@@ -23,6 +23,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { type DesignContext } from "../design_slop_rules.js";
+import { UI_EXT } from "../_lib/ui_surface.js";
 import { loadDesignContext, scanFile } from "../lint_design_slop.js";
 import { readHookStdin } from "./hook_stdin.js";
 
@@ -30,7 +31,6 @@ const SETTINGS_FILE = ".agent-settings.yml";
 const EXIT_ALLOW = 0;
 const EXIT_WARN = 2;
 const DEGRADE_AFTER = 3; // surfaces of the same file::rule signature before going silent
-const UI_EXT = /\.(html|htm|css|scss|sass|less|vue|svelte|astro|jsx|tsx)$/i;
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };

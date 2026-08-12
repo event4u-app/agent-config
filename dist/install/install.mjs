@@ -10446,8 +10446,8 @@ function ruleFileArrives(sourcePath, scope) {
   if (!sourcePath.endsWith(".md")) {
     return true;
   }
-  const basename5 = path12.basename(sourcePath);
-  if (COMPAT_ALWAYS_EXCLUDED.includes(basename5)) {
+  const basename6 = path12.basename(sourcePath);
+  if (COMPAT_ALWAYS_EXCLUDED.includes(basename6)) {
     return false;
   }
   return rule_in_scope(sourcePath, scope.workspaces, scope.packs, scope.roles ?? null);
@@ -15062,6 +15062,11 @@ var settingsSchema = external_exports.object({
         "PreToolUse anti-slop nudge (road-to-anti-slop-detector Phase 3). Default off. When on, runs the lint_design_slop registry against about-to-be-written UI content and WARNS (never blocks) on P0/P1 aesthetic tells (side-stripe, gradient-text, magic z-index, \u2026). Flags are rebuttable via DESIGN.md / design-slop-disable. Anti-loop: a file::rule signature surfaced 3x goes silent. Host-limited convenience layer; the universal gate is the lint_design_slop linter/CI."
       )
     }).default({}),
+    ui_route_nudge: external_exports.object({
+      enabled: external_exports.boolean().default(false).describe(
+        "PreToolUse UI-route nudge (road-to-frontend-skill-application Phase 4). Default off. When on, a Write/Edit to a UI surface with no design consultation latched this session WARNS (never blocks) naming the route \u2014 run existing-ui-audit, then the fe-design loop. A read or search touching fe-design / existing-ui-audit / design-review / design-intelligence latches consultation and silences it for the session. Anti-loop: at most 2 nudges per session. It does not read the rules: the UI-surface decision comes from _lib/ui_surface.ts and no code parses rule frontmatter, so this runs parallel to the two UI rules rather than consuming their triggers, and a test keeps the sets from drifting. It is a nudge, so their enforced_by: none stays accurate."
+      )
+    }).default({}),
     code_graph: external_exports.object({
       enabled: external_exports.boolean().default(false).describe(
         "PreToolUse code-graph nudge (ADR-124 Phase 4). Default off. When on AND a native code-graph cache or a consumer-shipped graph.json/SCIP index is present, warns once per session (never blocks) as the agent is about to Grep/Glob or Read a source file \u2014 query the graph first for who-calls/where-used/impact questions (or rebuild if stale, build if absent). Source G\u2019s strict block-first-read mode is deliberately un-ported."
@@ -17245,11 +17250,16 @@ function main(argv = null, options = {}) {
   }
   return _apply(project, out, err);
 }
-var _bundled = true;
+var _inForeignBundle = !(typeof __AGENT_CONFIG_CLI_DELEGATE__ !== "undefined" && __AGENT_CONFIG_CLI_DELEGATE__);
 var _HERE = fileURLToPath4(import.meta.url);
 function _isCliEntry() {
   if (process2.argv[1] === void 0) {
     return false;
+  }
+  if (typeof __AGENT_CONFIG_CLI_DELEGATE__ !== "undefined" && __AGENT_CONFIG_CLI_DELEGATE__) {
+    if (path15.basename(process2.argv[1], ".js") === "cmd_migrate") {
+      return true;
+    }
   }
   const argvUrl = pathToFileURL(path15.resolve(process2.argv[1])).href;
   if (import.meta.url === argvUrl) {
@@ -17263,7 +17273,7 @@ function _isCliEntry() {
     return false;
   }
 }
-if (!_bundled && (_isCliEntry() || process2.argv[1] === _HERE)) {
+if (!_inForeignBundle && (_isCliEntry() || process2.argv[1] === _HERE)) {
   try {
     process2.exitCode = main(process2.argv.slice(2));
   } catch (exc) {

@@ -1,0 +1,3190 @@
+diff --git a/Taskfile.yml b/Taskfile.yml
+index 656691a49ccc2457bdc42b7be3b65f0068da4a12..c1dbf0c95ab3283cefd2c4fa201c7e2f708d8467 100644
+--- a/Taskfile.yml
++++ b/Taskfile.yml
+@@ -259,6 +259,7 @@ tasks:
+       - task: lint-ghostwriter-source
+       - task: lint-media-policy-linkage
+       - task: lint-ui-stack-bundles
++      - task: lint-rule-skill-pack-reach
+       - task: lint-eval-fixture-citations
+       - task: lint-glama-drift
+       - task: lint-persona-governance
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 3c9074a845df4ce14471d5950ab43f88ec33d8dc..4c71e0f18cd23f4887f6ef7800cbe2c0a8b3d54f 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,11 +2,11 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 26 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **35** open blockers, **9** need you → `agent-config gates`
++> 27 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **37** open blockers, **9** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**237 / 333 steps done · 71%**
++**259 / 364 steps done · 71%**
+ 
+ ```text
+ ████████████████████████████░░░░░░░░░░░░   71%
+@@ -21,27 +21,28 @@
+ | 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
+ | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+ | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
+-| 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+-| 7 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
+-| 8 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 2 | 12 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █████████░ 86% |
+-| 9 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
+-| 10 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
+-| 11 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 1 | 11 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | █████████░ 92% |
+-| 12 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
+-| 13 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
+-| 14 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 15 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+-| 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+-| 17 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+-| 18 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+-| 19 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+-| 20 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+-| 21 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+-| 22 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+-| 23 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+-| 24 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+-| 25 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+-| 26 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
++| 6 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [2](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
++| 7 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
++| 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
++| 9 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 2 | 12 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █████████░ 86% |
++| 10 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
++| 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
++| 12 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 1 | 11 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | █████████░ 92% |
++| 13 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
++| 14 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
++| 15 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 16 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
++| 17 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
++| 18 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
++| 19 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
++| 20 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
++| 21 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
++| 22 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
++| 23 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
++| 24 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
++| 25 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
++| 26 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 27 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+ 
+ ---
+ 
+@@ -176,6 +177,32 @@
+ | 2 | Re-run test on existing artifacts (minimal spend) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+ | 3 | Landing & close | ⬜ not started | 1 | 0 | 0 | 1 | 0% |
+ 
++### [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md)
++
++**Frontend skills stop being loaded shelfware** — 22 / 31 done (71%)
++
++| # | Phase | State | Open | Done | Deferred | Cancelled | % |
++|---|---|---|---:|---:|---:|---:|---:|
++| 1 | Measure — capture the catalogue, publish the baseline | ✅ done | 0 | 6 | 0 | 0 | 100% |
++| 2 | Deliver — design surfaces reach the model with a description | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
++| 3 | Own the prompt — an ad-hoc lane for UI work | ✅ done | 0 | 4 | 0 | 0 | 100% |
++| 4 | Route — a runtime signal that is framework-agnostic | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
++| 5 | Reach and enforcement — only where a mechanism exists | 🟡 in progress | 5 | 7 | 0 | 0 | 58% |
++
++<a id="blockers-road-to-frontend-skill-application"></a>
++**Blockers**
++
++- **ui-session-capture-window** (owner: external) — blocks Phase 1 — Measure
++  - **What to do:**
++    1. Let the capture concern run across normal UI work until the corpus reaches the threshold; no human decision is required, only elapsed sessions.
++    2. Check progress by counting distinct session ids in the capture state file.
++  - **Resolved when:** the capture state holds ≥ 20 distinct sessions containing at least one UI turn.
++- **enforcement-evidence** (owner: maintainer) — blocks Phase 5 — Reach and enforcement
++  - **What to do:**
++    1. Read the published consultation and discharge rates from Phase 1 and the nudge A/B from Phase 4.
++    2. Decide whether warn-level pressure closed the gap; record the decision with the numbers that produced it.
++  - **Resolved when:** the enforcement decision is recorded against the published rates, either as a flip or as an explicit no-change.
++
+ ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
+ 
+ **Follow-up to Road to gated reach — exercise the YouTube channel** — 0 / 12 done (0%)
+diff --git a/agents/roadmaps/road-to-frontend-skill-application.md b/agents/roadmaps/road-to-frontend-skill-application.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ec69d168f0a48f2a57a4179552327418daa17fde
+--- /dev/null
++++ b/agents/roadmaps/road-to-frontend-skill-application.md
+@@ -0,0 +1,182 @@
++---
++complexity: lightweight
++execution:
++  mode: phase-checkpoints
++---
++
++# Roadmap: Frontend skills stop being loaded shelfware
++
++> On an ad-hoc UI turn the agent receives an activation signal for the design surface, holds the load-bearing heuristics in context rather than a map to them, and its consultation rate on UI turns is a published number instead of a suspicion.
++
++## Goal
++
++Raise the measured **consultation rate** on ad-hoc UI turns (share of UI-shaped turns where a design surface is actually consulted) from its published baseline, by fixing catalogue delivery and the ownership hole — with the baseline captured before any fix lands, and every enforcement claim matching what the tree can verify.
++
++## Prerequisites
++
++- [x] Read `AGENTS.md` and `src/scripts/report_skill_activation.ts` (the round-6 census — it names most of this and its own falsifier).
++- [x] Read `src/skills/fe-design/SKILL.md` § Positioning and `src/agent-src/templates/scripts/work_engine/directives/ui/design.ts` — the reference/executor split this roadmap works around.
++
++## Context
++
++**The symptom.** On frontend tasks the agent opens the design skills and does not apply them; asked afterwards it confirms it did not use them. Reported by the maintainer, sourced from an external analysis artifact (see `## Provenance`).
++
++**Why it happens.** Four verified, stacked causes — verified against `origin/main` on this branch, not carried over from the source:
++
++1. **Catalogue delivery.** The host's injected skill catalogue drops descriptions for most entries. Every design surface (`dashboard-design` #56 … `fe-design` #88 in the sorted 289-skill estate) arrives as a bare name, and a bare name carries no activation signal. Observed twice independently now: once by the round-6 census, once directly in an authoring session for this roadmap.
++2. **No runtime routing.** `src/scripts/_lib/router_match.ts` serves router replay, trigger-coverage CI and the two `explain` commands — no session-time consumer. Skill frontmatter carries no usable `triggers:` key (the single `^triggers:` hit in the estate is a documentation example inside `rule-writing`). The two rules that route to the design skills carry Laravel-only path triggers (`resources/views/`, `resources/js/`).
++3. **The ownership hole — the core of the symptom.** `fe-design` self-describes as "a universal reference skill, not an executor … it does not own the flow". The actual executor is the UI directive set, and nothing outside the `/implement-ticket` dispatcher imports it. The skill's own trigger evals encode the consequence: `"implement the selected checkout design in React exactly as approved"` → `trigger: false`. Outside the engine **no artefact owns an implementation prompt's design quality**. "Loaded but not applied" is the designed behaviour of a reference skill outside its pipeline.
++4. **Indirection depth.** `fe-design/SKILL.md` is a positioning shell; the heuristics are 227 lines away in `references/design-patterns.md` and the grounded corpus two hops away (677 KB of CSV in a different pack). "Loaded" has meant *the map was in context*, never the content.
++
++**Three corrections to the source analysis, verified here.** They change the plan, so they are recorded rather than silently applied:
++
++- **The truncation is not positional.** The source assumed "descriptions for roughly the first forty entries, bare names thereafter" and proposed priority-ordering as a fallback fix. In the authoring session's own catalogue, entries far past position 40 (`using-git-worktrees`, `roadmap-writing`, `md-language-check`) carried full descriptions while `command-routing` (~#45) did not, and all six checked skills carry a `description:` in frontmatter. A fixed head-N budget does not explain that. Phase 1 therefore measures the **selector**, and the priority-ordering option is cut until a selector is known.
++- **The pack mismatch is latent, not active.** The two UI rules are `packs: [frontend-design]` while `existing-ui-audit`, `design-review` and `fe-design` are `packs: [engineering-base]`. But `frontend-design` declares `requires: [engineering-base]`, so the asymmetry `design-review-after-ui-write` documents ("frontend-design without engineering-base") cannot occur; the undocumented reverse — an engineering-base-only install carrying the skills with no rule routing to them — is real but only bites once pack-scoped rule projection is active, and its setting ships inactive by default. Scope drops to a documentation fix plus a CI invariant.
++- **Delegated workers are not starved of design signal.** The role axis drops `[delegation-nudge, end-review-nudge, council-availability, team-review-gate, self-repair, session-eol]`; `design-slop` is not among them, and in-process subagents cannot be role-marked at all, so they fail open to the full concern chain. The claimed mechanism is dead. What survives is narrower: the dispatch-prompt template for UI work carries no audit findings or brief.
++
++**Related work, not duplicated here.** Model-tier inversion between UI builders and UI graders is already an open, verified finding in [`road-to-ui-track-integrity-followup`](road-to-ui-track-integrity-followup.md) (`status: ready`, unblocked by the `bench:ui` harness). This roadmap adds only a sequencing claim: Phase 1's fixtures and `bench:ui`'s should be shared so one measurement window serves both questions. Skill-description quality is measured by [`road-to-skill-description-measurement`](road-to-skill-description-measurement.md) — a **different instrument**; its non-goals forbid mixing the census invocation share with selection accuracy, and this roadmap honours that separation.
++
++- **Feature:** none
++- **Jira:** none
++
++## Gap table
++
++| Item from the source analysis | Verdict | Where it lands |
++|---|---|---|
++| Catalogue delivery defect (design skills arrive bare) | KEEP — mechanism corrected | Phase 1, Phase 2 |
++| Priority-ordering fallback (`catalog_priority` frontmatter) | CUT — rests on a head-N mechanism this tree contradicts | — |
++| No runtime routing; Laravel-only path triggers | KEEP | Phase 4 |
++| Enforcement gap (`enforced_by: none`, hook default-OFF) | KEEP — evidence-gated | Phase 5 |
++| Ownership hole (reference-not-executor, engine-only executor) | KEEP | Phase 3 |
++| Indirection depth (shell without content) | KEEP | Phase 3 |
++| Corpus format friction (measured at 677 KB CSV, not the source's 439 KB) | FOLD into the inlined-heuristics step | Phase 3 |
++| Pack inversion | FOLD — reduced to a doc fix plus one lint | Phase 5 |
++| Model-tier inversion | CUT — already tracked; sequencing note only | Phase 1 |
++| Anti-slop chain open at every link | FOLD into the baseline framing (there is no pressure to A/B against) | Phase 1 |
++| Role axis starves delegated UI writes | CUT — mechanism refuted; residual template gap kept | Phase 4 |
++
++## Phase 1: Measure — capture the catalogue, publish the baseline
++
++No fix lands before this phase publishes. The strongest candidate cause is currently a suspicion with a named falsifier, and there is no active design-quality pressure anywhere in the tree to A/B against — the baseline must record that honestly.
++
++- [x] **Step 1:** Ship a `session_start` concern that logs the injected skill-catalogue block once per session — entry count, per-entry described-vs-bare, byte length, host. Store under the existing feedback-dir state posture; record skill names and descriptions only, never user content. <!-- verify: npx vitest run tests/scripts/catalogue_capture.test.ts --> <!-- landed as a script, not a concern: the dispatcher envelope carries no catalogue (session_id/source/cwd/transcript_path only) and preamble_byte_census verified no local artifact holds the system payload; capture is split into a deterministic projection half and a labelled self-report half — see agents/settings/contexts/skill-catalogue-baseline.md -->
++- [x] **Step 2:** Diagnose the **selector**, not the position: for every captured entry, join described-vs-bare against the skill's own frontmatter (`description:` present, description length, `user-invocable`, projected directory) and report which property separates the two sets. A null result here is a publishable finding, not a failure.
++- [x] **Step 3:** Define "UI turn" deterministically for the analyzer by reusing and extending `UI_EXT` from `src/scripts/hooks/design_slop_hook.ts` (add `.blade.php`; the constant today covers `.html .htm .css .scss .sass .less .vue .svelte .astro .jsx .tsx`). <!-- verify: npx vitest run tests/scripts/ui_turn_definition.test.ts -->
++- [x] **Step 4:** Pre-register two metrics before any fix lands — **consultation rate** (share of UI turns where `fe-design`, `existing-ui-audit`, `design-intelligence` or `design-review` was invoked or a reference file read) and **discharge rate** (share of UI-write turns followed by a review verdict that is render-scoped or explicitly static-scoped, the two shapes `design-review-after-ui-write` defines).
++- [x] **Step 5:** Record in the baseline that design-quality pressure is currently **zero on every path** — `lint_design_slop` defaults to exit 0, the hook is default-OFF, and the routing skill is unreached — so the later A/B is not read as an upgrade of existing pressure.
++- [x] **Step 6:** Reuse the `bench:ui` fixture set for the UI-turn corpus rather than authoring a second one, so this measurement window also serves the tier question in `road-to-ui-track-integrity-followup`.
++
++**Exit criteria.** The capture concern runs on a hook-capable host; ≥ 20 UI sessions captured; both rates computed and published to the claims ledger with the counting method; the selector diagnosis published (including a null).
++
++**Rollback.** Remove the `session_start` concern registration; the capture is additive and holds no other surface.
++
++**Falsifier.** Captured catalogues show full descriptions for all 289 entries → the delivery hypothesis is dead, Phase 2 is cancelled, publish the null.
++
++## Phase 2: Deliver — design surfaces reach the model with a description
++
++Gated on Phase 1's selector diagnosis. The fix is chosen from what the selector turns out to be; only the first option below is currently supported by evidence.
++
++- [x] **Step 1:** Choose the delivery fix from the Phase-1 selector finding and record the choice with the evidence line that decided it. <!-- decided: NO fix selectable on observation 1 — verdict `no-selector`, all 16 bare entries declare a description, described entries reach #325 while bare start at #45. Recorded in agents/settings/contexts/skill-catalogue-baseline.md; steps 2-4 stay open pending the capture window. -->
++- [ ] **Step 2:** If the selector is estate size — project a workspace-scoped skill subset at install, so a frontend-active consumer receives the frontend-relevant set with full descriptions instead of the full estate. Sequence behind the existing estate-reduction target rather than duplicating it. <!-- verify: npx vitest run tests/scripts/scoped_projection.test.ts -->
++- [ ] **Step 3:** If the selector is a per-entry property (length, frontmatter shape, projection path) — fix that property on the eight design surfaces and re-capture to confirm the entries flip from bare to described. <!-- verify: npx vitest run tests/scripts/catalogue_capture.test.ts -->
++- [ ] **Step 4:** Re-run the Phase-1 capture and assert every design surface is described on a frontend-workspace install.
++
++**Exit criteria.** A post-fix capture shows described entries for all eight design surfaces on a frontend-workspace install.
++
++**Rollback.** Revert the projection or frontmatter change; the capture from Phase 1 stays and re-measures the reverted state.
++
++**Falsifier.** Consultation rate does not move after delivery is fixed → delivery was necessary but not sufficient. Record it and continue; the ownership hole in Phase 3 is the independent cause.
++
++## Phase 3: Own the prompt — an ad-hoc lane for UI work
++
++The engine's loop is sound; its reachability is the defect. This phase gives an ad-hoc UI prompt exactly one owner without touching the engine's ownership model.
++
++- [x] **Step 1:** Add a `ui-quick` entry path that runs audit → brief → apply → review against the same `REQUIRED_BRIEF_KEYS` / `REQUIRED_STATE_KEYS` contract the directive set enforces, without requiring a ticket envelope. The five-condition `ui-trivial` allow-list in `design-review-after-ui-write` is the skip gate, read off the diff. <!-- verify: npx vitest run tests/scripts/fe_design_triggers.test.ts --> <!-- landed as the ad-hoc lane INSIDE fe-design, not as a separate artefact: a new skill would inherit the catalogue-delivery defect Phase 1 just measured as unfixed (verdict `no-selector`), so the lane would be as unreachable as the skills it fronts. The roadmap step named "or skill-invoked protocol" as the alternative; this is it. -->
++- [x] **Step 2:** Give `fe-design` an executor-mode preamble for ad-hoc sessions — outside the engine the reading agent runs the loop itself — while the engine path keeps the reference positioning unchanged. <!-- verify: task lint-skills -->
++- [x] **Step 3:** Inline the load-bearing heuristics in the `fe-design` body (state coverage, audit-before-write, token reuse, a11y minimums, placeholder ban) so that "loaded" means content in context. Reference files stay for depth. Check the result against the skill's token-budget class before landing. <!-- verify: ./scripts-run src/scripts/lint_token_budget_discipline -->
++- [x] **Step 4:** Fix the trigger evals so an implementation prompt routes to a real owner in ad-hoc mode instead of `trigger: false`, and pin the engine/ad-hoc disjunction as should-trigger and should-not-trigger rows. <!-- verify: npx vitest run tests/scripts/fe_design_triggers.test.ts -->
++
++**Exit criteria.** Every path for a "build or change this UI" prompt has exactly one designated owner — the directive set when ticketed, `ui-quick` otherwise — asserted by the trigger evals.
++
++**Rollback.** Revert the SKILL.md sections and remove the `ui-quick` entry path; the trigger evals revert with them.
++
++## Phase 4: Route — a runtime signal that is framework-agnostic
++
++- [x] **Step 1:** Extend both UI rules' path triggers beyond Laravel — `components/`, `src/components/`, `app/`, `pages/` — plus file patterns for `*.vue`, `*.svelte`, `*.tsx`, `*.jsx`. <!-- verify: npx vitest run tests/scripts/ui_rule_triggers.test.ts -->
++- [x] **Step 2:** Ship a `ui-route-nudge` PreToolUse concern following the `delegation_nudge_hook` / `code_graph_nudge_hook` precedent: on a Write or Edit matching the UI extension set with no audit or consultation marker this session, warn once naming the route. Warn, never block, with the same anti-loop degradation valve `design_slop_hook` carries. <!-- verify: npx vitest run tests/scripts/ui_route_nudge.test.ts -->
++- [x] **Step 3:** State the host boundary in the concern's own header — this is the rule triggers' first runtime consumer, and only on hosts carrying the `pre_tool_use` slot; elsewhere the description-driven path from Phase 2 is the only carrier.
++- [x] **Step 4:** Make the dispatch-prompt template for UI-shaped work carry the audit findings and brief, or name their absence as a gap, so a delegated worker holds what the orchestrator knows. Lint it against the orchestration records. <!-- verify: npx vitest run tests/scripts/ui_dispatch_brief.test.ts -->
++- [ ] **Step 5:** Measure the nudge against no-nudge on the pre-registered consultation rate, with the minimum effect fixed before the run.
++
++**Exit criteria.** The A/B is published with its pre-registered effect size, whichever sign it carries.
++
++**Rollback.** Unregister the concern from the manifest; the rule trigger extension is independent and stays.
++
++**Falsifier.** The degradation valve silences more than half the nudges by session end → the signal is noise; redesign or drop it and publish.
++
++## Phase 5: Reach and enforcement — only where a mechanism exists
++
++Enforcement moves only where the tree can verify it; `enforced_by:` changes because a mechanism appeared, never because the prose got bolder.
++
++- [x] **Step 1:** Correct the pack asymmetry note in `design-review-after-ui-write` — it documents the direction that `requires: [engineering-base]` makes impossible, and omits the real one (an engineering-base install carrying the skills with no rule routing to them). <!-- verify: ./scripts-run src/scripts/check_references -->
++- [x] **Step 2:** Add a CI invariant in the shape of `lint_ui_stack_bundles`: no rule routes to a skill that a pack-legal install of that rule's pack set cannot receive. Ship it advisory first; promote to error once its finding set is empty. <!-- verify: ./scripts-run src/scripts/lint_rule_skill_pack_reach -->
++- [ ] **Step 3:** Decide the `design-slop` default from the Phase-1 and Phase-4 evidence, and record the decision with the numbers that produced it. Flip to default-ON warn for frontend-workspace installs only if the discharge rate stayed below the pre-registered target. <!-- blocked-by: enforcement-evidence -->
++- [ ] **Step 4:** If and only if warn-level pressure proved insufficient, gate a non-trivial ad-hoc UI write on the presence of an audit artifact this session — an artifact-presence check, not obligation semantics — with the `ui-trivial` diff conditions as the escape hatch. <!-- blocked-by: enforcement-evidence -->
++- [x] **Step 5:** Update `enforced_by:` in both rules to name the hook id, and only for the obligations that hook actually observes; anything still model-carried keeps saying so. <!-- verify: ./scripts-run src/scripts/check_enforcement_coverage --> <!-- checked, result: stays `none`. The ui-route-nudge is warn-only, capped, and default-OFF; a reminder that can be ignored is not enforcement. Both rules now name the carrier and say why the field did not move. -->
++
++**Exit criteria.** The pack invariant runs in CI with an empty finding set; the enforcement decision is recorded with its evidence; `enforced_by:` in both rules matches what a mechanism observes, checked by the enforcement-coverage join.
++
++**Rollback.** Demote the gate to warn and restore `enforced_by: none`; the pack lint is independent and stays.
++
++## Acceptance Criteria
++
++- [ ] Consultation rate and discharge rate are published numbers with a stated counting method, measured before and after the delivery and ownership fixes.
++- [ ] A post-fix catalogue capture shows all eight design surfaces described on a frontend-workspace install, or the null is published and the delivery phase is closed as cancelled.
++- [x] An ad-hoc "build this UI" prompt has exactly one owner on every path, asserted by trigger evals rather than by prose.
++- [x] `fe-design` carries its load-bearing heuristics in the body and still passes its token-budget class check.
++- [ ] The pack-legality invariant runs in CI and reports an empty finding set.
++- [x] `enforced_by:` in both UI rules names only obligations a mechanism observes; every remaining model-carried obligation still says so.
++- [x] No item from the source analysis was adopted without appearing in the gap table with a verdict — the plan integrates a verified subset rather than restating the source.
++
++## Blockers
++
++### blocker: ui-session-capture-window
++- **Status:** open
++- **Owner:** external
++- **Blocks:** Phase 1 — Measure
++- **What to do:**
++  1. Let the capture concern run across normal UI work until the corpus reaches the threshold; no human decision is required, only elapsed sessions.
++  2. Check progress by counting distinct session ids in the capture state file.
++- **Resolved when:** the capture state holds ≥ 20 distinct sessions containing at least one UI turn.
++
++### blocker: enforcement-evidence
++- **Status:** open
++- **Owner:** maintainer
++- **Blocks:** Phase 5 — Reach and enforcement
++- **What to do:**
++  1. Read the published consultation and discharge rates from Phase 1 and the nudge A/B from Phase 4.
++  2. Decide whether warn-level pressure closed the gap; record the decision with the numbers that produced it.
++- **Resolved when:** the enforcement decision is recorded against the published rates, either as a flip or as an explicit no-change.
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-08-12 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | Selector stays unknown | implementation | The catalogue capture shows the described/bare split but no frontmatter or projection property separates the two sets, because the selector is host-internal. Phase 2 then has no fix to pick and the roadmap stalls after its measurement. | Store the raw catalogue block, not just derived counters, so a later host change can be re-diagnosed without a new capture; treat a null selector as a publishable finding and fall back to the estate-reduction path, which shrinks the catalogue regardless of the selector. | Phase 1: Measure |
++| 2 | Two executors for one job | product | Executor-mode `fe-design` and the directive set both claim an implementation prompt, and a ticketed run picks the wrong one — trading a no-owner defect for an ambiguous-owner defect. | Scope executor mode explicitly to sessions outside the engine, leave the engine path's positioning untouched, and pin the disjunction as should-trigger and should-not-trigger rows so the ambiguity fails CI rather than a run. | Phase 3: Own the prompt |
++| 3 | Inlined heuristics overrun the budget | product | Moving the load-bearing heuristics into the skill body pushes it past its token-budget class, and the ceiling lint forces either a class change or a partial revert that recreates the empty shell. | Measure the body against the class before landing, keep depth in the reference files, and inline only heuristics that change a write decision rather than everything the references carry. | Phase 3: Own the prompt |
++| 4 | Nudge fatigue | implementation | The route nudge fires on every UI write, the degradation valve silences it early, and the measured effect is noise — leaving a concern that costs a slot and delivers nothing. | Pre-register the minimum effect before the run, count valve activations as a first-class metric, and drop the concern outright if more than half the nudges are silenced by session end. | Phase 4: Route |
++| 5 | Pack lint fires on an inactive axis | implementation | The pack-legality invariant reports routes that break only when pack-scoped rule projection is enabled, which ships inactive — producing findings consumers cannot act on and gate fatigue on a latent defect. | Check pack legality of the rule/skill pair rather than the current projection state, ship advisory until the finding set is empty, and state in the finding text that the defect is latent until the axis is enabled. | Phase 5: Reach and enforcement |
++
++## Notes
++
++- The two rules under discussion are `ui-audit-gate` (read side, audit before writing) and `design-review-after-ui-write` (write side, review before done). They are twins by construction; a change to one usually belongs on both.
++- The engine's ownership model for ticketed runs is explicitly out of scope. So is a prose-matching missed-activation detector — the round-6 phase drew that boundary and this roadmap does not reopen it.
++- The `plain → blade-ui` dispatch defect from the earlier design sweep is fixed in-engine (`stack_bundles.ts` plus its pack-legality lint). It changes nothing about reachability, which is what this roadmap is about.
++
++## Provenance
++
++- Source: an external analysis artifact dropped into the maintainer inbox, consumed as `agents/tmp.old/frontend-skills.txt`; the originating thread link, via `src/scripts/_lib/link_crypto.ts decrypt`: ENC1:KMygM6Jj+L6qzM7c+ieq+ugyXnjDwSx9FWN22uI5hsuhCNtV8SXg9NRfwf/uumdJBxJkeqQBabY5PyaqZEg2xG8fYI8zE0jUt5fRchhlHqU7HDgzZIwiJaU24NiGGq9AQNM3MIBhaIvM5YkMgEogrPraTS1Zo699IlqF
++- The source is a proposal by an external analysis agent and is not adopted doctrine. Every claim carried into this roadmap was re-verified against `origin/main` before drafting; three were corrected and two dropped, as recorded in `## Context` and the gap table.
++- Council: none run. The contested choices in this plan (delivery fix, enforcement level) are gated on measurements rather than argued, so a pre-authoring council would have resolved questions the evidence answers.
+diff --git a/agents/settings/contexts/skill-catalogue-baseline.md b/agents/settings/contexts/skill-catalogue-baseline.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..c34b04476d81eea393e97806c6a91182b58d7776
+--- /dev/null
++++ b/agents/settings/contexts/skill-catalogue-baseline.md
+@@ -0,0 +1,104 @@
++# Skill-catalogue delivery — pre-registered baseline
++
++The measurement half of the frontend-skill-application work. Everything here is
++fixed **before** a delivery or ownership fix lands, so a later rate can be
++compared against something that was not chosen after seeing the result.
++
++## The host boundary — why there is no `session_start` capture hook
++
++The round-6 census asked for a `session_start` concern that logs the injected
++skill-catalogue block. A concern cannot do that, and the tree already contains
++the proof: the dispatcher envelope carries `session_id`, `source`, `cwd` and
++`transcript_path`, and `preamble_byte_census.ts` verified independently that no
++local transcript or file holds the request's system payload. A hook claiming to
++"capture the catalogue" would be capturing something else under that name.
++
++The capture is therefore two-sided, and each side is labelled as what it is:
++
++| Side | Source | Status |
++|---|---|---|
++| Projection — which entries offer a `description:`, how long, which frontmatter keys, sorted position | `capture_skill_catalogue.ts` over the host-facing skill tree | deterministic, file-measurable |
++| Observation — which entries actually arrived bare in a live session | a session reporting its own context | **self-report**, never enforcement |
++
++The join of the two is the useful question: not *how many* are bare but **which
++property separates bare from described**. That property is the selector, and a
++delivery fix has to act on it.
++
++## Pre-registered metrics
++
++**UI turn.** Deterministic, from `src/scripts/_lib/ui_surface.ts` — the single
++definition shared by the analyzer, the anti-slop hook and the route nudge. A
++turn is UI-shaped when it writes a path matching `isUiPath` (the single-segment
++extensions plus the compound `.blade.php` suffix, which the hook's original
++regex could not match) or sits in a tree matching `isUiTreePath`.
++
++**Consultation rate.** Share of UI turns where any of `fe-design`,
++`existing-ui-audit`, `design-intelligence` or `design-review` was invoked, or
++one of their reference files was read.
++
++**Discharge rate.** Share of UI-write turns followed by a review verdict that is
++either render-scoped or explicitly static-scoped — the two verdict shapes
++`design-review-after-ui-write` defines. A "looks good" with neither scope named
++counts as undischarged.
++
++Both are computed over ≥ 20 captured UI sessions before any comparison is drawn.
++
++## Baseline condition: design-quality pressure is zero on every path
++
++Recorded so that a later A/B is not read as an upgrade of existing pressure. At
++baseline, all three links of the chain are open:
++
++- `lint_design_slop` defaults to exit 0 regardless of findings — advisory by
++  council decision, not a CI block.
++- The `design-slop` hook is default-OFF (`hooks.design_slop.enabled`), warn-only
++  by construction, and bound only on hosts carrying a `pre_tool_use` slot.
++- `design-review` itself does not fire, because nothing routes to it in an
++  ad-hoc session.
++
++Any measured movement after a fix is therefore movement from zero, not an
++increment on an existing control.
++
++## Observation 1 — 2026-08-12, host `claude`
++
++First observation recorded to `agents/evidence/metrics/skill-catalogue.jsonl`.
++Partial by construction: 16 entries observed bare, 19 observed described, out of
++336 projected entries.
++
++**Verdict: `no-selector`.** No measured property separates the two groups:
++
++| Candidate | Separates | What the data says |
++|---|---|---|
++| `declares-description` | no | 16/16 bare entries **do** declare a `description:` in their projected `SKILL.md` — the projection is not the cause |
++| `positional-head` | no | described entries reach position #325 while bare entries start at #45; the ranges overlap, so no head-N budget explains the split |
++| `description-length` | no | length ranges overlap |
++| any frontmatter key | no | no key's presence tracks the split |
++
++**Consequence, stated because it is load-bearing.** The census's strongest
++hypothesis — a fixed head-N description budget, with priority ordering as the
++fix — is refuted on this evidence. A delivery fix chosen today would be chosen
++without a mechanism to act on. That is why the delivery phase stays blocked on
++more observations rather than proceeding on the hypothesis.
++
++**What would change the verdict.** More observations from more hosts and more
++session shapes; a property the analyzer does not yet test (it tests description
++presence, description length, sorted position, and frontmatter-key presence);
++or a host-side statement of how the catalogue is assembled. Absent any of those,
++the honest position is that the selector is host-internal.
++
++All eight design surfaces are in the bare set: `dashboard-design`,
++`design-intelligence`, `design-review`, `design-system-capture`, `design-tokens`,
++`design-variations`, `existing-ui-audit`, `fe-design`.
++
++## Shared fixtures
++
++The UI-turn corpus reuses the `bench:ui` fixture set rather than authoring a
++second one, so a single measurement window serves both the consultation
++question here and the builder/grader tier question parked on that harness.
++
++## Privacy
++
++An observation record carries a schema version, a date, a host label, integer
++counts, the bare-entry names and the verdict. The record type has **no field**
++able to hold prompt text, file bodies, or paths outside the catalogue — the same
++exclusion-by-construction `domain-safety-pii` § Surface 2 requires of a log
++event. Do not widen it with a free-form field.
+diff --git a/dist/agent-src/rules/design-review-after-ui-write.md b/dist/agent-src/rules/design-review-after-ui-write.md
+index fd40a94f0bc58b85c4f5157bbf7bcff4b4e92f9c..550034994e415a48610a7c9f7c645873f3119bd1 100644
+--- a/dist/agent-src/rules/design-review-after-ui-write.md
++++ b/dist/agent-src/rules/design-review-after-ui-write.md
+@@ -6,6 +6,14 @@ description: "UI written or changed — review it against the design contract be
+ triggers:
+   - path_prefix: "resources/views/"
+   - path_prefix: "resources/js/"
++  - path_prefix: "components/"
++  - path_prefix: "src/components/"
++  - path_prefix: "pages/"
++  - file_pattern: "*.vue"
++  - file_pattern: "*.svelte"
++  - file_pattern: "*.tsx"
++  - file_pattern: "*.jsx"
++  - file_pattern: "*.blade.php"
+   - keyword: "component"
+   - keyword: "design token"
+ routes_to:
+@@ -87,18 +95,42 @@ enforcement. So this rule ships `enforced_by: none`, the same honesty boundary
+ for their own obligations, rather than pretending a satisfiable-by-assertion
+ condition is a gate.
+ 
++**A runtime carrier now exists, and it does not change that.** The
++`ui-route-nudge` PreToolUse concern is the first thing in the tree that ever
++consumed this rule's triggers at session time: on a UI write with no design
++consultation latched this session it emits one warning naming the route. It is
++warn-only, capped at two nudges per session, default-OFF, and bound only on
++hosts carrying a `pre_tool_use` slot. A nudge that can be ignored is not
++enforcement, so `enforced_by:` stays `none` — it moves the day a mechanism can
++refuse, not the day a reminder appears. `agent-config hooks:status` answers
++whether the concern is bound on the host you are actually on.
++
+ What that leaves, and it is the useful part: the write side now has a named
+ obligation and a route to the skill that discharges it, where before it had
+ neither. Full enforcement needs the work-engine `review`/`polish` gates (which
+ already act on `a11y_violation` and `token_violation` findings) or pack-scoped
+ rule projection — a maintainer decision, never an automated one.
+ 
+-One asymmetry worth stating: `design-review` lives in `engineering-base` while
+-this rule is scoped to `frontend-design`. The route still resolves — a rule may
+-name a skill from another pack — but a consumer with `frontend-design` and
+-without `engineering-base` gets the obligation without the skill. That is why
+-`accessibility-auditor` is a second route: it is the part of the review that
+-must not depend on the pairing.
++One asymmetry worth stating, in the direction it actually runs: `design-review`
++lives in `engineering-base` while this rule is scoped to `frontend-design`. The
++route still resolves — a rule may name a skill from another pack.
++
++The case this paragraph used to describe — `frontend-design` installed without
++`engineering-base`, so the obligation arrives without the skill — **cannot
++occur**: `frontend-design` declares `requires: [engineering-base]`, and the
++resolver expands that graph transitively. The real gap is the reverse and was
++undocumented: an **`engineering-base`-only** install (a plain `laravel` or
++`react` consumer, since both only *suggest* `frontend-design`) carries
++`existing-ui-audit`, `design-review` and `fe-design` while carrying **no rule
++that routes to them**. It bites only where pack-scoped rule projection is
++active — `rules.packs` ships inactive, so a default install still receives both
++rules — which makes it a latent defect rather than a live one, and exactly the
++kind that surfaces the day the projection axis is switched on.
++
++`lint_rule_skill_pack_reach` is the invariant that keeps this honest: no rule
++may route to a skill a pack-legal install of that rule's packs cannot receive.
++`accessibility-auditor` remains a second route for the independent reason that
++the a11y half of the review should not depend on the pairing at all.
+ 
+ ## Failure modes
+ 
+diff --git a/dist/agent-src/rules/ui-audit-gate.md b/dist/agent-src/rules/ui-audit-gate.md
+index bbf1366c5701f46eb1c72d11a10c4bc48870e6a3..34a725c11927565d5e45e4e13f2716d9331c03b9 100644
+--- a/dist/agent-src/rules/ui-audit-gate.md
++++ b/dist/agent-src/rules/ui-audit-gate.md
+@@ -6,6 +6,14 @@ description: "Writing/editing UI — components, screens, layouts, design tokens
+ triggers:
+   - path_prefix: "resources/views/"
+   - path_prefix: "resources/js/"
++  - path_prefix: "components/"
++  - path_prefix: "src/components/"
++  - path_prefix: "pages/"
++  - file_pattern: "*.vue"
++  - file_pattern: "*.svelte"
++  - file_pattern: "*.tsx"
++  - file_pattern: "*.jsx"
++  - file_pattern: "*.blade.php"
+   - keyword: "component"
+   - keyword: "design token"
+ routes_to:
+@@ -91,6 +99,14 @@ Full enforcement requires the dispatcher (or the `frontend-design` pack once
+ pack-scoped rule projection is enabled; that flip is a maintainer decision,
+ never an automated one).
+ 
++**A runtime carrier now exists, and it does not change the verdict.** The
++`ui-route-nudge` PreToolUse concern reads this rule's triggers at session time —
++the first consumer they have had — and warns once on a UI write with no design
++consultation latched. Warn-only, capped at two per session, default-OFF, bound
++only where a `pre_tool_use` slot exists. A reminder that can be ignored is not
++a gate, so `enforced_by:` stays `none`. Run `agent-config hooks:status` for the
++host you are on rather than trusting this sentence.
++
+ ## Failure modes
+ 
+ - Writing the component first and "thinking about reuse later".
+diff --git a/dist/agent-src/skills/fe-design/SKILL.md b/dist/agent-src/skills/fe-design/SKILL.md
+index eed61db81d6c6ae8de616723eb2195f2add14ff9..f21272a3b59089f2ef02a7bd5f3bbf52732d13bd 100644
+--- a/dist/agent-src/skills/fe-design/SKILL.md
++++ b/dist/agent-src/skills/fe-design/SKILL.md
+@@ -1,7 +1,7 @@
+ ---
+ model_tier: medium
+ name: fe-design
+-description: "Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, responsive strategy, a11y, UX principles. Stack-agnostic; cited by directives/ui/design.ts."
++description: "Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, build, review. Use when building or changing any UI, not only when planning one."
+ personas:
+   - frontend-engineer
+ domain: engineering
+@@ -11,15 +11,82 @@ packs:
+   - engineering-base
+ ---
+ 
+-# Frontend Design Skill (Reference)
+-
+-## Positioning — reference, not executor
+-
+-`fe-design` is a **universal reference skill**, not an executor. It carries
+-stack-agnostic heuristics that the UI directive set cites; it does **not**
+-own the flow.
+-
+-| Concern | Owner |
++# Frontend Design Skill
++
++## Ad-hoc mode — outside the engine, YOU run this loop now
++
++One question decides which mode you are in: **is a `/implement-ticket` run
++dispatching this?**
++
++| Situation | Who owns the UI write | This skill is |
++|---|---|---|
++| A ticketed run — the UI directive set is dispatching | `directives/ui/*` | a reference it cites |
++| Anything else — "build me the page", "improve this form", "implement the approved design" | **you, in this turn** | the executor |
++
++Outside the engine, nothing else owns the design quality of a UI write. Reading
++this skill and then writing the UI from priors is the failure it exists to
++prevent — the loop below is not optional context, it is the work.
++
++**Skip only when the change is `ui-trivial`, decidable off the diff:** ≤ 1 file,
++≤ 5 changed lines, no new component, no new state, no new dependency. Anything
++else runs the loop.
++
++### The loop
++
++1. **Audit first** — run [`existing-ui-audit`](../existing-ui-audit/SKILL.md).
++   What already exists (components, tokens, layout conventions) outranks every
++   heuristic below. Reinventing an existing component is the #1 failure mode.
++2. **Brief** — cover the same five keys the engine requires before any code:
++   `layout`, `components`, `states`, `microcopy`, `a11y`. `states` means all
++   five of `empty`, `loading`, `error`, `success`, `disabled` — a brief missing
++   one is unfinished, not concise.
++3. **Build** — against the audit's primitives, in the project's stack.
++4. **Review** — run [`design-review`](../design-review/SKILL.md) before calling
++   it done, and scope the verdict honestly: render-scoped when you can render
++   it, otherwise explicitly static-scoped, naming which checks actually ran.
++   "Looks good" with neither scope named is a verdict without evidence.
++
++### The heuristics — here, not one hop away
++
++The load-bearing subset, inline so that "loaded" means the content is in
++context. Depth stays in [`references/design-patterns.md`](references/design-patterns.md).
++
++1. **Audit outranks heuristic.** A token, primitive or convention the audit
++   found wins over anything on this list; say `[audit override]` when it does.
++2. **Reuse tokens, never raw values.** A hex, font or px literal where the
++   audit found a token is off-brand by construction.
++3. **All five states are designed.** `empty` is a helpful message, not a blank
++   region; `loading` prefers a skeleton over a spinner (it shows structure, so
++   it reads as faster); `error` says what to do next.
++4. **Labels are always visible.** No placeholder-only inputs.
++5. **Validate on blur and on submit**, never on every keystroke; the message
++   goes below the field and is specific.
++6. **Mobile-first, and 320 px actually works.** Default styles are the small
++   viewport; complexity is added at larger breakpoints, never removed at
++   smaller ones.
++7. **A11y minimums are non-negotiable:** 4.5:1 contrast for text (3:1 large),
++   every interactive element reachable by Tab, a visible focus ring, semantic
++   elements over `div`, and an `aria-label` wherever there is no visible text.
++8. **Every action gets feedback.** Users read silence as failure.
++9. **Prefer undo over a confirmation dialog** — confirmations get clicked
++   through; an undo affordance actually protects the user.
++10. **Tables:** numbers right-aligned, text left-aligned, a designed empty
++    state, and a sticky header on anything long enough to scroll.
++11. **No placeholder microcopy ships.** Lorem ipsum, `TODO`, and
++    `[Your text here]` are unfinished output, not drafts.
++
++Before proposing a direction, run the anti-slop scan named under
++[Anti-slop discipline](#anti-slop-discipline) below.
++
++## Positioning — reference inside the engine, executor outside it
++
++Inside a `/implement-ticket` run, `fe-design` is a **universal reference
++skill**: it carries stack-agnostic heuristics the UI directive set cites, and
++it does not own the flow. The ownership table below applies **to that mode**.
++Outside the engine the table has no dispatcher behind it — the ad-hoc loop
++above is the owner instead.
++
++| Concern | Owner (engine-mediated runs) |
+ |---|---|
+ | Layout / states / microcopy lock | [`directives/ui/design.ts`](../../templates/scripts/work_engine/directives/ui/design.ts) |
+ | Stack-dispatched implementation | [`directives/ui/apply.ts`](../../templates/scripts/work_engine/directives/ui/apply.ts) → `blade-ui` / `livewire` / `flux` / `react-shadcn-ui` |
+@@ -37,12 +104,17 @@ Cite this skill when:
+ - Making responsive design decisions
+ - Reviewing UI for accessibility and usability
+ 
+-Do NOT use this skill to:
++**Inside a ticketed run**, do NOT use this skill to:
+ 
+ - Implement components — that is the apply-step's stack-dispatched skill
+ - Audit an existing UI — that is `existing-ui-audit`
+ - Drive the full UI flow — that is the `directives/ui/` orchestrator
+ 
++Outside a ticketed run, the first and third lines invert: no dispatcher is
++running, so implementation quality and the flow are yours. The second holds in
++both modes — the audit is always `existing-ui-audit`; you invoke it, you do not
++replace it.
++
+ > **Resource-first, before taste.** Any request to recreate / redesign / mock /
+ > prototype / improve an existing UI runs the
+ > [resource-first context gate](../existing-ui-audit/SKILL.md#resource-first-context-gate-design-fidelity)
+@@ -129,4 +201,4 @@ approach or explicitly invoke the override condition in the design brief.
+ - Do NOT skip mobile viewport testing.
+ - Do NOT use fixed pixel widths for responsive layouts.
+ - Do NOT ignore accessibility requirements.
+-- Do NOT use this skill as an executor — it is a reference cited by `directives/ui/design.ts`.
++- Do NOT use this skill as an executor INSIDE a ticketed run — there the executor is `directives/ui/design.ts` and this is the reference it cites. Outside one, the ad-hoc loop at the top of this file IS the executor; do NOT read the reference and then write the UI from priors.
+diff --git a/dist/agent-src/skills/fe-design/evals/triggers.json b/dist/agent-src/skills/fe-design/evals/triggers.json
+index f599c89685c198a597e044f41487bd56e372a46a..df19b616d15e5350d02f8fa8b6401c79d13a8a73 100644
+--- a/dist/agent-src/skills/fe-design/evals/triggers.json
++++ b/dist/agent-src/skills/fe-design/evals/triggers.json
+@@ -1,7 +1,7 @@
+ {
+     "skill": "fe-design",
+-    "last_eval": "2026-07-10",
+-    "description": "5 should-trigger + 5 should-not-trigger queries for the variation & canvas planning layer (road-to-design-artifact-fidelity Phase 4). Should-trigger covers exploration / variation planning and UI-design decisions where fe-design plans BEFORE generating (give me directions, explore, plan the flow, pattern choice). Should-not-trigger covers near-misses that must NOT invoke design planning: pure implementation of an already-selected design (apply-step), inventorying existing UI (existing-ui-audit), a surgical one-line edit, and non-UI/backend work.",
++    "last_eval": "2026-08-12",
++    "description": "Should-trigger covers BOTH halves of this skill's two modes: planning/exploration (give me directions, explore, plan the flow, pattern choice) AND — new — ad-hoc implementation, because outside a ticketed run no other artefact owns the design quality of a UI write. The implementation query used to be labelled should-not-trigger on the reasoning that it belongs to the apply step; that step only exists as a dispatch target inside the engine, so the label routed ad-hoc implementation prompts to nobody. Should-not-trigger keeps the genuine near-misses: inventorying existing UI (existing-ui-audit owns it in both modes), a ui-trivial one-line edit, and non-UI work.",
+     "queries": [
+         {
+             "q": "give me three directions for the pricing page",
+@@ -25,7 +25,15 @@
+         },
+         {
+             "q": "implement the selected checkout design in React exactly as approved",
+-            "trigger": false
++            "trigger": true
++        },
++        {
++            "q": "build the settings page",
++            "trigger": true
++        },
++        {
++            "q": "improve this form, it feels clunky",
++            "trigger": true
+         },
+         {
+             "q": "what form components do we already have in the codebase?",
+diff --git a/dist/agent-src/skills/subagent-orchestration/prompts/README.md b/dist/agent-src/skills/subagent-orchestration/prompts/README.md
+index 0745f50f567c606bb92b6780080ec8595356af53..78df735fc8616ced4a592b40aecb8b17d3dc820e 100644
+--- a/dist/agent-src/skills/subagent-orchestration/prompts/README.md
++++ b/dist/agent-src/skills/subagent-orchestration/prompts/README.md
+@@ -23,6 +23,35 @@ Every prompt cites the status taxonomy in
+ ends with the **return-envelope** instruction so the subagent's reply
+ validates against that schema.
+ 
++### UI-shaped slices carry the design context, or name its absence
++
++A delegated worker's context is whatever the dispatch prompt carries. For a
++slice that writes UI, that has a specific consequence: the audit findings and
++the design brief live in the orchestrator's context, and nothing moves them
++across the dispatch boundary on its own. A worker that receives "build the
++settings page" and nothing else will build it from priors — the same failure
++the design skills exist to prevent, one layer down.
++
++So a UI-shaped dispatch prompt carries, in its `CONTEXT FILES:` section:
++
++- the **audit findings** from `existing-ui-audit` (components, tokens, layout
++  conventions the project already has), and
++- the **design brief** — `layout`, `components`, `states`, `microcopy`, `a11y`,
++  with all five states covered.
++
++When either is genuinely absent, **say so in the prompt** rather than omitting
++it silently: `no audit findings available — run existing-ui-audit first`. A
++worker told the context is missing can ask for it; a worker told nothing
++assumes there was nothing to know.
++
++**This is model-carried, and the reason is worth stating.** An orchestration
++record carries `ts`, `spawn_count`, `token_delta`, `tier_chosen` and
++`task_class` — it has no field able to hold a prompt, deliberately, for the same
++privacy-by-construction reason the telemetry event has none. So no lint can join
++a dispatch prompt against its record to check this clause: the data a check
++would need does not exist and should not be made to exist. The obligation is
++stated here and carried by the orchestrator, not enforced.
++
+ ## Prompt-cache discipline
+ 
+ When dispatching sibling subagents (e.g. `do-in-parallel` with N independent
+diff --git a/dist/install/install.mjs b/dist/install/install.mjs
+index 05a21a19c9ce336cd8c132f530dcd3292df7f1ff..7274c9191f40469feb59d341b4cd54fee370b3f9 100755
+--- a/dist/install/install.mjs
++++ b/dist/install/install.mjs
+@@ -15062,6 +15062,11 @@ var settingsSchema = external_exports.object({
+         "PreToolUse anti-slop nudge (road-to-anti-slop-detector Phase 3). Default off. When on, runs the lint_design_slop registry against about-to-be-written UI content and WARNS (never blocks) on P0/P1 aesthetic tells (side-stripe, gradient-text, magic z-index, \u2026). Flags are rebuttable via DESIGN.md / design-slop-disable. Anti-loop: a file::rule signature surfaced 3x goes silent. Host-limited convenience layer; the universal gate is the lint_design_slop linter/CI."
+       )
+     }).default({}),
++    ui_route_nudge: external_exports.object({
++      enabled: external_exports.boolean().default(false).describe(
++        "PreToolUse UI-route nudge (road-to-frontend-skill-application Phase 4). Default off. When on, a Write/Edit to a UI surface with no design consultation latched this session WARNS (never blocks) naming the route \u2014 run existing-ui-audit, then the fe-design loop. A read or search touching fe-design / existing-ui-audit / design-review / design-intelligence latches consultation and silences it for the session. Anti-loop: at most 2 nudges per session. This is the first runtime consumer the two UI rules have ever had; it is a nudge, so their enforced_by: none stays accurate."
++      )
++    }).default({}),
+     code_graph: external_exports.object({
+       enabled: external_exports.boolean().default(false).describe(
+         "PreToolUse code-graph nudge (ADR-124 Phase 4). Default off. When on AND a native code-graph cache or a consumer-shipped graph.json/SCIP index is present, warns once per session (never blocks) as the agent is about to Grep/Glob or Read a source file \u2014 query the graph first for who-calls/where-used/impact questions (or rebuild if stale, build if absent). Source G\u2019s strict block-first-read mode is deliberately un-ported."
+diff --git a/src/config/agent-settings.template.yml b/src/config/agent-settings.template.yml
+index 24dc70162f026aedac0b1c3b4456b1c89388bbba..688f5719e4a2892ab06163f5b9ec5ce4cc83b057 100644
+--- a/src/config/agent-settings.template.yml
++++ b/src/config/agent-settings.template.yml
+@@ -1248,6 +1248,18 @@ hooks:
+   design_slop:
+     enabled: false
+ 
++  # PreToolUse UI-route nudge (road-to-frontend-skill-application Phase 4).
++  # Default-OFF. When enabled, a Write/Edit to a UI surface with no design
++  # consultation latched this session WARNS (exit 2, never blocks) naming the
++  # route: run existing-ui-audit, then the fe-design loop. A read or search
++  # touching fe-design / existing-ui-audit / design-review / design-intelligence
++  # latches consultation and silences it for the rest of the session, so the
++  # agent that did the right thing is never nagged. Anti-loop: at most 2 nudges
++  # per session. Host-limited (pre_tool_use fires on ~2-3 hosts) — elsewhere the
++  # obligation stays model-carried, exactly as the two UI rules declare.
++  ui_route_nudge:
++    enabled: false
++
+   # PreToolUse code-graph nudge (ADR-124 Phase 4). Default-OFF. When enabled
+   # AND a native code-graph engine has built a cache (or the repo ships a
+   # graph.json / SCIP index), WARNS once per session (exit 2, never blocks) as
+diff --git a/src/domains/engineering-base/README.md b/src/domains/engineering-base/README.md
+index 8b791ea33fcb1ac2201d2c0092bf242d8b30c967..df9d2344fc42d98407d09162e31c7dd5ce4469d7 100644
+--- a/src/domains/engineering-base/README.md
++++ b/src/domains/engineering-base/README.md
+@@ -77,7 +77,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
+ - **`error-handling-patterns`** — Use when picking a failure-reporting strategy — exceptions vs Result types, recoverable vs not, retry / circuit-breaker / graceful degradation — decision framework only, catalogues externalized.
+ - **`evaluate-llm-feature`** — Black-box evaluation of a shipped LLM feature — adversarial probes for hallucination, prompt-injection, and cost-runaway vs stated expectations. Not RAG/embedding. Triggers 'review my chatbot'.
+ - **`existing-ui-audit`** — Use BEFORE writing or editing any non-trivial UI — inventories components, design tokens, shadcn primitives, and reusable patterns into state.ui_audit. Hard gate for the ui directive set.
+-- **`fe-design`** — Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, responsive strategy, a11y, UX principles. Stack-agnostic; cited by directives/ui/design.ts.
++- **`fe-design`** — Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, build, review. Use when building or changing any UI, not only when planning one.
+ - **`finishing-a-development-branch`** — Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, routes to merge/PR/park/discard; never destroys work without explicit confirmation.
+ - **`form-handler`** — Use when designing or reviewing a form — validation timing, error display, submission lifecycle, optimistic UI, dirty/pristine state, idempotency — even on 'why does submit double-fire?'.
+ - **`frontend-render-security`** — Writing/reviewing client-side UI (React/Vue/vanilla) — insecure-render + client-trust gaps AI ships: XSS via innerHTML, client secrets, client-only auth, CORS wildcard, token in localStorage
+diff --git a/src/rules/design-review-after-ui-write.md b/src/rules/design-review-after-ui-write.md
+index 3a558f13eecff02277d19829ae84e346469ec4a9..cb6c585ee2d2ed44070c21cd7ef9893b45dea08f 100644
+--- a/src/rules/design-review-after-ui-write.md
++++ b/src/rules/design-review-after-ui-write.md
+@@ -6,6 +6,14 @@ description: "UI written or changed — review it against the design contract be
+ triggers:
+   - path_prefix: "resources/views/"
+   - path_prefix: "resources/js/"
++  - path_prefix: "components/"
++  - path_prefix: "src/components/"
++  - path_prefix: "pages/"
++  - file_pattern: "*.vue"
++  - file_pattern: "*.svelte"
++  - file_pattern: "*.tsx"
++  - file_pattern: "*.jsx"
++  - file_pattern: "*.blade.php"
+   - keyword: "component"
+   - keyword: "design token"
+ routes_to:
+@@ -87,18 +95,42 @@ enforcement. So this rule ships `enforced_by: none`, the same honesty boundary
+ for their own obligations, rather than pretending a satisfiable-by-assertion
+ condition is a gate.
+ 
++**A runtime carrier now exists, and it does not change that.** The
++`ui-route-nudge` PreToolUse concern is the first thing in the tree that ever
++consumed this rule's triggers at session time: on a UI write with no design
++consultation latched this session it emits one warning naming the route. It is
++warn-only, capped at two nudges per session, default-OFF, and bound only on
++hosts carrying a `pre_tool_use` slot. A nudge that can be ignored is not
++enforcement, so `enforced_by:` stays `none` — it moves the day a mechanism can
++refuse, not the day a reminder appears. `agent-config hooks:status` answers
++whether the concern is bound on the host you are actually on.
++
+ What that leaves, and it is the useful part: the write side now has a named
+ obligation and a route to the skill that discharges it, where before it had
+ neither. Full enforcement needs the work-engine `review`/`polish` gates (which
+ already act on `a11y_violation` and `token_violation` findings) or pack-scoped
+ rule projection — a maintainer decision, never an automated one.
+ 
+-One asymmetry worth stating: `design-review` lives in `engineering-base` while
+-this rule is scoped to `frontend-design`. The route still resolves — a rule may
+-name a skill from another pack — but a consumer with `frontend-design` and
+-without `engineering-base` gets the obligation without the skill. That is why
+-`accessibility-auditor` is a second route: it is the part of the review that
+-must not depend on the pairing.
++One asymmetry worth stating, in the direction it actually runs: `design-review`
++lives in `engineering-base` while this rule is scoped to `frontend-design`. The
++route still resolves — a rule may name a skill from another pack.
++
++The case this paragraph used to describe — `frontend-design` installed without
++`engineering-base`, so the obligation arrives without the skill — **cannot
++occur**: `frontend-design` declares `requires: [engineering-base]`, and the
++resolver expands that graph transitively. The real gap is the reverse and was
++undocumented: an **`engineering-base`-only** install (a plain `laravel` or
++`react` consumer, since both only *suggest* `frontend-design`) carries
++`existing-ui-audit`, `design-review` and `fe-design` while carrying **no rule
++that routes to them**. It bites only where pack-scoped rule projection is
++active — `rules.packs` ships inactive, so a default install still receives both
++rules — which makes it a latent defect rather than a live one, and exactly the
++kind that surfaces the day the projection axis is switched on.
++
++`lint_rule_skill_pack_reach` is the invariant that keeps this honest: no rule
++may route to a skill a pack-legal install of that rule's packs cannot receive.
++`accessibility-auditor` remains a second route for the independent reason that
++the a11y half of the review should not depend on the pairing at all.
+ 
+ ## Failure modes
+ 
+diff --git a/src/rules/ui-audit-gate.md b/src/rules/ui-audit-gate.md
+index bbf1366c5701f46eb1c72d11a10c4bc48870e6a3..34a725c11927565d5e45e4e13f2716d9331c03b9 100644
+--- a/src/rules/ui-audit-gate.md
++++ b/src/rules/ui-audit-gate.md
+@@ -6,6 +6,14 @@ description: "Writing/editing UI — components, screens, layouts, design tokens
+ triggers:
+   - path_prefix: "resources/views/"
+   - path_prefix: "resources/js/"
++  - path_prefix: "components/"
++  - path_prefix: "src/components/"
++  - path_prefix: "pages/"
++  - file_pattern: "*.vue"
++  - file_pattern: "*.svelte"
++  - file_pattern: "*.tsx"
++  - file_pattern: "*.jsx"
++  - file_pattern: "*.blade.php"
+   - keyword: "component"
+   - keyword: "design token"
+ routes_to:
+@@ -91,6 +99,14 @@ Full enforcement requires the dispatcher (or the `frontend-design` pack once
+ pack-scoped rule projection is enabled; that flip is a maintainer decision,
+ never an automated one).
+ 
++**A runtime carrier now exists, and it does not change the verdict.** The
++`ui-route-nudge` PreToolUse concern reads this rule's triggers at session time —
++the first consumer they have had — and warns once on a UI write with no design
++consultation latched. Warn-only, capped at two per session, default-OFF, bound
++only where a `pre_tool_use` slot exists. A reminder that can be ignored is not
++a gate, so `enforced_by:` stays `none`. Run `agent-config hooks:status` for the
++host you are on rather than trusting this sentence.
++
+ ## Failure modes
+ 
+ - Writing the component first and "thinking about reuse later".
+diff --git a/src/scripts/_lib/hook_settings.ts b/src/scripts/_lib/hook_settings.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..fb40b350290a76250ff7b9d625a22e197e4d641f
+--- /dev/null
++++ b/src/scripts/_lib/hook_settings.ts
+@@ -0,0 +1,68 @@
++/**
++ * hook_settings — read a `hooks.<section>.enabled` flag out of
++ * `.agent-settings.yml` without dragging a YAML parser into a hook.
++ *
++ * Every default-OFF hook needs the same two-level lookup, and the tree already
++ * carries two hand-rolled copies of it (`code_graph_nudge_hook.enabled` and the
++ * equivalent inside `design_slop_hook`). Adding a third copy for the route
++ * nudge is what this file prevents; the two existing copies are pre-existing
++ * duplication and are deliberately left alone — folding them in is a separate,
++ * behaviour-neutral change, not something to smuggle into a feature diff.
++ *
++ * Fail-closed on the flag, fail-open on the read: an unreadable or malformed
++ * settings file returns `false`, which keeps a default-OFF hook off. A hook
++ * that turned itself ON because it could not read a file would be the worst
++ * possible failure mode for an opt-in nudge.
++ */
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++
++const SETTINGS_FILE = '.agent-settings.yml';
++
++/**
++ * True when `.agent-settings.yml` under `root` carries
++ * `hooks:\n  <section>:\n    enabled: true`.
++ *
++ * Deliberately indentation-shaped rather than a real parse: the same shape the
++ * existing hooks rely on, and a hook must never fail a tool call because a
++ * dependency could not load.
++ */
++export function hookSectionEnabled(root: string, section: string): boolean {
++    const file = path.join(root, SETTINGS_FILE);
++    let text: string;
++    try {
++        if (!fs.statSync(file).isFile()) return false;
++        text = fs.readFileSync(file, 'utf-8');
++    } catch {
++        return false;
++    }
++
++    const sectionPattern = new RegExp(`^\\s+${section.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:\\s*$`);
++    let inHooks = false;
++    let inSection = false;
++
++    for (const raw of text.split(/\r\n|\r|\n/)) {
++        const line = raw.replace(/\s+$/, '');
++        if (!line || line.replace(/^\s+/, '').startsWith('#')) continue;
++
++        // A non-indented line closes both scopes and may open `hooks:`.
++        if (!(line.startsWith(' ') || line.startsWith('\t'))) {
++            inHooks = /^hooks\s*:\s*$/.test(line);
++            inSection = false;
++            continue;
++        }
++
++        if (inHooks) {
++            if (sectionPattern.test(line)) {
++                inSection = true;
++                continue;
++            }
++            // A sibling key at the section's own depth closes the section.
++            if (inSection && /^\s{0,3}\S/.test(line)) inSection = false;
++        }
++
++        if (inSection && /^\s+enabled\s*:\s*true\b/.test(line)) return true;
++    }
++
++    return false;
++}
+diff --git a/src/scripts/_lib/ui_surface.ts b/src/scripts/_lib/ui_surface.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..9b42adfd1ec789523b6893a01934fff6927824ff
+--- /dev/null
++++ b/src/scripts/_lib/ui_surface.ts
+@@ -0,0 +1,77 @@
++/**
++ * ui_surface — the ONE definition of "this path is a UI surface".
++ *
++ * Three consumers need the same answer and were about to disagree about it:
++ * the anti-slop PreToolUse hook (which had the only copy), the UI-turn
++ * definition the catalogue analyzer counts against, and the route nudge.
++ * A UI-turn rate measured against one extension set and a nudge fired against
++ * another would produce a consultation rate that no fix could ever move,
++ * because the denominator and the trigger would be different populations.
++ *
++ * `.blade.php` is deliberately part of the set and was absent from the hook's
++ * original regex: a two-part extension does not match a `\.(…)$` alternation,
++ * so every Blade template — the single largest UI surface in a Laravel
++ * consumer — read as a non-UI file. That is why `isUiPath` matches on the
++ * path tail rather than on `path.extname`, which returns `.php` for
++ * `page.blade.php` and would silently reproduce the same hole.
++ */
++
++/** Single-segment UI extensions, without the leading dot. */
++export const UI_EXTENSIONS = [
++    'html',
++    'htm',
++    'css',
++    'scss',
++    'sass',
++    'less',
++    'vue',
++    'svelte',
++    'astro',
++    'jsx',
++    'tsx',
++] as const;
++
++/**
++ * Multi-segment UI suffixes. These cannot be expressed as an extension
++ * alternation — `path.extname('x.blade.php')` is `.php`.
++ */
++export const UI_COMPOUND_SUFFIXES = ['.blade.php'] as const;
++
++/** Equivalent to the historical hook regex, plus the compound suffixes. */
++export const UI_EXT = new RegExp(
++    `(\\.(${UI_EXTENSIONS.join('|')})|${UI_COMPOUND_SUFFIXES.map((s) => s.replace(/\./g, '\\.')).join('|')})$`,
++    'i',
++);
++
++/** True when `p` names a file on a UI surface. Case-insensitive. */
++export function isUiPath(p: string): boolean {
++    return UI_EXT.test(p);
++}
++
++/**
++ * Directory fragments that mark a UI tree across frameworks. The two UI rules
++ * carried only the Laravel pair (`resources/views/`, `resources/js/`), so a
++ * React, Vue, Next or Svelte consumer writing to `src/components/` matched no
++ * path trigger at all. Kept as fragments, not anchored prefixes: a consumer's
++ * UI tree is rarely at the repo root.
++ *
++ * `app/` is deliberately NOT in this list although it is the Next.js router
++ * directory. In a Laravel consumer `app/` is the entire backend, so the
++ * fragment would fire on every controller, model and job — a trigger that
++ * over-fires on the largest directory of a whole ecosystem is worse than the
++ * gap it closes. Next.js route files are caught by extension instead
++ * (`page.tsx`, `layout.tsx` match `isUiPath`), which is the precise signal.
++ */
++export const UI_PATH_FRAGMENTS = [
++    'resources/views/',
++    'resources/js/',
++    'components/',
++    'src/components/',
++    'pages/',
++] as const;
++
++/** True when `p` sits inside a conventional UI tree. */
++export function isUiTreePath(p: string): boolean {
++    const normalized = p.replace(/\\/g, '/').toLowerCase();
++    return UI_PATH_FRAGMENTS.some((fragment) => normalized.includes(fragment));
++}
+diff --git a/src/scripts/capture_skill_catalogue.ts b/src/scripts/capture_skill_catalogue.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..0e99421f2698469972854caba79d70c7b28be253
+--- /dev/null
++++ b/src/scripts/capture_skill_catalogue.ts
+@@ -0,0 +1,449 @@
++#!/usr/bin/env tsx
++/**
++ * capture_skill_catalogue — make the skill-catalogue delivery defect countable.
++ *
++ * THE HOST BOUNDARY, STATED FIRST BECAUSE IT DECIDES THE SHAPE OF THIS TOOL.
++ * The round-6 census asked for a `session_start` concern that logs the injected
++ * catalogue block. A concern cannot do that. The dispatcher envelope carries
++ * `session_id`, `source`, `cwd`, `transcript_path` — the injected catalogue is
++ * part of the request's system payload, and `preamble_byte_census.ts` already
++ * verified independently that no local transcript or file carries it. A hook
++ * that "captures the catalogue" would therefore be capturing something else and
++ * reporting it under that name, which is worse than not measuring.
++ *
++ * So the capture is deliberately two-sided, and each side is labelled with what
++ * it actually is:
++ *
++ *   PROJECTION (deterministic) — what the projected skill tree offers the host:
++ *   per entry, whether a `description:` exists, how long it is, which
++ *   frontmatter keys it carries, and its position in the sorted catalogue. This
++ *   is the host's INPUT and it is fully file-measurable.
++ *
++ *   OBSERVATION (self-reported) — which entries actually arrived as bare names
++ *   in a live session. Only the agent reading its own context can see this, so
++ *   it is supplied as a file and recorded AS a self-report. It is not
++ *   enforcement and nothing here pretends otherwise.
++ *
++ * The join of the two answers the question the census could not: not "how many
++ * are bare" but WHICH PROPERTY separates bare from described. That is the
++ * selector, and it is what a delivery fix has to act on. A positional
++ * head-N hypothesis is one candidate among several and this tool is built to
++ * falsify it rather than assume it — the first observation recorded against
++ * this repo showed entries far past position 40 carrying full descriptions
++ * while an earlier one was bare, which no head-N budget explains.
++ *
++ * PRIVACY BY CONSTRUCTION. An observation record carries skill names, integer
++ * counts and a host label. The record type has no field able to hold prompt
++ * text, file bodies, paths outside the catalogue, or user content — the same
++ * shape `domain-safety-pii` § Surface 2 requires of a log event. Do not widen
++ * it with a free-form field.
++ *
++ * Exit codes: 0 report produced · 1 usage/IO error or an empty catalogue root
++ * (a catalogue scan that found nothing must never read as a clean result).
++ */
++
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++const _HERE = fileURLToPath(import.meta.url);
++const REPO = path.resolve(path.dirname(_HERE), '..', '..');
++
++/** Catalogue roots tried in order; the first that exists wins. */
++export const DEFAULT_CATALOGUE_ROOTS = ['.claude/skills', 'src/skills'] as const;
++
++/** Where observations accumulate. Append-only, one JSON object per line. */
++export const OBSERVATION_LOG = path.join(
++    'agents',
++    'evidence',
++    'metrics',
++    'skill-catalogue.jsonl',
++);
++
++export interface CatalogueEntry {
++    /** Skill directory name — the identifier the host lists. */
++    name: string;
++    /** 1-based position in the alphabetically sorted catalogue. */
++    position: number;
++    /** Whether the projected SKILL.md declares a `description:`. */
++    hasDescription: boolean;
++    /** Character length of the declared description; 0 when absent. */
++    descriptionLength: number;
++    /** Top-level frontmatter keys the entry declares. */
++    frontmatterKeys: string[];
++}
++
++export interface SelectorCandidate {
++    /** Stable identifier for the property under test. */
++    id: string;
++    /** Human-readable statement of what the property is. */
++    describes: string;
++    /** True when the property's values are disjoint across the two groups. */
++    separates: boolean;
++    /** Why it does or does not separate, in one line. */
++    detail: string;
++}
++
++export interface SelectorReport {
++    catalogueRoot: string;
++    entriesTotal: number;
++    observedBare: string[];
++    observedDescribed: string[];
++    /** Observed names that the projection does not know. */
++    unknownObserved: string[];
++    candidates: SelectorCandidate[];
++    verdict: 'selector-found' | 'no-selector' | 'insufficient-observation';
++}
++
++/** Frontmatter block between the leading `---` fences, or "" when absent. */
++function frontmatterOf(content: string): string {
++    if (!content.startsWith('---')) return '';
++    const end = content.indexOf('\n---', 3);
++    if (end === -1) return '';
++    return content.slice(3, end);
++}
++
++/**
++ * Top-level keys of a frontmatter block. Deliberately shallow: a nested key is
++ * not a property the host's catalogue selector could plausibly read, and a full
++ * YAML parse would drag a dependency into a measurement tool.
++ */
++function topLevelKeys(frontmatter: string): string[] {
++    const keys: string[] = [];
++    for (const line of frontmatter.split('\n')) {
++        const match = /^([A-Za-z_][A-Za-z0-9_-]*):/.exec(line);
++        if (match) keys.push(match[1]!);
++    }
++    return keys;
++}
++
++/** The declared description with surrounding quotes stripped, or "". */
++function descriptionOf(frontmatter: string): string {
++    for (const line of frontmatter.split('\n')) {
++        const match = /^description:\s*(.*)$/.exec(line);
++        if (!match) continue;
++        return match[1]!.trim().replace(/^["']|["']$/g, '');
++    }
++    return '';
++}
++
++/**
++ * Read every `<root>/<name>/SKILL.md` into a catalogue entry, sorted by name —
++ * the order a host listing follows and therefore the order a positional
++ * hypothesis is measured against.
++ */
++export function readProjectedCatalogue(root: string): CatalogueEntry[] {
++    // Membership is decided by "does <name>/SKILL.md resolve", never by
++    // `Dirent.isDirectory()`. The host-facing projection is a tree of SYMLINKS
++    // into `dist/agent-src/skills/`, and a Dirent for a symlink reports
++    // `isDirectory() === false` — that filter silently read 47 of 289 entries
++    // and reported the result as a complete catalogue. `existsSync` follows
++    // the link, so the scan sees what the host sees.
++    const names = fs
++        .readdirSync(root)
++        .filter((n) => fs.existsSync(path.join(root, n, 'SKILL.md')))
++        .sort();
++
++    return names.map((name, index) => {
++        const content = fs.readFileSync(path.join(root, name, 'SKILL.md'), 'utf-8');
++        const frontmatter = frontmatterOf(content);
++        const description = descriptionOf(frontmatter);
++        return {
++            name,
++            position: index + 1,
++            hasDescription: description.length > 0,
++            descriptionLength: description.length,
++            frontmatterKeys: topLevelKeys(frontmatter),
++        };
++    });
++}
++
++/** True when two number sets occupy disjoint ranges in either direction. */
++function rangesAreDisjoint(a: number[], b: number[]): boolean {
++    if (a.length === 0 || b.length === 0) return false;
++    const maxA = Math.max(...a);
++    const minA = Math.min(...a);
++    const maxB = Math.max(...b);
++    const minB = Math.min(...b);
++    return maxA < minB || maxB < minA;
++}
++
++/**
++ * Join the projection against an observation and report which property, if
++ * any, separates the bare entries from the described ones.
++ *
++ * `observedBare` is the list of entries a live session saw without a
++ * description. Everything else in the projection is treated as observed
++ * described, which is the honest reading of a whole-catalogue observation —
++ * a partial observation would need its own described list, so the caller
++ * passes one when it has it.
++ */
++export function analyzeSelector(
++    projected: CatalogueEntry[],
++    observedBare: readonly string[],
++    observedDescribed?: readonly string[],
++): Omit<SelectorReport, 'catalogueRoot'> {
++    const known = new Map(projected.map((e) => [e.name, e]));
++    const unknownObserved = observedBare.filter((n) => !known.has(n)).sort();
++    const bare = observedBare.filter((n) => known.has(n));
++    const described = (
++        observedDescribed ?? projected.map((e) => e.name).filter((n) => !bare.includes(n))
++    ).filter((n) => known.has(n));
++
++    const base = {
++        entriesTotal: projected.length,
++        observedBare: [...bare].sort(),
++        observedDescribed: [...described].sort(),
++        unknownObserved,
++    };
++
++    if (bare.length === 0 || described.length === 0) {
++        return {
++            ...base,
++            candidates: [],
++            verdict: 'insufficient-observation' as const,
++        };
++    }
++
++    const bareEntries = bare.map((n) => known.get(n)!);
++    const describedEntries = described.map((n) => known.get(n)!);
++    const candidates: SelectorCandidate[] = [];
++
++    // 1. The projection itself — does the entry even declare a description?
++    const bareWithDesc = bareEntries.filter((e) => e.hasDescription).length;
++    const describedWithoutDesc = describedEntries.filter((e) => !e.hasDescription).length;
++    candidates.push({
++        id: 'declares-description',
++        describes: 'the projected SKILL.md declares a `description:`',
++        separates: bareWithDesc === 0 && describedWithoutDesc === 0,
++        detail: `${bareWithDesc}/${bareEntries.length} bare entries declare one; ${describedWithoutDesc}/${describedEntries.length} described entries do not`,
++    });
++
++    // 2. The head-N hypothesis the census proposed — falsifiable here.
++    const barePositions = bareEntries.map((e) => e.position);
++    const describedPositions = describedEntries.map((e) => e.position);
++    const positional = Math.max(...describedPositions) < Math.min(...barePositions);
++    candidates.push({
++        id: 'positional-head',
++        describes: 'every described entry sorts before every bare entry (a head-N budget)',
++        separates: positional,
++        detail: positional
++            ? `described top out at #${Math.max(...describedPositions)}, bare start at #${Math.min(...barePositions)}`
++            : `described reach #${Math.max(...describedPositions)} while bare start at #${Math.min(...barePositions)} — the ranges overlap, so no head-N cut explains this`,
++    });
++
++    // 3. Description length as a budget proxy.
++    const lengthSeparates = rangesAreDisjoint(
++        bareEntries.map((e) => e.descriptionLength),
++        describedEntries.map((e) => e.descriptionLength),
++    );
++    candidates.push({
++        id: 'description-length',
++        describes: 'description length ranges do not overlap between the groups',
++        separates: lengthSeparates,
++        detail: lengthSeparates
++            ? 'a length threshold separates the two groups'
++            : 'length ranges overlap',
++    });
++
++    // 4. Any frontmatter key whose presence tracks the split exactly.
++    const allKeys = new Set<string>();
++    for (const entry of projected) for (const key of entry.frontmatterKeys) allKeys.add(key);
++    for (const key of [...allKeys].sort()) {
++        const bareHas = bareEntries.filter((e) => e.frontmatterKeys.includes(key)).length;
++        const describedHas = describedEntries.filter((e) =>
++            e.frontmatterKeys.includes(key),
++        ).length;
++        const separates =
++            (bareHas === 0 && describedHas === describedEntries.length) ||
++            (describedHas === 0 && bareHas === bareEntries.length);
++        if (!separates) continue;
++        candidates.push({
++            id: `frontmatter:${key}`,
++            describes: `presence of the \`${key}:\` frontmatter key`,
++            separates: true,
++            detail: `bare ${bareHas}/${bareEntries.length}, described ${describedHas}/${describedEntries.length}`,
++        });
++    }
++
++    return {
++        ...base,
++        candidates,
++        verdict: candidates.some((c) => c.separates)
++            ? ('selector-found' as const)
++            : ('no-selector' as const),
++    };
++}
++
++/** One append-only observation record. No field can hold free-form content. */
++export interface ObservationRecord {
++    schema: 1;
++    observed_at: string;
++    host: string;
++    entries_total: number;
++    bare_count: number;
++    described_count: number;
++    bare_names: string[];
++    verdict: SelectorReport['verdict'];
++    separating_candidates: string[];
++}
++
++export function buildObservationRecord(
++    report: SelectorReport,
++    host: string,
++    observedAt: string,
++): ObservationRecord {
++    return {
++        schema: 1,
++        observed_at: observedAt,
++        host,
++        entries_total: report.entriesTotal,
++        bare_count: report.observedBare.length,
++        described_count: report.observedDescribed.length,
++        bare_names: report.observedBare,
++        verdict: report.verdict,
++        separating_candidates: report.candidates.filter((c) => c.separates).map((c) => c.id),
++    };
++}
++
++export function formatReport(report: SelectorReport): string {
++    const lines: string[] = [];
++    lines.push(`catalogue root: ${report.catalogueRoot}`);
++    lines.push(`entries: ${report.entriesTotal}`);
++    lines.push(
++        `observed: ${report.observedBare.length} bare · ${report.observedDescribed.length} described (self-reported)`,
++    );
++    if (report.unknownObserved.length > 0) {
++        lines.push(
++            `⚠️  ${report.unknownObserved.length} observed name(s) absent from the projection: ${report.unknownObserved.join(', ')}`,
++        );
++    }
++    if (report.verdict === 'insufficient-observation') {
++        lines.push('');
++        lines.push(
++            'verdict: insufficient-observation — an observation needs at least one bare AND one described entry to separate anything.',
++        );
++        return lines.join('\n');
++    }
++    lines.push('');
++    lines.push('selector candidates:');
++    for (const candidate of report.candidates) {
++        lines.push(`  ${candidate.separates ? '✅' : '❌'} ${candidate.id} — ${candidate.describes}`);
++        lines.push(`     ${candidate.detail}`);
++    }
++    lines.push('');
++    lines.push(
++        report.verdict === 'selector-found'
++            ? 'verdict: selector-found — a delivery fix can act on the separating property above.'
++            : 'verdict: no-selector — no measured property separates the groups; the selector is host-internal on this evidence. Publish the null rather than guessing a fix.',
++    );
++    return lines.join('\n');
++}
++
++function resolveCatalogueRoot(explicit: string | null): string {
++    if (explicit) {
++        if (!fs.existsSync(explicit)) {
++            throw new Error(`catalogue root does not exist: ${explicit}`);
++        }
++        return explicit;
++    }
++    for (const candidate of DEFAULT_CATALOGUE_ROOTS) {
++        const abs = path.join(REPO, candidate);
++        if (fs.existsSync(abs)) return abs;
++    }
++    throw new Error(
++        `no catalogue root found — tried ${DEFAULT_CATALOGUE_ROOTS.join(', ')} under ${REPO}`,
++    );
++}
++
++function argValue(flag: string): string | null {
++    const index = process.argv.indexOf(flag);
++    if (index === -1 || index + 1 >= process.argv.length) return null;
++    return process.argv[index + 1]!;
++}
++
++function main(): number {
++    const root = resolveCatalogueRoot(argValue('--catalogue-root'));
++    const projected = readProjectedCatalogue(root);
++
++    if (projected.length === 0) {
++        process.stderr.write(
++            `❌  catalogue root ${root} holds no SKILL.md entries — a scan that found nothing is not a clean result\n`,
++        );
++        return 1;
++    }
++
++    const observedPath = argValue('--observed');
++    if (!observedPath) {
++        // Projection-only mode: the deterministic half, for a baseline snapshot.
++        const withDescription = projected.filter((e) => e.hasDescription).length;
++        const payload = {
++            catalogue_root: path.relative(REPO, root) || root,
++            entries_total: projected.length,
++            declares_description: withDescription,
++            declares_none: projected.length - withDescription,
++        };
++        if (process.argv.includes('--json')) {
++            process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
++        } else {
++            process.stdout.write(
++                `catalogue root: ${payload.catalogue_root}\nentries: ${payload.entries_total}\ndeclares a description: ${payload.declares_description}\ndeclares none: ${payload.declares_none}\n\nThis is the PROJECTION half only — what the host is offered. Which entries actually\narrived bare is a live-session observation; pass it with --observed <file>.\n`,
++            );
++        }
++        return 0;
++    }
++
++    const readNames = (p: string): string[] =>
++        fs
++            .readFileSync(p, 'utf-8')
++            .split('\n')
++            .map((l) => l.trim())
++            .filter((l) => l.length > 0 && !l.startsWith('#'));
++
++    const observedBare = readNames(observedPath);
++
++    // A PARTIAL observation must supply both lists. Without `--described` the
++    // analyzer treats every non-bare entry as observed-described, which is only
++    // true of a whole-catalogue read; on a partial one it would silently invent
++    // hundreds of observations nobody made.
++    const describedPath = argValue('--described');
++    const observedDescribed = describedPath ? readNames(describedPath) : undefined;
++
++    const report: SelectorReport = {
++        catalogueRoot: path.relative(REPO, root) || root,
++        ...analyzeSelector(projected, observedBare, observedDescribed),
++    };
++
++    if (process.argv.includes('--json')) {
++        process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
++    } else {
++        process.stdout.write(`${formatReport(report)}\n`);
++    }
++
++    const host = argValue('--host') ?? 'unknown';
++    const stampedAt = argValue('--observed-at');
++    if (process.argv.includes('--record')) {
++        if (!stampedAt) {
++            process.stderr.write('❌  --record requires --observed-at <ISO date>\n');
++            return 1;
++        }
++        const logPath = path.join(REPO, OBSERVATION_LOG);
++        fs.mkdirSync(path.dirname(logPath), { recursive: true });
++        fs.appendFileSync(
++            logPath,
++            `${JSON.stringify(buildObservationRecord(report, host, stampedAt))}\n`,
++        );
++        process.stdout.write(`\nrecorded → ${OBSERVATION_LOG}\n`);
++    }
++
++    return 0;
++}
++
++if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(_HERE)) {
++    try {
++        process.exit(main());
++    } catch (error) {
++        process.stderr.write(`❌  ${(error as Error).message}\n`);
++        process.exit(1);
++    }
++}
+diff --git a/src/scripts/hook_manifest.yaml b/src/scripts/hook_manifest.yaml
+index 808e91592c028a25fbfd53a60e9f2a595f0a7189..2cc0ce2f8371da6891decc58961ebaea2a1bcb7c 100644
+--- a/src/scripts/hook_manifest.yaml
++++ b/src/scripts/hook_manifest.yaml
+@@ -152,6 +152,19 @@ concerns:
+     args: []
+     fail_closed: false
+     severity: advisory
++  # road-to-frontend-skill-application Phase 4 — OPTIONAL PreToolUse UI-route
++  # nudge. On a Write/Edit to a UI surface with no design consultation latched
++  # this session, WARNS (exit 2) naming the route; a read or search touching a
++  # design surface latches consultation and silences it. Anti-loop: at most 2
++  # nudges per session. The first runtime consumer the two UI rules' triggers
++  # have had — still a nudge, never a block, so "enforced_by: none" on those
++  # rules stays honest. Default-OFF (hooks.ui_route_nudge.enabled).
++  # fail_closed: false.
++  ui-route-nudge:
++    script: src/scripts/hooks/ui_route_nudge_hook.ts
++    args: []
++    fail_closed: false
++    severity: advisory
+   # ADR-124 Phase 4 — OPTIONAL PreToolUse code-graph nudge. When a code-graph
+   # source is present and the agent is about to search/read source, WARNS
+   # (exit 2) once per session to query the graph first (or rebuild if stale,
+@@ -528,7 +541,7 @@ platforms:
+     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+     session_end:      [chat-history, memory-learn, session-register]
+     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register]
+-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge, reread-guard]
++    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, reread-guard]
+     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
+ 
+   claude:
+@@ -536,7 +549,7 @@ platforms:
+     session_end:      [chat-history, memory-learn, session-register]
+     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, git-authorization, session-canary, self-repair, session-register]
+-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge, reread-guard]
++    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, reread-guard]
+     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape, language-mirror]
+     # round-5 § 6.1 — the ONLY binding on this slot in the tree. `pre_compact`
+     # sets a pin-lost marker; the `post_tool_use` entry above re-emits the pin
+@@ -575,7 +588,7 @@ platforms:
+     # still costs the dispatch, and its entire output is thrown away.
+     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge, reread-guard]
++    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, reread-guard]
+     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
+ 
+   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
+diff --git a/src/scripts/hooks/concern_registry.ts b/src/scripts/hooks/concern_registry.ts
+index fcba83bd30111257a0cdb7cddb77c8341b3185bf..f94e62942c44e1017fa9a61ba3557bafeff416ba 100644
+--- a/src/scripts/hooks/concern_registry.ts
++++ b/src/scripts/hooks/concern_registry.ts
+@@ -54,6 +54,7 @@ import { main as blockConfigWeakeningMain } from './block_config_weakening.js';
+ import { main as rtkWrapMain } from './rtk_wrap_hook.js';
+ import { main as designSlopMain } from './design_slop_hook.js';
+ import { main as codeGraphNudgeMain } from './code_graph_nudge_hook.js';
++import { main as uiRouteNudgeMain } from './ui_route_nudge_hook.js';
+ import { main as orchestrationRecordMain } from './orchestration_record_hook.js';
+ import { main as delegationNudgeMain } from './delegation_nudge_hook.js';
+ import { main as endReviewNudgeMain } from './end_review_nudge_hook.js';
+@@ -97,6 +98,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
+     'src/scripts/hooks/rtk_wrap_hook.ts': rtkWrapMain as ConcernMain,
+     'src/scripts/hooks/design_slop_hook.ts': designSlopMain as ConcernMain,
+     'src/scripts/hooks/code_graph_nudge_hook.ts': codeGraphNudgeMain as ConcernMain,
++    'src/scripts/hooks/ui_route_nudge_hook.ts': uiRouteNudgeMain as ConcernMain,
+     'src/scripts/hooks/orchestration_record_hook.ts': orchestrationRecordMain as ConcernMain,
+     'src/scripts/hooks/delegation_nudge_hook.ts': delegationNudgeMain as ConcernMain,
+     'src/scripts/hooks/end_review_nudge_hook.ts': endReviewNudgeMain as ConcernMain,
+diff --git a/src/scripts/hooks/design_slop_hook.ts b/src/scripts/hooks/design_slop_hook.ts
+index 78b26e67d35d5b5762c23c4e5a1bcc2d3dac7439..e297eabad07ccd079f96ff5d2bde045607ebaa3c 100644
+--- a/src/scripts/hooks/design_slop_hook.ts
++++ b/src/scripts/hooks/design_slop_hook.ts
+@@ -23,6 +23,7 @@ import fs from "node:fs";
+ import path from "node:path";
+ import { fileURLToPath, pathToFileURL } from "node:url";
+ import { type DesignContext } from "../design_slop_rules.js";
++import { UI_EXT } from "../_lib/ui_surface.js";
+ import { loadDesignContext, scanFile } from "../lint_design_slop.js";
+ import { readHookStdin } from "./hook_stdin.js";
+ 
+@@ -30,7 +31,6 @@ const SETTINGS_FILE = ".agent-settings.yml";
+ const EXIT_ALLOW = 0;
+ const EXIT_WARN = 2;
+ const DEGRADE_AFTER = 3; // surfaces of the same file::rule signature before going silent
+-const UI_EXT = /\.(html|htm|css|scss|sass|less|vue|svelte|astro|jsx|tsx)$/i;
+ 
+ type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
+ type JsonObject = { [k: string]: JsonValue };
+diff --git a/src/scripts/hooks/ui_route_nudge_hook.ts b/src/scripts/hooks/ui_route_nudge_hook.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..23db62484c767614b35920a515fb9f565d8364ad
+--- /dev/null
++++ b/src/scripts/hooks/ui_route_nudge_hook.ts
+@@ -0,0 +1,214 @@
++#!/usr/bin/env tsx
++/**
++ * PreToolUse UI-route nudge — deterministic, warn-only, default-OFF.
++ *
++ * The two UI rules have `enforced_by: none` and say so honestly: nothing
++ * observes whether a UI write consulted the design surface first. This is the
++ * first runtime consumer those rules' triggers have ever had — and it is a
++ * nudge, not a gate. It never blocks (dispatcher contract: 0 allow · 2 warn),
++ * because the obligation it points at is a judgement call and a block on a
++ * judgement call trades an ignore-problem for a friction-problem.
++ *
++ * WHAT IT OBSERVES, WHICH IS ALSO THE MEASUREMENT.
++ * Every PreToolUse event passes through here. A read or search touching a
++ * design surface (`fe-design`, `existing-ui-audit`, `design-review`,
++ * `design-intelligence`) latches "consulted" for the session. A Write or Edit
++ * to a UI path with no such latch is the case the nudge exists for. That latch
++ * is exactly the consultation signal the pre-registered consultation rate
++ * counts, so the nudge and the metric read the same event stream rather than
++ * two populations that could drift apart.
++ *
++ * ANTI-LOOP. At most `MAX_NUDGES` per session, then silent — the same
++ * degradation valve `design_slop_hook` carries, for the same reason: an agent
++ * that has decided to proceed must not be re-prompted into a loop.
++ *
++ * HOST BOUNDARY, STATED RATHER THAN IMPLIED. `pre_tool_use` exists on three
++ * hosts. Everywhere else this concern has nowhere to bind and the obligation
++ * stays model-carried, exactly as the two rules already declare. Run
++ * `agent-config hooks:status` for the host you are actually on.
++ *
++ * Default-OFF: no-ops unless `hooks.ui_route_nudge.enabled: true`.
++ * fail_closed: false — any error returns allow.
++ */
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import { hookSectionEnabled } from '../_lib/hook_settings.js';
++import { isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
++import { readHookStdin } from './hook_stdin.js';
++
++const EXIT_ALLOW = 0;
++const EXIT_WARN = 2;
++/** Nudges per session before the valve goes silent. */
++export const MAX_NUDGES = 2;
++
++/** Reads or searches that count as consulting the design surface. */
++export const DESIGN_SURFACES = [
++    'fe-design',
++    'existing-ui-audit',
++    'design-review',
++    'design-intelligence',
++] as const;
++
++type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
++type JsonObject = { [k: string]: JsonValue };
++
++function isObject(v: unknown): v is JsonObject {
++    return typeof v === 'object' && v !== null && !Array.isArray(v);
++}
++
++function unwrap(envelope: JsonObject): JsonObject {
++    const inner = envelope['payload'];
++    return isObject(inner) ? inner : envelope;
++}
++
++export interface ToolEvent {
++    /** Path the tool touches; "" when the tool names none. */
++    file: string;
++    /** True when the tool proposes new content (Write / Edit). */
++    isWrite: boolean;
++    /** Free-text the tool carries (a grep pattern, a glob). */
++    query: string;
++}
++
++/** Best-effort extraction; mirrors the shape `design_slop_hook` reads. */
++export function extractEvent(outer: JsonObject): ToolEvent | null {
++    const envelope = unwrap(outer);
++    const ti = envelope['tool_input'] ?? envelope['toolInput'] ?? envelope['input'];
++    if (!isObject(ti)) return null;
++
++    const fileVal = ti['file_path'] ?? ti['path'] ?? ti['filePath'];
++    const file = typeof fileVal === 'string' ? fileVal : '';
++
++    let isWrite = false;
++    for (const key of ['content', 'new_string', 'new_str', 'text', 'newText']) {
++        if (typeof ti[key] === 'string' && (ti[key] as string).length > 0) isWrite = true;
++    }
++
++    const parts: string[] = [];
++    for (const key of ['pattern', 'query', 'glob', 'command']) {
++        const v = ti[key];
++        if (typeof v === 'string') parts.push(v);
++    }
++
++    return { file, isWrite, query: parts.join(' ') };
++}
++
++/** True when the event reads or searches one of the design surfaces. */
++export function isConsultation(event: ToolEvent): boolean {
++    if (event.isWrite) return false;
++    const haystack = `${event.file} ${event.query}`.toLowerCase();
++    return DESIGN_SURFACES.some((surface) => haystack.includes(surface));
++}
++
++/** True when the event writes a UI surface. */
++export function isUiWrite(event: ToolEvent): boolean {
++    if (!event.isWrite || !event.file) return false;
++    return isUiPath(event.file) || isUiTreePath(event.file);
++}
++
++export interface SessionState {
++    consulted: boolean;
++    nudges: number;
++}
++
++function stateFile(root: string): string {
++    return path.join(root, 'agents', 'runtime', 'state', 'ui-route-nudge.json');
++}
++
++export function readState(root: string, session: string): SessionState {
++    try {
++        const all = JSON.parse(fs.readFileSync(stateFile(root), 'utf-8')) as Record<
++            string,
++            SessionState
++        >;
++        const entry = all[session];
++        if (entry && typeof entry.consulted === 'boolean' && typeof entry.nudges === 'number') {
++            return entry;
++        }
++    } catch {
++        /* fresh session */
++    }
++    return { consulted: false, nudges: 0 };
++}
++
++export function writeState(root: string, session: string, state: SessionState): void {
++    try {
++        const file = stateFile(root);
++        let all: Record<string, SessionState> = {};
++        try {
++            all = JSON.parse(fs.readFileSync(file, 'utf-8')) as Record<string, SessionState>;
++        } catch {
++            /* fresh file */
++        }
++        all[session] = state;
++        fs.mkdirSync(path.dirname(file), { recursive: true });
++        fs.writeFileSync(file, JSON.stringify(all));
++    } catch {
++        /* fail-open: a persistence failure must never break a tool call */
++    }
++}
++
++/**
++ * The decision, pure — so the test exercises the logic rather than the
++ * filesystem. Returns the next state and whether to warn.
++ */
++export function decide(
++    event: ToolEvent,
++    state: SessionState,
++): { state: SessionState; warn: boolean } {
++    if (isConsultation(event)) {
++        return { state: { ...state, consulted: true }, warn: false };
++    }
++    if (!isUiWrite(event)) return { state, warn: false };
++    if (state.consulted) return { state, warn: false };
++    if (state.nudges >= MAX_NUDGES) return { state, warn: false };
++    return { state: { ...state, nudges: state.nudges + 1 }, warn: true };
++}
++
++export function nudgeReason(file: string): string {
++    return `Non-trivial UI write to ${file} with no design consultation this session. Run \`existing-ui-audit\` first, then the fe-design loop (brief → build → review). Skip only if this is ui-trivial: <=1 file, <=5 lines, no new component, no new state, no new dependency.`;
++}
++
++export function main(): number {
++    let envelope: JsonValue;
++    try {
++        const raw = readHookStdin();
++        if (!raw.trim()) return EXIT_ALLOW;
++        envelope = JSON.parse(raw) as JsonValue;
++    } catch {
++        return EXIT_ALLOW;
++    }
++    if (!isObject(envelope)) return EXIT_ALLOW;
++
++    const rootVal = envelope['workspace_root'];
++    const root = typeof rootVal === 'string' && rootVal ? rootVal : process.cwd();
++    if (!hookSectionEnabled(root, 'ui_route_nudge')) return EXIT_ALLOW;
++
++    const sessionVal = envelope['session_id'];
++    const session = typeof sessionVal === 'string' && sessionVal ? sessionVal : 'unknown';
++
++    const event = extractEvent(envelope);
++    if (!event) return EXIT_ALLOW;
++
++    const before = readState(root, session);
++    const { state, warn } = decide(event, before);
++    if (state.consulted !== before.consulted || state.nudges !== before.nudges) {
++        writeState(root, session, state);
++    }
++    if (!warn) return EXIT_ALLOW;
++
++    process.stdout.write(`${JSON.stringify({ reason: nudgeReason(event.file) })}\n`);
++    return EXIT_WARN;
++}
++
++function isCliEntry(): boolean {
++    const entry = process.argv[1];
++    if (!entry) return false;
++    return pathToFileURL(path.resolve(entry)).href === import.meta.url;
++}
++
++if (isCliEntry()) process.exit(main());
++
++export const _HOOK_FILE = fileURLToPath(import.meta.url);
+diff --git a/src/scripts/lint_rule_skill_pack_reach.ts b/src/scripts/lint_rule_skill_pack_reach.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..f8cfc9ee91dba0555cc681169402bb22853493e5
+--- /dev/null
++++ b/src/scripts/lint_rule_skill_pack_reach.ts
+@@ -0,0 +1,251 @@
++#!/usr/bin/env tsx
++/**
++ * lint_rule_skill_pack_reach — a rule and the skills it routes to must be able
++ * to arrive in the same install.
++ *
++ * The defect that motivated this is real and was undocumented in the direction
++ * it actually runs. `ui-audit-gate` and `design-review-after-ui-write` are
++ * `packs: [frontend-design]`; `existing-ui-audit`, `design-review` and
++ * `fe-design` are `packs: [engineering-base]`. The direction the rule prose
++ * described — frontend-design without engineering-base — cannot happen, because
++ * `frontend-design` declares `requires: [engineering-base]`. The reverse can: a
++ * plain `laravel` or `react` install carries the skills and **no rule that ever
++ * routes to them**, since both packs only *suggest* frontend-design.
++ *
++ * TWO CHECKS, AND THEY ARE NOT THE SAME QUESTION.
++ *
++ *   unreachable-route (error) — a rule routes to a skill that a pack-legal
++ *   install of that rule cannot receive. The consumer gets the obligation
++ *   without the artefact that discharges it.
++ *
++ *   unrouted-skill (advisory) — some pack delivers a skill while delivering no
++ *   rule that routes to it. The consumer has the artefact and no path to it.
++ *   This is the measured case above. Advisory on purpose: a skill reachable
++ *   only by explicit user invocation is a legitimate design, so a finding here
++ *   is a question, not a verdict.
++ *
++ * The install closure is `pack + requires*` — the transitive expansion the
++ * resolver performs. `suggests` is deliberately NOT followed: it is advisory,
++ * the wizard may offer it and the user may decline, so an invariant that
++ * counted it would pass on installs that do not exist.
++ *
++ * ADVISORY UNTIL ITS FINDING SET IS EMPTY, AND THE FIRST RUN SAYS WHY.
++ * Measured on introduction: 12 `unreachable-route` and 14 `unrouted-skill`
++ * findings across 116 rules. The UI pair is one instance of an estate-wide
++ * pattern — safety floors routing into packs their own pack does not pull, and
++ * skills delivered by a pack whose routing rule ships in a different one.
++ * Shipping this as a blocking gate on day one would have meant either 12
++ * unrelated fixes smuggled into a feature change or a suppression file created
++ * on day one, which is the ratchet-shaped failure this repo has recorded
++ * before. So `--strict` exists and the default does not use it: promotion to
++ * error is a one-flag change once the set is empty, and the count is printed
++ * on every run so "still 12" cannot quietly become "still 30".
++ *
++ * Exit codes: 0 advisory run (default) or clean · 1 `unreachable-route`
++ * findings under `--strict` · 2 usage or IO error. A scan that walked no rules
++ * exits 2 rather than green — a gate that scanned nothing must never read as a
++ * pass.
++ */
++
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { parse as parseYaml } from 'yaml';
++
++const _HERE = fileURLToPath(import.meta.url);
++const REPO = path.resolve(path.dirname(_HERE), '..', '..');
++const RULES_DIR = path.join(REPO, 'src', 'rules');
++const SKILLS_DIR = path.join(REPO, 'src', 'skills');
++const PACKS_FILE = path.join(REPO, 'src', 'config', 'discovery', 'packs.yml');
++
++export interface PackDef {
++    id: string;
++    requires: string[];
++}
++
++export interface Finding {
++    kind: 'unreachable-route' | 'unrouted-skill';
++    subject: string;
++    detail: string;
++}
++
++/** Frontmatter block between the leading fences, or "" when absent. */
++function frontmatterOf(content: string): string {
++    if (!content.startsWith('---')) return '';
++    const end = content.indexOf('\n---', 3);
++    return end === -1 ? '' : content.slice(3, end);
++}
++
++function frontmatterObject(file: string): Record<string, unknown> {
++    const raw = frontmatterOf(fs.readFileSync(file, 'utf-8'));
++    if (!raw.trim()) return {};
++    try {
++        const parsed = parseYaml(raw) as unknown;
++        return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
++            ? (parsed as Record<string, unknown>)
++            : {};
++    } catch {
++        return {};
++    }
++}
++
++function stringList(value: unknown): string[] {
++    if (Array.isArray(value)) return value.filter((v): v is string => typeof v === 'string');
++    if (typeof value === 'string') return [value];
++    return [];
++}
++
++/** Parse the pack registry into id → hard requirements. */
++export function readPacks(file: string): Map<string, PackDef> {
++    const parsed = parseYaml(fs.readFileSync(file, 'utf-8')) as unknown;
++    const out = new Map<string, PackDef>();
++    if (!Array.isArray(parsed)) return out;
++    for (const entry of parsed) {
++        if (!entry || typeof entry !== 'object') continue;
++        const record = entry as Record<string, unknown>;
++        const id = record['id'];
++        if (typeof id !== 'string') continue;
++        out.set(id, { id, requires: stringList(record['requires']) });
++    }
++    return out;
++}
++
++/** `pack + requires*` — what an install selecting `pack` actually receives. */
++export function installClosure(pack: string, packs: Map<string, PackDef>): Set<string> {
++    const seen = new Set<string>();
++    const queue = [pack];
++    while (queue.length > 0) {
++        const current = queue.pop()!;
++        if (seen.has(current)) continue;
++        seen.add(current);
++        for (const required of packs.get(current)?.requires ?? []) queue.push(required);
++    }
++    return seen;
++}
++
++interface RuleInfo {
++    name: string;
++    packs: string[];
++    routesToSkills: string[];
++}
++
++export function readRules(dir: string): RuleInfo[] {
++    return fs
++        .readdirSync(dir)
++        .filter((f) => f.endsWith('.md'))
++        .map((f) => {
++            const fm = frontmatterObject(path.join(dir, f));
++            return {
++                name: f.replace(/\.md$/, ''),
++                packs: stringList(fm['packs']),
++                routesToSkills: stringList(fm['routes_to'])
++                    .filter((r) => r.startsWith('skill:'))
++                    .map((r) => r.slice('skill:'.length)),
++            };
++        });
++}
++
++export function readSkillPacks(dir: string): Map<string, string[]> {
++    const out = new Map<string, string[]>();
++    for (const name of fs.readdirSync(dir)) {
++        const file = path.join(dir, name, 'SKILL.md');
++        if (!fs.existsSync(file)) continue;
++        out.set(name, stringList(frontmatterObject(file)['packs']));
++    }
++    return out;
++}
++
++export function analyze(
++    rules: RuleInfo[],
++    skillPacks: Map<string, string[]>,
++    packs: Map<string, PackDef>,
++): Finding[] {
++    const findings: Finding[] = [];
++
++    // 1. unreachable-route — the obligation without the artefact.
++    for (const rule of rules) {
++        if (rule.packs.length === 0) continue; // unscoped rule ships everywhere
++        for (const skill of rule.routesToSkills) {
++            const target = skillPacks.get(skill);
++            if (target === undefined) continue; // a missing skill is check_references' job
++            if (target.length === 0) continue; // unscoped skill ships everywhere
++            const unreachableFrom = rule.packs.filter((p) => {
++                const closure = installClosure(p, packs);
++                return !target.some((tp) => closure.has(tp));
++            });
++            if (unreachableFrom.length === 0) continue;
++            findings.push({
++                kind: 'unreachable-route',
++                subject: `${rule.name} → skill:${skill}`,
++                detail: `rule pack(s) [${unreachableFrom.join(', ')}] do not reach skill pack(s) [${target.join(', ')}]`,
++            });
++        }
++    }
++
++    // 2. unrouted-skill — the artefact without a path to it.
++    const routedSkills = new Set(rules.flatMap((r) => r.routesToSkills));
++    for (const skill of routedSkills) {
++        const target = skillPacks.get(skill);
++        if (target === undefined || target.length === 0) continue;
++        const routingRules = rules.filter((r) => r.routesToSkills.includes(skill));
++        for (const skillPack of target) {
++            const closure = installClosure(skillPack, packs);
++            const reached = routingRules.some(
++                (r) => r.packs.length === 0 || r.packs.some((p) => closure.has(p)),
++            );
++            if (reached) continue;
++            findings.push({
++                kind: 'unrouted-skill',
++                subject: `skill:${skill}`,
++                detail: `an install of pack [${skillPack}] receives this skill but none of its routing rule(s) [${routingRules.map((r) => r.name).join(', ')}]`,
++            });
++        }
++    }
++
++    return findings;
++}
++
++function main(): number {
++    const packs = readPacks(PACKS_FILE);
++    const rules = readRules(RULES_DIR);
++    const skillPacks = readSkillPacks(SKILLS_DIR);
++
++    if (rules.length === 0 || skillPacks.size === 0 || packs.size === 0) {
++        process.stderr.write(
++            `❌  lint_rule_skill_pack_reach scanned nothing (rules=${rules.length}, skills=${skillPacks.size}, packs=${packs.size}) — refusing to report a pass\n`,
++        );
++        return 2;
++    }
++
++    const findings = analyze(rules, skillPacks, packs);
++    const errors = findings.filter((f) => f.kind === 'unreachable-route');
++    const advisories = findings.filter((f) => f.kind === 'unrouted-skill');
++
++    for (const finding of errors) {
++        process.stdout.write(`❌  ${finding.subject} — ${finding.detail}\n`);
++    }
++    for (const finding of advisories) {
++        process.stdout.write(`⚠️  ${finding.subject} — ${finding.detail}\n`);
++    }
++
++    const strict = process.argv.includes('--strict');
++    process.stdout.write(
++        `scanned: ${rules.length} rule(s), ${skillPacks.size} skill(s), ${packs.size} pack(s) — ${errors.length} unreachable-route, ${advisories.length} unrouted-skill\n`,
++    );
++    if (errors.length > 0 && !strict) {
++        process.stdout.write(
++            `advisory run: ${errors.length} unreachable-route finding(s) reported, exit 0. Promote with --strict once the set is empty.\n`,
++        );
++    }
++    return strict && errors.length > 0 ? 1 : 0;
++}
++
++if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(_HERE)) {
++    try {
++        process.exit(main());
++    } catch (error) {
++        process.stderr.write(`❌  ${(error as Error).message}\n`);
++        process.exit(2);
++    }
++}
+diff --git a/src/server/schemas/settings.ts b/src/server/schemas/settings.ts
+index 21fe1d8b6ba3e51164b5e07affb0d28395e1c187..8e907ed233eb3bbb14d98f299f8b14fe7b5aa5e9 100644
+--- a/src/server/schemas/settings.ts
++++ b/src/server/schemas/settings.ts
+@@ -515,6 +515,11 @@ export const settingsSchema = z.object({
+                 'PreToolUse anti-slop nudge (road-to-anti-slop-detector Phase 3). Default off. When on, runs the lint_design_slop registry against about-to-be-written UI content and WARNS (never blocks) on P0/P1 aesthetic tells (side-stripe, gradient-text, magic z-index, …). Flags are rebuttable via DESIGN.md / design-slop-disable. Anti-loop: a file::rule signature surfaced 3x goes silent. Host-limited convenience layer; the universal gate is the lint_design_slop linter/CI.',
+             ),
+         }).default({}),
++        ui_route_nudge: z.object({
++            enabled: z.boolean().default(false).describe(
++                'PreToolUse UI-route nudge (road-to-frontend-skill-application Phase 4). Default off. When on, a Write/Edit to a UI surface with no design consultation latched this session WARNS (never blocks) naming the route — run existing-ui-audit, then the fe-design loop. A read or search touching fe-design / existing-ui-audit / design-review / design-intelligence latches consultation and silences it for the session. Anti-loop: at most 2 nudges per session. This is the first runtime consumer the two UI rules have ever had; it is a nudge, so their enforced_by: none stays accurate.',
++            ),
++        }).default({}),
+         code_graph: z.object({
+             enabled: z.boolean().default(false).describe(
+                 'PreToolUse code-graph nudge (ADR-124 Phase 4). Default off. When on AND a native code-graph cache or a consumer-shipped graph.json/SCIP index is present, warns once per session (never blocks) as the agent is about to Grep/Glob or Read a source file — query the graph first for who-calls/where-used/impact questions (or rebuild if stale, build if absent). Source G’s strict block-first-read mode is deliberately un-ported.',
+diff --git a/src/skills/fe-design/SKILL.md b/src/skills/fe-design/SKILL.md
+index eed61db81d6c6ae8de616723eb2195f2add14ff9..f21272a3b59089f2ef02a7bd5f3bbf52732d13bd 100644
+--- a/src/skills/fe-design/SKILL.md
++++ b/src/skills/fe-design/SKILL.md
+@@ -1,7 +1,7 @@
+ ---
+ model_tier: medium
+ name: fe-design
+-description: "Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, responsive strategy, a11y, UX principles. Stack-agnostic; cited by directives/ui/design.ts."
++description: "Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, build, review. Use when building or changing any UI, not only when planning one."
+ personas:
+   - frontend-engineer
+ domain: engineering
+@@ -11,15 +11,82 @@ packs:
+   - engineering-base
+ ---
+ 
+-# Frontend Design Skill (Reference)
+-
+-## Positioning — reference, not executor
+-
+-`fe-design` is a **universal reference skill**, not an executor. It carries
+-stack-agnostic heuristics that the UI directive set cites; it does **not**
+-own the flow.
+-
+-| Concern | Owner |
++# Frontend Design Skill
++
++## Ad-hoc mode — outside the engine, YOU run this loop now
++
++One question decides which mode you are in: **is a `/implement-ticket` run
++dispatching this?**
++
++| Situation | Who owns the UI write | This skill is |
++|---|---|---|
++| A ticketed run — the UI directive set is dispatching | `directives/ui/*` | a reference it cites |
++| Anything else — "build me the page", "improve this form", "implement the approved design" | **you, in this turn** | the executor |
++
++Outside the engine, nothing else owns the design quality of a UI write. Reading
++this skill and then writing the UI from priors is the failure it exists to
++prevent — the loop below is not optional context, it is the work.
++
++**Skip only when the change is `ui-trivial`, decidable off the diff:** ≤ 1 file,
++≤ 5 changed lines, no new component, no new state, no new dependency. Anything
++else runs the loop.
++
++### The loop
++
++1. **Audit first** — run [`existing-ui-audit`](../existing-ui-audit/SKILL.md).
++   What already exists (components, tokens, layout conventions) outranks every
++   heuristic below. Reinventing an existing component is the #1 failure mode.
++2. **Brief** — cover the same five keys the engine requires before any code:
++   `layout`, `components`, `states`, `microcopy`, `a11y`. `states` means all
++   five of `empty`, `loading`, `error`, `success`, `disabled` — a brief missing
++   one is unfinished, not concise.
++3. **Build** — against the audit's primitives, in the project's stack.
++4. **Review** — run [`design-review`](../design-review/SKILL.md) before calling
++   it done, and scope the verdict honestly: render-scoped when you can render
++   it, otherwise explicitly static-scoped, naming which checks actually ran.
++   "Looks good" with neither scope named is a verdict without evidence.
++
++### The heuristics — here, not one hop away
++
++The load-bearing subset, inline so that "loaded" means the content is in
++context. Depth stays in [`references/design-patterns.md`](references/design-patterns.md).
++
++1. **Audit outranks heuristic.** A token, primitive or convention the audit
++   found wins over anything on this list; say `[audit override]` when it does.
++2. **Reuse tokens, never raw values.** A hex, font or px literal where the
++   audit found a token is off-brand by construction.
++3. **All five states are designed.** `empty` is a helpful message, not a blank
++   region; `loading` prefers a skeleton over a spinner (it shows structure, so
++   it reads as faster); `error` says what to do next.
++4. **Labels are always visible.** No placeholder-only inputs.
++5. **Validate on blur and on submit**, never on every keystroke; the message
++   goes below the field and is specific.
++6. **Mobile-first, and 320 px actually works.** Default styles are the small
++   viewport; complexity is added at larger breakpoints, never removed at
++   smaller ones.
++7. **A11y minimums are non-negotiable:** 4.5:1 contrast for text (3:1 large),
++   every interactive element reachable by Tab, a visible focus ring, semantic
++   elements over `div`, and an `aria-label` wherever there is no visible text.
++8. **Every action gets feedback.** Users read silence as failure.
++9. **Prefer undo over a confirmation dialog** — confirmations get clicked
++   through; an undo affordance actually protects the user.
++10. **Tables:** numbers right-aligned, text left-aligned, a designed empty
++    state, and a sticky header on anything long enough to scroll.
++11. **No placeholder microcopy ships.** Lorem ipsum, `TODO`, and
++    `[Your text here]` are unfinished output, not drafts.
++
++Before proposing a direction, run the anti-slop scan named under
++[Anti-slop discipline](#anti-slop-discipline) below.
++
++## Positioning — reference inside the engine, executor outside it
++
++Inside a `/implement-ticket` run, `fe-design` is a **universal reference
++skill**: it carries stack-agnostic heuristics the UI directive set cites, and
++it does not own the flow. The ownership table below applies **to that mode**.
++Outside the engine the table has no dispatcher behind it — the ad-hoc loop
++above is the owner instead.
++
++| Concern | Owner (engine-mediated runs) |
+ |---|---|
+ | Layout / states / microcopy lock | [`directives/ui/design.ts`](../../templates/scripts/work_engine/directives/ui/design.ts) |
+ | Stack-dispatched implementation | [`directives/ui/apply.ts`](../../templates/scripts/work_engine/directives/ui/apply.ts) → `blade-ui` / `livewire` / `flux` / `react-shadcn-ui` |
+@@ -37,12 +104,17 @@ Cite this skill when:
+ - Making responsive design decisions
+ - Reviewing UI for accessibility and usability
+ 
+-Do NOT use this skill to:
++**Inside a ticketed run**, do NOT use this skill to:
+ 
+ - Implement components — that is the apply-step's stack-dispatched skill
+ - Audit an existing UI — that is `existing-ui-audit`
+ - Drive the full UI flow — that is the `directives/ui/` orchestrator
+ 
++Outside a ticketed run, the first and third lines invert: no dispatcher is
++running, so implementation quality and the flow are yours. The second holds in
++both modes — the audit is always `existing-ui-audit`; you invoke it, you do not
++replace it.
++
+ > **Resource-first, before taste.** Any request to recreate / redesign / mock /
+ > prototype / improve an existing UI runs the
+ > [resource-first context gate](../existing-ui-audit/SKILL.md#resource-first-context-gate-design-fidelity)
+@@ -129,4 +201,4 @@ approach or explicitly invoke the override condition in the design brief.
+ - Do NOT skip mobile viewport testing.
+ - Do NOT use fixed pixel widths for responsive layouts.
+ - Do NOT ignore accessibility requirements.
+-- Do NOT use this skill as an executor — it is a reference cited by `directives/ui/design.ts`.
++- Do NOT use this skill as an executor INSIDE a ticketed run — there the executor is `directives/ui/design.ts` and this is the reference it cites. Outside one, the ad-hoc loop at the top of this file IS the executor; do NOT read the reference and then write the UI from priors.
+diff --git a/src/skills/fe-design/evals/triggers.json b/src/skills/fe-design/evals/triggers.json
+index f599c89685c198a597e044f41487bd56e372a46a..df19b616d15e5350d02f8fa8b6401c79d13a8a73 100644
+--- a/src/skills/fe-design/evals/triggers.json
++++ b/src/skills/fe-design/evals/triggers.json
+@@ -1,7 +1,7 @@
+ {
+     "skill": "fe-design",
+-    "last_eval": "2026-07-10",
+-    "description": "5 should-trigger + 5 should-not-trigger queries for the variation & canvas planning layer (road-to-design-artifact-fidelity Phase 4). Should-trigger covers exploration / variation planning and UI-design decisions where fe-design plans BEFORE generating (give me directions, explore, plan the flow, pattern choice). Should-not-trigger covers near-misses that must NOT invoke design planning: pure implementation of an already-selected design (apply-step), inventorying existing UI (existing-ui-audit), a surgical one-line edit, and non-UI/backend work.",
++    "last_eval": "2026-08-12",
++    "description": "Should-trigger covers BOTH halves of this skill's two modes: planning/exploration (give me directions, explore, plan the flow, pattern choice) AND — new — ad-hoc implementation, because outside a ticketed run no other artefact owns the design quality of a UI write. The implementation query used to be labelled should-not-trigger on the reasoning that it belongs to the apply step; that step only exists as a dispatch target inside the engine, so the label routed ad-hoc implementation prompts to nobody. Should-not-trigger keeps the genuine near-misses: inventorying existing UI (existing-ui-audit owns it in both modes), a ui-trivial one-line edit, and non-UI work.",
+     "queries": [
+         {
+             "q": "give me three directions for the pricing page",
+@@ -25,7 +25,15 @@
+         },
+         {
+             "q": "implement the selected checkout design in React exactly as approved",
+-            "trigger": false
++            "trigger": true
++        },
++        {
++            "q": "build the settings page",
++            "trigger": true
++        },
++        {
++            "q": "improve this form, it feels clunky",
++            "trigger": true
+         },
+         {
+             "q": "what form components do we already have in the codebase?",
+diff --git a/src/skills/subagent-orchestration/prompts/README.md b/src/skills/subagent-orchestration/prompts/README.md
+index 0745f50f567c606bb92b6780080ec8595356af53..78df735fc8616ced4a592b40aecb8b17d3dc820e 100644
+--- a/src/skills/subagent-orchestration/prompts/README.md
++++ b/src/skills/subagent-orchestration/prompts/README.md
+@@ -23,6 +23,35 @@ Every prompt cites the status taxonomy in
+ ends with the **return-envelope** instruction so the subagent's reply
+ validates against that schema.
+ 
++### UI-shaped slices carry the design context, or name its absence
++
++A delegated worker's context is whatever the dispatch prompt carries. For a
++slice that writes UI, that has a specific consequence: the audit findings and
++the design brief live in the orchestrator's context, and nothing moves them
++across the dispatch boundary on its own. A worker that receives "build the
++settings page" and nothing else will build it from priors — the same failure
++the design skills exist to prevent, one layer down.
++
++So a UI-shaped dispatch prompt carries, in its `CONTEXT FILES:` section:
++
++- the **audit findings** from `existing-ui-audit` (components, tokens, layout
++  conventions the project already has), and
++- the **design brief** — `layout`, `components`, `states`, `microcopy`, `a11y`,
++  with all five states covered.
++
++When either is genuinely absent, **say so in the prompt** rather than omitting
++it silently: `no audit findings available — run existing-ui-audit first`. A
++worker told the context is missing can ask for it; a worker told nothing
++assumes there was nothing to know.
++
++**This is model-carried, and the reason is worth stating.** An orchestration
++record carries `ts`, `spawn_count`, `token_delta`, `tier_chosen` and
++`task_class` — it has no field able to hold a prompt, deliberately, for the same
++privacy-by-construction reason the telemetry event has none. So no lint can join
++a dispatch prompt against its record to check this clause: the data a check
++would need does not exist and should not be made to exist. The obligation is
++stated here and carried by the orchestrator, not enforced.
++
+ ## Prompt-cache discipline
+ 
+ When dispatching sibling subagents (e.g. `do-in-parallel` with N independent
+diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
+index 4e689e68fb95c86810d27aa2feecccc2504307c7..1aadd51adb234ff2006958be786df2338672f2fd 100644
+--- a/taskfiles/ci-fast.yml
++++ b/taskfiles/ci-fast.yml
+@@ -380,6 +380,11 @@ tasks:
+     desc: "Every design-artifact eval fixture id must be cited by a contract, guideline, skill, rule, or test — an uncited fixture is an eval nobody runs (see tests/design-artifacts/eval-fixtures.md § Notes)"
+     cmd: ./scripts-run src/scripts/lint_eval_fixture_citations {{.QUIET_FLAG}}
+ 
++  lint-rule-skill-pack-reach:
++    silent: true
++    desc: "Report where a rule and the skills it routes to cannot arrive in the same install — unreachable-route (obligation without artefact) and unrouted-skill (artefact with no routing rule). ADVISORY: exit 0 while the finding set is non-empty; promote with --strict once it is (see src/rules/design-review-after-ui-write.md § pack asymmetry)"
++    cmd: ./scripts-run src/scripts/lint_rule_skill_pack_reach {{.QUIET_FLAG}}
++
+   lint-ui-stack-bundles:
+     silent: true
+     desc: "Enforce the UI-track verb→skill-bundle map — every bundle member must resolve to a real skill, and a pack-agnostic lane (incl. the `plain` fallback) must name only stack-neutral skills (see docs/contracts/ui-track-flow.md § implement → apply)"
+diff --git a/tests/scripts/catalogue_capture.test.ts b/tests/scripts/catalogue_capture.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..9556f3e886617a3f321754f2f4a98c195424e72d
+--- /dev/null
++++ b/tests/scripts/catalogue_capture.test.ts
+@@ -0,0 +1,206 @@
++/**
++ * `catalogue_capture` — the selector analyzer, including the case that
++ * motivated it.
++ *
++ * The load-bearing test is `refutes a head-N budget`. The census proposed a
++ * positional explanation for the described/bare split and a fix (priority
++ * ordering) that only works if the explanation holds. A live observation
++ * contradicted it — entries far down the sorted catalogue carried
++ * descriptions while an earlier one did not. If the analyzer cannot report
++ * that as a non-separating candidate, it would rubber-stamp the hypothesis
++ * that produced the wrong fix, which is the whole failure this tool exists
++ * to prevent.
++ */
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterAll, describe, expect, it } from 'vitest';
++
++import {
++    analyzeSelector,
++    buildObservationRecord,
++    formatReport,
++    readProjectedCatalogue,
++    type CatalogueEntry,
++} from '../../src/scripts/capture_skill_catalogue.js';
++
++const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'catalogue-capture-'));
++
++afterAll(() => {
++    fs.rmSync(TMP, { recursive: true, force: true });
++});
++
++function writeSkill(root: string, name: string, frontmatter: string): void {
++    const dir = path.join(root, name);
++    fs.mkdirSync(dir, { recursive: true });
++    fs.writeFileSync(path.join(dir, 'SKILL.md'), `---\n${frontmatter}\n---\n\n# ${name}\n`);
++}
++
++function entry(overrides: Partial<CatalogueEntry> & { name: string; position: number }): CatalogueEntry {
++    return {
++        hasDescription: true,
++        descriptionLength: 40,
++        frontmatterKeys: ['name', 'description'],
++        ...overrides,
++    };
++}
++
++describe('readProjectedCatalogue', () => {
++    const root = path.join(TMP, 'projection');
++
++    it('sorts by name and reads description presence off the frontmatter', () => {
++        writeSkill(root, 'zebra', 'name: zebra\ndescription: "Use when striping things."');
++        writeSkill(root, 'alpha', 'name: alpha\ndescription: "Use when starting things."');
++        writeSkill(root, 'bravo', 'name: bravo\nmodel_tier: medium');
++
++        const catalogue = readProjectedCatalogue(root);
++
++        expect(catalogue.map((e) => e.name)).toEqual(['alpha', 'bravo', 'zebra']);
++        expect(catalogue.map((e) => e.position)).toEqual([1, 2, 3]);
++        expect(catalogue.find((e) => e.name === 'bravo')!.hasDescription).toBe(false);
++        expect(catalogue.find((e) => e.name === 'alpha')!.descriptionLength).toBe(
++            'Use when starting things.'.length,
++        );
++    });
++
++    it('ignores directories without a SKILL.md', () => {
++        const root2 = path.join(TMP, 'partial');
++        writeSkill(root2, 'real', 'name: real\ndescription: "Use when real."');
++        fs.mkdirSync(path.join(root2, 'evals'), { recursive: true });
++
++        expect(readProjectedCatalogue(root2).map((e) => e.name)).toEqual(['real']);
++    });
++
++    it('follows symlinked entries — the shape the host-facing projection uses', () => {
++        // The real `.claude/skills/` is symlinks into `dist/agent-src/skills/`.
++        // A `Dirent.isDirectory()` filter reports false for every one of them,
++        // which read 47 of 289 entries as the whole catalogue.
++        const target = path.join(TMP, 'symlink-target');
++        const root3 = path.join(TMP, 'symlink-root');
++        writeSkill(target, 'linked', 'name: linked\ndescription: "Use when linked."');
++        fs.mkdirSync(root3, { recursive: true });
++        try {
++            fs.symlinkSync(path.join(target, 'linked'), path.join(root3, 'linked'), 'dir');
++        } catch {
++            return; // platform without symlink permission — nothing to assert
++        }
++
++        const catalogue = readProjectedCatalogue(root3);
++
++        expect(catalogue.map((e) => e.name)).toEqual(['linked']);
++        expect(catalogue[0]!.hasDescription).toBe(true);
++    });
++});
++
++describe('analyzeSelector', () => {
++    it('confirms a head-N budget when the positions really are disjoint', () => {
++        const projected = [
++            entry({ name: 'a', position: 1 }),
++            entry({ name: 'b', position: 2 }),
++            entry({ name: 'y', position: 3 }),
++            entry({ name: 'z', position: 4 }),
++        ];
++
++        const report = analyzeSelector(projected, ['y', 'z']);
++        const positional = report.candidates.find((c) => c.id === 'positional-head')!;
++
++        expect(positional.separates).toBe(true);
++        expect(report.verdict).toBe('selector-found');
++    });
++
++    it('refutes a head-N budget when a late entry is described and an early one is bare', () => {
++        // The observed shape: `command-routing` early and bare,
++        // `using-git-worktrees` late and described.
++        const projected = [
++            entry({ name: 'aaa-early-described', position: 1 }),
++            entry({ name: 'command-routing', position: 45 }),
++            entry({ name: 'using-git-worktrees', position: 280 }),
++        ];
++
++        const report = analyzeSelector(projected, ['command-routing']);
++        const positional = report.candidates.find((c) => c.id === 'positional-head')!;
++
++        expect(positional.separates).toBe(false);
++        expect(positional.detail).toContain('overlap');
++    });
++
++    it('does not blame the projection when every entry declares a description', () => {
++        const projected = [
++            entry({ name: 'a', position: 1 }),
++            entry({ name: 'b', position: 2 }),
++        ];
++
++        const report = analyzeSelector(projected, ['b']);
++        const declares = report.candidates.find((c) => c.id === 'declares-description')!;
++
++        expect(declares.separates).toBe(false);
++    });
++
++    it('finds a frontmatter key whose presence tracks the split exactly', () => {
++        const projected = [
++            entry({ name: 'a', position: 1, frontmatterKeys: ['name', 'description', 'user-invocable'] }),
++            entry({ name: 'b', position: 2, frontmatterKeys: ['name', 'description', 'user-invocable'] }),
++            entry({ name: 'c', position: 3, frontmatterKeys: ['name', 'description'] }),
++        ];
++
++        const report = analyzeSelector(projected, ['c']);
++
++        expect(report.candidates.map((c) => c.id)).toContain('frontmatter:user-invocable');
++        expect(report.verdict).toBe('selector-found');
++    });
++
++    it('reports no-selector rather than inventing one', () => {
++        const projected = [
++            entry({ name: 'a', position: 1 }),
++            entry({ name: 'b', position: 2 }),
++            entry({ name: 'c', position: 3 }),
++        ];
++
++        // Bare entry sits between two described ones and is identical in every
++        // measured property — nothing here can separate them.
++        const report = analyzeSelector(projected, ['b']);
++
++        expect(report.verdict).toBe('no-selector');
++        expect(formatReport({ catalogueRoot: 'x', ...report })).toContain('Publish the null');
++    });
++
++    it('needs both groups before it separates anything', () => {
++        const projected = [entry({ name: 'a', position: 1 })];
++
++        expect(analyzeSelector(projected, []).verdict).toBe('insufficient-observation');
++        expect(analyzeSelector(projected, ['a']).verdict).toBe('insufficient-observation');
++    });
++
++    it('surfaces observed names the projection does not know', () => {
++        const projected = [entry({ name: 'a', position: 1 }), entry({ name: 'b', position: 2 })];
++
++        expect(analyzeSelector(projected, ['a', 'ghost']).unknownObserved).toEqual(['ghost']);
++    });
++});
++
++describe('observation record', () => {
++    it('carries only names, counts and a host label — no free-form field', () => {
++        const projected = [entry({ name: 'a', position: 1 }), entry({ name: 'b', position: 2 })];
++        const report = { catalogueRoot: 'src/skills', ...analyzeSelector(projected, ['b']) };
++
++        const record = buildObservationRecord(report, 'claude', '2026-08-12');
++
++        expect(Object.keys(record).sort()).toEqual([
++            'bare_count',
++            'bare_names',
++            'described_count',
++            'entries_total',
++            'host',
++            'observed_at',
++            'schema',
++            'separating_candidates',
++            'verdict',
++        ]);
++        // Every value is a scalar or an array of scalars: nothing can hold a body.
++        for (const value of Object.values(record)) {
++            const values = Array.isArray(value) ? value : [value];
++            for (const v of values) expect(typeof v).not.toBe('object');
++        }
++    });
++});
+diff --git a/tests/scripts/fe_design_triggers.test.ts b/tests/scripts/fe_design_triggers.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..4b62eb9b7ce595883768f952f4b0da5ea78d4bdf
+--- /dev/null
++++ b/tests/scripts/fe_design_triggers.test.ts
+@@ -0,0 +1,120 @@
++/**
++ * `fe_design_triggers` — coherence between what fe-design SAYS it owns and
++ * what its trigger evals ROUTE to it.
++ *
++ * This is a structural test over two artefacts, not a model evaluation: it
++ * cannot say whether a live model would pick the skill (the live trigger eval
++ * is human-gated and hard-aborts under automation). What it can catch is the
++ * defect that produced the symptom — a SKILL.md declaring itself the owner of
++ * ad-hoc UI implementation while its own eval set labels every implementation
++ * prompt `trigger: false`, routing those prompts to nobody at all.
++ *
++ * The two halves must agree. If a future edit reverts the skill to
++ * reference-only, this test fails and points at the eval set that still claims
++ * otherwise — and vice versa.
++ */
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { describe, expect, it } from 'vitest';
++
++const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
++const SKILL_DIR = path.join(REPO_ROOT, 'src', 'skills', 'fe-design');
++const SKILL_MD = path.join(SKILL_DIR, 'SKILL.md');
++const EVALS = path.join(SKILL_DIR, 'evals', 'triggers.json');
++
++interface TriggerQuery {
++    q: string;
++    trigger: boolean;
++}
++interface TriggerSet {
++    skill: string;
++    last_eval: string;
++    description: string;
++    queries: TriggerQuery[];
++}
++
++const evals = JSON.parse(fs.readFileSync(EVALS, 'utf-8')) as TriggerSet;
++const skillBody = fs.readFileSync(SKILL_MD, 'utf-8');
++
++/** Words that mark a prompt as asking for a UI to be built or changed. */
++const IMPLEMENTATION_VERBS = ['implement', 'build', 'improve'];
++
++function isImplementationPrompt(q: string): boolean {
++    const lower = q.toLowerCase();
++    return IMPLEMENTATION_VERBS.some((verb) => lower.startsWith(`${verb} `));
++}
++
++describe('eval set shape', () => {
++    it('keeps at least five queries on each side', () => {
++        expect(evals.queries.filter((q) => q.trigger).length).toBeGreaterThanOrEqual(5);
++        expect(evals.queries.filter((q) => !q.trigger).length).toBeGreaterThanOrEqual(4);
++    });
++
++    it('has no duplicate queries', () => {
++        const seen = evals.queries.map((q) => q.q.toLowerCase());
++        expect(new Set(seen).size).toBe(seen.length);
++    });
++});
++
++describe('ownership coherence', () => {
++    const declaresAdHocExecutor = /outside the engine|ad-hoc mode/i.test(skillBody);
++
++    it('the skill declares an ad-hoc executor mode', () => {
++        expect(declaresAdHocExecutor).toBe(true);
++    });
++
++    it('routes implementation prompts to itself when it claims to own them', () => {
++        const implementationQueries = evals.queries.filter((q) => isImplementationPrompt(q.q));
++
++        expect(implementationQueries.length).toBeGreaterThan(0);
++        for (const query of implementationQueries) {
++            // The regression: a skill that says "outside the engine YOU run this
++            // loop" while sending every implementation prompt to `false` leaves
++            // the prompt ownerless, which is the measured symptom.
++            expect(query.trigger, `"${query.q}" must route to fe-design`).toBe(
++                declaresAdHocExecutor,
++            );
++        }
++    });
++
++    it('still refuses the genuine near-misses', () => {
++        const negatives = evals.queries.filter((q) => !q.trigger).map((q) => q.q.toLowerCase());
++
++        // Inventorying existing UI belongs to existing-ui-audit in BOTH modes.
++        expect(negatives.some((q) => q.includes('already have'))).toBe(true);
++        // A ui-trivial one-line change is the documented skip.
++        expect(negatives.some((q) => q.includes('colour to green'))).toBe(true);
++        // Non-UI work never routes here.
++        expect(negatives.some((q) => q.includes('database index'))).toBe(true);
++    });
++
++    it('does not let a near-miss be an implementation prompt', () => {
++        for (const query of evals.queries.filter((q) => !q.trigger)) {
++            expect(
++                isImplementationPrompt(query.q),
++                `"${query.q}" is an implementation prompt on the should-not-trigger side`,
++            ).toBe(false);
++        }
++    });
++});
++
++describe('the skill body carries the loop, not only a map to it', () => {
++    it('names all five required brief keys inline', () => {
++        for (const key of ['layout', 'components', 'states', 'microcopy', 'a11y']) {
++            expect(skillBody).toContain(`\`${key}\``);
++        }
++    });
++
++    it('names all five required states inline', () => {
++        for (const state of ['empty', 'loading', 'error', 'success', 'disabled']) {
++            expect(skillBody).toContain(`\`${state}\``);
++        }
++    });
++
++    it('carries the ui-trivial skip conditions rather than only linking them', () => {
++        expect(skillBody).toMatch(/ui-trivial/);
++        expect(skillBody).toMatch(/no new dependency/);
++    });
++});
+diff --git a/tests/scripts/pack_reach.test.ts b/tests/scripts/pack_reach.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..6dfa78f660b210a04d62acb7255242666e0dfa38
+--- /dev/null
++++ b/tests/scripts/pack_reach.test.ts
+@@ -0,0 +1,140 @@
++/**
++ * `pack_reach` — the two directions of pack reachability, and the difference
++ * between them.
++ *
++ * The rule prose this invariant replaces described the direction that cannot
++ * happen (`frontend-design` without `engineering-base`, which `requires:`
++ * forbids) and missed the one that can (an `engineering-base` install with the
++ * skills and no routing rule). Both directions are pinned here so a future
++ * edit cannot revert to describing the impossible one.
++ */
++import { describe, expect, it } from 'vitest';
++
++import {
++    analyze,
++    installClosure,
++    type PackDef,
++} from '../../src/scripts/lint_rule_skill_pack_reach.js';
++
++function packs(defs: Array<[string, string[]]>): Map<string, PackDef> {
++    return new Map(defs.map(([id, requires]) => [id, { id, requires }]));
++}
++
++const REGISTRY = packs([
++    ['engineering-base', []],
++    ['frontend-design', ['engineering-base']],
++    ['laravel', ['engineering-base']],
++]);
++
++describe('installClosure', () => {
++    it('expands hard requirements transitively', () => {
++        expect([...installClosure('frontend-design', REGISTRY)].sort()).toEqual([
++            'engineering-base',
++            'frontend-design',
++        ]);
++    });
++
++    it('does not invent the reverse edge', () => {
++        // engineering-base does NOT pull frontend-design — the asymmetry that
++        // makes the second check necessary.
++        expect([...installClosure('engineering-base', REGISTRY)]).toEqual(['engineering-base']);
++    });
++
++    it('terminates on a cycle rather than hanging', () => {
++        const cyclic = packs([
++            ['a', ['b']],
++            ['b', ['a']],
++        ]);
++
++        expect([...installClosure('a', cyclic)].sort()).toEqual(['a', 'b']);
++    });
++});
++
++describe('unreachable-route', () => {
++    it('does not fire on the real UI pairing — requires: makes it reachable', () => {
++        const findings = analyze(
++            [
++                {
++                    name: 'ui-audit-gate',
++                    packs: ['frontend-design'],
++                    routesToSkills: ['existing-ui-audit'],
++                },
++            ],
++            new Map([['existing-ui-audit', ['engineering-base']]]),
++            REGISTRY,
++        );
++
++        expect(findings.filter((f) => f.kind === 'unreachable-route')).toEqual([]);
++    });
++
++    it('fires when a rule routes into a pack its own packs do not pull', () => {
++        const findings = analyze(
++            [{ name: 'some-floor', packs: ['engineering-base'], routesToSkills: ['corpus-skill'] }],
++            new Map([['corpus-skill', ['frontend-design']]]),
++            REGISTRY,
++        );
++
++        expect(findings.filter((f) => f.kind === 'unreachable-route')).toHaveLength(1);
++        expect(findings[0]!.subject).toBe('some-floor → skill:corpus-skill');
++    });
++
++    it('ignores an unscoped rule — it ships everywhere', () => {
++        const findings = analyze(
++            [{ name: 'kernel-ish', packs: [], routesToSkills: ['corpus-skill'] }],
++            new Map([['corpus-skill', ['frontend-design']]]),
++            REGISTRY,
++        );
++
++        expect(findings.filter((f) => f.kind === 'unreachable-route')).toEqual([]);
++    });
++
++    it('ignores a route to a skill that does not exist — that is another gate', () => {
++        const findings = analyze(
++            [{ name: 'r', packs: ['engineering-base'], routesToSkills: ['ghost'] }],
++            new Map(),
++            REGISTRY,
++        );
++
++        expect(findings).toEqual([]);
++    });
++});
++
++describe('unrouted-skill', () => {
++    it('fires on the measured case: skills in engineering-base, rule in frontend-design', () => {
++        const findings = analyze(
++            [
++                {
++                    name: 'ui-audit-gate',
++                    packs: ['frontend-design'],
++                    routesToSkills: ['existing-ui-audit'],
++                },
++            ],
++            new Map([['existing-ui-audit', ['engineering-base']]]),
++            REGISTRY,
++        );
++
++        const advisory = findings.filter((f) => f.kind === 'unrouted-skill');
++        expect(advisory).toHaveLength(1);
++        expect(advisory[0]!.detail).toContain('engineering-base');
++    });
++
++    it('stays quiet when the routing rule ships in the same pack', () => {
++        const findings = analyze(
++            [{ name: 'r', packs: ['engineering-base'], routesToSkills: ['s'] }],
++            new Map([['s', ['engineering-base']]]),
++            REGISTRY,
++        );
++
++        expect(findings).toEqual([]);
++    });
++
++    it('stays quiet when an unscoped rule routes to the skill', () => {
++        const findings = analyze(
++            [{ name: 'r', packs: [], routesToSkills: ['s'] }],
++            new Map([['s', ['engineering-base']]]),
++            REGISTRY,
++        );
++
++        expect(findings.filter((f) => f.kind === 'unrouted-skill')).toEqual([]);
++    });
++});
+diff --git a/tests/scripts/ui_dispatch_brief.test.ts b/tests/scripts/ui_dispatch_brief.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..63f32f87eaaae0312ab20f04214194773bb6c9c5
+--- /dev/null
++++ b/tests/scripts/ui_dispatch_brief.test.ts
+@@ -0,0 +1,74 @@
++/**
++ * `ui_dispatch_brief` — the dispatch-prompt contract for UI-shaped slices.
++ *
++ * What this can and cannot check, stated up front because the difference is
++ * the finding: an orchestration record carries `ts`, `spawn_count`,
++ * `token_delta`, `tier_chosen` and `task_class` and has no field able to hold
++ * a prompt. So no test can join a real dispatch prompt against its record and
++ * assert the design context travelled. That data does not exist by design.
++ *
++ * What IS checkable is that the contract is written down where the
++ * orchestrator reads it, names both artefacts, and requires the absence case
++ * to be stated rather than omitted — which is the half that kept getting lost.
++ */
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { describe, expect, it } from 'vitest';
++
++const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
++const PROMPTS_DIR = path.join(REPO_ROOT, 'src', 'skills', 'subagent-orchestration', 'prompts');
++const README = fs.readFileSync(path.join(PROMPTS_DIR, 'README.md'), 'utf-8');
++const RECORD_SRC = fs.readFileSync(
++    path.join(REPO_ROOT, 'src', 'scripts', 'orchestration_record.ts'),
++    'utf-8',
++);
++
++describe('dispatch-prompt contract', () => {
++    it('requires the audit findings on a UI-shaped slice', () => {
++        expect(README).toMatch(/audit findings/i);
++        expect(README).toMatch(/existing-ui-audit/);
++    });
++
++    it('requires the design brief with all five keys named', () => {
++        for (const key of ['layout', 'components', 'states', 'microcopy', 'a11y']) {
++            expect(README).toContain(`\`${key}\``);
++        }
++    });
++
++    it('requires the absence case to be stated, not silently omitted', () => {
++        expect(README).toMatch(/no audit findings available/i);
++    });
++
++    it('states the enforcement boundary instead of implying a gate', () => {
++        expect(README).toMatch(/model-carried/i);
++        expect(README).toMatch(/no lint can join/i);
++    });
++});
++
++describe('the boundary the contract rests on', () => {
++    it('the orchestration record really has no prompt-bearing field', () => {
++        // If a future change adds one, this test fails and the README's
++        // "no lint can join" sentence becomes false — which is exactly when
++        // it should be revisited rather than quietly left standing.
++        const canonicalBlock = /JSON\.stringify\(\{([\s\S]*?)\}\)/.exec(RECORD_SRC)?.[1] ?? '';
++
++        expect(canonicalBlock).not.toMatch(/prompt|text|body|content|message/i);
++        for (const field of ['ts', 'spawn_count', 'token_delta', 'tier_chosen', 'task_class']) {
++            expect(canonicalBlock).toContain(field);
++        }
++    });
++});
++
++describe('prompt templates', () => {
++    it('every mode file listed in the README exists', () => {
++        const linked = [...README.matchAll(/\]\((([a-z0-9-]+)\.md)\)/g)].map((m) => m[1]!);
++        const unique = [...new Set(linked)];
++
++        expect(unique.length).toBeGreaterThan(0);
++        for (const file of unique) {
++            expect(fs.existsSync(path.join(PROMPTS_DIR, file)), file).toBe(true);
++        }
++    });
++});
+diff --git a/tests/scripts/ui_route_nudge.test.ts b/tests/scripts/ui_route_nudge.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..8b1e35bdca9681421e73414cb44d82cf2687861f
+--- /dev/null
++++ b/tests/scripts/ui_route_nudge.test.ts
+@@ -0,0 +1,148 @@
++/**
++ * `ui_route_nudge` — the decision logic of the first runtime consumer the UI
++ * rules' triggers have ever had.
++ *
++ * Three properties carry the weight, and each has a way of failing that would
++ * be invisible in production:
++ *
++ *   1. it warns on an unconsulted UI write — the case it exists for;
++ *   2. it goes quiet once the session HAS consulted — otherwise it nags the
++ *      exact agent that did the right thing;
++ *   3. it goes quiet after `MAX_NUDGES` regardless — the anti-loop valve,
++ *      without which a deliberate-but-undeclared pattern traps the agent.
++ *
++ * The logic is tested through `decide`, which is pure. The filesystem and the
++ * envelope shape are tested separately so a payload-shape change cannot hide
++ * behind a passing logic test.
++ */
++import { describe, expect, it } from 'vitest';
++
++import {
++    MAX_NUDGES,
++    decide,
++    extractEvent,
++    isConsultation,
++    isUiWrite,
++    nudgeReason,
++    type SessionState,
++    type ToolEvent,
++} from '../../src/scripts/hooks/ui_route_nudge_hook.js';
++
++const fresh: SessionState = { consulted: false, nudges: 0 };
++
++function write(file: string): ToolEvent {
++    return { file, isWrite: true, query: '' };
++}
++function read(file: string, query = ''): ToolEvent {
++    return { file, isWrite: false, query };
++}
++
++describe('event classification', () => {
++    it('treats a write to a UI file as a UI write', () => {
++        expect(isUiWrite(write('src/components/Card.tsx'))).toBe(true);
++        expect(isUiWrite(write('resources/views/home.blade.php'))).toBe(true);
++    });
++
++    it('does not treat a backend write as a UI write', () => {
++        expect(isUiWrite(write('app/Http/Controllers/CheckoutController.php'))).toBe(false);
++        expect(isUiWrite(write('src/scripts/lint_design_slop.ts'))).toBe(false);
++    });
++
++    it('does not treat a read of a UI file as a write', () => {
++        expect(isUiWrite(read('src/components/Card.tsx'))).toBe(false);
++    });
++
++    it('counts a read of a design surface as consultation', () => {
++        expect(isConsultation(read('src/skills/fe-design/SKILL.md'))).toBe(true);
++        expect(isConsultation(read('src/skills/existing-ui-audit/SKILL.md'))).toBe(true);
++    });
++
++    it('counts a search naming a design surface as consultation', () => {
++        expect(isConsultation(read('', 'design-review checklist'))).toBe(true);
++    });
++
++    it('does not count a write as consultation, even to a design surface', () => {
++        expect(isConsultation({ file: 'src/skills/fe-design/SKILL.md', isWrite: true, query: '' })).toBe(
++            false,
++        );
++    });
++});
++
++describe('decide', () => {
++    it('warns on an unconsulted UI write', () => {
++        const result = decide(write('src/components/Card.tsx'), fresh);
++
++        expect(result.warn).toBe(true);
++        expect(result.state.nudges).toBe(1);
++    });
++
++    it('stays silent once the session has consulted', () => {
++        const consulted: SessionState = { consulted: true, nudges: 0 };
++
++        expect(decide(write('src/components/Card.tsx'), consulted).warn).toBe(false);
++    });
++
++    it('latches consultation and does not warn on the consulting read itself', () => {
++        const result = decide(read('src/skills/fe-design/SKILL.md'), fresh);
++
++        expect(result.warn).toBe(false);
++        expect(result.state.consulted).toBe(true);
++    });
++
++    it('goes silent after MAX_NUDGES — the anti-loop valve', () => {
++        let state = fresh;
++        let warnings = 0;
++        for (let i = 0; i < MAX_NUDGES + 3; i += 1) {
++            const result = decide(write('src/components/Card.tsx'), state);
++            state = result.state;
++            if (result.warn) warnings += 1;
++        }
++
++        expect(warnings).toBe(MAX_NUDGES);
++    });
++
++    it('ignores a non-UI write entirely', () => {
++        const result = decide(write('src/scripts/foo.ts'), fresh);
++
++        expect(result.warn).toBe(false);
++        expect(result.state).toEqual(fresh);
++    });
++});
++
++describe('extractEvent', () => {
++    it('reads the nested payload shape the dispatcher sends', () => {
++        const event = extractEvent({
++            payload: { tool_input: { file_path: 'src/components/Card.tsx', content: '<div/>' } },
++        });
++
++        expect(event).toEqual({ file: 'src/components/Card.tsx', isWrite: true, query: '' });
++    });
++
++    it('reads the flat legacy shape too', () => {
++        const event = extractEvent({
++            tool_input: { file_path: 'a.vue', new_string: 'x' },
++        });
++
++        expect(event?.isWrite).toBe(true);
++    });
++
++    it('collects search text so a grep counts as consultation', () => {
++        const event = extractEvent({ tool_input: { pattern: 'fe-design' } })!;
++
++        expect(isConsultation(event)).toBe(true);
++    });
++
++    it('returns null when there is no tool input to read', () => {
++        expect(extractEvent({ payload: {} })).toBeNull();
++    });
++});
++
++describe('nudgeReason', () => {
++    it('names the file and the skip conditions rather than scolding', () => {
++        const reason = nudgeReason('src/components/Card.tsx');
++
++        expect(reason).toContain('src/components/Card.tsx');
++        expect(reason).toContain('existing-ui-audit');
++        expect(reason).toContain('ui-trivial');
++    });
++});
+diff --git a/tests/scripts/ui_rule_triggers.test.ts b/tests/scripts/ui_rule_triggers.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..b40b3b9e1cc71efd2d7651ad02e884e106bb9084
+--- /dev/null
++++ b/tests/scripts/ui_rule_triggers.test.ts
+@@ -0,0 +1,82 @@
++/**
++ * `ui_rule_triggers` — the two UI rules must reach a non-Laravel consumer.
++ *
++ * Both rules shipped with `resources/views/` and `resources/js/` as their only
++ * path triggers. A React, Vue, Next or Svelte project writing to
++ * `src/components/` matched no path trigger at all, leaving two prompt
++ * keywords as the entire routing surface for the whole ecosystem the design
++ * skills were written for.
++ *
++ * The negative half matters as much: a trigger that fires on the Laravel
++ * backend directory would be worse than the gap. `app/` is therefore absent
++ * by design and this test pins that, so a later "let's also add app/" edit
++ * has to argue with a failing test rather than with a comment.
++ */
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { describe, expect, it } from 'vitest';
++
++import { isUiPath } from '../../src/scripts/_lib/ui_surface.js';
++
++const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
++const RULES = ['ui-audit-gate', 'design-review-after-ui-write'] as const;
++
++function frontmatterOf(rule: string): string {
++    const body = fs.readFileSync(path.join(REPO_ROOT, 'src', 'rules', `${rule}.md`), 'utf-8');
++    const end = body.indexOf('\n---', 3);
++    return body.slice(3, end);
++}
++
++function triggerValues(rule: string, kind: 'path_prefix' | 'file_pattern' | 'keyword'): string[] {
++    const out: string[] = [];
++    for (const line of frontmatterOf(rule).split('\n')) {
++        const match = new RegExp(`^\\s*-\\s*${kind}:\\s*"(.+)"\\s*$`).exec(line);
++        if (match) out.push(match[1]!);
++    }
++    return out;
++}
++
++describe.each(RULES)('%s', (rule) => {
++    it('keeps the Laravel prefixes it already had', () => {
++        const prefixes = triggerValues(rule, 'path_prefix');
++        expect(prefixes).toContain('resources/views/');
++        expect(prefixes).toContain('resources/js/');
++    });
++
++    it('reaches component trees outside Laravel', () => {
++        const prefixes = triggerValues(rule, 'path_prefix');
++        expect(prefixes).toContain('components/');
++        expect(prefixes).toContain('src/components/');
++        expect(prefixes).toContain('pages/');
++    });
++
++    it('carries file patterns for the component file types', () => {
++        const patterns = triggerValues(rule, 'file_pattern');
++        for (const pattern of ['*.vue', '*.svelte', '*.tsx', '*.jsx', '*.blade.php']) {
++            expect(patterns).toContain(pattern);
++        }
++    });
++
++    it('does not take `app/` as a path prefix', () => {
++        // In a Laravel consumer that is the entire backend.
++        expect(triggerValues(rule, 'path_prefix')).not.toContain('app/');
++    });
++
++    it('keeps the prompt keywords as the host-independent fallback', () => {
++        const keywords = triggerValues(rule, 'keyword');
++        expect(keywords).toContain('component');
++        expect(keywords).toContain('design token');
++    });
++
++    it('declares every file pattern over a path the shared UI predicate accepts', () => {
++        // The rule triggers and `ui_surface` must not drift apart: a pattern
++        // the rules fire on but the measurement does not count would put the
++        // nudge and the consultation rate on different populations.
++        for (const pattern of triggerValues(rule, 'file_pattern')) {
++            const sample = `some/dir/example${pattern.replace('*', '')}`;
++            expect(isUiPath(sample), `${pattern} → ${sample}`).toBe(true);
++        }
++    });
++});
+diff --git a/tests/scripts/ui_turn_definition.test.ts b/tests/scripts/ui_turn_definition.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..f64c13bd9c82c42ae71907ec6c67b1f4921bd332
+--- /dev/null
++++ b/tests/scripts/ui_turn_definition.test.ts
+@@ -0,0 +1,97 @@
++/**
++ * `ui_turn_definition` — one definition of a UI surface, shared by the
++ * measurement and by the things that fire on it.
++ *
++ * The regression that matters is `.blade.php`. The anti-slop hook's original
++ * regex was a single-extension alternation, so a two-part suffix never
++ * matched and every Blade template — the largest UI surface a Laravel
++ * consumer has — read as a non-UI file. A consultation rate measured with
++ * that denominator would have been silently wrong in exactly the ecosystem
++ * the two UI rules were written for.
++ */
++import { describe, expect, it } from 'vitest';
++
++import {
++    UI_EXT,
++    UI_PATH_FRAGMENTS,
++    isUiPath,
++    isUiTreePath,
++} from '../../src/scripts/_lib/ui_surface.js';
++
++describe('isUiPath', () => {
++    it('matches the single-extension UI surfaces', () => {
++        for (const p of [
++            'src/components/Button.tsx',
++            'src/components/Button.jsx',
++            'app/page.vue',
++            'app/page.svelte',
++            'site/index.astro',
++            'assets/main.css',
++            'assets/main.scss',
++            'assets/main.sass',
++            'assets/main.less',
++            'public/index.html',
++            'public/index.htm',
++        ]) {
++            expect(isUiPath(p), p).toBe(true);
++        }
++    });
++
++    it('matches the compound Blade suffix that a bare extension check misses', () => {
++        expect(isUiPath('resources/views/pages/checkout.blade.php')).toBe(true);
++        // The failure mode being guarded: extname() of this path is `.php`.
++        expect(isUiPath('app/Http/Controllers/CheckoutController.php')).toBe(false);
++    });
++
++    it('is case-insensitive', () => {
++        expect(isUiPath('Src/Components/Button.TSX')).toBe(true);
++        expect(isUiPath('RESOURCES/VIEWS/x.BLADE.PHP')).toBe(true);
++    });
++
++    it('does not match non-UI surfaces', () => {
++        for (const p of [
++            'src/scripts/lint_design_slop.ts',
++            'README.md',
++            'package.json',
++            'src/skills/fe-design/SKILL.md',
++            'styles.css.map',
++        ]) {
++            expect(isUiPath(p), p).toBe(false);
++        }
++    });
++
++    it('exposes the same regex the hook consumes', () => {
++        expect(UI_EXT.test('a.vue')).toBe(true);
++        expect(UI_EXT.test('a.ts')).toBe(false);
++    });
++});
++
++describe('isUiTreePath', () => {
++    it('matches beyond the Laravel pair the rules originally carried', () => {
++        expect(isUiTreePath('resources/views/home.blade.php')).toBe(true);
++        expect(isUiTreePath('resources/js/app.js')).toBe(true);
++        // The consumers that matched no path trigger at all before this.
++        expect(isUiTreePath('src/components/Card.tsx')).toBe(true);
++        expect(isUiTreePath('apps/web/components/Card.tsx')).toBe(true);
++        expect(isUiTreePath('pages/about.vue')).toBe(true);
++    });
++
++    it('does not treat `app/` as a UI tree — it is the Laravel backend', () => {
++        // The over-fire this guards: `app/` would match every controller,
++        // model and job in a Laravel consumer.
++        expect(isUiTreePath('app/Http/Controllers/CheckoutController.php')).toBe(false);
++        expect(isUiTreePath('app/Models/Order.php')).toBe(false);
++        // The Next.js router file it would have caught is caught by extension.
++        expect(isUiPath('app/dashboard/page.tsx')).toBe(true);
++    });
++
++    it('does not match an unrelated tree', () => {
++        expect(isUiTreePath('src/scripts/hooks/design_slop_hook.ts')).toBe(false);
++        expect(isUiTreePath('docs/contracts/ui-track-flow.md')).toBe(false);
++    });
++
++    it('keeps the Laravel fragments the two rules already declared', () => {
++        expect(UI_PATH_FRAGMENTS).toContain('resources/views/');
++        expect(UI_PATH_FRAGMENTS).toContain('resources/js/');
++    });
++});

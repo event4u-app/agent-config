@@ -23,6 +23,35 @@ Every prompt cites the status taxonomy in
 ends with the **return-envelope** instruction so the subagent's reply
 validates against that schema.
 
+### UI-shaped slices carry the design context, or name its absence
+
+A delegated worker's context is whatever the dispatch prompt carries. For a
+slice that writes UI, that has a specific consequence: the audit findings and
+the design brief live in the orchestrator's context, and nothing moves them
+across the dispatch boundary on its own. A worker that receives "build the
+settings page" and nothing else will build it from priors — the same failure
+the design skills exist to prevent, one layer down.
+
+So a UI-shaped dispatch prompt carries, in its `CONTEXT FILES:` section:
+
+- the **audit findings** from `existing-ui-audit` (components, tokens, layout
+  conventions the project already has), and
+- the **design brief** — `layout`, `components`, `states`, `microcopy`, `a11y`,
+  with all five states covered.
+
+When either is genuinely absent, **say so in the prompt** rather than omitting
+it silently: `no audit findings available — run existing-ui-audit first`. A
+worker told the context is missing can ask for it; a worker told nothing
+assumes there was nothing to know.
+
+**This is model-carried, and the reason is worth stating.** An orchestration
+record carries `ts`, `spawn_count`, `token_delta`, `tier_chosen` and
+`task_class` — it has no field able to hold a prompt, deliberately, for the same
+privacy-by-construction reason the telemetry event has none. So no lint can join
+a dispatch prompt against its record to check this clause: the data a check
+would need does not exist and should not be made to exist. The obligation is
+stated here and carried by the orchestrator, not enforced.
+
 ## Prompt-cache discipline
 
 When dispatching sibling subagents (e.g. `do-in-parallel` with N independent
