@@ -2,13 +2,9 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { main } from '../../src/scripts/sync_agent_settings.js';
-
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(HERE, '..', '..');
 
 const MINIMAL_TEMPLATE = `# Header
 rule_loading_tier: __RULE_LOADING_TIER__
