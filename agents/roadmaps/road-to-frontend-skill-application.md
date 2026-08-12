@@ -142,12 +142,24 @@ Enforcement moves only where the tree can verify it; `enforced_by:` changes beca
 
 ### blocker: ui-session-capture-window
 - **Status:** open
-- **Owner:** external
-- **Blocks:** Phase 1 — Measure
+- **Owner:** maintainer
+- **Blocks:** Phase 1 — Measure · Phase 2 — Deliver
 - **What to do:**
-  1. Let the capture concern run across normal UI work until the corpus reaches the threshold; no human decision is required, only elapsed sessions.
-  2. Check progress by counting distinct session ids in the capture state file.
-- **Resolved when:** the capture state holds ≥ 20 distinct sessions containing at least one UI turn.
+  1. **Rewritten after implementation, because the original text described a mechanism that does not exist.** It said "let the capture concern run … no human decision is required, only elapsed sessions". There is no concern: a `session_start` hook cannot see the injected catalogue (envelope carries `session_id`/`source`/`cwd`/`transcript_path`, and `preamble_byte_census` verified no local artifact holds the system payload). Capture is a script plus a labelled self-report, so the corpus does NOT fill by itself.
+  2. Per observation: have a session write the entries it saw bare and the ones it saw described into `agents/evidence/metrics/skill-catalogue/<date>-<host>-{bare,described}.txt`, then run `./scripts-run src/scripts/capture_skill_catalogue --observed <bare> --described <described> --record --observed-at <ISO date> --host <host>`.
+  3. Progress is `wc -l agents/evidence/metrics/skill-catalogue.jsonl` — one line per observation, currently 1.
+  4. Vary the host and the session shape: a selector that only shows up on one host is exactly what the current `no-selector` verdict cannot distinguish from no selector at all.
+- **Resolved when:** `skill-catalogue.jsonl` holds ≥ 20 observations across ≥ 2 hosts, and `capture_skill_catalogue` reports either a `selector-found` verdict or a `no-selector` that has stopped moving.
+
+### blocker: consultation-rate-instrument
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** Phase 1 — Measure · Phase 4 — Route
+- **What to do:**
+  1. Phase 1 **defined** the consultation and discharge rates; nothing computes them yet. The signal exists — `ui-route-nudge` latches consultation per session — but no analyzer turns a corpus of sessions into a rate.
+  2. Decide whether that analyzer is worth building before the enforcement question, or whether the nudge A/B (Phase 4 Step 5) on `bench:ui` fixtures answers enough on its own.
+  3. Enabling the nudge is the prerequisite either way: set `hooks.ui_route_nudge.enabled: true` in `.agent-settings.yml`. It ships OFF deliberately; turning it on is a maintainer decision about noise, not a default.
+- **Resolved when:** either a rate analyzer exists and has published a baseline, or the decision to answer the question with the A/B alone is recorded.
 
 ### blocker: enforcement-evidence
 - **Status:** open

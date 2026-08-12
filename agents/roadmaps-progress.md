@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 27 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **37** open blockers, **9** need you → `agent-config gates`
+> 27 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **38** open blockers, **9** need you → `agent-config gates`
 
 ## Overall
 
@@ -21,7 +21,7 @@
 | 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
 | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
-| 6 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [2](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
+| 6 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
 | 7 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
 | 9 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 2 | 12 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █████████░ 86% |
@@ -192,11 +192,19 @@
 <a id="blockers-road-to-frontend-skill-application"></a>
 **Blockers**
 
-- **ui-session-capture-window** (owner: external) — blocks Phase 1 — Measure
+- **ui-session-capture-window** (owner: maintainer) — blocks Phase 1 — Measure · Phase 2 — Deliver
   - **What to do:**
-    1. Let the capture concern run across normal UI work until the corpus reaches the threshold; no human decision is required, only elapsed sessions.
-    2. Check progress by counting distinct session ids in the capture state file.
-  - **Resolved when:** the capture state holds ≥ 20 distinct sessions containing at least one UI turn.
+    1. **Rewritten after implementation, because the original text described a mechanism that does not exist.** It said "let the capture concern run … no human decision is required, only elapsed sessions". There is no concern: a `session_start` hook cannot see the injected catalogue (envelope carries `session_id`/`source`/`cwd`/`transcript_path`, and `preamble_byte_census` verified no local artifact holds the system payload). Capture is a script plus a labelled self-report, so the corpus does NOT fill by itself.
+    2. Per observation: have a session write the entries it saw bare and the ones it saw described into `agents/evidence/metrics/skill-catalogue/<date>-<host>-{bare,described}.txt`, then run `./scripts-run src/scripts/capture_skill_catalogue --observed <bare> --described <described> --record --observed-at <ISO date> --host <host>`.
+    3. Progress is `wc -l agents/evidence/metrics/skill-catalogue.jsonl` — one line per observation, currently 1.
+    4. Vary the host and the session shape: a selector that only shows up on one host is exactly what the current `no-selector` verdict cannot distinguish from no selector at all.
+  - **Resolved when:** `skill-catalogue.jsonl` holds ≥ 20 observations across ≥ 2 hosts, and `capture_skill_catalogue` reports either a `selector-found` verdict or a `no-selector` that has stopped moving.
+- **consultation-rate-instrument** (owner: maintainer) — blocks Phase 1 — Measure · Phase 4 — Route
+  - **What to do:**
+    1. Phase 1 **defined** the consultation and discharge rates; nothing computes them yet. The signal exists — `ui-route-nudge` latches consultation per session — but no analyzer turns a corpus of sessions into a rate.
+    2. Decide whether that analyzer is worth building before the enforcement question, or whether the nudge A/B (Phase 4 Step 5) on `bench:ui` fixtures answers enough on its own.
+    3. Enabling the nudge is the prerequisite either way: set `hooks.ui_route_nudge.enabled: true` in `.agent-settings.yml`. It ships OFF deliberately; turning it on is a maintainer decision about noise, not a default.
+  - **Resolved when:** either a rate analyzer exists and has published a baseline, or the decision to answer the question with the A/B alone is recorded.
 - **enforcement-evidence** (owner: maintainer) — blocks Phase 5 — Reach and enforcement
   - **What to do:**
     1. Read the published consultation and discharge rates from Phase 1 and the nudge A/B from Phase 4.

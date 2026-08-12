@@ -29,6 +29,14 @@ collision_ok:
   "design token": "same surface, opposite side: this inventories tokens before the write, design-review-after-ui-write reviews what the write emitted"
   "resources/views/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
   "resources/js/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
+  "components/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
+  "src/components/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
+  "pages/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
+  "*.vue": "one component file, two obligations: inventory before the write, review after it"
+  "*.svelte": "one component file, two obligations: inventory before the write, review after it"
+  "*.tsx": "one component file, two obligations: inventory before the write, review after it"
+  "*.jsx": "one component file, two obligations: inventory before the write, review after it"
+  "*.blade.php": "one template file, two obligations: inventory before the write, review after it"
 # obligation: line 39
 obligation_frequency: "per-edit"
 ---
