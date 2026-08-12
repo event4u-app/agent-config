@@ -175,16 +175,14 @@ lean_projection:
 # The kill-criterion table therefore lands on "criterion not met — defer" and the
 # telemetry multiplier stays suspended (0.9155 < 1.0).
 #
-# There is exactly one lever here, deliberately. A second key for the runtime
-# SCOPE of the grammar (`speak_scope`) shipped until 2026-08-12 and no code path
-# ever read it: the rule body's own carve-out list is what states the scope, so
-# the key could only ever disagree with the rule, never change it. Deleted; a
-# leftover value warns once and is ignored.
+# Stated explicitly here because until 2026-07-29 this default existed only in
+# prose — and two prose sources disagreed. Do not flip without a passing
+# output-side bench.
 telegraph:
   # speak: false = DORMANT (the shipped default per docs/adrs/telegraph/0002).
   # The rule is omitted from dist/router.json entirely, so its ~982-token body
-  # never ships. That omission is the lever that stops the cost — there is no
-  # runtime scope knob that can do it.
+  # never ships. This is the only lever that stops the cost: compile_router
+  # gates on `speak` and on nothing else.
   # Set true only after an output-side bench clears the kill-criterion bar.
   speak: false
 
@@ -414,12 +412,6 @@ chat_history:
   #   per_tool  = one entry per tool call (most verbose)
   frequency: __CHAT_HISTORY_FREQUENCY__
 
-  # There is no size cap or overflow-mode key here. `max_size_kb` and
-  # `on_overflow` shipped until 2026-08-12 and nothing read either one: the
-  # rotate command takes its cap from `--max-kb` and its mode from `--mode` on
-  # argv, and session-count pruning is what actually bounds the directory. A
-  # leftover value warns once and is ignored.
-
   # Per-entry-type text-length caps (chars). 0 = verbatim, no slice.
   # N > 0 = collapse whitespace, slice to N chars, append " … [+K chars]"
   # so the log self-reports truncation. Defaults match the hardcoded
@@ -648,11 +640,6 @@ quality:
   # gates delegated to remote CI", never claim an unrun pipeline passed.
   local_auto_run: false
 
-  # There is no wait-for-remote-CI key here. `wait_for_remote_ci` shipped until
-  # 2026-08-12 and nothing read it: whether to poll follows from the situation —
-  # a push happened and a remote pipeline is detectable — and the obligation is
-  # already stated where it belongs, in the PR command's own CI-wait step. A
-  # leftover value warns once and is ignored.
 
 # --- Design fidelity ---
 #
@@ -729,13 +716,18 @@ screenshots:
   # false = allowed, but still subject to the data-bearing human gate.
   forbid_terminal_capture: true
 
-  # There is no data-bearing-gate key here. `data_bearing_gate` shipped until
-  # 2026-08-12 documented as an on/off switch over the human confirmation for a
-  # data-bearing screenshot embed, and nothing read it — which is the only
-  # possible outcome: that embed is a published egress, so the confirmation is a
-  # Hard Floor no settings value may lift. An `off` could never have been
-  # honoured. A leftover value warns once and is ignored; illustrative /
-  # no-data screenshots still embed with a stated justification.
+  # on | off  (default: on)
+  # on  = a data-bearing screenshot embed is gated behind this-turn human
+  #       confirmation; uncertain/unresolved regions → redact-or-refuse, never
+  #       ship-and-hope. Illustrative / no-data screenshots (diagrams, logos,
+  #       placeholder-only UI) may embed with a stated justification.
+  # off = no data-bearing gate (legacy; the anonymization taxonomy still applies).
+  #
+  # NOTE: nothing reads this key yet — the gate it names is unconditional prose in
+  # `doc-screenshot-hygiene`. Kept rather than deleted so the missing reader is a
+  # visible gap instead of a silently unguarded action; see settings-classes.md
+  # § The six unread keys for the disagreement about which repair is right.
+  data_bearing_gate: "on"
 
 code_style:
   # minimal | full  (default: minimal)
@@ -1356,11 +1348,6 @@ explain:
 # rule refuses every legal-review-prep skill until `acknowledged: true`.
 legal_review_prep:
   acknowledged: false
-  # There is no `consented_at` timestamp key here. It shipped until 2026-08-12
-  # described as wizard-written, and nothing ever wrote or read it — the record
-  # of WHEN and BY WHAT ROUTE a value was set is the provenance sidecar that
-  # `settings:set` writes and `consentVerdict` reads, for every key rather than
-  # this one. A leftover value warns once and is ignored.
   # Gate legal work-product behind a multi-model council / deep-research pass
   # (defense-in-depth + audit trail; fail-closed). Off lets single-model legal
   # output through — not recommended for this high-risk pack.

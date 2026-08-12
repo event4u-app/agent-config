@@ -189,12 +189,12 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 105 |
-| **Total** | **134** |
+| C — guarded | 106 |
+| **Total** | **135** |
 
-The total was 140 until 2026-08-12, when the six keys no code path read were
-deleted (§ The six unread keys, below): one A (`telegraph.speak_scope`) and five
-C.
+The total was 140 until 2026-08-12, when five of the six keys no code path read were
+deleted, minus the one held open (§ The six unread keys, below): one A
+(`telegraph.speak_scope`) and four C.
 
 The total is every leaf in the template, where *leaf* means anything that is not
 a **non-empty** map. An empty map (like the former `subagents.host_capabilities: {}`) is a real
@@ -244,16 +244,17 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 83 |
 | un-inferrable | 9 |
-| consent | 37 |
+| consent | 38 |
 | policy | 5 |
-| **Total** | **134** |
+| **Total** | **135** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
 numbers were deliberately not guessed in advance, because a target set before the
 classification is a target the classification then argues toward. The six unread
-keys were deleted the same day, which is where the −5 `derivable` and −1
-`consent` come from.
+keys were deleted the same day, which is where the −5 `derivable` comes from;
+`consent` is unchanged because the one consent-classified key among them was
+held open rather than deleted.
 
 `derivable` is the **deletion queue, not a deletion**: a row stays until the
 mechanism it names actually exists, so 83 measures work outstanding, not keys
@@ -263,6 +264,7 @@ surface has, and stating it is the point. `policy` is the smallest class and the
 only one whose action is a *move* rather than a keep or a delete: five keys carry
 a project fact the tree could hold instead.
 
+<<<<<<< HEAD
 ## The floor — the nine keys no mechanism can derive
 
 This is the residual set: not "what is left over today", but what stays after the
@@ -272,7 +274,7 @@ situation cannot answer it. The test each one passes is **not** "hard to detect"
 it is that a probe could at best enumerate candidates while the *choice among them*
 belongs to the human, and choosing wrong has a cost the agent cannot take back.
 
-`consent` (37) and `policy` (5) are deliberately **not** part of this floor:
+`consent` (38) and `policy` (5) are deliberately **not** part of this floor:
 consent rows survive only what re-examination leaves of them, and every policy row
 is scheduled to move into the project surface and then disappear. The floor is the
 nine below.
@@ -294,7 +296,7 @@ is account state, and the only mechanism that could observe it spends money to d
 so. That is the shape of an `un-inferrable` row — not "we did not bother", but "the
 observation is itself the thing the user is deciding whether to pay for".
 
-## The six unread keys — found, then deleted
+## The six unread keys — five deleted, one held open
 
 **Six keys had no reader at all** — found while classifying, not sought:
 `telegraph.speak_scope`, `chat_history.max_size_kb`, `chat_history.on_overflow`,
@@ -303,34 +305,33 @@ observation is itself the thing the user is deciding whether to pay for".
 reference page, and in several cases in the setup wizard; none was consulted by
 any code path. They were configured, documented, surfaced and inert. That is a
 sharper finding than the 83, because a key nothing reads cannot be defended on
-the grounds that someone depends on it — and two of them sat on consent-shaped
-surfaces, where the absence of a reader means the authorisation they appeared to
-carry was not enforced anywhere.
+the grounds that someone depends on it.
 
-All six were deleted on 2026-08-12, each with its own `REMOVED_KEYS` reason
-naming what decides instead. An unread key is the one deletion that cannot
-silently change a default, because no behaviour was reading the old value — which
-is why this batch went first and why it needed no replacement mechanism built
-ahead of it.
+**Five of the six are gone (2026-08-12, `road-to-zero-settings` Phase 2.1).**
+They are the one batch whose removal is provably free: a key nothing reads
+cannot change a default by leaving, so no replacement mechanism had to ship
+first. Each carries its own reason string in `REMOVED_KEYS`, so an older install
+that still sets one warns once and boots unchanged.
 
-Two of the six carried a **documented promise the code did not keep**, and the
-deletion is what repairs them:
+The sixth, `screenshots.data_bearing_gate`, **stays** — and the reason it stays
+is the finding, not an exception. It is `consent`, and its missing reader means
+the authorisation it appears to carry is not enforced anywhere. Deleting it
+would remove the appearance of a gate and leave the unguarded action; the
+repair is to build the reader, which is Phase 3 work with a real behaviour
+change behind it. `legal_review_prep.consented_at` looked like the same case and
+is not: it is the *timestamp* of a consent whose actual gate is
+`legal_review_prep.acknowledged`, which is read and stays.
 
-- `screenshots.data_bearing_gate` was documented as an on/off switch over the
-  human confirmation for a data-bearing screenshot embed. That embed is a
-  published egress, so the confirmation is a Hard Floor that no settings value may
-  lift — an `off` could never have been honoured, and the reference page
-  advertised an opt-out that did not exist. Its disposition was `consent` on the
-  strength of that description; with no reader and no liftable gate the honest
-  classification is `derivable`, and the mechanism that decides instead is the
-  unconditional gate in `doc-screenshot-hygiene` routing into
-  `non-destructive-by-default`. Recorded here rather than quietly relabelled,
-  because reclassifying a row toward deletion is exactly the move the
-  name-your-replacement rule exists to police.
-- `legal_review_prep.consented_at` was documented as "set automatically by the
-  setup wizard". Nothing wrote it. The record of when and by what route a value
-  was set is the provenance sidecar `settings:set` writes and `consentVerdict`
-  reads — for every key, not for this one.
+**The counter-argument is recorded rather than settled**, because it was raised
+against this decision in parallel and is not obviously wrong: a data-bearing
+screenshot embed is a *published egress*, so its confirmation routes into
+`non-destructive-by-default`, which refuses a settings override by construction.
+On that reading an `off` could never have been honoured at all, the reference
+page advertises an opt-out that cannot exist, and the key is `derivable` with the
+unconditional gate in `doc-screenshot-hygiene` as its replacement. Which reading
+wins decides whether Phase 3 builds a reader or deletes a false promise, so it is
+a product call and it is left to the maintainer. Kept as-is meanwhile: the
+conservative side of that disagreement is the one that changes nothing.
 
 ## The table
 
@@ -408,6 +409,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `consistency.cross_source` | C | `"on"` | disables the cross-source discrepancy gate | derivable — the rule's own trigger condition; a discrepancy exists only when two present sources contradict |
 | `screenshots.identity_allowlist` | C | `[]` | allowlist of identities that ship unredacted | consent |
 | `screenshots.forbid_terminal_capture` | C | `true` | kill-switch over the highest-leak capture path | consent |
+| `screenshots.data_bearing_gate` | C | `"on"` | the human-confirmation gate over a published egress | consent |
 | `code_style.docblocks` | A | `minimal` | code convention | derivable — the project's own linter/style config and the docblock density of the touched file, which `standards-from-config` reads off the tree |
 | `subagents.downshift` | C | `true` | routes to another model tier, which is spend and quality | derivable — the per-slice tier assignment in `auto-dispatch-classification`, which the orchestrator already computes per dispatch |
 | `subagents.quota_arbitrage` | C | `true` | spends from a separate quota pool | consent |
@@ -523,6 +525,38 @@ that says "include examples" is bounded by the C-classed allow-list that decides
 *which* examples. `pipelines.skill_improvement` carries a stated litmus — if its
 approval ever stops being a separate mechanical step and becomes an in-turn
 "ok", it moves to C.
+
+## The floor — the residual `un-inferrable` set, with the reason each survives
+
+These nine are the answer to *"how few keys can this surface have?"*, and the
+answer is published rather than asserted: each row states what a mechanism would
+have to observe to derive the value, and why nothing in the environment carries
+that. A row here is falsifiable — name the probe and it stops being
+un-inferrable.
+
+The direction this contract encodes is fewer keys. This section is where that
+direction stops, and stating the stopping point is what keeps "we are down to N"
+from being a slogan. `un-inferrable` is the only disposition expected NOT to
+shrink; `derivable` is a queue, `consent` is under re-examination, and `policy`
+moves into the project surface.
+
+| Key | Why no mechanism can derive it |
+|---|---|
+| `profile.id` | Which of the six audience identities the human *is*. The tree carries what the project contains, never who is sitting in front of it — a repo full of TypeScript is equally a developer's, an agency's, and a founder's. |
+| `personal.ide` | Names a binary to execute. A probe can list what is installed; it cannot know which one the human wants opened, and guessing wrong executes the wrong program. |
+| `personal.canary_name` | What the human wants to be called. `git config user.name` supplies a *prefill*, never the answer — the two differ for most people, and a wrong name is worse than none, because the canary then signals on a token the user never watches for. |
+| `subagents.model_map.lite` | Names an external model endpoint. Which endpoints an account may call is a billing fact behind a vendor, not a property of the machine or the repo. |
+| `subagents.model_map.medium` | Same — the endpoint this account may call at this tier. |
+| `subagents.model_map.high` | Same — the endpoint this account may call at this tier. |
+| `subagents.implementer_model` | Same, for the implementer role: which endpoint is permitted and paid for is outside anything the package can observe. |
+| `subagents.judge_model` | Same, for the judge role — and here a wrong default is worse than an empty one, because it would silently judge with the model under test. |
+| `ai_team.model` | Same, for the team surface. `auto` is a resolution *strategy*, not a derivation: it still needs the endpoint list this key supplies. |
+
+The `consent` class (38) is deliberately NOT part of this floor. Those keys are
+kept for now but sit under the Phase-3 re-examination that asks whether the
+ACTION needs authorising at all — a consent gate on something the package should
+not be doing is two problems wearing one flag, and the repair may remove the
+action rather than the key.
 
 ## Adding a key
 

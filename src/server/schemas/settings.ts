@@ -242,10 +242,13 @@ export const settingsSchema = z.object({
         forbid_terminal_capture: z.boolean().default(true).describe(
             'Consumed by the doc-screenshot-hygiene rule. true (default) = terminal/CLI/IDE screenshots are forbidden (highest leak vector: absolute local paths, env tokens); use text code blocks with text redaction instead. false = allowed, still subject to the data-bearing human gate.',
         ),
-    }).default({ identity_allowlist: [], forbid_terminal_capture: true }),
+        data_bearing_gate: z.enum(['on', 'off']).default('on').describe(
+            'Consumed by the doc-screenshot-hygiene rule. on (default) = a data-bearing screenshot embed is gated behind this-turn human confirmation; uncertain/unresolved regions redact-or-refuse, never ship-and-hope; illustrative/no-data screenshots may embed with a stated justification. off = no data-bearing gate (the anonymization taxonomy still applies).',
+        ),
+    }).default({ identity_allowlist: [], forbid_terminal_capture: true, data_bearing_gate: 'on' }),
     telegraph: z.object({
         speak: z.boolean().default(false).describe(
-            'Whether the telegraph-speak rule ships at all. false (default) = DORMANT: compile_router omits the rule from dist/router.json entirely, so its body never reaches a host. That omission is the only lever that stops the cost — the rule body states its own grammar scope, so no scope setting exists. Set true only after an output-side bench clears the kill-criterion bar (docs/adrs/telegraph/0002).',
+            'Whether the telegraph-speak rule ships at all. false (default) = DORMANT: compile_router omits the rule from dist/router.json entirely, so its body never reaches a host. This is the only lever that stops the cost. Set true only after an output-side bench clears the kill-criterion bar (docs/adrs/telegraph/0002).',
         ),
     }).default({ speak: false }),
     tokens: z.object({

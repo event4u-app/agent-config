@@ -907,11 +907,22 @@ export function load_agent_settings(
  * made the soak impossible; whether the gate fires is now decided by each
  * detector's own trigger conditions. See `turn_end_gate_hook.ts` § "Always
  * armed".
- */
-/**
- * Keys that shipped once and no longer exist, mapped to the reason the warning
- * prints — which must name what decides INSTEAD, never just "removed".
  *
+ * The five `derivable` leaves below (2026-08-12, road-to-zero-settings Phase
+ * 2.1) are a different case from every entry above them, and the difference is
+ * the whole safety argument: no code path ever *consulted* them. Each appeared
+ * in the template, the schema and the reference page, and several in the setup
+ * wizard, while the decision they looked like they governed was taken
+ * elsewhere. A key nothing reads cannot change a default by leaving — so this
+ * is the one deletion batch that needs no replacement mechanism, only the
+ * per-key statement of what already decides.
+ *
+ * A sixth unread key, `screenshots.data_bearing_gate`, was found in the same
+ * pass and deliberately NOT deleted — it is `consent`, and the open question is
+ * whether the repair is to build its missing reader or to delete a promise a
+ * Hard Floor can never honour. See `settings-classes.md` § The six unread keys.
+ *
+ * Every reason string must name what decides INSTEAD, never just "removed".
  * Exported so `lint_settings_classes` can check the deletion side of the
  * surface: a reason that names no replacement, or an entry whose key is live in
  * the template again, is a contradiction the loader itself cannot notice.
@@ -926,30 +937,11 @@ export const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
     ['hooks.turn_end_gate.promissory', 'the turn-end gate is always armed'],
     ['hooks.turn_end_gate.language', 'the turn-end gate is always armed'],
     ['hooks.turn_end_gate.verification', 'the turn-end gate is always armed'],
-    // Six keys deleted 2026-08-12 because no code path read any of them — the
-    // reason per key names what decides instead, which is what makes the
-    // deletion free rather than a silently-changed default.
-    [
-        'telegraph.speak_scope',
-        'the telegraph-speak rule body states its own grammar scope; `telegraph.speak` is the only lever',
-    ],
-    [
-        'chat_history.max_size_kb',
-        'the rotate command takes its cap from --max-kb, and session-count pruning bounds the directory',
-    ],
-    ['chat_history.on_overflow', 'the rotate command takes its mode from --mode'],
-    [
-        'quality.wait_for_remote_ci',
-        'a push plus a detectable remote pipeline decides it; the PR command already states the obligation',
-    ],
-    [
-        'screenshots.data_bearing_gate',
-        'a data-bearing embed is a published egress, so its confirmation is a Hard Floor no setting may lift',
-    ],
-    [
-        'legal_review_prep.consented_at',
-        'the provenance sidecar settings:set writes and consentVerdict reads records when and by what route',
-    ],
+    ['telegraph.speak_scope', 'the rule body states its own scope; compile_router gates on telegraph.speak alone'],
+    ['chat_history.max_size_kb', 'the rotate command takes --max-kb from argv; session-count pruning bounds the file'],
+    ['chat_history.on_overflow', 'the overflow mode comes from the rotate command --mode argv'],
+    ['quality.wait_for_remote_ci', 'whether to poll follows from the push plus a detectable remote pipeline'],
+    ['legal_review_prep.consented_at', 'the provenance sidecar settings:set writes and consentVerdict reads'],
 ]);
 
 /** Keys already warned about in THIS process — the "once per run" dedupe. */

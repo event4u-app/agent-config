@@ -109,6 +109,12 @@
           "type": "boolean",
           "default": true,
           "description": "Consumed by the doc-screenshot-hygiene rule. true (default) = terminal/CLI/IDE screenshots are forbidden (highest leak vector: absolute local paths, env tokens); use text code blocks with text redaction instead. false = allowed, still subject to the data-bearing human gate."
+        },
+        "data_bearing_gate": {
+          "type": "string",
+          "enum": ["on", "off"],
+          "default": "on",
+          "description": "Consumed by the doc-screenshot-hygiene rule. on (default) = a data-bearing screenshot embed is gated behind this-turn human confirmation; uncertain/unresolved regions redact-or-refuse, never ship-and-hope; illustrative/no-data screenshots may embed with a stated justification. off = no data-bearing gate (the anonymization taxonomy still applies)."
         }
       }
     },

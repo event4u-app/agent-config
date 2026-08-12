@@ -165,23 +165,28 @@ describe('settings schema ↔ template parity', () => {
 });
 
 /**
- * The six keys deleted on 2026-08-12 because no code path read any of them.
+ * The five keys deleted on 2026-08-12 because no code path read any of them.
  *
- * The parity gate above already fails on a one-sided deletion, so absence needs
- * no separate assertion. What it does NOT cover, and what a silent regression
- * would look like, is the value coming *back*: a settings file left over from
- * before the deletion still carries these keys, and the danger is a future edit
- * that re-adds a leaf and starts honouring one. So the pin is the inverted
- * invariant — the leftover value does not survive a parse and cannot become a
- * live setting again.
+ * Absence is asserted in `tests/lib/removed_zero_settings_keys.test.ts` — on both
+ * the template and the schema side, with a not-vacuously-true probe — so it is
+ * deliberately not repeated here. What that file does not cover, and what a
+ * silent regression would look like, is the value coming *back*: a settings file
+ * left over from before the deletion still carries these keys, and the danger is
+ * a future edit that re-adds a leaf and starts honouring one. So the pin here is
+ * the one assertion the sibling file lacks — the leftover value does not survive
+ * a parse and cannot become a live setting again.
  */
 const DELETED_2026_08_12: readonly (readonly [string, string, Json])[] = [
     ['telegraph', 'speak_scope', 'aggressive'],
     ['chat_history', 'max_size_kb', 64],
     ['chat_history', 'on_overflow', 'condense'],
     ['quality', 'wait_for_remote_ci', true],
-    ['screenshots', 'data_bearing_gate', 'off'],
     ['legal_review_prep', 'consented_at', '2026-01-01T00:00:00Z'],
+    // `screenshots.data_bearing_gate` was the sixth unread key found in the same
+    // pass and is deliberately NOT here: it was held open rather than deleted,
+    // pending the decision on whether to build its missing reader or delete a
+    // promise a Hard Floor can never honour. Adding it would assert a deletion
+    // that has not happened.
 ] as const;
 
 describe('deleted settings keys cannot be honoured again', () => {
@@ -189,11 +194,6 @@ describe('deleted settings keys cannot be honoured again', () => {
 
     for (const [section, leaf, hostileValue] of DELETED_2026_08_12) {
         const dotted = `${section}.${leaf}`;
-
-        it(`${dotted} is absent from the template and the schema`, () => {
-            expect(getTemplateAt(template, dotted)).toBeUndefined();
-            expect(getSchemaAt(settingsSchema, dotted)).toBeNull();
-        });
 
         it(`${dotted} is stripped rather than honoured when a stale file still carries it`, () => {
             // The hostile value is the one a pre-deletion file would plausibly
