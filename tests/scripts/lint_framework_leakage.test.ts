@@ -58,6 +58,16 @@ describe('lint_framework_leakage — ported pytest suite', () => {
     function run(...paths: string[]): number {
         return mod.main(['--paths', ...paths]);
     }
+    /**
+     * A run with NO `--paths`, i.e. the shape CI uses.
+     *
+     * The unused-exemption check is deliberately inert under `--paths`, where
+     * "unused" means "out of scope", so every assertion about it has to come
+     * through here — `run()` would make those specs pass for the wrong reason.
+     */
+    function runFull(): number {
+        return mod.main([]);
+    }
     function runExtra(extra: string[], ...paths: string[]): number {
         return mod.main([...extra, '--paths', ...paths]);
     }
@@ -86,15 +96,76 @@ describe('lint_framework_leakage — ported pytest suite', () => {
     });
 
     it('test_allowlisted_line_passes', () => {
+        // Anchored, not `lines: [4]`. Position keying is retired: it drifts out
+        // from under its own exemption on any edit above the line, and three
+        // shipped entries had rotted that way before the migration.
         makeTree(tmp, {
             'skills/refine-prompt/SKILL.md': '# Refine\n\nLine 2\nUses FormRequest here.\n',
             '_allow.json': JSON.stringify({
                 version: 1,
-                entries: [{ file: 'skills/refine-prompt/SKILL.md', lines: [4], reason: 'documented' }],
+                entries: [
+                    {
+                        file: 'skills/refine-prompt/SKILL.md',
+                        anchor: 'Uses FormRequest here.',
+                        reason: 'documented',
+                    },
+                ],
             }),
         });
         expect(run('skills')).toBe(0);
         expect(stdout).toContain('1 allowlisted');
+    });
+
+    it('test_position_keyed_entry_is_refused', () => {
+        // The fixture is CLEAN on purpose. An earlier version of this spec used a
+        // file carrying an un-exempted `FormRequest`, so the run exited 1 whether
+        // or not the validator existed — it passed for a reason it was not
+        // testing, and deleting the check it claims to pin left it green. With no
+        // leakage in the tree the only thing that can return 1 is the refusal.
+        makeTree(tmp, {
+            'skills/refine-prompt/SKILL.md': '# Refine\n\nNothing framework-specific here.\n',
+            '_allow.json': JSON.stringify({
+                version: 1,
+                entries: [{ file: 'skills/refine-prompt/SKILL.md', lines: [3], reason: 'documented' }],
+            }),
+        });
+        expect(run('skills')).toBe(1);
+    });
+
+    it('test_exemption_that_suppresses_nothing_is_refused', () => {
+        // An anchor resolving to a line says nothing about that line producing a
+        // hit. Re-keying a drifted position entry to an anchor preserved the rot
+        // silently until this check; five shipped entries were in that state.
+        makeTree(tmp, {
+            'skills/refine-prompt/SKILL.md': '# Refine\n\nNothing framework-specific here.\n',
+            '_allow.json': JSON.stringify({
+                version: 1,
+                entries: [
+                    {
+                        file: 'skills/refine-prompt/SKILL.md',
+                        anchor: 'Nothing framework-specific here.',
+                        reason: 'documented',
+                    },
+                ],
+            }),
+        });
+        expect(runFull()).toBe(1);
+    });
+
+    it('test_unused_check_is_skipped_when_paths_narrow_the_scan', () => {
+        // `--paths` makes "unused" mean "out of scope". The guard for this was
+        // first written as `paths.length === 0`, which never fired: the default
+        // IS a non-empty list of three subdirectories, so the check silently did
+        // nothing on exactly the full runs it exists for.
+        makeTree(tmp, {
+            'skills/refine-prompt/SKILL.md': '# Refine\n\nNothing framework-specific here.\n',
+            'rules/other.md': '# Other\n\nAlso clean.\n',
+            '_allow.json': JSON.stringify({
+                version: 1,
+                entries: [{ file: 'rules/other.md', anchor: 'Also clean.', reason: 'documented' }],
+            }),
+        });
+        expect(run('skills')).toBe(0);
     });
 
     it('test_allowlist_whole_file_passes', () => {
