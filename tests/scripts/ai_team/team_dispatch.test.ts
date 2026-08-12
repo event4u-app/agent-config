@@ -455,11 +455,16 @@ describe('run_team_review — envelope (happy parse)', () => {
         expect(env?.model).toBe('auto');
         expect(env?.quota).toEqual({ used: 1, ceiling: 50 }); // recorded via existing machinery
         expect(env?.raw).toBeUndefined();
-        // Exactly one synchronous call; system prompt + bundle rode the argv.
+        // Exactly one synchronous call; system prompt + bundle ride stdin as one
+        // payload. `codex exec` has no `--system` flag and rejects it with exit 2,
+        // so an argv carrying it fails every team review — which is what this
+        // assertion pinned as correct until 2026-08-12.
         expect(calls.length).toBe(1);
         const argv = calls[0]?.cmd ?? [];
         expect(argv.join(' ')).toContain('exec');
-        expect(argv).toContain('--system');
+        expect(argv).not.toContain('--system');
+        expect(argv).toContain('-');
+        expect(calls[0]?.stdin ?? '').toContain('findings');
     });
 
     it('clean review (no findings) → DONE', () => {
