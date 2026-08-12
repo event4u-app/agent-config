@@ -44,7 +44,7 @@ Before implementing:
 
 ## Demand gate — should this exist? (build / defer)
 
-On a "build me an app / add this feature" ask, ONE reflexive pre-check before the three checks: **who asked · what breaks if unbuilt · what's the evidence?** Recommend **build** only at a real retention/activation blocker (evidence, not anxiety); else **defer/validate**, naming the missing evidence. Advisory — "just build it" proceeds immediately; no network lookup. Hierarchy + build/defer table: guideline § 8-pre.
+On a "build me an app / add this feature" ask, ONE reflexive pre-check before the three checks: **who asked · what breaks if unbuilt · what's the evidence?** **Read the addressee first** — `project.audience` (`agent-config settings:get project.audience`, absent → `public`): the demand hierarchy measures **market** demand and is meaningless where no market is intended, so at `self` the check is inert and the work is classified `L-self` → **build**. With a market: recommend **build** at a real retention/activation blocker (evidence, not anxiety); else **defer/validate**, naming the missing evidence. Never gate a roadmap on a user population the project is not meant to have. Advisory — "just build it" proceeds immediately; no network lookup. Hierarchy + build/defer table: guideline § 8-pre.
 
 ## The solution-size ladder — stop at the first rung that works
 

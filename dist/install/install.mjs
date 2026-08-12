@@ -14591,6 +14591,7 @@ var modelAutoSwitch = external_exports.enum(["auto", "suggest", "off"]);
 var leanProjectionMode = external_exports.enum(["eager-all", "thin"]);
 var projectionMode = external_exports.enum(["legacy-all", "scoped"]);
 var memoryCadence = external_exports.enum(["auto", "always", "never"]);
+var projectAudience = external_exports.enum(["self", "internal", "client", "public"]);
 var settingsSchema = external_exports.object({
   agent_config_version: external_exports.string().default("").describe(
     'Pin the package to an exact semver (e.g. "1.4.2") so all teammates load the same skill / rule set. Leave empty to track whatever is installed locally \u2014 useful for the maintainers of this package, risky for production projects.'
@@ -14695,6 +14696,9 @@ var settingsSchema = external_exports.object({
     ),
     improvement_pr_branch_prefix: external_exports.string().default("improve/agent-").describe(
       'Branch-name prefix for improvement PRs the agent opens against project.upstream_repo (e.g. "improve/agent-add-react-skill"). Pick a prefix your repo conventions allow.'
+    ),
+    audience: projectAudience.default("public").describe(
+      'Who this project is built for \u2014 read by the demand gate (\xA7 8-pre of docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md), whose L0-L4 ladder measures MARKET demand and is meaningless where no market is intended. self = a tool its maintainer builds for themselves; the gate is inert and work is classified L-self (build) instead of being deferred for lack of a user population nobody wants. internal = a team tool; only "what breaks without it?" survives. client = built for a named client, who is the requester rather than a market segment. public (default) = a product with an intended market; full three-question gate, behaviour unchanged from before this key existed.'
     )
   }),
   github: external_exports.object({
