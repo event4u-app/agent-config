@@ -449,9 +449,21 @@ export function main(argv: string[] | null = null, options: MainOptions = {}): n
 
 // --- CLI entry ---
 
+/**
+ * Defined by `build:cli-delegate` only — see `cmd_session_recycle.ts` for why the
+ * URL comparison below cannot decide this inside that bundle.
+ */
+declare const __AGENT_CONFIG_CLI_DELEGATE__: boolean | undefined;
+
 function _isCliEntry(): boolean {
     if (process.argv[1] === undefined) {
         return false;
+    }
+    if (typeof __AGENT_CONFIG_CLI_DELEGATE__ !== 'undefined' && __AGENT_CONFIG_CLI_DELEGATE__) {
+        // Found by running every delegate bundle, not by reading: `--splitting`
+        // had moved this body into a shared chunk too, so `agent-config refresh`
+        // was a silent exit 0 like doctor, migrate and session:recycle.
+        return path.basename(process.argv[1], '.js') === 'cmd_refresh';
     }
     const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
     if (import.meta.url === argvUrl) {

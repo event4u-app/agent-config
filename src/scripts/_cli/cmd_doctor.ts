@@ -3591,9 +3591,24 @@ function main(argv: string[] | null = null): number {
 
 // --- CLI entry ---
 
+/**
+ * Defined by `build:cli-delegate` only — see `cmd_session_recycle.ts` for why a
+ * single "am I inside a bundle" flag cannot answer "may I run".
+ */
+declare const __AGENT_CONFIG_CLI_DELEGATE__: boolean | undefined;
+
 function _isCliEntry(): boolean {
     if (process.argv[1] === undefined) {
         return false;
+    }
+    if (typeof __AGENT_CONFIG_CLI_DELEGATE__ !== 'undefined' && __AGENT_CONFIG_CLI_DELEGATE__) {
+        // `--splitting` moves this module's body into a shared chunk, so the URL
+        // comparison below weighs the CHUNK against `argv[1]` and never matches.
+        // `agent-config doctor` shipped producing zero bytes and exit 0 for
+        // exactly that reason — a diagnostic reporting success while saying
+        // nothing. The invoked file name is the reliable signal inside this
+        // bundle; the delegate smoke test keeps the literal honest.
+        return path.basename(process.argv[1], '.js') === 'cmd_doctor';
     }
     const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
     if (import.meta.url === argvUrl) {

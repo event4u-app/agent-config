@@ -932,13 +932,30 @@ export function main(argv: string[] | null = null, options: MainOptions = {}): n
 // build's `--define`) disables the auto-run there; under tsx/node it is
 // undefined, so `typeof` short-circuits and the standalone CLI guard fires
 // normally.
+// The sentinel above is true in EVERY esbuild target, `build:cli-delegate`
+// included — and there this file is the entry, so refusing on it refused to run
+// the bundle built to run it: `dist/cli-delegate/cmd_migrate.js` produced zero
+// bytes and exit 0, and `agent-config migrate` reported success while doing
+// nothing. `__AGENT_CONFIG_CLI_DELEGATE__` is defined by that one build only, so
+// the pair distinguishes "inlined into the installer" (never run) from "this
+// bundle's own target" (run, subject to the entry check below).
 declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
-const _bundled =
-    typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__;
+declare const __AGENT_CONFIG_CLI_DELEGATE__: boolean | undefined;
+const _inForeignBundle =
+    typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' &&
+    __AGENT_CONFIG_BUNDLE__ &&
+    !(typeof __AGENT_CONFIG_CLI_DELEGATE__ !== 'undefined' && __AGENT_CONFIG_CLI_DELEGATE__);
 const _HERE = fileURLToPath(import.meta.url);
 function _isCliEntry(): boolean {
     if (process.argv[1] === undefined) {
         return false;
+    }
+    if (typeof __AGENT_CONFIG_CLI_DELEGATE__ !== 'undefined' && __AGENT_CONFIG_CLI_DELEGATE__) {
+        // `--splitting` moves this module's body into a shared chunk, so the URL
+        // comparison below weighs the CHUNK against `argv[1]` and never matches —
+        // `agent-config migrate` shipped producing zero bytes and exit 0. The
+        // invoked file name is the reliable signal inside this bundle.
+        return path.basename(process.argv[1], '.js') === 'cmd_migrate';
     }
     const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
     if (import.meta.url === argvUrl) {
@@ -958,7 +975,7 @@ function _isCliEntry(): boolean {
     }
 }
 
-if (!_bundled && (_isCliEntry() || process.argv[1] === _HERE)) {
+if (!_inForeignBundle && (_isCliEntry() || process.argv[1] === _HERE)) {
     try {
         process.exitCode = main(process.argv.slice(2));
     } catch (exc) {
