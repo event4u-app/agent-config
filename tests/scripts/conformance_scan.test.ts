@@ -193,8 +193,17 @@ describe("render", () => {
       expect(out).toContain(k);
     }
     // The scope disclaimer is part of the contract, not decoration.
-    expect(out).toMatch(/NOT measured/);
+    //
+    // Round 7 § 6.4 tightened it: the footer used to say four classes are "NOT
+    // measured", and two of the four were wrong — `session-canary` is probeable
+    // and promissory closings are already GATED. So the assertion moved from the
+    // old blanket string to the property that now matters: each named class
+    // carries its own status, and the two that really are unmeasured say so.
+    expect(out).toMatch(/measured NOWHERE/);
     expect(out).toMatch(/session-canary/);
+    expect(out).toMatch(/probe_session_canary/);
+    expect(out).toMatch(/ALREADY GATED/);
+    expect(out).toMatch(/ask-shape/);
   });
 });
 
