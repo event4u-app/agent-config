@@ -6,6 +6,14 @@ description: "UI written or changed — review it against the design contract be
 triggers:
   - path_prefix: "resources/views/"
   - path_prefix: "resources/js/"
+  - path_prefix: "components/"
+  - path_prefix: "src/components/"
+  - path_prefix: "pages/"
+  - file_pattern: "*.vue"
+  - file_pattern: "*.svelte"
+  - file_pattern: "*.tsx"
+  - file_pattern: "*.jsx"
+  - file_pattern: "*.blade.php"
   - keyword: "component"
   - keyword: "design token"
 routes_to:
@@ -87,18 +95,42 @@ enforcement. So this rule ships `enforced_by: none`, the same honesty boundary
 for their own obligations, rather than pretending a satisfiable-by-assertion
 condition is a gate.
 
+**A runtime carrier now exists, and it does not change that.** The
+`ui-route-nudge` PreToolUse concern is the first thing in the tree that ever
+consumed this rule's triggers at session time: on a UI write with no design
+consultation latched this session it emits one warning naming the route. It is
+warn-only, capped at two nudges per session, default-OFF, and bound only on
+hosts carrying a `pre_tool_use` slot. A nudge that can be ignored is not
+enforcement, so `enforced_by:` stays `none` — it moves the day a mechanism can
+refuse, not the day a reminder appears. `agent-config hooks:status` answers
+whether the concern is bound on the host you are actually on.
+
 What that leaves, and it is the useful part: the write side now has a named
 obligation and a route to the skill that discharges it, where before it had
 neither. Full enforcement needs the work-engine `review`/`polish` gates (which
 already act on `a11y_violation` and `token_violation` findings) or pack-scoped
 rule projection — a maintainer decision, never an automated one.
 
-One asymmetry worth stating: `design-review` lives in `engineering-base` while
-this rule is scoped to `frontend-design`. The route still resolves — a rule may
-name a skill from another pack — but a consumer with `frontend-design` and
-without `engineering-base` gets the obligation without the skill. That is why
-`accessibility-auditor` is a second route: it is the part of the review that
-must not depend on the pairing.
+One asymmetry worth stating, in the direction it actually runs: `design-review`
+lives in `engineering-base` while this rule is scoped to `frontend-design`. The
+route still resolves — a rule may name a skill from another pack.
+
+The case this paragraph used to describe — `frontend-design` installed without
+`engineering-base`, so the obligation arrives without the skill — **cannot
+occur**: `frontend-design` declares `requires: [engineering-base]`, and the
+resolver expands that graph transitively. The real gap is the reverse and was
+undocumented: an **`engineering-base`-only** install (a plain `laravel` or
+`react` consumer, since both only *suggest* `frontend-design`) carries
+`existing-ui-audit`, `design-review` and `fe-design` while carrying **no rule
+that routes to them**. It bites only where pack-scoped rule projection is
+active — `rules.packs` ships inactive, so a default install still receives both
+rules — which makes it a latent defect rather than a live one, and exactly the
+kind that surfaces the day the projection axis is switched on.
+
+`lint_rule_skill_pack_reach` is the invariant that keeps this honest: no rule
+may route to a skill a pack-legal install of that rule's packs cannot receive.
+`accessibility-auditor` remains a second route for the independent reason that
+the a11y half of the review should not depend on the pairing at all.
 
 ## Failure modes
 

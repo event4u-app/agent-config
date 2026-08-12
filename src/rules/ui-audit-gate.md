@@ -6,6 +6,14 @@ description: "Writing/editing UI — components, screens, layouts, design tokens
 triggers:
   - path_prefix: "resources/views/"
   - path_prefix: "resources/js/"
+  - path_prefix: "components/"
+  - path_prefix: "src/components/"
+  - path_prefix: "pages/"
+  - file_pattern: "*.vue"
+  - file_pattern: "*.svelte"
+  - file_pattern: "*.tsx"
+  - file_pattern: "*.jsx"
+  - file_pattern: "*.blade.php"
   - keyword: "component"
   - keyword: "design token"
 routes_to:
@@ -90,6 +98,14 @@ component because reuse beats duplication — not because a check will catch you
 Full enforcement requires the dispatcher (or the `frontend-design` pack once
 pack-scoped rule projection is enabled; that flip is a maintainer decision,
 never an automated one).
+
+**A runtime carrier now exists, and it does not change the verdict.** The
+`ui-route-nudge` PreToolUse concern reads this rule's triggers at session time —
+the first consumer they have had — and warns once on a UI write with no design
+consultation latched. Warn-only, capped at two per session, default-OFF, bound
+only where a `pre_tool_use` slot exists. A reminder that can be ignored is not
+a gate, so `enforced_by:` stays `none`. Run `agent-config hooks:status` for the
+host you are on rather than trusting this sentence.
 
 ## Failure modes
 
