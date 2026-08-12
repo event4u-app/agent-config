@@ -194,6 +194,21 @@ is producer/consumer across two concerns that are both already bound.
   unsettled") only ever refuses more often. The invariant is preserved, not
   bypassed.
   `verify:` `grep -ci "asymmetr" src/scripts/hooks/turn_end_gate_hook.ts`
+> **The switch this detector shipped behind was deleted under it, mid-run.** PR
+> #1296 landed on `main` while these phases were executing and removed
+> `hooks.turn_end_gate.*` entirely, arming the gate unconditionally — its argument
+> being that a default-off safety gate is an absent one, so the soak the switch
+> was protecting could never happen. Detector D was written with its own
+> `completion` flag and a test pinning it; the merge resolved **toward main**, so
+> the flag and the ten settings tests are gone and D sits in the same
+> unconditional list as A/B/C, with its gating where that file says gating
+> belongs — inside the detector. Three consequences, stated rather than absorbed:
+> it can no longer be turned off by configuration, only by a revert; that raises
+> the bar on its false-positive corpus, which is what 1.4's negative cases and the
+> three end-to-end probes are for; and Phase 1 above was written against a design
+> that no longer exists, so this note sits here instead of the text being silently
+> rewritten to look prescient.
+
 - [x] **1.3** Fail-open on every internal error, and fire **at most once per
   turn**. A turn-end gate that can wedge the loop is worse than the class it
   catches.
