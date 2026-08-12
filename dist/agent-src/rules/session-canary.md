@@ -118,6 +118,29 @@ refused turn-end continues in the same turn) that rejects a task-start reply
 carrying no greeting. Proposed, not shipped; until it is, this obligation is
 model-carried in practice, whatever the frequency join reports.
 
+**Round 7 downgrade: that proposed mechanism is UNDECIDABLE as written, and the
+obligation splits into a measured half and an unmeasurable one.** A *task* start
+is recorded nowhere in a transcript — there is no task event on any host, and
+`user-interrupt-priority`'s continuation/clarification/interrupt distinction is a
+judgement, not a field. So a delivery check "that rejects a task-start reply" has
+no way to know a task started. The proposal is not merely unbuilt; as specified it
+cannot be built, and saying "proposed, not shipped" implied otherwise.
+
+What IS decidable is the per-**session** instance, and it was measured rather than
+asserted (`./scripts-run src/scripts/probe_session_canary`, 30 sessions,
+2026-08-12): the opening greeting is present in **25 of 28** sessions carrying
+assistant prose (89.3 %), and in **24 of 25** post-carrier (96.0 %). Of the three
+misses, two predate the carrier (2026-07-21, 2026-07-29) and one is a session whose
+first thirty turns were tool calls.
+
+Both halves of that are load-bearing. The carrier works exactly where it has a
+slot — `session_start` — which is why the session-scope figure is high; and the
+24-of-29 task-start figure above is not contradicted by it, because the two count
+different events. The honest statement is therefore: **session-scope compliance is
+measured and good; task-scope compliance is unmeasured and unmeasurable with
+today's transcript, and no gate can change that until a task boundary is recorded
+somewhere.** Do not read the 96 % as covering the obligation as a whole.
+
 **The wrong-name half needs nothing, and that is worth stating.** The beat
 already carries the resolved value — `build_canary_reminder` emits
 `Canary active for "<name>"`, and the hook no-ops when no layer resolves a name —
