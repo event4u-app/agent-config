@@ -370,6 +370,35 @@ describe('detector D — completion claim over unsettled CI (round 7)', () => {
         ).toBeNull();
     });
 
+    // Measured 2026-08-12: three of ten realistic closings were refused, and every
+    // one of them was an honest "not done yet" line — the shape this gate exists
+    // to encourage. A line-anchored keyword cannot separate "Fertig." from
+    // "Fertig ist der Fix noch nicht."; a same-line negation check can.
+    it('does NOT fire when the same line negates the claim', () => {
+        for (const reply of [
+            'Fertig ist der Fix noch nicht — die CI läuft.',
+            'Fertig? Nein, zwei Shards laufen noch.',
+            'Task complete wäre verfrüht — 3 Checks pending.',
+            'Done, not yet — waiting on the last shard.',
+        ]) {
+            expect(detectCompletionClaim(reply, UNSETTLED), reply).toBeNull();
+        }
+    });
+
+    it('still fires on a real claim on an unsettled read', () => {
+        for (const reply of ['Fertig, Matze.', '**Fertig** — der PR steht.', 'Done.']) {
+            expect(detectCompletionClaim(reply, UNSETTLED), reply).not.toBeNull();
+        }
+    });
+
+    // The negation must be on the CLAIM's own line: a later line saying something
+    // is unfinished does not retract a completion claim made above it.
+    it('does not let a negation on a DIFFERENT line suppress the claim', () => {
+        expect(
+            detectCompletionClaim('Fertig, Matze.\n\nDer Rest ist noch nicht dran.', UNSETTLED),
+        ).not.toBeNull();
+    });
+
     it('does NOT fire on "fertig" inside a sentence about something else', () => {
         expect(
             detectCompletionClaim(
