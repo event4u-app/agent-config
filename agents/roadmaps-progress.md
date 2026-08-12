@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 29 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **38** open blockers, **9** need you → `agent-config gates`
+> 30 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **40** open blockers, **9** need you → `agent-config gates`
 
 ## Overall
 
-**259 / 381 steps done · 68%**
+**263 / 386 steps done · 68%**
 
 ```text
 ███████████████████████████░░░░░░░░░░░░░   68%
@@ -37,14 +37,15 @@
 | 19 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
 | 20 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 21 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
-| 22 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 23 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
-| 24 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 25 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 26 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 27 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 28 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 29 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 22 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 1 | 4 | 15 | 1 | [2](#blockers-road-to-skill-ecosystem-executable-payloads) | ████████░░ 80% |
+| 23 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 24 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+| 25 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 26 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 27 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 28 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 29 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 30 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -582,6 +583,38 @@ _1 blocker resolved._
     cannot supply it and must not simulate it. Substituting an AI rater would
     break the pre-registration.
   - **Resolved when:** a predictions JSON exists for the pre-rewrite and the post-rewrite tree state, produced by the same protocol.
+
+### [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md)
+
+**Road to executable skill payloads — a skill that only describes work cannot be measured doing it** — 4 / 5 done (80%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Falsification spikes | ⏭️ skipped | 0 | 0 | 3 | 0 | 0% |
+| 1 | Structured runtime requirements in the skill schema | ✅ done | 0 | 3 | 2 | 0 | 100% |
+| 2 | Executable payload pilots | ⏭️ skipped | 0 | 0 | 5 | 0 | 0% |
+| 3 | Injection hardening at the ingestion point | ✅ done | 0 | 1 | 1 | 1 | 100% |
+| 4 | Output-quality benchmark axis | ⏭️ skipped | 0 | 0 | 3 | 0 | 0% |
+| 5 | Low-cost sweeps | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
+
+<a id="blockers-road-to-skill-ecosystem-executable-payloads"></a>
+**Blockers**
+
+- **phase-0-spikes-need-a-live-host-session** (owner: maintainer) — blocks all of Phase 0, Phase 1 step 3, Phase 2 in full, Phase 4 in full.
+  - **What to do:**
+    S0.1 needs 20 scripted invocations against a live host and
+    S0.2 needs a token measurement — both are spend-bearing and a live
+    trigger-style evaluation hard-aborts under automation, so they cannot be run
+    from an autonomous session. Run them, publish the results (including a null),
+    then unblock the dependent phases in their own change.
+  - **Resolved when:** (unspecified)
+- **compatibility-deprecation-is-a-consumer-visible-decision** (owner: maintainer) — blocks Phase 1, the `harness_compat` step.
+  - **What to do:**
+    decide whether this schema keeps mirroring the public
+    Agent-Skills `compatibility` field, adds `harness_compat` beside it
+    permanently, or migrates and diverges. `requires` lands additively either way,
+    so nothing else waits on this.
+  - **Resolved when:** (unspecified)
 
 ### [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md)
 
