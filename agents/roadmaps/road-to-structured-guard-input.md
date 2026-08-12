@@ -42,26 +42,71 @@ measured. Do not treat the recommendation as settled until Phase 1 answers them.
 
 ## Phase 1 — measure before building
 
-- [ ] Measure the false-NEGATIVE cost of the advisory downgrade. Over the next
+- [x] Measure the false-NEGATIVE cost of the advisory downgrade. Over the next
       50 sessions, count second-self-review dispatches that the guard now only
       warns about, and classify each as genuine verdict shopping or fan-out.
       *Verify:* a count with a per-case classification, not a rate alone. The
       council's bar: if genuine shopping slips through at >2%, the branch needs
       structure rather than advisory status.
-- [ ] Measure whether the secondary controls the council assumed actually exist.
+      → **0 genuine shopping over 128 sessions.** 7 hits total (1 pre-loaded
+      verdict, 6 second-self-review); all 6 sit in one R2 review-and-repair arc
+      separated by fix workers, and one of the 6 is an implementation prompt
+      misclassified. Bar not met. Measured with `conformance_scan --why
+      evidence-steering`, which imports the guard's own predicates.
+      Detail: `agents/evidence/analysis/structured-guard-input-phase1.md`.
+- [x] Measure whether the secondary controls the council assumed actually exist.
       For each guard, name what else would catch the failure it was built for —
       evidence-file validation for a fabricated verdict, CI approval for an
       unauthorized publish, human review for a completion claim over red CI.
       *Verify:* per guard, either a named second control with a file reference,
       or an explicit "none — this guard is the only control", which changes the
       severity answer for that guard.
-- [ ] Count the dispatch call sites that would need a `role` / `evidence_scope`
+      → **`evidence-independence`: NONE — this guard is the only control**, as
+      `evaluator-independence.md:107-112` states itself. 2 of 6 blocking
+      concerns have no independent backstop for their blocking class. Full
+      census in the analysis file.
+- [x] Count the dispatch call sites that would need a `role` / `evidence_scope`
       field.
       *Verify:* a count. The council's falsifier: >50 sites with >30% external
       makes the structured-metadata path too expensive, and the recommendation
       changes.
+      → **50 sites, 24 external (48 %)**; 57 / 54 % including bench harnesses.
+      The external half of the bar is exceeded in both readings; the count half
+      fires only on the wider boundary. The envelope carries no intent field
+      today, and the one intent-shaped field in the tree
+      (`subagent_spawn.ts:37` `role_mode`) has zero production call sites.
 
 ## Phase 2 — the structured field, if Phase 1 supports it
+
+> **Phase 1 does not support it, on this roadmap's own pre-registered bars.**
+> F1 measured 0 genuine verdict shopping over 128 sessions (bar: >2 %). F3
+> measured 48 % external call sites (bar: >30 %), where "external" means the
+> field would be model-set — the same self-declared inference the field exists
+> to replace, and already Phase 3's pre-registered failure mode. F2 measured the
+> one finding that argues the other way: this guard has **no** second control,
+> so advisory is safe only while the rate holds.
+>
+> The disposition below is **an open decision, not a verdict**. The AI council
+> was convened on it and returned INCONCLUSIVE — `cli_quota_exhausted` on both
+> members — so it is recorded here rather than resolved. The four options as put
+> to the council:
+>
+> - **A — cancel Phases 2 and 3**, record the published null, keep advisory
+>   severity. The gap F2 names stays open.
+> - **B — re-cut Phase 2 to the 26 internal sites only**; field set by
+>   construction where a code call site exists, external prose sites explicitly
+>   out of scope and advisory.
+> - **C — replace Phase 2 with a downstream control** aimed at what F2 found:
+>   leave dispatch-time severity alone and make the evidence path non-advisory,
+>   so a steered evaluation is caught where its verdict is *used*, not where it
+>   is dispatched.
+> - **D — defer** pending a prospective 50-session window. Note this repo treats
+>   a deferred step as a hard blocker on archiving, and the retrospective corpus
+>   already enumerates the same population (the downgrade changed severity, not
+>   classification).
+>
+> Until it is answered, Phase 2 and Phase 3 stay open and unstarted **by
+> design** — building them would be the sunk cost Risk 2 names.
 
 - [ ] Add `role: evaluate | implement | coordinate` and
       `evidence_scope: self | external | none` to the dispatch envelope, set by
@@ -91,15 +136,32 @@ measured. Do not treat the recommendation as settled until Phase 1 answers them.
 
 ## Phase 4 — the blind spot the audit missed
 
-- [ ] Establish whether guards see pre- or post-expansion text. A guard reading
+- [x] Establish whether guards see pre- or post-expansion text. A guard reading
       `rm $FILES` cannot know whether `$FILES` expands to `*.tmp` or `*`; the
       same applies to a dispatch prompt built from a template.
       *Verify:* a worked example per guard showing which text the guard actually
       received, taken from a real envelope rather than from the code path.
-- [ ] If guards see pre-expansion text, record the consequence for the tier rule:
+      → **Answered with the verify condition NOT met, and that is the finding.**
+      No captured envelope exists in the tree; the one hook fixture is
+      hand-authored and forbidden from carrying real content, so "a real
+      envelope" was not available to take an example from. What the tree does
+      establish: transport rewrites nothing, and both shell guards are built and
+      tested for **pre-expansion** text (they hand-parse `$(…)`, backticks and
+      heredocs, and record `P=publish; npm $P` as a measured open hole that can
+      only exist on unexpanded input). One live positive observation was taken
+      instead: a literal `-n` inside a `git log` command reached
+      `block-no-verify` and was refused, confirming the guard reads the text the
+      model emitted. The remaining host fact and the capture procedure that
+      settles it are recorded in the contract.
+- [x] If guards see pre-expansion text, record the consequence for the tier rule:
       a "structured" input that is a template variable is not structured at the
       moment the guard reads it.
       *Verify:* the contract's tier section states the answer either way.
+      → `docs/contracts/hook-architecture-v1.md` § *What text a guard actually
+      receives*: a Tier-1 declaration must name a field whose **value** is
+      present in the payload, never one derivable only after substitution; a
+      dispatch prompt has no expansion stage between the model and the tool call,
+      so the template concern is a shell concern in practice.
 
 ## Success criteria
 
