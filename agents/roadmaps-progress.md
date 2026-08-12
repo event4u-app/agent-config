@@ -6,10 +6,10 @@
 
 ## Overall
 
-**267 / 387 steps done · 69%**
+**270 / 387 steps done · 70%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   69%
+████████████████████████████░░░░░░░░░░░░   70%
 ```
 
 ## Open roadmaps
@@ -45,7 +45,7 @@
 | 27 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 28 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
 | 29 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 30 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 9 | 5 | 4 | 0 | 0 | [1](#blockers-road-to-zero-settings) | ████░░░░░░ 44% |
+| 30 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-zero-settings) | ████████░░ 78% |
 
 ---
 
@@ -919,14 +919,14 @@ _1 blocker resolved._
 
 ### [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md)
 
-**Road to zero settings — delete the flags whose answer the situation already carries** — 4 / 9 done (44%)
+**Road to zero settings — delete the flags whose answer the situation already carries** — 7 / 9 done (78%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | classify all 140, with the number published | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | delete the free tier | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | delete the free tier | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 3 | the keys that need a mechanism first | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 4 | state the floor and stop | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+| 4 | state the floor and stop | ✅ done | 0 | 2 | 0 | 0 | 100% |
 
 <a id="blockers-road-to-zero-settings"></a>
 **Blockers**
@@ -938,15 +938,42 @@ _1 blocker resolved._
     product call about what the package may do to a user — not a classification —
     and the roadmap's own `verify:` demands a recorded verdict rather than a
     deferral, so it cannot be closed by an agent choosing one.
-    - **Why it is not council-resolved:** it is a judgement call, so the
-    action-vs-judgement split would normally route it to the AI council. The
-    council was **configured and both members failed** on 2026-08-12 —
-    `anthropic` exit 1, `openai` exit 2 (`unexpected argument '--system'` from the
-    `codex exec` transport). The run also printed `2/2 present, needed 1 —
-    concluded` while its own JSON recorded `present: 0, status: inconclusive`,
-    which is worth repairing separately: a transport failure that reports as a
-    quorum is worse than one that reports as an outage.
-  - **Resolved when:** each of the three keys carries a recorded verdict (keep, or redesign the action), in this roadmap or an ADR.
+    - **Why it is not council-resolved — re-measured 2026-08-12, and the reason has
+    changed.** It is a judgement call, so the action-vs-judgement split routes it to
+    the AI council, and the council **is** configured (2 members, both CLI
+    transport — `council:status` confirms). The transport defect this blocker used
+    to name is **fixed**: `openai` exit 2 (`unexpected argument '--system'` from
+    `codex exec`) was repaired in PR #1308, and the false-quorum line it also named
+    now reads correctly — the run prints `after the run · 0/2 present … INCONCLUSIVE`
+    beside the stale pre-run `2/2 present … concluded`. Do not re-diagnose either.
+    What blocks it today is different and simpler: **both members returned
+    `cli_quota_exhausted`** (`anthropic 125/50`, `openai 134/50`). That is a
+    spend/quota hard blocker — the kind that is surfaced rather than retried — so
+    the pass produced no verdict and cost $0.00. Re-run when the quota window
+    resets; the question is written and needs no re-derivation.
+    **Retried once, deliberately, because the environment changed** — PR #1309
+    landed another transport repair between the two attempts — and it confirmed the
+    reading rather than lifting it: same `cli_quota_exhausted`, both members absent.
+    **A failed attempt still counts against the quota**: the counters rose from
+    125/50 · 134/50 to 140/50 · 146/50 across the two runs. So do not burn further
+    attempts probing whether it works yet; check `council:status` quota output
+    first.
+    - **The step's own premise is wrong in two ways, verified against the tree
+    2026-08-12 — hand the corrected version to the council, not the original.**
+    (a) It says "the three class-B consent keys". Only **two** of the three carry the
+    `consent` disposition: `personal.open_edited_files` and
+    `memory.learn_on_session_end`. The third, `personal.canary_name`, is
+    `un-inferrable` — it is now one of the nine keys in the published floor (§ The
+    floor), so asking whether its *action* needs authorising is the wrong question
+    for it. (b) The two real consent keys are not comparable, and the difference is
+    the whole substance: `memory.learn_on_session_end` has a **real** reader
+    (`src/scripts/memory_learn_hook.ts` parses it itself and stays dark unless it
+    reads `true`), while `personal.open_edited_files` is enforced by **prose only** —
+    `src/skills/file-editor/SKILL.md` instructs the agent to read it, and no code
+    path or hook can refuse the action. Whether an authorisation that only prose
+    enforces is a consent gate at all is the question the step should be asking
+    about that key.
+  - **Resolved when:** each of the two consent keys carries a recorded verdict (keep, redesign the action, or delete with a named replacement), in this roadmap or an ADR, and the third key's mis-grouping is either corrected or argued.
 
 ---
 
