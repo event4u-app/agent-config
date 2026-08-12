@@ -38,6 +38,27 @@ const HOOK = path.join(REPO, 'src', 'scripts', 'install-hooks.sh');
 /** Roots of the local closure. `ci` is the local mirror; the hook is what a push runs. */
 const LOCAL_ROOTS = ['ci', 'consistency'] as const;
 
+/**
+ * Round 7 § Phase 3 — the third dimension, and why two were not enough.
+ *
+ * `task ci` INCLUDES `preflight` (`Taskfile.yml:87`), so the two roots above
+ * answer "does the local MIRROR match CI". The pass an agent is actually told to
+ * run before pushing is `task preflight`, a deliberate subset of `ci` — its own
+ * docstring excludes `check_enforcement_coverage` at a measured 30.7 s because
+ * "a pre-push gate that doubles the hook teaches people to skip it".
+ *
+ * That makes `CI ∩ ci \ preflight` invisible to this gate by construction, and it
+ * is exactly where round 7's measured "green locally, red remotely" cycles came
+ * from: the Thin-Root char cap, the ratchet living in the Node-Tests shard, and
+ * the derived-page freshness check.
+ *
+ * Reported, not gated. The subset is intentional, so failing on it would demand
+ * that `preflight` grow into `ci` — the opposite of what its author decided. What
+ * this dimension removes is the IMPLICATION that a green preflight means CI will
+ * be green.
+ */
+const PREFLIGHT_ROOTS = ['preflight'] as const;
+
 export interface Declared {
     id: string;
     class: string;
@@ -197,6 +218,19 @@ export interface ParityReport {
     undeclared_ci_only: string[];
     undeclared_local_only: string[];
     stale_declarations: string[];
+    /** Round 7 § Phase 3 — `task preflight`'s own closure. */
+    preflight_gates: string[];
+    /**
+     * `CI ∩ local \ (preflight ∪ pre-push hook)` — gates a push's remote run
+     * enforces, the local mirror covers, and NOTHING a push runs locally reaches.
+     * Report-only: the measured size of "green locally, red remotely", not a
+     * failure.
+     *
+     * The hook's own closure is in the subtrahend per R2 finding 4: subtracting
+     * preflight alone counted gates the pre-push hook already runs, which cannot
+     * fail after a push. That read 221; the honest figure is 209.
+     */
+    ci_not_in_preflight: string[];
 }
 
 export function analyse(repo = REPO, manifest?: Manifest): ParityReport {
@@ -231,12 +265,38 @@ export function analyse(repo = REPO, manifest?: Manifest): ParityReport {
         ...[...declaredLocal].filter((g) => localGates.has(g) && ciGates.has(g)),
     ].sort();
 
+    // Round 7 § 3.1 — the third dimension. Derived the same way as the other two,
+    // so it cannot drift from them by construction.
+    //
+    // R2 finding 4 (medium): the first version subtracted only the `preflight`
+    // closure from `localGates`, and `localGates` includes every gate reachable
+    // from `install-hooks.sh` — which the PRE-PUSH hook runs. A gate that runs
+    // before the push lands cannot produce a "green locally, red remotely" cycle,
+    // so counting it inflated the number and mislabelled it, in a step whose own
+    // text calls the number "the deliverable, not an adjective". The subtrahend is
+    // therefore everything a push already runs: preflight PLUS the hook's own
+    // closure.
+    const preflightGates = local_closure(PREFLIGHT_ROOTS, tasks);
+    const prePush = new Set(preflightGates);
+    if (fs.existsSync(HOOK)) {
+        const hook = fs.readFileSync(HOOK, 'utf-8');
+        for (const g of extract_gates(hook)) prePush.add(g);
+        for (const t of extract_tasks(hook)) {
+            for (const g of local_closure([t], tasks)) prePush.add(g);
+        }
+    }
+    const ci_not_in_preflight = [...ciGates]
+        .filter((g) => localGates.has(g) && !prePush.has(g))
+        .sort();
+
     return {
         ci_gates: [...ciGates].sort(),
         local_gates: [...localGates].sort(),
         undeclared_ci_only,
         undeclared_local_only,
         stale_declarations,
+        preflight_gates: [...preflightGates].sort(),
+        ci_not_in_preflight,
     };
 }
 
@@ -291,6 +351,20 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         );
         for (const g of r.stale_declarations) process.stdout.write(`  - ${g}\n`);
     }
+
+    // Round 7 § 3.2 — printed on EVERY path, pass or fail, because the number is
+    // the deliverable. A green parity verdict above says the local MIRROR matches
+    // CI; it says nothing about the pass a contributor is told to run, and reading
+    // the green line as if it did is the implication this block removes.
+    process.stdout.write(
+        `ℹ️   preflight: ${String(r.preflight_gates.length)} gate(s) of the ${String(r.local_gates.length)} local ones; ` +
+            `${String(r.ci_not_in_preflight.length)} CI-enforced gate(s) run NEITHER in \`task preflight\` NOR\n` +
+            '    anywhere else the pre-push hook reaches — i.e. the set that can only fail after\n' +
+            '    a push. `task ci` INCLUDES preflight, so the parity verdict above cannot see it.\n' +
+            '    Report-only: the subset is deliberate (see the preflight docstring). A green\n' +
+            '    preflight is therefore not a prediction that CI will be green.\n',
+    );
+    for (const g of r.ci_not_in_preflight) process.stdout.write(`      · ${g}\n`);
 
     if (!failed) {
         process.stdout.write(

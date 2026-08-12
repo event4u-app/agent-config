@@ -870,6 +870,43 @@ describe('_postRunQuorum', () => {
         expect(absent).toEqual([{ member: 'anthropic', reason: 'unavailable', detail: 'no response' }]);
     });
 
+    // Round 7 § 5.2 — attendance is a NON-EMPTY answer, not the absence of an
+    // error. Measured: a 290 s curl timeout returned an empty body with NO error
+    // set in two sessions, and the banner printed `2/2 present` — a single-voice
+    // verdict presented as convergence, on a paid run.
+    it('an empty response body with NO error counts as ABSENT, not present', () => {
+        const members = [
+            new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: '' })),
+            new StubMember('openai', 'gpt-x', new CouncilResponse({ provider: 'openai', model: 'gpt-x', text: 'a real answer' })),
+        ];
+        const responses = members.map((m) => m.ask());
+        const { quorum, absent } = _postRunQuorum(members, responses, {});
+        expect(quorum).toEqual({ status: 'concluded', threshold: 1, total: 2, present: 1 });
+        expect(absent).toEqual([
+            { member: 'anthropic', reason: 'unavailable', detail: 'empty response body' },
+        ]);
+    });
+
+    it('whitespace-only text is empty too — a body of newlines is not an answer', () => {
+        const members = [
+            new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: '\n \n' })),
+        ];
+        const responses = members.map((m) => m.ask());
+        const { quorum } = _postRunQuorum(members, responses, {});
+        expect(quorum.present).toBe(0);
+    });
+
+    it('a real answer still counts — the change must not deduct a working member', () => {
+        const members = [
+            new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: 'ok' })),
+            new StubMember('openai', 'gpt-x', new CouncilResponse({ provider: 'openai', model: 'gpt-x', text: 'ok' })),
+        ];
+        const responses = members.map((m) => m.ask());
+        const { quorum, absent } = _postRunQuorum(members, responses, {});
+        expect(quorum).toEqual({ status: 'concluded', threshold: 1, total: 2, present: 2 });
+        expect(absent).toEqual([]);
+    });
+
     it('an explicit `quorum: 2` over 3 members with 2 present is still inconclusive (2 < 2 is false, so this is concluded) — sanity on the setting passthrough', () => {
         const members = [
             new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: 'ok' })),

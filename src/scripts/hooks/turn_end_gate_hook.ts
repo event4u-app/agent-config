@@ -122,6 +122,9 @@ import {
     STATE_FILE as LANGUAGE_STATE_FILE,
     type Verdict,
 } from '../language_mirror_hook.js';
+// Round 7 § Phase 1 — the CI-settle producer. Imported for its STATE_FILE only,
+// so the consumer cannot read a path the producer does not write.
+import { STATE_FILE as CI_STATE_FILE } from '../before_complete_hook.js';
 import { isSafeTranscriptPath } from './end_review_nudge_hook.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -142,7 +145,7 @@ const EXIT_ALLOW = 0;
 export const TRANSCRIPT_READ_MAX_BYTES = 8 * 1024 * 1024; // 8 MB
 
 /** Detector identity, used in the state marker and the refusal text. */
-export type DetectorId = 'promissory' | 'language' | 'verification';
+export type DetectorId = 'promissory' | 'language' | 'verification' | 'completion';
 
 export interface Finding {
     detector: DetectorId;
@@ -344,7 +347,84 @@ export interface LanguagePin {
     language: Verdict;
 }
 
-/** Read the pin the language-mirror hook wrote. Absent ⇒ no obligation. */
+/**
+ * Round 7 § Phase 1 — where the CI-settle fact comes from, and why not from here.
+ *
+ * The obvious implementation reads the unsettled state out of the transcript this
+ * hook already parses. It cannot: `_toolCalls` keeps only name, command and target
+ * path, so a tool RESULT — where the pending count lives — is never read; and
+ * `toolCalls` is reset at every genuine user prompt by design, while the measured
+ * failure is a completion claim in a LATER turn than the poll. Building it that way
+ * meant reversing an invariant this file argues for two functions down.
+ *
+ * So the producer is `before_complete_hook`, which already sees tool output on
+ * `post_tool_use` and already owns the `pendingCount` predicate. It writes
+ * `ci_last` into `agents/state/verify-before-complete.json` and this reads it.
+ *
+ * NO network call, deliberately. Asking `gh pr checks` here would put a network
+ * round-trip on every turn-end; `road-to-hook-latency-repair` exists because that
+ * cost is real. The rejected alternative is named so the next author does not
+ * re-derive it.
+ *
+ * ASYMMETRY that makes the cross-turn read legitimate where the reader refuses it
+ * for verification: a stale POSITIVE ("I verified") wrongly vouches for work it
+ * never saw. A stale NEGATIVE ("CI was not settled") only ever refuses more often.
+ * Same freshness invariant, opposite failure direction.
+ */
+export function readCiSettled(workspaceRoot: string): { seen: boolean; settled: boolean } {
+    try {
+        const raw = fs.readFileSync(path.join(workspaceRoot, CI_STATE_FILE), 'utf-8');
+        const decoded: unknown = JSON.parse(raw);
+        if (typeof decoded === 'object' && decoded !== null && !Array.isArray(decoded)) {
+            const ci = (decoded as Record<string, unknown>)['ci_last'];
+            if (typeof ci === 'object' && ci !== null && !Array.isArray(ci)) {
+                return { seen: true, settled: (ci as Record<string, unknown>)['settled'] === true };
+            }
+        }
+    } catch {
+        // absent, unreadable, or malformed — all mean "no CI was observed", and a
+        // session that never polled CI must never be refused for it.
+    }
+    return { seen: false, settled: false };
+}
+
+/**
+ * A completion claim in the delivered reply. Deliberately narrow: the German and
+ * English closings the corpus actually produced, anchored to a line so a mid-reply
+ * "fertig" inside a sentence about something else does not fire.
+ *
+ * Measured shapes it must catch (round 7, § Phase 1): "Fertig, Matze." ·
+ * "Damit ist alles erledigt." · "Aufgabe erledigt." · "der komplette Auftrag ist
+ * durch".
+ */
+const _COMPLETION_RE =
+    /(^|\n)\s*(?:\*\*)?(?:fertig\b|damit ist alles erledigt|aufgabe erledigt|alles erledigt\b|komplett(?:er)? (?:auftrag|abgearbeitet)|der komplette auftrag ist durch|done[.!]|all done\b|task complete)/i;
+
+export function detectCompletionClaim(
+    reply: string,
+    ci: { seen: boolean; settled: boolean },
+): Finding | null {
+    // A session that never read CI has nothing to be premature about.
+    if (!ci.seen || ci.settled) return null;
+    const prose = visibleProse(reply);
+    const m = _COMPLETION_RE.exec(prose);
+    if (!m) return null;
+    const at = m.index;
+    return {
+        detector: 'completion',
+        evidence: prose.slice(at, at + 120).trim(),
+        reason:
+            'a completion claim while the last CI read was not settled — ' +
+            'read the verdict, then claim it (verify-before-complete)',
+    };
+}
+
+/**
+ * Read the pin the language-mirror hook wrote. Absent ⇒ no obligation.
+ *
+ * (R2 finding 8: this line was left 73 lines above, where inserting `readCiSettled`
+ * had stranded it — so it documented the wrong function and this one had none.)
+ */
 export function readLanguagePin(workspaceRoot: string): Verdict {
     try {
         const raw = fs.readFileSync(path.join(workspaceRoot, LANGUAGE_STATE_FILE), 'utf-8');
@@ -773,6 +853,14 @@ export function main(): number {
         detectPromissory(lastAssistant),
         detectLanguage(lastAssistant, readLanguagePin(workspaceRoot)),
         detectUnverifiedEdit(toolCalls),
+        // Round 7 § Phase 1 — detector D, in the same unconditional list as the
+        // other three. It shipped with its own settings flag one commit earlier
+        // and that flag is gone: `hooks.turn_end_gate.*` was deleted on
+        // 2026-08-12 because a default-off safety gate is an absent one. Its
+        // gating is where the comment above says gating belongs — inside the
+        // detector: no CI observed, or a settled read, or no completion claim
+        // ⇒ no finding.
+        detectCompletionClaim(lastAssistant, readCiSettled(workspaceRoot)),
     ]) {
         if (f) findings.push(f);
     }
@@ -785,8 +873,9 @@ export function main(): number {
     );
     process.stderr.write(
         `turn-end-gate: REFUSED — this turn is not finished.\n${lines.join('\n')}\n` +
-            '  Do the promised work now, correct the language, or run the ' +
-            'verification the edit needs, then end the turn.\n' +
+            '  Do the promised work now, correct the language, run the ' +
+            'verification the edit needs, or read the CI verdict before claiming ' +
+            'it — then end the turn.\n' +
             '  This turn will not be refused a second time.\n',
     );
     return EXIT_BLOCK;

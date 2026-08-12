@@ -749,11 +749,18 @@ function _postRunQuorum(
     for (let i = 0; i < members.length; i++) {
         const m = members[i] as ExternalAIClient;
         const r = responses[i];
-        if (r !== undefined && !r.error) {
+        // Round 7 § 5.2 — attendance is a NON-EMPTY answer, not the absence of an
+        // error. `!r.error` alone counted a member that returned zero bytes, and
+        // that is not hypothetical: a 290 s curl timeout returned an empty body
+        // with no error set in two sessions (`9fc9ba3e`, `4ac2f7ac`) and the
+        // banner printed `2/2 present` — a single-voice verdict presented as
+        // convergence, on a paid run. An empty answer contributes nothing to a
+        // quorum by definition, whatever the transport thought of it.
+        if (r !== undefined && !r.error && r.text.trim() !== '') {
             present += 1;
             continue;
         }
-        const raw = r?.error ?? 'no response';
+        const raw = r?.error ?? (r !== undefined && r.text.trim() === '' ? 'empty response body' : 'no response');
         const failure = classifyCliFailure(raw);
         absent.push({
             member: m.name,
@@ -772,7 +779,14 @@ function _postRunQuorum(
  */
 function _format_quorum_line(q: QuorumResult): string {
     const verdict = q.status === 'concluded' ? 'concluded' : 'INCONCLUSIVE — release gate holds';
-    return `council:quorum · ${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.`;
+    // Round 7 § 5.3 — a degraded pass says so. `1/2 present, needed 1 —
+    // concluded` is literally true and reads as agreement; with a threshold of 1
+    // a solo answer concludes, and nothing in the line distinguishes "both
+    // members agreed" from "one member answered". The counts were always there;
+    // what was missing is the word that stops a reader inferring convergence.
+    const degraded =
+        q.present < q.total ? `  ⚠️  DEGRADED — ${String(q.total - q.present)} member(s) did not answer; this is not convergence.` : '';
+    return `council:quorum · ${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.${degraded}`;
 }
 
 function build_members(settings: Dict, opts: BuildMembersOptions = {}): ExternalAIClient[] {
@@ -2651,6 +2665,25 @@ function cmd_run(
         );
         return 0;
     }
+
+    // Round 7 § 5.1 — VALIDATE THE OUTPUT PATH BEFORE THE FIRST BILLABLE CALL.
+    //
+    // The only validation used to sit immediately before the WRITE, i.e. after
+    // every member had been paid, so a wrong directory discarded a completed run.
+    // Measured across round 7's corpus: ~$1.30 in three sessions (`291f827b`
+    // ~$0.42, `9502795e` $0.44, plus a discarded run each in `d6154522` and
+    // `3d50d0df`). The trap sat in the operator's notes for weeks and was still
+    // paid twice, because the defect is the ORDERING, not the caller.
+    //
+    // Placed HERE, after the `--confirm` gate, and not at function entry: the
+    // estimate-only path neither writes nor bills, and the first attempt at this
+    // fix validated at entry and broke it — caught by
+    // `council_cli.test.ts`'s no-confirm case. Nothing above this line spends.
+    //
+    // The validator is pure, so the pre-write call stays: it returns the string
+    // the write uses, and removing it to avoid "duplicate work" would put the
+    // guarantee back in a single place that runs late.
+    _validate_council_output_path(args.output as string, { kind: 'responses', subcommand: 'run' });
 
     const cost_cfg = (ai_cfg['cost_budget'] as Dict) || {};
     const budget = new CostBudget({

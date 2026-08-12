@@ -409,15 +409,82 @@ export function _looks_like_git_invocation(cmd: string, depth = 0): boolean {
  * Heredoc bodies are removed before extraction: a backtick or `$(` inside a
  * commit message being written to a file is data, and feeding it back through
  * this function is exactly the false positive the round-5 repair closed.
+ *
+ * ROUND 7 — THREAT MODEL for extending that removal to the shlex path (§ 2.1).
+ * Until round 7 the stripped string fed only `substitutionPayloads`; `shlexSplit`
+ * still received the RAW command. Both halves of that were measured, on this
+ * branch, before anything changed:
+ *
+ *   `git commit -F - <<'EOF' … maintainer's … EOF`   → BLOCKED   (false positive)
+ *   `bash <<EOF … git commit --no-verify … EOF`       → ALLOWED   (real bypass)
+ *
+ * So this is not the round-6 trade of one false positive for two false negatives.
+ * The bypass PRE-EXISTS: with the body inline, `shlexSplit` succeeds, the tokens
+ * are `bash <<EOF git commit --no-verify EOF`, command position is `bash`, and
+ * `_git_base` never sees git. Stripping before shlex fixes the false positive;
+ * scanning the bodies fixes the bypass. Both directions verified by probe.
+ *
+ * What an attacker can hide in a heredoc body, and how each is handled:
+ *
+ *   - a body consumed by a SHELL (`sh`/`bash`/`zsh`/`ksh`, with or without a path
+ *     prefix or an `env` prefix) IS a command list → scanned recursively.
+ *   - a body consumed by anything else (`git commit -F -`, `cat > f`, `tee`) is
+ *     DATA. Scanning it would re-open the exact false positive above, since a
+ *     commit message may legitimately contain the words `--no-verify`.
+ *   - an UNTERMINATED heredoc never matches the delimiter, so nothing is stripped
+ *     and the raw string still reaches shlex — the fail-closed branch keeps it.
  */
+
+/** One heredoc: its body, and whether a shell is the thing consuming it. */
+interface Heredoc {
+    body: string;
+    shellConsumed: boolean;
+}
+
+/**
+ * Command position on the line that opens the heredoc is a shell interpreter, so
+ * the body is a command list rather than data. Anchored to the segment start or a
+ * shell separator, exactly like `_looks_like_git_invocation` does one level up —
+ * a bare mention of `bash` in an argument must not promote a message to code.
+ */
+const _SHELL_CONSUMER_RE =
+    /(?:^|[|&;]|\$\(|`)\s*(?:env\s+(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*)?(?:\S*\/)?(?:ba|z|k)?sh\b/;
+
+export function _heredocs(cmd: string): { stripped: string; docs: Heredoc[] } {
+    const re = /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1([\s\S]*?)^\s*\2\s*$/gm;
+    const docs: Heredoc[] = [];
+    let stripped = '';
+    let last = 0;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(cmd)) !== null) {
+        const lineStart = cmd.lastIndexOf('\n', m.index) + 1;
+        const prefix = cmd.slice(lineStart, m.index);
+        docs.push({ body: m[3] ?? '', shellConsumed: _SHELL_CONSUMER_RE.test(prefix) });
+        stripped += cmd.slice(last, m.index) + '<<HEREDOC';
+        last = m.index + m[0].length;
+    }
+    stripped += cmd.slice(last);
+    return { stripped, docs };
+}
+
 function _check_command(cmd: string, depth = 0): [boolean, string] {
+    // Round 7 § 2.2 — the stripped string now feeds shlex as well, not only the
+    // substitution scan. `<<HEREDOC` is a plain token, so an apostrophe in a
+    // commit message can no longer abort the parse of the command carrying it.
+    const { stripped, docs } = depth <= 3 ? _heredocs(cmd) : { stripped: cmd, docs: [] };
     if (depth <= 3) {
-        const withoutHeredocs = cmd.replace(
-            /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1[\s\S]*?^\s*\2\s*$/gm,
-            '<<HEREDOC',
-        );
-        for (const payload of substitutionPayloads(withoutHeredocs)) {
+        for (const payload of substitutionPayloads(stripped)) {
             const [blocked, reason] = _check_command(payload, depth + 1);
+            if (blocked) {
+                return [true, reason];
+            }
+        }
+        // A shell-consumed body is a command list, so it is checked like one.
+        for (const doc of docs) {
+            if (!doc.shellConsumed) {
+                continue;
+            }
+            const [blocked, reason] = _check_command(doc.body, depth + 1);
             if (blocked) {
                 return [true, reason];
             }
@@ -425,15 +492,21 @@ function _check_command(cmd: string, depth = 0): [boolean, string] {
     }
     let tokens: string[];
     try {
-        tokens = shlexSplit(cmd);
+        tokens = shlexSplit(stripped);
     } catch (e) {
         if (e instanceof ShlexError) {
-            if (_looks_like_git_invocation(cmd)) {
+            // Tested against the string that actually failed to parse. Round 7
+            // § 2.4: the message no longer prescribes the message-in-a-file
+            // workaround, because a TERMINATED heredoc is now stripped before
+            // this point and can no longer be the cause. What reaches here is
+            // genuinely unbalanced quoting — an unterminated heredoc, or an odd
+            // quote outside one — which bash itself refuses to run.
+            if (_looks_like_git_invocation(stripped)) {
                 return [
                     true,
                     'command parse failed (shlex) on a git-containing command — fail-closed (git-history-discipline). \n'
-                    + 'Most common cause: an apostrophe or backtick inside a heredoc commit message in the SAME compound command as `git`. \n'
-                    + 'Fix: write the message to a file and use `git commit -F <file>` — do not retry the heredoc.',
+                    + 'The quoting is unbalanced OUTSIDE any terminated heredoc — an unterminated heredoc, or an odd quote. \n'
+                    + 'bash refuses this command too; fix the quoting rather than working around the guard.',
                 ];
             }
             return [false, ''];
