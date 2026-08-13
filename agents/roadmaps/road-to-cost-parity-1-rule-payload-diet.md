@@ -1,6 +1,5 @@
 ---
 complexity: structural
-status: later
 execution:
   mode: phase-checkpoints
 ---
@@ -14,6 +13,18 @@ execution:
 > the command surface, the `tier:` field and the adherence bench to their
 > existing owners.
 
+> **REOPENED 2026-08-13 — maintainer pick, resume condition (c).** Moved back
+> out of `later/` into the active tree. The authorisation is the standalone
+> tranche the council itself flagged as available: the bundling of the
+> consolidation pilot with the norm-line work "is a choice, not a structural
+> necessity", so the observed-counts-only basis can proceed without waiting on
+> the two gates that are still shut. Conditions (a) and (b) remain UNMET and are
+> not claimed — `road-to-surface-consolidation` Phase 3 is still time-gated to
+> ~2026-08-26 and the live trigger eval has not run — so the phases that depend
+> on them stay blocked; what reopens is the census and the consolidation tranche.
+> The paragraph below is the parking record it supersedes, kept because the
+> reasoning it carries is still the reason the other phases wait.
+>
 > **Parked in `later/` (2026-08-10 — AI-council convergence, maintainer pick).**
 > Both council members independently recommended opening only the unblocked
 > parts of this family first, so the queue is shown to move before blocked
