@@ -52,9 +52,15 @@ gh pr view <number> --json number,state,mergeStateStatus,mergedAt,baseRefName
 - **Before merging** → re-fetch and re-read `state` + `mergeStateStatus` in the
   **same turn**; never merge on a status seen earlier in the conversation.
 - **"Based on main" / "current"** → prove it with
-  `git rev-list --count HEAD..origin/main` (after `git fetch`); non-zero ⇒ the
-  branch is behind and is **not** current — merge `main` in before opening a PR
-  (see [`/create-pr`](../../commands/pr/create.md) § 1b).
+  `npx tsx node_modules/@event4u/agent-config/src/scripts/check_branch_freshness.ts`;
+  exit `1` ⇒ the branch is behind and is **not** current — merge the base in,
+  regenerate the derived files, then open the PR (see
+  [`/create-pr`](../../commands/pr/create.md) § 1b).
+  Prefer it over `git rev-list --count HEAD..origin/main`, which is wrong twice
+  over: it pins `main` as the base for a branch whose PR may target something
+  else, and it reads the local tracking ref — a fetch from earlier in the
+  session, which is memory rather than a check. The gate asks the remote and
+  resolves the base from the open PR.
 
 ## Conventions
 

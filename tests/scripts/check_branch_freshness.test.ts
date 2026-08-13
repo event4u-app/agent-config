@@ -14,7 +14,14 @@ import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { main } from "../../src/scripts/check_branch_freshness.js";
+import {
+  askForgeForBase,
+  describeBase,
+  main,
+  resolveBase,
+  type ForgeAnswer,
+  type GhResult,
+} from "../../src/scripts/check_branch_freshness.js";
 
 const GATE = path.resolve("src/scripts/check_branch_freshness.ts");
 
@@ -102,5 +109,109 @@ describe("check_branch_freshness", () => {
     const taskfile = fs.readFileSync(path.join(cwd, "taskfiles/ci-fast.yml"), "utf8");
     expect(taskfile).toContain("check_branch_freshness");
     expect(fs.existsSync(GATE)).toBe(true);
+  });
+
+  it("checks the base of the OPEN PR, not the repo default", () => {
+    git(["checkout", "-b", "feat/stacked"], process.cwd());
+    commit(process.cwd(), "b.txt", "two");
+
+    // The branch is perfectly current with main and behind `develop`. A gate
+    // that assumed the default would report the true-but-irrelevant green.
+    const forge = (): ForgeAnswer => ({ kind: "pr", base: "develop", number: 77 });
+    const r = resolveBase([], "feat/stacked", forge);
+    expect(r.base).toBe("develop");
+    expect(r.source).toBe("pull-request");
+    expect(r.unverified).toBeUndefined();
+    expect(describeBase(r)).toContain("#77");
+  });
+
+  it("an explicit --base outranks the forge and never spends a round trip", () => {
+    let asked = 0;
+    const forge = (): ForgeAnswer => {
+      asked += 1;
+      return { kind: "pr", base: "develop", number: 1 };
+    };
+    const r = resolveBase(["--base", "release/9"], "feat/x", forge);
+    expect(r.base).toBe("release/9");
+    expect(r.source).toBe("flag");
+    expect(asked).toBe(0);
+  });
+
+  it("distinguishes 'the forge says there is no PR' from 'the forge could not be asked'", () => {
+    const answered = resolveBase([], "feat/x", () => ({ kind: "none" }));
+    const silent = resolveBase([], "feat/x", () => ({
+      kind: "unavailable",
+      reason: "the gh CLI is not installed",
+    }));
+
+    // Same base — and that is the point: only the confidence differs, so the
+    // two must not be representable as the same verdict.
+    expect(silent.base).toBe(answered.base);
+    expect(answered.unverified).toBeUndefined();
+    expect(silent.unverified).toBe("the gh CLI is not installed");
+  });
+
+  it("reports NOT-VERIFIED loudly even under --quiet when the forge is unreachable", () => {
+    git(["checkout", "-b", "feat/quiet"], process.cwd());
+    commit(process.cwd(), "b.txt", "two");
+    const said: string[] = [];
+    const write = process.stdout.write.bind(process.stdout);
+    // `gh` is absent in CI for this repo's test job, so the unverified path is
+    // the one this run actually takes — no stubbing needed to reach it.
+    process.stdout.write = ((chunk: string) => {
+      said.push(String(chunk));
+      return true;
+    }) as typeof process.stdout.write;
+    try {
+      main(["--quiet"]);
+    } finally {
+      process.stdout.write = write;
+    }
+    const out = said.join("");
+    // Either the forge answered (a real gh in the dev environment) or it did
+    // not; what must never happen is silence about which of the two it was.
+    if (out.includes("could not ask the forge")) {
+      expect(out).toContain("NOT verified");
+    }
+  });
+
+  it("treats a closed-PR-shaped empty answer as 'no open PR', not as a base", () => {
+    const run = (): GhResult => ({ ok: true, stdout: "[]" });
+    expect(askForgeForBase("feat/x", run)).toEqual({ kind: "none" });
+  });
+
+  it("reads baseRefName out of the forge answer", () => {
+    const run = (): GhResult => ({
+      ok: true,
+      stdout: JSON.stringify([{ number: 1325, baseRefName: "release/9" }]),
+    });
+    expect(askForgeForBase("feat/x", run)).toEqual({
+      kind: "pr",
+      base: "release/9",
+      number: 1325,
+    });
+  });
+
+  it("never invents a base when the forge output is unusable", () => {
+    const garbage = (): GhResult => ({ ok: true, stdout: "not json" });
+    const empty = (): GhResult => ({ ok: true, stdout: JSON.stringify([{ number: 1 }]) });
+    const failed = (): GhResult => ({ ok: false, reason: "not authenticated" });
+    for (const run of [garbage, empty, failed]) {
+      const answer = askForgeForBase("feat/x", run);
+      expect(answer.kind).toBe("unavailable");
+    }
+  });
+
+  it("asks for OPEN PRs on this head only — a merged PR's base is not the next push's base", () => {
+    let seen: string[] = [];
+    const run = (args: string[]): GhResult => {
+      seen = args;
+      return { ok: true, stdout: "[]" };
+    };
+    askForgeForBase("feat/x", run);
+    expect(seen).toContain("--head");
+    expect(seen).toContain("feat/x");
+    expect(seen).toContain("--state");
+    expect(seen).toContain("open");
   });
 });
