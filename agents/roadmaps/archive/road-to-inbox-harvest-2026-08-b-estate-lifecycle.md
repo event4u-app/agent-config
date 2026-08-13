@@ -70,7 +70,7 @@ report-only by construction and moves no cap.
 
 ## Phase 1 — The revisit offer
 
-- [ ] **1.1 Surface the offer to the maintainer, and stop.** State the two locks
+- [x] **1.1 Surface the offer to the maintainer, and stop.** State the two locks
       above with their `file:line`, state that Phases 2-4 are report-only and need
       no reopening, and ask the one question the blocker names. Do not edit the
       parked roadmap, and do not reopen `governance.md:49-59` — the commit-based
@@ -91,6 +91,28 @@ report-only by construction and moves no cap.
       report-only, added no frontmatter field and moved no cap, so nothing below
       depends on the answer. What the answer unlocks is only what the blocker
       already scopes — a removal list, a cap change, or a new estate field.
+
+      **ANSWERED 2026-08-13 — it reopens.** The maintainer picked reopen over
+      stay-parked. `road-to-cost-parity-1-rule-payload-diet.md` has moved out of
+      `later/` into the active tree and its `status: later` frontmatter is gone;
+      the parking paragraph is superseded in place rather than deleted, because
+      the reasoning it carries is still why the roadmap's *other* phases wait.
+      The reopen is resume condition **(c)** — the maintainer authorising the
+      consolidation pilot as a standalone tranche, which the council had already
+      flagged as available ("the bundling is a choice, not a structural
+      necessity"). Conditions (a) and (b) are **not** claimed and remain unmet:
+      the utilization sweep is still time-gated to ~2026-08-26 and the live
+      trigger eval has not run.
+
+      **The second half of the question was not separately answered, and that is
+      recorded rather than inferred.** The question put two things: does the
+      framing reopen, and does the second-maintainer condition still hold. Only
+      the first was answered. `docs/governance.md` § Skill lifecycle policy is
+      untouched by this change, so its deferral of `last_reviewed:` "until a
+      second maintainer exists" stands exactly as written — an unanswered
+      sub-question leaves the existing state where it was, and reading a reopen
+      of one lock as a release of a different one would be precisely the
+      inference this step was written to avoid.
 
 ## Phase 2 — The dormancy signal governance already mandates
 
@@ -254,7 +276,7 @@ precedent this roadmap's own Context cites (`check_standing_rule_delivery.ts:15-
 ## Blockers
 
 ### blocker: estate-lifecycle-revisit-answer
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** any step that would act on a report — a removal list, a cap change, or
   a new estate metadata field. Phases 2, 3 and 4 are NOT blocked: every step there
@@ -265,4 +287,11 @@ precedent this roadmap's own Context cites (`check_standing_rule_delivery.ts:15-
   a `last_reviewed:` field until a second maintainer exists — confirm that
   condition still holds, since it is what makes Phase 2 derive rather than store.
 - **Resolved when:** the answer is written into 1.1 with its date, and either the
-  parked roadmap moves out of `later/` or 1.1 records that it stays.
+  parked roadmap moves out of `later/` or 1.1 records that it stays. **Both
+  discharged 2026-08-13:** the answer is at 1.1 with its date, and
+  `road-to-cost-parity-1-rule-payload-diet.md` has moved out of `later/` into the
+  active tree. The `governance.md` half of the "what to do" was NOT separately
+  answered; that file is untouched, so its deferral stands as written — recorded
+  at 1.1 rather than resolved by inference, since this blocker's own resolution
+  clause asks for the reopen answer and the disposition of the parked file, and
+  gets both.

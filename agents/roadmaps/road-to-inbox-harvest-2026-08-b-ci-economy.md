@@ -432,18 +432,27 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
       ubuntu twin over the ceiling, hiding the breach rather than fixing it.
       The ADR names the missing evidence a real demotion needs — per-OS failure
       attribution, which nothing in the tree records — as its `review_trigger`.
-      **The blocker below still said 222 on both of its clauses; corrected
-      2026-08-13, and the second one was not cosmetic.** Its resolution clause
-      read *"ADR-222 is accepted and the ruleset's `required_status_checks` list
-      matches …"* — and `ADR-222-blocker-handover-at-reply-close.md` exists and is
-      merged. So a reader checking the first leg got a **true** answer from an
-      unrelated document, and could have closed a maintainer-owned blocker while
-      the ruleset edit it exists for never happened. The leg is dropped rather
-      than renumbered to 223: 4.1 already records ADR-223 as *accepted*, so an
-      "ADR is accepted" condition would be satisfied on the day it was written
-      and would gate nothing. What is left is exactly the ruleset edit. The other
-      clause called ADR-223 "a proposal"; it is an accepted record that no
-      demotion is supportable, which is close to its opposite.
+      **The blocker below still said 222 on both of its clauses; the number is
+      corrected to 223 on 2026-08-13, and nothing else about it changes.**
+      A first attempt at this correction, on the same day, went further and was
+      **wrong** — recorded here rather than quietly reverted, because the shape of
+      the error is the useful part. It dropped the "ADR is accepted" leg from the
+      resolution clause, arguing that a reader checking *"ADR-222 is accepted"*
+      would get a **true** answer from the unrelated merged document and could
+      close this blocker without the ruleset edit. That argument fails on a fact
+      neither the roadmap nor the first correction checked: **`ADR-222` is itself
+      `status: proposed`** (`docs/decisions/ADR-222-blocker-handover-at-reply-close.md:3`),
+      so the mis-numbered leg evaluated **false**, not true. Being merged is not
+      being accepted, and the whole hazard was invented.
+      The second half of that attempt was wrong the same way: it called ADR-223
+      "an accepted record that no demotion is supportable". `ADR-223:3` is
+      `status: proposed` and its own § Status reads *"Acceptance is the
+      maintainer's call."* The original wording — *"a proposal, not an enforcement
+      change"* — was, apart from the number, exactly what the ADR says about
+      itself. So the acceptance leg stands, renumbered: it tracks a maintainer
+      decision the ADR explicitly reserves, and removing it would have left
+      nothing in this roadmap watching for it.
+      <!-- verify: grep -n '^status:' docs/decisions/ADR-223-no-required-check-demotion-on-cost-grounds.md docs/decisions/ADR-222-blocker-handover-at-reply-close.md  # both: proposed -->
       <!-- verify: ls docs/decisions/ | grep ADR-223 -->
       <!-- verify: the `## Blockers` section carries no ADR-222 —
            sed -n '/^## Blockers/,$p' agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md | grep -c 'ADR-222'  # expect 0.
@@ -479,17 +488,18 @@ worse than none — it reads as a live control.
 - **Status:** open
 - **Owner:** maintainer
 - **Blocks:** step 4.2 only. Phases 0-3 and step 4.1 are not blocked — they change
-  no required check, and ADR-223 records a decision, not an enforcement change.
+  no required check, and ADR-223 is a proposal, not an enforcement change.
 
 - **What to do:** decide whether the macOS leg and the `npm audit` PR gate stay in
   the required set, then apply the ruleset edit. Ruleset `17749383` currently
   requires exactly one check, `Sync + Generate Tools Consistency`
   (`docs/contracts/branch-protection-policy.md:59`); the write path is documented
   at `branch-protection-policy.md:158`.
-- **Resolved when:** the ruleset's `required_status_checks` list matches the
-  matrix in `branch-protection-policy.md`, with `ci-green-floor.md` and
-  `release-pr-gating.md` updated in the same change. (Both clauses corrected
-  2026-08-13 — see 4.1 for what was wrong and why the ADR leg is gone.)
+- **Resolved when:** ADR-223 is accepted and the ruleset's
+  `required_status_checks` list matches the matrix in
+  `branch-protection-policy.md`, with `ci-green-floor.md` and
+  `release-pr-gating.md` updated in the same change. (Number corrected 222→223
+  on 2026-08-13; the acceptance leg stands — see 4.1.)
 
 
 ### blocker: merge-queue-enablement

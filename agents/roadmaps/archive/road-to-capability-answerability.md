@@ -78,8 +78,7 @@ the third. The pattern is not new work to invent — it is work to repeat.
 
 ### blocker: host-capability-default-flip
 
-- **Status:** open — **proposed closure by supersession, pending one maintainer
-  answer** (see below; the answer is a scope clarification, not a design call)
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** the third acceptance criterion only. It no longer blocks 1.1, 1.2
   or 1.3 — the decision those steps were waiting to *apply* has been taken and
@@ -97,10 +96,19 @@ the third. The pattern is not new work to invent — it is work to repeat.
   host registry plus a live environment probe, and a test pins its arity at 1 so
   no override parameter can return). There is no empty `host_capabilities: {}`
   left to assign semantics to.
-- **Resolved when:** the maintainer answers the scope question below. The
-  original wording — "the decision is recorded and the template comment, the
-  loader, and the reading rules agree" — is satisfied for production behaviour
-  and, as of this change, for the documents that describe it.
+- **Resolved when:** the maintainer answers the scope question below — **answered
+  2026-08-13: Reading 1 (production behaviour).** The original wording — "the
+  decision is recorded and the template comment, the loader, and the reading
+  rules agree" — was satisfied for production behaviour before this roadmap
+  opened, and is also satisfied for the documents that describe it; under the
+  answered reading only the first of those was ever required. The answer, the
+  deciding argument, and the honest provenance of the council pass that supplied
+  it are recorded at the third acceptance criterion. One note for future editors,
+  learned here the hard way: the dashboard reads `Status` as a literal and
+  absorbs every following line until the next RECOGNISED field
+  (`Status`/`Owner`/`Blocks`/`Resolved when`/`What to do`), so a date, a comment
+  block, or an invented `Resolved on:` bullet under it silently keeps the blocker
+  OPEN. Keep the Status line bare.
 
 **The one question left, and it is the whole blocker.** "…and the reading rules
 agree" is ambiguous between two readings, and only the owner can say which was
@@ -537,21 +545,43 @@ half a fix.
   `tool-safety` beside the tool-registry allowlist, because the registry and the
   reachable MCP surface being the same thing is the belief that verb exists to
   break.
-- [ ] The host-capability default is decided, and the template comment, the
+- [x] The host-capability default is decided, and the template comment, the
   loader, and the reading rules agree — pinned by a test.
-  <!-- OPEN on the first clause only, and deliberately. "Decided" is satisfied in
-  substance (all-false, settings key removed, merged under
-  road-to-always-on-orchestration Phase 1) but the closure of a maintainer-owned
-  blocker stays a maintainer act — council 2/2, 2026-08-10. The rest of the
-  criterion is met: template, loader, reading rules and the documents describing
-  them agree, pinned by the parity block in
-  tests/scripts/_lib_host_capability.test.ts. Flip this when the blocker's one
-  scope question is answered. -->
 
-  Left open **on purpose**, not by omission: an agent recording "already decided
-  elsewhere" against a maintainer-owned blocker is exactly the inference by which
-  an agent would make a consumer-visible change without making one visibly. The
-  work is done; the signature is not the agent's to forge.
+  **Answered by the maintainer 2026-08-13: Reading 1 — production behaviour.**
+  "…and the reading rules agree" means the template, the loader and the
+  production code path agree; it does not extend to documentation
+  exhaustiveness. So the criterion was already satisfied before the
+  documentation pass, and is satisfied now.
+
+  The deciding argument came from a council pass on the question and is worth
+  keeping, because neither this blocker nor the agent that surfaced it had it:
+  **the criterion names its own instrument — "pinned by a test".** A test checks
+  production parity; nothing in this repo tests documentation exhaustiveness, and
+  the parity block in `tests/scripts/_lib_host_capability.test.ts` was green
+  before the doc gaps were closed. A criterion that names a test as its evidence
+  is making a claim that test can decide.
+
+  **Council provenance, stated plainly rather than dressed up:** 1 member
+  (anthropic), 3 rounds, 2026-08-13. The second seat failed to start, so this is
+  a single-model pass and **not** convergence — the earlier 2/2 session of
+  2026-08-10 converged only on *who owns the closure*, not on which reading. The
+  argument above is admitted on its own checkable merit, not on a quorum it did
+  not have.
+
+  The same pass named a third option this blocker missed: the criterion is
+  under-specified and could be rewritten into two separately-evidenced claims
+  (production parity via test / documentation alignment via spot check) instead
+  of being confirmed. Recorded and **not taken** — the criterion is closed, and
+  reopening a satisfied criterion to improve its wording is a change to make when
+  writing the next one, not to a finished record. The lesson belongs in the
+  authoring guidance, and this paragraph is where a future author will find it.
+
+  What stayed true throughout, and why this box was not flipped earlier: an agent
+  recording "already decided elsewhere" against a maintainer-owned blocker is
+  exactly the inference by which an agent would make a consumer-visible change
+  without making one visibly. The work was done; the signature was not the
+  agent's to forge. It is signed now.
 
 - [x] The ten rules naming `.agent-settings.yml` bare either carry the resolution
   chain or point at it.
