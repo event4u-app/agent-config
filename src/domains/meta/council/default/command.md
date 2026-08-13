@@ -152,11 +152,22 @@ Construct each member from the resolved mode:
 - `manual` → `ManualClient` from `scripts.ai_council.clients`
   (`billable=False`, no API key, no SDK call).
 
-### 3. Cost confirmation — ALWAYS ASK for billable members
+### 3. Spend bound — ASK when a billable member has no ceiling
 
-Council calls to billable members spend money. Even under
-`personal.autonomy: on`, the agent **must** ask before invoking any
-billable member.
+Council calls to billable members spend money, so a bound is mandatory.
+Per ADR-230 the bound is a **ceiling**, not a per-invocation approval —
+the same three cases the `ai-council` skill resolves in its Procedure § 3:
+
+| Situation | Behaviour |
+|---|---|
+| No billable member (all `mode: cli`, subscription auth) | No gate. Estimate is information; go to Step 4. Spend is $0. |
+| Billable member **with** `cost_budget.max_total_usd` or `daily_limit_usd` non-zero | No per-run ask. The ceiling is the authorization the user already gave; `on_overrun` still pauses per member on breach. |
+| Billable member with **both** caps `0` | **Ask.** Nothing bounds the spend, so the user must. |
+
+`personal.autonomy` neither creates nor lifts that bound — autonomy is
+not a ceiling. Consumers who want a per-invocation gate set a small
+`cost_budget.max_total_usd`; every call then breaches and `on_overrun`
+asks per member.
 
 Run the CLI in **estimate** mode first — it bundles the artefact, runs
 redaction, and prints the per-member preview without spending:
@@ -182,17 +193,21 @@ roadmap file with `--input-mode roadmap`. `diff` and `files` modes
 remain Phase 4 — for now ask the user to convert into a `prompt`.
 
 The CLI prints a `council:estimate · members=N (billable=M)` line
-followed by per-member projected USD and a TOTAL. Render that to the
-user inside the cost-confirmation numbered-options block per the
-`ai-council` skill (§ Pre-call estimate format) — then `1. Run /
-2. Cancel`. If the billable count is `0`, skip the gate entirely
-(spend = $0) and proceed directly to Step 4.
+followed by per-member projected USD and a TOTAL. Render that table per
+the `ai-council` skill (§ Pre-call estimate format) in every case — it is
+what makes the spend legible whether or not it is being asked about.
 
-Wait for the user's pick. `1` proceeds; anything else aborts.
+Then read `billable=M` together with the two caps:
+
+- `M == 0` → no gate. Proceed to Step 4.
+- `M > 0` and a cap is set → no gate. Proceed to Step 4; `on_overrun`
+  handles a breach per member.
+- `M > 0` and both caps are `0` → render the table inside a numbered-options
+  block (`1. Run / 2. Cancel`) and wait. `1` proceeds; anything else aborts.
 
 ### 4. Run the CLI
 
-Once the user picks `1`, invoke the same arguments with `run` plus
+Invoke the same arguments with `run` plus
 `--confirm` and an output path under `agents/runtime/council/sessions/`:
 
 ```bash
