@@ -41,8 +41,9 @@ complexity: structural
 > document is rejected as duplicate or unfounded, that is the null to record
 > there.
 
-> **Execution status (2026-08-13).** Phases 1, 2 and 5 are closed — 10 of 18
-> steps. Phase 4 Step 3 was attempted and **withdrawn**: the completion review
+> **Execution status (2026-08-13).** Phase 2 and Phase 5 are closed; Phase 1 is
+> closed except its multi-host census half — **9 done, 1 deferred** of 18.
+> Phase 4 Step 3 was attempted and **withdrawn**: the completion review
 > showed the trigger form available without guessing a vendor's share path
 > fires on the vendor's documentation pages, which is the failure the rule's own
 > `claude.ai` precedent exists to avoid. Withdrawing it is the step's own
@@ -51,12 +52,16 @@ complexity: structural
 > effort**, plus the withdrawn Step 3 above. The seven, each recorded at its own
 > phase:
 >
-> - **Phase 3** (`source-first-gate`) — its verifier exemption keys on a payload
->   field that `road-to-subagent-lifecycle-integrity` Phase 0 Step 4 spikes and
->   its Phase 4 binds; both are open. The roadmap already calls this "a hard
->   dependency, not a nicety": shipping the gate first means warning the one
->   actor doing it right. Step 2 additionally cites the program X3 activation
->   policy note, which does not exist yet.
+> - **Phase 3** (`source-first-gate`) — **two** open dependencies, not one. Its
+>   verifier exemption keys on a payload field that
+>   `road-to-subagent-lifecycle-integrity` Phase 0 Step 4 spikes and its Phase 4
+>   binds; both are open, and the roadmap calls this "a hard dependency, not a
+>   nicety" — shipping the gate first means warning the one actor doing it
+>   right. **And its matcher list comes from Phase 1 Step 2's census, which is
+>   `[~]`: one host was censused, and that host's only capture tool photographs
+>   the display rather than a page.** A matcher built from it would watch the
+>   wrong surface. Step 2 additionally cites the program X3 activation policy
+>   note, which does not exist yet.
 > - **Phase 4 Steps 1–2** (browser handover) — cite the import adapter and the
 >   persistence discipline owned by `road-to-design-system-onramp` Phases 1–2,
 >   neither of which exists. Writing the section now would define a second
@@ -203,7 +208,7 @@ discipline, and a pre-delivery checklist — harvest verdicts in Phase 4/5.)
       measured zero browser-capable capture tools on the host. The falsifier's
       literal condition is met and is deliberately **not** honoured — a null
       produced by a setting that excludes the failure mode is not a null.
-- [x] **Step 2:** Census the screenshot-capable tool names actually present
+- [~] **Step 2:** Census the screenshot-capable tool names actually present
       across the supported hosts (Claude Code browser tools, Playwright MCP
       `browser_take_screenshot`, Chrome MCP equivalents, `Bash` screencapture
       shapes) — the matcher list for Phase 3 comes from this census, never
@@ -215,6 +220,11 @@ discipline, and a pre-delivery checklist — harvest verdicts in Phase 4/5.)
       and jira. The one present tool photographs the display, not a page.
       A Phase-3 matcher built from this census alone would watch the wrong
       surface — the multi-host half of this step stays open by host limitation.
+      **Marked `[~]`, not `[x]`:** the step says "across the supported hosts"
+      and one host was censused. A third review round caught the checkbox
+      claiming more than the note underneath it delivered. Phase 3 Step 1 takes
+      its matcher list from this census, so the deferral is a real dependency
+      and is listed as one below, not a bookkeeping detail.
 - [x] **Step 3:** Extend the `ui-route-nudge` consultation latch definition so
       that reading a provided artifact file (the handover classes
       `design-fidelity` already routes) counts as consultation — capture-only

@@ -159,8 +159,21 @@ index 0000000000000000000000000000000000000000..7d1041da0958ced75cbd62dbfa46d109
 +browser tool, and a third arm whose artifact arrives as a URL rather than a
 +path. Neither is available here; that is a host limitation, recorded rather than
 +worked around.
+diff --git a/agents/index.md b/agents/index.md
+index 0a6c79b5ede05ba3d04fb5085d434984f9a7723b..d60485bba0b9c3f9c95c913f2e8425dcaa365be7 100644
+--- a/agents/index.md
++++ b/agents/index.md
+@@ -98,7 +98,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
+ | skill | [`evaluate-llm-feature`](../src/skills/evaluate-llm-feature/SKILL.md) | official | Black-box evaluation of a shipped LLM feature — adversarial probes for hallucination, prompt-injection, and cost-runaway vs stated expectations. Not RAG/embedding. Triggers 'review my chatbot'. |
+ | skill | [`existing-ui-audit`](../src/skills/existing-ui-audit/SKILL.md) | official | Use BEFORE writing or editing any non-trivial UI — inventories components, design tokens, shadcn primitives, and reusable patterns into state.ui_audit. Hard gate for the ui directive set. |
+ | skill | [`expansion-playbook`](../src/skills/expansion-playbook/SKILL.md) | official | Use when designing account-expansion mechanics — upsell vs cross-sell, expansion-trigger signals, NRR cognition. Triggers on 'lift NRR', 'when do we upsell vs cross-sell'. |
+-| skill | [`fe-design`](../src/skills/fe-design/SKILL.md) | official | Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, build, review. Use when building or changing any UI, not only when planning one. |
++| skill | [`fe-design`](../src/skills/fe-design/SKILL.md) | official | Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, inventory, build, review. Use when building or changing any UI, not only when planning one. |
+ | skill | [`feature-planning`](../src/skills/feature-planning/SKILL.md) | official | Use when the user says \"plan a feature\", \"brainstorm\", \"explore this idea\", or wants to go from idea to structured plan and roadmap. |
+ | skill | [`file-editor`](../src/skills/file-editor/SKILL.md) | official | Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled. |
+ | skill | [`finishing-a-development-branch`](../src/skills/finishing-a-development-branch/SKILL.md) | official | Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, routes to merge/PR/park/discard; never destroys work without explicit confirmation. |
 diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
-index a236061543dd98ac0454d45f071282add5d9b271..9e77bffbf590acc483bf4e84d0683ebac426b24e 100644
+index a236061543dd98ac0454d45f071282add5d9b271..6050b315275a6ef6f42fc144784593b3561edae9 100644
 --- a/agents/roadmaps-progress.md
 +++ b/agents/roadmaps-progress.md
 @@ -2,11 +2,11 @@
@@ -173,7 +186,7 @@ index a236061543dd98ac0454d45f071282add5d9b271..9e77bffbf590acc483bf4e84d0683eba
  ## Overall
  
 -**284 / 455 steps done · 62%**
-+**294 / 471 steps done · 62%**
++**293 / 470 steps done · 62%**
  
  ```text
  █████████████████████████░░░░░░░░░░░░░░░   62%
@@ -241,7 +254,7 @@ index a236061543dd98ac0454d45f071282add5d9b271..9e77bffbf590acc483bf4e84d0683eba
 +| 24 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 1 | 4 | 15 | 1 | [2](#blockers-road-to-skill-ecosystem-executable-payloads) | ████████░░ 80% |
 +| 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 +| 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
-+| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 8 | 10 | 0 | 0 | 0 | ██████░░░░ 56% |
++| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 8 | 9 | 1 | 0 | 0 | █████░░░░░ 53% |
 +| 28 | [road-to-structured-guard-input.md](roadmaps/road-to-structured-guard-input.md) | 4 | 9 | 3 | 5 | 0 | 1 | 0 | ██████░░░░ 62% |
 +| 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 19 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
 +| 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -258,13 +271,13 @@ index a236061543dd98ac0454d45f071282add5d9b271..9e77bffbf590acc483bf4e84d0683eba
  ### [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md)
  
 -**Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation** — 0 / 18 done (0%)
-+**Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation** — 10 / 18 done (56%)
++**Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation** — 9 / 17 done (53%)
  
  | # | Phase | State | Open | Done | Deferred | Cancelled | % |
  |---|---|---|---:|---:|---:|---:|---:|
 -| 1 | Measure — reproduce ad-hoc, census the screenshot tools | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 -| 2 | One data-basis ladder, written where the agent reads, engine-independent | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-+| 1 | Measure — reproduce ad-hoc, census the screenshot tools | ✅ done | 0 | 3 | 0 | 0 | 100% |
++| 1 | Measure — reproduce ad-hoc, census the screenshot tools | ✅ done | 0 | 2 | 1 | 0 | 100% |
 +| 2 | One data-basis ladder, written where the agent reads, engine-independent | ✅ done | 0 | 5 | 0 | 0 | 100% |
  | 3 | The deterministic carrier — a source-first gate on screenshot tools | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
  | 4 | The browser handover — extraction into files, inside the lock | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
@@ -274,15 +287,16 @@ index a236061543dd98ac0454d45f071282add5d9b271..9e77bffbf590acc483bf4e84d0683eba
  
  ### [road-to-structured-guard-input.md](roadmaps/road-to-structured-guard-input.md)
 diff --git a/agents/roadmaps/road-to-source-first-frontend.md b/agents/roadmaps/road-to-source-first-frontend.md
-index f5f3b3cbd8c70e95337436317ce54b9c53daed81..f96e54656a95c484eb99984c68438065f525639d 100644
+index f5f3b3cbd8c70e95337436317ce54b9c53daed81..2bd838875a09038bd2c76f3c9daa1fc440e97bb3 100644
 --- a/agents/roadmaps/road-to-source-first-frontend.md
 +++ b/agents/roadmaps/road-to-source-first-frontend.md
-@@ -39,6 +39,32 @@ complexity: structural
+@@ -39,6 +39,37 @@ complexity: structural
  > document is rejected as duplicate or unfounded, that is the null to record
  > there.
  
-+> **Execution status (2026-08-13).** Phases 1, 2 and 5 are closed — 10 of 18
-+> steps. Phase 4 Step 3 was attempted and **withdrawn**: the completion review
++> **Execution status (2026-08-13).** Phase 2 and Phase 5 are closed; Phase 1 is
++> closed except its multi-host census half — **9 done, 1 deferred** of 18.
++> Phase 4 Step 3 was attempted and **withdrawn**: the completion review
 +> showed the trigger form available without guessing a vendor's share path
 +> fires on the vendor's documentation pages, which is the failure the rule's own
 +> `claude.ai` precedent exists to avoid. Withdrawing it is the step's own
@@ -291,12 +305,16 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..f96e54656a95c484eb99984c68438065
 +> effort**, plus the withdrawn Step 3 above. The seven, each recorded at its own
 +> phase:
 +>
-+> - **Phase 3** (`source-first-gate`) — its verifier exemption keys on a payload
-+>   field that `road-to-subagent-lifecycle-integrity` Phase 0 Step 4 spikes and
-+>   its Phase 4 binds; both are open. The roadmap already calls this "a hard
-+>   dependency, not a nicety": shipping the gate first means warning the one
-+>   actor doing it right. Step 2 additionally cites the program X3 activation
-+>   policy note, which does not exist yet.
++> - **Phase 3** (`source-first-gate`) — **two** open dependencies, not one. Its
++>   verifier exemption keys on a payload field that
++>   `road-to-subagent-lifecycle-integrity` Phase 0 Step 4 spikes and its Phase 4
++>   binds; both are open, and the roadmap calls this "a hard dependency, not a
++>   nicety" — shipping the gate first means warning the one actor doing it
++>   right. **And its matcher list comes from Phase 1 Step 2's census, which is
++>   `[~]`: one host was censused, and that host's only capture tool photographs
++>   the display rather than a page.** A matcher built from it would watch the
++>   wrong surface. Step 2 additionally cites the program X3 activation policy
++>   note, which does not exist yet.
 +> - **Phase 4 Steps 1–2** (browser handover) — cite the import adapter and the
 +>   persistence discipline owned by `road-to-design-system-onramp` Phases 1–2,
 +>   neither of which exists. Writing the section now would define a second
@@ -310,7 +328,7 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..f96e54656a95c484eb99984c68438065
  ## Context / What is verified
  
  **W1 — The principle exists as prose, in one skill, with no carrier.**
-@@ -160,25 +186,61 @@ discipline, and a pre-delivery checklist — harvest verdicts in Phase 4/5.)
+@@ -160,25 +191,66 @@ discipline, and a pre-delivery checklist — harvest verdicts in Phase 4/5.)
  
  ## Phase 1: Measure — reproduce ad-hoc, census the screenshot tools
  
@@ -331,7 +349,7 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..f96e54656a95c484eb99984c68438065
 +      measured zero browser-capable capture tools on the host. The falsifier's
 +      literal condition is met and is deliberately **not** honoured — a null
 +      produced by a setting that excludes the failure mode is not a null.
-+- [x] **Step 2:** Census the screenshot-capable tool names actually present
++- [~] **Step 2:** Census the screenshot-capable tool names actually present
        across the supported hosts (Claude Code browser tools, Playwright MCP
        `browser_take_screenshot`, Chrome MCP equivalents, `Bash` screencapture
        shapes) — the matcher list for Phase 3 comes from this census, never
@@ -344,6 +362,11 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..f96e54656a95c484eb99984c68438065
 +      and jira. The one present tool photographs the display, not a page.
 +      A Phase-3 matcher built from this census alone would watch the wrong
 +      surface — the multi-host half of this step stays open by host limitation.
++      **Marked `[~]`, not `[x]`:** the step says "across the supported hosts"
++      and one host was censused. A third review round caught the checkbox
++      claiming more than the note underneath it delivered. Phase 3 Step 1 takes
++      its matcher list from this census, so the deferral is a real dependency
++      and is listed as one below, not a bookkeeping detail.
 +- [x] **Step 3:** Extend the `ui-route-nudge` consultation latch definition so
        that reading a provided artifact file (the handover classes
        `design-fidelity` already routes) counts as consultation — capture-only
@@ -375,7 +398,7 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..f96e54656a95c484eb99984c68438065
  
  **Falsifier.** Step 1 shows the ad-hoc run reading the source, adopting the
  markup, and reporting losses without any of the changes below → the symptom
-@@ -189,7 +251,7 @@ hand the operator report back with the measurement.
+@@ -189,7 +261,7 @@ hand the operator report back with the measurement.
  
  ## Phase 2: One data-basis ladder, written where the agent reads, engine-independent
  
@@ -384,7 +407,7 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..f96e54656a95c484eb99984c68438065
        `docs/guidelines/design-fidelity-mechanics.md` *(proposal)*, one table,
        cited by both `fe-design` and `design-review`: **(1) provided source
        files/archive → (2) repository/source read via any channel, including
-@@ -199,13 +261,13 @@ hand the operator report back with the measurement.
+@@ -199,13 +271,13 @@ hand the operator report back with the measurement.
        dynamically, never as the data basis while a higher rung is reachable.**
        Analyzing/improving the source stays explicitly allowed — the ladder
        governs where data comes from, not whether defects may be fixed.
@@ -400,7 +423,7 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..f96e54656a95c484eb99984c68438065
        and the `design-fidelity` Iron-Law block *(proposal)*: where the
        artifact's markup/CSS/JS is stack-compatible, adaptation of that code is
        the default; a from-scratch re-derivation is a **deviation** requiring
-@@ -224,7 +286,7 @@ hand the operator report back with the measurement.
+@@ -224,7 +296,7 @@ hand the operator report back with the measurement.
        through a design handover (a vendored component, a licensed template)
        stays under `code-provenance` in full. Both rules gain the cross-link in
        the same change, so the boundary is readable from either side.
@@ -409,7 +432,7 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..f96e54656a95c484eb99984c68438065
        `fe-design` § Ad-hoc mode — inventory the artifact's interactions,
        keyframes, and script includes **before building**; every item lands in
        exactly one bucket (adopted verbatim / translated / dropped-with-stated-
-@@ -232,9 +294,18 @@ hand the operator report back with the measurement.
+@@ -232,9 +304,18 @@ hand the operator report back with the measurement.
        two surfaces cannot drift. Prose duty first; a deterministic ad-hoc
        checker is a gated follow-up, opened only if Phase 6 re-measurement
        shows the prose alone did not move the number.
@@ -429,7 +452,7 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..f96e54656a95c484eb99984c68438065
  
  **Falsifier.** Owned per-duty by Phase 6's re-measurement.
  
-@@ -312,6 +383,21 @@ concern logic.
+@@ -312,6 +393,21 @@ concern logic.
        `ROUTING_MATRIX` per the rule's own extension discipline
        (`design-fidelity.md` § Routing). A bare-domain chat mention stays
        silent, same as the `claude.ai` precedent.
@@ -451,7 +474,7 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..f96e54656a95c484eb99984c68438065
  
  **Falsifier.** The extraction-artifact path goes unused across two release
  cycles of real handovers (telemetry from Phase 1 Step 3) → the browser
-@@ -322,19 +408,23 @@ existing handover prose and drop the persistence step.
+@@ -322,19 +418,23 @@ existing handover prose and drop the persistence step.
  
  ## Phase 5: Interop precedence — a provided artifact outranks generative tooling
  
@@ -477,7 +500,7 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..f96e54656a95c484eb99984c68438065
  
  **Falsifier.** None needed beyond Phase 6 — the clause is one sentence; if it
  never binds, it costs nothing.
-@@ -356,8 +446,56 @@ never binds, it costs nothing.
+@@ -356,8 +456,56 @@ never binds, it costs nothing.
  deterministic follow-ups stay closed; record it as the second data point for
  the estate-wide "when is prose enough" question.
  
@@ -535,7 +558,7 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..f96e54656a95c484eb99984c68438065
  | Rank | Item | Risk type | Description | Mitigation | Anchored under |
  |------|------|-----------|-------------|------------|----------------|
  | 1 | The adopt-the-code duty contradicts an existing Iron Law | implementation | `code-provenance` opens with `NEVER ADOPT EXTERNAL CODE VERBATIM` and routes any conscious borrow through a license check plus a ledger entry. Phase 2 Step 3 instructs the opposite for a provided artifact. Two Iron Laws giving opposite instructions on the same act is worse than either gap alone: whichever the agent follows, it is violating a rule, and no gate can arbitrate | Phase 2 Step 3 carries a mandatory scope line — a user-supplied artifact is the user's own material, not third-party external code, mirroring the carve-out `content-quoting-floor` already makes — and both rules gain the cross-link in the same change so the boundary is readable from either side | Phase 2 Step 3 |
-@@ -365,6 +503,7 @@ the estate-wide "when is prose enough" question.
+@@ -365,6 +513,7 @@ the estate-wide "when is prose enough" question.
  | 3 | The gate warns the one actor doing it right | implementation | A verifier subagent screenshotting for QA is the sanctioned use. A `source-first-gate` matched on screenshot tools with no exemption fires on exactly that actor, which teaches the reader to ignore the warning and burns the valve on false positives | The verifier exemption keys on the payload `agent_id` / `agent_type`, and this phase is sequenced after `road-to-subagent-lifecycle-integrity` Phase 4 establishes that binding — stated as a hard dependency, not a note | Phase 3 Step 1 |
  | 4 | Phase 1 refutes the premise after the plan is written | product | The measurement that decides whether the symptom reproduces ad-hoc on current main runs first, and it may come back green — in which case five phases of enforcement design were authored against a symptom the tree no longer has | That outcome is the pre-registered falsifier: publish the null, park Phases 2–4, hand the operator report back with the measurement; the roadmap is written so the null is a clean stop rather than a sunk cost | Phase 1 |
  | 5 | Extraction into files goes unused and the section rots | product | The browser-handover class rests on one operator report. If real handovers rarely arrive as URLs, the extraction artifact path, the persistence discipline, and three new trigger rows are maintained for a case that does not occur | Phase 4's falsifier folds the section into the existing handover prose and drops the persistence step if the path goes unused across two release cycles, measured by the Phase-1 telemetry rather than by impression | Phase 4 |
@@ -778,9 +801,18 @@ index 25acb2d8f9e72014914057ad50bbcaaa23cda186..f6b2b1bbd832e8a0c298f1635618bfb9
  
  For a review that needs browser probing, use an **async background verifier**
 diff --git a/dist/agent-src/skills/fe-design/SKILL.md b/dist/agent-src/skills/fe-design/SKILL.md
-index f21272a3b59089f2ef02a7bd5f3bbf52732d13bd..35fd45321ea10b7085becec3e933849726f99afa 100644
+index f21272a3b59089f2ef02a7bd5f3bbf52732d13bd..0c7fbf0a965b2a398c767933204e6650a3faf64b 100644
 --- a/dist/agent-src/skills/fe-design/SKILL.md
 +++ b/dist/agent-src/skills/fe-design/SKILL.md
+@@ -1,7 +1,7 @@
+ ---
+ model_tier: medium
+ name: fe-design
+-description: "Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, build, review. Use when building or changing any UI, not only when planning one."
++description: "Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, inventory, build, review. Use when building or changing any UI, not only when planning one."
+ personas:
+   - frontend-engineer
+ domain: engineering
 @@ -40,8 +40,32 @@ else runs the loop.
     `layout`, `components`, `states`, `microcopy`, `a11y`. `states` means all
     five of `empty`, `loading`, `error`, `success`, `disabled` — a brief missing
@@ -816,8 +848,21 @@ index f21272a3b59089f2ef02a7bd5f3bbf52732d13bd..35fd45321ea10b7085becec3e9338497
     it done, and scope the verdict honestly: render-scoped when you can render
     it, otherwise explicitly static-scoped, naming which checks actually ran.
     "Looks good" with neither scope named is a verdict without evidence.
+diff --git a/docs/catalog.md b/docs/catalog.md
+index 6f9368771cbf21e5d73dbc91e569646aad7963ed..ede84c1526f21ed26380d0260ff6fa592ed27777 100644
+--- a/docs/catalog.md
++++ b/docs/catalog.md
+@@ -114,7 +114,7 @@ are excluded.
+ | skill | [`evaluate-llm-feature`](../dist/agent-src/skills/evaluate-llm-feature/SKILL.md) | official | Black-box evaluation of a shipped LLM feature — adversarial probes for hallucination, prompt-injection, and cost-runaway vs stated expectations. Not RAG/embedding. Triggers 'review my chatbot'. |
+ | skill | [`existing-ui-audit`](../dist/agent-src/skills/existing-ui-audit/SKILL.md) | official | Use BEFORE writing or editing any non-trivial UI — inventories components, design tokens, shadcn primitives, and reusable patterns into state.ui_audit. Hard gate for the ui directive set. |
+ | skill | [`expansion-playbook`](../dist/agent-src/skills/expansion-playbook/SKILL.md) | official | Use when designing account-expansion mechanics — upsell vs cross-sell, expansion-trigger signals, NRR cognition. Triggers on 'lift NRR', 'when do we upsell vs cross-sell'. |
+-| skill | [`fe-design`](../dist/agent-src/skills/fe-design/SKILL.md) | official | Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, build, review. Use when building or changing any UI, not only when planning one. |
++| skill | [`fe-design`](../dist/agent-src/skills/fe-design/SKILL.md) | official | Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, inventory, build, review. Use when building or changing any UI, not only when planning one. |
+ | skill | [`feature-planning`](../dist/agent-src/skills/feature-planning/SKILL.md) | official | Use when the user says \"plan a feature\", \"brainstorm\", \"explore this idea\", or wants to go from idea to structured plan and roadmap. |
+ | skill | [`file-editor`](../dist/agent-src/skills/file-editor/SKILL.md) | official | Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled. |
+ | skill | [`finishing-a-development-branch`](../dist/agent-src/skills/finishing-a-development-branch/SKILL.md) | official | Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, routes to merge/PR/park/discard; never destroys work without explicit confirmation. |
 diff --git a/docs/guidelines/design-fidelity-mechanics.md b/docs/guidelines/design-fidelity-mechanics.md
-index ec122cce8688cbb8b59fd33aa7a2bc702d6e40eb..8411b9e4bc5f6a903e41ea7e2bf74a095dcf64b5 100644
+index ec122cce8688cbb8b59fd33aa7a2bc702d6e40eb..9015e237e34d05015312f0c7cb405e7424a356d8 100644
 --- a/docs/guidelines/design-fidelity-mechanics.md
 +++ b/docs/guidelines/design-fidelity-mechanics.md
 @@ -4,6 +4,102 @@
@@ -933,11 +978,13 @@ index ec122cce8688cbb8b59fd33aa7a2bc702d6e40eb..8411b9e4bc5f6a903e41ea7e2bf74a09
  THE EXEMPTION COVERS ONLY DECISIONS THE ARTIFACT ACTUALLY COVERS.
  IT NEVER COVERS GENERATIVE WORK IN THE SAME RUN.
  ```
-@@ -94,6 +191,21 @@ nothing acts on them.
+@@ -94,6 +191,23 @@ nothing acts on them.
     the consumer's own brand (`brand-source-of-truth`). Artifact-vs-brand
     conflicts are surfaced, never merged.
  
-+**The fourth member, and why it is not obvious.** A generative design-system
++### The precedence chain's fourth member, and why it is not obvious
++
++A generative design-system
 +skill — this suite's own or a third party's installed beside it — can carry an
 +instruction of the shape *"always generate a design system first"*. On a
 +greenfield brief that is right. On a **port** it is the same error the anti-slop
@@ -955,7 +1002,7 @@ index ec122cce8688cbb8b59fd33aa7a2bc702d6e40eb..8411b9e4bc5f6a903e41ea7e2bf74a09
  **The mechanical half.** A review finding carries `artifact_covered: true`, and
  the polish gate drops those from the round-driving set *before* the ceiling
  check, so a port cannot burn its two rounds on findings it was never allowed to
-@@ -125,7 +237,11 @@ labelled "not wired yet" note beats an invented redesign.
+@@ -125,7 +239,11 @@ labelled "not wired yet" note beats an invented redesign.
  
  Behavioral baseline: the `daf-*` fixtures named above (edit preservation,
  unwanted variations, redesign trigger, missing asset, external asset URL,
@@ -968,6 +1015,19 @@ index ec122cce8688cbb8b59fd33aa7a2bc702d6e40eb..8411b9e4bc5f6a903e41ea7e2bf74a09
  
  ## See also
  
+diff --git a/src/domains/engineering-base/README.md b/src/domains/engineering-base/README.md
+index df9d2344fc42d98407d09162e31c7dd5ce4469d7..38af7026fccd299a4fe5467eccfb94d7dd64cb44 100644
+--- a/src/domains/engineering-base/README.md
++++ b/src/domains/engineering-base/README.md
+@@ -77,7 +77,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
+ - **`error-handling-patterns`** — Use when picking a failure-reporting strategy — exceptions vs Result types, recoverable vs not, retry / circuit-breaker / graceful degradation — decision framework only, catalogues externalized.
+ - **`evaluate-llm-feature`** — Black-box evaluation of a shipped LLM feature — adversarial probes for hallucination, prompt-injection, and cost-runaway vs stated expectations. Not RAG/embedding. Triggers 'review my chatbot'.
+ - **`existing-ui-audit`** — Use BEFORE writing or editing any non-trivial UI — inventories components, design tokens, shadcn primitives, and reusable patterns into state.ui_audit. Hard gate for the ui directive set.
+-- **`fe-design`** — Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, build, review. Use when building or changing any UI, not only when planning one.
++- **`fe-design`** — Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, inventory, build, review. Use when building or changing any UI, not only when planning one.
+ - **`finishing-a-development-branch`** — Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, routes to merge/PR/park/discard; never destroys work without explicit confirmation.
+ - **`form-handler`** — Use when designing or reviewing a form — validation timing, error display, submission lifecycle, optimistic UI, dirty/pristine state, idempotency — even on 'why does submit double-fire?'.
+ - **`frontend-render-security`** — Writing/reviewing client-side UI (React/Vue/vanilla) — insecure-render + client-trust gaps AI ships: XSS via innerHTML, client secrets, client-only auth, CORS wildcard, token in localStorage
 diff --git a/src/rules/code-provenance.md b/src/rules/code-provenance.md
 index 16b0154784aaa8106175a71978a92d7874f46856..bb773dfbd8125674fd1d5718f62052cd0e7c83f9 100644
 --- a/src/rules/code-provenance.md
@@ -1169,7 +1229,7 @@ index 5c9c53e42fa9241a61efea0b92ab61c025711cbe..f183a86ee6e7ff96b9d5eb41ce65a503
      }
      if (!warn) return EXIT_ALLOW;
 diff --git a/src/scripts/report_consultation_rate.ts b/src/scripts/report_consultation_rate.ts
-index 9b44de07c09e1425e017efebd6f86b89108366af..229405e09fc10dc126fa953f16d80048aafcb4c0 100644
+index 9b44de07c09e1425e017efebd6f86b89108366af..4e415fcf374247d033174e2d97ba7a04ccd6990d 100644
 --- a/src/scripts/report_consultation_rate.ts
 +++ b/src/scripts/report_consultation_rate.ts
 @@ -48,6 +48,7 @@ import { fileURLToPath } from 'node:url';
@@ -1263,12 +1323,20 @@ index 9b44de07c09e1425e017efebd6f86b89108366af..229405e09fc10dc126fa953f16d80048
          if (isConsultation(event)) {
              consulted = true;
              if (event.file.replace(/\\/g, '/').toLowerCase().includes(`skills/${REVIEW_SURFACE}/`)) {
-@@ -166,6 +213,12 @@ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement
+@@ -166,6 +213,20 @@ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement
  
      out.uiWriteTurns = writeTurns.size;
      for (const wasConsulted of writeTurns.values()) if (wasConsulted) out.consulted += 1;
 +    for (const wasRead of artifactTurns.values()) if (wasRead) out.artifactRead += 1;
 +    out.sawArtifact = artifactRead;
++    // KNOWN IMPRECISION, accepted: ordering inside ONE assistant message comes
++    // from the `tool_use` part index, and parallel tool calls in a single
++    // message carry no real order. A read and a write issued together can
++    // therefore score either way. Not repaired here — a transcript carries no
++    // per-call timestamp, so the fix is a different data source rather than a
++    // different loop, and the error is bounded to same-message pairs. It is a
++    // third reason the published rate is a ceiling.
++    //
 +    // The FIRST write's outcome — `artifactTurns` is insertion-ordered on the
 +    // first UI write of each turn, so its first value is that write's state.
 +    const firstWrite = artifactTurns.values().next();
@@ -1276,7 +1344,7 @@ index 9b44de07c09e1425e017efebd6f86b89108366af..229405e09fc10dc126fa953f16d80048
      // A single max comparison, not a scan per write: the proxy asks only whether
      // ANY review-open follows, so the last one decides every earlier write.
      void reviewOpenPositions;
-@@ -216,6 +269,9 @@ export function measureStore(store: string, limit: number): RateReport {
+@@ -216,6 +277,9 @@ export function measureStore(store: string, limit: number): RateReport {
          uiWriteTurns: 0,
          consulted: 0,
          reviewOpenedAfter: 0,
@@ -1286,7 +1354,7 @@ index 9b44de07c09e1425e017efebd6f86b89108366af..229405e09fc10dc126fa953f16d80048
      };
      // A store that is not there and a store with nothing in it are different
      // findings, and only one of them is about the agent. Collapsing them into
-@@ -255,6 +311,11 @@ export function measureStore(store: string, limit: number): RateReport {
+@@ -255,6 +319,11 @@ export function measureStore(store: string, limit: number): RateReport {
          report.uiWriteTurns += measured.uiWriteTurns;
          report.consulted += measured.consulted;
          report.reviewOpenedAfter += measured.reviewOpenedAfter;
@@ -1298,7 +1366,7 @@ index 9b44de07c09e1425e017efebd6f86b89108366af..229405e09fc10dc126fa953f16d80048
      }
      return report;
  }
-@@ -285,6 +346,50 @@ export function render(report: RateReport, threshold: number): string {
+@@ -285,6 +354,62 @@ export function render(report: RateReport, threshold: number): string {
      lines.push(
          `  discharge PROXY (review opened)  ${pct(report.reviewOpenedAfter, report.uiWriteTurns)}  (${report.reviewOpenedAfter}/${report.uiWriteTurns})`,
      );
@@ -1320,6 +1388,18 @@ index 9b44de07c09e1425e017efebd6f86b89108366af..229405e09fc10dc126fa953f16d80048
 +    );
 +    lines.push(
 +        '  rate toward the size of the estate rather than the behaviour.',
++    );
++    lines.push(
++        '  That denominator is narrower than it sounds, twice: "artifact" means',
++    );
++    lines.push(
++        '  a path ending design.html or under .claude/design-system/ — a handover',
++    );
++    lines.push(
++        '  under any other name is not counted — and a session that read one but',
++    );
++    lines.push(
++        '  wrote no UI is excluded, since it had nothing to be late for.',
 +    );
 +    lines.push(
 +        '  The line above it shares the consultation denominator and is kept for',
@@ -1392,9 +1472,18 @@ index 25acb2d8f9e72014914057ad50bbcaaa23cda186..f6b2b1bbd832e8a0c298f1635618bfb9
  
  For a review that needs browser probing, use an **async background verifier**
 diff --git a/src/skills/fe-design/SKILL.md b/src/skills/fe-design/SKILL.md
-index f21272a3b59089f2ef02a7bd5f3bbf52732d13bd..35fd45321ea10b7085becec3e933849726f99afa 100644
+index f21272a3b59089f2ef02a7bd5f3bbf52732d13bd..0c7fbf0a965b2a398c767933204e6650a3faf64b 100644
 --- a/src/skills/fe-design/SKILL.md
 +++ b/src/skills/fe-design/SKILL.md
+@@ -1,7 +1,7 @@
+ ---
+ model_tier: medium
+ name: fe-design
+-description: "Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, build, review. Use when building or changing any UI, not only when planning one."
++description: "Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, inventory, build, review. Use when building or changing any UI, not only when planning one."
+ personas:
+   - frontend-engineer
+ domain: engineering
 @@ -40,8 +40,32 @@ else runs the loop.
     `layout`, `components`, `states`, `microcopy`, `a11y`. `states` means all
     five of `empty`, `loading`, `error`, `success`, `disabled` — a brief missing
@@ -1517,7 +1606,7 @@ index 086929088955ee11ca74dd4b32f5d6d74d7f1911..f49b312f6357e4aadf0229e50da6cde7
  
  The `daf-lane-*` family, plus `daf-placeholder-in-array` and
 diff --git a/tests/scripts/consultation_rate.test.ts b/tests/scripts/consultation_rate.test.ts
-index b36eaa6f76750ddc6f3b4d891b581910dac4695e..a6bf4d02cb1c16073e45f9971fc4b4a068516cfe 100644
+index b36eaa6f76750ddc6f3b4d891b581910dac4695e..85086504606fafcaea4f34a1ec63dfd2be6b6d33 100644
 --- a/tests/scripts/consultation_rate.test.ts
 +++ b/tests/scripts/consultation_rate.test.ts
 @@ -54,6 +54,68 @@ const open = (file: string, turn?: number) => ({
@@ -1634,7 +1723,7 @@ index b36eaa6f76750ddc6f3b4d891b581910dac4695e..a6bf4d02cb1c16073e45f9971fc4b4a0
  });
  
  describe('render', () => {
-@@ -217,8 +317,32 @@ describe('render', () => {
+@@ -217,8 +317,36 @@ describe('render', () => {
          uiWriteTurns: 4,
          consulted: 1,
          reviewOpenedAfter: 2,
@@ -1662,6 +1751,10 @@ index b36eaa6f76750ddc6f3b4d891b581910dac4695e..a6bf4d02cb1c16073e45f9971fc4b4a0
 +        const out = render(report, 20);
 +        expect(out).toContain('A CEILING, NOT A MEASUREMENT');
 +        expect(out).toContain('search whose path argument');
++        // The denominator is narrowed twice in code; both narrowings are named
++        // in the output rather than left for a reader to discover in the source.
++        expect(out).toContain('narrower than it sounds');
++        expect(out).toContain('wrote no UI is excluded');
 +    });
 +
      it('reports the rate and marks the proxy as not the discharge rate', () => {
@@ -1710,10 +1803,10 @@ index d8bca85cb213f33a4eae057d9365af9ef8f05840..e7a049101db368dda4589bc631bd20c0
          klass: 'en',
 diff --git a/tests/scripts/ui_route_nudge_artifact_read.test.ts b/tests/scripts/ui_route_nudge_artifact_read.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..394aee2469ecb4075b426d301da34bf80e5758e5
+index 0000000000000000000000000000000000000000..f6d1d795fd586b83174c5684840523ef9801d39b
 --- /dev/null
 +++ b/tests/scripts/ui_route_nudge_artifact_read.test.ts
-@@ -0,0 +1,129 @@
+@@ -0,0 +1,152 @@
 +/**
 + * `isArtifactRead` — the shared predicate the analyzer measures over.
 + *
@@ -1727,7 +1820,10 @@ index 0000000000000000000000000000000000000000..394aee2469ecb4075b426d301da34bf8
 + * The drift guard at the bottom is the load-bearing part: the predicate COPIES
 + * two of `design-fidelity`'s triggers rather than reading the rule, exactly as
 + * the hook copies the UI-surface predicate. A copy nothing pins is a copy that
-+ * rots, so the rule's own frontmatter is parsed here and compared.
++ * rots, so the rule's own frontmatter is parsed here and compared **as a set** —
++ * an earlier revision asserted only that the two copied triggers were still
++ * present, which stays green while the rule grows a third the predicate never
++ * learns about.
 + */
 +import * as fs from 'node:fs';
 +import * as path from 'node:path';
@@ -1829,17 +1925,37 @@ index 0000000000000000000000000000000000000000..394aee2469ecb4075b426d301da34bf8
 +        return fm['triggers'] as Array<Record<string, string>>;
 +    }
 +
-+    it('the rule still declares the file_pattern the predicate copied', () => {
-+        const patterns = ruleTriggers()
-+            .filter((t) => 'file_pattern' in t)
-+            .map((t) => t['file_pattern']);
-+        expect(patterns).toContain('*design.html');
++    // Asserting the SET, not membership. A `toContain` pair passes forever
++    // while the rule grows a third file-shaped trigger the predicate never
++    // learns about — the same shape as a near-miss row that tests an
++    // already-closed direction, which is why this branch withdrew a trigger
++    // rather than ship it. Adding a file_pattern/path_prefix must red this
++    // test and force a decision about `isArtifactRead`.
++    it('the rule declares EXACTLY the file-shaped triggers the predicate copied', () => {
++        const fileShaped = ruleTriggers().filter(
++            (t) => 'file_pattern' in t || 'path_prefix' in t,
++        );
++        expect(fileShaped).toEqual([
++            { file_pattern: '*design.html' },
++            { path_prefix: '.claude/design-system/' },
++        ]);
 +    });
 +
-+    it('the rule still declares the path_prefix the predicate copied', () => {
-+        const prefixes = ruleTriggers()
-+            .filter((t) => 'path_prefix' in t)
-+            .map((t) => t['path_prefix']);
-+        expect(prefixes).toContain('.claude/design-system/');
++    it('every file-shaped trigger is one `isArtifactRead` actually accepts', () => {
++        // The membership half, derived rather than restated: each declared
++        // trigger is turned into a path the predicate should latch on. A new
++        // trigger the predicate ignores fails here even if someone updates the
++        // set above without touching the predicate.
++        const samples: Record<string, string> = {
++            '*design.html': 'some/dir/design.html',
++            '.claude/design-system/': '.claude/design-system/tokens.json',
++        };
++        for (const trigger of ruleTriggers()) {
++            const value = trigger['file_pattern'] ?? trigger['path_prefix'];
++            if (value === undefined) continue;
++            const sample = samples[value];
++            expect(sample, `no sample path for trigger ${value}`).toBeDefined();
++            expect(isArtifactRead(read(sample as string))).toBe(true);
++        }
 +    });
 +});

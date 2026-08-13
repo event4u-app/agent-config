@@ -21,13 +21,14 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 40a8b5e94db4b6a2eadfeb18a66d71aae6151cec, review
-  artefacts excluded), scope hash `975af0b2532154b89c92da7ed2f2ee4c7b870fc622cb172e1436705b0cc66155`
+- diff: `diff.patch` — the review scope (branch head 4f7744dc6107942ca990cebdc89ee3b93a7315bc, review
+  artefacts excluded), scope hash `614e4eca456fba8af2228a01487db5e09c182890d2dfa7fa036473acc411e113`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
 
 - agents/evidence/analysis/source-first-frontend-phase1.md
+- agents/index.md
 - agents/roadmaps-progress.md
 - agents/roadmaps/road-to-source-first-frontend.md
 - agents/settings/contexts/design-corpus-upstream-harvest.md
@@ -36,7 +37,9 @@ Changed files:
 - dist/agent-src/rules/design-fidelity.md
 - dist/agent-src/skills/design-review/references/verification-automation.md
 - dist/agent-src/skills/fe-design/SKILL.md
+- docs/catalog.md
 - docs/guidelines/design-fidelity-mechanics.md
+- src/domains/engineering-base/README.md
 - src/rules/code-provenance.md
 - src/rules/content-quoting-floor.md
 - src/rules/design-fidelity.md
@@ -69,5 +72,5 @@ Fill the findings table in `feat-source-first-frontend.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 975af0b2532154b89c92da7ed2f2ee4c7b870fc622cb172e1436705b0cc66155, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 614e4eca456fba8af2228a01487db5e09c182890d2dfa7fa036473acc411e113, reviewed <YYYY-MM-DD>
 ```
