@@ -39,6 +39,7 @@ import {
 import {
     ROADMAP_CLAIM_REL,
     claim_is_stale,
+    foreign_sessions_block,
     read_claimed_slug,
     roadmap_claim_rel,
 } from '../../src/scripts/session_register_hook.js';
@@ -716,5 +717,56 @@ describe('the branch axis — what the register cannot see', () => {
             throw new Error('no git');
         }) as unknown as typeof spawnSync;
         expect(other_worktree_branches(main, thrower)).toEqual([]);
+    });
+});
+
+/**
+ * The context block is emitted for a COLLISION, never for mere co-existence.
+ *
+ * Measured cause: a live peer that collided with nothing still produced a
+ * paragraph about other sessions in every parallel session's context, and a
+ * model handed that paragraph mentions it unprompted and treats it as a reason
+ * to hold work back — although this hook has never blocked anything.
+ */
+describe('foreign_sessions_block — collision-gated, and never a git gate', () => {
+    it('is SILENT when a live peer collides with nothing', () => {
+        const { main, wt } = make_repo();
+        const dir = register_dir(main)!;
+        // Peer sits on `feat/a` in the linked worktree; `main` is on `main` and
+        // neither side claims a roadmap. Live, visible, and irrelevant.
+        write_record(dir, rec({ session_id: 'peer', worktree: wt, branch: 'feat/a' }));
+        expect(foreign_live_records(dir, 'me')).toHaveLength(1);
+
+        expect(foreign_sessions_block(main, 'me')).toBeNull();
+    });
+
+    it('fires on a branch collision and carries the never-gates-git clause', () => {
+        const { main, wt } = make_repo();
+        const dir = register_dir(main)!;
+        write_record(dir, rec({ session_id: 'peer', worktree: wt, branch: 'main' }));
+
+        const block = foreign_sessions_block(main, 'me');
+        expect(block).toContain('COLLISION');
+        expect(block).toContain('branch `main`');
+        // The clause that closes the gap the model was falling into.
+        expect(block).toContain('are ALWAYS executed');
+        expect(block).toContain('never gates a git operation');
+        // ...and it must not read as a licence to ignore the roadmap STOP.
+        expect(block).toContain('never about shipping work that is already done');
+    });
+
+    it('scopes the branch question to the whole session, not to every turn', () => {
+        const { main, wt } = make_repo();
+        const dir = register_dir(main)!;
+        write_record(dir, rec({ session_id: 'peer', worktree: wt, branch: 'main' }));
+
+        const block = foreign_sessions_block(main, 'me')!;
+        expect(block).toContain('ONCE PER SESSION');
+        expect(block).toContain('Do not re-raise it on later turns');
+    });
+
+    it('says nothing at all when there is no peer', () => {
+        const { main } = make_repo();
+        expect(foreign_sessions_block(main, 'me')).toBeNull();
     });
 });
