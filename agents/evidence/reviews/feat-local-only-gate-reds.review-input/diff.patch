@@ -1,0 +1,549 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 10880afd7509da9c555de6746807e3c24cf01d14..aa558045ab9dc35646e9c4564e05351e89deb320 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -6,10 +6,10 @@
+ 
+ ## Overall
+ 
+-**297 / 451 steps done · 66%**
++**300 / 451 steps done · 67%**
+ 
+ ```text
+-██████████████████████████░░░░░░░░░░░░░░   66%
++███████████████████████████░░░░░░░░░░░░░   67%
+ ```
+ 
+ ## ⚠️ Iron Law 3 — unresolved deferred items
+@@ -49,7 +49,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
+ | 15 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
+ | 16 | [road-to-inbox-harvest-distillation.md](roadmaps/road-to-inbox-harvest-distillation.md) | 4 | 16 | 0 | 9 | 1 | 6 | [2](#blockers-road-to-inbox-harvest-distillation) | ██████████ 100% |
+ | 17 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 18 | [road-to-local-only-gate-reds.md](roadmaps/road-to-local-only-gate-reds.md) | 4 | 10 | 7 | 3 | 0 | 0 | [3](#blockers-road-to-local-only-gate-reds) | ███░░░░░░░ 30% |
++| 18 | [road-to-local-only-gate-reds.md](roadmaps/road-to-local-only-gate-reds.md) | 4 | 10 | 4 | 6 | 0 | 0 | [3](#blockers-road-to-local-only-gate-reds) | ██████░░░░ 60% |
+ | 19 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+ | 20 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+ | 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+@@ -518,14 +518,14 @@ _1 blocker resolved._
+ 
+ ### [road-to-local-only-gate-reds.md](roadmaps/road-to-local-only-gate-reds.md)
+ 
+-**Road to local-only gate reds — four red gates nobody sees** — 3 / 10 done (30%)
++**Road to local-only gate reds — four red gates nobody sees** — 6 / 10 done (60%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+ | 1 | the two mechanical repairs | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+-| 2 | the self-test ratchet | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
++| 2 | the self-test ratchet | ✅ done | 0 | 2 | 0 | 0 | 100% |
+ | 3 | the roadmap that cannot archive | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+-| 4 | close the class, or state why it stays open | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
++| 4 | close the class, or state why it stays open | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+ 
+ <a id="blockers-road-to-local-only-gate-reds"></a>
+ **Blockers**
+@@ -573,7 +573,22 @@ _1 blocker resolved._
+     and it is a legitimate answer on its own.
+     4. Record the choice where its scope fits — an ADR for the wiring options, a
+     paragraph in `docs/contracts/ci-green-floor.md` for the accept option.
+-  - **Resolved when:** the decision exists in a tracked artefact and Phase 4 step 2 can cite it. - **Note:** an AI council was asked to adjudicate this and was unreachable (anthropic quota-exhausted, openai trusted-directory refusal, two attempts). The staged baseline was chosen without it, on the ground that it is the only option adding no unfixable block. It is not a council verdict and does not foreclose the others.
++    5. **Added 2026-08-13 — the same decision now also owns a live red.** The
++    repair dropped `check_ci_local_parity`'s scanned population from 443 to
++    **357** (107 CI + 250 local), below its `min_scanned: 380` floor, so
++    `check_gate_coverage` reds on it while the parity gate itself exits 0. The
++    floor and its `corpus:` line still describe the pre-repair population.
++    Three answers, and they are not equivalent: **(a)** re-anchor the floor to
++    the measured 357 with a stated margin and rewrite the `corpus:` line —
++    cheapest, and a floor re-anchor is a weakening that should be argued rather
++    than typed; **(b)** wire `check_ci_local_parity` into a workflow, which
++    § 3 already names as the smallest change that gives the mechanism teeth and
++    which makes the floor remotely meaningful for the first time; **(c)** drain
++    enough of the 167 that the CI-side count rises back over the floor on its
++    own, which is the only answer that fixes the floor by fixing the thing the
++    floor measures. Whichever is chosen, the `corpus:` description is stale
++    either way and needs the same edit.
++  - **Resolved when:** the decision exists in a tracked artefact and Phase 4 step 2 can cite it, **and** the `check_ci_local_parity` floor red of § 5 is either cleared or carries a recorded, argued disposition. The second half is explicit because without it this roadmap can reach `count_open == 0` and archive while a gate it opened is still red — which is the exact failure the whole file is about, committed by the file itself. - **Note:** an AI council was asked to adjudicate this and was unreachable (anthropic quota-exhausted, openai trusted-directory refusal, two attempts). The staged baseline was chosen without it, on the ground that it is the only option adding no unfixable block. It is not a council verdict and does not foreclose the others.
+ 
+ ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
+ 
+diff --git a/agents/roadmaps/road-to-local-only-gate-reds.md b/agents/roadmaps/road-to-local-only-gate-reds.md
+index ac48c823418e86b7ef3638badd8a67a3f2e7da48..2280f5f345d36d20b786dbcf4f31c8190c5cc2b9 100644
+--- a/agents/roadmaps/road-to-local-only-gate-reds.md
++++ b/agents/roadmaps/road-to-local-only-gate-reds.md
+@@ -62,6 +62,59 @@ runs in no workflow.** It is its own finding, so the ratchet added here has no
+ remote reach either. Clearing the backlog is what would give it teeth; until
+ then it fails only a local `task ci`.
+ 
++## Two more reds — found 2026-08-13; one repaired here, one filed
++
++Running `check_gate_coverage` at the start of the next pass exits 1 on **two**
++gates the original four did not include. The first draft of this section claimed
++one, and the R2 completion review caught it: the grep that found the first was
++keyed on the ratchet vocabulary, so it read past a red whose message shares none
++of those words. A count is a claim, and this one was wrong by exactly the gate
++this branch edits.
++
++**Red 1 — `lint_rule_skill_pack_reach` had never reported a scan. Repaired.**
++
++```
++❌ lint_rule_skill_pack_reach: emitted no 'scanned: <N>' line
++   — an enforced gate must report what it inspected
++```
++
++`SCANNED_RE` in `check_gate_coverage.ts` is `/^\s*scanned:\s*(\d+)\s*$/m` — the
++count must **end** the line — while the gate emitted
++`scanned: 116 rule(s), 289 skill(s), …`. So an entry registered `status:
++enforced` with `min_scanned: 90` resolved to `null` from the moment `924cad87f`
++registered it, which is the same commit Phase 2 Step 1 identifies by name. The
++line is byte-identical on `origin/main`, so this is pre-existing rather than a
++regression of this branch. Repaired by emitting the machine-readable contract
++line first and the human breakdown second; the gate now reads
++`✅ lint_rule_skill_pack_reach: scanned 116 ≥ 90`.
++
++It is the roadmap's own thesis pointed at itself: a gate registered as enforced,
++carrying a floor, and structurally incapable of meeting it — red for seven days
++inside the branch whose subject is red gates nobody sees.
++
++**Red 2 — the parity floor the repair itself moved. Not repaired here.**
++
++```
++❌ check_ci_local_parity: scanned 357, floor 380
++   (CI + local gate invocations parsed from .github/workflows + taskfiles
++    (443 at baseline)) — a gate inspecting this little cannot certify the corpus
++```
++
++The gate's own run is **green** — `✅ CI ↔ local parity: 107 CI gate(s), 250
++local, 26 declared CI-only, 2 declared local-only`, exit 0. What is red is its
++`min_scanned` floor in `src/config/gate-coverage.yml`, and the arithmetic is
++exactly the repair: 107 + 250 = 357, where the 443 baseline was taken while the
++CI-side set still carried the 167 comment-derived phantoms. So the floor and its
++`corpus:` line now describe a population that no longer exists — the same shape
++as a stale pin that still reads as authoritative.
++
++This is **not** repaired here, deliberately. A `min_scanned` floor is a gate
++threshold, and lowering one is a weakening whichever way the arithmetic points;
++the honest re-anchor number is a judgement about margin, not a derivation. It is
++recorded under `blocker: ci-reachability-decision` § 5 with the candidate
++answers, because it is the same decision: what the tree does about a parity gate
++whose measured population just fell by 20 %.
++
+ An AI council was asked to adjudicate the disposition and **could not be
+ reached** — anthropic `cli_quota_exhausted` (50/50), openai
+ `Not inside a trusted directory`, from both the worktree and the main checkout,
+@@ -120,7 +173,7 @@ re-derive them.
+ 
+ ## Phase 2 — the self-test ratchet
+ 
+-- [ ] Identify which registered gate crossed the
++- [x] Identify which registered gate crossed the
+       `gate-self-test:registered-non-adopters` ratchet. It reads **25** against
+       a baseline of **24**, i.e. one over, and the baseline note records the
+       landing state as "24 of the 32 gates registered enforced" on 2026-08-06.
+@@ -140,14 +193,56 @@ re-derive them.
+       `lint_rule_skill_pack_reach`, `lint_token_budget_discipline`,
+       `lint_trigger_collisions`, `skill_linter`.
+       *Verify:* the crossing gate is named with the commit that registered it.
+-
+-- [ ] Give that gate a self-test, or an exemption marker carrying a real reason.
++      → **`lint_rule_skill_pack_reach`, registered by `924cad87f`
++      (2026-08-12, "fix(ci): three downstream surfaces the new triggers, key and
++      gate opened").** Derived rather than guessed: the enforced manifest set was
++      recomputed at `c94676978` (the last `gate-coverage.yml` commit on the
++      baseline's landing date) and at HEAD, and `list_self_test_non_adopters` was
++      run against both. 32 → 35 enforced, non-adopters 24 → 25. Exactly three
++      gates were added — `check_review_prompt_binding`, `lint_rule_skill_pack_reach`,
++      `lint_workflow_paths` — and only one of the three appears in the current
++      non-adopter set, which is also the only id present in the now-set and
++      absent from the then-set. Zero gates were removed, so the +1 has a single
++      cause.
++
++- [x] Give that gate a self-test, or an exemption marker carrying a real reason.
+       Adoption is the default; an exemption is legitimate where a gate's
+       rejection cannot be provoked by a fixture it can build in a temp
+       directory. **Do not raise the baseline** — `check_gate_coverage` states in
+       its own failure message that raising it is a defect, not a fix.
+       *Verify:* `npx tsx src/scripts/check_gate_coverage.ts` reports the ratchet
+       at 24 or below.
++      → **Adopted, not exempted.** The exemption ground did not apply: the
++      gate's three inputs (`src/rules/`, `src/skills/`, the pack registry) are
++      ordinary tree reads, so a temp-directory fixture can provoke every verdict.
++      Added `--root <dir>` plumbing and `--self-test` with **six cases (3
++      rejecting, floor 6)**: an unreachable route under `--strict`, an empty
++      rule corpus (the scanned-nothing refusal, exit 2), a valueless `--root`
++      (added when the R2 review found that flag falling back to the real tree),
++      and three accepts that pin the discrimination — the same route made
++      reachable through `requires`, an unscoped rule, an unscoped skill.
++      Default invocation is byte-identical:
++      `116 rule(s), 289 skill(s), 34 pack(s) — 12 unreachable-route,
++      14 unrouted-skill`, exit 0.
++      The reject cases were checked against the failure this repository has
++      recorded before — a negative test that passes for the wrong reason.
++      Mutating `unreachableFrom.length === 0` to `>= 0` turned the first case
++      red (`5/6 case(s) behaved`) and left the others green, so the case is
++      bound to the detector and not to the fixture.
++
++      The sixth case was mutation-checked separately, and the first attempt
++      taught something worth recording. Deleting the guard body alone does
++      **not** turn it red: `args.root` then holds `undefined`,
++      `path.join(undefined, …)` throws, and the entry guard still exits 2 — the
++      case would have passed for the wrong reason, which is the exact failure
++      it exists to prevent. Restoring the original `argv[i + 1] ?? REPO`
++      fallback — the real defect, not a paraphrase of it — does turn it red
++      (`5/6`, exit 0 because the run silently scanned the live tree). So the
++      case is bound to the silent fallback. It does **not** distinguish a clean
++      refusal from a crash, since both exit 2; `runSelfTest` compares exit codes
++      and nothing here asserts the message.
++
++      Ratchet reads **24**, the baseline unchanged and not raised.
+ 
+ ## Phase 3 — the roadmap that cannot archive
+ 
+@@ -204,7 +299,7 @@ class recurs.
+       reason — the set was empty by construction, so the test had pinned the
+       defect and would have forced any repair to preserve it.
+ 
+-- [ ] Search the same defect class elsewhere: a checker whose extraction is fed
++- [x] Search the same defect class elsewhere: a checker whose extraction is fed
+       by text that is not an instruction.
+       **Started, one candidate, not proven.** `check_enforcement_coverage` seeds
+       reachability with a bare `wiring.includes(stem)` over raw workflow text —
+@@ -217,6 +312,43 @@ class recurs.
+       *Verify:* either a demonstrated false "reachable" verdict for a named
+       script, or a recorded null saying the substring matches carry no verdict
+       weight.
++      → **Both halves answered: the mechanism is demonstrated on a named script,
++      and the null is that no verdict moves — now quantified.**
++
++      *Method, stated because it differs from the 13 above and the two numbers
++      are otherwise read as contradicting.* The earlier probe asked which stems
++      occur only inside comments. This one re-runs the gate's **own** seed
++      disjunction — `wiring.includes(rel) || wiring.includes(stem)` — a second
++      time against YAML with `#` comments removed, so a stem mentioned in prose
++      whose path also appears in a `cmd:` survives, as it should. 851 scripts,
++      **417 seeded**, 380 of them stem-only.
++
++      *The demonstration.* Exactly **4** of the 417 leave the seed once comments
++      are stripped, and one is a wrong-kind match rather than a generic word:
++      `.github/workflows/tests.yml:425` is a NOTE about a workflow that MOVED,
++      and it names `scripts/cmd_export.py` — a **Python** file that is not in the
++      tree (`ls` fails). That prose seeds the TypeScript
++      `src/scripts/_cli/cmd_export.ts` as reachable from CI. The other three are
++      the generic-word class: `mcp_server/tool_catalog_source.ts` from a
++      `tests.yml:272` comment, and `_cli/explain_last/assumptions.ts` plus its
++      `sections/` twin from the English word "assumptions" in
++      `evaluator-umbrella.yml:62`.
++
++      *The null, and it is bounded rather than asserted.* The seed only reaches a
++      verdict through `resolve_one`, which resolves a rule's frontmatter
++      `enforced_by:` entry. The declared-enforcer vocabulary across all 33
++      declaring rules is 15 `validator:src/scripts/*.ts` paths, 9 `hook:` ids,
++      `none`, and `observer:maintainer-review`. **None of the four appears in
++      it**, so today the inflation costs no rule a wrong coverage verdict. That
++      turns the previous "unquantified" into a measured ceiling of four scripts.
++
++      *Not repaired here, and the reason is a real edge case rather than
++      caution.* The obvious fix — pass the seed through `strip_comments` — does
++      not work: that helper strips `//` and `/* */`, and the wiring corpus is
++      YAML, whose comments are `#`. A YAML-aware strip has to decide what to do
++      with `#` inside a quoted scalar, which is a design question and not a
++      one-line change. Filed as an option under
++      `blocker: ci-reachability-decision` rather than smuggled in.
+ 
+ - [ ] Decide what follows from that number, and record the decision.
+       The options are genuinely different in cost and none is obviously right:
+@@ -239,6 +371,11 @@ class recurs.
+ - `agent-config roadmap:progress-check` exits 0.
+ - The Phase 4 decision is recorded in a durable artefact, including the case
+   where the decision is to change nothing.
++- `npx tsx src/scripts/check_gate_coverage.ts` reports **no gate red that this
++  roadmap opened** — specifically the `check_ci_local_parity` floor of
++  § Two more reds is cleared or carries a recorded disposition. Added
++  2026-08-13: without this criterion the roadmap could close green while
++  leaving a red gate behind, which is the failure it exists to remove.
+ 
+ ## Quality gates
+ 
+@@ -326,8 +463,27 @@ remote CI on the PR is the authoritative gate
+      and it is a legitimate answer on its own.
+   4. Record the choice where its scope fits — an ADR for the wiring options, a
+      paragraph in `docs/contracts/ci-green-floor.md` for the accept option.
++  5. **Added 2026-08-13 — the same decision now also owns a live red.** The
++     repair dropped `check_ci_local_parity`'s scanned population from 443 to
++     **357** (107 CI + 250 local), below its `min_scanned: 380` floor, so
++     `check_gate_coverage` reds on it while the parity gate itself exits 0. The
++     floor and its `corpus:` line still describe the pre-repair population.
++     Three answers, and they are not equivalent: **(a)** re-anchor the floor to
++     the measured 357 with a stated margin and rewrite the `corpus:` line —
++     cheapest, and a floor re-anchor is a weakening that should be argued rather
++     than typed; **(b)** wire `check_ci_local_parity` into a workflow, which
++     § 3 already names as the smallest change that gives the mechanism teeth and
++     which makes the floor remotely meaningful for the first time; **(c)** drain
++     enough of the 167 that the CI-side count rises back over the floor on its
++     own, which is the only answer that fixes the floor by fixing the thing the
++     floor measures. Whichever is chosen, the `corpus:` description is stale
++     either way and needs the same edit.
+ - **Resolved when:** the decision exists in a tracked artefact and Phase 4
+-  step 2 can cite it.
++  step 2 can cite it, **and** the `check_ci_local_parity` floor red of § 5 is
++  either cleared or carries a recorded, argued disposition. The second half is
++  explicit because without it this roadmap can reach `count_open == 0` and
++  archive while a gate it opened is still red — which is the exact failure the
++  whole file is about, committed by the file itself.
+ - **Note:** an AI council was asked to adjudicate this and was unreachable
+   (anthropic quota-exhausted, openai trusted-directory refusal, two attempts).
+   The staged baseline was chosen without it, on the ground that it is the only
+diff --git a/src/scripts/lint_rule_skill_pack_reach.ts b/src/scripts/lint_rule_skill_pack_reach.ts
+index aea6dca9d3047a9d27fdf64a8d1518c6ba0b5cec..f493cecaf22e74efa9e534b26acfb52b8295428b 100644
+--- a/src/scripts/lint_rule_skill_pack_reach.ts
++++ b/src/scripts/lint_rule_skill_pack_reach.ts
+@@ -51,19 +51,40 @@
+  * findings under `--strict` · 2 usage or IO error. A scan that walked no rules
+  * exits 2 rather than green — a gate that scanned nothing must never read as a
+  * pass.
++ *
++ * `--self-test` proves those rejections still fire in the binary a contributor
++ * runs, not merely in the imported functions `tests/scripts/pack_reach.test.ts`
++ * exercises. `--root <dir>` exists for it: the three inputs are ordinary tree
++ * reads, so a temporary fixture repo can reproduce every verdict, which is why
++ * this gate adopts the harness rather than claiming the exemption.
+  */
+ 
+ import * as fs from 'node:fs';
++import * as os from 'node:os';
+ import * as path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ 
+ import { parse as parseYaml } from 'yaml';
+ 
++import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
++
+ const _HERE = fileURLToPath(import.meta.url);
+ const REPO = path.resolve(path.dirname(_HERE), '..', '..');
+-const RULES_DIR = path.join(REPO, 'src', 'rules');
+-const SKILLS_DIR = path.join(REPO, 'src', 'skills');
+-const PACKS_FILE = path.join(REPO, 'src', 'config', 'discovery', 'packs.yml');
++
++interface Roots {
++    rulesDir: string;
++    skillsDir: string;
++    packsFile: string;
++}
++
++/** The three inputs, resolved against `root` so a fixture tree can stand in. */
++function rootsFor(root: string): Roots {
++    return {
++        rulesDir: path.join(root, 'src', 'rules'),
++        skillsDir: path.join(root, 'src', 'skills'),
++        packsFile: path.join(root, 'src', 'config', 'discovery', 'packs.yml'),
++    };
++}
+ 
+ export interface PackDef {
+     id: string;
+@@ -212,10 +233,165 @@ export function analyze(
+     return findings;
+ }
+ 
+-function main(): number {
+-    const packs = readPacks(PACKS_FILE);
+-    const rules = readRules(RULES_DIR);
+-    const skillPacks = readSkillPacks(SKILLS_DIR);
++interface Args {
++    quiet: boolean;
++    strict: boolean;
++    selfTest: boolean;
++    root: string;
++}
++
++function _parseArgs(argv: readonly string[]): Args {
++    const args: Args = { quiet: false, strict: false, selfTest: false, root: REPO };
++    for (let i = 0; i < argv.length; i += 1) {
++        const a = argv[i];
++        if (a === '--quiet') args.quiet = true;
++        else if (a === '--strict') args.strict = true;
++        else if (a === '--self-test') args.selfTest = true;
++        else if (a === '--root') {
++            // Never fall back to the real repo. A self-test whose root argument
++            // went missing would otherwise scan the live tree instead of its
++            // fixture and could still exit 0 — a green run proving nothing,
++            // which is the exact failure `_lib/gate_self_test.ts` exists for.
++            const value = argv[i + 1];
++            if (value === undefined || value.startsWith('--')) {
++                throw new Error('--root requires a directory argument');
++            }
++            args.root = value;
++            i += 1;
++        }
++    }
++    return args;
++}
++
++/**
++ * Build a fixture tree. `packsYml` is written verbatim; each rule and skill is
++ * a minimal frontmatter block, which is all `readRules` / `readSkillPacks`
++ * ever look at.
++ */
++function _fixture(
++    tmp: string,
++    name: string,
++    packsYml: string,
++    rules: ReadonlyArray<{ name: string; packs?: string[]; routes: string[] }>,
++    skills: ReadonlyArray<{ name: string; packs?: string[] }>,
++): string {
++    const root = path.join(tmp, name);
++    const { rulesDir, skillsDir, packsFile } = rootsFor(root);
++    fs.mkdirSync(rulesDir, { recursive: true });
++    fs.mkdirSync(skillsDir, { recursive: true });
++    fs.mkdirSync(path.dirname(packsFile), { recursive: true });
++    fs.writeFileSync(packsFile, packsYml, 'utf-8');
++    const list = (key: string, values?: string[]): string =>
++        values === undefined ? '' : `${key}: [${values.join(', ')}]\n`;
++    for (const rule of rules) {
++        fs.writeFileSync(
++            path.join(rulesDir, `${rule.name}.md`),
++            `---\n${list('packs', rule.packs)}${list('routes_to', rule.routes)}---\n\n# ${rule.name}\n`,
++            'utf-8',
++        );
++    }
++    for (const skill of skills) {
++        fs.mkdirSync(path.join(skillsDir, skill.name), { recursive: true });
++        fs.writeFileSync(
++            path.join(skillsDir, skill.name, 'SKILL.md'),
++            `---\n${list('packs', skill.packs)}---\n\n# ${skill.name}\n`,
++            'utf-8',
++        );
++    }
++    return root;
++}
++
++function _selfTest(): number {
++    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lrspr-selftest-'));
++    const runRaw = (args: readonly string[]): number =>
++        runGateCli(REPO, 'src/scripts/lint_rule_skill_pack_reach.ts', args, REPO);
++    const run = (root: string, extra: readonly string[] = []): number =>
++        runRaw(['--root', root, '--quiet', ...extra]);
++
++    // `alpha` stands alone; `beta` pulls `alpha` in transitively.
++    const PACKS = '- id: alpha\n- id: beta\n  requires: [alpha]\n- id: gamma\n';
++
++    try {
++        const unreachable = _fixture(
++            tmp,
++            'unreachable',
++            PACKS,
++            [{ name: 'r', packs: ['gamma'], routes: ['skill:s'] }],
++            [{ name: 's', packs: ['alpha'] }],
++        );
++        const viaRequires = _fixture(
++            tmp,
++            'via-requires',
++            PACKS,
++            [{ name: 'r', packs: ['beta'], routes: ['skill:s'] }],
++            [{ name: 's', packs: ['alpha'] }],
++        );
++        const unscopedRule = _fixture(
++            tmp,
++            'unscoped-rule',
++            PACKS,
++            [{ name: 'r', routes: ['skill:s'] }],
++            [{ name: 's', packs: ['alpha'] }],
++        );
++        const unscopedSkill = _fixture(
++            tmp,
++            'unscoped-skill',
++            PACKS,
++            [{ name: 'r', packs: ['gamma'], routes: ['skill:s'] }],
++            [{ name: 's' }],
++        );
++        const empty = _fixture(tmp, 'empty', PACKS, [], [{ name: 's', packs: ['alpha'] }]);
++
++        return runSelfTest({
++            gate: 'lint_rule_skill_pack_reach',
++            minCases: 6,
++            minRejectCases: 3,
++            cases: [
++                {
++                    name: 'a rule routing into a pack its own closure never reaches is rejected under --strict',
++                    expect: 'reject',
++                    run: () => run(unreachable, ['--strict']),
++                },
++                {
++                    name: 'an empty rule corpus refuses to report a pass',
++                    expect: 'reject',
++                    run: () => run(empty, ['--strict']),
++                },
++                {
++                    name: 'the same route passes when `requires` pulls the skill pack in transitively',
++                    expect: 'accept',
++                    run: () => run(viaRequires, ['--strict']),
++                },
++                {
++                    name: 'an unscoped rule ships everywhere, so its route is always reachable',
++                    expect: 'accept',
++                    run: () => run(unscopedRule, ['--strict']),
++                },
++                {
++                    name: 'an unscoped skill ships everywhere, so no route into it can be unreachable',
++                    expect: 'accept',
++                    run: () => run(unscopedSkill, ['--strict']),
++                },
++                {
++                    name: '--root with no value is refused rather than silently scanning the real tree',
++                    expect: 'reject',
++                    run: () => runRaw(['--quiet', '--root']),
++                },
++            ],
++        });
++    } finally {
++        fs.rmSync(tmp, { recursive: true, force: true });
++    }
++}
++
++function main(argv: readonly string[] = process.argv.slice(2)): number {
++    const args = _parseArgs(argv);
++    if (args.selfTest) return _selfTest();
++
++    const { rulesDir, skillsDir, packsFile } = rootsFor(args.root);
++    const packs = readPacks(packsFile);
++    const rules = readRules(rulesDir);
++    const skillPacks = readSkillPacks(skillsDir);
+ 
+     if (rules.length === 0 || skillPacks.size === 0 || packs.size === 0) {
+         process.stderr.write(
+@@ -231,8 +407,7 @@ function main(): number {
+     // --quiet suppresses the per-finding lines but never the count line: this
+     // gate is expected to stay non-empty for a while, and a quiet run that
+     // printed nothing at all would read as clean.
+-    const quiet = process.argv.includes('--quiet');
+-    if (!quiet) {
++    if (!args.quiet) {
+         for (const finding of errors) {
+             process.stdout.write(`❌  ${finding.subject} — ${finding.detail}\n`);
+         }
+@@ -241,16 +416,22 @@ function main(): number {
+         }
+     }
+ 
+-    const strict = process.argv.includes('--strict');
++    // Two lines on purpose. `check_gate_coverage`'s SCANNED_RE is
++    // `/^\s*scanned:\s*(\d+)\s*$/m` — the count must END the line — so the
++    // detailed breakdown below can never satisfy it. This gate was registered
++    // `enforced` with `min_scanned: 90` and had therefore reported `null` since
++    // 924cad87f: an enforced floor that no output could ever meet. Emit the
++    // machine-readable contract line first, then the human breakdown.
++    process.stdout.write(`scanned: ${rules.length}\n`);
+     process.stdout.write(
+-        `scanned: ${rules.length} rule(s), ${skillPacks.size} skill(s), ${packs.size} pack(s) — ${errors.length} unreachable-route, ${advisories.length} unrouted-skill\n`,
++        `${rules.length} rule(s), ${skillPacks.size} skill(s), ${packs.size} pack(s) — ${errors.length} unreachable-route, ${advisories.length} unrouted-skill\n`,
+     );
+-    if (errors.length > 0 && !strict) {
++    if (errors.length > 0 && !args.strict) {
+         process.stdout.write(
+             `advisory run: ${errors.length} unreachable-route finding(s) reported, exit 0. Promote with --strict once the set is empty.\n`,
+         );
+     }
+-    return strict && errors.length > 0 ? 1 : 0;
++    return args.strict && errors.length > 0 ? 1 : 0;
+ }
+ 
+ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(_HERE)) {
