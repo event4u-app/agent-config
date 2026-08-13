@@ -190,12 +190,15 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 106 |
-| **Total** | **135** |
+| C — guarded | 105 |
+| **Total** | **134** |
 
 The total was 140 until 2026-08-12, when five of the six keys no code path read were
 deleted, minus the one held open (§ The six unread keys, below): one A
-(`telegraph.speak_scope`) and four C.
+(`telegraph.speak_scope`) and four C. It dropped to 134 on 2026-08-13 when
+ADR-229 deleted `worktrees.mode` — a fifth C, and the first deletion in this
+series of a key that WAS read: the doctrine there is that the decision was never
+the agent's to make, not that nothing consulted it.
 
 The total is every leaf in the template, where *leaf* means anything that is not
 a **non-empty** map. An empty map (like the former `subagents.host_capabilities: {}`) is a real
@@ -245,9 +248,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 83 |
 | un-inferrable | 9 |
-| consent | 38 |
+| consent | 37 |
 | policy | 5 |
-| **Total** | **135** |
+| **Total** | **134** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
