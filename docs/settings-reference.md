@@ -291,7 +291,7 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `subagents.adversarial_council` | C | string | `"off"` | `off` · `ask` · `on` | Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only — a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Stays default-off until the adversarial-council-finding-coverage claim is backed. |
+| `subagents.adversarial_council` | C | string | `"off"` | `off` · `ask` · `on` | Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only — a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Default-off PERMANENTLY per the locked pre-registration gate: the finding-coverage claim resolved an honest null on 2026-07-21 (zero residual-recall lift, 100% false-positive rate on correct-code controls). |
 | `subagents.downshift` | C | boolean | `true` |  | Route delegable sub-tasks to the lowest-capable model tier (cost + speed via model downshift). false = every subagent runs on the session tier. |
 | `subagents.implementer_model` | C | string | `""` |  | Override the model the orchestrator dispatches to subagents that write code (e.g. claude-sonnet-4, gpt-5). Empty (default) = inherit the session's primary model — cheapest and usually right. |
 | `subagents.judge_model` | C | string | `""` |  | Override the model used for review / judge subagents that critique implementer output. Empty (default) = one tier above the implementer model — picks up nuance the implementer missed. |
@@ -334,7 +334,7 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `worktrees.mode` | C | string | `"ask"` | `off` · `on` · `ask` | When the agent considers a parallel `git worktree` for risky / large work. ask (default) = surface a numbered option and wait. on = spawn worktrees autonomously. off = never use worktrees, edit in place. |
+| `worktrees.mode` | C | string | `"on"` | `off` · `on` · `ask` | When the agent considers a parallel `git worktree` for risky / large work. on (default) = spawn worktrees autonomously; the Iron-Law gates (ignore-check, clean baseline) still apply. ask = surface a numbered option and wait. off = never use worktrees, edit in place. |
 
 ## See also
 

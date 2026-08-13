@@ -348,12 +348,12 @@ export const settingsSchema = z.object({
             'Hard cap on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs. Raise for faster fan-out, lower if you hit rate limits or want lower token spend.',
         ),
         adversarial_council: z.enum(['off', 'ask', 'on']).default('off').describe(
-            'Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only — a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Stays default-off until the adversarial-council-finding-coverage claim is backed.',
+            'Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only — a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Default-off PERMANENTLY per the locked pre-registration gate: the finding-coverage claim resolved an honest null on 2026-07-21 (zero residual-recall lift, 100% false-positive rate on correct-code controls).',
         ),
     }),
     worktrees: z.object({
-        mode: worktreeMode.default('ask').describe(
-            'When the agent considers a parallel `git worktree` for risky / large work. ask (default) = surface a numbered option and wait. on = spawn worktrees autonomously. off = never use worktrees, edit in place.',
+        mode: worktreeMode.default('on').describe(
+            'When the agent considers a parallel `git worktree` for risky / large work. on (default) = spawn worktrees autonomously; the Iron-Law gates (ignore-check, clean baseline) still apply. ask = surface a numbered option and wait. off = never use worktrees, edit in place.',
         ),
     }),
     ai_team: z.object({

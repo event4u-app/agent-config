@@ -421,7 +421,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `subagents.model_ceiling` | C | `""` | session-wide subagent model cap (exported as `CLAUDE_CODE_SUBAGENT_MODEL` by suite-owned CLI spawn wrappers), which is spend and quality | consent |
 | `subagents.max_parallel` | C | `3` | parallelism cap, and therefore a spend rate | consent |
 | `subagents.adversarial_council` | C | `"off"` | governs a paid verification step | consent |
-| `worktrees.mode` | C | `ask` | standing permission for autonomous worktree creation | consent |
+| `worktrees.mode` | C | `on` | standing permission for autonomous worktree creation | consent |
 | `ai_team.model` | C | `auto` | names an external model | un-inferrable |
 | `ai_team.allow_delegate` | C | `false` | grants an external tool write access to the repository | consent |
 | `ai_team.max_calls_per_day` | C | `50` | quota cap on a shared budget | consent |

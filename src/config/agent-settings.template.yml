@@ -809,8 +809,14 @@ subagents:
   # for defect FINDING coverage (not a go/no-go decision) and returns an advisory
   # findings-by-severity verdict. ADVISORY ONLY — it NEVER auto-gates the change
   # (Hard Floor). The registered claim + high-risk tier use cross-vendor skeptics.
-  # Stays default-off until the adversarial-council-finding-coverage claim is
-  # backed by the two-stage residual-detection benchmark (prove-or-drop).
+  #
+  # This is NOT an approval gate and was deliberately left alone by ADR-229.
+  # The pre-registered claim RESOLVED as an honest null on 2026-07-21: zero
+  # residual-recall lift (0.60 panel vs 0.60 single skeptic — the second
+  # vendor's catches were a strict subset of the first's) and a 100%
+  # false-positive rate on controversial-but-correct controls. Per the locked
+  # pre-registration gate the surface stays default-off PERMANENTLY. Setting it
+  # to `on` buys a paid red-team that flags correct code every time.
   adversarial_council: off
 
 # --- Git worktrees ---
@@ -819,20 +825,27 @@ subagents:
 # mode 6 (`do-in-worktrees`) behave. Mechanical layer on top of the
 # existing `scope-control` permission gate — narrows, never widens.
 worktrees:
-  # off | on | ask  (default: ask)
+  # off | on | ask  (default: on)
   #
-  # ask = status quo. Skill asks before creating any worktree; mode 6 is
-  #       selectable when the chain shape warrants it. Matches the
-  #       behaviour required by `scope-control` and `autonomous-execution`.
+  # on  = standing permission (default). Skill skips the per-creation
+  #       permission ask; mode 6 may be picked without prompting. Iron-Law
+  #       gates (ignore-check, clean baseline) still apply, and a worktree
+  #       is a local, fully reversible artefact — `git worktree remove`
+  #       undoes it, so nothing here reaches the Hard Floor.
+  # ask = skill asks before creating any worktree; mode 6 is
+  #       selectable when the chain shape warrants it.
   # off = no autonomous worktree creation. Skill refuses; mode 6 falls
   #       back to mode 3 (do-in-steps). Explicit user request in the
   #       chat ("do this in a worktree", "use mode 6") overrides for
   #       that single task — the setting suppresses *unprompted* usage,
   #       not the tool itself.
-  # on  = standing permission. Skill skips the per-creation permission
-  #       ask; mode 6 may be picked without prompting. Iron-Law gates
-  #       (ignore-check, clean baseline) still apply.
-  mode: ask
+  #
+  # Quoted deliberately: bare `on` parses as the boolean true and the schema
+  # then rejects it ("worktrees.mode: True is not of type 'string'"). Same
+  # reason `tokens.rich_skills` and `consistency.cross_source` are quoted.
+  # Bare `off` happens to survive the same path — do not read that as a licence
+  # to leave `on` bare.
+  mode: "on"
 
 # --- AI Council (external second-opinion network) ---
 #
