@@ -1,0 +1,42 @@
+<!-- clean: empty state that explains cause and gives the next action, no illustration filler -->
+<div class="empty" role="status">
+  <h2 class="empty__title">No runs in this window</h2>
+  <p class="empty__body">
+    The pipeline has not executed between 1 March and 8 March. The most recent
+    run finished on 27 February at 04:12 UTC.
+  </p>
+
+  <ul class="empty__reasons">
+    <li>The schedule is paused. A paused schedule keeps its cron but skips execution.</li>
+    <li>The source connection failed authentication and the run was never queued.</li>
+  </ul>
+
+  <div class="empty__actions">
+    <button class="button button--primary" type="button" data-action="resume">
+      Resume schedule
+    </button>
+    <a class="button button--quiet" href="/pipelines/482/runs?window=90d">
+      Widen to 90 days
+    </a>
+  </div>
+
+  <p class="empty__aside">
+    Connection last verified 27 February. <a href="/connections/17">Check the source connection</a>.
+  </p>
+</div>
+
+<div class="empty empty--search" role="status" hidden>
+  <h2 class="empty__title">Nothing matches "corrupt-parquet"</h2>
+  <p class="empty__body">
+    Search covers run names and failure messages from the selected window only.
+  </p>
+  <ul class="empty__reasons">
+    <li>Try a shorter term. Search does not split on hyphens.</li>
+    <li>Clear the status filter. It is currently set to Succeeded.</li>
+  </ul>
+  <div class="empty__actions">
+    <button class="button button--quiet" type="button" data-action="clear-filters">
+      Clear filters
+    </button>
+  </div>
+</div>
