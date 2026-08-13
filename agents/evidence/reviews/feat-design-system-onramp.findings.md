@@ -1,10 +1,10 @@
 # Findings: feat-design-system-onramp
-<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: 35ad5f97491854c8078645f5c9b22dcac051d76f69f37b50cee08585f6518be6 | diff: 49b6e4741aa21a18c72c3f51f9775981f980bb1f | reviewer: r2-fresh-subagent-feat-design-system-onramp | prompt_hash: 01dc4a92f49c945d6ba077d657eb997ec259ca437fae583fba8a07e8aab2fdf3 -->
+<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: 55676112b012535c808019d8771d490dda0dbc60569689f85f10a2bb941cec90 | diff: d6ffea46a32a3683b83d72315cdf83cefa61fbe5 | reviewer: r2-fresh-subagent-feat-design-system-onramp | prompt_hash: 01dc4a92f49c945d6ba077d657eb997ec259ca437fae583fba8a07e8aab2fdf3 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 49b6e4741aa21a18c72c3f51f9775981f980bb1f
-  scope_hash: 35ad5f97491854c8078645f5c9b22dcac051d76f69f37b50cee08585f6518be6
+  diff_sha: d6ffea46a32a3683b83d72315cdf83cefa61fbe5
+  scope_hash: 55676112b012535c808019d8771d490dda0dbc60569689f85f10a2bb941cec90
   roadmap: agents/roadmaps/road-to-design-system-onramp.md
   roadmap_hash: 29e9c42bccf3853da8addc4a83b9db50c383b28f2631d9c08e867fed60d53afe
   ac_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
