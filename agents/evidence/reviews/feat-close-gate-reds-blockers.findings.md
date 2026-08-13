@@ -1,16 +1,16 @@
 # Findings: feat-close-gate-reds-blockers
-<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: d6e2ef4d6743415197efd4b7eff005d8a779ddfd9d72602e76cf32970d3f832c | diff: 5ca4290795560d4fca8a054db6439e39e5bb6b42 | reviewer: r2-fresh-subagent-feat-close-gate-reds-blockers | prompt_hash: fc065dcb92568d6f1a3f1278bb0f802823bd99d04ecbdbd135ada645ca195582 -->
+<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: faf1525aa307bd3db5bd628edeb27bc024a8459a7ec9bb6a76af8d76a49449e3 | diff: b271d078b70d3c177571fc152cc00315b5780aba | reviewer: r2-fresh-subagent-feat-close-gate-reds-blockers | prompt_hash: 8574b226ee70a51014ad4cb8db428027f24e0cb733cc80393eaa51d90cd5901a -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 5ca4290795560d4fca8a054db6439e39e5bb6b42
-  scope_hash: d6e2ef4d6743415197efd4b7eff005d8a779ddfd9d72602e76cf32970d3f832c
+  diff_sha: b271d078b70d3c177571fc152cc00315b5780aba
+  scope_hash: faf1525aa307bd3db5bd628edeb27bc024a8459a7ec9bb6a76af8d76a49449e3
   roadmap: agents/roadmaps/archive/road-to-local-only-gate-reds.md
   roadmap_hash: b01511dd3994dda701b7f628182ae7c042dce017b27722b314d277cab521a951
   ac_hash: 1438494c3dc1452f2504e2f8565d58313c734da2e18642969cdd7be17aaf0863
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-08-13T13:47:35Z
+dispatched: 2026-08-13T13:50:26Z
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
@@ -22,3 +22,5 @@ dispatched: 2026-08-13T13:47:35Z
 | 5 | medium | agents/roadmaps/road-to-inbox-harvest-2026-08-b.md:130 | Archiving `road-to-inbox-harvest-2026-08-b-release-integrity.md` left its parent's family table pointing at the pre-archive path. The same table already re-points three archived siblings to `archive/...`, so the omission is inconsistent with the file's own convention, and step 2.1 just below still lists `-release-integrity` Phase 5 as open cheap work. The link is a bare filename, so `check_references` cannot see it (its path regex requires a known root segment) — this is exactly the 530-dead-link class the branch's own roadmap names at :196. | fixed | Fixed in 5ca429079: link re-pointed, and the defect class SEARCHED — 38 active roadmaps vs 485 archived files, 2 dangling, both fixed, sweep now 0. |
 | 6 | low | .github/workflows/consistency.yml:209 | The cost paragraph introduces two new steps but measures only the cheaper one: "Cost is negligible: 0.53 s measured for the parity gate". `check_gate_coverage` forks all 35 registered gates and measures ~19.4 s locally, roughly 50x the cited figure and ~26% on top of the 75 s this job is recorded at in ci-cost-budget.md. The conclusion still holds (well under the 300 s ceiling), but the evidence covers the minority of the added cost, and the 75 s row becomes stale. Repeated at docs/contracts/ci-green-floor.md:190 and the archived roadmap :420. | fixed | Fixed in 5ca429079: both steps timed (0.53 s + 18.6 s, ~26% on top of 75 s); the negligible claim is withdrawn. |
 | 7 | low | agents/roadmaps/archive/road-to-local-only-gate-reds.md:183 | The archival falsifier for `road-to-august-program` states PR #1325 and PR #1330 shipped "with **zero shared files**". They share `agents/roadmaps-progress.md`. The shared file is the generated dashboard and carries no integration weight, so the conclusion survives — but the claim as written is false, and the surrounding figures (06:59, 10:04, five intervening first-parent merges) were verified exact. | fixed | Fixed in 5ca429079: corrected to "no substantive file"; the conclusion survives since the shared file is the generated dashboard. |
+
+**Re-bound after the third merge with `main`.** PR #1333 merged an earlier state of this branch, so the seven fixes above are NOT yet on the trunk — the defects they repair are live there. The merge changed the review scope and contract §2.1 forces a re-bind; it brought no new subject matter into this branch, so no new claim is made about it.

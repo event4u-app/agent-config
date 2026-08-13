@@ -21,13 +21,14 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 5ca4290795560d4fca8a054db6439e39e5bb6b42, review
-  artefacts excluded), scope hash `d6e2ef4d6743415197efd4b7eff005d8a779ddfd9d72602e76cf32970d3f832c`
+- diff: `diff.patch` — the review scope (branch head b271d078b70d3c177571fc152cc00315b5780aba, review
+  artefacts excluded), scope hash `faf1525aa307bd3db5bd628edeb27bc024a8459a7ec9bb6a76af8d76a49449e3`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
 
 - .github/workflows/consistency.yml
+- agents/roadmaps-progress.md
 - agents/roadmaps/archive/road-to-local-only-gate-reds.md
 - agents/roadmaps/road-to-inbox-harvest-2026-08-b.md
 - docs/contracts/ci-green-floor.md
@@ -54,5 +55,5 @@ Fill the findings table in `feat-close-gate-reds-blockers.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope d6e2ef4d6743415197efd4b7eff005d8a779ddfd9d72602e76cf32970d3f832c, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope faf1525aa307bd3db5bd628edeb27bc024a8459a7ec9bb6a76af8d76a49449e3, reviewed <YYYY-MM-DD>
 ```

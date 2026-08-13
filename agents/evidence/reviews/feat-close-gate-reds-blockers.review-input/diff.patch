@@ -18,6 +18,28 @@ index 2e0cf61de8a23ad2fa9d48d11d981495ac700812..02fca67207bd69c6643c96cfb0f58490
        - name: CI ↔ local gate parity
          run: ./scripts-run src/scripts/check_ci_local_parity --quiet
  
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index eb685b28ccbbe4fc0e8185fd7e840cc9b8e0816c..9aeb8e95fa86e3d61e1822dccad2e700760d8a5a 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **48** open blockers, **12** need you → `agent-config gates`
++> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **42** open blockers, **9** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**316 / 451 steps done · 70%**
++**298 / 429 steps done · 69%**
+ 
+ ```text
+-████████████████████████████░░░░░░░░░░░░   70%
++████████████████████████████░░░░░░░░░░░░   69%
+ ```
+ 
+ ## ⚠️ Iron Law 3 — unresolved deferred items
 diff --git a/agents/roadmaps/archive/road-to-local-only-gate-reds.md b/agents/roadmaps/archive/road-to-local-only-gate-reds.md
 index 71b5b199d290c11399a5d79696323e70e762aaae..c369540c8a8ae681c8fad35ece16a4e62d58b59b 100644
 --- a/agents/roadmaps/archive/road-to-local-only-gate-reds.md
