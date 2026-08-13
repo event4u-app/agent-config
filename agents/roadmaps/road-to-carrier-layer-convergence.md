@@ -35,6 +35,16 @@ parent_roadmap: road-to-feedback-9-29
 > obligation) and it is not zero. Whether `install.ts` should emit `paths:` is a
 > consumer-visible behaviour question and is NOT decided here.
 >
+> **Decided elsewhere, 2026-08-13 —
+> [`ADR-228`](../../docs/decisions/ADR-228-global-install-does-not-emit-paths.md):
+> the global install does not emit `paths:`, and the 24 stay as accepted
+> over-delivery.** Not on cost: at least six of the 24 are safety or governance
+> floors carrying an Iron Law, and `ADR-227` records that path-scoped rules are
+> **not re-injected after `/compact`** — so scoping them globally would trade a
+> safe over-delivery for a silent under-delivery in the rules where silence is
+> most expensive. This roadmap keeps its non-goal; the question no longer waits on
+> anyone.
+>
 > The second defect sat in the instrument — a metadata-only difference was
 > reported as body divergence, i.e. as the one class the report tells a reader to
 > act on — and both are repaired under Phase 2. Classification, the cited
