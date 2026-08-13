@@ -129,6 +129,7 @@ import { isSafeTranscriptPath } from './end_review_nudge_hook.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json, is_replay_mode } from './state_io.js';
+import { openRecordStats } from './subagent_ledger_hook.js';
 
 /** Dispatcher-internal block code. Pinned to 1 by `concern_block_exit_parity`. */
 const EXIT_BLOCK = 1;
@@ -842,6 +843,39 @@ export function main(): number {
 
     const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined) || process.cwd();
 
+    // Layer 1b — an open subagent dispatch is an EXPLICIT allow
+    // (road-to-subagent-lifecycle-integrity Phase 3 Step 2).
+    //
+    // A turn waiting on an async subagent has, by construction, outstanding
+    // work the model cannot finish in this turn. Refusing it is the upstream
+    // Stop-hook x async-subagent loop shape (anthropics/claude-code#55754):
+    // the gate refuses, the model still cannot proceed because the dispatch
+    // has not returned, and the refusal repeats.
+    //
+    // This is an allow path and can never become a deny path — it only ever
+    // lets a turn END that would otherwise have been refused. It reads the
+    // Phase-1 ledger; a ledger that is absent, empty or unreadable yields zero
+    // open records and changes nothing, so the gate degrades to exactly its
+    // previous behaviour rather than failing open in the dangerous direction.
+    //
+    // R2 round 2, finding 2: it used to be an early `return EXIT_ALLOW`, which
+    // suppressed ALL FOUR detectors. A pending dispatch explains a promissory
+    // closing (A) and an unsettled completion claim (D); it explains nothing
+    // about a language mismatch (B) or an unverified edit (C), and silencing
+    // those was scope Step 2 never asked for. Applied per detector below.
+    //
+    // R2 round 2, finding 1: the count is TTL-filtered inside
+    // `openRecordStats`. A leaked record from a dispatch that never returned
+    // would otherwise read as "a dispatch is open" forever and, because this
+    // branch is an ALLOW, disable those two detectors indefinitely with no
+    // signal — the ledger's own leak inherited with the opposite polarity.
+    let dispatchOpen = false;
+    try {
+        dispatchOpen = openRecordStats(workspaceRoot).open_count > 0;
+    } catch {
+        // An unreadable ledger is not a reason to change the verdict.
+    }
+
     const transcriptPath = str(
         (payload['transcript_path'] ?? payload['transcriptPath']) as JsonValue | undefined,
     );
@@ -881,7 +915,10 @@ export function main(): number {
     // second, configurable notion of warranted layered on top of it.
     const findings: Finding[] = [];
     for (const f of [
-        detectPromissory(lastAssistant),
+        // A and D are the completion-adjacent pair a pending dispatch excuses
+        // (Phase 3 Step 2, narrowed by R2 round 2 finding 2). B and C are not
+        // excused by anything about a dispatch and run unchanged.
+        dispatchOpen ? null : detectPromissory(lastAssistant),
         detectLanguage(lastAssistant, readLanguagePin(workspaceRoot)),
         detectUnverifiedEdit(toolCalls),
         // Round 7 § Phase 1 — detector D, in the same unconditional list as the
@@ -891,7 +928,7 @@ export function main(): number {
         // gating is where the comment above says gating belongs — inside the
         // detector: no CI observed, or a settled read, or no completion claim
         // ⇒ no finding.
-        detectCompletionClaim(lastAssistant, readCiSettled(workspaceRoot)),
+        dispatchOpen ? null : detectCompletionClaim(lastAssistant, readCiSettled(workspaceRoot)),
     ]) {
         if (f) findings.push(f);
     }
