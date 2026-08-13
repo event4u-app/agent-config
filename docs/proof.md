@@ -56,6 +56,7 @@ evidence pointer, or `task check-claims` fails the build.
 | A MEASURED-BUT-NOT-SHIPPED experiment — the thin rule projection reduced eager rule load 78,513 → 13,881 GPT-tokens (whole always-loaded projection 98,529 → 33,897, ~65.6%), but FAILED the quality gate (thin win-rate 36.2% vs required 48%) and does not ship; it un-defers only behind `discipline_profile: essential`. Shipped behavior does NOT include this reduction. Method: `agent-config benchmark` over the pinned token baseline; the baseline is the honest "what the user pays if everything loads eagerly", NOT a synthetic full-corpus strawman (council Q4); quality gate per the Phase-0 paired judge run. | quant | `internal/bench/reports/token-baseline.json#eager_rule_load` | ✅ |
 | The first cross-vendor parity pass (5 orchestration-corpus tasks × 2 vendors × 3 repeats, identical prompts via the council transport, $0.16) measured real per-host finding-count differences — claude-sonnet-4-5 surfaced ~2× the findings of gpt-4o on the multi-file analysis task (median 11 vs 5) while both vendors were identical on the planted hollow-implementation task (2 vs 2) and perfectly silent on the clean-code negative control (0 vs 0, no spurious findings). The per-task `finding_floor` values are calibrated from the cross-host lower envelope and the gate is armed. | quant | `internal/bench/reports/parity-count.json#min over hosts of median` | ✅ |
 | The scoped-projection default for new installs ships 218 of 289 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree. | quant | `exec:update_counts --check -> 0` | ✅ |
+| On a 32-file labelled clean-UI corpus, 18 of the 19 shipped design-slop rules produced zero false positives; the nineteenth (`slop-c6-lock-colour`, catalog C6) fired on 4 of the 32 files and was demoted to judgment-only rather than tuned. | quant | `internal/bench/corpora/design-slop-fp-PREREG.md#The ceiling, declared before the run` | ✅ |
 | On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on scope/downstream traps; on a strong host the same measurement is a published null — the package transplants discipline a weak model lacks, not model intelligence. | quant | `docs/benchmark.md#weak-host-specific` | ✅ |
 | The non-coding domain skills (finance/founder/ops/content) are forged on TS/PHP and labeled unvalidated until they pass a sourced domain-truth fixture; no public prose implies proven domain correctness, and the validated count is CI-ratcheted. | qual | `exec:domain_soundness_status --check -> 0` | ✅ |
 | The validated non-coding domain-skill count is pinned and CI-ratcheted at a maintainer-set floor (9 of 20 default-surface skills carry a sourced `evals/domain-truth.json` fixture at pin time, 2026-07-11 — 5 deterministic, keys from cited formulas; 4 rubric, criteria matching a named external practice); the floor only rises via a maintainer `--write-floor` after a new sourced fixture lands. | quant | `exec:domain_soundness_status -> 0` | ✅ |
@@ -93,14 +94,14 @@ evidence pointer, or `task check-claims` fails the build.
 | On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex reviewer gpt-5.5), the cross-model team-review arm produced NO recall lift over single-model self-review — all three arms recalled every planted defect (Δ = 0, H1 not met). Honest null, ceiling-limited (recall 1.00 everywhere: the seeded defects are too obvious to discriminate the arms on recall); the only non-null signal is a single self-review false positive on the controversial-but-correct control vs 0 for team/council. No cross-model quality/lift claim binds; team mode stays workflow-value-only. Re-open: a judge-survivable-subtlety corpus or a new model generation. | quant | `internal/bench/reports/defect-finding.json#honest_null` | ✅ |
 | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate. | quant | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` | ✅ |
 
-**47 backed claim(s)** — all evidence pointers resolve in CI.
+**48 backed claim(s)** — all evidence pointers resolve in CI.
 
 ### How many of those re-derive themselves
 
-**12 of 47** backed claims carry `exec:` evidence —
+**12 of 48** backed claims carry `exec:` evidence —
 CI re-runs the command and compares its exit code to the claim, so a
 stale one turns the build red. The other
-**35** rest on a pointer: CI checks that the artefact
+**36** rest on a pointer: CI checks that the artefact
 exists and contains what it should, which cannot distinguish a live
 claim from one whose producer nobody has run in months.
 
@@ -120,6 +121,7 @@ given:
 | On the first post-fix behaviour-conformance measurement (round 5, `/analyze:conformance --limit 30`, run 2026- | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | A MEASURED-BUT-NOT-SHIPPED experiment — the thin rule projection reduced eager rule load 78,513 → 13,881 GPT-t | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | The first cross-vendor parity pass (5 orchestration-corpus tasks × 2 vendors × 3 repeats, identical prompts vi | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
+| On a 32-file labelled clean-UI corpus, 18 of the 19 shipped design-slop rules produced zero false positives; t | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on sc | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | On the READ-ONLY FAN-OUT slice family, tier-downshifted subagent dispatch (lite/haiku vs session-tier-proxy so | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | The text-layer-only boundary above is machine-enforced, not asserted: a scope-guard test fails if any corpus e | prose or contract artefact — no exit code carries the verdict |
@@ -325,7 +327,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (83) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 61 ledger entries · 47 backed · 10 unbacked inventory · 4 resolved-null.
+**Axis 2 — evidence form per public claim.** 62 ledger entries · 48 backed · 10 unbacked inventory · 4 resolved-null.
 
 | Claim id | Kind | Status | Evidence pointer |
 |---|---|---|---|
@@ -344,6 +346,7 @@ Undeclared rules (83) carry no row — an honest gap beats a false claim.
 | `cross-model-parity-count` | quant | backed | `internal/bench/reports/parity-count.json#min over hosts of median` |
 | `cross-source-consistency-precision` | quant | unbacked | `PRE-REGISTERED 2026-07-28 (road-to-feedback-9.2.0-followups Phase 1 — no goalpost-moving after the numbers land). Falsification criteria fixed BEFORE data: (1) fixtures + expected actions are pinned in `internal/bench/corpora/honesty-false-premise.yaml` (shared with the honesty bench, extended-not-forked); (2) the scorer is `src/scripts/bench_cross_source_eval.ts` (ask\|proceed\|warn classification, forbidden-assumption + over-firing checks) — precision = correctly-surfaced discrepancies / all surfaced; over-firing = asks on negative controls / negative controls; (3) the run needs real model responses per fixture (paid, maintainer-gated spend) — this entry stands as documented debt until that run lands; (4) HONEST NULL consequence bound: precision < 85% or over-firing > 5% → loosen the rule's default (`consistency.cross_source: on` → `auto`) or tighten its confidence tiers — never silently keep firing. This binds the weaker-evidenced default-on rule to a measurement like every other default-flip.` |
 | `default-install-context-cost` | quant | backed | `exec:update_counts --check -> 0` |
+| `design-slop-false-positive-baseline` | quant | backed | `internal/bench/corpora/design-slop-fp-PREREG.md#The ceiling, declared before the run` |
 | `discipline-lift-weak-host` | quant | backed | `docs/benchmark.md#weak-host-specific` |
 | `domain-soundness-scoped` | qual | backed | `exec:domain_soundness_status --check -> 0` |
 | `domain-soundness-validated-count` | quant | backed | `exec:domain_soundness_status -> 0` |

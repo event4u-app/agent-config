@@ -1,10 +1,17 @@
 ---
 complexity: structural
-status: ready
+status: later
 ---
 
 # Road to corpus knowledge skills — compile a document corpus into on-demand knowledge, and measure whether the compile earned its existence
 
+> **Blocked until** the maintainer names the first two corpora (Phase 0.2) or
+> archives this plan as demand-not-shown. Parked rather than active because every
+> remaining open item is gated on that one decision — the two items that were
+> workable (Phase 0.1 and Phase 5) already shipped, so leaving the file in the
+> active tree would tell the dashboard and `/roadmap:process-*` that work is
+> available when none is.
+>
 > **Origin.** An external analysis artifact dropped into the maintainer inbox
 > (see `## Provenance`), re-verified claim-by-claim against `origin/main` before
 > this file was written. The source proposed five phases; two shipped in the

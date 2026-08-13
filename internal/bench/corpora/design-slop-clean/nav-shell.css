@@ -1,0 +1,99 @@
+/* clean: app shell nav, active state by weight and background rather than an accent stripe */
+.appbar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 56px;
+  padding: 0 20px;
+  background: #14304a;
+  color: #f0f4f8;
+}
+
+.appbar__brand {
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.appbar__nav {
+  display: flex;
+  gap: 4px;
+  margin-inline-start: auto;
+}
+
+.appbar__link {
+  padding: 7px 12px;
+  border-radius: 6px;
+  color: #d3dde7;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  transition: background-color 120ms ease-out, color 120ms ease-out;
+}
+
+.appbar__link:hover {
+  background: #1c405f;
+  color: #ffffff;
+}
+
+.appbar__link[aria-current="page"] {
+  background: #1c405f;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.appbar__link:focus-visible {
+  outline: 2px solid #9ec7ec;
+  outline-offset: 2px;
+}
+
+.sidebar {
+  width: 236px;
+  padding: 16px 10px;
+  background: #f4f6f8;
+  border-right: 1px solid #dde2e7;
+}
+
+.sidebar__group {
+  margin-bottom: 18px;
+}
+
+.sidebar__group-label {
+  margin: 0 0 6px;
+  padding-inline: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #55626f;
+}
+
+.sidebar__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  color: #1c242d;
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+
+.sidebar__item:hover {
+  background: #e6ebf0;
+}
+
+.sidebar__item[aria-current="page"] {
+  background: #dbe6f1;
+  font-weight: 600;
+}
+
+.sidebar__count {
+  margin-inline-start: auto;
+  font-size: 0.8125rem;
+  color: #55626f;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .appbar__link {
+    transition: none;
+  }
+}

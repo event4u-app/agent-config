@@ -1,0 +1,61 @@
+<!-- clean: pricing as a comparison table with concrete limits, no equal-weight card triptych -->
+<section class="pricing" aria-labelledby="pricing-title">
+  <h2 class="pricing__title" id="pricing-title">Plans and limits</h2>
+  <p class="pricing__lede">
+    Every plan includes the full API. The differences are seat count, retention,
+    and how fast support answers.
+  </p>
+
+  <table class="pricing__table">
+    <caption class="pricing__caption">Billed monthly. Annual billing removes two months.</caption>
+    <thead>
+      <tr>
+        <th scope="col">Limit</th>
+        <th scope="col">Team, 29 EUR per seat</th>
+        <th scope="col">Business, 65 EUR per seat</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row">Seats</th>
+        <td>Up to 25</td>
+        <td>Unlimited</td>
+      </tr>
+      <tr>
+        <th scope="row">Event retention</th>
+        <td>90 days</td>
+        <td>3 years</td>
+      </tr>
+      <tr>
+        <th scope="row">API requests per minute</th>
+        <td>600</td>
+        <td>6,000</td>
+      </tr>
+      <tr>
+        <th scope="row">Audit log export</th>
+        <td>CSV, manual</td>
+        <td>CSV and S3 delivery</td>
+      </tr>
+      <tr>
+        <th scope="row">First support response</th>
+        <td>One business day</td>
+        <td>Two hours, 07:00 to 21:00 CET</td>
+      </tr>
+      <tr>
+        <th scope="row">Single sign-on</th>
+        <td>Google and Microsoft</td>
+        <td>Any SAML 2.0 provider</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pricing__actions">
+    <a class="button button--primary" href="/signup?plan=team">Start on Team</a>
+    <a class="button button--quiet" href="/contact/sales">Ask about Business</a>
+  </div>
+
+  <p class="pricing__footnote">
+    Usage above the request limit is queued, not rejected. Overage is billed at
+    0.4 EUR per 1,000 requests.
+  </p>
+</section>

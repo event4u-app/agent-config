@@ -531,3 +531,66 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: https://arxiv.org/abs/2303.11366 (2026-08-11)
 - status: backed
 - last_verified: 2026-08-11
+
+### claim: design-slop-false-positive-baseline
+- claim: On a 32-file labelled clean-UI corpus, 18 of the 19 shipped design-slop rules produced zero false positives; the nineteenth (`slop-c6-lock-colour`, catalog C6) fired on 4 of the 32 files and was demoted to judgment-only rather than tuned.
+- kind: quant
+- evidence: internal/bench/corpora/design-slop-fp-PREREG.md#The ceiling, declared before the run
+- status: backed
+- last_verified: 2026-08-13
+
+  Counting method: M1 is the number of distinct corpus files on which a rule
+  emits at least one finding — per file, not per hit. Every corpus file is
+  labelled clean by construction, so a finding is a false positive by
+  definition and no adjudication step stands between the run and the number.
+  The corpus hash pins the epoch; a figure quoted without it is not comparable
+  to this one.
+
+  What this does NOT say. It is not a precision result. The pre-registration
+  names the honest-null branch in advance: an all-zero outcome would show that
+  the corpus fails to discriminate, not that the detector is precise. After the
+  C6 demotion the remaining 18 rules do read all-zero, and that is exactly the
+  branch this sentence is invoking — the surviving registry is *not* thereby
+  shown to be precise on unseen UI. What the run did demonstrate is that the
+  instrument discriminates at all, because it caught a real defect on its first
+  use, and that the corpus is not merely too weak to fire.
+
+  The C6 finding, stated as measured. The catalog entry describes "≥ 3 distinct
+  saturated *accent* hue families … no single accent identity". Two independent
+  mechanical causes were traced by running the rule's own `hueBucket` over each
+  flagged file, and they compound:
+
+  - **The saturation gate admits neutrals.** It tests HSL saturation ≥ 0.25, and
+    HSL saturation inflates at extreme lightness. `#16202b`, a near-black body-
+    text slate, computes s = 0.33; `#eef2f6`, a near-white row-hover background,
+    computes s = 0.31 at l = 0.949 — just under the 0.95 ceiling. Both are
+    ink-and-paper neutrals counted as accent hue families.
+  - **Semantic status colour is not accent identity.** In `data-table.css` the
+    four buckets were one accent blue plus a settled-green pill, a pending-amber
+    pill, and neutrals; genuine accent count, one. `toast-stack.css` reached
+    three buckets with **zero** accents — an error red, a warning amber, and its
+    near-white text.
+
+  Making those files pass would have meant desaturating error text or dropping
+  status pills from a table: worse UI written to keep a regex quiet. The
+  pre-registered response to M1 ≥ 1 is demotion with the count, explicitly not
+  tuning the rule until it passes, and that is what happened; a tightened C6
+  would be a new rule measured against a new epoch.
+
+  Not consumer telemetry. The deferral that motivated this instrument asks for
+  a false-positive rate "in real consumer use". This is not that, and the gap
+  is not closed by calling a repo-authored corpus real. What it replaces is an
+  absence.
+
+  Delta, same epoch (corpus hash unchanged, so the two numbers are comparable).
+  Six catalog entries whose thresholds the catalog already published — V4, C3,
+  T9, T10, M1, M3 — were promoted to rules and graded individually rather than
+  as a batch. All six recorded M1 = 0 and each fires on its own positive
+  fixture, so N = 6 of 6 shipped and the registry stands at 24. The per-rule bar
+  is what makes that reportable: a batch bar would have let one noisy rule sink
+  five clean ones, or let an average carry a bad one through.
+
+  The same caveat governs the delta. Six more rules at zero on 32 files is six
+  more rules that did not fire here, not six rules shown to be precise. The one
+  thing the epoch does establish is that the instrument is capable of a non-zero
+  reading, because it produced one on its first use.
