@@ -533,6 +533,29 @@ pairs:
       - src/rules/active-remediation.md#the-iron-law
       - src/rules/minimal-safe-diff.md#own-orphan-cleanup
 
+  - id: no-cheap-questions-x-active-remediation
+    rules: [no-cheap-questions, active-remediation]
+    relation: gates
+    conflict: >-
+      The agent spotted a real defect it may not fix autonomously — a red gate,
+      a lint batch, a stale idiom outside the fix-now bar — while a standing
+      autonomous mandate is running. `active-remediation` says an undecided
+      issue must reach the user; `no-cheap-questions` forbids continuation
+      prompts and content-free asks.
+    resolution: >-
+      `no-cheap-questions` bounds the shape, `active-remediation` bounds the
+      silence. The Pre-Send Self-Check runs first: a finding with no nameable
+      benefit or no real trade-off is dropped silently and never becomes a
+      question. What survives is asked ONCE, batched after delivery, as
+      numbered candidate fixes plus an explicit "leave it" and one
+      recommendation line — never "shall I continue?", never a bare yes/no
+      flag. Suppression is the only outcome the check licenses; a mention in
+      the closing summary with no decision attached is neither asking nor
+      dropping, and is what both rules reject.
+    evidence:
+      - src/rules/active-remediation.md#the-ask-carries-fixes-not-a-flag
+      - src/rules/no-cheap-questions.md#pre-send-self-check--mandatory-before-every-question
+
   - id: cross-source-consistency-x-design-fidelity
     rules: [cross-source-consistency, design-fidelity]
     relation: gates

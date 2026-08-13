@@ -1,11 +1,11 @@
 {
   "token_method": "tokens_gpt: exact (tiktoken cl100k_base); tokens_claude: proxy (chars/3.6)",
   "metrics": {
-    "eager_rule_load": 101670,
-    "thin_rule_load": 15561,
-    "skill_descriptions": 12341,
-    "command_descriptions": 6244,
+    "eager_rule_load": 106704,
+    "thin_rule_load": 15563,
+    "skill_descriptions": 12379,
+    "command_descriptions": 6252,
     "mcp_schemas": 4174
   },
-  "rebaseline_note": "eager_rule_load 96775 -> 101670, itemised rather than silently raised. +4895 total. Attribution VERIFIED by measurement, not assumed: moving the two new rules out of src/rules/ and re-running sync + the meter gives 99567, so 2103 tokens are the new rules (council-availability 3875 chars, self-repair-loop ~4600 chars — both well under the 8708-char largest-rule mark, so size-enforcement does not ask for more trimming) and the remaining 2792 is inherited growth that arrived with main after the previous anchor. As in the 92621 -> 96775 re-anchor, the branch found little headroom left: main had already spent 2792 of the 4839-token allowance, leaving 2047 for two rules needing 2103 — over by 56. The response was still to trim first, not to raise the tolerance: both rules were condensed twice (10202 -> 8692 -> 8651 chars, 348 + 41 tokens) before this note was written, and the second trim's diminishing return is what established that prose was no longer the cost. Re-anchoring here because +5.1% against the old anchor otherwise blocks two rules whose own share is +2.2%."
+  "rebaseline_note": "eager_rule_load 101670 -> 106704, itemised rather than silently raised. +5034 total, of which THIS branch is 707 and 4327 is inherited growth that arrived with main after the previous anchor. Attribution VERIFIED by measurement, not assumed: the only projected rule in this diff is active-remediation, measured with token_count.gpt_tokens (exact BPE) at 1101 tokens on origin/main and 1870 here, so main alone stood at 105997 — +4.26% of a +5% allowance already spent before the branch existed, leaving 756 tokens for a change whose own share is +0.7%. As in the 96775 -> 101670 anchor, the response was to trim FIRST and only then re-anchor: the rule's first draft measured +931 and was condensed to +707 by moving the failing-check bounds, the ownership breakdown and the closing-summary failure mode into the mechanics guideline (not part of eager_rule_load), which brought the surface to 106704 and the gate green with 49 tokens of slack. That 49 is why this anchor exists at all: green-with-49 is not a working state, because the NEXT non-trivial edit to any always-loaded rule crosses the cliff regardless of its own size, and the maintainer would meet the same forced-condensation round for reasons that have nothing to do with their change. Re-anchored deliberately (user-authorised 2026-08-13) rather than inside the PR that hit the wall — the earlier refusal to re-anchor silently stands; what changed is that a human decided it, with the inherited 4.26% named here instead of absorbed unremarked. Durable fix is paths:-scoping of the always-loaded corpus, tracked as a follow-up roadmap; this anchor buys the room to do it deliberately rather than under a red gate."
 }
