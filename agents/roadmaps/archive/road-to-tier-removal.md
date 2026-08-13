@@ -192,12 +192,50 @@ proceed with removal · keep deferred.
 
 ## Phase 4 — Removal execution (blocked on Phases 1–3)
 
-- [ ] Scripted backfill: drop `tier:` from the command sources, remove the
+- [x] Scripted backfill: drop `tier:` from the command sources, remove the
       `tier` property + the tier↔visibility consistency clause from
       `command.schema.json` / `lint_command_tiers.ts`, drop the `tier`-fallback
       branches in the remaining display-only readers, stop dual-emitting `tier`
       in the manifest. One reviewable diff; `lint_command_tiers.ts` then
       enforces `visibility` alone.
+
+      **Done 2026-08-14 — [`ADR-231`](../../docs/decisions/ADR-231-remove-command-tier-alias.md)
+      records the proceed decision and supersedes ADR-092.**
+
+      Pre-flight census (the safety condition for a scripted strip): **200/200**
+      command files carried `visibility:`, with **0** tier↔visibility
+      disagreements — so the alias was derivable-and-redundant everywhere and
+      nothing was lost. The strip script refused any file missing `visibility`
+      or disagreeing with it; it had nothing to refuse.
+
+      Landed: 200 `command.md` frontmatters · `command.schema.json` (property
+      gone; `additionalProperties: false` now hard-fails a stray `tier:`) ·
+      `lint_command_tiers.ts` (visibility alone) · `build_discovery_manifest.ts`
+      (no emit) · the four display-only readers · the CLI `ls`/`explain` output ·
+      the `audit_command_surface` report columns, legend and remediation hint.
+
+      **Two decisions this step had to make that the roadmap did not specify.**
+      (1) **Manifest version 2 → 3.** Dropping a published field is breaking, and
+      the manifest schema's own rule is "Bump on breaking change" — so the break
+      rides on the version instead of leaving a v2 consumer to meet a
+      silently-absent field. (2) **The `deprecations` entry is RETAINED**, with a
+      new `removed_in: 3`: the reader who most needs the migration pointer is the
+      one who arrives *after* the key is gone.
+
+      **Deliberately NOT removed** (and each is now commented in place, so the
+      next reader does not "finish the job" and break it): `audit_command_surface`
+      `_tier_at_ref` / `_is_visible_tier` and `lint_command_verbs`'s fallback —
+      both parse **past** git revisions, where only the alias exists;
+      `lint_command_routing` and `install.ts` keep visibility-first precedence
+      with a tier fallback, which for `install.ts` is live back-compat against a
+      locked v2 manifest still on a consumer's disk.
+
+      Evidence: `lint_command_tiers` 200 + 200 green · `validate_frontmatter`
+      436 artefacts / 0 failing · manifest rebuild 607 artefacts, `version: 3`,
+      **0** artefacts carrying `tier`, 200 commands carrying `visibility` ·
+      `check_discovery_determinism` OK across 2 runs ·
+      `validate_discovery_manifest` matches a fresh rebuild · budget audit 213
+      commands / 0 packs over budget · `npm run typecheck` exit 0.
       <!-- deferred 2026-07-28 — the INTERNAL half of this step landed early
       under Phase 2 (the three Runtime-Risk readers now prefer `visibility`),
       which is what makes the remainder small and safe. What is left is the
@@ -233,13 +271,20 @@ proceed with removal · keep deferred.
 
 - The unknown-external-consumer hard stop is cleared by Phase-1 evidence
   before any removal lands.
+  <!-- 2026-08-14 — met as WAIVED, not as evidenced, and the distinction is the
+  point. Phase 3 records a maintainer waiver; no evidence of zero external reads
+  ever existed and none could (fetch telemetry is infeasible here). The hard stop
+  was ACCEPTED, not disproved. ADR-231 carries the same sentence so the record
+  cannot later be read as a measurement. Mitigation: the removal is lossless —
+  `visible→0 / advanced→1 / internal→2` is frozen — so a rollback is a
+  regenerate-and-publish, not a redesign. -->
 - Command frontmatter + schema carry `visibility:` only; no tier↔visibility
   consistency check remains; the manifest no longer dual-emits `tier`.
 - A superseding ADR records the proceed decision (ADR-092 → superseded).
-  <!-- 2026-07-28: NOT yet met, and ADR-137 is not it. ADR-137 amends the
-  trigger SET (withdraws the impossible Trigger 2, keeps Trigger 1 as the sole
-  gate); ADR-092's deferral still stands. The proceed ADR is written when the
-  amended gate clears and the removal actually lands. -->
+  <!-- met 2026-08-14 — ADR-231. ADR-092's frontmatter now reads
+  `status: superseded` / `superseded_by: ADR-231`, and the decisions INDEX was
+  regenerated. (The earlier note here was right that ADR-137 is not it: 137
+  amends the trigger SET only.) -->
 - The internal readers resolve visibility from `visibility`, not from the
   integer alias, so the alias can be dropped without silently un-gating a
   command. <!-- met 2026-07-28, Phase 2. -->
@@ -330,6 +375,36 @@ date — that is the one act left to the maintainer.
   owner exercising the call the council reserved for them ("the date itself is
   not an agent decision"). Phase 3 records the waiver as a waiver. Phase 4's
   external half is now unblocked and is the only thing left in this roadmap.
+
+## Out-of-scope findings (2026-08-14, surfaced not fixed)
+
+- **The tier-usage telemetry signal is designed but UNBUILT, and its contract
+  named the removed key.** `docs/contracts/command-clusters.md` § Tier-usage
+  signal specifies a per-invocation record with a `tier` field ("the tier the
+  command had at the time of the call") written by the dispatcher to
+  `.agent-tier-usage.jsonl`. **Nothing in this tree writes that file** — there is
+  a reader (`tier_usage_report`), a settings reader, and a `doctor` readiness
+  check, but no writer. So the contract was not a live consumer of the integer
+  key and the removal did not have to rebuild it. Two edits landed anyway,
+  because the removal made the doc false: the field row now records `visibility`
+  values, and the section carries an explicit unbuilt note. **Not** in scope:
+  building the writer, or renaming the `telemetry.tier_usage.*` settings
+  namespace / log filename / report script to match — that is a rename across a
+  consumer-visible surface for a signal that has never run.
+
+- **`agents/reports/command-budget-audit.{json,md}` was last regenerated
+  2026-06-03 and is regenerated by this change.** The generator's legend and
+  columns had to change (they described `tier`), so the artefact was rebuilt —
+  which also absorbs ~2 months of unrelated drift (new packs appear, counts
+  move). Stated rather than buried: the non-legend part of that diff is
+  pre-existing staleness, not an effect of the alias removal. No gate compares
+  this report against a fresh run, which is why it could drift that far unnoticed.
+
+- **`lint_command_tiers.ts` is now a misnomer.** It checks `visibility` and
+  nothing else. The name is kept deliberately (ADR-231 § Alternatives): the
+  Taskfile entry, the CI workflow step, the contract doc and the test file all
+  key on it, so a rename is a wider diff than the removal it would be tidying —
+  and it would bury the actual change.
 
 ## Out-of-scope findings (2026-07-28, surfaced not fixed)
 
