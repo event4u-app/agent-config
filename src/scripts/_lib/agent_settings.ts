@@ -922,6 +922,13 @@ export function load_agent_settings(
  * whether the repair is to build its missing reader or to delete a promise a
  * Hard Floor can never honour. See `settings-classes.md` § The six unread keys.
  *
+ * `worktrees.mode` (2026-08-13, ADR-229) is a third doctrine again: not
+ * always-on, not unread. It WAS read, and the reader honoured all three values —
+ * the deletion says the decision was never the agent's to make. `ask` bought a
+ * round trip per spawn, `on` let the agent start parallel work unprompted, and
+ * `off` described the wanted behaviour, so `off` became the hardcoded rule and
+ * the switch went. What decides instead is the user's own sentence in the chat.
+ *
  * Every reason string must name what decides INSTEAD, never just "removed".
  * Exported so `lint_settings_classes` can check the deletion side of the
  * surface: a reason that names no replacement, or an entry whose key is live in
@@ -942,6 +949,7 @@ export const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
     ['chat_history.on_overflow', 'the overflow mode comes from the rotate command --mode argv'],
     ['quality.wait_for_remote_ci', 'whether to poll follows from the push plus a detectable remote pipeline'],
     ['legal_review_prep.consented_at', 'the provenance sidecar settings:set writes and consentVerdict reads'],
+    ['worktrees.mode', 'the user asking for a worktree in the chat; creation is instruction-only and hardcoded'],
 ]);
 
 /** Keys already warned about in THIS process — the "once per run" dedupe. */

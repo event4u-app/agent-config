@@ -39,9 +39,10 @@ surface without a consumer.
 **It governs writes, not reads.** Every class is readable by everything. A C
 class does not hide a value; it refuses to let a non-human change it.
 
-**It governs writes, not asks.** Four settings ship an `ask` value in their own
-enum (`tokens.rich_skills`, `subagents.adversarial_council`, `worktrees.mode`,
-`decision_engine.on_block`).
+**It governs writes, not asks.** Three settings ship an `ask` value in their own
+enum (`tokens.rich_skills`, `subagents.adversarial_council`,
+`decision_engine.on_block`). It was four until ADR-229 deleted
+`worktrees.mode`.
 Those are C-class here, and that is not a contradiction: the class says who may
 *persist* a new value; the `ask` value says what happens *at runtime* when the
 setting is already set to `ask`. A C-class key set to `ask` still produces a
@@ -421,7 +422,6 @@ Rows follow template order, so a diff against the template reads straight down.
 | `subagents.model_ceiling` | C | `""` | session-wide subagent model cap (exported as `CLAUDE_CODE_SUBAGENT_MODEL` by suite-owned CLI spawn wrappers), which is spend and quality | consent |
 | `subagents.max_parallel` | C | `3` | parallelism cap, and therefore a spend rate | consent |
 | `subagents.adversarial_council` | C | `"off"` | governs a paid verification step | consent |
-| `worktrees.mode` | C | `ask` | standing permission for autonomous worktree creation | consent |
 | `ai_team.model` | C | `auto` | names an external model | un-inferrable |
 | `ai_team.allow_delegate` | C | `false` | grants an external tool write access to the repository | consent |
 | `ai_team.max_calls_per_day` | C | `50` | quota cap on a shared budget | consent |

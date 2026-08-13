@@ -23,7 +23,6 @@ const accessStyle = z.enum(['getters_setters', 'get_attribute', 'magic_propertie
 const chatFreq = z.enum(['per_turn', 'per_phase', 'per_tool']);
 const qualityCadence = z.enum(['end_of_roadmap', 'per_phase', 'per_step']);
 const regenCadence = z.enum(['per_step', 'every_5_steps', 'phase_boundary']);
-const worktreeMode = z.enum(['off', 'on', 'ask']);
 const fidelityMode = z.enum(['strict', 'structural', 'hard-floor']);
 const crossSourceMode = z.enum(['on', 'auto', 'off']);
 const richSkillsMode = z.enum(['on', 'ask', 'off']);
@@ -351,11 +350,9 @@ export const settingsSchema = z.object({
             'Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only — a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Stays default-off until the adversarial-council-finding-coverage claim is backed.',
         ),
     }),
-    worktrees: z.object({
-        mode: worktreeMode.default('ask').describe(
-            'When the agent considers a parallel `git worktree` for risky / large work. ask (default) = surface a numbered option and wait. on = spawn worktrees autonomously. off = never use worktrees, edit in place.',
-        ),
-    }),
+    // `worktrees.mode` was DELETED (ADR-229). Worktree creation is
+    // instruction-only and hardcoded; there is nothing left to configure. A
+    // leftover key is ignored with one deprecation line via REMOVED_KEYS.
     ai_team: z.object({
         model: z.string().default('auto').describe(
             "Model handed to the codex CLI. 'auto' (default) = pass no --model flag so the CLI's own default applies — tracks the subscription's current strongest model instead of pinning a stale ID. Any other value passes through verbatim as `--model <value>`.",
