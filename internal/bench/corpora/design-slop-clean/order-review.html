@@ -1,0 +1,60 @@
+<!-- clean: checkout review step, address and payment stated back to the customer before commitment -->
+<main class="checkout" id="main">
+  <h1 class="checkout__title">Review your order</h1>
+  <p class="checkout__step">Step 3 of 3. Nothing is charged until you confirm.</p>
+
+  <section class="checkout__block" aria-labelledby="ship-to">
+    <h2 class="checkout__block-title" id="ship-to">Shipping to</h2>
+    <address class="checkout__address">
+      Ana Beltrán<br />
+      Kastanienallee 42<br />
+      10435 Berlin<br />
+      Germany
+    </address>
+    <a class="checkout__edit" href="/checkout/address">Change address</a>
+    <p class="checkout__note">Delivery estimate 11 to 13 March by DHL, tracked.</p>
+  </section>
+
+  <section class="checkout__block" aria-labelledby="pay-with">
+    <h2 class="checkout__block-title" id="pay-with">Paying with</h2>
+    <p class="checkout__payment">Visa ending 4417, expires 08/28</p>
+    <a class="checkout__edit" href="/checkout/payment">Change payment method</a>
+  </section>
+
+  <section class="summary" aria-labelledby="order-summary">
+    <h2 class="summary__title" id="order-summary">Order summary</h2>
+    <ul class="summary__list">
+      <li class="summary__item">
+        <img class="summary__thumb" src="/img/p-2291.jpg" alt="" width="48" height="48" />
+        <span class="summary__name">
+          Field notebook, dotted, A5
+          <span class="summary__qty">Quantity 2</span>
+        </span>
+        <span class="summary__price">24,00 EUR</span>
+      </li>
+      <li class="summary__item">
+        <img class="summary__thumb" src="/img/p-1180.jpg" alt="" width="48" height="48" />
+        <span class="summary__name">
+          Refill cartridges, pack of 6
+          <span class="summary__qty">Quantity 1</span>
+        </span>
+        <span class="summary__price">9,50 EUR</span>
+      </li>
+    </ul>
+
+    <div class="summary__totals">
+      <p class="summary__row"><span>Subtotal</span><span>33,50 EUR</span></p>
+      <p class="summary__row"><span>Shipping</span><span>4,90 EUR</span></p>
+      <p class="summary__row"><span>VAT, 19 percent</span><span>6,15 EUR</span></p>
+      <p class="summary__row summary__row--grand"><span>Total</span><span>44,55 EUR</span></p>
+    </div>
+  </section>
+
+  <form method="post" action="/checkout/confirm">
+    <button class="button button--primary" type="submit">Place order, 44,55 EUR</button>
+    <p class="checkout__terms">
+      By placing this order you accept the <a href="/terms">terms of sale</a> and
+      the 14 day return policy.
+    </p>
+  </form>
+</main>

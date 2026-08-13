@@ -1,0 +1,61 @@
+<!-- clean: settings form with fieldsets, explicit save state, and consequence text on destructive actions -->
+<main class="settings" id="main">
+  <h1 class="settings__title">Notification settings</h1>
+
+  <form method="post" action="/settings/notifications">
+    <fieldset class="fieldset">
+      <legend class="fieldset__legend">Email</legend>
+
+      <label class="checkbox">
+        <input type="checkbox" name="email[deploy_failed]" checked />
+        <span>
+          A deployment fails
+          <small class="checkbox__note">Sent immediately, one message per deployment.</small>
+        </span>
+      </label>
+
+      <label class="checkbox">
+        <input type="checkbox" name="email[weekly_digest]" />
+        <span>
+          Weekly summary
+          <small class="checkbox__note">Monday 08:00 in your account time zone.</small>
+        </span>
+      </label>
+    </fieldset>
+
+    <fieldset class="fieldset">
+      <legend class="fieldset__legend">Delivery window</legend>
+
+      <div class="field">
+        <label class="field__label" for="quiet-from">Pause alerts from</label>
+        <input class="field__input" id="quiet-from" name="quiet_from" type="time" value="22:00" />
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="quiet-to">Resume at</label>
+        <input class="field__input" id="quiet-to" name="quiet_to" type="time" value="07:00" />
+      </div>
+
+      <p class="fieldset__note">
+        Alerts raised during the pause are delivered when it ends. Nothing is discarded.
+      </p>
+    </fieldset>
+
+    <div class="settings__actions">
+      <button class="button button--primary" type="submit">Save changes</button>
+      <button class="button button--quiet" type="reset">Discard</button>
+      <p class="settings__saved" role="status">Saved 12:41, 8 March.</p>
+    </div>
+  </form>
+
+  <section class="danger" aria-labelledby="danger-title">
+    <h2 class="danger__title" id="danger-title">Delete this account</h2>
+    <p>
+      Deleting removes 4 projects and 18 months of run history. Team members lose
+      access at once. This cannot be undone.
+    </p>
+    <button class="button button--danger" type="button" data-dialog="confirm-delete">
+      Delete account
+    </button>
+  </section>
+</main>

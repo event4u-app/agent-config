@@ -1,0 +1,52 @@
+<!-- clean: status page with dated updates and per-component state, text carries the status not colour alone -->
+<main class="status" id="main">
+  <h1 class="status__title">Platform status</h1>
+  <p class="status__summary">
+    Degraded performance on webhook delivery in eu-central. All other components
+    are operating normally.
+  </p>
+
+  <h2 class="status__section-title">Components</h2>
+  <dl class="components">
+    <div class="components__row">
+      <dt>API, eu-central</dt>
+      <dd data-state="operational">Operational</dd>
+    </div>
+    <div class="components__row">
+      <dt>Webhook delivery, eu-central</dt>
+      <dd data-state="degraded">Degraded, median delay 4 minutes</dd>
+    </div>
+    <div class="components__row">
+      <dt>Dashboard</dt>
+      <dd data-state="operational">Operational</dd>
+    </div>
+    <div class="components__row">
+      <dt>Scheduled exports</dt>
+      <dd data-state="operational">Operational</dd>
+    </div>
+  </dl>
+
+  <h2 class="status__section-title">Updates</h2>
+  <ol class="updates">
+    <li class="updates__entry">
+      <h3 class="updates__heading">Delivery queue draining</h3>
+      <p class="updates__time"><time datetime="2026-03-08T14:35Z">8 March, 14:35 UTC</time></p>
+      <p>
+        The queue backlog is down from 210,000 to 46,000 events. No events have
+        been dropped. Retries follow the normal backoff schedule.
+      </p>
+    </li>
+    <li class="updates__entry">
+      <h3 class="updates__heading">Cause identified</h3>
+      <p class="updates__time"><time datetime="2026-03-08T13:02Z">8 March, 13:02 UTC</time></p>
+      <p>
+        A connection pool limit on the delivery workers was reached after a
+        deploy at 12:48 UTC. The limit has been raised and workers restarted.
+      </p>
+    </li>
+  </ol>
+
+  <p class="status__subscribe">
+    <a href="/status/feed.atom">Subscribe to the Atom feed</a> for update notifications.
+  </p>
+</main>

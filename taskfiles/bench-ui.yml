@@ -32,3 +32,14 @@ tasks:
       previous numbers are not comparable to the ones it produces. Use when
       the fixture set genuinely changed, never to make a bad run go away.
     cmd: npx tsx internal/bench/ui/run.ts --update-lock {{.CLI_ARGS}}
+
+  bench:design-slop-fp:
+    silent: true
+    desc: |
+      Per-rule false-positive count for the design-slop registry, measured
+      against a labelled clean-UI corpus. Every corpus file is clean by
+      construction, so a finding is a false positive by definition; counting is
+      per file, not per hit. Pre-registration and the declared ceiling live in
+      internal/bench/corpora/design-slop-fp-PREREG.md. A different instrument
+      from bench:ui, which scores port fidelity, not detector precision.
+    cmd: npx tsx internal/bench/design-slop-fp/run.ts {{.CLI_ARGS}}
