@@ -197,9 +197,22 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
       "user approves", "looks good", or "sign-off".
     - A **human gate** is allowed only when only a human can **decide or
       authorize**: a Hard-Floor action (deploy, prod data/infra),
-      billable spend, or a contested product / architecture decision.
-      Record it as a structured `## Blockers` entry (rule 20) — never as
-      an inline checkbox step scattered through phases.
+      billable spend, or a decision bound to the user's own preference,
+      risk appetite, or product intent.
+    - A **contested technical decision is not a human gate while a
+      council is configured.** Which design is sound, whether a contract
+      still holds, which of N implementations to pick — these have
+      technical answers, and `decision_resolution` already classes a
+      contract or architecture change as `medium_impact → council`
+      (`docs/contracts/ai-council-config.md`). Authoring them as human
+      gates contradicts that classification and spends the user's
+      attention on a question the council answers. Run it, record the
+      verdict in the phase, and the gate becomes a step.
+      `agent-config council:status` says whether one is configured —
+      never infer it from the project tree (`council-availability`).
+      Record a genuine gate as a structured `## Blockers` entry
+      (rule 20) — never as an inline checkbox step scattered through
+      phases.
     - An **external dependency is a blocker, not a human gate**, whenever
       the agent can probe its status (CI run finished, package version
       published, upstream PR merged, API reachable, DNS propagated):
@@ -216,10 +229,17 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
       `security-sensitive-stop`, and `commit-policy` fire at run time on
       their own; an authored "STOP: confirm with user before X" duplicates
       them and only adds interruptions.
-    Gate-test before writing any checkpoint: *"Could the agent clear this
-    with a tool or command during the run?"* Yes → it is a step, not a
-    gate. No → structured blocker with a decidable `Resolved when:`,
-    owned by a human only when the blocker is a genuine human gate.
+    Gate-test before writing any checkpoint, asked in this order:
+    1. *"Could the agent clear this with a tool or command during the
+       run?"* Yes → it is a step, not a gate.
+    2. *"Does it have a technical answer a council could reach?"* Yes →
+       it is a step whose first action runs the council.
+    3. Only what survives both — preference, risk appetite, product
+       intent, authorization, spend — becomes a structured blocker with
+       a decidable `Resolved when:`, owned by a human.
+    Stopping at question 1 is the authoring bug this ordering exists to
+    prevent: it sends every decision the agent cannot compute straight to
+    the user, including the ones the council exists to answer.
     `task lint-roadmap-complexity` warns on human-gate step patterns,
     human-gate phase headings, and human-approval exit criteria.
 

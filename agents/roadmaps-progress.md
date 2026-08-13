@@ -225,24 +225,6 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 4 | Wire the consumers — cross-refs, no duplication | ⬜ not started | 2 | 0 | 0 | 1 | 0% |
 | 5 | Measure | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 
-### [road-to-eval-loop-runnability.md](roadmaps/road-to-eval-loop-runnability.md)
-
-**Eval-loop runnability — one dead root the sweep cannot see** — 6 / 7 done (86%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Report Class-A dead roots outside the gate population | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Decide the orchestrator's disposition | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
-
-<a id="blockers-road-to-eval-loop-runnability"></a>
-**Blockers**
-
-- **eval-orchestrator-disposition** (owner: user) — blocks Phase 2 — Decide the orchestrator's disposition
-  - **What to do:**
-    1. Decide whether the ADR-051 faithful-twin carve-out on `run_skill_evals.ts` outranks the orchestrator being runnable.
-    2. Pick one: repoint `SKILLS_ROOT` to `src/skills` (breaks the byte-identical-parity contract), retire the orchestrator, or accept the cost with a dated reason in the file header.
-  - **Resolved when:** the maintainer states which of the three dispositions applies.
-
 ### [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md)
 
 **Frontend skills stop being loaded shelfware** — 22 / 31 done (71%)

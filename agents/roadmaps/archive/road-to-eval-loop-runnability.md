@@ -108,21 +108,31 @@ script reads its output.
 
 ## Phase 2: Decide the orchestrator's disposition
 
-Blocked — see `## Blockers`. The remedy is a maintainer decision, not a fix:
-`run_skill_evals.ts:13-16` states the dead path is preserved deliberately as a
-faithful twin of a retired Python source under an ADR-051 carve-out, with a
-pinned "no behaviour changes, byte-identical stdout" contract. Repointing the
-root at `src/skills` makes the orchestrator runnable and breaks that contract;
-leaving it preserves parity with a source nobody runs. Naming the trade-off is
-this roadmap's job; choosing is not.
+Resolved as **repoint**, and executed. The trade-off read like a maintainer
+call because the header framed the dead path as deliberate. Two checks settled
+it without one — both proposed by the council pass (2026-08-13, one member
+answering of two; the second failed with `exit_1`, so this is a degraded run and
+is reported as such rather than as convergence):
 
-- [ ] **Step 1:** Once the blocker clears, execute the chosen disposition — repoint `SKILLS_ROOT`, or retire the orchestrator, or record the carve-out as a deliberate accepted cost with a dated reason in the file header. <!-- verify: ./scripts-run src/scripts/run_skill_evals scaffold code-review -->
+- **Boilerplate test.** "This faithful twin replicates that literal
+  byte-for-byte" is standard ADR-051 twin language, not a marker for this file:
+  `measure_projection_bytes.ts:25-26` says the same about the same container.
+  The header encoded provenance, not an intentional disabled state.
+- **Authority test.** ADR-200 is not silent. § 5 makes Python behaviour binding
+  "unless a documented divergence says otherwise", and § 6 supplies the process.
+  Repointing is therefore the contract's own mechanism, and *skipping the
+  divergence doc* would have been the breach — "an undocumented difference is a
+  regression by definition".
 
-**Exit criteria:** `run_skill_evals` either resolves a real skill directory or
-carries a dated, reasoned statement that it is intentionally unrunnable.
+- [x] **Step 1:** Execute the disposition. `SKILLS_ROOT` resolves through `_lib/agent_src.ts::SRC_SKILLS()`; the header now records the divergence instead of claiming verbatim replication. <!-- verify: ./scripts-run src/scripts/run_skill_evals scaffold code-review -->
+- [x] **Step 2:** Write the ADR-200 § 6 divergence doc (verdict `bug-fix-in-TS`) with the before/after commands as evidence and the spawn-stub scope limit stated. <!-- verify: ls docs/migration/divergences/src-scripts-run_skill_evals.md -->
+- [x] **Step 3:** Close the ignore gap the repoint opens — `scaffold` writes to `src/skills/<id>/evals/runs/`, covered until now only for the retired container and `dist/`. <!-- verify: git status --short src/skills -->
 
-**Rollback:** none needed — the step is a single-file edit under the chosen
-disposition.
+**Exit criteria:** `run_skill_evals scaffold` resolves a real skill directory,
+and the divergence is recorded in the ADR-200 ledger with evidence.
+
+**Rollback:** revert the `SKILLS_ROOT` line and the header block; the divergence
+doc and the ignore line are inert without them.
 
 ## Acceptance Criteria
 
@@ -134,13 +144,18 @@ disposition.
 
 ### blocker: eval-orchestrator-disposition
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Blocks:** Phase 2 — Decide the orchestrator's disposition
 - **What to do:**
   1. Decide whether the ADR-051 faithful-twin carve-out on `run_skill_evals.ts` outranks the orchestrator being runnable.
-  2. Pick one: repoint `SKILLS_ROOT` to `src/skills` (breaks the byte-identical-parity contract), retire the orchestrator, or accept the cost with a dated reason in the file header.
+  2. Pick one: repoint `SKILLS_ROOT`, retire the orchestrator, or accept the cost with a dated reason in the file header.
 - **Resolved when:** the maintainer states which of the three dispositions applies.
+- **Resolution (2026-08-13):** it was never a human gate. ADR-200 § 6 already
+  owns this class of change, and the "deliberate" framing turned out to be twin
+  boilerplate. Authoring it as a blocker was the mis-classification this PR also
+  repairs in `templates/roadmaps.md` rule 22 — a contested *technical* decision
+  routes to the council, not to the user.
 
 ## Risk Register
 
@@ -151,7 +166,8 @@ disposition.
 | 1 | Advisory pass moves a ratchet base | implementation | Touching the shared gate population would change the 223 / 225 / 232 alignment the three sites were consolidated to fix, reddening the ratchet and the registration test for a reason unrelated to this plan. | The pass is additive and Class-A-only; `matchesGatePattern` and `_lib/gate_population.ts` are explicitly out of scope, and Step 2 pins the gate-population counts as unchanged. | Phase 1 Step 1 |
 | 2 | Class-A advisory floods with prose mentions | implementation | 79 files under `src/scripts/` mention `.agent-src.uncondensed`; a naive scan would report dozens of comments and report strings as dead roots, making the advisory noise. | Reuse the existing extractor, which requires a literal join over a recognised root base rather than a textual mention; Step 2 reads the output before the change is kept. | Phase 1 Step 2 |
 | 3 | The corrections table is read as permission to reopen owned work | product | A reader seeing five claims marked "already owned" may open duplicate items in the owning roadmaps instead of treating them as pointers. | The redirect table names the owning roadmap and its state per claim, and the acceptance criteria make non-duplication a checked outcome. | Acceptance Criteria |
-| 4 | Phase 2 stalls indefinitely | product | The disposition decision is a maintainer call on a documented carve-out; an unanswered blocker leaves an orchestrator that silently cannot run. | The finding is recorded in the sweep output by Phase 1, so the defect stays visible in tooling whether or not the decision is taken. | Phase 1 Step 1 |
+| 4 | Phase 2 stalls indefinitely | product | Authored as a maintainer call on a documented carve-out; an unanswered blocker would leave an orchestrator that silently cannot run. **Materialized in the opposite direction:** the gate was mis-classified — ADR-200 § 6 already owned the decision. | The finding is recorded in the sweep output by Phase 1 regardless; the mis-classification itself is repaired in `templates/roadmaps.md` rule 22 so the next author routes a technical decision to the council. | Phase 2 |
+| 5 | Repointing makes the orchestrator write into the source tree | implementation | `scaffold` creates `src/skills/<id>/evals/runs/`, which no ignore rule covered — untracked output under `src/` previously reddened `task sync-check`. | Ignore line added in the same change; verified by a clean `git status --short src/skills` after a real scaffold run. | Phase 2 Step 3 |
 
 ## Notes
 
@@ -167,6 +183,11 @@ roadmaps named in the redirect table.
   their own pins, referenced here only as Sources A–F and named in none of them.
   The originating thread link, via `src/scripts/_lib/link_crypto.ts decrypt`:
   ENC1:N1SU7ogBRwuM2myqGbgYVeGntFsNUzc7qaHHJ+DW1yIPUNcEFxFNr8VhIDs09UBA7/uHSZQUNacqvnF9E5mY3CNrknXpoFmgbYjwLHp0B5QkYzjvPErQF4GQarU+qpPPwRZaCx1cD+2koyWeTY71NjQBMR8QVlWHDWrY
-- Council: not convened. The one contested item is a maintainer decision on an
-  ADR-051 carve-out — a `user_required` class that a council cannot authorize —
-  and is carried as a structured blocker instead.
+- Council: anthropic + openai, 2026-08-13, depth `deep`, prompt-mode `design`.
+  **Degraded — 1 of 2 answered** (openai `exit_1`), so this is one reviewer's
+  reasoning, not convergence, and is reported that way in Phase 2. Its
+  contribution was the two falsification tests, not a verdict: check whether the
+  "deliberately preserved" wording is twin boilerplate, and read ADR-200 before
+  assuming the header encodes intent. Both checks ran and both pointed at
+  repoint. The first attempt returned 0 of 2 at a 120 s CLI timeout — repaired
+  in this PR and recorded in the ADR-200 ledger.

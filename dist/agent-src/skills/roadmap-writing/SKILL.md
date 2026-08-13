@@ -152,14 +152,14 @@ Sign-off" phases are authoring bugs; replace each with an
 agent-verifiable check (a command, a targeted test, a grep). Never
 restate run-time safety floors as steps.
 
-Gate-test before any checkpoint: *"Could the agent clear this with a
-tool or command during the run?"* Yes → step, not gate. No →
-structured `## Blockers` entry (§ 5b), distinguishing per rule 22:
-**human gate** (only a human can decide/authorize — Hard-Floor
-authorization, billable spend, contested decision) vs **external
-blocker** (agent cannot resolve but CAN probe status — CI run, package
-release, upstream PR; `Resolved when:` carries the probe, owner is
-not a human). Merge is never a completion requirement — it may appear
+Gate-test — three rungs in order (rule 22 owns the detail): **1.** agent-clearable
+by tool/command → step. **2.** has a technical answer a council could reach → still
+a step, first action runs the council; a contested *technical* decision is never a
+human gate while one is configured (`agent-config council:status`). **3.** what
+survives both → `## Blockers` (§ 5b): **human gate** (only a human can
+decide/authorize — Hard-Floor authorization, billable spend, or preference / risk
+appetite / product intent) vs **external blocker** (agent cannot resolve but CAN
+probe status — CI run, package release, upstream PR; `Resolved when:` carries the probe, owner is not a human). Merge is never a completion requirement — it may appear
 as a blocker only when later roadmap work depends on the merged state.
 `lint_roadmap_complexity` warns on human-gate patterns in every mode.
 

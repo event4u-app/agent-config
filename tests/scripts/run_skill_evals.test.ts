@@ -108,7 +108,12 @@ describe('run_skill_evals — _grade_assertions (pure)', () => {
     });
 
     it('REPO_ROOT / SKILLS_ROOT resolve consistently', () => {
-        expect(SKILLS_ROOT).toBe(path.join(MOD_REPO_ROOT, '.agent-src.uncondensed', 'skills'));
+        // DIVERGENCE from the Python mirror, documented under ADR-200 § 6 in
+        // `docs/migration/divergences/src-scripts-run_skill_evals.md`: the root
+        // resolves the LIVE skills tree. Replicating the retired container
+        // literal made every subcommand fail in `_skill_dir()` before doing any
+        // work, so these assertions had been pinning an unrunnable orchestrator.
+        expect(SKILLS_ROOT).toBe(path.join(MOD_REPO_ROOT, 'src', 'skills'));
     });
 });
 
@@ -120,9 +125,7 @@ describe('run_skill_evals — CLI error paths (tsx)', () => {
         // The message embeds the machine-dependent SKILLS_ROOT path — assert
         // the stable prefix + the path tail only.
         expect(t.stderr).toContain("error: skill '__no_such_skill_wave8e__' not found at ");
-        expect(t.stderr).toContain(
-            path.join('.agent-src.uncondensed', 'skills', '__no_such_skill_wave8e__'),
-        );
+        expect(t.stderr).toContain(path.join('src', 'skills', '__no_such_skill_wave8e__'));
     }
 
     it('scaffold <missing skill> → not-found error, exit 1', () => {
@@ -160,17 +163,19 @@ describe('run_skill_evals — report happy path (self-contained fixture)', () =>
     const skill = `__wave8e_fixture_${process.pid}__`;
     const evalsDir = path.join(SKILLS_ROOT, skill, 'evals');
     const runsDir = path.join(evalsDir, 'runs');
-    const legacyRoot = path.join(MOD_REPO_ROOT, '.agent-src.uncondensed');
     // The topmost ancestor we had to create (reaped wholesale on teardown) —
     // leaves the working tree exactly as found.
-    let reapTarget: string;
+    //
+    // The former three-rung ladder started at the retired container, which no
+    // longer exists: with SKILLS_ROOT repointed at the live tree (ADR-200
+    // divergence) the first rung always won, teardown removed a path that was
+    // never there, and the fixture skill survived under `src/skills/`. Measured
+    // — two `__wave8e_fixture_*` directories left behind. SKILLS_ROOT is inside
+    // `src/` and always exists, so the fixture directory IS the topmost thing
+    // this suite creates.
+    const reapTarget = path.join(SKILLS_ROOT, skill);
 
     beforeEach(() => {
-        reapTarget = !fs.existsSync(legacyRoot)
-            ? legacyRoot
-            : !fs.existsSync(SKILLS_ROOT)
-              ? SKILLS_ROOT
-              : path.join(SKILLS_ROOT, skill);
         fs.mkdirSync(runsDir, { recursive: true });
     });
 

@@ -156,7 +156,14 @@ describe('clients — module constants', () => {
         expect(DEFAULT_PERPLEXITY_MODEL).toBe('sonar-pro');
         expect(DEFAULT_MAX_TOKENS).toBe(2048);
         expect(UNLIMITED_TOKENS_FALLBACK).toBe(16384);
-        expect(DEFAULT_CLI_TIMEOUT_SECONDS).toBe(120.0);
+        // DELIBERATE DIVERGENCE from the Python mirror (2026-08-13): 120 → 300,
+        // matching the API transport, which diverged the same way in 2026-06-24
+        // for the same symptom. The mirrored source is retired and cannot be
+        // reintroduced (`no-python-in-src`), so parity here documents where a
+        // value CAME FROM — it cannot outrank a live-behaviour repair. Measured:
+        // at 120 a deep design run returned `0/2 present — INCONCLUSIVE`, both
+        // members `error: timeout` at ~123 s.
+        expect(DEFAULT_CLI_TIMEOUT_SECONDS).toBe(300.0);
         expect(MANUAL_END_MARKER).toBe('END');
     });
 
