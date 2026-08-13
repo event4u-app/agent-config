@@ -1,10 +1,10 @@
 # Findings: guard-input-prompt-binding
-<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: fe27f0c0747231c3bbd91d563cfb6bebb0950326d78a41b67a2c231b6a4e2f96 | diff: 578b33663d3aee9c30b5e4b486cef7195351ae79 | reviewer: r2-fresh-subagent-guard-input-prompt-binding | prompt_hash: 9442b32523a1113bf8bf6976a597218317d3ac5bf7e0d91e6fafd4cf593d4846 -->
+<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: 7ea2ee324c35d59bc2f22f4c7d48669ceefc93fd8df301a56fd38deeaa4031f3 | diff: 84c300c36ed8583a73e18544ab47d8513ed9289b | reviewer: r2-fresh-subagent-guard-input-prompt-binding | prompt_hash: 9442b32523a1113bf8bf6976a597218317d3ac5bf7e0d91e6fafd4cf593d4846 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 578b33663d3aee9c30b5e4b486cef7195351ae79
-  scope_hash: fe27f0c0747231c3bbd91d563cfb6bebb0950326d78a41b67a2c231b6a4e2f96
+  diff_sha: 84c300c36ed8583a73e18544ab47d8513ed9289b
+  scope_hash: 7ea2ee324c35d59bc2f22f4c7d48669ceefc93fd8df301a56fd38deeaa4031f3
   roadmap: none
   roadmap_hash: none
   ac_hash: none
@@ -40,6 +40,11 @@ silently by the re-bind:
   regenerates `agents/roadmaps-progress.md`. **The reviewer never saw either
   file.** It is a roadmap capturing four pre-existing gate reds unrelated to this
   change, added on the operator's explicit instruction after the review closed.
+- `84c300c36` — a merge of `origin/main` (20 commits, PRs #1321 and #1322),
+  taken because the branch had fallen behind before the push. It carries no work
+  of this branch's own; the one conflict was the generated dashboard, resolved by
+  regenerating it rather than hand-merging. Named for completeness — content that
+  reached `main` through its own review is not this artefact's to re-certify.
 
 Two facts make the disclosure the proportionate response rather than a second
 review round: the addition is documentation with no executable surface — a
