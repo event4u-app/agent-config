@@ -368,6 +368,12 @@ before any behaviour data exists.
   teams leave the experimental state and this re-cuts.
 - **Probed 2026-08-09:** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is unset on
   this host — condition unchanged, 5.4 stays open.
+- **Re-probed 2026-08-13:** still unset (`env | grep -i EXPERIMENTAL` returns
+  nothing). Four days, no change. Recorded rather than left silent because the
+  absence of a dated line is indistinguishable from nobody having looked — but
+  the repetition is also the finding: this blocker does not clear by waiting on
+  this host, so 5.4's realistic paths are an upstream flag flip or the "teams
+  leave the experimental state" branch already named in the resolution clause.
 
 ### blocker: cross-vendor-worker-slices
 

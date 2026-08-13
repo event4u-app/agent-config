@@ -151,6 +151,33 @@ the finding.
   deleted ahead of its mechanism. The next drain picks a row, writes its
   replacement, and deletes the key after; the ratchet at 83 makes each such
   drain visible and forbids the number going back up. -->
+  <!-- SCOUTED 2026-08-13 — the next drains, ranked, so the following run does not
+  re-derive the search. Method that matters: an un-dotted last-segment grep on top
+  of the dotted-path grep, because several keys are read via a YAML parse that
+  never mentions the dotted form (`subagents.downshift` looks unread by dotted
+  path and is read by `hooks/delegation_nudge_hook.ts`). Candidates below survived
+  that check.
+    · `project.pr_template` — ZERO readers of any kind, code or prose. Cheapest
+      possible drain (83 -> 82). Six surfaces: template, `src/server/schemas/settings.ts`,
+      the contract row plus BOTH count tables in `docs/contracts/settings-classes.md`
+      (Counts and Dispositions), a `REMOVED_KEYS` entry in
+      `src/scripts/_lib/agent_settings.ts` naming the replacement, the ratchet in
+      `gate-violation-baselines.json`, and the regenerated `docs/settings-reference.md`
+      plus its site mirror. Also drop its `LEGACY_RENAME_MAP` alias in `install.ts`
+      (an alias table, not a reader). A schema edit reds Install-Aux and
+      Static-Checks until the install bundle is rebuilt in the same commit.
+    · `commands.create_pr.{detail_level,api_examples,ui_paths,api_paths}` — four
+      rows in one drain, zero CODE readers; five prose files describe them as
+      defaults without gating on them.
+    · `reasoning.*` — eleven rows, the largest single drain available, and NOT a
+      free one: `contexts/execution/rdp-gate.md` signal 1 reads the block, so the
+      gate's first signal has to be rewritten before the keys go. That rewrite IS
+      the "write the replacement before touching the key" ordering this step
+      states, which makes it the honest test case rather than the cheap one.
+  Not drained in this pass on purpose: a single-key drain moves 83 -> 82 on a
+  standing queue and closes no roadmap, while touching the schema and the install
+  bundle. The scouting is the deliverable here; the deletion is a separate,
+  reviewable change. -->
   <!-- verify: ./scripts-run src/scripts/lint_settings_classes reports derivable == the baseline in src/config/gate-violation-baselines.json -->
 - [ ] 3.2 Re-examine the three class-B consent keys against the question
   *"does the action need authorising at all?"* — a consent gate on an action the
