@@ -98,22 +98,33 @@ describe('spawn-guard-shadow — the candidate spread', () => {
         expect(labels.length).toBeGreaterThan(1);
     });
 
-    it('separates the two arms so a reader knows which one tripped', () => {
+    it('reports the concurrency arm, and names which arm tripped', () => {
         expect(evaluateCandidates(1, 4)).toEqual([
             { label: 'n2m4', would_deny: true, on: ['concurrent'] },
             { label: 'n3m6', would_deny: false, on: [] },
             { label: 'n4m8', would_deny: false, on: [] },
         ]);
-        expect(evaluateCandidates(4, 0)).toEqual([
-            { label: 'n2m4', would_deny: true, on: ['depth'] },
-            { label: 'n3m6', would_deny: true, on: ['depth'] },
-            { label: 'n4m8', would_deny: true, on: ['depth'] },
+        expect(evaluateCandidates(1, 8)).toEqual([
+            { label: 'n2m4', would_deny: true, on: ['concurrent'] },
+            { label: 'n3m6', would_deny: true, on: ['concurrent'] },
+            { label: 'n4m8', would_deny: true, on: ['concurrent'] },
         ]);
-        expect(evaluateCandidates(9, 9)).toEqual([
-            { label: 'n2m4', would_deny: true, on: ['depth', 'concurrent'] },
-            { label: 'n3m6', would_deny: true, on: ['depth', 'concurrent'] },
-            { label: 'n4m8', would_deny: true, on: ['depth', 'concurrent'] },
-        ]);
+    });
+
+    it('never lets the depth estimate reach a verdict (R2 round 2, finding 3)', () => {
+        // The estimate is `max(open depths) + 1` over ALL open records
+        // regardless of lineage, so it is >= 2 whenever anything is open —
+        // flat fan-out included. A depth arm reading that would make the
+        // policy's 99th-percentile derivation a measurement of the estimator.
+        for (const depth of [1, 2, 3, 9, 99]) {
+            expect(evaluateCandidates(depth, 0).every((v) => !v.would_deny)).toBe(true);
+        }
+        // …and the concurrency arm is unaffected by it, in either direction.
+        expect(evaluateCandidates(99, 4)[0]).toEqual({
+            label: 'n2m4',
+            would_deny: true,
+            on: ['concurrent'],
+        });
     });
 
     it('denies nothing on a quiet estate', () => {
@@ -138,5 +149,48 @@ describe('spawn-guard-shadow — depth estimate honesty', () => {
         processEnvelope(toolCall('Agent'), root);
         expect(ledgerLines()[0]!.depth_estimate).toBe(1);
         expect(ledgerLines()[0]!.concurrent_open).toBe(0);
+    });
+
+    it('flags the estimate as unusable for derivation', () => {
+        processEnvelope(toolCall('Agent'), root);
+        expect(ledgerLines()[0]!.depth_usable_for_derivation).toBe(false);
+    });
+});
+
+describe('spawn-guard-shadow — a quiet line is falsifiable (R2 round 2, finding 4)', () => {
+    it('distinguishes "nothing is running" from "I can see nothing"', () => {
+        // Without this, a quiet estate and a ledger the hook cannot see emit
+        // byte-identical records — the instrument-goes-quiet failure one layer
+        // up from the one the ledger already fixed for itself.
+        processEnvelope(toolCall('Agent'), root);
+        expect(ledgerLines()[0]!.ledger_present).toBe(false);
+
+        plantOpen('x', 1);
+        processEnvelope(toolCall('Agent'), root);
+        expect(ledgerLines()[1]!.ledger_present).toBe(true);
+    });
+
+    it('reports leaked records separately instead of counting them', () => {
+        const ancient = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+        const dir = path.join(root, LEDGER_DIR, OPEN_SUBDIR);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'stale0000001.json'),
+            JSON.stringify({
+                ref: 'stale0000001',
+                agent_type: 'Explore',
+                started_at: ancient,
+                parent_ref: null,
+                depth: 1,
+                depth_basis: 'assumed-root',
+                session_id: null,
+            }),
+            'utf8',
+        );
+
+        processEnvelope(toolCall('Agent'), root);
+        const line = ledgerLines()[0]!;
+        expect(line.concurrent_open).toBe(0);
+        expect(line.stale_open_excluded).toBe(1);
     });
 });

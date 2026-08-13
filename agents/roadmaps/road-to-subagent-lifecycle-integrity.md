@@ -368,9 +368,20 @@ reverts by file.
       inventing a proxy is what the cited `capsule_trigger.ts` discipline
       refuses. Wall-clock only, stated rather than implied.
 
-**Falsifier (Step 1).** The warn window shows zero would-have-fired events
-across ≥20 dispatches → the caps are solving a problem this estate does not
-have; record the null, leave the guard warn-only or remove it.
+**Falsifier (Step 1), restated for the shadow posture.** The original wording
+named a "warn window", and there is no warn window — the step shipped shadow,
+so a falsifier phrased against a window that does not exist could never fail.
+Replacement, against what the shadow actually records: the **shadow** window
+shows zero `would_deny` across ≥ 20 dispatches at the WIDEST candidate
+(`n4m8`) → the concurrency cap is solving a problem this estate does not have;
+record the null and remove the guard rather than tightening the candidate until
+something fires.
+
+Note which arm this falsifier is about. It is the concurrency arm, because
+after R2 round 2 finding 3 that is the only arm producing a verdict at all.
+The depth arm cannot be falsified here — it is not evaluated, and it becomes
+falsifiable only once Phase 0 Step 4 settles whether `agent_id` reaches a
+PreToolUse payload.
 
 **Rollback.** Each concern is one manifest line; ledger stays (it is Phase-1
 infrastructure).

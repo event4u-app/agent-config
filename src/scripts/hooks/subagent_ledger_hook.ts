@@ -440,16 +440,60 @@ export function armsExceeded(elapsedMs: number | null): string[] {
     return WALL_CLOCK_ARMS_MS.filter((a) => elapsedMs >= a.ms).map((a) => a.label);
 }
 
+export interface OpenStats {
+    /** Open records within the TTL. Stale ones are NOT counted. */
+    open_count: number;
+    /** Deepest depth among the counted records; 0 when none. */
+    max_depth: number;
+    /** Counted separately so a caller can see the leak rather than inherit it. */
+    stale_excluded: number;
+    /** `false` when the ledger directory does not exist at all. */
+    ledger_present: boolean;
+}
+
 /**
- * Open-set summary for the pre-spawn shadow guard: how many dispatches are
- * open and how deep the deepest one is. Separate from `readOpenRecords` so the
- * guard reads a small derived value rather than the whole set.
+ * Open-set summary for the pre-spawn shadow guard and the turn-end allow path.
+ *
+ * **TTL-aware, and that is load-bearing rather than tidy** (R2 round 2,
+ * finding 1). Reaping happens inside the ledger hook, on the next
+ * `subagent_start` / `subagent_stop`. A dispatch that never returns — the
+ * symptom this whole roadmap targets — leaves a record behind, and if no
+ * further subagent event ever occurs that record is never reaped. A consumer
+ * that reads the raw count then sees "a dispatch is open" forever. For the
+ * spawn guard that inflates a number; for the turn-end gate it silently
+ * disables the gate, because the open-dispatch branch is an ALLOW. The ledger
+ * already solved this leak for itself and the new consumers inherited it with
+ * the opposite polarity, so the filter belongs here, in the shared reader,
+ * rather than in each caller.
+ *
+ * `ledger_present` exists for finding 4: a quiet estate and a ledger this hook
+ * cannot see otherwise produce byte-identical readings, which is the
+ * instrument-goes-quiet failure the ledger's own round-1 finding 1 fixed one
+ * layer down. A caller can now tell "nothing is running" from "I can see
+ * nothing".
  */
-export function openRecordStats(root: string): { open_count: number; max_depth: number } {
+export function openRecordStats(root: string, nowMs: number = Date.now()): OpenStats {
+    const ledgerPresent = fs.existsSync(path.join(root, LEDGER_DIR));
     const open = readOpenRecords(root);
     let maxDepth = 0;
-    for (const rec of open.values()) if (rec.depth > maxDepth) maxDepth = rec.depth;
-    return { open_count: open.size, max_depth: maxDepth };
+    let counted = 0;
+    let stale = 0;
+    for (const rec of open.values()) {
+        const started = Date.parse(rec.started_at);
+        const isStale = Number.isFinite(started) && nowMs - started >= OPEN_RECORD_TTL_MS;
+        if (isStale) {
+            stale++;
+            continue;
+        }
+        counted++;
+        if (rec.depth > maxDepth) maxDepth = rec.depth;
+    }
+    return {
+        open_count: counted,
+        max_depth: maxDepth,
+        stale_excluded: stale,
+        ledger_present: ledgerPresent,
+    };
 }
 
 /** Contract § Concurrency: lock + tmp + rename, via the shared helper. */
@@ -498,11 +542,13 @@ export function reapStaleOpenRecords(root: string, nowIso: string): number {
             agent_type: rec.agent_type,
             depth: rec.depth,
             depth_basis: rec.depth_basis,
+            // R2 round 2, finding 5: the arm list is NOT repeated here. A reap
+            // fires only past OPEN_RECORD_TTL_MS (24 h), which exceeds every
+            // arm (largest: 2 h), so `stop_loss_arms_exceeded` would be a
+            // constant on this line — a field that cannot vary answers no
+            // question. `age_ms` carries strictly more information and is what
+            // a reader should aggregate over.
             age_ms: now - started,
-            // Phase 3 Step 3, shadow: a reaped record is the ONLY place a
-            // never-returning dispatch becomes observable, so the stop-loss
-            // arms are evaluated here as well as on a real stop.
-            stop_loss_arms_exceeded: armsExceeded(now - started),
             reason: 'open record exceeded OPEN_RECORD_TTL_MS without a stop',
         });
     }
@@ -629,8 +675,14 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string): numb
  * R2 finding 10: the host's `cwd` lives under `payload`, not at the envelope
  * top level, so a top-level `cwd` branch is unreachable on the dispatcher path.
  * Both real positions are read here, envelope-level roots first.
+ *
+ * R2 round 2, finding 6: EXPORTED, and every consumer of this ledger uses it.
+ * The producer and its two readers had each grown their own precedence order,
+ * so a root that resolved one way for the writer could resolve another for the
+ * reader — and a reader looking in the wrong place finds an empty ledger,
+ * which every one of these consumers reads as "nothing is open".
  */
-function _resolveRoot(envelope: JsonValue): string {
+export function resolveConsumerRoot(envelope: JsonValue): string {
     if (isObject(envelope)) {
         const pr = str(envelope, 'workspace_root', 'project_root');
         if (pr) return pr;
@@ -649,7 +701,7 @@ export function main(): number {
     } catch {
         return EXIT_ALLOW;
     }
-    return processEnvelope(envelope, _resolveRoot(envelope));
+    return processEnvelope(envelope, resolveConsumerRoot(envelope));
 }
 
 // Bundle-safety: never auto-run when inlined into an esbuild bundle, where

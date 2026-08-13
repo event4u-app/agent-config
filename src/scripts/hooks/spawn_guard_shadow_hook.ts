@@ -38,11 +38,13 @@
  *
  * ── What this does NOT measure, stated rather than implied ────────────────
  *
- * Depth here is the depth the NEW dispatch would have, estimated as the
- * deepest open record + 1. Pre-spawn there is no `agent_id` to resolve a
- * real parent from, so this is an upper bound on a sibling spawn and exact
- * only for a linear chain. The field is named `depth_estimate` and carries
- * its basis, so nobody derives a percentile from it believing it measured.
+ * Depth. The estimate is the deepest open record + 1, maximised over ALL open
+ * records regardless of lineage, because pre-spawn there is no `agent_id` to
+ * resolve a real parent from. That makes it >= 2 whenever anything is open —
+ * flat fan-out included — so it **decides nothing**: no candidate's verdict
+ * reads it, and the line carries `depth_usable_for_derivation: false`. It
+ * rides along as context and becomes a real measurement only when Phase 0
+ * Step 4 establishes whether `agent_id` reaches a PreToolUse payload.
  *
  * PRIVACY BY CONSTRUCTION: counts and candidate verdicts only. No prompt, no
  * agent id, no tool input — the record type has no field able to hold any.
@@ -51,7 +53,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { appendLedgerLine, openRecordStats } from './subagent_ledger_hook.js';
+import { appendLedgerLine, openRecordStats, resolveConsumerRoot } from './subagent_ledger_hook.js';
 import { readHookStdin } from './hook_stdin.js';
 
 const EXIT_ALLOW = 0;
@@ -89,15 +91,37 @@ export const CANDIDATES: readonly Candidate[] = [
 export interface ShadowVerdict {
     readonly label: string;
     readonly would_deny: boolean;
-    /** Which arm tripped: `depth`, `concurrent`, both, or none. */
+    /** Which arm tripped. Only `concurrent` can appear — see below. */
     readonly on: string[];
 }
 
-/** Pure: evaluate every candidate against the observed state. */
+/**
+ * Pure: evaluate every candidate against the observed state.
+ *
+ * **Only the concurrency arm produces a verdict** (R2 round 2, finding 3). The
+ * depth arm is confounded by construction and was silently poisoning the very
+ * curve this shadow exists to produce:
+ *
+ * `depth_estimate` is `max(open depths) + 1`, maximised over ALL open records
+ * regardless of lineage, and every record carries depth >= 1. So the estimate
+ * is >= 2 whenever anything at all is open — including a flat fan-out with no
+ * nesting whatsoever. `n2m4`'s depth arm would then read `would_deny` on an
+ * ordinary sibling spawn, and the 99th-percentile derivation the activation
+ * policy prescribes would be computed over the estimator's artefact rather
+ * than over observed nesting.
+ *
+ * This was not caught by reasoning; it was caught by a reviewer after an
+ * end-to-end probe produced exactly that reading and it was briefly mistaken
+ * for a signal.
+ *
+ * Real per-spawn depth needs the parent lineage, which needs `agent_id` on the
+ * PreToolUse payload — Phase 0 Step 4, still open. Until it lands, the depth
+ * number rides along as context, flagged unusable, and decides nothing.
+ */
 export function evaluateCandidates(depthEstimate: number, concurrentOpen: number): ShadowVerdict[] {
+    void depthEstimate;
     return CANDIDATES.map((c) => {
         const on: string[] = [];
-        if (depthEstimate >= c.max_depth) on.push('depth');
         if (concurrentOpen >= c.max_concurrent) on.push('concurrent');
         return { label: c.label, would_deny: on.length > 0, on };
     });
@@ -134,6 +158,16 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string): numb
             concurrent_open: stats.open_count,
             depth_estimate: depthEstimate,
             depth_estimate_basis: 'deepest-open-record-plus-one',
+            // R2 round 2, finding 3: the estimate is >= 2 whenever anything is
+            // open, nesting or not, so it must not reach a derivation. It rides
+            // as context with the flag that says so.
+            depth_usable_for_derivation: false,
+            // R2 round 2, finding 4: without these, a quiet estate, a ledger
+            // this hook cannot see, and a root mismatch all emit byte-identical
+            // records — the instrument-goes-quiet failure one layer up from the
+            // one the ledger already fixed for itself.
+            ledger_present: stats.ledger_present,
+            stale_open_excluded: stats.stale_excluded,
             candidates: verdicts.map((v) => ({ label: v.label, would_deny: v.would_deny, on: v.on })),
             // Shadow posture is a property of this file, not of a setting —
             // there is no code path here that can deny.
@@ -146,17 +180,11 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string): numb
     return EXIT_ALLOW;
 }
 
-function _resolveRoot(envelope: JsonValue): string {
-    if (isObject(envelope)) {
-        for (const k of ['workspace_root', 'project_root']) {
-            const v = envelope[k];
-            if (typeof v === 'string' && v) return v;
-        }
-        const cwd = unwrapPayload(envelope)['cwd'];
-        if (typeof cwd === 'string' && cwd) return cwd;
-    }
-    return process.cwd();
-}
+// R2 round 2, finding 6: this file used to carry its OWN root-resolution
+// order, a third one alongside the ledger's and the turn-end gate's. A reader
+// that resolves a different root than the writer finds an empty ledger, and
+// every consumer here reads an empty ledger as "nothing is open" — a silent
+// wrong answer rather than an error. One exported resolver, three callers.
 
 export function main(): number {
     const raw = readHookStdin();
@@ -166,7 +194,7 @@ export function main(): number {
     } catch {
         return EXIT_ALLOW;
     }
-    return processEnvelope(envelope, _resolveRoot(envelope));
+    return processEnvelope(envelope, resolveConsumerRoot(envelope));
 }
 
 declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;

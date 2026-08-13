@@ -857,8 +857,21 @@ export function main(): number {
     // Phase-1 ledger; a ledger that is absent, empty or unreadable yields zero
     // open records and changes nothing, so the gate degrades to exactly its
     // previous behaviour rather than failing open in the dangerous direction.
+    //
+    // R2 round 2, finding 2: it used to be an early `return EXIT_ALLOW`, which
+    // suppressed ALL FOUR detectors. A pending dispatch explains a promissory
+    // closing (A) and an unsettled completion claim (D); it explains nothing
+    // about a language mismatch (B) or an unverified edit (C), and silencing
+    // those was scope Step 2 never asked for. Applied per detector below.
+    //
+    // R2 round 2, finding 1: the count is TTL-filtered inside
+    // `openRecordStats`. A leaked record from a dispatch that never returned
+    // would otherwise read as "a dispatch is open" forever and, because this
+    // branch is an ALLOW, disable those two detectors indefinitely with no
+    // signal — the ledger's own leak inherited with the opposite polarity.
+    let dispatchOpen = false;
     try {
-        if (openRecordStats(workspaceRoot).open_count > 0) return EXIT_ALLOW;
+        dispatchOpen = openRecordStats(workspaceRoot).open_count > 0;
     } catch {
         // An unreadable ledger is not a reason to change the verdict.
     }
@@ -902,7 +915,10 @@ export function main(): number {
     // second, configurable notion of warranted layered on top of it.
     const findings: Finding[] = [];
     for (const f of [
-        detectPromissory(lastAssistant),
+        // A and D are the completion-adjacent pair a pending dispatch excuses
+        // (Phase 3 Step 2, narrowed by R2 round 2 finding 2). B and C are not
+        // excused by anything about a dispatch and run unchanged.
+        dispatchOpen ? null : detectPromissory(lastAssistant),
         detectLanguage(lastAssistant, readLanguagePin(workspaceRoot)),
         detectUnverifiedEdit(toolCalls),
         // Round 7 § Phase 1 — detector D, in the same unconditional list as the
@@ -912,7 +928,7 @@ export function main(): number {
         // gating is where the comment above says gating belongs — inside the
         // detector: no CI observed, or a settled read, or no completion claim
         // ⇒ no finding.
-        detectCompletionClaim(lastAssistant, readCiSettled(workspaceRoot)),
+        dispatchOpen ? null : detectCompletionClaim(lastAssistant, readCiSettled(workspaceRoot)),
     ]) {
         if (f) findings.push(f);
     }

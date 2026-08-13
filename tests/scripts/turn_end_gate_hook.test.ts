@@ -576,7 +576,7 @@ describe('the gate, end to end', () => {
     // async subagent cannot finish the outstanding work in THIS turn, so
     // refusing it produces the upstream Stop-hook x async-subagent loop
     // (anthropics/claude-code#55754): refuse, cannot proceed, refuse again.
-    function plantOpenDispatch(dir: string): void {
+    function plantOpenDispatch(dir: string, startedAt: string = new Date().toISOString()): void {
         const openDir = path.join(dir, 'agents', 'runtime', 'state', 'subagent-ledger', 'open');
         fs.mkdirSync(openDir, { recursive: true });
         fs.writeFileSync(
@@ -584,7 +584,7 @@ describe('the gate, end to end', () => {
             JSON.stringify({
                 ref: 'aaaaaaaaaaaa',
                 agent_type: 'Explore',
-                started_at: new Date().toISOString(),
+                started_at: startedAt,
                 parent_ref: null,
                 depth: 1,
                 depth_basis: 'assumed-root',
@@ -616,6 +616,44 @@ describe('the gate, end to end', () => {
             recursive: true,
             force: true,
         });
+
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(1);
+        expect(r.stderr).toContain('promissory');
+    });
+
+    it('an open dispatch does NOT excuse a language mismatch (R2 round 2, finding 2)', () => {
+        // Step 2 scopes the allow to the completion-adjacent detectors. A
+        // pending dispatch says nothing about which language the reply is in,
+        // so detector B must still fire — the earlier version returned early
+        // and silenced all four.
+        const { dir, home } = makeGateWorkspace();
+        fs.mkdirSync(path.join(dir, 'agents', 'state'), { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'agents', 'state', 'language-mirror.json'),
+            JSON.stringify({ language: 'de', source: 'prompt' }),
+        );
+        const t = writeTranscript(
+            home,
+            ['mach weiter'],
+            'The change is applied and the tests are green across the whole suite here.',
+        );
+        plantOpenDispatch(dir);
+
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(1);
+        expect(r.stderr).toContain('language');
+    });
+
+    it('a LEAKED open record does not disable the gate for ever (R2 round 2, finding 1)', () => {
+        // The dispatch that never returns is the symptom this roadmap targets,
+        // and reaping only happens on the NEXT subagent event — which, for a
+        // dispatch that never returns, may never come. Without the TTL filter
+        // this record would allow every turn-end from here on, silently.
+        const { dir, home } = makeGateWorkspace();
+        const t = writeTranscript(home, ['mach weiter'], PROMISE);
+        const ancient = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+        plantOpenDispatch(dir, ancient);
 
         const r = runHook(dir, envelopeJson(dir, t), home);
         expect(r.status, r.stderr).toBe(1);
