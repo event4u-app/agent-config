@@ -42,15 +42,18 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-13)
 # ----------------------------------------------------------
-# 255 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 257 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
 # **35 of them emit the machine-readable `scanned: <N>` line under their
 # CI-identical argv, and all 35 are listed below.** The manifest is therefore
 # complete with respect to its own contract, and covers ~14 % of the population.
 # (The 2026-08-05 reading said "32 … and all 31 are listed"; the 2026-08-10
 # reading said "33 … and all 33" while 34 entries were listed. Both halves are
-# RECOUNTED here: 255 is what `count_gate_scripts()` returns on the tree that
-# carries this change, and 35 is the entries counted directly.)
+# RECOUNTED here: 257 is what `count_gate_scripts()` returns on the tree that
+# carries this change, and 35 is the entries counted directly. It read 255 while
+# this change was being written and 257 after `main` merged in two further gate
+# scripts — re-measured at the merge rather than left at the earlier reading,
+# which is the same discipline the note below records failing.)
 #
 # A 2026-08-13 revision of this paragraph first wrote 256, derived as "255 before
 # this change plus the one it adds" — inside the sentence claiming to have
