@@ -588,7 +588,7 @@ _1 blocker resolved._
     own, which is the only answer that fixes the floor by fixing the thing the
     floor measures. Whichever is chosen, the `corpus:` description is stale
     either way and needs the same edit.
-  - **Resolved when:** the decision exists in a tracked artefact and Phase 4 step 2 can cite it. - **Note:** an AI council was asked to adjudicate this and was unreachable (anthropic quota-exhausted, openai trusted-directory refusal, two attempts). The staged baseline was chosen without it, on the ground that it is the only option adding no unfixable block. It is not a council verdict and does not foreclose the others.
+  - **Resolved when:** the decision exists in a tracked artefact and Phase 4 step 2 can cite it, **and** the `check_ci_local_parity` floor red of § 5 is either cleared or carries a recorded, argued disposition. The second half is explicit because without it this roadmap can reach `count_open == 0` and archive while a gate it opened is still red — which is the exact failure the whole file is about, committed by the file itself. - **Note:** an AI council was asked to adjudicate this and was unreachable (anthropic quota-exhausted, openai trusted-directory refusal, two attempts). The staged baseline was chosen without it, on the ground that it is the only option adding no unfixable block. It is not a council verdict and does not foreclose the others.
 
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 

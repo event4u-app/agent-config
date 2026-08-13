@@ -215,19 +215,34 @@ re-derive them.
       → **Adopted, not exempted.** The exemption ground did not apply: the
       gate's three inputs (`src/rules/`, `src/skills/`, the pack registry) are
       ordinary tree reads, so a temp-directory fixture can provoke every verdict.
-      Added `--root <dir>` plumbing and `--self-test` with five cases (2
-      rejecting, floor 5): an unreachable route under `--strict`, an empty rule
-      corpus (the scanned-nothing refusal, exit 2), and three accepts that pin
-      the discrimination — the same route made reachable through `requires`, an
-      unscoped rule, an unscoped skill. Default invocation is byte-identical:
+      Added `--root <dir>` plumbing and `--self-test` with **six cases (3
+      rejecting, floor 6)**: an unreachable route under `--strict`, an empty
+      rule corpus (the scanned-nothing refusal, exit 2), a valueless `--root`
+      (added when the R2 review found that flag falling back to the real tree),
+      and three accepts that pin the discrimination — the same route made
+      reachable through `requires`, an unscoped rule, an unscoped skill.
+      Default invocation is byte-identical:
       `116 rule(s), 289 skill(s), 34 pack(s) — 12 unreachable-route,
       14 unrouted-skill`, exit 0.
       The reject cases were checked against the failure this repository has
       recorded before — a negative test that passes for the wrong reason.
       Mutating `unreachableFrom.length === 0` to `>= 0` turned the first case
-      red (`4/5 case(s) behaved`) and left the four others green, so the case is
-      bound to the detector and not to the fixture. Ratchet reads **24**, the
-      baseline unchanged and not raised.
+      red (`5/6 case(s) behaved`) and left the others green, so the case is
+      bound to the detector and not to the fixture.
+
+      The sixth case was mutation-checked separately, and the first attempt
+      taught something worth recording. Deleting the guard body alone does
+      **not** turn it red: `args.root` then holds `undefined`,
+      `path.join(undefined, …)` throws, and the entry guard still exits 2 — the
+      case would have passed for the wrong reason, which is the exact failure
+      it exists to prevent. Restoring the original `argv[i + 1] ?? REPO`
+      fallback — the real defect, not a paraphrase of it — does turn it red
+      (`5/6`, exit 0 because the run silently scanned the live tree). So the
+      case is bound to the silent fallback. It does **not** distinguish a clean
+      refusal from a crash, since both exit 2; `runSelfTest` compares exit codes
+      and nothing here asserts the message.
+
+      Ratchet reads **24**, the baseline unchanged and not raised.
 
 ## Phase 3 — the roadmap that cannot archive
 
@@ -356,6 +371,11 @@ class recurs.
 - `agent-config roadmap:progress-check` exits 0.
 - The Phase 4 decision is recorded in a durable artefact, including the case
   where the decision is to change nothing.
+- `npx tsx src/scripts/check_gate_coverage.ts` reports **no gate red that this
+  roadmap opened** — specifically the `check_ci_local_parity` floor of
+  § Two more reds is cleared or carries a recorded disposition. Added
+  2026-08-13: without this criterion the roadmap could close green while
+  leaving a red gate behind, which is the failure it exists to remove.
 
 ## Quality gates
 
@@ -459,7 +479,11 @@ remote CI on the PR is the authoritative gate
      floor measures. Whichever is chosen, the `corpus:` description is stale
      either way and needs the same edit.
 - **Resolved when:** the decision exists in a tracked artefact and Phase 4
-  step 2 can cite it.
+  step 2 can cite it, **and** the `check_ci_local_parity` floor red of § 5 is
+  either cleared or carries a recorded, argued disposition. The second half is
+  explicit because without it this roadmap can reach `count_open == 0` and
+  archive while a gate it opened is still red — which is the exact failure the
+  whole file is about, committed by the file itself.
 - **Note:** an AI council was asked to adjudicate this and was unreachable
   (anthropic quota-exhausted, openai trusted-directory refusal, two attempts).
   The staged baseline was chosen without it, on the ground that it is the only
