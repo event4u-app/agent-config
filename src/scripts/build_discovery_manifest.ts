@@ -657,26 +657,13 @@ function _build(strict: boolean): [JsonObject, JsonObject[]] {
         // 6.0.0-C: surface command routing metadata. Does not affect the
         // per-file checksum (computed over frontmatter, below).
         if (category === 'command' && fm !== null && _isObject(fm)) {
-            if (fm['tier'] !== undefined && fm['tier'] !== null) {
-                entry['tier'] = fm['tier'];
-            }
-            // ADR-090: `visibility:` is the named source of truth; the integer
-            // `tier:` is a back-compat alias. Dual-emit BOTH into the manifest
-            // (a published data contract) during the deprecation window so
-            // external consumers reading the integer key keep working. The
-            // top-level `deprecations` block (ADR-092 / road-to-tier-removal)
-            // announces the `tier` deprecation; removal is Phase 4. Prefer the
-            // explicit field; derive from tier when absent.
-            const _tierToVis: Record<number, string> = { 0: 'visible', 1: 'advanced', 2: 'internal' };
-            let _vis: Json = fm['visibility'];
-            if (
-                (_vis === undefined || _vis === null) &&
-                fm['tier'] !== undefined &&
-                fm['tier'] !== null
-            ) {
-                // `.get(fm["tier"])` returns None when tier is not 0/1/2 → undefined here.
-                _vis = typeof fm['tier'] === 'number' ? _tierToVis[fm['tier']] : undefined;
-            }
+            // ADR-090 named `visibility:` the source of truth; the integer
+            // `tier:` alias it superseded was dual-emitted here through the
+            // deprecation window and REMOVED in road-to-tier-removal Phase 4.
+            // The manifest no longer carries `tier` in any entry — the
+            // top-level `deprecations` block records the removal for consumers
+            // that still read the old key.
+            const _vis: Json = fm['visibility'];
             if (_vis !== undefined && _vis !== null) {
                 entry['visibility'] = _vis;
             }
@@ -788,22 +775,22 @@ function _build(strict: boolean): [JsonObject, JsonObject[]] {
     const stats = _compute_stats(artefacts, unassigned, documentedUnassigned);
 
     const manifest: JsonObject = {
-        version: 2,
-        // Machine-readable deprecation signal (road-to-tier-removal Phase 1,
-        // ADR-092). The integer command `tier` (0/1/2) is a back-compat alias
-        // for the named `visibility` field (ADR-090). It is STILL emitted into
-        // command entries above (non-breaking) — this block only ANNOUNCES the
-        // deprecation so external manifest consumers can migrate to `visibility`
-        // during the soak window. Removal of `tier` is Phase 4 of
-        // road-to-tier-removal (cheaply reversible per ADR-092). `sunset` is
-        // maintainer-owned: SET on 2026-08-13, with the soak wait explicitly
+        // v3 (road-to-tier-removal Phase 4): the integer command `tier` is no
+        // longer emitted on `category: command` artefacts. That is a breaking
+        // change to a published data contract, and this schema's own rule is
+        // "bump on breaking change" — so the version carries the break rather
+        // than leaving a v2 consumer to discover a silently-absent field.
+        version: 3,
+        // Machine-readable removal record (road-to-tier-removal Phase 1 added
+        // this block as a deprecation ANNOUNCEMENT; Phase 4 turned it into the
+        // record of an executed removal). The entry is retained on purpose: a
+        // consumer that still reads the old key needs to find out what replaced
+        // it and when it went, and an absent entry would say neither. `sunset`
+        // is maintainer-owned: SET on 2026-08-13, with the soak wait explicitly
         // waived ("wir haben lange genug gewartet"). ADR-137 had already reduced
         // the re-open trigger set to this one act — a concrete sunset — after
         // withdrawing the second trigger as structurally impossible in a
-        // no-runtime package. The date is today rather than a future one because
-        // the waiver IS the decision: the announcement has been live since
-        // Phase 1, and the maintainer judged the window sufficient rather than
-        // starting a new one.
+        // no-runtime package.
         deprecations: [
             {
                 key: 'tier',
@@ -811,12 +798,13 @@ function _build(strict: boolean): [JsonObject, JsonObject[]] {
                 replacement: 'visibility',
                 since: 'ADR-092',
                 sunset: '2026-08-13',
+                removed_in: 3,
                 note:
-                    'Integer command `tier` (0/1/2) is a deprecated back-compat ' +
-                    'alias for the named `visibility` field (ADR-090). Read ' +
-                    '`visibility`; `tier` is still emitted (non-breaking) but ' +
-                    'scheduled for removal — see road-to-tier-removal. Sunset set ' +
-                    '2026-08-13; removal lands as one reviewable diff.',
+                    'Integer command `tier` (0/1/2) was a back-compat alias for ' +
+                    'the named `visibility` field (ADR-090). REMOVED in manifest ' +
+                    'v3 — command artefacts no longer carry `tier`. Read ' +
+                    '`visibility` (`visible` / `advanced` / `internal`); the old ' +
+                    'mapping was 0↔visible, 1↔advanced, 2↔internal.',
             },
         ],
         generated_at: _nowUtc(),
