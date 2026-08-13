@@ -125,4 +125,8 @@ its declared posture by accident, only by declaring a different one.
 
 - [`hook-architecture-v1.md`](hook-architecture-v1.md) — the dispatcher contract this policy sits on top of.
 - `src/rules/session-canary.md` — the measured advisory null this ladder is built around.
-- `agents/roadmaps/road-to-subagent-lifecycle-integrity.md` — Phase 3, the first consumer.
+- `src/scripts/hooks/spawn_guard_shadow_hook.ts` — the first concern shipped
+  under this policy, and the worked example of the shadow rung. Roadmaps cite
+  this file rather than the reverse: a roadmap is archived when its work
+  completes, so a contract linking to one acquires a dead reference by design
+  (`no-roadmap-references`).
