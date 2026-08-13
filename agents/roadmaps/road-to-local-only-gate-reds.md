@@ -83,17 +83,25 @@ Both are one-token frontmatter edits with no judgement left in them; the
 measurements that decide each value are recorded here so the step does not
 re-derive them.
 
-- [ ] `agents/roadmaps/road-to-always-loaded-corpus-scoping.md` declares
-      `complexity: standard`, which is not one of the two accepted values.
-      `COMPLEXITY_PAT` in `src/scripts/lint_roadmap_complexity.ts` accepts
-      `lightweight|structural` only, so the file reports `[untagged]` and the
-      gate exits 1 on the whole corpus.
-      **Measured, so the value is not a guess:** 149 lines, 4 `## Phase`
-      headings — both inside the lightweight caps (600 lines, 6 phases), so
-      `lightweight` is the correct tag and `structural` would be a false claim
-      of contract-layer scope.
-      *Verify:* `npx tsx src/scripts/lint_roadmap_complexity.ts` exits 0 and the
-      summary line reports 0 untagged.
+- [x] ~~`agents/roadmaps/archive/road-to-always-loaded-corpus-scoping.md` declares
+      `complexity: standard`~~ — **repaired 2026-08-13** in the PR that closed
+      that roadmap, because it was the sole failure of
+      `lint_roadmap_complexity` and it sat in a file that diff was already
+      editing. `COMPLEXITY_PAT` in `src/scripts/lint_roadmap_complexity.ts`
+      accepts `lightweight|structural` only, so the file reported `[untagged]`
+      and the gate exited 1 on the whole corpus.
+      **Re-measured at repair time — the value held, its evidence did not:**
+      **247** lines (this step recorded 149, before the closing edits), 4
+      `## Phase` headings; both still inside the lightweight caps (600 lines,
+      6 phases), so `lightweight` is correct and `structural` would have been a
+      false claim of contract-layer scope.
+      *Verified:* `npx tsx src/scripts/lint_roadmap_complexity.ts` →
+      `42 roadmap(s) complexity-clean`, `0 untagged`, exit 0.
+      **Note for whoever resolves `august-program-disposition`:** that blocker's
+      `Blocks:` line claims both mechanical repairs, but its body gates only the
+      `road-to-august-program` disposition and `check_roadmap_trackable`. This
+      half was never actually gated by it. The roadmap named above now lives
+      under `agents/roadmaps/archive/`.
 
 - [ ] Decide the disposition of `agents/roadmaps/road-to-august-program.md` and
       apply it. `check_roadmap_trackable` fails it for carrying no
@@ -290,6 +298,17 @@ remote CI on the PR is the authoritative gate
 - **Status:** open
 - **Owner:** user
 - **Blocks:** Phase 4 — close the class, or state why it stays open
+- **Observed 2026-08-13, a two-gate contradiction worth folding into the choice:**
+  `archive_completed_roadmaps.ts:151` treats `agents/evidence/` as a
+  `_FROZEN_RECORD_PREFIXES` entry and deliberately does **not** migrate roadmap
+  references inside a committed record, after one such rewrite corrupted a
+  hash-bound reviewer prompt. `check_references` requires those same references
+  to resolve. So every roadmap archived while an evidence record cites it emits a
+  red that only a hand-placed `<!-- ref-ignore -->` inside the frozen prefix can
+  clear — one occurred in this PR
+  (`agents/evidence/reviews/active-remediation-no-open-errors.findings.md`). The
+  two gates disagree on ownership; neither is wrong on its own terms. Recorded,
+  not repaired.
 - **What to do:**
   1. The denominator is measured and is **167 of 247 local gates (68 %)**, not
      the four this roadmap opened with. None of the 167 has a recorded reason in
