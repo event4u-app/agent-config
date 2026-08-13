@@ -6,7 +6,7 @@
 
 ## Overall
 
-**303 / 486 steps done · 62%**
+**305 / 488 steps done · 62%**
 
 ```text
 █████████████████████████░░░░░░░░░░░░░░░   62%
@@ -52,7 +52,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 18 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
 | 19 | [road-to-inbox-harvest-distillation.md](roadmaps/road-to-inbox-harvest-distillation.md) | 4 | 16 | 0 | 9 | 1 | 6 | [2](#blockers-road-to-inbox-harvest-distillation) | ██████████ 100% |
 | 20 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 21 | [road-to-local-only-gate-reds.md](roadmaps/road-to-local-only-gate-reds.md) | 4 | 8 | 8 | 0 | 0 | 0 | [3](#blockers-road-to-local-only-gate-reds) | ░░░░░░░░░░ 0% |
+| 21 | [road-to-local-only-gate-reds.md](roadmaps/road-to-local-only-gate-reds.md) | 4 | 10 | 8 | 2 | 0 | 0 | [3](#blockers-road-to-local-only-gate-reds) | ██░░░░░░░░ 20% |
 | 22 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 23 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 24 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
@@ -584,14 +584,14 @@ _1 blocker resolved._
 
 ### [road-to-local-only-gate-reds.md](roadmaps/road-to-local-only-gate-reds.md)
 
-**Road to local-only gate reds — four red gates nobody sees** — 0 / 8 done (0%)
+**Road to local-only gate reds — four red gates nobody sees** — 2 / 10 done (20%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | the two mechanical repairs | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 2 | the self-test ratchet | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | the roadmap that cannot archive | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 4 | close the class, or state why it stays open | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 4 | close the class, or state why it stays open | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
 
 <a id="blockers-road-to-local-only-gate-reds"></a>
 **Blockers**
@@ -623,14 +623,23 @@ _1 blocker resolved._
   - **Resolved when:** all three read `Status: resolved`, or the roadmap has been moved to `later/` with the reason recorded.
 - **ci-reachability-decision** (owner: user) — blocks Phase 4 — close the class, or state why it stays open
   - **What to do:**
-    1. Read the Phase 4 step 1 measurement — how many `ci` tasks have no workflow
-    counterpart, and how many of those absences are deliberate.
+    1. The denominator is measured and is **167 of 247 local gates (68 %)**, not
+    the four this roadmap opened with. None of the 167 has a recorded reason in
+    either direction, because the checker that would have asked never reported
+    them. Two `local_only` declarations exist; the other 165 have none.
     2. Choose: wire the local-only gates into an existing workflow · add one
     aggregate job for the remainder · accept the gap explicitly and name a
-    cadence for checking trunk state.
-    3. Record the choice where its scope fits — an ADR for the first two, a
-    paragraph in `docs/contracts/ci-green-floor.md` for the third.
-  - **Resolved when:** the decision exists in a tracked artefact and Phase 4 step 2 can cite it.
+    cadence for checking trunk state · or keep the shrink-only baseline as the
+    standing answer and drain it opportunistically.
+    3. Note what the baseline already buys, so the choice is not overstated: a NEW
+    gate registered in `task ci` with no workflow now reds. What it does not
+    buy is remote reach — `check_ci_local_parity` runs in no workflow either, so
+    the ratchet fires only in a local `task ci`. Wiring **that one gate** into a
+    workflow is the smallest change that would give the whole mechanism teeth,
+    and it is a legitimate answer on its own.
+    4. Record the choice where its scope fits — an ADR for the wiring options, a
+    paragraph in `docs/contracts/ci-green-floor.md` for the accept option.
+  - **Resolved when:** the decision exists in a tracked artefact and Phase 4 step 2 can cite it. - **Note:** an AI council was asked to adjudicate this and was unreachable (anthropic quota-exhausted, openai trusted-directory refusal, two attempts). The staged baseline was chosen without it, on the ground that it is the only option adding no unfixable block. It is not a council verdict and does not foreclose the others.
 
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 

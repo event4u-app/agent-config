@@ -29,6 +29,47 @@ That is not automatically a defect. There are legitimate reasons to keep a gate
 out of CI — runtime, flakiness, a dependency the runner lacks. But the reason is
 recorded nowhere, and the consequence is: the four below went unnoticed.
 
+## Correction 2026-08-13 — the cause was found, and it is worse than the symptom
+
+The paragraph above asked why the four went unnoticed. There is a checker whose
+entire purpose is to notice: `check_ci_local_parity`, whose manifest header
+defines the failure class as *"local-only — a gate `task ci` runs that no
+workflow does. Nothing enforces it remotely, so a defect merges"* and cites a
+measured case (16 stale index rows reached the trunk behind a local-only
+`check-index`).
+
+**It could not report that direction at all.** It builds its CI-side set by
+regexing raw workflow text for `task <name>` and expanding each name's closure —
+comments included. Several workflow comments contain the literal string
+`task ci` *while stating that no workflow invokes it*. So `ci` was read as an
+invocation, its 247-gate closure entered the "runs in CI" set, and
+`undeclared_local_only` was **0 by construction**. The prose documenting the gap
+was what suppressed the gate that would have reported it.
+
+Measured at the repair, which ships with this roadmap:
+
+| | before | after |
+|---|---:|---:|
+| `ci` extracted from workflow text | yes | no |
+| CI-side gate count | 273 | 106 |
+| `undeclared_local_only` | 0 | **167** |
+
+167 of 247 local gates — **68 %** — have no remote reach. The four that started
+this roadmap are a sample of that set, not the set.
+
+One further fact bounds what the repair buys: **`check_ci_local_parity` itself
+runs in no workflow.** It is its own finding, so the ratchet added here has no
+remote reach either. Clearing the backlog is what would give it teeth; until
+then it fails only a local `task ci`.
+
+An AI council was asked to adjudicate the disposition and **could not be
+reached** — anthropic `cli_quota_exhausted` (50/50), openai
+`Not inside a trusted directory`, from both the worktree and the main checkout,
+across two attempts. The shrink-only baseline below is therefore a **staged
+choice made without the council**, deliberately the option that adds no
+unfixable block; the alternatives stay open under
+`blocker: ci-reachability-decision`.
+
 ## Prerequisites
 
 - A clean checkout of `main`, no working-tree modifications — three of the four
@@ -124,13 +165,50 @@ re-derive them.
 The three phases above clear four instances. This phase decides whether the
 class recurs.
 
-- [ ] Establish, per gate, why the four are absent from every
+- [x] Establish, per gate, why the four are absent from every
       `.github/workflows/*.yml`. Distinguish a deliberate exclusion (runtime,
       runner dependency, known flakiness) from drift (nobody wired it). Report
       the split; do not assume it is all drift.
       *Verify:* a table of the four with a cited reason each, and the same
       question answered for the rest of the `ci` list — how many `ci` tasks have
       no workflow counterpart at all.
+      → **Answered, and the step's own framing was too small.** The number is
+      **167 of 247** local gates, not four. The reason none of them was reported
+      is a defect in `check_ci_local_parity`, not a per-gate decision: it counted
+      `task ci` mentions inside workflow COMMENTS as invocations, which made its
+      local-only count 0 by construction. See § Correction 2026-08-13.
+      The split the step asked for (deliberate vs drift) is therefore **not
+      answerable per gate today** and is not claimed: with the count suppressed
+      since the checker shipped, no gate was ever put to that question. The
+      declared exemptions that do exist are the manifest's two `local_only`
+      entries; the remaining 165 have no recorded reason in either direction.
+      Repaired here: comments are stripped before extraction, the count is
+      published, and the 167 are recorded as a shrink-only baseline so a NEW
+      gate registered in `task ci` with no workflow reds immediately.
+
+- [x] Pin the repair so it cannot silently regress.
+      *Verify:* a test asserts that the real workflow corpus yields `ci` from raw
+      text and NOT from stripped text, and that the local-only set is neither
+      above its baseline nor silently empty.
+      → Six assertions in `tests/scripts/check_ci_local_parity.test.ts`. One
+      pre-existing assertion had to be **corrected rather than kept**: it read
+      `expect(report.undeclared_local_only).toEqual([])` and passed for the wrong
+      reason — the set was empty by construction, so the test had pinned the
+      defect and would have forced any repair to preserve it.
+
+- [ ] Search the same defect class elsewhere: a checker whose extraction is fed
+      by text that is not an instruction.
+      **Started, one candidate, not proven.** `check_enforcement_coverage` seeds
+      reachability with a bare `wiring.includes(stem)` over raw workflow text —
+      the same shape — while its *script-body* expansion one function later does
+      strip comments. Probed: 13 of 850 script stems appear in workflow text only
+      inside comments, but all 13 are generic English words (`council`, `packs`,
+      `prompts`, `replay`, `telemetry`, …) matching as substrings of prose. So the
+      mechanism is confirmed and the consequence is coverage **inflation**, not
+      the blindness above — a different severity, and unquantified.
+      *Verify:* either a demonstrated false "reachable" verdict for a named
+      script, or a recorded null saying the substring matches carry no verdict
+      weight.
 
 - [ ] Decide what follows from that number, and record the decision.
       The options are genuinely different in cost and none is obviously right:
@@ -213,12 +291,26 @@ remote CI on the PR is the authoritative gate
 - **Owner:** user
 - **Blocks:** Phase 4 — close the class, or state why it stays open
 - **What to do:**
-  1. Read the Phase 4 step 1 measurement — how many `ci` tasks have no workflow
-     counterpart, and how many of those absences are deliberate.
+  1. The denominator is measured and is **167 of 247 local gates (68 %)**, not
+     the four this roadmap opened with. None of the 167 has a recorded reason in
+     either direction, because the checker that would have asked never reported
+     them. Two `local_only` declarations exist; the other 165 have none.
   2. Choose: wire the local-only gates into an existing workflow · add one
      aggregate job for the remainder · accept the gap explicitly and name a
-     cadence for checking trunk state.
-  3. Record the choice where its scope fits — an ADR for the first two, a
-     paragraph in `docs/contracts/ci-green-floor.md` for the third.
+     cadence for checking trunk state · or keep the shrink-only baseline as the
+     standing answer and drain it opportunistically.
+  3. Note what the baseline already buys, so the choice is not overstated: a NEW
+     gate registered in `task ci` with no workflow now reds. What it does not
+     buy is remote reach — `check_ci_local_parity` runs in no workflow either, so
+     the ratchet fires only in a local `task ci`. Wiring **that one gate** into a
+     workflow is the smallest change that would give the whole mechanism teeth,
+     and it is a legitimate answer on its own.
+  4. Record the choice where its scope fits — an ADR for the wiring options, a
+     paragraph in `docs/contracts/ci-green-floor.md` for the accept option.
 - **Resolved when:** the decision exists in a tracked artefact and Phase 4
   step 2 can cite it.
+- **Note:** an AI council was asked to adjudicate this and was unreachable
+  (anthropic quota-exhausted, openai trusted-directory refusal, two attempts).
+  The staged baseline was chosen without it, on the ground that it is the only
+  option adding no unfixable block. It is not a council verdict and does not
+  foreclose the others.
