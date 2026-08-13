@@ -1,10 +1,10 @@
 # Findings: guard-input-prompt-binding
-<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: fd58c016d754b9e82da9d0ba3bbd5016d71e0a5b77be8d9e3d241b0a501fc8c9 | diff: 6b6eed24eaf29592ee588d54e50af48447d7e5a2 | reviewer: r2-fresh-subagent-guard-input-prompt-binding | prompt_hash: 9442b32523a1113bf8bf6976a597218317d3ac5bf7e0d91e6fafd4cf593d4846 -->
+<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: 86beb9112ddbc88202b2b645b2f076516f4bf689d2484338b3b451e3c1076891 | diff: b93df013381e38ae0ca594c810905866b204ed71 | reviewer: r2-fresh-subagent-guard-input-prompt-binding | prompt_hash: 9442b32523a1113bf8bf6976a597218317d3ac5bf7e0d91e6fafd4cf593d4846 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 6b6eed24eaf29592ee588d54e50af48447d7e5a2
-  scope_hash: fd58c016d754b9e82da9d0ba3bbd5016d71e0a5b77be8d9e3d241b0a501fc8c9
+  diff_sha: b93df013381e38ae0ca594c810905866b204ed71
+  scope_hash: 86beb9112ddbc88202b2b645b2f076516f4bf689d2484338b3b451e3c1076891
   roadmap: none
   roadmap_hash: none
   ac_hash: none
@@ -61,6 +61,13 @@ silently by the re-bind:
   baseline is a staged choice recorded as such in the roadmap, not a verdict.
   This is the one entry in this list a reviewer should treat as genuinely
   un-reviewed code rather than as bookkeeping.
+- `b93df0133` — wires `lint-design-antipattern-parity` into `consistency.yml`.
+  Not a discretionary addition: the third merge of `main` brought that gate in
+  registered only in the `ci:` task list, the new ratchet refused the merge at
+  168 against its baseline of 167, and wiring it was the repair. Raising the
+  baseline was rejected as the move its own failure message calls a defect;
+  declaring it `local_only` was rejected because the reason would have been
+  invented. Verified green before wiring, so it adds a passing step.
 - `746f3fd38` — re-measures the gate-script denominator 255 → 257 after the first
   merge brought two further gate scripts. A one-token change to a comment in
   `gate-coverage.yml`, made because leaving a knowingly stale number in the
