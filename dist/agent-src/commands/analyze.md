@@ -5,7 +5,7 @@ disable-model-invocation: true
 argument-hint: "[postmortem|premortem|decision|near-miss|incident|reference-repo|inbox] [subject]"
 pack: analysis-workbench
 intent: "Analysis dispatcher — classify input by keywords, propose a weighted framework path, let the user pick"
-routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-reference-repo, analyze-inbox]
+routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-reference-repo, analyze-inbox, analyze-conformance]
 replaces: []
 tier: 1
 visibility: advanced
@@ -40,6 +40,7 @@ to the chosen sub-command. Never auto-selects silently.
 | `/analyze:incident` | `analyze/incident/command.md` | Full incident flow: commander → RCA → post-mortem → memory candidate |
 | `/analyze:reference-repo` | `analyze/reference-repo/command.md` | Deep-dive an external reference repo (competitor, inspiration, peer) → structured comparison + adoption plan |
 | `/analyze:inbox` | `analyze/inbox/command.md` | Deep-dive a LOCAL artifact dropped in `agents/tmp/` (review, prompt, spec, transcript) → claim verification against the current tree + artefact mapping + roadmap |
+| `/analyze:conformance` | `analyze/conformance/command.md` | Audit recent local sessions for rule violations → deterministic scan + subagent passes, root-caused per class, and a roadmap for what is mechanisable |
 
 ## Dispatch
 
