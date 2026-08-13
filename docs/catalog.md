@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **704 public artefacts** shipped by
+Consumer-facing catalog of all **708 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -436,7 +436,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (196)
+## Commands (200)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -497,6 +497,10 @@ are excluded.
 | command | [`council-design`](../dist/agent-src/commands/council/design.md) | cluster: council | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
 | command | [`council-optimize`](../dist/agent-src/commands/council/optimize.md) | cluster: council | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
 | command | [`council-pr`](../dist/agent-src/commands/council/pr.md) | cluster: council | Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in. |
+| command | [`design-system`](../dist/agent-src/commands/design-system.md) | cluster: design-system | Design-system onramp — generate one from the corpus, import an extractor's output, or capture the current repo's. Three doors onto machinery that already ships. |
+| command | [`design-system-capture`](../dist/agent-src/commands/design-system/capture.md) | cluster: design-system | Inventory this repo's own components and tokens and emit them in the design-system.json shape, so the import path is identical to an external extraction. |
+| command | [`design-system-generate`](../dist/agent-src/commands/design-system/generate.md) | cluster: design-system | Ground a design system in the curated design corpus from a product or industry brief, then optionally persist it as MASTER.md or seed DESIGN.md. |
+| command | [`design-system-import`](../dist/agent-src/commands/design-system/import.md) | cluster: design-system | Run an extraction tool's output through the three-lane adapter into the design-system.json contract, then hand it to the per-field confirmation import. |
 | command | [`estimate-ticket`](../dist/agent-src/commands/estimate-ticket.md) |  | Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt |
 | command | [`explain-run`](../dist/agent-src/commands/explain-run.md) |  | Read-only 'why did that happen' run report — resolved rule set, rules fired, artefact engagement, subagent dispatches, hook/loop/freshness state — even when the user just says 'explain the last run'. |
 | command | [`feature`](../dist/agent-src/commands/feature.md) | cluster: feature | Feature orchestrator — routes to explore, plan, refactor, roadmap, dev |

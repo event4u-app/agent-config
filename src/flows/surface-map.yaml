@@ -59,6 +59,10 @@ commands:
 
   implementation:
     - bug/fix
+    - design-system
+    - design-system/capture
+    - design-system/generate
+    - design-system/import
     - tests/e2e-heal
     - tests/e2e-plan
     - feature/dev
