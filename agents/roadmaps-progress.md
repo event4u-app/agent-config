@@ -2,15 +2,23 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 35 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **46** open blockers, **12** need you → `agent-config gates`
+> 37 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **49** open blockers, **13** need you → `agent-config gates`
 
 ## Overall
 
-**279 / 471 steps done · 59%**
+**294 / 487 steps done · 60%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   59%
+████████████████████████░░░░░░░░░░░░░░░░   60%
 ```
+
+## ⚠️ Iron Law 3 — unresolved deferred items
+
+These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
+
+| Roadmap | Done | Deferred | Cancelled |
+|---|---:|---:|---:|
+| [road-to-inbox-harvest-distillation.md](roadmaps/road-to-inbox-harvest-distillation.md) | 9 | 1 | 6 |
 
 ## ✅ Completed — pending archival
 
@@ -32,33 +40,35 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 6 | [road-to-corpus-knowledge-skills.md](roadmaps/road-to-corpus-knowledge-skills.md) | 6 | 15 | 11 | 3 | 0 | 1 | [2](#blockers-road-to-corpus-knowledge-skills) | ██░░░░░░░░ 21% |
 | 7 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 8 | [road-to-design-system-onramp.md](roadmaps/road-to-design-system-onramp.md) | 5 | 13 | 12 | 0 | 0 | 1 | 0 | ░░░░░░░░░░ 0% |
-| 9 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
-| 10 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 11 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
-| 12 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 2 | 12 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █████████░ 86% |
-| 13 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
-| 14 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
-| 15 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 0 | 12 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | ██████████ 100% |
-| 16 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
-| 17 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
-| 18 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 19 | [road-to-local-only-gate-reds.md](roadmaps/road-to-local-only-gate-reds.md) | 4 | 8 | 8 | 0 | 0 | 0 | [3](#blockers-road-to-local-only-gate-reds) | ░░░░░░░░░░ 0% |
-| 20 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 21 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 22 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
-| 23 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 24 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
-| 25 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 1 | 4 | 15 | 1 | [2](#blockers-road-to-skill-ecosystem-executable-payloads) | ████████░░ 80% |
-| 26 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 27 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
-| 28 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 18 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 19 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
-| 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 31 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 32 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 33 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 34 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 35 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 15 | 3 | 12 | 0 | 0 | [1](#blockers-road-to-zero-settings) | ████████░░ 80% |
+| 9 | [road-to-eval-loop-runnability.md](roadmaps/road-to-eval-loop-runnability.md) | 2 | 7 | 1 | 6 | 0 | 0 | [1](#blockers-road-to-eval-loop-runnability) | █████████░ 86% |
+| 10 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
+| 11 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+| 12 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
+| 13 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 2 | 12 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █████████░ 86% |
+| 14 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
+| 15 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
+| 16 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 0 | 12 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | ██████████ 100% |
+| 17 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
+| 18 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
+| 19 | [road-to-inbox-harvest-distillation.md](roadmaps/road-to-inbox-harvest-distillation.md) | 4 | 16 | 0 | 9 | 1 | 6 | [2](#blockers-road-to-inbox-harvest-distillation) | ██████████ 100% |
+| 20 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 21 | [road-to-local-only-gate-reds.md](roadmaps/road-to-local-only-gate-reds.md) | 4 | 8 | 8 | 0 | 0 | 0 | [3](#blockers-road-to-local-only-gate-reds) | ░░░░░░░░░░ 0% |
+| 22 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 23 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 24 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+| 25 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 26 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+| 27 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 1 | 4 | 15 | 1 | [2](#blockers-road-to-skill-ecosystem-executable-payloads) | ████████░░ 80% |
+| 28 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 29 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+| 30 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 18 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 31 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 19 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
+| 32 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 33 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 34 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 35 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 36 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 37 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 15 | 3 | 12 | 0 | 0 | [1](#blockers-road-to-zero-settings) | ████████░░ 80% |
 
 ---
 
@@ -249,6 +259,24 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 3 | Corpus refresh — close the v2.5 → v2.6 drift | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | Wire the consumers — cross-refs, no duplication | ⬜ not started | 2 | 0 | 0 | 1 | 0% |
 | 5 | Measure | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+
+### [road-to-eval-loop-runnability.md](roadmaps/road-to-eval-loop-runnability.md)
+
+**Eval-loop runnability — one dead root the sweep cannot see** — 6 / 7 done (86%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Report Class-A dead roots outside the gate population | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | Decide the orchestrator's disposition | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+
+<a id="blockers-road-to-eval-loop-runnability"></a>
+**Blockers**
+
+- **eval-orchestrator-disposition** (owner: user) — blocks Phase 2 — Decide the orchestrator's disposition
+  - **What to do:**
+    1. Decide whether the ADR-051 faithful-twin carve-out on `run_skill_evals.ts` outranks the orchestrator being runnable.
+    2. Pick one: repoint `SKILLS_ROOT` to `src/skills` (breaks the byte-identical-parity contract), retire the orchestrator, or accept the cost with a dated reason in the file header.
+  - **Resolved when:** the maintainer states which of the three dispositions applies.
 
 ### [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md)
 
@@ -516,6 +544,35 @@ _1 blocker resolved._
     ~18 permanent findings, which is the allowlist-fatigue shape this repo's own
     rules warn about.
   - **Resolved when:** the files are deleted, or a reason to keep them is recorded.
+
+### [road-to-inbox-harvest-distillation.md](roadmaps/road-to-inbox-harvest-distillation.md)
+
+**Road to harvested-claim provenance and router-head skills** — 9 / 9 done (100%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | A harvested claim is citable or it is labelled | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 2 | Personas may declare what they are allowed to cite | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 3 | The synthesis half that is actually missing | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 4 | The documented cap becomes a gate | ✅ done | 0 | 2 | 1 | 6 | 100% |
+
+<a id="blockers-road-to-inbox-harvest-distillation"></a>
+**Blockers**
+
+- **router-head-retrofit-instrument** (owner: maintainer) — blocks step 4.3 only. Steps 4.1 and 4.2 are unblocked — they constrain new skills and do not require the retrofit.
+  - **What to do:**
+    either supply an instrument that observes what the host
+    actually loads on skill trigger (no such observation exists in this tree
+    today), or decide explicitly that the published K6 cap is reason enough to
+    restructure the three offenders without a token claim.
+  - **Resolved when:** an instrument exists and has produced a before/after reading on one skill, **or** a maintainer decision is recorded that the contract alone justifies the retrofit.
+- **first-contract-true-analysis-run** (owner: maintainer) — blocks nothing in this roadmap. Recorded because the consumed drafts raised it and it is a real gap: no artefact under `agents/evidence/analysis/` shows `/analyze:reference-repo` having been run end-to-end under its own §5b convergence contract — `ls agents/evidence/analysis/ | grep compare` returns nothing. The drafts themselves were produced *outside* the command, so its contract has an untested path.
+  - **What to do:**
+    run the command against a small reference and land the
+    evidence artefact. Two things make this a maintainer call rather than an
+    autonomous step: it spends on external fetches, and its output is raw named
+    evidence, which `source-confidentiality` keeps local-only unless anonymised.
+  - **Resolved when:** one evidence artefact exists that was produced by the command rather than by an ad-hoc pass.
 
 ### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
 

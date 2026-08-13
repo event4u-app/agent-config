@@ -148,6 +148,36 @@ export function classify(rel: string): TriageClass {
     return 'C';
 }
 
+/**
+ * Non-gate scripts eligible for the Class-A advisory pass.
+ *
+ * WHY A SECOND POPULATION EXISTS AT ALL. The gate population above is
+ * deliberately shared with the ratchet and the registration test, because three
+ * sites once carried their own regex and disagreed. That sharing is worth
+ * keeping — but it means the sweep's reach is a FILENAME PREFIX, and a script
+ * reading a retired container is dead whether or not its name starts with one
+ * of five words. Measured: `run_skill_evals.ts` roots its `SKILLS_ROOT` at the
+ * skills subtree of the container ADR-051 retired (see `CLASS_A_RETIRED`), and
+ * every subcommand fails in `_skill_dir()` before doing any work — while its
+ * sibling `skill_trigger_eval.ts`, same retired root and a `skill_` prefix, is
+ * reported. One visible, one not, on the prefix alone.
+ *
+ * So this pass widens the READING, never the shared population: it is
+ * Class-A-only (a closed set of retired containers, needing no allowlist to stay
+ * honest), it is advisory, and it feeds neither the ratchet count nor the exit
+ * code. Widening `matchesGatePattern` instead would move the ratchet base for a
+ * reason unrelated to any gate.
+ */
+export function isNonGateScript(filename: string): boolean {
+    if (!filename.endsWith('.ts')) return false;
+    if (filename.endsWith('.d.ts') || filename.endsWith('.test.ts')) return false;
+    // This file declares the retired containers as a classification table
+    // (`CLASS_A_RETIRED`); reading its own constant back as a dead root is a
+    // self-report, not a finding.
+    if (filename === 'sweep_dead_scan_roots.ts') return false;
+    return !isGateFile(filename);
+}
+
 export interface Finding {
     rel: string;
     names: string;
@@ -827,6 +857,20 @@ export function main(argv: string[]): number {
         if (r.confirmed.length || r.unproven.length) results.set(f, r);
     }
 
+    // Class-A advisory over the scripts the shared gate population cannot reach.
+    // Reuses the same extractor, so a prose mention or a report string is not a
+    // finding — only a literal join over a recognised root base is.
+    const advisory: string[] = [];
+    const advisoryPop = fs.existsSync(args.scripts)
+        ? fs.readdirSync(args.scripts).filter(isNonGateScript).sort()
+        : [];
+    for (const f of advisoryPop) {
+        const r = analyze(fs.readFileSync(path.join(args.scripts, f), 'utf-8'), repoRoot);
+        for (const h of [...r.confirmed, ...r.unproven]) {
+            if (classify(h.rel) === 'A') advisory.push(`  advisory  [A] ${f}: ${h.rel} (${h.names})`);
+        }
+    }
+
     const used = new Set<Disposition>();
     const disposed = (script: string, rel: string): Disposition | undefined => {
         const hit = ledger.find((l) => l.script === script && l.rel === rel);
@@ -899,6 +943,13 @@ export function main(argv: string[]): number {
     if (!args.quiet) {
         process.stdout.write(`sweep_dead_scan_roots: ${pop.length} gate script(s) scanned\n`);
         for (const l of lines) process.stdout.write(`${l}\n`);
+        if (advisory.length) {
+            process.stdout.write(
+                `sweep_dead_scan_roots: ${advisoryPop.length} non-gate script(s) scanned ` +
+                    '(Class-A advisory — not counted, not gated)\n',
+            );
+            for (const l of advisory) process.stdout.write(`${l}\n`);
+        }
     }
 
     if (stale.length) {
