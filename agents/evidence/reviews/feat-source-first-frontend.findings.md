@@ -1,16 +1,16 @@
 # Findings: feat-source-first-frontend
-<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: 614e4eca456fba8af2228a01487db5e09c182890d2dfa7fa036473acc411e113 | diff: 4f7744dc6107942ca990cebdc89ee3b93a7315bc | reviewer: r2-fresh-subagent-feat-source-first-frontend | prompt_hash: 3078c558cd0e50e49ab1d34788fd9a20896bef7a75700d81af70cb87d9aef03f -->
+<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: 0f094ab6dcb6f1c4e6892d2ab4d28ea62921d6c7280b7d52cca7b138a786cf8a | diff: e97242bdb1f8acfdcf9e5b5547057517f41a70c0 | reviewer: r2-fresh-subagent-feat-source-first-frontend | prompt_hash: ccea4bcc772d1951dc7f5161818288d0cf05a1a93f027d6af872c1e584fef2ac -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 4f7744dc6107942ca990cebdc89ee3b93a7315bc
-  scope_hash: 614e4eca456fba8af2228a01487db5e09c182890d2dfa7fa036473acc411e113
+  diff_sha: e97242bdb1f8acfdcf9e5b5547057517f41a70c0
+  scope_hash: 0f094ab6dcb6f1c4e6892d2ab4d28ea62921d6c7280b7d52cca7b138a786cf8a
   roadmap: agents/roadmaps/road-to-source-first-frontend.md
   roadmap_hash: 179ffdfe36688fa3b75583d04d3540a7e929f63b6c3b6981d2b1697c19155683
   ac_hash: e03ec29dc72033d4c8d6693ceaab4473032eaa46e5f81970ebeab800a6d6320b
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-08-13T01:24:30Z
+dispatched: 2026-08-13T04:43:11Z
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
