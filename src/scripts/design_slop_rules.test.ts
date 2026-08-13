@@ -124,6 +124,42 @@ const FIXTURES: Record<string, { ext: string; positive: string; negative: string
     // only 2 consecutive → within cap
     negative: '<section><div class="grid"><img src="x"><h2>A</h2><p>t</p></div></section>'.repeat(2),
   },
+  "slop-v4-over-rounded": {
+    ext: "css",
+    // 24px radius on an 80px chip — mid-range rounding on a small surface
+    positive: ".chip{width:80px;border-radius:24px;background:#1f5f9c}",
+    // a deliberate pill is a shape decision, not over-rounding
+    negative: ".chip{width:80px;border-radius:9999px;background:#1f5f9c}",
+  },
+  "slop-c3-dark-glow": {
+    ext: "css",
+    // zero-offset saturated glow inside a declared dark surface
+    positive: ".dark .btn{background:#0b0f14;box-shadow:0 0 18px #22d3ee}",
+    // same dark surface, ordinary offset depth — not a glow
+    negative: ".dark .btn{background:#0b0f14;box-shadow:0 2px 8px #22d3ee}",
+  },
+  "slop-t9-uppercase-body": {
+    ext: "css",
+    positive: "article p{text-transform:uppercase;font-size:16px}",
+    // a short field label is the legitimate home of uppercase
+    negative: ".field-label{text-transform:uppercase;font-size:12px}",
+  },
+  "slop-t10-wide-tracking-body": {
+    ext: "css",
+    positive: "article p{letter-spacing:0.12em;font-size:16px}",
+    negative: "article p{letter-spacing:0.01em;font-size:16px}",
+  },
+  "slop-m1-bounce-easing": {
+    ext: "css",
+    // y1 = 1.56 overshoots the target and returns — the bounce signature
+    positive: ".card{transition:transform .3s cubic-bezier(.34,1.56,.64,1)}",
+    negative: ".card{transition:transform .3s cubic-bezier(.4,0,.2,1)}",
+  },
+  "slop-m3-img-hover-transform": {
+    ext: "css",
+    positive: ".tile:hover img{transform:scale(1.05)}",
+    negative: ".tile:hover .tile__title{color:#16202b}",
+  },
 };
 
 function findingsFor(ruleId: string, content: string, ext: string, ctx = NO_CTX) {

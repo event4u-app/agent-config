@@ -514,4 +514,145 @@ export const SLOP_RULES: SlopRule[] = [
       return [];
     },
   },
+  // -------------------------------------------------------------------------
+  // Catalog thresholds promoted to rules (road-to-design-detector-evidence
+  // Phase 3). Each entry below already published its number in
+  // docs/guidelines/design-antipatterns.md — the prose is the specification,
+  // nothing here is invented, and each was graded per rule against the clean
+  // corpus rather than as a batch.
+  // -------------------------------------------------------------------------
+  {
+    id: "slop-v4-over-rounded",
+    catalogId: "V4",
+    severity: "P3",
+    engines: ["css"],
+    description: "border-radius > 16px on an element declared under 200px wide",
+    message: "Heavy rounding on a small surface reads as scaffold-default; scale the radius to the element (V4).",
+    gated: (ctx) => ctx.has("pill", "fully rounded", "soft ui", "claymorphism"),
+    detect: ({ content }) =>
+      cssBlocks(content)
+        .filter((b) => {
+          // A pill (9999px / 50% / 999px) and a circle are deliberate shapes,
+          // not over-rounding — the tell is a mid-range radius on a small box.
+          const r = /border-radius\s*:\s*(\d+)px/i.exec(b.body);
+          if (!r?.[1]) return false;
+          const radius = parseInt(r[1], 10);
+          if (radius <= 16 || radius >= 100) return false;
+          // "small" must be declared in the same block; nothing here infers
+          // layout, because inferring it would need a cascade.
+          const size = /(?:^|[;{\s])(?:max-)?(?:width|height)\s*:\s*(\d+)px/i.exec(b.body);
+          return size?.[1] !== undefined && parseInt(size[1], 10) < 200;
+        })
+        .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) })),
+  },
+  {
+    id: "slop-c3-dark-glow",
+    catalogId: "C3",
+    severity: "P2",
+    engines: ["css"],
+    description: "Saturated zero-offset glow (box-shadow / text-shadow) in a dark context",
+    message: "A neon glow on dark reads as gaming-UI default rather than a considered accent (C3).",
+    gated: (ctx) => ctx.has("glow", "neon", "cyberpunk", "gaming"),
+    detect: ({ content, lines }) => {
+      // The tell is dark-context-specific, so a file with no dark surface at all
+      // is out of scope — a glow on a light page is a different question.
+      const darkContext =
+        /prefers-color-scheme\s*:\s*dark/i.test(content) ||
+        /\.dark\b|\[data-theme=["']?dark/i.test(content) ||
+        /background(?:-color)?\s*:\s*#(?:0[0-9a-f]{5}|1[0-9a-f]{5}|000|111)\b/i.test(content);
+      if (!darkContext) return [];
+      const out: RawHit[] = [];
+      for (let i = 0; i < lines.length; i++) {
+        const l = lines[i] ?? "";
+        // zero-offset + real blur is the glow signature; an offset shadow is depth.
+        const m = /(?:box|text)-shadow\s*:\s*0\s+0\s+(\d+)px[^;]*?(#[0-9a-f]{3,8})/i.exec(l);
+        if (!m?.[1] || !m[2]) continue;
+        if (parseInt(m[1], 10) < 8) continue;
+        if (hueBucket(m[2]) === null) continue; // a neutral halo is not a neon accent
+        out.push({ line: i + 1, snippet: l.trim().slice(0, 80) });
+      }
+      return out;
+    },
+  },
+  {
+    id: "slop-t9-uppercase-body",
+    catalogId: "T9",
+    severity: "P3",
+    engines: ["css"],
+    description: "text-transform: uppercase applied to body-length text",
+    message: "All-caps destroys word-shape for sustained reading; reserve it for short labels (T9).",
+    gated: (ctx) => ctx.has("all caps", "all-caps", "uppercase display"),
+    detect: ({ content }) =>
+      cssBlocks(content)
+        // Short UI surfaces (labels, buttons, table headers, badges, eyebrows)
+        // are the legitimate home of uppercase and are excluded by selector.
+        .filter((b) => /\b(p|body|article|\.prose|\.body|\.content|\.copy|blockquote|li)\b/i.test(b.selector))
+        .filter((b) => !/label|button|\bth\b|badge|chip|tag|eyebrow|kicker|caption|nav/i.test(b.selector))
+        .filter((b) => /text-transform\s*:\s*uppercase/i.test(b.body))
+        .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) })),
+  },
+  {
+    id: "slop-t10-wide-tracking-body",
+    catalogId: "T10",
+    severity: "P3",
+    engines: ["css"],
+    description: "letter-spacing above 0.05em on body-length text",
+    message: "Wide tracking slows sustained reading; it belongs to display type, not body (T10).",
+    gated: (ctx) => ctx.has("wide tracking", "letterspacing", "letter-spacing"),
+    detect: ({ content }) =>
+      cssBlocks(content)
+        .filter((b) => /\b(p|body|article|\.prose|\.body|\.content|\.copy|blockquote|li)\b/i.test(b.selector))
+        .filter((b) => !/label|button|\bth\b|badge|chip|tag|eyebrow|kicker|caption|nav|h[1-6]/i.test(b.selector))
+        .filter((b) => {
+          const em = /letter-spacing\s*:\s*(\d*\.?\d+)(em|rem)/i.exec(b.body);
+          if (em?.[1]) return parseFloat(em[1]) > 0.05;
+          const px = /letter-spacing\s*:\s*(\d*\.?\d+)px/i.exec(b.body);
+          return px?.[1] !== undefined && parseFloat(px[1]) > 0.8;
+        })
+        .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) })),
+  },
+  {
+    id: "slop-m1-bounce-easing",
+    catalogId: "M1",
+    severity: "P2",
+    engines: ["css"],
+    description: "Bounce or elastic easing on a UI transition",
+    message: "Overshoot draws attention to the animation instead of the state change (M1).",
+    gated: (ctx) => ctx.has("bounce", "playful motion", "elastic"),
+    detect: ({ lines }) => {
+      const out: RawHit[] = [];
+      for (let i = 0; i < lines.length; i++) {
+        const l = lines[i] ?? "";
+        // Overshoot is decidable from the curve itself: a control point outside
+        // [0,1] on the output axis means the value passes its target and returns.
+        const cb = /cubic-bezier\(\s*[-\d.]+\s*,\s*(-?[\d.]+)\s*,\s*[-\d.]+\s*,\s*(-?[\d.]+)\s*\)/i.exec(l);
+        if (cb?.[1] !== undefined && cb[2] !== undefined) {
+          const y1 = parseFloat(cb[1]);
+          const y2 = parseFloat(cb[2]);
+          if (y1 < 0 || y1 > 1 || y2 < 0 || y2 > 1) {
+            out.push({ line: i + 1, snippet: l.trim().slice(0, 80) });
+            continue;
+          }
+        }
+        if (/(?:transition|animation)[^;]*\b(?:bounce|elastic|back(?:In|Out|InOut))\b/i.test(l)) {
+          out.push({ line: i + 1, snippet: l.trim().slice(0, 80) });
+        }
+      }
+      return out;
+    },
+  },
+  {
+    id: "slop-m3-img-hover-transform",
+    catalogId: "M3",
+    severity: "P3",
+    engines: ["css"],
+    description: "transform or filter animation on an <img> hover",
+    message: "Hover-scaling an image triggers composite plus decode and often shifts layout (M3).",
+    gated: (ctx) => ctx.has("image hover", "hover zoom", "ken burns"),
+    detect: ({ content }) =>
+      cssBlocks(content)
+        .filter((b) => /\bimg\b/i.test(b.selector) && /:hover|:focus-within/i.test(b.selector))
+        .filter((b) => /(?:^|[;{\s])(?:transform|filter)\s*:/i.test(b.body))
+        .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) })),
+  },
 ];

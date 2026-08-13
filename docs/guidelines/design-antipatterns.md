@@ -219,14 +219,14 @@ are listed in § Quality floors.
 | V1 | backed | |
 | V2 | judgment-only | decoration-vs-intent is the tell; a text pass cannot read intent |
 | V3 | backed | |
-| V4 | candidate | `border-radius` > 16px on elements under 200px wide |
+| V4 | backed | |
 | V5 | judgment-only | icon register collision is a visual-style comparison |
 | V6 | backed | |
 | V7 | judgment-only | DOM-structure nesting depth, measured too false-positive-prone |
 | V8 | backed | |
 | C1 | judgment-only | the tell is the combination *as the primary scheme*; which colours are primary is a judgment |
 | C2 | backed | |
-| C3 | candidate | neon `box-shadow` / `text-shadow` accents on a dark surface |
+| C3 | backed | |
 | C4 | floor | WCAG contrast, Q1 |
 | C5 | backed | |
 | C6 | judgment-only | demoted 2026-08-13 at M1 = 4 of 32 clean files; the rule counted every saturated hue, so one accent plus a semantic danger colour reached its threshold — which is correct design, not the tell this entry describes |
@@ -239,8 +239,8 @@ are listed in § Quality floors.
 | T6 | backed | |
 | T7 | backed | |
 | T8 | deferred | typeface count is a design-system opinion, not a floor |
-| T9 | candidate | `text-transform: uppercase` on body-length text |
-| T10 | candidate | `letter-spacing` above 0.05em on body text |
+| T9 | backed | |
+| T10 | backed | |
 | L1 | judgment-only | composite structural template |
 | L2 | judgment-only | three-identical-card grid; DOM-structure analysis |
 | L3 | deferred | spacing-multiple uniformity is a design-system opinion |
@@ -251,9 +251,9 @@ are listed in § Quality floors.
 | L8 | backed | |
 | L9 | backed | |
 | L10 | backed | |
-| M1 | candidate | bounce or elastic easing on UI transitions |
+| M1 | backed | |
 | M2 | backed | |
-| M3 | candidate | transform or filter animation on an `<img>` hover |
+| M3 | backed | |
 | M4 | backed | |
 | M5 | floor | reduced-motion alternative, Q4 |
 | CP1 | backed | |
