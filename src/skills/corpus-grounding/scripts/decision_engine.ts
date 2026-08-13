@@ -532,12 +532,6 @@ function _select_best_match(
 // ── grounding ────────────────────────────────────────────────────────────
 
 /**
- * Conditional grounding: category → rules → planned multi-domain search.
- *
- * Returns the interface-v1 grounded dict (see Python docstring). Async because
- * `_load_rules_callable` is async (dynamic import).
- */
-/**
  * The three optional 1-10 design dials.
  *
  * Adapted from the upstream generator's tier table (MIT; see
@@ -593,6 +587,15 @@ export function resolve_dial(dial_name: string, value: number | null | undefined
     return null;
 }
 
+/**
+ * Conditional grounding: category → rules → planned multi-domain search.
+ *
+ * Returns the interface-v1 grounded dict (see Python docstring). Async because
+ * `_load_rules_callable` is async (dynamic import).
+ *
+ * `dials` is optional and additive: with none passed, the returned dict is
+ * exactly what it was before dials existed.
+ */
 export async function ground(
     manifest: Manifest,
     query: string,
@@ -664,16 +667,28 @@ export async function ground(
             .filter((s) => s.length > 0);
     }
 
-    // 4b — dials. Variance BIASES the existing priority list rather than
-    // replacing it: the rule's own keywords are grounded in the corpus, the
-    // dial is a caller preference, and a preference that silently overrode
-    // grounded evidence would invert this engine's whole point.
+    // 4b — dials.
+    //
+    // Variance biases SELECTION, never RETRIEVAL, and never silently.
+    //
+    // An earlier version prepended the dial's keywords to `priority` outright.
+    // That looked like "biasing" and was not: `priority.slice(0, 2)` augments
+    // the query, so the rule's own corpus-grounded keywords were pushed out of
+    // the retrieval entirely, and five dial keywords then outscored two rule
+    // keywords in the match. The dial did not bias the evidence — it replaced
+    // it, and nothing said so.
+    //
+    // Split instead. `priority` stays the rule's, so what comes BACK from the
+    // corpus is unchanged by the dial. `selection_priority` carries the dial in
+    // front for choosing among those rows — which is what a preference dial is
+    // legitimately for. And when that choice differs from the one the rule's own
+    // keywords would have made, it is reported rather than left invisible.
     const variance_info = resolve_dial('variance', dials?.variance);
     const motion_info = resolve_dial('motion', dials?.motion);
     const density_info = resolve_dial('density', dials?.density);
-    if (variance_info) {
-        priority = [...(variance_info.style_keywords as string[]), ...priority];
-    }
+    const selection_priority = variance_info
+        ? [...(variance_info.style_keywords as string[]), ...priority]
+        : priority;
 
     // 5 — planned multi-domain search.
     const selections: ResultDict = {};
@@ -689,12 +704,28 @@ export async function ground(
         }
         const result = search_domain(manifest, q, domain_name, _int(max_results));
         const results = (result.results as Row[] | null) || [];
-        const best =
-            domain_name === priority_domain
-                ? _select_best_match(results, priority, name_cols[domain_name])
-                : results.length > 0
-                  ? (results[0] as Row)
-                  : {};
+        let best: Row;
+        if (domain_name === priority_domain) {
+            best = _select_best_match(results, selection_priority, name_cols[domain_name]);
+            if (variance_info) {
+                // What the rule alone would have picked from the SAME rows.
+                // Reporting the divergence is the whole difference between a
+                // dial that biases and a dial that quietly overrules.
+                const ungated = _select_best_match(results, priority, name_cols[domain_name]);
+                if (ungated !== best) {
+                    const col = name_cols[domain_name];
+                    const nameOf = (r: Row): string =>
+                        col && r[col] !== undefined ? pyStr(r[col]) : '(unnamed)';
+                    gaps.push(
+                        `--variance ${String(variance_info.value)} changed the ${domain_name} pick to ` +
+                            `'${nameOf(best)}'; the rule's own keywords would have selected ` +
+                            `'${nameOf(ungated)}' — the dial biased the choice, it did not come from the corpus`,
+                    );
+                }
+            }
+        } else {
+            best = results.length > 0 ? (results[0] as Row) : {};
+        }
         selections[domain_name] = {
             best,
             // Python: [r for r in results if r is not best] — identity compare.
@@ -717,25 +748,42 @@ export async function ground(
     let motion_selection: ResultDict | null = null;
     if (motion_info) {
         const tier = motion_info.tier as string;
-        const motion_domain = (manifest.domains as Record<string, unknown>)['gsap'];
+        const motion_domain = (manifest.domains as Record<string, ResultDict>)['gsap'];
         if (motion_domain === undefined) {
             gaps.push(
                 "the --motion dial needs a 'gsap' search domain (motion.csv); this manifest has none, so the dial had no effect",
             );
         } else {
-            const motion_result = search_domain(manifest, `${query} ${tier}`, 'gsap', 5);
-            const rows = ((motion_result.results as Row[] | null) || []).filter(
-                (r) => pyStr(r['Intensity Tier']) === tier,
+            // FILTER FIRST, then rank. Retrieving the global top-N and filtering
+            // afterwards drops rows at the requested tier that lost the global
+            // cut to rows of another tier — the dial then silently returns less
+            // than the corpus holds for it. `search_domain` already merges a
+            // filters dict (it is what the `--filter` flag uses), and the row
+            // count comes from the manifest like every other domain rather than
+            // from a literal here.
+            const motion_max = motion_domain['max_results'];
+            const motion_result = search_domain(
+                manifest,
+                query,
+                'gsap',
+                typeof motion_max === 'number' ? motion_max : null,
+                { 'Intensity Tier': tier },
             );
+            const rows = (motion_result.results as Row[] | null) || [];
             if (rows.length === 0) {
+                // No block at all, not an empty one: `motion: {best: {}}` reads
+                // as "the dial ran and found nothing worth showing", which is
+                // indistinguishable from a corpus that has nothing at this tier.
+                // The gap says which, and the absent key says the rest.
                 gaps.push(`no motion row at tier '${tier}' matched the query — the dial narrowed to nothing`);
+            } else {
+                motion_selection = {
+                    tier,
+                    best: rows[0] as Row,
+                    alternatives: rows.slice(1),
+                    confidence: motion_result.confidence,
+                };
             }
-            motion_selection = {
-                tier,
-                best: rows.length > 0 ? (rows[0] as Row) : {},
-                alternatives: rows.slice(1),
-                confidence: motion_result.confidence,
-            };
         }
     }
 
@@ -861,6 +909,50 @@ export function _render_markdown(grounded: ResultDict, master = false): string {
         `- **Confidence:** ${pyStr(conf.label ?? '?')} ` + `(${_confScore(conf.score)})`,
         '',
     );
+
+    // Dials render HERE, not only under --json. This is the whole consumption
+    // path for two of the three output paths: the default text render and the
+    // persisted MASTER.md both come through this function, and `--density`'s
+    // only payload is `spacing_scale` — omitted here, that dial is inert
+    // everywhere a human actually reads the result.
+    const dials = (grounded.dials as ResultDict | null) || null;
+    if (dials) {
+        const dialLines: string[] = [];
+        for (const name of ['variance', 'motion', 'density']) {
+            const value = dials[name];
+            if (value === null || value === undefined) {
+                continue;
+            }
+            const label = dials[`${name}_label`];
+            dialLines.push(
+                `- **${name[0]?.toUpperCase()}${name.slice(1)}:** ${pyStr(value)}/10` +
+                    (label ? ` — ${pyStr(label)}` : ''),
+            );
+        }
+        if (dialLines.length > 0) {
+            lines.push('### Dials', '', ...dialLines, '');
+        }
+    }
+
+    const spacing = (grounded.spacing_scale as ResultDict | null) || null;
+    if (spacing && Object.keys(spacing).length > 0) {
+        lines.push('### Spacing scale (density override)', '');
+        for (const step of Object.keys(spacing)) {
+            lines.push(`- **${step}:** ${pyStr(spacing[step])}`);
+        }
+        lines.push('');
+    }
+
+    const motion = (grounded.motion as ResultDict | null) || null;
+    const motionBest = motion ? ((motion.best as Row | null) || {}) : {};
+    if (motion && Object.keys(motionBest).length > 0) {
+        lines.push(`### Motion (tier: ${pyStr(motion.tier ?? '')})`, '');
+        for (const key of Object.keys(motionBest)) {
+            lines.push(`- **${key}:** ${pyStr(motionBest[key])}`);
+        }
+        lines.push('');
+    }
+
     const selections = (grounded.selections as ResultDict | null) || {};
     for (const domain of Object.keys(selections)) {
         const sel = (selections[domain] as ResultDict | null) || {};

@@ -8,14 +8,28 @@
  *
  * The no-flag path is pinned too, and it is the load-bearing one: the dials'
  * whole contract is that an unset dial changes nothing, so a run without flags
- * must carry none of the three output keys.
+ * must carry none of the three output keys. That block calls the REAL
+ * `ground()` — an earlier version of this file claimed the contract was pinned
+ * while every test exercised `resolve_dial` in isolation, which is a different
+ * statement and would have held even if `ground()` emitted the keys always.
  */
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { describe, expect, it } from 'vitest';
 
 import {
     DIAL_TIERS,
+    ground,
     resolve_dial,
 } from '../../src/skills/corpus-grounding/scripts/decision_engine.js';
+import { load_manifest } from '../../src/skills/corpus-grounding/scripts/schema_validator.js';
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const MANIFEST = path.resolve(
+    HERE,
+    '../../src/skills/design-intelligence/data/manifest.json',
+);
 
 describe('dial tier boundaries', () => {
     const boundaries: Array<[string, number, string]> = [
@@ -69,6 +83,81 @@ describe('dial engagement', () => {
 
     it('returns null for an unknown dial name rather than throwing', () => {
         expect(resolve_dial('saturation', 5)).toBeNull();
+    });
+});
+
+/**
+ * The contract the branch calls load-bearing, asserted against the real
+ * `ground()` rather than against `resolve_dial` in isolation.
+ *
+ * The first version of this file claimed in its own docstring that the no-flag
+ * path was "pinned" while no test called `ground()` at all — `resolve_dial(x,
+ * null) === null` is a different statement and would hold even if `ground()`
+ * emitted the keys unconditionally.
+ */
+describe('the no-flag contract, against the real ground()', () => {
+    const manifest = load_manifest(MANIFEST);
+    const QUERY = 'clean minimal saas landing page';
+
+    it('emits none of the dial keys when no dial is passed', async () => {
+        const out = await ground(manifest, QUERY);
+        expect(out['dials']).toBeUndefined();
+        expect(out['motion']).toBeUndefined();
+        expect(out['spacing_scale']).toBeUndefined();
+    });
+
+    it('emits none of them for an all-null dial object either', async () => {
+        const out = await ground(manifest, QUERY, null, {
+            variance: null,
+            motion: null,
+            density: null,
+        });
+        expect(out['dials']).toBeUndefined();
+        expect(out['spacing_scale']).toBeUndefined();
+    });
+
+    it('leaves the top-level key set unchanged', async () => {
+        const bare = Object.keys(await ground(manifest, QUERY)).sort();
+        expect(bare).toEqual([
+            'category',
+            'confidence',
+            'domain',
+            'evidence_gap',
+            'query',
+            'rule',
+            'rules_evaluation',
+            'selections',
+        ]);
+    });
+
+    it('density adds a spacing scale and nothing else', async () => {
+        const out = await ground(manifest, QUERY, null, { density: 9 });
+        expect(out['spacing_scale']).toBeDefined();
+        expect(out['motion']).toBeUndefined();
+    });
+});
+
+describe('variance biases selection, never retrieval, and never silently', () => {
+    const manifest = load_manifest(MANIFEST);
+    const QUERY = 'clean minimal saas landing page';
+
+    it('returns the same rows with and without the dial', async () => {
+        const bare = await ground(manifest, QUERY);
+        const dialled = await ground(manifest, QUERY, null, { variance: 1 });
+        const names = (r: Record<string, unknown>): string[] => {
+            const sel = (r['selections'] as Record<string, Record<string, unknown>>)['style'] ?? {};
+            const best = (sel['best'] ?? {}) as Record<string, unknown>;
+            const alts = (sel['alternatives'] ?? []) as Array<Record<string, unknown>>;
+            return [best, ...alts].map((x) => String(x['Style Category'] ?? '')).sort();
+        };
+        expect(names(dialled)).toEqual(names(bare));
+    });
+
+    it('reports the divergence when the dial changes the pick', async () => {
+        const out = await ground(manifest, QUERY, null, { variance: 1 });
+        const gaps = (out['evidence_gap'] as string[]).join(' ');
+        expect(gaps).toContain('--variance 1 changed the style pick');
+        expect(gaps).toContain("the rule's own keywords would have selected");
     });
 });
 
