@@ -268,7 +268,10 @@ Write the pick to frontmatter as `execution.mode:`
   rewrite each hit as an agent-verifiable check (a command, a targeted
   test) **before saving**, or promote it to a structured `## Blockers`
   entry: a **human gate** only when only a human can decide/authorize
-  (Hard-Floor authorization, billable spend, contested decision); an
+  (Hard-Floor authorization, billable spend, or a decision bound to
+  preference, risk appetite, or product intent). A contested **technical**
+  decision is not a human gate while a council is configured — it is a
+  step whose first action runs the council (template rule 22); an
   **external dependency** becomes a blocker whose `Resolved when:`
   names an agent-checkable status probe — never a human gate. Do not
   author safety floors as steps — they fire at run time on their own.

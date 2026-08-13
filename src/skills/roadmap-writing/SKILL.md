@@ -152,14 +152,24 @@ Sign-off" phases are authoring bugs; replace each with an
 agent-verifiable check (a command, a targeted test, a grep). Never
 restate run-time safety floors as steps.
 
-Gate-test before any checkpoint: *"Could the agent clear this with a
-tool or command during the run?"* Yes → step, not gate. No →
-structured `## Blockers` entry (§ 5b), distinguishing per rule 22:
-**human gate** (only a human can decide/authorize — Hard-Floor
-authorization, billable spend, contested decision) vs **external
-blocker** (agent cannot resolve but CAN probe status — CI run, package
-release, upstream PR; `Resolved when:` carries the probe, owner is
-not a human). Merge is never a completion requirement — it may appear
+Gate-test before any checkpoint, in order: **1.** *"Could the agent clear
+this with a tool or command during the run?"* Yes → step, not gate.
+**2.** *"Does it have a technical answer a council could reach?"* Yes →
+still a step; its first action runs the council and the phase records the
+verdict. A contested **technical** decision is not a human gate while a
+council is configured — `decision_resolution` already routes a contract
+or architecture change to `medium_impact → council`
+([`ai-council-config`](../../../docs/contracts/ai-council-config.md)), and
+authoring it as a gate contradicts that. `agent-config council:status`
+answers availability; never infer it from the tree
+([`council-availability`](../../rules/council-availability.md)).
+**3.** Only what survives both → structured `## Blockers` entry (§ 5b),
+distinguishing per rule 22: **human gate** (only a human can
+decide/authorize — Hard-Floor authorization, billable spend, or a
+decision bound to preference, risk appetite, or product intent) vs
+**external blocker** (agent cannot resolve but CAN probe status — CI run,
+package release, upstream PR; `Resolved when:` carries the probe, owner
+is not a human). Merge is never a completion requirement — it may appear
 as a blocker only when later roadmap work depends on the merged state.
 `lint_roadmap_complexity` warns on human-gate patterns in every mode.
 
