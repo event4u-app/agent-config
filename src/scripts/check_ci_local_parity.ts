@@ -30,6 +30,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { checkRatchet } from './_lib/gate_baseline.js';
+
 const _FILE = fileURLToPath(import.meta.url);
 export const REPO = path.resolve(path.dirname(_FILE), '..', '..');
 const MANIFEST = path.join(REPO, 'src', 'config', 'ci-local-parity.yml');
@@ -202,13 +204,49 @@ export function local_closure(roots: readonly string[], tasks: Map<string, TaskD
     return gates;
 }
 
+/**
+ * Drop YAML comments before anything is extracted from a workflow.
+ *
+ * WHY, and it is the defect this checker was blind to for its whole life. The CI
+ * side is built by regexing workflow TEXT for `task <name>` and expanding each
+ * name's closure. Several workflow comments contain the literal string
+ * `task ci` — while stating that **no workflow invokes it**:
+ *
+ *     # invokes `task ci`, so a gate registered only there never runs remotely.
+ *     # …NO workflow invokes `task ci`, `ci-strict`, or …
+ *
+ * Read as an invocation, `ci` expanded to its full closure and put all 247
+ * `task ci` gates into the "runs in CI" set. `undeclared_local_only` was
+ * therefore **0 by construction** — the one direction this manifest's own header
+ * calls the one that let real defects merge could not be reported at all, and the
+ * prose documenting the gap was what suppressed it.
+ *
+ * Measured at the repair: CI-side 273 → 106, `undeclared_local_only` 0 → 167 of
+ * 247 local gates. A checker whose extraction invents coverage is worse than
+ * none, which this file already says about a different extraction bug ten lines
+ * up — the same lesson, learned twice.
+ *
+ * Deliberately crude: a `#` inside a quoted YAML scalar is treated as a comment
+ * start. That direction is safe here — it can only make the checker see LESS
+ * wiring, i.e. over-report drift, never invent coverage. A YAML parse would be
+ * exact, but every workflow would have to be structurally valid for the checker
+ * to run at all, and a parity checker that cannot run on a malformed workflow is
+ * a parity checker that goes quiet exactly when someone is editing CI.
+ */
+export function strip_yaml_comments(text: string): string {
+    return text
+        .split('\n')
+        .map((l) => l.replace(/(^|\s)#.*$/, '$1'))
+        .join('\n');
+}
+
 function _read_all(dir: string): string {
     if (!fs.existsSync(dir)) return '';
     return fs
         .readdirSync(dir)
         .filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'))
         .sort()
-        .map((f) => fs.readFileSync(path.join(dir, f), 'utf-8'))
+        .map((f) => strip_yaml_comments(fs.readFileSync(path.join(dir, f), 'utf-8')))
         .join('\n');
 }
 
@@ -332,17 +370,33 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
                 '    Undeclared, it means a contributor discovers this failure only after pushing.\n',
         );
     }
-    if (r.undeclared_local_only.length > 0) {
+    // Ratcheted, not listed one by one.
+    //
+    // Repairing the comment-blindness above took this count from 0 to 167 in one
+    // step — pre-existing debt the checker could not see, not new breakage. A hard
+    // fail on 167 findings nobody can clear in the change that reveals them is the
+    // gate that lands as N instant blockers, which this repository has recorded as
+    // a failure mode and refused before. A shrink-only count keeps the property
+    // that matters: the number may not RISE, so a gate added to `task ci` with no
+    // workflow reds immediately, which is the regression this direction exists to
+    // catch. Listing all 167 every run would bury that signal in its own noise.
+    const parity = checkRatchet({
+        gate: 'ci-parity:local-only',
+        actual: r.undeclared_local_only.length,
+        repoRoot: REPO,
+    });
+    if (!parity.ok) {
         failed = true;
-        process.stdout.write(
-            `❌  ${String(r.undeclared_local_only.length)} gate(s) run locally but in no workflow:\n`,
-        );
+        process.stdout.write(`❌  ${parity.message}\n`);
         for (const g of r.undeclared_local_only) process.stdout.write(`  - ${g}\n`);
         process.stdout.write(
             '\n    Prefer adding it to a workflow — this is the direction that let real defects\n' +
                 '    merge (16 stale index rows reached main behind a local-only check-index).\n' +
-                '    If remote enforcement is genuinely not wanted, declare it under `local_only:`.\n',
+                '    If remote enforcement is genuinely not wanted, declare it under `local_only:`.\n' +
+                '    Raising the baseline is a defect, not a fix.\n',
         );
+    } else {
+        process.stdout.write(`ℹ️   ${parity.message}\n`);
     }
     if (r.stale_declarations.length > 0) {
         failed = true;

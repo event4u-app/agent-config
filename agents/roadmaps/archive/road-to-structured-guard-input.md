@@ -117,7 +117,7 @@ over the structured field. The three steps below replace the field steps; what
 they were is recorded above. The measurement that shaped them is in
 `agents/evidence/analysis/structured-guard-input-phase1.md` § Phase 2 re-cut.
 
-- [ ] Verify the prompt→verdict binding that already exists but is checked by
+- [x] Verify the prompt→verdict binding that already exists but is checked by
       nothing. For every `*.findings.md` carrying `prompt_hash`, when the
       conventional input package `<slug>.review-input/prompt.md` is present:
       re-derive `sha256(prompt.md)` and compare, and run `preloadedVerdict`
@@ -129,7 +129,25 @@ they were is recorded above. The measurement that shaped them is in
       No manifest change: the package path is derivable from the slug, so the
       `prompt:` manifest field first considered would have been a migration
       event for 30 committed manifests in exchange for nothing.
-- [ ] Dispose of the two measured breaks, which are not the same kind.
+      → **Shipped as `src/scripts/check_review_prompt_binding.ts`**, and the
+      baseline reproduces to the digit: `19 package(s) · 17 binding · 0 steered
+      · 2 broken (2 baselined)`. Both planted failures are pinned twice — in
+      `tests/scripts/check_review_prompt_binding.test.ts` against the imported
+      functions, and in `--self-test` against the real CLI, because a unit test
+      cannot prove the binary a contributor runs still rejects. Registered in
+      `gate-coverage.yml` (`min_scanned: 15`) and in the `ci` task list.
+      Two departures from the step's own text, both deliberate:
+      **(a) it is a NEW gate, not an extension of `check_completion_review`.**
+      That gate reports grammar violations only for the branch's own or
+      scope-relevant artefacts, on purpose — a stale foreign artefact must not
+      poison an unrelated PR. This check is corpus-wide, and the reasoning does
+      not transfer: a committed `prompt.md` and its recorded hash are both
+      immutable, so a break is branch-independent.
+      **(b) steering is checked on every package, including a baselined one.**
+      An exemption covers a hash that will not re-derive, never the content of
+      the prompt; a baseline able to suppress the steering check would be a hole
+      in the one thing the gate exists to see.
+- [x] Dispose of the two measured breaks, which are not the same kind.
       `zcs-close-2026-08-09` was broken by the archival sweep rewriting a path
       inside a frozen record; that cause was fixed 2026-08-11, and § 2.7 forbids
       editing the round record now to make it re-derive, so it is a documented
@@ -138,12 +156,36 @@ they were is recorded above. The measurement that shaped them is in
       and trailing-newline variants were ruled out.
       *Verify:* each of the two is either explained with its cause named, or
       recorded as a baseline entry carrying the reason it may not be repaired.
-- [ ] Correct the dispatcher docstring at `dispatch_r2_reviewer.ts:645`, which
+      → **Both recorded in `src/config/review-prompt-binding-baseline.json`**,
+      with the cause named for the first and its absence stated for the second.
+      Neither is repaired, and that is the contract's doing rather than a
+      shortcut: § 2.7 forbids editing a round record, so making either hash
+      re-derive would require exactly the edit the contract prohibits. Each entry
+      pins BOTH hashes, so a later repair and a further corruption both stop
+      matching and red — an exemption that could go stale silently would be the
+      hole this gate exists to close.
+      The file is declared in `SUPPRESSION_INVENTORY`, so it is ratcheted like
+      every other suppression surface rather than sitting outside the hygiene
+      gate. Doing that surfaced a live defect in the gate itself, fixed here:
+      `check_suppression_hygiene` resolved one target twice (the self-closing
+      `newInThisChange` branch called `ledger.fail` and the loop tail resolved it
+      again), so it **crashed with a `LedgerUsageError` instead of running** —
+      and the crash was masking its own finding, that
+      `rule-enforcement-baseline.json`'s bootstrap flag had served its purpose
+      and needed removing. Both are done.
+- [x] Correct the dispatcher docstring at `dispatch_r2_reviewer.ts:645`, which
       states that `--verify` re-derives `prompt_hash` from the same inputs and
       compares. It does not — `runVerify` re-derives `scope_hash`,
       `roadmap_hash` and `ac_hash` only.
       *Verify:* the docstring matches what `runVerify` actually compares, and
       the contract's § 5 correction and it agree.
+      → **Corrected**, and it now states the reason as well as the fact: the
+      prompt is not reconstructible from the repo, so it is not one of the
+      inputs `runVerify` re-derives — it is an artefact the dispatcher wrote,
+      which is why the check that compares it reads the committed package
+      instead. `plan-review-gates.md` § 5 gains a dated paragraph recording that
+      the instrument shipped; the earlier correction is left standing rather
+      than edited away, per that section's own audit-trail argument.
 
 ## Phase 3 — the adversarial question the council raised
 

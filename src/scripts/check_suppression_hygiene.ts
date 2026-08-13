@@ -227,8 +227,19 @@ export const SUPPRESSION_INVENTORY: readonly SuppressionSpec[] = [
         file: 'src/config/rule-enforcement-baseline.json',
         listKey: null,
         tier: 'string_list',
-        newInThisChange: true,
         what: 'rules predating the enforced_by-declaration ratchet',
+    },
+    {
+        // Two committed prompt→verdict bindings that do not re-derive. Both
+        // sit inside round records § 2.7 declares immutable, so neither may be
+        // repaired by editing the record — the entry pins BOTH hashes, so a
+        // later repair or a further corruption reds instead of passing.
+        file: 'src/config/review-prompt-binding-baseline.json',
+        listKey: 'entries',
+        tier: 'object',
+        keyFields: ['slug'],
+        newInThisChange: true,
+        what: 'review prompts whose recorded prompt_hash does not re-derive',
     },
 ];
 
@@ -391,6 +402,12 @@ export function main(): number {
         const entries = loadEntries(spec);
         const reasonField = spec.reasonField ?? 'reason';
 
+        // Declared BEFORE the stale-flag branch below, which is a file-level
+        // finding: it must feed the single terminal resolution at the end of
+        // this iteration rather than resolve the target itself. Resolving twice
+        // is a `LedgerUsageError` that aborts the whole gate.
+        let fileFindings = 0;
+
         let comparison: RatchetComparison;
         try {
             comparison = compareToBaseRef({
@@ -413,8 +430,8 @@ export function main(): number {
                     `\`newInThisChange\` is still set, but the baseline now resolves at ${baseRef} — ` +
                     'the flag has served its purpose and must be removed from SUPPRESSION_INVENTORY. ' +
                     'Leaving it set makes a future mistyped path pass as a new baseline forever.';
-                ledger.fail(spec.file, detail);
                 findings.push({ file: spec.file, entry: '(whole file)', kind: 'uninventoried', detail });
+                fileFindings += 1;
             }
         } catch (exc) {
             if (exc instanceof BaseRefUnavailableError) {
@@ -426,7 +443,6 @@ export function main(): number {
         }
 
         const added = new Set(comparison.added);
-        let fileFindings = 0;
 
         for (const entry of entries) {
             if (spec.tier === 'object' && entry.reason.length < MIN_REASON_CHARS) {
