@@ -40,7 +40,7 @@ else runs the loop.
    `layout`, `components`, `states`, `microcopy`, `a11y`. `states` means all
    five of `empty`, `loading`, `error`, `success`, `disabled` — a brief missing
    one is unfinished, not concise.
-2b. **Inventory — only when an artifact was provided, and before you build.**
+3. **Inventory — only when an artifact was provided, and before you build.**
    List the artifact's **interactions, keyframes, and script includes** from its
    source (`design-fidelity-mechanics` § Data-basis ladder — read it, do not
    look at a picture of it). Then place **every** listed item in exactly one
@@ -58,11 +58,11 @@ else runs the loop.
    (`apply.ts`, `COVERAGE_BUCKETS`, an unaccounted item is a halt); out here it
    is a duty you carry, and nothing checks it for you. (fixture:
    `daf-adhoc-port-coverage`.)
-3. **Build** — against the audit's primitives, in the project's stack. Where the
+4. **Build** — against the audit's primitives, in the project's stack. Where the
    artifact's own markup/CSS/JS is stack-compatible, adapt **that code**;
    re-deriving it from scratch is a deviation needing confirmation
    (`design-fidelity-mechanics` § Adopt the code).
-4. **Review** — run [`design-review`](../design-review/SKILL.md) before calling
+5. **Review** — run [`design-review`](../design-review/SKILL.md) before calling
    it done, and scope the verdict honestly: render-scoped when you can render
    it, otherwise explicitly static-scoped, naming which checks actually ran.
    "Looks good" with neither scope named is a verdict without evidence.

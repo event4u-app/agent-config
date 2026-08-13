@@ -92,11 +92,17 @@ export interface SessionMeasurement {
      * being comparable.
      */
     artifactRead: number;
+    /** True when this session read a provided artifact at any point. */
+    sawArtifact: boolean;
+    /**
+     * True when this session's FIRST UI write came after an artifact read —
+     * the metric named "artifact read before first UI write". Meaningless
+     * unless `sawArtifact`, which is why it is reported over that denominator.
+     */
+    readBeforeFirstWrite: boolean;
 }
 
 export interface RateReport {
-    /** UI-write turns preceded by reading a provided design artifact. */
-    artifactRead: number;
     store: string;
     /** False when the store directory does not exist — never the same as empty. */
     storeExists: boolean;
@@ -109,6 +115,16 @@ export interface RateReport {
     uiWriteTurns: number;
     consulted: number;
     reviewOpenedAfter: number;
+    /** UI-write turns preceded by reading a provided design artifact. */
+    artifactRead: number;
+    /**
+     * Sessions that read a provided artifact at all — the ONLY honest
+     * denominator for the read-before-write rate. A session with no handover
+     * cannot fail to read one.
+     */
+    handoverSessions: number;
+    /** Of those, the ones whose first UI write came after the read. */
+    handoverReadFirst: number;
 }
 
 /**
@@ -157,6 +173,8 @@ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement
         consulted: 0,
         reviewOpenedAfter: 0,
         artifactRead: 0,
+        sawArtifact: false,
+        readBeforeFirstWrite: false,
     };
     let consulted = false;
     let artifactRead = false;
@@ -177,13 +195,13 @@ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement
             }
             return;
         }
-        // Checked before `isConsultation` and kept separate from it: an
-        // artifact is not a design surface, and folding the two would make the
-        // consultation rate move for a reason it never measured.
-        if (isArtifactRead(event)) {
-            artifactRead = true;
-            return;
-        }
+        // Evaluated INDEPENDENTLY of the consultation branch, never as an
+        // early return before it. The two predicates are not disjoint —
+        // `skills/design-review/references/design.html` satisfies both — so a
+        // `return` here would remove such an event from the consultation
+        // numerator and from the discharge-proxy latch. An earlier revision did
+        // exactly that while claiming in its comment to prevent it.
+        if (isArtifactRead(event)) artifactRead = true;
         if (isConsultation(event)) {
             consulted = true;
             if (event.file.replace(/\\/g, '/').toLowerCase().includes(`skills/${REVIEW_SURFACE}/`)) {
@@ -196,6 +214,11 @@ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement
     out.uiWriteTurns = writeTurns.size;
     for (const wasConsulted of writeTurns.values()) if (wasConsulted) out.consulted += 1;
     for (const wasRead of artifactTurns.values()) if (wasRead) out.artifactRead += 1;
+    out.sawArtifact = artifactRead;
+    // The FIRST write's outcome — `artifactTurns` is insertion-ordered on the
+    // first UI write of each turn, so its first value is that write's state.
+    const firstWrite = artifactTurns.values().next();
+    out.readBeforeFirstWrite = firstWrite.done !== true && firstWrite.value === true;
     // A single max comparison, not a scan per write: the proxy asks only whether
     // ANY review-open follows, so the last one decides every earlier write.
     void reviewOpenPositions;
@@ -247,6 +270,8 @@ export function measureStore(store: string, limit: number): RateReport {
         consulted: 0,
         reviewOpenedAfter: 0,
         artifactRead: 0,
+        handoverSessions: 0,
+        handoverReadFirst: 0,
     };
     // A store that is not there and a store with nothing in it are different
     // findings, and only one of them is about the agent. Collapsing them into
@@ -287,6 +312,10 @@ export function measureStore(store: string, limit: number): RateReport {
         report.consulted += measured.consulted;
         report.reviewOpenedAfter += measured.reviewOpenedAfter;
         report.artifactRead += measured.artifactRead;
+        if (measured.sawArtifact) {
+            report.handoverSessions += 1;
+            if (measured.readBeforeFirstWrite) report.handoverReadFirst += 1;
+        }
     }
     return report;
 }
@@ -318,20 +347,42 @@ export function render(report: RateReport, threshold: number): string {
         `  discharge PROXY (review opened)  ${pct(report.reviewOpenedAfter, report.uiWriteTurns)}  (${report.reviewOpenedAfter}/${report.uiWriteTurns})`,
     );
     lines.push(
-        `  ARTIFACT READ BEFORE WRITE       ${pct(report.artifactRead, report.uiWriteTurns)}  (${report.artifactRead}/${report.uiWriteTurns})`,
+        `  artifact read (all UI turns)      ${pct(report.artifactRead, report.uiWriteTurns)}  (${report.artifactRead}/${report.uiWriteTurns})`,
+    );
+    lines.push(
+        `  READ BEFORE FIRST WRITE          ${pct(report.handoverReadFirst, report.handoverSessions)}  (${report.handoverReadFirst}/${report.handoverSessions} handover session(s))`,
     );
     lines.push('');
     lines.push(
-        '  The third rate shares the second denominator and answers a different',
+        '  READ BEFORE FIRST WRITE is the rate to quote. Its denominator is',
     );
     lines.push(
-        '  question: not "did it open the design surface" but "did it read the',
+        '  sessions that read a provided artifact at all — a session with no',
     );
     lines.push(
-        '  handed-over source". A session with no handover contributes 0/N to it',
+        '  handover cannot fail to read one, so including it would dilute the',
     );
     lines.push(
-        '  by construction, so read it per-handover, never as an estate average.',
+        '  rate toward the size of the estate rather than the behaviour.',
+    );
+    lines.push(
+        '  The line above it shares the consultation denominator and is kept for',
+    );
+    lines.push(
+        '  comparability with that rate only.',
+    );
+    lines.push('');
+    lines.push(
+        '  KNOWN BLIND SPOT: a session handed an artifact that NEVER reads it is',
+    );
+    lines.push(
+        '  invisible here — nothing in a transcript marks a handover that was',
+    );
+    lines.push(
+        '  ignored. That case is the defect this measures, so the rate is a',
+    );
+    lines.push(
+        '  ceiling on the problem, never a measurement of it.',
     );
     lines.push('');
 

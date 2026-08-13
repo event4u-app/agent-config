@@ -129,10 +129,23 @@ export function isUiWrite(event: ToolEvent): boolean {
  * `path_prefix: .claude/design-system/`. Reading one is the agent reaching
  * rung 1 of the data-basis ladder before it writes.
  *
+ * A SHARED PREDICATE, NOT A DECISION INPUT HERE. `decide` does not branch on
+ * it: the nudge's behaviour is unchanged by an artifact read, and the phase
+ * that introduced this states `nothing behavioural`. The one consumer is
+ * `report_consultation_rate`, which measures over transcripts. Keeping the
+ * predicate beside `isUiWrite` / `isConsultation` is what stops the analyzer
+ * and the nudge from classifying the same event differently.
+ *
  * THIS IS A COPY OF THE RULE'S TRIGGERS, NOT A READ OF THEM — same honesty
  * boundary the header states for `ui_surface.ts`: nothing here parses
  * `src/rules/*.md`. `ui_route_nudge_artifact_read.test.ts` pins the two against
  * the rule's own frontmatter so the copy cannot drift silently.
+ *
+ * **Not disjoint from `isConsultation` by construction** —
+ * `src/skills/design-review/references/design.html` satisfies both. Callers
+ * must evaluate the two independently rather than branching on the first hit;
+ * an early return on this predicate silently removes such an event from the
+ * consultation numerator.
  */
 export function isArtifactRead(event: ToolEvent): boolean {
     if (event.isWrite || !event.file) return false;
@@ -143,27 +156,6 @@ export function isArtifactRead(event: ToolEvent): boolean {
 export interface SessionState {
     consulted: boolean;
     nudges: number;
-    /**
-     * CAPTURE-ONLY. True once a provided-artifact file was read this session.
-     *
-     * It is deliberately NOT folded into `consulted`, and the distinction is
-     * the whole point: folding it in would silence the nudge for a session that
-     * opened a `design.html`, which is a **behaviour** change. The phase that
-     * introduced this field ships instrumentation and states `nothing
-     * behavioural` in its own rollback line, so the two cannot both be honoured
-     * by one field. Whether an artifact read SHOULD latch consultation is a
-     * real question and a separate decision — it needs the rate below to answer
-     * it, which is why the rate is measured first.
-     */
-    artifactRead?: boolean;
-    /**
-     * CAPTURE-ONLY. The instrument: was an artifact read before the session's
-     * FIRST UI write? Latched once, at that write. `undefined` = no UI write
-     * yet, which is distinct from `false` (a write happened, unread) and must
-     * stay distinct — collapsing them would count every read-only session as a
-     * failure.
-     */
-    artifactReadBeforeFirstUiWrite?: boolean;
 }
 
 function stateFile(root: string): string {
@@ -232,46 +224,27 @@ export function decide(
     event: ToolEvent,
     state: SessionState,
 ): { state: SessionState; warn: boolean } {
-    // Capture-only, and ordered first so it records even on an event the
-    // branches below return early on. It never reaches `warn`.
-    if (isArtifactRead(event)) {
-        return { state: { ...state, artifactRead: true }, warn: false };
-    }
     if (isConsultation(event)) {
         return { state: { ...state, consulted: true }, warn: false };
     }
     if (!isUiWrite(event)) return { state, warn: false };
-
-    // Latch the instrument at the FIRST UI write, before any early return —
-    // otherwise a session that consulted, or one past the valve, would never
-    // record its own read-before-write outcome and the rate would be measured
-    // over the nudged sessions alone.
-    const measured: SessionState =
-        state.artifactReadBeforeFirstUiWrite === undefined
-            ? { ...state, artifactReadBeforeFirstUiWrite: state.artifactRead === true }
-            : state;
-
-    if (measured.consulted) return { state: measured, warn: false };
-    if (measured.nudges >= MAX_NUDGES) return { state: measured, warn: false };
-    return { state: { ...measured, nudges: measured.nudges + 1 }, warn: true };
+    if (state.consulted) return { state, warn: false };
+    if (state.nudges >= MAX_NUDGES) return { state, warn: false };
+    return { state: { ...state, nudges: state.nudges + 1 }, warn: true };
 }
 
 /**
  * Did anything worth persisting change?
  *
- * Enumerated per field rather than deep-compared, and it is a real trap: the
- * predicate this replaced tested `consulted` and `nudges` only, so the two
- * capture-only fields would have been computed on every event and written on
- * none — an instrument that silently records nothing. A new field must be added
- * here or it does not persist.
+ * Enumerated per field rather than deep-compared. **A new field must be added
+ * here or it does not persist** — a review on this branch caught exactly that
+ * shape: two session fields were computed on every event and written on none,
+ * because the guard tested the two older fields by name. Those fields are gone
+ * (the measurement lives in the analyzer, one implementation instead of two),
+ * but the guard stays enumerated and this note stays with it.
  */
 export function stateChanged(before: SessionState, after: SessionState): boolean {
-    return (
-        before.consulted !== after.consulted ||
-        before.nudges !== after.nudges ||
-        before.artifactRead !== after.artifactRead ||
-        before.artifactReadBeforeFirstUiWrite !== after.artifactReadBeforeFirstUiWrite
-    );
+    return before.consulted !== after.consulted || before.nudges !== after.nudges;
 }
 
 export function nudgeReason(file: string): string {

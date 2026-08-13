@@ -218,15 +218,26 @@ describe('render', () => {
         consulted: 1,
         reviewOpenedAfter: 2,
         artifactRead: 3,
+        handoverSessions: 2,
+        handoverReadFirst: 1,
     };
 
-    it('publishes the artifact-read rate on the same denominator', () => {
+    it('publishes the read-before-first-write rate over handover sessions', () => {
         const out = render(report, 20);
-        expect(out).toContain('ARTIFACT READ BEFORE WRITE');
-        // 3 of the same 4 UI-write turns — the shared denominator is what makes
-        // the two rates comparable, so it is asserted rather than assumed.
+        // The quotable rate uses the handover denominator, not the estate one:
+        // a session with no handover cannot fail to read one.
+        expect(out).toContain('READ BEFORE FIRST WRITE');
+        expect(out).toContain('(1/2 handover session(s))');
+        // The comparability line keeps the consultation denominator.
         expect(out).toContain('(3/4)');
         expect(out).toContain('(1/4)');
+    });
+
+    it('states the blind spot rather than implying the rate is complete', () => {
+        // A handed-over artifact that is never read leaves no transcript trace,
+        // and that case IS the defect — so the output has to say the rate is a
+        // ceiling rather than a measurement.
+        expect(render(report, 20)).toContain('KNOWN BLIND SPOT');
     });
 
     it('reports the rate and marks the proxy as not the discharge rate', () => {

@@ -201,33 +201,14 @@ export const ROUTING_MATRIX: readonly Row[] = [
         baseline: false,
     },
 
-    // --- Class 5: a third-party builder's share link -----------------------
-    {
-        id: 'none-lovable-share-link',
-        klass: 'en',
-        prompt: 'The page is done: https://lovable.dev/projects/9f2a — take it from there.',
-        open_files: [],
-        routes: true,
-        baseline: false,
-    },
-    {
-        id: 'none-v0-share-link',
-        klass: 'en',
-        prompt: 'https://v0.dev/chat/b7c1 — that is the layout we settled on.',
-        open_files: [],
-        routes: true,
-        baseline: false,
-    },
-    {
-        id: 'none-bolt-share-link',
-        klass: 'en',
-        prompt: 'Built it here: https://bolt.new/~/sb1-x9 — implement it in our stack.',
-        open_files: [],
-        routes: true,
-        baseline: false,
-    },
-
     // --- Near-misses: must stay silent ------------------------------------
+    //
+    // The builder-URL class (`lovable.dev` / `v0.dev` / `bolt.new`) was
+    // attempted here and WITHDRAWN. `https://v0.dev/` is a substring of
+    // `https://v0.dev/docs`, so the trigger fired on the vendor's own
+    // documentation, pricing and changelog pages — every mention of the tool's
+    // site became a spec handover. The two rows below pin BOTH directions
+    // silent so a future attempt has to clear them before shipping the class.
     {
         id: 'near-bare-host-mention',
         klass: 'en',
@@ -239,14 +220,14 @@ export const ROUTING_MATRIX: readonly Row[] = [
         baseline: false,
     },
     {
-        id: 'known-gap-protocolless-share-link',
+        id: 'near-builder-host-non-handover-url',
         klass: 'en',
-        // DELIBERATELY RED, and not a near-miss: this IS a handover the rule
-        // does not catch. Closing it needs either a bare-host keyword (which
-        // `near-bare-host-mention` proves is over-broad) or a guessed per-vendor
-        // share-path segment. A trigger built on a guessed path is worse than a
-        // stated gap, so the gap is pinned here instead of believed closed.
-        prompt: 'lovable.dev/projects/9f2a — build that.',
+        // The row that would have caught the withdrawn trigger, and the reason
+        // it is here rather than the protocol-less one: a near-miss that tests
+        // a direction which was ALREADY silent cannot detect over-broadness a
+        // new trigger introduces. This URL is on the builder's host, carries
+        // the protocol, and is not a handover.
+        prompt: 'Per https://v0.dev/docs the free tier caps at three projects.',
         open_files: [],
         routes: false,
         baseline: false,
