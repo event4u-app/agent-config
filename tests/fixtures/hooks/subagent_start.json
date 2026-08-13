@@ -1,0 +1,7 @@
+{
+  "session_id": "fixture-subagent-start-001",
+  "agent_id": "fixture-agent-0001",
+  "agent_type": "Explore",
+  "cwd": "/workspace",
+  "platform_hint": "claude"
+}

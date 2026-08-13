@@ -55,6 +55,8 @@ const EVENT_VOCABULARY: ReadonlySet<string> = new Set([
   "stop",
   "pre_compact",
   "agent_error",
+  "subagent_start",
+  "subagent_stop",
 ]);
 
 // Known platform identifiers.

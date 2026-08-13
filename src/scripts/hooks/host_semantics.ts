@@ -62,6 +62,8 @@ const CLAUDE_HOOK_EVENT_NAME: Record<string, string> = {
     session_end: "SessionEnd",
     stop: "Stop",
     pre_compact: "PreCompact",
+    subagent_start: "SubagentStart",
+    subagent_stop: "SubagentStop",
 };
 
 /**

@@ -49,7 +49,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 15 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
 | 16 | [road-to-inbox-harvest-distillation.md](roadmaps/road-to-inbox-harvest-distillation.md) | 4 | 16 | 0 | 9 | 1 | 6 | [2](#blockers-road-to-inbox-harvest-distillation) | ██████████ 100% |
 | 17 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 18 | [road-to-local-only-gate-reds.md](roadmaps/road-to-local-only-gate-reds.md) | 4 | 10 | 7 | 3 | 0 | 0 | [3](#blockers-road-to-local-only-gate-reds) | ███░░░░░░░ 30% |
+| 18 | [road-to-local-only-gate-reds.md](roadmaps/road-to-local-only-gate-reds.md) | 4 | 10 | 4 | 6 | 0 | 0 | [3](#blockers-road-to-local-only-gate-reds) | ██████░░░░ 60% |
 | 19 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 20 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
@@ -59,7 +59,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 | 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
 | 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 8 | 9 | 1 | 0 | 0 | █████░░░░░ 53% |
-| 28 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 19 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
+| 28 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 14 | 5 | 0 | 2 | 0 | ███░░░░░░░ 26% |
 | 29 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 30 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 31 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
@@ -551,14 +551,14 @@ _1 blocker resolved._
 
 ### [road-to-local-only-gate-reds.md](roadmaps/road-to-local-only-gate-reds.md)
 
-**Road to local-only gate reds — four red gates nobody sees** — 3 / 10 done (30%)
+**Road to local-only gate reds — four red gates nobody sees** — 6 / 10 done (60%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | the two mechanical repairs | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
-| 2 | the self-test ratchet | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | the self-test ratchet | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 3 | the roadmap that cannot archive | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 4 | close the class, or state why it stays open | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
+| 4 | close the class, or state why it stays open | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
 
 <a id="blockers-road-to-local-only-gate-reds"></a>
 **Blockers**
@@ -606,7 +606,22 @@ _1 blocker resolved._
     and it is a legitimate answer on its own.
     4. Record the choice where its scope fits — an ADR for the wiring options, a
     paragraph in `docs/contracts/ci-green-floor.md` for the accept option.
-  - **Resolved when:** the decision exists in a tracked artefact and Phase 4 step 2 can cite it. - **Note:** an AI council was asked to adjudicate this and was unreachable (anthropic quota-exhausted, openai trusted-directory refusal, two attempts). The staged baseline was chosen without it, on the ground that it is the only option adding no unfixable block. It is not a council verdict and does not foreclose the others.
+    5. **Added 2026-08-13 — the same decision now also owns a live red.** The
+    repair dropped `check_ci_local_parity`'s scanned population from 443 to
+    **357** (107 CI + 250 local), below its `min_scanned: 380` floor, so
+    `check_gate_coverage` reds on it while the parity gate itself exits 0. The
+    floor and its `corpus:` line still describe the pre-repair population.
+    Three answers, and they are not equivalent: **(a)** re-anchor the floor to
+    the measured 357 with a stated margin and rewrite the `corpus:` line —
+    cheapest, and a floor re-anchor is a weakening that should be argued rather
+    than typed; **(b)** wire `check_ci_local_parity` into a workflow, which
+    § 3 already names as the smallest change that gives the mechanism teeth and
+    which makes the floor remotely meaningful for the first time; **(c)** drain
+    enough of the 167 that the CI-side count rises back over the floor on its
+    own, which is the only answer that fixes the floor by fixing the thing the
+    floor measures. Whichever is chosen, the `corpus:` description is stale
+    either way and needs the same edit.
+  - **Resolved when:** the decision exists in a tracked artefact and Phase 4 step 2 can cite it, **and** the `check_ci_local_parity` floor red of § 5 is either cleared or carries a recorded, argued disposition. The second half is explicit because without it this roadmap can reach `count_open == 0` and archive while a gate it opened is still red — which is the exact failure the whole file is about, committed by the file itself. - **Note:** an AI council was asked to adjudicate this and was unreachable (anthropic quota-exhausted, openai trusted-directory refusal, two attempts). The staged baseline was chosen without it, on the ground that it is the only option adding no unfixable block. It is not a council verdict and does not foreclose the others.
 
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 
@@ -893,16 +908,16 @@ _1 blocker resolved._
 
 ### [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md)
 
-**Road to subagent lifecycle integrity — turn three production symptoms into deterministic guards** — 0 / 19 done (0%)
+**Road to subagent lifecycle integrity — turn three production symptoms into deterministic guards** — 5 / 19 done (26%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Spikes — pin the host, reproduce the two upstream premises | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 1 | Measure — lifecycle capture, no behaviour change | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 0 | Spikes — pin the host, reproduce the two upstream premises | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
+| 1 | Measure — lifecycle capture, no behaviour change | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
 | 2 | Return-channel integrity — validate, fall back to disk, retry once | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | Runaway containment — spawn guard, ledger-aware stop gate, shadow stop-loss | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | Role axis binds on payload, not env | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Tier routing has a caller — measure whether it moved the distribution | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 5 | Tier routing has a caller — measure whether it moved the distribution | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
 | 6 | Frontend amendments — SUPERSEDED by road-to-source-first-frontend | ⏭️ skipped | 0 | 0 | 0 | 2 | 0% |
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)

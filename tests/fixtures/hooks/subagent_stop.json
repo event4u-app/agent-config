@@ -1,0 +1,8 @@
+{
+  "session_id": "fixture-subagent-stop-001",
+  "agent_id": "fixture-agent-0001",
+  "agent_type": "Explore",
+  "last_assistant_message": "{\"summary\":\"fixture envelope\",\"handoff\":\"none\",\"confidence\":\"high\",\"findings\":[],\"risks\":[]}",
+  "cwd": "/workspace",
+  "platform_hint": "claude"
+}
