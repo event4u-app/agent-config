@@ -29,7 +29,25 @@ Don't just screenshot the default state. Capture:
 
 ### Mockup-to-code verification
 
-When implementing from a design mockup or screenshot:
+**Branch on what the artifact actually is before you open anything.** The two
+kinds carry different workflows, and running the image workflow over a code
+artifact is the failure this branch exists to prevent — it rebuilds from pixels
+what was handed over as source.
+
+**Code artifact** — an HTML/JSX/Vue file, an archive, a repo, a live page whose
+DOM you can reach:
+
+1. **Read the code** — it is the data basis (`design-fidelity-mechanics`
+   § Data-basis ladder, rungs 1–2). Markup, styles, scripts.
+2. **Implement** — adapting the artifact's own code where it is
+   stack-compatible; a from-scratch re-derivation is a deviation, not a default.
+3. **Screenshot afterwards** — for an after-the-fact visual diff only, never as
+   the input you built from.
+4. **Flag deviations** — including behaviour: a handler or keyframe that did not
+   survive is a deviation, not an implementation detail.
+
+**Image artifact** — a PNG/JPG screenshot, a Figma export you cannot open as
+source, a photograph of a whiteboard:
 
 1. **Open the mockup** — use the provided image/screenshot.
 2. **Implement** — build the UI component.
@@ -37,6 +55,10 @@ When implementing from a design mockup or screenshot:
 4. **Flag deviations** — spacing, colors, typography, alignment differences.
 
 This is especially useful when the user provides a screenshot or Figma export as a reference.
+
+> **Near-miss worth naming:** an HTML file *opened in a browser* is still a code
+> artifact. The browser makes it look like an image; the file on disk is rung 1.
+> Take the code path.
 
 ## Async-verifier pattern (keep the main context clean)
 

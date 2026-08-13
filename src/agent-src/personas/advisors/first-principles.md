@@ -7,6 +7,12 @@ mode: reviewer
 version: "1.0"
 source: package
 council_advisor: true
+# Explicitly empty, not merely unset: reconstructing a problem from its
+# irreducible constraints is this advisor's whole function, so "asserts no
+# harvested doctrine" is a statement about the lens rather than a gap in one.
+# Every other persona leaves the field absent (unscoped) — see the sources
+# block in templates/persona.md for the three states.
+sources: []
 ---
 
 # First-Principles Advisor

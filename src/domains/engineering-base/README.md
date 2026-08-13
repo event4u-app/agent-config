@@ -18,7 +18,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`active-remediation`** — Spotted an issue (security gap, missing test, bad code, duplication, stale idiom) — never ignore: small→fix inline, bigger→ask, many→follow-up PR
 - **`broken-access-control`** — Endpoint/query on user/tenant data — authenticated ≠ authorized: server-derived ownership/tenant/role + negative tests (401/non-owner/cross-tenant)
 - **`code-comment-discipline`** — Writing/editing code — a comment states a WHY or constraint the code cannot show; never restate what names/types say; no signature-mirroring docblocks
-- **`code-provenance`** — Porting/adapting external code (algorithm, structure, >~10 lines) — close the source, re-derive; conscious borrows need a ledger entry + license check
+- **`code-provenance`** — Porting external code, or asserting an externally-sourced claim — close the source, re-derive; borrows need a ledger entry + license check, harvested claims an id or an own-analysis label
 - **`commit-conventions`** — Git commit format, branch naming, conventional commits, committing, pushing, creating PRs
 - **`commit-policy`** — Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked
 - **`cross-source-consistency`** — Two sources disagree (ticket text vs mockup, spec silent on a needed behavior, spec vs code) → surface + ask before proceeding, never silently guess
@@ -77,7 +77,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`error-handling-patterns`** — Use when picking a failure-reporting strategy — exceptions vs Result types, recoverable vs not, retry / circuit-breaker / graceful degradation — decision framework only, catalogues externalized.
 - **`evaluate-llm-feature`** — Black-box evaluation of a shipped LLM feature — adversarial probes for hallucination, prompt-injection, and cost-runaway vs stated expectations. Not RAG/embedding. Triggers 'review my chatbot'.
 - **`existing-ui-audit`** — Use BEFORE writing or editing any non-trivial UI — inventories components, design tokens, shadcn primitives, and reusable patterns into state.ui_audit. Hard gate for the ui directive set.
-- **`fe-design`** — Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, build, review. Use when building or changing any UI, not only when planning one.
+- **`fe-design`** — Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, inventory, build, review. Use when building or changing any UI, not only when planning one.
 - **`finishing-a-development-branch`** — Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, routes to merge/PR/park/discard; never destroys work without explicit confirmation.
 - **`form-handler`** — Use when designing or reviewing a form — validation timing, error display, submission lifecycle, optimistic UI, dirty/pristine state, idempotency — even on 'why does submit double-fire?'.
 - **`frontend-render-security`** — Writing/reviewing client-side UI (React/Vue/vanilla) — insecure-render + client-trust gaps AI ships: XSS via innerHTML, client secrets, client-only auth, CORS wildcard, token in localStorage

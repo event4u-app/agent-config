@@ -44,6 +44,14 @@
       "type": "string",
       "enum": ["package", "project"],
       "default": "package"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+      },
+      "description": "Optional harvest_id list (provenance/harvests.jsonl) this persona may cite as external doctrine. Three distinct states, and the difference is the point: ABSENT = unscoped, today's behaviour for every persona that does not opt in; [] = explicitly declares it asserts only from its own reasoning, nothing harvested; a non-empty list = scoped to exactly those ids. Every declared id must resolve to a ledger row — checked by lint_harvest_provenance.ts, which treats a persona entry as a citation exactly like an inline harvest marker. Not to be confused with the singular `source` field above, which records package-vs-project origin."
     }
   }
 }

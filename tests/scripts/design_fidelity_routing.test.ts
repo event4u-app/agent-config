@@ -202,6 +202,36 @@ export const ROUTING_MATRIX: readonly Row[] = [
     },
 
     // --- Near-misses: must stay silent ------------------------------------
+    //
+    // The builder-URL class (`lovable.dev` / `v0.dev` / `bolt.new`) was
+    // attempted here and WITHDRAWN. `https://v0.dev/` is a substring of
+    // `https://v0.dev/docs`, so the trigger fired on the vendor's own
+    // documentation, pricing and changelog pages — every mention of the tool's
+    // site became a spec handover. The two rows below pin BOTH directions
+    // silent so a future attempt has to clear them before shipping the class.
+    {
+        id: 'near-bare-host-mention',
+        klass: 'en',
+        // The host without a protocol is a tool mention, not a handover — the
+        // `claude.ai` precedent applied to the three builders.
+        prompt: 'We looked at v0.dev and bolt.new before picking a stack.',
+        open_files: [],
+        routes: false,
+        baseline: false,
+    },
+    {
+        id: 'near-builder-host-non-handover-url',
+        klass: 'en',
+        // The row that would have caught the withdrawn trigger, and the reason
+        // it is here rather than the protocol-less one: a near-miss that tests
+        // a direction which was ALREADY silent cannot detect over-broadness a
+        // new trigger introduces. This URL is on the builder's host, carries
+        // the protocol, and is not a handover.
+        prompt: 'Per https://v0.dev/docs the free tier caps at three projects.',
+        open_files: [],
+        routes: false,
+        baseline: false,
+    },
     {
         id: 'near-claude-ai-chat-link',
         klass: 'en',

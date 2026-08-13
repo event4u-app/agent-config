@@ -123,6 +123,45 @@ export function isUiWrite(event: ToolEvent): boolean {
     return isUiPath(event.file) || isUiTreePath(event.file);
 }
 
+/**
+ * The two handover shapes `design-fidelity` routes on a FILE rather than on a
+ * word: its `file_pattern: *design.html` and its
+ * `path_prefix: .claude/design-system/`. Reading one is the agent reaching
+ * rung 1 of the data-basis ladder before it writes.
+ *
+ * A SHARED PREDICATE, NOT A DECISION INPUT HERE. `decide` does not branch on
+ * it: the nudge's behaviour is unchanged by an artifact read, and the phase
+ * that introduced this states `nothing behavioural`. The one consumer is
+ * `report_consultation_rate`, which measures over transcripts. Keeping the
+ * predicate beside `isUiWrite` / `isConsultation` is what stops the analyzer
+ * and the nudge from classifying the same event differently.
+ *
+ * THIS IS A COPY OF THE RULE'S TRIGGERS, NOT A READ OF THEM — same honesty
+ * boundary the header states for `ui_surface.ts`: nothing here parses
+ * `src/rules/*.md`. `ui_route_nudge_artifact_read.test.ts` pins the two against
+ * the rule's own frontmatter so the copy cannot drift silently.
+ *
+ * **Not disjoint from `isConsultation` by construction** —
+ * `src/skills/design-review/references/design.html` satisfies both. Callers
+ * must evaluate the two independently rather than branching on the first hit;
+ * an early return on this predicate silently removes such an event from the
+ * consultation numerator.
+ *
+ * **Known over-count, not fixed here.** A `Grep` / `Glob` whose `path` argument
+ * happens to be the artifact satisfies this predicate although nothing was
+ * read — the same search-is-not-a-read class `isConsultation` was narrowed to
+ * exclude. It is not excluded here because `ToolEvent` carries no tool name,
+ * and adding one would change the shared shape `isConsultation` and `isUiWrite`
+ * are measured through, moving a published rate this branch does not own. The
+ * consequence is stated where it matters: the rate is a CEILING on
+ * read-before-write, and `report_consultation_rate`'s output says so.
+ */
+export function isArtifactRead(event: ToolEvent): boolean {
+    if (event.isWrite || !event.file) return false;
+    const normalized = event.file.replace(/\\/g, '/').toLowerCase();
+    return normalized.endsWith('design.html') || normalized.includes('.claude/design-system/');
+}
+
 export interface SessionState {
     consulted: boolean;
     nudges: number;
@@ -203,8 +242,22 @@ export function decide(
     return { state: { ...state, nudges: state.nudges + 1 }, warn: true };
 }
 
+/**
+ * Did anything worth persisting change?
+ *
+ * Enumerated per field rather than deep-compared. **A new field must be added
+ * here or it does not persist** — a review on this branch caught exactly that
+ * shape: two session fields were computed on every event and written on none,
+ * because the guard tested the two older fields by name. Those fields are gone
+ * (the measurement lives in the analyzer, one implementation instead of two),
+ * but the guard stays enumerated and this note stays with it.
+ */
+export function stateChanged(before: SessionState, after: SessionState): boolean {
+    return before.consulted !== after.consulted || before.nudges !== after.nudges;
+}
+
 export function nudgeReason(file: string): string {
-    return `Non-trivial UI write to ${file} with no design consultation this session. Run \`existing-ui-audit\` first, then the fe-design loop (brief → build → review). Skip only if this is ui-trivial: <=1 file, <=5 lines, no new component, no new state, no new dependency.`;
+    return `Non-trivial UI write to ${file} with no design consultation this session. Run \`existing-ui-audit\` first, then the fe-design loop (brief → inventory, if an artifact was provided → build → review). Skip only if this is ui-trivial: <=1 file, <=5 lines, no new component, no new state, no new dependency.`;
 }
 
 export function main(): number {
@@ -230,7 +283,7 @@ export function main(): number {
 
     const before = readState(root, session);
     const { state, warn } = decide(event, before);
-    if (state.consulted !== before.consulted || state.nudges !== before.nudges) {
+    if (stateChanged(before, state)) {
         writeState(root, session, state);
     }
     if (!warn) return EXIT_ALLOW;

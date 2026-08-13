@@ -254,8 +254,34 @@ incomplete document. Never a drawer to fill.}
 
 {Only if --no-roadmap was not set.}
 
+## Seeds
+
+{One block per ADOPT/ADAPT row whose adoption lands in a NEW skill or rule —
+omit the section entirely when every row extends something that exists.}
+
+### SEED — {proposed-name}
+
+> Proposal. Nothing is created from this block without an explicit ask.
+
+- **Kind:** skill | rule
+- **Target template:** `src/agent-src/templates/skill.md` | `.../rule.md`
+- **One-line description:** {what it does, in the voice the template wants}
+- **Cites:** {harvest ids this artefact will carry, once § 8 records them}
+- **Extends instead?** {the nearest existing artefact considered, and why it
+  does not fit — a seed that skipped this line is not ready to hand over}
+
 ## Open questions for the maintainer
 ```
+
+The `## Seeds` section is the handoff shape
+[`learning-to-rule-or-skill`](../../../../skills/learning-to-rule-or-skill/SKILL.md)
+accepts as intake. It is a **proposal artifact, never an auto-created file** —
+the block says so in its own first line, so the property survives being read out
+of context. The `Extends instead?` field is load-bearing rather than decorative:
+it makes the four-surface overlap scan that
+[`artifact-drafting-protocol`](../../../../rules/artifact-drafting-protocol.md)
+requires visible at handoff time, when the analysis is still open, instead of
+re-derived later by whoever picks the seed up.
 
 ### 7. Offer next steps
 
@@ -269,6 +295,42 @@ After writing the file, present:
 > 4. Deep-dive on one axis — say which
 
 Never create the roadmap without explicit confirmation.
+
+### 8. Close the loop — offer the ledger rows
+
+**Only after a roadmap draft is accepted** (option 1 or 2 above). This step
+exists because the command otherwise ends with the knowledge it harvested
+recorded nowhere citable: the analysis document is archived evidence, and the
+next comparative pass re-litigates the same provenance from scratch.
+
+Offer — never write unasked, same confirmation floor as every other write here:
+
+> Record {N} harvest row(s) in `provenance/harvests.jsonl`?
+> {one preview line per row}
+
+One row per **anchored ADOPT or ADAPT** finding, and nothing else:
+
+| Field | Filled from |
+|---|---|
+| `harvest_id` | a kebab-case slug for the mechanism |
+| `stated_in` | the roadmap file the user just accepted |
+| `source_ref` | the reference's `<url>@<sha>` — the § 2 pin, already recorded in the document header |
+| `evidence_locator` | the reference-side `file:line` from that row of the comparison matrix |
+| `harvested_at` | today |
+| `verdict` | `adopt` or `adapt` |
+
+**REJECT, ALREADY, and UNCLEAR rows produce nothing.** Not an oversight: the
+ledger's integrity gate asserts that every row's `stated_in` artefact exists,
+and a rejected finding has no artefact — it is recorded in this analysis
+document, which is where a later harvest goes to learn the question was already
+settled. Writing rejections into the ledger would either break the gate or
+force it to stop checking the thing it exists to check.
+
+**Confidential sources.** When [`source-confidentiality`](../../../../rules/source-confidentiality.md)
+keeps the reference's name out of the tracked tree, `source_ref` takes the
+opaque form (`opaque:<id>` / an `ENC1:` token) instead of the URL. The row still
+pins something; it just does not name it. Contract and field shapes:
+`provenance/README.md`.
 
 ## Safety
 
