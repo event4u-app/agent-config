@@ -12,6 +12,14 @@
 █████████████████████████░░░░░░░░░░░░░░░   63%
 ```
 
+## ⚠️ Iron Law 3 — unresolved deferred items
+
+These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
+
+| Roadmap | Done | Deferred | Cancelled |
+|---|---:|---:|---:|
+| [road-to-inbox-harvest-distillation.md](roadmaps/road-to-inbox-harvest-distillation.md) | 9 | 1 | 6 |
+
 ## ✅ Completed — pending archival
 
 These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but still sit in the active tree. They should be in `agents/roadmaps/archive/`. Run the archival sweep `archive_completed_roadmaps --all` (untracked-safe), or follow the manual fallback documented in the `roadmap-management` skill, then regenerate this dashboard.
@@ -534,6 +542,35 @@ _1 blocker resolved._
     ~18 permanent findings, which is the allowlist-fatigue shape this repo's own
     rules warn about.
   - **Resolved when:** the files are deleted, or a reason to keep them is recorded.
+
+### [road-to-inbox-harvest-distillation.md](roadmaps/road-to-inbox-harvest-distillation.md)
+
+**Road to harvested-claim provenance and router-head skills** — 9 / 9 done (100%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | A harvested claim is citable or it is labelled | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 2 | Personas may declare what they are allowed to cite | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 3 | The synthesis half that is actually missing | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 4 | The documented cap becomes a gate | ✅ done | 0 | 2 | 1 | 6 | 100% |
+
+<a id="blockers-road-to-inbox-harvest-distillation"></a>
+**Blockers**
+
+- **router-head-retrofit-instrument** (owner: maintainer) — blocks step 4.3 only. Steps 4.1 and 4.2 are unblocked — they constrain new skills and do not require the retrofit.
+  - **What to do:**
+    either supply an instrument that observes what the host
+    actually loads on skill trigger (no such observation exists in this tree
+    today), or decide explicitly that the published K6 cap is reason enough to
+    restructure the three offenders without a token claim.
+  - **Resolved when:** an instrument exists and has produced a before/after reading on one skill, **or** a maintainer decision is recorded that the contract alone justifies the retrofit.
+- **first-contract-true-analysis-run** (owner: maintainer) — blocks nothing in this roadmap. Recorded because the consumed drafts raised it and it is a real gap: no artefact under `agents/evidence/analysis/` shows `/analyze:reference-repo` having been run end-to-end under its own §5b convergence contract — `ls agents/evidence/analysis/ | grep compare` returns nothing. The drafts themselves were produced *outside* the command, so its contract has an untested path.
+  - **What to do:**
+    run the command against a small reference and land the
+    evidence artefact. Two things make this a maintainer call rather than an
+    autonomous step: it spends on external fetches, and its output is raw named
+    evidence, which `source-confidentiality` keeps local-only unless anonymised.
+  - **Resolved when:** one evidence artefact exists that was produced by the command rather than by an ad-hoc pass.
 
 ### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
 

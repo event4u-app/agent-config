@@ -103,6 +103,36 @@ contested.
 Each entry carries **provenance**: which judge(s) raised it. Never merge two
 judges' findings into one unattributed line.
 
+### 4b. Mark an uncited assertion — never drop it
+
+A panelist assertion carrying neither fresh evidence produced this run (a
+`file:line`, a command's output, a diff hunk) nor a citation is **marked
+`uncited`** where it appears. It still ships.
+
+```
+FLAG THE UNCITED ASSERTION. NEVER DROP IT.
+A SUPPRESSED FINDING IS INDISTINGUISHABLE FROM A FINDING NOBODY MADE.
+```
+
+The distinction is load-bearing and it is the reason this is a marking rule
+rather than a filter: an unevidenced assertion may still be the most valuable
+line in the report — a judge noticing something it could not yet prove is
+exactly the signal a human wants. What the reader needs is to know which
+category they are reading, not to be protected from one of them.
+
+**Drop was considered and rejected against this file.** The formulation this
+was adapted from offers "drop or flag"; the drop half contradicts § 4's
+Advisory tier three paragraphs up — *"Emitted in full, never elided … a finding
+that reached a judge and not the reader was suppressed by the aggregator"*.
+Taking it would have put two rules in one skill in direct conflict, with the
+newer one silently winning. Marking satisfies the same goal (the reader can
+tell evidence from assertion) at zero information cost.
+
+Scope: this marks **panelist** assertions inside a synthesis. It does not reach
+the reviewed change, and it is not the `code-provenance` knowledge-layer
+obligation, which governs what a durable artefact asserts rather than what a
+transient review does.
+
 ### 5. Overall recommendation
 
 One sentence, not a number: `block` (any worst-tier verdict), `revise` (any

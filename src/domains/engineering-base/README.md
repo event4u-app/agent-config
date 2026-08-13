@@ -18,7 +18,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`active-remediation`** — Spotted an issue (security gap, missing test, bad code, duplication, stale idiom) — never ignore: small→fix inline, bigger→ask, many→follow-up PR
 - **`broken-access-control`** — Endpoint/query on user/tenant data — authenticated ≠ authorized: server-derived ownership/tenant/role + negative tests (401/non-owner/cross-tenant)
 - **`code-comment-discipline`** — Writing/editing code — a comment states a WHY or constraint the code cannot show; never restate what names/types say; no signature-mirroring docblocks
-- **`code-provenance`** — Porting/adapting external code (algorithm, structure, >~10 lines) — close the source, re-derive; conscious borrows need a ledger entry + license check
+- **`code-provenance`** — Porting external code, or asserting an externally-sourced claim — close the source, re-derive; borrows need a ledger entry + license check, harvested claims an id or an own-analysis label
 - **`commit-conventions`** — Git commit format, branch naming, conventional commits, committing, pushing, creating PRs
 - **`commit-policy`** — Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked
 - **`cross-source-consistency`** — Two sources disagree (ticket text vs mockup, spec silent on a needed behavior, spec vs code) → surface + ask before proceeding, never silently guess
