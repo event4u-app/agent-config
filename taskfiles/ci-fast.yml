@@ -977,6 +977,11 @@ tasks:
     desc: Enforce the risk_class invariant — a high-risk pack must be off-by-default + consent + lab (road-to-capability-governance Phase 2)
     cmd: ./scripts-run src/scripts/lint_pack_risk_class {{.QUIET_FLAG}}
 
+  lint-design-antipattern-parity:
+    silent: true
+    desc: Enforce catalog-to-rule parity — every design-antipattern entry classified, every backed entry matched by a slop rule (road-to-design-detector-evidence Phase 1)
+    cmd: ./scripts-run src/scripts/lint_design_antipattern_parity {{.QUIET_FLAG}}
+
   check-trunk-drift:
     silent: true
     desc: "Advisory pre-PR check — fail if the branch is behind origin/main (road-to-product-clarity Phase 4b). Run in the /create-pr pre-flight; wire into blocking CI per branch-protection policy."

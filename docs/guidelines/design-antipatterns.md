@@ -36,16 +36,17 @@ The stack-specific bans live in the apply skills and link back here by entry ID.
 The objective floors are cited from the linter, never re-eyeballed by an agent.
 
 **Deterministic detector backing** (`lint_design_slop`, dependency-free, zero
-runtime token cost): a pattern-detectable subset of these entries now has a
-deterministic rule that `design-review` cites instead of re-deriving — `V1`,
-`V3`, `V6`, `C2`, `C5`, `T4`, `T6`, `T7`, `L4`, `L8`, `M2`, `M4`, `CP1`, `CP2`,
-`CP5`, plus the **Consistency Locks & layout caps** `V8`, `C6`, `L9`, `L10`
-(rule ids `slop-<id>-*`, registry in `src/scripts/design_slop_rules.ts`). These
-are **flags / rebuttable presumptions**, never hard blocks — a consumer
-`DESIGN.md` that declares the pattern as intentional suppresses the flag. The
-entries needing structural or aesthetic judgment (e.g. `T3` icon-tile stack,
-`L2` three-identical-card grid, `V2` glassmorphism intent, `C7` theme-inversion)
-stay agent-judgment-only and are deliberately **not** in the detector.
+runtime token cost): a pattern-detectable subset of these entries has a
+deterministic rule that `design-review` cites instead of re-deriving (rule ids
+`slop-<id>-*`, registry in `src/scripts/design_slop_rules.ts`). These are
+**flags / rebuttable presumptions**, never hard blocks — a consumer `DESIGN.md`
+that declares the pattern as intentional suppresses the flag.
+
+Which entries those are is **not** enumerated here. The enumeration lives in
+[§ Detector status](#detector-status) below, where every entry carries exactly
+one status and `lint_design_antipattern_parity` checks the `backed` rows against
+the registry on every run. A second hand-maintained list in this paragraph is
+precisely the drift the gate exists to prevent, so there is only one.
 
 ## Current-generation tells (generation-dated — review 2026-Q4)
 
@@ -192,6 +193,74 @@ Converged via council (claude-sonnet-4-5 + gpt-4o, 2026-07-06): shared floor
 here, referenced by artifact-producing skills, deliberately not a PII-rule
 extension. Deterministic detection in `lint_design_slop` (path/trace grep) is
 possible but deferred until a real incident.
+
+---
+
+## Detector status
+
+Every catalog entry above carries exactly one status. This table is the single
+enumeration of what the deterministic detector covers, and
+`src/scripts/lint_design_antipattern_parity.ts` checks it on every CI run: a
+`backed` row whose id is not in the registry fails, a registry rule whose
+`catalogId` is not `backed` here fails, and an entry missing from this table
+fails. `Q*` floors are excluded — they are owned by `lint_design_quality` and
+are listed in § Quality floors.
+
+| Status | Meaning |
+|---|---|
+| `backed` | a deterministic rule exists in `design_slop_rules.ts` |
+| `floor` | measurable and enforced, but as a `Q*` objective floor in `lint_design_quality`, not as an aesthetic tell |
+| `judgment-only` | needs structural or aesthetic judgment a text pass cannot make; `design-review` decides it |
+| `deferred` | pattern-detectable but a design-system opinion rather than a floor; deliberately not shipped |
+| `candidate` | a numeric threshold stated in the entry, not yet detected — a status that must resolve to `backed` or `judgment-only`, never persist |
+
+| Entry | Status | Note |
+|---|---|---|
+| V1 | backed | |
+| V2 | judgment-only | decoration-vs-intent is the tell; a text pass cannot read intent |
+| V3 | backed | |
+| V4 | candidate | `border-radius` > 16px on elements under 200px wide |
+| V5 | judgment-only | icon register collision is a visual-style comparison |
+| V6 | backed | |
+| V7 | judgment-only | DOM-structure nesting depth, measured too false-positive-prone |
+| V8 | backed | |
+| C1 | judgment-only | the tell is the combination *as the primary scheme*; which colours are primary is a judgment |
+| C2 | backed | |
+| C3 | candidate | neon `box-shadow` / `text-shadow` accents on a dark surface |
+| C4 | floor | WCAG contrast, Q1 |
+| C5 | backed | |
+| C6 | backed | |
+| C7 | judgment-only | theme inversion may be deliberate emphasis |
+| T1 | judgment-only | requires comparing optical weight across the document |
+| T2 | judgment-only | requires knowing which element is the hero |
+| T3 | judgment-only | icon-tile stack; DOM-structure analysis, too false-positive-prone |
+| T4 | backed | |
+| T5 | judgment-only | copy phrase-list; that mechanism is council-rejected |
+| T6 | backed | |
+| T7 | backed | |
+| T8 | deferred | typeface count is a design-system opinion, not a floor |
+| T9 | candidate | `text-transform: uppercase` on body-length text |
+| T10 | candidate | `letter-spacing` above 0.05em on body text |
+| L1 | judgment-only | composite structural template |
+| L2 | judgment-only | three-identical-card grid; DOM-structure analysis |
+| L3 | deferred | spacing-multiple uniformity is a design-system opinion |
+| L4 | backed | |
+| L5 | floor | line length, Q3 |
+| L6 | judgment-only | requires an ancestor relation a flat text pass cannot establish |
+| L7 | judgment-only | requires a render |
+| L8 | backed | |
+| L9 | backed | |
+| L10 | backed | |
+| M1 | candidate | bounce or elastic easing on UI transitions |
+| M2 | backed | |
+| M3 | candidate | transform or filter animation on an `<img>` hover |
+| M4 | backed | |
+| M5 | floor | reduced-motion alternative, Q4 |
+| CP1 | backed | |
+| CP2 | backed | |
+| CP3 | judgment-only | copy phrase-list; that mechanism is council-rejected |
+| CP4 | judgment-only | copy phrase-list; that mechanism is council-rejected |
+| CP5 | backed | |
 
 ---
 
