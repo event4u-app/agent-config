@@ -581,3 +581,16 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
   a false-positive rate "in real consumer use". This is not that, and the gap
   is not closed by calling a repo-authored corpus real. What it replaces is an
   absence.
+
+  Delta, same epoch (corpus hash unchanged, so the two numbers are comparable).
+  Six catalog entries whose thresholds the catalog already published — V4, C3,
+  T9, T10, M1, M3 — were promoted to rules and graded individually rather than
+  as a batch. All six recorded M1 = 0 and each fires on its own positive
+  fixture, so N = 6 of 6 shipped and the registry stands at 24. The per-rule bar
+  is what makes that reportable: a batch bar would have let one noisy rule sink
+  five clean ones, or let an average carry a bad one through.
+
+  The same caveat governs the delta. Six more rules at zero on 32 files is six
+  more rules that did not fire here, not six rules shown to be precise. The one
+  thing the epoch does establish is that the instrument is capable of a non-zero
+  reading, because it produced one on its first use.
