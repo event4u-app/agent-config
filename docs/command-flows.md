@@ -7,7 +7,7 @@
 
 > Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `scripts/lint_command_flow_coverage.py`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
 
-**199 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
+**200 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
 
 ## User-work flows
 
@@ -22,6 +22,7 @@ _Explore, plan, estimate, refine, and investigate before building. The "what sho
 **Default path:** `feature/explore` → `feature/plan` → `estimate-ticket` → `refine-ticket`
 
 - `analyze` — Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review…
+- `analyze-conformance` — Audit recent local sessions for rule violations — deterministic scan plus subagent passes over the transcri…
 - `analyze-decision` — Audit a past architectural decision — restate what was chosen and why, compare original assumptions against…
 - `analyze-inbox` — Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, verify every…
 - `analyze-incident` — Full incident flow — incident-commander coordination, then RCA via root-cause-frameworks, then a blame-free…

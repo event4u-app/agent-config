@@ -7,7 +7,7 @@
 - **Total commands:** 220
 - **Top-level commands (directory `.`):** 0
 - **Sub-cluster directories:** 213
-- **Low-signal (≤2 commits AND ≤30d old):** 3
+- **Low-signal (≤2 commits AND ≤30d old):** 7
 - **Overlap pairs (cosine ≥ 0.6):** 7
 
 ## Per-directory counts
@@ -245,7 +245,7 @@
 Per-command invocation telemetry is **not** available. Two surrogate signals were considered:
 
 - **Filesystem mtime** — useless: `task sync` rewrites every file when the   condensed and uncondensed trees are regenerated.
-- **Git history (`--follow`)** — uninformative here: the `.agent-src.uncondensed/`   directory is the result of a recent rename (`.augment.uncondensed/` →   `.agent-src.uncondensed/`), so almost every file shows a single recent commit   on the current branch. 3 of 220 commands fall into the   ≤2-commits / ≤30d-old bucket purely as a   rename artefact, not as a real cold-tail signal.
+- **Git history (`--follow`)** — uninformative here: the `.agent-src.uncondensed/`   directory is the result of a recent rename (`.augment.uncondensed/` →   `.agent-src.uncondensed/`), so almost every file shows a single recent commit   on the current branch. 7 of 220 commands fall into the   ≤2-commits / ≤30d-old bucket purely as a   rename artefact, not as a real cold-tail signal.
 
 **Implication for Phase 1 categorisation:** keep / merge / retire decisions must be made on **intent** (description content, overlap with sibling commands, tier placement, cluster fit) rather than usage data. The cosine-≥0.6 overlap pairs above are the primary structural lever.
 
@@ -273,8 +273,8 @@ Column `bucket` is left blank — the categorisation lives in [`command-surface-
 | `video-storyboard` | `src/domains/ai-video/video/storyboard/command.md` | 2 | video | — | 101 | 16 | 86 | |
 | `FIRST_WIN` | `src/domains/analysis-workbench/FIRST_WIN.md` | — | — | — | 53 | 1 | 58 | |
 | `README` | `src/domains/analysis-workbench/README.md` | — | — | — | 26 | 42 | 58 | |
-| `analyze` | `src/domains/analysis-workbench/analyze/command.md` | 1 | analyze | — | 129 | 5 | 58 | |
-| `analyze-conformance` | `src/domains/analysis-workbench/analyze/conformance/command.md` | 2 | analyze | — | 236 | 6 | 6 | |
+| `analyze` | `src/domains/analysis-workbench/analyze/command.md` | 1 | analyze | — | 130 | 5 | 58 | |
+| `analyze-conformance` | `src/domains/analysis-workbench/analyze/conformance/command.md` | 2 | analyze | — | 236 | 6 | 7 | |
 | `analyze-decision` | `src/domains/analysis-workbench/analyze/decision/command.md` | 2 | analyze | — | 108 | 5 | 58 | |
 | `analyze-inbox` | `src/domains/analysis-workbench/analyze/inbox/command.md` | 2 | analyze | — | 242 | 4 | 7 | |
 | `analyze-incident` | `src/domains/analysis-workbench/analyze/incident/command.md` | 2 | analyze | — | 120 | 6 | 58 | |
@@ -293,10 +293,10 @@ Column `bucket` is left blank — the categorisation lives in [`command-surface-
 | `bug` | `src/domains/engineering-base/bug/command.md` | 2 | bug | — | 60 | 2 | 35 | |
 | `bug-fix` | `src/domains/engineering-base/bug/fix/command.md` | 2 | bug | — | 196 | 16 | 86 | |
 | `bug-investigate` | `src/domains/engineering-base/bug/investigate/command.md` | 2 | bug | — | 189 | 15 | 86 | |
-| `design-system-capture` | `src/domains/engineering-base/design-system/capture/command.md` | 2 | design-system | — | 44 | 0 | — | |
-| `design-system` | `src/domains/engineering-base/design-system/command.md` | 2 | design-system | — | 66 | 0 | — | |
-| `design-system-generate` | `src/domains/engineering-base/design-system/generate/command.md` | 2 | design-system | — | 52 | 0 | — | |
-| `design-system-import` | `src/domains/engineering-base/design-system/import/command.md` | 2 | design-system | — | 63 | 0 | — | |
+| `design-system-capture` | `src/domains/engineering-base/design-system/capture/command.md` | 2 | design-system | — | 44 | 1 | 0 | |
+| `design-system` | `src/domains/engineering-base/design-system/command.md` | 2 | design-system | — | 66 | 1 | 0 | |
+| `design-system-generate` | `src/domains/engineering-base/design-system/generate/command.md` | 2 | design-system | — | 52 | 1 | 0 | |
+| `design-system-import` | `src/domains/engineering-base/design-system/import/command.md` | 2 | design-system | — | 63 | 1 | 0 | |
 | `feature` | `src/domains/engineering-base/feature/command.md` | 1 | feature | — | 65 | 15 | 86 | |
 | `feature-dev` | `src/domains/engineering-base/feature/dev/command.md` | 2 | feature | — | 125 | 17 | 86 | |
 | `feature-explore` | `src/domains/engineering-base/feature/explore/command.md` | 2 | feature | — | 192 | 15 | 86 | |
@@ -305,13 +305,13 @@ Column `bucket` is left blank — the categorisation lives in [`command-surface-
 | `feature-roadmap` | `src/domains/engineering-base/feature/roadmap/command.md` | 2 | feature | — | 242 | 17 | 86 | |
 | `fix-ci` | `src/domains/engineering-base/fix/ci/command.md` | 2 | fix | — | 88 | 15 | 86 | |
 | `fix` | `src/domains/engineering-base/fix/command.md` | 1 | fix | — | 100 | 21 | 86 | |
-| `fix-comments` | `src/domains/engineering-base/fix/comments/command.md` | 2 | fix | — | 100 | 3 | 51 | |
+| `fix-comments` | `src/domains/engineering-base/fix/comments/command.md` | 2 | fix | — | 100 | 3 | 52 | |
 | `fix-portability` | `src/domains/engineering-base/fix/portability/command.md` | 2 | fix | — | 101 | 18 | 86 | |
 | `fix-pr-comments-loop` | `src/domains/engineering-base/fix/pr-comments-loop/command.md` | 2 | fix | — | 136 | 2 | 21 | |
 | `fix-pr-comments` | `src/domains/engineering-base/fix/pr-comments/command.md` | 2 | fix | — | 248 | 18 | 86 | |
 | `fix-quality` | `src/domains/engineering-base/fix/quality/command.md` | 2 | fix | — | 148 | 18 | 86 | |
 | `fix-refs` | `src/domains/engineering-base/fix/refs/command.md` | 2 | fix | — | 98 | 18 | 86 | |
-| `fix-route` | `src/domains/engineering-base/fix/route/command.md` | 2 | fix | — | 49 | 4 | 28 | |
+| `fix-route` | `src/domains/engineering-base/fix/route/command.md` | 2 | fix | — | 49 | 4 | 29 | |
 | `fix-seeder` | `src/domains/engineering-base/fix/seeder/command.md` | 2 | fix | — | 158 | 15 | 86 | |
 | `implement-ticket` | `src/domains/engineering-base/implement-ticket/command.md` | 0 | — | — | 203 | 18 | 86 | |
 | `judge` | `src/domains/engineering-base/judge/command.md` | 1 | judge | — | 88 | 16 | 86 | |
@@ -330,10 +330,10 @@ Column `bucket` is left blank — the categorisation lives in [`command-surface-
 | `review` | `src/domains/engineering-base/review/command.md` | 1 | review | — | 62 | 2 | 35 | |
 | `review-routing` | `src/domains/engineering-base/review/routing/command.md` | 2 | review | — | 129 | 16 | 86 | |
 | `security-audit-config` | `src/domains/engineering-base/security-audit-config/command.md` | 2 | — | — | 86 | 5 | 60 | |
-| `tdd` | `src/domains/engineering-base/tdd/command.md` | 2 | tdd | — | 72 | 3 | 28 | |
-| `tdd-green` | `src/domains/engineering-base/tdd/green/command.md` | 2 | tdd | — | 31 | 3 | 28 | |
-| `tdd-red` | `src/domains/engineering-base/tdd/red/command.md` | 2 | tdd | — | 32 | 3 | 28 | |
-| `tdd-refactor` | `src/domains/engineering-base/tdd/refactor/command.md` | 2 | tdd | — | 30 | 3 | 28 | |
+| `tdd` | `src/domains/engineering-base/tdd/command.md` | 2 | tdd | — | 72 | 3 | 29 | |
+| `tdd-green` | `src/domains/engineering-base/tdd/green/command.md` | 2 | tdd | — | 31 | 3 | 29 | |
+| `tdd-red` | `src/domains/engineering-base/tdd/red/command.md` | 2 | tdd | — | 32 | 3 | 29 | |
+| `tdd-refactor` | `src/domains/engineering-base/tdd/refactor/command.md` | 2 | tdd | — | 30 | 3 | 29 | |
 | `tests` | `src/domains/engineering-base/tests/command.md` | 2 | tests | — | 85 | 16 | 86 | |
 | `tests-create` | `src/domains/engineering-base/tests/create/command.md` | 2 | tests | — | 113 | 16 | 86 | |
 | `tests-e2e-heal` | `src/domains/engineering-base/tests/e2e-heal/command.md` | 2 | tests | — | 114 | 16 | 86 | |
@@ -347,9 +347,9 @@ Column `bucket` is left blank — the categorisation lives in [`command-surface-
 | `worktree-create` | `src/domains/engineering-base/worktree/create/command.md` | 2 | worktree | — | 65 | 6 | 33 | |
 | `worktree-status` | `src/domains/engineering-base/worktree/status/command.md` | 2 | worktree | — | 80 | 5 | 33 | |
 | `worktree-verify` | `src/domains/engineering-base/worktree/verify/command.md` | 2 | worktree | — | 70 | 5 | 33 | |
-| `FIRST_WIN` | `src/domains/fun/FIRST_WIN.md` | — | — | — | 48 | 3 | 72 | |
-| `README` | `src/domains/fun/README.md` | — | — | — | 18 | 50 | 72 | |
-| `prediction-pool` | `src/domains/fun/prediction-pool/command.md` | 2 | — | — | 237 | 10 | 72 | |
+| `FIRST_WIN` | `src/domains/fun/FIRST_WIN.md` | — | — | — | 48 | 3 | 73 | |
+| `README` | `src/domains/fun/README.md` | — | — | — | 18 | 50 | 73 | |
+| `prediction-pool` | `src/domains/fun/prediction-pool/command.md` | 2 | — | — | 237 | 10 | 73 | |
 | `README` | `src/domains/git/README.md` | — | — | — | 17 | 41 | 70 | |
 | `git-commit` | `src/domains/git/commit/command.md` | 0 | git-commit | — | 215 | 17 | 86 | |
 | `git-commit-in-chunks` | `src/domains/git/commit/in-chunks/command.md` | 2 | git-commit | — | 155 | 15 | 86 | |
@@ -370,9 +370,9 @@ Column `bucket` is left blank — the categorisation lives in [`command-surface-
 | `FIRST_WIN` | `src/domains/legal-review-prep/FIRST_WIN.md` | — | — | — | 32 | 2 | 50 | |
 | `LEGAL_NOTICE` | `src/domains/legal-review-prep/LEGAL_NOTICE.md` | — | — | — | 54 | 4 | 49 | |
 | `README` | `src/domains/legal-review-prep/README.md` | — | — | — | 22 | 39 | 50 | |
-| `README` | `src/domains/legal-review-prep/evals/README.md` | — | — | — | 63 | 5 | 49 | |
-| `dpa-art28-controller-audit-deletion` | `src/domains/legal-review-prep/evals/dpa-art28-controller-audit-deletion.md` | — | — | — | 32 | 2 | 49 | |
-| `dpa-art28-processor-subprocessor` | `src/domains/legal-review-prep/evals/dpa-art28-processor-subprocessor.md` | — | — | — | 32 | 2 | 49 | |
+| `README` | `src/domains/legal-review-prep/evals/README.md` | — | — | — | 63 | 5 | 50 | |
+| `dpa-art28-controller-audit-deletion` | `src/domains/legal-review-prep/evals/dpa-art28-controller-audit-deletion.md` | — | — | — | 32 | 2 | 50 | |
+| `dpa-art28-processor-subprocessor` | `src/domains/legal-review-prep/evals/dpa-art28-processor-subprocessor.md` | — | — | — | 32 | 2 | 50 | |
 | `README` | `src/domains/meta/README.md` | — | — | — | 317 | 174 | 83 | |
 | `agent-handoff` | `src/domains/meta/agent-handoff/command.md` | 0 | — | — | 268 | 25 | 86 | |
 | `agent-status` | `src/domains/meta/agent-status/command.md` | 0 | — | — | 142 | 14 | 86 | |

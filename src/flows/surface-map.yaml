@@ -37,6 +37,7 @@ commands:
     - analyze
     - analyze/reference-repo
     - analyze/inbox
+    - analyze/conformance
     - analyze/decision
     - analyze/incident
     - analyze/near-miss

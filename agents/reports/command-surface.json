@@ -269,7 +269,7 @@
       "visibility": "advanced",
       "cluster": "analyze",
       "pack": "analysis-workbench",
-      "line_count": 129,
+      "line_count": 130,
       "last_modified_iso": "2026-08-06T07:28:52+02:00",
       "days_since_modified": 7,
       "commit_count": 5,
@@ -289,10 +289,10 @@
       "pack": "analysis-workbench",
       "line_count": 236,
       "last_modified_iso": "2026-08-12T10:26:05+02:00",
-      "days_since_modified": 0,
+      "days_since_modified": 1,
       "commit_count": 6,
       "first_commit_iso": "2026-08-06T10:46:43+02:00",
-      "days_since_first_commit": 6
+      "days_since_first_commit": 7
     },
     {
       "name": "analyze-decision",
@@ -630,11 +630,11 @@
       "cluster": "design-system",
       "pack": "engineering-base",
       "line_count": 44,
-      "last_modified_iso": "",
-      "days_since_modified": null,
-      "commit_count": 0,
-      "first_commit_iso": "",
-      "days_since_first_commit": null
+      "last_modified_iso": "2026-08-13T10:20:16+02:00",
+      "days_since_modified": 0,
+      "commit_count": 1,
+      "first_commit_iso": "2026-08-13T10:20:16+02:00",
+      "days_since_first_commit": 0
     },
     {
       "name": "design-system",
@@ -648,11 +648,11 @@
       "cluster": "design-system",
       "pack": "engineering-base",
       "line_count": 66,
-      "last_modified_iso": "",
-      "days_since_modified": null,
-      "commit_count": 0,
-      "first_commit_iso": "",
-      "days_since_first_commit": null
+      "last_modified_iso": "2026-08-13T10:20:16+02:00",
+      "days_since_modified": 0,
+      "commit_count": 1,
+      "first_commit_iso": "2026-08-13T10:20:16+02:00",
+      "days_since_first_commit": 0
     },
     {
       "name": "design-system-generate",
@@ -666,11 +666,11 @@
       "cluster": "design-system",
       "pack": "engineering-base",
       "line_count": 52,
-      "last_modified_iso": "",
-      "days_since_modified": null,
-      "commit_count": 0,
-      "first_commit_iso": "",
-      "days_since_first_commit": null
+      "last_modified_iso": "2026-08-13T10:20:16+02:00",
+      "days_since_modified": 0,
+      "commit_count": 1,
+      "first_commit_iso": "2026-08-13T10:20:16+02:00",
+      "days_since_first_commit": 0
     },
     {
       "name": "design-system-import",
@@ -684,11 +684,11 @@
       "cluster": "design-system",
       "pack": "engineering-base",
       "line_count": 63,
-      "last_modified_iso": "",
-      "days_since_modified": null,
-      "commit_count": 0,
-      "first_commit_iso": "",
-      "days_since_first_commit": null
+      "last_modified_iso": "2026-08-13T10:20:16+02:00",
+      "days_since_modified": 0,
+      "commit_count": 1,
+      "first_commit_iso": "2026-08-13T10:20:16+02:00",
+      "days_since_first_commit": 0
     },
     {
       "name": "feature",
@@ -850,7 +850,7 @@
       "days_since_modified": 23,
       "commit_count": 3,
       "first_commit_iso": "2026-06-22T10:12:45+02:00",
-      "days_since_first_commit": 51
+      "days_since_first_commit": 52
     },
     {
       "name": "fix-portability",
@@ -958,7 +958,7 @@
       "days_since_modified": 15,
       "commit_count": 4,
       "first_commit_iso": "2026-07-15T10:35:40+02:00",
-      "days_since_first_commit": 28
+      "days_since_first_commit": 29
     },
     {
       "name": "fix-seeder",
@@ -1300,7 +1300,7 @@
       "days_since_modified": 10,
       "commit_count": 3,
       "first_commit_iso": "2026-07-15T10:35:40+02:00",
-      "days_since_first_commit": 28
+      "days_since_first_commit": 29
     },
     {
       "name": "tdd-green",
@@ -1318,7 +1318,7 @@
       "days_since_modified": 23,
       "commit_count": 3,
       "first_commit_iso": "2026-07-15T10:35:40+02:00",
-      "days_since_first_commit": 28
+      "days_since_first_commit": 29
     },
     {
       "name": "tdd-red",
@@ -1336,7 +1336,7 @@
       "days_since_modified": 23,
       "commit_count": 3,
       "first_commit_iso": "2026-07-15T10:35:40+02:00",
-      "days_since_first_commit": 28
+      "days_since_first_commit": 29
     },
     {
       "name": "tdd-refactor",
@@ -1354,7 +1354,7 @@
       "days_since_modified": 23,
       "commit_count": 3,
       "first_commit_iso": "2026-07-15T10:35:40+02:00",
-      "days_since_first_commit": 28
+      "days_since_first_commit": 29
     },
     {
       "name": "tests",
@@ -1606,7 +1606,7 @@
       "days_since_modified": 70,
       "commit_count": 3,
       "first_commit_iso": "2026-06-01T10:43:35+02:00",
-      "days_since_first_commit": 72
+      "days_since_first_commit": 73
     },
     {
       "name": "README",
@@ -1624,7 +1624,7 @@
       "days_since_modified": 11,
       "commit_count": 50,
       "first_commit_iso": "2026-06-01T10:45:13+02:00",
-      "days_since_first_commit": 72
+      "days_since_first_commit": 73
     },
     {
       "name": "prediction-pool",
@@ -1642,7 +1642,7 @@
       "days_since_modified": 10,
       "commit_count": 10,
       "first_commit_iso": "2026-06-01T10:43:35+02:00",
-      "days_since_first_commit": 72
+      "days_since_first_commit": 73
     },
     {
       "name": "README",
@@ -2020,7 +2020,7 @@
       "days_since_modified": 49,
       "commit_count": 5,
       "first_commit_iso": "2026-06-24T10:08:54+02:00",
-      "days_since_first_commit": 49
+      "days_since_first_commit": 50
     },
     {
       "name": "dpa-art28-controller-audit-deletion",
@@ -2038,7 +2038,7 @@
       "days_since_modified": 49,
       "commit_count": 2,
       "first_commit_iso": "2026-06-24T10:08:54+02:00",
-      "days_since_first_commit": 49
+      "days_since_first_commit": 50
     },
     {
       "name": "dpa-art28-processor-subprocessor",
@@ -2056,7 +2056,7 @@
       "days_since_modified": 49,
       "commit_count": 2,
       "first_commit_iso": "2026-06-24T10:08:54+02:00",
-      "days_since_first_commit": 49
+      "days_since_first_commit": 50
     },
     {
       "name": "README",
