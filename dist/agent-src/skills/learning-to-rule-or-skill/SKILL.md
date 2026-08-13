@@ -39,8 +39,9 @@ Use this skill when:
   candidate rather than a blank page — it does **not** skip that search, and a
   seed whose `Extends instead?` line is missing is incomplete intake, not a
   shortcut. The repetition gate is satisfied differently here: the evidence is
-  the anchored ADOPT/ADAPT verdict behind the seed, not a count of ≥ 2
-  occurrences.
+  the anchored ADOPT/ADAPT verdict behind the seed rather than a recurrence
+  count — a mechanism confirmed once against a named own-repo defect is not the
+  one-off case the gate exists to filter.
 
 Do not use this skill when:
 
