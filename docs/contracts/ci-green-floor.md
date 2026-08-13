@@ -174,8 +174,11 @@ defects merge. Prefer wiring it into a workflow over declaring it.
 
 ### The local-only backlog — decided 2026-08-13
 
-**166 of 250 local gates have no remote reach, and that is an accepted standing
-state with a shrink-only ratchet, not an open task.** The number was 0 until the
+**166 of 251 local gates have no remote reach, and that is an accepted standing
+state with a shrink-only ratchet, not an open task.** (The two comparable pairs
+are 167 of 250 before this change and 166 of 251 after it — the wiring moved both
+terms, so a post-wiring numerator against a pre-wiring denominator, as this line
+first read, is not a ratio of anything.) The number was 0 until the
 same day, by construction: `check_ci_local_parity` built its CI-side set by
 regexing raw workflow text for `task <name>`, and several workflow *comments*
 contain the literal string `task ci` while stating that no workflow invokes it.
@@ -191,13 +194,23 @@ were visible only to whoever ran the script by hand. Measured cost: 0.53 s for
 the parity gate against ~225 s of headroom under the 5-minute per-job ceiling in
 [`ci-cost-budget.md`](ci-cost-budget.md).
 
-**Why the backlog is not drained.** Reaching the old coverage floor needed 23
-gates wired. A 22-gate sample run individually found **3 already red** locally,
-so wiring at that rate lands on the order of 23 merge-blocking reds on the first
-run of the only required check — the "gate that lands as N instant blockers"
-shape this repository has refused before, and the same reason the 166 were
-baselined rather than hard-failed. Serial runtime is not the obstacle: the sample
-mean was 0.92 s, so all 166 is roughly 154 s.
+**Why the backlog is not drained — and the first version of this paragraph
+priced it wrong by roughly 8×.** A 22-gate sample run individually found **3
+already red** locally, i.e. ~14 %. Wiring **all 166** at that rate lands on the
+order of **23 merge-blocking reds** on the first run of the only required check —
+the "gate that lands as N instant blockers" shape this repository has refused
+before, and the same reason the 166 were baselined rather than hard-failed.
+Serial runtime is not the obstacle: sample mean 0.92 s, so all 166 is roughly
+154 s.
+
+The correction matters because it changes what was actually declined. The
+original text attached the 23-red figure to the 23 gates that would have restored
+the *old* floor, which is arithmetic nonsense — 23 gates at 14 % is ~3 reds, not
+23. **A partial drain is therefore much cheaper than this paragraph first
+implied**, and it stays on the table: wiring ten or twenty gates a change, each
+red fixed as it appears, is a legitimate way to shrink the ratchet and is what
+"lowering happens by wiring gates into workflows" already means. What is declined
+here is the *sweep*, not the drain.
 
 **What the standing answer buys, stated narrowly.** A *new* gate registered in
 `task ci` with no workflow reds immediately, and the ratchet is now remotely
