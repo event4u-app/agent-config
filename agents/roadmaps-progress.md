@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 30 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **40** open blockers, **11** need you → `agent-config gates`
+> 29 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **39** open blockers, **10** need you → `agent-config gates`
 
 ## Overall
 
-**260 / 446 steps done · 58%**
+**253 / 437 steps done · 58%**
 
 ```text
 ███████████████████████░░░░░░░░░░░░░░░░░   58%
@@ -44,8 +44,7 @@
 | 26 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 27 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 1 | 7 | 0 | 0 | 0 | █████████░ 88% |
 | 28 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 29 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 30 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 15 | 1 | 14 | 0 | 0 | 0 | █████████░ 93% |
+| 29 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 15 | 1 | 14 | 0 | 0 | 0 | █████████░ 93% |
 
 ---
 
@@ -896,27 +895,6 @@ _1 blocker resolved._
     and chose the named blocker over a re-scope that changes a pre-registered
     input.
   - **Resolved when:** either a host-renderable framework lane exists (a build/serve step for the React lane, landed for its own reason) **or** a supported generic-lane override exists — at which point the re-scope is recorded as a dated amendment in `internal/bench/corpora/ui-track-integrity-PREREG.md` and Measurement B becomes executable.
-
-### [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md)
-
-**Road to worktree hygiene — 249 worktrees, 40 GB, one prune that does nothing** — 7 / 9 done (78%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | inventory, classify, record | 🟡 in progress | 2 | 7 | 0 | 0 | 78% |
-
-<a id="blockers-road-to-worktree-hygiene"></a>
-**Blockers**
-
-- **safe-set-removal-approval** (owner: user) — blocks Phase 1 step 3, and the last acceptance criterion
-  - **What to do:**
-    review the prepared plan
-    (`./scripts-run src/scripts/worktree_cleanup_check inventory --plan`) and
-    approve, narrow, or decline the removal of the 143 safe worktrees and their
-    fully-merged branches. Bulk deletion is a Hard-Floor action
-    (`non-destructive-by-default`): an agent may prepare and surface it, never
-    perform it, and a single earlier approval never covers a bulk sweep.
-  - **Resolved when:** the maintainer has approved (or declined) the safe-set removal this turn, and — if approved — the post-removal count is recorded in `agents/evidence/reports/worktree-inventory.md`.
 
 ### [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md)
 

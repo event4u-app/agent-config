@@ -71,13 +71,15 @@ duty, not just a permission gate:
       (2) git reports worktree paths as realpaths, so a repo reached through a
       symlinked parent mis-classified conventional worktrees as non-standard;
       fixed by canonicalising the longest existing ancestor. -->
-- [ ] Present the safe set as a list and remove **only after explicit approval** —
+- [x] Present the safe set as a list and remove **only after explicit approval** —
       per `scope-control`, branch and worktree deletion is permission-gated, and
       a bulk sweep does not inherit a single earlier approval.
 
-      **Re-presented 2026-08-13 on maintainer instruction ("re-run the inventory
-      first, then remove"). Still NOT removed, and the three findings below are
-      why — none of them was knowable on 2026-08-05.**
+      **Re-presented and executed 2026-08-13 on maintainer instruction ("re-run
+      the inventory first, then remove"). The re-run produced three findings
+      first, none of them knowable on 2026-08-05, and they changed what "the safe
+      set" even refers to — which is why the removal that followed is two
+      worktrees rather than the 143 the earlier plan proposed.**
 
       **Finding 1 — the inventory misclassifies when run from inside a worktree,
       and the error is total.** Same binary, same repo, same minute:
@@ -110,11 +112,44 @@ duty, not just a permission gate:
       set would therefore be removal under a predicate the maintainer did not
       approve — the exact substitution the approval was written to prevent.
 
-      **What that leaves.** The removal needs either the tool taught the two
-      missing conditions, or an explicit approval of the 181-item set under the
-      predicate the tool actually implements. Both are maintainer calls, and the
-      second is a Hard-Floor bulk deletion that names its object. Nothing was
-      deleted.
+      **Resolved the same day by taking the first branch: the tool was taught
+      the two missing conditions.** `isStandardLocation` now takes the MAIN
+      worktree as its base (a one-line defect with a total effect), and
+      `inventory` gained `--min-age-days=N` and `--exclude-live-sessions`. The
+      second reads the session register — real records with a real `worktree`
+      path and a real TTL — rather than inferring occupancy from file mtime,
+      which this module's own header already rules out as a liveness signal. An
+      unreadable git-dir mtime disqualifies under an age floor rather than
+      passing it: absence of evidence must not read as "old enough". Pinned by a
+      regression test that judges one sibling worktree from inside another.
+
+      **Then the approved predicate ran, and its result is the finding.**
+
+      | Predicate | safe |
+      |---|---:|
+      | tool default (merged · clean · conventional root · 48 h) | 181 |
+      | **as approved** (+ >60 days · no live session) | **2** |
+
+      **275 of 304 worktrees had git activity inside 60 days.** The 40 GB is not
+      a residue of abandoned work — it is current work. So the condition set that
+      made the removal safe also made it nearly empty, and the two are the same
+      fact rather than a disappointment: at this rate of branching, "untouched
+      for 60 days" describes almost nothing. Executing the 181-item set would
+      have removed 179 worktrees that the approved predicate rejects.
+
+      **Executed 2026-08-13, both of them, named:**
+      `.claude/worktrees/perf-installer-e2e` (branch `fix/lint-report-warnings`)
+      and `.claude/worktrees/reaping-orphans` (branch
+      `fix/reaping-pre-inventory-orphans`). Registered count 304 → **302**;
+      re-run under the same predicate now reports safe **0**, so the approval is
+      fully spent.
+
+      **What the disk question still needs, and it is a different question.**
+      Reclaiming the 40 GB means deciding about worktrees that are *recent*, which
+      no age floor can authorise. The honest options are a cap on concurrent
+      worktrees, removal keyed on merged-and-branch-deleted regardless of age, or
+      accepting the disk cost. That is a policy call, not a predicate tweak, and
+      it is not made here.
       <!-- PRESENTED 2026-08-05, removal NOT run: `inventory --plan` emits the 143
       `git worktree remove` + `git branch -d` pairs (never `-D`, so git itself
       re-checks the merge). Running them is a Hard-Floor bulk deletion needing the
@@ -160,14 +195,21 @@ or a tool that walks worktrees — or simply when a maintainer wants the list.
       verdict does not change when it is run twice.
 - [x] The review set is recorded with a per-entry reason, untouched.
 - [x] The residual counts are recorded so growth can be told from residue.
-- [ ] The safe set has been removed after explicit maintainer approval, and the
+- [x] The safe set has been removed after explicit maintainer approval, and the
       post-removal count is recorded.
+      **2026-08-13 — met, and worth reading with the number beside it.** The safe
+      set *under the approved predicate* was **2**, both removed by name; the
+      registered count is recorded at 304 → **302**, and a re-run reports safe 0.
+      The approval is spent. What is NOT claimed: the 40 GB is untouched, because
+      275 of 304 worktrees are younger than the approved 60-day floor. This
+      criterion asked whether the approved set was removed and it was; it never
+      asked whether the disk problem was solved, and it is not.
 
 ## Blockers
 
 ### blocker: safe-set-removal-approval
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Blocks:** Phase 1 step 3, and the last acceptance criterion
 - **What to do:** review the prepared plan
