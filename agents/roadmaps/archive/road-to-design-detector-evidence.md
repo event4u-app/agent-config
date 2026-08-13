@@ -271,7 +271,7 @@ files. It was discharged the way the pre-registration demands — demoted to
 handled, not that it stayed quiet; recording it as "did not fire" would be the
 tidier sentence and the false one.
 
-- [ ] **Step 1:** Add the six rules to `src/scripts/design_slop_rules.ts`, each
+- [x] **Step 1:** Add the six rules to `src/scripts/design_slop_rules.ts`, each
       keeping its catalog id, its severity from the P0–P3 semantics documented at
       `design_slop_rules.ts:20-27`, and the rebuttable-presumption behaviour:
       **C3** neon `box-shadow`/`text-shadow` accents on a dark
@@ -284,11 +284,11 @@ tidier sentence and the false one.
       patterns, and any implementation reaching for a parser invalidates Phases 1
       and 2 along with itself.
       <!-- verify: npx vitest run src/scripts/design_slop_rules.test.ts -->
-- [ ] **Step 2:** One positive and one negative fixture per new rule, per the
+- [x] **Step 2:** One positive and one negative fixture per new rule, per the
       "no untested tell" assertion the suite already enforces
       (`design_slop_rules.test.ts:149`).
       <!-- verify: npx vitest run src/scripts/design_slop_rules.test.ts -->
-- [ ] **Step 3:** Re-run the Phase-2 bench and publish the delta. Acceptance is
+- [x] **Step 3:** Re-run the Phase-2 bench and publish the delta. Acceptance is
       **per rule, not per batch** — an all-or-nothing bar would sink five clean
       rules for one noisy one, and would let a batch pass by averaging. Each rule
       is graded on its own: zero false positives on the clean corpus **and** a
@@ -299,7 +299,7 @@ tidier sentence and the false one.
       catalog's six thresholds do not survive contact with real clean markup,
       which is a finding rather than a failure.
       <!-- verify: npx vitest run tests/scripts/design_slop_fp_bench.test.ts -->
-- [ ] **Step 4:** Update the catalog's detector-backing set — which Phase 1
+- [x] **Step 4:** Update the catalog's detector-backing set — which Phase 1
       Step 2 now checks mechanically — and confirm the parity gate stays green
       at the new rule count, whatever N turned out to be.
       <!-- verify: npx tsx src/scripts/lint_design_antipattern_parity.ts --quiet -->
