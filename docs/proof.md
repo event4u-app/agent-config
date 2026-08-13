@@ -285,10 +285,11 @@ Pure projection of what the repo already knows — the `enforced_by`
 resolution (`check_enforcement_coverage`) and the claims ledger
 (`docs/CLAIMS.md`). No new taxonomy, zero hand-written rows.
 
-**Axis 1 — enforcement level per rule.** 116 rules · 15 blocking (12.9%) · 9 observer · 0 local-only · 84 undeclared (no `enforced_by` yet).
+**Axis 1 — enforcement level per rule.** 116 rules · 15 blocking (12.9%) · 9 observer · 0 local-only · 83 undeclared (no `enforced_by` yet).
 
 | Rule | Effective level | Declared backstop(s) |
 |---|---|---|
+| `active-remediation` | none | `none` |
 | `code-provenance` | none | `none` |
 | `context-hygiene` | observer | `hook:context-hygiene` |
 | `council-availability` | none | `none` |
@@ -322,7 +323,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 | `untrusted-input-defense` | none | `none` |
 | `verify-before-complete` | observer | `hook:verify-before-complete` |
 
-Undeclared rules (84) carry no row — an honest gap beats a false claim.
+Undeclared rules (83) carry no row — an honest gap beats a false claim.
 
 **Axis 2 — evidence form per public claim.** 61 ledger entries · 47 backed · 10 unbacked inventory · 4 resolved-null.
 

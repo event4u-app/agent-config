@@ -64,6 +64,17 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 
 ## Per-roadmap phase breakdown
 
+### [road-to-always-loaded-corpus-scoping.md](roadmaps/road-to-always-loaded-corpus-scoping.md)
+
+**Scope the always-loaded rule corpus** — 0 / 16 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Establish whether scoping can reach the load path at all | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Inventory — what could legitimately be scoped | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Pilot on a bounded set, measured before and after | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | Decide and record | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+
 ### [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md)
 
 **Road to always-on orchestration — subagents, council, and team stop being features and become how this suite works** — 35 / 36 done (97%)
