@@ -81,7 +81,7 @@ capture-only and "silent on every path" (`hook_manifest.yaml:396-408`).
 
 **V5 — The refusal-capable stop gate has no view of pending async work.**
 `turn-end-gate` is always armed on the `stop` slot and can refuse a turn-end
-(`hook_manifest.yaml:445-460`; `src/scripts/hooks/turn_end_gate_hook.ts:810`
+(`hook_manifest.yaml:445-460`; `src/scripts/hooks/turn_end_gate_hook.ts:841`
 honours `stop_hook_active`). The subagent-orchestration skill dispatches
 async by default ("keep working while they run",
 `src/skills/subagent-orchestration/SKILL.md`, RDP section). Upstream issue
@@ -164,9 +164,17 @@ roadmap does **not** duplicate that work.
 
 ## Phase 0: Spikes — pin the host, reproduce the two upstream premises
 
-- [ ] **Step 1:** Record the installed host version and re-extract the event
+- [x] **Step 1:** Record the installed host version and re-extract the event
       enum (S0.2 method). Assert `SubagentStop` still present; record the
       version pin next to the finding.
+      → Host **2.1.229** (the spike pinned 2.1.220, so this is a fresh
+      extract, not a transfer). Exact-token counts: `SubagentStop` **24**,
+      `SubagentStart` **12** — both present. Payload field names
+      (`agent_id`, `agent_type`, `last_assistant_message`, …) are present in
+      the string table, which is a **presence** check and not proof that a
+      given event carries a given field — Steps 2 and 4 remain open and
+      Phase 4 stays gated on Step 4.
+      `agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md`.
 - [ ] **Step 2:** Payload spike: one throwaway `SubagentStop` command hook in a
       scratch project; capture the raw stdin JSON. Assert `last_assistant_message`
       and `agent_type` arrive as documented on THIS host version.
@@ -194,17 +202,43 @@ existing audit stream", `archive/road-to-orchestrator-first-execution.md:442-445
 — what changed since the cancellation is that the reopen trigger's letter is
 dead (V2) and production evidence exists.
 
-- [ ] **Step 1:** Vocabulary + native mapping + contract table row. Lint
+- [x] **Step 1:** Vocabulary + native mapping + contract table row. Lint
       (`lint_hook_manifest`) updated in the same change.
-- [ ] **Step 2:** `subagent-ledger` concern *(proposal)*: on `subagent_start`,
+      → `subagent_start` / `subagent_stop` added to both `EVENT_VOCABULARY`
+      copies (`dispatch_hook.ts`, `lint_hook_manifest.ts`), to
+      `host_semantics.CLAUDE_HOOK_EVENT_NAME`, to the `claude` + `cowork`
+      alias tables and platform chains, and to the contract's Event row.
+      **`hooks/hooks.json` was NOT hand-edited** — it is generated from the
+      manifest by `build_claude_hook_matrix`, so `task sync` +
+      `task generate-tools` regenerated it (`plugin_hooks` 7 → 9).
+      Two downstream surfaces the step's text does not name and CI does:
+      `concern_registry.ts` (parity test) and the manifest's bound-concern
+      lint. *Verified:* `lint_hook_manifest` exit 0; `tests/hooks` +
+      `tests/scripts/lint_hook_manifest.test.ts` 52 pass.
+- [x] **Step 2:** `subagent-ledger` concern *(proposal)*: on `subagent_start`,
       append an open-dispatch record `{agent_id, agent_type, started_at}` to
       gitignored runtime state; on `subagent_stop`, close it with
       `{duration, envelope_parse: ok|fail|absent}` — envelope parse runs
       `validateResponse` against `last_assistant_message` in **observe mode**
       (no decision emitted, ever, in this phase).
-- [ ] **Step 3:** Depth/concurrency signals: an open record whose starting
+      → `src/scripts/hooks/subagent_ledger_hook.ts`, bound on the two new
+      events only. **One deliberate departure from the step's literal text:**
+      the raw `agent_id` is never written. It is a host-supplied high-entropy
+      token of exactly the class `orchestration_record_hook` refuses to record
+      (`check_secret_leak` flags them as candidate credentials), so the ledger
+      stores `ref` — a local SHA-256 prefix — which correlates start↔stop and
+      child↔parent without persisting the host's token. `last_assistant_message`
+      never reaches disk in any form; only the three-way verdict and an error
+      **count**. A negative test plants both hostile values in the fields under
+      test and greps every written byte.
+- [x] **Step 3:** Depth/concurrency signals: an open record whose starting
       payload itself carries an `agent_id` is a nested spawn; record depth and
       the concurrent-open count per event.
+      → Depth is derived from the open-record set, never asserted: a named
+      parent gives `depth_basis: "observed"`, no parent field at all gives
+      depth 1 with `"assumed-root"` — absence recorded as absence, since
+      Phase 0 Steps 2/4 are what will replace the assumption with an observed
+      payload shape. *Verified:* 16 tests in `tests/hooks/subagent_ledger.test.ts`.
 - [ ] **Step 4:** Publish the baseline after ≥20 real dispatches: envelope
       return rate, parse-failure rate, duration distribution, nested-spawn
       count. This number replaces the 0.27% model-carried capture as the
@@ -257,6 +291,16 @@ reverts by file.
 
 ## Phase 3: Runaway containment — spawn guard, ledger-aware stop gate, shadow stop-loss
 
+> **Not started 2026-08-13, and the reason is an artefact that does not exist.**
+> Step 1 defers its warn→deny posture to "the concern activation policy
+> (program X3), which this step cites instead of re-arguing" the soak history.
+> `grep -rl "concern activation policy" .` returns **four** hits and every one
+> is roadmap prose or a review input — three roadmaps now cite a document none
+> of them wrote. Building the guard would mean inventing that posture, on top
+> of thresholds whose own text calls them "refined from Phase-1 telemetry,
+> never final" — telemetry the ledger landed in this PR has not collected yet.
+> Recorded rather than shipped; the phase stays open.
+
 - [ ] **Step 1:** `spawn-guard` PreToolUse concern on `Agent`/`Task`
       *(proposal)*: refuse a spawn when the ledger shows depth ≥ N or
       concurrent-open ≥ M (start values N=2, M=4 — pre-registered, refined
@@ -290,7 +334,10 @@ infrastructure).
       present ⇒ role `worker`, without touching the env path (CLI spawn
       wrappers keep working). Gated on the Phase-0 Step-4 spike.
 - [ ] **Step 2:** Supersede the stale blocker comment
-      (`hook_manifest.yaml:536-540`) with the payload mechanism and the spike
+      (`hook_manifest.yaml:568-571` — the comment moved again when Phase 1
+      Step 1 inserted the `subagent-ledger` concern above it; the draft's
+      `:536-540` and the adoption note's `:547-550` are both stale)
+      with the payload mechanism and the spike
       ref — corrected in place, the same way round 7 corrected the
       verify-before-complete path comment (`hook_manifest.yaml:63-66`).
 - [ ] **Step 3:** Keep the invariant: `pre_tool_use` concerns are never
@@ -310,12 +357,23 @@ wire-it-or-delete-it fork; the fork is decided — `delegation_nudge_hook.ts:342
 wires it, so neither branch is work. What the draft's evidence never covered is
 whether a *wired* caller changes the outcome, and that is the open question.
 
-- [ ] **Step 1:** Confirm the wired call site actually governs the dispatches the
+- [x] **Step 1:** Confirm the wired call site actually governs the dispatches the
       ledger counts — `delegation-nudge` runs on `user_prompt_submit` and is
       advisory (it injects a verdict line, it does not select the tier for the
       spawn). If the tier the spawn uses is still model-carried downstream of the
       nudge, the caller is reachable but **not** load-bearing, and that is the
       finding to publish, not a second wiring change.
+      → **Reachable, not load-bearing** — the pre-registered outcome, traced
+      end to end. `recommendSliceTier` (`delegation_nudge_hook.ts:341`) calls
+      the resolver with a hardcoded `task_tier: "lite"` / `session_tier: "high"`
+      (no per-slice classification exists at prompt-submit time); the returned
+      tier is interpolated into prose at `:382` and injected as
+      `additionalContext`. Nothing reads it back. `resolveSubagentRouting` has
+      exactly one production caller and its output terminates in a sentence.
+      So the follow-up is **not** a second wiring change — it is Step 2, which
+      needs the ≥20-dispatch window the Phase-1 ledger has only just begun to
+      collect. Full trace: `agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md`
+      § Phase 5 Step 1.
 - [ ] **Step 2:** Re-measure the tier distribution over the next ≥20 dispatches
       via the Phase-1 ledger; publish the before/after pair.
 
