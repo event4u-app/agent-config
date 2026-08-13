@@ -142,6 +142,10 @@ internal/evals/results/
 # evals.json is tracked, per-run outputs and benchmarks are not).
 .agent-src.uncondensed/skills/*/evals/runs/
 dist/agent-src/skills/*/evals/runs/
+# src/ line added 2026-08-13: the orchestrator resolves the live skills tree
+# now (ADR-200 divergence), so `scaffold` writes here rather than into the
+# retired container — the same ignore-audit gap ADR-051 left for last-run.json.
+src/skills/*/evals/runs/
 
 # Memory access runtime cache (per-repo `memory_status` probe result;
 # regenerated on demand, never committed)

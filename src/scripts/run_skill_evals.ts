@@ -10,10 +10,13 @@
  * JSON files (json.dumps indent=2 + trailing newline). No behaviour
  * changes.
  *
- * The `.agent-src.uncondensed/skills/` literal below is part of the
- * mirrored .py source — this is a faithful twin, so the legacy path is
- * replicated verbatim, not modernized (ADR-051 carve-out for faithful
- * twins).
+ * SKILLS_ROOT diverges from the mirrored .py source: it resolves the live
+ * skills tree through the shared resolver instead of replicating the retired
+ * container literal. Replicating it made every subcommand fail in
+ * `_skill_dir()` before doing any work — the twin was byte-faithful to a
+ * source that no longer exists and runnable against nothing. Documented per
+ * ADR-200 § 6 in `docs/migration/divergences/src-scripts-run_skill_evals.md`;
+ * an undocumented difference would be a regression by definition.
  *
  * Sub-agent SPAWNING is per-environment (Claude Code, Augment Code,
  * council) and is left as a stub `_spawn_subagent(...)` that authors
@@ -25,11 +28,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { SRC_SKILLS } from './_lib/agent_src.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/run_skill_evals.ts → parents[2] is the repo root (mirrors
 // `Path(__file__).resolve().parent.parent.parent` in the .py).
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-export const SKILLS_ROOT = path.join(REPO_ROOT, '.agent-src.uncondensed', 'skills');
+export const SKILLS_ROOT = SRC_SKILLS();
 
 /** JSON value type for eval specs / grades. */
 type JsonValue =
