@@ -102,6 +102,10 @@ Do NOT create a skill or rule for:
 → See `docs/guidelines/agent-infra/size-and-scope.md` for full limits.
 
 * Target: 300–900 words. Review for split above 1200 words. Strongly consider split above 1500 words.
+* Over the 400-line K6 cap → the **router-head contract** in `templates/skill.md`
+  applies: entry head (when-to-use · mode table · routing) plus one `tasks/` or
+  `references/` file per mode, and the head never inlines more than one mode's
+  procedure. Gated by `lint_skill_router_head` with a shrink-only allowlist.
 * If multiple workflows exist → split into multiple skills
 * If two skills overlap heavily → merge
 * If a skill becomes "read the guideline" → it lost its purpose, restore the workflow

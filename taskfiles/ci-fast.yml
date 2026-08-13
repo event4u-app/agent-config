@@ -1080,6 +1080,29 @@ tasks:
       from the ledger.
     cmd: ./scripts-run src/scripts/lint_provenance {{.QUIET_FLAG}}
 
+  lint-harvest-provenance:
+    silent: true
+    desc: >-
+      Harvest ledger gate — the knowledge-side sibling of lint-provenance.
+      Checks provenance/harvests.jsonl against its own closed schema, rejects an
+      unpinned source_ref and a duplicate harvest_id, fails a row whose artefact
+      no longer exists, and fails a `<!-- harvest:id -->` citation with no ledger
+      row. Like its sibling it audits our own records, so it cannot see an
+      unrecorded harvest — an empty ledger with zero citations is a legitimate
+      pass and the green line says so.
+    cmd: ./scripts-run src/scripts/lint_harvest_provenance {{.QUIET_FLAG}}
+
+  lint-skill-router-head:
+    silent: true
+    desc: >-
+      Router-head gate — makes the published K6 cap (400 lines) enforced for NEW
+      skills. Over the cap with no tasks/ or references/ directory is a monolith
+      and fails; the four skills already over it sit in a SHRINK-ONLY allowlist
+      that may lose entries and never gain them. Not a token or activation
+      claim: what the host loads on trigger is unobservable from this tree, so
+      the gate asserts only that an existing published contract now holds.
+    cmd: ./scripts-run src/scripts/lint_skill_router_head {{.QUIET_FLAG}}
+
   reuse-lint:
     silent: true
     desc: >-

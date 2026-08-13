@@ -38,6 +38,32 @@ source: package
   - mode            optional — advisory link to a role-contracts workflow mode
   - version         required — semantic version; bump on breaking changes
   - source          required — "package" for personas shipped in dist/agent-src/
+  - sources         optional — harvest_id list this persona may cite as external
+                    doctrine (provenance/harvests.jsonl). OMIT IT unless you mean
+                    one of the two scoped states; absent is the normal case and
+                    the one every existing persona is in.
+-->
+
+<!-- SOURCES — an epistemic scope, not a bibliography.
+
+  A persona declares a voice. `sources:` optionally declares what that voice is
+  allowed to assert as *external doctrine* — as opposed to its own reasoning,
+  which needs no declaration and is never restricted.
+
+  | State | Meaning |
+  |---|---|
+  | field absent | Unscoped. Today's behaviour for every persona; nothing changes. |
+  | `sources: []` | Explicitly asserts nothing harvested — its positions are its own. |
+  | `sources: [id, …]` | May cite those harvest ids as doctrine. |
+
+  Every declared id must resolve to a row in `provenance/harvests.jsonl`;
+  `lint_harvest_provenance` fails an id that does not. Do NOT invent a row to
+  populate the field — an empty ledger and an absent field is the correct
+  resting state, and `[]` is for a persona where the distinction is worth
+  stating out loud.
+
+  This does not touch the Unique-Questions heuristic. A scoped persona still
+  earns its place by asking what nobody else asks.
 -->
 
 # {Role name}

@@ -183,6 +183,8 @@ tasks:
       - task: lint-trust-coherence
       - task: lint-legal-pack
       - task: lint-provenance
+      - task: lint-harvest-provenance
+      - task: lint-skill-router-head
       - task: lint-provenance-vocabulary
       - task: validate-discovery-manifest
       - task: check-discovery-determinism
