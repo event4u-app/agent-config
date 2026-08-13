@@ -364,8 +364,9 @@ whether a *wired* caller changes the outcome, and that is the open question.
       nudge, the caller is reachable but **not** load-bearing, and that is the
       finding to publish, not a second wiring change.
       → **Reachable, not load-bearing** — the pre-registered outcome, traced
-      end to end. `recommendSliceTier` (`delegation_nudge_hook.ts:341`) calls
-      the resolver with a hardcoded `task_tier: "lite"` / `session_tier: "high"`
+      end to end. `recommendSliceTier` calls the resolver at
+      `delegation_nudge_hook.ts:342` (the same call site the paragraph above
+      cites) with a hardcoded `task_tier: "lite"` / `session_tier: "high"`
       (no per-slice classification exists at prompt-submit time); the returned
       tier is interpolated into prose at `:382` and injected as
       `additionalContext`. Nothing reads it back. `resolveSubagentRouting` has

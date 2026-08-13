@@ -427,10 +427,11 @@ and by the dispatcher replay tests
 
 ```
 tests/fixtures/hooks/
-  session_start.json · session_end.json · user_prompt_submit.json
-  pre_tool_use.json  · post_tool_use.json · stop.json
-  pre_compact.json   · agent_error.json
-  README.md          — corpus contract + platform-shape table
+  session_start.json  · session_end.json  · user_prompt_submit.json
+  pre_tool_use.json   · post_tool_use.json · stop.json
+  pre_compact.json    · agent_error.json
+  subagent_start.json · subagent_stop.json
+  README.md           — corpus contract + platform-shape table
 ```
 
 Each fixture is a **stdin payload** — the dispatcher wraps it via
@@ -442,7 +443,9 @@ Each fixture is a **stdin payload** — the dispatcher wraps it via
   (`chat-history`, `roadmap-progress`, `context-hygiene`,
   `verify-before-complete`, `minimal-safe-diff`) run without raising
   — primarily `tool_name` (for `*_tool_use`), `prompt` (for
-  `user_prompt_submit`).
+  `user_prompt_submit`), `agent_id` + `agent_type` (for `subagent_*`,
+  which `subagent-ledger` correlates on) and `last_assistant_message`
+  (for `subagent_stop`, which it classifies without recording).
 - No real user content. Committed alongside source; the redaction
   workflow in [`hook-payload-capture`](../hook-payload-capture.md)
   applies to **captured** payloads, not committed fixtures.

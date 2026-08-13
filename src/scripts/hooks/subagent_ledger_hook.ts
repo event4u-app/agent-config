@@ -50,20 +50,60 @@
  * evaluated if the measurement window is uncontaminated by a mechanism
  * reacting to it.
  *
+ * ── An instrument that goes quiet is worse than one that reports nothing ──
+ *
+ * R2 finding 1. A payload carrying no `agent_id` used to make both handlers
+ * return before writing anything, so a host shape this tree has not yet ruled
+ * out (Phase 0 Step 2 is still open, and the string-table check in the
+ * evidence page is presence-only) would produce an empty ledger — byte-identical
+ * to "no dispatches happened", and the Phase-1 Step-4 baseline would read the
+ * two the same way. Both handlers now emit an `unidentified: true` line
+ * instead: no ref, no host token, and the absence is visible in the output.
+ *
+ * ── Open records are reaped, and the reaping is itself recorded ───────────
+ *
+ * R2 finding 2. An open record is created by a start and removed by its stop.
+ * A dispatch that never stops — symptom #1, the thing this instrument exists
+ * to catch — therefore leaves a file behind, and `concurrent_open` and `depth`
+ * would drift upward forever. Phase 3's pre-registered spawn guard reads this
+ * same set at `concurrent-open >= 4`, so four leaked records would eventually
+ * deny every spawn.
+ *
+ * So a record older than `OPEN_RECORD_TTL_MS` is reaped on the next event and
+ * a `subagent_reaped` line is written for it. That line is not bookkeeping —
+ * it is the closest thing this instrument has to a direct observation of a
+ * never-returning dispatch, which is why the leak is reported rather than
+ * quietly swept. `session_id` rides on the record so a future sweep can scope
+ * by session; nothing reads it yet and it is not claimed to.
+ *
  * ── Depth and concurrency (Step 3) ────────────────────────────────────────
  *
- * Depth is derived from the open-record set, not asserted. A start payload
- * that names a parent (`parent_agent_id` / `parentAgentId`, or a
- * session-level `agent_id` distinct from the starting agent's own) is a
- * nested spawn: its depth is the parent's depth + 1, resolved by walking the
- * open records. When no parent field arrives at all, depth is recorded as 1
- * with `depth_basis: "assumed-root"` — absence is written down as absence,
- * never as a measured root. Phase 0 Steps 2 and 4 are what will replace the
- * assumption with an observed payload shape; until they run, the honest
- * record says which of the two it is.
+ * Depth is derived from the open-record set, never asserted, and the basis is
+ * recorded alongside it in three values rather than two (R2 finding 5):
  *
- * `concurrent_open` is the count of open records at the moment the event is
- * processed, INCLUDING the record being opened, so a lone dispatch reads 1.
+ *   `observed`        — the named parent's record was open and its depth read.
+ *   `asserted-parent` — the payload named a parent whose record is not open.
+ *                       Nesting is a FACT; the number is a floor, since a
+ *                       grandchild whose parent already closed is deeper.
+ *   `assumed-root`    — the payload named no parent at all.
+ *
+ * A consumer filtering for measured depths takes `observed` alone. Labelling
+ * the middle case `observed` would have fed a guess into exactly that filter.
+ *
+ * `concurrent_open` has ONE definition on both lines (R2 finding 8): **the
+ * number of open dispatches after this event is applied.** Start counts after
+ * its own record is written; stop counts after its own is removed.
+ *
+ * ── Writes go through the contract's atomic path ──────────────────────────
+ *
+ * R2 finding 3. `hook-architecture-v1.md` § Concurrency requires lock + tmp +
+ * rename for writes under `agents/runtime/state/`; `atomic_write_json` is that
+ * path and is now used. The read-modify-write is gone rather than merely
+ * serialised: the record is written FIRST and the directory counted AFTER, so
+ * N concurrent starts each see at least their own record instead of every one
+ * reading the pre-write set and recording `concurrent_open: 1` — the
+ * undercount landed precisely in parallel fan-out, the mode this instrument
+ * exists to measure.
  */
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
@@ -71,7 +111,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { validateResponse } from '../_lib/subagent_response.js';
-import { is_replay_mode } from './state_io.js';
+import { atomic_write_json, is_replay_mode } from './state_io.js';
 import { readHookStdin } from './hook_stdin.js';
 
 const EXIT_ALLOW = 0;
@@ -87,6 +127,19 @@ function isObject(v: unknown): v is JsonObject {
 export const LEDGER_DIR = path.join('agents', 'runtime', 'state', 'subagent-ledger');
 /** Open-dispatch records live one file per ref so a crash cannot tear the set. */
 export const OPEN_SUBDIR = 'open';
+
+/**
+ * How long an open record may sit before it is treated as a dispatch that
+ * never returned. 24 h is a STATED DEFAULT, not a measured optimum — the
+ * distribution it should be derived from is what Phase 1 Step 4 publishes.
+ * It is deliberately far above any plausible dispatch so a reap is evidence
+ * of a real never-returning run rather than of a slow one.
+ *
+ * Revisit-if: the Phase-1 duration distribution shows a p99 within an order
+ * of magnitude of this value, or a reap line appears for a dispatch that did
+ * in fact return.
+ */
+export const OPEN_RECORD_TTL_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Stable, local, non-reversible correlation key for a host `agent_id`.
@@ -105,20 +158,13 @@ export function refFor(agentId: string): string {
 }
 
 /**
- * Unwrap the dispatcher envelope (`{schema_version, platform, event, payload}`)
- * down to the platform-native payload, falling back to the top-level object
- * for direct/legacy invocation — the same shape `orchestration_record_hook`
- * and `code_graph_nudge_hook` handle.
+ * Unwrap the dispatcher envelope (`{schema_version, platform, event,
+ * payload}`) down to the platform-native payload, falling back to the
+ * top-level object for direct/legacy invocation.
  */
-export function unwrapPayload(envelope: JsonObject): JsonObject {
+function unwrapPayload(envelope: JsonObject): JsonObject {
     const inner = envelope['payload'];
     return isObject(inner) ? inner : envelope;
-}
-
-/** Read the internal event name off the dispatcher envelope. */
-export function extractEvent(envelope: JsonObject): string | null {
-    const v = envelope['event'];
-    return typeof v === 'string' && v ? v : null;
 }
 
 function str(payload: JsonObject, ...keys: string[]): string | null {
@@ -127,16 +173,6 @@ function str(payload: JsonObject, ...keys: string[]): string | null {
         if (typeof v === 'string' && v) return v;
     }
     return null;
-}
-
-/** The starting/stopping agent's own id, across observed host key variants. */
-export function extractAgentId(payload: JsonObject): string | null {
-    return str(payload, 'agent_id', 'agentId');
-}
-
-/** The agent TYPE, an id-shaped enum — the one host string recorded verbatim. */
-export function extractAgentType(payload: JsonObject): string | null {
-    return str(payload, 'agent_type', 'agentType', 'subagent_type', 'subagentType');
 }
 
 /**
@@ -148,7 +184,7 @@ export function extractAgentType(payload: JsonObject): string | null {
  * context rather than a dedicated parent key). `null` means the payload said
  * nothing — recorded as `assumed-root`, never as "this is a root".
  */
-export function extractParentId(payload: JsonObject, ownId: string | null): string | null {
+function extractParentId(payload: JsonObject, ownId: string | null): string | null {
     const explicit = str(payload, 'parent_agent_id', 'parentAgentId');
     if (explicit) return explicit;
     const session = payload['session'];
@@ -157,11 +193,6 @@ export function extractParentId(payload: JsonObject, ownId: string | null): stri
         if (sessionAgent && sessionAgent !== ownId) return sessionAgent;
     }
     return null;
-}
-
-/** The subagent's final assistant message — read, classified, never stored. */
-export function extractLastMessage(payload: JsonObject): string | null {
-    return str(payload, 'last_assistant_message', 'lastAssistantMessage');
 }
 
 export type EnvelopeParse = 'ok' | 'fail' | 'absent';
@@ -176,51 +207,96 @@ export interface ParseVerdict {
  * Classify a subagent's final message against the response-envelope contract.
  *
  * Three outcomes, and the distinction between the last two is the whole point
- * of the measurement: `absent` means no envelope was found to judge (no
- * message, or a message carrying no JSON object at all), `fail` means one was
- * found and did not satisfy `validateResponse`. Collapsing them would make the
- * Phase-1 baseline unable to separate "the worker never returned a structured
- * result" from "it returned a malformed one" — two different defects with two
- * different fixes.
- *
- * A fenced ```json block is unwrapped first, because that is how a model
- * emits an envelope in prose; a bare object is tried second.
+ * of the measurement: `absent` means no envelope was found to judge, `fail`
+ * means one was found and did not satisfy `validateResponse`. Collapsing them
+ * would make the Phase-1 baseline unable to separate "the worker never
+ * returned a structured result" from "it returned a malformed one" — two
+ * different defects with two different fixes.
  */
 export function classifyEnvelope(message: string | null): ParseVerdict {
     if (message === null || !message.trim()) return { verdict: 'absent', error_count: 0 };
 
-    const candidate = _extractJsonObject(message);
-    if (candidate === null) return { verdict: 'absent', error_count: 0 };
+    const candidates = _jsonObjectCandidates(message);
+    if (candidates.length === 0) return { verdict: 'absent', error_count: 0 };
 
-    const result = validateResponse(candidate);
-    if (result.valid) return { verdict: 'ok', error_count: 0 };
-    return { verdict: 'fail', error_count: result.errors.length };
+    // A message may carry several object-shaped spans. The envelope is the one
+    // that validates, so a `fail` is only reported once every candidate has
+    // been tried — otherwise a stray leading `{}` would mask a valid envelope.
+    let best: ParseVerdict | null = null;
+    for (const candidate of candidates) {
+        const result = validateResponse(candidate);
+        if (result.valid) return { verdict: 'ok', error_count: 0 };
+        if (best === null) best = { verdict: 'fail', error_count: result.errors.length };
+    }
+    return best ?? { verdict: 'absent', error_count: 0 };
 }
 
 /**
- * Pull the first plausible JSON object out of a message. Returns the DECODED
- * value, never the text. Deliberately conservative: a fenced block, then the
- * outermost brace span. A message with no object shape yields `null`, which
- * the caller reports as `absent` rather than `fail`.
+ * Every decoded JSON object the message contains, in the order a reader would
+ * meet them.
+ *
+ * R2 finding 4: the previous implementation took the span from the first `{`
+ * to the LAST `}`, so a valid envelope followed by any later brace in prose
+ * ("… — done. See {done}.") produced unparseable text and was reported
+ * `absent` — routing an extraction failure into the "never returned anything"
+ * bucket that the whole three-way verdict exists to keep separate, and biasing
+ * the Phase-1 return-rate falsifier downward.
+ *
+ * R2 finding 11: fenced blocks are now matched with an anchored, global scan
+ * rather than a first-match-anywhere regex, which used to be able to match at
+ * a *closing* fence and capture the prose between two blocks.
+ *
+ * The scanner walks brace depth and respects string literals and escapes, so a
+ * `}` inside a JSON string value cannot end a span early.
  */
-function _extractJsonObject(message: string): unknown | null {
-    const fenced = /```(?:json)?\s*\n([\s\S]*?)```/.exec(message);
-    const bodies: string[] = [];
-    if (fenced && fenced[1]) bodies.push(fenced[1]);
-    const first = message.indexOf('{');
-    const last = message.lastIndexOf('}');
-    if (first !== -1 && last > first) bodies.push(message.slice(first, last + 1));
+function _jsonObjectCandidates(message: string): unknown[] {
+    const texts: string[] = [];
 
-    for (const body of bodies) {
-        try {
-            const parsed: unknown = JSON.parse(body.trim());
-            if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
-        } catch {
-            // try the next candidate shape
+    for (const match of message.matchAll(/^[ \t]*```[ \t]*(?:json)?[ \t]*\r?\n([\s\S]*?)^[ \t]*```/gm)) {
+        if (match[1]) texts.push(match[1]);
+    }
+
+    let depth = 0;
+    let start = -1;
+    let inString = false;
+    let escaped = false;
+    for (let i = 0; i < message.length; i++) {
+        const ch = message[i]!;
+        if (inString) {
+            if (escaped) escaped = false;
+            else if (ch === '\\') escaped = true;
+            else if (ch === '"') inString = false;
+            continue;
+        }
+        if (ch === '"') inString = true;
+        else if (ch === '{') {
+            if (depth === 0) start = i;
+            depth++;
+        } else if (ch === '}') {
+            if (depth > 0) {
+                depth--;
+                if (depth === 0 && start !== -1) {
+                    texts.push(message.slice(start, i + 1));
+                    start = -1;
+                }
+            }
         }
     }
-    return null;
+
+    const out: unknown[] = [];
+    for (const text of texts) {
+        try {
+            const parsed: unknown = JSON.parse(text.trim());
+            if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) out.push(parsed);
+        } catch {
+            // Not an object span after all — the next candidate may be.
+        }
+    }
+    return out;
 }
+
+/** How a recorded depth was arrived at. See the header for the three values. */
+export type DepthBasis = 'observed' | 'asserted-parent' | 'assumed-root';
 
 /** An open dispatch, as persisted between the start and stop invocations. */
 export interface OpenRecord {
@@ -229,7 +305,8 @@ export interface OpenRecord {
     started_at: string;
     parent_ref: string | null;
     depth: number;
-    depth_basis: 'observed' | 'assumed-root';
+    depth_basis: DepthBasis;
+    session_id: string | null;
 }
 
 function openDir(root: string): string {
@@ -238,6 +315,43 @@ function openDir(root: string): string {
 
 function openFile(root: string, ref: string): string {
     return path.join(openDir(root), `${ref}.json`);
+}
+
+const DEPTH_BASES: ReadonlySet<string> = new Set<DepthBasis>(['observed', 'asserted-parent', 'assumed-root']);
+
+/**
+ * Validate a parsed open record fully before it is trusted.
+ *
+ * R2 finding 7: the previous version checked only that `ref` was a string and
+ * cast the rest, so a record missing `depth` produced `undefined + 1` = `NaN`,
+ * which serialises as `"depth": null` on a line still labelled
+ * `depth_basis: "observed"`. A record that does not satisfy the shape is
+ * treated as unreadable — the same class as a torn write — rather than
+ * half-believed.
+ */
+function _asOpenRecord(value: unknown, expectedRef: string): OpenRecord | null {
+    if (!isObject(value)) return null;
+    const ref = value['ref'];
+    // R2 finding 7, second half: the map used to be keyed by the record's
+    // self-declared ref while removal unlinks `<ref>.json`, so a file whose
+    // contents disagreed with its filename was counted forever. The filename
+    // is the identity; a record that disagrees with it is not trusted.
+    if (typeof ref !== 'string' || ref !== expectedRef) return null;
+    if (typeof value['started_at'] !== 'string') return null;
+    if (typeof value['depth'] !== 'number' || !Number.isFinite(value['depth'])) return null;
+    if (typeof value['depth_basis'] !== 'string' || !DEPTH_BASES.has(value['depth_basis'])) return null;
+    const agentType = value['agent_type'];
+    const parentRef = value['parent_ref'];
+    const sessionId = value['session_id'];
+    return {
+        ref,
+        agent_type: typeof agentType === 'string' ? agentType : null,
+        started_at: value['started_at'],
+        parent_ref: typeof parentRef === 'string' ? parentRef : null,
+        depth: value['depth'],
+        depth_basis: value['depth_basis'] as DepthBasis,
+        session_id: typeof sessionId === 'string' ? sessionId : null,
+    };
 }
 
 /** Every currently-open record, keyed by ref. Unreadable entries are skipped. */
@@ -251,12 +365,11 @@ export function readOpenRecords(root: string): Map<string, OpenRecord> {
     }
     for (const name of names) {
         if (!name.endsWith('.json')) continue;
+        const expectedRef = name.slice(0, -'.json'.length);
         try {
             const raw = fs.readFileSync(path.join(openDir(root), name), 'utf8');
-            const parsed: unknown = JSON.parse(raw);
-            if (isObject(parsed) && typeof parsed['ref'] === 'string') {
-                out.set(parsed['ref'] as string, parsed as unknown as OpenRecord);
-            }
+            const rec = _asOpenRecord(JSON.parse(raw), expectedRef);
+            if (rec) out.set(rec.ref, rec);
         } catch {
             // A torn or hand-edited record is data we do not have, not a crash.
         }
@@ -265,27 +378,21 @@ export function readOpenRecords(root: string): Map<string, OpenRecord> {
 }
 
 /**
- * Resolve depth from the open-record set.
- *
- * A parent we can see gives `observed` depth. A parent the payload named but
- * whose record is not open (it closed first, or its start was never seen)
- * still counts as nesting — depth 2 — because the payload asserted a parent;
- * what we lack is the ancestor chain, not the fact of nesting. No parent field
- * at all is `assumed-root`. The walk is bounded by the open-set size so a
- * malformed cycle cannot spin.
+ * Resolve depth from the open-record set. See the header for why the middle
+ * case is `asserted-parent` and not `observed`.
  */
 export function resolveDepth(
     parentRef: string | null,
     open: ReadonlyMap<string, OpenRecord>,
-): { depth: number; depth_basis: 'observed' | 'assumed-root' } {
+): { depth: number; depth_basis: DepthBasis } {
     if (parentRef === null) return { depth: 1, depth_basis: 'assumed-root' };
     const parent = open.get(parentRef);
-    if (!parent) return { depth: 2, depth_basis: 'observed' };
+    if (!parent) return { depth: 2, depth_basis: 'asserted-parent' };
     return { depth: parent.depth + 1, depth_basis: 'observed' };
 }
 
 /** `${ts.slice(0,7)}.jsonl` — the monthly-file convention the audit stream uses. */
-export function ledgerFileFor(root: string, ts: string): string {
+function ledgerFileFor(root: string, ts: string): string {
     return path.join(root, LEDGER_DIR, `${ts.slice(0, 7)}.jsonl`);
 }
 
@@ -296,10 +403,9 @@ function appendLedgerLine(root: string, ts: string, line: Record<string, unknown
     fs.appendFileSync(file, `${JSON.stringify(line)}\n`, 'utf8');
 }
 
+/** Contract § Concurrency: lock + tmp + rename, via the shared helper. */
 function writeOpenRecord(root: string, rec: OpenRecord): void {
-    if (is_replay_mode()) return;
-    fs.mkdirSync(openDir(root), { recursive: true });
-    fs.writeFileSync(openFile(root, rec.ref), `${JSON.stringify(rec)}\n`, 'utf8');
+    atomic_write_json(openFile(root, rec.ref), rec);
 }
 
 function removeOpenRecord(root: string, ref: string): void {
@@ -311,25 +417,82 @@ function removeOpenRecord(root: string, ref: string): void {
     }
 }
 
-function handleStart(root: string, payload: JsonObject, nowIso: string): void {
-    const agentId = extractAgentId(payload);
-    if (agentId === null) return; // nothing to correlate on; record nothing rather than a fiction
+/** Count of open records on disk right now. Called AFTER our own write/remove. */
+function countOpen(root: string): number {
+    try {
+        return fs.readdirSync(openDir(root)).filter((n) => n.endsWith('.json')).length;
+    } catch {
+        return 0;
+    }
+}
+
+/**
+ * Reap open records past the TTL and report each one.
+ *
+ * The reap line is the point, not the cleanup: a record that aged out is the
+ * instrument's only direct sighting of a dispatch that never returned.
+ * Returns the number reaped.
+ */
+export function reapStaleOpenRecords(root: string, nowIso: string): number {
+    const now = Date.parse(nowIso);
+    if (!Number.isFinite(now)) return 0;
+    let reaped = 0;
+    for (const rec of readOpenRecords(root).values()) {
+        const started = Date.parse(rec.started_at);
+        if (!Number.isFinite(started) || now - started < OPEN_RECORD_TTL_MS) continue;
+        removeOpenRecord(root, rec.ref);
+        reaped++;
+        appendLedgerLine(root, nowIso, {
+            event: 'subagent_reaped',
+            ts: nowIso,
+            ref: rec.ref,
+            agent_type: rec.agent_type,
+            depth: rec.depth,
+            depth_basis: rec.depth_basis,
+            age_ms: now - started,
+            reason: 'open record exceeded OPEN_RECORD_TTL_MS without a stop',
+        });
+    }
+    return reaped;
+}
+
+/** The one line written when the host gave us nothing to correlate on. */
+function appendUnidentified(root: string, event: string, nowIso: string, payload: JsonObject): void {
+    appendLedgerLine(root, nowIso, {
+        event,
+        ts: nowIso,
+        ref: null,
+        unidentified: true,
+        // The agent TYPE is an id-shaped enum and may still be present; it is
+        // the only thing salvageable from a payload with no id.
+        agent_type: str(payload, 'agent_type', 'agentType', 'subagent_type', 'subagentType'),
+        reason: 'payload carried no agent id — nothing to correlate start with stop',
+    });
+}
+
+function handleStart(root: string, payload: JsonObject, nowIso: string, sessionId: string | null): void {
+    const agentId = str(payload, 'agent_id', 'agentId');
+    if (agentId === null) {
+        appendUnidentified(root, 'subagent_start', nowIso, payload);
+        return;
+    }
 
     const ref = refFor(agentId);
     const parentId = extractParentId(payload, agentId);
     const parentRef = parentId ? refFor(parentId) : null;
 
-    const open = readOpenRecords(root);
-    const { depth, depth_basis } = resolveDepth(parentRef, open);
+    const { depth, depth_basis } = resolveDepth(parentRef, readOpenRecords(root));
 
     const rec: OpenRecord = {
         ref,
-        agent_type: extractAgentType(payload),
+        agent_type: str(payload, 'agent_type', 'agentType', 'subagent_type', 'subagentType'),
         started_at: nowIso,
         parent_ref: parentRef,
         depth,
         depth_basis,
+        session_id: sessionId,
     };
+    // Write FIRST, count AFTER — see the header on R2 finding 3.
     writeOpenRecord(root, rec);
 
     appendLedgerLine(root, nowIso, {
@@ -340,18 +503,19 @@ function handleStart(root: string, payload: JsonObject, nowIso: string): void {
         parent_ref: parentRef,
         depth,
         depth_basis,
-        // The record just written is included, so a lone dispatch reads 1.
-        concurrent_open: open.size + (open.has(ref) ? 0 : 1),
+        concurrent_open: countOpen(root),
     });
 }
 
 function handleStop(root: string, payload: JsonObject, nowIso: string): void {
-    const agentId = extractAgentId(payload);
-    if (agentId === null) return;
+    const agentId = str(payload, 'agent_id', 'agentId');
+    if (agentId === null) {
+        appendUnidentified(root, 'subagent_stop', nowIso, payload);
+        return;
+    }
 
     const ref = refFor(agentId);
-    const open = readOpenRecords(root);
-    const rec = open.get(ref) ?? null;
+    const rec = readOpenRecords(root).get(ref) ?? null;
 
     let durationMs: number | null = null;
     if (rec) {
@@ -359,13 +523,16 @@ function handleStop(root: string, payload: JsonObject, nowIso: string): void {
         if (Number.isFinite(started)) durationMs = Math.max(0, Date.parse(nowIso) - started);
     }
 
-    const parse = classifyEnvelope(extractLastMessage(payload));
+    const parse = classifyEnvelope(str(payload, 'last_assistant_message', 'lastAssistantMessage'));
+
+    // Remove FIRST, count AFTER — same definition on both lines.
+    removeOpenRecord(root, ref);
 
     appendLedgerLine(root, nowIso, {
         event: 'subagent_stop',
         ts: nowIso,
         ref,
-        agent_type: rec?.agent_type ?? extractAgentType(payload),
+        agent_type: rec?.agent_type ?? str(payload, 'agent_type', 'agentType', 'subagent_type', 'subagentType'),
         depth: rec?.depth ?? null,
         depth_basis: rec?.depth_basis ?? null,
         // `null` = the matching start was never seen. That is a finding about
@@ -374,23 +541,24 @@ function handleStop(root: string, payload: JsonObject, nowIso: string): void {
         start_seen: rec !== null,
         envelope_parse: parse.verdict,
         envelope_error_count: parse.error_count,
-        // Excludes the record being closed.
-        concurrent_open: Math.max(0, open.size - (rec ? 1 : 0)),
+        concurrent_open: countOpen(root),
     });
-
-    removeOpenRecord(root, ref);
 }
 
 /** Process an ALREADY-PARSED dispatcher envelope. Always returns EXIT_ALLOW. */
 export function processEnvelope(envelope: JsonValue, consumerRoot: string): number {
     try {
         if (!isObject(envelope)) return EXIT_ALLOW;
-        const event = extractEvent(envelope);
+        const event = envelope['event'];
         if (event !== 'subagent_start' && event !== 'subagent_stop') return EXIT_ALLOW;
 
         const payload = unwrapPayload(envelope);
         const nowIso = new Date().toISOString();
-        if (event === 'subagent_start') handleStart(consumerRoot, payload, nowIso);
+        const sessionId = str(payload, 'session_id', 'sessionId') ?? str(envelope, 'session_id', 'sessionId');
+
+        reapStaleOpenRecords(consumerRoot, nowIso);
+
+        if (event === 'subagent_start') handleStart(consumerRoot, payload, nowIso, sessionId);
         else handleStop(consumerRoot, payload, nowIso);
     } catch {
         // Malformed payload, unreadable disk, anything — never disturb the run.
@@ -399,24 +567,20 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string): numb
     return EXIT_ALLOW;
 }
 
-export function run(stdin_text: string, options: { consumer_root: string }): number {
-    let envelope: JsonValue;
-    try {
-        const raw = stdin_text.trim();
-        if (!raw) return EXIT_ALLOW;
-        envelope = JSON.parse(raw) as JsonValue;
-    } catch {
-        return EXIT_ALLOW;
-    }
-    return processEnvelope(envelope, options.consumer_root);
-}
-
+/**
+ * Resolve the consumer repo root from the dispatcher envelope.
+ *
+ * R2 finding 10: the host's `cwd` lives under `payload`, not at the envelope
+ * top level, so a top-level `cwd` branch is unreachable on the dispatcher path.
+ * Both real positions are read here, envelope-level roots first.
+ */
 function _resolveRoot(envelope: JsonValue): string {
     if (isObject(envelope)) {
-        const cwd = envelope['cwd'];
-        if (typeof cwd === 'string' && cwd) return cwd;
-        const pr = envelope['workspace_root'] ?? envelope['project_root'];
-        if (typeof pr === 'string' && pr) return pr;
+        const pr = str(envelope, 'workspace_root', 'project_root');
+        if (pr) return pr;
+        const payload = unwrapPayload(envelope);
+        const cwd = str(payload, 'cwd');
+        if (cwd) return cwd;
     }
     return process.cwd();
 }

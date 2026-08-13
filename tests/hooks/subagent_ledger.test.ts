@@ -26,9 +26,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     classifyEnvelope,
     LEDGER_DIR,
+    OPEN_RECORD_TTL_MS,
     OPEN_SUBDIR,
     processEnvelope,
     readOpenRecords,
+    reapStaleOpenRecords,
     refFor,
     resolveDepth,
     type OpenRecord,
@@ -83,9 +85,20 @@ describe('subagent-ledger — event filtering', () => {
         expect(fs.existsSync(path.join(root, LEDGER_DIR))).toBe(false);
     });
 
-    it('writes nothing when the payload carries no agent id to correlate on', () => {
+    it('records an unidentified line — never silence — when the payload carries no agent id', () => {
+        // R2 finding 1: returning silently made an unrecognised host payload
+        // shape indistinguishable from "no dispatches happened", which is the
+        // one reading the Phase-1 baseline must never be unable to rule out.
         processEnvelope(envelope('subagent_start', { agent_type: 'Explore' }), root);
-        expect(ledgerLines()).toEqual([]);
+
+        const line = ledgerLines()[0]!;
+        expect(line.event).toBe('subagent_start');
+        expect(line.unidentified).toBe(true);
+        expect(line.ref).toBeNull();
+        // The agent TYPE is an id-shaped enum and is still salvageable.
+        expect(line.agent_type).toBe('Explore');
+        // No open record can exist without something to key it on.
+        expect(readOpenRecords(root).size).toBe(0);
     });
 
     it('never returns a non-zero exit, even on a malformed envelope', () => {
@@ -132,12 +145,17 @@ describe('subagent-ledger — start/stop correlation', () => {
         expect(stop.agent_type).toBe('Explore');
     });
 
-    it('counts concurrent open dispatches, including the one being opened', () => {
+    it('uses ONE definition of concurrent_open on both lines: open AFTER this event', () => {
+        // R2 finding 8: start counts after its own record is written, stop
+        // after its own is removed — so an aggregate over the .jsonl mixes no
+        // scales. The stop side was previously pinned by no test at all.
         processEnvelope(envelope('subagent_start', { agent_id: 'a' }), root);
         processEnvelope(envelope('subagent_start', { agent_id: 'b' }), root);
         processEnvelope(envelope('subagent_start', { agent_id: 'c' }), root);
+        processEnvelope(envelope('subagent_stop', { agent_id: 'b' }), root);
+        processEnvelope(envelope('subagent_stop', { agent_id: 'a' }), root);
 
-        expect(ledgerLines().map((l) => l.concurrent_open)).toEqual([1, 2, 3]);
+        expect(ledgerLines().map((l) => l.concurrent_open)).toEqual([1, 2, 3, 2, 1]);
     });
 });
 
@@ -173,11 +191,94 @@ describe('subagent-ledger — depth (Step 3)', () => {
         expect(ledgerLines()[1]!.parent_ref).toBe(refFor('p2'));
     });
 
-    it('still counts nesting when the named parent has already closed', () => {
-        // The payload asserted a parent, so the FACT of nesting is known even
-        // though the ancestor chain is not — depth 2, basis observed.
+    it('labels a closed-parent depth asserted-parent, not observed', () => {
+        // R2 finding 5: the payload asserted a parent, so the FACT of nesting
+        // is known — but 2 is a floor, since a grandchild whose parent already
+        // closed is deeper. Calling that `observed` would feed a guess into
+        // exactly the filter a consumer uses to get measured depths.
         const open = new Map<string, OpenRecord>();
-        expect(resolveDepth('missing-ref', open)).toEqual({ depth: 2, depth_basis: 'observed' });
+        expect(resolveDepth('missing-ref', open)).toEqual({ depth: 2, depth_basis: 'asserted-parent' });
+    });
+});
+
+describe('subagent-ledger — open-record reaping (R2 finding 2)', () => {
+    function plantOpenRecord(ref: string, startedAt: string): void {
+        const dir = path.join(root, LEDGER_DIR, OPEN_SUBDIR);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, `${ref}.json`),
+            JSON.stringify({
+                ref,
+                agent_type: 'Explore',
+                started_at: startedAt,
+                parent_ref: null,
+                depth: 1,
+                depth_basis: 'assumed-root',
+                session_id: null,
+            }),
+            'utf8',
+        );
+    }
+
+    it('reaps a record past the TTL and REPORTS it rather than sweeping it quietly', () => {
+        const now = new Date('2026-08-13T12:00:00.000Z');
+        const stale = new Date(now.getTime() - OPEN_RECORD_TTL_MS - 1).toISOString();
+        plantOpenRecord('deadbeef0001', stale);
+
+        expect(reapStaleOpenRecords(root, now.toISOString())).toBe(1);
+        expect(readOpenRecords(root).size).toBe(0);
+
+        const line = ledgerLines()[0]!;
+        // The reap line is the point: it is the instrument's only direct
+        // sighting of a dispatch that never returned.
+        expect(line.event).toBe('subagent_reaped');
+        expect(line.ref).toBe('deadbeef0001');
+        expect(line.age_ms).toBeGreaterThan(OPEN_RECORD_TTL_MS);
+    });
+
+    it('leaves a record inside the TTL alone', () => {
+        const now = new Date('2026-08-13T12:00:00.000Z');
+        plantOpenRecord('deadbeef0002', new Date(now.getTime() - 60_000).toISOString());
+
+        expect(reapStaleOpenRecords(root, now.toISOString())).toBe(0);
+        expect(readOpenRecords(root).size).toBe(1);
+        expect(ledgerLines()).toEqual([]);
+    });
+});
+
+describe('subagent-ledger — open-record validation (R2 finding 7)', () => {
+    function plantRaw(name: string, body: unknown): void {
+        const dir = path.join(root, LEDGER_DIR, OPEN_SUBDIR);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, name), JSON.stringify(body), 'utf8');
+    }
+
+    it('refuses a record with no depth instead of computing NaN from it', () => {
+        plantRaw('cafebabe0001.json', {
+            ref: 'cafebabe0001',
+            started_at: '2026-08-13T10:00:00.000Z',
+            depth_basis: 'assumed-root',
+        });
+        expect(readOpenRecords(root).size).toBe(0);
+
+        // The consequence the validation prevents: a null depth on a line
+        // still labelled observed.
+        processEnvelope(envelope('subagent_start', { agent_id: 'child', parent_agent_id: 'cafebabe' }), root);
+        for (const line of ledgerLines()) {
+            if (line.depth_basis === 'observed') expect(line.depth).toEqual(expect.any(Number));
+        }
+    });
+
+    it('refuses a record whose internal ref disagrees with its filename', () => {
+        // Otherwise it is loaded, counted, and never deleted — removal unlinks
+        // by filename, so the mismatch compounds the leak.
+        plantRaw('aaaaaaaaaaaa.json', {
+            ref: 'bbbbbbbbbbbb',
+            started_at: '2026-08-13T10:00:00.000Z',
+            depth: 1,
+            depth_basis: 'assumed-root',
+        });
+        expect(readOpenRecords(root).size).toBe(0);
     });
 });
 
@@ -202,6 +303,32 @@ describe('subagent-ledger — envelope classification', () => {
         expect(classifyEnvelope(null).verdict).toBe('absent');
         expect(classifyEnvelope('   ').verdict).toBe('absent');
         expect(classifyEnvelope('I finished the task, no structured output.').verdict).toBe('absent');
+    });
+
+    it('finds a valid envelope followed by later prose braces (R2 finding 4)', () => {
+        // The reported failure verbatim: the old first-brace-to-last-brace span
+        // swallowed the trailing `{done}`, failed to parse, and reported
+        // `absent` — routing an extraction failure into the "never returned
+        // anything" bucket the three-way verdict exists to keep separate.
+        expect(classifyEnvelope(`... ${JSON.stringify(valid)} - done. See {done}.`).verdict).toBe('ok');
+    });
+
+    it('finds a valid envelope preceded by an unrelated object', () => {
+        expect(classifyEnvelope(`{"note":"ignore me"} then: ${JSON.stringify(valid)}`).verdict).toBe('ok');
+    });
+
+    it('is not confused by a brace inside a string value', () => {
+        const tricky = { ...valid, summary: 'a } brace and a \\" quote' };
+        expect(classifyEnvelope(JSON.stringify(tricky)).verdict).toBe('ok');
+    });
+
+    it('ignores a preceding non-json fenced block (R2 finding 11)', () => {
+        const msg = '```bash\nnpm test\n```\n\n```json\n' + JSON.stringify(valid) + '\n```\n';
+        expect(classifyEnvelope(msg).verdict).toBe('ok');
+    });
+
+    it('still reports fail when the only object present is malformed', () => {
+        expect(classifyEnvelope('preamble {"summary":"s"} trailing }').verdict).toBe('fail');
     });
 });
 

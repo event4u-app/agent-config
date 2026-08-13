@@ -88,7 +88,7 @@ actually asks is whether that caller *governs* anything. Traced end to end:
 
 | step | site | what happens to the tier |
 |---|---|---|
-| 1 | `delegation_nudge_hook.ts:341` | `recommendSliceTier` calls `resolveSubagentRouting` with a hardcoded `task_tier: "lite"` / `session_tier: "high"` — there is no per-slice classification at prompt-submit time |
+| 1 | `delegation_nudge_hook.ts:342` | `recommendSliceTier` (declared `:341`) calls `resolveSubagentRouting` with a hardcoded `task_tier: "lite"` / `session_tier: "high"` — there is no per-slice classification at prompt-submit time |
 | 2 | `delegation_nudge_hook.ts:443` | the returned `Tier` is assigned to a local |
 | 3 | `delegation_nudge_hook.ts:382` | `buildNudgeLine` interpolates it into prose: `` `(${sliceCount} ${unit}, ${tier} tier recommended)` `` |
 | 4 | — | the string is injected as `additionalContext`. Nothing else reads it. |
