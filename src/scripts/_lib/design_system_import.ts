@@ -213,22 +213,35 @@ function sourceFromOverride(p: ProvenanceOverride): SourceBlock {
     };
 }
 
-/** String→string maps survive; anything else is reported rather than coerced. */
-function stringMap(value: unknown): Record<string, string> | null {
+/**
+ * String→string maps survive; anything else is reported rather than coerced.
+ *
+ * `dropped` collects the keys this helper could not take. Without it the helper
+ * returned a PARTIAL map and looked like a success: because the result was
+ * non-null, the caller's `else` branch — the one that routes an unrecognised
+ * value into `_meta` — never ran, so a nested subtree vanished with an empty
+ * note list. Reporting the loss is what lets every caller keep the module's own
+ * promise that nothing is dropped in silence.
+ */
+function stringMap(value: unknown, dropped?: string[]): Record<string, string> | null {
     if (!isPlainObject(value)) return null;
     const out: Record<string, string> = {};
     for (const [k, v] of Object.entries(value)) {
         if (typeof v === 'string') out[k] = v;
         else if (typeof v === 'number') out[k] = String(v);
+        else dropped?.push(k);
     }
     return Object.keys(out).length > 0 ? out : null;
 }
 
-function stringList(value: unknown): string[] | null {
+/** As `stringMap`, for arrays; `dropped` collects the indices that did not fit. */
+function stringList(value: unknown, dropped?: string[]): string[] | null {
     if (!Array.isArray(value)) return null;
-    const out = value
-        .filter((v) => typeof v === 'string' || typeof v === 'number')
-        .map((v) => String(v));
+    const out: string[] = [];
+    value.forEach((v, i) => {
+        if (typeof v === 'string' || typeof v === 'number') out.push(String(v));
+        else dropped?.push(String(i));
+    });
     return out.length > 0 ? out : null;
 }
 
@@ -302,7 +315,12 @@ function mapNative(input: Record<string, unknown>): ImportOutcome {
 
     if (Object.keys(unmapped).length > 0) {
         const existingMeta = isPlainObject(carried['_meta']) ? carried['_meta'] : {};
-        carried['_meta'] = { ...existingMeta, unmapped };
+        // Merge INTO any existing `_meta.unmapped` rather than replacing it.
+        // Overwriting the key loses entries a previous pass recorded — reachable
+        // by re-importing this adapter's own output — and losing carried values
+        // is precisely what the native lane exists not to do.
+        const existingUnmapped = isPlainObject(existingMeta['unmapped']) ? existingMeta['unmapped'] : {};
+        carried['_meta'] = { ...existingMeta, unmapped: { ...existingUnmapped, ...unmapped } };
     }
 
     // The cast is the lane's contract with itself: `source` is validated above,
@@ -371,14 +389,64 @@ const NON_ROLE_SEGMENTS = new Set([
  * `button-radius` — and every other leaf keeps its own name.
  */
 export function roleName(path: string[]): string {
-    const last = path[path.length - 1] ?? 'value';
-    if (path.length < 2) return last;
-    const parent = path[path.length - 2] as string;
-    const isNumeric = /^\d+$/.test(last);
-    if (isNumeric || NON_ROLE_SEGMENTS.has(last.toLowerCase())) {
-        return `${parent}-${last}`.replace(/-default$/i, '');
+    // A `default` leaf names its parent, so it is dropped BEFORE anything is
+    // joined. Joining first and stripping the suffix afterwards takes the
+    // *bucket* as the parent on a three-segment path, so `button.radius.default`
+    // came out as `radius` — a role named after its bucket, which then collided
+    // with every other component's radius.
+    const withoutDefault =
+        path.length > 1 && /^default$/i.test(path[path.length - 1] as string)
+            ? path.slice(0, -1)
+            : path;
+    const last = withoutDefault[withoutDefault.length - 1] ?? 'value';
+    if (withoutDefault.length < 2) return last;
+    const parent = withoutDefault[withoutDefault.length - 2] as string;
+    if (/^\d+$/.test(last) || NON_ROLE_SEGMENTS.has(last.toLowerCase())) {
+        return `${parent}-${last}`;
     }
     return last;
+}
+
+/**
+ * Write a token into a bucket without ever overwriting a different value.
+ *
+ * `roleName` shortens a path to something a human can read, and any shortening
+ * can collide: `semantic.color.background` and `component.card.background` both
+ * reduce to `background`. Letting the second write win loses the first token
+ * while the import still reports success with an empty note list — the exact
+ * "quietly loses a block, looks like a successful run" failure this adapter's
+ * own risk register names.
+ *
+ * So a collision widens the name with more of the token's own path until it is
+ * free, and says so. Re-stating the SAME value under a shortened name is not a
+ * collision and stays silent — that is one decision expressed twice, not two
+ * decisions competing.
+ */
+function assignRole(
+    target: Record<string, string>,
+    role: string,
+    value: string,
+    path: string[],
+    notes: string[],
+): void {
+    if (target[role] === undefined) {
+        target[role] = value;
+        return;
+    }
+    if (target[role] === value) return;
+    for (let take = 2; take <= path.length; take++) {
+        const candidate = path.slice(path.length - take).join('-');
+        if (target[candidate] === value) return;
+        if (target[candidate] === undefined) {
+            target[candidate] = value;
+            notes.push(
+                `role "${role}" was already held by a different value — ${path.join('.')} is filed as "${candidate}" instead of overwriting it`,
+            );
+            return;
+        }
+    }
+    // Unreachable for well-formed JSON: the full path is unique per leaf.
+    notes.push(`${path.join('.')} could not be given a free role name and was dropped`);
 }
 
 /**
@@ -423,6 +491,7 @@ function mapDtcg(input: Record<string, unknown>, source: SourceBlock): ImportOut
     const families: FontFamily[] = [];
     const fontSizes: ScaleStep[] = [];
     const unmapped: Record<string, string> = {};
+    let darkByPath = 0;
 
     const walk = (node: unknown, path: string[]): void => {
         if (path.length > 8 || !isPlainObject(node)) return;
@@ -441,23 +510,31 @@ function mapDtcg(input: Record<string, unknown>, source: SourceBlock): ImportOut
                 }
                 const bucket = dtcgBucket(leafType(value), next);
                 const role = roleName(next);
+                // A path segment named `dark` is read as the dark THEME. That
+                // is an inference, and a fallible one — `text.dark` and
+                // `neutral.dark` are shades, not themes — so it is counted and
+                // surfaced rather than applied invisibly.
                 const isDark = next.some((p) => p.toLowerCase() === 'dark');
                 switch (bucket) {
                     case 'color':
-                        if (isDark) colorsDark[role] = raw;
-                        else colorsLight[role] = raw;
+                        if (isDark) {
+                            darkByPath += 1;
+                            assignRole(colorsDark, role, raw, next, notes);
+                        } else {
+                            assignRole(colorsLight, role, raw, next, notes);
+                        }
                         break;
                     case 'radius':
-                        radius[role] = raw;
+                        assignRole(radius, role, raw, next, notes);
                         break;
                     case 'shadow':
-                        shadow[role] = raw;
+                        assignRole(shadow, role, raw, next, notes);
                         break;
                     case 'duration':
-                        durations[role] = raw;
+                        assignRole(durations, role, raw, next, notes);
                         break;
                     case 'easing':
-                        easings[role] = raw;
+                        assignRole(easings, role, raw, next, notes);
                         break;
                     case 'spacing':
                         spacingScale.push(raw);
@@ -503,6 +580,11 @@ function mapDtcg(input: Record<string, unknown>, source: SourceBlock): ImportOut
             `${Object.keys(unmapped).length} DTCG token(s) had no contract bucket — kept as observation under _meta.unmapped`,
         );
     }
+    if (darkByPath > 0) {
+        notes.push(
+            `${darkByPath} colour(s) were filed under the dark theme because a path segment is named "dark" — the format states no colour scheme, so verify these are theme values and not shades named dark`,
+        );
+    }
     if (unresolvedAliases > 0) {
         notes.push(
             `${unresolvedAliases} DTCG alias reference(s) point at a token this file does not define — the reference is kept verbatim so the broken pointer is visible, not blanked`,
@@ -534,13 +616,34 @@ function mapDembrandt(input: Record<string, unknown>, source: SourceBlock): Impo
     const meta: Record<string, unknown> = {};
     const out: DesignSystem = { source };
 
+    /** Route entries a helper could not take into `_meta`, and say so. */
+    const reportDropped = (bucket: string, dropped: string[], source_: unknown): void => {
+        if (dropped.length === 0) return;
+        meta[bucket] = source_;
+        notes.push(
+            `${bucket}: ${dropped.length} entry/entries (${dropped.slice(0, 5).join(', ')}${dropped.length > 5 ? ', …' : ''}) are not scalar values — the whole block is kept as observation under _meta.${bucket} so nothing is lost`,
+        );
+    };
+
     const colors = input['colors'];
     if (colors !== undefined) {
         const nested = isPlainObject(colors) ? colors : undefined;
-        const explicitLight = stringMap(colors) ?? stringMap(nested?.['light']);
-        const semantic = explicitLight === null ? stringMap(nested?.['semantic']) : null;
+        // Each candidate gets its OWN dropped list, and only the one actually
+        // used is reported. Sharing a list across the probes would count a
+        // legitimate nested grouping (`colors.semantic` + `colors.dark`) as a
+        // loss, because the flat-map probe necessarily rejects both.
+        const flatDropped: string[] = [];
+        const lightDropped: string[] = [];
+        const semanticDropped: string[] = [];
+        const darkDropped: string[] = [];
+        const flat = stringMap(colors, flatDropped);
+        const explicitLight = flat ?? stringMap(nested?.['light'], lightDropped);
+        const semantic =
+            explicitLight === null ? stringMap(nested?.['semantic'], semanticDropped) : null;
         const light = explicitLight ?? semantic;
-        const dark = stringMap(nested?.['dark']);
+        const dark = stringMap(nested?.['dark'], darkDropped);
+        const usedDropped = flat ? flatDropped : semantic ? semanticDropped : lightDropped;
+        reportDropped('colors', [...usedDropped, ...darkDropped], colors);
         if (light || dark) {
             out.colors = {};
             if (light) out.colors.light = light;
@@ -606,7 +709,11 @@ function mapDembrandt(input: Record<string, unknown>, source: SourceBlock): Impo
 
     const spacing = input['spacing'];
     if (spacing !== undefined) {
-        const scale = stringList(spacing) ?? stringList(isPlainObject(spacing) ? spacing['scale'] : undefined);
+        const spacingDropped: string[] = [];
+        const scale =
+            stringList(spacing, spacingDropped) ??
+            stringList(isPlainObject(spacing) ? spacing['scale'] : undefined, spacingDropped);
+        reportDropped('spacing', spacingDropped, spacing);
         const base = isPlainObject(spacing) ? spacing['base'] : undefined;
         if (scale || typeof base === 'string') {
             out.spacing = {};
@@ -623,10 +730,31 @@ function mapDembrandt(input: Record<string, unknown>, source: SourceBlock): Impo
     // radius half maps and the rest is stated as observation.
     const borders = input['borders'];
     if (borders !== undefined) {
-        const radius =
-            stringMap(isPlainObject(borders) ? borders['radius'] : undefined) ?? stringMap(borders);
+        const bordersObj = isPlainObject(borders) ? borders : undefined;
+        const hasRadiusKey = bordersObj !== undefined && 'radius' in bordersObj;
+        const borderDropped: string[] = [];
+        // The whole-object fallback is reachable ONLY when there is no `radius`
+        // key at all. Previously it also fired when `borders.radius` was present
+        // but not a string map (a list, say), and then emitted border *widths
+        // and styles* as radius tokens while dropping the real radius data —
+        // coercion plus silent loss, the two things this lane promises not to do.
+        const radius = hasRadiusKey
+            ? stringMap(bordersObj['radius'], borderDropped)
+            : stringMap(borders, borderDropped);
         if (radius) out.radius = radius;
-        if (isPlainObject(borders)) {
+        else if (hasRadiusKey) {
+            meta['borders'] = borders;
+            notes.push(
+                'borders.radius is present but not a role→value map — the whole borders block is kept as observation under _meta.borders rather than mapping the other border fields as radius',
+            );
+        }
+        if (radius && borderDropped.length > 0) {
+            notes.push(
+                `borders.radius: ${borderDropped.length} non-scalar entry/entries were not mapped — see _meta.borders`,
+            );
+            meta['borders'] = borders;
+        }
+        if (isPlainObject(borders) && meta['borders'] === undefined) {
             const rest: Record<string, unknown> = {};
             for (const [k, v] of Object.entries(borders)) {
                 if (k !== 'radius') rest[k] = v;
@@ -642,10 +770,13 @@ function mapDembrandt(input: Record<string, unknown>, source: SourceBlock): Impo
 
     const shadows = input['shadows'];
     if (shadows !== undefined) {
-        const mapped = stringMap(shadows);
-        if (mapped) out.shadow = mapped;
-        else {
-            const list = stringList(shadows);
+        const shadowDropped: string[] = [];
+        const mapped = stringMap(shadows, shadowDropped);
+        if (mapped) {
+            out.shadow = mapped;
+            reportDropped('shadows', shadowDropped, shadows);
+        } else {
+            const list = stringList(shadows, shadowDropped);
             if (list) {
                 const asMap: Record<string, string> = {};
                 list.forEach((v, i) => {
@@ -699,9 +830,37 @@ function mapDembrandt(input: Record<string, unknown>, source: SourceBlock): Impo
         for (const key of ['contexts', 'profiles', 'hover', 'hoverDeltas', 'detected_libs']) {
             if (motion[key] !== undefined) observed[key] = motion[key];
         }
-        if (Object.keys(observed).length > 0) {
+        // Anything else under `motion` is residue: neither a token this lane
+        // maps nor a documented observation. It used to vanish, and the
+        // unrecognised-shape guard could not catch it because `out.motion` was
+        // already defined by whatever DID map. Keep it beside the observations.
+        const OBSERVED_KEYS = new Set(['contexts', 'profiles', 'hover', 'hoverDeltas', 'detected_libs']);
+        // A key counts as consumed only when ITS OWN bucket mapped. Testing
+        // "durations || easings" lets an unreadable `easings` shape disappear
+        // whenever `durations` happened to succeed — the same silent loss one
+        // level down.
+        const consumed = new Set<string>();
+        if (durations) {
+            consumed.add('durations');
+            consumed.add('durationScale');
+        }
+        if (easings) {
+            consumed.add('easings');
+            consumed.add('easing');
+        }
+        const residue: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(motion)) {
+            if (OBSERVED_KEYS.has(key) || consumed.has(key)) continue;
+            residue[key] = value;
+        }
+        if (Object.keys(observed).length > 0 || Object.keys(residue).length > 0) {
             out.motion = out.motion ?? {};
-            out.motion._meta = observed;
+            out.motion._meta = { ...observed, ...(Object.keys(residue).length > 0 ? { unmapped: residue } : {}) };
+        }
+        if (Object.keys(residue).length > 0) {
+            notes.push(
+                `motion: ${Object.keys(residue).join(', ')} matched no token or observation shape — kept under motion._meta.unmapped`,
+            );
         }
         if (out.motion === undefined) {
             meta['motion'] = motion;
@@ -725,11 +884,27 @@ function mapDembrandt(input: Record<string, unknown>, source: SourceBlock): Impo
         }
         if (built.length > 0) out.components = built;
     } else if (isPlainObject(components)) {
-        const built: ComponentObservation[] = Object.entries(components).map(([name, value]) => ({
-            name,
-            observed: { props: stringList(value) ?? Object.keys(isPlainObject(value) ? value : {}) },
-        }));
+        // Mirror the array branch: omit an absent key rather than emitting an
+        // empty array, and never discard a scalar observation just because it
+        // is not a list.
+        const built: ComponentObservation[] = [];
+        const componentResidue: Record<string, unknown> = {};
+        for (const [name, value] of Object.entries(components)) {
+            const observed: ComponentObservation['observed'] = {};
+            const props = stringList(value) ?? (isPlainObject(value) ? Object.keys(value) : null);
+            if (props && props.length > 0) observed.props = props;
+            else if (typeof value === 'string' || typeof value === 'number') {
+                componentResidue[name] = value;
+            }
+            built.push({ name, observed });
+        }
         if (built.length > 0) out.components = built;
+        if (Object.keys(componentResidue).length > 0) {
+            meta['components'] = componentResidue;
+            notes.push(
+                `components: ${Object.keys(componentResidue).join(', ')} carried a scalar observation rather than a class/prop list — kept under _meta.components`,
+            );
+        }
     }
 
     // WCAG results and breakpoints are documented output with no contract key.

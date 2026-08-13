@@ -143,6 +143,12 @@ export function parse_args(argv: readonly string[]): Args {
     if ((args.sourceKind === null) !== (args.sourceRef === null)) {
         argError('--source-kind and --source-ref must be given together');
     }
+    // `--captured-at` alone was accepted and then ignored: the override object
+    // is only built when the kind/ref pair is present. Silently discarding a
+    // flag the user typed is worse than refusing it.
+    if (args.capturedAt !== null && args.sourceKind === null) {
+        argError('--captured-at requires --source-kind and --source-ref');
+    }
     return args;
 }
 
@@ -207,6 +213,19 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             : undefined;
 
     const outcome = importDesignSystem(parsed, provenance, args.lane ?? undefined);
+
+    // The input's own provenance wins over a caller override — defensible, and
+    // previously invisible: a user who typed --source-ref was never told the
+    // flag had no effect on this file.
+    if (
+        outcome.ok &&
+        provenance !== undefined &&
+        outcome.design_system.source._meta?.provenance_origin === 'input'
+    ) {
+        outcome.notes.push(
+            `the file carries its own source block, so it wins over --source-ref "${provenance.ref}" — the supplied provenance was not used`,
+        );
+    }
 
     if (!outcome.ok) {
         process.stderr.write(`${render_summary(outcome)}\n`);

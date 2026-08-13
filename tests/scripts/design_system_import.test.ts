@@ -234,6 +234,133 @@ describe('observation is never promoted to a token', () => {
     });
 });
 
+/**
+ * Every case below is a probe the R2 completion reviewer executed against this
+ * module and found losing data while reporting success. They are pinned here so
+ * the class cannot return: the 36 tests above all passed while these failed,
+ * which is exactly why a fixture suite is not a substitute for adversarial
+ * probing.
+ */
+describe('R2 findings — nothing is lost while reporting success', () => {
+    it('keeps two same-named roles from different DTCG layers', () => {
+        const outcome = importDesignSystem(
+            {
+                semantic: { color: { background: { $value: '#ffffff', $type: 'color' } } },
+                component: { card: { background: { $value: '#eeeeee', $type: 'color' } } },
+            },
+            PROVENANCE,
+        );
+        expect(outcome.ok).toBe(true);
+        if (!outcome.ok) return;
+        const light = outcome.design_system.colors?.light ?? {};
+        expect(Object.values(light)).toEqual(expect.arrayContaining(['#ffffff', '#eeeeee']));
+        expect(outcome.notes.join(' ')).toContain('already held by a different value');
+    });
+
+    it('names a `default` leaf after its component, not after its bucket', () => {
+        expect(roleName(['button', 'radius', 'default'])).toBe('button-radius');
+        expect(roleName(['card', 'radius', 'default'])).toBe('card-radius');
+    });
+
+    it('keeps two component radii that both end in default', () => {
+        const outcome = importDesignSystem(
+            {
+                button: { radius: { default: { $value: '4px', $type: 'dimension' } } },
+                card: { radius: { default: { $value: '12px', $type: 'dimension' } } },
+            },
+            PROVENANCE,
+        );
+        expect(outcome.ok).toBe(true);
+        if (!outcome.ok) return;
+        expect(Object.values(outcome.design_system.radius ?? {})).toEqual(
+            expect.arrayContaining(['4px', '12px']),
+        );
+    });
+
+    it('never emits border widths or styles as radius tokens', () => {
+        const outcome = importDesignSystem(
+            { borders: { radius: ['4px', '8px'], width: '1px', style: 'solid' } },
+            PROVENANCE,
+        );
+        expect(outcome.ok).toBe(true);
+        if (!outcome.ok) return;
+        expect(outcome.design_system.radius).toBeUndefined();
+        expect(outcome.design_system._meta).toHaveProperty('borders');
+        expect(outcome.notes.join(' ')).toContain('borders.radius is present but not a role');
+    });
+
+    it('marks the dark-by-path inference in the DTCG lane', () => {
+        const outcome = importDesignSystem(
+            { color: { neutral: { dark: { $value: '#222222', $type: 'color' } } } },
+            PROVENANCE,
+        );
+        expect(outcome.ok).toBe(true);
+        if (!outcome.ok) return;
+        expect(outcome.notes.join(' ')).toContain('path segment is named "dark"');
+    });
+
+    it('routes a non-scalar colour subtree to _meta instead of discarding it', () => {
+        const outcome = importDesignSystem(
+            { colors: { primary: '#533afd', scales: { blue: { '500': '#00f' } } } },
+            PROVENANCE,
+        );
+        expect(outcome.ok).toBe(true);
+        if (!outcome.ok) return;
+        expect(outcome.design_system._meta).toHaveProperty('colors');
+        expect(outcome.notes.join(' ')).toContain('not scalar values');
+    });
+
+    it('does not report a loss for a legitimate nested colour grouping', () => {
+        const outcome = importDesignSystem(readFixture('dembrandt.json'), PROVENANCE);
+        expect(outcome.ok).toBe(true);
+        if (!outcome.ok) return;
+        expect(outcome.design_system._meta).not.toHaveProperty('colors');
+    });
+
+    it('keeps motion residue that matches neither a token nor an observation', () => {
+        const outcome = importDesignSystem(
+            {
+                motion: {
+                    durations: { fast: '150ms' },
+                    easings: { standard: { value: 'cubic-bezier(0,0,1,1)' } },
+                    transitions: { a: 'b' },
+                },
+            },
+            PROVENANCE,
+        );
+        expect(outcome.ok).toBe(true);
+        if (!outcome.ok) return;
+        const motionMeta = (outcome.design_system.motion?._meta ?? {}) as Record<string, unknown>;
+        expect(motionMeta).toHaveProperty('unmapped');
+        expect(Object.keys(motionMeta['unmapped'] as Record<string, unknown>)).toEqual(
+            expect.arrayContaining(['transitions', 'easings']),
+        );
+        expect(outcome.notes.join(' ')).toContain('motion:');
+    });
+
+    it('merges into a pre-existing _meta.unmapped instead of clobbering it', () => {
+        const outcome = importDesignSystem({
+            source: { kind: 'dir', ref: '.', captured_at: '2026-01-01' },
+            _meta: { unmapped: { keep: 'me' } },
+            offContract: 1,
+        });
+        expect(outcome.ok).toBe(true);
+        if (!outcome.ok) return;
+        const unmapped = outcome.design_system._meta?.['unmapped'] as Record<string, unknown>;
+        expect(unmapped).toHaveProperty('keep', 'me');
+        expect(unmapped).toHaveProperty('offContract');
+    });
+
+    it('omits an empty props array and keeps a scalar component observation', () => {
+        const outcome = importDesignSystem({ components: { button: 'observed once' } }, PROVENANCE);
+        expect(outcome.ok).toBe(true);
+        if (!outcome.ok) return;
+        expect(outcome.design_system.components?.[0]?.observed).toEqual({});
+        expect(outcome.design_system._meta).toHaveProperty('components');
+        expect(outcome.notes.join(' ')).toContain('scalar observation');
+    });
+});
+
 describe('a forced lane changes the mapper, never the input', () => {
     it('maps nothing when a native artifact is forced through the token mapper', () => {
         const outcome = importDesignSystem(readFixture('native.json'), PROVENANCE, 'dtcg');
@@ -289,6 +416,24 @@ describe('CLI contract', () => {
         const r = run([path.join(FIXTURES, 'dtcg.tokens.json'), '--source-ref', 'x']);
         expect(r.status).toBe(2);
         expect(r.stderr).toContain('must be given together');
+    });
+
+    it('exits 2 rather than silently ignoring a lone --captured-at', () => {
+        const r = run([path.join(FIXTURES, 'native.json'), '--captured-at', '2026-01-01']);
+        expect(r.status).toBe(2);
+        expect(r.stderr).toContain('--captured-at requires');
+    });
+
+    it('says so when the file own provenance overrides the supplied flags', () => {
+        const r = run([
+            path.join(FIXTURES, 'native.json'),
+            '--source-kind',
+            'dir',
+            '--source-ref',
+            './ignored',
+        ]);
+        expect(r.status).toBe(0);
+        expect(r.stderr).toContain('was not used');
     });
 
     it('renders a human summary that states the trust posture', () => {
