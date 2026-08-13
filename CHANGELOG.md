@@ -348,6 +348,75 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 10.4.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [11.0.0](https://github.com/event4u-app/agent-config/compare/10.4.0...11.0.0) (2026-08-13)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 7d4af2c, 9e4cc35.
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+### BREAKING CHANGES
+
+* **settings:** delete worktrees.mode — worktree creation is instruction-only ([9e4cc35](https://github.com/event4u-app/agent-config/commit/9e4cc35513a69b9e107b639ff9dc78622d42b09e))
+
+### Features
+
+* **council:** replace the per-run spend confirmation with a ceiling ([945d6c0](https://github.com/event4u-app/agent-config/commit/945d6c08b6e9a5519858fa6f4bb6ddece461621b))
+* **gates:** resolve the PR base before judging branch freshness ([f77da9a](https://github.com/event4u-app/agent-config/commit/f77da9a6618d0ef982cd4b9bb83201179e26e818))
+* **grounding:** the three 1-10 design dials, re-derived not ported ([1516fa8](https://github.com/event4u-app/agent-config/commit/1516fa8adda1c772a71062fb1950598f336b1c5e))
+* **corpus:** vendor motion.csv and a gsap search domain; decline the rest ([0a82fa2](https://github.com/event4u-app/agent-config/commit/0a82fa2128ffdbc3273b85efd83152ead8e1da28))
+
+### Bug Fixes
+
+* **settings:** correct the class-count summaries after the deletion ([b1cf141](https://github.com/event4u-app/agent-config/commit/b1cf1419366bd1a8bc338ce4a11e310724143627))
+* **session-register:** gate the context block on a real collision ([c1dcf0e](https://github.com/event4u-app/agent-config/commit/c1dcf0e599e709f465903805a3f8147cc079fecd))
+* **council:** align the command surfaces with the ceiling bound ([2e3ad3f](https://github.com/event4u-app/agent-config/commit/2e3ad3f74947fba2ff73c2017515e5954b19cefb))
+* **session-register:** anchor the record on the session checkout, not the chdir target ([7b64d4e](https://github.com/event4u-app/agent-config/commit/7b64d4e3d0db42e6f177692cdf2c47eba3634d72))
+* **review:** put the skip declaration on one line ([d6d3736](https://github.com/event4u-app/agent-config/commit/d6d3736fef1509eda589dbb8f36a3b806f30bcf3))
+* **docs:** drop maintainer-only invocations from the shipped surfaces ([4e89881](https://github.com/event4u-app/agent-config/commit/4e8988172a773be43b8a9b3d93d3676f76fc5adf))
+* **roadmap:** relocate distillation's two maintainer-gated items and archive it ([c19fcf6](https://github.com/event4u-app/agent-config/commit/c19fcf6072f499a5e0b5149985e238ee8eb5511e))
+* **corpus:** advance last_checked in the manifest too, not only in ATTRIBUTION ([ca40b92](https://github.com/event4u-app/agent-config/commit/ca40b92b83db4a1951b4dc1328b21ecfdf7919f4))
+* **provenance:** correct a falsified compliance record, and shrink two diffs ([88e095d](https://github.com/event4u-app/agent-config/commit/88e095d8342106111bd36d69f410f39646deb558))
+* **grounding:** make the dials reach a reader, and make the variance claim true ([af919d3](https://github.com/event4u-app/agent-config/commit/af919d30d91a2c379819135fa7e34446a7da33a3))
+* **gates:** carve out the two license-attribution surfaces for code borrows ([2a969a0](https://github.com/event4u-app/agent-config/commit/2a969a0c4835e9a4db031d01e70ebcb5e0bb051d))
+* **records:** close all seven R2 findings, including a false claim of mine ([5ca4290](https://github.com/event4u-app/agent-config/commit/5ca4290795560d4fca8a054db6439e39e5bb6b42))
+
+### Documentation
+
+* **skills:** hardcode the instruction-only worktree rule across every surface ([7d4af2c](https://github.com/event4u-app/agent-config/commit/7d4af2c9b51714fe3a6ae636b379f835f7dc0cbc))
+* **adr:** record ADR-229 — worktree creation is instruction-only ([b20e3a5](https://github.com/event4u-app/agent-config/commit/b20e3a56a05402d95f88a66ade4075b3d211e53d))
+* **adr:** record ADR-230 — the council spend bound is a ceiling ([1f35330](https://github.com/event4u-app/agent-config/commit/1f35330a6203c336a9ddced6593cf7f8e09fdbdc))
+* **review:** declare the completion-review skip for a docs-only branch ([3ad11bf](https://github.com/event4u-app/agent-config/commit/3ad11bf5109088bca10a80954dffbd280e2586c1))
+* **roadmap:** close Phase 0 Step 3 and re-scope Phases 1 and 2 on the measurement ([d9a888e](https://github.com/event4u-app/agent-config/commit/d9a888e793977be05af7c2c2b345655956e3eb8e))
+* **evidence:** reproduce #58109 and record what the ledger cannot see ([21b8d2d](https://github.com/event4u-app/agent-config/commit/21b8d2dfbcd0dff415bfda7306788a86f3b3809b))
+* **review:** re-bind the skip declaration after merging main ([3e03c75](https://github.com/event4u-app/agent-config/commit/3e03c75c4465ceac9d02bdfb76e8ad0091387965))
+* **git:** route the pre-PR freshness check through the gate ([c0edb1f](https://github.com/event4u-app/agent-config/commit/c0edb1f36c001087d1118ef1fac3e7cb5e10f333))
+* **review:** re-scope the skip declaration after the main merge ([7184ae8](https://github.com/event4u-app/agent-config/commit/7184ae89ec9e9385aca59ecba9bdd2eacc336c08))
+* **review:** re-bind the findings artefact after the corpus-staleness fix ([47131d4](https://github.com/event4u-app/agent-config/commit/47131d403539cdaebf67e7b514267562835ae5c1))
+* **review:** re-bind the findings artefact to the post-fix scope ([6a48f11](https://github.com/event4u-app/agent-config/commit/6a48f11ba78b1086209dfa06928bfe1f7addc743))
+* **roadmap:** correct three overclaims, re-depth the archive links, stale watchlist ([c4e95d3](https://github.com/event4u-app/agent-config/commit/c4e95d36a6efcaf44f1aa693816806111e823165))
+* **review:** bind the R2 findings for feat-design-system-onramp-blockers ([2092734](https://github.com/event4u-app/agent-config/commit/2092734d3438ac2647bdcdde5faf05be49b7b0dc))
+* **review:** re-bind the artefact after the third main merge ([3b4bdb6](https://github.com/event4u-app/agent-config/commit/3b4bdb6a08f46181d869a2d4bd4dfb16af3e4349))
+* **review:** re-bind the R2 artefact after the fix pass ([5bfc84c](https://github.com/event4u-app/agent-config/commit/5bfc84c8bfea61a9522f21f8cbb7f72acdcc7450))
+* **council:** record the two unblocking decisions, and their honest standing ([8cd7182](https://github.com/event4u-app/agent-config/commit/8cd71823c1b1ce3c6002d16cb444d1b96b70f3fa))
+* **review:** the real R2 review, replacing the skip — 7 findings ([834e7f1](https://github.com/event4u-app/agent-config/commit/834e7f10f26e0d93911f0c92d0720f72c8ee0fc2))
+
+### Tests
+
+* **settings:** re-point two vacuous assertions and assert the deletion ([933f320](https://github.com/event4u-app/agent-config/commit/933f3208efd38a22854e147e7d3c7ddee2bacde1))
+
+### Chores
+
+* **roadmap:** regenerate the dashboard after the main merge ([2653222](https://github.com/event4u-app/agent-config/commit/26532222c07d0784f1f608a0fc4185ed9b02274b))
+* **roadmap:** regenerate the dashboard after the third main merge ([b271d07](https://github.com/event4u-app/agent-config/commit/b271d078b70d3c177571fc152cc00315b5780aba))
+* **roadmap:** close design-system-onramp at 12/12 and archive it ([14bce9c](https://github.com/event4u-app/agent-config/commit/14bce9c59b193631737f7b2a19157fd53d4e6de4))
+
+Tests: 13818 (+50 since 10.4.0)
+
 ## [10.4.0](https://github.com/event4u-app/agent-config/compare/10.3.0...10.4.0) (2026-08-13)
 
 ### Release highlights
