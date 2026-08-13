@@ -2,23 +2,15 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **42** open blockers, **9** need you → `agent-config gates`
+> 31 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **40** open blockers, **9** need you → `agent-config gates`
 
 ## Overall
 
-**298 / 429 steps done · 69%**
+**281 / 410 steps done · 69%**
 
 ```text
 ████████████████████████████░░░░░░░░░░░░   69%
 ```
-
-## ⚠️ Iron Law 3 — unresolved deferred items
-
-These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
-
-| Roadmap | Done | Deferred | Cancelled |
-|---|---:|---:|---:|
-| [road-to-inbox-harvest-distillation.md](roadmaps/road-to-inbox-harvest-distillation.md) | 9 | 1 | 6 |
 
 ## Open roadmaps
 
@@ -29,15 +21,15 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
 | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
-| 6 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
-| 7 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
-| 9 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 2 | 12 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █████████░ 86% |
-| 10 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
-| 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
-| 12 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
-| 13 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
-| 14 | [road-to-inbox-harvest-distillation.md](roadmaps/road-to-inbox-harvest-distillation.md) | 4 | 16 | 0 | 9 | 1 | 6 | [2](#blockers-road-to-inbox-harvest-distillation) | ██████████ 100% |
+| 6 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
+| 7 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
+| 8 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+| 9 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
+| 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 2 | 12 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █████████░ 86% |
+| 11 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
+| 12 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
+| 13 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
+| 14 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
 | 15 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 16 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 17 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
@@ -188,6 +180,33 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 1 | Protocol diff (no model calls) | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 2 | Re-run test on existing artifacts (minimal spend) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
 | 3 | Landing & close | ⬜ not started | 1 | 0 | 0 | 1 | 0% |
+
+### [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md)
+
+**Road to the distillation follow-ups — two maintainer-gated items, relocated intact** — 0 / 2 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | The router-head retrofit | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 2 | The untested contract path | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-distillation-followups"></a>
+**Blockers**
+
+- **router-head-retrofit-instrument** (owner: maintainer) — blocks Phase 1 Step 1 only.
+  - **What to do:**
+    either supply an instrument that observes what the host
+    actually loads on skill trigger (no such observation exists in this tree
+    today), or decide explicitly that the published K6 cap is reason enough to
+    restructure the three offenders without a token claim.
+  - **Resolved when:** an instrument exists and has produced a before/after reading on one skill, **or** a maintainer decision is recorded that the contract alone justifies the retrofit.
+- **first-contract-true-analysis-run** (owner: maintainer) — blocks Phase 2 Step 1 only.
+  - **What to do:**
+    run the command against a small reference and land the
+    evidence artefact. Two things make this a maintainer call rather than an
+    autonomous step: it spends on external fetches, and its output is raw named
+    evidence, which `source-confidentiality` keeps local-only unless anonymised.
+  - **Resolved when:** one evidence artefact exists that was produced by the command rather than by an ad-hoc pass.
 
 ### [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md)
 
@@ -405,35 +424,6 @@ _1 blocker resolved._
     ~18 permanent findings, which is the allowlist-fatigue shape this repo's own
     rules warn about.
   - **Resolved when:** the files are deleted, or a reason to keep them is recorded.
-
-### [road-to-inbox-harvest-distillation.md](roadmaps/road-to-inbox-harvest-distillation.md)
-
-**Road to harvested-claim provenance and router-head skills** — 9 / 9 done (100%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | A harvested claim is citable or it is labelled | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 2 | Personas may declare what they are allowed to cite | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 3 | The synthesis half that is actually missing | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 4 | The documented cap becomes a gate | ✅ done | 0 | 2 | 1 | 6 | 100% |
-
-<a id="blockers-road-to-inbox-harvest-distillation"></a>
-**Blockers**
-
-- **router-head-retrofit-instrument** (owner: maintainer) — blocks step 4.3 only. Steps 4.1 and 4.2 are unblocked — they constrain new skills and do not require the retrofit.
-  - **What to do:**
-    either supply an instrument that observes what the host
-    actually loads on skill trigger (no such observation exists in this tree
-    today), or decide explicitly that the published K6 cap is reason enough to
-    restructure the three offenders without a token claim.
-  - **Resolved when:** an instrument exists and has produced a before/after reading on one skill, **or** a maintainer decision is recorded that the contract alone justifies the retrofit.
-- **first-contract-true-analysis-run** (owner: maintainer) — blocks nothing in this roadmap. Recorded because the consumed drafts raised it and it is a real gap: no artefact under `agents/evidence/analysis/` shows `/analyze:reference-repo` having been run end-to-end under its own §5b convergence contract — `ls agents/evidence/analysis/ | grep compare` returns nothing. The drafts themselves were produced *outside* the command, so its contract has an untested path.
-  - **What to do:**
-    run the command against a small reference and land the
-    evidence artefact. Two things make this a maintainer call rather than an
-    autonomous step: it spends on external fetches, and its output is raw named
-    evidence, which `source-confidentiality` keeps local-only unless anonymised.
-  - **Resolved when:** one evidence artefact exists that was produced by the command rather than by an ad-hoc pass.
 
 ### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
 
