@@ -437,7 +437,7 @@ export const SLOP_RULES: SlopRule[] = [
     },
   },
   {
-    id: "slop-lock-shape",
+    id: "slop-v8-lock-shape",
     catalogId: "V8",
     severity: "P2",
     engines: ["css"],
@@ -465,7 +465,7 @@ export const SLOP_RULES: SlopRule[] = [
     },
   },
   {
-    id: "slop-lock-colour",
+    id: "slop-c6-lock-colour",
     catalogId: "C6",
     severity: "P3",
     engines: ["css"],

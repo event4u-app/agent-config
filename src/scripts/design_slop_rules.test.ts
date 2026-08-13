@@ -100,12 +100,12 @@ const FIXTURES: Record<string, { ext: string; positive: string; negative: string
     negative:
       '<h1>Get Started</h1><p>Deploys are marked ✅ when healthy.</p><td>✅</td><button>Track progress</button>',
   },
-  "slop-lock-shape": {
+  "slop-v8-lock-shape": {
     ext: "css",
     positive: ".a{border-radius:4px}.b{border-radius:8px}.c{border-radius:12px}.d{border-radius:20px}",
     negative: ".a{border-radius:8px}.b{border-radius:12px}",
   },
-  "slop-lock-colour": {
+  "slop-c6-lock-colour": {
     ext: "css",
     positive: ".a{color:#e11d48}.b{background:#2563eb}.c{border-color:#16a34a}",
     negative: ".a{color:#111827}.b{background:#6b7280}.c{border-color:#2563eb}",
