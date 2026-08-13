@@ -1,10 +1,10 @@
 # Findings: guard-input-prompt-binding
-<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: 856a3546b2ad2c7f4aeb4192a7ecc776b33f90a9edb5b52fa210edf43087671e | diff: 491020a989021ef29db713823184e2bb4972275f | reviewer: r2-fresh-subagent-guard-input-prompt-binding | prompt_hash: 9442b32523a1113bf8bf6976a597218317d3ac5bf7e0d91e6fafd4cf593d4846 -->
+<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: fe27f0c0747231c3bbd91d563cfb6bebb0950326d78a41b67a2c231b6a4e2f96 | diff: 578b33663d3aee9c30b5e4b486cef7195351ae79 | reviewer: r2-fresh-subagent-guard-input-prompt-binding | prompt_hash: 9442b32523a1113bf8bf6976a597218317d3ac5bf7e0d91e6fafd4cf593d4846 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 491020a989021ef29db713823184e2bb4972275f
-  scope_hash: 856a3546b2ad2c7f4aeb4192a7ecc776b33f90a9edb5b52fa210edf43087671e
+  diff_sha: 578b33663d3aee9c30b5e4b486cef7195351ae79
+  scope_hash: fe27f0c0747231c3bbd91d563cfb6bebb0950326d78a41b67a2c231b6a4e2f96
   roadmap: none
   roadmap_hash: none
   ac_hash: none
@@ -27,3 +27,27 @@ dispatched: 2026-08-13T00:36:22Z
 | 10 | low | src/scripts/check_review_prompt_binding.ts:354 | Two exit paths bypass the § 6 requirement that the `scanned:` line be "emitted on **every** exit path, exit `2` included": `parseArgs` calls `process.exit(2)` at lines 354 and 370 without emitting it. Separately, `evaluate()` sits outside the try/catch that maps failures to exit 2, and a non-`DeadScopeError` from `assertScanned` is rethrown, so an internal error there terminates the process with node's default exit 1 — the "policy violation, block" code — inverting § 6 for the very failures the docstring promises are exit 2. | fixed | 85d72ca1f |
 | 11 | low | src/scripts/check_review_prompt_binding.ts:122 | `loadBaseline` builds the map with `out.set(entry.slug, …)`, so a duplicate `slug` silently overwrites the earlier entry and is never reported. The shipped file is a suppression list under `check_suppression_hygiene`, where a silently dropped entry — with its reason and falsifier — is the class of hole the ratchet exists to prevent; a duplicate key should be an error alongside the missing-field errors already raised above it. | fixed | 85d72ca1f |
 | 12 | low | src/scripts/check_review_prompt_binding.ts:426 | `--json` writes the payload to stdout interleaved with the `scanned:` line, the ledger report and the summary line, so the output is not machine-parseable. Both baseline entries record `npx tsx src/scripts/check_review_prompt_binding.ts --json` as their falsifier; piping that documented command into a JSON consumer fails. Either route the JSON to a file or a distinct stream, or drop the flag's implicit promise. | fixed | 85d72ca1f |
+
+## Scope grew after the review — what this artefact does NOT cover
+
+The marker above binds scope `fe27f0c0` (head `578b33663`). The reviewer read
+scope `364a1cad` (head `6ea08095`). The difference is **not** only the fix pass
+its own findings caused, and the extra part is named here rather than absorbed
+silently by the re-bind:
+
+- `578b33663` — `docs(roadmap): capture the four gates that are red on main and
+  unseen`. Adds `agents/roadmaps/road-to-local-only-gate-reds.md` and
+  regenerates `agents/roadmaps-progress.md`. **The reviewer never saw either
+  file.** It is a roadmap capturing four pre-existing gate reds unrelated to this
+  change, added on the operator's explicit instruction after the review closed.
+
+Two facts make the disclosure the proportionate response rather than a second
+review round: the addition is documentation with no executable surface — a
+roadmap and a generated dashboard, zero code paths — and the § 2.5 ordering that
+matters (findings recorded before the fixes that answer them) is intact and
+unaffected by it.
+
+A reader who needs the code half of this change reviewed has it: rows 1-12 bind
+to it, and every fix ref points at a commit inside the reviewed lineage. A reader
+asking whether the roadmap was reviewed has the answer in this paragraph: it was
+not.
