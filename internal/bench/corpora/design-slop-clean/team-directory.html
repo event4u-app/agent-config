@@ -1,0 +1,56 @@
+<!-- clean: sortable directory table with real headers, scoped cells, and a described sort control -->
+<section class="directory" aria-labelledby="directory-title">
+  <h2 class="directory__title" id="directory-title">Members of Atlas Logistics</h2>
+
+  <div class="directory__toolbar">
+    <label class="field field--inline">
+      <span class="field__label">Filter by name or email</span>
+      <input class="field__input" type="search" name="q" value="" />
+    </label>
+    <p class="directory__count" role="status">Showing 6 of 41 members</p>
+  </div>
+
+  <table class="ledger">
+    <thead>
+      <tr>
+        <th class="ledger__head-cell" scope="col" aria-sort="ascending">
+          <button type="button" class="ledger__sort">Name</button>
+        </th>
+        <th class="ledger__head-cell" scope="col">Email</th>
+        <th class="ledger__head-cell" scope="col">Role</th>
+        <th class="ledger__head-cell ledger__head-cell--numeric" scope="col">Last active</th>
+        <th class="ledger__head-cell" scope="col"><span class="visually-hidden">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="ledger__row">
+        <th class="ledger__cell" scope="row">Ana Beltrán</th>
+        <td class="ledger__cell ledger__cell--secondary">ana.beltran@atlas-lg.example</td>
+        <td class="ledger__cell">Owner</td>
+        <td class="ledger__cell ledger__cell--numeric"><time datetime="2026-03-08">Today</time></td>
+        <td class="ledger__cell"><a href="/members/104">Manage</a></td>
+      </tr>
+      <tr class="ledger__row">
+        <th class="ledger__cell" scope="row">Bo Lindqvist</th>
+        <td class="ledger__cell ledger__cell--secondary">bo.l@atlas-lg.example</td>
+        <td class="ledger__cell">Dispatcher</td>
+        <td class="ledger__cell ledger__cell--numeric"><time datetime="2026-03-06">2 days ago</time></td>
+        <td class="ledger__cell"><a href="/members/118">Manage</a></td>
+      </tr>
+      <tr class="ledger__row">
+        <th class="ledger__cell" scope="row">Ruth Okonjo</th>
+        <td class="ledger__cell ledger__cell--secondary">r.okonjo@atlas-lg.example</td>
+        <td class="ledger__cell">Dispatcher</td>
+        <td class="ledger__cell ledger__cell--numeric"><time datetime="2026-01-22">45 days ago</time></td>
+        <td class="ledger__cell"><a href="/members/131">Manage</a></td>
+      </tr>
+      <tr class="ledger__row">
+        <th class="ledger__cell" scope="row">Yusuf Kaya</th>
+        <td class="ledger__cell ledger__cell--secondary">y.kaya@atlas-lg.example</td>
+        <td class="ledger__cell">Read only</td>
+        <td class="ledger__cell ledger__cell--numeric">Never signed in</td>
+        <td class="ledger__cell"><a href="/members/142">Resend invite</a></td>
+      </tr>
+    </tbody>
+  </table>
+</section>

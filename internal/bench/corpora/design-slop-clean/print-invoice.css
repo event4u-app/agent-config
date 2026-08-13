@@ -1,0 +1,98 @@
+/* clean: print stylesheet, physical units and page breaks only, no screen decoration */
+@page {
+  size: A4;
+  margin: 18mm 16mm 20mm;
+}
+
+@media print {
+  body {
+    font-family: Georgia, "Liberation Serif", serif;
+    font-size: 10.5pt;
+    line-height: 1.45;
+    color: #000000;
+    background: #ffffff;
+  }
+
+  .no-print,
+  .appbar,
+  .sidebar {
+    display: none;
+  }
+
+  .invoice__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 6mm;
+    border-bottom: 0.5pt solid #000000;
+  }
+
+  .invoice__issuer {
+    font-size: 9.5pt;
+    line-height: 1.4;
+  }
+
+  .invoice__number {
+    font-size: 13pt;
+    font-weight: bold;
+  }
+
+  .invoice__meta {
+    margin: 6mm 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4mm;
+    font-size: 9.5pt;
+  }
+
+  .invoice__table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .invoice__table th {
+    text-align: left;
+    font-size: 9pt;
+    padding: 2mm 1mm;
+    border-bottom: 0.5pt solid #000000;
+  }
+
+  .invoice__table td {
+    padding: 2mm 1mm;
+    border-bottom: 0.25pt solid #999999;
+    vertical-align: top;
+  }
+
+  .invoice__table td.amount,
+  .invoice__table th.amount {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .invoice__table tr {
+    break-inside: avoid;
+  }
+
+  .invoice__totals {
+    margin-top: 4mm;
+    margin-left: auto;
+    width: 70mm;
+  }
+
+  .invoice__totals .grand {
+    font-weight: bold;
+    border-top: 0.5pt solid #000000;
+    padding-top: 1.5mm;
+  }
+
+  .invoice__terms {
+    margin-top: 10mm;
+    font-size: 9pt;
+    break-inside: avoid;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 8.5pt;
+  }
+}

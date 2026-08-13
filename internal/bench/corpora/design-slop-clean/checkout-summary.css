@@ -1,0 +1,88 @@
+/* clean: order summary with tabular figures, two-step radius scale, no decorative depth */
+.summary {
+  --pad: 20px;
+  --line: #e0e4e8;
+  --ink: #1c242d;
+  --ink-dim: #59646f;
+  --total: #123a2b;
+
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: var(--pad);
+}
+
+.summary__title {
+  margin: 0 0 var(--pad);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.summary__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.summary__item {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.summary__thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #f1f3f5;
+}
+
+.summary__name {
+  font-size: 0.9375rem;
+  color: var(--ink);
+}
+
+.summary__qty {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--ink-dim);
+}
+
+.summary__price {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9375rem;
+}
+
+.summary__totals {
+  display: grid;
+  gap: 6px;
+  padding-top: 14px;
+  font-size: 0.9375rem;
+}
+
+.summary__row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-dim);
+}
+
+.summary__row--grand {
+  padding-top: 10px;
+  margin-top: 6px;
+  border-top: 1px solid var(--line);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--total);
+}
+
+.summary__note {
+  margin: 14px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--ink-dim);
+}

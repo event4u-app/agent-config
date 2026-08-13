@@ -1,0 +1,87 @@
+/* clean: documentation prose scale, constrained measure, paired serif and mono with stated roles */
+.prose {
+  /* Charter for long-form reading, Iosevka for code: the pair was chosen so
+     numerals stay distinguishable at 14px in API tables. */
+  --font-body: Charter, "Bitstream Charter", Georgia, serif;
+  --font-mono: Iosevka, "SFMono-Regular", ui-monospace, monospace;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --rule: #dcdcd8;
+  --mark: #2c5f4f;
+
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--ink);
+  max-width: 68ch;
+}
+
+.prose h1 {
+  font-size: 2rem;
+  line-height: 1.2;
+  margin: 0 0 0.5rem;
+}
+
+.prose h2 {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  margin: 2.5rem 0 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.prose h3 {
+  font-size: 1.1875rem;
+  margin: 1.75rem 0 0.5rem;
+}
+
+.prose p {
+  margin: 0 0 1.15rem;
+}
+
+.prose a {
+  color: var(--mark);
+  text-underline-offset: 3px;
+}
+
+.prose ul,
+.prose ol {
+  margin: 0 0 1.15rem;
+  padding-left: 1.4rem;
+}
+
+.prose li + li {
+  margin-top: 0.35rem;
+}
+
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: #f3f3f0;
+  padding: 0.1em 0.32em;
+  border-radius: 3px;
+}
+
+.prose pre {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  background: #f7f7f4;
+  padding: 1rem 1.15rem;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.prose blockquote {
+  margin: 1.5rem 0;
+  padding: 0.25rem 0 0.25rem 1.15rem;
+  border-left: 1px solid var(--rule);
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.prose figcaption {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  margin-top: 0.5rem;
+}
