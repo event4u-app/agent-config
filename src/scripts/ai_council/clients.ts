@@ -949,7 +949,21 @@ export const CLI_CALLS_FILENAME = 'cli-calls.json';
 // Default subprocess timeout (seconds) for a single CLI call. Long enough for
 // the largest frontier models to think; short enough to surface a hung
 // subprocess without freezing the council run.
-export const DEFAULT_CLI_TIMEOUT_SECONDS = 120.0;
+//
+// Raised 120 → 300 (2026-08-13) to match the API transport, which has carried
+// `--max-time 290` / `timeout: 300_000` since the 2026-06-24 repair of the same
+// symptom. That repair landed in `_curlJsonPost` only, so when a member resolves
+// to `cli · subscription` the old cap was still live — and a deep design run
+// reproduced it exactly: both members returned `error: timeout` at
+// `latency_ms: 122921` with `timeout_seconds: 120`, and the run reported
+// `0/2 present — INCONCLUSIVE`.
+//
+// This is not a comfort setting. A council that cannot finish a deep prompt is
+// a council the agent cannot use, and every question it would have answered
+// falls back to interrupting the user — the routing that
+// `decision_resolution` classes `medium_impact → council` depends on this
+// call completing.
+export const DEFAULT_CLI_TIMEOUT_SECONDS = 300.0;
 
 /** Return the canonical write target for the daily-quota counter. */
 function _cliCallsStatePath(): string {
