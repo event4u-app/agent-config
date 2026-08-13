@@ -124,6 +124,15 @@ note. An import that lands mostly under `_meta` is the designed degradation, not
 a failure — it means the tool's shape moved, and the values are still in front
 of the human instead of silently coerced into tokens.
 
+**Parked, not adopted — runtime drift detection.** One documented producer also
+ships a drift gate: `--compare <baseline>` against a captured baseline, with
+distinct exit codes (0 clean · 1 drift · 2 usage · 67 threshold) and a
+machine-readable `drift` key carrying per-token `changes[]`. That is a
+*design-quality CI* capability, not an import one, and nothing in this package
+asks for it today — recorded here as a candidate so the next reader finds it
+already assessed, and taken up only if a design-quality roadmap asks for runtime
+drift detection.
+
 The compatibility matrix is committed as tests, not prose:
 `tests/scripts/fixtures/design-system-import/` holds one input/expected pair per
 lane, and that directory's README states which sample is a real capture and
