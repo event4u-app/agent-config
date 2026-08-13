@@ -24,6 +24,9 @@ triggers:
   - phrase: "1:1 um"
   - phrase: "1:1 nach"
   - phrase: "claude.site/artifacts"
+  - phrase: "https://lovable.dev/"
+  - phrase: "https://v0.dev/"
+  - phrase: "https://bolt.new/"
   - file_pattern: "*design.html"
   - path_prefix: ".claude/design-system/"
 applies_to_user_types:
@@ -60,7 +63,19 @@ A PROVIDED PROTOTYPE / DESIGN SYSTEM IS THE SPEC, NOT A SUGGESTION.
 BUILD IT 1:1. NEVER SWAP FONTS, CONTROLS, COMPONENTS, LAYOUT, SPACING,
 OR COLOUR — AND NEVER OMIT OR ADD AN ELEMENT — WITHOUT EXPLICIT CONFIRMATION.
 A "BETTER IDEA" IS A PROPOSAL TO SURFACE, NEVER A CHANGE TO MAKE.
+WHENEVER THE SOURCE IS REACHABLE, THE SOURCE IS THE DATA BASIS.
+A SCREENSHOT IS VALIDATION, NEVER THE INPUT YOU BUILD FROM.
+WHERE THE ARTIFACT'S OWN MARKUP / CSS / JS IS STACK-COMPATIBLE, ADAPTING
+THAT CODE IS THE DEFAULT — A FROM-SCRATCH RE-DERIVATION IS A DEVIATION
+AND NEEDS THE SAME CONFIRMATION AS A SWAPPED CONTROL.
 ```
+
+The last three lines route to
+[`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md)
+§ Data-basis ladder and § Adopt the code — including the scope line that keeps
+the adopt-the-code duty from colliding with
+[`code-provenance`](code-provenance.md). Read that scope line before acting on
+either rule; the boundary is stated from both sides.
 
 ## What counts as the spec
 
@@ -114,6 +129,19 @@ Two further handover shapes carry the artifact without any of the above:
   conventional location for a handed-over token/component set. The prefix is the
   vendor-scoped directory, never a bare `design-system/`, which is a normal
   source folder in a large fraction of frontend repos.
+- **A third-party builder's share link.** `https://lovable.dev/`,
+  `https://v0.dev/`, `https://bolt.new/` — the same shape as the capability URL
+  above, and for the same reason: a page built in one of these tools and handed
+  over as a link is a finished spec, not an inspiration. The **protocol prefix
+  is load-bearing**: a pasted URL carries `https://`, while "I had a look at
+  v0.dev" does not, so the bare host stays silent exactly as `claude.ai` does.
+  **Named limit, not an oversight:** a share link pasted *without* the protocol
+  (`v0.dev/chat/…`) does not fire. Closing that would mean either a bare-host
+  keyword — which fires on every mention of the tool — or guessing each vendor's
+  share-path segment, and a trigger built on a guessed path is worse than a
+  stated gap. The gap is pinned red in the matrix
+  (`near-bare-host-mention`, `known-gap-protocolless-share-link`) so it is
+  visible rather than believed closed.
 
 The trigger set is deliberately phrase-heavy on the German side and on
 `artifact`: a bare `artifact` keyword fires on "the CI build artifact is 40 MB".
@@ -121,9 +149,10 @@ The trigger set is deliberately phrase-heavy on the German side and on
 [`design_fidelity_routing.test.ts`](../../tests/scripts/design_fidelity_routing.test.ts)
 pins both halves — every class that must route, and the near-misses that must
 stay silent (fixture `daf-port-trigger-de`). Extending the set without adding a
-near-miss row there is how an over-broad trigger lands: each of the two triggers
-above ships with its own near-miss row (`near-claude-ai-chat-link`,
-`near-generic-design-system-dir`).
+near-miss row there is how an over-broad trigger lands: each of the three
+trigger classes above ships with its own near-miss row
+(`near-claude-ai-chat-link`, `near-generic-design-system-dir`,
+`near-bare-host-mention`).
 
 Body migrated to [`guideline:design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, third-party delivery is self-hosted by default, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

@@ -40,7 +40,28 @@ else runs the loop.
    `layout`, `components`, `states`, `microcopy`, `a11y`. `states` means all
    five of `empty`, `loading`, `error`, `success`, `disabled` — a brief missing
    one is unfinished, not concise.
-3. **Build** — against the audit's primitives, in the project's stack.
+2b. **Inventory — only when an artifact was provided, and before you build.**
+   List the artifact's **interactions, keyframes, and script includes** from its
+   source (`design-fidelity-mechanics` § Data-basis ladder — read it, do not
+   look at a picture of it). Then place **every** listed item in exactly one
+   bucket, using the engine's own names so the two surfaces cannot drift:
+
+   | Bucket | Meaning |
+   |---|---|
+   | `honoured` | carried over as-is |
+   | `translated` | carried over in a different shape (a handler became a framework binding) |
+   | `flagged` | **not** carried over — with the reason, in the output |
+
+   Dropping a handler stays allowed; hiding one does not. An item in no bucket
+   is the failure this step exists to catch — "missing JavaScript" is what it
+   looks like from the user's side. Inside the engine this is enforced
+   (`apply.ts`, `COVERAGE_BUCKETS`, an unaccounted item is a halt); out here it
+   is a duty you carry, and nothing checks it for you. (fixture:
+   `daf-adhoc-port-coverage`.)
+3. **Build** — against the audit's primitives, in the project's stack. Where the
+   artifact's own markup/CSS/JS is stack-compatible, adapt **that code**;
+   re-deriving it from scratch is a deviation needing confirmation
+   (`design-fidelity-mechanics` § Adopt the code).
 4. **Review** — run [`design-review`](../design-review/SKILL.md) before calling
    it done, and scope the verdict honestly: render-scoped when you can render
    it, otherwise explicitly static-scoped, naming which checks actually ran.

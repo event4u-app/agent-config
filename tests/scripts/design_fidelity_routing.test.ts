@@ -201,7 +201,56 @@ export const ROUTING_MATRIX: readonly Row[] = [
         baseline: false,
     },
 
+    // --- Class 5: a third-party builder's share link -----------------------
+    {
+        id: 'none-lovable-share-link',
+        klass: 'en',
+        prompt: 'The page is done: https://lovable.dev/projects/9f2a — take it from there.',
+        open_files: [],
+        routes: true,
+        baseline: false,
+    },
+    {
+        id: 'none-v0-share-link',
+        klass: 'en',
+        prompt: 'https://v0.dev/chat/b7c1 — that is the layout we settled on.',
+        open_files: [],
+        routes: true,
+        baseline: false,
+    },
+    {
+        id: 'none-bolt-share-link',
+        klass: 'en',
+        prompt: 'Built it here: https://bolt.new/~/sb1-x9 — implement it in our stack.',
+        open_files: [],
+        routes: true,
+        baseline: false,
+    },
+
     // --- Near-misses: must stay silent ------------------------------------
+    {
+        id: 'near-bare-host-mention',
+        klass: 'en',
+        // The host without a protocol is a tool mention, not a handover — the
+        // `claude.ai` precedent applied to the three builders.
+        prompt: 'We looked at v0.dev and bolt.new before picking a stack.',
+        open_files: [],
+        routes: false,
+        baseline: false,
+    },
+    {
+        id: 'known-gap-protocolless-share-link',
+        klass: 'en',
+        // DELIBERATELY RED, and not a near-miss: this IS a handover the rule
+        // does not catch. Closing it needs either a bare-host keyword (which
+        // `near-bare-host-mention` proves is over-broad) or a guessed per-vendor
+        // share-path segment. A trigger built on a guessed path is worse than a
+        // stated gap, so the gap is pinned here instead of believed closed.
+        prompt: 'lovable.dev/projects/9f2a — build that.',
+        open_files: [],
+        routes: false,
+        baseline: false,
+    },
     {
         id: 'near-claude-ai-chat-link',
         klass: 'en',

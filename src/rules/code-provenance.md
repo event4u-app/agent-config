@@ -102,6 +102,16 @@ observes — so this rule ships `enforced_by: none`, same honesty stance as
   no specific source in mind.
 - Reusing your **own** prior code within this repo.
 - Prose/docs/config-only edits.
+- **A design artifact the user handed over** — a prototype, an exported
+  `design.html`, a token sidecar. That is the user's own material, not
+  third-party external code, so adapting its markup/CSS/JS is not a borrow and
+  needs no ledger entry. Same carve-out
+  [`content-quoting-floor`](content-quoting-floor.md) makes for user-owned text.
+  **The carve-out is authorship, not delivery:** a vendored component or a
+  licensed template that merely *arrives inside* a handover stays under this
+  rule in full. Boundary stated from the other side in
+  [`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md)
+  § Adopt the code.
 
 ## See also
 
