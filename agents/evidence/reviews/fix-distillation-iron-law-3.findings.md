@@ -1,6 +1,6 @@
 # Findings: fix-distillation-iron-law-3
 
-**Skipped:** no code surface for this completion — the branch changes four markdown files (a roadmap relocation, its successor, the archived predecessor and the regenerated dashboard) and no executable path, scope 6a792e5d3f62ececef2a8569262f8554a16dc8a638e1cc6647e33ecf4c6f0d91, declared 2026-08-13
+**Skipped:** no code surface for this completion — the branch changes four markdown files (a roadmap relocation, its successor, the archived predecessor and the regenerated dashboard) and no executable path, scope a575a47661fc8e64481a57d080c7599b90ef7cc42f51ed7eb187276d6a405eb1, declared 2026-08-13
 
 ## Why a skip is honest here rather than convenient
 
