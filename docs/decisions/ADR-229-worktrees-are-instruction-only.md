@@ -98,20 +98,33 @@ text and its emission condition, not its authority.
   breath so it cannot be read as overriding the roadmap STOP: *"Any STOP below is
   about WHICH WORK TO START, never about shipping work that is already done."*
 - **The branch question is scoped to the session**, not the turn — asked once
-  before the first write, and the answer holds.
+  before the first write, and the answer holds. It applies to the same-worktree
+  case only; the different-worktree case does not ask at all (below).
 
 **Deliberately unchanged:** the `sessions:claim` write-refusal, the DUPLICATE
 WORK stop on an identical roadmap slug, and the TTL/heartbeat mechanics. That
 guard fires on the roadmap slug — the axis where the measured loss occurred — and
 it is the one part of this system that has paid for itself.
 
-**One suspicion investigated and dropped.** `classify_collisions` compares branch
-names without comparing worktree paths, so several sessions in the *same* checkout
-count as colliding. That looked like the false-positive source and it is not: two
-sessions sharing one working directory collide harder than two worktrees — they
-share the filesystem — so the warning is correct and "spawn a separate worktree"
-is the right advice. No change made. The observed noise came from idle same-checkout
-peers still inside the 4 h TTL, which is TTL tuning and explicitly out of scope.
+**One suspicion, half wrong, corrected by a parallel branch.** `classify_collisions`
+compares branch names without comparing worktree paths. Reading that, this work
+concluded it was *not* a false positive — two sessions sharing one working
+directory collide harder than two worktrees, since they share the filesystem —
+and made no change.
+
+That reasoning holds for the same-worktree case and misses the other one
+entirely. `7b64d4e3d` landed on `main` mid-flight with exactly the missing
+distinction: same branch name in a **different** worktree is separate files,
+separate index, separate HEAD, and the commit message names the same symptom
+reported here — *"halting for it cost the user a commit per session"*. It
+downgrades that case from `COLLISION` + ask to a `NOTE` that says in as many
+words: not a reason to stop, to ask, or to withhold a commit.
+
+That is the better fix and it is adopted here rather than re-derived. This
+branch contributes the two things it did not have: emission is gated on a
+collision existing at all, and the same-worktree question is scoped **once per
+session** rather than once per ask. Recorded because the first version of this
+paragraph asserted "no change made" as a finding, and a merge falsified it.
 
 ## Consequences
 
