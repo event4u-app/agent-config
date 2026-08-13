@@ -60,7 +60,27 @@ A PROVIDED PROTOTYPE / DESIGN SYSTEM IS THE SPEC, NOT A SUGGESTION.
 BUILD IT 1:1. NEVER SWAP FONTS, CONTROLS, COMPONENTS, LAYOUT, SPACING,
 OR COLOUR — AND NEVER OMIT OR ADD AN ELEMENT — WITHOUT EXPLICIT CONFIRMATION.
 A "BETTER IDEA" IS A PROPOSAL TO SURFACE, NEVER A CHANGE TO MAKE.
+WHENEVER THE SOURCE IS REACHABLE, THE SOURCE IS THE DATA BASIS.
+A SCREENSHOT IS VALIDATION, NEVER THE INPUT YOU BUILD FROM,
+WHILE ANY HIGHER RUNG IS REACHABLE. WHEN THE HANDOVER *IS* AN IMAGE,
+THE IMAGE IS THE SPEC AND THE 1:1 FLOOR ABOVE APPLIES TO IT UNCHANGED.
+WHERE THE ARTIFACT'S OWN MARKUP / CSS / JS IS STACK-COMPATIBLE, ADAPTING
+THAT CODE IS THE DEFAULT — A FROM-SCRATCH RE-DERIVATION IS A DEVIATION
+AND NEEDS THE SAME CONFIRMATION AS A SWAPPED CONTROL.
 ```
+
+The qualifier is load-bearing, not hedging. Unqualified, the screenshot line
+contradicts this rule's own opening sentence and its § What counts as the spec,
+both of which name a screenshot as a legitimate spec — and it would forbid the
+image-only handover class the rule exists to govern. What it forbids is
+narrower: reaching for pixels **while the code is sitting there**.
+
+The five new lines route to
+[`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md)
+§ Data-basis ladder (the first three) and § Adopt the code (the last two) —
+including the scope line that keeps the adopt-the-code duty from colliding with
+[`code-provenance`](code-provenance.md). Read that scope line before acting on
+either rule; the boundary is stated from both sides.
 
 ## What counts as the spec
 
@@ -114,6 +134,21 @@ Two further handover shapes carry the artifact without any of the above:
   conventional location for a handed-over token/component set. The prefix is the
   vendor-scoped directory, never a bare `design-system/`, which is a normal
   source folder in a large fraction of frontend repos.
+- **A third-party builder's share link — UNCOVERED, deliberately.** A page built
+  in Lovable / v0 / bolt and handed over as a link is a finished spec, and this
+  rule does not route it. The obvious trigger was tried on this branch and
+  **withdrawn**: matching is plain substring containment, so `https://v0.dev/`
+  also fires on `https://v0.dev/docs`, a pricing page, or a changelog link — it
+  would treat every mention of the tool's own site as a spec handover. That is
+  the `claude.ai` failure the capability-URL entry above exists to avoid, and by
+  this rule's own standard it is worse than the gap it closes. The alternatives
+  are a bare-host keyword (broader still) or guessing each vendor's share-path
+  segment, and a trigger built on a guessed path is not evidence.
+  **What closes it:** a verified share-path segment per vendor, or a
+  handover-word co-occurrence the matcher cannot express today. Until then the
+  class needs one word in the prompt, like any other unlisted filename.
+  `near-bare-host-mention` in the matrix pins the bare-host direction silent so
+  a future attempt cannot reintroduce the broad form unnoticed.
 
 The trigger set is deliberately phrase-heavy on the German side and on
 `artifact`: a bare `artifact` keyword fires on "the CI build artifact is 40 MB".
@@ -121,9 +156,20 @@ The trigger set is deliberately phrase-heavy on the German side and on
 [`design_fidelity_routing.test.ts`](../../tests/scripts/design_fidelity_routing.test.ts)
 pins both halves — every class that must route, and the near-misses that must
 stay silent (fixture `daf-port-trigger-de`). Extending the set without adding a
-near-miss row there is how an over-broad trigger lands: each of the two triggers
-above ships with its own near-miss row (`near-claude-ai-chat-link`,
-`near-generic-design-system-dir`).
+near-miss row there is how an over-broad trigger lands: each of the two shipped
+trigger classes above carries its own near-miss row
+(`near-claude-ai-chat-link`, `near-generic-design-system-dir`), and the
+withdrawn builder-URL class left `near-bare-host-mention` behind so the broad
+form stays pinned silent.
+
+**The near-miss must test the direction the new trigger opens, not a direction
+that was already closed.** The withdrawn class is the worked example: its first
+near-miss row tested a protocol-less mention, which was silent *before* the
+change and therefore could not have caught the over-broadness the change
+introduced. The row that would have caught it is
+`near-builder-host-non-handover-url` — a documentation URL on the same host —
+and it exists only because a review asked for it after the trigger had already
+shipped. Write that row first next time; it is the cheap half.
 
 Body migrated to [`guideline:design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, third-party delivery is self-hosted by default, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

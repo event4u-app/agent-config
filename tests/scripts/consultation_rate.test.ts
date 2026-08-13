@@ -54,6 +54,68 @@ const open = (file: string, turn?: number) => ({
 const FE_DESIGN = 'src/skills/fe-design/SKILL.md';
 const REVIEW = 'src/skills/design-review/SKILL.md';
 
+const ARTIFACT = 'tests/design-artifacts/fixtures/design.html';
+/** Satisfies BOTH predicates — the overlap the analyzer must not collapse. */
+const BOTH = 'src/skills/design-review/references/design.html';
+
+describe('measureSession — the artifact-read measurement', () => {
+    it('counts a write after an artifact read', () => {
+        const m = measureSession([open(ARTIFACT), uiWrite()]);
+        expect(m.artifactRead).toBe(1);
+        expect(m.sawArtifact).toBe(true);
+        expect(m.readBeforeFirstWrite).toBe(true);
+    });
+
+    it('does not count a write that precedes the read', () => {
+        const m = measureSession([uiWrite(), open(ARTIFACT)]);
+        expect(m.artifactRead).toBe(0);
+        expect(m.sawArtifact).toBe(true);
+        // The session read the artifact — but not before it started writing,
+        // which is the whole question the metric asks.
+        expect(m.readBeforeFirstWrite).toBe(false);
+    });
+
+    it('latches readBeforeFirstWrite on the FIRST write, not a later better one', () => {
+        const m = measureSession([uiWrite('a.vue'), open(ARTIFACT), uiWrite('b.vue')]);
+        expect(m.readBeforeFirstWrite).toBe(false);
+        // The later write DID follow the read, so the per-turn count moves
+        // while the per-session verdict does not. Both are correct and they
+        // answer different questions.
+        expect(m.artifactRead).toBe(1);
+    });
+
+    it('reports no handover when no artifact was read', () => {
+        const m = measureSession([open(FE_DESIGN), uiWrite()]);
+        expect(m.sawArtifact).toBe(false);
+        expect(m.readBeforeFirstWrite).toBe(false);
+    });
+
+    it('a session with no UI write at all is not a handover failure', () => {
+        const m = measureSession([open(ARTIFACT)]);
+        expect(m.sawArtifact).toBe(true);
+        expect(m.uiWriteTurns).toBe(0);
+        // No write happened, so there is nothing to have been late for.
+        expect(m.readBeforeFirstWrite).toBe(false);
+    });
+
+    it('an overlapping path counts for BOTH rates, never one instead of the other', () => {
+        // The finding that produced this test: an early `return` on the
+        // artifact branch silently removed such an event from the consultation
+        // numerator. Asserting both move is what pins the independent
+        // evaluation.
+        const m = measureSession([open(BOTH), uiWrite()]);
+        expect(m.artifactRead).toBe(1);
+        expect(m.consulted).toBe(1);
+    });
+
+    it('an overlapping path still latches the discharge proxy', () => {
+        // `design-review` is the proxy surface, and BOTH lives under it — an
+        // early return would have dropped this latch too.
+        const m = measureSession([uiWrite(), open(BOTH)]);
+        expect(m.reviewOpenedAfter).toBe(1);
+    });
+});
+
 describe('measureSession — ordering', () => {
     it('counts a write after a consultation as consulted', () => {
         const m = measureSession([open(FE_DESIGN), uiWrite()]);
@@ -205,6 +267,44 @@ describe('readSessionEvents + measureStore', () => {
     it('returns an empty report for a store that does not exist', () => {
         expect(measureStore(path.join(TMP, 'nope'), 10).sessions).toBe(0);
     });
+
+    it('counts handover sessions and their read-first outcome across the store', () => {
+        const dir = path.join(TMP, 'store-handover');
+        // Read the artifact, then write — the good case.
+        writeTranscript(dir, 'good.jsonl', [
+            ['Read', 'tests/design-artifacts/fixtures/design.html'],
+            ['Write', 'a.vue'],
+        ]);
+        // Write first, read after — a handover session that was late.
+        writeTranscript(dir, 'late.jsonl', [
+            ['Write', 'b.vue'],
+            ['Read', 'tests/design-artifacts/fixtures/design.html'],
+        ]);
+        // No artifact at all — must NOT enter the handover denominator.
+        writeTranscript(dir, 'nohandover.jsonl', [['Write', 'c.vue']]);
+
+        const report = measureStore(dir, 10);
+
+        expect(report.sessionsWithUiWrite).toBe(3);
+        // The denominator is handover sessions, not every session that wrote UI.
+        expect(report.handoverSessions).toBe(2);
+        expect(report.handoverReadFirst).toBe(1);
+    });
+
+    it('does not count a handover session that never wrote UI', () => {
+        // It is excluded before the handover accumulation, by the same
+        // `uiWriteTurns === 0` guard the other rates use — so a session that
+        // only read the artifact cannot deflate the rate.
+        const dir = path.join(TMP, 'store-readonly');
+        writeTranscript(dir, 'readonly.jsonl', [
+            ['Read', 'tests/design-artifacts/fixtures/design.html'],
+        ]);
+
+        const report = measureStore(dir, 10);
+
+        expect(report.sessionsWithUiWrite).toBe(0);
+        expect(report.handoverSessions).toBe(0);
+    });
 });
 
 describe('render', () => {
@@ -217,7 +317,35 @@ describe('render', () => {
         uiWriteTurns: 4,
         consulted: 1,
         reviewOpenedAfter: 2,
+        artifactRead: 3,
+        handoverSessions: 2,
+        handoverReadFirst: 1,
     };
+
+    it('publishes the read-before-first-write rate over handover sessions', () => {
+        const out = render(report, 20);
+        // The quotable rate uses the handover denominator, not the estate one:
+        // a session with no handover cannot fail to read one.
+        expect(out).toContain('READ BEFORE FIRST WRITE');
+        expect(out).toContain('(1/2 handover session(s))');
+        // The comparability line keeps the consultation denominator.
+        expect(out).toContain('(3/4)');
+        expect(out).toContain('(1/4)');
+    });
+
+    it('states the blind spots rather than implying the rate is complete', () => {
+        // Two error sources, both pointing the same way: a handover that is
+        // never read leaves no trace (and IS the defect), and a search whose
+        // path is the artifact counts as a read. So the output has to say
+        // ceiling, not measurement.
+        const out = render(report, 20);
+        expect(out).toContain('A CEILING, NOT A MEASUREMENT');
+        expect(out).toContain('search whose path argument');
+        // The denominator is narrowed twice in code; both narrowings are named
+        // in the output rather than left for a reader to discover in the source.
+        expect(out).toContain('narrower than it sounds');
+        expect(out).toContain('wrote no UI is excluded');
+    });
 
     it('reports the rate and marks the proxy as not the discharge rate', () => {
         const out = render(report, 20);

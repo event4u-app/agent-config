@@ -48,6 +48,7 @@ import { fileURLToPath } from 'node:url';
 
 import { projectStoreSlug } from './_lib/cc_transcript.js';
 import {
+    isArtifactRead,
     isConsultation,
     isUiWrite,
     type ToolEvent,
@@ -81,6 +82,24 @@ export interface SessionMeasurement {
     consulted: number;
     /** Those turns followed later by opening the review skill. */
     reviewOpenedAfter: number;
+    /**
+     * Those turns that followed reading a provided design artifact.
+     *
+     * Shares this function's denominator on purpose — the two rates answer
+     * different questions over the SAME population ("did it consult the design
+     * surface" vs "did it read the handed-over source"), and measuring them on
+     * separate denominators is how two instruments about one behaviour stop
+     * being comparable.
+     */
+    artifactRead: number;
+    /** True when this session read a provided artifact at any point. */
+    sawArtifact: boolean;
+    /**
+     * True when this session's FIRST UI write came after an artifact read —
+     * the metric named "artifact read before first UI write". Meaningless
+     * unless `sawArtifact`, which is why it is reported over that denominator.
+     */
+    readBeforeFirstWrite: boolean;
 }
 
 export interface RateReport {
@@ -96,6 +115,16 @@ export interface RateReport {
     uiWriteTurns: number;
     consulted: number;
     reviewOpenedAfter: number;
+    /** UI-write turns preceded by reading a provided design artifact. */
+    artifactRead: number;
+    /**
+     * Sessions that read a provided artifact at all — the ONLY honest
+     * denominator for the read-before-write rate. A session with no handover
+     * cannot fail to read one.
+     */
+    handoverSessions: number;
+    /** Of those, the ones whose first UI write came after the read. */
+    handoverReadFirst: number;
 }
 
 /**
@@ -139,10 +168,20 @@ export function toolUseToEvent(part: Record<string, unknown>): ToolEvent | null 
  * consult for the file it already wrote.
  */
 export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement {
-    const out: SessionMeasurement = { uiWriteTurns: 0, consulted: 0, reviewOpenedAfter: 0 };
+    const out: SessionMeasurement = {
+        uiWriteTurns: 0,
+        consulted: 0,
+        reviewOpenedAfter: 0,
+        artifactRead: 0,
+        sawArtifact: false,
+        readBeforeFirstWrite: false,
+    };
     let consulted = false;
+    let artifactRead = false;
     /** turn -> was the session already consulted when that turn first wrote UI */
     const writeTurns = new Map<number, boolean>();
+    /** turn -> had an artifact been read when that turn first wrote UI */
+    const artifactTurns = new Map<number, boolean>();
     let lastReviewOpenAt = -1;
     const reviewOpenPositions: number[] = [];
     const writePositions: Array<{ position: number; turn: number }> = [];
@@ -151,10 +190,18 @@ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement
         if (isUiWrite(event)) {
             if (!writeTurns.has(turn)) {
                 writeTurns.set(turn, consulted);
+                artifactTurns.set(turn, artifactRead);
                 writePositions.push({ position, turn });
             }
             return;
         }
+        // Evaluated INDEPENDENTLY of the consultation branch, never as an
+        // early return before it. The two predicates are not disjoint —
+        // `skills/design-review/references/design.html` satisfies both — so a
+        // `return` here would remove such an event from the consultation
+        // numerator and from the discharge-proxy latch. An earlier revision did
+        // exactly that while claiming in its comment to prevent it.
+        if (isArtifactRead(event)) artifactRead = true;
         if (isConsultation(event)) {
             consulted = true;
             if (event.file.replace(/\\/g, '/').toLowerCase().includes(`skills/${REVIEW_SURFACE}/`)) {
@@ -166,6 +213,20 @@ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement
 
     out.uiWriteTurns = writeTurns.size;
     for (const wasConsulted of writeTurns.values()) if (wasConsulted) out.consulted += 1;
+    for (const wasRead of artifactTurns.values()) if (wasRead) out.artifactRead += 1;
+    out.sawArtifact = artifactRead;
+    // KNOWN IMPRECISION, accepted: ordering inside ONE assistant message comes
+    // from the `tool_use` part index, and parallel tool calls in a single
+    // message carry no real order. A read and a write issued together can
+    // therefore score either way. Not repaired here — a transcript carries no
+    // per-call timestamp, so the fix is a different data source rather than a
+    // different loop, and the error is bounded to same-message pairs. It is a
+    // third reason the published rate is a ceiling.
+    //
+    // The FIRST write's outcome — `artifactTurns` is insertion-ordered on the
+    // first UI write of each turn, so its first value is that write's state.
+    const firstWrite = artifactTurns.values().next();
+    out.readBeforeFirstWrite = firstWrite.done !== true && firstWrite.value === true;
     // A single max comparison, not a scan per write: the proxy asks only whether
     // ANY review-open follows, so the last one decides every earlier write.
     void reviewOpenPositions;
@@ -216,6 +277,9 @@ export function measureStore(store: string, limit: number): RateReport {
         uiWriteTurns: 0,
         consulted: 0,
         reviewOpenedAfter: 0,
+        artifactRead: 0,
+        handoverSessions: 0,
+        handoverReadFirst: 0,
     };
     // A store that is not there and a store with nothing in it are different
     // findings, and only one of them is about the agent. Collapsing them into
@@ -255,6 +319,11 @@ export function measureStore(store: string, limit: number): RateReport {
         report.uiWriteTurns += measured.uiWriteTurns;
         report.consulted += measured.consulted;
         report.reviewOpenedAfter += measured.reviewOpenedAfter;
+        report.artifactRead += measured.artifactRead;
+        if (measured.sawArtifact) {
+            report.handoverSessions += 1;
+            if (measured.readBeforeFirstWrite) report.handoverReadFirst += 1;
+        }
     }
     return report;
 }
@@ -284,6 +353,62 @@ export function render(report: RateReport, threshold: number): string {
     );
     lines.push(
         `  discharge PROXY (review opened)  ${pct(report.reviewOpenedAfter, report.uiWriteTurns)}  (${report.reviewOpenedAfter}/${report.uiWriteTurns})`,
+    );
+    lines.push(
+        `  artifact read (all UI turns)     ${pct(report.artifactRead, report.uiWriteTurns)}  (${report.artifactRead}/${report.uiWriteTurns})`,
+    );
+    lines.push(
+        `  READ BEFORE FIRST WRITE          ${pct(report.handoverReadFirst, report.handoverSessions)}  (${report.handoverReadFirst}/${report.handoverSessions} handover session(s))`,
+    );
+    lines.push('');
+    lines.push(
+        '  READ BEFORE FIRST WRITE is the rate to quote. Its denominator is',
+    );
+    lines.push(
+        '  sessions that read a provided artifact at all — a session with no',
+    );
+    lines.push(
+        '  handover cannot fail to read one, so including it would dilute the',
+    );
+    lines.push(
+        '  rate toward the size of the estate rather than the behaviour.',
+    );
+    lines.push(
+        '  That denominator is narrower than it sounds, twice: "artifact" means',
+    );
+    lines.push(
+        '  a path ending design.html or under .claude/design-system/ — a handover',
+    );
+    lines.push(
+        '  under any other name is not counted — and a session that read one but',
+    );
+    lines.push(
+        '  wrote no UI is excluded, since it had nothing to be late for.',
+    );
+    lines.push(
+        '  The line above it shares the consultation denominator and is kept for',
+    );
+    lines.push(
+        '  comparability with that rate only.',
+    );
+    lines.push('');
+    lines.push(
+        '  A CEILING, NOT A MEASUREMENT, for two reasons. A session handed an',
+    );
+    lines.push(
+        '  artifact that NEVER reads it is invisible — nothing in a transcript',
+    );
+    lines.push(
+        '  marks a handover that was ignored, and that case IS the defect. And a',
+    );
+    lines.push(
+        '  search whose path argument happens to be the artifact counts as a read',
+    );
+    lines.push(
+        '  although nothing was read. Both errors point the same way: the true',
+    );
+    lines.push(
+        '  read-before-write rate is at most what is printed here.',
     );
     lines.push('');
 

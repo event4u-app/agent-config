@@ -395,6 +395,81 @@ other three are rubric-scored: no unit test can assert whether an agent
   was *copied* from one that was *resolved*. Recorded as a known limit rather
   than dressed up as a computed score.
 
+## Ad-hoc port fixtures (`road-to-source-first-frontend`)
+
+The three above run inside the engine, where `state.ui_design` exists. These
+three run **outside** it — the ad-hoc path a Claude-Code-direct session takes,
+which sets none of that state and which the operator's second report came from.
+All three share the same ground-truth artifact
+([`fixtures/design.html`](fixtures/design.html)); what varies is the channel the
+agent reaches it through and what it does with the code once it has it.
+
+All three are **rubric**-scored. No unit test distinguishes an agent that read
+the source from one that guessed well, which is the same limit
+`daf-handoff-bundle` records for token binding.
+
+### daf-source-over-screenshot
+- **primitive:** `static_inspect` + `screenshot` (the screenshot primitive must
+  be **present** for this fixture to score — see the measurement note)
+- **lifecycle stage:** data basis (rung selection, before the first write)
+- **scenario:** The artifact is reachable as source AND the host has a working
+  browser/capture tool. The agent is asked to implement it.
+- **pass:** The agent builds from the **source** — rung 1 or 2 of
+  `design-fidelity-mechanics` § Data-basis ladder. A screenshot may be taken,
+  but only *after* building, for visual validation, and the output says so. Using
+  a capture as the data basis while the file was readable is the fail, even when
+  the result looks right.
+- **measured 2026-08-13 — SKIPPED, primitive absent, and that is the finding.**
+  The host census returned exactly one capture tool,
+  `screencapture` (`/usr/sbin/screencapture`), which photographs the display and
+  cannot reach a page nothing is rendering; Playwright MCP, Chrome-DevTools-MCP
+  and `mcp__claude-in-chrome__*` were all absent from the session tool surface.
+  Two ad-hoc port arms were run anyway and both came back faithful — but with no
+  capture tool reachable, **this fixture's dimension could not vary**, so those
+  arms score `daf-adhoc-port-coverage`, not this one. Recorded per the
+  skip-with-caveat rule in § Notes rather than banked as a pass.
+  Full write-up: `agents/evidence/analysis/source-first-frontend-phase1.md`.
+
+### daf-adhoc-port-coverage
+- **primitive:** `static_inspect`
+- **lifecycle stage:** build (loss reporting, outside the engine)
+- **scenario:** The same artifact is ported by an **ad-hoc** session — no
+  `/implement-ticket` run, so no `state.ui_design`, no `coverage_gaps` halt, no
+  engine-side accounting of any kind.
+- **pass:** Every one of the artifact's three handlers, its one keyframe, and its
+  script includes is accounted for in exactly one of `honoured` / `translated` /
+  `flagged` — the engine's own bucket names (`apply.ts`, `COVERAGE_BUCKETS`) —
+  and a `flagged` item carries its reason in the output. Silence about a dropped
+  item is the fail. This is the ad-hoc twin of `daf-port-interactions`, whose
+  guarantee is enforced by a gate that ad-hoc runs never reach.
+- **measured 2026-08-13 — PASS on both arms, with the setting stated.** Two
+  independent ad-hoc ports (one prompt carrying a `design-fidelity` trigger
+  phrase, one carrying none) each kept 3/3 handlers and 1/1 keyframe and
+  volunteered their deviations unprompted. Neither had been told what was being
+  measured. **Two conditions bound the result:** the artifact was a local
+  filesystem path (not the URL handover class), and no capture tool was
+  reachable. A pass here is a pass for that setting, not for the operator's.
+
+### daf-rederive-is-deviation
+- **primitive:** `static_inspect`
+- **lifecycle stage:** build (adopt-the-code duty)
+- **scenario:** The artifact's markup and CSS are stack-compatible with the
+  target project. The agent implements the same screen.
+- **pass:** The artifact's own markup/CSS is **adapted**. If the agent instead
+  writes an equivalent from scratch, it surfaces that as a deviation and asks —
+  the same confirmation a swapped control needs
+  (`design-fidelity-mechanics` § Adopt the code). A silent from-scratch rewrite
+  whose pixels match is the fail: the visible half survives a re-derivation and
+  the behavioural half does not, which is why "looks identical" cannot score it.
+- **near-miss this fixture must NOT flag:** a genuine stack translation
+  (the artifact's structure ported into Blade / JSX / a template language) is
+  adaptation, not re-derivation. The discriminator is whether the output's
+  element tree can be walked beside the artifact's.
+- **baseline:** not yet measured. The two 2026-08-13 arms produced near
+  byte-identical HTML, i.e. adaptation in the trivial case where source and
+  target stack are the same. The fixture's real question — a *cross-stack* port —
+  is untested.
+
 ## Lane fixtures (`road-to-ui-track-integrity`)
 
 The `daf-lane-*` family, plus `daf-placeholder-in-array` and
