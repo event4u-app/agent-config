@@ -1167,7 +1167,12 @@ ${bodyExtra}
 
 * Do NOT skip validation
 `;
-        return writeFile('.agent-src.uncondensed/skills/test-strict/SKILL.md', content);
+        // `src/skills/`, not the retired container the neighbouring helper still
+        // writes into: `src/` is the source of truth (ADR-051), and
+        // `check_no_new_legacy_path` refuses NEW references to the dead path —
+        // including one written in a comment, which is how this line got its
+        // second draft.
+        return writeFile('src/skills/test-strict/SKILL.md', content);
     }
 
     it('strict mode with no write-path gate in the body warns', () => {
