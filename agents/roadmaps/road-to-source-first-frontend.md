@@ -372,7 +372,7 @@ concern logic.
       second shape: this step cites the existing contract
       (`design-system-capture/references/design-system-json.md`) and the import
       adapter from
-      [`road-to-design-system-onramp`](road-to-design-system-onramp.md) Phase 1,
+      [`road-to-design-system-onramp`](archive/road-to-design-system-onramp.md) Phase 1,
       and defines no format of its own. Raw source files land beside it. Screenshots taken during extraction land in a references
       directory and carry QA duty only (the cloner-pipeline shape: extraction
       files feed the builder, images feed review). State the lock boundary in
@@ -383,7 +383,7 @@ concern logic.
       survives sessions instead of being re-screenshotted next time. The
       **persistence discipline itself** (skip-if-exists unless explicitly forced;
       never silently discard prior decisions, borrowed from Source C) is
-      owned by [`road-to-design-system-onramp`](road-to-design-system-onramp.md)
+      owned by [`road-to-design-system-onramp`](archive/road-to-design-system-onramp.md)
       Phase 2, where it already lives — cited here, stated once there (program
       X4). This section owns the **producer sentence**: the documented easy path
       is a connected extractor MCP, with the manual Chrome-DevTools-MCP channel

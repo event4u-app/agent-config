@@ -8,7 +8,7 @@ complexity: structural
 > [`road-to-subagent-lifecycle-integrity`](road-to-subagent-lifecycle-integrity.md) (SLI),
 > [`road-to-symptom-driven-harvest-loop`](archive/road-to-symptom-driven-harvest-loop.md) (SHL — **fully executed and archived** at adoption),
 > [`road-to-source-first-frontend`](road-to-source-first-frontend.md) (SFF),
-> [`road-to-design-system-onramp`](road-to-design-system-onramp.md) (DSO) —
+> [`road-to-design-system-onramp`](archive/road-to-design-system-onramp.md) (DSO) —
 > in combination, with what each later roadmap learned that the earlier ones
 > did not know. This file is the **program layer**: it does not repeat the
 > children's evidence (their Context sections stay authoritative), it
