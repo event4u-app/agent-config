@@ -6,10 +6,10 @@
 
 ## Overall
 
-**284 / 453 steps done · 63%**
+**288 / 453 steps done · 64%**
 
 ```text
-█████████████████████████░░░░░░░░░░░░░░░   63%
+██████████████████████████░░░░░░░░░░░░░░   64%
 ```
 
 ## Open roadmaps
@@ -21,7 +21,7 @@
 | 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
 | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
-| 6 | [road-to-design-detector-evidence.md](roadmaps/road-to-design-detector-evidence.md) | 3 | 12 | 8 | 4 | 0 | 0 | 0 | ███░░░░░░░ 33% |
+| 6 | [road-to-design-detector-evidence.md](roadmaps/road-to-design-detector-evidence.md) | 3 | 12 | 4 | 8 | 0 | 0 | 0 | ███████░░░ 67% |
 | 7 | [road-to-design-system-onramp.md](roadmaps/road-to-design-system-onramp.md) | 5 | 13 | 12 | 0 | 0 | 1 | 0 | ░░░░░░░░░░ 0% |
 | 8 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
 | 9 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
@@ -186,12 +186,12 @@
 
 ### [road-to-design-detector-evidence.md](roadmaps/road-to-design-detector-evidence.md)
 
-**Road to design-detector evidence — make the traceability claim checkable and publish the number the expansion was deferred on** — 4 / 12 done (33%)
+**Road to design-detector evidence — make the traceability claim checkable and publish the number the expansion was deferred on** — 8 / 12 done (67%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | The traceability claim becomes a gate | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | The number the deferral asks for | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | The number the deferral asks for | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Six thresholds become rules | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
 ### [road-to-design-system-onramp.md](roadmaps/road-to-design-system-onramp.md)

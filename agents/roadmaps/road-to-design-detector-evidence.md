@@ -205,13 +205,13 @@ A deferral whose precondition no instrument can satisfy is a permanent stop
 wearing a temporary label. This phase builds the instrument and publishes the
 baseline — it does not lift the deferral, it makes lifting it possible.
 
-- [ ] **Step 1:** Record the finding in the `design_slop_rules.ts` header block,
+- [x] **Step 1:** Record the finding in the `design_slop_rules.ts` header block,
       immediately after the paragraph that documents the dependency-free
       constraint (`:12-18`): the existing per-rule negative fixture is a presence
       guard on one crafted snippet, not a false-positive rate. Without it the
       next reader mistakes 19 green negatives for an FP measurement.
       <!-- verify: grep -c "presence guard" src/scripts/design_slop_rules.ts -->
-- [ ] **Step 2:** Assemble a **clean-UI corpus** under `internal/bench/corpora/`:
+- [x] **Step 2:** Assemble a **clean-UI corpus** under `internal/bench/corpora/`:
       real, non-slop markup and CSS drawn from the fixtures this repo already
       owns (`tests/design-artifacts/fixtures/`) plus hand-authored clean samples.
       Bounds, so "assemble a corpus" is checkable: **at least 8 samples per
@@ -227,13 +227,18 @@ baseline — it does not lift the deferral, it makes lifting it possible.
       exists, so the number cannot be moved after it is seen. It is not
       corpus-before-rules, and saying otherwise would be the stronger claim this
       ordering does not support.
-- [ ] **Step 3:** Pre-register the two metrics before measuring, in the house
+- [x] **Step 3:** Pre-register the two metrics before measuring, in the house
       pre-registration shape used by `internal/bench/corpora/*-PREREG.md`:
       **per-rule false-positive count** on the clean corpus, and **recall** on
       the existing positive fixtures. Pre-registration names the ceiling before
-      the number is known.
-      <!-- verify: npx tsx src/scripts/lint_bench_corpus.ts --quiet -->
-- [ ] **Step 4:** Run it and publish the 19-rule baseline to
+      the number is known. The ceiling landed as **M1 = 0**, argued rather than
+      picked: these rules surface to a human as flags, and one noisy rule
+      discredits the quiet ones. M2 is recorded as **suite-enforced** rather
+      than recomputed — `design_slop_rules.test.ts` already fails if a rule
+      misses its own fixture, so a second implementation would print a number
+      and add no evidence.
+      <!-- verify: npx vitest run tests/scripts/design_slop_fp_bench.test.ts -->
+- [x] **Step 4:** Run it and publish the 19-rule baseline to
       [`docs/CLAIMS.md`](../../docs/CLAIMS.md) with the counting method and the
       corpus SHA, so a later expansion has a comparable prior instead of a fresh
       epoch. An honest null — every rule clean, no discrimination shown — is a
@@ -257,10 +262,14 @@ Each entry below is already published in the catalog as a number. Nothing is
 ported and nothing is invented — the prose is the specification, and Phase 2's
 baseline is the acceptance instrument.
 
-**Entry condition.** Phase 2 Step 4 is complete: the baseline is in the ledger,
-the corpus is SHA-pinned, and the Phase-2 kill-switch did not fire. The phases
-are sequential, not parallel; without the baseline, Step 3 has nothing to grade
-against.
+**Entry condition — met, and not in the way the plan expected.** Phase 2 Step 4
+is complete and the baseline is in the ledger at corpus `90544389b05c1d0b`. The
+kill-switch **did** fire: `slop-c6-lock-colour` recorded M1 = 4 of 32 clean
+files. It was discharged the way the pre-registration demands — demoted to
+`judgment-only` with its count, not tuned — so the registry Phase 3 extends is
+18 rules, every one of them at M1 = 0. The condition is that the switch was
+handled, not that it stayed quiet; recording it as "did not fire" would be the
+tidier sentence and the false one.
 
 - [ ] **Step 1:** Add the six rules to `src/scripts/design_slop_rules.ts`, each
       keeping its catalog id, its severity from the P0–P3 semantics documented at
