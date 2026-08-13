@@ -396,11 +396,60 @@ function ledgerFileFor(root: string, ts: string): string {
     return path.join(root, LEDGER_DIR, `${ts.slice(0, 7)}.jsonl`);
 }
 
-function appendLedgerLine(root: string, ts: string, line: Record<string, unknown>): void {
+/**
+ * Append one line to the monthly ledger. Exported because `spawn-guard-shadow`
+ * (Phase 3 Step 1) writes its own observations into the SAME stream: one
+ * instrument, one file, so a reader correlates a would-deny against the
+ * dispatches around it without joining two corpora.
+ */
+export function appendLedgerLine(root: string, ts: string, line: Record<string, unknown>): void {
     if (is_replay_mode()) return;
     const file = ledgerFileFor(root, ts);
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.appendFileSync(file, `${JSON.stringify(line)}\n`, 'utf8');
+}
+
+/**
+ * Candidate wall-clock stop-loss arms — Phase 3 Step 3, shadow only.
+ *
+ * Recorded retrospectively rather than fired: a `subagent_stop` knows the real
+ * duration and a reap knows the age, so "which arm would have fired" is a fact
+ * at that moment rather than a timer that has to run. The never-returning case
+ * — the one the stop-loss actually targets — reaches this through the reap
+ * line, which is the only place it is observable at all.
+ *
+ * These are candidates under evaluation, not thresholds: per the activation
+ * policy the shipped value is derived from the observed distribution, and
+ * there is no distribution yet.
+ *
+ * The plan also names a tool-call-count arm. It is NOT implemented and not
+ * faked: a hook sees no per-dispatch tool-call count on any payload this tree
+ * has observed, and inventing a proxy is the move `capsule_trigger.ts` refuses
+ * in the same words ("NOTHING ACTS ON THESE").
+ */
+export const WALL_CLOCK_ARMS_MS: ReadonlyArray<{ label: string; ms: number }> = [
+    { label: '5m', ms: 5 * 60 * 1000 },
+    { label: '15m', ms: 15 * 60 * 1000 },
+    { label: '30m', ms: 30 * 60 * 1000 },
+    { label: '2h', ms: 2 * 60 * 60 * 1000 },
+];
+
+/** Which wall-clock arms an elapsed duration would have tripped. */
+export function armsExceeded(elapsedMs: number | null): string[] {
+    if (elapsedMs === null || !Number.isFinite(elapsedMs)) return [];
+    return WALL_CLOCK_ARMS_MS.filter((a) => elapsedMs >= a.ms).map((a) => a.label);
+}
+
+/**
+ * Open-set summary for the pre-spawn shadow guard: how many dispatches are
+ * open and how deep the deepest one is. Separate from `readOpenRecords` so the
+ * guard reads a small derived value rather than the whole set.
+ */
+export function openRecordStats(root: string): { open_count: number; max_depth: number } {
+    const open = readOpenRecords(root);
+    let maxDepth = 0;
+    for (const rec of open.values()) if (rec.depth > maxDepth) maxDepth = rec.depth;
+    return { open_count: open.size, max_depth: maxDepth };
 }
 
 /** Contract § Concurrency: lock + tmp + rename, via the shared helper. */
@@ -450,6 +499,10 @@ export function reapStaleOpenRecords(root: string, nowIso: string): number {
             depth: rec.depth,
             depth_basis: rec.depth_basis,
             age_ms: now - started,
+            // Phase 3 Step 3, shadow: a reaped record is the ONLY place a
+            // never-returning dispatch becomes observable, so the stop-loss
+            // arms are evaluated here as well as on a real stop.
+            stop_loss_arms_exceeded: armsExceeded(now - started),
             reason: 'open record exceeded OPEN_RECORD_TTL_MS without a stop',
         });
     }
@@ -538,6 +591,9 @@ function handleStop(root: string, payload: JsonObject, nowIso: string): void {
         // `null` = the matching start was never seen. That is a finding about
         // the instrument's own coverage and is recorded as such, not as 0.
         duration_ms: durationMs,
+        // Phase 3 Step 3, shadow: which wall-clock arms this dispatch would
+        // have tripped. Recorded, never acted on.
+        stop_loss_arms_exceeded: armsExceeded(durationMs),
         start_seen: rec !== null,
         envelope_parse: parse.verdict,
         envelope_error_count: parse.error_count,
