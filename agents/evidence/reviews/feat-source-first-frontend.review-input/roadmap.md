@@ -47,8 +47,9 @@ complexity: structural
 > fires on the vendor's documentation pages, which is the failure the rule's own
 > `claude.ai` precedent exists to avoid. Withdrawing it is the step's own
 > standard applied, not a shortfall.
-> The remaining eight are **blocked on named dependencies, not on effort**, and
-> each is recorded at its own phase:
+> That leaves eight open: **seven blocked on named dependencies rather than on
+> effort**, plus the withdrawn Step 3 above. The seven, each recorded at its own
+> phase:
 >
 > - **Phase 3** (`source-first-gate`) — its verifier exemption keys on a payload
 >   field that `road-to-subagent-lifecycle-integrity` Phase 0 Step 4 spikes and
@@ -474,7 +475,29 @@ symptom. Phase 6 is where the symptom claim would be earned, and it needs a
 consumer repo.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-12 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-13 | reviewer: claude/host -->
+
+> **Re-reviewed 2026-08-13** after 10 steps closed, the Acceptance Criteria
+> section landed, and Phase 4 Step 3 was withdrawn. Two of the five risks have
+> **fired** and are re-stated with what actually happened; one is closed by its
+> own mitigation; a sixth is added because it fired and no row predicted it.
+>
+> - **Risk 1 (adopt-the-code vs `code-provenance`) — CLOSED by its mitigation.**
+>   The scope line shipped, both rules carry the cross-link, and the boundary is
+>   authorship rather than delivery.
+> - **Risk 2 (prose into a delivery channel measured as broken) — FIRED, and
+>   worse than written.** The instrument that was to check it has **no
+>   population in this repo** (0 UI-write turns / 40 sessions), and it carries a
+>   blind spot by construction: a handover that is never read leaves no
+>   transcript trace. The mitigation as written — "Phase 6 re-measures" — cannot
+>   run here at all.
+> - **Risk 4 (Phase 1 refutes the premise) — FIRED SIDEWAYS.** It did not come
+>   back green; it came back **inconclusive**, which the row did not anticipate.
+>   The pre-registered response ("publish the null, park Phases 2–4") was
+>   therefore *not* taken, and the reason is recorded at the step rather than
+>   resolved by preference.
+> - **Risks 3 and 5 — unchanged**, both attached to phases that stay open.
+
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The adopt-the-code duty contradicts an existing Iron Law | implementation | `code-provenance` opens with `NEVER ADOPT EXTERNAL CODE VERBATIM` and routes any conscious borrow through a license check plus a ledger entry. Phase 2 Step 3 instructs the opposite for a provided artifact. Two Iron Laws giving opposite instructions on the same act is worse than either gap alone: whichever the agent follows, it is violating a rule, and no gate can arbitrate | Phase 2 Step 3 carries a mandatory scope line — a user-supplied artifact is the user's own material, not third-party external code, mirroring the carve-out `content-quoting-floor` already makes — and both rules gain the cross-link in the same change so the boundary is readable from either side | Phase 2 Step 3 |
@@ -482,6 +505,7 @@ consumer repo.
 | 3 | The gate warns the one actor doing it right | implementation | A verifier subagent screenshotting for QA is the sanctioned use. A `source-first-gate` matched on screenshot tools with no exemption fires on exactly that actor, which teaches the reader to ignore the warning and burns the valve on false positives | The verifier exemption keys on the payload `agent_id` / `agent_type`, and this phase is sequenced after `road-to-subagent-lifecycle-integrity` Phase 4 establishes that binding — stated as a hard dependency, not a note | Phase 3 Step 1 |
 | 4 | Phase 1 refutes the premise after the plan is written | product | The measurement that decides whether the symptom reproduces ad-hoc on current main runs first, and it may come back green — in which case five phases of enforcement design were authored against a symptom the tree no longer has | That outcome is the pre-registered falsifier: publish the null, park Phases 2–4, hand the operator report back with the measurement; the roadmap is written so the null is a clean stop rather than a sunk cost | Phase 1 |
 | 5 | Extraction into files goes unused and the section rots | product | The browser-handover class rests on one operator report. If real handovers rarely arrive as URLs, the extraction artifact path, the persistence discipline, and three new trigger rows are maintained for a case that does not occur | Phase 4's falsifier folds the section into the existing handover prose and drops the persistence step if the path goes unused across two release cycles, measured by the Phase-1 telemetry rather than by impression | Phase 4 |
+| 6 | A new trigger ships over-broad and its near-miss row cannot catch it | implementation | Added 2026-08-13 because it FIRED and no row above predicted it. Phase 4 Step 3 shipped three builder-URL triggers whose near-miss row tested a direction that was **already silent** before the change, so it could not detect the over-broadness the change introduced: `https://v0.dev/` is a substring of `https://v0.dev/docs`, and the vendor's documentation, pricing and changelog pages all began routing as spec handovers. The rule's extension discipline was satisfied in letter while the failure mode it exists to catch stayed untested; only the completion review found it | The step is withdrawn rather than shipped. `design-fidelity` § Routing now states that a near-miss must test the direction the NEW trigger opens, with this as the worked example, and `near-builder-host-non-handover-url` pins that direction silent so a retry has to clear it first | Phase 4 Step 3 |
 
 ## Non-goals
 
