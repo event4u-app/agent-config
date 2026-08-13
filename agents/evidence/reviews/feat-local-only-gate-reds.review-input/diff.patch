@@ -133,17 +133,44 @@ index 46eb41cd054fcf8efb618fcb4eeabe4d7e7dd735..e30f8ed08aa0d97c67307458488ae294
  ---
  
 diff --git a/agents/roadmaps/road-to-local-only-gate-reds.md b/agents/roadmaps/road-to-local-only-gate-reds.md
-index 0c0b776e9d98f95b46342b80ee44ffb4306d9232..69f3a836515ebaa65839202b47e705e25c29d6cb 100644
+index 0c0b776e9d98f95b46342b80ee44ffb4306d9232..c66254877ff0495472d9f7ddbdb985fc0b110155 100644
 --- a/agents/roadmaps/road-to-local-only-gate-reds.md
 +++ b/agents/roadmaps/road-to-local-only-gate-reds.md
-@@ -62,6 +62,32 @@ runs in no workflow.** It is its own finding, so the ratchet added here has no
+@@ -62,6 +62,59 @@ runs in no workflow.** It is its own finding, so the ratchet added here has no
  remote reach either. Clearing the backlog is what would give it teeth; until
  then it fails only a local `task ci`.
  
-+## The repair left a fifth red — found 2026-08-13, not repaired here
++## Two more reds — found 2026-08-13; one repaired here, one filed
 +
-+Running `check_gate_coverage` at the start of the next pass surfaces a gate the
-+four above did not include, and its cause is the repair itself:
++Running `check_gate_coverage` at the start of the next pass exits 1 on **two**
++gates the original four did not include. The first draft of this section claimed
++one, and the R2 completion review caught it: the grep that found the first was
++keyed on the ratchet vocabulary, so it read past a red whose message shares none
++of those words. A count is a claim, and this one was wrong by exactly the gate
++this branch edits.
++
++**Red 1 — `lint_rule_skill_pack_reach` had never reported a scan. Repaired.**
++
++```
++❌ lint_rule_skill_pack_reach: emitted no 'scanned: <N>' line
++   — an enforced gate must report what it inspected
++```
++
++`SCANNED_RE` in `check_gate_coverage.ts` is `/^\s*scanned:\s*(\d+)\s*$/m` — the
++count must **end** the line — while the gate emitted
++`scanned: 116 rule(s), 289 skill(s), …`. So an entry registered `status:
++enforced` with `min_scanned: 90` resolved to `null` from the moment `924cad87f`
++registered it, which is the same commit Phase 2 Step 1 identifies by name. The
++line is byte-identical on `origin/main`, so this is pre-existing rather than a
++regression of this branch. Repaired by emitting the machine-readable contract
++line first and the human breakdown second; the gate now reads
++`✅ lint_rule_skill_pack_reach: scanned 116 ≥ 90`.
++
++It is the roadmap's own thesis pointed at itself: a gate registered as enforced,
++carrying a floor, and structurally incapable of meeting it — red for seven days
++inside the branch whose subject is red gates nobody sees.
++
++**Red 2 — the parity floor the repair itself moved. Not repaired here.**
 +
 +```
 +❌ check_ci_local_parity: scanned 357, floor 380
@@ -169,7 +196,7 @@ index 0c0b776e9d98f95b46342b80ee44ffb4306d9232..69f3a836515ebaa65839202b47e705e2
  An AI council was asked to adjudicate the disposition and **could not be
  reached** — anthropic `cli_quota_exhausted` (50/50), openai
  `Not inside a trusted directory`, from both the worktree and the main checkout,
-@@ -83,7 +109,7 @@ Both are one-token frontmatter edits with no judgement left in them; the
+@@ -83,7 +136,7 @@ Both are one-token frontmatter edits with no judgement left in them; the
  measurements that decide each value are recorded here so the step does not
  re-derive them.
  
@@ -178,7 +205,7 @@ index 0c0b776e9d98f95b46342b80ee44ffb4306d9232..69f3a836515ebaa65839202b47e705e2
        `complexity: standard`, which is not one of the two accepted values.
        `COMPLEXITY_PAT` in `src/scripts/lint_roadmap_complexity.ts` accepts
        `lightweight|structural` only, so the file reports `[untagged]` and the
-@@ -94,6 +120,11 @@ re-derive them.
+@@ -94,6 +147,11 @@ re-derive them.
        of contract-layer scope.
        *Verify:* `npx tsx src/scripts/lint_roadmap_complexity.ts` exits 0 and the
        summary line reports 0 untagged.
@@ -190,7 +217,7 @@ index 0c0b776e9d98f95b46342b80ee44ffb4306d9232..69f3a836515ebaa65839202b47e705e2
  
  - [ ] Decide the disposition of `agents/roadmaps/road-to-august-program.md` and
        apply it. `check_roadmap_trackable` fails it for carrying no
-@@ -112,7 +143,7 @@ re-derive them.
+@@ -112,7 +170,7 @@ re-derive them.
  
  ## Phase 2 — the self-test ratchet
  
@@ -199,7 +226,7 @@ index 0c0b776e9d98f95b46342b80ee44ffb4306d9232..69f3a836515ebaa65839202b47e705e2
        `gate-self-test:registered-non-adopters` ratchet. It reads **25** against
        a baseline of **24**, i.e. one over, and the baseline note records the
        landing state as "24 of the 32 gates registered enforced" on 2026-08-06.
-@@ -132,14 +163,41 @@ re-derive them.
+@@ -132,14 +190,41 @@ re-derive them.
        `lint_rule_skill_pack_reach`, `lint_token_budget_discipline`,
        `lint_trigger_collisions`, `skill_linter`.
        *Verify:* the crossing gate is named with the commit that registered it.
@@ -243,7 +270,7 @@ index 0c0b776e9d98f95b46342b80ee44ffb4306d9232..69f3a836515ebaa65839202b47e705e2
  
  ## Phase 3 — the roadmap that cannot archive
  
-@@ -196,7 +254,7 @@ class recurs.
+@@ -196,7 +281,7 @@ class recurs.
        reason — the set was empty by construction, so the test had pinned the
        defect and would have forced any repair to preserve it.
  
@@ -252,7 +279,7 @@ index 0c0b776e9d98f95b46342b80ee44ffb4306d9232..69f3a836515ebaa65839202b47e705e2
        by text that is not an instruction.
        **Started, one candidate, not proven.** `check_enforcement_coverage` seeds
        reachability with a bare `wiring.includes(stem)` over raw workflow text —
-@@ -209,6 +267,43 @@ class recurs.
+@@ -209,6 +294,43 @@ class recurs.
        *Verify:* either a demonstrated false "reachable" verdict for a named
        script, or a recorded null saying the substring matches carry no verdict
        weight.
@@ -296,7 +323,7 @@ index 0c0b776e9d98f95b46342b80ee44ffb4306d9232..69f3a836515ebaa65839202b47e705e2
  
  - [ ] Decide what follows from that number, and record the decision.
        The options are genuinely different in cost and none is obviously right:
-@@ -307,6 +402,21 @@ remote CI on the PR is the authoritative gate
+@@ -307,6 +429,21 @@ remote CI on the PR is the authoritative gate
       and it is a legitimate answer on its own.
    4. Record the choice where its scope fits — an ADR for the wiring options, a
       paragraph in `docs/contracts/ci-green-floor.md` for the accept option.
@@ -319,7 +346,7 @@ index 0c0b776e9d98f95b46342b80ee44ffb4306d9232..69f3a836515ebaa65839202b47e705e2
    step 2 can cite it.
  - **Note:** an AI council was asked to adjudicate this and was unreachable
 diff --git a/src/scripts/lint_rule_skill_pack_reach.ts b/src/scripts/lint_rule_skill_pack_reach.ts
-index aea6dca9d3047a9d27fdf64a8d1518c6ba0b5cec..93dcc36c91b73689ebbf2a304011f8fcbe08f328 100644
+index aea6dca9d3047a9d27fdf64a8d1518c6ba0b5cec..f493cecaf22e74efa9e534b26acfb52b8295428b 100644
 --- a/src/scripts/lint_rule_skill_pack_reach.ts
 +++ b/src/scripts/lint_rule_skill_pack_reach.ts
 @@ -51,19 +51,40 @@
@@ -366,7 +393,7 @@ index aea6dca9d3047a9d27fdf64a8d1518c6ba0b5cec..93dcc36c91b73689ebbf2a304011f8fc
  
  export interface PackDef {
      id: string;
-@@ -212,10 +233,155 @@ export function analyze(
+@@ -212,10 +233,165 @@ export function analyze(
      return findings;
  }
  
@@ -389,7 +416,15 @@ index aea6dca9d3047a9d27fdf64a8d1518c6ba0b5cec..93dcc36c91b73689ebbf2a304011f8fc
 +        else if (a === '--strict') args.strict = true;
 +        else if (a === '--self-test') args.selfTest = true;
 +        else if (a === '--root') {
-+            args.root = argv[i + 1] ?? REPO;
++            // Never fall back to the real repo. A self-test whose root argument
++            // went missing would otherwise scan the live tree instead of its
++            // fixture and could still exit 0 — a green run proving nothing,
++            // which is the exact failure `_lib/gate_self_test.ts` exists for.
++            const value = argv[i + 1];
++            if (value === undefined || value.startsWith('--')) {
++                throw new Error('--root requires a directory argument');
++            }
++            args.root = value;
 +            i += 1;
 +        }
 +    }
@@ -436,13 +471,10 @@ index aea6dca9d3047a9d27fdf64a8d1518c6ba0b5cec..93dcc36c91b73689ebbf2a304011f8fc
 +
 +function _selfTest(): number {
 +    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lrspr-selftest-'));
++    const runRaw = (args: readonly string[]): number =>
++        runGateCli(REPO, 'src/scripts/lint_rule_skill_pack_reach.ts', args, REPO);
 +    const run = (root: string, extra: readonly string[] = []): number =>
-+        runGateCli(
-+            REPO,
-+            'src/scripts/lint_rule_skill_pack_reach.ts',
-+            ['--root', root, '--quiet', ...extra],
-+            REPO,
-+        );
++        runRaw(['--root', root, '--quiet', ...extra]);
 +
 +    // `alpha` stands alone; `beta` pulls `alpha` in transitively.
 +    const PACKS = '- id: alpha\n- id: beta\n  requires: [alpha]\n- id: gamma\n';
@@ -480,8 +512,8 @@ index aea6dca9d3047a9d27fdf64a8d1518c6ba0b5cec..93dcc36c91b73689ebbf2a304011f8fc
 +
 +        return runSelfTest({
 +            gate: 'lint_rule_skill_pack_reach',
-+            minCases: 5,
-+            minRejectCases: 2,
++            minCases: 6,
++            minRejectCases: 3,
 +            cases: [
 +                {
 +                    name: 'a rule routing into a pack its own closure never reaches is rejected under --strict',
@@ -508,6 +540,11 @@ index aea6dca9d3047a9d27fdf64a8d1518c6ba0b5cec..93dcc36c91b73689ebbf2a304011f8fc
 +                    expect: 'accept',
 +                    run: () => run(unscopedSkill, ['--strict']),
 +                },
++                {
++                    name: '--root with no value is refused rather than silently scanning the real tree',
++                    expect: 'reject',
++                    run: () => runRaw(['--quiet', '--root']),
++                },
 +            ],
 +        });
 +    } finally {
@@ -526,7 +563,7 @@ index aea6dca9d3047a9d27fdf64a8d1518c6ba0b5cec..93dcc36c91b73689ebbf2a304011f8fc
  
      if (rules.length === 0 || skillPacks.size === 0 || packs.size === 0) {
          process.stderr.write(
-@@ -231,8 +397,7 @@ function main(): number {
+@@ -231,8 +407,7 @@ function main(): number {
      // --quiet suppresses the per-finding lines but never the count line: this
      // gate is expected to stay non-empty for a while, and a quiet run that
      // printed nothing at all would read as clean.
@@ -536,13 +573,21 @@ index aea6dca9d3047a9d27fdf64a8d1518c6ba0b5cec..93dcc36c91b73689ebbf2a304011f8fc
          for (const finding of errors) {
              process.stdout.write(`❌  ${finding.subject} — ${finding.detail}\n`);
          }
-@@ -241,16 +406,15 @@ function main(): number {
+@@ -241,16 +416,22 @@ function main(): number {
          }
      }
  
 -    const strict = process.argv.includes('--strict');
++    // Two lines on purpose. `check_gate_coverage`'s SCANNED_RE is
++    // `/^\s*scanned:\s*(\d+)\s*$/m` — the count must END the line — so the
++    // detailed breakdown below can never satisfy it. This gate was registered
++    // `enforced` with `min_scanned: 90` and had therefore reported `null` since
++    // 924cad87f: an enforced floor that no output could ever meet. Emit the
++    // machine-readable contract line first, then the human breakdown.
++    process.stdout.write(`scanned: ${rules.length}\n`);
      process.stdout.write(
-         `scanned: ${rules.length} rule(s), ${skillPacks.size} skill(s), ${packs.size} pack(s) — ${errors.length} unreachable-route, ${advisories.length} unrouted-skill\n`,
+-        `scanned: ${rules.length} rule(s), ${skillPacks.size} skill(s), ${packs.size} pack(s) — ${errors.length} unreachable-route, ${advisories.length} unrouted-skill\n`,
++        `${rules.length} rule(s), ${skillPacks.size} skill(s), ${packs.size} pack(s) — ${errors.length} unreachable-route, ${advisories.length} unrouted-skill\n`,
      );
 -    if (errors.length > 0 && !strict) {
 +    if (errors.length > 0 && !args.strict) {
