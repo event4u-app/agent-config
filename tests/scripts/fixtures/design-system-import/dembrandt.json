@@ -1,0 +1,48 @@
+{
+  "colors": {
+    "semantic": {
+      "primary": "#533afd",
+      "surface": "#ffffff",
+      "text": "#0b0b0f"
+    },
+    "dark": {
+      "surface": "#0b0b0f",
+      "text": "#f5f5f7"
+    }
+  },
+  "typography": {
+    "families": [
+      { "name": "Inter", "role": "body" },
+      { "name": "IBM Plex Mono", "role": "mono", "bundled_local": true }
+    ],
+    "scale": [
+      { "step": "base", "size": "16px", "lineHeight": "1.5" },
+      { "step": "xl", "size": "32px", "lineHeight": "1.2" }
+    ]
+  },
+  "spacing": { "base": "8px", "scale": ["4px", "8px", "16px", "32px"] },
+  "borders": {
+    "radius": { "sm": "4px", "pill": "9999px" },
+    "widths": ["1px", "2px"],
+    "styles": ["solid"]
+  },
+  "shadows": ["0 1px 2px rgba(0,0,0,.06)", "0 8px 24px rgba(0,0,0,.12)"],
+  "motion": {
+    "durations": ["150ms", "300ms"],
+    "easings": [
+      { "name": "ease-out", "value": "cubic-bezier(0, 0, 0.2, 1)" },
+      { "name": "spring", "value": "cubic-bezier(0.34, 1.56, 0.64, 1)" }
+    ],
+    "contexts": { "button": { "hover": "scale-up" }, "modal": { "enter": "fade-in" } },
+    "detected_libs": ["gsap"]
+  },
+  "components": [
+    { "name": "button", "classes": ["btn", "btn--primary"], "props": ["border-radius", "padding"] },
+    { "name": "badge", "classes": ["badge"] }
+  ],
+  "breakpoints": { "sm": "640px", "lg": "1024px" },
+  "wcag": [
+    { "pair": "text-on-surface", "ratio": 18.1, "grade": "AAA" },
+    { "pair": "primary-on-surface", "ratio": 4.7, "grade": "AA" }
+  ]
+}

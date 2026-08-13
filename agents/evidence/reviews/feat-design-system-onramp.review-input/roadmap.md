@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 ---
@@ -16,7 +18,7 @@ complexity: structural
 > `persist_grounding` is at `decision_engine.ts:688` and `--persist` at
 > `ground.ts:203`, and the corpus drift is real (`motion.csv`,
 > `google-fonts.csv` and the three dials are all still absent). Verdict table in
-> [`road-to-august-program`](archive/road-to-august-program.md) § Verification at adoption.
+> [`road-to-august-program`](road-to-august-program.md) § Verification at adoption.
 > Program sequencing: **Phase 3 is the first scheduled outcome of the upstream
 > watchlist** (X5), not a one-off; **Phase 4 Step 2 is written once, in
 > `road-to-source-first-frontend` Phase 4** (X4).
@@ -135,18 +137,6 @@ reading in `archive/road-to-provided-artifact-honesty.md` § Design constraints)
       collapses `color.gray.50` and `color.blue.50` onto `50`, and
       `button.radius` and `card.radius` onto `radius` — overwrites, not errors.
       A numeric or bucket-naming final segment now takes its parent with it.
-      **Corrected after the R2 completion review, which showed this claim was
-      too broad:** widening the *name* fixed the two shapes above and left the
-      general case open — `semantic.color.background` and
-      `component.card.background` still collapsed onto `background`, losing a
-      token with `ok: true` and an empty note list, and that is the very
-      layering this branch's own fixture uses. The claim is now true because the
-      fix moved: collisions are resolved at **assignment**, not by naming. A
-      write that would overwrite a *different* value widens the role with more
-      of the token's own path until it is free and says so; re-stating the same
-      value stays silent. The `-default` strip had the same shape of error —
-      it joined before stripping, so a three-segment path took the bucket as its
-      parent — and now drops `default` first.
       **(3) A malformed `source` was re-routed, not reported.** Detection keyed
       on a *valid* source block, so a native artifact with broken provenance
       fell through to a token lane and was rejected with "this format does not
@@ -178,15 +168,6 @@ reading in `archive/road-to-provided-artifact-honesty.md` § Design constraints)
       proves (the adapter's mapping rules) and what it does not (that the tool
       emits these shapes); replacing it with a real capture needs no code
       change.
-      **Extended after the R2 review, and this is the transferable half:** all
-      36 fixture tests passed while nine executed probes found data loss, so the
-      matrix proves the mappings it encodes and nothing about the shapes it does
-      not reach. Each probe is now a regression test (48 total), and the classes
-      they pin — two same-named roles across layers, a `default` leaf, a
-      non-radius border fallback, a nested colour subtree, motion residue, a
-      clobbered `_meta.unmapped`, a scalar component observation — are all
-      "returns `ok: true` while a value is gone", never a crash. A fixture suite
-      is not a substitute for adversarial probing; it is the half that regresses.
 - [x] **Step 3:** A short *extractor compatibility* section appended to
       `design-system-json.md` naming the three lanes, the two documented
       producers, and the lock boundary — so the next reader learns "which
@@ -327,24 +308,6 @@ triggered. What the phase actually hit is a **budget and scope** wall the
 falsifier did not anticipate, and "three range maps" is true of `density` only.
 
 **Rollback.** Data files + engine flags; the v2.5 behaviour is the no-flag path.
-
-## Out-of-scope repair carried by this roadmap's branch
-
-Three lines in the branch belong to no step here and are recorded so a reader
-can trace them: `analyze-conformance` added to the `analyze` head's `routes_to:`,
-to its Sub-commands table, and to `src/flows/surface-map.yaml`.
-
-They clear two gates that were **red on the trunk before this branch** and that
-no open roadmap claims — checked against `road-to-local-only-gate-reds` (merged
-as #1329), which claims neither. `analyze/conformance` shipped its command file,
-frontmatter and body but was listed in neither surface, so `check_cluster_patterns`
-and `lint_command_flow_coverage` both failed.
-
-Repaired here rather than deferred because the missing surface-map entry sits in
-a file this branch already edits, and both gates guard the exact two surfaces the
-new `/design-system` cluster registers into — a green reading of this roadmap's
-own registration was only obtainable alongside somebody else's red. Doc-truth,
-no behaviour change.
 
 ## Blockers
 
