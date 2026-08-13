@@ -1,0 +1,55 @@
+<!-- clean: documentation page with in-page nav, ordered headings, and a real code example -->
+<div class="docs-layout">
+  <nav class="docs-nav" aria-label="Section contents">
+    <h2 class="docs-nav__title">On this page</h2>
+    <ol class="docs-nav__list">
+      <li><a href="#idempotency">Idempotency keys</a></li>
+      <li><a href="#lifetime">Key lifetime</a></li>
+      <li><a href="#conflicts">Conflicting replays</a></li>
+    </ol>
+  </nav>
+
+  <article class="prose">
+    <h1>Retrying a charge safely</h1>
+    <p>
+      A network timeout does not tell you whether the charge was created. Send an
+      idempotency key so a retry cannot create a second charge.
+    </p>
+
+    <h2 id="idempotency">Idempotency keys</h2>
+    <p>
+      Pass any string up to 255 characters in the
+      <code>Idempotency-Key</code> header. A UUID version 4 is a reasonable
+      default. Generate it before the first attempt, not per retry.
+    </p>
+    <pre><code>curl https://api.example.com/v2/charges \
+  -H "Idempotency-Key: 8f14e45f-ea0c-4b9a-9b1d-2f6c7a30dd11" \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 4200, "currency": "EUR", "source": "src_18f2"}'</code></pre>
+
+    <h2 id="lifetime">Key lifetime</h2>
+    <p>
+      We store the first response for 24 hours. A replay inside that window
+      returns the stored response with <code>Idempotent-Replay: true</code>.
+      After 24 hours the key is forgotten and a replay creates a new charge.
+    </p>
+
+    <h2 id="conflicts">Conflicting replays</h2>
+    <p>
+      Reusing a key with a different request body returns
+      <code>409 idempotency_key_reuse</code>. The original charge is untouched.
+      This usually means the key was derived from something too coarse, such as
+      a user id rather than a cart id.
+    </p>
+    <table>
+      <thead>
+        <tr><th scope="col">Status</th><th scope="col">Meaning</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>200</td><td>Stored response replayed</td></tr>
+        <tr><td>201</td><td>Charge created on this request</td></tr>
+        <tr><td>409</td><td>Key reused with a different body</td></tr>
+      </tbody>
+    </table>
+  </article>
+</div>

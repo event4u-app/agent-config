@@ -1,0 +1,59 @@
+<!-- clean: labelled sign-in form with real error semantics and no decorative markup -->
+<main class="auth" id="main">
+  <h1 class="auth__title">Sign in to Ferrymark</h1>
+  <p class="auth__sub">Use the email address your workspace admin invited.</p>
+
+  <form class="auth__form" method="post" action="/session" novalidate>
+    <div class="field">
+      <label class="field__label" for="email">Work email</label>
+      <input
+        class="field__input"
+        id="email"
+        name="email"
+        type="email"
+        autocomplete="username"
+        required
+        aria-describedby="email-hint"
+      />
+      <p class="field__hint" id="email-hint">We will not use this address for product mail.</p>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="password">Password</label>
+      <input
+        class="field__input"
+        id="password"
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        required
+        aria-invalid="true"
+        aria-describedby="password-error"
+      />
+      <p class="field__error" id="password-error" role="alert">
+        That password does not match our record for this address.
+      </p>
+    </div>
+
+    <label class="checkbox">
+      <input type="checkbox" name="remember" value="1" />
+      <span>Keep me signed in on this device</span>
+    </label>
+
+    <button class="button button--primary" type="submit">Sign in</button>
+
+    <p class="auth__alt">
+      <a href="/password/reset">Reset your password</a>
+      or
+      <a href="/sso">sign in with your identity provider</a>.
+    </p>
+  </form>
+
+  <aside class="auth__notice">
+    <h2 class="auth__notice-title">Scheduled maintenance</h2>
+    <p>
+      Sign-in will be unavailable on 4 May between 02:00 and 02:30 UTC while we
+      move the session store.
+    </p>
+  </aside>
+</main>
