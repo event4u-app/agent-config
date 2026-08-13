@@ -217,7 +217,17 @@ describe('render', () => {
         uiWriteTurns: 4,
         consulted: 1,
         reviewOpenedAfter: 2,
+        artifactRead: 3,
     };
+
+    it('publishes the artifact-read rate on the same denominator', () => {
+        const out = render(report, 20);
+        expect(out).toContain('ARTIFACT READ BEFORE WRITE');
+        // 3 of the same 4 UI-write turns — the shared denominator is what makes
+        // the two rates comparable, so it is asserted rather than assumed.
+        expect(out).toContain('(3/4)');
+        expect(out).toContain('(1/4)');
+    });
 
     it('reports the rate and marks the proxy as not the discharge rate', () => {
         const out = render(report, 20);

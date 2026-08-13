@@ -48,6 +48,7 @@ import { fileURLToPath } from 'node:url';
 
 import { projectStoreSlug } from './_lib/cc_transcript.js';
 import {
+    isArtifactRead,
     isConsultation,
     isUiWrite,
     type ToolEvent,
@@ -81,9 +82,21 @@ export interface SessionMeasurement {
     consulted: number;
     /** Those turns followed later by opening the review skill. */
     reviewOpenedAfter: number;
+    /**
+     * Those turns that followed reading a provided design artifact.
+     *
+     * Shares this function's denominator on purpose — the two rates answer
+     * different questions over the SAME population ("did it consult the design
+     * surface" vs "did it read the handed-over source"), and measuring them on
+     * separate denominators is how two instruments about one behaviour stop
+     * being comparable.
+     */
+    artifactRead: number;
 }
 
 export interface RateReport {
+    /** UI-write turns preceded by reading a provided design artifact. */
+    artifactRead: number;
     store: string;
     /** False when the store directory does not exist — never the same as empty. */
     storeExists: boolean;
@@ -139,10 +152,18 @@ export function toolUseToEvent(part: Record<string, unknown>): ToolEvent | null 
  * consult for the file it already wrote.
  */
 export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement {
-    const out: SessionMeasurement = { uiWriteTurns: 0, consulted: 0, reviewOpenedAfter: 0 };
+    const out: SessionMeasurement = {
+        uiWriteTurns: 0,
+        consulted: 0,
+        reviewOpenedAfter: 0,
+        artifactRead: 0,
+    };
     let consulted = false;
+    let artifactRead = false;
     /** turn -> was the session already consulted when that turn first wrote UI */
     const writeTurns = new Map<number, boolean>();
+    /** turn -> had an artifact been read when that turn first wrote UI */
+    const artifactTurns = new Map<number, boolean>();
     let lastReviewOpenAt = -1;
     const reviewOpenPositions: number[] = [];
     const writePositions: Array<{ position: number; turn: number }> = [];
@@ -151,8 +172,16 @@ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement
         if (isUiWrite(event)) {
             if (!writeTurns.has(turn)) {
                 writeTurns.set(turn, consulted);
+                artifactTurns.set(turn, artifactRead);
                 writePositions.push({ position, turn });
             }
+            return;
+        }
+        // Checked before `isConsultation` and kept separate from it: an
+        // artifact is not a design surface, and folding the two would make the
+        // consultation rate move for a reason it never measured.
+        if (isArtifactRead(event)) {
+            artifactRead = true;
             return;
         }
         if (isConsultation(event)) {
@@ -166,6 +195,7 @@ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement
 
     out.uiWriteTurns = writeTurns.size;
     for (const wasConsulted of writeTurns.values()) if (wasConsulted) out.consulted += 1;
+    for (const wasRead of artifactTurns.values()) if (wasRead) out.artifactRead += 1;
     // A single max comparison, not a scan per write: the proxy asks only whether
     // ANY review-open follows, so the last one decides every earlier write.
     void reviewOpenPositions;
@@ -216,6 +246,7 @@ export function measureStore(store: string, limit: number): RateReport {
         uiWriteTurns: 0,
         consulted: 0,
         reviewOpenedAfter: 0,
+        artifactRead: 0,
     };
     // A store that is not there and a store with nothing in it are different
     // findings, and only one of them is about the agent. Collapsing them into
@@ -255,6 +286,7 @@ export function measureStore(store: string, limit: number): RateReport {
         report.uiWriteTurns += measured.uiWriteTurns;
         report.consulted += measured.consulted;
         report.reviewOpenedAfter += measured.reviewOpenedAfter;
+        report.artifactRead += measured.artifactRead;
     }
     return report;
 }
@@ -284,6 +316,22 @@ export function render(report: RateReport, threshold: number): string {
     );
     lines.push(
         `  discharge PROXY (review opened)  ${pct(report.reviewOpenedAfter, report.uiWriteTurns)}  (${report.reviewOpenedAfter}/${report.uiWriteTurns})`,
+    );
+    lines.push(
+        `  ARTIFACT READ BEFORE WRITE       ${pct(report.artifactRead, report.uiWriteTurns)}  (${report.artifactRead}/${report.uiWriteTurns})`,
+    );
+    lines.push('');
+    lines.push(
+        '  The third rate shares the second denominator and answers a different',
+    );
+    lines.push(
+        '  question: not "did it open the design surface" but "did it read the',
+    );
+    lines.push(
+        '  handed-over source". A session with no handover contributes 0/N to it',
+    );
+    lines.push(
+        '  by construction, so read it per-handover, never as an estate average.',
     );
     lines.push('');
 
