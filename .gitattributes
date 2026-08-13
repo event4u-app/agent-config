@@ -74,3 +74,10 @@ agents/memory/domain-invariants/*.yml      text eol=lf
 agents/memory/incident-learnings/*.yml     text eol=lf
 agents/memory/product-rules/*.yml          text eol=lf
 # --- END agent-config managed: memory merge attributes ---
+
+# Reviewer input packages — `check_review_prompt_binding` hashes the RAW BYTES
+# of prompt.md against the prompt_hash recorded in the findings marker. Without
+# a pinned line ending, a checkout with core.autocrlf=true materializes every
+# prompt with CRLF and breaks every binding in the corpus at once, for that
+# contributor only, with a baseline that cannot cover it.
+agents/evidence/reviews/**/prompt.md       text eol=lf

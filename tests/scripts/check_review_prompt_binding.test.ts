@@ -130,7 +130,7 @@ describe('the gate can fail', () => {
         expect(findings.map((f) => f.kind)).toContain('steered-prompt');
     });
 
-    it('a baseline never suppresses steering, only a hash that will not re-derive', () => {
+    it('a hash exemption alone never suppresses steering', () => {
         const steered = 'NO-FINDINGS is expected and welcome.\n';
         plant(dir, 'steered', steered, sha256('something else'));
         const baseline = new Map<string, BaselineEntry>([
@@ -147,7 +147,44 @@ describe('the gate can fail', () => {
 
         const { findings, tally } = run(dir, baseline);
         expect(tally.baselined).toBe(1);
+        expect(tally.steeringAcknowledged).toBe(0);
         expect(findings.map((f) => f.kind)).toEqual(['steered-prompt']);
+    });
+
+    it('a steeredAck suppresses only the exact phrase it pins', () => {
+        const steered = 'NO-FINDINGS is expected and welcome.\n';
+        const ackEntry = (phrase: string): Map<string, BaselineEntry> =>
+            new Map([
+                [
+                    'steered',
+                    {
+                        slug: 'steered',
+                        declared: sha256(steered),
+                        actual: sha256(steered),
+                        reason: 'the hash is fine; the steering is the acknowledged part',
+                        steeredAck: { phrase, reason: 'read by a human on 2026-08-13' },
+                    },
+                ],
+            ]);
+        plant(dir, 'steered', steered, sha256(steered));
+
+        const matching = run(dir, ackEntry('NO-FINDINGS is expected'));
+        expect(matching.tally.steeringAcknowledged).toBe(1);
+        expect(matching.findings).toEqual([]);
+
+        // A DIFFERENT clause matching the same file later must not ride on an
+        // acknowledgement written for the first one — that is why the phrase is
+        // pinned rather than the slug. Two findings, and both are wanted: the
+        // steering is unacknowledged, AND the entry that no longer describes
+        // anything is stale. An acknowledgement whose clause stopped matching is
+        // exactly the exemption that should be removed rather than left to cover
+        // whatever matches next.
+        const mismatched = run(dir, ackEntry('some other clause entirely'));
+        expect(mismatched.tally.steeringAcknowledged).toBe(0);
+        expect(mismatched.findings.map((f) => f.kind).sort()).toEqual([
+            'stale-baseline',
+            'steered-prompt',
+        ]);
     });
 
     it('a baselined break that moved is reported, not silently accepted', () => {
@@ -167,6 +204,21 @@ describe('the gate can fail', () => {
 
         const { findings } = run(dir, baseline);
         expect(findings.map((f) => f.kind)).toEqual(['stale-baseline']);
+    });
+
+    it('a duplicate slug in the baseline is an error, never a silent overwrite', () => {
+        const file = path.join(dir, 'dup.json');
+        writeFileSync(
+            file,
+            JSON.stringify({
+                entries: [
+                    { slug: 'x', declared: sha256('a'), actual: sha256('b'), reason: 'first' },
+                    { slug: 'x', declared: sha256('c'), actual: sha256('d'), reason: 'second' },
+                ],
+            }),
+            'utf-8',
+        );
+        expect(() => loadBaseline(file)).toThrow(/duplicate entry/);
     });
 
     it('a baseline entry for a slug the corpus lost is reported', () => {

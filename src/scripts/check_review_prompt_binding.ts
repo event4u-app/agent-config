@@ -17,14 +17,25 @@
  * only link between a verdict and the prompt that produced it was broken,
  * currently, and nobody noticed — because nothing looked.
  *
- * WHAT IT DOES NOT DO, stated so the gate is not oversold. The host that authors
- * a steered prompt also writes the file, so a host that substitutes a clean
- * prompt for a steered one stays undetected. What changes is that steering must
- * now be an act of SUBSTITUTION leaving its own artefact in the commit, instead
- * of being invisible by default. The steering predicate's own ceiling is
- * measured too: against the four clauses the case-zero incident records verbatim,
- * `preloadedVerdict` matches exactly one. One of four is the detection floor this
- * buys, not a solved problem.
+ * WHAT IT DOES NOT DO, stated so the gate is not oversold. Three limits, and the
+ * first is the cheapest bypass rather than the cleverest:
+ *
+ * 1. **Omission beats substitution.** Simply not committing
+ *    `<slug>.review-input/prompt.md` drops the round out of the checkable set
+ *    with no finding and no signal, because an artefact without a package is
+ *    deliberately out of scope (see {@link collectPackages}). Nothing in the tree
+ *    requires the package to exist. Measured on the corpus this gate shipped
+ *    against: **11 of 19** artefacts already carry a `prompt_hash` with no
+ *    package, so the bypassed state is the historical norm and is
+ *    indistinguishable from it. Closing this needs a requirement that packages be
+ *    committed — a migration decision, not a check.
+ * 2. **Substitution stays undetectable.** The host that authors a steered prompt
+ *    also writes the file, so swapping a clean prompt for the steered one passes.
+ *    What changes is that steering then requires an act of substitution leaving
+ *    its own artefact in the commit, instead of being invisible by default.
+ * 3. **The steering predicate is one-of-four.** Against the four clauses the
+ *    case-zero incident records verbatim, `preloadedVerdict` matches exactly one.
+ *    That is the detection floor this buys, not a solved problem.
  *
  * Corpus-wide on purpose. `check_completion_review` deliberately reports grammar
  * violations only for the branch's own or scope-relevant artefacts, because a
@@ -47,7 +58,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
-import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 import { parseArtifact } from './check_completion_review.js';
 import { preloadedVerdict } from './hooks/evidence_independence.js';
 
@@ -64,6 +75,25 @@ export interface BaselineEntry {
     /** The hash the committed `prompt.md` actually produces. */
     actual: string;
     reason: string;
+    /**
+     * An acknowledged steering match, pinned to the exact phrase.
+     *
+     * WHY THIS EXISTS, and why it is separate from the hash exemption. The
+     * steering predicate is `preloadedVerdict`, a live regex list owned by
+     * `evidence_independence` and expected to grow — its own history includes a
+     * phrase dropped for false positives. A committed prompt cannot be edited
+     * into compliance without rewriting a historical record. So with no
+     * acknowledgement path at all, ONE phrase added to that shared list would
+     * convert already-committed prompts into permanent blocks on every unrelated
+     * PR, and a gate whose only output is an unfixable block is the gate that
+     * gets switched off.
+     *
+     * The phrase is pinned rather than the slug: acknowledging "this record
+     * matches THIS clause, and here is the human read of it" cannot silently
+     * cover a DIFFERENT clause matching the same file later. The corpus carries
+     * zero of these today, which is the state to keep.
+     */
+    steeredAck?: { phrase: string; reason: string };
 }
 
 export interface Finding {
@@ -81,8 +111,10 @@ export interface Tally {
     broken: number;
     /** Of {@link broken}, how many an accurate baseline entry covers. */
     baselined: number;
-    /** Packages whose prompt carries a pre-loaded verdict — never baselinable. */
+    /** Packages whose prompt carries a pre-loaded verdict. */
     steered: number;
+    /** Of {@link steered}, how many carry a phrase-pinned `steeredAck`. */
+    steeringAcknowledged: number;
 }
 
 export function sha256(buf: Buffer | string): string {
@@ -119,11 +151,23 @@ export function loadBaseline(file: string): Map<string, BaselineEntry> {
         ) {
             throw new Error(`${file}: entry missing slug / declared / actual / reason`);
         }
+        // A duplicate slug would silently overwrite the earlier entry, dropping
+        // its reason and its falsifier — the precise hole the suppression
+        // ratchet exists to prevent, and invisible to it because the file still
+        // parses.
+        if (out.has(entry.slug)) {
+            throw new Error(`${file}: duplicate entry for slug '${entry.slug}'`);
+        }
+        const ack = entry.steeredAck;
+        if (ack !== undefined && (typeof ack.phrase !== 'string' || typeof ack.reason !== 'string')) {
+            throw new Error(`${file}: ${entry.slug}: steeredAck needs a phrase and a reason`);
+        }
         out.set(entry.slug, {
             slug: entry.slug,
             declared: entry.declared.toLowerCase(),
             actual: entry.actual.toLowerCase(),
             reason: entry.reason,
+            ...(ack === undefined ? {} : { steeredAck: ack }),
         });
     }
     return out;
@@ -182,38 +226,58 @@ export function evaluate(
     ledger: GateLedger,
 ): { findings: Finding[]; tally: Tally } {
     const findings: Finding[] = [];
-    const tally: Tally = { packages: packages.length, binding: 0, broken: 0, baselined: 0, steered: 0 };
+    const tally: Tally = {
+        packages: packages.length,
+        binding: 0,
+        broken: 0,
+        baselined: 0,
+        steered: 0,
+        steeringAcknowledged: 0,
+    };
     const matched = new Set<string>();
 
     for (const pkg of packages) {
         const name = `${pkg.slug}.findings.md`;
-        const text = fs.readFileSync(pkg.promptPath, 'utf-8');
-        const actual = sha256(fs.readFileSync(pkg.promptPath));
+        // ONE read: the hash must cover exactly the bytes the steering predicate
+        // screened. Two reads leave a window in which they could differ, which
+        // would publish a hash that does not correspond to the text that was
+        // checked — undetectable downstream.
+        const buf = fs.readFileSync(pkg.promptPath);
+        const text = buf.toString('utf-8');
+        const actual = sha256(buf);
         let failed: string | null = null;
+        const entry = baseline.get(pkg.slug);
 
-        // Steering is checked on EVERY package, including a baselined one: an
-        // exemption covers a hash that will not re-derive, never the content of
-        // the prompt. A baseline that could suppress this would be a hole in the
-        // one thing the gate exists to see.
+        // Steering is checked on EVERY package, including one whose hash is
+        // baselined: the hash exemption covers a hash, never the content. It can
+        // only be acknowledged by its own `steeredAck`, pinned to the matched
+        // phrase — see the field's docstring for why an acknowledgement path has
+        // to exist at all.
         const steer = preloadedVerdict(text);
         if (steer !== null) {
             tally.steered += 1;
-            failed = `pre-loaded verdict in the committed prompt: ${JSON.stringify(steer)}`;
-            findings.push({
-                kind: 'steered-prompt',
-                slug: pkg.slug,
-                detail:
-                    `${pkg.artefact}: the reviewer prompt carries ${JSON.stringify(steer)} — ` +
-                    'a verdict authored into the prompt, which is the case-zero failure ' +
-                    '(evaluator-independence). Never baselinable.',
-            });
+            const ack = entry?.steeredAck;
+            if (ack !== undefined && ack.phrase === steer) {
+                tally.steeringAcknowledged += 1;
+                matched.add(pkg.slug);
+            } else {
+                failed = `pre-loaded verdict in the committed prompt: ${JSON.stringify(steer)}`;
+                findings.push({
+                    kind: 'steered-prompt',
+                    slug: pkg.slug,
+                    detail:
+                        `${pkg.artefact}: the reviewer prompt carries ${JSON.stringify(steer)} — ` +
+                        'a verdict authored into the prompt, which is the case-zero failure ' +
+                        '(evaluator-independence). It is not covered by a hash exemption; ' +
+                        'acknowledging it needs a `steeredAck` entry pinning this exact phrase.',
+                });
+            }
         }
 
         if (actual === pkg.declared) {
             tally.binding += 1;
         } else {
             tally.broken += 1;
-            const entry = baseline.get(pkg.slug);
             if (entry !== undefined && entry.declared === pkg.declared && entry.actual === actual) {
                 tally.baselined += 1;
                 matched.add(pkg.slug);
@@ -352,6 +416,9 @@ function parseArgs(argv: readonly string[]): Args {
             const v = argv[++i];
             if (v === undefined) {
                 process.stderr.write(`check_review_prompt_binding: ${a} expects one argument\n`);
+                // § 6: the count is emitted on EVERY exit path, exit 2 included —
+                // the coverage guard must never be left without a number.
+                process.stdout.write('scanned: 0\n');
                 process.exit(2);
             }
             return v;
@@ -368,6 +435,7 @@ function parseArgs(argv: readonly string[]): Args {
             process.exit(0);
         } else {
             process.stderr.write(`check_review_prompt_binding: unrecognized argument: ${a}\n`);
+            process.stdout.write('scanned: 0\n');
             process.exit(2);
         }
     }
@@ -401,38 +469,57 @@ export function main(argv?: readonly string[]): number {
         return 2;
     }
 
-    // The count is the CHECKABLE set, not the directory listing: an artefact with
-    // no prompt package was not inspected, and counting it would be the very
-    // false-coverage claim `scanned:` exists to prevent.
-    process.stdout.write(`scanned: ${String(packages.length)}\n`);
+    // In `--json` mode stdout carries the payload and NOTHING else, because both
+    // baseline entries name `--json` as their falsifier and a falsifier that has
+    // to be un-interleaved before it parses is not re-runnable. The human lines,
+    // the ledger and the `scanned:` count all move to stderr there.
+    const out = args.json
+        ? process.stderr.write.bind(process.stderr)
+        : process.stdout.write.bind(process.stdout);
 
-    const { findings, tally } = evaluate(packages, baseline, ledger);
-
+    let findings: Finding[];
+    let tally: Tally;
     try {
-        assertScanned({
-            gate: 'check_review_prompt_binding',
-            scanned: packages.length,
-            units: 'reviewer prompt package(s)',
-            roots: [args.reviewsDir],
-        });
+        // The count is the CHECKABLE set, not the directory listing: an artefact
+        // with no prompt package was not inspected, and counting it would be the
+        // false-coverage claim `scanned:` exists to prevent. `reportScanned`
+        // asserts and publishes the SAME number — splitting the two is how a
+        // published count drifts from the validated one.
+        reportScanned(
+            {
+                gate: 'check_review_prompt_binding',
+                scanned: packages.length,
+                units: 'reviewer prompt package(s)',
+                roots: [args.reviewsDir],
+            },
+            out,
+        );
+        ({ findings, tally } = evaluate(packages, baseline, ledger));
     } catch (exc) {
         if (exc instanceof DeadScopeError) {
             process.stderr.write(`❌  ${exc.message}\n`);
             return 1;
         }
-        throw exc;
+        // Anything else here is an internal error, and § 6 maps those to 2 so a
+        // broken gate cannot block the change that repairs it. Letting it throw
+        // would exit 1 — the "policy violation, block" code — inverting the
+        // contract for exactly the failures the docstring promises are exit 2.
+        process.stderr.write(
+            `❌  check_review_prompt_binding: ${exc instanceof Error ? exc.message : String(exc)}\n`,
+        );
+        return 2;
     }
+
+    ledger.report(out);
+    out(
+        `prompt bindings: ${String(tally.packages)} package(s) · ${String(tally.binding)} binding · ` +
+            `${String(tally.steered)} steered (${String(tally.steeringAcknowledged)} acknowledged) · ` +
+            `${String(tally.broken)} broken (${String(tally.baselined)} baselined)\n`,
+    );
 
     if (args.json) {
         process.stdout.write(`${JSON.stringify({ tally, findings }, null, 2)}\n`);
     }
-
-    ledger.report();
-    process.stdout.write(
-        `prompt bindings: ${String(tally.packages)} package(s) · ${String(tally.binding)} binding · ` +
-            `${String(tally.steered)} steered · ${String(tally.broken)} broken ` +
-            `(${String(tally.baselined)} baselined)\n`,
-    );
 
     if (findings.length === 0) {
         return 0;

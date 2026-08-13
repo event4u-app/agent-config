@@ -936,8 +936,14 @@ tasks:
       committed `<slug>.review-input/prompt.md` and runs the pre-loaded-verdict
       predicate over the text. Corpus-wide on purpose: a committed prompt and its
       hash are both immutable, so a break is branch-independent. Exit 2 =
-      internal error (unreadable corpus / malformed baseline).
-    cmd: ./scripts-run src/scripts/check_review_prompt_binding
+      internal error → degraded advisory (warn-and-allow), per the exit-code
+      contract § 6: a malformed baseline must not hard-block the PR that
+      repairs it.
+    cmd: |
+      ./scripts-run src/scripts/check_review_prompt_binding || {
+        rc=$?;
+        if [ "$rc" = "2" ]; then echo "⚠️  check_review_prompt_binding: internal error — degraded advisory mode, allowing (exit-code contract §6)"; else exit "$rc"; fi;
+      }
 
   check-r2-manifest:
     silent: true
