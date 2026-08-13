@@ -206,9 +206,12 @@ jobs:
       # the script by hand. Wired here rather than into rule-backstops.yml
       # because this job is the only required status check
       # (docs/contracts/branch-protection-policy.md), which is what makes a red
-      # actually block a merge. Cost is negligible: 0.53 s measured for the
-      # parity gate against ~225 s of headroom under the 5-minute per-job
-      # ceiling in docs/contracts/ci-cost-budget.md (this job averages 75 s).
+      # actually block a merge. Cost, both steps measured rather than the
+      # cheaper one: check_ci_local_parity 0.53 s, check_gate_coverage 18.6 s —
+      # together ~19 s, about 26% on top of this job's recorded 75 s average,
+      # against a 300 s per-job ceiling (docs/contracts/ci-cost-budget.md).
+      # Comfortable, but not the "negligible" this comment first claimed: the
+      # coverage gate spawns every registered gate to read its scanned: line.
       - name: CI ↔ local gate parity
         run: ./scripts-run src/scripts/check_ci_local_parity --quiet
 
