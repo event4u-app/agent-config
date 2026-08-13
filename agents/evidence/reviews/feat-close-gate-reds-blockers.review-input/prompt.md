@@ -21,31 +21,17 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head e9d2efc389b81c5721374d0fc37829fabd046e22, review
-  artefacts excluded), scope hash `6de6eb32b0b006cd5f748b998025a9f7e27931ecab984808c09621ac25921a45`
+- diff: `diff.patch` — the review scope (branch head b271d078b70d3c177571fc152cc00315b5780aba, review
+  artefacts excluded), scope hash `faf1525aa307bd3db5bd628edeb27bc024a8459a7ec9bb6a76af8d76a49449e3`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
 
 - .github/workflows/consistency.yml
-- Taskfile.yml
 - agents/roadmaps-progress.md
-- agents/roadmaps/archive/road-to-august-program.md
-- agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-release-integrity.md
 - agents/roadmaps/archive/road-to-local-only-gate-reds.md
-- agents/roadmaps/road-to-august-program.md
-- agents/roadmaps/road-to-carrier-layer-convergence.md
-- agents/roadmaps/road-to-design-system-onramp.md
-- agents/roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md
-- agents/roadmaps/road-to-local-only-gate-reds.md
-- agents/roadmaps/road-to-source-first-frontend.md
-- agents/roadmaps/road-to-subagent-lifecycle-integrity.md
-- agents/settings/contexts/carrier-divergence-109-vs-24.md
-- docs/contracts/CHANGELOG-conventions.md
+- agents/roadmaps/road-to-inbox-harvest-2026-08-b.md
 - docs/contracts/ci-green-floor.md
-- docs/decisions/ADR-221-host-native-first-ladder.md
-- docs/decisions/ADR-228-global-install-does-not-emit-paths.md
-- docs/decisions/INDEX.md
 - src/config/gate-coverage.yml
 - src/config/gate-violation-baselines.json
 
@@ -69,5 +55,5 @@ Fill the findings table in `feat-close-gate-reds-blockers.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 6de6eb32b0b006cd5f748b998025a9f7e27931ecab984808c09621ac25921a45, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope faf1525aa307bd3db5bd628edeb27bc024a8459a7ec9bb6a76af8d76a49449e3, reviewed <YYYY-MM-DD>
 ```

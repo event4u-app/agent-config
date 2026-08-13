@@ -335,9 +335,19 @@ gates:
       Why 340 and not 360, the measured value: gate-authoring.md § registration
       requires a floor BELOW the live count, because a floor pinned at today's
       number reds on the very change that legitimately retires one unit. 340
-      leaves ~20 units (~5.5%) of headroom while still catching the collapse this
-      floor exists for — a re-broken extractor would drop the count by 164, not
-      by 20.
+      leaves ~20 units (~5.5%) of headroom.
+      What this floor can and cannot catch, corrected after the R2 review caught
+      the first version arguing from a break that cannot fire it. The extraction
+      bug INFLATED the count — phantom gate names entering the CI set — so a
+      re-break raises the population to roughly 527 and a min_scanned floor never
+      triggers on a rise. The floor guards the opposite direction: an extractor
+      that stops finding taskfiles or workflows at all, a parse error zeroing one
+      side, a scan root that moves. Those are collapses of 100+ units and 340
+      catches every one of them. The realistic PARTIAL break — one taskfile
+      failing to parse, say ~14 units — passes 340 and would have failed 380,
+      which is the honest cost of the headroom and is accepted here rather than
+      hidden: a floor tight enough to catch that is also tight enough to red on
+      the next legitimate retirement.
 
   - id: check_site_links
     argv: []

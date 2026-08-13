@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 31 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **40** open blockers, **9** need you → `agent-config gates`
+> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **42** open blockers, **9** need you → `agent-config gates`
 
 ## Overall
 
-**290 / 417 steps done · 70%**
+**298 / 429 steps done · 69%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   70%
+████████████████████████████░░░░░░░░░░░░   69%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
