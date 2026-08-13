@@ -572,6 +572,56 @@ describe('the gate, end to end', () => {
         expect(r.stderr).toBe('');
     });
 
+    // road-to-subagent-lifecycle-integrity Phase 3 Step 2. A turn waiting on an
+    // async subagent cannot finish the outstanding work in THIS turn, so
+    // refusing it produces the upstream Stop-hook x async-subagent loop
+    // (anthropics/claude-code#55754): refuse, cannot proceed, refuse again.
+    function plantOpenDispatch(dir: string): void {
+        const openDir = path.join(dir, 'agents', 'runtime', 'state', 'subagent-ledger', 'open');
+        fs.mkdirSync(openDir, { recursive: true });
+        fs.writeFileSync(
+            path.join(openDir, 'aaaaaaaaaaaa.json'),
+            JSON.stringify({
+                ref: 'aaaaaaaaaaaa',
+                agent_type: 'Explore',
+                started_at: new Date().toISOString(),
+                parent_ref: null,
+                depth: 1,
+                depth_basis: 'assumed-root',
+                session_id: null,
+            }),
+            'utf8',
+        );
+    }
+
+    it('never refuses a turn-end while a subagent dispatch is still open', () => {
+        const { dir, home } = makeGateWorkspace();
+        // The exact reply the gate refuses with no open dispatch (the first
+        // test in this block proves that), so a pass here can only come from
+        // the open-dispatch allow path — not from an innocuous reply.
+        const t = writeTranscript(home, ['mach weiter'], PROMISE);
+        plantOpenDispatch(dir);
+
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stderr).toBe('');
+    });
+
+    it('still refuses once the dispatch closes — the allow path is not a kill switch', () => {
+        const { dir, home } = makeGateWorkspace();
+        const t = writeTranscript(home, ['mach weiter'], PROMISE);
+        plantOpenDispatch(dir);
+        // Removing the record is exactly what a stop event does.
+        fs.rmSync(path.join(dir, 'agents', 'runtime', 'state', 'subagent-ledger', 'open'), {
+            recursive: true,
+            force: true,
+        });
+
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(1);
+        expect(r.stderr).toContain('promissory');
+    });
+
     // Round 7 § Phase 1 — the completion detector THROUGH the real process, not
     // only as a pure function. The unit tests prove the predicate; this proves it
     // is wired: a detector that is correct and unreachable is the shape this

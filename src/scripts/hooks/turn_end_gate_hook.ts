@@ -129,6 +129,7 @@ import { isSafeTranscriptPath } from './end_review_nudge_hook.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json, is_replay_mode } from './state_io.js';
+import { openRecordStats } from './subagent_ledger_hook.js';
 
 /** Dispatcher-internal block code. Pinned to 1 by `concern_block_exit_parity`. */
 const EXIT_BLOCK = 1;
@@ -841,6 +842,26 @@ export function main(): number {
     if (payload['stop_hook_active'] === true) return EXIT_ALLOW;
 
     const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined) || process.cwd();
+
+    // Layer 1b — an open subagent dispatch is an EXPLICIT allow
+    // (road-to-subagent-lifecycle-integrity Phase 3 Step 2).
+    //
+    // A turn waiting on an async subagent has, by construction, outstanding
+    // work the model cannot finish in this turn. Refusing it is the upstream
+    // Stop-hook x async-subagent loop shape (anthropics/claude-code#55754):
+    // the gate refuses, the model still cannot proceed because the dispatch
+    // has not returned, and the refusal repeats.
+    //
+    // This is an allow path and can never become a deny path — it only ever
+    // lets a turn END that would otherwise have been refused. It reads the
+    // Phase-1 ledger; a ledger that is absent, empty or unreadable yields zero
+    // open records and changes nothing, so the gate degrades to exactly its
+    // previous behaviour rather than failing open in the dangerous direction.
+    try {
+        if (openRecordStats(workspaceRoot).open_count > 0) return EXIT_ALLOW;
+    } catch {
+        // An unreadable ledger is not a reason to change the verdict.
+    }
 
     const transcriptPath = str(
         (payload['transcript_path'] ?? payload['transcriptPath']) as JsonValue | undefined,
