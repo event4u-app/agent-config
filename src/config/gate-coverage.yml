@@ -42,15 +42,24 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-13)
 # ----------------------------------------------------------
-# 256 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 255 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
 # **35 of them emit the machine-readable `scanned: <N>` line under their
 # CI-identical argv, and all 35 are listed below.** The manifest is therefore
 # complete with respect to its own contract, and covers ~14 % of the population.
 # (The 2026-08-05 reading said "32 … and all 31 are listed"; the 2026-08-10
 # reading said "33 … and all 33" while 34 entries were listed. Both halves are
-# RECOUNTED here — 255 scripts before this change plus the one it adds, and the
-# listed entries counted directly — never adjusted toward the previous prose.)
+# RECOUNTED here: 255 is what `count_gate_scripts()` returns on the tree that
+# carries this change, and 35 is the entries counted directly.)
+#
+# A 2026-08-13 revision of this paragraph first wrote 256, derived as "255 before
+# this change plus the one it adds" — inside the sentence claiming to have
+# recounted. It was wrong twice over: 255 was already the reading WITH the new
+# script present, and arithmetic on the previous prose is the exact move this
+# paragraph forbids. Recorded rather than quietly corrected, because a
+# denominator that goes stale by being adjusted is the failure documented here
+# twice before, and the third instance is the one that shows the note is not
+# enough on its own.
 #
 # Two revisions of this header have now gone stale the same way. It claimed
 # "8 of 211", then "22 of 223" while 26 entries were listed. Both halves drift

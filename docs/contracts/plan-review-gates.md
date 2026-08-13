@@ -757,10 +757,16 @@ dispatched: YYYY-MM-DDTHH:MM:SSZ
   solution**. Two things are mechanically collectable — that the committed
   prompt is the one the verdict was bound to, and that it carries no pre-loaded
   verdict by the same predicate `evidence-independence` uses. Neither closes the
-  residual: the host that authors the prompt also writes the file, so
-  substitution stays undetectable, and against the four steering clauses case
-  zero records the predicate matches exactly **one**. The residual stays
-  `accepted-risk`; what changes is that it is no longer *uninstrumented*.
+  residual, and the cheapest bypass is **omission, not substitution**: not
+  committing the package at all drops the round out of the checkable set with no
+  finding and no signal — **11 of the 19** artefacts measured already look
+  exactly like that, so the bypassed state is the historical norm and
+  indistinguishable from it. Beyond that, the host that authors the prompt also
+  writes the file, so substitution stays undetectable, and against the four
+  steering clauses case zero records the predicate matches exactly **one**. The
+  residual stays `accepted-risk`; what changes is that it is no longer
+  *uninstrumented*. Requiring the package to be committed is the next step and is
+  a migration decision, not a check.
 
   **Shipped 2026-08-13 — `check_review_prompt_binding` collects both.** It runs
   corpus-wide (a committed prompt and its recorded hash are both immutable, so a
@@ -772,11 +778,19 @@ dispatched: YYYY-MM-DDTHH:MM:SSZ
   its refutation staying on the record is the property that surfaced this at all.
 
   Two records remain broken and are **recorded, not repaired**, in
-  `src/config/review-prompt-binding-baseline.json`: § 2.7 forbids editing a round
-  record, so repairing either hash would mean the edit the contract prohibits.
+  `src/config/review-prompt-binding-baseline.json`. The reason is evidentiary,
+  not permissional: for the sweep-corrupted record the declared hash was produced
+  by the original text, so rewriting either side would fabricate a binding that
+  never held or erase the evidence the sweep reached inside a committed round;
+  for the unexplained one, neither side can be established as correct, so making
+  them agree would assert a binding nobody has evidence for. **Not** because
+  § 2.7 forbids the edit — an earlier revision of this paragraph said that and
+  was wrong: § 2.7 scopes its freeze to superseded `round<N>-review.md` records
+  and states the rename is "never an edit ban on the live artefact".
+
   Each entry pins BOTH the declared and the actual hash, so a later repair and a
   further corruption are equally visible. The exemption covers the hash only — a
-  pre-loaded verdict is never baselinable.
+  pre-loaded verdict is never suppressed silently.
 
 **Case zero (2026-08-04).** A commit shipped a "binding R2 honest-null"
 declaring 0 findings for one scope. A real reviewer *was* dispatched and did
