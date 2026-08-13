@@ -1,10 +1,6 @@
 # Findings: feat-subagent-lifecycle-phase0-payload-spikes
 
-**Skipped:** no code surface for this completion — the branch changes three
-markdown files (one new evidence file, the roadmap it feeds, and the regenerated
-dashboard) and no executable path, scope
-865bbe70364fbb7afe9915227d125297e7c992f2bcb241583e1fe94d24434f52, declared
-2026-08-13
+**Skipped:** no code surface for this completion — the branch changes three markdown files (one new evidence file, the roadmap it feeds, and the regenerated dashboard) and no executable path, scope 865bbe70364fbb7afe9915227d125297e7c992f2bcb241583e1fe94d24434f52, declared 2026-08-13
 
 ## Why a skip is honest here rather than convenient
 
