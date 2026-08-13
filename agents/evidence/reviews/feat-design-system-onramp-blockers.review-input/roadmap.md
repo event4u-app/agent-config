@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 ---
@@ -264,10 +266,34 @@ matrix says so; no lane is forced.
       and `:import`, each time as a citation to `brand-source-of-truth` and the
       contract's trust posture rather than a re-definition of them.
 
-**Falsifier.** Two release windows with zero invocations outside the
-maintainer's own runs → the onramp has no demand; demote the cluster to
-`later/` and keep only the Phase-1 adapter (which the port branch consumes
-regardless).
+**Falsifier (amended 2026-08-13 — the original had no instrument).** It read
+"two release windows with zero invocations outside the maintainer's own runs".
+Per-command invocation telemetry does not exist and both surrogates are rejected
+in `audit_command_surface.ts:587`, so zero-invocations and zero-measurement were
+the same reading and the falsifier would have retired a working surface on a
+missing counter. Replaced, on the AI-council decision recorded in
+[`design-system-blockers-council`](../evidence/analysis/design-system-blockers-council.md),
+with a signal that exists:
+
+> At each release-review walk the maintainer reads the `skill-usage:collect`
+> exposure records (privacy-scrubbed SHA-256 prompt-prefix hashes — counts and
+> slugs, never transcript content) for the slug **`design-system`**, and checks
+> for Issues/PRs citing the cluster. **Two consecutive release windows with both
+> zero `design-system` exposure records and zero citing Issues/PRs** → the onramp
+> has no demand; demote the cluster to `later/` and keep only the Phase-1 adapter
+> (which the port branch consumes regardless).
+
+**What that signal can and cannot see, stated so nobody reads it as wider than
+it is.** `skill_usage_collect.load_known_slugs` builds its population from
+directories carrying a `SKILL.md` under `.augment/skills`, `.claude/skills` and
+`dist/agent-src/skills`. Checked against the real tree: `design-system` is
+present (the head is suggestion-eligible, so it projects as a command-skill);
+`design-system-generate` and `design-system-import` are **absent** (the subs are
+`suggestion.eligible: false` and get no projection); and `design-system-capture`
+is present but is the **pre-existing skill** of that name, not this cluster's
+sub — so it is excluded by name, because counting it would merge two different
+things with independent traffic. The signal is therefore head-only, and a
+head-only count is a floor on cluster usage rather than a measurement of it.
 
 **Rollback.** One command cluster; the engines it fronts are untouched.
 
@@ -278,11 +304,14 @@ the upstream watchlist**, not a one-off fix. The pin drifted `b7e3af80` →
 `97eb2a20` unnoticed for two months, which is the concrete proof that the
 watchlist's scope is "everything we pin upstream", not just host issues.
 
-- [ ] **Step 1:** *(BLOCKED — see `### blocker: corpus-refresh-budget-and-scope`.
-      Its premise was measured at the pin and is false in both directions: the
-      step names two missing files; there are **nine** absent and **eleven**
-      content-drifted. And its second named file is the one ADR-061 §8 rejected
-      by name.)* Re-pin the vendored corpus to upstream `97eb2a20`: bring
+- [x] **Step 1:** *(Its premise was measured at the pin and is false in both
+      directions: the step names two missing files; there are **nine** absent
+      and **eleven** content-drifted. Its second named file is the one ADR-061
+      §8 rejected by name. Resolved by AI council on a maintainer delegation —
+      see the blocker below and
+      [`design-system-blockers-council`](../evidence/analysis/design-system-blockers-council.md).
+      **Executed as the council decided: `motion.csv` only, no pin bump.**)*
+      Re-pin the vendored corpus to upstream `97eb2a20`: bring
       `motion.csv` (16 GSAP presets) and `google-fonts.csv` into
       `design-intelligence/data/`, manifest rows included; ATTRIBUTION.md
       SHA + date bump; license posture re-checked (MIT/Apache-2.0 unchanged
@@ -296,7 +325,32 @@ watchlist's scope is "everything we pin upstream", not just host issues.
       `react-shadcn-ui/scripts/shadcn_add.ts:4`, `ADR-061:170`, plus two watch
       notes. A re-pin that touches only ATTRIBUTION leaves nine stale SHAs
       behind, each of which reads as authoritative.
-- [ ] **Step 2:** Port the three design dials into `decision_engine.ts` +
+      **Done 2026-08-13, deliberately NARROWER than the step's letter.**
+      Adopted: `data/motion.csv` (10.5 KB, 16 rows, the three `Intensity Tier`
+      values the motion dial needs) plus a `gsap` search domain in
+      `manifest.json` — upstream searches motion under that key, not `motion`,
+      which the step did not say. Verified end-to-end: `ground search --domain
+      gsap "hover button"` returns scored rows at confidence 0.497.
+      **Declined, each with its reason:** `google-fonts.csv` (743 KB — ADR-061
+      §8 rejects it by name and size; the 2026-06-16 amendment authorises a slim
+      top-N slice from a *different* mirror, not this file), `typography.csv`
+      (our curated `font-pairings-reference.csv` is the ADR's working
+      substitution — verified: every one of the manifest's now-eleven domains
+      resolves to a file that exists), six desktop-UI stacks outside
+      `frontend-design`'s scope, and eleven content-drifted files nobody has
+      reviewed.
+      **The ten-site pin sweep is therefore deliberately NOT done, and that is
+      the correct outcome, not an omission.** The base pin stays `b7e3af80`
+      because the corpus as a whole is still that commit; bumping it would
+      assert an adoption that did not happen. `ATTRIBUTION.md` gains a
+      *partial adoptions* section naming the two assets taken from `97eb2a20`
+      and why the base pin is unchanged. Licence re-verified at that commit
+      before adopting: MIT, same holder, unchanged.
+      **Budget:** the `design-intelligence` per-skill cap moved 23.0 → 23.5 with
+      the reason in `pack-size-budget.json` itself, as that file's own note
+      requires — including what was declined in the same pass, so the raise
+      reads as a bounded decision rather than a ratchet slipping.
+- [x] **Step 2:** Port the three design dials into `decision_engine.ts` +
       `ground.ts` flags (`--variance/--motion/--density`, 1-10, unset = no
       behaviour change — upstream's own contract), surfaced as optional args
       on `/design-system generate`.
@@ -312,10 +366,33 @@ watchlist's scope is "everything we pin upstream", not just host issues.
       wired" class this package has already paid for once. Porting two of three
       dials and leaving the third inert is worse than waiting: the flag surface
       would claim a capability the corpus cannot answer.
-- [ ] **Step 3:** One regression fixture per dial tier boundary, mirroring
+      **Done 2026-08-13, all three dials, once Step 1 supplied `motion.csv`.**
+      `DIAL_TIERS` + `resolve_dial` in `decision_engine.ts`; `--variance`,
+      `--motion`, `--density` in `ground.ts`. Verified end-to-end: `--variance 2
+      --motion 9 --density 9` returns the three labels, a `Complex`-tier motion
+      row from `motion.csv` with three alternatives, and the dense spacing scale.
+      **The no-flag contract is the load-bearing part and is pinned:** a run
+      without dials carries none of `dials` / `motion` / `spacing_scale` and its
+      top-level keys are unchanged, so the pre-dial behaviour is byte-identical.
+      Three re-derivations rather than a port, recorded in
+      `provenance/borrows.jsonl`: the dials enter `ground()` as an optional
+      parameter (upstream threads them through a `generate()` this tree does not
+      have); variance **prepends** to the rule's corpus-grounded priority
+      keywords instead of replacing the list, so a caller preference cannot
+      silently override grounded evidence; and a missing `gsap` domain or an
+      empty tier emits an `evidence_gap` rather than a silent empty block.
+- [x] **Step 3:** One regression fixture per dial tier boundary, mirroring
       upstream's `DIAL_TIERS`, so the next upstream refresh diffs against
       pinned expectations instead of memory.
-      **Deferred 2026-08-13** — its subject is Step 2's output.
+      **Done 2026-08-13** — `tests/scripts/skills_corpus_grounding_dials.test.ts`,
+      24 tests. Every boundary is pinned (1/3/4/7/8/10 per dial), because a
+      boundary is where a tier table actually breaks and a test at 5 would pass
+      under almost any off-by-one. Two checks the step did not ask for and that
+      earn their place: the table is asserted to cover 1-10 with no gap and no
+      overlap, and each tier is asserted to carry the payload its dial is
+      consumed for — a tier that resolves but has no `style_keywords`,
+      `tier` or `spacing` is a dial that engages and then does nothing, which
+      is the failure mode this whole phase exists to avoid.
 
 **Falsifier.** Upstream's dial implementation turns out to depend on data the
 MIT grant does not cover → dials are re-implemented from the tier table alone
@@ -350,7 +427,7 @@ no behaviour change.
 
 ### blocker: corpus-refresh-budget-and-scope
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 3 entirely — 3.1 directly, 3.2 through the measured
   `motion.csv` dependency below, 3.3 as 3.2's subject. Phases 1, 2, 4 and 5 are
@@ -401,9 +478,24 @@ no behaviour change.
   benefit (a working motion dial, a fresher corpus) is real and is stated here
   so the decision can be made on it.
 
+**Resolution (2026-08-13).** The maintainer delegated the decision to the AI
+council. Verdict: **option (b)** — adopt `motion.csv` only, re-baseline the
+per-skill cap to 23.5 % with the reason in the same commit, and decline the font
+CSV, the six desktop stacks and the wholesale pin bump. Phase 3 executed exactly
+that; the declined half is named in `pack-size-budget.json` so the raise reads as
+a bounded decision rather than a ratchet slipping.
+
+**Honest standing of the verdict:** it is ONE member over two rounds, not a
+2-of-2 convergence — the second seat returned `exit_1` because the `codex` CLI
+refuses a git worktree as an untrusted directory. Better than a solo call by the
+implementing agent, which is why it was routed; not the convergence a council
+verdict normally implies. Full record, including the member's own strongest
+counter-argument against its verdict:
+[`design-system-blockers-council`](../evidence/analysis/design-system-blockers-council.md).
+
 ### blocker: no-command-invocation-telemetry
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 5.1 only, and through it the Phase-2 falsifier's ability to
   fire. Phases 1, 2 and 4 are closed and do not depend on it.
@@ -427,6 +519,21 @@ no behaviour change.
   collecting user-behaviour data, which is a product and privacy decision; (b)
   rewrites a pre-registered falsifier, which is exactly the move a falsifier
   exists to prevent an agent from making on its own.
+
+**Resolution (2026-08-13).** Same delegation, same single-member standing as the
+blocker above. Verdict: **option (b)** — amend the falsifier to a signal that
+exists rather than build per-command telemetry. Two supporting arguments worth
+keeping: a new user-behaviour telemetry surface is disproportionate to the
+question it answers, and a human read at a release boundary is *appropriate* for
+a retirement decision, because "should we" carries context a counter does not.
+
+**Two corrections were applied to the council's own proposed text before adopting
+it**, both measured against the tree rather than argued: it named a
+`/design-system:apply` sub-command that does not exist, and it assumed an
+instrument reach the population does not have — `skill-usage` sees the cluster
+**head only**, and the `design-system-capture` slug in that population is the
+pre-existing skill, not this cluster's sub. The amended falsifier under Phase 2
+states both, so a head-only count is not read as cluster-wide usage.
 
 ## Phase 4: Wire the consumers — cross-refs, no duplication
 
@@ -459,11 +566,12 @@ no behaviour change.
 
 ## Phase 5: Measure
 
-- [ ] **Step 1:** *(BLOCKED — see `### blocker: no-command-invocation-telemetry`.)*
-      Count `/design-system` invocations and adapter runs per
+- [x] **Step 1:** Count `/design-system` invocations and adapter runs per
       release window (the command telemetry the estate already records for
       clusters); publish alongside the Phase-2 falsifier's threshold.
-      **Its premise is false, and the instrument it names does not exist.** `audit_command_surface.ts:587` states it outright:
+      **Closed 2026-08-13 by amending the falsifier, not by building a counter —
+      AI-council decision on a maintainer delegation.** The step's premise is
+      false and the instrument it names does not exist. `audit_command_surface.ts:587` states it outright:
       *"Per-command invocation telemetry is **not** available."* The two
       surrogates it considered are both rejected in that same note — filesystem
       mtime (`task sync` rewrites every file) and git history (dominated by a

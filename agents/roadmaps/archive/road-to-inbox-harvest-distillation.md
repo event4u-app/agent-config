@@ -11,7 +11,7 @@ complexity: lightweight
 > Source (consumed inbox): `agents/tmp.old/distillation` — two draft roadmaps
 > and their transcript, authored outside this repo by a comparative pass
 > against an external reference. The source is named only in that gitignored
-> directory, per [`source-confidentiality`](../../src/rules/source-confidentiality.md);
+> directory, per [`source-confidentiality`](../../../src/rules/source-confidentiality.md);
 > this roadmap carries the mechanisms, never the attribution.
 
 ## Context / What is verified
@@ -36,23 +36,23 @@ smaller than the drafts it consumes.
   elicitation router anchored on `fe-design` being reachable only through
   `/implement-ticket`. At HEAD, `src/skills/fe-design/SKILL.md:1-31` opens with
   an explicit *"Ad-hoc mode — outside the engine, YOU run this loop now"* and a
-  mode table, and [`road-to-frontend-skill-application.md`](road-to-frontend-skill-application.md)
+  mode table, and [`road-to-frontend-skill-application.md`](../road-to-frontend-skill-application.md)
   Phase 3 steps 1–4 are all `[x]`. That draft phase carried its own instruction
   for this case — fold in and cancel — and it is honoured in `## Cancelled`.
 - **"Never manufacture consensus" already exists**, in a different file than the
   draft guessed. It looked at `adversarial-verification-council.md:81-94` and
   found only the `refutes` / reconciliation machinery. The real owner is
-  [`judge-synthesis`](../../src/skills/judge-synthesis/SKILL.md):84-89: *"Surface
+  [`judge-synthesis`](../../../src/skills/judge-synthesis/SKILL.md):84-89: *"Surface
   both verdicts and the disagreement explicitly — never silently resolve it by
   averaging or vote-count."* Phase 3 shrinks to the half that is genuinely
   missing.
 
 **One re-cut this analysis makes on its own.** The drafts proposed a **new
-rule** for cite-or-label. [`code-provenance`](../../src/rules/code-provenance.md)
+rule** for cite-or-label. [`code-provenance`](../../../src/rules/code-provenance.md)
 already owns exactly this discipline one layer down — a ledger, a
 before-it-lands obligation, an escalation on unknown provenance — and differs
 only in that its subject is code. Extending it is the smaller move
-([`improve-before-implement`](../../src/rules/improve-before-implement.md)
+([`improve-before-implement`](../../../src/rules/improve-before-implement.md)
 § solution-size ladder: reuse-in-repo before a new artefact), and it avoids
 adding a rule to a projection surface with four generators.
 
@@ -71,7 +71,7 @@ The spine. Phases 2 and 3 both scope against the registry, so it lands first.
       `src/scripts/schemas/`, README section mirroring the `borrows`
       conventions. The schema stays inside this repo's Draft-07 subset — no
       `$ref`, no `const`, inline single-member `enum` — the trap
-      [`road-to-inbox-harvest-2026-08.md`](road-to-inbox-harvest-2026-08.md)
+      [`road-to-inbox-harvest-2026-08.md`](../road-to-inbox-harvest-2026-08.md)
       already paid for.
       <!-- verify: npx vitest run tests/scripts/lint_harvest_provenance.test.ts -->
       <!-- renamed from the drafted `claims.jsonl`/`claim_id`: `check_claims.ts`
@@ -122,7 +122,7 @@ The spine. Phases 2 and 3 both scope against the registry, so it lands first.
       seed block — proposed name, one-line description, target template, and the
       harvest ids it will cite — for each ADOPT row whose adoption lands in a *new*
       skill or rule. A handoff artefact for
-      [`learning-to-rule-or-skill`](../../src/skills/learning-to-rule-or-skill/SKILL.md),
+      [`learning-to-rule-or-skill`](../../../src/skills/learning-to-rule-or-skill/SKILL.md),
       never an auto-created file; the block declares itself a proposal in its
       first line. That skill's intake section names the seed block as an
       accepted input shape, which is what turns the current `## Related` pointer
@@ -205,21 +205,28 @@ which 4 skills currently exceed — an existing contract made real, nothing more
       it; `tasks/` is new and permitted. The allowlist is an inline constant
       rather than a JSON baseline: a baseline file grows unread, and a
       shrink-only list has to be read on every diff that touches it. -->
-- [~] **4.3 Retrofit the three offenders.** Deferred, not skipped — see
-      `blocker: router-head-retrofit-instrument`. The draft pre-registered
-      "tokens-on-trigger before/after per skill" as the gate on this work, and
-      that instrument does not exist: tokens-on-trigger is a host-side quantity,
-      and this tree can measure a file's exact BPE size
-      (`lint_token_budget_discipline`) but not what the host loaded. Retrofitting
-      three skills on an unmeasurable premise is the exact move ADR-202 forbids,
-      so the series waits for an instrument or an explicit maintainer decision to
-      proceed on the contract alone.
+- [-] **4.3 Retrofit the three offenders.** **Relocated 2026-08-13 to
+      [`road-to-distillation-followups`](../road-to-distillation-followups.md)
+      Phase 1 — moved, not dropped, and not decided.** The reasoning is
+      unchanged and travels with it: the draft pre-registered "tokens-on-trigger
+      before/after per skill" as the gate on this work, and that instrument does
+      not exist — tokens-on-trigger is a host-side quantity, and this tree can
+      measure a file's exact BPE size (`lint_token_budget_discipline`) but not
+      what the host loaded. Retrofitting three skills on an unmeasurable premise
+      is the exact move ADR-202 forbids, so the series waits for an instrument or
+      an explicit maintainer decision to proceed on the contract alone.
+      **Why relocate rather than leave it `[~]`:** with `count_open == 0` this
+      roadmap could not archive, so Iron Law 3 held it in the active tree
+      indefinitely and its red was reported on every run without anyone owning
+      the item. Relocation is one of that rule's three sanctioned resolutions
+      (spawn follow-up), and it is the only one that neither fakes the
+      maintainer's call nor loses the work.
 
 ## Cancelled — each against a named citation
 
 - [-] **Bare-invocation elicitation router for mode-rich skills.** Shipped.
       `src/skills/fe-design/SKILL.md:1-31` carries the mode table and the ad-hoc
-      executor lane; [`road-to-frontend-skill-application.md`](road-to-frontend-skill-application.md)
+      executor lane; [`road-to-frontend-skill-application.md`](../road-to-frontend-skill-application.md)
       Phase 3 steps 1–4 are `[x]`, including trigger evals pinning the
       engine/ad-hoc disjunction. The draft's own prerequisite ordered this
       cancellation if the surface was already claimed.
@@ -235,7 +242,7 @@ which 4 skills currently exceed — an existing contract made real, nothing more
 - [-] **Directory-as-roster instead of hand-maintained lists.** Already the
       repo's shape — `task generate-tools` and the census scripts encode it.
 - [-] **"Never manufacture consensus" in council synthesis.**
-      [`judge-synthesis`](../../src/skills/judge-synthesis/SKILL.md):84-89 —
+      [`judge-synthesis`](../../../src/skills/judge-synthesis/SKILL.md):84-89 —
       *"Surface both verdicts and the disagreement explicitly — never silently
       resolve it by averaging or vote-count. The human adjudicates."* The draft
       looked for this in `adversarial-verification-council.md` and, not finding
@@ -260,10 +267,13 @@ which 4 skills currently exceed — an existing contract made real, nothing more
 ## Blockers
 
 ### blocker: router-head-retrofit-instrument
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Blocks:** step 4.3 only. Steps 4.1 and 4.2 are unblocked — they constrain
-  new skills and do not require the retrofit.
+- **Blocks:** nothing here any more. It blocked step 4.3 only, and 4.3 has moved
+  to [`road-to-distillation-followups`](../road-to-distillation-followups.md)
+  Phase 1, where this blocker is carried forward **unchanged**, `What to do` and
+  `Resolved when` included. `resolved` here means discharged FOR THIS ROADMAP —
+  the underlying question is open and owned there, not answered.
 - **What to do:** either supply an instrument that observes what the host
   actually loads on skill trigger (no such observation exists in this tree
   today), or decide explicitly that the published K6 cap is reason enough to
@@ -273,14 +283,18 @@ which 4 skills currently exceed — an existing contract made real, nothing more
   contract alone justifies the retrofit.
 
 ### blocker: first-contract-true-analysis-run
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Blocks:** nothing in this roadmap. Recorded because the consumed drafts
-  raised it and it is a real gap: no artefact under `agents/evidence/analysis/`
-  shows `/analyze:reference-repo` having been run end-to-end under its own §5b
-  convergence contract — `ls agents/evidence/analysis/ | grep compare` returns
-  nothing. The drafts themselves were produced *outside* the command, so its
-  contract has an untested path.
+- **Blocks:** nothing here — it never did, by its own wording, and that is
+  exactly why it had to move: a blocker that gates no step in its own roadmap
+  still blocks the archival sweep, so it held this file open while owning
+  nothing in it. Carried forward **unchanged** to
+  [`road-to-distillation-followups`](../road-to-distillation-followups.md) Phase 2,
+  where it gates a step that is actually about it. `resolved` here means
+  discharged FOR THIS ROADMAP; the gap is open and owned there. The gap itself:
+  no artefact under `agents/evidence/analysis/` shows `/analyze:reference-repo`
+  having been run end-to-end under its own §5b convergence contract — the drafts
+  were produced *outside* the command, so its contract has an untested path.
 - **What to do:** run the command against a small reference and land the
   evidence artefact. Two things make this a maintainer call rather than an
   autonomous step: it spends on external fetches, and its output is raw named
@@ -294,4 +308,4 @@ which 4 skills currently exceed — an existing contract made real, nothing more
 - Automating convergence via LLM-as-judge — §5b forbids it, and that
   prohibition is load-bearing.
 - Scheduling recurring harvests — cadence is a maintainer decision under the
-  capacity caps of [`ADR-216`](../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md).
+  capacity caps of [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md).
