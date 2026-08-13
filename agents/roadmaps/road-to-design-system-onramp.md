@@ -16,7 +16,7 @@ complexity: structural
 > `persist_grounding` is at `decision_engine.ts:688` and `--persist` at
 > `ground.ts:203`, and the corpus drift is real (`motion.csv`,
 > `google-fonts.csv` and the three dials are all still absent). Verdict table in
-> [`road-to-august-program`](road-to-august-program.md) § Verification at adoption.
+> [`road-to-august-program`](archive/road-to-august-program.md) § Verification at adoption.
 > Program sequencing: **Phase 3 is the first scheduled outcome of the upstream
 > watchlist** (X5), not a one-off; **Phase 4 Step 2 is written once, in
 > `road-to-source-first-frontend` Phase 4** (X4).

@@ -20,7 +20,7 @@ complexity: structural
 > and **re-verified at adoption against tip `1432c7a45`** — V7 flipped to
 > `already-fixed`, V1b's count was wrong, V6's anchor moved; every other claim
 > held. The verdict table lives in
-> [`road-to-august-program`](road-to-august-program.md) § Verification at adoption.
+> [`road-to-august-program`](archive/road-to-august-program.md) § Verification at adoption.
 > External claims carry their source. Anything marked *(proposal)* is this
 > roadmap's own suggestion, never a foundation to cross-cite.
 
