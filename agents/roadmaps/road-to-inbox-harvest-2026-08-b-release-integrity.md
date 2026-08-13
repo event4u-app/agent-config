@@ -162,18 +162,67 @@ fix.
       `capsule_version`, wrong `variant`, an unknown key, unparseable and
       missing `written_at`, empty `acceptance_criteria`, non-object payloads,
       and the all-violations-at-once case.
-- [ ] **3.4 `surface prune` as a report flag.** OPEN — the step's own premise
-      does not hold, and inventing past it would be the failure this roadmap is
-      about. It reads "a flag beats a 197th command", which presumes a host verb
-      named `surface`. There is none: `grep "'surface" src/cli/registry.ts`
-      returns nothing, and no script generates `docs/SKILL_CENSUS.md` or
-      `docs/artefact-census.md` (the only reader is
-      `check_artefact_count_messaging.ts`). So the choices are to create the
-      verb the step forbids, or to pick a different host verb — a design
-      decision the step did not make and this run declines to make silently.
-      Whoever takes it: `commands` (native, already "list/explain the command
-      surface") is the nearest candidate, and 3.5 already points the
-      reduction TARGETS at the three roadmaps that own them.
+- [x] **3.4 `surface prune` as a report flag.** Landed as
+      `commands ls --candidates`, and the three design decisions the step
+      refused to make silently are recorded here rather than in a commit body.
+      **Host verb: `commands`** — the step's own named candidate, confirmed
+      real (`registry.ts`, `native`, synopsis "List/explain the command
+      surface"). Zero new registry verbs, so Risk 3 does not fire.
+      **NOT named `--prune`, and that is the finding the step could not see:**
+      `prune` is ALREADY a registered verb (`registry.ts`, `delegate`) meaning
+      "remove orphaned bridge markers against `installed-tools.lock`". A
+      `--prune` flag here would read as "delete commands" — the one thing this
+      report must not do, since 3.5 hands the reduction targets to
+      `road-to-surface-consolidation`, `road-to-solution-minimalism` and
+      `road-to-tier-removal`. The report names all three and decides nothing.
+      **Data source changed, with the reason:** the step pointed at
+      `docs/SKILL_CENSUS.md` and `docs/artefact-census.md`. Both are DATED
+      point-in-time snapshots — measured 2026-07-13 (237 skills) and
+      2026-06-09 (227 skills / 150 commands) against a tree now at 289 / 196 —
+      and `check_artefact_count_messaging.ts` excludes them **by design**
+      ("carry point-in-time counts by design"). `SKILL_CENSUS` states outright
+      that no usage evidence backs its Keep/Prune calls. Rendering either as
+      current would ship exactly the unbacked claim this roadmap exists to
+      remove, so the report reads the **discovery manifest** instead: every row
+      traces to a manifest field (`replaces`, `visibility`, `intent`, `pack`)
+      a reader can grep. Both snapshots are named in the output with the
+      warning not to read their numbers as current.
+      **`utilization_report` is named, not imported.** Its D1/REAP verdict is
+      the designated usage-backed signal, but its entry guard is an argv
+      comparison with no `__AGENT_CONFIG_BUNDLE__` guard, and this file reaches
+      the CLI bundle via `main.ts` — the precondition 3.1 hit on
+      `preamble_byte_census`. Half-importing it would have run its `main` at
+      import time. The report states the evidence gap and its owner instead.
+      **Measured on the real manifest:** 196 commands — 5 visible, 17 advanced,
+      174 internal; **8 commands that absorbed prior names**; **166 of 196
+      carry no `intent`**. Text mode caps the undocumented enumeration at 12 and
+      **names the withheld count** ("… and 154 more"); `--json` is never capped.
+      **Three defects were found in this step's own first draft and fixed
+      before merge — two by probing the diff, one by the neutral review.**
+      (a) A `visibility` value outside the three known labels was counted but
+      never rendered, so the printed breakdown silently disagreed with the
+      printed total; the record's key order was also first-seen, making
+      `--json` unstable. (b) The `replaces` bucket was labelled **"deprecation
+      shims — the one retirement class"**, which is the exact inverse of the
+      field's contract: `command.schema.json` states "`replaces` is set on the
+      NEW canonical command pointing back", and the retirement marker is
+      `superseded_by`, "set on the OLD shim pointing forward". The first draft
+      therefore named `git-commit`, `git-pr-create` and `fix-quality` — tier-0
+      daily drivers — as the evidenced cut class, while
+      `check_command_count_messaging` publishes the CI-enforced canonical
+      figure **0 shims of 196** and `superseded_by` appears in no command file
+      and is not emitted into the manifest at all. The bucket is now "absorbed
+      prior names", carries an explicit NOT-a-retirement-class line, and the
+      real shim class is reported as **not computable from this data** with the
+      canonical figure cited. (c) `--candidates` silently discarded `--pack`,
+      `--visible`, `--profile` and `--expanded` — a narrowed request printed a
+      196-command report, and a typo'd `--profile` exited 0 where plain `ls`
+      exits 1; all four are now refused with exit 1.
+      30 assertions in `src/cli/commands/commands.candidates.test.ts`. Every
+      expectation derives from its input rather than pinning emitted prose,
+      with one deliberate exception: the absorbed-name membership is asserted by
+      **naming** the expected slugs, because re-deriving the implementation's
+      own predicate is what let the inversion pass a green suite.
       ORIGINAL TEXT: Over census data already computed
       in `docs/SKILL_CENSUS.md` and `docs/artefact-census.md`; a flag beats a 197th
       command against a 196-command surface.
