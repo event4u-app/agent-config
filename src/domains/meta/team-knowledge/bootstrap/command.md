@@ -2,7 +2,6 @@
 model_tier: medium
 name: team-knowledge-bootstrap
 pack: meta
-tier: 2
 visibility: internal
 cluster: team-knowledge
 sub: bootstrap

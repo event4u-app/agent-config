@@ -2,7 +2,6 @@
 model_tier: high
 name: roadmap-materialize
 pack: product-basic
-tier: 2
 visibility: internal
 cluster: roadmap
 sub: materialize

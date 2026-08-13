@@ -7,7 +7,6 @@ pack: engineering-base
 intent: "Review dispatcher — multi-judge self-review of the current diff, or reviewer routing"
 routes_to: [review-changes, review-routing]
 replaces: []
-tier: 1
 visibility: advanced
 description: Review orchestrator — routes to changes (five-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns)
 cluster: review

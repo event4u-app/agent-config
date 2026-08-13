@@ -2,7 +2,6 @@
 model_tier: medium
 name: knowledge-forget
 pack: product-discovery
-tier: 2
 visibility: internal
 cluster: knowledge
 sub: forget

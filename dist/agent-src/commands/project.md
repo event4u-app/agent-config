@@ -7,7 +7,6 @@ pack: engineering-base
 intent: "Project dispatcher — full analysis or quick health check"
 routes_to: [project-analyze, project-health]
 replaces: []
-tier: 2
 visibility: internal
 description: Project orchestrator — routes to analyze (full audit) and health (read-only status check)
 cluster: project

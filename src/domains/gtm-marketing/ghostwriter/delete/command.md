@@ -2,7 +2,6 @@
 model_tier: inherit
 name: ghostwriter-delete
 pack: gtm-marketing
-tier: 2
 visibility: internal
 cluster: ghostwriter
 sub: delete

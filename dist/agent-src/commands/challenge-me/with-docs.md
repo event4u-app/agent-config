@@ -2,7 +2,6 @@
 model_tier: medium
 name: challenge-me-with-docs
 pack: product-reasoning
-tier: 2
 visibility: internal
 cluster: challenge-me
 sub: with-docs

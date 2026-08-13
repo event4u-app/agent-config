@@ -2,7 +2,6 @@
 model_tier: medium
 name: check-current-md
 pack: meta
-tier: 2
 visibility: internal
 description: "Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes."
 argument-hint: "[path...]"

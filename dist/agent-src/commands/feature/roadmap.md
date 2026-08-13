@@ -2,7 +2,6 @@
 model_tier: inherit
 name: feature-roadmap
 pack: engineering-base
-tier: 2
 visibility: internal
 cluster: feature
 sub: roadmap

@@ -2,7 +2,6 @@
 model_tier: inherit
 name: design-system
 pack: engineering-base
-tier: 2
 visibility: internal
 cluster: design-system
 type: orchestrator

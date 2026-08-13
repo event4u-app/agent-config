@@ -4,7 +4,6 @@ name: tdd
 disable-model-invocation: true
 argument-hint: "[red|green|refactor] [behavior | args]"
 pack: engineering-base
-tier: 2
 visibility: internal
 description: TDD orchestrator — routes to red (failing test), green (minimum code), refactor (clean while green)
 cluster: tdd

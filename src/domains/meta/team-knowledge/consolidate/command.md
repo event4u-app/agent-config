@@ -2,7 +2,6 @@
 model_tier: medium
 name: team-knowledge-consolidate
 pack: meta
-tier: 2
 visibility: internal
 cluster: team-knowledge
 sub: consolidate

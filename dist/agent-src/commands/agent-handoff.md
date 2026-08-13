@@ -5,7 +5,6 @@ pack: meta
 intent: "Resume a previous session in a fresh chat: pick a session, generate a handoff, auto-seed the next session"
 routes_to: [agent-docs-writing]
 replaces: []
-tier: 0
 visibility: visible
 skills: [agent-docs-writing]
 description: Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste.

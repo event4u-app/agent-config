@@ -2,7 +2,6 @@
 model_tier: inherit
 name: feature-dev
 pack: engineering-base
-tier: 2
 visibility: internal
 cluster: feature
 sub: dev

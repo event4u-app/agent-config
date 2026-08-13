@@ -7,7 +7,6 @@ pack: git
 intent: "Open a pull request with a generated description and stripped attribution footers"
 routes_to: [git-workflow]
 replaces: [create-pr]
-tier: 1
 visibility: advanced
 cluster: git-pr-create
 skills: [git-workflow]

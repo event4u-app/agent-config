@@ -2,7 +2,6 @@
 model_tier: high
 name: design-system-generate
 pack: engineering-base
-tier: 2
 visibility: internal
 cluster: design-system
 sub: generate

@@ -2,7 +2,6 @@
 model_tier: medium
 name: fix-route
 pack: engineering-base
-tier: 2
 visibility: internal
 sub: route
 cluster: fix

@@ -7,7 +7,6 @@ pack: product-basic
 intent: "Roadmap dispatcher — create, process-step, process-phase, process-full, next, ai-council"
 routes_to: [roadmap-create, roadmap-ai-council, roadmap-materialize, roadmap-process-step, roadmap-process-phase, roadmap-process-full, roadmap-next]
 replaces: []
-tier: 1
 visibility: advanced
 description: Roadmap orchestrator — routes to create (authoring), process-step / process-phase / process-full (autonomous execution), and next (pick a roadmap and ship it).
 cluster: roadmap

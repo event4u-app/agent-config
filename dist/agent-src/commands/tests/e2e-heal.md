@@ -2,7 +2,6 @@
 model_tier: medium
 name: tests-e2e-heal
 pack: engineering-base
-tier: 2
 visibility: internal
 replaces: [e2e-heal]
 sub: e2e-heal

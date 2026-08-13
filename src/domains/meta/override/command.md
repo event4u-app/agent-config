@@ -4,7 +4,6 @@ name: override
 disable-model-invocation: true
 argument-hint: "[create|manage] [args]"
 pack: meta
-tier: 2
 visibility: internal
 description: Override orchestrator — routes to create, manage
 cluster: override

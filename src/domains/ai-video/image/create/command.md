@@ -2,7 +2,6 @@
 model_tier: high
 name: image-create
 pack: ai-video
-tier: 2
 visibility: internal
 cluster: image
 sub: create

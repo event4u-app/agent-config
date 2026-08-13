@@ -2,7 +2,6 @@
 model_tier: high
 name: agents-user-review
 pack: meta
-tier: 2
 visibility: internal
 cluster: agents
 sub: user

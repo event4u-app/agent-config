@@ -7,7 +7,6 @@ pack: git
 intent: "Stage and commit changes in logical chunks with a Conventional Commits message"
 routes_to: [git-workflow, conventional-commits-writing]
 replaces: [commit]
-tier: 0
 visibility: visible
 cluster: git-commit
 skills: [git-workflow]

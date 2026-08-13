@@ -2,7 +2,6 @@
 model_tier: medium
 name: chat-history-import
 pack: memory
-tier: 2
 visibility: internal
 cluster: chat-history
 sub: import

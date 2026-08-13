@@ -2,7 +2,6 @@
 model_tier: high
 name: analyze-reference-repo
 pack: analysis-workbench
-tier: 2
 visibility: internal
 sub: reference-repo
 cluster: analyze

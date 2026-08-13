@@ -3,7 +3,6 @@ model_tier: medium
 name: git-commit-in-chunks
 pack: git
 replaces: [commit-in-chunks, commit:in-chunks]
-tier: 2
 visibility: internal
 cluster: git-commit
 sub: in-chunks

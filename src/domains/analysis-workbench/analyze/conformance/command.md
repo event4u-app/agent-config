@@ -2,7 +2,6 @@
 model_tier: high
 name: analyze-conformance
 pack: analysis-workbench
-tier: 2
 visibility: internal
 sub: conformance
 cluster: analyze

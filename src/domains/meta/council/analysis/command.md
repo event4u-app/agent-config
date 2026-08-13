@@ -2,7 +2,6 @@
 model_tier: high
 name: council-analysis
 pack: product-reasoning
-tier: 2
 visibility: internal
 cluster: council
 sub: analysis

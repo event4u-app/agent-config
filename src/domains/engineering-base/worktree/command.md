@@ -4,7 +4,6 @@ name: worktree
 disable-model-invocation: true
 argument-hint: "[create|status|verify|cleanup] [args]"
 pack: engineering-base
-tier: 2
 visibility: internal
 description: Worktree orchestrator — routes to create, status, verify, cleanup
 cluster: worktree

@@ -2,7 +2,6 @@
 model_tier: medium
 name: sync-agent-settings
 pack: meta
-tier: 2
 visibility: internal
 sub: agent-settings
 cluster: sync

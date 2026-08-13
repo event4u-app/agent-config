@@ -2,7 +2,6 @@
 model_tier: medium
 name: roadmap-process-phase
 pack: product-basic
-tier: 2
 visibility: internal
 cluster: roadmap
 sub: process-phase

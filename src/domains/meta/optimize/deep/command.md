@@ -2,7 +2,6 @@
 model_tier: high
 name: optimize-deep
 pack: meta
-tier: 2
 visibility: internal
 sub: deep
 cluster: optimize

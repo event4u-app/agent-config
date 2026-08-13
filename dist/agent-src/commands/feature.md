@@ -7,7 +7,6 @@ pack: engineering-base
 intent: "Feature-workflow dispatcher — explore, plan, refactor, roadmap, dev"
 routes_to: [feature-explore, feature-plan, feature-refactor, feature-roadmap, feature-dev]
 replaces: []
-tier: 1
 visibility: advanced
 description: Feature orchestrator — routes to explore, plan, refactor, roadmap, dev
 cluster: feature
