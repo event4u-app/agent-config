@@ -1128,6 +1128,77 @@ ${frontmatterExtra}---
         expect(hasCode(result, 'missing_runtime_requires')).toBe(true);
     });
 
+    // road-to-skill-ecosystem-executable-payloads Phase 5 — the action-reference
+    // split. `safety_mode: strict` is a frontmatter claim about a mutating path;
+    // these pin that the body has to honour it one of the two allowed ways.
+    function makeStrictSkill(bodyExtra: string): string {
+        const content = `---
+name: test-strict
+description: "Use when testing the strict-mode write gate."
+source: project
+execution:
+  type: assisted
+  handler: shell
+  safety_mode: strict
+---
+
+# test-strict
+
+## When to use
+
+* Testing the strict-mode write gate
+
+## Procedure
+
+1. Inspect current state
+2. Apply change
+3. Validate result
+${bodyExtra}
+## Output format
+
+1. Result
+2. Next step
+
+## Gotchas
+
+* Missing validation causes weak skills
+
+## Do NOT
+
+* Do NOT skip validation
+`;
+        // `src/skills/`, not the retired container the neighbouring helper still
+        // writes into: `src/` is the source of truth (ADR-051), and
+        // `check_no_new_legacy_path` refuses NEW references to the dead path —
+        // including one written in a comment, which is how this line got its
+        // second draft.
+        return writeFile('src/skills/test-strict/SKILL.md', content);
+    }
+
+    it('strict mode with no write-path gate in the body warns', () => {
+        const result = lint_file(makeStrictSkill(''));
+        expect(hasCode(result, 'strict_mode_missing_write_gate')).toBe(true);
+    });
+
+    it('strict mode with an inline precondition passes', () => {
+        const result = lint_file(
+            makeStrictSkill('\nShow the command with `--dry-run` first; the user confirms before any live run.\n'),
+        );
+        expect(hasCode(result, 'strict_mode_missing_write_gate')).toBe(false);
+    });
+
+    it('strict mode that defers the write path to references/ passes', () => {
+        const result = lint_file(
+            makeStrictSkill('\nThis skill does not define the mutating workflow — see [apply](references/apply.md).\n'),
+        );
+        expect(hasCode(result, 'strict_mode_missing_write_gate')).toBe(false);
+    });
+
+    it('a skill without strict mode is not asked for a write gate', () => {
+        const result = lint_file(makeSkill('execution:\n  type: assisted\n  handler: shell\n'));
+        expect(hasCode(result, 'strict_mode_missing_write_gate')).toBe(false);
+    });
+
     it('invalid handler fails', () => {
         const result = lint_file(makeSkill('execution:\n  type: manual\n  handler: bash\n'));
         expect(hasCode(result, 'invalid_execution_handler')).toBe(true);

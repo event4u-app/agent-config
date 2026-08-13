@@ -432,7 +432,23 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
       ubuntu twin over the ceiling, hiding the breach rather than fixing it.
       The ADR names the missing evidence a real demotion needs — per-OS failure
       attribution, which nothing in the tree records — as its `review_trigger`.
+      **The blocker below still said 222 on both of its clauses; corrected
+      2026-08-13, and the second one was not cosmetic.** Its resolution clause
+      read *"ADR-222 is accepted and the ruleset's `required_status_checks` list
+      matches …"* — and `ADR-222-blocker-handover-at-reply-close.md` exists and is
+      merged. So a reader checking the first leg got a **true** answer from an
+      unrelated document, and could have closed a maintainer-owned blocker while
+      the ruleset edit it exists for never happened. The leg is dropped rather
+      than renumbered to 223: 4.1 already records ADR-223 as *accepted*, so an
+      "ADR is accepted" condition would be satisfied on the day it was written
+      and would gate nothing. What is left is exactly the ruleset edit. The other
+      clause called ADR-223 "a proposal"; it is an accepted record that no
+      demotion is supportable, which is close to its opposite.
       <!-- verify: ls docs/decisions/ | grep ADR-223 -->
+      <!-- verify: the `## Blockers` section carries no ADR-222 —
+           sed -n '/^## Blockers/,$p' agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md | grep -c 'ADR-222'  # expect 0.
+           Step 4.1 itself mentions ADR-222 several times on purpose: it is the
+           document that took the number, and naming it is the whole explanation. -->
 - [~] **4.2 Demote the macOS leg and/or the `npm audit` PR gate.** Deferred behind
       `blocker: required-check-set-change`. Touches ruleset `17749383` plus
       `docs/contracts/branch-protection-policy.md`, `ci-green-floor.md` and
@@ -463,16 +479,18 @@ worse than none — it reads as a live control.
 - **Status:** open
 - **Owner:** maintainer
 - **Blocks:** step 4.2 only. Phases 0-3 and step 4.1 are not blocked — they change
-  no required check, and ADR-222 is a proposal, not an enforcement change.
+  no required check, and ADR-223 records a decision, not an enforcement change.
+
 - **What to do:** decide whether the macOS leg and the `npm audit` PR gate stay in
   the required set, then apply the ruleset edit. Ruleset `17749383` currently
   requires exactly one check, `Sync + Generate Tools Consistency`
   (`docs/contracts/branch-protection-policy.md:59`); the write path is documented
   at `branch-protection-policy.md:158`.
-- **Resolved when:** ADR-222 is accepted and the ruleset's
-  `required_status_checks` list matches the matrix in
-  `branch-protection-policy.md`, with `ci-green-floor.md` and
-  `release-pr-gating.md` updated in the same change.
+- **Resolved when:** the ruleset's `required_status_checks` list matches the
+  matrix in `branch-protection-policy.md`, with `ci-green-floor.md` and
+  `release-pr-gating.md` updated in the same change. (Both clauses corrected
+  2026-08-13 — see 4.1 for what was wrong and why the ADR leg is gone.)
+
 
 ### blocker: merge-queue-enablement
 - **Status:** open

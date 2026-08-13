@@ -279,7 +279,23 @@ binds. Only a third detector is missing, and the soak stays.
       measurement, not with an omission.** Its stated precondition is met — 3.1
       shipped the field — but the field has **zero producers** today: the
       `--template` skeleton offers it empty, and no envelope in the tree carries
-      an entry. A tenth `pre_tool_use` concern pays latency on every tool call
+      an entry.
+      **Re-probed 2026-08-13 — stale in the letter, intact in the substance, and
+      the distinction is what keeps the step blocked.** One non-empty producer now
+      exists (`agents/runtime/state/recycle-envelope.json`, a real
+      `capsule_version: 3` main-session envelope), so "no envelope carries an
+      entry" is no longer literally true. It changes nothing, for two reasons the
+      guard would hit immediately. The file is **gitignored** (`.gitignore:162`,
+      `/agents/runtime/`), so it is local runtime state rather than a tree fact a
+      gate can count on. And both of its entries are **prose sentences naming
+      files**, not path refs — while the field's own validator budget
+      (`subagent_capsule.ts:599`) and its test fixture
+      (`session_recycle.test.ts:293`, `['src/generated/api.ts', '../other-worktree/']`)
+      treat it as path refs. A path-matching guard shipped today would match
+      **zero** of the entries that exist. So the premise to re-measure is not "does
+      any envelope carry the field" — it is "does any envelope carry an entry a
+      path guard could match", and that count is still 0.
+      A tenth `pre_tool_use` concern pays latency on every tool call
       (this step says so itself) to read a list that is currently always absent,
       which is the build-the-mechanism-before-measuring-the-premise pattern this
       package has recorded three times. Sequence it after the first envelopes

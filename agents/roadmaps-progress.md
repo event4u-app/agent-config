@@ -9,7 +9,7 @@
 **282 / 410 steps done · 69%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   70%
+████████████████████████████░░░░░░░░░░░░   69%
 ```
 
 ## Open roadmaps
@@ -102,7 +102,7 @@
     when the experimental flag is on in a real environment,
     run the 5.1 spike, then bind the concerns with the same fail-open
     discipline as the #1223 set.
-  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts. - **Probed 2026-08-09:** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is unset on this host — condition unchanged, 5.4 stays open.
+  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts. - **Probed 2026-08-09:** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is unset on this host — condition unchanged, 5.4 stays open. - **Re-probed 2026-08-13:** still unset (`env | grep -i EXPERIMENTAL` returns nothing). Four days, no change. Recorded rather than left silent because the absence of a dated line is indistinguishable from nobody having looked — but the repetition is also the finding: this blocker does not clear by waiting on this host, so 5.4's realistic paths are an upstream flag flip or the "teams leave the experimental state" branch already named in the resolution clause.
 - **cross-vendor-worker-slices** (owner: maintainer) — blocks routing ordinary work slices to second-vendor CLI workers (huge-context analysis, independence-critical review — Source G shape)
   - **What to do:**
     the drafts cited a direction-policy artefact that does not
@@ -275,14 +275,14 @@ _1 blocker resolved._
 <a id="blockers-road-to-inbox-harvest-2026-08-b-ci-economy"></a>
 **Blockers**
 
-- **required-check-set-change** (owner: maintainer) — blocks step 4.2 only. Phases 0-3 and step 4.1 are not blocked — they change no required check, and ADR-222 is a proposal, not an enforcement change.
+- **required-check-set-change** (owner: maintainer) — blocks step 4.2 only. Phases 0-3 and step 4.1 are not blocked — they change no required check, and ADR-223 records a decision, not an enforcement change.
   - **What to do:**
     decide whether the macOS leg and the `npm audit` PR gate stay in
     the required set, then apply the ruleset edit. Ruleset `17749383` currently
     requires exactly one check, `Sync + Generate Tools Consistency`
     (`docs/contracts/branch-protection-policy.md:59`); the write path is documented
     at `branch-protection-policy.md:158`.
-  - **Resolved when:** ADR-222 is accepted and the ruleset's `required_status_checks` list matches the matrix in `branch-protection-policy.md`, with `ci-green-floor.md` and `release-pr-gating.md` updated in the same change.
+  - **Resolved when:** the ruleset's `required_status_checks` list matches the matrix in `branch-protection-policy.md`, with `ci-green-floor.md` and `release-pr-gating.md` updated in the same change. (Both clauses corrected 2026-08-13 — see 4.1 for what was wrong and why the ADR leg is gone.)
 - **merge-queue-enablement** (owner: maintainer) — blocks step 4.3 only. Nothing else here depends on a merge queue.
   - **What to do:**
     decide whether to enable a GitHub merge queue for `main` — a
@@ -351,6 +351,15 @@ _1 blocker resolved._
   - **What to do:**
     after 2.4 ships, wait for the first `rate_missing` row in
     `agents/cost-tracking/sessions.jsonl` and record its actual shape.
+    **Probed 2026-08-13 — the wait is longer than "no flagged row yet", and the
+    reason is worth recording so the next probe does not read a false near-miss.**
+    `agents/cost-tracking/` does not exist, in this worktree or in the main
+    checkout, so the ledger has **no rows at all** — not zero *flagged* rows. Every
+    `rate_missing` occurrence in the tree is producer code (`src/scripts/cost/track.mjs:250-251`),
+    its consumer (`src/scripts/cost_summary.ts`), the contract
+    (`docs/contracts/cost-summary-schema.md:123-137`), or this roadmap's own prose.
+    The precondition for observing a flagged row is therefore that `track.mjs` runs
+    at all and creates the ledger — a step upstream of the one this blocker waits on.
   - **Resolved when:** at least one real `rate_missing` row exists and its field set is written down, so a backfill pass can be built against an observed shape rather than a guessed one.
 
 ### [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md)

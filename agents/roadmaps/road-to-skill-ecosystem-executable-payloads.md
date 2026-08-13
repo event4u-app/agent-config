@@ -251,6 +251,23 @@ is nothing to benchmark before that.
   reference file behind a precondition; add a linter nudge for skills carrying
   `execution.safety_mode: strict`.
   `verify:` `skill-writing` carries the section and the nudge fires on a fixture.
+  **DELIVERABLE SHIPPED 2026-08-13; the box is held open on the Iron-Law-3
+  disposition, not on missing work.** `skill-writing` § Action-reference split
+  states the two allowed shapes (gate inline / defer to `references/`), and
+  `skill_linter` emits `strict_mode_missing_write_gate` (warning) when a strict
+  skill's body carries neither — pinned by four fixtures in
+  `tests/scripts/skill_linter.test.ts`. The tree's one strict skill
+  (`react-shadcn-ui`) passes unchanged, so the nudge ships without a ratchet
+  regression. Flipping this box drives `count_open` to 0 against 15 `[~]` items
+  and `roadmap:progress-check` then exits 1 — **measured, not assumed**. The
+  disposition of those 15 is a user decision that Iron Law 3 reserves
+  (`roadmap-management § 4b`: spawn follow-up / restore / cancel); most of them
+  read as *blocked* rather than *deferred* by their own text, so a restore to
+  `[ ]` is the likely shape. Flip this the moment that call is made.
+  <!-- verify: ./scripts-run src/scripts/skill_linter src/skills/react-shadcn-ui/SKILL.md -->
+  <!-- verify: grep -n 'Action-reference split' src/skills/skill-writing/SKILL.md -->
+  <!-- verify: grep -n 'strict_mode_missing_write_gate' src/scripts/skill_linter.ts -->
+
 - [~] **Trigger-density sweep — parked, not dropped.** Moving activation
   vocabulary into router `triggers` would be measured by a lint delta over a file
   no host reads at runtime (`rule-router.md:27`). Reopen only if a runtime router
