@@ -6,10 +6,10 @@
 
 ## Overall
 
-**294 / 487 steps done · 60%**
+**303 / 486 steps done · 62%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   60%
+█████████████████████████░░░░░░░░░░░░░░░   62%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -61,7 +61,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 27 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 1 | 4 | 15 | 1 | [2](#blockers-road-to-skill-ecosystem-executable-payloads) | ████████░░ 80% |
 | 28 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 | 29 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
-| 30 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 18 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 30 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 8 | 9 | 1 | 0 | 0 | █████░░░░░ 53% |
 | 31 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 19 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
 | 32 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 33 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
@@ -904,15 +904,15 @@ _1 blocker resolved._
 
 ### [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md)
 
-**Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation** — 0 / 18 done (0%)
+**Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation** — 9 / 17 done (53%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Measure — reproduce ad-hoc, census the screenshot tools | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | One data-basis ladder, written where the agent reads, engine-independent | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Measure — reproduce ad-hoc, census the screenshot tools | ✅ done | 0 | 2 | 1 | 0 | 100% |
+| 2 | One data-basis ladder, written where the agent reads, engine-independent | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 3 | The deterministic carrier — a source-first gate on screenshot tools | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | The browser handover — extraction into files, inside the lock | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Interop precedence — a provided artifact outranks generative tooling | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 5 | Interop precedence — a provided artifact outranks generative tooling | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 6 | Close the loop — re-measure ad-hoc, decide the gated follow-ups | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md)
