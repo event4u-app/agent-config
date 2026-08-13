@@ -16,7 +16,7 @@ complexity: structural
 > `persist_grounding` is at `decision_engine.ts:688` and `--persist` at
 > `ground.ts:203`, and the corpus drift is real (`motion.csv`,
 > `google-fonts.csv` and the three dials are all still absent). Verdict table in
-> [`road-to-august-program`](archive/road-to-august-program.md) § Verification at adoption.
+> [`road-to-august-program`](road-to-august-program.md) § Verification at adoption.
 > Program sequencing: **Phase 3 is the first scheduled outcome of the upstream
 > watchlist** (X5), not a one-off; **Phase 4 Step 2 is written once, in
 > `road-to-source-first-frontend` Phase 4** (X4).
@@ -270,7 +270,7 @@ Per-command invocation telemetry does not exist and both surrogates are rejected
 in `audit_command_surface.ts:587`, so zero-invocations and zero-measurement were
 the same reading and the falsifier would have retired a working surface on a
 missing counter. Replaced, on the AI-council decision recorded in
-[`design-system-blockers-council`](../evidence/analysis/design-system-blockers-council.md),
+[`design-system-blockers-council`](../../evidence/analysis/design-system-blockers-council.md),
 with a signal that exists:
 
 > At each release-review walk the maintainer reads the `skill-usage:collect`
@@ -307,7 +307,7 @@ watchlist's scope is "everything we pin upstream", not just host issues.
       and **eleven** content-drifted. Its second named file is the one ADR-061
       §8 rejected by name. Resolved by AI council on a maintainer delegation —
       see the blocker below and
-      [`design-system-blockers-council`](../evidence/analysis/design-system-blockers-council.md).
+      [`design-system-blockers-council`](../../evidence/analysis/design-system-blockers-council.md).
       **Executed as the council decided: `motion.csv` only, no pin bump.**)*
       Re-pin the vendored corpus to upstream `97eb2a20`: bring
       `motion.csv` (16 GSAP presets) and `google-fonts.csv` into
@@ -372,13 +372,41 @@ watchlist's scope is "everything we pin upstream", not just host issues.
       **The no-flag contract is the load-bearing part and is pinned:** a run
       without dials carries none of `dials` / `motion` / `spacing_scale` and its
       top-level keys are unchanged, so the pre-dial behaviour is byte-identical.
+      **That claim was also corrected by the review** — it was originally
+      asserted while every test exercised `resolve_dial` in isolation and none
+      called `ground()`, which is a different statement and would have held even
+      if `ground()` emitted the keys unconditionally. Six tests now call the
+      real `ground()`.
+      **And the dials reached no reader.** `_render_markdown` was never extended,
+      so the whole payload existed only under `--json` while the default text
+      output and the persisted `MASTER.md` — both of which come through that
+      function — dropped it, making `--density` (whose only output is
+      `spacing_scale`) fully inert wherever a human actually reads the result.
+      That is the "defined but not wired" class this very phase says it deferred
+      Phase 3 to avoid. All three now render in both paths, and the flags are
+      documented in `/design-system:generate` and `corpus-grounding/SKILL.md`,
+      where they previously appeared in no surface at all.
       Three re-derivations rather than a port, recorded in
       `provenance/borrows.jsonl`: the dials enter `ground()` as an optional
       parameter (upstream threads them through a `generate()` this tree does not
-      have); variance **prepends** to the rule's corpus-grounded priority
-      keywords instead of replacing the list, so a caller preference cannot
-      silently override grounded evidence; and a missing `gsap` domain or an
-      empty tier emits an `evidence_gap` rather than a silent empty block.
+      have); variance biases **selection** and never **retrieval**; and a missing
+      `gsap` domain or an empty tier emits an `evidence_gap` rather than a silent
+      empty block.
+      **Corrected after the R2 completion review, which measured the variance
+      claim and found it false.** The first version prepended the dial's
+      keywords to the priority list outright and called that "biasing". It was
+      not: `priority.slice(0, 2)` augments the retrieval query, so the rule's own
+      corpus-grounded keywords were pushed out of retrieval entirely, and five
+      dial keywords then outscored two rule keywords in the match — `--variance 1`
+      flipped a `Liquid Glass` pick the rule itself had made. The dial did not
+      bias the evidence, it replaced it, and nothing said so. Worse, that false
+      sentence had been written into `provenance/borrows.jsonl`, where it is a
+      falsified compliance record rather than a stale comment. Now: the rule's
+      keywords alone augment the query (retrieval is provably unchanged — a test
+      asserts the same rows come back with and without the dial), a separate
+      selection list carries the dial only for choosing among those rows, and a
+      changed pick is **reported in `evidence_gap`** naming both candidates. A
+      preference may win; it may not win quietly.
 - [x] **Step 3:** One regression fixture per dial tier boundary, mirroring
       upstream's `DIAL_TIERS`, so the next upstream refresh diffs against
       pinned expectations instead of memory.
@@ -489,7 +517,7 @@ refuses a git worktree as an untrusted directory. Better than a solo call by the
 implementing agent, which is why it was routed; not the convergence a council
 verdict normally implies. Full record, including the member's own strongest
 counter-argument against its verdict:
-[`design-system-blockers-council`](../evidence/analysis/design-system-blockers-council.md).
+[`design-system-blockers-council`](../../evidence/analysis/design-system-blockers-council.md).
 
 ### blocker: no-command-invocation-telemetry
 
@@ -564,12 +592,15 @@ states both, so a head-only count is not read as cluster-wide usage.
 
 ## Phase 5: Measure
 
-- [x] **Step 1:** Count `/design-system` invocations and adapter runs per
+- [-] **Step 1:** Count `/design-system` invocations and adapter runs per
       release window (the command telemetry the estate already records for
       clusters); publish alongside the Phase-2 falsifier's threshold.
-      **Closed 2026-08-13 by amending the falsifier, not by building a counter —
-      AI-council decision on a maintainer delegation.** The step's premise is
-      false and the instrument it names does not exist. `audit_command_surface.ts:587` states it outright:
+      **Cancelled 2026-08-13, not done — its deliverable was refuted rather than
+      delivered, and `[x]` claimed otherwise.** The step's premise is false and
+      the instrument it names does not exist, so there is no count to publish.
+      What replaced it: the Phase-2 falsifier now names a signal that does exist
+      (AI-council decision on a maintainer delegation). `[-]` matches the
+      treatment Phase 4 Step 2 already uses for the same outcome shape. `audit_command_surface.ts:587` states it outright:
       *"Per-command invocation telemetry is **not** available."* The two
       surrogates it considered are both rejected in that same note — filesystem
       mtime (`task sync` rewrites every file) and git history (dominated by a
