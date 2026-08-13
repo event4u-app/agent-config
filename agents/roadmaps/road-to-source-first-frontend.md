@@ -28,7 +28,7 @@ complexity: structural
 > **Re-verified at adoption against tip `1432c7a45`** (81 commits past the pin).
 > Every W-claim held; three anchors drifted and one sibling-state claim was wrong
 > — corrected inline below, verdict table in
-> [`road-to-august-program`](road-to-august-program.md) § Verification at adoption.
+> [`road-to-august-program`](archive/road-to-august-program.md) § Verification at adoption.
 > Program sequencing: **Phase 1 Step 2 runs in Wave 0** (it is spike-shaped and
 > X2 needs its result beside the `agent_id` spike), and **Phase 3 depends on
 > `road-to-subagent-lifecycle-integrity` Phase 0 Step 4 + Phase 4** (X2).
