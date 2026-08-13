@@ -1,10 +1,10 @@
 # Findings: guard-input-prompt-binding
-<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: badef7e30a64595add6560692e3911f2b9ab01fc55a8ca59891aa273f22fc202 | diff: 7fcc236ebb5ef73b45e00f539deb1faac7314643 | reviewer: r2-fresh-subagent-guard-input-prompt-binding | prompt_hash: 9442b32523a1113bf8bf6976a597218317d3ac5bf7e0d91e6fafd4cf593d4846 -->
+<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: fd58c016d754b9e82da9d0ba3bbd5016d71e0a5b77be8d9e3d241b0a501fc8c9 | diff: 6b6eed24eaf29592ee588d54e50af48447d7e5a2 | reviewer: r2-fresh-subagent-guard-input-prompt-binding | prompt_hash: 9442b32523a1113bf8bf6976a597218317d3ac5bf7e0d91e6fafd4cf593d4846 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 7fcc236ebb5ef73b45e00f539deb1faac7314643
-  scope_hash: badef7e30a64595add6560692e3911f2b9ab01fc55a8ca59891aa273f22fc202
+  diff_sha: 6b6eed24eaf29592ee588d54e50af48447d7e5a2
+  scope_hash: fd58c016d754b9e82da9d0ba3bbd5016d71e0a5b77be8d9e3d241b0a501fc8c9
   roadmap: none
   roadmap_hash: none
   ac_hash: none
@@ -46,6 +46,21 @@ silently by the re-bind:
   generated dashboard, resolved by regenerating rather than hand-merging. Named
   for completeness — content that reached `main` through its own review is not
   this artefact's to re-certify.
+- `0d70e7a67` and `6b6eed24e` — **the largest unreviewed addition, and it is
+  code.** `check_ci_local_parity` built its CI-side gate set by regexing raw
+  workflow text for `task <name>`, comments included; workflow comments say
+  `task ci` while stating no workflow invokes it, so its local-only count was 0
+  by construction. The repair strips comments before extraction, publishes the
+  now-truthful count (167 of 247 local gates), records it as a shrink-only
+  baseline, and corrects a pre-existing test assertion that had pinned the
+  defect. Six new assertions. **The reviewer saw none of this** — it was found
+  after the review closed, on the operator's instruction to investigate whether
+  the trunk-red gates should have been possible.
+  An AI council was asked to adjudicate the disposition and was unreachable
+  (anthropic quota, openai trusted-directory refusal, two attempts), so the
+  baseline is a staged choice recorded as such in the roadmap, not a verdict.
+  This is the one entry in this list a reviewer should treat as genuinely
+  un-reviewed code rather than as bookkeeping.
 - `746f3fd38` — re-measures the gate-script denominator 255 → 257 after the first
   merge brought two further gate scripts. A one-token change to a comment in
   `gate-coverage.yml`, made because leaving a knowingly stale number in the
@@ -53,11 +68,15 @@ silently by the re-bind:
   already records twice. Post-review, and small enough to name rather than
   re-review.
 
-Two facts make the disclosure the proportionate response rather than a second
-review round: the addition is documentation with no executable surface — a
-roadmap and a generated dashboard, zero code paths — and the § 2.5 ordering that
-matters (findings recorded before the fixes that answer them) is intact and
-unaffected by it.
+**Revised 2026-08-13 — that reasoning no longer covers this artefact.** It was
+written when the only addition was a roadmap and a regenerated dashboard, and it
+argued from the addition having no executable surface. `0d70e7a67` changed a
+gate's extraction logic and a ratchet baseline, which is executable and is not
+bookkeeping. The honest position is therefore narrower than the original claim:
+the § 2.5 ordering is still intact, and rows 1-12 still bind to the code they
+were written against, but **this artefact does not certify the parity repair**.
+A reviewer who wants that half reviewed needs a fresh round; nothing here should
+be read as standing in for one.
 
 A reader who needs the code half of this change reviewed has it: rows 1-12 bind
 to it, and every fix ref points at a commit inside the reviewed lineage. A reader
