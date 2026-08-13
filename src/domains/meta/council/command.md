@@ -35,7 +35,7 @@ sub-command swaps the mode-specific addendum.
 
 1. Resolve the target + capture the original ask.
 2. Check the council is configured + price table fresh.
-3. Cost confirmation (ALWAYS ASK for billable members).
+3. Spend bound (ask only when a billable member has no ceiling — ADR-230).
 4. Run the CLI.
 5. Render the report (5 / 5a / 5b — render → critical lens → user options).
 6. Hard floor — text only.
