@@ -48,30 +48,34 @@ work and makes it impossible to tell what you broke.
 
 ## Procedure
 
-### 0. Pre-flight — read `worktrees.mode`
+### 0. Pre-flight — instruction-only, no setting to read
 
-Before anything else, read `worktrees.mode` from `.agent-settings.yml`
-(default: `ask`). The setting is a **mechanical layer on top of**
-`scope-control`'s permission gate — it narrows, never widens.
+```
+NEVER CREATE A WORKTREE THE USER DID NOT ASK FOR.
+THERE IS NO SETTING. THE ONLY TRIGGER IS THE USER SAYING SO IN THE CHAT.
+```
 
-| `worktrees.mode` | Behaviour |
+There is nothing to read: `worktrees.mode` was deleted (ADR-229). Creation
+is instruction-only and hardcoded, so the decision is never the agent's.
+
+| Situation | Behaviour |
 |---|---|
-| `ask` | Status quo. Continue to step 1; `scope-control` permission gate applies for every worktree creation. |
-| `on` | Standing permission. Skip the per-creation permission ask; continue to step 1. Iron-Law gates (ignore-check, clean baseline) still apply. |
-| `off` | No autonomous worktree creation. **Refuse** unless the user explicitly asked **this turn** for a worktree ("do this in a worktree", "use mode 6", "spawn a worktree for X"). |
+| The user asked for a worktree **in the chat** — "do this in a worktree", "use mode 6", "spawn a worktree for X", or the same in another language | Continue to step 1. No permission question: the request **is** the permission. |
+| Anything else, however well the shape would fit | **Do not create one.** Continue in place. |
 
-**Off, no explicit request** → stop. Tell the user the setting is `off`,
-suggest the in-place alternative (`subagent-orchestration` mode 3
-`do-in-steps`, or just stay on the current branch). Do not re-ask on
-the same task.
+**No explicit request** → do not ask, do not offer, do not mention it. Use
+the in-place path (`subagent-orchestration` mode 3 `do-in-steps`, or just
+stay on the current branch) and say nothing about worktrees. Proposing one
+unprompted is the failure this rule exists to stop — it puts a decision the
+user did not raise in front of them, and the answer is nearly always no.
 
-**Off, with explicit request this turn** → acknowledge once
-("`worktrees.mode` is `off`; running this on your explicit request
-for this task") and continue to step 1. The override is for this one
-task — it does not flip the setting.
+This suppresses **unprompted** usage only. The tool stays fully available
+the moment the user wants it, with no confirmation loop in the way: an
+explicit request goes straight to step 1.
 
-The setting only suppresses **unprompted** usage. The tool stays
-available when the user wants it.
+The Iron-Law gates below are unchanged and still run on every
+explicitly-requested worktree — ignore-safety check (step 3) and clean
+baseline (step 5). Instruction-only removes the *choice*, never the checks.
 
 ### 1. Inspect current state
 

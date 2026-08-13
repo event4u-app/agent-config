@@ -26,7 +26,7 @@ Thin orchestration — mechanics live in the skills; do not restate them.
 ### 1. Gate + create
 
 Run [`using-git-worktrees`](../../../skills/using-git-worktrees/SKILL.md)
-in full: `worktrees.mode` pre-flight, existing-worktree inspection,
+in full: instruction-only pre-flight, existing-worktree inspection,
 directory convention, ignore-safety check, worktree creation, the
 [§ 4b seeding allow/deny list](../../../skills/using-git-worktrees/SKILL.md#4b-seed-the-worktree--allow--deny-list),
 dependency install + clean baseline. Its Iron Law (no worktree without
@@ -61,5 +61,7 @@ name it as the suggested next action — suggest, never auto-run.
 ### Rules
 
 - **Do NOT commit or push.**
-- Worktree creation stays permission-gated per `scope-control` unless
-  `worktrees.mode: on` grants standing permission (skill § 0).
+- Worktree creation is instruction-only (ADR-229). Invoking this command
+  **is** the explicit request, so the skill's § 0 pre-flight passes and no
+  further permission question is raised. Nothing here creates a worktree
+  the user did not ask for.

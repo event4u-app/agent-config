@@ -77,12 +77,16 @@ conservative default (`""`, `false`, `false`), so absent is indistinguishable
 from *no* and never from *yes*.
 
 **Class C carrying an `ask` value in its own enum** — a runtime question whose
-answer dies with the run: `worktrees.mode` (**ships** as `ask`), plus
-`tokens.rich_skills`, `subagents.adversarial_council`, `decision_engine.on_block`
-(which can be set to `ask` by a human but do not ship that way). Always-on
-orchestration (road-to-always-on-orchestration Phase 1) deleted
-`subagents.auto` and `subagents.budget_routing` — the layer no longer carries a
-setting for this protocol to route.
+answer dies with the run: `tokens.rich_skills`,
+`subagents.adversarial_council`, `decision_engine.on_block`. **None of them
+ships as `ask`** — a human sets it, so the whole class is opt-in and no shipped
+default routes a question through this protocol at all.
+
+Two deletions got the list here. Always-on orchestration
+(road-to-always-on-orchestration Phase 1) removed `subagents.auto` and
+`subagents.budget_routing`. ADR-229 removed `worktrees.mode`, which was the last
+key that *shipped* as `ask` — worktree creation is instruction-only now, so
+there is no setting and nothing to ask about.
 
 ## The budget
 
@@ -153,9 +157,10 @@ by `settings:set` and only *displayed* by the GUI.
 - Class A — resolves to its default, never asked.
 - Class C **not** set to `ask` — no question; a change is a human edit.
 - Already decided on any resolution layer, or the run completes without it.
-- **The `ask` routes to a permission gate.** `worktrees.mode: ask` means
-  `scope-control`'s per-creation gate applies — a permission ask about an
-  *action*, which that rule owns; a storage line there would store nothing.
+- **The `ask` routes to a permission gate** — a permission ask about an
+  *action*, which `scope-control` owns; a storage line there would store
+  nothing. `worktrees.mode: ask` was the worked example until ADR-229 deleted
+  the key; the carve-out is kept because the shape recurs, not the key.
 - **The `ask` is code, not agent-carried.** `decision_engine.on_block: ask` is a
   TTY prompt in `work_engine/hooks/builtin/decision_gate.ts`.
 
