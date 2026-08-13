@@ -135,10 +135,10 @@ than less: the gate can now read the PR's real `baseRefName` from the forge, so
 a stacked or release-line PR is measured against the branch it will actually
 merge into instead of against the repo default.
 
-`task preflight` (and therefore the pre-push hook) runs the same gate, so a push
-that goes out through the hook is covered without a separate step. Run it by
-hand when you push with the hook bypassed, or when you are about to open the PR
-some time after the last push — that gap is exactly where a base moves unseen.
+Where the project wires this gate into its pre-push chain, a push that goes out
+through the hook is covered without a separate step. Run it by hand when you push
+with the hook bypassed, or when you are about to open the PR some time after the
+last push — that gap is exactly where a base moves unseen.
 
 ### 1c. PR-gate — archive completed roadmaps (MANDATORY)
 
