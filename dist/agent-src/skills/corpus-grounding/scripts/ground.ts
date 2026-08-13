@@ -125,6 +125,28 @@ interface Args {
     persist?: string | null;
     project_name?: string | null;
     page?: string | null;
+    /** Optional 1-10 design dials; `null` means "not passed", never a default. */
+    variance?: number | null;
+    motion?: number | null;
+    density?: number | null;
+}
+
+/**
+ * Parse a 1-10 dial value.
+ *
+ * A non-numeric value is rejected rather than clamped: `--motion high` is a
+ * mistake the caller can fix, and silently reading it as "no dial" would run
+ * the whole grounding pass and return a result that quietly ignored the flag.
+ * Out-of-RANGE numbers are a different case and are clamped downstream — 11 is
+ * a typo with an obvious intent, `high` is not a number at all.
+ */
+function _dial(flag: string, raw: string): number {
+    const n = Number(raw);
+    if (!Number.isFinite(n)) {
+        process.stderr.write(`argument ${flag}: expected an integer 1-10, got '${raw}'\n`);
+        process.exit(2);
+    }
+    return Math.trunc(n);
 }
 
 /**
@@ -212,6 +234,18 @@ function _parseArgs(argv: string[]): Args {
             args.page = eat();
         } else if (a.startsWith('--page=')) {
             args.page = a.slice('--page='.length);
+        } else if (a === '--variance') {
+            args.variance = _dial('--variance', eat());
+        } else if (a.startsWith('--variance=')) {
+            args.variance = _dial('--variance', a.slice('--variance='.length));
+        } else if (a === '--motion') {
+            args.motion = _dial('--motion', eat());
+        } else if (a.startsWith('--motion=')) {
+            args.motion = _dial('--motion', a.slice('--motion='.length));
+        } else if (a === '--density') {
+            args.density = _dial('--density', eat());
+        } else if (a.startsWith('--density=')) {
+            args.density = _dial('--density', a.slice('--density='.length));
         } else {
             positionals.push(a);
         }
@@ -293,7 +327,11 @@ export async function main(argv: string[] | null = null): Promise<number> {
 
         // ground
         const context = args.context ? (JSON.parse(args.context) as Record<string, unknown>) : {};
-        const grounded = await run_ground(manifest, args.query as string, context);
+        const grounded = await run_ground(manifest, args.query as string, context, {
+            variance: args.variance ?? null,
+            motion: args.motion ?? null,
+            density: args.density ?? null,
+        });
         if (args.persist) {
             const info = persist_grounding(
                 grounded,
