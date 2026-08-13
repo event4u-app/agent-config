@@ -176,7 +176,12 @@ describe('the key lists are DERIVED from the class contract, not snapshotted', (
     it('every key the rule routes to the non-persisting path is class C', () => {
         const cKeys = new Set(keysOfClass('C'));
         const text = ruleText();
-        const cSection = /Class C carrying an `ask` value[\s\S]*?do not ship that way\)\./.exec(text)?.[0];
+        // The terminator matters: the paragraph AFTER this one names
+        // `subagents.auto` / `subagents.budget_routing`, which always-on
+        // orchestration deleted. Running past it would assert two dead keys
+        // are class C and fail for a reason that has nothing to do with the
+        // routing claim under test.
+        const cSection = /Class C carrying an `ask` value[\s\S]*?the whole class became opt-in\./.exec(text)?.[0];
         expect(cSection, 'the C-ask section must be findable').toBeTruthy();
         const named = (cSection ?? '').match(/`([a-z_]+\.[a-z_]+)`/g) ?? [];
         expect(named.length).toBeGreaterThan(0);
@@ -186,12 +191,18 @@ describe('the key lists are DERIVED from the class contract, not snapshotted', (
         }
     });
 
-    it('the one key the rule calls ship-as-ask really does default to ask', () => {
+    it('no C-ask key ships as ask, exactly as the rule now claims', () => {
         // The rule distinguishes "ships as ask" from "can be set to ask". That
         // distinction is a claim about the template and must be checked, or it
         // becomes a comfortable fiction after the next default flip.
-        for (const key of ['worktrees.mode']) {
-            expect(declaredDefault(key), `${key} default cell`).toMatch(/ask/);
+        //
+        // ADR-229 flipped the last one (`worktrees.mode`: ask -> on), so the
+        // claim inverted: the rule now says NONE of them ships as ask. The
+        // assertion inverts with it and stays load-bearing in the direction
+        // that can actually drift now — a default flipped back to `ask` while
+        // the rule keeps saying no key ships that way.
+        for (const key of ['worktrees.mode', 'tokens.rich_skills', 'subagents.adversarial_council', 'decision_engine.on_block']) {
+            expect(declaredDefault(key), `${key} default cell`).not.toMatch(/ask/);
         }
     });
 
