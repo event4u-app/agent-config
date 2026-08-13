@@ -152,8 +152,26 @@ proceed with removal · keep deferred.
 
 ## Phase 3 — External soak confirmation
 
-- [ ] Confirm the Phase-1 deprecation signal has soaked; record the
+- [x] Confirm the Phase-1 deprecation signal has soaked; record the
       zero-consumer evidence that closes the unknown-consumer hard stop.
+
+      **CLOSED 2026-08-13 by maintainer waiver, and the waiver is what closes it
+      — not new evidence.** Asked directly, the maintainer answered *"sofortige
+      Entfernung. wir haben lange genug gewartet."* Two acts in one: the concrete
+      `sunset` that ADR-137 had reduced the trigger set to is now SET
+      (`build_discovery_manifest.ts`, `sunset: '2026-08-13'`), and the
+      wait-for-it-to-pass leg is expressly waived rather than satisfied.
+      Recording it as a waiver matters, because the alternative reading — that
+      the soak produced clearing evidence — would be false. It did not. The
+      Phase-1 announcement has been live since 2026-07, no breakage was reported,
+      and this roadmap already states why that is weak: known adoption is ~7
+      stars / 1 fork, so quiet is close to uninformative about unknown consumers.
+      The maintainer weighed that and judged the window sufficient. That is a
+      legitimate call and squarely theirs; it is not a measurement, and nothing
+      here should later be cited as one.
+      The unknown-consumer hard stop is therefore **accepted, not disproved** —
+      with the reversibility note below (a manifest schema patch, under an hour)
+      as the standing mitigation.
       <!-- deferred 2026-07-28 — the soak evidence EXISTS (Phase 1) but it does
       NOT close the hard stop, and no autonomous run can make it close. The
       re-open trigger set is unsatisfiable as written:
@@ -289,7 +307,7 @@ date — that is the one act left to the maintainer.
 ## Blockers
 
 ### blocker: trigger-set-amendment
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 3 (soak confirmation) and Phase 4 (the external removal
   half). Everything agent-executable is done: the audit, the internal
@@ -306,6 +324,12 @@ date — that is the one act left to the maintainer.
   `tier` deprecation entry AND that date has passed with no external breakage
   reported — at which point Phase 3 records the confirmation and Phase 4's
   external half becomes executable.
+  **Discharged 2026-08-13.** First leg: `sunset: '2026-08-13'` is set in
+  `build_discovery_manifest.ts`. Second leg: **waived, not met** — the maintainer
+  answered "sofortige Entfernung, wir haben lange genug gewartet", which is the
+  owner exercising the call the council reserved for them ("the date itself is
+  not an agent decision"). Phase 3 records the waiver as a waiver. Phase 4's
+  external half is now unblocked and is the only thing left in this roadmap.
 
 ## Out-of-scope findings (2026-07-28, surfaced not fixed)
 
