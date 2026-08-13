@@ -39,6 +39,26 @@ complexity: structural
 > document is rejected as duplicate or unfounded, that is the null to record
 > there.
 
+> **Execution status (2026-08-13).** Phases 1, 2, 4 Step 3 and 5 are closed —
+> 11 of 18 steps. The remaining seven are **blocked on named dependencies, not
+> on effort**, and each is recorded at its own phase:
+>
+> - **Phase 3** (`source-first-gate`) — its verifier exemption keys on a payload
+>   field that `road-to-subagent-lifecycle-integrity` Phase 0 Step 4 spikes and
+>   its Phase 4 binds; both are open. The roadmap already calls this "a hard
+>   dependency, not a nicety": shipping the gate first means warning the one
+>   actor doing it right. Step 2 additionally cites the program X3 activation
+>   policy note, which does not exist yet.
+> - **Phase 4 Steps 1–2** (browser handover) — cite the import adapter and the
+>   persistence discipline owned by `road-to-design-system-onramp` Phases 1–2,
+>   neither of which exists. Writing the section now would define a second
+>   artifact shape, which program X4 exists to prevent.
+> - **Phase 6** — a post-landing re-measurement window. Its instrument now
+>   exists and **has no population in this repo** (0 UI-write turns over 40
+>   sessions); it needs a consumer repo with real UI writes to mean anything.
+>   That is a change to what Phase 6 can promise, and it is recorded in the
+>   evidence file rather than discovered at re-measurement time.
+
 ## Context / What is verified
 
 **W1 — The principle exists as prose, in one skill, with no carrier.**
@@ -160,25 +180,54 @@ discipline, and a pre-delivery checklist — harvest verdicts in Phase 4/5.)
 
 ## Phase 1: Measure — reproduce ad-hoc, census the screenshot tools
 
-- [ ] **Step 1:** Run the existing `daf-port-baseline` artifact
+- [x] **Step 1:** Run the existing `daf-port-baseline` artifact
       (`tests/design-artifacts/fixtures/design.html`) through an **ad-hoc**
       session (no engine) with "setz das 1:1 um". Record: was the artifact
       file read before any write; was a screenshot/vision path used; did the
       three handlers and the keyframe survive; was any loss stated. This is
       the ad-hoc twin of the honesty roadmap's Phase-0 measurement, which
       only ever ran the engine path.
-- [ ] **Step 2:** Census the screenshot-capable tool names actually present
+      **Done 2026-08-13, run TWICE (with and without a trigger phrase), result
+      INCONCLUSIVE with a named cause** —
+      [`source-first-frontend-phase1`](../evidence/analysis/source-first-frontend-phase1.md).
+      Both arms read the source, kept 3/3 handlers and 1/1 keyframe, and stated
+      their deviations. The screenshot dimension **could not vary**: Step 2
+      measured zero browser-capable capture tools on the host. The falsifier's
+      literal condition is met and is deliberately **not** honoured — a null
+      produced by a setting that excludes the failure mode is not a null.
+- [x] **Step 2:** Census the screenshot-capable tool names actually present
       across the supported hosts (Claude Code browser tools, Playwright MCP
       `browser_take_screenshot`, Chrome MCP equivalents, `Bash` screencapture
       shapes) — the matcher list for Phase 3 comes from this census, never
       from memory.
-- [ ] **Step 3:** Extend the `ui-route-nudge` consultation latch definition so
+      **Done 2026-08-13 for THIS host only, and it returns one entry:**
+      `screencapture` (`/usr/sbin/screencapture`) via `Bash`. Playwright MCP,
+      Chrome-DevTools-MCP and `mcp__claude-in-chrome__*` are all absent from the
+      session tool surface; the package registry carries only read-only github
+      and jira. The one present tool photographs the display, not a page.
+      A Phase-3 matcher built from this census alone would watch the wrong
+      surface — the multi-host half of this step stays open by host limitation.
+- [x] **Step 3:** Extend the `ui-route-nudge` consultation latch definition so
       that reading a provided artifact file (the handover classes
       `design-fidelity` already routes) counts as consultation — capture-only
       in this phase; publish the "artifact read before first UI write" rate
       alongside the existing consultation-rate instrument, same event stream
       (the shared-population discipline `ui_route_nudge_hook.ts:20-27`
       already states).
+      **Done 2026-08-13, with one deliberate departure from the step's letter.**
+      The step says "counts as consultation"; this phase's own rollback line
+      says `nothing behavioural`. Folding the read into the `consulted` latch
+      would **silence the nudge** for any session that opened a `design.html` —
+      a behaviour change — so the two cannot both be honoured by one field. The
+      read is captured in its own fields (`artifactRead`,
+      `artifactReadBeforeFirstUiWrite`), `decide()` never branches on them, and
+      a test asserts the warn outcome is identical with and without a read.
+      Whether an artifact read *should* latch consultation is a real question
+      and now a separate decision — it wants this rate to answer it.
+      **The rate has no population in this repo:** 0 UI-write turns over 40
+      sessions, because a governed instruction suite has almost no UI surface
+      for the predicate to match. Consequence for Phase 6 recorded in the
+      evidence file.
 
 **Falsifier.** Step 1 shows the ad-hoc run reading the source, adopting the
 markup, and reporting losses without any of the changes below → the symptom
@@ -189,7 +238,7 @@ hand the operator report back with the measurement.
 
 ## Phase 2: One data-basis ladder, written where the agent reads, engine-independent
 
-- [ ] **Step 1:** Add § *Data-basis ladder* to
+- [x] **Step 1:** Add § *Data-basis ladder* to
       `docs/guidelines/design-fidelity-mechanics.md` *(proposal)*, one table,
       cited by both `fe-design` and `design-review`: **(1) provided source
       files/archive → (2) repository/source read via any channel, including
@@ -199,13 +248,13 @@ hand the operator report back with the measurement.
       dynamically, never as the data basis while a higher rung is reachable.**
       Analyzing/improving the source stays explicitly allowed — the ladder
       governs where data comes from, not whether defects may be fixed.
-- [ ] **Step 2:** Fix the W2 contradiction in
+- [x] **Step 2:** Fix the W2 contradiction in
       `design-review/references/verification-automation.md:30-39`: the
       mockup-to-code section branches on artifact kind — *code artifact →
       read the code, screenshot for after-the-fact visual diff only; image
       artifact → current workflow.* One near-miss note that an HTML file
       opened in a browser is still a code artifact.
-- [ ] **Step 3:** Add the adopt-the-code duty (W4) to the mechanics guideline
+- [x] **Step 3:** Add the adopt-the-code duty (W4) to the mechanics guideline
       and the `design-fidelity` Iron-Law block *(proposal)*: where the
       artifact's markup/CSS/JS is stack-compatible, adaptation of that code is
       the default; a from-scratch re-derivation is a **deviation** requiring
@@ -224,7 +273,7 @@ hand the operator report back with the measurement.
       through a design handover (a vendored component, a licensed template)
       stays under `code-provenance` in full. Both rules gain the cross-link in
       the same change, so the boundary is readable from either side.
-- [ ] **Step 4:** De-gate the coverage duty for ad-hoc runs: a step in
+- [x] **Step 4:** De-gate the coverage duty for ad-hoc runs: a step in
       `fe-design` § Ad-hoc mode — inventory the artifact's interactions,
       keyframes, and script includes **before building**; every item lands in
       exactly one bucket (adopted verbatim / translated / dropped-with-stated-
@@ -232,9 +281,18 @@ hand the operator report back with the measurement.
       two surfaces cannot drift. Prose duty first; a deterministic ad-hoc
       checker is a gated follow-up, opened only if Phase 6 re-measurement
       shows the prose alone did not move the number.
-- [ ] **Step 5:** One fixture per new duty (`daf-adhoc-port-coverage`,
+- [x] **Step 5:** One fixture per new duty (`daf-adhoc-port-coverage`,
       `daf-source-over-screenshot`, `daf-rederive-is-deviation`), wired into
       the `daf-*` set.
+      **Done 2026-08-13.** All three carry their measured-or-skipped state
+      rather than an assumed pass: `daf-adhoc-port-coverage` PASS on both arms
+      with the setting stated, `daf-source-over-screenshot` **SKIPPED —
+      primitive absent** (no capture tool on the host, per the § Notes
+      skip-with-caveat rule), `daf-rederive-is-deviation` unmeasured because
+      both arms were same-stack and its question is cross-stack.
+      Also repaired in passing: `daf-handoff-bundle` was cited by no scanned
+      surface, so `lint-eval-fixture-citations` was **red before this branch**;
+      one citation line in the guideline fixes it.
 
 **Falsifier.** Owned per-duty by Phase 6's re-measurement.
 
@@ -307,11 +365,18 @@ concern logic.
       X4). This section owns the **producer sentence**: the documented easy path
       is a connected extractor MCP, with the manual Chrome-DevTools-MCP channel
       as fallback.
-- [ ] **Step 3:** Extend `design-fidelity` triggers with `lovable.dev`,
+- [x] **Step 3:** Extend `design-fidelity` triggers with `lovable.dev`,
       `v0.dev`, `bolt.new` URL phrases — each with its near-miss row in
       `ROUTING_MATRIX` per the rule's own extension discipline
       (`design-fidelity.md` § Routing). A bare-domain chat mention stays
       silent, same as the `claude.ai` precedent.
+      **Done 2026-08-13** — three `https://<host>/` phrases (the protocol
+      prefix is what separates a pasted link from a tool mention), plus
+      `near-bare-host-mention` and a **deliberately red**
+      `known-gap-protocolless-share-link` row. That gap is named rather than
+      closed: closing it needs either a bare-host keyword, which the near-miss
+      row proves over-broad, or a guessed per-vendor share path — and a trigger
+      built on a guessed path is worse than a stated gap. Matrix 21 → 26 green.
 
 **Falsifier.** The extraction-artifact path goes unused across two release
 cycles of real handovers (telemetry from Phase 1 Step 3) → the browser
@@ -322,19 +387,23 @@ existing handover prose and drop the persistence step.
 
 ## Phase 5: Interop precedence — a provided artifact outranks generative tooling
 
-- [ ] **Step 1:** One clause in the mechanics § Provided-artifact precedence
+- [x] **Step 1:** One clause in the mechanics § Provided-artifact precedence
       *(proposal)*: the precedence chain gains a fourth member — *provided
       artifact > anti-slop > house taste **> any generative design-system
       tooling, first- or third-party***. A co-installed skill instructing
       "always generate a design system first" does not apply to a port; its
       output may inform decisions the artifact leaves open, nothing more.
-- [ ] **Step 2:** Harvest verdicts on **Source C** recorded where
+- [x] **Step 2:** Harvest verdicts on **Source C** recorded where
       harvest verdicts live: **adopt** (persist + retrieval order,
       skip-if-exists, checklist-as-predelivery-gate — consumed in Phase 4),
       **reject** (generative-first default for the port case, `--design-system`
       REQUIRED step), **parked** (BM25 CSV search as a corpus-grounding
       alternative — overlaps the existing 16-stack corpus; compare only if
       the corpus roadmap asks).
+      **Done 2026-08-13** — `agents/settings/contexts/design-corpus-upstream-harvest.md`,
+      anonymised per `source-confidentiality` with the real identity left where
+      licence attribution belongs. The park carries an explicit un-park
+      condition so it is a decision rather than a backlog entry.
 
 **Falsifier.** None needed beyond Phase 6 — the clause is one sentence; if it
 never binds, it costs nothing.
