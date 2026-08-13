@@ -2,7 +2,7 @@
   "upstream": {
     "sha": "b7e3af80f6e331f6fb456667b82b12cade7c9d35",
     "repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
-    "last_checked": "2026-06-07",
+    "last_checked": "2026-08-13",
     "last_eval": {
       "date": "2026-06-16",
       "model": "claude-sonnet-4-5",
