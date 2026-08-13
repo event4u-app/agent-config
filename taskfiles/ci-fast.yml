@@ -31,10 +31,19 @@ tasks:
       # 2026-08-08 — a branch cut from a fetch at the start of a ninety-minute
       # run pushed into a `main` that had moved twice, one of the merges
       # shipping the same roadmap phase the branch was implementing. Every other
-      # gate here inspects local content and none of them can see that. One
-      # `git ls-remote`, ~0.3s, and it asks the SERVER rather than the tracking
-      # ref — comparing against the local ref would reproduce the stale reading
-      # that caused the incident. No-op in CI, where the forge owns mergeability.
+      # gate here inspects local content and none of them can see that. It asks
+      # the SERVER rather than the tracking ref — comparing against the local ref
+      # would reproduce the stale reading that caused the incident.
+      # Two round trips now, not one: a `gh pr list` to resolve WHICH base this
+      # branch's open PR actually targets, then the `git ls-remote` against it.
+      # The second was always here (~0.3s); the first was added because a
+      # hardcoded `main` reports a true-but-irrelevant green for any branch whose
+      # PR targets a release line or a parent PR. Budget note: that is ~1-2s
+      # against the 25s pre_push_budget_seconds ceiling in
+      # src/config/ci-local-parity.yml, and it degrades rather than fails —
+      # no `gh`, no auth, no GitHub remote falls back to the repo default and
+      # SAYS SO, so an offline push is never blocked by the resolution step.
+      # No-op in CI, where the forge owns mergeability.
       - ./scripts-run src/scripts/check_branch_freshness --quiet
       # FIRST among the content gates, and the order is the whole point: this
       # gate reads the host rule
