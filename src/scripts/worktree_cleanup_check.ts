@@ -34,6 +34,7 @@ import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { read_live_records, register_dir } from './_lib/session_register.js';
 
 export interface CheckResult {
     allowed: boolean;
@@ -304,8 +305,20 @@ function isAncestor(repoPath: string, branch: string, trunk: string): boolean {
     }
 }
 
-export function isStandardLocation(repoPath: string, worktreePath: string): boolean {
-    const rel = path.relative(canonical(repoPath), canonical(worktreePath));
+/**
+ * `basePath` MUST be the main worktree, never the invoking repo path.
+ *
+ * Measured 2026-08-13, and the failure is total rather than partial: called with
+ * a linked worktree as the base, every sibling worktree resolves to `..` and the
+ * safe set collapses to empty. Same binary, same repo, same minute — from inside
+ * `.claude/worktrees/<branch>`: 304 registered, safe 0, 278 "non-standard"; from
+ * the main checkout: safe 181, 81 non-standard. A maintainer who ran the
+ * inventory from a worktree would read "nothing to clean" and conclude the
+ * estate was fine, which is the worst shape a cleanup tool can fail in — it
+ * fails silently, and toward inaction.
+ */
+export function isStandardLocation(basePath: string, worktreePath: string): boolean {
+    const rel = path.relative(canonical(basePath), canonical(worktreePath));
     if (rel.startsWith('..') || path.isAbsolute(rel)) return false;
     return STANDARD_WORKTREE_DIRS.some(
         (dir) => rel === dir || rel.startsWith(`${dir}${path.sep}`),
@@ -348,16 +361,70 @@ function lastGitActivity(worktreePath: string): Date | null {
  * Classify every worktree. `now` is injectable so the live-window boundary is
  * testable rather than wall-clock dependent.
  */
-export function buildInventory(repoPath: string, now: Date = new Date()): Inventory {
+/**
+ * Two conditions the `safe` predicate does NOT carry by default, both off unless
+ * asked for. They exist because an approval can be stricter than the tool, and
+ * silently removing under the looser predicate is the substitution such an
+ * approval is written to prevent.
+ *
+ * `minAgeDays` is a floor on git inactivity, layered ON TOP of the 48-hour live
+ * window rather than replacing it: 48h answers "is someone in it right now", a
+ * 60-day floor answers "is this abandoned". Different questions.
+ *
+ * `excludeLiveSessions` reads the session register — real records with a real
+ * `worktree` path and a real TTL — instead of inferring occupancy from file
+ * mtime, which this module's own header already rules out as a liveness signal.
+ */
+export interface InventoryOptions {
+    now?: Date;
+    minAgeDays?: number | null;
+    excludeLiveSessions?: boolean;
+}
+
+export function buildInventory(
+    repoPath: string,
+    nowOrOptions: Date | InventoryOptions = new Date(),
+): Inventory {
+    const opts: InventoryOptions =
+        nowOrOptions instanceof Date ? { now: nowOrOptions } : nowOrOptions;
+    const now = opts.now ?? new Date();
+    const minAgeDays = opts.minAgeDays ?? null;
+    const ageCutoff = minAgeDays === null ? null : now.getTime() - minAgeDays * 86400 * 1000;
+    return buildInventoryInner(repoPath, now, ageCutoff, minAgeDays, opts.excludeLiveSessions === true);
+}
+
+function buildInventoryInner(
+    repoPath: string,
+    nowArg: Date,
+    ageCutoff: number | null,
+    minAgeDays: number | null,
+    excludeLiveSessions: boolean,
+): Inventory {
+    const now = nowArg;
     const trunk = resolveTrunk(repoPath);
     const entries = listWorktrees(repoPath);
     const mainPath = canonical(entries.length > 0 ? entries[0]!.path : repoPath);
     const liveCutoff = now.getTime() - LIVE_WINDOW_HOURS * 3600 * 1000;
 
+    // Registered session worktrees, canonicalised so the comparison survives a
+    // symlinked checkout root the same way every other path here does. Empty set
+    // when the option is off, when no register directory exists (the normal
+    // state before any session registers), or when every record has expired.
+    const sessionPaths = new Set<string>();
+    if (excludeLiveSessions) {
+        const dir = register_dir(mainPath);
+        if (dir !== null) {
+            for (const rec of read_live_records(dir, { now })) {
+                sessionPaths.add(canonical(rec.worktree));
+            }
+        }
+    }
+
     const rows: InventoryRow[] = entries.map((e) => {
         const resolved = canonical(e.path);
         const isMain = resolved === mainPath;
-        const standardLocation = isMain ? true : isStandardLocation(repoPath, resolved);
+        // `mainPath`, NOT `repoPath` — see isStandardLocation's contract.
+        const standardLocation = isMain ? true : isStandardLocation(mainPath, resolved);
         const reasons: string[] = [];
 
         if (!fs.existsSync(resolved)) {
@@ -388,6 +455,20 @@ export function buildInventory(repoPath: string, now: Date = new Date()): Invent
         if (isMain) reasons.push('main worktree — cannot be removed');
         if (e.branch === null) {
             reasons.push('detached HEAD — no branch to judge reachability for');
+        }
+        if (sessionPaths.has(resolved)) {
+            reasons.push('a live agent session is registered in this worktree');
+        }
+        if (ageCutoff !== null && (activity === null || activity.getTime() >= ageCutoff)) {
+            // `activity === null` disqualifies rather than passes: an unreadable
+            // git-dir mtime is absence of evidence, and under an explicit
+            // minimum-age floor that has to read as "cannot show it is old
+            // enough", never as "old enough".
+            reasons.push(
+                activity === null
+                    ? `git activity unreadable — cannot prove ${minAgeDays}+ days of inactivity`
+                    : `git activity within the last ${minAgeDays} days`,
+            );
         }
         if (!standardLocation) {
             reasons.push('non-standard location — outside the conventional worktree roots');
@@ -465,7 +546,7 @@ export function removalPlan(inv: Inventory): string[] {
 function usage(): never {
     process.stderr.write(
         'usage: worktree_cleanup_check check <worktree-path> | scope-overlap [repo-path] | ' +
-            'inventory [repo-path] [--json|--plan]\n',
+            'inventory [repo-path] [--json|--plan] [--min-age-days=N] [--exclude-live-sessions]\n',
     );
     process.exit(2);
 }
@@ -509,9 +590,32 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         const rest = argv.slice(1);
         const flags = rest.filter((a) => a.startsWith('--'));
         const positional = rest.filter((a) => !a.startsWith('--'));
-        if (positional.length > 1 || flags.some((f) => f !== '--json' && f !== '--plan')) usage();
+        const KNOWN = ['--json', '--plan', '--exclude-live-sessions'];
+        const ageFlag = flags.find((f) => f.startsWith('--min-age-days='));
+        if (
+            positional.length > 1 ||
+            flags.some((f) => !KNOWN.includes(f) && !f.startsWith('--min-age-days='))
+        ) {
+            usage();
+        }
+        let minAgeDays: number | null = null;
+        if (ageFlag !== undefined) {
+            const raw = ageFlag.slice('--min-age-days='.length);
+            const n = Number(raw);
+            // Refuse rather than silently fall back to null: a typo'd floor that
+            // reads as "no floor" would widen the safe set at exactly the moment
+            // the caller asked to narrow it.
+            if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) {
+                process.stderr.write(`--min-age-days needs a non-negative integer, got '${raw}'\n`);
+                return 2;
+            }
+            minAgeDays = n;
+        }
         const repo = path.resolve(positional[0] ?? '.');
-        const inv = buildInventory(repo);
+        const inv = buildInventory(repo, {
+            minAgeDays,
+            excludeLiveSessions: flags.includes('--exclude-live-sessions'),
+        });
 
         if (flags.includes('--json')) {
             process.stdout.write(`${JSON.stringify(inv, null, 2)}\n`);
