@@ -346,6 +346,19 @@ describe('trunk resolution + location convention', () => {
         // A directory whose name merely starts with a root name is not inside it.
         expect(isStandardLocation(repo, path.join(repo, '.worktrees-old', 'd'))).toBe(false);
     });
+
+    // Regression, measured 2026-08-13: called with a LINKED worktree as the base
+    // instead of the main worktree, every conventional sibling resolves to `..`
+    // and the safe set collapses to empty. On the real repo that read as
+    // "safe 0 of 304" from inside a worktree versus "safe 181" from the main
+    // checkout — a cleanup tool failing silently, toward inaction.
+    it('a conventional worktree is standard against the MAIN worktree, not against a sibling', () => {
+        const wtA = path.join(repo, '.claude', 'worktrees', 'a');
+        const wtB = path.join(repo, '.claude', 'worktrees', 'b');
+        expect(isStandardLocation(repo, wtA)).toBe(true);
+        // The defect: judging sibling `a` from inside sibling `b`.
+        expect(isStandardLocation(wtB, wtA)).toBe(false);
+    });
 });
 
 describe('ownsOverlap glob-prefix semantics', () => {

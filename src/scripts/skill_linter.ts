@@ -254,6 +254,31 @@ const EXTERNAL_EXECUTION_HANDLERS = new Set(['shell', 'php', 'node']);
  * span lines and accept a bare key whose value sits somewhere below it.
  */
 const RUNTIME_REQUIRES_BLOCK_PATTERN = /^runtime_requires:[ \t]*(\{.*)?$/m;
+
+/**
+ * `safety_mode: strict` is a claim made in the frontmatter about a skill whose
+ * execution path may mutate something. Nothing checked that the body honours it,
+ * so the claim could be pure metadata. These patterns recognise the two shapes
+ * the action-reference split allows (`skill-writing` § Action-reference split):
+ * an inline precondition that gates the write, or a deferral of the write-path
+ * steps into the skill's own `references/`.
+ *
+ * Deliberately a warning over a phrase list rather than an error over a required
+ * section: a skill that gates its write path some third way is doing the right
+ * thing, and a hard gate over a corpus of one strict skill would be a gate that
+ * mostly cannot fail — the defect class `road-to-skill-ecosystem-gate-integrity`
+ * exists to remove.
+ */
+const STRICT_WRITE_GATE_PATTERNS = [
+    /--dry-run/i,
+    /\bnever silent[- ]run/i,
+    /\bpropose,? never\b/i,
+    /\bconfirms? before\b/i,
+    /\bexplicit (?:user )?confirmation\b/i,
+    /\basks? (?:the user )?(?:first|before)\b/i,
+];
+const SKILL_REFERENCE_DEFERRAL_PATTERN = /\]\(\.{0,2}\/?references\//;
+
 const VALID_EXECUTION_FIELDS = new Set([
     'type',
     'handler',
@@ -1295,7 +1320,7 @@ function lint_wing4_boundaries(text: string): Issue[] {
  * for an optional parameter — a future caller that forgets it gets a confident
  * error about a declaration it never looked for.
  */
-function lint_execution_metadata(execution: ExecutionBlock, frontmatter: string): Issue[] {
+function lint_execution_metadata(execution: ExecutionBlock, frontmatter: string, body = ''): Issue[] {
     const issues: Issue[] = [];
 
     const execType = execution.type;
@@ -1367,6 +1392,29 @@ function lint_execution_metadata(execution: ExecutionBlock, frontmatter: string)
     if (safetyMode !== undefined && (typeof safetyMode !== 'string' || !VALID_EXECUTION_SAFETY_MODES.has(safetyMode))) {
         issues.push(
             new Issue('error', 'invalid_safety_mode', `Invalid safety_mode '${String(safetyMode)}'; must be 'strict'`),
+        );
+    }
+
+    // road-to-skill-ecosystem-executable-payloads Phase 5 — the action-reference
+    // split. A strict-mode skill either gates its write path inline, or says it
+    // does not define the mutating workflow and defers those steps to its own
+    // `references/` behind a precondition. Neither present → the strict claim is
+    // frontmatter only, and the body reads like an ordinary skill.
+    if (
+        safetyMode === 'strict' &&
+        body !== '' &&
+        !STRICT_WRITE_GATE_PATTERNS.some((p) => p.test(body)) &&
+        !SKILL_REFERENCE_DEFERRAL_PATTERN.test(body)
+    ) {
+        issues.push(
+            new Issue(
+                'warning',
+                'strict_mode_missing_write_gate',
+                "execution.safety_mode is 'strict' but the body names no precondition on the write " +
+                    'path and defers no write-path steps to the skill\'s references/ — state the gate ' +
+                    'inline (propose-then-confirm, --dry-run) or defer it, per skill-writing ' +
+                    '§ Action-reference split',
+            ),
         );
     }
 
@@ -1585,7 +1633,7 @@ export function lint_skill(p: string, text: string, absPath: string | null = nul
 
         const execution = parseExecutionBlock(frontmatter);
         if (execution !== null) {
-            issues.push(...lint_execution_metadata(execution, frontmatter));
+            issues.push(...lint_execution_metadata(execution, frontmatter, text.replace(FRONTMATTER_PATTERN, '')));
         }
 
         const tierMatch = TIER_PATTERN.exec(frontmatter);

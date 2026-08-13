@@ -80,7 +80,7 @@ describe('template_defaults — the layer itself', () => {
         // is read somewhere with its own fallback, and each is a key a sparse
         // settings file legitimately omits.
         for (const key of [
-            'worktrees.mode',
+            'subagents.max_parallel',
             'model.auto_switch',
             'memory.cadence',
             'update_check.enabled',
@@ -177,17 +177,20 @@ describe('template_defaults — the layer itself', () => {
 
 describe('precedence — the layer sits BELOW every real layer', () => {
     it('a project-file value wins over the template default', () => {
+        // The key must be LIVE in the template, or line two below passes
+        // vacuously (undefined !== the written value) and the test certifies
+        // nothing. This used `worktrees.mode` until ADR-229 deleted it.
         const tmp = make_tmp();
         const project = path.join(tmp, '.agent-settings.yml');
-        fs.writeFileSync(project, 'worktrees:\n  mode: "off"\n', 'utf-8');
+        fs.writeFileSync(project, 'design:\n  fidelity_mode: "structural"\n', 'utf-8');
 
         const merged = ags.load_agent_settings({
             project_path: project,
             user_global_path: path.join(tmp, 'no-user.yml'),
         });
 
-        expect(leaf(merged, 'worktrees.mode')).toBe('off');
-        expect(leaf(template_tree(), 'worktrees.mode')).not.toBe('off');
+        expect(leaf(merged, 'design.fidelity_mode')).toBe('structural');
+        expect(leaf(template_tree(), 'design.fidelity_mode')).not.toBe('structural');
     });
 
     it('a whitelisted user-global value wins over the template default', () => {

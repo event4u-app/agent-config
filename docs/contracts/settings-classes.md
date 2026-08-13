@@ -39,9 +39,10 @@ surface without a consumer.
 **It governs writes, not reads.** Every class is readable by everything. A C
 class does not hide a value; it refuses to let a non-human change it.
 
-**It governs writes, not asks.** Four settings ship an `ask` value in their own
-enum (`tokens.rich_skills`, `subagents.adversarial_council`, `worktrees.mode`,
-`decision_engine.on_block`).
+**It governs writes, not asks.** Three settings ship an `ask` value in their own
+enum (`tokens.rich_skills`, `subagents.adversarial_council`,
+`decision_engine.on_block`). It was four until ADR-229 deleted
+`worktrees.mode`.
 Those are C-class here, and that is not a contradiction: the class says who may
 *persist* a new value; the `ask` value says what happens *at runtime* when the
 setting is already set to `ask`. A C-class key set to `ask` still produces a
@@ -141,6 +142,47 @@ larger set; it is the set that passes both halves.
 | `personal.canary_name` | un-inferrable, and answering arms the session-degradation canary; one keypress to accept the prefill | `""` (canary dark) |
 | `memory.learn_on_session_end` | it turns on automatic memory writes at the end of every session — a standing write the user should authorise | `false` |
 
+## Class B is a persistence property, not an enforcement claim
+
+Recorded 2026-08-13, from `road-to-zero-settings` step 3.2 — the step that asked
+each class-B key *"does the action need authorising at all?"*. Two of the three
+answers turned out not to be about the keys.
+
+```
+CLASS B SAYS: MAY BE ASKED ONCE, THEN PERSISTED. IT SAYS NOTHING ABOUT
+WHETHER ANYTHING CAN REFUSE THE ACTION. THE DISPOSITION SAYS THAT.
+A `consent` KEY NEEDS A MECHANISM THAT CAN WITHHOLD, OR AN EXPLICIT
+PROSE-ONLY LABEL. AN `un-inferrable` KEY NEEDS ONLY PERSISTENCE.
+```
+
+The two axes are independent, and reading class B as implying an enforcement
+obligation is what made two non-problems look like problems:
+
+- **`personal.canary_name`** authorises nothing — it holds a nickname used as a
+  liveness marker. It is class B because it cannot be inferred and is worth
+  keeping once answered, and its disposition (`un-inferrable`) already says so.
+  There is no gate to build here and never was.
+- **`personal.open_edited_files`** is a genuine `consent` key with **no mechanism
+  that can refuse the action** — its only reader is prose in
+  `src/skills/file-editor/SKILL.md`. The suite's standing rule is *never claim
+  enforcement you do not have*, and the discharge of that rule is to **declare
+  the limit**, not to delete the user's choice: it is carried as an explicitly
+  prose-only preference. An unenforceable flag that says it is unenforceable is
+  honest; one that presents as a gate is not.
+- **`memory.learn_on_session_end`** is what a consent key looks like when the
+  mechanism exists: `src/scripts/memory_learn_hook.ts` reads it and can withhold
+  the write, and the default is conservative.
+
+Splitting class B into `B-consent` and `B-config` was considered and **not
+taken** — it would churn a contract, a linter and every consumer's mental model
+to express what this paragraph expresses. What the split would have bought is
+the obligation stated above; stating it directly costs one section.
+
+**Consequence for anyone adding a class-B key:** the § B eligibility invariant
+still binds in full. This section adds one question on top of it — *if the
+disposition is `consent`, what can refuse the action?* An answer of "nothing"
+is allowed, and must then be written down as such.
+
 ## The one exception — `emergency.orchestration_halt`
 
 The always-on-orchestration doctrine (subagents, council, team) deletes every
@@ -189,12 +231,15 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 106 |
-| **Total** | **135** |
+| C — guarded | 105 |
+| **Total** | **134** |
 
 The total was 140 until 2026-08-12, when five of the six keys no code path read were
 deleted, minus the one held open (§ The six unread keys, below): one A
-(`telegraph.speak_scope`) and four C.
+(`telegraph.speak_scope`) and four C. It dropped to 134 on 2026-08-13 when
+ADR-229 deleted `worktrees.mode` — a fifth C, and the first deletion in this
+series of a key that WAS read: the doctrine there is that the decision was never
+the agent's to make, not that nothing consulted it.
 
 The total is every leaf in the template, where *leaf* means anything that is not
 a **non-empty** map. An empty map (like the former `subagents.host_capabilities: {}`) is a real
@@ -244,9 +289,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 83 |
 | un-inferrable | 9 |
-| consent | 38 |
+| consent | 37 |
 | policy | 5 |
-| **Total** | **135** |
+| **Total** | **134** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -421,7 +466,6 @@ Rows follow template order, so a diff against the template reads straight down.
 | `subagents.model_ceiling` | C | `""` | session-wide subagent model cap (exported as `CLAUDE_CODE_SUBAGENT_MODEL` by suite-owned CLI spawn wrappers), which is spend and quality | consent |
 | `subagents.max_parallel` | C | `3` | parallelism cap, and therefore a spend rate | consent |
 | `subagents.adversarial_council` | C | `"off"` | governs a paid verification step | consent |
-| `worktrees.mode` | C | `ask` | standing permission for autonomous worktree creation | consent |
 | `ai_team.model` | C | `auto` | names an external model | un-inferrable |
 | `ai_team.allow_delegate` | C | `false` | grants an external tool write access to the repository | consent |
 | `ai_team.max_calls_per_day` | C | `50` | quota cap on a shared budget | consent |

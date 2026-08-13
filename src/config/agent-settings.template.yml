@@ -815,24 +815,21 @@ subagents:
 
 # --- Git worktrees ---
 #
-# Controls how the `using-git-worktrees` skill and `subagent-orchestration`
-# mode 6 (`do-in-worktrees`) behave. Mechanical layer on top of the
-# existing `scope-control` permission gate — narrows, never widens.
-worktrees:
-  # off | on | ask  (default: ask)
-  #
-  # ask = status quo. Skill asks before creating any worktree; mode 6 is
-  #       selectable when the chain shape warrants it. Matches the
-  #       behaviour required by `scope-control` and `autonomous-execution`.
-  # off = no autonomous worktree creation. Skill refuses; mode 6 falls
-  #       back to mode 3 (do-in-steps). Explicit user request in the
-  #       chat ("do this in a worktree", "use mode 6") overrides for
-  #       that single task — the setting suppresses *unprompted* usage,
-  #       not the tool itself.
-  # on  = standing permission. Skill skips the per-creation permission
-  #       ask; mode 6 may be picked without prompting. Iron-Law gates
-  #       (ignore-check, clean baseline) still apply.
-  mode: ask
+# There is no setting. Worktree creation is INSTRUCTION-ONLY (ADR-229):
+# `using-git-worktrees` and `subagent-orchestration` mode 6 (`do-in-worktrees`)
+# create a worktree ONLY when the user asks for one in the chat ("do this in a
+# worktree", "use mode 6"). Unprompted, mode 6 is not selectable and the chain
+# falls back to mode 3 (`do-in-steps`).
+#
+# `worktrees.mode` was DELETED. It offered `ask`/`on`/`off` over a decision that
+# was never the agent's to make: `ask` spent a round trip on every spawn, `on`
+# let the agent start parallel work on its own, and `off` was the behaviour
+# everyone actually wanted — so the setting's only real value was hardcoded and
+# the other two values removed. A leftover key from an older install is ignored
+# with one deprecation line (see `REMOVED_KEYS` in `_lib/agent_settings.ts`).
+#
+# The Iron-Law gates on creation (ignore-safety check, clean baseline) are
+# unchanged and still run on every explicitly-requested worktree.
 
 # --- AI Council (external second-opinion network) ---
 #

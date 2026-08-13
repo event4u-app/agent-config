@@ -795,20 +795,28 @@ function _build(strict: boolean): [JsonObject, JsonObject[]] {
         // command entries above (non-breaking) — this block only ANNOUNCES the
         // deprecation so external manifest consumers can migrate to `visibility`
         // during the soak window. Removal of `tier` is Phase 4 of
-        // road-to-tier-removal (cheaply reversible per ADR-092); `sunset` is
-        // maintainer-owned and stays null until the soak clears.
+        // road-to-tier-removal (cheaply reversible per ADR-092). `sunset` is
+        // maintainer-owned: SET on 2026-08-13, with the soak wait explicitly
+        // waived ("wir haben lange genug gewartet"). ADR-137 had already reduced
+        // the re-open trigger set to this one act — a concrete sunset — after
+        // withdrawing the second trigger as structurally impossible in a
+        // no-runtime package. The date is today rather than a future one because
+        // the waiver IS the decision: the announcement has been live since
+        // Phase 1, and the maintainer judged the window sufficient rather than
+        // starting a new one.
         deprecations: [
             {
                 key: 'tier',
                 scope: 'command',
                 replacement: 'visibility',
                 since: 'ADR-092',
-                sunset: null,
+                sunset: '2026-08-13',
                 note:
                     'Integer command `tier` (0/1/2) is a deprecated back-compat ' +
                     'alias for the named `visibility` field (ADR-090). Read ' +
                     '`visibility`; `tier` is still emitted (non-breaking) but ' +
-                    'scheduled for removal — see road-to-tier-removal.',
+                    'scheduled for removal — see road-to-tier-removal. Sunset set ' +
+                    '2026-08-13; removal lands as one reviewable diff.',
             },
         ],
         generated_at: _nowUtc(),

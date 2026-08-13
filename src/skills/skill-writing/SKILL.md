@@ -672,6 +672,41 @@ This duplicates the rules on purpose, and the duplication is the point: the
 rules are the enforcement, the section is what survives the artifact leaving
 their reach.
 
+## Action-reference split (required pattern, `safety_mode: strict` skills)
+
+`execution.safety_mode: strict` says the skill's execution path may mutate
+something. That is a claim made in the frontmatter, and until the body backs it
+the claim costs nothing: a reader who follows the procedure top to bottom finds
+the mutating step sitting inline with every other step, indistinguishable from a
+read.
+
+A strict skill therefore takes one of exactly two shapes, and says which:
+
+- **Gate it inline.** The mutating step carries its precondition in the same
+  breath — propose the exact command first, `--dry-run` before the live run, the
+  user confirms, verify the effect landed afterwards. The precondition is part of
+  the step, never a general reassurance three sections away.
+- **Defer it.** The SKILL.md states plainly that it **does not define the
+  mutating workflow**, and points the write-path steps at a file under the
+  skill's own `references/`. The pointer is the precondition's home: the
+  reference opens with what must be true before its first step runs.
+
+Deferring is the better shape once the write path has more than a couple of
+steps, and for the reason the split exists at all — the main body stays readable
+as the thing an agent loads to decide *whether* to act, while the steps that
+change something live behind one deliberate extra read. What it must never
+become is a second copy: the reference holds the write path, the SKILL.md holds
+the pointer, and neither restates the other.
+
+`skill_linter` nudges (`strict_mode_missing_write_gate`, warning) when a strict
+skill's body carries neither shape. It is a warning and it matches on prose, so
+treat it as a prompt to check the body rather than a verdict on it — a skill that
+gates its write path some third way is doing the right thing and should say so
+plainly enough that the next reader sees the gate without running the linter.
+
+Read with § Security-constraints above: that section states what the script may
+touch, this one states what must be true before it touches it.
+
 ## Mechanism-teaching section (optional pattern, skills whose subject has one)
 
 A procedure tells the agent what to do in the cases you thought of. A

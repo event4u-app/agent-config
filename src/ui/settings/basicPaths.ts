@@ -47,7 +47,6 @@ export const BASIC_PATHS: ReadonlySet<string> = new Set([
     // Runtime comfort
     'chat_history.enabled',
     'update_check.enabled',
-    'worktrees.mode',
     // Consent
     'legal_review_prep.acknowledged',
 ]);

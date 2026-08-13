@@ -68,11 +68,20 @@ this automatically when invoked via `debate`). The estimate covers
 projection. Surface the projection to the user with a clear note that
 progressive disclosure may stop the debate early.
 
-### 4. Cost confirmation (ALWAYS ASK)
+### 4. Spend bound (ask when a billable member has no ceiling)
 
-Per [`ai-council` skill § cost gate](../../skills/ai-council/SKILL.md),
-always surface the projected total spend and ask for explicit consent
-before invoking. Numbered options:
+Per [`ai-council` skill § Procedure 3](../../skills/ai-council/SKILL.md)
+and ADR-230, surface the projected total spend in every case, and ask
+only when a billable member is in the fan-out AND both
+`cost_budget.max_total_usd` and `daily_limit_usd` are `0`.
+
+A debate multiplies the per-round cost by `N`, so quote the worst case,
+not one round — that is what a ceiling has to cover. The between-rounds
+confirmation gate is unaffected: it is a separate, per-round control and
+it still fires, which is where a debate that turns out expensive gets
+stopped.
+
+Numbered options, when the ask applies:
 
 > The debate is projected to cost **$X.XXXX** ($Y.YYYY × N rounds, worst case).
 >

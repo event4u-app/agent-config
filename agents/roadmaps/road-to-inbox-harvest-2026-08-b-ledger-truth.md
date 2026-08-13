@@ -342,6 +342,15 @@ they are never cross-checked, and **they match model ids by different strategies
   touch this path.
 - **What to do:** after 2.4 ships, wait for the first `rate_missing` row in
   `agents/cost-tracking/sessions.jsonl` and record its actual shape.
+  **Probed 2026-08-13 — the wait is longer than "no flagged row yet", and the
+  reason is worth recording so the next probe does not read a false near-miss.**
+  `agents/cost-tracking/` does not exist, in this worktree or in the main
+  checkout, so the ledger has **no rows at all** — not zero *flagged* rows. Every
+  `rate_missing` occurrence in the tree is producer code (`src/scripts/cost/track.mjs:250-251`),
+  its consumer (`src/scripts/cost_summary.ts`), the contract
+  (`docs/contracts/cost-summary-schema.md:123-137`), or this roadmap's own prose.
+  The precondition for observing a flagged row is therefore that `track.mjs` runs
+  at all and creates the ledger — a step upstream of the one this blocker waits on.
 - **Resolved when:** at least one real `rate_missing` row exists and its field set
   is written down, so a backfill pass can be built against an observed shape
   rather than a guessed one.

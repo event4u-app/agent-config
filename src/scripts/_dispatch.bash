@@ -447,6 +447,9 @@ require_tsx() {
 # command surface (`sync`, `doctor`, `validate`, `upgrade`, …) and its
 # basenames are unique, so the mapping is collision-free. Other exec_ts
 # callers (resolve_script results, the work engine, …) are unaffected.
+#
+# In a DEV tree the bundle is also suppressed when any `src/**/*.ts` is newer
+# than it — see cli_delegate_bundle_is_stale.
 cli_delegate_bundle() {
   local ts_abs="$1"
   case "$ts_abs" in
@@ -457,18 +460,52 @@ cli_delegate_bundle() {
   name="$(basename "${ts_abs%.ts}")"
   local bundle="$PACKAGE_ROOT/dist/cli-delegate/$name.js"
   if [[ -f "$bundle" ]] && command -v node >/dev/null 2>&1; then
+    cli_delegate_bundle_is_stale "$bundle" && return 0
     printf '%s' "$bundle"
   fi
+}
+
+# Is a `dist/cli-delegate/` bundle older than the sources it was built from?
+#
+# Only asked in a DEV tree — `$PACKAGE_ROOT/src` exists there and nowhere else.
+# A consumer install ships no `src/`, so it returns "not stale" without a single
+# stat and the ADR-204 fast path is untouched.
+#
+# The scan covers `src` WHOLE, not `src/scripts`: `_cli/*.ts` imports reach into
+# `src/shared`, `src/install`, `src/server`, `src/agent`, `src/config` and
+# `src/agent-src`, and the defect this guard exists for lived two hops away in
+# `src/scripts/_lib/cc_transcript.ts` — a scan narrowed to the entry point's own
+# directory would have missed it.
+#
+# Cost, measured 2026-08-14 on the local tree (1075 `.ts` files): 78 ms when the
+# bundle is current (the full walk) and ~12 ms when it is not (`-quit` exits at
+# the first newer file). The bundle saves ~290 ms against the tsx path, so the
+# worst case still leaves most of that — and buys the guarantee that a dev-tree
+# edit is never silently ignored in favour of a stale compile.
+cli_delegate_bundle_is_stale() {
+  local bundle="$1"
+  [[ -d "$PACKAGE_ROOT/src" ]] || return 1
+  local newer
+  newer="$(find "$PACKAGE_ROOT/src" -name '*.ts' -newer "$bundle" -print -quit 2>/dev/null)"
+  [[ -n "$newer" ]]
 }
 
 # Run an absolute script path. The argument is an absolute path that may carry
 # a `.py` (legacy) or `.ts` extension; we resolve the `.ts` twin.
 #
-# A precompiled `dist/cli-delegate/` bundle wins when present — the consumer
-# tree ships no tsx (see require_tsx), and the bundle is also ~5.7x faster
-# than the npx path it replaces (p50 56-71 ms vs 346-392 ms, measured
-# 2026-07-31; see docs/decisions/ADR-204). The tsx path stays as the dev-tree
-# route and as the fallback for every non-`_cli` caller.
+# A precompiled `dist/cli-delegate/` bundle wins when present AND not stale —
+# the consumer tree ships no tsx (see require_tsx), and the bundle is also
+# ~5.7x faster than the npx path it replaces (p50 56-71 ms vs 346-392 ms,
+# measured 2026-07-31; see docs/decisions/ADR-204). The tsx path stays as the
+# dev-tree route and as the fallback for every non-`_cli` caller.
+#
+# "Not stale" is the load-bearing qualifier, and it was added because the
+# unqualified version shipped a real failure: a dev-tree `dist/cli-delegate/`
+# built before a `projectStoreSlug` fix kept running the OLD slug, so
+# `agent-config handoff --list` reported "no recent sessions" in any worktree
+# whose path carried a `+`, while the fixed source right next to it listed ten.
+# A compiled copy that silently outranks the source it was built from turns
+# every edit into a coin flip — see cli_delegate_bundle_is_stale.
 #
 # Argv/stdin/stdout/stderr/exit-code pass through unchanged in both routes —
 # mirrors src/scripts/run.ts resolution.

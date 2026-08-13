@@ -38,9 +38,12 @@ import {
 } from '../../src/scripts/_lib/session_register.js';
 import {
     ROADMAP_CLAIM_REL,
+    build_record,
     claim_is_stale,
+    foreign_sessions_block,
     read_claimed_slug,
     roadmap_claim_rel,
+    session_checkout,
 } from '../../src/scripts/session_register_hook.js';
 import {
     branch_name_hits,
@@ -716,5 +719,139 @@ describe('the branch axis — what the register cannot see', () => {
             throw new Error('no git');
         }) as unknown as typeof spawnSync;
         expect(other_worktree_branches(main, thrower)).toEqual([]);
+    });
+});
+
+/**
+ * The context block is emitted for a COLLISION, never for mere co-existence.
+ *
+ * Measured cause: a live peer that collided with nothing still produced a
+ * paragraph about other sessions in every parallel session's context, and a
+ * model handed that paragraph mentions it unprompted and treats it as a reason
+ * to hold work back — although this hook has never blocked anything.
+ */
+describe('foreign_sessions_block — collision-gated, and never a git gate', () => {
+    it('is SILENT when a live peer collides with nothing', () => {
+        const { main, wt } = make_repo();
+        const dir = register_dir(main)!;
+        // Peer sits on `feat/a` in the linked worktree; `main` is on `main` and
+        // neither side claims a roadmap. Live, visible, and irrelevant.
+        write_record(dir, rec({ session_id: 'peer', worktree: wt, branch: 'feat/a' }));
+        expect(foreign_live_records(dir, 'me')).toHaveLength(1);
+
+        expect(foreign_sessions_block(main, 'me')).toBeNull();
+    });
+
+    it('carries the never-gates-git clause whenever it speaks at all', () => {
+        const { wt } = make_repo();
+        const dir = register_dir(wt)!;
+        // Same branch AND same worktree — the one shape that is a real collision.
+        write_record(dir, rec({ session_id: 'peer', worktree: wt, branch: 'feat/a' }));
+
+        const block = foreign_sessions_block(wt, 'me')!;
+        expect(block).toContain('COLLISION');
+        // The clause that closes the gap the model was falling into.
+        expect(block).toContain('are ALWAYS executed');
+        expect(block).toContain('never gates a git operation');
+        // ...and it must not read as a licence to ignore the roadmap STOP.
+        expect(block).toContain('never about shipping work that is already done');
+    });
+
+    it('scopes the branch question to the whole session, not to every turn', () => {
+        const { wt } = make_repo();
+        const dir = register_dir(wt)!;
+        write_record(dir, rec({ session_id: 'peer', worktree: wt, branch: 'feat/a' }));
+
+        const block = foreign_sessions_block(wt, 'me')!;
+        expect(block).toContain('ONCE PER SESSION');
+        expect(block).toContain('Do not re-raise it on later turns');
+    });
+
+    it('says nothing at all when there is no peer', () => {
+        const { main } = make_repo();
+        expect(foreign_sessions_block(main, 'me')).toBeNull();
+    });
+});
+
+describe('the record describes THIS session checkout, not the chdir target', () => {
+    it('prefers the session cwd over workspace_root — the measured defect', () => {
+        const { main, wt } = make_repo();
+        // Exactly the shape hosts produce: the hook is chdir'd to the main
+        // checkout while the session works in a worktree.
+        expect(fs.realpathSync(session_checkout(main, wt))).toBe(fs.realpathSync(wt));
+        const record = build_record(session_checkout(main, wt), 'sess-wt', 'claude', iso_now());
+        expect(record.branch).toBe('feat/a');
+        expect(fs.realpathSync(record.worktree)).toBe(fs.realpathSync(wt));
+    });
+
+    it('without the fix the record claims the main checkout and its branch', () => {
+        const { main } = make_repo();
+        const wrong = build_record(main, 'sess-wt', 'claude', iso_now());
+        expect(wrong.branch).toBe('main');
+    });
+
+    it('falls back to workspace_root when the cwd is absent, empty, or not a directory', () => {
+        const { main } = make_repo();
+        expect(session_checkout(main, null)).toBe(main);
+        expect(session_checkout(main, '   ')).toBe(main);
+        expect(session_checkout(main, path.join(main, 'nope'))).toBe(main);
+        const file = path.join(main, 'a-file');
+        fs.writeFileSync(file, 'x');
+        expect(session_checkout(main, file)).toBe(main);
+    });
+
+    it('refuses a cwd that is not a checkout root — git_dir does not walk up', () => {
+        const { main, wt } = make_repo();
+        const sub = path.join(wt, 'src');
+        fs.mkdirSync(sub, { recursive: true });
+        expect(session_checkout(main, sub)).toBe(main);
+    });
+
+    it('refuses a cwd in a DIFFERENT repository — the register is shared per repo', () => {
+        const { main } = make_repo();
+        const other = path.join(tmp, 'other-repo');
+        fs.mkdirSync(other, { recursive: true });
+        git(other, 'init', '-q', '-b', 'main');
+        expect(session_checkout(main, other)).toBe(main);
+    });
+});
+
+describe('a shared branch NAME is only a collision inside one worktree', () => {
+    function register(dir: string, over: Partial<SessionRecord>): void {
+        fs.mkdirSync(dir, { recursive: true });
+        write_record(dir, rec(over));
+    }
+
+    it('same branch in a DIFFERENT worktree does not halt the session', () => {
+        const { main, wt } = make_repo();
+        const dir = register_dir(wt)!;
+        register(dir, { session_id: 'peer', branch: 'feat/a', worktree: main });
+        const block = foreign_sessions_block(wt, 'mine')!;
+        expect(block).toContain('DIFFERENT');
+        expect(block).not.toContain('COLLISION');
+        // The load-bearing half: nothing in it tells the model to stop or ask.
+        expect(block).not.toContain('Ask the user ONCE');
+        expect(block).toContain('withhold a commit');
+    });
+
+    it('same branch in the SAME worktree still asks before writing', () => {
+        const { wt } = make_repo();
+        const dir = register_dir(wt)!;
+        register(dir, { session_id: 'peer', branch: 'feat/a', worktree: wt });
+        const block = foreign_sessions_block(wt, 'mine')!;
+        expect(block).toContain('COLLISION');
+        expect(block).toContain('THIS SAME worktree');
+        expect(block).toContain('Ask the user ONCE');
+    });
+
+    it('a different branch in the same worktree is neither — and is now silent', () => {
+        const { wt } = make_repo();
+        const dir = register_dir(wt)!;
+        register(dir, { session_id: 'peer', branch: 'feat/other', worktree: wt });
+        // This case previously produced a block that said nothing actionable.
+        // Collision-gating turned "neither" into silence: with no roadmap hit and
+        // no branch hit there is nothing to report, and the paragraph itself was
+        // the thing the model kept narrating.
+        expect(foreign_sessions_block(wt, 'mine')).toBeNull();
     });
 });

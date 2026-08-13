@@ -40,9 +40,26 @@ The register tells you what is going on. It does not stop anything.
 
 Two sessions can claim the same branch in the same millisecond and both succeed.
 Nothing here provides mutual exclusion, and no feature should ever be built on
-it as if it did. When a collision is detected, your session asks you once — join
-the branch, or spawn a separate worktree — and then does what you choose. The
-question is the whole mechanism.
+it as if it did. When two sessions share **one worktree** on one branch — the
+same files, the same index — your session asks you once **per session**: join
+anyway, or spawn a separate worktree. The answer then holds for the rest of that
+session. The question is the whole mechanism.
+
+The same branch NAME in a **different** worktree is not that: separate trees,
+separate index, and the normal shape on this repository. It produces a one-line
+note and no question.
+
+**No collision, no block.** A live peer on a different branch, claiming a
+different roadmap or none, produces nothing at all: the context block is emitted
+only when a roadmap or branch collision actually fires. Mere co-existence is not
+news, and a session told about it tends to mention it unprompted and to treat it
+as a reason to hold work back.
+
+**It never gates a git operation.** The block says so in its own text, because
+that is where the misreading happened rather than in any code — the hook has
+always ended in `return 0` and has never blocked anything. Commit, push and PR
+creation on your explicit instruction always run. A `STOP` in the block is about
+*which work to start*, never about shipping work that is already done.
 
 The one place that does refuse is `sessions:claim`: it will not WRITE a claim on a
 roadmap a live peer already holds, and exits non-zero instead. That is a
