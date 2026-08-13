@@ -17,6 +17,14 @@
  * dependency-free approach. Council 2026-06-28 assumed those libs were present;
  * for THIS package, pattern-based is the correct, frugal adaptation.
  *
+ * WHAT THE NEGATIVE FIXTURES ARE NOT: each rule ships one positive and one
+ * negative fixture, and the suite asserts both exist. That is a PRESENCE guard —
+ * "this regex stays quiet on one clean snippet crafted for it" — and it is NOT a
+ * false-positive RATE. Nineteen green negatives say nothing about how often a
+ * rule fires on clean UI it has never seen. Reading them as an FP measurement is
+ * the mistake that makes the registry look better-evidenced than it is; the rate
+ * is measured against the clean corpus under `internal/bench/corpora/`, not here.
+ *
  * Severity is a REBUTTABLE PRESUMPTION, never a hard block:
  *   P0 — objective failure (none here; those live in lint_design_quality)
  *   P1 — high-confidence tell (e.g. the side-stripe signature)
