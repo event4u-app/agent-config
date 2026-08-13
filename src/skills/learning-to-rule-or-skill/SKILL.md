@@ -31,6 +31,16 @@ Use this skill when:
   a repeated phase pattern via
   [`extract_audit_patterns.ts`](../../../scripts/extract_audit_patterns.ts)
   — the pattern's `count` ≥ 2 already satisfies the repetition gate
+* A comparative analysis handed over a **`### SEED —` block** from its
+  `## Seeds` section ([`/analyze:reference-repo`](../../agent-src/commands/analyze/reference-repo.md)
+  § 6). This is an accepted intake shape: the block already carries the
+  proposed name, kind, target template, one-line description, and the
+  `Extends instead?` answer, so step 4's overlap search starts from a stated
+  candidate rather than a blank page — it does **not** skip that search, and a
+  seed whose `Extends instead?` line is missing is incomplete intake, not a
+  shortcut. The repetition gate is satisfied differently here: the evidence is
+  the anchored ADOPT/ADAPT verdict behind the seed, not a count of ≥ 2
+  occurrences.
 
 Do not use this skill when:
 
