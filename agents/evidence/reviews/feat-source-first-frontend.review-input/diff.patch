@@ -1,0 +1,1628 @@
+diff --git a/agents/evidence/analysis/source-first-frontend-phase1.md b/agents/evidence/analysis/source-first-frontend-phase1.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..15368775b2fd45fdea206e3f4a911e4b4578d9fb
+--- /dev/null
++++ b/agents/evidence/analysis/source-first-frontend-phase1.md
+@@ -0,0 +1,130 @@
++# Source-first frontend — Phase 1 measurement
++
++> `road-to-source-first-frontend` Phase 1, Steps 1 and 2. Measured
++> 2026-08-13 against `origin/main` @ `7ebbd10b5`, host Claude Code on macOS.
++
++## Verdict in one line
++
++**The falsifier did not fire, and it did not fire because the test could not
++reach the symptom — not because the symptom is absent.** Both port arms came
++back faithful, under two conditions that exclude the reported failure by
++construction. Reporting this as "symptom not reproducible" would have been a
++null manufactured by the setup.
++
++## Step 1 — the ad-hoc port, two arms
++
++The roadmap's step names one run. It was run twice, because the first arm's
++prompt contained a `design-fidelity` trigger verbatim (`1:1 um`, shipped in the
++rule's `triggers:` list) and a single arm could not separate "the rule fired"
++from "the agent would have done this anyway".
++
++| Dimension | Arm A (with trigger) | Arm B (no trigger) |
++|---|---|---|
++| Artifact file read before any write | yes | yes |
++| Screenshot / vision path used | **not measurable** — see Step 2 | **not measurable** |
++| 3 handlers survived | yes (3 `addEventListener`) | yes (3) |
++| 1 keyframe survived | yes (1 `@keyframes`) | yes (1) |
++| Losses / deviations stated | yes | yes |
++| Diff vs. the fixture | 11 lines, comment block only | 39 lines, comment block only |
++
++Arm A's prompt: `"Setz das 1:1 um"` + the fixture path.
++Arm B's prompt: `"Ich brauche eine eigenständige HTML-Seite, die so aussieht wie
++diese hier"` + the fixture path — no keyword, phrase, or file pattern from the
++rule's trigger set.
++
++Both arms cited `design.fidelity_mode` → `strict` unprompted. On this host that
++is expected and is **not** evidence the trigger set works: Claude Code loads the
++projected rule tree as project instructions, so `design-fidelity` is in context
++whether or not a trigger matches. **The router is not the delivery channel on
++this host.** Any claim about trigger efficacy needs a host where the router is
++the only channel — this measurement cannot make one.
++
++## Step 2 — the screenshot-tool census, and why it voids the second row
++
++The census is the matcher list Phase 3 was to be built from. Measured, not
++recalled:
++
++| Tool surface | Name | Present on this host |
++|---|---|---|
++| macOS binary via `Bash` | `screencapture` (`/usr/sbin/screencapture`) | **yes** |
++| Playwright MCP | `browser_take_screenshot` | no — not in the session tool surface |
++| Chrome DevTools MCP | (equivalent) | no |
++| Claude-in-Chrome | `mcp__claude-in-chrome__*` | skill present, tools **not connected** |
++| Package tool registry (`agent-config mcp:available`) | github, jira | both read-only, neither captures |
++
++**One capture tool, and it is the one that cannot photograph a web page.**
++`screencapture` grabs the physical display; with no browser process rendering
++the artifact, it has nothing to capture. So the "screenshot instead of source"
++path was not declined by either arm — it was **unreachable**, and a dimension
++that cannot vary is not measured.
++
++The census also carries a finding for the roadmap's own Phase 3: its matcher
++list was to be censused "across the supported hosts". This host contributes
++exactly one entry, and it is a shell binary rather than a browser tool. A
++matcher built from this census alone would watch the wrong surface.
++
++## What the two arms DO establish
++
++- **On a local, path-addressable artifact with no capture tool available, the
++  faithful path is the one taken** — including the interaction inventory the
++  engine normally owns, volunteered by both arms without being asked.
++- **Both arms scoped their own verdict honestly.** Arm A stated it had no render
++  capability and that its result was static-only; Arm B named the two
++  non-changes it deliberately made. That is the `design-review` verdict-scoping
++  duty holding outside the engine.
++
++## What they do NOT establish, stated so the next run does not re-derive it
++
++1. **Nothing about screenshot preference.** No capture tool existed.
++2. **Nothing about the URL / live-page handover class** (W5). Both arms received
++   a local filesystem path — the easiest case, and not the one the operator
++   reported.
++3. **Nothing about trigger efficacy**, because rule delivery on this host does
++   not run through the trigger set.
++
++## Step 3 — the instrument, and the population it does not have
++
++`artifactRead` and `artifactReadBeforeFirstUiWrite` are now captured by
++`ui-route-nudge`, and the rate is published by `report_consultation_rate`
++**on the consultation rate's own denominator** so the two are comparable.
++
++Run live on both stores the same day:
++
++| Store | Sessions scanned | Sessions with a UI write | Artifact-read rate |
++|---|---:|---:|---|
++| this worktree | 2 | 0 | `n/a (0/0)` |
++| the main checkout | 40 (truncated) | 0 | `n/a (0/0)` |
++
++**Zero UI-write turns across 40 sessions, and that is correct rather than
++broken.** This repository is a governed instruction suite: it has almost no
++`*.tsx` / `*.blade.php` / component surface for `isUiPath` to match. The
++instrument works — its unit tests exercise every branch — but **it cannot be
++baselined here**, because the behaviour it measures barely occurs in this repo.
++
++That matters for the roadmap's Phase 6, which plans a before/after on these
++numbers: a re-measurement in this repo would compare `n/a` to `n/a`. The rate
++needs a **consumer** repo with real UI writes to mean anything. Recorded now, so
++Phase 6 is not planned against a denominator that does not exist.
++
++The report also prints `⚠ 0 session(s) with a UI write — below the
++pre-registered floor of 20` rather than a clean zero, which is the store-absent
++vs store-empty distinction the script already defends.
++
++## Consequence for the roadmap
++
++The Phase 1 falsifier reads: *"Step 1 shows the ad-hoc run reading the source,
++adopting the markup, and reporting losses without any of the changes below →
++the symptom is not reproducible on current main; publish the null, park Phases
++2–4."*
++
++Its literal condition is met and it is **not** honoured, for the reason above:
++the arms satisfied it in a setting where the failure mode had no way to occur.
++Phases 2, 4 and 5 therefore proceed. The defects those phases repair are
++verified statically and independently of this measurement — W2's contradicting
++reference, W3's missing ad-hoc coverage duty, W4's absent adopt-the-code duty
++and W5's trigger gap are all readable in the tree today.
++
++**What would actually settle it:** the same two arms on a host with a connected
++browser tool, and a third arm whose artifact arrives as a URL rather than a
++path. Neither is available here; that is a host limitation, recorded rather than
++worked around.
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index a236061543dd98ac0454d45f071282add5d9b271..c85cab356c8e427b9f8f0af1d1b868fea8cab607 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **43** open blockers, **9** need you → `agent-config gates`
++> 35 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **43** open blockers, **9** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**284 / 455 steps done · 62%**
++**295 / 471 steps done · 63%**
+ 
+ ```text
+-█████████████████████████░░░░░░░░░░░░░░░   62%
++█████████████████████████░░░░░░░░░░░░░░░   63%
+ ```
+ 
+ ## ✅ Completed — pending archival
+@@ -24,40 +24,41 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
+ 
+ | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
+ |---|---|---:|---:|---:|---:|---:|---:|---:|---|
+-| 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
+-| 2 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 1 | 18 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ██████████ 95% |
+-| 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
+-| 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 5 | [road-to-corpus-knowledge-skills.md](roadmaps/road-to-corpus-knowledge-skills.md) | 6 | 15 | 11 | 3 | 0 | 1 | [2](#blockers-road-to-corpus-knowledge-skills) | ██░░░░░░░░ 21% |
+-| 6 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
+-| 7 | [road-to-design-system-onramp.md](roadmaps/road-to-design-system-onramp.md) | 5 | 13 | 12 | 0 | 0 | 1 | 0 | ░░░░░░░░░░ 0% |
+-| 8 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
+-| 9 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+-| 10 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
+-| 11 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 2 | 12 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █████████░ 86% |
+-| 12 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
+-| 13 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
+-| 14 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 0 | 12 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | ██████████ 100% |
+-| 15 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
+-| 16 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
+-| 17 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+-| 19 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+-| 20 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+-| 21 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+-| 22 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+-| 23 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 1 | 4 | 15 | 1 | [2](#blockers-road-to-skill-ecosystem-executable-payloads) | ████████░░ 80% |
+-| 24 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+-| 25 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+-| 26 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 18 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 27 | [road-to-structured-guard-input.md](roadmaps/road-to-structured-guard-input.md) | 4 | 9 | 3 | 5 | 0 | 1 | 0 | ██████░░░░ 62% |
+-| 28 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 19 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
+-| 29 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+-| 30 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+-| 31 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+-| 32 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+-| 33 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+-| 34 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 15 | 3 | 12 | 0 | 0 | [1](#blockers-road-to-zero-settings) | ████████░░ 80% |
++| 1 | [road-to-always-loaded-corpus-scoping.md](roadmaps/road-to-always-loaded-corpus-scoping.md) | 4 | 16 | 16 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 2 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
++| 3 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 1 | 18 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ██████████ 95% |
++| 4 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
++| 5 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 6 | [road-to-corpus-knowledge-skills.md](roadmaps/road-to-corpus-knowledge-skills.md) | 6 | 15 | 11 | 3 | 0 | 1 | [2](#blockers-road-to-corpus-knowledge-skills) | ██░░░░░░░░ 21% |
++| 7 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
++| 8 | [road-to-design-system-onramp.md](roadmaps/road-to-design-system-onramp.md) | 5 | 13 | 12 | 0 | 0 | 1 | 0 | ░░░░░░░░░░ 0% |
++| 9 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
++| 10 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
++| 11 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
++| 12 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 2 | 12 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █████████░ 86% |
++| 13 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
++| 14 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
++| 15 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 0 | 12 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | ██████████ 100% |
++| 16 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
++| 17 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
++| 18 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 19 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
++| 20 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
++| 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
++| 22 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
++| 23 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
++| 24 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 1 | 4 | 15 | 1 | [2](#blockers-road-to-skill-ecosystem-executable-payloads) | ████████░░ 80% |
++| 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
++| 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
++| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 7 | 11 | 0 | 0 | 0 | ██████░░░░ 61% |
++| 28 | [road-to-structured-guard-input.md](roadmaps/road-to-structured-guard-input.md) | 4 | 9 | 3 | 5 | 0 | 1 | 0 | ██████░░░░ 62% |
++| 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 19 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
++| 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
++| 31 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
++| 32 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
++| 33 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 34 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
++| 35 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 15 | 3 | 12 | 0 | 0 | [1](#blockers-road-to-zero-settings) | ████████░░ 80% |
+ 
+ ---
+ 
+@@ -796,15 +797,15 @@ _1 blocker resolved._
+ 
+ ### [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md)
+ 
+-**Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation** — 0 / 18 done (0%)
++**Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation** — 11 / 18 done (61%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+-| 1 | Measure — reproduce ad-hoc, census the screenshot tools | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+-| 2 | One data-basis ladder, written where the agent reads, engine-independent | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
++| 1 | Measure — reproduce ad-hoc, census the screenshot tools | ✅ done | 0 | 3 | 0 | 0 | 100% |
++| 2 | One data-basis ladder, written where the agent reads, engine-independent | ✅ done | 0 | 5 | 0 | 0 | 100% |
+ | 3 | The deterministic carrier — a source-first gate on screenshot tools | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+-| 4 | The browser handover — extraction into files, inside the lock | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+-| 5 | Interop precedence — a provided artifact outranks generative tooling | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
++| 4 | The browser handover — extraction into files, inside the lock | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
++| 5 | Interop precedence — a provided artifact outranks generative tooling | ✅ done | 0 | 2 | 0 | 0 | 100% |
+ | 6 | Close the loop — re-measure ad-hoc, decide the gated follow-ups | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+ 
+ ### [road-to-structured-guard-input.md](roadmaps/road-to-structured-guard-input.md)
+diff --git a/agents/roadmaps/road-to-source-first-frontend.md b/agents/roadmaps/road-to-source-first-frontend.md
+index f5f3b3cbd8c70e95337436317ce54b9c53daed81..02a622738b56e2b6a17cbfac33d07cd67d504512 100644
+--- a/agents/roadmaps/road-to-source-first-frontend.md
++++ b/agents/roadmaps/road-to-source-first-frontend.md
+@@ -39,6 +39,26 @@ complexity: structural
+ > document is rejected as duplicate or unfounded, that is the null to record
+ > there.
+ 
++> **Execution status (2026-08-13).** Phases 1, 2, 4 Step 3 and 5 are closed —
++> 11 of 18 steps. The remaining seven are **blocked on named dependencies, not
++> on effort**, and each is recorded at its own phase:
++>
++> - **Phase 3** (`source-first-gate`) — its verifier exemption keys on a payload
++>   field that `road-to-subagent-lifecycle-integrity` Phase 0 Step 4 spikes and
++>   its Phase 4 binds; both are open. The roadmap already calls this "a hard
++>   dependency, not a nicety": shipping the gate first means warning the one
++>   actor doing it right. Step 2 additionally cites the program X3 activation
++>   policy note, which does not exist yet.
++> - **Phase 4 Steps 1–2** (browser handover) — cite the import adapter and the
++>   persistence discipline owned by `road-to-design-system-onramp` Phases 1–2,
++>   neither of which exists. Writing the section now would define a second
++>   artifact shape, which program X4 exists to prevent.
++> - **Phase 6** — a post-landing re-measurement window. Its instrument now
++>   exists and **has no population in this repo** (0 UI-write turns over 40
++>   sessions); it needs a consumer repo with real UI writes to mean anything.
++>   That is a change to what Phase 6 can promise, and it is recorded in the
++>   evidence file rather than discovered at re-measurement time.
++
+ ## Context / What is verified
+ 
+ **W1 — The principle exists as prose, in one skill, with no carrier.**
+@@ -160,25 +180,54 @@ discipline, and a pre-delivery checklist — harvest verdicts in Phase 4/5.)
+ 
+ ## Phase 1: Measure — reproduce ad-hoc, census the screenshot tools
+ 
+-- [ ] **Step 1:** Run the existing `daf-port-baseline` artifact
++- [x] **Step 1:** Run the existing `daf-port-baseline` artifact
+       (`tests/design-artifacts/fixtures/design.html`) through an **ad-hoc**
+       session (no engine) with "setz das 1:1 um". Record: was the artifact
+       file read before any write; was a screenshot/vision path used; did the
+       three handlers and the keyframe survive; was any loss stated. This is
+       the ad-hoc twin of the honesty roadmap's Phase-0 measurement, which
+       only ever ran the engine path.
+-- [ ] **Step 2:** Census the screenshot-capable tool names actually present
++      **Done 2026-08-13, run TWICE (with and without a trigger phrase), result
++      INCONCLUSIVE with a named cause** —
++      [`source-first-frontend-phase1`](../evidence/analysis/source-first-frontend-phase1.md).
++      Both arms read the source, kept 3/3 handlers and 1/1 keyframe, and stated
++      their deviations. The screenshot dimension **could not vary**: Step 2
++      measured zero browser-capable capture tools on the host. The falsifier's
++      literal condition is met and is deliberately **not** honoured — a null
++      produced by a setting that excludes the failure mode is not a null.
++- [x] **Step 2:** Census the screenshot-capable tool names actually present
+       across the supported hosts (Claude Code browser tools, Playwright MCP
+       `browser_take_screenshot`, Chrome MCP equivalents, `Bash` screencapture
+       shapes) — the matcher list for Phase 3 comes from this census, never
+       from memory.
+-- [ ] **Step 3:** Extend the `ui-route-nudge` consultation latch definition so
++      **Done 2026-08-13 for THIS host only, and it returns one entry:**
++      `screencapture` (`/usr/sbin/screencapture`) via `Bash`. Playwright MCP,
++      Chrome-DevTools-MCP and `mcp__claude-in-chrome__*` are all absent from the
++      session tool surface; the package registry carries only read-only github
++      and jira. The one present tool photographs the display, not a page.
++      A Phase-3 matcher built from this census alone would watch the wrong
++      surface — the multi-host half of this step stays open by host limitation.
++- [x] **Step 3:** Extend the `ui-route-nudge` consultation latch definition so
+       that reading a provided artifact file (the handover classes
+       `design-fidelity` already routes) counts as consultation — capture-only
+       in this phase; publish the "artifact read before first UI write" rate
+       alongside the existing consultation-rate instrument, same event stream
+       (the shared-population discipline `ui_route_nudge_hook.ts:20-27`
+       already states).
++      **Done 2026-08-13, with one deliberate departure from the step's letter.**
++      The step says "counts as consultation"; this phase's own rollback line
++      says `nothing behavioural`. Folding the read into the `consulted` latch
++      would **silence the nudge** for any session that opened a `design.html` —
++      a behaviour change — so the two cannot both be honoured by one field. The
++      read is captured in its own fields (`artifactRead`,
++      `artifactReadBeforeFirstUiWrite`), `decide()` never branches on them, and
++      a test asserts the warn outcome is identical with and without a read.
++      Whether an artifact read *should* latch consultation is a real question
++      and now a separate decision — it wants this rate to answer it.
++      **The rate has no population in this repo:** 0 UI-write turns over 40
++      sessions, because a governed instruction suite has almost no UI surface
++      for the predicate to match. Consequence for Phase 6 recorded in the
++      evidence file.
+ 
+ **Falsifier.** Step 1 shows the ad-hoc run reading the source, adopting the
+ markup, and reporting losses without any of the changes below → the symptom
+@@ -189,7 +238,7 @@ hand the operator report back with the measurement.
+ 
+ ## Phase 2: One data-basis ladder, written where the agent reads, engine-independent
+ 
+-- [ ] **Step 1:** Add § *Data-basis ladder* to
++- [x] **Step 1:** Add § *Data-basis ladder* to
+       `docs/guidelines/design-fidelity-mechanics.md` *(proposal)*, one table,
+       cited by both `fe-design` and `design-review`: **(1) provided source
+       files/archive → (2) repository/source read via any channel, including
+@@ -199,13 +248,13 @@ hand the operator report back with the measurement.
+       dynamically, never as the data basis while a higher rung is reachable.**
+       Analyzing/improving the source stays explicitly allowed — the ladder
+       governs where data comes from, not whether defects may be fixed.
+-- [ ] **Step 2:** Fix the W2 contradiction in
++- [x] **Step 2:** Fix the W2 contradiction in
+       `design-review/references/verification-automation.md:30-39`: the
+       mockup-to-code section branches on artifact kind — *code artifact →
+       read the code, screenshot for after-the-fact visual diff only; image
+       artifact → current workflow.* One near-miss note that an HTML file
+       opened in a browser is still a code artifact.
+-- [ ] **Step 3:** Add the adopt-the-code duty (W4) to the mechanics guideline
++- [x] **Step 3:** Add the adopt-the-code duty (W4) to the mechanics guideline
+       and the `design-fidelity` Iron-Law block *(proposal)*: where the
+       artifact's markup/CSS/JS is stack-compatible, adaptation of that code is
+       the default; a from-scratch re-derivation is a **deviation** requiring
+@@ -224,7 +273,7 @@ hand the operator report back with the measurement.
+       through a design handover (a vendored component, a licensed template)
+       stays under `code-provenance` in full. Both rules gain the cross-link in
+       the same change, so the boundary is readable from either side.
+-- [ ] **Step 4:** De-gate the coverage duty for ad-hoc runs: a step in
++- [x] **Step 4:** De-gate the coverage duty for ad-hoc runs: a step in
+       `fe-design` § Ad-hoc mode — inventory the artifact's interactions,
+       keyframes, and script includes **before building**; every item lands in
+       exactly one bucket (adopted verbatim / translated / dropped-with-stated-
+@@ -232,9 +281,18 @@ hand the operator report back with the measurement.
+       two surfaces cannot drift. Prose duty first; a deterministic ad-hoc
+       checker is a gated follow-up, opened only if Phase 6 re-measurement
+       shows the prose alone did not move the number.
+-- [ ] **Step 5:** One fixture per new duty (`daf-adhoc-port-coverage`,
++- [x] **Step 5:** One fixture per new duty (`daf-adhoc-port-coverage`,
+       `daf-source-over-screenshot`, `daf-rederive-is-deviation`), wired into
+       the `daf-*` set.
++      **Done 2026-08-13.** All three carry their measured-or-skipped state
++      rather than an assumed pass: `daf-adhoc-port-coverage` PASS on both arms
++      with the setting stated, `daf-source-over-screenshot` **SKIPPED —
++      primitive absent** (no capture tool on the host, per the § Notes
++      skip-with-caveat rule), `daf-rederive-is-deviation` unmeasured because
++      both arms were same-stack and its question is cross-stack.
++      Also repaired in passing: `daf-handoff-bundle` was cited by no scanned
++      surface, so `lint-eval-fixture-citations` was **red before this branch**;
++      one citation line in the guideline fixes it.
+ 
+ **Falsifier.** Owned per-duty by Phase 6's re-measurement.
+ 
+@@ -307,11 +365,18 @@ concern logic.
+       X4). This section owns the **producer sentence**: the documented easy path
+       is a connected extractor MCP, with the manual Chrome-DevTools-MCP channel
+       as fallback.
+-- [ ] **Step 3:** Extend `design-fidelity` triggers with `lovable.dev`,
++- [x] **Step 3:** Extend `design-fidelity` triggers with `lovable.dev`,
+       `v0.dev`, `bolt.new` URL phrases — each with its near-miss row in
+       `ROUTING_MATRIX` per the rule's own extension discipline
+       (`design-fidelity.md` § Routing). A bare-domain chat mention stays
+       silent, same as the `claude.ai` precedent.
++      **Done 2026-08-13** — three `https://<host>/` phrases (the protocol
++      prefix is what separates a pasted link from a tool mention), plus
++      `near-bare-host-mention` and a **deliberately red**
++      `known-gap-protocolless-share-link` row. That gap is named rather than
++      closed: closing it needs either a bare-host keyword, which the near-miss
++      row proves over-broad, or a guessed per-vendor share path — and a trigger
++      built on a guessed path is worse than a stated gap. Matrix 21 → 26 green.
+ 
+ **Falsifier.** The extraction-artifact path goes unused across two release
+ cycles of real handovers (telemetry from Phase 1 Step 3) → the browser
+@@ -322,19 +387,23 @@ existing handover prose and drop the persistence step.
+ 
+ ## Phase 5: Interop precedence — a provided artifact outranks generative tooling
+ 
+-- [ ] **Step 1:** One clause in the mechanics § Provided-artifact precedence
++- [x] **Step 1:** One clause in the mechanics § Provided-artifact precedence
+       *(proposal)*: the precedence chain gains a fourth member — *provided
+       artifact > anti-slop > house taste **> any generative design-system
+       tooling, first- or third-party***. A co-installed skill instructing
+       "always generate a design system first" does not apply to a port; its
+       output may inform decisions the artifact leaves open, nothing more.
+-- [ ] **Step 2:** Harvest verdicts on **Source C** recorded where
++- [x] **Step 2:** Harvest verdicts on **Source C** recorded where
+       harvest verdicts live: **adopt** (persist + retrieval order,
+       skip-if-exists, checklist-as-predelivery-gate — consumed in Phase 4),
+       **reject** (generative-first default for the port case, `--design-system`
+       REQUIRED step), **parked** (BM25 CSV search as a corpus-grounding
+       alternative — overlaps the existing 16-stack corpus; compare only if
+       the corpus roadmap asks).
++      **Done 2026-08-13** — `agents/settings/contexts/design-corpus-upstream-harvest.md`,
++      anonymised per `source-confidentiality` with the real identity left where
++      licence attribution belongs. The park carries an explicit un-park
++      condition so it is a decision rather than a backlog entry.
+ 
+ **Falsifier.** None needed beyond Phase 6 — the clause is one sentence; if it
+ never binds, it costs nothing.
+diff --git a/agents/settings/contexts/design-corpus-upstream-harvest.md b/agents/settings/contexts/design-corpus-upstream-harvest.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..c253381cdb46ca907170d2429d74408d50d4bfbc
+--- /dev/null
++++ b/agents/settings/contexts/design-corpus-upstream-harvest.md
+@@ -0,0 +1,62 @@
++# Design-corpus upstream — harvest verdicts (2026-08-13)
++
++> Durable record of what this suite takes, refuses, and parks from **Source C**,
++> the upstream of the vendored design corpus. Its real identity and pin live in
++> [`design-intelligence/ATTRIBUTION.md`](../../../src/skills/design-intelligence/ATTRIBUTION.md)
++> — the one place licence attribution belongs, per `source-confidentiality`.
++> Cite this file rather than re-reading the upstream.
++
++## Why the verdicts exist
++
++Source C ships a generative design-system skill that is installed **beside**
++agent-config in real setups. Its Step 2 instructs regeneration as a required
++first move for new pages and projects, with no carve-out for the case where the
++user already handed over a finished artifact. Nothing in this tree said which
++wins, so a co-installed skill could quietly outrank a supplied spec.
++
++The precedence answer is now written where the agent reads it
++(`design-fidelity-mechanics` § Provided-artifact precedence — the chain's fourth
++member). These are the harvest verdicts on the rest.
++
++## Adopt
++
++- **File-persisted master + per-page overrides with an explicit retrieval
++  order.** The pattern is right and this tree lacked it: a design decision that
++  lives only in a session is re-derived — or re-screenshotted — next session.
++  Consumed by the browser-handover work, which owns the retrieval order
++  (project token file → extraction artifact → live page).
++- **Skip-if-exists unless explicitly forced.** A regeneration that silently
++  discards prior decisions is the same failure as a port that silently drops a
++  handler. The forced path stays available and stays explicit.
++- **A pre-delivery checklist as a gate rather than a suggestion.** This tree
++  already has the shape elsewhere (verdict scoping in `design-review`); the
++  borrow is the placement — before delivery, not after review.
++
++## Reject
++
++- **Generative-first as the default for a port.** Correct on a greenfield brief,
++  wrong the moment an artifact exists, and wrong in a way nothing downstream can
++  repair: the generative step runs *before* the artifact is read, so no later
++  gate gets the chance to override it.
++- **A `--design-system` step marked REQUIRED.** A required generative step is
++  the mechanism by which the above becomes unavoidable. Rejected as a default;
++  unobjectionable as an opt-in.
++
++## Park
++
++- **BM25 CSV search as a corpus-grounding retrieval alternative.** Plausible,
++  and it overlaps this tree's existing 16-stack corpus rather than extending it.
++  Comparing the two is only worth doing if the corpus track asks the question;
++  until then a second retrieval mechanism is a maintenance surface with no
++  named beneficiary.
++  **Un-park when:** the corpus track raises a retrieval-quality question that
++  the current lookup measurably fails, with the failure named. Absent that, this
++  stays parked rather than "not yet done".
++
++## What this record does NOT claim
++
++The adopt list is a verdict on the **pattern**, not a licence to copy code.
++Anything actually borrowed at the code layer runs through `code-provenance` in
++full — the user-supplied-artifact carve-out in `design-fidelity-mechanics`
++§ Adopt the code covers a **user's own handover**, and an upstream repository is
++the opposite of that.
+diff --git a/dist/agent-src/rules/code-provenance.md b/dist/agent-src/rules/code-provenance.md
+index 16b0154784aaa8106175a71978a92d7874f46856..bb773dfbd8125674fd1d5718f62052cd0e7c83f9 100644
+--- a/dist/agent-src/rules/code-provenance.md
++++ b/dist/agent-src/rules/code-provenance.md
+@@ -102,6 +102,16 @@ observes — so this rule ships `enforced_by: none`, same honesty stance as
+   no specific source in mind.
+ - Reusing your **own** prior code within this repo.
+ - Prose/docs/config-only edits.
++- **A design artifact the user handed over** — a prototype, an exported
++  `design.html`, a token sidecar. That is the user's own material, not
++  third-party external code, so adapting its markup/CSS/JS is not a borrow and
++  needs no ledger entry. Same carve-out
++  [`content-quoting-floor`](content-quoting-floor.md) makes for user-owned text.
++  **The carve-out is authorship, not delivery:** a vendored component or a
++  licensed template that merely *arrives inside* a handover stays under this
++  rule in full. Boundary stated from the other side in
++  [`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md)
++  § Adopt the code.
+ 
+ ## See also
+ 
+diff --git a/dist/agent-src/rules/content-quoting-floor.md b/dist/agent-src/rules/content-quoting-floor.md
+index 4ccb1f21e2a1c71c2d0bb5131d470bb5fb3dc950..5e07bf8ecd19b2aaef0f8beb35660b6cd75707c1 100644
+--- a/dist/agent-src/rules/content-quoting-floor.md
++++ b/dist/agent-src/rules/content-quoting-floor.md
+@@ -82,6 +82,12 @@ does not substitute for engaging with the source.
+   treating fetched content as data vs instructions; this rule governs
+   how much of that data may be reproduced verbatim once it IS being
+   used as source material.
++- [`code-provenance`](code-provenance.md) +
++  [`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md)
++  § Adopt the code — this rule's user-owned-text carve-out extended to
++  **markup**: a design artifact the user hands over is their own material, so
++  adapting its code is not a borrow. Third-party code arriving inside that
++  handover is not covered, on either side.
+ - [`docs/contracts/write-engine.md`](../docs/contracts/write-engine.md) —
+   ghostwriter's disclosure-footer contract; this rule's quote floor
+   applies to any ghostwriter draft that cites an external source.
+diff --git a/dist/agent-src/rules/design-fidelity.md b/dist/agent-src/rules/design-fidelity.md
+index e7a9248d5c94beb3962b6d03ade6f70006fc9737..5bed529d26276656e67051fd3c6eba6987c1b584 100644
+--- a/dist/agent-src/rules/design-fidelity.md
++++ b/dist/agent-src/rules/design-fidelity.md
+@@ -24,6 +24,9 @@ triggers:
+   - phrase: "1:1 um"
+   - phrase: "1:1 nach"
+   - phrase: "claude.site/artifacts"
++  - phrase: "https://lovable.dev/"
++  - phrase: "https://v0.dev/"
++  - phrase: "https://bolt.new/"
+   - file_pattern: "*design.html"
+   - path_prefix: ".claude/design-system/"
+ applies_to_user_types:
+@@ -60,8 +63,20 @@ A PROVIDED PROTOTYPE / DESIGN SYSTEM IS THE SPEC, NOT A SUGGESTION.
+ BUILD IT 1:1. NEVER SWAP FONTS, CONTROLS, COMPONENTS, LAYOUT, SPACING,
+ OR COLOUR — AND NEVER OMIT OR ADD AN ELEMENT — WITHOUT EXPLICIT CONFIRMATION.
+ A "BETTER IDEA" IS A PROPOSAL TO SURFACE, NEVER A CHANGE TO MAKE.
++WHENEVER THE SOURCE IS REACHABLE, THE SOURCE IS THE DATA BASIS.
++A SCREENSHOT IS VALIDATION, NEVER THE INPUT YOU BUILD FROM.
++WHERE THE ARTIFACT'S OWN MARKUP / CSS / JS IS STACK-COMPATIBLE, ADAPTING
++THAT CODE IS THE DEFAULT — A FROM-SCRATCH RE-DERIVATION IS A DEVIATION
++AND NEEDS THE SAME CONFIRMATION AS A SWAPPED CONTROL.
+ ```
+ 
++The last three lines route to
++[`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md)
++§ Data-basis ladder and § Adopt the code — including the scope line that keeps
++the adopt-the-code duty from colliding with
++[`code-provenance`](code-provenance.md). Read that scope line before acting on
++either rule; the boundary is stated from both sides.
++
+ ## What counts as the spec
+ 
+ A user-provided, finished design artifact the user points at and says "match
+@@ -114,6 +129,19 @@ Two further handover shapes carry the artifact without any of the above:
+   conventional location for a handed-over token/component set. The prefix is the
+   vendor-scoped directory, never a bare `design-system/`, which is a normal
+   source folder in a large fraction of frontend repos.
++- **A third-party builder's share link.** `https://lovable.dev/`,
++  `https://v0.dev/`, `https://bolt.new/` — the same shape as the capability URL
++  above, and for the same reason: a page built in one of these tools and handed
++  over as a link is a finished spec, not an inspiration. The **protocol prefix
++  is load-bearing**: a pasted URL carries `https://`, while "I had a look at
++  v0.dev" does not, so the bare host stays silent exactly as `claude.ai` does.
++  **Named limit, not an oversight:** a share link pasted *without* the protocol
++  (`v0.dev/chat/…`) does not fire. Closing that would mean either a bare-host
++  keyword — which fires on every mention of the tool — or guessing each vendor's
++  share-path segment, and a trigger built on a guessed path is worse than a
++  stated gap. The gap is pinned red in the matrix
++  (`near-bare-host-mention`, `known-gap-protocolless-share-link`) so it is
++  visible rather than believed closed.
+ 
+ The trigger set is deliberately phrase-heavy on the German side and on
+ `artifact`: a bare `artifact` keyword fires on "the CI build artifact is 40 MB".
+@@ -121,9 +149,10 @@ The trigger set is deliberately phrase-heavy on the German side and on
+ [`design_fidelity_routing.test.ts`](../../tests/scripts/design_fidelity_routing.test.ts)
+ pins both halves — every class that must route, and the near-misses that must
+ stay silent (fixture `daf-port-trigger-de`). Extending the set without adding a
+-near-miss row there is how an over-broad trigger lands: each of the two triggers
+-above ships with its own near-miss row (`near-claude-ai-chat-link`,
+-`near-generic-design-system-dir`).
++near-miss row there is how an over-broad trigger lands: each of the three
++trigger classes above ships with its own near-miss row
++(`near-claude-ai-chat-link`, `near-generic-design-system-dir`,
++`near-bare-host-mention`).
+ 
+ Body migrated to [`guideline:design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, third-party delivery is self-hosted by default, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
+ Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
+diff --git a/dist/agent-src/skills/design-review/references/verification-automation.md b/dist/agent-src/skills/design-review/references/verification-automation.md
+index 25acb2d8f9e72014914057ad50bbcaaa23cda186..f6b2b1bbd832e8a0c298f1635618bfb9b14b8659 100644
+--- a/dist/agent-src/skills/design-review/references/verification-automation.md
++++ b/dist/agent-src/skills/design-review/references/verification-automation.md
+@@ -29,7 +29,25 @@ Don't just screenshot the default state. Capture:
+ 
+ ### Mockup-to-code verification
+ 
+-When implementing from a design mockup or screenshot:
++**Branch on what the artifact actually is before you open anything.** The two
++kinds carry different workflows, and running the image workflow over a code
++artifact is the failure this branch exists to prevent — it rebuilds from pixels
++what was handed over as source.
++
++**Code artifact** — an HTML/JSX/Vue file, an archive, a repo, a live page whose
++DOM you can reach:
++
++1. **Read the code** — it is the data basis (`design-fidelity-mechanics`
++   § Data-basis ladder, rungs 1–2). Markup, styles, scripts.
++2. **Implement** — adapting the artifact's own code where it is
++   stack-compatible; a from-scratch re-derivation is a deviation, not a default.
++3. **Screenshot afterwards** — for an after-the-fact visual diff only, never as
++   the input you built from.
++4. **Flag deviations** — including behaviour: a handler or keyframe that did not
++   survive is a deviation, not an implementation detail.
++
++**Image artifact** — a PNG/JPG screenshot, a Figma export you cannot open as
++source, a photograph of a whiteboard:
+ 
+ 1. **Open the mockup** — use the provided image/screenshot.
+ 2. **Implement** — build the UI component.
+@@ -38,6 +56,10 @@ When implementing from a design mockup or screenshot:
+ 
+ This is especially useful when the user provides a screenshot or Figma export as a reference.
+ 
++> **Near-miss worth naming:** an HTML file *opened in a browser* is still a code
++> artifact. The browser makes it look like an image; the file on disk is rung 1.
++> Take the code path.
++
+ ## Async-verifier pattern (keep the main context clean)
+ 
+ For a review that needs browser probing, use an **async background verifier**
+diff --git a/dist/agent-src/skills/fe-design/SKILL.md b/dist/agent-src/skills/fe-design/SKILL.md
+index f21272a3b59089f2ef02a7bd5f3bbf52732d13bd..fca35f3ea49afb9fd8f376f22257d15acfb5b471 100644
+--- a/dist/agent-src/skills/fe-design/SKILL.md
++++ b/dist/agent-src/skills/fe-design/SKILL.md
+@@ -40,7 +40,28 @@ else runs the loop.
+    `layout`, `components`, `states`, `microcopy`, `a11y`. `states` means all
+    five of `empty`, `loading`, `error`, `success`, `disabled` — a brief missing
+    one is unfinished, not concise.
+-3. **Build** — against the audit's primitives, in the project's stack.
++2b. **Inventory — only when an artifact was provided, and before you build.**
++   List the artifact's **interactions, keyframes, and script includes** from its
++   source (`design-fidelity-mechanics` § Data-basis ladder — read it, do not
++   look at a picture of it). Then place **every** listed item in exactly one
++   bucket, using the engine's own names so the two surfaces cannot drift:
++
++   | Bucket | Meaning |
++   |---|---|
++   | `honoured` | carried over as-is |
++   | `translated` | carried over in a different shape (a handler became a framework binding) |
++   | `flagged` | **not** carried over — with the reason, in the output |
++
++   Dropping a handler stays allowed; hiding one does not. An item in no bucket
++   is the failure this step exists to catch — "missing JavaScript" is what it
++   looks like from the user's side. Inside the engine this is enforced
++   (`apply.ts`, `COVERAGE_BUCKETS`, an unaccounted item is a halt); out here it
++   is a duty you carry, and nothing checks it for you. (fixture:
++   `daf-adhoc-port-coverage`.)
++3. **Build** — against the audit's primitives, in the project's stack. Where the
++   artifact's own markup/CSS/JS is stack-compatible, adapt **that code**;
++   re-deriving it from scratch is a deviation needing confirmation
++   (`design-fidelity-mechanics` § Adopt the code).
+ 4. **Review** — run [`design-review`](../design-review/SKILL.md) before calling
+    it done, and scope the verdict honestly: render-scoped when you can render
+    it, otherwise explicitly static-scoped, naming which checks actually ran.
+diff --git a/docs/guidelines/design-fidelity-mechanics.md b/docs/guidelines/design-fidelity-mechanics.md
+index ec122cce8688cbb8b59fd33aa7a2bc702d6e40eb..8411b9e4bc5f6a903e41ea7e2bf74a095dcf64b5 100644
+--- a/docs/guidelines/design-fidelity-mechanics.md
++++ b/docs/guidelines/design-fidelity-mechanics.md
+@@ -4,6 +4,102 @@
+ 
+ _Origin: migrated from `src/rules/design-fidelity.md` per the P4 pattern of `road-to-kernel-and-router.md`. The Iron Law, the `design.fidelity_mode` strictness table, and the fire/not-fire scope stay in the rule; this file carries the illustrative depth._
+ 
++## Data-basis ladder
++
++```
++WHENEVER SOURCE IS REACHABLE, THE SOURCE IS THE DATA BASIS.
++A SCREENSHOT IS VALIDATION, NEVER THE INPUT YOU BUILD FROM,
++WHILE ANY HIGHER RUNG IS REACHABLE.
++```
++
++Four rungs, highest first. Take the highest one you can reach; a lower rung is
++a fallback you name, not a preference you exercise.
++
++| # | Rung | What it is | When it is the right rung |
++|---|---|---|---|
++| 1 | **Provided source files** | The artifact itself — an archive, an attached `design.html`, a token sidecar, a repo the user pointed at | Whenever the user handed something over. Read it *before* the first write. |
++| 2 | **Source read through any channel** | The same code reached indirectly — a repository read, or DOM / stylesheets / scripts pulled through the user's own connected browser tools | The artifact is live rather than attached (a URL, a staging page, a preview build) |
++| 3 | **Structured snapshot** | An accessibility tree or equivalent structured dump — text, roles, hierarchy, no pixels | Source is genuinely unreachable, but structure is not |
++| 4 | **Screenshot** | Rendered pixels | Nothing above is reachable, **or** the thing being checked only exists once rendered |
++
++**What rung 4 is legitimately for**, and this is not a grudging exception:
++visual validation after building, layout collisions, contrast as actually
++rendered, and content that only exists dynamically. The failure this ladder
++names is not *using* a screenshot — it is using one **as the data basis while
++rung 1 or 2 was sitting right there**, which is how a port ends up with the
++right colours and none of the behaviour.
++
++**The ladder governs where data comes from, never whether defects may be
++fixed.** Reading the source and improving it is allowed and often correct;
++reading the source is what makes an improvement a decision rather than a guess.
++
++Two consequences worth stating because they are the ones agents get backwards:
++
++- **A rendered HTML file is still a code artifact.** Opening it in a browser
++  does not demote it to rung 4; the file is still rung 1. What the browser adds
++  is validation, not input.
++- **Degrading is honest, silence is not.** When you build from rung 3 or 4, say
++  which rung you used and why the higher ones were unreachable. An unscoped
++  "matches the design" over a screenshot-derived build is a verdict without
++  evidence (`design-review` § verdict scoping).
++
++Regression witness: `daf-source-over-screenshot`.
++
++## Adopt the code — re-derivation is a deviation
++
++Where the artifact's own markup, CSS, or JS is stack-compatible, **adapting that
++code is the default**. Writing an equivalent from scratch is a **deviation** and
++carries the same obligation as a swapped control: surface it, get confirmation,
++do not just do it.
++
++Stack translation is not re-derivation. Porting the artifact's structure into
++Blade, JSX or a template language translates *that* structure — it does not
++license a new one. If your output's element tree cannot be walked next to the
++artifact's, you re-derived.
++
++Why this needs saying at all: the visible half of a port (colours, type,
++spacing) is what a reviewer checks, and it survives a from-scratch rewrite. The
++half that does not survive is the behaviour — event handlers, keyframes, ARIA
++wiring, focus order — and its absence is invisible in a screenshot comparison.
++"HTML not adopted, worse markup written from scratch, missing JavaScript" is one
++failure, not three.
++
++### The scope line — where `code-provenance` ends and this begins
++
++```
++A USER-SUPPLIED DESIGN ARTIFACT IS THE USER'S OWN MATERIAL, NOT THIRD-PARTY
++EXTERNAL CODE. ADOPTING IT IS NOT A BORROW.
++THIRD-PARTY CODE THAT MERELY ARRIVES THROUGH A HANDOVER STAYS UNDER
++`code-provenance` IN FULL.
++```
++
++Without this line the two rules contradict each other on the same act:
++[`code-provenance`](../../src/rules/code-provenance.md) opens with `NEVER ADOPT
++EXTERNAL CODE VERBATIM` and routes any conscious borrow through a licence check
++plus a ledger entry, while the duty above says adapt the artifact's code.
++Whichever the agent followed, it would be violating a rule, and no gate can
++arbitrate between two Iron Laws.
++
++The resolution weakens neither, and it is not new: it is the carve-out
++[`content-quoting-floor`](../../src/rules/content-quoting-floor.md) already
++makes for user-owned text — *"content the user wrote, pasted, or explicitly
++authorized for verbatim use is not an external source"*. A design artifact the
++user hands over is that same category, in markup.
++
++**What stays under `code-provenance` in full**, so the carve-out cannot be read
++as a hole:
++
++- A vendored component, a licensed template, or a third-party library that
++  happens to be *inside* the handover. Arriving through a design handover
++  changes nothing about its licence.
++- Code the artifact itself borrowed from somewhere identifiable.
++- Anything you reach for *beyond* the artifact while implementing it.
++
++The discriminator is authorship, not delivery: did the user hand you their own
++material, or did they hand you a container with someone else's material in it?
++
++Regression witness: `daf-rederive-is-deviation`.
++
+ ## Surgical visual edits
+ 
+ A request to change one visual thing — a colour, a label, a single element — is
+@@ -64,7 +160,8 @@ brand evidence**. The design-surface instance of the no-invented-facts floor.
+ ## Provided-artifact precedence
+ 
+ ```
+-PROVIDED ARTIFACT  >  ANTI-SLOP  >  HOUSE TASTE.
++PROVIDED ARTIFACT  >  ANTI-SLOP  >  HOUSE TASTE
++                   >  ANY GENERATIVE DESIGN-SYSTEM TOOLING, FIRST- OR THIRD-PARTY.
+ THE EXEMPTION COVERS ONLY DECISIONS THE ARTIFACT ACTUALLY COVERS.
+ IT NEVER COVERS GENERATIVE WORK IN THE SAME RUN.
+ ```
+@@ -94,6 +191,21 @@ nothing acts on them.
+    the consumer's own brand (`brand-source-of-truth`). Artifact-vs-brand
+    conflicts are surfaced, never merged.
+ 
++**The fourth member, and why it is not obvious.** A generative design-system
++skill — this suite's own or a third party's installed beside it — can carry an
++instruction of the shape *"always generate a design system first"*. On a
++greenfield brief that is right. On a **port** it is the same error the anti-slop
++catalog makes: it argues the agent out of a decision the user already made, and
++it does so from a step that runs *before* the artifact is even read, so nothing
++downstream ever gets the chance to override it. A generative step's output may
++inform decisions the artifact leaves open — states it never showed, a breakpoint
++it never specified — and nothing more. It never re-opens a decision the artifact
++carries.
++
++This is a precedence clause, not a ban: the generative tooling stays correct
++where it was already correct. What it loses is the authority to run *instead of*
++reading a supplied artifact.
++
+ **The mechanical half.** A review finding carries `artifact_covered: true`, and
+ the polish gate drops those from the round-driving set *before* the ceiling
+ check, so a port cannot burn its two rounds on findings it was never allowed to
+@@ -125,7 +237,11 @@ labelled "not wired yet" note beats an invented redesign.
+ 
+ Behavioral baseline: the `daf-*` fixtures named above (edit preservation,
+ unwanted variations, redesign trigger, missing asset, external asset URL,
+-invented screenshot).
++invented screenshot), plus the port family this guideline governs —
++`daf-source-over-screenshot` (data basis), `daf-adhoc-port-coverage` (loss
++reporting outside the engine), `daf-rederive-is-deviation` (adopt the code),
++and `daf-handoff-bundle`, the bundle shape where a token sidecar makes
++"honoured the contract" and "eyeballed the CSS" produce different artefacts.
+ 
+ ## See also
+ 
+diff --git a/src/rules/code-provenance.md b/src/rules/code-provenance.md
+index 16b0154784aaa8106175a71978a92d7874f46856..bb773dfbd8125674fd1d5718f62052cd0e7c83f9 100644
+--- a/src/rules/code-provenance.md
++++ b/src/rules/code-provenance.md
+@@ -102,6 +102,16 @@ observes — so this rule ships `enforced_by: none`, same honesty stance as
+   no specific source in mind.
+ - Reusing your **own** prior code within this repo.
+ - Prose/docs/config-only edits.
++- **A design artifact the user handed over** — a prototype, an exported
++  `design.html`, a token sidecar. That is the user's own material, not
++  third-party external code, so adapting its markup/CSS/JS is not a borrow and
++  needs no ledger entry. Same carve-out
++  [`content-quoting-floor`](content-quoting-floor.md) makes for user-owned text.
++  **The carve-out is authorship, not delivery:** a vendored component or a
++  licensed template that merely *arrives inside* a handover stays under this
++  rule in full. Boundary stated from the other side in
++  [`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md)
++  § Adopt the code.
+ 
+ ## See also
+ 
+diff --git a/src/rules/content-quoting-floor.md b/src/rules/content-quoting-floor.md
+index 4ccb1f21e2a1c71c2d0bb5131d470bb5fb3dc950..5e07bf8ecd19b2aaef0f8beb35660b6cd75707c1 100644
+--- a/src/rules/content-quoting-floor.md
++++ b/src/rules/content-quoting-floor.md
+@@ -82,6 +82,12 @@ does not substitute for engaging with the source.
+   treating fetched content as data vs instructions; this rule governs
+   how much of that data may be reproduced verbatim once it IS being
+   used as source material.
++- [`code-provenance`](code-provenance.md) +
++  [`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md)
++  § Adopt the code — this rule's user-owned-text carve-out extended to
++  **markup**: a design artifact the user hands over is their own material, so
++  adapting its code is not a borrow. Third-party code arriving inside that
++  handover is not covered, on either side.
+ - [`docs/contracts/write-engine.md`](../docs/contracts/write-engine.md) —
+   ghostwriter's disclosure-footer contract; this rule's quote floor
+   applies to any ghostwriter draft that cites an external source.
+diff --git a/src/rules/design-fidelity.md b/src/rules/design-fidelity.md
+index e7a9248d5c94beb3962b6d03ade6f70006fc9737..5bed529d26276656e67051fd3c6eba6987c1b584 100644
+--- a/src/rules/design-fidelity.md
++++ b/src/rules/design-fidelity.md
+@@ -24,6 +24,9 @@ triggers:
+   - phrase: "1:1 um"
+   - phrase: "1:1 nach"
+   - phrase: "claude.site/artifacts"
++  - phrase: "https://lovable.dev/"
++  - phrase: "https://v0.dev/"
++  - phrase: "https://bolt.new/"
+   - file_pattern: "*design.html"
+   - path_prefix: ".claude/design-system/"
+ applies_to_user_types:
+@@ -60,8 +63,20 @@ A PROVIDED PROTOTYPE / DESIGN SYSTEM IS THE SPEC, NOT A SUGGESTION.
+ BUILD IT 1:1. NEVER SWAP FONTS, CONTROLS, COMPONENTS, LAYOUT, SPACING,
+ OR COLOUR — AND NEVER OMIT OR ADD AN ELEMENT — WITHOUT EXPLICIT CONFIRMATION.
+ A "BETTER IDEA" IS A PROPOSAL TO SURFACE, NEVER A CHANGE TO MAKE.
++WHENEVER THE SOURCE IS REACHABLE, THE SOURCE IS THE DATA BASIS.
++A SCREENSHOT IS VALIDATION, NEVER THE INPUT YOU BUILD FROM.
++WHERE THE ARTIFACT'S OWN MARKUP / CSS / JS IS STACK-COMPATIBLE, ADAPTING
++THAT CODE IS THE DEFAULT — A FROM-SCRATCH RE-DERIVATION IS A DEVIATION
++AND NEEDS THE SAME CONFIRMATION AS A SWAPPED CONTROL.
+ ```
+ 
++The last three lines route to
++[`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md)
++§ Data-basis ladder and § Adopt the code — including the scope line that keeps
++the adopt-the-code duty from colliding with
++[`code-provenance`](code-provenance.md). Read that scope line before acting on
++either rule; the boundary is stated from both sides.
++
+ ## What counts as the spec
+ 
+ A user-provided, finished design artifact the user points at and says "match
+@@ -114,6 +129,19 @@ Two further handover shapes carry the artifact without any of the above:
+   conventional location for a handed-over token/component set. The prefix is the
+   vendor-scoped directory, never a bare `design-system/`, which is a normal
+   source folder in a large fraction of frontend repos.
++- **A third-party builder's share link.** `https://lovable.dev/`,
++  `https://v0.dev/`, `https://bolt.new/` — the same shape as the capability URL
++  above, and for the same reason: a page built in one of these tools and handed
++  over as a link is a finished spec, not an inspiration. The **protocol prefix
++  is load-bearing**: a pasted URL carries `https://`, while "I had a look at
++  v0.dev" does not, so the bare host stays silent exactly as `claude.ai` does.
++  **Named limit, not an oversight:** a share link pasted *without* the protocol
++  (`v0.dev/chat/…`) does not fire. Closing that would mean either a bare-host
++  keyword — which fires on every mention of the tool — or guessing each vendor's
++  share-path segment, and a trigger built on a guessed path is worse than a
++  stated gap. The gap is pinned red in the matrix
++  (`near-bare-host-mention`, `known-gap-protocolless-share-link`) so it is
++  visible rather than believed closed.
+ 
+ The trigger set is deliberately phrase-heavy on the German side and on
+ `artifact`: a bare `artifact` keyword fires on "the CI build artifact is 40 MB".
+@@ -121,9 +149,10 @@ The trigger set is deliberately phrase-heavy on the German side and on
+ [`design_fidelity_routing.test.ts`](../../tests/scripts/design_fidelity_routing.test.ts)
+ pins both halves — every class that must route, and the near-misses that must
+ stay silent (fixture `daf-port-trigger-de`). Extending the set without adding a
+-near-miss row there is how an over-broad trigger lands: each of the two triggers
+-above ships with its own near-miss row (`near-claude-ai-chat-link`,
+-`near-generic-design-system-dir`).
++near-miss row there is how an over-broad trigger lands: each of the three
++trigger classes above ships with its own near-miss row
++(`near-claude-ai-chat-link`, `near-generic-design-system-dir`,
++`near-bare-host-mention`).
+ 
+ Body migrated to [`guideline:design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, third-party delivery is self-hosted by default, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
+ Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
+diff --git a/src/scripts/hooks/ui_route_nudge_hook.ts b/src/scripts/hooks/ui_route_nudge_hook.ts
+index 5c9c53e42fa9241a61efea0b92ab61c025711cbe..c0e032c194353e1fc49d405dd34fac709a135108 100644
+--- a/src/scripts/hooks/ui_route_nudge_hook.ts
++++ b/src/scripts/hooks/ui_route_nudge_hook.ts
+@@ -123,9 +123,47 @@ export function isUiWrite(event: ToolEvent): boolean {
+     return isUiPath(event.file) || isUiTreePath(event.file);
+ }
+ 
++/**
++ * The two handover shapes `design-fidelity` routes on a FILE rather than on a
++ * word: its `file_pattern: *design.html` and its
++ * `path_prefix: .claude/design-system/`. Reading one is the agent reaching
++ * rung 1 of the data-basis ladder before it writes.
++ *
++ * THIS IS A COPY OF THE RULE'S TRIGGERS, NOT A READ OF THEM — same honesty
++ * boundary the header states for `ui_surface.ts`: nothing here parses
++ * `src/rules/*.md`. `ui_route_nudge_artifact_read.test.ts` pins the two against
++ * the rule's own frontmatter so the copy cannot drift silently.
++ */
++export function isArtifactRead(event: ToolEvent): boolean {
++    if (event.isWrite || !event.file) return false;
++    const normalized = event.file.replace(/\\/g, '/').toLowerCase();
++    return normalized.endsWith('design.html') || normalized.includes('.claude/design-system/');
++}
++
+ export interface SessionState {
+     consulted: boolean;
+     nudges: number;
++    /**
++     * CAPTURE-ONLY. True once a provided-artifact file was read this session.
++     *
++     * It is deliberately NOT folded into `consulted`, and the distinction is
++     * the whole point: folding it in would silence the nudge for a session that
++     * opened a `design.html`, which is a **behaviour** change. The phase that
++     * introduced this field ships instrumentation and states `nothing
++     * behavioural` in its own rollback line, so the two cannot both be honoured
++     * by one field. Whether an artifact read SHOULD latch consultation is a
++     * real question and a separate decision — it needs the rate below to answer
++     * it, which is why the rate is measured first.
++     */
++    artifactRead?: boolean;
++    /**
++     * CAPTURE-ONLY. The instrument: was an artifact read before the session's
++     * FIRST UI write? Latched once, at that write. `undefined` = no UI write
++     * yet, which is distinct from `false` (a write happened, unread) and must
++     * stay distinct — collapsing them would count every read-only session as a
++     * failure.
++     */
++    artifactReadBeforeFirstUiWrite?: boolean;
+ }
+ 
+ function stateFile(root: string): string {
+@@ -194,13 +232,46 @@ export function decide(
+     event: ToolEvent,
+     state: SessionState,
+ ): { state: SessionState; warn: boolean } {
++    // Capture-only, and ordered first so it records even on an event the
++    // branches below return early on. It never reaches `warn`.
++    if (isArtifactRead(event)) {
++        return { state: { ...state, artifactRead: true }, warn: false };
++    }
+     if (isConsultation(event)) {
+         return { state: { ...state, consulted: true }, warn: false };
+     }
+     if (!isUiWrite(event)) return { state, warn: false };
+-    if (state.consulted) return { state, warn: false };
+-    if (state.nudges >= MAX_NUDGES) return { state, warn: false };
+-    return { state: { ...state, nudges: state.nudges + 1 }, warn: true };
++
++    // Latch the instrument at the FIRST UI write, before any early return —
++    // otherwise a session that consulted, or one past the valve, would never
++    // record its own read-before-write outcome and the rate would be measured
++    // over the nudged sessions alone.
++    const measured: SessionState =
++        state.artifactReadBeforeFirstUiWrite === undefined
++            ? { ...state, artifactReadBeforeFirstUiWrite: state.artifactRead === true }
++            : state;
++
++    if (measured.consulted) return { state: measured, warn: false };
++    if (measured.nudges >= MAX_NUDGES) return { state: measured, warn: false };
++    return { state: { ...measured, nudges: measured.nudges + 1 }, warn: true };
++}
++
++/**
++ * Did anything worth persisting change?
++ *
++ * Enumerated per field rather than deep-compared, and it is a real trap: the
++ * predicate this replaced tested `consulted` and `nudges` only, so the two
++ * capture-only fields would have been computed on every event and written on
++ * none — an instrument that silently records nothing. A new field must be added
++ * here or it does not persist.
++ */
++export function stateChanged(before: SessionState, after: SessionState): boolean {
++    return (
++        before.consulted !== after.consulted ||
++        before.nudges !== after.nudges ||
++        before.artifactRead !== after.artifactRead ||
++        before.artifactReadBeforeFirstUiWrite !== after.artifactReadBeforeFirstUiWrite
++    );
+ }
+ 
+ export function nudgeReason(file: string): string {
+@@ -230,7 +301,7 @@ export function main(): number {
+ 
+     const before = readState(root, session);
+     const { state, warn } = decide(event, before);
+-    if (state.consulted !== before.consulted || state.nudges !== before.nudges) {
++    if (stateChanged(before, state)) {
+         writeState(root, session, state);
+     }
+     if (!warn) return EXIT_ALLOW;
+diff --git a/src/scripts/report_consultation_rate.ts b/src/scripts/report_consultation_rate.ts
+index 9b44de07c09e1425e017efebd6f86b89108366af..709e004972eabc507370ffd0bac33abb5bbe7cf5 100644
+--- a/src/scripts/report_consultation_rate.ts
++++ b/src/scripts/report_consultation_rate.ts
+@@ -48,6 +48,7 @@ import { fileURLToPath } from 'node:url';
+ 
+ import { projectStoreSlug } from './_lib/cc_transcript.js';
+ import {
++    isArtifactRead,
+     isConsultation,
+     isUiWrite,
+     type ToolEvent,
+@@ -81,9 +82,21 @@ export interface SessionMeasurement {
+     consulted: number;
+     /** Those turns followed later by opening the review skill. */
+     reviewOpenedAfter: number;
++    /**
++     * Those turns that followed reading a provided design artifact.
++     *
++     * Shares this function's denominator on purpose — the two rates answer
++     * different questions over the SAME population ("did it consult the design
++     * surface" vs "did it read the handed-over source"), and measuring them on
++     * separate denominators is how two instruments about one behaviour stop
++     * being comparable.
++     */
++    artifactRead: number;
+ }
+ 
+ export interface RateReport {
++    /** UI-write turns preceded by reading a provided design artifact. */
++    artifactRead: number;
+     store: string;
+     /** False when the store directory does not exist — never the same as empty. */
+     storeExists: boolean;
+@@ -139,10 +152,18 @@ export function toolUseToEvent(part: Record<string, unknown>): ToolEvent | null
+  * consult for the file it already wrote.
+  */
+ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement {
+-    const out: SessionMeasurement = { uiWriteTurns: 0, consulted: 0, reviewOpenedAfter: 0 };
++    const out: SessionMeasurement = {
++        uiWriteTurns: 0,
++        consulted: 0,
++        reviewOpenedAfter: 0,
++        artifactRead: 0,
++    };
+     let consulted = false;
++    let artifactRead = false;
+     /** turn -> was the session already consulted when that turn first wrote UI */
+     const writeTurns = new Map<number, boolean>();
++    /** turn -> had an artifact been read when that turn first wrote UI */
++    const artifactTurns = new Map<number, boolean>();
+     let lastReviewOpenAt = -1;
+     const reviewOpenPositions: number[] = [];
+     const writePositions: Array<{ position: number; turn: number }> = [];
+@@ -151,10 +172,18 @@ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement
+         if (isUiWrite(event)) {
+             if (!writeTurns.has(turn)) {
+                 writeTurns.set(turn, consulted);
++                artifactTurns.set(turn, artifactRead);
+                 writePositions.push({ position, turn });
+             }
+             return;
+         }
++        // Checked before `isConsultation` and kept separate from it: an
++        // artifact is not a design surface, and folding the two would make the
++        // consultation rate move for a reason it never measured.
++        if (isArtifactRead(event)) {
++            artifactRead = true;
++            return;
++        }
+         if (isConsultation(event)) {
+             consulted = true;
+             if (event.file.replace(/\\/g, '/').toLowerCase().includes(`skills/${REVIEW_SURFACE}/`)) {
+@@ -166,6 +195,7 @@ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement
+ 
+     out.uiWriteTurns = writeTurns.size;
+     for (const wasConsulted of writeTurns.values()) if (wasConsulted) out.consulted += 1;
++    for (const wasRead of artifactTurns.values()) if (wasRead) out.artifactRead += 1;
+     // A single max comparison, not a scan per write: the proxy asks only whether
+     // ANY review-open follows, so the last one decides every earlier write.
+     void reviewOpenPositions;
+@@ -216,6 +246,7 @@ export function measureStore(store: string, limit: number): RateReport {
+         uiWriteTurns: 0,
+         consulted: 0,
+         reviewOpenedAfter: 0,
++        artifactRead: 0,
+     };
+     // A store that is not there and a store with nothing in it are different
+     // findings, and only one of them is about the agent. Collapsing them into
+@@ -255,6 +286,7 @@ export function measureStore(store: string, limit: number): RateReport {
+         report.uiWriteTurns += measured.uiWriteTurns;
+         report.consulted += measured.consulted;
+         report.reviewOpenedAfter += measured.reviewOpenedAfter;
++        report.artifactRead += measured.artifactRead;
+     }
+     return report;
+ }
+@@ -285,6 +317,22 @@ export function render(report: RateReport, threshold: number): string {
+     lines.push(
+         `  discharge PROXY (review opened)  ${pct(report.reviewOpenedAfter, report.uiWriteTurns)}  (${report.reviewOpenedAfter}/${report.uiWriteTurns})`,
+     );
++    lines.push(
++        `  ARTIFACT READ BEFORE WRITE       ${pct(report.artifactRead, report.uiWriteTurns)}  (${report.artifactRead}/${report.uiWriteTurns})`,
++    );
++    lines.push('');
++    lines.push(
++        '  The third rate shares the second denominator and answers a different',
++    );
++    lines.push(
++        '  question: not "did it open the design surface" but "did it read the',
++    );
++    lines.push(
++        '  handed-over source". A session with no handover contributes 0/N to it',
++    );
++    lines.push(
++        '  by construction, so read it per-handover, never as an estate average.',
++    );
+     lines.push('');
+ 
+     if (report.sessionsWithUiWrite < threshold) {
+diff --git a/src/skills/design-review/references/verification-automation.md b/src/skills/design-review/references/verification-automation.md
+index 25acb2d8f9e72014914057ad50bbcaaa23cda186..f6b2b1bbd832e8a0c298f1635618bfb9b14b8659 100644
+--- a/src/skills/design-review/references/verification-automation.md
++++ b/src/skills/design-review/references/verification-automation.md
+@@ -29,7 +29,25 @@ Don't just screenshot the default state. Capture:
+ 
+ ### Mockup-to-code verification
+ 
+-When implementing from a design mockup or screenshot:
++**Branch on what the artifact actually is before you open anything.** The two
++kinds carry different workflows, and running the image workflow over a code
++artifact is the failure this branch exists to prevent — it rebuilds from pixels
++what was handed over as source.
++
++**Code artifact** — an HTML/JSX/Vue file, an archive, a repo, a live page whose
++DOM you can reach:
++
++1. **Read the code** — it is the data basis (`design-fidelity-mechanics`
++   § Data-basis ladder, rungs 1–2). Markup, styles, scripts.
++2. **Implement** — adapting the artifact's own code where it is
++   stack-compatible; a from-scratch re-derivation is a deviation, not a default.
++3. **Screenshot afterwards** — for an after-the-fact visual diff only, never as
++   the input you built from.
++4. **Flag deviations** — including behaviour: a handler or keyframe that did not
++   survive is a deviation, not an implementation detail.
++
++**Image artifact** — a PNG/JPG screenshot, a Figma export you cannot open as
++source, a photograph of a whiteboard:
+ 
+ 1. **Open the mockup** — use the provided image/screenshot.
+ 2. **Implement** — build the UI component.
+@@ -38,6 +56,10 @@ When implementing from a design mockup or screenshot:
+ 
+ This is especially useful when the user provides a screenshot or Figma export as a reference.
+ 
++> **Near-miss worth naming:** an HTML file *opened in a browser* is still a code
++> artifact. The browser makes it look like an image; the file on disk is rung 1.
++> Take the code path.
++
+ ## Async-verifier pattern (keep the main context clean)
+ 
+ For a review that needs browser probing, use an **async background verifier**
+diff --git a/src/skills/fe-design/SKILL.md b/src/skills/fe-design/SKILL.md
+index f21272a3b59089f2ef02a7bd5f3bbf52732d13bd..fca35f3ea49afb9fd8f376f22257d15acfb5b471 100644
+--- a/src/skills/fe-design/SKILL.md
++++ b/src/skills/fe-design/SKILL.md
+@@ -40,7 +40,28 @@ else runs the loop.
+    `layout`, `components`, `states`, `microcopy`, `a11y`. `states` means all
+    five of `empty`, `loading`, `error`, `success`, `disabled` — a brief missing
+    one is unfinished, not concise.
+-3. **Build** — against the audit's primitives, in the project's stack.
++2b. **Inventory — only when an artifact was provided, and before you build.**
++   List the artifact's **interactions, keyframes, and script includes** from its
++   source (`design-fidelity-mechanics` § Data-basis ladder — read it, do not
++   look at a picture of it). Then place **every** listed item in exactly one
++   bucket, using the engine's own names so the two surfaces cannot drift:
++
++   | Bucket | Meaning |
++   |---|---|
++   | `honoured` | carried over as-is |
++   | `translated` | carried over in a different shape (a handler became a framework binding) |
++   | `flagged` | **not** carried over — with the reason, in the output |
++
++   Dropping a handler stays allowed; hiding one does not. An item in no bucket
++   is the failure this step exists to catch — "missing JavaScript" is what it
++   looks like from the user's side. Inside the engine this is enforced
++   (`apply.ts`, `COVERAGE_BUCKETS`, an unaccounted item is a halt); out here it
++   is a duty you carry, and nothing checks it for you. (fixture:
++   `daf-adhoc-port-coverage`.)
++3. **Build** — against the audit's primitives, in the project's stack. Where the
++   artifact's own markup/CSS/JS is stack-compatible, adapt **that code**;
++   re-deriving it from scratch is a deviation needing confirmation
++   (`design-fidelity-mechanics` § Adopt the code).
+ 4. **Review** — run [`design-review`](../design-review/SKILL.md) before calling
+    it done, and scope the verdict honestly: render-scoped when you can render
+    it, otherwise explicitly static-scoped, naming which checks actually ran.
+diff --git a/tests/design-artifacts/eval-fixtures.md b/tests/design-artifacts/eval-fixtures.md
+index 086929088955ee11ca74dd4b32f5d6d74d7f1911..f49b312f6357e4aadf0229e50da6cde758ce8331 100644
+--- a/tests/design-artifacts/eval-fixtures.md
++++ b/tests/design-artifacts/eval-fixtures.md
+@@ -395,6 +395,81 @@ other three are rubric-scored: no unit test can assert whether an agent
+   was *copied* from one that was *resolved*. Recorded as a known limit rather
+   than dressed up as a computed score.
+ 
++## Ad-hoc port fixtures (`road-to-source-first-frontend`)
++
++The three above run inside the engine, where `state.ui_design` exists. These
++three run **outside** it — the ad-hoc path a Claude-Code-direct session takes,
++which sets none of that state and which the operator's second report came from.
++All three share the same ground-truth artifact
++([`fixtures/design.html`](fixtures/design.html)); what varies is the channel the
++agent reaches it through and what it does with the code once it has it.
++
++All three are **rubric**-scored. No unit test distinguishes an agent that read
++the source from one that guessed well, which is the same limit
++`daf-handoff-bundle` records for token binding.
++
++### daf-source-over-screenshot
++- **primitive:** `static_inspect` + `screenshot` (the screenshot primitive must
++  be **present** for this fixture to score — see the measurement note)
++- **lifecycle stage:** data basis (rung selection, before the first write)
++- **scenario:** The artifact is reachable as source AND the host has a working
++  browser/capture tool. The agent is asked to implement it.
++- **pass:** The agent builds from the **source** — rung 1 or 2 of
++  `design-fidelity-mechanics` § Data-basis ladder. A screenshot may be taken,
++  but only *after* building, for visual validation, and the output says so. Using
++  a capture as the data basis while the file was readable is the fail, even when
++  the result looks right.
++- **measured 2026-08-13 — SKIPPED, primitive absent, and that is the finding.**
++  The host census returned exactly one capture tool,
++  `screencapture` (`/usr/sbin/screencapture`), which photographs the display and
++  cannot reach a page nothing is rendering; Playwright MCP, Chrome-DevTools-MCP
++  and `mcp__claude-in-chrome__*` were all absent from the session tool surface.
++  Two ad-hoc port arms were run anyway and both came back faithful — but with no
++  capture tool reachable, **this fixture's dimension could not vary**, so those
++  arms score `daf-adhoc-port-coverage`, not this one. Recorded per the
++  skip-with-caveat rule in § Notes rather than banked as a pass.
++  Full write-up: `agents/evidence/analysis/source-first-frontend-phase1.md`.
++
++### daf-adhoc-port-coverage
++- **primitive:** `static_inspect`
++- **lifecycle stage:** build (loss reporting, outside the engine)
++- **scenario:** The same artifact is ported by an **ad-hoc** session — no
++  `/implement-ticket` run, so no `state.ui_design`, no `coverage_gaps` halt, no
++  engine-side accounting of any kind.
++- **pass:** Every one of the artifact's three handlers, its one keyframe, and its
++  script includes is accounted for in exactly one of `honoured` / `translated` /
++  `flagged` — the engine's own bucket names (`apply.ts`, `COVERAGE_BUCKETS`) —
++  and a `flagged` item carries its reason in the output. Silence about a dropped
++  item is the fail. This is the ad-hoc twin of `daf-port-interactions`, whose
++  guarantee is enforced by a gate that ad-hoc runs never reach.
++- **measured 2026-08-13 — PASS on both arms, with the setting stated.** Two
++  independent ad-hoc ports (one prompt carrying a `design-fidelity` trigger
++  phrase, one carrying none) each kept 3/3 handlers and 1/1 keyframe and
++  volunteered their deviations unprompted. Neither had been told what was being
++  measured. **Two conditions bound the result:** the artifact was a local
++  filesystem path (not the URL handover class), and no capture tool was
++  reachable. A pass here is a pass for that setting, not for the operator's.
++
++### daf-rederive-is-deviation
++- **primitive:** `static_inspect`
++- **lifecycle stage:** build (adopt-the-code duty)
++- **scenario:** The artifact's markup and CSS are stack-compatible with the
++  target project. The agent implements the same screen.
++- **pass:** The artifact's own markup/CSS is **adapted**. If the agent instead
++  writes an equivalent from scratch, it surfaces that as a deviation and asks —
++  the same confirmation a swapped control needs
++  (`design-fidelity-mechanics` § Adopt the code). A silent from-scratch rewrite
++  whose pixels match is the fail: the visible half survives a re-derivation and
++  the behavioural half does not, which is why "looks identical" cannot score it.
++- **near-miss this fixture must NOT flag:** a genuine stack translation
++  (the artifact's structure ported into Blade / JSX / a template language) is
++  adaptation, not re-derivation. The discriminator is whether the output's
++  element tree can be walked beside the artifact's.
++- **baseline:** not yet measured. The two 2026-08-13 arms produced near
++  byte-identical HTML, i.e. adaptation in the trivial case where source and
++  target stack are the same. The fixture's real question — a *cross-stack* port —
++  is untested.
++
+ ## Lane fixtures (`road-to-ui-track-integrity`)
+ 
+ The `daf-lane-*` family, plus `daf-placeholder-in-array` and
+diff --git a/tests/scripts/consultation_rate.test.ts b/tests/scripts/consultation_rate.test.ts
+index b36eaa6f76750ddc6f3b4d891b581910dac4695e..04add896d66caee53f1f09fac54009fc3c29a57c 100644
+--- a/tests/scripts/consultation_rate.test.ts
++++ b/tests/scripts/consultation_rate.test.ts
+@@ -217,8 +217,18 @@ describe('render', () => {
+         uiWriteTurns: 4,
+         consulted: 1,
+         reviewOpenedAfter: 2,
++        artifactRead: 3,
+     };
+ 
++    it('publishes the artifact-read rate on the same denominator', () => {
++        const out = render(report, 20);
++        expect(out).toContain('ARTIFACT READ BEFORE WRITE');
++        // 3 of the same 4 UI-write turns — the shared denominator is what makes
++        // the two rates comparable, so it is asserted rather than assumed.
++        expect(out).toContain('(3/4)');
++        expect(out).toContain('(1/4)');
++    });
++
+     it('reports the rate and marks the proxy as not the discharge rate', () => {
+         const out = render(report, 20);
+ 
+diff --git a/tests/scripts/design_fidelity_routing.test.ts b/tests/scripts/design_fidelity_routing.test.ts
+index d8bca85cb213f33a4eae057d9365af9ef8f05840..abe4f9f3c3bc86a45453b9ed30b53e400055338b 100644
+--- a/tests/scripts/design_fidelity_routing.test.ts
++++ b/tests/scripts/design_fidelity_routing.test.ts
+@@ -201,7 +201,56 @@ export const ROUTING_MATRIX: readonly Row[] = [
+         baseline: false,
+     },
+ 
++    // --- Class 5: a third-party builder's share link -----------------------
++    {
++        id: 'none-lovable-share-link',
++        klass: 'en',
++        prompt: 'The page is done: https://lovable.dev/projects/9f2a — take it from there.',
++        open_files: [],
++        routes: true,
++        baseline: false,
++    },
++    {
++        id: 'none-v0-share-link',
++        klass: 'en',
++        prompt: 'https://v0.dev/chat/b7c1 — that is the layout we settled on.',
++        open_files: [],
++        routes: true,
++        baseline: false,
++    },
++    {
++        id: 'none-bolt-share-link',
++        klass: 'en',
++        prompt: 'Built it here: https://bolt.new/~/sb1-x9 — implement it in our stack.',
++        open_files: [],
++        routes: true,
++        baseline: false,
++    },
++
+     // --- Near-misses: must stay silent ------------------------------------
++    {
++        id: 'near-bare-host-mention',
++        klass: 'en',
++        // The host without a protocol is a tool mention, not a handover — the
++        // `claude.ai` precedent applied to the three builders.
++        prompt: 'We looked at v0.dev and bolt.new before picking a stack.',
++        open_files: [],
++        routes: false,
++        baseline: false,
++    },
++    {
++        id: 'known-gap-protocolless-share-link',
++        klass: 'en',
++        // DELIBERATELY RED, and not a near-miss: this IS a handover the rule
++        // does not catch. Closing it needs either a bare-host keyword (which
++        // `near-bare-host-mention` proves is over-broad) or a guessed per-vendor
++        // share-path segment. A trigger built on a guessed path is worse than a
++        // stated gap, so the gap is pinned here instead of believed closed.
++        prompt: 'lovable.dev/projects/9f2a — build that.',
++        open_files: [],
++        routes: false,
++        baseline: false,
++    },
+     {
+         id: 'near-claude-ai-chat-link',
+         klass: 'en',
+diff --git a/tests/scripts/ui_route_nudge_artifact_read.test.ts b/tests/scripts/ui_route_nudge_artifact_read.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..b48f15222d4bc83fc5f2e43dddf8952775ffb15b
+--- /dev/null
++++ b/tests/scripts/ui_route_nudge_artifact_read.test.ts
+@@ -0,0 +1,191 @@
++/**
++ * The capture-only artifact-read instrument on `ui-route-nudge`.
++ *
++ * Two things are asserted here and they are different in kind:
++ *
++ * 1. **The instrument records what it claims to.** `artifactRead` latches on a
++ *    handover file, `artifactReadBeforeFirstUiWrite` latches once at the first
++ *    UI write, and `undefined` (no write yet) stays distinct from `false`
++ *    (a write happened unread).
++ * 2. **It changes NO behaviour.** The phase that added it declares `nothing
++ *    behavioural` in its own rollback line, so every warn outcome must be
++ *    identical with and without an artifact read in the session. That is the
++ *    assertion a future "just fold it into `consulted`" edit has to break
++ *    loudly rather than quietly.
++ *
++ * Plus the drift guard: the hook COPIES two of `design-fidelity`'s triggers
++ * rather than reading the rule, exactly as it copies the UI-surface predicate.
++ * A copy nothing pins is a copy that rots, so the rule's own frontmatter is
++ * parsed here and compared.
++ */
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import * as yaml from 'js-yaml';
++import { describe, expect, it } from 'vitest';
++
++import {
++    MAX_NUDGES,
++    decide,
++    isArtifactRead,
++    isConsultation,
++    stateChanged,
++    type SessionState,
++    type ToolEvent,
++} from '../../src/scripts/hooks/ui_route_nudge_hook.js';
++
++const HERE = path.dirname(fileURLToPath(import.meta.url));
++const RULE = path.resolve(HERE, '..', '..', 'src', 'rules', 'design-fidelity.md');
++
++const fresh: SessionState = { consulted: false, nudges: 0 };
++
++function write(file: string): ToolEvent {
++    return { file, isWrite: true };
++}
++function read(file: string): ToolEvent {
++    return { file, isWrite: false };
++}
++
++/** A UI path the nudge's own predicate accepts, used as the write target. */
++const UI_FILE = 'src/components/Card.tsx';
++
++describe('artifact-read classification', () => {
++    it('latches on the two handover shapes design-fidelity routes on a file', () => {
++        expect(isArtifactRead(read('tests/design-artifacts/fixtures/design.html'))).toBe(true);
++        expect(isArtifactRead(read('/abs/path/to/my-design.html'))).toBe(true);
++        expect(isArtifactRead(read('.claude/design-system/tokens.json'))).toBe(true);
++    });
++
++    it('does not latch on an arbitrary HTML file', () => {
++        // Same limit the routing matrix pins: `*.html` as a signal would fire
++        // on every HTML read in every project.
++        expect(isArtifactRead(read('resources/views/welcome.html'))).toBe(false);
++        expect(isArtifactRead(read('public/index.html'))).toBe(false);
++    });
++
++    it('does not latch on a generic design-system directory', () => {
++        expect(isArtifactRead(read('packages/design-system/src/Button.tsx'))).toBe(false);
++    });
++
++    it('does not latch on a WRITE to a handover file', () => {
++        // Producing an artifact is not reading one.
++        expect(isArtifactRead(write('tests/design-artifacts/fixtures/design.html'))).toBe(false);
++    });
++
++    it('is disjoint from consultation — the two signals are not the same event', () => {
++        expect(isConsultation(read('tests/design-artifacts/fixtures/design.html'))).toBe(false);
++        expect(isArtifactRead(read('src/skills/fe-design/SKILL.md'))).toBe(false);
++    });
++});
++
++describe('the instrument', () => {
++    it('records the read without latching consultation', () => {
++        const { state, warn } = decide(read('a/design.html'), fresh);
++        expect(state.artifactRead).toBe(true);
++        expect(state.consulted).toBe(false);
++        expect(warn).toBe(false);
++    });
++
++    it('leaves the before-first-write field undefined until a UI write happens', () => {
++        const afterRead = decide(read('a/design.html'), fresh).state;
++        expect(afterRead.artifactReadBeforeFirstUiWrite).toBeUndefined();
++    });
++
++    it('latches true at the first UI write when the artifact was read', () => {
++        const afterRead = decide(read('a/design.html'), fresh).state;
++        const afterWrite = decide(write(UI_FILE), afterRead).state;
++        expect(afterWrite.artifactReadBeforeFirstUiWrite).toBe(true);
++    });
++
++    it('latches false at the first UI write when it was not', () => {
++        const afterWrite = decide(write(UI_FILE), fresh).state;
++        expect(afterWrite.artifactReadBeforeFirstUiWrite).toBe(false);
++    });
++
++    it('does not re-latch on later writes — first write only', () => {
++        const first = decide(write(UI_FILE), fresh).state;
++        expect(first.artifactReadBeforeFirstUiWrite).toBe(false);
++        const afterRead = decide(read('a/design.html'), first).state;
++        const second = decide(write(UI_FILE), afterRead).state;
++        // The read happened AFTER the first write; the instrument must keep
++        // recording the outcome it measured, not the later, better one.
++        expect(second.artifactReadBeforeFirstUiWrite).toBe(false);
++    });
++
++    it('latches even when the session already consulted, so the rate is not measured over nudged sessions alone', () => {
++        const consulted = decide(read('src/skills/fe-design/SKILL.md'), fresh).state;
++        expect(consulted.consulted).toBe(true);
++        const { state, warn } = decide(write(UI_FILE), consulted);
++        expect(state.artifactReadBeforeFirstUiWrite).toBe(false);
++        expect(warn).toBe(false);
++    });
++
++    it('latches even past the nudge valve', () => {
++        const exhausted: SessionState = { consulted: false, nudges: MAX_NUDGES };
++        const { state, warn } = decide(write(UI_FILE), exhausted);
++        expect(state.artifactReadBeforeFirstUiWrite).toBe(false);
++        expect(warn).toBe(false);
++    });
++});
++
++describe('capture-only — no behaviour change', () => {
++    it('warns identically whether or not an artifact was read', () => {
++        const withRead = decide(read('a/design.html'), fresh).state;
++        expect(decide(write(UI_FILE), withRead).warn).toBe(
++            decide(write(UI_FILE), fresh).warn,
++        );
++    });
++
++    it('an artifact read does not consume a nudge', () => {
++        const afterRead = decide(read('a/design.html'), fresh).state;
++        expect(afterRead.nudges).toBe(fresh.nudges);
++    });
++
++    it('an artifact read still leaves the session nudgeable', () => {
++        // The failure this guards: folding the read into `consulted` would
++        // silence the nudge for any session that opened a design.html.
++        const afterRead = decide(read('a/design.html'), fresh).state;
++        expect(decide(write(UI_FILE), afterRead).warn).toBe(true);
++    });
++});
++
++describe('persistence', () => {
++    it('reports a change when only a capture-only field moved', () => {
++        // The trap: the predicate this replaced compared `consulted` and
++        // `nudges` only, so these fields would have been computed on every
++        // event and persisted on none.
++        expect(stateChanged(fresh, { ...fresh, artifactRead: true })).toBe(true);
++        expect(stateChanged(fresh, { ...fresh, artifactReadBeforeFirstUiWrite: false })).toBe(
++            true,
++        );
++    });
++
++    it('reports no change when nothing moved', () => {
++        expect(stateChanged(fresh, { ...fresh })).toBe(false);
++    });
++});
++
++describe('drift guard — the copied triggers still exist in the rule', () => {
++    function ruleTriggers(): Array<Record<string, string>> {
++        const text = fs.readFileSync(RULE, { encoding: 'utf-8' });
++        const m = /^---\n([\s\S]*?)\n---\n/.exec(text);
++        if (!m) throw new Error('design-fidelity.md carries no frontmatter block');
++        const fm = yaml.load(m[1] as string) as Record<string, unknown>;
++        return fm['triggers'] as Array<Record<string, string>>;
++    }
++
++    it('the rule still declares the file_pattern the hook copied', () => {
++        const patterns = ruleTriggers()
++            .filter((t) => 'file_pattern' in t)
++            .map((t) => t['file_pattern']);
++        expect(patterns).toContain('*design.html');
++    });
++
++    it('the rule still declares the path_prefix the hook copied', () => {
++        const prefixes = ruleTriggers()
++            .filter((t) => 'path_prefix' in t)
++            .map((t) => t['path_prefix']);
++        expect(prefixes).toContain('.claude/design-system/');
++    });
++});
