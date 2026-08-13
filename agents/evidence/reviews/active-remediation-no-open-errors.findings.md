@@ -111,7 +111,18 @@ and it is recorded here rather than left as an unexplained red.
 
 The maintainer decided the open item this artefact previously recorded as
 unresolved, so two files join the diff: `internal/bench/reports/token-baseline.json`
-(101,670 → 106,704) and `agents/roadmaps/road-to-always-loaded-corpus-scoping.md`.
+(101,670 → 106,704) and `agents/roadmaps/road-to-always-loaded-corpus-scoping.md`. <!-- ref-ignore -->
+<!-- The path above is recorded as it stood when this review ran; that roadmap was
+     archived on 2026-08-13. It is NOT re-pointed, because `agents/evidence/` is a
+     `_FROZEN_RECORD_PREFIXES` entry in `archive_completed_roadmaps.ts:151` — the
+     archival sweep deliberately does not migrate references inside a committed
+     record, after one such rewrite corrupted a hash-bound reviewer prompt
+     (`src/config/review-prompt-binding-baseline.json`). `ref-ignore` is therefore
+     the only discharge that leaves the recorded path verbatim.
+     Known gate contradiction, recorded not repaired: the sweep refuses to migrate
+     these references and `check_references` requires them to resolve, so every
+     roadmap archived while an evidence record cites it needs this marker by hand.
+     Noted for `road-to-local-only-gate-reds` § ci-reachability-decision. -->
 
 The re-anchor is the same operation this branch earlier declined, and the
 distinction is the whole record: declined **silently, inside the PR that hit the
