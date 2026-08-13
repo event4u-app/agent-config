@@ -23,7 +23,7 @@ Last refreshed: 2026-05-04.
 |---|---|
 | **Platform** | Host agent surface — one of `augment`, `claude`, `cowork`, `cursor`, `cline`, `windsurf`, `gemini`, `copilot`. The `claude` value covers both Claude Code (CLI) and Claude.ai Web; `cowork` covers the Claude desktop app's local-agent-mode runtime separately so chat-history entries can attribute events to Cowork vs CLI Claude Code via the `agent` field. Cowork shares Claude Code's lifecycle vocabulary and payload shape but is upstream-blocked from reading any settings source as of writing (anthropics/claude-code#40495, #27398). The canonical platform identifier is `claude` for the CLI/IDE surface and `cowork` for the desktop sandbox (both match `chat_history.PLATFORM_EVENT_MAP`). |
 | **Concern** | A single agent-config behaviour wired to one or more lifecycle events — e.g. `chat-history`, `roadmap-progress`, `verify-before-complete`. Lives as a Python script under `scripts/hooks/concerns/<name>.py`. |
-| **Event** | The agent-config-internal event vocabulary the dispatcher exposes — `session_start`, `session_end`, `user_prompt_submit`, `pre_tool_use`, `post_tool_use`, `stop`, `pre_compact`, `agent_error`. Per-platform native names map to these. `agent_error` is synthetic — fired by the agent (or wrapper) when the host crashes outside a concern, so chat-history can checkpoint partial sessions on abnormal exit. (Added in Round 2 — 2026-05-04.) |
+| **Event** | The agent-config-internal event vocabulary the dispatcher exposes — `session_start`, `session_end`, `user_prompt_submit`, `pre_tool_use`, `post_tool_use`, `stop`, `pre_compact`, `agent_error`, `subagent_start`, `subagent_stop`. Per-platform native names map to these. `agent_error` is synthetic — fired by the agent (or wrapper) when the host crashes outside a concern, so chat-history can checkpoint partial sessions on abnormal exit. (Added in Round 2 — 2026-05-04.) `subagent_start` / `subagent_stop` bracket **one subagent dispatch**, not one session — the only pair in this vocabulary whose scope is narrower than a session. They are aliased on `claude` and `cowork` only; a platform that never sends them has no alias row, which is how the table expresses absence rather than a per-platform flag. (Added 2026-08-13 — `road-to-subagent-lifecycle-integrity` Phase 1.) |
 | **Trampoline** | A 5–10 line per-platform shell script that reads the platform's native payload, calls the dispatcher with `--platform <name>`, and forwards the platform's exit-code semantics. |
 | **Dispatcher** | `src/scripts/hooks/dispatch_hook.ts` — single Python entrypoint that reads the manifest, resolves which concerns fire on `(platform, event)`, runs each one with the contract envelope below, and reduces their exit codes. |
 
@@ -427,10 +427,11 @@ and by the dispatcher replay tests
 
 ```
 tests/fixtures/hooks/
-  session_start.json · session_end.json · user_prompt_submit.json
-  pre_tool_use.json  · post_tool_use.json · stop.json
-  pre_compact.json   · agent_error.json
-  README.md          — corpus contract + platform-shape table
+  session_start.json  · session_end.json  · user_prompt_submit.json
+  pre_tool_use.json   · post_tool_use.json · stop.json
+  pre_compact.json    · agent_error.json
+  subagent_start.json · subagent_stop.json
+  README.md           — corpus contract + platform-shape table
 ```
 
 Each fixture is a **stdin payload** — the dispatcher wraps it via
@@ -442,7 +443,9 @@ Each fixture is a **stdin payload** — the dispatcher wraps it via
   (`chat-history`, `roadmap-progress`, `context-hygiene`,
   `verify-before-complete`, `minimal-safe-diff`) run without raising
   — primarily `tool_name` (for `*_tool_use`), `prompt` (for
-  `user_prompt_submit`).
+  `user_prompt_submit`), `agent_id` + `agent_type` (for `subagent_*`,
+  which `subagent-ledger` correlates on) and `last_assistant_message`
+  (for `subagent_stop`, which it classifies without recording).
 - No real user content. Committed alongside source; the redaction
   workflow in [`hook-payload-capture`](../hook-payload-capture.md)
   applies to **captured** payloads, not committed fixtures.

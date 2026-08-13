@@ -80,6 +80,14 @@ export const EXIT_WARN = 2;
 // Per Council Round 2 (Q3): `agent_error` covers agent-level crashes
 // that are not concern-triggered, so chat-history can checkpoint
 // partial sessions on abnormal exit.
+//
+// `subagent_start` / `subagent_stop` (road-to-subagent-lifecycle-integrity
+// Phase 1 Step 1) are the dispatch-level twins of the session pair: they
+// bracket ONE subagent run rather than one session. The host tokens they map
+// to were re-extracted at 2.1.229 rather than carried over from the 2.1.220
+// spike — see agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md.
+// Only `claude` and `cowork` alias them today; every other platform simply
+// never sends them, which the alias table already expresses by omission.
 export const EVENT_VOCABULARY: ReadonlySet<string> = new Set([
   "session_start",
   "session_end",
@@ -89,6 +97,8 @@ export const EVENT_VOCABULARY: ReadonlySet<string> = new Set([
   "stop",
   "pre_compact",
   "agent_error",
+  "subagent_start",
+  "subagent_stop",
 ]);
 
 const _SEVERITY_BY_EXIT: Record<number, string> = {

@@ -1,0 +1,1283 @@
+diff --git a/agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md b/agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1dd542274b107ed04b11cce31b5db19d017de24a
+--- /dev/null
++++ b/agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md
+@@ -0,0 +1,133 @@
++# Subagent lifecycle — Phase 0 Step 1: host pin + event-enum re-extract
++
++> Read-only evidence for Phase 0 Step 1 of
++> [`road-to-subagent-lifecycle-integrity`](../../roadmaps/road-to-subagent-lifecycle-integrity.md).
++> Measured 2026-08-13 against `origin/main` @ `da40cc27b`. Every number below
++> carries the command that produced it; nothing is asserted from memory or
++> carried over from the earlier spike.
++
++## Host pin
++
++```
++$ claude --version
++2.1.229 (Claude Code)
++
++$ readlink -f "$(which claude)"
++/opt/homebrew/lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe
++```
++
++The prior spike
++([`solution-minimalism-phase0-spikes.md`](solution-minimalism-phase0-spikes.md)
++§ S0.2) pinned **2.1.220**. This re-extract is against **2.1.229**, so the
++finding below is a fresh measurement on the version this roadmap ships against,
++not a transferred one.
++
++## Event enum — exact-token counts
++
++Method: `strings -a <binary> | grep -c '^<token>$'`. The exact-match anchor
++matters — a substring count inflates every token that also appears inside prose
++or a longer identifier (`Notification` alone reads 446 as a substring and 14 as
++an exact token).
++
++| Native event | exact | in this tree's vocabulary? |
++|---|---:|---|
++| `SessionStart` | 24 | yes → `session_start` |
++| `SessionEnd` | 12 | yes → `session_end` |
++| `UserPromptSubmit` | 16 | yes → `user_prompt_submit` |
++| `PreToolUse` | 25 | yes → `pre_tool_use` |
++| `PostToolUse` | 25 | yes → `post_tool_use` |
++| `PreCompact` | 11 | yes → `pre_compact` |
++| `Notification` | 14 | no — not bound by this tree |
++| **`SubagentStart`** | **12** | **no — added by Phase 1 Step 1** |
++| **`SubagentStop`** | **24** | **no — added by Phase 1 Step 1** |
++| `PostToolBatch` | 10 | no — out of scope for this roadmap |
++
++`Stop` is deliberately absent from the table: it is a two-character-boundary
++token that no exact-line grep can separate from the many identifiers ending in
++`Stop` (`SubagentStop` among them), so a count for it would be noise. Its
++binding is already shipped and is not what this step is establishing.
++
++**Assertion of Phase 0 Step 1 holds:** `SubagentStop` is still present on the
++installed host, and `SubagentStart` with it.
++
++## Payload field names — present in the binary
++
++Same exact-token method. This is a **presence** check on the string table, not
++a proof that the fields arrive on a given event's stdin — that is Phase 0
++Steps 2 and 4, which need a hook registered in a fresh session and are not
++discharged here.
++
++| Field | exact |
++|---|---:|
++| `agent_id` | 3 |
++| `agent_type` | 3 |
++| `subagent_type` | 4 |
++| `last_assistant_message` | 1 |
++| `additionalContext` | 5 |
++| `hook_event_name` | 1 |
++| `transcript_path` | 1 |
++| `stop_hook_active` | 1 |
++
++## What this step does NOT establish
++
++The three fields the roadmap's Phase 2 and Phase 4 depend on — `agent_id` /
++`agent_type` on tool events, and `last_assistant_message` on `SubagentStop` —
++are present as **strings in the binary**. That is necessary and not sufficient:
++a string table cannot say which event carries which field. Phase 0 Steps 2 and
++4 remain open, and Phase 4 stays gated on Step 4 exactly as written.
++
++The honest consequence for this PR: Phase 1 binds the two events and captures
++whatever the payload actually carries, recording absence as data. Nothing in
++Phase 1 assumes a field it has not seen arrive.
++
++## Phase 5 Step 1 — the wired tier caller is reachable and NOT load-bearing
++
++The draft's fork ("wire it or delete it") was already decided:
++`resolveSubagentRouting` has a production caller. The open question the step
++actually asks is whether that caller *governs* anything. Traced end to end:
++
++| step | site | what happens to the tier |
++|---|---|---|
++| 1 | `delegation_nudge_hook.ts:341` | `recommendSliceTier` calls `resolveSubagentRouting` with a hardcoded `task_tier: "lite"` / `session_tier: "high"` — there is no per-slice classification at prompt-submit time |
++| 2 | `delegation_nudge_hook.ts:443` | the returned `Tier` is assigned to a local |
++| 3 | `delegation_nudge_hook.ts:382` | `buildNudgeLine` interpolates it into prose: `` `(${sliceCount} ${unit}, ${tier} tier recommended)` `` |
++| 4 | — | the string is injected as `additionalContext`. Nothing else reads it. |
++
++`resolveSubagentRouting` has exactly one production caller
++(`grep -n resolveSubagentRouting src --include '*.ts'`, excluding tests: one
++import and one call, both in `delegation_nudge_hook.ts`), and its output
++terminates in a sentence.
++
++**Finding, which is the outcome the step pre-registered as the honest one:**
++the caller is **reachable but not load-bearing**. The tier a spawn actually
++uses is chosen by the model when it invokes the `Agent` tool, downstream of and
++unconstrained by the nudge. A second wiring change is therefore *not* the
++follow-up — the follow-up is Phase 5 Step 2, which measures whether the
++distribution moves at all, and it needs the ≥20-dispatch window the Phase-1
++ledger has only just started collecting.
++
++## Phase 3 — not started, and the reason is a missing artefact
++
++Phase 3 Step 1 states that the spawn guard "ships **warn-first** … **per the
++concern activation policy** (program X3), which this step cites instead of
++re-arguing" the soak history. That policy does not exist:
++
++```
++$ grep -rl "concern activation policy" .
++agents/roadmaps/road-to-august-program.md
++agents/roadmaps/road-to-subagent-lifecycle-integrity.md
++agents/roadmaps/road-to-source-first-frontend.md
++agents/evidence/reviews/feat-source-first-frontend.review-input/roadmap.md
++```
++
++Four hits, all of them roadmap prose or a review input — no policy artefact in
++`docs/contracts/`, `src/rules/`, or anywhere else. Three roadmaps now cite a
++document none of them wrote.
++
++Building the guard anyway would mean inventing the warn→deny posture the step
++deliberately deferred to that policy, on top of thresholds (`N=2`, `M=4`) whose
++own text calls them "pre-registered … refined from Phase-1 telemetry, never
++final" — telemetry this PR produces the instrument for and cannot yet have.
++That is the threshold-invented-rather-than-measured failure this repository has
++recorded repeatedly, so Phase 3 stays open with this note rather than shipping
++a guard whose activation rule is a citation to nothing.
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 9541814c8a6b9f6c2ada6eba88c82abb5d675e1a..3ee80503d92652973ad97e420173870acaf8315b 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,11 +2,11 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 36 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **47** open blockers, **13** need you → `agent-config gates`
++> 35 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **46** open blockers, **12** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**302 / 474 steps done · 64%**
++**301 / 467 steps done · 64%**
+ 
+ ```text
+ ██████████████████████████░░░░░░░░░░░░░░   64%
+@@ -39,35 +39,34 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
+ | 5 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+ | 6 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
+ | 7 | [road-to-design-system-onramp.md](roadmaps/road-to-design-system-onramp.md) | 5 | 13 | 12 | 0 | 0 | 1 | 0 | ░░░░░░░░░░ 0% |
+-| 8 | [road-to-eval-loop-runnability.md](roadmaps/road-to-eval-loop-runnability.md) | 2 | 7 | 1 | 6 | 0 | 0 | [1](#blockers-road-to-eval-loop-runnability) | █████████░ 86% |
+-| 9 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
+-| 10 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+-| 11 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
+-| 12 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 2 | 12 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █████████░ 86% |
+-| 13 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
+-| 14 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
+-| 15 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 0 | 12 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | ██████████ 100% |
+-| 16 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
+-| 17 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
+-| 18 | [road-to-inbox-harvest-distillation.md](roadmaps/road-to-inbox-harvest-distillation.md) | 4 | 16 | 0 | 9 | 1 | 6 | [2](#blockers-road-to-inbox-harvest-distillation) | ██████████ 100% |
+-| 19 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 20 | [road-to-local-only-gate-reds.md](roadmaps/road-to-local-only-gate-reds.md) | 4 | 10 | 8 | 2 | 0 | 0 | [3](#blockers-road-to-local-only-gate-reds) | ██░░░░░░░░ 20% |
+-| 21 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+-| 22 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+-| 23 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+-| 24 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+-| 25 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+-| 26 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 1 | 4 | 15 | 1 | [2](#blockers-road-to-skill-ecosystem-executable-payloads) | ████████░░ 80% |
+-| 27 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+-| 28 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+-| 29 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 8 | 9 | 1 | 0 | 0 | █████░░░░░ 53% |
+-| 30 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 19 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
+-| 31 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+-| 32 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+-| 33 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+-| 34 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+-| 35 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+-| 36 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 15 | 3 | 12 | 0 | 0 | [1](#blockers-road-to-zero-settings) | ████████░░ 80% |
++| 8 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
++| 9 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
++| 10 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
++| 11 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 2 | 12 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █████████░ 86% |
++| 12 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
++| 13 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
++| 14 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 0 | 12 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | ██████████ 100% |
++| 15 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
++| 16 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
++| 17 | [road-to-inbox-harvest-distillation.md](roadmaps/road-to-inbox-harvest-distillation.md) | 4 | 16 | 0 | 9 | 1 | 6 | [2](#blockers-road-to-inbox-harvest-distillation) | ██████████ 100% |
++| 18 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 19 | [road-to-local-only-gate-reds.md](roadmaps/road-to-local-only-gate-reds.md) | 4 | 10 | 8 | 2 | 0 | 0 | [3](#blockers-road-to-local-only-gate-reds) | ██░░░░░░░░ 20% |
++| 20 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
++| 21 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
++| 22 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
++| 23 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
++| 24 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
++| 25 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 1 | 4 | 15 | 1 | [2](#blockers-road-to-skill-ecosystem-executable-payloads) | ████████░░ 80% |
++| 26 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
++| 27 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
++| 28 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 8 | 9 | 1 | 0 | 0 | █████░░░░░ 53% |
++| 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 14 | 5 | 0 | 2 | 0 | ███░░░░░░░ 26% |
++| 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
++| 31 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
++| 32 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
++| 33 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 34 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
++| 35 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 15 | 3 | 12 | 0 | 0 | [1](#blockers-road-to-zero-settings) | ████████░░ 80% |
+ 
+ ---
+ 
+@@ -873,16 +872,16 @@ _1 blocker resolved._
+ 
+ ### [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md)
+ 
+-**Road to subagent lifecycle integrity — turn three production symptoms into deterministic guards** — 0 / 19 done (0%)
++**Road to subagent lifecycle integrity — turn three production symptoms into deterministic guards** — 5 / 19 done (26%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+-| 0 | Spikes — pin the host, reproduce the two upstream premises | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+-| 1 | Measure — lifecycle capture, no behaviour change | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
++| 0 | Spikes — pin the host, reproduce the two upstream premises | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
++| 1 | Measure — lifecycle capture, no behaviour change | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+ | 2 | Return-channel integrity — validate, fall back to disk, retry once | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+ | 3 | Runaway containment — spawn guard, ledger-aware stop gate, shadow stop-loss | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+ | 4 | Role axis binds on payload, not env | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+-| 5 | Tier routing has a caller — measure whether it moved the distribution | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
++| 5 | Tier routing has a caller — measure whether it moved the distribution | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+ | 6 | Frontend amendments — SUPERSEDED by road-to-source-first-frontend | ⏭️ skipped | 0 | 0 | 0 | 2 | 0% |
+ 
+ ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
+diff --git a/agents/roadmaps/road-to-subagent-lifecycle-integrity.md b/agents/roadmaps/road-to-subagent-lifecycle-integrity.md
+index e0e1af8e95f22934f6d74f7315b9a848ef882f40..372e75aeddfeb2cdfc698bfcb01b8aec3c2feeb0 100644
+--- a/agents/roadmaps/road-to-subagent-lifecycle-integrity.md
++++ b/agents/roadmaps/road-to-subagent-lifecycle-integrity.md
+@@ -81,7 +81,7 @@ capture-only and "silent on every path" (`hook_manifest.yaml:396-408`).
+ 
+ **V5 — The refusal-capable stop gate has no view of pending async work.**
+ `turn-end-gate` is always armed on the `stop` slot and can refuse a turn-end
+-(`hook_manifest.yaml:445-460`; `src/scripts/hooks/turn_end_gate_hook.ts:810`
++(`hook_manifest.yaml:445-460`; `src/scripts/hooks/turn_end_gate_hook.ts:841`
+ honours `stop_hook_active`). The subagent-orchestration skill dispatches
+ async by default ("keep working while they run",
+ `src/skills/subagent-orchestration/SKILL.md`, RDP section). Upstream issue
+@@ -164,9 +164,17 @@ roadmap does **not** duplicate that work.
+ 
+ ## Phase 0: Spikes — pin the host, reproduce the two upstream premises
+ 
+-- [ ] **Step 1:** Record the installed host version and re-extract the event
++- [x] **Step 1:** Record the installed host version and re-extract the event
+       enum (S0.2 method). Assert `SubagentStop` still present; record the
+       version pin next to the finding.
++      → Host **2.1.229** (the spike pinned 2.1.220, so this is a fresh
++      extract, not a transfer). Exact-token counts: `SubagentStop` **24**,
++      `SubagentStart` **12** — both present. Payload field names
++      (`agent_id`, `agent_type`, `last_assistant_message`, …) are present in
++      the string table, which is a **presence** check and not proof that a
++      given event carries a given field — Steps 2 and 4 remain open and
++      Phase 4 stays gated on Step 4.
++      `agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md`.
+ - [ ] **Step 2:** Payload spike: one throwaway `SubagentStop` command hook in a
+       scratch project; capture the raw stdin JSON. Assert `last_assistant_message`
+       and `agent_type` arrive as documented on THIS host version.
+@@ -194,17 +202,43 @@ existing audit stream", `archive/road-to-orchestrator-first-execution.md:442-445
+ — what changed since the cancellation is that the reopen trigger's letter is
+ dead (V2) and production evidence exists.
+ 
+-- [ ] **Step 1:** Vocabulary + native mapping + contract table row. Lint
++- [x] **Step 1:** Vocabulary + native mapping + contract table row. Lint
+       (`lint_hook_manifest`) updated in the same change.
+-- [ ] **Step 2:** `subagent-ledger` concern *(proposal)*: on `subagent_start`,
++      → `subagent_start` / `subagent_stop` added to both `EVENT_VOCABULARY`
++      copies (`dispatch_hook.ts`, `lint_hook_manifest.ts`), to
++      `host_semantics.CLAUDE_HOOK_EVENT_NAME`, to the `claude` + `cowork`
++      alias tables and platform chains, and to the contract's Event row.
++      **`hooks/hooks.json` was NOT hand-edited** — it is generated from the
++      manifest by `build_claude_hook_matrix`, so `task sync` +
++      `task generate-tools` regenerated it (`plugin_hooks` 7 → 9).
++      Two downstream surfaces the step's text does not name and CI does:
++      `concern_registry.ts` (parity test) and the manifest's bound-concern
++      lint. *Verified:* `lint_hook_manifest` exit 0; `tests/hooks` +
++      `tests/scripts/lint_hook_manifest.test.ts` 52 pass.
++- [x] **Step 2:** `subagent-ledger` concern *(proposal)*: on `subagent_start`,
+       append an open-dispatch record `{agent_id, agent_type, started_at}` to
+       gitignored runtime state; on `subagent_stop`, close it with
+       `{duration, envelope_parse: ok|fail|absent}` — envelope parse runs
+       `validateResponse` against `last_assistant_message` in **observe mode**
+       (no decision emitted, ever, in this phase).
+-- [ ] **Step 3:** Depth/concurrency signals: an open record whose starting
++      → `src/scripts/hooks/subagent_ledger_hook.ts`, bound on the two new
++      events only. **One deliberate departure from the step's literal text:**
++      the raw `agent_id` is never written. It is a host-supplied high-entropy
++      token of exactly the class `orchestration_record_hook` refuses to record
++      (`check_secret_leak` flags them as candidate credentials), so the ledger
++      stores `ref` — a local SHA-256 prefix — which correlates start↔stop and
++      child↔parent without persisting the host's token. `last_assistant_message`
++      never reaches disk in any form; only the three-way verdict and an error
++      **count**. A negative test plants both hostile values in the fields under
++      test and greps every written byte.
++- [x] **Step 3:** Depth/concurrency signals: an open record whose starting
+       payload itself carries an `agent_id` is a nested spawn; record depth and
+       the concurrent-open count per event.
++      → Depth is derived from the open-record set, never asserted: a named
++      parent gives `depth_basis: "observed"`, no parent field at all gives
++      depth 1 with `"assumed-root"` — absence recorded as absence, since
++      Phase 0 Steps 2/4 are what will replace the assumption with an observed
++      payload shape. *Verified:* 16 tests in `tests/hooks/subagent_ledger.test.ts`.
+ - [ ] **Step 4:** Publish the baseline after ≥20 real dispatches: envelope
+       return rate, parse-failure rate, duration distribution, nested-spawn
+       count. This number replaces the 0.27% model-carried capture as the
+@@ -257,6 +291,16 @@ reverts by file.
+ 
+ ## Phase 3: Runaway containment — spawn guard, ledger-aware stop gate, shadow stop-loss
+ 
++> **Not started 2026-08-13, and the reason is an artefact that does not exist.**
++> Step 1 defers its warn→deny posture to "the concern activation policy
++> (program X3), which this step cites instead of re-arguing" the soak history.
++> `grep -rl "concern activation policy" .` returns **four** hits and every one
++> is roadmap prose or a review input — three roadmaps now cite a document none
++> of them wrote. Building the guard would mean inventing that posture, on top
++> of thresholds whose own text calls them "refined from Phase-1 telemetry,
++> never final" — telemetry the ledger landed in this PR has not collected yet.
++> Recorded rather than shipped; the phase stays open.
++
+ - [ ] **Step 1:** `spawn-guard` PreToolUse concern on `Agent`/`Task`
+       *(proposal)*: refuse a spawn when the ledger shows depth ≥ N or
+       concurrent-open ≥ M (start values N=2, M=4 — pre-registered, refined
+@@ -290,7 +334,10 @@ infrastructure).
+       present ⇒ role `worker`, without touching the env path (CLI spawn
+       wrappers keep working). Gated on the Phase-0 Step-4 spike.
+ - [ ] **Step 2:** Supersede the stale blocker comment
+-      (`hook_manifest.yaml:536-540`) with the payload mechanism and the spike
++      (`hook_manifest.yaml:568-571` — the comment moved again when Phase 1
++      Step 1 inserted the `subagent-ledger` concern above it; the draft's
++      `:536-540` and the adoption note's `:547-550` are both stale)
++      with the payload mechanism and the spike
+       ref — corrected in place, the same way round 7 corrected the
+       verify-before-complete path comment (`hook_manifest.yaml:63-66`).
+ - [ ] **Step 3:** Keep the invariant: `pre_tool_use` concerns are never
+@@ -310,12 +357,23 @@ wire-it-or-delete-it fork; the fork is decided — `delegation_nudge_hook.ts:342
+ wires it, so neither branch is work. What the draft's evidence never covered is
+ whether a *wired* caller changes the outcome, and that is the open question.
+ 
+-- [ ] **Step 1:** Confirm the wired call site actually governs the dispatches the
++- [x] **Step 1:** Confirm the wired call site actually governs the dispatches the
+       ledger counts — `delegation-nudge` runs on `user_prompt_submit` and is
+       advisory (it injects a verdict line, it does not select the tier for the
+       spawn). If the tier the spawn uses is still model-carried downstream of the
+       nudge, the caller is reachable but **not** load-bearing, and that is the
+       finding to publish, not a second wiring change.
++      → **Reachable, not load-bearing** — the pre-registered outcome, traced
++      end to end. `recommendSliceTier` (`delegation_nudge_hook.ts:341`) calls
++      the resolver with a hardcoded `task_tier: "lite"` / `session_tier: "high"`
++      (no per-slice classification exists at prompt-submit time); the returned
++      tier is interpolated into prose at `:382` and injected as
++      `additionalContext`. Nothing reads it back. `resolveSubagentRouting` has
++      exactly one production caller and its output terminates in a sentence.
++      So the follow-up is **not** a second wiring change — it is Step 2, which
++      needs the ≥20-dispatch window the Phase-1 ledger has only just begun to
++      collect. Full trace: `agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md`
++      § Phase 5 Step 1.
+ - [ ] **Step 2:** Re-measure the tier distribution over the next ≥20 dispatches
+       via the Phase-1 ledger; publish the before/after pair.
+ 
+diff --git a/docs/contracts/hook-architecture-v1.md b/docs/contracts/hook-architecture-v1.md
+index d261ae5b6778b4e7243f181a1fd1d37178c0660c..69ddcb6d98e7e0e1cb60a8bfb3e2986da2b8e912 100644
+--- a/docs/contracts/hook-architecture-v1.md
++++ b/docs/contracts/hook-architecture-v1.md
+@@ -23,7 +23,7 @@ Last refreshed: 2026-05-04.
+ |---|---|
+ | **Platform** | Host agent surface — one of `augment`, `claude`, `cowork`, `cursor`, `cline`, `windsurf`, `gemini`, `copilot`. The `claude` value covers both Claude Code (CLI) and Claude.ai Web; `cowork` covers the Claude desktop app's local-agent-mode runtime separately so chat-history entries can attribute events to Cowork vs CLI Claude Code via the `agent` field. Cowork shares Claude Code's lifecycle vocabulary and payload shape but is upstream-blocked from reading any settings source as of writing (anthropics/claude-code#40495, #27398). The canonical platform identifier is `claude` for the CLI/IDE surface and `cowork` for the desktop sandbox (both match `chat_history.PLATFORM_EVENT_MAP`). |
+ | **Concern** | A single agent-config behaviour wired to one or more lifecycle events — e.g. `chat-history`, `roadmap-progress`, `verify-before-complete`. Lives as a Python script under `scripts/hooks/concerns/<name>.py`. |
+-| **Event** | The agent-config-internal event vocabulary the dispatcher exposes — `session_start`, `session_end`, `user_prompt_submit`, `pre_tool_use`, `post_tool_use`, `stop`, `pre_compact`, `agent_error`. Per-platform native names map to these. `agent_error` is synthetic — fired by the agent (or wrapper) when the host crashes outside a concern, so chat-history can checkpoint partial sessions on abnormal exit. (Added in Round 2 — 2026-05-04.) |
++| **Event** | The agent-config-internal event vocabulary the dispatcher exposes — `session_start`, `session_end`, `user_prompt_submit`, `pre_tool_use`, `post_tool_use`, `stop`, `pre_compact`, `agent_error`, `subagent_start`, `subagent_stop`. Per-platform native names map to these. `agent_error` is synthetic — fired by the agent (or wrapper) when the host crashes outside a concern, so chat-history can checkpoint partial sessions on abnormal exit. (Added in Round 2 — 2026-05-04.) `subagent_start` / `subagent_stop` bracket **one subagent dispatch**, not one session — the only pair in this vocabulary whose scope is narrower than a session. They are aliased on `claude` and `cowork` only; a platform that never sends them has no alias row, which is how the table expresses absence rather than a per-platform flag. (Added 2026-08-13 — `road-to-subagent-lifecycle-integrity` Phase 1.) |
+ | **Trampoline** | A 5–10 line per-platform shell script that reads the platform's native payload, calls the dispatcher with `--platform <name>`, and forwards the platform's exit-code semantics. |
+ | **Dispatcher** | `src/scripts/hooks/dispatch_hook.ts` — single Python entrypoint that reads the manifest, resolves which concerns fire on `(platform, event)`, runs each one with the contract envelope below, and reduces their exit codes. |
+ 
+diff --git a/hooks/hooks.json b/hooks/hooks.json
+index b3e6a7e43c8d7627c81fd5fce01f82fd203d3a72..2ff9d4e745c24fa0912fd631c70f8d91e646e57a 100644
+--- a/hooks/hooks.json
++++ b/hooks/hooks.json
+@@ -69,6 +69,26 @@
+           }
+         ]
+       }
++    ],
++    "SubagentStart": [
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "command": "B=\"\"; [ -f \"$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js\" ] && B=\"$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js\"; [ -z \"$B\" ] && [ -f \"$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js\" ] && [ -f \"$CLAUDE_PROJECT_DIR/src/scripts/hook_manifest.yaml\" ] && B=\"$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js\"; if [ -n \"$B\" ] && command -v node >/dev/null 2>&1; then exec node \"$B\" --platform claude --event subagent_start --native-event SubagentStart --project-dir \"$CLAUDE_PROJECT_DIR\" --min-version 1; fi; BIN=\"$CLAUDE_PROJECT_DIR/agent-config\"; [ -x \"$BIN\" ] || BIN=agent-config; command -v \"$BIN\" >/dev/null 2>&1 || exit 0; \"$BIN\" dispatch:hook --platform claude --event subagent_start --native-event SubagentStart --project-dir \"$CLAUDE_PROJECT_DIR\" --min-version 1"
++          }
++        ]
++      }
++    ],
++    "SubagentStop": [
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "command": "B=\"\"; [ -f \"$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js\" ] && B=\"$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js\"; [ -z \"$B\" ] && [ -f \"$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js\" ] && [ -f \"$CLAUDE_PROJECT_DIR/src/scripts/hook_manifest.yaml\" ] && B=\"$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js\"; if [ -n \"$B\" ] && command -v node >/dev/null 2>&1; then exec node \"$B\" --platform claude --event subagent_stop --native-event SubagentStop --project-dir \"$CLAUDE_PROJECT_DIR\" --min-version 1; fi; BIN=\"$CLAUDE_PROJECT_DIR/agent-config\"; [ -x \"$BIN\" ] || BIN=agent-config; command -v \"$BIN\" >/dev/null 2>&1 || exit 0; \"$BIN\" dispatch:hook --platform claude --event subagent_stop --native-event SubagentStop --project-dir \"$CLAUDE_PROJECT_DIR\" --min-version 1"
++          }
++        ]
++      }
+     ]
+   }
+ }
+diff --git a/src/scripts/hook_manifest.yaml b/src/scripts/hook_manifest.yaml
+index 85d177d8f43ae4a119321bf687c97ecb9c675196..fefa3b5d8fd2b9fb36810e79ad65c95e5514f0c3 100644
+--- a/src/scripts/hook_manifest.yaml
++++ b/src/scripts/hook_manifest.yaml
+@@ -535,6 +535,27 @@ concerns:
+     args: []
+     fail_closed: false
+     severity: advisory
++  # road-to-subagent-lifecycle-integrity Phase 1 (Steps 2+3) — the subagent
++  # lifecycle ledger. Binds ONLY the two new events; on every other slot it is
++  # not listed at all. Appends `subagent_start` / `subagent_stop` lines to
++  # gitignored runtime state and keeps one open-record file per live dispatch
++  # so depth and concurrency are derived from the set rather than asserted.
++  #
++  # CAPTURE ONLY, and that is load-bearing rather than cautious: Phase 1's
++  # falsifier (envelope return rate >=95% and no dispatch over 2x its tier
++  # budget-equivalent duration) can only be read off a window no mechanism
++  # reacted to. `validateResponse` runs in observe mode — the verdict is
++  # written down and dropped, never emitted as a decision. Phase 2's
++  # return-gate and Phase 3's spawn-guard are the concerns allowed to act, and
++  # both are pre-registered as gated on the baseline this one produces.
++  #
++  # Never blocks, never warns: exit 0 on every path including a malformed
++  # payload or an unwritable disk. fail_closed: false.
++  subagent-ledger:
++    script: src/scripts/hooks/subagent_ledger_hook.ts
++    args: []
++    fail_closed: false
++    severity: advisory
+ 
+ # Role axis (road-to-token-economy-dispatch Phase 2). The dispatcher reads
+ # AGENT_CONFIG_SESSION_ROLE (resolved via _lib/session_role.ts — set ONLY by
+@@ -577,6 +598,11 @@ platforms:
+     # shape § 6.2 refuses. claude only: it is the sole verified platform, and
+     # the measured compaction defect is a Claude Code transcript fact.
+     pre_compact:      [language-mirror]
++    # road-to-subagent-lifecycle-integrity Phase 1 Step 1. `claude` is the only
++    # platform where both native events were measured present on the installed
++    # binary (2.1.229 — see the evidence page cited on the alias rows below).
++    subagent_start:   [subagent-ledger]
++    subagent_stop:    [subagent-ledger]
+ 
+   # Cowork — the Claude desktop app's local-agent-mode runtime, built
+   # on top of the Claude Code CLI. Same lifecycle vocabulary, same
+@@ -609,6 +635,15 @@ platforms:
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, reread-guard]
+     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
++    # subagent-ledger IS bound here, unlike the two nudges above, and the
++    # difference is the delivery channel rather than the platform: the nudges
++    # depend on stdout reaching the model, which this trampoline discards by
++    # construction; the ledger's entire output is a disk append, which survives
++    # a discarded stdout and a discarded exit code alike. It stays dead until
++    # the upstream settings-source blockers land and the events actually fire —
++    # structurally ready, costing nothing in the meantime.
++    subagent_start:   [subagent-ledger]
++    subagent_stop:    [subagent-ledger]
+ 
+   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
+   # IDE and CLI; `~/.cursor/hooks.json` (user) is opt-in via
+@@ -698,6 +733,12 @@ native_event_aliases:
+     PostToolUse:       post_tool_use
+     PreToolUse:        pre_tool_use
+     PreCompact:        pre_compact
++    # road-to-subagent-lifecycle-integrity Phase 1 Step 1. Both tokens were
++    # re-extracted from the installed binary at 2.1.229 (exact-token counts 12
++    # and 24) rather than carried over from the 2.1.220 spike — see
++    # agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md.
++    SubagentStart:     subagent_start
++    SubagentStop:      subagent_stop
+   # Cowork shares Claude Code's PascalCase event vocabulary verbatim
+   # (Cowork is Claude Code under the hood). Native names are duplicated
+   # here rather than aliased so dispatcher logs / feedback carry the
+@@ -710,6 +751,13 @@ native_event_aliases:
+     PostToolUse:       post_tool_use
+     PreToolUse:        pre_tool_use
+     PreCompact:        pre_compact
++    # Cowork is Claude Code under the hood, so the subagent pair is aliased
++    # here for the same reason the rest of the table is duplicated rather than
++    # referenced. NOT independently measured on a Cowork build — the alias
++    # costs nothing if the host never sends the event, and the ledger records
++    # absence as data rather than assuming arrival.
++    SubagentStart:     subagent_start
++    SubagentStop:      subagent_stop
+   cursor:
+     sessionStart:        session_start
+     sessionEnd:          session_end
+diff --git a/src/scripts/hooks/concern_registry.ts b/src/scripts/hooks/concern_registry.ts
+index f94e62942c44e1017fa9a61ba3557bafeff416ba..e061698aa894d96e42dbc0bac50fdcde41c234a2 100644
+--- a/src/scripts/hooks/concern_registry.ts
++++ b/src/scripts/hooks/concern_registry.ts
+@@ -62,6 +62,7 @@ import { main as turnEndGateMain } from './turn_end_gate_hook.js';
+ import { main as editShapeMain } from './edit_shape_hook.js';
+ import { main as rereadGuardMain } from './reread_guard_hook.js';
+ import { main as sessionEolMain } from './session_eol_hook.js';
++import { main as subagentLedgerMain } from './subagent_ledger_hook.js';
+ 
+ /** A concern `main` — argv-taking or not; both shapes exist. */
+ export type ConcernMain = (argv?: string[]) => number | undefined | void;
+@@ -106,4 +107,5 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
+     'src/scripts/hooks/edit_shape_hook.ts': editShapeMain as ConcernMain,
+     'src/scripts/hooks/reread_guard_hook.ts': rereadGuardMain as ConcernMain,
+     'src/scripts/hooks/session_eol_hook.ts': sessionEolMain as ConcernMain,
++    'src/scripts/hooks/subagent_ledger_hook.ts': subagentLedgerMain as ConcernMain,
+ };
+diff --git a/src/scripts/hooks/dispatch_hook.ts b/src/scripts/hooks/dispatch_hook.ts
+index eead55e4ffd04bec8c0a755a10d21cb285978a2d..69959fca85cc1ca2d755bf5d25982c98e480746f 100644
+--- a/src/scripts/hooks/dispatch_hook.ts
++++ b/src/scripts/hooks/dispatch_hook.ts
+@@ -80,6 +80,14 @@ export const EXIT_WARN = 2;
+ // Per Council Round 2 (Q3): `agent_error` covers agent-level crashes
+ // that are not concern-triggered, so chat-history can checkpoint
+ // partial sessions on abnormal exit.
++//
++// `subagent_start` / `subagent_stop` (road-to-subagent-lifecycle-integrity
++// Phase 1 Step 1) are the dispatch-level twins of the session pair: they
++// bracket ONE subagent run rather than one session. The host tokens they map
++// to were re-extracted at 2.1.229 rather than carried over from the 2.1.220
++// spike — see agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md.
++// Only `claude` and `cowork` alias them today; every other platform simply
++// never sends them, which the alias table already expresses by omission.
+ export const EVENT_VOCABULARY: ReadonlySet<string> = new Set([
+   "session_start",
+   "session_end",
+@@ -89,6 +97,8 @@ export const EVENT_VOCABULARY: ReadonlySet<string> = new Set([
+   "stop",
+   "pre_compact",
+   "agent_error",
++  "subagent_start",
++  "subagent_stop",
+ ]);
+ 
+ const _SEVERITY_BY_EXIT: Record<number, string> = {
+diff --git a/src/scripts/hooks/host_semantics.ts b/src/scripts/hooks/host_semantics.ts
+index 0aefb9856f967c0e96c8e241994ec06f9e21a285..40a981ffd85bfbaa464eb3dc044683c06d641c2f 100644
+--- a/src/scripts/hooks/host_semantics.ts
++++ b/src/scripts/hooks/host_semantics.ts
+@@ -62,6 +62,8 @@ const CLAUDE_HOOK_EVENT_NAME: Record<string, string> = {
+     session_end: "SessionEnd",
+     stop: "Stop",
+     pre_compact: "PreCompact",
++    subagent_start: "SubagentStart",
++    subagent_stop: "SubagentStop",
+ };
+ 
+ /**
+diff --git a/src/scripts/hooks/subagent_ledger_hook.ts b/src/scripts/hooks/subagent_ledger_hook.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..20a65021e4e2b18afa1234dc02760ae78f706f28
+--- /dev/null
++++ b/src/scripts/hooks/subagent_ledger_hook.ts
+@@ -0,0 +1,451 @@
++#!/usr/bin/env tsx
++/**
++ * Subagent lifecycle ledger — capture only, no behaviour change
++ * (road-to-subagent-lifecycle-integrity Phase 1, Steps 2 + 3).
++ *
++ * Why this exists. Two of the three operator-reported symptoms — subagents
++ * that never terminate, and subagents that finish and "signal" but whose
++ * result never reaches the orchestrator — share one structural root: **no
++ * subagent lifecycle event was registered anywhere in this tree**. The
++ * dispatcher's vocabulary carried eight events and none of them bracketed a
++ * single dispatch, so nothing could say how long a dispatch ran, how many ran
++ * at once, how deep they nested, or whether a return envelope arrived at all.
++ * Every claim about those symptoms was therefore model-carried anecdote.
++ *
++ * This concern is the instrument, and ONLY the instrument. It appends; it
++ * never decides. Phase 2 (`subagent-return-gate`) and Phase 3 (`spawn-guard`,
++ * stop-loss) are the mechanisms that may act on what it records, and both are
++ * pre-registered as gated on a baseline this file has to produce first. That
++ * ordering is deliberate: a guard built before the distribution is known is a
++ * threshold invented rather than measured, which is the failure this
++ * repository has recorded repeatedly.
++ *
++ * ── What is recorded, and what is refused ──────────────────────────────────
++ *
++ * PRIVACY BY CONSTRUCTION — never widen this file to read or emit free text.
++ *
++ *   - `agent_id` is a host-supplied high-entropy opaque token. The sibling
++ *     `orchestration_record_hook.ts` records the same class of value as a
++ *     deliberate NON-goal ("`check_secret_leak` correctly flags [them] as
++ *     candidate credentials"), so this ledger never writes one. It writes
++ *     `ref` — the first 12 hex chars of a local SHA-256 of the id. That is
++ *     enough to correlate a start with its stop and a child with its parent,
++ *     and it is not the host's token.
++ *   - `agent_type` IS recorded verbatim: it is an id-shaped enum
++ *     (`Explore` / `general-purpose` / `production-validator` / …), the same
++ *     single host string `orchestration_record_hook` already records.
++ *   - `last_assistant_message` is free model prose and is NEVER recorded, in
++ *     any form — not truncated, not hashed, not summarised. Only the three-way
++ *     parse VERDICT (`ok` / `fail` / `absent`) and a validator error COUNT
++ *     leave this function. A record type with no field able to hold prose has
++ *     no scrubber that can fail.
++ *
++ * ── Observe mode is a property of this file, not a setting ────────────────
++ *
++ * `validateResponse` runs here, and its result is written down and dropped.
++ * The hook's exit code is ALWAYS 0 on every path — malformed envelope,
++ * unparseable payload, unwritable disk, failed validation. A `warn` (exit 2)
++ * is read as a hard BLOCK on this host, and this concern has nothing to say
++ * to the model, so it never warns either. Phase 1's falsifier can only be
++ * evaluated if the measurement window is uncontaminated by a mechanism
++ * reacting to it.
++ *
++ * ── Depth and concurrency (Step 3) ────────────────────────────────────────
++ *
++ * Depth is derived from the open-record set, not asserted. A start payload
++ * that names a parent (`parent_agent_id` / `parentAgentId`, or a
++ * session-level `agent_id` distinct from the starting agent's own) is a
++ * nested spawn: its depth is the parent's depth + 1, resolved by walking the
++ * open records. When no parent field arrives at all, depth is recorded as 1
++ * with `depth_basis: "assumed-root"` — absence is written down as absence,
++ * never as a measured root. Phase 0 Steps 2 and 4 are what will replace the
++ * assumption with an observed payload shape; until they run, the honest
++ * record says which of the two it is.
++ *
++ * `concurrent_open` is the count of open records at the moment the event is
++ * processed, INCLUDING the record being opened, so a lone dispatch reads 1.
++ */
++import * as crypto from 'node:crypto';
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import { validateResponse } from '../_lib/subagent_response.js';
++import { is_replay_mode } from './state_io.js';
++import { readHookStdin } from './hook_stdin.js';
++
++const EXIT_ALLOW = 0;
++
++type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
++type JsonObject = { [k: string]: JsonValue };
++
++function isObject(v: unknown): v is JsonObject {
++    return typeof v === 'object' && v !== null && !Array.isArray(v);
++}
++
++/** Ledger root, relative to the consumer repo root. Gitignored via `/agents/runtime/`. */
++export const LEDGER_DIR = path.join('agents', 'runtime', 'state', 'subagent-ledger');
++/** Open-dispatch records live one file per ref so a crash cannot tear the set. */
++export const OPEN_SUBDIR = 'open';
++
++/**
++ * Stable, local, non-reversible correlation key for a host `agent_id`.
++ *
++ * Twelve hex chars is 48 bits — collision-free for any realistic count of
++ * concurrent dispatches, and short enough to read in a ledger line. The digest
++ * is unsalted ON PURPOSE: the value must be stable across the two separate
++ * hook invocations that bracket one dispatch (start and stop are different
++ * processes), so a per-process salt would break the only thing this key is
++ * for. Nothing is being protected against an offline guessing attack here —
++ * the goal is that the host's opaque token never lands in a file, not that
++ * the mapping is cryptographically hidden from someone who already holds it.
++ */
++export function refFor(agentId: string): string {
++    return crypto.createHash('sha256').update(agentId, 'utf8').digest('hex').slice(0, 12);
++}
++
++/**
++ * Unwrap the dispatcher envelope (`{schema_version, platform, event, payload}`)
++ * down to the platform-native payload, falling back to the top-level object
++ * for direct/legacy invocation — the same shape `orchestration_record_hook`
++ * and `code_graph_nudge_hook` handle.
++ */
++export function unwrapPayload(envelope: JsonObject): JsonObject {
++    const inner = envelope['payload'];
++    return isObject(inner) ? inner : envelope;
++}
++
++/** Read the internal event name off the dispatcher envelope. */
++export function extractEvent(envelope: JsonObject): string | null {
++    const v = envelope['event'];
++    return typeof v === 'string' && v ? v : null;
++}
++
++function str(payload: JsonObject, ...keys: string[]): string | null {
++    for (const k of keys) {
++        const v = payload[k];
++        if (typeof v === 'string' && v) return v;
++    }
++    return null;
++}
++
++/** The starting/stopping agent's own id, across observed host key variants. */
++export function extractAgentId(payload: JsonObject): string | null {
++    return str(payload, 'agent_id', 'agentId');
++}
++
++/** The agent TYPE, an id-shaped enum — the one host string recorded verbatim. */
++export function extractAgentType(payload: JsonObject): string | null {
++    return str(payload, 'agent_type', 'agentType', 'subagent_type', 'subagentType');
++}
++
++/**
++ * The PARENT agent's id, when the payload names one.
++ *
++ * Two shapes are accepted, and neither is invented: an explicit parent field,
++ * or a session-level `agent_id` that differs from the starting agent's own id
++ * (which is what a nested spawn looks like when the host reports the caller's
++ * context rather than a dedicated parent key). `null` means the payload said
++ * nothing — recorded as `assumed-root`, never as "this is a root".
++ */
++export function extractParentId(payload: JsonObject, ownId: string | null): string | null {
++    const explicit = str(payload, 'parent_agent_id', 'parentAgentId');
++    if (explicit) return explicit;
++    const session = payload['session'];
++    if (isObject(session)) {
++        const sessionAgent = str(session, 'agent_id', 'agentId');
++        if (sessionAgent && sessionAgent !== ownId) return sessionAgent;
++    }
++    return null;
++}
++
++/** The subagent's final assistant message — read, classified, never stored. */
++export function extractLastMessage(payload: JsonObject): string | null {
++    return str(payload, 'last_assistant_message', 'lastAssistantMessage');
++}
++
++export type EnvelopeParse = 'ok' | 'fail' | 'absent';
++
++export interface ParseVerdict {
++    verdict: EnvelopeParse;
++    /** Count of validator errors. A COUNT — the messages never leave this function. */
++    error_count: number;
++}
++
++/**
++ * Classify a subagent's final message against the response-envelope contract.
++ *
++ * Three outcomes, and the distinction between the last two is the whole point
++ * of the measurement: `absent` means no envelope was found to judge (no
++ * message, or a message carrying no JSON object at all), `fail` means one was
++ * found and did not satisfy `validateResponse`. Collapsing them would make the
++ * Phase-1 baseline unable to separate "the worker never returned a structured
++ * result" from "it returned a malformed one" — two different defects with two
++ * different fixes.
++ *
++ * A fenced ```json block is unwrapped first, because that is how a model
++ * emits an envelope in prose; a bare object is tried second.
++ */
++export function classifyEnvelope(message: string | null): ParseVerdict {
++    if (message === null || !message.trim()) return { verdict: 'absent', error_count: 0 };
++
++    const candidate = _extractJsonObject(message);
++    if (candidate === null) return { verdict: 'absent', error_count: 0 };
++
++    const result = validateResponse(candidate);
++    if (result.valid) return { verdict: 'ok', error_count: 0 };
++    return { verdict: 'fail', error_count: result.errors.length };
++}
++
++/**
++ * Pull the first plausible JSON object out of a message. Returns the DECODED
++ * value, never the text. Deliberately conservative: a fenced block, then the
++ * outermost brace span. A message with no object shape yields `null`, which
++ * the caller reports as `absent` rather than `fail`.
++ */
++function _extractJsonObject(message: string): unknown | null {
++    const fenced = /```(?:json)?\s*\n([\s\S]*?)```/.exec(message);
++    const bodies: string[] = [];
++    if (fenced && fenced[1]) bodies.push(fenced[1]);
++    const first = message.indexOf('{');
++    const last = message.lastIndexOf('}');
++    if (first !== -1 && last > first) bodies.push(message.slice(first, last + 1));
++
++    for (const body of bodies) {
++        try {
++            const parsed: unknown = JSON.parse(body.trim());
++            if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
++        } catch {
++            // try the next candidate shape
++        }
++    }
++    return null;
++}
++
++/** An open dispatch, as persisted between the start and stop invocations. */
++export interface OpenRecord {
++    ref: string;
++    agent_type: string | null;
++    started_at: string;
++    parent_ref: string | null;
++    depth: number;
++    depth_basis: 'observed' | 'assumed-root';
++}
++
++function openDir(root: string): string {
++    return path.join(root, LEDGER_DIR, OPEN_SUBDIR);
++}
++
++function openFile(root: string, ref: string): string {
++    return path.join(openDir(root), `${ref}.json`);
++}
++
++/** Every currently-open record, keyed by ref. Unreadable entries are skipped. */
++export function readOpenRecords(root: string): Map<string, OpenRecord> {
++    const out = new Map<string, OpenRecord>();
++    let names: string[];
++    try {
++        names = fs.readdirSync(openDir(root));
++    } catch {
++        return out;
++    }
++    for (const name of names) {
++        if (!name.endsWith('.json')) continue;
++        try {
++            const raw = fs.readFileSync(path.join(openDir(root), name), 'utf8');
++            const parsed: unknown = JSON.parse(raw);
++            if (isObject(parsed) && typeof parsed['ref'] === 'string') {
++                out.set(parsed['ref'] as string, parsed as unknown as OpenRecord);
++            }
++        } catch {
++            // A torn or hand-edited record is data we do not have, not a crash.
++        }
++    }
++    return out;
++}
++
++/**
++ * Resolve depth from the open-record set.
++ *
++ * A parent we can see gives `observed` depth. A parent the payload named but
++ * whose record is not open (it closed first, or its start was never seen)
++ * still counts as nesting — depth 2 — because the payload asserted a parent;
++ * what we lack is the ancestor chain, not the fact of nesting. No parent field
++ * at all is `assumed-root`. The walk is bounded by the open-set size so a
++ * malformed cycle cannot spin.
++ */
++export function resolveDepth(
++    parentRef: string | null,
++    open: ReadonlyMap<string, OpenRecord>,
++): { depth: number; depth_basis: 'observed' | 'assumed-root' } {
++    if (parentRef === null) return { depth: 1, depth_basis: 'assumed-root' };
++    const parent = open.get(parentRef);
++    if (!parent) return { depth: 2, depth_basis: 'observed' };
++    return { depth: parent.depth + 1, depth_basis: 'observed' };
++}
++
++/** `${ts.slice(0,7)}.jsonl` — the monthly-file convention the audit stream uses. */
++export function ledgerFileFor(root: string, ts: string): string {
++    return path.join(root, LEDGER_DIR, `${ts.slice(0, 7)}.jsonl`);
++}
++
++function appendLedgerLine(root: string, ts: string, line: Record<string, unknown>): void {
++    if (is_replay_mode()) return;
++    const file = ledgerFileFor(root, ts);
++    fs.mkdirSync(path.dirname(file), { recursive: true });
++    fs.appendFileSync(file, `${JSON.stringify(line)}\n`, 'utf8');
++}
++
++function writeOpenRecord(root: string, rec: OpenRecord): void {
++    if (is_replay_mode()) return;
++    fs.mkdirSync(openDir(root), { recursive: true });
++    fs.writeFileSync(openFile(root, rec.ref), `${JSON.stringify(rec)}\n`, 'utf8');
++}
++
++function removeOpenRecord(root: string, ref: string): void {
++    if (is_replay_mode()) return;
++    try {
++        fs.unlinkSync(openFile(root, ref));
++    } catch {
++        // Already gone — a duplicate stop is not an error worth reporting.
++    }
++}
++
++function handleStart(root: string, payload: JsonObject, nowIso: string): void {
++    const agentId = extractAgentId(payload);
++    if (agentId === null) return; // nothing to correlate on; record nothing rather than a fiction
++
++    const ref = refFor(agentId);
++    const parentId = extractParentId(payload, agentId);
++    const parentRef = parentId ? refFor(parentId) : null;
++
++    const open = readOpenRecords(root);
++    const { depth, depth_basis } = resolveDepth(parentRef, open);
++
++    const rec: OpenRecord = {
++        ref,
++        agent_type: extractAgentType(payload),
++        started_at: nowIso,
++        parent_ref: parentRef,
++        depth,
++        depth_basis,
++    };
++    writeOpenRecord(root, rec);
++
++    appendLedgerLine(root, nowIso, {
++        event: 'subagent_start',
++        ts: nowIso,
++        ref,
++        agent_type: rec.agent_type,
++        parent_ref: parentRef,
++        depth,
++        depth_basis,
++        // The record just written is included, so a lone dispatch reads 1.
++        concurrent_open: open.size + (open.has(ref) ? 0 : 1),
++    });
++}
++
++function handleStop(root: string, payload: JsonObject, nowIso: string): void {
++    const agentId = extractAgentId(payload);
++    if (agentId === null) return;
++
++    const ref = refFor(agentId);
++    const open = readOpenRecords(root);
++    const rec = open.get(ref) ?? null;
++
++    let durationMs: number | null = null;
++    if (rec) {
++        const started = Date.parse(rec.started_at);
++        if (Number.isFinite(started)) durationMs = Math.max(0, Date.parse(nowIso) - started);
++    }
++
++    const parse = classifyEnvelope(extractLastMessage(payload));
++
++    appendLedgerLine(root, nowIso, {
++        event: 'subagent_stop',
++        ts: nowIso,
++        ref,
++        agent_type: rec?.agent_type ?? extractAgentType(payload),
++        depth: rec?.depth ?? null,
++        depth_basis: rec?.depth_basis ?? null,
++        // `null` = the matching start was never seen. That is a finding about
++        // the instrument's own coverage and is recorded as such, not as 0.
++        duration_ms: durationMs,
++        start_seen: rec !== null,
++        envelope_parse: parse.verdict,
++        envelope_error_count: parse.error_count,
++        // Excludes the record being closed.
++        concurrent_open: Math.max(0, open.size - (rec ? 1 : 0)),
++    });
++
++    removeOpenRecord(root, ref);
++}
++
++/** Process an ALREADY-PARSED dispatcher envelope. Always returns EXIT_ALLOW. */
++export function processEnvelope(envelope: JsonValue, consumerRoot: string): number {
++    try {
++        if (!isObject(envelope)) return EXIT_ALLOW;
++        const event = extractEvent(envelope);
++        if (event !== 'subagent_start' && event !== 'subagent_stop') return EXIT_ALLOW;
++
++        const payload = unwrapPayload(envelope);
++        const nowIso = new Date().toISOString();
++        if (event === 'subagent_start') handleStart(consumerRoot, payload, nowIso);
++        else handleStop(consumerRoot, payload, nowIso);
++    } catch {
++        // Malformed payload, unreadable disk, anything — never disturb the run.
++        return EXIT_ALLOW;
++    }
++    return EXIT_ALLOW;
++}
++
++export function run(stdin_text: string, options: { consumer_root: string }): number {
++    let envelope: JsonValue;
++    try {
++        const raw = stdin_text.trim();
++        if (!raw) return EXIT_ALLOW;
++        envelope = JSON.parse(raw) as JsonValue;
++    } catch {
++        return EXIT_ALLOW;
++    }
++    return processEnvelope(envelope, options.consumer_root);
++}
++
++function _resolveRoot(envelope: JsonValue): string {
++    if (isObject(envelope)) {
++        const cwd = envelope['cwd'];
++        if (typeof cwd === 'string' && cwd) return cwd;
++        const pr = envelope['workspace_root'] ?? envelope['project_root'];
++        if (typeof pr === 'string' && pr) return pr;
++    }
++    return process.cwd();
++}
++
++export function main(): number {
++    const raw = readHookStdin();
++    let envelope: JsonValue = {};
++    try {
++        envelope = raw.trim() ? (JSON.parse(raw) as JsonValue) : {};
++    } catch {
++        return EXIT_ALLOW;
++    }
++    return processEnvelope(envelope, _resolveRoot(envelope));
++}
++
++// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
++// every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
++declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
++function _isCliEntry(): boolean {
++    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
++        return false;
++    }
++    if (process.argv[1] === undefined) return false;
++    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
++    if (import.meta.url === argvUrl) return true;
++    try {
++        return fs.realpathSync(fileURLToPath(import.meta.url)) === fs.realpathSync(path.resolve(process.argv[1]));
++    } catch {
++        return false;
++    }
++}
++if (_isCliEntry()) process.exit(main());
+diff --git a/src/scripts/lint_hook_manifest.ts b/src/scripts/lint_hook_manifest.ts
+index efe9545cd66c302edaffac0c351e48ad390ba6b7..a5a4249d9b3dd03e63c1ffaf28289ad48a343707 100644
+--- a/src/scripts/lint_hook_manifest.ts
++++ b/src/scripts/lint_hook_manifest.ts
+@@ -55,6 +55,8 @@ const EVENT_VOCABULARY: ReadonlySet<string> = new Set([
+   "stop",
+   "pre_compact",
+   "agent_error",
++  "subagent_start",
++  "subagent_stop",
+ ]);
+ 
+ // Known platform identifiers.
+diff --git a/tests/hooks/subagent_ledger.test.ts b/tests/hooks/subagent_ledger.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..705da2ded5d69c35bbd7149b9cb590f277980a52
+--- /dev/null
++++ b/tests/hooks/subagent_ledger.test.ts
+@@ -0,0 +1,242 @@
++/**
++ * subagent-ledger — capture behaviour and the privacy floor
++ * (road-to-subagent-lifecycle-integrity Phase 1, Steps 2+3).
++ *
++ * Two things are asserted here and they are not the same kind of claim.
++ *
++ * The behaviour tests pin what the ledger records: correlation across the two
++ * separate hook invocations that bracket one dispatch, depth resolved from the
++ * open-record set rather than asserted, and the three-way envelope verdict
++ * whose middle value (`fail`) is the whole reason the measurement exists — a
++ * baseline that cannot separate "no envelope returned" from "a malformed one
++ * returned" cannot tell two different defects apart.
++ *
++ * The privacy test pins something the file's prose alone cannot: that no
++ * host `agent_id` and no line of the subagent's final message reaches disk.
++ * It plants the hostile values in the FIELDS under test and then greps every
++ * byte the hook wrote — a negative test that passes because the value is
++ * absent from the output, not because the assertion was never reachable.
++ */
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import {
++    classifyEnvelope,
++    LEDGER_DIR,
++    OPEN_SUBDIR,
++    processEnvelope,
++    readOpenRecords,
++    refFor,
++    resolveDepth,
++    type OpenRecord,
++} from '../../src/scripts/hooks/subagent_ledger_hook.js';
++
++let root: string;
++
++beforeEach(() => {
++    root = fs.mkdtempSync(path.join(os.tmpdir(), 'subagent-ledger-'));
++});
++
++afterEach(() => {
++    fs.rmSync(root, { recursive: true, force: true });
++});
++
++/** Every byte the hook wrote under the ledger root, concatenated. */
++function allWrittenBytes(): string {
++    const dir = path.join(root, LEDGER_DIR);
++    if (!fs.existsSync(dir)) return '';
++    const parts: string[] = [];
++    const walk = (d: string): void => {
++        for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
++            const p = path.join(d, entry.name);
++            if (entry.isDirectory()) walk(p);
++            else parts.push(fs.readFileSync(p, 'utf8'));
++        }
++    };
++    walk(dir);
++    return parts.join('\n');
++}
++
++function ledgerLines(): Array<Record<string, unknown>> {
++    const dir = path.join(root, LEDGER_DIR);
++    if (!fs.existsSync(dir)) return [];
++    const out: Array<Record<string, unknown>> = [];
++    for (const name of fs.readdirSync(dir)) {
++        if (!name.endsWith('.jsonl')) continue;
++        for (const line of fs.readFileSync(path.join(dir, name), 'utf8').split('\n')) {
++            if (line.trim()) out.push(JSON.parse(line) as Record<string, unknown>);
++        }
++    }
++    return out;
++}
++
++function envelope(event: string, payload: Record<string, unknown>): Record<string, unknown> {
++    return { schema_version: 1, platform: 'claude', event, payload };
++}
++
++describe('subagent-ledger — event filtering', () => {
++    it('writes nothing for an event outside the subagent pair', () => {
++        processEnvelope(envelope('post_tool_use', { tool_name: 'Agent' }), root);
++        expect(fs.existsSync(path.join(root, LEDGER_DIR))).toBe(false);
++    });
++
++    it('writes nothing when the payload carries no agent id to correlate on', () => {
++        processEnvelope(envelope('subagent_start', { agent_type: 'Explore' }), root);
++        expect(ledgerLines()).toEqual([]);
++    });
++
++    it('never returns a non-zero exit, even on a malformed envelope', () => {
++        expect(processEnvelope('not an object', root)).toBe(0);
++        expect(processEnvelope(envelope('subagent_stop', {}), root)).toBe(0);
++    });
++});
++
++describe('subagent-ledger — start/stop correlation', () => {
++    it('opens a record on start and closes it on stop', () => {
++        processEnvelope(envelope('subagent_start', { agent_id: 'agent-abc', agent_type: 'Explore' }), root);
++
++        const open = readOpenRecords(root);
++        expect(open.size).toBe(1);
++        expect([...open.values()][0]?.agent_type).toBe('Explore');
++
++        processEnvelope(
++            envelope('subagent_stop', {
++                agent_id: 'agent-abc',
++                last_assistant_message: '{"summary":"s","handoff":"h","confidence":"high","findings":[],"risks":[]}',
++            }),
++            root,
++        );
++
++        expect(readOpenRecords(root).size).toBe(0);
++        expect(fs.existsSync(path.join(root, LEDGER_DIR, OPEN_SUBDIR, `${refFor('agent-abc')}.json`))).toBe(false);
++
++        const lines = ledgerLines();
++        expect(lines.map((l) => l.event)).toEqual(['subagent_start', 'subagent_stop']);
++        const stop = lines[1]!;
++        expect(stop.start_seen).toBe(true);
++        expect(typeof stop.duration_ms).toBe('number');
++        expect(stop.envelope_parse).toBe('ok');
++    });
++
++    it('records a stop whose start was never seen as start_seen:false, not duration 0', () => {
++        processEnvelope(envelope('subagent_stop', { agent_id: 'orphan', agent_type: 'Explore' }), root);
++
++        const stop = ledgerLines()[0]!;
++        expect(stop.start_seen).toBe(false);
++        // `null`, never 0 — a fabricated zero would read as an instant dispatch
++        // and silently pollute the duration distribution the baseline reports.
++        expect(stop.duration_ms).toBeNull();
++        expect(stop.agent_type).toBe('Explore');
++    });
++
++    it('counts concurrent open dispatches, including the one being opened', () => {
++        processEnvelope(envelope('subagent_start', { agent_id: 'a' }), root);
++        processEnvelope(envelope('subagent_start', { agent_id: 'b' }), root);
++        processEnvelope(envelope('subagent_start', { agent_id: 'c' }), root);
++
++        expect(ledgerLines().map((l) => l.concurrent_open)).toEqual([1, 2, 3]);
++    });
++});
++
++describe('subagent-ledger — depth (Step 3)', () => {
++    it('records a start with no parent field as depth 1, basis assumed-root', () => {
++        processEnvelope(envelope('subagent_start', { agent_id: 'root-agent' }), root);
++
++        const start = ledgerLines()[0]!;
++        expect(start.depth).toBe(1);
++        // The distinction that matters: the payload said nothing, so the
++        // record says "assumed", never "measured root".
++        expect(start.depth_basis).toBe('assumed-root');
++        expect(start.parent_ref).toBeNull();
++    });
++
++    it('resolves a nested spawn against the open parent record', () => {
++        processEnvelope(envelope('subagent_start', { agent_id: 'parent' }), root);
++        processEnvelope(envelope('subagent_start', { agent_id: 'child', parent_agent_id: 'parent' }), root);
++
++        const child = ledgerLines()[1]!;
++        expect(child.depth).toBe(2);
++        expect(child.depth_basis).toBe('observed');
++        expect(child.parent_ref).toBe(refFor('parent'));
++    });
++
++    it('treats a session-level agent id distinct from the starter as the parent', () => {
++        processEnvelope(envelope('subagent_start', { agent_id: 'p2' }), root);
++        processEnvelope(
++            envelope('subagent_start', { agent_id: 'c2', session: { agent_id: 'p2' } }),
++            root,
++        );
++
++        expect(ledgerLines()[1]!.parent_ref).toBe(refFor('p2'));
++    });
++
++    it('still counts nesting when the named parent has already closed', () => {
++        // The payload asserted a parent, so the FACT of nesting is known even
++        // though the ancestor chain is not — depth 2, basis observed.
++        const open = new Map<string, OpenRecord>();
++        expect(resolveDepth('missing-ref', open)).toEqual({ depth: 2, depth_basis: 'observed' });
++    });
++});
++
++describe('subagent-ledger — envelope classification', () => {
++    const valid = { summary: 's', handoff: 'h', confidence: 'high', findings: [], risks: [] };
++
++    it('reports ok for a valid bare envelope', () => {
++        expect(classifyEnvelope(JSON.stringify(valid))).toEqual({ verdict: 'ok', error_count: 0 });
++    });
++
++    it('reports ok for a valid envelope inside a fenced json block', () => {
++        expect(classifyEnvelope(`here you go:\n\`\`\`json\n${JSON.stringify(valid)}\n\`\`\`\n`).verdict).toBe('ok');
++    });
++
++    it('reports fail — with an error COUNT, not the messages — for a malformed envelope', () => {
++        const verdict = classifyEnvelope('{"summary":"s"}');
++        expect(verdict.verdict).toBe('fail');
++        expect(verdict.error_count).toBeGreaterThan(0);
++    });
++
++    it('separates absent from fail', () => {
++        expect(classifyEnvelope(null).verdict).toBe('absent');
++        expect(classifyEnvelope('   ').verdict).toBe('absent');
++        expect(classifyEnvelope('I finished the task, no structured output.').verdict).toBe('absent');
++    });
++});
++
++describe('subagent-ledger — privacy by construction', () => {
++    // High-entropy, unique, and planted in the exact fields the hook reads —
++    // so a hit in the written bytes can only have come through the code path
++    // under test.
++    const HOST_ID = 'ag_7f3c9d2b41e85a6079bc4d1f2e3a5b8c';
++    const SECRET_PROSE = 'ZZQX-do-not-persist-this-sentence-9182';
++
++    it('writes no host agent id and no line of the final message to disk', () => {
++        processEnvelope(envelope('subagent_start', { agent_id: HOST_ID, agent_type: 'general-purpose' }), root);
++        processEnvelope(
++            envelope('subagent_stop', {
++                agent_id: HOST_ID,
++                last_assistant_message: `${SECRET_PROSE} {"summary":"${SECRET_PROSE}","handoff":"h"}`,
++            }),
++            root,
++        );
++
++        const written = allWrittenBytes();
++        // The test is only meaningful if the hook wrote something at all.
++        expect(written.length).toBeGreaterThan(0);
++        expect(written).not.toContain(HOST_ID);
++        expect(written).not.toContain(SECRET_PROSE);
++        // …and the correlation key that replaced the id IS there, so the
++        // absence above is redaction rather than the hook silently doing nothing.
++        expect(written).toContain(refFor(HOST_ID));
++    });
++
++    it('derives a stable ref across the two separate invocations', () => {
++        // Start and stop run in different processes; an unstable (e.g. salted
++        // per-run) key would break the only thing the ref exists for.
++        expect(refFor(HOST_ID)).toBe(refFor(HOST_ID));
++        expect(refFor(HOST_ID)).toHaveLength(12);
++        expect(refFor(HOST_ID)).not.toBe(refFor(`${HOST_ID}x`));
++    });
++});
