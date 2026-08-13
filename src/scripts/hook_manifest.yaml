@@ -535,6 +535,27 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+  # road-to-subagent-lifecycle-integrity Phase 1 (Steps 2+3) — the subagent
+  # lifecycle ledger. Binds ONLY the two new events; on every other slot it is
+  # not listed at all. Appends `subagent_start` / `subagent_stop` lines to
+  # gitignored runtime state and keeps one open-record file per live dispatch
+  # so depth and concurrency are derived from the set rather than asserted.
+  #
+  # CAPTURE ONLY, and that is load-bearing rather than cautious: Phase 1's
+  # falsifier (envelope return rate >=95% and no dispatch over 2x its tier
+  # budget-equivalent duration) can only be read off a window no mechanism
+  # reacted to. `validateResponse` runs in observe mode — the verdict is
+  # written down and dropped, never emitted as a decision. Phase 2's
+  # return-gate and Phase 3's spawn-guard are the concerns allowed to act, and
+  # both are pre-registered as gated on the baseline this one produces.
+  #
+  # Never blocks, never warns: exit 0 on every path including a malformed
+  # payload or an unwritable disk. fail_closed: false.
+  subagent-ledger:
+    script: src/scripts/hooks/subagent_ledger_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
 
 # Role axis (road-to-token-economy-dispatch Phase 2). The dispatcher reads
 # AGENT_CONFIG_SESSION_ROLE (resolved via _lib/session_role.ts — set ONLY by
@@ -577,6 +598,11 @@ platforms:
     # shape § 6.2 refuses. claude only: it is the sole verified platform, and
     # the measured compaction defect is a Claude Code transcript fact.
     pre_compact:      [language-mirror]
+    # road-to-subagent-lifecycle-integrity Phase 1 Step 1. `claude` is the only
+    # platform where both native events were measured present on the installed
+    # binary (2.1.229 — see the evidence page cited on the alias rows below).
+    subagent_start:   [subagent-ledger]
+    subagent_stop:    [subagent-ledger]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
   # on top of the Claude Code CLI. Same lifecycle vocabulary, same
@@ -609,6 +635,15 @@ platforms:
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, reread-guard]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
+    # subagent-ledger IS bound here, unlike the two nudges above, and the
+    # difference is the delivery channel rather than the platform: the nudges
+    # depend on stdout reaching the model, which this trampoline discards by
+    # construction; the ledger's entire output is a disk append, which survives
+    # a discarded stdout and a discarded exit code alike. It stays dead until
+    # the upstream settings-source blockers land and the events actually fire —
+    # structurally ready, costing nothing in the meantime.
+    subagent_start:   [subagent-ledger]
+    subagent_stop:    [subagent-ledger]
 
   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
   # IDE and CLI; `~/.cursor/hooks.json` (user) is opt-in via
@@ -698,6 +733,12 @@ native_event_aliases:
     PostToolUse:       post_tool_use
     PreToolUse:        pre_tool_use
     PreCompact:        pre_compact
+    # road-to-subagent-lifecycle-integrity Phase 1 Step 1. Both tokens were
+    # re-extracted from the installed binary at 2.1.229 (exact-token counts 12
+    # and 24) rather than carried over from the 2.1.220 spike — see
+    # agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md.
+    SubagentStart:     subagent_start
+    SubagentStop:      subagent_stop
   # Cowork shares Claude Code's PascalCase event vocabulary verbatim
   # (Cowork is Claude Code under the hood). Native names are duplicated
   # here rather than aliased so dispatcher logs / feedback carry the
@@ -710,6 +751,13 @@ native_event_aliases:
     PostToolUse:       post_tool_use
     PreToolUse:        pre_tool_use
     PreCompact:        pre_compact
+    # Cowork is Claude Code under the hood, so the subagent pair is aliased
+    # here for the same reason the rest of the table is duplicated rather than
+    # referenced. NOT independently measured on a Cowork build — the alias
+    # costs nothing if the host never sends the event, and the ledger records
+    # absence as data rather than assuming arrival.
+    SubagentStart:     subagent_start
+    SubagentStop:      subagent_stop
   cursor:
     sessionStart:        session_start
     sessionEnd:          session_end
