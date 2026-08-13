@@ -537,10 +537,67 @@ function _select_best_match(
  * Returns the interface-v1 grounded dict (see Python docstring). Async because
  * `_load_rules_callable` is async (dynamic import).
  */
+/**
+ * The three optional 1-10 design dials.
+ *
+ * Adapted from the upstream generator's tier table (MIT; see
+ * `design-intelligence/ATTRIBUTION.md` and `provenance/borrows.jsonl`). The
+ * TIER BOUNDARIES and the values they carry are the upstream's data; the
+ * plumbing below is this engine's own, because upstream threads them through a
+ * `generate()` this tree does not have and ours has `ground()` instead.
+ *
+ * Unset means unset: a dial the caller did not pass changes nothing, which is
+ * the upstream's own contract and the only thing that keeps the no-flag path
+ * byte-identical to the behaviour before this existed.
+ */
+export const DIAL_TIERS: Record<string, Array<[number, number, ResultDict]>> = {
+    variance: [
+        [1, 3, { label: 'Centered / Minimal', style_keywords: ['Minimalism', 'Exaggerated Minimalism', 'centered', 'symmetric', 'grid-based'] }],
+        [4, 7, { label: 'Balanced / Modern', style_keywords: ['modern', 'structured', 'balanced'] }],
+        [8, 10, { label: 'Bold / Asymmetric', style_keywords: ['Brutalism', 'Bento Grids', 'asymmetric', 'experimental'] }],
+    ],
+    motion: [
+        [1, 3, { label: 'Subtle', tier: 'Subtle' }],
+        [4, 7, { label: 'Standard', tier: 'Standard' }],
+        [8, 10, { label: 'Complex', tier: 'Complex' }],
+    ],
+    density: [
+        [1, 3, { label: 'Spacious', spacing: { xs: '4px', sm: '8px', md: '24px', lg: '32px', xl: '48px', '2xl': '64px', '3xl': '96px' } }],
+        [4, 7, { label: 'Standard', spacing: { xs: '4px', sm: '8px', md: '16px', lg: '24px', xl: '32px', '2xl': '48px', '3xl': '64px' } }],
+        [8, 10, { label: 'Dense / Dashboard', spacing: { xs: '2px', sm: '4px', md: '8px', lg: '12px', xl: '16px', '2xl': '24px', '3xl': '32px' } }],
+    ],
+};
+
+/** The dial values a caller may pass; `null`/absent means "do not engage". */
+export interface Dials {
+    variance?: number | null;
+    motion?: number | null;
+    density?: number | null;
+}
+
+/**
+ * Bucket a 1-10 dial value into its tier config, or `null` when unset.
+ *
+ * Out-of-range input is clamped rather than rejected: the dial is a coarse
+ * preference, and refusing an 11 would turn a typo into a failed run for no
+ * gain in meaning.
+ */
+export function resolve_dial(dial_name: string, value: number | null | undefined): ResultDict | null {
+    if (value === null || value === undefined || Number.isNaN(value)) return null;
+    const tiers = DIAL_TIERS[dial_name];
+    if (tiers === undefined) return null;
+    const v = Math.max(1, Math.min(10, Math.trunc(value)));
+    for (const [lo, hi, info] of tiers) {
+        if (v >= lo && v <= hi) return { ...info, value: v };
+    }
+    return null;
+}
+
 export async function ground(
     manifest: Manifest,
     query: string,
     context: Record<string, unknown> | null = null,
+    dials: Dials | null = null,
 ): Promise<ResultDict> {
     const reasoning = manifest.reasoning as Record<string, unknown> | null | undefined;
     if (!reasoning) {
@@ -607,6 +664,17 @@ export async function ground(
             .filter((s) => s.length > 0);
     }
 
+    // 4b — dials. Variance BIASES the existing priority list rather than
+    // replacing it: the rule's own keywords are grounded in the corpus, the
+    // dial is a caller preference, and a preference that silently overrode
+    // grounded evidence would invert this engine's whole point.
+    const variance_info = resolve_dial('variance', dials?.variance);
+    const motion_info = resolve_dial('motion', dials?.motion);
+    const density_info = resolve_dial('density', dials?.density);
+    if (variance_info) {
+        priority = [...(variance_info.style_keywords as string[]), ...priority];
+    }
+
     // 5 — planned multi-domain search.
     const selections: ResultDict = {};
     const domain_confidences: number[] = [];
@@ -641,6 +709,36 @@ export async function ground(
         domain_confidences.push(score instanceof PyFloat ? score.value : (score as number | undefined) ?? 0.0);
     }
 
+    // 5b — the motion dial reads a corpus, which is why it needs `motion.csv`
+    // and the other two do not. Rows are filtered by the `Intensity Tier`
+    // column; a tier with no rows yields an evidence gap rather than a silent
+    // empty block, because "the dial did nothing" and "the corpus has nothing
+    // at this tier" are different facts to the reader.
+    let motion_selection: ResultDict | null = null;
+    if (motion_info) {
+        const tier = motion_info.tier as string;
+        const motion_domain = (manifest.domains as Record<string, unknown>)['gsap'];
+        if (motion_domain === undefined) {
+            gaps.push(
+                "the --motion dial needs a 'gsap' search domain (motion.csv); this manifest has none, so the dial had no effect",
+            );
+        } else {
+            const motion_result = search_domain(manifest, `${query} ${tier}`, 'gsap', 5);
+            const rows = ((motion_result.results as Row[] | null) || []).filter(
+                (r) => pyStr(r['Intensity Tier']) === tier,
+            );
+            if (rows.length === 0) {
+                gaps.push(`no motion row at tier '${tier}' matched the query — the dial narrowed to nothing`);
+            }
+            motion_selection = {
+                tier,
+                best: rows.length > 0 ? (rows[0] as Row) : {},
+                alternatives: rows.slice(1),
+                confidence: motion_result.confidence,
+            };
+        }
+    }
+
     // 6 — aggregate confidence (weakest link wins).
     const numeric = domain_confidences.length > 0 ? pyRound(Math.min(...domain_confidences), 3) : 0.0;
     const label = numeric >= 0.4 ? 'high' : numeric >= 0.15 ? 'medium' : 'low';
@@ -653,7 +751,7 @@ export async function ground(
         }
     }
 
-    return {
+    const out: ResultDict = {
         domain: manifest.domain,
         query,
         category,
@@ -664,6 +762,24 @@ export async function ground(
         evidence_gap:
             gaps.length > 0 ? gaps : ['none — every planned domain returned a scored match'],
     };
+
+    // Dial output is ADDITIVE and omitted entirely when no dial was passed, so
+    // the no-flag result stays byte-identical to what it was before dials
+    // existed. `spacing_scale` is a top-level override because it replaces a
+    // scale rather than informing one.
+    if (variance_info || motion_info || density_info) {
+        out.dials = {
+            variance: variance_info ? variance_info.value : null,
+            variance_label: variance_info ? variance_info.label : null,
+            motion: motion_info ? motion_info.value : null,
+            motion_label: motion_info ? motion_info.label : null,
+            density: density_info ? density_info.value : null,
+            density_label: density_info ? density_info.label : null,
+        };
+        if (motion_selection) out.motion = motion_selection;
+        if (density_info) out.spacing_scale = density_info.spacing;
+    }
+    return out;
 }
 
 /** Python int(x) for a plan value (int or numeric string). */
