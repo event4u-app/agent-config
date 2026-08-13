@@ -11,6 +11,26 @@ execution:
 > code-level injection guard — without importing any of the governance debt that
 > estate carries.
 
+> **Glyph re-classification, 2026-08-13 — maintainer decision, stated rather
+> than done quietly.** Fifteen steps carried `[~]` (*deferred*) while their own
+> text said *blocked*: "Blocked on S0.1 and S0.2", "Gated on S0.3",
+> "Human-gated", "Blocked on Phase 2 producing at least one executable skill".
+> All fifteen are now `[ ]`, which — plus the recorded blockers — is what
+> *blocked* already means here. The sibling `road-to-inbox-harvest-2026-08-b-ledger-truth`
+> made the identical correction and said so out loud; this follows it.
+> Two consequences, both intended. The completion figure **falls sharply**,
+> because it now counts blocked work as open instead of hiding it as deferred.
+> And the Iron-Law-3 condition (`count_open == 0` with any `[~]` left) no longer
+> fires, which is what allowed the finished Phase 5 step to be ticked at all —
+> the trigger for this decision, and worth naming so nobody reads the
+> re-classification as a way of dodging that gate. It is the opposite: the gate
+> asked a question the glyphs had been answering wrongly.
+> The two items that were arguably parked rather than blocked — the empty-corpus
+> injection lint and the trigger-density sweep — moved with the rest, because
+> each is held by an external reopen condition ("the moment Phase 2 lands a pilot
+> that fetches", "only if a runtime router consumer ships"), which is a blocked
+> shape too.
+
 Status: **proposal.** Nothing below is a foundation; every mechanism is
 default-off until its gate clears (ADR-202 discipline). Form: inverted harvest
 (ADR-211 C/D) — it starts from confirmed defects in this tree and draws sources
@@ -128,14 +148,14 @@ Pre-registered, honest-null publishable. All three are human-gated: they need a
 live host session and spend, and a live trigger-style measurement hard-aborts
 under automation.
 
-- [~] **S0.1 host execution reliability.** 20 scripted invocations across 3 pilot
+- [ ] **S0.1 host execution reliability.** 20 scripted invocations across 3 pilot
   skills; measure invocation rate and argument fidelity on Claude Code first.
   Prior: the activation census above. *Kill: < 90 % reliable invocation → Phase 2
   stops; Phase 1 and Phase 3 proceed regardless.*
-- [~] **S0.2 token delta.** For 3 candidate skills, current in-context cost of
+- [ ] **S0.2 token delta.** For 3 candidate skills, current in-context cost of
   the deterministic portion vs. a thin manual plus a script call. *Kill: median
   saving < 30 % → Phase 2 shrinks to net-new skills, no conversions.*
-- [~] **S0.3 requirements-check value.** Inject 5 synthetic missing-dependency
+- [ ] **S0.3 requirements-check value.** Inject 5 synthetic missing-dependency
   states; measure whether a requirements-aware `doctor` detects them earlier than
   today's mid-run failure. *Kill: no earlier detection → Phase 1 ships
   schema-only, no doctor wiring.*
@@ -164,7 +184,7 @@ Closes D2. Steps 1, 2 and 4 are ungated; step 3 is gated on S0.3.
   no egress. Skills with `handler: internal` remain out of scope by definition.
   `verify:` `./scripts-run src/scripts/validate_frontmatter` exits 0 — 436
   artefacts, 0 failing.
-- [~] Wire `cmd_doctor.ts` / `cmd_preflight.ts` to probe declared `bins` on PATH,
+- [ ] Wire `cmd_doctor.ts` / `cmd_preflight.ts` to probe declared `bins` on PATH,
   `env` set/unset, and `network` against the egress allowlist. **Gated on S0.3** —
   do not start before that spike publishes.
 - [x] Linter rule: an external handler (`shell`/`node`/`php`) **that declares a
@@ -177,7 +197,7 @@ Closes D2. Steps 1, 2 and 4 are ungated; step 3 is gated on S0.3.
   **list** must not satisfy the rule, and a sixth that a flow-style
   `runtime_requires: {…}` does — 6 tests in
   `tests/scripts/skill_linter.test.ts`, 146 pass.
-- [~] Deprecate free-text `compatibility` toward a structured `harness_compat`
+- [ ] Deprecate free-text `compatibility` toward a structured `harness_compat`
   enum. **Human-gated:** `compatibility` is a public Agent-Skills spec field and
   2 skills use it; a deprecation is a consumer-visible schema decision, not an
   autonomous edit.
@@ -187,15 +207,15 @@ Closes D2. Steps 1, 2 and 4 are ungated; step 3 is gated on S0.3.
 Closes D1 and D3. **Blocked on S0.1 and S0.2** — no step starts before both
 publish.
 
-- [~] Pick 3 pilot skills where determinism dominates; convert to thin manual
+- [ ] Pick 3 pilot skills where determinism dominates; convert to thin manual
   plus a script under the skill's `scripts/`, declared via `execution.handler`.
-- [~] Every pilot ships `--emit=json` with a JSON-Schema output contract checked
+- [ ] Every pilot ships `--emit=json` with a JSON-Schema output contract checked
   in beside the skill.
-- [~] `--diagnose` implemented as `agent-config doctor --skill=<id>`, never a
+- [ ] `--diagnose` implemented as `agent-config doctor --skill=<id>`, never a
   bespoke per-skill flag.
-- [~] Fail-soft contract for any multi-fetch pilot — `errors_by_source`,
+- [ ] Fail-soft contract for any multi-fetch pilot — `errors_by_source`,
   retry-once, render-with-gaps — as a `_lib` module, never copied per skill.
-- [~] *Kill: after 4 weeks of pilot telemetry, invocation rate or output validity
+- [ ] *Kill: after 4 weeks of pilot telemetry, invocation rate or output validity
   < 90 % → revert the pilots to prose and publish the null.*
 
 ## Phase 3 — Injection hardening at the ingestion point
@@ -223,7 +243,7 @@ check. Ungated and independent of every other phase.
   entries from the committed decision store, which is principal-authored. The
   helper is therefore forward-looking — it exists for the Phase 2 fetching
   pilots and for command-level PR/issue ingestion.
-- [~] Lint (never-silent class) for a call site feeding externally-sourced
+- [ ] Lint (never-silent class) for a call site feeding externally-sourced
   content into an LLM prompt without the helper. **Deferred, with the reason:**
   the population is empty today, and a gate over an empty corpus exits green
   while scanning nothing — the exact defect class the sibling family roadmap
@@ -236,39 +256,38 @@ check. Ungated and independent of every other phase.
 Closes D5. **Blocked on Phase 2 producing at least one executable skill** — there
 is nothing to benchmark before that.
 
-- [~] Extend the eval layer with a per-executable-skill `bench.json`: pinned input
+- [ ] Extend the eval layer with a per-executable-skill `bench.json`: pinned input
   fixtures plus judge config, grafted onto the existing `bench_ab_*` harness
   rather than a new one.
-- [~] Compare working-tree revision against a pinned base ref on identical
+- [ ] Compare working-tree revision against a pinned base ref on identical
   fixtures; pre-register judge verdicts and publish deltas even when null.
-- [~] CI runs the bench on PRs touching an executable skill's `scripts/`;
+- [ ] CI runs the bench on PRs touching an executable skill's `scripts/`;
   advisory first, ratchet only after two consecutive releases show signal.
 
 ## Phase 5 — Low-cost sweeps
 
-- [ ] **Action-reference guideline.** Codify the split where a SKILL.md declares
+- [x] **Action-reference guideline.** Codify the split where a SKILL.md declares
   it does not define the mutating workflow and defers write-path steps to a
   reference file behind a precondition; add a linter nudge for skills carrying
   `execution.safety_mode: strict`.
   `verify:` `skill-writing` carries the section and the nudge fires on a fixture.
-  **DELIVERABLE SHIPPED 2026-08-13; the box is held open on the Iron-Law-3
-  disposition, not on missing work.** `skill-writing` § Action-reference split
-  states the two allowed shapes (gate inline / defer to `references/`), and
-  `skill_linter` emits `strict_mode_missing_write_gate` (warning) when a strict
-  skill's body carries neither — pinned by four fixtures in
-  `tests/scripts/skill_linter.test.ts`. The tree's one strict skill
-  (`react-shadcn-ui`) passes unchanged, so the nudge ships without a ratchet
-  regression. Flipping this box drives `count_open` to 0 against 15 `[~]` items
-  and `roadmap:progress-check` then exits 1 — **measured, not assumed**. The
-  disposition of those 15 is a user decision that Iron Law 3 reserves
-  (`roadmap-management § 4b`: spawn follow-up / restore / cancel); most of them
-  read as *blocked* rather than *deferred* by their own text, so a restore to
-  `[ ]` is the likely shape. Flip this the moment that call is made.
+  **Shipped 2026-08-13.** `skill-writing` § Action-reference split states the two
+  allowed shapes (gate inline / defer to `references/`), and `skill_linter` emits
+  `strict_mode_missing_write_gate` (warning) when a strict skill's body carries
+  neither — pinned by four fixtures in `tests/scripts/skill_linter.test.ts`. The
+  tree's one strict skill (`react-shadcn-ui`) passes unchanged, so the nudge
+  ships without a ratchet regression.
+  A review of the shipped rule recorded two limits worth carrying forward rather
+  than burying: the nudge cannot currently fire on anything in the tree (one
+  strict skill, and it satisfies both branches), and its phrase list has known
+  holes in both directions — a step that says *"Do NOT ask the user first"*
+  satisfies it, and *"wait for explicit approval"* does not. It is a warning over
+  prose, not a gate, and the section is the actual control.
   <!-- verify: ./scripts-run src/scripts/skill_linter src/skills/react-shadcn-ui/SKILL.md -->
   <!-- verify: grep -n 'Action-reference split' src/skills/skill-writing/SKILL.md -->
   <!-- verify: grep -n 'strict_mode_missing_write_gate' src/scripts/skill_linter.ts -->
 
-- [~] **Trigger-density sweep — parked, not dropped.** Moving activation
+- [ ] **Trigger-density sweep — parked, not dropped.** Moving activation
   vocabulary into router `triggers` would be measured by a lint delta over a file
   no host reads at runtime (`rule-router.md:27`). Reopen only if a runtime router
   consumer ships.
