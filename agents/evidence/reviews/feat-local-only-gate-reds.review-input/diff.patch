@@ -1,5 +1,5 @@
 diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
-index 10880afd7509da9c555de6746807e3c24cf01d14..81bfe61321b43a15f05fd4c63c8b30e8d32339ca 100644
+index 10880afd7509da9c555de6746807e3c24cf01d14..aa558045ab9dc35646e9c4564e05351e89deb320 100644
 --- a/agents/roadmaps-progress.md
 +++ b/agents/roadmaps-progress.md
 @@ -6,10 +6,10 @@
@@ -42,10 +42,11 @@ index 10880afd7509da9c555de6746807e3c24cf01d14..81bfe61321b43a15f05fd4c63c8b30e8
  
  <a id="blockers-road-to-local-only-gate-reds"></a>
  **Blockers**
-@@ -573,6 +573,21 @@ _1 blocker resolved._
+@@ -573,7 +573,22 @@ _1 blocker resolved._
      and it is a legitimate answer on its own.
      4. Record the choice where its scope fits — an ADR for the wiring options, a
      paragraph in `docs/contracts/ci-green-floor.md` for the accept option.
+-  - **Resolved when:** the decision exists in a tracked artefact and Phase 4 step 2 can cite it. - **Note:** an AI council was asked to adjudicate this and was unreachable (anthropic quota-exhausted, openai trusted-directory refusal, two attempts). The staged baseline was chosen without it, on the ground that it is the only option adding no unfixable block. It is not a council verdict and does not foreclose the others.
 +    5. **Added 2026-08-13 — the same decision now also owns a live red.** The
 +    repair dropped `check_ci_local_parity`'s scanned population from 443 to
 +    **357** (107 CI + 250 local), below its `min_scanned: 380` floor, so
@@ -61,11 +62,12 @@ index 10880afd7509da9c555de6746807e3c24cf01d14..81bfe61321b43a15f05fd4c63c8b30e8
 +    own, which is the only answer that fixes the floor by fixing the thing the
 +    floor measures. Whichever is chosen, the `corpus:` description is stale
 +    either way and needs the same edit.
-   - **Resolved when:** the decision exists in a tracked artefact and Phase 4 step 2 can cite it. - **Note:** an AI council was asked to adjudicate this and was unreachable (anthropic quota-exhausted, openai trusted-directory refusal, two attempts). The staged baseline was chosen without it, on the ground that it is the only option adding no unfixable block. It is not a council verdict and does not foreclose the others.
++  - **Resolved when:** the decision exists in a tracked artefact and Phase 4 step 2 can cite it, **and** the `check_ci_local_parity` floor red of § 5 is either cleared or carries a recorded, argued disposition. The second half is explicit because without it this roadmap can reach `count_open == 0` and archive while a gate it opened is still red — which is the exact failure the whole file is about, committed by the file itself. - **Note:** an AI council was asked to adjudicate this and was unreachable (anthropic quota-exhausted, openai trusted-directory refusal, two attempts). The staged baseline was chosen without it, on the ground that it is the only option adding no unfixable block. It is not a council verdict and does not foreclose the others.
  
  ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
+ 
 diff --git a/agents/roadmaps/road-to-local-only-gate-reds.md b/agents/roadmaps/road-to-local-only-gate-reds.md
-index ac48c823418e86b7ef3638badd8a67a3f2e7da48..a93cff04e9d676366dad2ee9d78201aa48ed6819 100644
+index ac48c823418e86b7ef3638badd8a67a3f2e7da48..2280f5f345d36d20b786dbcf4f31c8190c5cc2b9 100644
 --- a/agents/roadmaps/road-to-local-only-gate-reds.md
 +++ b/agents/roadmaps/road-to-local-only-gate-reds.md
 @@ -62,6 +62,59 @@ runs in no workflow.** It is its own finding, so the ratchet added here has no
@@ -137,7 +139,7 @@ index ac48c823418e86b7ef3638badd8a67a3f2e7da48..a93cff04e9d676366dad2ee9d78201aa
        `gate-self-test:registered-non-adopters` ratchet. It reads **25** against
        a baseline of **24**, i.e. one over, and the baseline note records the
        landing state as "24 of the 32 gates registered enforced" on 2026-08-06.
-@@ -140,14 +193,41 @@ re-derive them.
+@@ -140,14 +193,56 @@ re-derive them.
        `lint_rule_skill_pack_reach`, `lint_token_budget_discipline`,
        `lint_trigger_collisions`, `skill_linter`.
        *Verify:* the crossing gate is named with the commit that registered it.
@@ -165,23 +167,38 @@ index ac48c823418e86b7ef3638badd8a67a3f2e7da48..a93cff04e9d676366dad2ee9d78201aa
 +      → **Adopted, not exempted.** The exemption ground did not apply: the
 +      gate's three inputs (`src/rules/`, `src/skills/`, the pack registry) are
 +      ordinary tree reads, so a temp-directory fixture can provoke every verdict.
-+      Added `--root <dir>` plumbing and `--self-test` with five cases (2
-+      rejecting, floor 5): an unreachable route under `--strict`, an empty rule
-+      corpus (the scanned-nothing refusal, exit 2), and three accepts that pin
-+      the discrimination — the same route made reachable through `requires`, an
-+      unscoped rule, an unscoped skill. Default invocation is byte-identical:
++      Added `--root <dir>` plumbing and `--self-test` with **six cases (3
++      rejecting, floor 6)**: an unreachable route under `--strict`, an empty
++      rule corpus (the scanned-nothing refusal, exit 2), a valueless `--root`
++      (added when the R2 review found that flag falling back to the real tree),
++      and three accepts that pin the discrimination — the same route made
++      reachable through `requires`, an unscoped rule, an unscoped skill.
++      Default invocation is byte-identical:
 +      `116 rule(s), 289 skill(s), 34 pack(s) — 12 unreachable-route,
 +      14 unrouted-skill`, exit 0.
 +      The reject cases were checked against the failure this repository has
 +      recorded before — a negative test that passes for the wrong reason.
 +      Mutating `unreachableFrom.length === 0` to `>= 0` turned the first case
-+      red (`4/5 case(s) behaved`) and left the four others green, so the case is
-+      bound to the detector and not to the fixture. Ratchet reads **24**, the
-+      baseline unchanged and not raised.
++      red (`5/6 case(s) behaved`) and left the others green, so the case is
++      bound to the detector and not to the fixture.
++
++      The sixth case was mutation-checked separately, and the first attempt
++      taught something worth recording. Deleting the guard body alone does
++      **not** turn it red: `args.root` then holds `undefined`,
++      `path.join(undefined, …)` throws, and the entry guard still exits 2 — the
++      case would have passed for the wrong reason, which is the exact failure
++      it exists to prevent. Restoring the original `argv[i + 1] ?? REPO`
++      fallback — the real defect, not a paraphrase of it — does turn it red
++      (`5/6`, exit 0 because the run silently scanned the live tree). So the
++      case is bound to the silent fallback. It does **not** distinguish a clean
++      refusal from a crash, since both exit 2; `runSelfTest` compares exit codes
++      and nothing here asserts the message.
++
++      Ratchet reads **24**, the baseline unchanged and not raised.
  
  ## Phase 3 — the roadmap that cannot archive
  
-@@ -204,7 +284,7 @@ class recurs.
+@@ -204,7 +299,7 @@ class recurs.
        reason — the set was empty by construction, so the test had pinned the
        defect and would have forced any repair to preserve it.
  
@@ -190,7 +207,7 @@ index ac48c823418e86b7ef3638badd8a67a3f2e7da48..a93cff04e9d676366dad2ee9d78201aa
        by text that is not an instruction.
        **Started, one candidate, not proven.** `check_enforcement_coverage` seeds
        reachability with a bare `wiring.includes(stem)` over raw workflow text —
-@@ -217,6 +297,43 @@ class recurs.
+@@ -217,6 +312,43 @@ class recurs.
        *Verify:* either a demonstrated false "reachable" verdict for a named
        script, or a recorded null saying the substring matches carry no verdict
        weight.
@@ -234,7 +251,19 @@ index ac48c823418e86b7ef3638badd8a67a3f2e7da48..a93cff04e9d676366dad2ee9d78201aa
  
  - [ ] Decide what follows from that number, and record the decision.
        The options are genuinely different in cost and none is obviously right:
-@@ -326,6 +443,21 @@ remote CI on the PR is the authoritative gate
+@@ -239,6 +371,11 @@ class recurs.
+ - `agent-config roadmap:progress-check` exits 0.
+ - The Phase 4 decision is recorded in a durable artefact, including the case
+   where the decision is to change nothing.
++- `npx tsx src/scripts/check_gate_coverage.ts` reports **no gate red that this
++  roadmap opened** — specifically the `check_ci_local_parity` floor of
++  § Two more reds is cleared or carries a recorded disposition. Added
++  2026-08-13: without this criterion the roadmap could close green while
++  leaving a red gate behind, which is the failure it exists to remove.
+ 
+ ## Quality gates
+ 
+@@ -326,8 +463,27 @@ remote CI on the PR is the authoritative gate
       and it is a legitimate answer on its own.
    4. Record the choice where its scope fits — an ADR for the wiring options, a
       paragraph in `docs/contracts/ci-green-floor.md` for the accept option.
@@ -254,8 +283,15 @@ index ac48c823418e86b7ef3638badd8a67a3f2e7da48..a93cff04e9d676366dad2ee9d78201aa
 +     floor measures. Whichever is chosen, the `corpus:` description is stale
 +     either way and needs the same edit.
  - **Resolved when:** the decision exists in a tracked artefact and Phase 4
-   step 2 can cite it.
+-  step 2 can cite it.
++  step 2 can cite it, **and** the `check_ci_local_parity` floor red of § 5 is
++  either cleared or carries a recorded, argued disposition. The second half is
++  explicit because without it this roadmap can reach `count_open == 0` and
++  archive while a gate it opened is still red — which is the exact failure the
++  whole file is about, committed by the file itself.
  - **Note:** an AI council was asked to adjudicate this and was unreachable
+   (anthropic quota-exhausted, openai trusted-directory refusal, two attempts).
+   The staged baseline was chosen without it, on the ground that it is the only
 diff --git a/src/scripts/lint_rule_skill_pack_reach.ts b/src/scripts/lint_rule_skill_pack_reach.ts
 index aea6dca9d3047a9d27fdf64a8d1518c6ba0b5cec..f493cecaf22e74efa9e534b26acfb52b8295428b 100644
 --- a/src/scripts/lint_rule_skill_pack_reach.ts
