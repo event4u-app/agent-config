@@ -248,7 +248,15 @@ function _parseArgs(argv: readonly string[]): Args {
         else if (a === '--strict') args.strict = true;
         else if (a === '--self-test') args.selfTest = true;
         else if (a === '--root') {
-            args.root = argv[i + 1] ?? REPO;
+            // Never fall back to the real repo. A self-test whose root argument
+            // went missing would otherwise scan the live tree instead of its
+            // fixture and could still exit 0 — a green run proving nothing,
+            // which is the exact failure `_lib/gate_self_test.ts` exists for.
+            const value = argv[i + 1];
+            if (value === undefined || value.startsWith('--')) {
+                throw new Error('--root requires a directory argument');
+            }
+            args.root = value;
             i += 1;
         }
     }
@@ -295,13 +303,10 @@ function _fixture(
 
 function _selfTest(): number {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lrspr-selftest-'));
+    const runRaw = (args: readonly string[]): number =>
+        runGateCli(REPO, 'src/scripts/lint_rule_skill_pack_reach.ts', args, REPO);
     const run = (root: string, extra: readonly string[] = []): number =>
-        runGateCli(
-            REPO,
-            'src/scripts/lint_rule_skill_pack_reach.ts',
-            ['--root', root, '--quiet', ...extra],
-            REPO,
-        );
+        runRaw(['--root', root, '--quiet', ...extra]);
 
     // `alpha` stands alone; `beta` pulls `alpha` in transitively.
     const PACKS = '- id: alpha\n- id: beta\n  requires: [alpha]\n- id: gamma\n';
@@ -339,8 +344,8 @@ function _selfTest(): number {
 
         return runSelfTest({
             gate: 'lint_rule_skill_pack_reach',
-            minCases: 5,
-            minRejectCases: 2,
+            minCases: 6,
+            minRejectCases: 3,
             cases: [
                 {
                     name: 'a rule routing into a pack its own closure never reaches is rejected under --strict',
@@ -366,6 +371,11 @@ function _selfTest(): number {
                     name: 'an unscoped skill ships everywhere, so no route into it can be unreachable',
                     expect: 'accept',
                     run: () => run(unscopedSkill, ['--strict']),
+                },
+                {
+                    name: '--root with no value is refused rather than silently scanning the real tree',
+                    expect: 'reject',
+                    run: () => runRaw(['--quiet', '--root']),
                 },
             ],
         });
@@ -406,8 +416,15 @@ function main(argv: readonly string[] = process.argv.slice(2)): number {
         }
     }
 
+    // Two lines on purpose. `check_gate_coverage`'s SCANNED_RE is
+    // `/^\s*scanned:\s*(\d+)\s*$/m` — the count must END the line — so the
+    // detailed breakdown below can never satisfy it. This gate was registered
+    // `enforced` with `min_scanned: 90` and had therefore reported `null` since
+    // 924cad87f: an enforced floor that no output could ever meet. Emit the
+    // machine-readable contract line first, then the human breakdown.
+    process.stdout.write(`scanned: ${rules.length}\n`);
     process.stdout.write(
-        `scanned: ${rules.length} rule(s), ${skillPacks.size} skill(s), ${packs.size} pack(s) — ${errors.length} unreachable-route, ${advisories.length} unrouted-skill\n`,
+        `${rules.length} rule(s), ${skillPacks.size} skill(s), ${packs.size} pack(s) — ${errors.length} unreachable-route, ${advisories.length} unrouted-skill\n`,
     );
     if (errors.length > 0 && !args.strict) {
         process.stdout.write(

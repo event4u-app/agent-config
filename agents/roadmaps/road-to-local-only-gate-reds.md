@@ -62,10 +62,37 @@ runs in no workflow.** It is its own finding, so the ratchet added here has no
 remote reach either. Clearing the backlog is what would give it teeth; until
 then it fails only a local `task ci`.
 
-## The repair left a fifth red — found 2026-08-13, not repaired here
+## Two more reds — found 2026-08-13; one repaired here, one filed
 
-Running `check_gate_coverage` at the start of the next pass surfaces a gate the
-four above did not include, and its cause is the repair itself:
+Running `check_gate_coverage` at the start of the next pass exits 1 on **two**
+gates the original four did not include. The first draft of this section claimed
+one, and the R2 completion review caught it: the grep that found the first was
+keyed on the ratchet vocabulary, so it read past a red whose message shares none
+of those words. A count is a claim, and this one was wrong by exactly the gate
+this branch edits.
+
+**Red 1 — `lint_rule_skill_pack_reach` had never reported a scan. Repaired.**
+
+```
+❌ lint_rule_skill_pack_reach: emitted no 'scanned: <N>' line
+   — an enforced gate must report what it inspected
+```
+
+`SCANNED_RE` in `check_gate_coverage.ts` is `/^\s*scanned:\s*(\d+)\s*$/m` — the
+count must **end** the line — while the gate emitted
+`scanned: 116 rule(s), 289 skill(s), …`. So an entry registered `status:
+enforced` with `min_scanned: 90` resolved to `null` from the moment `924cad87f`
+registered it, which is the same commit Phase 2 Step 1 identifies by name. The
+line is byte-identical on `origin/main`, so this is pre-existing rather than a
+regression of this branch. Repaired by emitting the machine-readable contract
+line first and the human breakdown second; the gate now reads
+`✅ lint_rule_skill_pack_reach: scanned 116 ≥ 90`.
+
+It is the roadmap's own thesis pointed at itself: a gate registered as enforced,
+carrying a floor, and structurally incapable of meeting it — red for seven days
+inside the branch whose subject is red gates nobody sees.
+
+**Red 2 — the parity floor the repair itself moved. Not repaired here.**
 
 ```
 ❌ check_ci_local_parity: scanned 357, floor 380
