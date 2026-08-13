@@ -1,10 +1,10 @@
 # Findings: guard-input-prompt-binding
-<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: 7ea2ee324c35d59bc2f22f4c7d48669ceefc93fd8df301a56fd38deeaa4031f3 | diff: 84c300c36ed8583a73e18544ab47d8513ed9289b | reviewer: r2-fresh-subagent-guard-input-prompt-binding | prompt_hash: 9442b32523a1113bf8bf6976a597218317d3ac5bf7e0d91e6fafd4cf593d4846 -->
+<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: badef7e30a64595add6560692e3911f2b9ab01fc55a8ca59891aa273f22fc202 | diff: 7fcc236ebb5ef73b45e00f539deb1faac7314643 | reviewer: r2-fresh-subagent-guard-input-prompt-binding | prompt_hash: 9442b32523a1113bf8bf6976a597218317d3ac5bf7e0d91e6fafd4cf593d4846 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 84c300c36ed8583a73e18544ab47d8513ed9289b
-  scope_hash: 7ea2ee324c35d59bc2f22f4c7d48669ceefc93fd8df301a56fd38deeaa4031f3
+  diff_sha: 7fcc236ebb5ef73b45e00f539deb1faac7314643
+  scope_hash: badef7e30a64595add6560692e3911f2b9ab01fc55a8ca59891aa273f22fc202
   roadmap: none
   roadmap_hash: none
   ac_hash: none
@@ -40,11 +40,18 @@ silently by the re-bind:
   regenerates `agents/roadmaps-progress.md`. **The reviewer never saw either
   file.** It is a roadmap capturing four pre-existing gate reds unrelated to this
   change, added on the operator's explicit instruction after the review closed.
-- `84c300c36` — a merge of `origin/main` (20 commits, PRs #1321 and #1322),
-  taken because the branch had fallen behind before the push. It carries no work
-  of this branch's own; the one conflict was the generated dashboard, resolved by
-  regenerating it rather than hand-merging. Named for completeness — content that
-  reached `main` through its own review is not this artefact's to re-certify.
+- `84c300c36` and `7fcc236eb` — two merges of `origin/main` (PRs #1321, #1322
+  and #1325), taken because the branch fell behind twice during the push
+  sequence. Neither carries work of this branch; both conflicted only in the
+  generated dashboard, resolved by regenerating rather than hand-merging. Named
+  for completeness — content that reached `main` through its own review is not
+  this artefact's to re-certify.
+- `746f3fd38` — re-measures the gate-script denominator 255 → 257 after the first
+  merge brought two further gate scripts. A one-token change to a comment in
+  `gate-coverage.yml`, made because leaving a knowingly stale number in the
+  paragraph that exists to catch stale numbers is the failure that paragraph
+  already records twice. Post-review, and small enough to name rather than
+  re-review.
 
 Two facts make the disclosure the proportionate response rather than a second
 review round: the addition is documentation with no executable surface — a
