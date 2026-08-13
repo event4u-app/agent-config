@@ -68,52 +68,77 @@ gate.
 
 Run, in order:
 
-1. `git fetch origin {target-base} --quiet` (default: `main`).
-2. `git rev-list --count HEAD..origin/{target-base}` — number of
-   commits HEAD is **behind** the base.
-3. `gh pr list --state open --base {target-base} --limit 20 --json number,headRefName,files`
-   — open PRs targeting the same base.
+1. **Ask the gate, never hand-roll the comparison:**
+
+   ```bash
+   ./scripts-run src/scripts/check_branch_freshness
+   ```
+
+   It resolves the base itself — explicit `--base`, else the base of the **open
+   PR for this branch** as the forge reports it, else the repo default from
+   `origin/HEAD`. Do **not** substitute `git rev-list --count HEAD..origin/main`:
+   that hardcodes a base this branch may not target, and it reads the local
+   tracking ref, which is a fetch from earlier in the session — a memory, not a
+   check (`direct-answers` Iron Law 2). Exit `0` = current, `1` = behind, and the
+   refusal names the base **and where that base came from**.
+
+2. `gh pr list --state open --base {resolved-base} --limit 20 --json number,headRefName,files`
+   — open PRs targeting the same base, for the overlap question below.
 
 **Decision matrix:**
 
-| Behind | Overlapping open PR touches same files? | Action |
+| Gate | Overlapping open PR touches same files? | Action |
 |---|---|---|
-| `0` | — | Proceed to Step 2 |
-| `1–N` | No | **Merge `origin/main` in** — `git merge origin/{target-base} --no-edit` — then proceed. No need to ask; state that you did it. Abort + surface only on conflict. |
-| `1–N` | **Yes** | STOP — surface the overlapping PR number, ask: stack on top of it / wait for it to land / proceed-anyway-and-accept-conflicts / cancel |
+| exit `0` | — | Proceed to Step 2 |
+| exit `1` | No | **Merge the base in** — `git fetch origin && git merge origin/{resolved-base} --no-edit` — then run the regeneration set below, then proceed. No need to ask; state that you did it. |
+| exit `1` | **Yes** | STOP — surface the overlapping PR number, ask: stack on top of it / wait for it to land / proceed-anyway-and-accept-conflicts / cancel |
+| warns `could not ask the forge` | — | The **default** base was checked and an open PR against a different base was **not** ruled out. Say so; do not report it as a clean freshness pass. |
 
-A branch behind its base is **not** current — bring `main` in **before** the PR
+A branch behind its base is **not** current — bring the base in **before** the PR
 exists, never after. Auto-merge when there is no file overlap (the common case);
 only ask when an overlapping open PR makes the base genuinely ambiguous. Never
 improvise the base or silently proceed when behind **and** overlapping. The
 10-second fetch beats hours of rebase reconciliation after the parent PR lands.
 
-**On merge conflict: regenerate, don't abort.** Most conflicts on this class of
-branch are in **generated files** — the roadmap dashboard
-(`agents/roadmaps-progress.md`), `docs/proof.md`, the `dist/agent-src/`
-projection, tool projections. Those are resolved **by regenerating from the merged sources**,
-never by hand-picking hunks:
+**After EVERY merge — not only on conflict — regenerate the derived files.**
+This is the half that gets skipped, because a merge that lands cleanly *looks*
+finished. It is not: these files are **generated**, so a clean auto-merge of
+them produces a file that describes neither side's sources. The dashboard is the
+usual casualty — it merges without a conflict marker and then reports a roadmap
+set that no longer exists.
 
-1. `./agent-config roadmap:progress` → resolves the dashboard.
-2. `./scripts-run src/scripts/build_proof` → resolves `docs/proof.md`.
-3. `bash src/scripts/condense.sh --sync`, then `--check` → resolves any
-   conflict inside `dist/agent-src/` by re-projecting from the merged source.
+1. `./agent-config roadmap:progress` → the roadmap dashboard.
+2. `./scripts-run src/scripts/build_proof` → `docs/proof.md`.
+3. `bash src/scripts/condense.sh --sync`, then `--check` → re-projects
+   `dist/agent-src/` from the merged source.
 4. Stage the regenerated files, complete the merge, and re-run the touched
    verification before pushing.
 
-Only a conflict in **hand-authored** content (source code, prose you or the
-other PR wrote) is surfaced to the user; a generated-file conflict never is.
+On a **conflict**, the same four steps are the resolution — regenerate from the
+merged sources, never hand-pick hunks. Only a conflict in **hand-authored**
+content (source code, prose you or the other PR wrote) is surfaced to the user;
+a generated-file conflict never is.
 
 ### 1b-ii. Update freshness — MANDATORY on EVERY later push to an open PR
 
 The gate above is not creation-only. **Every subsequent push** to a branch with
 an open PR (a CI fix, a review response, a follow-up commit) re-runs the same
-sequence first: `git fetch origin {target-base}` → behind-check → merge
-`origin/{target-base}` in (regenerating on conflict as above) → verify → push.
+sequence first: `check_branch_freshness` → on exit `1`, merge
+`origin/{resolved-base}` in → regenerate the derived files → verify → push.
 A PR that sits open while its base advances goes stale silently; keeping the
 base merged **at every touch** means it stays `mergeStateStatus: CLEAN` instead
-of accumulating conflicts for the moment the user wants to merge. If the
-behind-check shows `0`, the step costs one fetch and nothing else.
+of accumulating conflicts for the moment the user wants to merge. If the gate
+exits `0`, the step costs one `ls-remote` and nothing else.
+
+Once the PR exists, this is also when the resolution gets *more* precise rather
+than less: the gate can now read the PR's real `baseRefName` from the forge, so
+a stacked or release-line PR is measured against the branch it will actually
+merge into instead of against the repo default.
+
+`task preflight` (and therefore the pre-push hook) runs the same gate, so a push
+that goes out through the hook is covered without a separate step. Run it by
+hand when you push with the hook bypassed, or when you are about to open the PR
+some time after the last push — that gap is exactly where a base moves unseen.
 
 ### 1c. PR-gate — archive completed roadmaps (MANDATORY)
 
