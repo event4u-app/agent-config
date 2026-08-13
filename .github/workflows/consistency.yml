@@ -419,6 +419,15 @@ jobs:
       - name: Corpus staleness + CSV integrity (declared cadence, declared columns)
         run: task check-corpus-staleness
 
+      # Third instance of the same pattern, and the first one a MECHANISM caught
+      # rather than a reader: this gate was added to the `ci:` list with no
+      # workflow step, and the newly-repaired `ci-parity:local-only` ratchet
+      # refused the merge that brought it in. Wired here rather than raising the
+      # ratchet, which its own failure message calls a defect. Passes on the
+      # tree it lands on.
+      - name: Design-antipattern catalog ↔ rule parity
+        run: task lint-design-antipattern-parity
+
       - name: Cloud bundle dry-run (source invariants)
         run: task ci-cloud-bundle
 
