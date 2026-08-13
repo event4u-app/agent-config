@@ -328,9 +328,25 @@ not a default.
 2. **Bundle + redact.** Call `scripts/ai_council/bundler.ts` to produce
    a redacted artefact bundle. If `BundleTooLarge` fires, surface the
    size and ask the user to narrow scope — do NOT truncate silently.
-3. **Confirm spend.** Before any network call, surface members + cost
-   ceiling and require an explicit user `1` to proceed. Autonomy
-   settings do not override this gate.
+3. **Clear the spend bound.** The council is standing-authorized — there is
+   no per-invocation approval. What still binds is a *bound*, resolved in
+   this order:
+   - **No billable member** (every member is `mode: cli` under
+     subscription auth — `billable=False`) → nothing is spent. Render the
+     estimate table as information and fan out. No gate.
+   - **Billable members with a configured ceiling** (`cost_budget.max_total_usd`
+     non-zero, or `daily_limit_usd` non-zero) → the ceiling **is** the
+     authorization the user already gave. Render the estimate and fan out.
+     `on_overrun` still fires per member on breach (below) — that is where
+     the user regains the decision.
+   - **Billable members with no ceiling at all** (`max_total_usd: 0` AND
+     `daily_limit_usd: 0`) → unbounded paid spend, so surface the estimate
+     and require an explicit `1`. Nothing bounds the call, so the user must.
+
+   Autonomy settings do not *create* a bound and do not lift the last case.
+   Consumers who want the old per-run gate back set a small
+   `cost_budget.max_total_usd`: every call then breaches and `on_overrun`
+   asks, per member.
 4. **Fan out.** Dispatch the bundle to each enabled council member via
    `scripts/ai_council/orchestrator.ts`. Each member receives the
    neutrality preamble from `prompts.ts` plus the artefact — nothing
@@ -594,8 +610,9 @@ overrides the table regardless of how the lens resolved.
   identity — that primes the reviewer and collapses diversity.
 - Do NOT silently truncate a too-large bundle — surface the size and
   ask for narrower scope.
-- Do NOT auto-spend tokens under `personal.autonomy: on` — the cost
-  gate fires every time, no exceptions.
+- Do NOT spend against an unbounded budget without asking — a billable
+  member with neither `max_total_usd` nor `daily_limit_usd` set has no
+  ceiling, and autonomy is not a ceiling.
 - Do NOT reuse SDK clients across invocations — re-load keys via
   `load_*_key()` each call.
 
@@ -620,7 +637,8 @@ Real failure modes seen in the wild:
 | Paste the host-agent identity ("I am Augment / Claude Code…") | Identity primes the reviewer's model. | Neutrality preamble in `prompts.ts` already handles this. |
 | Silently truncate a too-large bundle. | Misleads the reviewer into thinking they saw the whole thing. | Bundler raises `BundleTooLarge`; surface and ask for narrower scope. |
 | Reuse the same SDK client across calls without re-loading the key. | Leaks the key in long-lived process state. | Each invocation builds fresh clients from `load_*_key()`. |
-| Auto-spend tokens under `personal.autonomy: on`. | Autonomy ≠ permission to spend money. | Always ask before consultation, even under autonomy. |
+| Spend against a billable member with no configured ceiling because "the council is standing-authorized". | Standing authorization is a *bound* the user set once, not a blank cheque. No ceiling = nothing was authorized. | Surface the estimate and ask, exactly in that one case (Procedure § 3). |
+| Re-ask per invocation once a ceiling exists. | The ceiling already carried the decision; re-asking is the approval burden this default removed. | Fan out; let `on_overrun` ask on breach. |
 | Forward council convergence to the user as numbered options without a host verdict. | Convergence ≠ correctness; the council never saw the codebase. | Apply the *Critical evaluation* lens; tag every finding `accept` / `accept-with-modification` / `reject` / `needs-input` with one-line reason. |
 | Reject a finding on preference, not evidence. | "I don't like this" is not a verdict. | Cite the file, line, ADR, or contract that justifies the rejection — or surface as `needs-input`. |
 | Paraphrase council output into the host's own analysis to defend a verdict. | Strips attribution, breaches `direct-answers` no-invented-facts. | Verdict cites host evidence (file:line); council output stays attributed in the per-member sections. |
