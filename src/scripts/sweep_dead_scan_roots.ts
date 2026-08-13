@@ -156,11 +156,11 @@ export function classify(rel: string): TriageClass {
  * sites once carried their own regex and disagreed. That sharing is worth
  * keeping — but it means the sweep's reach is a FILENAME PREFIX, and a script
  * reading a retired container is dead whether or not its name starts with one
- * of five words. Measured: `run_skill_evals.ts` roots at
- * `.agent-src.uncondensed/skills` (`:32`) and every subcommand fails in
- * `_skill_dir()` before doing any work, while its sibling `skill_trigger_eval.ts`
- * — same retired root, `skill_` prefix — is reported. One visible, one not, on
- * the prefix alone.
+ * of five words. Measured: `run_skill_evals.ts` roots its `SKILLS_ROOT` at the
+ * skills subtree of the container ADR-051 retired (see `CLASS_A_RETIRED`), and
+ * every subcommand fails in `_skill_dir()` before doing any work — while its
+ * sibling `skill_trigger_eval.ts`, same retired root and a `skill_` prefix, is
+ * reported. One visible, one not, on the prefix alone.
  *
  * So this pass widens the READING, never the shared population: it is
  * Class-A-only (a closed set of retired containers, needing no allowlist to stay
