@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 35 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **44** open blockers, **10** need you → `agent-config gates`
+> 37 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **46** open blockers, **10** need you → `agent-config gates`
 
 ## Overall
 
-**290 / 462 steps done · 63%**
+**308 / 486 steps done · 63%**
 
 ```text
 █████████████████████████░░░░░░░░░░░░░░░   63%
@@ -32,41 +32,43 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
-| 2 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 1 | 18 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ██████████ 95% |
-| 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
-| 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-corpus-knowledge-skills.md](roadmaps/road-to-corpus-knowledge-skills.md) | 6 | 15 | 11 | 3 | 0 | 1 | [2](#blockers-road-to-corpus-knowledge-skills) | ██░░░░░░░░ 21% |
-| 6 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
-| 7 | [road-to-design-system-onramp.md](roadmaps/road-to-design-system-onramp.md) | 5 | 13 | 12 | 0 | 0 | 1 | 0 | ░░░░░░░░░░ 0% |
-| 8 | [road-to-eval-loop-runnability.md](roadmaps/road-to-eval-loop-runnability.md) | 2 | 7 | 1 | 6 | 0 | 0 | [1](#blockers-road-to-eval-loop-runnability) | █████████░ 86% |
-| 9 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
-| 10 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 11 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
-| 12 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 2 | 12 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █████████░ 86% |
-| 13 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
-| 14 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
-| 15 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 0 | 12 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | ██████████ 100% |
-| 16 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
-| 17 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
-| 18 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 19 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 20 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
-| 22 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 23 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
-| 24 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 1 | 4 | 15 | 1 | [2](#blockers-road-to-skill-ecosystem-executable-payloads) | ████████░░ 80% |
-| 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
-| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 18 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 28 | [road-to-structured-guard-input.md](roadmaps/road-to-structured-guard-input.md) | 4 | 9 | 3 | 5 | 0 | 1 | 0 | ██████░░░░ 62% |
-| 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 19 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
-| 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 31 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 32 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 33 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 34 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 35 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 15 | 3 | 12 | 0 | 0 | [1](#blockers-road-to-zero-settings) | ████████░░ 80% |
+| 1 | [road-to-always-loaded-corpus-scoping.md](roadmaps/road-to-always-loaded-corpus-scoping.md) | 4 | 16 | 16 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
+| 3 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 1 | 18 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ██████████ 95% |
+| 4 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
+| 5 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 6 | [road-to-corpus-knowledge-skills.md](roadmaps/road-to-corpus-knowledge-skills.md) | 6 | 15 | 11 | 3 | 0 | 1 | [2](#blockers-road-to-corpus-knowledge-skills) | ██░░░░░░░░ 21% |
+| 7 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
+| 8 | [road-to-design-system-onramp.md](roadmaps/road-to-design-system-onramp.md) | 5 | 13 | 12 | 0 | 0 | 1 | 0 | ░░░░░░░░░░ 0% |
+| 9 | [road-to-eval-loop-runnability.md](roadmaps/road-to-eval-loop-runnability.md) | 2 | 7 | 1 | 6 | 0 | 0 | [1](#blockers-road-to-eval-loop-runnability) | █████████░ 86% |
+| 10 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
+| 11 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+| 12 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
+| 13 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 2 | 12 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █████████░ 86% |
+| 14 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
+| 15 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
+| 16 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 0 | 12 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | ██████████ 100% |
+| 17 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
+| 18 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
+| 19 | [road-to-inbox-harvest-distillation.md](roadmaps/road-to-inbox-harvest-distillation.md) | 4 | 16 | 0 | 9 | 1 | 6 | [2](#blockers-road-to-inbox-harvest-distillation) | ██████████ 100% |
+| 20 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 21 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 22 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 23 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+| 24 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 25 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+| 26 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 1 | 4 | 15 | 1 | [2](#blockers-road-to-skill-ecosystem-executable-payloads) | ████████░░ 80% |
+| 27 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 28 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+| 29 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 8 | 9 | 1 | 0 | 0 | █████░░░░░ 53% |
+| 30 | [road-to-structured-guard-input.md](roadmaps/road-to-structured-guard-input.md) | 4 | 9 | 3 | 5 | 0 | 1 | 0 | ██████░░░░ 62% |
+| 31 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 19 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
+| 32 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 33 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 34 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 35 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 36 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 37 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 15 | 3 | 12 | 0 | 0 | [1](#blockers-road-to-zero-settings) | ████████░░ 80% |
 
 ---
 
@@ -852,15 +854,15 @@ _1 blocker resolved._
 
 ### [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md)
 
-**Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation** — 0 / 18 done (0%)
+**Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation** — 9 / 17 done (53%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Measure — reproduce ad-hoc, census the screenshot tools | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | One data-basis ladder, written where the agent reads, engine-independent | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Measure — reproduce ad-hoc, census the screenshot tools | ✅ done | 0 | 2 | 1 | 0 | 100% |
+| 2 | One data-basis ladder, written where the agent reads, engine-independent | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 3 | The deterministic carrier — a source-first gate on screenshot tools | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | The browser handover — extraction into files, inside the lock | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Interop precedence — a provided artifact outranks generative tooling | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 5 | Interop precedence — a provided artifact outranks generative tooling | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 6 | Close the loop — re-measure ad-hoc, decide the gated follow-ups | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-structured-guard-input.md](roadmaps/road-to-structured-guard-input.md)
