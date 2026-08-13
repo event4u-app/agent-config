@@ -162,7 +162,7 @@ already settled — three of them have been proposed more than once.
 The registry header's promise is currently true and currently unguarded. A gate
 costs one script and converts an assertion into a fact.
 
-- [ ] **Step 1:** Add `src/scripts/lint_design_antipattern_parity.ts` — for every
+- [x] **Step 1:** Add `src/scripts/lint_design_antipattern_parity.ts` — for every
       rule in the registry, resolve its `catalogId` against a real table row in
       `docs/guidelines/design-antipatterns.md`; fail on an id that resolves to
       nothing. In the other direction, every V/C/T/L/M/CP catalog row must be
@@ -171,19 +171,22 @@ costs one script and converts an assertion into a fact.
       unclassified row fails. Follow the house gate contract: `--quiet`, a
       per-item line, exit 0 clean / 1 on failure, and a self-test.
       <!-- verify: npx vitest run tests/scripts/lint_design_antipattern_parity.test.ts -->
-- [ ] **Step 2:** Make the document's "deterministic detector backing" paragraph
+- [x] **Step 2:** Make the document's "deterministic detector backing" paragraph
       derived rather than hand-maintained: the gate asserts the listed set equals
       the registry's actual `catalogId` set, so the list cannot drift from the
-      code that it describes.
+      code that it describes. Landed as a stronger shape than planned — the
+      prose enumeration is **deleted** rather than checked, and the single
+      enumeration is the § Detector status table, where all 45 entries carry one
+      of five statuses. Two lists cannot drift when there is one.
       <!-- verify: npx tsx src/scripts/lint_design_antipattern_parity.ts --quiet -->
-- [ ] **Step 3:** Rename the two id↔catalog naming breaks to the convention the
+- [x] **Step 3:** Rename the two id↔catalog naming breaks to the convention the
       other seventeen follow: `slop-lock-shape` → `slop-v8-lock-shape`,
       `slop-lock-colour` → `slop-c6-lock-colour`, with their fixture keys. The
       rename is the plan, not an option the gate picks — a step that defers its
       own decision is a placeholder. Downstream: the fixture record in
       `design_slop_rules.test.ts` and any `--json` consumer keyed on the old id.
       <!-- verify: npx vitest run src/scripts/design_slop_rules.test.ts -->
-- [ ] **Step 4:** Register the gate in the CI pipeline beside the other design
+- [x] **Step 4:** Register the gate in the CI pipeline beside the other design
       linters, under CI-identical argv.
       <!-- verify: npx tsx src/scripts/lint_design_antipattern_parity.ts --quiet -->
 
