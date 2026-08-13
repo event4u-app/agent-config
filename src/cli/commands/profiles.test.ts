@@ -9,14 +9,14 @@ import { describe, expect, it } from 'vitest';
 import { loadProfile, resolveProfileView } from './profiles.js';
 import type { DiscoveryArtefact } from '../discovery/loadManifest.js';
 
-function cmd(slug: string, pack: string, tier = 2): DiscoveryArtefact {
+function cmd(slug: string, pack: string, visibility = 'internal'): DiscoveryArtefact {
     return {
         path: `src/domains/${pack}/${slug}/command.md`,
         category: 'command',
         name: slug,
         slug,
         pack,
-        tier,
+        visibility,
         workspaces: [],
         packs: [pack],
         lifecycle: 'stable',
@@ -26,13 +26,13 @@ function cmd(slug: string, pack: string, tier = 2): DiscoveryArtefact {
 }
 
 const MANIFEST: DiscoveryArtefact[] = [
-    cmd('work', 'engineering-base', 0),
-    cmd('review-changes', 'engineering-base', 1),
+    cmd('work', 'engineering-base', 'visible'),
+    cmd('review-changes', 'engineering-base', 'advanced'),
     cmd('fix-ci', 'engineering-base'),
-    cmd('git-commit', 'git', 0),
-    cmd('git-pr-create', 'git', 1),
+    cmd('git-commit', 'git', 'visible'),
+    cmd('git-pr-create', 'git', 'advanced'),
     cmd('git-sync', 'git'),
-    cmd('research', 'product-discovery', 0), // not in developer's packs
+    cmd('research', 'product-discovery', 'visible'), // not in developer's packs
 ];
 
 describe('profiles-as-views', () => {

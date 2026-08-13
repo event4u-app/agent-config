@@ -111,11 +111,15 @@ describe('compiled CLI', () => {
             timeout: 10_000,
         });
         expect(res.exitCode).toBe(0);
-        const parsed = JSON.parse(res.stdout) as { commands: Array<{ name: string; tier: number; intent: string }> };
+        const parsed = JSON.parse(res.stdout) as {
+            commands: Array<{ name: string; visibility: string; intent: string }>;
+        };
         expect(parsed.commands.length).toBeGreaterThan(0);
-        // Every listed command is visible (tier 0/1) and carries an intent.
+        // Every listed command is surfaced (visible/advanced) and carries an
+        // intent. The integer `tier` this used to assert on is gone from the
+        // manifest since v3 (road-to-tier-removal Phase 4).
         for (const c of parsed.commands) {
-            expect([0, 1]).toContain(c.tier);
+            expect(['visible', 'advanced']).toContain(c.visibility);
             expect(typeof c.intent).toBe('string');
             expect(c.intent.length).toBeGreaterThan(0);
         }

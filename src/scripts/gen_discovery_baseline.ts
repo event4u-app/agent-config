@@ -247,19 +247,19 @@ export function main(): number {
     out.push('');
 
     out.push('## Sample commands (first 10)\n');
-    out.push('| File | name | tier | cluster |');
+    out.push('| File | name | visibility | cluster |');
     out.push('|---|---|---|---|');
     for (const c of commands.slice(0, 10)) {
         const fm = _frontmatter(c);
         const rel = _relativeTo(c, SRC);
-        out.push(`| \`${rel}\` | ${fm.name ?? ''} | ${fm.tier ?? ''} | ${fm.cluster ?? ''} |`);
+        out.push(`| \`${rel}\` | ${fm.name ?? ''} | ${fm.visibility ?? ''} | ${fm.cluster ?? ''} |`);
     }
     out.push('');
 
     out.push('## Notes\n');
     out.push('- Every skill carries `domain:` today — Phase 4 mapping uses it as primary signal.');
     out.push('- Rules use `type` (always | auto) + `tier` (safety-floor | kernel | …); no `domain:` today.');
-    out.push('- Commands use `tier` + `cluster`; no `domain:` today.');
+    out.push('- Commands use `visibility` + `cluster`; no `domain:` today.');
     out.push('- Templates have no consistent frontmatter; Phase 4 quarantines them in `unassigned-artefacts.yml`.');
     out.push('');
 

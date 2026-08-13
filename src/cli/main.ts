@@ -309,9 +309,9 @@ async function main(rawArgv: readonly string[]): Promise<number> {
         .description('Inspect the command surface from the discovery manifest');
     commands
         .command('ls', { isDefault: true })
-        .description('List commands (command, pack, tier, visibility, intent)')
+        .description('List commands (command, pack, visibility, intent)')
         .option('--pack <id>', 'Restrict to one owning pack')
-        .option('--visible', 'Restrict to visible commands (tier 0/1)')
+        .option('--visible', 'Restrict to visible commands (visible/advanced)')
         .option('--profile <id>', 'Render a profile\'s curated command view (developer, founder, …)')
         .option('--expanded', 'With --profile: add the active packs\' full command set')
         .option('--candidates', 'Surface-reduction report (shims, undocumented, pack weight) — report-only')

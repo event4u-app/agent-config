@@ -34,7 +34,7 @@ function cmd(
         name: slug,
         slug,
         pack,
-        tier: 2,
+        visibility: 'internal',
         workspaces: [],
         packs: [pack],
         lifecycle: 'stable',

@@ -138,7 +138,7 @@ export function buildEntries(): CatalogIndexEntry[] {
             cls: 'command',
             name,
             description: _str(fm['description']) || _str(fm['intent']),
-            tags: [_str(fm['pack']), _str(fm['tier']), _str(fm['visibility'])].filter((s) => s.length > 0),
+            tags: [_str(fm['pack']), _str(fm['visibility'])].filter((s) => s.length > 0),
             path: _rel(abs),
         });
     }
