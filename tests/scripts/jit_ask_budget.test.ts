@@ -36,6 +36,9 @@ import {
     isConservativeDefault,
     parseSettingsClassRows,
 } from '../../src/shared/settingsClasses.js';
+// The deletion half of the surface: a key removed from the contract must be
+// recorded here, or an old install silently keeps a value nothing reads.
+import { REMOVED_KEYS } from '../../src/scripts/_lib/agent_settings.js';
 
 const REPO = path.resolve(__dirname, '..', '..');
 const RULE = path.join(REPO, 'src', 'rules', 'settings-ask-protocol.md');
@@ -176,7 +179,13 @@ describe('the key lists are DERIVED from the class contract, not snapshotted', (
     it('every key the rule routes to the non-persisting path is class C', () => {
         const cKeys = new Set(keysOfClass('C'));
         const text = ruleText();
-        const cSection = /Class C carrying an `ask` value[\s\S]*?do not ship that way\)\./.exec(text)?.[0];
+        // Terminate at the PARAGRAPH break, not at a sentence: the paragraph
+        // after this one names `subagents.auto`, `subagents.budget_routing`
+        // and `worktrees.mode`, all DELETED keys, and running past it would
+        // assert three dead keys are class C — a failure with nothing to do
+        // with the routing claim under test. Anchoring on prose was tried and
+        // broke on a re-wrap; `\n\n` is the same anchor the Class-B check uses.
+        const cSection = /Class C carrying an `ask` value[\s\S]*?\n\n/.exec(text)?.[0];
         expect(cSection, 'the C-ask section must be findable').toBeTruthy();
         const named = (cSection ?? '').match(/`([a-z_]+\.[a-z_]+)`/g) ?? [];
         expect(named.length).toBeGreaterThan(0);
@@ -186,13 +195,22 @@ describe('the key lists are DERIVED from the class contract, not snapshotted', (
         }
     });
 
-    it('the one key the rule calls ship-as-ask really does default to ask', () => {
+    it('no C-ask key ships as ask, and the deleted one is gone from every surface', () => {
         // The rule distinguishes "ships as ask" from "can be set to ask". That
         // distinction is a claim about the template and must be checked, or it
         // becomes a comfortable fiction after the next default flip.
-        for (const key of ['worktrees.mode']) {
-            expect(declaredDefault(key), `${key} default cell`).toMatch(/ask/);
+        //
+        // ADR-229 deleted `worktrees.mode`, the last key that shipped as `ask`,
+        // so the claim inverted: NONE of them ships that way. Both halves are
+        // asserted — the survivors, and the absence of the deleted key. A
+        // deletion checked only by "the rule no longer mentions it" would pass
+        // with the key still live in the template.
+        for (const key of ['tokens.rich_skills', 'subagents.adversarial_council', 'decision_engine.on_block']) {
+            expect(declaredDefault(key), `${key} default cell`).not.toMatch(/ask/);
         }
+        expect(declaredDefault('worktrees.mode'), 'gone from the class table').toBeUndefined();
+        expect(keysOfClass('C'), 'gone from the C list').not.toContain('worktrees.mode');
+        expect(REMOVED_KEYS.has('worktrees.mode'), 'recorded as a removed key').toBe(true);
     });
 
     it('every B key ships a conservative default, so absent never reads as yes', () => {
