@@ -86,6 +86,13 @@ tasks:
       - task: consistency
       - task: preflight
       - task: check-ci-local-parity
+      # Defined in taskfiles/ci-fast.yml since it was written and referenced by
+      # NOTHING — not this chain, not a workflow — so the gate that reads every
+      # other gate's coverage floor could only be seen by running it by hand.
+      # Wiring it into consistency.yml without this line would have made it
+      # CI-only, i.e. a failure a contributor meets only after pushing, which is
+      # the mirror image of the defect road-to-local-only-gate-reds was about.
+      - task: check-gate-coverage
       - task: check-ci-strict-superset
       - task: counts-check
       - task: check-index
