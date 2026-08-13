@@ -80,6 +80,7 @@ TS-shell native (run via the installed `agent-config` binary):
                              Names the degraded case (settings file without a
                              profile.id → zero packs) that nothing else reports.
   commands [ls|explain]      List/explain the command surface from the discovery manifest
+                             (ls --candidates: surface-reduction report, report-only)
   mcp-server                 Turnkey read-only stdio MCP server (no repo clone; ADR-085)
   doctor-shell               Probe the TS-shell environment
   rtk:detect                 rtk (Rust Token Killer) presence + identity readout (--json)
