@@ -51,19 +51,40 @@
  * findings under `--strict` · 2 usage or IO error. A scan that walked no rules
  * exits 2 rather than green — a gate that scanned nothing must never read as a
  * pass.
+ *
+ * `--self-test` proves those rejections still fire in the binary a contributor
+ * runs, not merely in the imported functions `tests/scripts/pack_reach.test.ts`
+ * exercises. `--root <dir>` exists for it: the three inputs are ordinary tree
+ * reads, so a temporary fixture repo can reproduce every verdict, which is why
+ * this gate adopts the harness rather than claiming the exemption.
  */
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
-const RULES_DIR = path.join(REPO, 'src', 'rules');
-const SKILLS_DIR = path.join(REPO, 'src', 'skills');
-const PACKS_FILE = path.join(REPO, 'src', 'config', 'discovery', 'packs.yml');
+
+interface Roots {
+    rulesDir: string;
+    skillsDir: string;
+    packsFile: string;
+}
+
+/** The three inputs, resolved against `root` so a fixture tree can stand in. */
+function rootsFor(root: string): Roots {
+    return {
+        rulesDir: path.join(root, 'src', 'rules'),
+        skillsDir: path.join(root, 'src', 'skills'),
+        packsFile: path.join(root, 'src', 'config', 'discovery', 'packs.yml'),
+    };
+}
 
 export interface PackDef {
     id: string;
@@ -212,10 +233,155 @@ export function analyze(
     return findings;
 }
 
-function main(): number {
-    const packs = readPacks(PACKS_FILE);
-    const rules = readRules(RULES_DIR);
-    const skillPacks = readSkillPacks(SKILLS_DIR);
+interface Args {
+    quiet: boolean;
+    strict: boolean;
+    selfTest: boolean;
+    root: string;
+}
+
+function _parseArgs(argv: readonly string[]): Args {
+    const args: Args = { quiet: false, strict: false, selfTest: false, root: REPO };
+    for (let i = 0; i < argv.length; i += 1) {
+        const a = argv[i];
+        if (a === '--quiet') args.quiet = true;
+        else if (a === '--strict') args.strict = true;
+        else if (a === '--self-test') args.selfTest = true;
+        else if (a === '--root') {
+            args.root = argv[i + 1] ?? REPO;
+            i += 1;
+        }
+    }
+    return args;
+}
+
+/**
+ * Build a fixture tree. `packsYml` is written verbatim; each rule and skill is
+ * a minimal frontmatter block, which is all `readRules` / `readSkillPacks`
+ * ever look at.
+ */
+function _fixture(
+    tmp: string,
+    name: string,
+    packsYml: string,
+    rules: ReadonlyArray<{ name: string; packs?: string[]; routes: string[] }>,
+    skills: ReadonlyArray<{ name: string; packs?: string[] }>,
+): string {
+    const root = path.join(tmp, name);
+    const { rulesDir, skillsDir, packsFile } = rootsFor(root);
+    fs.mkdirSync(rulesDir, { recursive: true });
+    fs.mkdirSync(skillsDir, { recursive: true });
+    fs.mkdirSync(path.dirname(packsFile), { recursive: true });
+    fs.writeFileSync(packsFile, packsYml, 'utf-8');
+    const list = (key: string, values?: string[]): string =>
+        values === undefined ? '' : `${key}: [${values.join(', ')}]\n`;
+    for (const rule of rules) {
+        fs.writeFileSync(
+            path.join(rulesDir, `${rule.name}.md`),
+            `---\n${list('packs', rule.packs)}${list('routes_to', rule.routes)}---\n\n# ${rule.name}\n`,
+            'utf-8',
+        );
+    }
+    for (const skill of skills) {
+        fs.mkdirSync(path.join(skillsDir, skill.name), { recursive: true });
+        fs.writeFileSync(
+            path.join(skillsDir, skill.name, 'SKILL.md'),
+            `---\n${list('packs', skill.packs)}---\n\n# ${skill.name}\n`,
+            'utf-8',
+        );
+    }
+    return root;
+}
+
+function _selfTest(): number {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lrspr-selftest-'));
+    const run = (root: string, extra: readonly string[] = []): number =>
+        runGateCli(
+            REPO,
+            'src/scripts/lint_rule_skill_pack_reach.ts',
+            ['--root', root, '--quiet', ...extra],
+            REPO,
+        );
+
+    // `alpha` stands alone; `beta` pulls `alpha` in transitively.
+    const PACKS = '- id: alpha\n- id: beta\n  requires: [alpha]\n- id: gamma\n';
+
+    try {
+        const unreachable = _fixture(
+            tmp,
+            'unreachable',
+            PACKS,
+            [{ name: 'r', packs: ['gamma'], routes: ['skill:s'] }],
+            [{ name: 's', packs: ['alpha'] }],
+        );
+        const viaRequires = _fixture(
+            tmp,
+            'via-requires',
+            PACKS,
+            [{ name: 'r', packs: ['beta'], routes: ['skill:s'] }],
+            [{ name: 's', packs: ['alpha'] }],
+        );
+        const unscopedRule = _fixture(
+            tmp,
+            'unscoped-rule',
+            PACKS,
+            [{ name: 'r', routes: ['skill:s'] }],
+            [{ name: 's', packs: ['alpha'] }],
+        );
+        const unscopedSkill = _fixture(
+            tmp,
+            'unscoped-skill',
+            PACKS,
+            [{ name: 'r', packs: ['gamma'], routes: ['skill:s'] }],
+            [{ name: 's' }],
+        );
+        const empty = _fixture(tmp, 'empty', PACKS, [], [{ name: 's', packs: ['alpha'] }]);
+
+        return runSelfTest({
+            gate: 'lint_rule_skill_pack_reach',
+            minCases: 5,
+            minRejectCases: 2,
+            cases: [
+                {
+                    name: 'a rule routing into a pack its own closure never reaches is rejected under --strict',
+                    expect: 'reject',
+                    run: () => run(unreachable, ['--strict']),
+                },
+                {
+                    name: 'an empty rule corpus refuses to report a pass',
+                    expect: 'reject',
+                    run: () => run(empty, ['--strict']),
+                },
+                {
+                    name: 'the same route passes when `requires` pulls the skill pack in transitively',
+                    expect: 'accept',
+                    run: () => run(viaRequires, ['--strict']),
+                },
+                {
+                    name: 'an unscoped rule ships everywhere, so its route is always reachable',
+                    expect: 'accept',
+                    run: () => run(unscopedRule, ['--strict']),
+                },
+                {
+                    name: 'an unscoped skill ships everywhere, so no route into it can be unreachable',
+                    expect: 'accept',
+                    run: () => run(unscopedSkill, ['--strict']),
+                },
+            ],
+        });
+    } finally {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    }
+}
+
+function main(argv: readonly string[] = process.argv.slice(2)): number {
+    const args = _parseArgs(argv);
+    if (args.selfTest) return _selfTest();
+
+    const { rulesDir, skillsDir, packsFile } = rootsFor(args.root);
+    const packs = readPacks(packsFile);
+    const rules = readRules(rulesDir);
+    const skillPacks = readSkillPacks(skillsDir);
 
     if (rules.length === 0 || skillPacks.size === 0 || packs.size === 0) {
         process.stderr.write(
@@ -231,8 +397,7 @@ function main(): number {
     // --quiet suppresses the per-finding lines but never the count line: this
     // gate is expected to stay non-empty for a while, and a quiet run that
     // printed nothing at all would read as clean.
-    const quiet = process.argv.includes('--quiet');
-    if (!quiet) {
+    if (!args.quiet) {
         for (const finding of errors) {
             process.stdout.write(`❌  ${finding.subject} — ${finding.detail}\n`);
         }
@@ -241,16 +406,15 @@ function main(): number {
         }
     }
 
-    const strict = process.argv.includes('--strict');
     process.stdout.write(
         `scanned: ${rules.length} rule(s), ${skillPacks.size} skill(s), ${packs.size} pack(s) — ${errors.length} unreachable-route, ${advisories.length} unrouted-skill\n`,
     );
-    if (errors.length > 0 && !strict) {
+    if (errors.length > 0 && !args.strict) {
         process.stdout.write(
             `advisory run: ${errors.length} unreachable-route finding(s) reported, exit 0. Promote with --strict once the set is empty.\n`,
         );
     }
-    return strict && errors.length > 0 ? 1 : 0;
+    return args.strict && errors.length > 0 ? 1 : 0;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(_HERE)) {
