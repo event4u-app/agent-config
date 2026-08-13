@@ -54,20 +54,31 @@ function run(dir: string, baseline: Map<string, BaselineEntry> = new Map()) {
     return { ...evaluate(packages, baseline, ledger), packages };
 }
 
-describe('the committed corpus reproduces the measured baseline', () => {
-    it('reads 19 packages: 17 binding, 2 broken, 0 steered', () => {
+describe('the committed corpus holds the invariant', () => {
+    /**
+     * Asserted as an INVARIANT, not as the frozen 2026-08-13 reading of
+     * `19 packages · 17 binding · 2 broken · 0 steered`.
+     *
+     * The corpus grows by one package every time a reviewed PR commits its input
+     * package — including the PR that introduced this gate. Pinning the counts
+     * would make this test red on the next reviewed change for a reason that has
+     * nothing to do with the property under test, which is the overfit-to-a-fixed-
+     * case failure. What must hold for every future reading is directional: no
+     * prompt carries a pre-loaded verdict, every break is one the baseline
+     * describes, and the corpus has not collapsed to nothing.
+     */
+    it('every break is baselined, nothing is steered, and the corpus is live', () => {
         const ledger = new GateLedger('test');
         const packages = collectPackages(REVIEWS, REPO_ROOT, ledger);
         const { tally, findings } = evaluate(packages, loadBaseline(BASELINE), ledger);
 
-        expect(tally.packages).toBe(19);
-        expect(tally.binding).toBe(17);
-        expect(tally.broken).toBe(2);
         expect(tally.steered).toBe(0);
-        // Both breaks are covered, so the gate is green on a corpus it did not
-        // create — the property that lets it ship without blocking every PR.
-        expect(tally.baselined).toBe(2);
+        expect(tally.broken).toBe(tally.baselined);
         expect(findings).toEqual([]);
+        // A floor, not an equality: below it the scan has collapsed rather than
+        // found nothing. 19 was the reading when the gate landed.
+        expect(tally.packages).toBeGreaterThanOrEqual(19);
+        expect(tally.binding).toBe(tally.packages - tally.broken);
     });
 
     it('every baseline entry names a break that is actually present', () => {
