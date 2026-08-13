@@ -207,8 +207,42 @@ Before considering a skill complete, verify it passes all 5 checks:
 - [ ] **K3: No obvious content** — doesn't teach the model what it already knows; only project-specific conventions and non-obvious patterns
 - [ ] **K4: Has Gotcha section** — documents real failure patterns, not theoretical advice; seeded with 2-3 entries
 - [ ] **K5: Has Output format** — numbered list with 2-4 deliverables describing what the skill produces
-- [ ] **K6: Under 400 lines** — if larger, extract reference tables or templates into separate files in the skill folder
+- [ ] **K6: Under 400 lines** — if larger, restructure as a router head per the contract below (gate: `lint_skill_router_head`)
 - [ ] **English only** — all content in English
 - [ ] **No duplication** — doesn't repeat rules or guidelines that are already enforced elsewhere
 - [ ] **No "Related skills" section for mid-tier / untiered skills** — the agent discovers them via `<available_skills>` descriptions; cross-links waste tokens. Senior-tier skills (`tier: senior`) MUST include the block per `skill-quality.md` § Senior-Tier Required Structure (linter-enforced).
+
+## The router-head contract (K6, over the cap)
+
+A `SKILL.md` over the 400-line cap restructures instead of growing. The shape:
+
+| Part | Holds | Budget |
+|---|---|---|
+| **Entry head** — `SKILL.md` | When-to-use · a mode table · the routing that picks a mode · anything true across *all* modes | the cap |
+| **Mode bodies** — `tasks/*.md` or `references/*.md` in the skill folder | One file per mode: the procedure, its examples, its tables | unbudgeted |
+
+One binding constraint on the head: **it never inlines the procedure body for
+more than one mode.** A head that carries mode A in full and points at modes
+B and C has not been restructured — it has been relabelled, and the next edit
+will grow it back.
+
+### What this contract does NOT claim
+
+It does not claim a token win. The host loads `SKILL.md` whole on trigger, and
+whether it then follows a pointer into `tasks/` is host behaviour **nothing in
+this tree observes**. Anyone proposing a retrofit of an existing oversized skill
+on activation grounds is asserting something currently unmeasurable, and
+ADR-202's lesson binds: an activation claim goes behind a measured instrument or
+it is not made.
+
+What the contract does is narrower and real: the 400-line cap was already this
+repo's published position, sitting in a checklist nothing enforced. The gate
+makes an existing contract true for **new** skills. Restructuring the current
+offenders is a separate decision with its own evidence bar.
+
+### Grandfathering
+
+`lint_skill_router_head` carries a shrink-only allowlist seeded with the skills
+that already exceed the cap. Entries may be removed, never added — a new
+oversized monolith fails the gate rather than joining the list.
 
