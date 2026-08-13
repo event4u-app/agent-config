@@ -1,0 +1,56 @@
+{
+  "$schema": "https://design-tokens.org/schema.json",
+  "primitive": {
+    "color": {
+      "gray": {
+        "50": { "$value": "#F9FAFB", "$type": "color" },
+        "900": { "$value": "#111827", "$type": "color" }
+      },
+      "blue": {
+        "50": { "$value": "#EFF6FF", "$type": "color" },
+        "500": { "$value": "#3B82F6", "$type": "color" }
+      }
+    },
+    "spacing": {
+      "1": { "$value": "0.25rem", "$type": "dimension" },
+      "4": { "$value": "1rem", "$type": "dimension" }
+    },
+    "fontSize": {
+      "base": { "$value": "1rem", "$type": "dimension" },
+      "lg": { "$value": "1.125rem", "$type": "dimension" }
+    },
+    "radius": {
+      "md": { "$value": "0.375rem", "$type": "dimension" }
+    },
+    "shadow": {
+      "sm": { "$value": "0 1px 2px 0 rgb(0 0 0 / 0.05)", "$type": "shadow" }
+    },
+    "duration": {
+      "fast": { "$value": "150ms", "$type": "duration" }
+    },
+    "easing": {
+      "standard": { "$value": "cubic-bezier(0.4, 0, 0.2, 1)", "$type": "cubicBezier" }
+    },
+    "font": {
+      "body": { "$value": "Inter", "$type": "fontFamily" }
+    }
+  },
+  "semantic": {
+    "color": {
+      "background": { "$value": "{primitive.color.gray.50}", "$type": "color" },
+      "foreground": { "$value": "{primitive.color.gray.900}", "$type": "color" }
+    }
+  },
+  "component": {
+    "button": {
+      "paddingX": { "$value": "1rem", "$type": "dimension" }
+    }
+  },
+  "dark": {
+    "semantic": {
+      "color": {
+        "background": { "$value": "#030712", "$type": "color" }
+      }
+    }
+  }
+}

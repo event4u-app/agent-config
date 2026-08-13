@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **46** open blockers, **12** need you → `agent-config gates`
+> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **48** open blockers, **12** need you → `agent-config gates`
 
 ## Overall
 
-**308 / 451 steps done · 68%**
+**316 / 451 steps done · 70%**
 
 ```text
-███████████████████████████░░░░░░░░░░░░░   68%
+████████████████████████████░░░░░░░░░░░░   70%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -37,7 +37,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
 | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
-| 6 | [road-to-design-system-onramp.md](roadmaps/road-to-design-system-onramp.md) | 5 | 13 | 12 | 0 | 0 | 1 | 0 | ░░░░░░░░░░ 0% |
+| 6 | [road-to-design-system-onramp.md](roadmaps/road-to-design-system-onramp.md) | 5 | 13 | 4 | 8 | 0 | 1 | [2](#blockers-road-to-design-system-onramp) | ███████░░░ 67% |
 | 7 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
 | 8 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
@@ -202,15 +202,48 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 
 ### [road-to-design-system-onramp.md](roadmaps/road-to-design-system-onramp.md)
 
-**Road to the design-system onramp — consume the crawler ecosystem, one optional command** — 0 / 12 done (0%)
+**Road to the design-system onramp — consume the crawler ecosystem, one optional command** — 8 / 12 done (67%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | The import adapter — three lanes into one contract | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | The onramp — one optional command, zero settings | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | The import adapter — three lanes into one contract | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | The onramp — one optional command, zero settings | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 3 | Corpus refresh — close the v2.5 → v2.6 drift | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | Wire the consumers — cross-refs, no duplication | ⬜ not started | 2 | 0 | 0 | 1 | 0% |
+| 4 | Wire the consumers — cross-refs, no duplication | ✅ done | 0 | 2 | 0 | 1 | 100% |
 | 5 | Measure | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-design-system-onramp"></a>
+**Blockers**
+
+- **corpus-refresh-budget-and-scope** (owner: maintainer) — blocks Phase 3 entirely — 3.1 directly, 3.2 through the measured `motion.csv` dependency below, 3.3 as 3.2's subject. Phases 1, 2, 4 and 5 are unaffected and closed or closable without it. - **What was measured** (upstream tree read at `97eb2a20`, licence re-verified at that commit: MIT, same holder, unchanged): 1. **The step's scope claim is false.** It names `motion.csv` and `google-fonts.csv` as the delta. Against our `data/`: **nine** files are absent — those two plus `typography.csv` and six desktop-UI stacks (`avalonia`, `javafx`, `uno`, `uwp`, `winui`, `wpf`) — and **eleven** more have drifted in content (`products` +15 KB, `nuxt-ui` +7 KB, `colors` +6 KB, and eight smaller). A wholesale re-pin therefore adopts six stacks outside `frontend-design`'s scope and eleven unreviewed content changes, which is a different act from the two-file bump the step describes. 2. **`google-fonts.csv` is already a recorded decision.** ADR-061 §8 rejected it **by name and by size** — "745 KB, 1923 rows … Skip. Redundant with the public Google Fonts API". The 2026-06-16 amendment supersedes that only toward **adopt-lite pinned metadata** from a *different* MIT mirror, "or a slim top-N slice". The full 743 KB upstream CSV this step names is the mechanism that was rejected, not the one the amendment authorised. 3. **Two `owner: maintainer` budgets stand in the way**, and both are cited by `pack-size-budget.json` itself: `packed_size_mb` is 7.238 against a 7.8 cap (~562 KB of headroom, and the font CSV alone is 743 KB), and the `design-intelligence` per-skill exception sits at **22.63 % of a 23 % cap** — whose own note calls it "visible debt, not an endorsement: raising `max_pct` requires a reason in the same commit". Even the small half (`motion.csv`, 10.5 KB) spends roughly all remaining headroom of that exception (~22.87 % by arithmetic), which is a call on a maintainer-owned budget rather than an in-budget change. 4. **The budget cannot be re-measured from a built worktree.** `check_pack_size` reads 9.096 here against a 7.8 cap *before any change*, which is the trap `pack-size-budget.json` documents in its own baseline note — the `--ignore-scripts` method assumes `dist/cli|ui|mcp|hooks` are absent and a built tree has them. So the real figure needs a clean checkout; the numbers above are the committed ones plus arithmetic, and are labelled as such.
+  - **What to do:**
+    decide the shape, then Phase 3 becomes executable as written
+    against that decision. The options are not equivalent and none is an agent's
+    to take: (a) adopt `motion.csv` only, spending the per-skill headroom and
+    leaving the pin unbumped — smallest, and it is what unblocks the motion dial;
+    (b) (a) plus a re-baselined per-skill cap with the reason in the same commit;
+    (c) a full re-pin, which needs a scope verdict on the six desktop stacks and
+    the eleven content drifts; (d) revisit ADR-061 §8's font decision on the
+    merits, which is an ADR act, not a roadmap step.
+    - **Why it is not agent-resolvable:** every path either raises a budget whose
+    file declares `owner: maintainer`, reverses a recorded ADR decision, or adopts
+    third-party corpus content into a shipped package on nobody's authority. Per
+    `decision-revisit-gate` the lock is surfaced rather than silently obeyed — the
+    benefit (a working motion dial, a fresher corpus) is real and is stated here
+    so the decision can be made on it.
+  - **Resolved when:** (unspecified)
+- **no-command-invocation-telemetry** (owner: maintainer) — blocks step 5.1 only, and through it the Phase-2 falsifier's ability to fire. Phases 1, 2 and 4 are closed and do not depend on it. - **What was measured:** `audit_command_surface.ts:587` states plainly that *"Per-command invocation telemetry is **not** available"*, and rejects both surrogates in the same note — filesystem mtime (`task sync` rewrites every file) and git history (dominated by a directory-rename artefact). So the estate does not, in fact, record the command telemetry step 5.1 assumes. - **Why this matters beyond one step:** Phase 2's falsifier is *"two release windows with zero invocations → demote the cluster to `later/`"*. With no counter, **zero-invocations and zero-measurement are the same reading**, and acting on it would retire a working surface on the strength of a missing instrument. The falsifier is therefore inert until this is resolved, and that is recorded here rather than left for someone to discover at demotion time.
+  - **What to do:**
+    either (a) build a per-command invocation counter — the skill
+    layer already has one shape of it in `skill-usage:collect`, and it carries its
+    own privacy surface, so it is a roadmap of its own, not a step; or (b) decide
+    the Phase-2 falsifier on a different signal (an explicit maintainer read at
+    the review-window walk) and amend it to say so.
+    - **Why it is not agent-resolvable:** (a) is a new telemetry capability
+    collecting user-behaviour data, which is a product and privacy decision; (b)
+    rewrites a pre-registered falsifier, which is exactly the move a falsifier
+    exists to prevent an agent from making on its own.
+  - **Resolved when:** (unspecified)
 
 ### [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md)
 

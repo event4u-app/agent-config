@@ -345,7 +345,10 @@ function _halt_provided_without_contract(
         '> 1. Proceed — port it with those five losses on the record; `apply` ' +
             'still has to report what it honoured, translated, and flagged',
         '> 2. Supply a `design-system.json` — its token values are then ' +
-            'honoured verbatim instead of re-derived',
+            'honoured verbatim instead of re-derived. Already have an ' +
+            "extractor's output in another shape? `/design-system:import " +
+            '<file>` maps a DTCG token file or an extraction tool\'s raw JSON ' +
+            'into this contract offline.',
         '> 3. Abort — drop this UI request',
         '',
         '**Recommendation: 2 — Supply the contract** — it is the only option ' +
