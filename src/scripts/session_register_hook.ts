@@ -50,7 +50,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { current_branch } from './_lib/git_common_dir.js';
+import { current_branch, git_common_dir, git_dir } from './_lib/git_common_dir.js';
 import {
     HEARTBEAT_REACHABLE_PLATFORMS,
     type Collision,
@@ -258,11 +258,63 @@ export function claim_is_stale(
 }
 
 /**
+ * The checkout THIS session is actually working in — which is **not**
+ * `envelope.workspace_root` when the session runs in a worktree.
+ *
+ * Measured 2026-08-13, and it emptied the register of meaning: every one of four
+ * live records read `worktree: <main checkout>` / `branch: main` while the
+ * sessions writing them sat in four different worktrees on four different
+ * branches. The path is mechanical — the host hook line passes
+ * `--project-dir "$CLAUDE_PROJECT_DIR"`, `dispatch_hook.main` chdirs there, and
+ * `_build_envelope` sets `workspace_root: process.cwd()`. A host that keeps
+ * `CLAUDE_PROJECT_DIR` pointed at the ORIGINAL project for a worktree session
+ * therefore hands every concern the main checkout, and `current_branch` reads
+ * the main checkout's HEAD.
+ *
+ * The consequence was not cosmetic: with every record on one phantom branch,
+ * every pair of sessions collided, so the branch warning below fired in every
+ * session but the first and told the model to stop before doing any work.
+ *
+ * The session's own directory survives in `payload.cwd`, which every host in
+ * this suite's event-shape contract carries. It is trusted only under three
+ * conditions, because a wrong anchor is worse than the fallback:
+ *
+ * 1. it is an existing directory;
+ * 2. it is the ROOT of a checkout (`git_dir` looks for `<dir>/.git` and does not
+ *    walk up, so a session whose cwd is a subdirectory degrades to
+ *    `workspace_root` — today's behaviour, never something worse);
+ * 3. it belongs to the SAME repository — identical git common dir. A cwd in
+ *    another repo would otherwise write this repo's register with a foreign
+ *    branch, and the register is shared by every worktree here.
+ */
+export function session_checkout(
+    workspace_root: string,
+    payload_cwd: string | null | undefined,
+): string {
+    const cwd = String(payload_cwd ?? '').trim();
+    if (cwd === '') return workspace_root;
+    try {
+        if (!fs.statSync(cwd).isDirectory()) return workspace_root;
+    } catch {
+        return workspace_root;
+    }
+    if (git_dir(cwd) === null) return workspace_root;
+    const mine = git_common_dir(cwd);
+    const theirs = git_common_dir(workspace_root);
+    if (mine === null || theirs === null || mine !== theirs) return workspace_root;
+    return cwd;
+}
+
+/**
  * Build this session's record from live state.
  *
  * Branch and slug are **re-read on every beat**, never carried forward from
  * registration: a session checks out other branches mid-run, and the slug is
  * null at registration by construction because the roadmap is picked later.
+ *
+ * `workspace_root` here means **this session's checkout** — the caller resolves
+ * it through `session_checkout` first. Passing the envelope's value directly is
+ * the defect documented there.
  */
 export function build_record(
     workspace_root: string,
@@ -307,6 +359,10 @@ export function touch(
  * Spotlighted as DATA, never instructions: the worktree paths and branch names
  * in it come from other sessions, which are not a trusted instruction source
  * (`untrusted-input-defense`).
+ *
+ * `workspace_root` is **this session's checkout** (`session_checkout`), not the
+ * envelope's chdir target: every comparison below — the branch, the peer's
+ * worktree, the claim — is a statement about the tree this session works in.
  */
 export function foreign_sessions_block(
     workspace_root: string,
@@ -392,15 +448,40 @@ export function foreign_sessions_block(
         );
     }
 
+    // Same branch NAME is two different situations, and conflating them is what
+    // turned this warning into a work stop. In the SAME worktree two sessions
+    // edit one set of files and one index — worth a question before writing. In
+    // DIFFERENT worktrees they share a branch name and nothing else: separate
+    // files, separate index, separate HEAD. That is the normal shape here (this
+    // repo carries dozens of worktrees), and halting for it cost the user a
+    // commit per session.
+    //
+    // Distinguishing them only became possible once `worktree` was true — see
+    // `session_checkout`. Before that every record claimed the main checkout, so
+    // every collision looked like the dangerous one.
     if (branch_hit !== null) {
-        parts.push(
-            '',
-            `COLLISION: another live session already holds branch \`${here}\`.`,
-            'Ask the user ONCE, as numbered options, before doing any work on it:',
-            '  1. Join the same branch (coordinate manually — this register is advisory, not a lock)',
-            '  2. Spawn a separate worktree for this session',
-            'Never decide silently, in either direction.',
-        );
+        const peer_tree = path.resolve(branch_hit.record.worktree ?? '');
+        const same_tree = peer_tree !== '' && peer_tree === path.resolve(workspace_root);
+        if (same_tree) {
+            parts.push(
+                '',
+                `COLLISION: another live session is on branch \`${here}\` in THIS SAME worktree`,
+                `(${branch_hit.record.worktree}) — the same files and the same git index.`,
+                'Ask the user ONCE, as numbered options, before writing anything:',
+                '  1. Join anyway and coordinate manually (this register is advisory, not a lock)',
+                '  2. Spawn a separate worktree for this session',
+                'Never decide silently, in either direction.',
+            );
+        } else {
+            parts.push(
+                '',
+                `NOTE: another live session is on the same branch name \`${here}\` in a DIFFERENT`,
+                `worktree (${branch_hit.record.worktree}). Separate trees, separate index:`,
+                'this is the normal shape here. It is NOT a reason to stop, to ask, or to',
+                'withhold a commit — keep working. Say it in one line before a push, where the',
+                'two histories actually meet, so the user can intervene.',
+            );
+        }
     }
 
     parts.push(
@@ -427,7 +508,18 @@ export function main(): number {
     }
 
     const event = String(envelope['event'] ?? '');
-    const root = String(envelope['workspace_root'] ?? process.cwd());
+    const payload = envelope['payload'];
+    const payload_cwd =
+        payload !== null && typeof payload === 'object' && !Array.isArray(payload)
+            ? (payload as Record<string, unknown>)['cwd']
+            : null;
+    // `workspace_root` is the chdir'd project dir, which is the MAIN checkout for
+    // a worktree session on at least one host. Everything below is a statement
+    // about the session's own tree, so it anchors on the session's own cwd.
+    const root = session_checkout(
+        String(envelope['workspace_root'] ?? process.cwd()),
+        typeof payload_cwd === 'string' ? payload_cwd : null,
+    );
     const platform = String(envelope['platform'] ?? 'generic').trim().toLowerCase();
     const session_id = String(envelope['session_id'] ?? '').trim();
 
