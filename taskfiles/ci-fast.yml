@@ -38,11 +38,15 @@ tasks:
       # branch's open PR actually targets, then the `git ls-remote` against it.
       # The second was always here (~0.3s); the first was added because a
       # hardcoded `main` reports a true-but-irrelevant green for any branch whose
-      # PR targets a release line or a parent PR. Budget note: that is ~1-2s
-      # against the 25s pre_push_budget_seconds ceiling in
-      # src/config/ci-local-parity.yml, and it degrades rather than fails —
-      # no `gh`, no auth, no GitHub remote falls back to the repo default and
-      # SAYS SO, so an offline push is never blocked by the resolution step.
+      # PR targets a release line or a parent PR.
+      # Budget: ~1-2s typical against the 25s pre_push_budget_seconds ceiling in
+      # src/config/ci-local-parity.yml. The WORST case is larger and is worth
+      # stating rather than averaging away: FORGE_TIMEOUT_MS in the gate is 10s,
+      # so one cold or hung `gh` can spend 10s — 40% of the ceiling — before the
+      # fallback. Fast failures (no `gh` -> ENOENT, no auth -> non-zero exit)
+      # return immediately; only an unresponsive forge reaches the timeout.
+      # Either way it degrades rather than fails: the run falls back to the repo
+      # default and SAYS SO, so an offline push is never blocked by the step.
       # No-op in CI, where the forge owns mergeability.
       - ./scripts-run src/scripts/check_branch_freshness --quiet
       # FIRST among the content gates, and the order is the whole point: this
