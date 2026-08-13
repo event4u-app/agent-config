@@ -24,8 +24,9 @@ Run the grounded one-shot over the curated corpus and print the full
 recommendation. Args: `"<product / industry / keywords>"`.
 
 ```bash
-./scripts-run src/skills/corpus-grounding/scripts/ground ground "<query>" \
-    --manifest src/skills/design-intelligence/data/manifest.json
+npx tsx node_modules/@event4u/agent-config/src/skills/corpus-grounding/scripts/ground.ts \
+    ground "<query>" \
+    --manifest node_modules/@event4u/agent-config/src/skills/design-intelligence/data/manifest.json
 ```
 
 Add `--persist <dir> --project-name <name>` to write

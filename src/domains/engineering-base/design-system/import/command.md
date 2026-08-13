@@ -24,7 +24,7 @@ Transform an extracted design system into the `design-system.json` contract,
 then import it per field. Args: `<file>`.
 
 ```bash
-./scripts-run src/scripts/design_system_import <file> \
+npx tsx node_modules/@event4u/agent-config/src/scripts/design_system_import.ts <file> \
     [--lane native|dtcg|dembrandt] \
     [--source-kind url|repo|dir --source-ref <ref>] [--captured-at <ISO>] \
     [--format json|summary]

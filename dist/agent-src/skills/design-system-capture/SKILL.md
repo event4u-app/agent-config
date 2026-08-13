@@ -204,9 +204,9 @@ only when an import is requested.
 
 **The supply path is real, and it is one command.** Where an extractor's output
 is not already in this shape, run it through the three-lane adapter first —
-`/design-system:import <file>` (or `./scripts-run src/scripts/design_system_import
-<file>`), which accepts a native artifact, a DTCG token file, or an extraction
-tool's raw JSON and emits the contract. Lanes and documented producers:
+`/design-system:import <file>`, which accepts a native artifact, a DTCG token
+file, or an extraction tool's raw JSON and emits the contract. Lanes and
+documented producers:
 [`references/design-system-json.md`](references/design-system-json.md)
 § Extractor compatibility. The adapter is offline and pure — it does not change
 what this skill owns.

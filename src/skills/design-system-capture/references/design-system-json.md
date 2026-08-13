@@ -90,7 +90,11 @@ that fetched would quietly become the crawler this package does not ship.
 | `dembrandt` | an extraction tool's raw JSON | Matches the documented top-level key names and accepts a small set of shapes per bucket. Motion durations/easings become the `motion` block; per-context profiles, hover deltas, WCAG results and breakpoints are **observation** and land in `_meta`. |
 
 ```bash
-./scripts-run src/scripts/design_system_import <file> \
+# The command is the supported entry point:
+/design-system:import <file>
+
+# Or call the transform directly, from an installed package:
+npx tsx node_modules/@event4u/agent-config/src/scripts/design_system_import.ts <file> \
     [--lane native|dtcg|dembrandt] \
     [--source-kind url|repo|dir --source-ref <ref>] [--captured-at <ISO>] \
     [--format json|summary]
