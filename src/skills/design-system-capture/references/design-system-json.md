@@ -86,7 +86,7 @@ that fetched would quietly become the crawler this package does not ship.
 | Lane | Input | What it does |
 |---|---|---|
 | `native` | an existing `design-system.json` | Validates `source`, carries every other key verbatim. Past provenance the validation is **report-only** — a key whose shape contradicts the contract is flagged and kept, never dropped, because the import is a proposal a human reads. |
-| `dtcg` | a W3C DTCG token file (`{$value, $type}` leaves) | Buckets by `$type`, never by group path, so it works on any authoring tool's layering. Resolves `{alias.references}` to their values. Tokens with no contract bucket land in `_meta.unmapped`. |
+| `dtcg` | a W3C DTCG token file (`{$value, $type}` leaves) | Buckets by `$type`, so it works on any authoring tool's layering — **with two stated path exceptions**: `dimension` / `number` is genuinely ambiguous in DTCG (spacing, radius and font size share it), so the path breaks that tie, and a path segment named `dark` files a colour under the dark theme. Both are inferences and both are reported in the notes. Resolves `{alias.references}` to their values. Tokens with no contract bucket land in `_meta.unmapped` — which is why `component.button.paddingX` lands there rather than under spacing. |
 | `dembrandt` | an extraction tool's raw JSON | Matches the documented top-level key names and accepts a small set of shapes per bucket. Motion durations/easings become the `motion` block; per-context profiles, hover deltas, WCAG results and breakpoints are **observation** and land in `_meta`. |
 
 ```bash
