@@ -40,16 +40,17 @@
 #                visible, or it repeats the sin it exists to catch.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-10)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-13)
 # ----------------------------------------------------------
-# 251 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 256 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
-# **33 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and all 33 are listed below.** The manifest is therefore
-# complete with respect to its own contract, and covers ~13 % of the population.
-# (The 2026-08-05 reading said "32 … and all 31 are listed": the two halves of
-# one sentence disagreed by one, which is the drift this paragraph exists to
-# make visible. Both are recounted above, not adjusted toward each other.)
+# **35 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and all 35 are listed below.** The manifest is therefore
+# complete with respect to its own contract, and covers ~14 % of the population.
+# (The 2026-08-05 reading said "32 … and all 31 are listed"; the 2026-08-10
+# reading said "33 … and all 33" while 34 entries were listed. Both halves are
+# RECOUNTED here — 255 scripts before this change plus the one it adds, and the
+# listed entries counted directly — never adjusted toward the previous prose.)
 #
 # Two revisions of this header have now gone stale the same way. It claimed
 # "8 of 211", then "22 of 223" while 26 entries were listed. Both halves drift
@@ -676,6 +677,27 @@ gates:
       check_kernel_prefix_stability). The canary is what distinguishes that from
       a gate scanning nothing — it plants the removal-permitting class with no
       evidence and the gate reds.
+
+  - id: check_review_prompt_binding
+    argv: []
+    min_scanned: 15
+    corpus: "agents/evidence/reviews/<slug>.review-input/prompt.md paired with a prompt_hash in <slug>.findings.md (19 at baseline)"
+    status: enforced
+    canary:
+      class: unbound-review-prompt
+      path: agents/evidence/reviews/zcs-closure.review-input/prompt.md
+      content: |
+        Planted canary: a reviewer prompt whose sha256 cannot equal the
+        prompt_hash recorded in zcs-closure.findings.md.
+    note: >
+      The plant needs a slug that already carries a `prompt_hash` but no committed
+      package — a brand-new `zz-canary` slug is skipped, not caught, because an
+      artefact without a package is deliberately out of scope. `zcs-closure` is a
+      closed round, so it will not gain a real package and the plant cannot
+      collide with one. The two planted failures the roadmap asked for (a one-byte
+      prompt edit, a pre-loaded verdict) are pinned in
+      tests/scripts/check_review_prompt_binding.test.ts, which is where the
+      two-file plants this single-file recipe cannot express are exercised.
 
   - id: check_corpus_staleness
     argv: ["--quiet", "--today", "2026-08-06"]

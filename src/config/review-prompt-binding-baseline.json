@@ -1,0 +1,19 @@
+{
+  "$schema_note": "Consumed by src/scripts/check_review_prompt_binding.ts. An entry EXEMPTS one committed review prompt from the sha256(prompt.md) == prompt_hash check, and nothing else — a pre-loaded verdict is never baselinable. Both hashes are pinned on purpose: if either moves, the entry stops matching and the gate reds, so a later repair and a further corruption are equally visible.",
+  "entries": [
+    {
+      "slug": "zcs-close-2026-08-09",
+      "declared": "48eae5ad829b375c4667fcd72ecc482cbd62ae90788134ca46a81eacce267d49",
+      "actual": "f83ee959abb7f8c333bc89f117d3dee93f0e7b2a816c4593471aeda9b18c302d",
+      "reason": "Explained and closed at the cause: the archival sweep rewrote a roadmap path INSIDE this committed reviewer prompt while migrating inbound references, editing a round record that plan-review-gates.md section 2.7 declares immutable. The cause was fixed on 2026-08-11 by _FROZEN_RECORD_PREFIXES in the sweep. Repairing the hash now would require editing the frozen record, which section 2.7 forbids, so the break is recorded rather than repaired.",
+      "falsifier": "npx tsx src/scripts/check_review_prompt_binding.ts --json  # the recorded actual hash stops matching the committed prompt.md, i.e. the record moved after all"
+    },
+    {
+      "slug": "feat-parallel-session-collision-hardening",
+      "declared": "d996e8e86a6e21a7cad66963f70219e59fe8cb96bca0bd1adceeea7ad2565c4b",
+      "actual": "dae1f14e90be94e71415e520b08222ea819488188d670de280d874803de1035c",
+      "reason": "Current and UNEXPLAINED, and it is the empirical justification for this gate. The prompt.md has a single commit dated 2026-08-12, after the sweep fix, so the sweep did not cause it; the declared hash never matched the committed text. CRLF/LF and trailing-newline variants were all tried and none reproduces the declared hash. Section 2.7 forbids editing the round record, so it may not be repaired here.",
+      "falsifier": "npx tsx src/scripts/check_review_prompt_binding.ts --json  # a cause is found and the entry is replaced by the repair, or the recorded actual hash stops matching"
+    }
+  ]
+}

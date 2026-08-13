@@ -928,6 +928,17 @@ tasks:
         if [ "$rc" = "2" ]; then echo "⚠️  check_completion_review: internal error — degraded advisory mode, allowing (exit-code contract §6)"; else exit "$rc"; fi;
       }
 
+  check-review-prompt-binding:
+    silent: true
+    desc: |
+      Gate R2 — the prompt→verdict binding. `prompt_hash` was written into every
+      findings marker and compared to nothing; this re-derives it from the
+      committed `<slug>.review-input/prompt.md` and runs the pre-loaded-verdict
+      predicate over the text. Corpus-wide on purpose: a committed prompt and its
+      hash are both immutable, so a break is branch-independent. Exit 2 =
+      internal error (unreadable corpus / malformed baseline).
+    cmd: ./scripts-run src/scripts/check_review_prompt_binding
+
   check-r2-manifest:
     silent: true
     desc: |
