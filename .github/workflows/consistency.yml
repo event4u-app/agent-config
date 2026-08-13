@@ -198,6 +198,23 @@ jobs:
       - name: Check cross-references
         run: ./scripts-run src/scripts/check_references
 
+      # Both gates below were registered `enforced` and ran in NO workflow, so
+      # each was its own finding: check_ci_local_parity exists to report gates
+      # with no remote reach and had none itself, and check_gate_coverage — the
+      # gate that reads every other gate's floor — was referenced by nothing at
+      # all, not even `task ci`. Its reds were visible only to someone running
+      # the script by hand. Wired here rather than into rule-backstops.yml
+      # because this job is the only required status check
+      # (docs/contracts/branch-protection-policy.md), which is what makes a red
+      # actually block a merge. Cost is negligible: 0.53 s measured for the
+      # parity gate against ~225 s of headroom under the 5-minute per-job
+      # ceiling in docs/contracts/ci-cost-budget.md (this job averages 75 s).
+      - name: CI ↔ local gate parity
+        run: ./scripts-run src/scripts/check_ci_local_parity --quiet
+
+      - name: Gate coverage floors
+        run: ./scripts-run src/scripts/check_gate_coverage
+
       - name: No leftover conflict markers / unmerged paths
         run: ./scripts-run src/scripts/check_no_conflict_markers
 
