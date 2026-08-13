@@ -445,7 +445,7 @@ never binds, it costs nothing.
 deterministic follow-ups stay closed; record it as the second data point for
 the estate-wide "when is prose enough" question.
 
-## Acceptance criteria
+## Acceptance Criteria
 
 > Added 2026-08-13 after the completion review found the roadmap had none: the
 > phase-level Falsifiers state when a phase is **wrong**, which is not the same
