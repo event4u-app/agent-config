@@ -142,6 +142,47 @@ larger set; it is the set that passes both halves.
 | `personal.canary_name` | un-inferrable, and answering arms the session-degradation canary; one keypress to accept the prefill | `""` (canary dark) |
 | `memory.learn_on_session_end` | it turns on automatic memory writes at the end of every session — a standing write the user should authorise | `false` |
 
+## Class B is a persistence property, not an enforcement claim
+
+Recorded 2026-08-13, from `road-to-zero-settings` step 3.2 — the step that asked
+each class-B key *"does the action need authorising at all?"*. Two of the three
+answers turned out not to be about the keys.
+
+```
+CLASS B SAYS: MAY BE ASKED ONCE, THEN PERSISTED. IT SAYS NOTHING ABOUT
+WHETHER ANYTHING CAN REFUSE THE ACTION. THE DISPOSITION SAYS THAT.
+A `consent` KEY NEEDS A MECHANISM THAT CAN WITHHOLD, OR AN EXPLICIT
+PROSE-ONLY LABEL. AN `un-inferrable` KEY NEEDS ONLY PERSISTENCE.
+```
+
+The two axes are independent, and reading class B as implying an enforcement
+obligation is what made two non-problems look like problems:
+
+- **`personal.canary_name`** authorises nothing — it holds a nickname used as a
+  liveness marker. It is class B because it cannot be inferred and is worth
+  keeping once answered, and its disposition (`un-inferrable`) already says so.
+  There is no gate to build here and never was.
+- **`personal.open_edited_files`** is a genuine `consent` key with **no mechanism
+  that can refuse the action** — its only reader is prose in
+  `src/skills/file-editor/SKILL.md`. The suite's standing rule is *never claim
+  enforcement you do not have*, and the discharge of that rule is to **declare
+  the limit**, not to delete the user's choice: it is carried as an explicitly
+  prose-only preference. An unenforceable flag that says it is unenforceable is
+  honest; one that presents as a gate is not.
+- **`memory.learn_on_session_end`** is what a consent key looks like when the
+  mechanism exists: `src/scripts/memory_learn_hook.ts` reads it and can withhold
+  the write, and the default is conservative.
+
+Splitting class B into `B-consent` and `B-config` was considered and **not
+taken** — it would churn a contract, a linter and every consumer's mental model
+to express what this paragraph expresses. What the split would have bought is
+the obligation stated above; stating it directly costs one section.
+
+**Consequence for anyone adding a class-B key:** the § B eligibility invariant
+still binds in full. This section adds one question on top of it — *if the
+disposition is `consent`, what can refuse the action?* An answer of "nothing"
+is allowed, and must then be written down as such.
+
 ## The one exception — `emergency.orchestration_halt`
 
 The always-on-orchestration doctrine (subagents, council, team) deletes every

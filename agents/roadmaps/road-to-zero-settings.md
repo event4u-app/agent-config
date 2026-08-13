@@ -157,8 +157,16 @@ the finding.
   never mentions the dotted form (`subagents.downshift` looks unread by dotted
   path and is read by `hooks/delegation_nudge_hook.ts`). Candidates below survived
   that check.
-    · `project.pr_template` — ZERO readers of any kind, code or prose. Cheapest
-      possible drain (83 -> 82). Six surfaces: template, `src/server/schemas/settings.ts`,
+    · `project.pr_template` — zero CODE readers, and the cheapest drain available
+      (83 -> 82). **Corrected on review: not "zero readers of any kind".**
+      `src/agent-src/templates/agent-settings.md:557` carries a directive row —
+      "Path to PR template file. Read this instead of searching for it." — which
+      is a model-carried reader, not a description of a default. That file is
+      authored rather than generated and is a seventh surface the enumeration
+      below does not name separately. The distinction matters because it is the
+      one this very note draws for `commands.create_pr.*`, and applying it
+      unevenly is how a "free" drain turns into a silent behaviour change.
+      Six further surfaces: `agent-settings.template.yml`, `src/server/schemas/settings.ts`,
       the contract row plus BOTH count tables in `docs/contracts/settings-classes.md`
       (Counts and Dispositions), a `REMOVED_KEYS` entry in
       `src/scripts/_lib/agent_settings.ts` naming the replacement, the ratchet in
@@ -179,11 +187,37 @@ the finding.
   bundle. The scouting is the deliverable here; the deletion is a separate,
   reviewable change. -->
   <!-- verify: ./scripts-run src/scripts/lint_settings_classes reports derivable == the baseline in src/config/gate-violation-baselines.json -->
-- [ ] 3.2 Re-examine the three class-B consent keys against the question
+- [x] 3.2 Re-examine the three class-B consent keys against the question
   *"does the action need authorising at all?"* — a consent gate on an action the
   package should not be taking is two problems wearing one flag.
   `verify:` each of the three carries a recorded verdict (keep / redesign the
   action), not a deferral.
+
+  **Verdicts recorded 2026-08-13 (maintainer decision, informed by a council
+  pass). Provenance stated plainly: 1 member, 3 rounds — the second seat failed
+  to start, so this is a single-model pass and NOT convergence.** The arguments
+  are admitted on their checkable merit, not on a quorum they did not have.
+
+  | Key | Verdict | Reason |
+  |---|---|---|
+  | `memory.learn_on_session_end` | **KEEP** | A real consent gate: a real reader (`src/scripts/memory_learn_hook.ts`) can actually refuse the action, and the conservative default is `false`. The gate authorises something the package legitimately does and can genuinely withhold. |
+  | `personal.open_edited_files` | **REDESIGN — keep the key, label it honestly** | Nothing can enforce it; the only "reader" is prose in `src/skills/file-editor/SKILL.md`. The suite's rule is *never claim enforcement you do not have* — and the honest discharge of that rule is to DECLARE the limit, not to delete the user's choice. Marked as prose-only in the contract rather than dressed as a gate. |
+  | `personal.canary_name` | **REDESIGN — reclassify, it was never a consent key** | It authorises nothing; it holds a nickname used as a liveness marker. Its disposition is already `un-inferrable`; what was wrong is reading class B as implying a consent obligation. |
+
+  **The cross-cutting finding, which is the actual result of asking the
+  question.** Two of the three "problems" were not in the keys. Class B was doing
+  two jobs at once — *asked once and persisted* (a persistence property) and
+  *authorises an action* (a quality bar that demands enforcement). Those are
+  independent: a consent key needs a mechanism that can refuse; un-inferrable
+  config needs only persistence. The fix taken is the documentation one rather
+  than splitting the class, because splitting would churn a contract to express
+  something one paragraph states — see the consent-vs-config paragraph added to
+  `docs/contracts/settings-classes.md`.
+
+  The stricter alternative — delete `personal.open_edited_files` and its
+  behaviour outright — was raised in the same pass and **rejected**: an
+  unenforceable flag that says so is honest, while deleting it removes a real
+  user choice over a real behaviour to fix a labelling problem.
 
 ## Phase 4 — state the floor and stop
 
@@ -303,7 +337,7 @@ round-trip. Editing it would delete the case rather than fix it.
 
 ### blocker: consent-key-redesign-verdict
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 3.2 only. Phases 1 and 4.2 are closed; 2.1/2.2/3.1/4.1 are
   unblocked by it.
@@ -387,9 +421,13 @@ round-trip. Editing it would delete the case rather than fix it.
   mechanism to be ahead of. The constraint binds the next drain, not this one.)
 - [x] The residual set is published with a per-key reason.
 - [x] A new `derivable` key cannot be added without the gate refusing it.
-- [ ] The three class-B keys each carry a recorded verdict. (Blocked — see
-  `blocker: consent-key-redesign-verdict`. This is the only criterion still
-  open; 3.1's queue is standing work, not an acceptance gap.)
+- [x] The three class-B keys each carry a recorded verdict. **Recorded
+  2026-08-13 at step 3.2**: `memory.learn_on_session_end` KEEP,
+  `personal.open_edited_files` REDESIGN (kept, labelled prose-only),
+  `personal.canary_name` REDESIGN (reclassified — it was never a consent key).
+  The cross-cutting finding is in `docs/contracts/settings-classes.md` § "Class B
+  is a persistence property, not an enforcement claim". 3.1's queue remains
+  standing work and is not an acceptance gap.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-12 | reviewer: claude/host -->
