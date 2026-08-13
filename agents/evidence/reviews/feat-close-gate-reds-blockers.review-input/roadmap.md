@@ -110,12 +110,20 @@ CI-side set still carried the 167 comment-derived phantoms. So the floor and its
 `corpus:` line now describe a population that no longer exists — the same shape
 as a stale pin that still reads as authoritative.
 
-This is **not** repaired here, deliberately. A `min_scanned` floor is a gate
-threshold, and lowering one is a weakening whichever way the arithmetic points;
-the honest re-anchor number is a judgement about margin, not a derivation. It is
-recorded under `blocker: ci-reachability-decision` § 5 with the candidate
-answers, because it is the same decision: what the tree does about a parity gate
-whose measured population just fell by 20 %.
+This was **not** repaired when the section was written, deliberately: a
+`min_scanned` floor is a gate threshold, lowering one is a weakening whichever
+way the arithmetic points, and the honest re-anchor number is a judgement about
+margin rather than a derivation. It was filed under
+`blocker: ci-reachability-decision` § 5 with the candidate answers, because it is
+the same decision.
+
+**Repaired 2026-08-13 when that blocker was resolved** — see Phase 4 Step 4. The
+floor moved 380 → **340** against a re-measured population of **360** (109 CI +
+251 local), with the argument written into the manifest, and the two meta-gates
+were wired into both `consistency.yml` and the `task ci` chain. The numbers in
+the block above are the reading taken when the red was *found*; they are left
+unedited because they are what the finding said, and the movement since is the
+repair rather than a correction.
 
 An AI council was asked to adjudicate the disposition and **could not be
 reached** — anthropic `cli_quota_exhausted` (50/50), openai
@@ -420,11 +428,21 @@ class recurs.
       Runtime was never the obstacle: sample mean 0.92 s, all 166 ≈ 154 s.
       **Two numbers moved as a consequence and were locked in the same change:**
       the wiring took `undeclared_local_only` 167 → **166** (the parity gate left
-      the set it reports), and the parsed population 357 → **359**, so the
-      `min_scanned` floor was re-anchored 380 → **340** with the argument written
-      into the manifest — 443 was measured while 167 phantoms were still counted,
-      so reach was never lost, and `gate-authoring.md` requires a floor *below*
-      the live count so a legitimate retirement does not red it.
+      the set it reports), and the parsed population 357 → **360**, so the
+      `min_scanned` floor was re-anchored 380 → **340**, with the argument written
+      into the manifest rather than typed as a number.
+      **The wiring first introduced the mirror-image defect, and self-verification
+      nearly missed it.** Adding `check_gate_coverage` to `consistency.yml` made
+      it CI-reachable while it remained in no local chain — `undeclared_ci_only`,
+      the direction whose own message reads *"a contributor discovers this failure
+      only after pushing"*. Repaired by wiring it into the `task ci` chain too,
+      where its task definition had sat unreferenced since it was written; parity
+      then returns exit 0 at 360 (109 CI + 251 local).
+      It was missed on the first pass for exactly the reason Phase 2's own record
+      names: the check was a grep keyed on `CI ↔ local parity`, a line printed
+      **only on the green path**, so it matched nothing and the adjacent ratchet
+      line was read as the verdict. Twice now on this roadmap a success-vocabulary
+      grep has read past a failure. **Read the exit code.**
       **Result:** `check_gate_coverage` reports `enforced 35 · pending 0 ·
       failing 0` — `✅ every enforced gate cleared its coverage floor`.
 

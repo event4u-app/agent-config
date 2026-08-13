@@ -26,11 +26,29 @@ index b6a09f85c46b0b833d2962cf52e6e158425f6375..2e0cf61de8a23ad2fa9d48d11d981495
        - name: No leftover conflict markers / unmerged paths
          run: ./scripts-run src/scripts/check_no_conflict_markers
  
+diff --git a/Taskfile.yml b/Taskfile.yml
+index 1db9c47bbb01444cd752f380577642218e3cf331..fe971f94ce7834cff37f2ce9326b1e80ff7d09c0 100644
+--- a/Taskfile.yml
++++ b/Taskfile.yml
+@@ -86,6 +86,13 @@ tasks:
+       - task: consistency
+       - task: preflight
+       - task: check-ci-local-parity
++      # Defined in taskfiles/ci-fast.yml since it was written and referenced by
++      # NOTHING — not this chain, not a workflow — so the gate that reads every
++      # other gate's coverage floor could only be seen by running it by hand.
++      # Wiring it into consistency.yml without this line would have made it
++      # CI-only, i.e. a failure a contributor meets only after pushing, which is
++      # the mirror image of the defect road-to-local-only-gate-reds was about.
++      - task: check-gate-coverage
+       - task: check-ci-strict-superset
+       - task: counts-check
+       - task: check-index
 diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
-index 7faa3b2569ec8e0c31439b4d9d59bd03d69139a4..3e3ac658cb192bd0441a1ca1f322d62dee7b0348 100644
+index cf6b4916fba2935fb86516a9137f0d1cd641e739..e542de8b5a8a3290b54ea0d5f819b97b75c4d7f8 100644
 --- a/agents/roadmaps-progress.md
 +++ b/agents/roadmaps-progress.md
-@@ -2,14 +2,14 @@
+@@ -2,11 +2,11 @@
  
  > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
  >
@@ -39,15 +57,11 @@ index 7faa3b2569ec8e0c31439b4d9d59bd03d69139a4..3e3ac658cb192bd0441a1ca1f322d62d
  
  ## Overall
  
--**305 / 451 steps done · 68%**
-+**287 / 429 steps done · 67%**
+-**308 / 451 steps done · 68%**
++**290 / 429 steps done · 68%**
  
  ```text
--███████████████████████████░░░░░░░░░░░░░   68%
-+███████████████████████████░░░░░░░░░░░░░   67%
- ```
- 
- ## ⚠️ Iron Law 3 — unresolved deferred items
+ ███████████████████████████░░░░░░░░░░░░░   68%
 @@ -20,14 +20,6 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
  |---|---:|---:|---:|
  | [road-to-inbox-harvest-distillation.md](roadmaps/road-to-inbox-harvest-distillation.md) | 9 | 1 | 6 |
@@ -82,7 +96,7 @@ index 7faa3b2569ec8e0c31439b4d9d59bd03d69139a4..3e3ac658cb192bd0441a1ca1f322d62d
 -| 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 -| 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
 -| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 8 | 9 | 1 | 0 | 0 | █████░░░░░ 53% |
--| 28 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 14 | 5 | 0 | 2 | 0 | ███░░░░░░░ 26% |
+-| 28 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 11 | 8 | 0 | 2 | 0 | ████░░░░░░ 42% |
 -| 29 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 -| 30 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 -| 31 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
@@ -102,7 +116,7 @@ index 7faa3b2569ec8e0c31439b4d9d59bd03d69139a4..3e3ac658cb192bd0441a1ca1f322d62d
 +| 23 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 +| 24 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
 +| 25 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 8 | 9 | 1 | 0 | 0 | █████░░░░░ 53% |
-+| 26 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 14 | 5 | 0 | 2 | 0 | ███░░░░░░░ 26% |
++| 26 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 11 | 8 | 0 | 2 | 0 | ████░░░░░░ 42% |
 +| 27 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 +| 28 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 +| 29 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
@@ -944,10 +958,10 @@ index 0000000000000000000000000000000000000000..c4d8da396fe83d3566df185be0fd53fa
 +- **Resolved when:** `status` is `accepted` or `rejected` and the index is regenerated.
 diff --git a/agents/roadmaps/archive/road-to-local-only-gate-reds.md b/agents/roadmaps/archive/road-to-local-only-gate-reds.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..570afdd612920cb5a09832cd8f26029c0019a7b0
+index 0000000000000000000000000000000000000000..71b5b199d290c11399a5d79696323e70e762aaae
 --- /dev/null
 +++ b/agents/roadmaps/archive/road-to-local-only-gate-reds.md
-@@ -0,0 +1,601 @@
+@@ -0,0 +1,619 @@
 +---
 +complexity: lightweight
 +---
@@ -1058,12 +1072,20 @@ index 0000000000000000000000000000000000000000..570afdd612920cb5a09832cd8f26029c
 +`corpus:` line now describe a population that no longer exists — the same shape
 +as a stale pin that still reads as authoritative.
 +
-+This is **not** repaired here, deliberately. A `min_scanned` floor is a gate
-+threshold, and lowering one is a weakening whichever way the arithmetic points;
-+the honest re-anchor number is a judgement about margin, not a derivation. It is
-+recorded under `blocker: ci-reachability-decision` § 5 with the candidate
-+answers, because it is the same decision: what the tree does about a parity gate
-+whose measured population just fell by 20 %.
++This was **not** repaired when the section was written, deliberately: a
++`min_scanned` floor is a gate threshold, lowering one is a weakening whichever
++way the arithmetic points, and the honest re-anchor number is a judgement about
++margin rather than a derivation. It was filed under
++`blocker: ci-reachability-decision` § 5 with the candidate answers, because it is
++the same decision.
++
++**Repaired 2026-08-13 when that blocker was resolved** — see Phase 4 Step 4. The
++floor moved 380 → **340** against a re-measured population of **360** (109 CI +
++251 local), with the argument written into the manifest, and the two meta-gates
++were wired into both `consistency.yml` and the `task ci` chain. The numbers in
++the block above are the reading taken when the red was *found*; they are left
++unedited because they are what the finding said, and the movement since is the
++repair rather than a correction.
 +
 +An AI council was asked to adjudicate the disposition and **could not be
 +reached** — anthropic `cli_quota_exhausted` (50/50), openai
@@ -1368,11 +1390,21 @@ index 0000000000000000000000000000000000000000..570afdd612920cb5a09832cd8f26029c
 +      Runtime was never the obstacle: sample mean 0.92 s, all 166 ≈ 154 s.
 +      **Two numbers moved as a consequence and were locked in the same change:**
 +      the wiring took `undeclared_local_only` 167 → **166** (the parity gate left
-+      the set it reports), and the parsed population 357 → **359**, so the
-+      `min_scanned` floor was re-anchored 380 → **340** with the argument written
-+      into the manifest — 443 was measured while 167 phantoms were still counted,
-+      so reach was never lost, and `gate-authoring.md` requires a floor *below*
-+      the live count so a legitimate retirement does not red it.
++      the set it reports), and the parsed population 357 → **360**, so the
++      `min_scanned` floor was re-anchored 380 → **340**, with the argument written
++      into the manifest rather than typed as a number.
++      **The wiring first introduced the mirror-image defect, and self-verification
++      nearly missed it.** Adding `check_gate_coverage` to `consistency.yml` made
++      it CI-reachable while it remained in no local chain — `undeclared_ci_only`,
++      the direction whose own message reads *"a contributor discovers this failure
++      only after pushing"*. Repaired by wiring it into the `task ci` chain too,
++      where its task definition had sat unreferenced since it was written; parity
++      then returns exit 0 at 360 (109 CI + 251 local).
++      It was missed on the first pass for exactly the reason Phase 2's own record
++      names: the check was a grep keyed on `CI ↔ local parity`, a line printed
++      **only on the green path**, so it matched nothing and the adjacent ratchet
++      line was read as the verdict. Twice now on this roadmap a success-vocabulary
++      grep has read past a failure. **Read the exit code.**
 +      **Result:** `check_gate_coverage` reports `enforced 35 · pending 0 ·
 +      failing 0` — `✅ every enforced gate cleared its coverage floor`.
 +
@@ -2741,7 +2773,7 @@ index 2bd838875a09038bd2c76f3c9daa1fc440e97bb3..11e3f4afdbdfce06df1a8ad420908ae3
  > X2 needs its result beside the `agent_id` spike), and **Phase 3 depends on
  > `road-to-subagent-lifecycle-integrity` Phase 0 Step 4 + Phase 4** (X2).
 diff --git a/agents/roadmaps/road-to-subagent-lifecycle-integrity.md b/agents/roadmaps/road-to-subagent-lifecycle-integrity.md
-index 60af9979a1d200dfb8c538df531fd12652cd0310..b234762b4df236e03de8b66b5aaa68006d6fa6f7 100644
+index 745ccbc34b2fc1f85699c58198c139795fd1ab35..3e0a41bdb64a05683437cf4d7a81e09c83150379 100644
 --- a/agents/roadmaps/road-to-subagent-lifecycle-integrity.md
 +++ b/agents/roadmaps/road-to-subagent-lifecycle-integrity.md
 @@ -20,7 +20,7 @@ complexity: structural
@@ -3124,7 +3156,7 @@ index 110cae8d3ce02b607934516f2ada338edcdf7635..c71fad9b413dbd189d4b828d72dc8a5d
  ## Unnumbered (legacy)
  
 diff --git a/src/config/gate-coverage.yml b/src/config/gate-coverage.yml
-index 1ef2ad74590e8e31857682f6384cd1ff4680d5eb..31a57ac2d41eb9a0a238b2098c97d59e5ad82132 100644
+index 1ef2ad74590e8e31857682f6384cd1ff4680d5eb..2a5ed0c26cea937e65d5a0ce6ad161140c0698f9 100644
 --- a/src/config/gate-coverage.yml
 +++ b/src/config/gate-coverage.yml
 @@ -305,8 +305,8 @@ gates:
@@ -3134,29 +3166,35 @@ index 1ef2ad74590e8e31857682f6384cd1ff4680d5eb..31a57ac2d41eb9a0a238b2098c97d59e
 -    min_scanned: 380
 -    corpus: "CI + local gate invocations parsed from .github/workflows + taskfiles (443 at baseline)"
 +    min_scanned: 340
-+    corpus: "CI + local gate invocations parsed from .github/workflows + taskfiles (359 measured 2026-08-13; 443 at the 2026-08-02 baseline, before the extraction repair)"
++    corpus: "CI + local gate invocations parsed from .github/workflows + taskfiles (360 measured 2026-08-13: 109 CI + 251 local)"
      status: enforced
      note: >
        Registered 2026-08-02. It already emitted the contract line on every path,
-@@ -317,6 +317,21 @@ gates:
+@@ -317,6 +317,27 @@ gates:
        taskfile set, so the only plantable violation is a new file under
        .github/workflows — a surface the canary must not write to. Reported
        UNPROVEN by --canary, never green.
 +      FLOOR RE-ANCHORED 380 → 340 on 2026-08-13, and the direction deserves an
-+      argument rather than a diff. 443 was measured while the CI-side set still
-+      carried 167 phantoms — gate names read out of workflow COMMENTS by an
-+      extraction bug this gate's own repair removed. So the population did not
-+      shrink because reach was lost; it shrank because entries that never existed
-+      stopped being counted, which is the discriminator false-green.md § 5 asks
++      argument rather than a diff.
++      The claim is NOT that 443 minus phantoms equals 360 — that arithmetic does
++      not close, and pretending otherwise would be the false-precision this
++      manifest exists to prevent. 443 was measured on 2026-08-02 against a
++      different tree: both a CI-side set inflated by 167 phantoms AND a smaller
++      local set than today's. The two totals are not comparable term by term.
++      What IS comparable is the repair's own before/after on ONE tree, which is
++      the measurement that matters here: CI-side 273 → 106, because gate names
++      were being read out of workflow COMMENTS by an extraction bug this gate's
++      own repair removed. So the fall is entries that never existed ceasing to be
++      counted, not reach being lost — the discriminator false-green.md § 5 asks
 +      for ("a legitimate ratchet lowers severity while keeping reach"). Reach over
-+      the real corpus is unchanged and, with the two gates wired into
-+      consistency.yml in the same change, one unit higher than before.
-+      Why 340 and not 359, the measured value: gate-authoring.md § registration
++      the real corpus is one unit HIGHER than before this change: the two gates
++      wired into consistency.yml were previously reachable from neither side.
++      Why 340 and not 360, the measured value: gate-authoring.md § registration
 +      requires a floor BELOW the live count, because a floor pinned at today's
 +      number reds on the very change that legitimately retires one unit. 340
-+      leaves ~19 units (5%) of headroom while still catching the collapse this
-+      floor exists for — a re-broken extractor would drop the count by 167, not
-+      by 19.
++      leaves ~20 units (~5.5%) of headroom while still catching the collapse this
++      floor exists for — a re-broken extractor would drop the count by 164, not
++      by 20.
  
    - id: check_site_links
      argv: []
