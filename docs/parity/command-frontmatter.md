@@ -26,7 +26,7 @@
 | `disable-model-invocation` | ✅ honored natively | inert (vacuously true — no model-invocation surface) | Schema pins `enum: [true]` — commands are user-invoked by design |
 | `model` | ✅ (rendered copies only) | inert | Never authored by hand: the generator rewrites `model_tier:` → native `model:` at projection time (ADR-034/035) |
 
-All other fields (`tier`, `visibility`, `pack`, `cluster`, `intent`,
+All other fields (`visibility`, `pack`, `cluster`, `intent`,
 `routes_to`, `replaces`, `suggestion`, `workspaces`, `packs`, `trust`,
 `install`, `model_tier`, …) are **suite governance metadata** — consumed by the
 package's own linters, router, discovery manifest, and docs generators, never

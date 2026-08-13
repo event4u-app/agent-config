@@ -384,7 +384,7 @@ tasks:
 
   lint-command-tiers:
     silent: true
-    desc: Validate that every slash command under .agent-src.uncondensed/commands/ declares a `tier:` frontmatter key (0/1/2) — see docs/contracts/command-surface-tiers.md
+    desc: Validate that every slash command declares a `visibility:` frontmatter key (visible/advanced/internal) — see docs/contracts/command-surface-tiers.md. The integer `tier:` alias this gate is named for was removed in road-to-tier-removal Phase 4; the gate id is kept so the Taskfile entry, the contract, and CI keep resolving.
     cmd: ./scripts-run src/scripts/lint_command_tiers {{.QUIET_FLAG}}
 
   lint-ghostwriter-source:
