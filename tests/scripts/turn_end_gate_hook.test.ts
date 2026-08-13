@@ -572,6 +572,94 @@ describe('the gate, end to end', () => {
         expect(r.stderr).toBe('');
     });
 
+    // road-to-subagent-lifecycle-integrity Phase 3 Step 2. A turn waiting on an
+    // async subagent cannot finish the outstanding work in THIS turn, so
+    // refusing it produces the upstream Stop-hook x async-subagent loop
+    // (anthropics/claude-code#55754): refuse, cannot proceed, refuse again.
+    function plantOpenDispatch(dir: string, startedAt: string = new Date().toISOString()): void {
+        const openDir = path.join(dir, 'agents', 'runtime', 'state', 'subagent-ledger', 'open');
+        fs.mkdirSync(openDir, { recursive: true });
+        fs.writeFileSync(
+            path.join(openDir, 'aaaaaaaaaaaa.json'),
+            JSON.stringify({
+                ref: 'aaaaaaaaaaaa',
+                agent_type: 'Explore',
+                started_at: startedAt,
+                parent_ref: null,
+                depth: 1,
+                depth_basis: 'assumed-root',
+                session_id: null,
+            }),
+            'utf8',
+        );
+    }
+
+    it('never refuses a turn-end while a subagent dispatch is still open', () => {
+        const { dir, home } = makeGateWorkspace();
+        // The exact reply the gate refuses with no open dispatch (the first
+        // test in this block proves that), so a pass here can only come from
+        // the open-dispatch allow path — not from an innocuous reply.
+        const t = writeTranscript(home, ['mach weiter'], PROMISE);
+        plantOpenDispatch(dir);
+
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stderr).toBe('');
+    });
+
+    it('still refuses once the dispatch closes — the allow path is not a kill switch', () => {
+        const { dir, home } = makeGateWorkspace();
+        const t = writeTranscript(home, ['mach weiter'], PROMISE);
+        plantOpenDispatch(dir);
+        // Removing the record is exactly what a stop event does.
+        fs.rmSync(path.join(dir, 'agents', 'runtime', 'state', 'subagent-ledger', 'open'), {
+            recursive: true,
+            force: true,
+        });
+
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(1);
+        expect(r.stderr).toContain('promissory');
+    });
+
+    it('an open dispatch does NOT excuse a language mismatch (R2 round 2, finding 2)', () => {
+        // Step 2 scopes the allow to the completion-adjacent detectors. A
+        // pending dispatch says nothing about which language the reply is in,
+        // so detector B must still fire — the earlier version returned early
+        // and silenced all four.
+        const { dir, home } = makeGateWorkspace();
+        fs.mkdirSync(path.join(dir, 'agents', 'state'), { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'agents', 'state', 'language-mirror.json'),
+            JSON.stringify({ language: 'de', source: 'prompt' }),
+        );
+        const t = writeTranscript(
+            home,
+            ['mach weiter'],
+            'The change is applied and the tests are green across the whole suite here.',
+        );
+        plantOpenDispatch(dir);
+
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(1);
+        expect(r.stderr).toContain('language');
+    });
+
+    it('a LEAKED open record does not disable the gate for ever (R2 round 2, finding 1)', () => {
+        // The dispatch that never returns is the symptom this roadmap targets,
+        // and reaping only happens on the NEXT subagent event — which, for a
+        // dispatch that never returns, may never come. Without the TTL filter
+        // this record would allow every turn-end from here on, silently.
+        const { dir, home } = makeGateWorkspace();
+        const t = writeTranscript(home, ['mach weiter'], PROMISE);
+        const ancient = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+        plantOpenDispatch(dir, ancient);
+
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(1);
+        expect(r.stderr).toContain('promissory');
+    });
+
     // Round 7 § Phase 1 — the completion detector THROUGH the real process, not
     // only as a pure function. The unit tests prove the predicate; this proves it
     // is wired: a detector that is correct and unreachable is the shape this

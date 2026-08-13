@@ -21,24 +21,22 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 3fc433269cc36520bb10e5f08f302cdfdffc5d5a, review
-  artefacts excluded), scope hash `2ae974e06a060deea9efe6157c7634873e67912ff7abc451fbfbefdea1c8d482`
+- diff: `diff.patch` — the review scope (branch head 4d49029266a04d8d025e110be0a574553634acea, review
+  artefacts excluded), scope hash `de440ba0d93ebaf2537518782922d87799e56aec7dbaf974bce274d30d6f8c00`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
 
-- agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md
 - agents/roadmaps-progress.md
 - agents/roadmaps/road-to-subagent-lifecycle-integrity.md
-- docs/contracts/hook-architecture-v1.md
-- hooks/hooks.json
+- docs/contracts/concern-activation-policy.md
 - src/scripts/hook_manifest.yaml
 - src/scripts/hooks/concern_registry.ts
-- src/scripts/hooks/dispatch_hook.ts
-- src/scripts/hooks/host_semantics.ts
+- src/scripts/hooks/spawn_guard_shadow_hook.ts
 - src/scripts/hooks/subagent_ledger_hook.ts
-- src/scripts/lint_hook_manifest.ts
-- tests/hooks/subagent_ledger.test.ts
+- src/scripts/hooks/turn_end_gate_hook.ts
+- tests/hooks/spawn_guard_shadow.test.ts
+- tests/scripts/turn_end_gate_hook.test.ts
 
 ## Output format (contract §2.2)
 
@@ -60,5 +58,5 @@ Fill the findings table in `feat-subagent-lifecycle-integrity.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 2ae974e06a060deea9efe6157c7634873e67912ff7abc451fbfbefdea1c8d482, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope de440ba0d93ebaf2537518782922d87799e56aec7dbaf974bce274d30d6f8c00, reviewed <YYYY-MM-DD>
 ```

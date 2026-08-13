@@ -291,17 +291,36 @@ reverts by file.
 
 ## Phase 3: Runaway containment — spawn guard, ledger-aware stop gate, shadow stop-loss
 
-> **Not started 2026-08-13, and the reason is an artefact that does not exist.**
-> Step 1 defers its warn→deny posture to "the concern activation policy
-> (program X3), which this step cites instead of re-arguing" the soak history.
-> `grep -rl "concern activation policy" .` returns **four** hits and every one
-> is roadmap prose or a review input — three roadmaps now cite a document none
-> of them wrote. Building the guard would mean inventing that posture, on top
-> of thresholds whose own text calls them "refined from Phase-1 telemetry,
-> never final" — telemetry the ledger landed in this PR has not collected yet.
-> Recorded rather than shipped; the phase stays open.
+> **Unblocked 2026-08-13 by writing the missing artefact, then built shadow-only.**
+>
+> The blocker was real: Step 1 deferred its warn→deny posture to "the concern
+> activation policy (program X3)", and `grep -rl` returned four hits, all
+> roadmap prose or a review input — three roadmaps citing a document none of
+> them wrote.
+>
+> Put to the **AI council**, which converged on option (b) with one correction
+> worth more than the option itself: *"Don't frame it as defer-or-shadow — it's
+> shadow NOW to enable policy LATER. Shadow Step 1 IS the measurement
+> instrument."* A guard cannot derive its threshold from telemetry that only a
+> guard would produce, so the shadow is the thing that unblocks the policy, not
+> the thing the policy unblocks.
+>
+> Two further council points were adopted: the flip trigger is **economic**
+> (cost avoided > friction imposed), not count-based — "three incidents" is a
+> number with no unit; and a blocking concern ships with a **reverse trigger**
+> from day one, because a gate that never fires is unmeasured cost rather than
+> proof of safety.
+>
+> Honest provenance: the pass was **1 of 2 members present**. The tool calls
+> that `concluded` under its own 1-of-2 rule and simultaneously prints
+> "DEGRADED — this is not convergence". It is a single independent opinion,
+> named as such, not a quorum. Its response also cited a "Reviewer A" from an
+> internal round and closed with a GitHub compare URL to a branch that does not
+> exist; both were discarded as noise rather than treated as findings.
+>
+> The policy now exists: [`docs/contracts/concern-activation-policy.md`](../../docs/contracts/concern-activation-policy.md).
 
-- [ ] **Step 1:** `spawn-guard` PreToolUse concern on `Agent`/`Task`
+- [x] **Step 1:** `spawn-guard` PreToolUse concern on `Agent`/`Task`
       *(proposal)*: refuse a spawn when the ledger shows depth ≥ N or
       concurrent-open ≥ M (start values N=2, M=4 — pre-registered, refined
       from Phase-1 telemetry, never final). Ships **warn-first** (exit 2 with
@@ -311,19 +330,58 @@ reverts by file.
       derived from (`hook_manifest.yaml:477-481` at adoption). Depth caps live
       orchestrator-side
       because children cannot be trusted to carry them (#68619).
-- [ ] **Step 2:** `turn-end-gate` consults the ledger: an open dispatch is an
+      → Shipped as `spawn-guard-shadow` (`src/scripts/hooks/spawn_guard_shadow_hook.ts`),
+      **shadow, not warn-first** — the one place this departs from the step's
+      own text, and the policy written to unblock it is what rules the warn
+      rung out: a verified-firing per-turn injection left its compliance rate
+      unmoved (`session-canary`, 24 of 29) while both blocking carriers in
+      conformance round 5 reached zero. A warn pays this concern's full
+      per-call cost and buys nothing measurable.
+      **N=2/M=4 ships as one candidate of three** (`n2m4`, `n3m6`, `n4m8`),
+      evaluated simultaneously, because one candidate yields a verdict and a
+      spread yields the curve the policy's 99th-percentile derivation needs.
+      Depth pre-spawn is an upper bound (`deepest-open-record-plus-one`) and
+      says so in the record — there is no `agent_id` yet to resolve a real
+      parent from. *Verified:* 8 tests, the load-bearing one being that no
+      input reaches a deny.
+- [x] **Step 2:** `turn-end-gate` consults the ledger: an open dispatch is an
       explicit **allow** path for the completion-adjacent detectors, closing
       the #55754 loop shape. One test: pending-dispatch turn-end is never
       refused.
-- [ ] **Step 3:** Wall-clock and tool-call-count stop-loss per open dispatch —
+      → Layer 1b in `turn_end_gate_hook.ts`, an allow path that cannot become
+      a deny path. An absent, empty or unreadable ledger yields zero open
+      records and changes nothing, so the gate degrades to its prior behaviour
+      rather than failing open. *Verified:* the required test plus its
+      falsifier — the same promissory reply is refused again once the dispatch
+      closes, so the allow path is not a kill switch. 83 tests pass.
+- [x] **Step 3:** Wall-clock and tool-call-count stop-loss per open dispatch —
       **shadow first**: log the step at which each arm WOULD have fired,
       exactly the `capsule_trigger.ts` discipline ("NOTHING ACTS ON THESE"),
       because hooks cannot read token counts and a proxy must earn its
       trigger. Acting on the winning arm is a separate, evidence-gated change.
+      → `stop_loss_arms_exceeded` on both the stop line (real duration) and the
+      reap line (age). Recording it retrospectively needs no timer, and the
+      reap is the only place a never-returning dispatch — the case the
+      stop-loss actually targets — is observable at all.
+      **The tool-call-count arm is NOT implemented, and not faked:** no payload
+      this tree has observed carries a per-dispatch tool-call count, and
+      inventing a proxy is what the cited `capsule_trigger.ts` discipline
+      refuses. Wall-clock only, stated rather than implied.
 
-**Falsifier (Step 1).** The warn window shows zero would-have-fired events
-across ≥20 dispatches → the caps are solving a problem this estate does not
-have; record the null, leave the guard warn-only or remove it.
+**Falsifier (Step 1), restated for the shadow posture.** The original wording
+named a "warn window", and there is no warn window — the step shipped shadow,
+so a falsifier phrased against a window that does not exist could never fail.
+Replacement, against what the shadow actually records: the **shadow** window
+shows zero `would_deny` across ≥ 20 dispatches at the WIDEST candidate
+(`n4m8`) → the concurrency cap is solving a problem this estate does not have;
+record the null and remove the guard rather than tightening the candidate until
+something fires.
+
+Note which arm this falsifier is about. It is the concurrency arm, because
+after R2 round 2 finding 3 that is the only arm producing a verdict at all.
+The depth arm cannot be falsified here — it is not evaluated, and it becomes
+falsifiable only once Phase 0 Step 4 settles whether `agent_id` reaches a
+PreToolUse payload.
 
 **Rollback.** Each concern is one manifest line; ledger stays (it is Phase-1
 infrastructure).

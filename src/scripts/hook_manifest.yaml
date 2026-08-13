@@ -556,6 +556,27 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+  # road-to-subagent-lifecycle-integrity Phase 3 Step 1 — spawn guard, SHADOW
+  # ONLY, per docs/contracts/concern-activation-policy.md. On every Agent/Task
+  # call it appends one `spawn_guard_shadow` line recording what a guard WOULD
+  # have done at three candidate threshold pairs. It emits nothing to the model
+  # and has no code path that can deny.
+  #
+  # It skips the warn rung deliberately: the activation policy rules it out for
+  # a concern on its way to blocking, because a verified-firing per-turn
+  # injection left its own compliance rate unmoved (session-canary, 24 of 29)
+  # while both blocking carriers in conformance round 5 reached zero. A warn
+  # would pay this concern's full per-call cost and buy nothing measurable;
+  # shadow pays the same cost and buys the distribution the shipped threshold
+  # has to be derived from.
+  #
+  # Never blocks, never warns: exit 0 on every path. fail_closed: false.
+  spawn-guard-shadow:
+    script: src/scripts/hooks/spawn_guard_shadow_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    tools: [Agent, Task]
 
 # Role axis (road-to-token-economy-dispatch Phase 2). The dispatcher reads
 # AGENT_CONFIG_SESSION_ROLE (resolved via _lib/session_role.ts — set ONLY by
@@ -589,7 +610,7 @@ platforms:
     session_end:      [chat-history, memory-learn, session-register]
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, git-authorization, session-canary, self-repair, session-register]
-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, reread-guard]
+    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, reread-guard, spawn-guard-shadow]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape, language-mirror]
     # round-5 § 6.1 — the ONLY binding on this slot in the tree. `pre_compact`
     # sets a pin-lost marker; the `post_tool_use` entry above re-emits the pin
@@ -633,7 +654,7 @@ platforms:
     # still costs the dispatch, and its entire output is thrown away.
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, reread-guard]
+    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, reread-guard, spawn-guard-shadow]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
     # subagent-ledger IS bound here, unlike the two nudges above, and the
     # difference is the delivery channel rather than the platform: the nudges
