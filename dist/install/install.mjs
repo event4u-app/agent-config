@@ -10223,7 +10223,8 @@ var REMOVED_KEYS = /* @__PURE__ */ new Map([
   ["chat_history.max_size_kb", "the rotate command takes --max-kb from argv; session-count pruning bounds the file"],
   ["chat_history.on_overflow", "the overflow mode comes from the rotate command --mode argv"],
   ["quality.wait_for_remote_ci", "whether to poll follows from the push plus a detectable remote pipeline"],
-  ["legal_review_prep.consented_at", "the provenance sidecar settings:set writes and consentVerdict reads"]
+  ["legal_review_prep.consented_at", "the provenance sidecar settings:set writes and consentVerdict reads"],
+  ["worktrees.mode", "the user asking for a worktree in the chat; creation is instruction-only and hardcoded"]
 ]);
 var _warnedRemovedKeys = /* @__PURE__ */ new Set();
 function _readDottedSettingsPath(root, dotted) {
@@ -14586,7 +14587,6 @@ var accessStyle = external_exports.enum(["getters_setters", "get_attribute", "ma
 var chatFreq = external_exports.enum(["per_turn", "per_phase", "per_tool"]);
 var qualityCadence = external_exports.enum(["end_of_roadmap", "per_phase", "per_step"]);
 var regenCadence = external_exports.enum(["per_step", "every_5_steps", "phase_boundary"]);
-var worktreeMode = external_exports.enum(["off", "on", "ask"]);
 var fidelityMode = external_exports.enum(["strict", "structural", "hard-floor"]);
 var crossSourceMode = external_exports.enum(["on", "auto", "off"]);
 var richSkillsMode = external_exports.enum(["on", "ask", "off"]);
@@ -14906,11 +14906,9 @@ var settingsSchema = external_exports.object({
       "Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only \u2014 a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Stays default-off until the adversarial-council-finding-coverage claim is backed."
     )
   }),
-  worktrees: external_exports.object({
-    mode: worktreeMode.default("ask").describe(
-      "When the agent considers a parallel `git worktree` for risky / large work. ask (default) = surface a numbered option and wait. on = spawn worktrees autonomously. off = never use worktrees, edit in place."
-    )
-  }),
+  // `worktrees.mode` was DELETED (ADR-229). Worktree creation is
+  // instruction-only and hardcoded; there is nothing left to configure. A
+  // leftover key is ignored with one deprecation line via REMOVED_KEYS.
   ai_team: external_exports.object({
     model: external_exports.string().default("auto").describe(
       "Model handed to the codex CLI. 'auto' (default) = pass no --model flag so the CLI's own default applies \u2014 tracks the subscription's current strongest model instead of pinning a stale ID. Any other value passes through verbatim as `--model <value>`."

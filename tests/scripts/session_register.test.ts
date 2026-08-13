@@ -722,6 +722,57 @@ describe('the branch axis — what the register cannot see', () => {
     });
 });
 
+/**
+ * The context block is emitted for a COLLISION, never for mere co-existence.
+ *
+ * Measured cause: a live peer that collided with nothing still produced a
+ * paragraph about other sessions in every parallel session's context, and a
+ * model handed that paragraph mentions it unprompted and treats it as a reason
+ * to hold work back — although this hook has never blocked anything.
+ */
+describe('foreign_sessions_block — collision-gated, and never a git gate', () => {
+    it('is SILENT when a live peer collides with nothing', () => {
+        const { main, wt } = make_repo();
+        const dir = register_dir(main)!;
+        // Peer sits on `feat/a` in the linked worktree; `main` is on `main` and
+        // neither side claims a roadmap. Live, visible, and irrelevant.
+        write_record(dir, rec({ session_id: 'peer', worktree: wt, branch: 'feat/a' }));
+        expect(foreign_live_records(dir, 'me')).toHaveLength(1);
+
+        expect(foreign_sessions_block(main, 'me')).toBeNull();
+    });
+
+    it('carries the never-gates-git clause whenever it speaks at all', () => {
+        const { wt } = make_repo();
+        const dir = register_dir(wt)!;
+        // Same branch AND same worktree — the one shape that is a real collision.
+        write_record(dir, rec({ session_id: 'peer', worktree: wt, branch: 'feat/a' }));
+
+        const block = foreign_sessions_block(wt, 'me')!;
+        expect(block).toContain('COLLISION');
+        // The clause that closes the gap the model was falling into.
+        expect(block).toContain('are ALWAYS executed');
+        expect(block).toContain('never gates a git operation');
+        // ...and it must not read as a licence to ignore the roadmap STOP.
+        expect(block).toContain('never about shipping work that is already done');
+    });
+
+    it('scopes the branch question to the whole session, not to every turn', () => {
+        const { wt } = make_repo();
+        const dir = register_dir(wt)!;
+        write_record(dir, rec({ session_id: 'peer', worktree: wt, branch: 'feat/a' }));
+
+        const block = foreign_sessions_block(wt, 'me')!;
+        expect(block).toContain('ONCE PER SESSION');
+        expect(block).toContain('Do not re-raise it on later turns');
+    });
+
+    it('says nothing at all when there is no peer', () => {
+        const { main } = make_repo();
+        expect(foreign_sessions_block(main, 'me')).toBeNull();
+    });
+});
+
 describe('the record describes THIS session checkout, not the chdir target', () => {
     it('prefers the session cwd over workspace_root — the measured defect', () => {
         const { main, wt } = make_repo();
@@ -793,12 +844,14 @@ describe('a shared branch NAME is only a collision inside one worktree', () => {
         expect(block).toContain('Ask the user ONCE');
     });
 
-    it('a different branch in the same worktree is neither', () => {
+    it('a different branch in the same worktree is neither — and is now silent', () => {
         const { wt } = make_repo();
         const dir = register_dir(wt)!;
         register(dir, { session_id: 'peer', branch: 'feat/other', worktree: wt });
-        const block = foreign_sessions_block(wt, 'mine')!;
-        expect(block).not.toContain('COLLISION');
-        expect(block).not.toContain('DIFFERENT');
+        // This case previously produced a block that said nothing actionable.
+        // Collision-gating turned "neither" into silence: with no roadmap hit and
+        // no branch hit there is nothing to report, and the paragraph itself was
+        // the thing the model kept narrating.
+        expect(foreign_sessions_block(wt, 'mine')).toBeNull();
     });
 });

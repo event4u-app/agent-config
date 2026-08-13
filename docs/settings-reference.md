@@ -330,12 +330,6 @@ explanation lives now that the file no longer carries it as comments.
 | `verbosity.preview_artifacts` | C | boolean | `false` |  | Show generated commit messages, PR titles/bodies, branch names before acting. false (default) = use generated content directly (/commit terse path). |
 | `verbosity.routine_confirmations` | C | boolean | `false` |  | Confirmation prompts for routine workflow steps with one obvious answer. Iron-Law gates (commit-policy, scope-control git-ops, Hard Floor) ALWAYS ask regardless. |
 
-## worktrees
-
-| Key | Class | Type | Default | Allowed values | What it does |
-|---|---|---|---|---|---|
-| `worktrees.mode` | C | string | `"ask"` | `off` · `on` · `ask` | When the agent considers a parallel `git worktree` for risky / large work. ask (default) = surface a numbered option and wait. on = spawn worktrees autonomously. off = never use worktrees, edit in place. |
-
 ## See also
 
 - [`settings-classes`](contracts/settings-classes.md) — the class contract this page reads.
