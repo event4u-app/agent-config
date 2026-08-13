@@ -21,14 +21,13 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 8ec2334a526572dd549b571f40bf9a24928dbd35, review
-  artefacts excluded), scope hash `b751937c59402229f70e7fb9226eb7e4a143d66c62614969dff6e2d42cac9ffb`
+- diff: `diff.patch` — the review scope (branch head c8ab04232e07c0bee1b976453c6abe1da7dc2a14, review
+  artefacts excluded), scope hash `839e94ed1c360ad85c0df49b9e619981da3729bb817b6acf03586a817d8d98dd`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
 
 - agents/roadmaps-progress.md
-- agents/roadmaps/road-to-always-loaded-corpus-scoping.md
 - agents/roadmaps/road-to-local-only-gate-reds.md
 - src/scripts/lint_rule_skill_pack_reach.ts
 
@@ -52,5 +51,5 @@ Fill the findings table in `feat-local-only-gate-reds.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope b751937c59402229f70e7fb9226eb7e4a143d66c62614969dff6e2d42cac9ffb, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 839e94ed1c360ad85c0df49b9e619981da3729bb817b6acf03586a817d8d98dd, reviewed <YYYY-MM-DD>
 ```
