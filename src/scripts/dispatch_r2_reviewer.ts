@@ -642,7 +642,21 @@ function reviewerPrompt(args: {
  * Writing the hash of the prompt THIS dispatcher built makes the channel
  * attributable: the artefact now records which prompt produced it, so a review
  * run against a different prompt is distinguishable from one run against the
- * dispatcher's. `--verify` re-derives it from the same inputs and compares.
+ * dispatcher's.
+ *
+ * `--verify` / `--verify-current` do NOT re-derive it. {@link runVerify}
+ * re-derives `scope_hash`, `roadmap_hash` and `ac_hash` only — it re-computes
+ * the review's INPUTS from the current repo state, and the prompt is not one of
+ * them (it is not reconstructible from the repo; it is an artefact this
+ * dispatcher wrote). An earlier revision of this comment claimed otherwise for
+ * roughly a year, which is how the field came to be written, parsed, and
+ * compared to nothing.
+ *
+ * What compares it is `check_review_prompt_binding`, against the prompt package
+ * this dispatcher commits beside the artefact (`<slug>.review-input/prompt.md`,
+ * written below) — a different check with a different scope: corpus-wide rather
+ * than current-branch, because a committed prompt and its recorded hash are both
+ * immutable.
  *
  * It does not CLOSE the residual and is not sold as doing so: the same host that
  * authors a steered prompt could hash the steered text. The gain is an

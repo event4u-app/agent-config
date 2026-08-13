@@ -762,6 +762,22 @@ dispatched: YYYY-MM-DDTHH:MM:SSZ
   zero records the predicate matches exactly **one**. The residual stays
   `accepted-risk`; what changes is that it is no longer *uninstrumented*.
 
+  **Shipped 2026-08-13 — `check_review_prompt_binding` collects both.** It runs
+  corpus-wide (a committed prompt and its recorded hash are both immutable, so a
+  break is branch-independent, unlike the scope-relative checks in § 2.6) and is
+  registered in `gate-coverage.yml` with a `scanned:` floor and a `--self-test`.
+  Two statements above are now historical rather than current: the dispatcher
+  docstring has been corrected, and `prompt_hash` is no longer compared to
+  nothing. Both are left standing rather than edited away — the false claim and
+  its refutation staying on the record is the property that surfaced this at all.
+
+  Two records remain broken and are **recorded, not repaired**, in
+  `src/config/review-prompt-binding-baseline.json`: § 2.7 forbids editing a round
+  record, so repairing either hash would mean the edit the contract prohibits.
+  Each entry pins BOTH the declared and the actual hash, so a later repair and a
+  further corruption are equally visible. The exemption covers the hash only — a
+  pre-loaded verdict is never baselinable.
+
 **Case zero (2026-08-04).** A commit shipped a "binding R2 honest-null"
 declaring 0 findings for one scope. A real reviewer *was* dispatched and did
 return `NO-FINDINGS` — but its prompt stated that the previous two rounds were
