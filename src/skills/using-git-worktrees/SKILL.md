@@ -51,13 +51,16 @@ work and makes it impossible to tell what you broke.
 ### 0. Pre-flight — read `worktrees.mode`
 
 Before anything else, read `worktrees.mode` from `.agent-settings.yml`
-(default: `ask`). The setting is a **mechanical layer on top of**
-`scope-control`'s permission gate — it narrows, never widens.
+(default: `on`). The setting is a **mechanical layer on top of**
+`scope-control`'s permission gate — it narrows, never widens. The shipped
+`on` is the standing permission `scope-control` accepts ("an unrevoked
+standing instruction"); a worktree is local and `git worktree remove`
+undoes it, so no Hard-Floor trigger sits under this step.
 
 | `worktrees.mode` | Behaviour |
 |---|---|
-| `ask` | Status quo. Continue to step 1; `scope-control` permission gate applies for every worktree creation. |
-| `on` | Standing permission. Skip the per-creation permission ask; continue to step 1. Iron-Law gates (ignore-check, clean baseline) still apply. |
+| `on` (default) | Standing permission. Skip the per-creation permission ask; continue to step 1. Iron-Law gates (ignore-check, clean baseline) still apply. |
+| `ask` | Continue to step 1; `scope-control` permission gate applies for every worktree creation. |
 | `off` | No autonomous worktree creation. **Refuse** unless the user explicitly asked **this turn** for a worktree ("do this in a worktree", "use mode 6", "spawn a worktree for X"). |
 
 **Off, no explicit request** → stop. Tell the user the setting is `off`,

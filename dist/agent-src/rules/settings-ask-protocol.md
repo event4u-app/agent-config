@@ -77,9 +77,11 @@ conservative default (`""`, `false`, `false`), so absent is indistinguishable
 from *no* and never from *yes*.
 
 **Class C carrying an `ask` value in its own enum** — a runtime question whose
-answer dies with the run: `worktrees.mode` (**ships** as `ask`), plus
-`tokens.rich_skills`, `subagents.adversarial_council`, `decision_engine.on_block`
-(which can be set to `ask` by a human but do not ship that way). Always-on
+answer dies with the run: `worktrees.mode`, `tokens.rich_skills`,
+`subagents.adversarial_council`, `decision_engine.on_block`. **None of them
+ships as `ask`** — a human sets it. `worktrees.mode` shipped as `ask` until
+ADR-229 flipped it to `on`; with that no shipped default routes a question
+through this protocol at all, and the whole class became opt-in. Always-on
 orchestration (road-to-always-on-orchestration Phase 1) deleted
 `subagents.auto` and `subagents.budget_routing` — the layer no longer carries a
 setting for this protocol to route.

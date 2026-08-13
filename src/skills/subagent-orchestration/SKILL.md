@@ -303,12 +303,12 @@ prefer the cheaper one (`do-and-judge` < `do-and-judge-two-stage` <
 `judge-with-debate` < `do-in-worktrees`).
 
 **Mode 6 (`do-in-worktrees`) is gated by `worktrees.mode`** from
-`.agent-settings.yml` (default: `ask`). Resolve before picking:
+`.agent-settings.yml` (default: `on`). Resolve before picking:
 
 | `worktrees.mode` | Mode 6 |
 |---|---|
+| `on` (default) | Eligible. Per-creation ask suppressed. |
 | `ask` | Eligible. `using-git-worktrees` will run the per-creation permission ask. |
-| `on` | Eligible. Per-creation ask suppressed. |
 | `off` | **Not eligible.** Fall back to mode 3 (`do-in-steps`) — same step-by-step chain, in-place on the current branch. Unless the user **explicitly asked this turn** for a worktree chain, in which case proceed with mode 6 and acknowledge the override per [`using-git-worktrees § Pre-flight`](../using-git-worktrees/SKILL.md). |
 
 ### 4. Dispatch
