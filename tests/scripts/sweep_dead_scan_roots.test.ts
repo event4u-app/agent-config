@@ -27,6 +27,7 @@ import {
     censusOnlyRoots,
     classify,
     countUnits,
+    isNonGateScript,
     resolveRoot,
     rootExists,
     main,
@@ -461,5 +462,81 @@ describe('root resolution is independent of checkout shape', () => {
         } finally {
             fs.rmSync(root, { recursive: true, force: true });
         }
+    });
+});
+
+/**
+ * The Class-A advisory over NON-gate scripts.
+ *
+ * Added because the sweep's reach was a filename prefix, not a property of the
+ * code: `run_skill_evals.ts` roots at a retired container and fails on every
+ * subcommand, while its sibling `skill_trigger_eval.ts` — same retired root —
+ * was reported, on the `skill_` prefix alone. The pair below pins both halves
+ * of the widening: a non-gate script over a retired container IS surfaced, and
+ * the pass stays Class-A-only so it cannot grow into a second census.
+ *
+ * The exit assertion is the load-bearing one. The gate population is shared
+ * with the ratchet and the registration test, so an advisory that moved the
+ * exit code would move a ratchet base for a reason unrelated to any gate.
+ */
+describe('sweep_dead_scan_roots — Class-A advisory over non-gate scripts', () => {
+    function advisoryTree(): string {
+        const root = mkTmp('sweep-fx-adv-');
+        fs.mkdirSync(path.join(root, 'src', 'scripts'), { recursive: true });
+        fs.mkdirSync(path.join(root, 'src', 'rules'), { recursive: true });
+        // Non-gate prefix (`run_`), retired container → must be surfaced.
+        fs.writeFileSync(
+            path.join(root, 'src', 'scripts', 'run_fixture_evals.ts'),
+            [
+                "import * as fs from 'node:fs';",
+                "import * as path from 'node:path';",
+                "const REPO_ROOT = '/x';",
+                "const SKILLS_ROOT = path.join(REPO_ROOT, '.agent-src.uncondensed', 'skills');",
+                'fs.readdirSync(SKILLS_ROOT);',
+            ].join('\n'),
+        );
+        // Non-gate prefix, live non-retired root → must stay out of the advisory.
+        fs.writeFileSync(
+            path.join(root, 'src', 'scripts', 'run_fixture_live.ts'),
+            [
+                "import * as fs from 'node:fs';",
+                "import * as path from 'node:path';",
+                "const REPO_ROOT = '/x';",
+                "const RULES = path.join(REPO_ROOT, 'src', 'rules');",
+                'fs.readdirSync(RULES);',
+            ].join('\n'),
+        );
+        return root;
+    }
+
+    function runSweep(root: string): { stdout: string; status: number | null } {
+        const r = spawnSync(
+            TSX,
+            [SCRIPT, '--root', path.join(root, 'src', 'scripts'), '--ledger', ledgerFile([])],
+            { cwd: REPO, encoding: 'utf8' },
+        );
+        return { stdout: r.stdout ?? '', status: r.status };
+    }
+
+    it('surfaces a non-gate script rooting at a retired container', () => {
+        const { stdout } = runSweep(advisoryTree());
+        expect(stdout).toContain('advisory  [A] run_fixture_evals.ts');
+    });
+
+    it('leaves a non-gate script with a live root out of the advisory', () => {
+        const { stdout } = runSweep(advisoryTree());
+        expect(stdout).not.toContain('run_fixture_live.ts');
+    });
+
+    it('does not gate — an advisory-only tree still exits 0', () => {
+        const { status } = runSweep(advisoryTree());
+        expect(status).toBe(0);
+    });
+
+    it('excludes the sweep itself, whose class table is not a read', () => {
+        expect(isNonGateScript('sweep_dead_scan_roots.ts')).toBe(false);
+        expect(isNonGateScript('run_skill_evals.ts')).toBe(true);
+        expect(isNonGateScript('lint_anything.ts')).toBe(false);
+        expect(isNonGateScript('run_thing.test.ts')).toBe(false);
     });
 });
