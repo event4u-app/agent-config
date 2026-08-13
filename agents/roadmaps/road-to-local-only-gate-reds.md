@@ -62,6 +62,32 @@ runs in no workflow.** It is its own finding, so the ratchet added here has no
 remote reach either. Clearing the backlog is what would give it teeth; until
 then it fails only a local `task ci`.
 
+## The repair left a fifth red — found 2026-08-13, not repaired here
+
+Running `check_gate_coverage` at the start of the next pass surfaces a gate the
+four above did not include, and its cause is the repair itself:
+
+```
+❌ check_ci_local_parity: scanned 357, floor 380
+   (CI + local gate invocations parsed from .github/workflows + taskfiles
+    (443 at baseline)) — a gate inspecting this little cannot certify the corpus
+```
+
+The gate's own run is **green** — `✅ CI ↔ local parity: 107 CI gate(s), 250
+local, 26 declared CI-only, 2 declared local-only`, exit 0. What is red is its
+`min_scanned` floor in `src/config/gate-coverage.yml`, and the arithmetic is
+exactly the repair: 107 + 250 = 357, where the 443 baseline was taken while the
+CI-side set still carried the 167 comment-derived phantoms. So the floor and its
+`corpus:` line now describe a population that no longer exists — the same shape
+as a stale pin that still reads as authoritative.
+
+This is **not** repaired here, deliberately. A `min_scanned` floor is a gate
+threshold, and lowering one is a weakening whichever way the arithmetic points;
+the honest re-anchor number is a judgement about margin, not a derivation. It is
+recorded under `blocker: ci-reachability-decision` § 5 with the candidate
+answers, because it is the same decision: what the tree does about a parity gate
+whose measured population just fell by 20 %.
+
 An AI council was asked to adjudicate the disposition and **could not be
 reached** — anthropic `cli_quota_exhausted` (50/50), openai
 `Not inside a trusted directory`, from both the worktree and the main checkout,
@@ -83,7 +109,7 @@ Both are one-token frontmatter edits with no judgement left in them; the
 measurements that decide each value are recorded here so the step does not
 re-derive them.
 
-- [ ] `agents/roadmaps/road-to-always-loaded-corpus-scoping.md` declares
+- [x] `agents/roadmaps/road-to-always-loaded-corpus-scoping.md` declares
       `complexity: standard`, which is not one of the two accepted values.
       `COMPLEXITY_PAT` in `src/scripts/lint_roadmap_complexity.ts` accepts
       `lightweight|structural` only, so the file reports `[untagged]` and the
@@ -94,6 +120,11 @@ re-derive them.
       of contract-layer scope.
       *Verify:* `npx tsx src/scripts/lint_roadmap_complexity.ts` exits 0 and the
       summary line reports 0 untagged.
+      → **Applied `lightweight`.** The four lightweight conditions were
+      re-verified against the linter's own constants rather than taken from the
+      step: 149 lines against `LIGHTWEIGHT_LINE_CAP = 600`, 4 phases against
+      `LIGHTWEIGHT_PHASE_CAP = 6`, and zero `## Council Round N` / `### Verdict`
+      blocks. Gate now exits 0 — `25 lightweight · 17 structural · 0 untagged`.
 
 - [ ] Decide the disposition of `agents/roadmaps/road-to-august-program.md` and
       apply it. `check_roadmap_trackable` fails it for carrying no
@@ -112,7 +143,7 @@ re-derive them.
 
 ## Phase 2 — the self-test ratchet
 
-- [ ] Identify which registered gate crossed the
+- [x] Identify which registered gate crossed the
       `gate-self-test:registered-non-adopters` ratchet. It reads **25** against
       a baseline of **24**, i.e. one over, and the baseline note records the
       landing state as "24 of the 32 gates registered enforced" on 2026-08-06.
@@ -132,14 +163,41 @@ re-derive them.
       `lint_rule_skill_pack_reach`, `lint_token_budget_discipline`,
       `lint_trigger_collisions`, `skill_linter`.
       *Verify:* the crossing gate is named with the commit that registered it.
+      → **`lint_rule_skill_pack_reach`, registered by `924cad87f`
+      (2026-08-12, "fix(ci): three downstream surfaces the new triggers, key and
+      gate opened").** Derived rather than guessed: the enforced manifest set was
+      recomputed at `c94676978` (the last `gate-coverage.yml` commit on the
+      baseline's landing date) and at HEAD, and `list_self_test_non_adopters` was
+      run against both. 32 → 35 enforced, non-adopters 24 → 25. Exactly three
+      gates were added — `check_review_prompt_binding`, `lint_rule_skill_pack_reach`,
+      `lint_workflow_paths` — and only one of the three appears in the current
+      non-adopter set, which is also the only id present in the now-set and
+      absent from the then-set. Zero gates were removed, so the +1 has a single
+      cause.
 
-- [ ] Give that gate a self-test, or an exemption marker carrying a real reason.
+- [x] Give that gate a self-test, or an exemption marker carrying a real reason.
       Adoption is the default; an exemption is legitimate where a gate's
       rejection cannot be provoked by a fixture it can build in a temp
       directory. **Do not raise the baseline** — `check_gate_coverage` states in
       its own failure message that raising it is a defect, not a fix.
       *Verify:* `npx tsx src/scripts/check_gate_coverage.ts` reports the ratchet
       at 24 or below.
+      → **Adopted, not exempted.** The exemption ground did not apply: the
+      gate's three inputs (`src/rules/`, `src/skills/`, the pack registry) are
+      ordinary tree reads, so a temp-directory fixture can provoke every verdict.
+      Added `--root <dir>` plumbing and `--self-test` with five cases (2
+      rejecting, floor 5): an unreachable route under `--strict`, an empty rule
+      corpus (the scanned-nothing refusal, exit 2), and three accepts that pin
+      the discrimination — the same route made reachable through `requires`, an
+      unscoped rule, an unscoped skill. Default invocation is byte-identical:
+      `116 rule(s), 289 skill(s), 34 pack(s) — 12 unreachable-route,
+      14 unrouted-skill`, exit 0.
+      The reject cases were checked against the failure this repository has
+      recorded before — a negative test that passes for the wrong reason.
+      Mutating `unreachableFrom.length === 0` to `>= 0` turned the first case
+      red (`4/5 case(s) behaved`) and left the four others green, so the case is
+      bound to the detector and not to the fixture. Ratchet reads **24**, the
+      baseline unchanged and not raised.
 
 ## Phase 3 — the roadmap that cannot archive
 
@@ -196,7 +254,7 @@ class recurs.
       reason — the set was empty by construction, so the test had pinned the
       defect and would have forced any repair to preserve it.
 
-- [ ] Search the same defect class elsewhere: a checker whose extraction is fed
+- [x] Search the same defect class elsewhere: a checker whose extraction is fed
       by text that is not an instruction.
       **Started, one candidate, not proven.** `check_enforcement_coverage` seeds
       reachability with a bare `wiring.includes(stem)` over raw workflow text —
@@ -209,6 +267,43 @@ class recurs.
       *Verify:* either a demonstrated false "reachable" verdict for a named
       script, or a recorded null saying the substring matches carry no verdict
       weight.
+      → **Both halves answered: the mechanism is demonstrated on a named script,
+      and the null is that no verdict moves — now quantified.**
+
+      *Method, stated because it differs from the 13 above and the two numbers
+      are otherwise read as contradicting.* The earlier probe asked which stems
+      occur only inside comments. This one re-runs the gate's **own** seed
+      disjunction — `wiring.includes(rel) || wiring.includes(stem)` — a second
+      time against YAML with `#` comments removed, so a stem mentioned in prose
+      whose path also appears in a `cmd:` survives, as it should. 851 scripts,
+      **417 seeded**, 380 of them stem-only.
+
+      *The demonstration.* Exactly **4** of the 417 leave the seed once comments
+      are stripped, and one is a wrong-kind match rather than a generic word:
+      `.github/workflows/tests.yml:425` is a NOTE about a workflow that MOVED,
+      and it names `scripts/cmd_export.py` — a **Python** file that is not in the
+      tree (`ls` fails). That prose seeds the TypeScript
+      `src/scripts/_cli/cmd_export.ts` as reachable from CI. The other three are
+      the generic-word class: `mcp_server/tool_catalog_source.ts` from a
+      `tests.yml:272` comment, and `_cli/explain_last/assumptions.ts` plus its
+      `sections/` twin from the English word "assumptions" in
+      `evaluator-umbrella.yml:62`.
+
+      *The null, and it is bounded rather than asserted.* The seed only reaches a
+      verdict through `resolve_one`, which resolves a rule's frontmatter
+      `enforced_by:` entry. The declared-enforcer vocabulary across all 33
+      declaring rules is 15 `validator:src/scripts/*.ts` paths, 9 `hook:` ids,
+      `none`, and `observer:maintainer-review`. **None of the four appears in
+      it**, so today the inflation costs no rule a wrong coverage verdict. That
+      turns the previous "unquantified" into a measured ceiling of four scripts.
+
+      *Not repaired here, and the reason is a real edge case rather than
+      caution.* The obvious fix — pass the seed through `strip_comments` — does
+      not work: that helper strips `//` and `/* */`, and the wiring corpus is
+      YAML, whose comments are `#`. A YAML-aware strip has to decide what to do
+      with `#` inside a quoted scalar, which is a design question and not a
+      one-line change. Filed as an option under
+      `blocker: ci-reachability-decision` rather than smuggled in.
 
 - [ ] Decide what follows from that number, and record the decision.
       The options are genuinely different in cost and none is obviously right:
@@ -307,6 +402,21 @@ remote CI on the PR is the authoritative gate
      and it is a legitimate answer on its own.
   4. Record the choice where its scope fits — an ADR for the wiring options, a
      paragraph in `docs/contracts/ci-green-floor.md` for the accept option.
+  5. **Added 2026-08-13 — the same decision now also owns a live red.** The
+     repair dropped `check_ci_local_parity`'s scanned population from 443 to
+     **357** (107 CI + 250 local), below its `min_scanned: 380` floor, so
+     `check_gate_coverage` reds on it while the parity gate itself exits 0. The
+     floor and its `corpus:` line still describe the pre-repair population.
+     Three answers, and they are not equivalent: **(a)** re-anchor the floor to
+     the measured 357 with a stated margin and rewrite the `corpus:` line —
+     cheapest, and a floor re-anchor is a weakening that should be argued rather
+     than typed; **(b)** wire `check_ci_local_parity` into a workflow, which
+     § 3 already names as the smallest change that gives the mechanism teeth and
+     which makes the floor remotely meaningful for the first time; **(c)** drain
+     enough of the 167 that the CI-side count rises back over the floor on its
+     own, which is the only answer that fixes the floor by fixing the thing the
+     floor measures. Whichever is chosen, the `corpus:` description is stale
+     either way and needs the same edit.
 - **Resolved when:** the decision exists in a tracked artefact and Phase 4
   step 2 can cite it.
 - **Note:** an AI council was asked to adjudicate this and was unreachable
