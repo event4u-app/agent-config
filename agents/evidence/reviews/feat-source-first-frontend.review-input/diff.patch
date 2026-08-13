@@ -135,10 +135,10 @@ index 0000000000000000000000000000000000000000..15368775b2fd45fdea206e3f4a911e4b
 +path. Neither is available here; that is a host limitation, recorded rather than
 +worked around.
 diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
-index a236061543dd98ac0454d45f071282add5d9b271..c85cab356c8e427b9f8f0af1d1b868fea8cab607 100644
+index a236061543dd98ac0454d45f071282add5d9b271..9e77bffbf590acc483bf4e84d0683ebac426b24e 100644
 --- a/agents/roadmaps-progress.md
 +++ b/agents/roadmaps-progress.md
-@@ -2,14 +2,14 @@
+@@ -2,11 +2,11 @@
  
  > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
  >
@@ -148,14 +148,10 @@ index a236061543dd98ac0454d45f071282add5d9b271..c85cab356c8e427b9f8f0af1d1b868fe
  ## Overall
  
 -**284 / 455 steps done · 62%**
-+**295 / 471 steps done · 63%**
++**294 / 471 steps done · 62%**
  
  ```text
--█████████████████████████░░░░░░░░░░░░░░░   62%
-+█████████████████████████░░░░░░░░░░░░░░░   63%
- ```
- 
- ## ✅ Completed — pending archival
+ █████████████████████████░░░░░░░░░░░░░░░   62%
 @@ -24,40 +24,41 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
  
  | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
@@ -220,7 +216,7 @@ index a236061543dd98ac0454d45f071282add5d9b271..c85cab356c8e427b9f8f0af1d1b868fe
 +| 24 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 1 | 4 | 15 | 1 | [2](#blockers-road-to-skill-ecosystem-executable-payloads) | ████████░░ 80% |
 +| 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 +| 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
-+| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 7 | 11 | 0 | 0 | 0 | ██████░░░░ 61% |
++| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 8 | 10 | 0 | 0 | 0 | ██████░░░░ 56% |
 +| 28 | [road-to-structured-guard-input.md](roadmaps/road-to-structured-guard-input.md) | 4 | 9 | 3 | 5 | 0 | 1 | 0 | ██████░░░░ 62% |
 +| 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 19 | 0 | 0 | 2 | 0 | ░░░░░░░░░░ 0% |
 +| 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -237,7 +233,7 @@ index a236061543dd98ac0454d45f071282add5d9b271..c85cab356c8e427b9f8f0af1d1b868fe
  ### [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md)
  
 -**Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation** — 0 / 18 done (0%)
-+**Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation** — 11 / 18 done (61%)
++**Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation** — 10 / 18 done (56%)
  
  | # | Phase | State | Open | Done | Deferred | Cancelled | % |
  |---|---|---|---:|---:|---:|---:|---:|
@@ -246,24 +242,28 @@ index a236061543dd98ac0454d45f071282add5d9b271..c85cab356c8e427b9f8f0af1d1b868fe
 +| 1 | Measure — reproduce ad-hoc, census the screenshot tools | ✅ done | 0 | 3 | 0 | 0 | 100% |
 +| 2 | One data-basis ladder, written where the agent reads, engine-independent | ✅ done | 0 | 5 | 0 | 0 | 100% |
  | 3 | The deterministic carrier — a source-first gate on screenshot tools | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
--| 4 | The browser handover — extraction into files, inside the lock | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+ | 4 | The browser handover — extraction into files, inside the lock | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 -| 5 | Interop precedence — a provided artifact outranks generative tooling | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-+| 4 | The browser handover — extraction into files, inside the lock | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
 +| 5 | Interop precedence — a provided artifact outranks generative tooling | ✅ done | 0 | 2 | 0 | 0 | 100% |
  | 6 | Close the loop — re-measure ad-hoc, decide the gated follow-ups | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
  
  ### [road-to-structured-guard-input.md](roadmaps/road-to-structured-guard-input.md)
 diff --git a/agents/roadmaps/road-to-source-first-frontend.md b/agents/roadmaps/road-to-source-first-frontend.md
-index f5f3b3cbd8c70e95337436317ce54b9c53daed81..02a622738b56e2b6a17cbfac33d07cd67d504512 100644
+index f5f3b3cbd8c70e95337436317ce54b9c53daed81..c3f6abcaeeb7e06c5a539b81191162a6f7f49ca6 100644
 --- a/agents/roadmaps/road-to-source-first-frontend.md
 +++ b/agents/roadmaps/road-to-source-first-frontend.md
-@@ -39,6 +39,26 @@ complexity: structural
+@@ -39,6 +39,31 @@ complexity: structural
  > document is rejected as duplicate or unfounded, that is the null to record
  > there.
  
-+> **Execution status (2026-08-13).** Phases 1, 2, 4 Step 3 and 5 are closed —
-+> 11 of 18 steps. The remaining seven are **blocked on named dependencies, not
-+> on effort**, and each is recorded at its own phase:
++> **Execution status (2026-08-13).** Phases 1, 2 and 5 are closed — 10 of 18
++> steps. Phase 4 Step 3 was attempted and **withdrawn**: the completion review
++> showed the trigger form available without guessing a vendor's share path
++> fires on the vendor's documentation pages, which is the failure the rule's own
++> `claude.ai` precedent exists to avoid. Withdrawing it is the step's own
++> standard applied, not a shortfall.
++> The remaining eight are **blocked on named dependencies, not on effort**, and
++> each is recorded at its own phase:
 +>
 +> - **Phase 3** (`source-first-gate`) — its verifier exemption keys on a payload
 +>   field that `road-to-subagent-lifecycle-integrity` Phase 0 Step 4 spikes and
@@ -284,7 +284,7 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..02a622738b56e2b6a17cbfac33d07cd6
  ## Context / What is verified
  
  **W1 — The principle exists as prose, in one skill, with no carrier.**
-@@ -160,25 +180,54 @@ discipline, and a pre-delivery checklist — harvest verdicts in Phase 4/5.)
+@@ -160,25 +185,61 @@ discipline, and a pre-delivery checklist — harvest verdicts in Phase 4/5.)
  
  ## Phase 1: Measure — reproduce ad-hoc, census the screenshot tools
  
@@ -329,20 +329,27 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..02a622738b56e2b6a17cbfac33d07cd6
 +      The step says "counts as consultation"; this phase's own rollback line
 +      says `nothing behavioural`. Folding the read into the `consulted` latch
 +      would **silence the nudge** for any session that opened a `design.html` —
-+      a behaviour change — so the two cannot both be honoured by one field. The
-+      read is captured in its own fields (`artifactRead`,
-+      `artifactReadBeforeFirstUiWrite`), `decide()` never branches on them, and
-+      a test asserts the warn outcome is identical with and without a read.
++      a behaviour change — so the two cannot both be honoured. The read is a
++      shared predicate (`isArtifactRead`) that `decide()` never branches on; a
++      test asserts the warn outcome is identical with and without a read.
 +      Whether an artifact read *should* latch consultation is a real question
 +      and now a separate decision — it wants this rate to answer it.
++      **Corrected after the completion review:** the first pass also latched two
++      session fields in the hook, which nothing read — the named metric was
++      computed and discarded while the published one was unnamed. The
++      measurement now lives in the analyzer alone, and it publishes
++      `READ BEFORE FIRST WRITE` over **handover sessions**, not over every UI
++      write, because a session with no handover cannot fail to read one.
 +      **The rate has no population in this repo:** 0 UI-write turns over 40
 +      sessions, because a governed instruction suite has almost no UI surface
-+      for the predicate to match. Consequence for Phase 6 recorded in the
-+      evidence file.
++      for the predicate to match. It also carries a stated blind spot — a
++      handover that is never read leaves no transcript trace, so the rate is a
++      ceiling on the defect rather than a measurement of it. Consequence for
++      Phase 6 recorded in the evidence file.
  
  **Falsifier.** Step 1 shows the ad-hoc run reading the source, adopting the
  markup, and reporting losses without any of the changes below → the symptom
-@@ -189,7 +238,7 @@ hand the operator report back with the measurement.
+@@ -189,7 +250,7 @@ hand the operator report back with the measurement.
  
  ## Phase 2: One data-basis ladder, written where the agent reads, engine-independent
  
@@ -351,7 +358,7 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..02a622738b56e2b6a17cbfac33d07cd6
        `docs/guidelines/design-fidelity-mechanics.md` *(proposal)*, one table,
        cited by both `fe-design` and `design-review`: **(1) provided source
        files/archive → (2) repository/source read via any channel, including
-@@ -199,13 +248,13 @@ hand the operator report back with the measurement.
+@@ -199,13 +260,13 @@ hand the operator report back with the measurement.
        dynamically, never as the data basis while a higher rung is reachable.**
        Analyzing/improving the source stays explicitly allowed — the ladder
        governs where data comes from, not whether defects may be fixed.
@@ -367,7 +374,7 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..02a622738b56e2b6a17cbfac33d07cd6
        and the `design-fidelity` Iron-Law block *(proposal)*: where the
        artifact's markup/CSS/JS is stack-compatible, adaptation of that code is
        the default; a from-scratch re-derivation is a **deviation** requiring
-@@ -224,7 +273,7 @@ hand the operator report back with the measurement.
+@@ -224,7 +285,7 @@ hand the operator report back with the measurement.
        through a design handover (a vendored component, a licensed template)
        stays under `code-provenance` in full. Both rules gain the cross-link in
        the same change, so the boundary is readable from either side.
@@ -376,7 +383,7 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..02a622738b56e2b6a17cbfac33d07cd6
        `fe-design` § Ad-hoc mode — inventory the artifact's interactions,
        keyframes, and script includes **before building**; every item lands in
        exactly one bucket (adopted verbatim / translated / dropped-with-stated-
-@@ -232,9 +281,18 @@ hand the operator report back with the measurement.
+@@ -232,9 +293,18 @@ hand the operator report back with the measurement.
        two surfaces cannot drift. Prose duty first; a deterministic ad-hoc
        checker is a gated follow-up, opened only if Phase 6 re-measurement
        shows the prose alone did not move the number.
@@ -396,27 +403,29 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..02a622738b56e2b6a17cbfac33d07cd6
  
  **Falsifier.** Owned per-duty by Phase 6's re-measurement.
  
-@@ -307,11 +365,18 @@ concern logic.
-       X4). This section owns the **producer sentence**: the documented easy path
-       is a connected extractor MCP, with the manual Chrome-DevTools-MCP channel
-       as fallback.
--- [ ] **Step 3:** Extend `design-fidelity` triggers with `lovable.dev`,
-+- [x] **Step 3:** Extend `design-fidelity` triggers with `lovable.dev`,
-       `v0.dev`, `bolt.new` URL phrases — each with its near-miss row in
+@@ -312,6 +382,21 @@ concern logic.
        `ROUTING_MATRIX` per the rule's own extension discipline
        (`design-fidelity.md` § Routing). A bare-domain chat mention stays
        silent, same as the `claude.ai` precedent.
-+      **Done 2026-08-13** — three `https://<host>/` phrases (the protocol
-+      prefix is what separates a pasted link from a tool mention), plus
-+      `near-bare-host-mention` and a **deliberately red**
-+      `known-gap-protocolless-share-link` row. That gap is named rather than
-+      closed: closing it needs either a bare-host keyword, which the near-miss
-+      row proves over-broad, or a guessed per-vendor share path — and a trigger
-+      built on a guessed path is worse than a stated gap. Matrix 21 → 26 green.
++      **ATTEMPTED AND WITHDRAWN 2026-08-13 — the available trigger form is
++      over-broad, and shipping it would fail this step's own standard.**
++      `https://v0.dev/` was tried; matching is plain substring containment, so
++      it also fires on `https://v0.dev/docs`, a pricing page or a changelog
++      link — every mention of the vendor's own site becomes a spec handover.
++      That is exactly the `claude.ai` failure the capability-URL trigger was
++      written to avoid. The completion review caught it: the near-miss row
++      shipped alongside tested a **protocol-less** mention, which was already
++      silent before the change and therefore could not detect the
++      over-broadness the change introduced.
++      Left behind so a retry cannot repeat it: `near-bare-host-mention` and
++      `near-builder-host-non-handover-url` pin both directions silent.
++      **What would close this step:** a verified share-path segment per vendor
++      (not a guessed one), or a matcher that can express handover-word
++      co-occurrence. Neither is available from the repo.
  
  **Falsifier.** The extraction-artifact path goes unused across two release
  cycles of real handovers (telemetry from Phase 1 Step 3) → the browser
-@@ -322,19 +387,23 @@ existing handover prose and drop the persistence step.
+@@ -322,19 +407,23 @@ existing handover prose and drop the persistence step.
  
  ## Phase 5: Interop precedence — a provided artifact outranks generative tooling
  
@@ -442,6 +451,39 @@ index f5f3b3cbd8c70e95337436317ce54b9c53daed81..02a622738b56e2b6a17cbfac33d07cd6
  
  **Falsifier.** None needed beyond Phase 6 — the clause is one sentence; if it
  never binds, it costs nothing.
+@@ -356,6 +445,32 @@ never binds, it costs nothing.
+ deterministic follow-ups stay closed; record it as the second data point for
+ the estate-wide "when is prose enough" question.
+ 
++## Acceptance Criteria
++
++> Added 2026-08-13 after the completion review found the roadmap had none: the
++> phase-level Falsifiers state when a phase is **wrong**, which is not the same
++> as stating when it is **done**. A review over closed steps had nothing to
++> check against. Each criterion below is checkable from the tree.
++
++| # | Criterion | Met? |
++|---|---|---|
++| A1 | The data-basis ladder exists as one table in the mechanics guideline, cited by name from both the rule's Iron-Law block and `design-review`'s verification reference | yes |
++| A2 | `verification-automation.md` § Mockup-to-code branches on artifact kind; the code branch reads the code and the image branch survives unchanged | yes |
++| A3 | The adopt-the-code duty exists AND its `code-provenance` scope line is present, with the cross-link readable from both rules | yes |
++| A4 | `fe-design` § Ad-hoc mode carries an inventory step whose buckets are the engine's own `COVERAGE_BUCKETS` names, and it renders as a step of the loop | yes |
++| A5 | Three `daf-*` fixtures exist, each carrying its measured / skipped / unmeasured state rather than an assumed pass, and each cited by a scanned surface | yes |
++| A6 | The precedence chain names generative design-system tooling as its fourth member | yes |
++| A7 | The Source-C harvest verdicts are recorded anonymised, with the park carrying an un-park condition | yes |
++| A8 | The read-before-write rate is published over a denominator its own prose endorses, and its blind spot is stated in the output | yes |
++| A9 | No new trigger ships without a near-miss row testing the direction that trigger opens | yes — enforced by withdrawing the builder-URL class rather than shipping it |
++| A10 | Every Iron-Law line added to `design-fidelity` is consistent with that rule's own § What counts as the spec | yes — the screenshot line carries its scope clause |
++
++**Not claimed:** that the operator's symptom is fixed. Phase 1 could not
++reproduce it under conditions where it can occur (no capture tool, no URL
++handover), so these criteria cover the *defects verified in the tree*, not the
++symptom. Phase 6 is where the symptom claim would be earned, and it needs a
++consumer repo.
++
+ ## Risk Register
+ <!-- risk-review: v1 | reviewed: 2026-08-12 | reviewer: claude/host -->
+ | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 diff --git a/agents/settings/contexts/design-corpus-upstream-harvest.md b/agents/settings/contexts/design-corpus-upstream-harvest.md
 new file mode 100644
 index 0000000000000000000000000000000000000000..c253381cdb46ca907170d2429d74408d50d4bfbc
@@ -549,71 +591,79 @@ index 4ccb1f21e2a1c71c2d0bb5131d470bb5fb3dc950..5e07bf8ecd19b2aaef0f8beb35660b6c
    ghostwriter's disclosure-footer contract; this rule's quote floor
    applies to any ghostwriter draft that cites an external source.
 diff --git a/dist/agent-src/rules/design-fidelity.md b/dist/agent-src/rules/design-fidelity.md
-index e7a9248d5c94beb3962b6d03ade6f70006fc9737..5bed529d26276656e67051fd3c6eba6987c1b584 100644
+index e7a9248d5c94beb3962b6d03ade6f70006fc9737..e0d7132607adcc70048cf5d48097e9b55ac562a2 100644
 --- a/dist/agent-src/rules/design-fidelity.md
 +++ b/dist/agent-src/rules/design-fidelity.md
-@@ -24,6 +24,9 @@ triggers:
-   - phrase: "1:1 um"
-   - phrase: "1:1 nach"
-   - phrase: "claude.site/artifacts"
-+  - phrase: "https://lovable.dev/"
-+  - phrase: "https://v0.dev/"
-+  - phrase: "https://bolt.new/"
-   - file_pattern: "*design.html"
-   - path_prefix: ".claude/design-system/"
- applies_to_user_types:
-@@ -60,8 +63,20 @@ A PROVIDED PROTOTYPE / DESIGN SYSTEM IS THE SPEC, NOT A SUGGESTION.
+@@ -60,8 +60,28 @@ A PROVIDED PROTOTYPE / DESIGN SYSTEM IS THE SPEC, NOT A SUGGESTION.
  BUILD IT 1:1. NEVER SWAP FONTS, CONTROLS, COMPONENTS, LAYOUT, SPACING,
  OR COLOUR — AND NEVER OMIT OR ADD AN ELEMENT — WITHOUT EXPLICIT CONFIRMATION.
  A "BETTER IDEA" IS A PROPOSAL TO SURFACE, NEVER A CHANGE TO MAKE.
 +WHENEVER THE SOURCE IS REACHABLE, THE SOURCE IS THE DATA BASIS.
-+A SCREENSHOT IS VALIDATION, NEVER THE INPUT YOU BUILD FROM.
++A SCREENSHOT IS VALIDATION, NEVER THE INPUT YOU BUILD FROM,
++WHILE ANY HIGHER RUNG IS REACHABLE. WHEN THE HANDOVER *IS* AN IMAGE,
++THE IMAGE IS THE SPEC AND THE 1:1 FLOOR ABOVE APPLIES TO IT UNCHANGED.
 +WHERE THE ARTIFACT'S OWN MARKUP / CSS / JS IS STACK-COMPATIBLE, ADAPTING
 +THAT CODE IS THE DEFAULT — A FROM-SCRATCH RE-DERIVATION IS A DEVIATION
 +AND NEEDS THE SAME CONFIRMATION AS A SWAPPED CONTROL.
  ```
  
-+The last three lines route to
++The qualifier is load-bearing, not hedging. Unqualified, the screenshot line
++contradicts this rule's own opening sentence and its § What counts as the spec,
++both of which name a screenshot as a legitimate spec — and it would forbid the
++image-only handover class the rule exists to govern. What it forbids is
++narrower: reaching for pixels **while the code is sitting there**.
++
++The five new lines route to
 +[`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md)
-+§ Data-basis ladder and § Adopt the code — including the scope line that keeps
-+the adopt-the-code duty from colliding with
++§ Data-basis ladder (the first three) and § Adopt the code (the last two) —
++including the scope line that keeps the adopt-the-code duty from colliding with
 +[`code-provenance`](code-provenance.md). Read that scope line before acting on
 +either rule; the boundary is stated from both sides.
 +
  ## What counts as the spec
  
  A user-provided, finished design artifact the user points at and says "match
-@@ -114,6 +129,19 @@ Two further handover shapes carry the artifact without any of the above:
+@@ -114,6 +134,21 @@ Two further handover shapes carry the artifact without any of the above:
    conventional location for a handed-over token/component set. The prefix is the
    vendor-scoped directory, never a bare `design-system/`, which is a normal
    source folder in a large fraction of frontend repos.
-+- **A third-party builder's share link.** `https://lovable.dev/`,
-+  `https://v0.dev/`, `https://bolt.new/` — the same shape as the capability URL
-+  above, and for the same reason: a page built in one of these tools and handed
-+  over as a link is a finished spec, not an inspiration. The **protocol prefix
-+  is load-bearing**: a pasted URL carries `https://`, while "I had a look at
-+  v0.dev" does not, so the bare host stays silent exactly as `claude.ai` does.
-+  **Named limit, not an oversight:** a share link pasted *without* the protocol
-+  (`v0.dev/chat/…`) does not fire. Closing that would mean either a bare-host
-+  keyword — which fires on every mention of the tool — or guessing each vendor's
-+  share-path segment, and a trigger built on a guessed path is worse than a
-+  stated gap. The gap is pinned red in the matrix
-+  (`near-bare-host-mention`, `known-gap-protocolless-share-link`) so it is
-+  visible rather than believed closed.
++- **A third-party builder's share link — UNCOVERED, deliberately.** A page built
++  in Lovable / v0 / bolt and handed over as a link is a finished spec, and this
++  rule does not route it. The obvious trigger was tried on this branch and
++  **withdrawn**: matching is plain substring containment, so `https://v0.dev/`
++  also fires on `https://v0.dev/docs`, a pricing page, or a changelog link — it
++  would treat every mention of the tool's own site as a spec handover. That is
++  the `claude.ai` failure the capability-URL entry above exists to avoid, and by
++  this rule's own standard it is worse than the gap it closes. The alternatives
++  are a bare-host keyword (broader still) or guessing each vendor's share-path
++  segment, and a trigger built on a guessed path is not evidence.
++  **What closes it:** a verified share-path segment per vendor, or a
++  handover-word co-occurrence the matcher cannot express today. Until then the
++  class needs one word in the prompt, like any other unlisted filename.
++  `near-bare-host-mention` in the matrix pins the bare-host direction silent so
++  a future attempt cannot reintroduce the broad form unnoticed.
  
  The trigger set is deliberately phrase-heavy on the German side and on
  `artifact`: a bare `artifact` keyword fires on "the CI build artifact is 40 MB".
-@@ -121,9 +149,10 @@ The trigger set is deliberately phrase-heavy on the German side and on
+@@ -121,9 +156,18 @@ The trigger set is deliberately phrase-heavy on the German side and on
  [`design_fidelity_routing.test.ts`](../../tests/scripts/design_fidelity_routing.test.ts)
  pins both halves — every class that must route, and the near-misses that must
  stay silent (fixture `daf-port-trigger-de`). Extending the set without adding a
 -near-miss row there is how an over-broad trigger lands: each of the two triggers
 -above ships with its own near-miss row (`near-claude-ai-chat-link`,
 -`near-generic-design-system-dir`).
-+near-miss row there is how an over-broad trigger lands: each of the three
-+trigger classes above ships with its own near-miss row
-+(`near-claude-ai-chat-link`, `near-generic-design-system-dir`,
-+`near-bare-host-mention`).
++near-miss row there is how an over-broad trigger lands: each of the two shipped
++trigger classes above carries its own near-miss row
++(`near-claude-ai-chat-link`, `near-generic-design-system-dir`), and the
++withdrawn builder-URL class left `near-bare-host-mention` behind so the broad
++form stays pinned silent.
++
++**The near-miss must test the direction the new trigger opens, not a direction
++that was already closed.** The withdrawn class is the worked example: its first
++near-miss row tested a protocol-less mention, which was silent *before* the
++change and therefore could not have caught the over-broadness the change
++introduced. The row that would have caught it — a documentation URL on the same
++host — was the one nobody wrote.
  
  Body migrated to [`guideline:design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, third-party delivery is self-hosted by default, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
  Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
@@ -660,15 +710,16 @@ index 25acb2d8f9e72014914057ad50bbcaaa23cda186..f6b2b1bbd832e8a0c298f1635618bfb9
  
  For a review that needs browser probing, use an **async background verifier**
 diff --git a/dist/agent-src/skills/fe-design/SKILL.md b/dist/agent-src/skills/fe-design/SKILL.md
-index f21272a3b59089f2ef02a7bd5f3bbf52732d13bd..fca35f3ea49afb9fd8f376f22257d15acfb5b471 100644
+index f21272a3b59089f2ef02a7bd5f3bbf52732d13bd..6c64d8a519fb022b3dbcf93e6a5d9c2aa9247788 100644
 --- a/dist/agent-src/skills/fe-design/SKILL.md
 +++ b/dist/agent-src/skills/fe-design/SKILL.md
-@@ -40,7 +40,28 @@ else runs the loop.
+@@ -40,8 +40,29 @@ else runs the loop.
     `layout`, `components`, `states`, `microcopy`, `a11y`. `states` means all
     five of `empty`, `loading`, `error`, `success`, `disabled` — a brief missing
     one is unfinished, not concise.
 -3. **Build** — against the audit's primitives, in the project's stack.
-+2b. **Inventory — only when an artifact was provided, and before you build.**
+-4. **Review** — run [`design-review`](../design-review/SKILL.md) before calling
++3. **Inventory — only when an artifact was provided, and before you build.**
 +   List the artifact's **interactions, keyframes, and script includes** from its
 +   source (`design-fidelity-mechanics` § Data-basis ladder — read it, do not
 +   look at a picture of it). Then place **every** listed item in exactly one
@@ -686,13 +737,14 @@ index f21272a3b59089f2ef02a7bd5f3bbf52732d13bd..fca35f3ea49afb9fd8f376f22257d15a
 +   (`apply.ts`, `COVERAGE_BUCKETS`, an unaccounted item is a halt); out here it
 +   is a duty you carry, and nothing checks it for you. (fixture:
 +   `daf-adhoc-port-coverage`.)
-+3. **Build** — against the audit's primitives, in the project's stack. Where the
++4. **Build** — against the audit's primitives, in the project's stack. Where the
 +   artifact's own markup/CSS/JS is stack-compatible, adapt **that code**;
 +   re-deriving it from scratch is a deviation needing confirmation
 +   (`design-fidelity-mechanics` § Adopt the code).
- 4. **Review** — run [`design-review`](../design-review/SKILL.md) before calling
++5. **Review** — run [`design-review`](../design-review/SKILL.md) before calling
     it done, and scope the verdict honestly: render-scoped when you can render
     it, otherwise explicitly static-scoped, naming which checks actually ran.
+    "Looks good" with neither scope named is a verdict without evidence.
 diff --git a/docs/guidelines/design-fidelity-mechanics.md b/docs/guidelines/design-fidelity-mechanics.md
 index ec122cce8688cbb8b59fd33aa7a2bc702d6e40eb..8411b9e4bc5f6a903e41ea7e2bf74a095dcf64b5 100644
 --- a/docs/guidelines/design-fidelity-mechanics.md
@@ -884,79 +936,87 @@ index 4ccb1f21e2a1c71c2d0bb5131d470bb5fb3dc950..5e07bf8ecd19b2aaef0f8beb35660b6c
    ghostwriter's disclosure-footer contract; this rule's quote floor
    applies to any ghostwriter draft that cites an external source.
 diff --git a/src/rules/design-fidelity.md b/src/rules/design-fidelity.md
-index e7a9248d5c94beb3962b6d03ade6f70006fc9737..5bed529d26276656e67051fd3c6eba6987c1b584 100644
+index e7a9248d5c94beb3962b6d03ade6f70006fc9737..e0d7132607adcc70048cf5d48097e9b55ac562a2 100644
 --- a/src/rules/design-fidelity.md
 +++ b/src/rules/design-fidelity.md
-@@ -24,6 +24,9 @@ triggers:
-   - phrase: "1:1 um"
-   - phrase: "1:1 nach"
-   - phrase: "claude.site/artifacts"
-+  - phrase: "https://lovable.dev/"
-+  - phrase: "https://v0.dev/"
-+  - phrase: "https://bolt.new/"
-   - file_pattern: "*design.html"
-   - path_prefix: ".claude/design-system/"
- applies_to_user_types:
-@@ -60,8 +63,20 @@ A PROVIDED PROTOTYPE / DESIGN SYSTEM IS THE SPEC, NOT A SUGGESTION.
+@@ -60,8 +60,28 @@ A PROVIDED PROTOTYPE / DESIGN SYSTEM IS THE SPEC, NOT A SUGGESTION.
  BUILD IT 1:1. NEVER SWAP FONTS, CONTROLS, COMPONENTS, LAYOUT, SPACING,
  OR COLOUR — AND NEVER OMIT OR ADD AN ELEMENT — WITHOUT EXPLICIT CONFIRMATION.
  A "BETTER IDEA" IS A PROPOSAL TO SURFACE, NEVER A CHANGE TO MAKE.
 +WHENEVER THE SOURCE IS REACHABLE, THE SOURCE IS THE DATA BASIS.
-+A SCREENSHOT IS VALIDATION, NEVER THE INPUT YOU BUILD FROM.
++A SCREENSHOT IS VALIDATION, NEVER THE INPUT YOU BUILD FROM,
++WHILE ANY HIGHER RUNG IS REACHABLE. WHEN THE HANDOVER *IS* AN IMAGE,
++THE IMAGE IS THE SPEC AND THE 1:1 FLOOR ABOVE APPLIES TO IT UNCHANGED.
 +WHERE THE ARTIFACT'S OWN MARKUP / CSS / JS IS STACK-COMPATIBLE, ADAPTING
 +THAT CODE IS THE DEFAULT — A FROM-SCRATCH RE-DERIVATION IS A DEVIATION
 +AND NEEDS THE SAME CONFIRMATION AS A SWAPPED CONTROL.
  ```
  
-+The last three lines route to
++The qualifier is load-bearing, not hedging. Unqualified, the screenshot line
++contradicts this rule's own opening sentence and its § What counts as the spec,
++both of which name a screenshot as a legitimate spec — and it would forbid the
++image-only handover class the rule exists to govern. What it forbids is
++narrower: reaching for pixels **while the code is sitting there**.
++
++The five new lines route to
 +[`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md)
-+§ Data-basis ladder and § Adopt the code — including the scope line that keeps
-+the adopt-the-code duty from colliding with
++§ Data-basis ladder (the first three) and § Adopt the code (the last two) —
++including the scope line that keeps the adopt-the-code duty from colliding with
 +[`code-provenance`](code-provenance.md). Read that scope line before acting on
 +either rule; the boundary is stated from both sides.
 +
  ## What counts as the spec
  
  A user-provided, finished design artifact the user points at and says "match
-@@ -114,6 +129,19 @@ Two further handover shapes carry the artifact without any of the above:
+@@ -114,6 +134,21 @@ Two further handover shapes carry the artifact without any of the above:
    conventional location for a handed-over token/component set. The prefix is the
    vendor-scoped directory, never a bare `design-system/`, which is a normal
    source folder in a large fraction of frontend repos.
-+- **A third-party builder's share link.** `https://lovable.dev/`,
-+  `https://v0.dev/`, `https://bolt.new/` — the same shape as the capability URL
-+  above, and for the same reason: a page built in one of these tools and handed
-+  over as a link is a finished spec, not an inspiration. The **protocol prefix
-+  is load-bearing**: a pasted URL carries `https://`, while "I had a look at
-+  v0.dev" does not, so the bare host stays silent exactly as `claude.ai` does.
-+  **Named limit, not an oversight:** a share link pasted *without* the protocol
-+  (`v0.dev/chat/…`) does not fire. Closing that would mean either a bare-host
-+  keyword — which fires on every mention of the tool — or guessing each vendor's
-+  share-path segment, and a trigger built on a guessed path is worse than a
-+  stated gap. The gap is pinned red in the matrix
-+  (`near-bare-host-mention`, `known-gap-protocolless-share-link`) so it is
-+  visible rather than believed closed.
++- **A third-party builder's share link — UNCOVERED, deliberately.** A page built
++  in Lovable / v0 / bolt and handed over as a link is a finished spec, and this
++  rule does not route it. The obvious trigger was tried on this branch and
++  **withdrawn**: matching is plain substring containment, so `https://v0.dev/`
++  also fires on `https://v0.dev/docs`, a pricing page, or a changelog link — it
++  would treat every mention of the tool's own site as a spec handover. That is
++  the `claude.ai` failure the capability-URL entry above exists to avoid, and by
++  this rule's own standard it is worse than the gap it closes. The alternatives
++  are a bare-host keyword (broader still) or guessing each vendor's share-path
++  segment, and a trigger built on a guessed path is not evidence.
++  **What closes it:** a verified share-path segment per vendor, or a
++  handover-word co-occurrence the matcher cannot express today. Until then the
++  class needs one word in the prompt, like any other unlisted filename.
++  `near-bare-host-mention` in the matrix pins the bare-host direction silent so
++  a future attempt cannot reintroduce the broad form unnoticed.
  
  The trigger set is deliberately phrase-heavy on the German side and on
  `artifact`: a bare `artifact` keyword fires on "the CI build artifact is 40 MB".
-@@ -121,9 +149,10 @@ The trigger set is deliberately phrase-heavy on the German side and on
+@@ -121,9 +156,18 @@ The trigger set is deliberately phrase-heavy on the German side and on
  [`design_fidelity_routing.test.ts`](../../tests/scripts/design_fidelity_routing.test.ts)
  pins both halves — every class that must route, and the near-misses that must
  stay silent (fixture `daf-port-trigger-de`). Extending the set without adding a
 -near-miss row there is how an over-broad trigger lands: each of the two triggers
 -above ships with its own near-miss row (`near-claude-ai-chat-link`,
 -`near-generic-design-system-dir`).
-+near-miss row there is how an over-broad trigger lands: each of the three
-+trigger classes above ships with its own near-miss row
-+(`near-claude-ai-chat-link`, `near-generic-design-system-dir`,
-+`near-bare-host-mention`).
++near-miss row there is how an over-broad trigger lands: each of the two shipped
++trigger classes above carries its own near-miss row
++(`near-claude-ai-chat-link`, `near-generic-design-system-dir`), and the
++withdrawn builder-URL class left `near-bare-host-mention` behind so the broad
++form stays pinned silent.
++
++**The near-miss must test the direction the new trigger opens, not a direction
++that was already closed.** The withdrawn class is the worked example: its first
++near-miss row tested a protocol-less mention, which was silent *before* the
++change and therefore could not have caught the over-broadness the change
++introduced. The row that would have caught it — a documentation URL on the same
++host — was the one nobody wrote.
  
  Body migrated to [`guideline:design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, third-party delivery is self-hosted by default, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
  Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 diff --git a/src/scripts/hooks/ui_route_nudge_hook.ts b/src/scripts/hooks/ui_route_nudge_hook.ts
-index 5c9c53e42fa9241a61efea0b92ab61c025711cbe..c0e032c194353e1fc49d405dd34fac709a135108 100644
+index 5c9c53e42fa9241a61efea0b92ab61c025711cbe..155484a49dee0b8b3e06adfe4ea8444f3d0613a8 100644
 --- a/src/scripts/hooks/ui_route_nudge_hook.ts
 +++ b/src/scripts/hooks/ui_route_nudge_hook.ts
-@@ -123,9 +123,47 @@ export function isUiWrite(event: ToolEvent): boolean {
+@@ -123,6 +123,36 @@ export function isUiWrite(event: ToolEvent): boolean {
      return isUiPath(event.file) || isUiTreePath(event.file);
  }
  
@@ -966,10 +1026,23 @@ index 5c9c53e42fa9241a61efea0b92ab61c025711cbe..c0e032c194353e1fc49d405dd34fac70
 + * `path_prefix: .claude/design-system/`. Reading one is the agent reaching
 + * rung 1 of the data-basis ladder before it writes.
 + *
++ * A SHARED PREDICATE, NOT A DECISION INPUT HERE. `decide` does not branch on
++ * it: the nudge's behaviour is unchanged by an artifact read, and the phase
++ * that introduced this states `nothing behavioural`. The one consumer is
++ * `report_consultation_rate`, which measures over transcripts. Keeping the
++ * predicate beside `isUiWrite` / `isConsultation` is what stops the analyzer
++ * and the nudge from classifying the same event differently.
++ *
 + * THIS IS A COPY OF THE RULE'S TRIGGERS, NOT A READ OF THEM — same honesty
 + * boundary the header states for `ui_surface.ts`: nothing here parses
 + * `src/rules/*.md`. `ui_route_nudge_artifact_read.test.ts` pins the two against
 + * the rule's own frontmatter so the copy cannot drift silently.
++ *
++ * **Not disjoint from `isConsultation` by construction** —
++ * `src/skills/design-review/references/design.html` satisfies both. Callers
++ * must evaluate the two independently rather than branching on the first hit;
++ * an early return on this predicate silently removes such an event from the
++ * consultation numerator.
 + */
 +export function isArtifactRead(event: ToolEvent): boolean {
 +    if (event.isWrite || !event.file) return false;
@@ -980,81 +1053,28 @@ index 5c9c53e42fa9241a61efea0b92ab61c025711cbe..c0e032c194353e1fc49d405dd34fac70
  export interface SessionState {
      consulted: boolean;
      nudges: number;
-+    /**
-+     * CAPTURE-ONLY. True once a provided-artifact file was read this session.
-+     *
-+     * It is deliberately NOT folded into `consulted`, and the distinction is
-+     * the whole point: folding it in would silence the nudge for a session that
-+     * opened a `design.html`, which is a **behaviour** change. The phase that
-+     * introduced this field ships instrumentation and states `nothing
-+     * behavioural` in its own rollback line, so the two cannot both be honoured
-+     * by one field. Whether an artifact read SHOULD latch consultation is a
-+     * real question and a separate decision — it needs the rate below to answer
-+     * it, which is why the rate is measured first.
-+     */
-+    artifactRead?: boolean;
-+    /**
-+     * CAPTURE-ONLY. The instrument: was an artifact read before the session's
-+     * FIRST UI write? Latched once, at that write. `undefined` = no UI write
-+     * yet, which is distinct from `false` (a write happened, unread) and must
-+     * stay distinct — collapsing them would count every read-only session as a
-+     * failure.
-+     */
-+    artifactReadBeforeFirstUiWrite?: boolean;
+@@ -203,6 +233,20 @@ export function decide(
+     return { state: { ...state, nudges: state.nudges + 1 }, warn: true };
  }
  
- function stateFile(root: string): string {
-@@ -194,13 +232,46 @@ export function decide(
-     event: ToolEvent,
-     state: SessionState,
- ): { state: SessionState; warn: boolean } {
-+    // Capture-only, and ordered first so it records even on an event the
-+    // branches below return early on. It never reaches `warn`.
-+    if (isArtifactRead(event)) {
-+        return { state: { ...state, artifactRead: true }, warn: false };
-+    }
-     if (isConsultation(event)) {
-         return { state: { ...state, consulted: true }, warn: false };
-     }
-     if (!isUiWrite(event)) return { state, warn: false };
--    if (state.consulted) return { state, warn: false };
--    if (state.nudges >= MAX_NUDGES) return { state, warn: false };
--    return { state: { ...state, nudges: state.nudges + 1 }, warn: true };
-+
-+    // Latch the instrument at the FIRST UI write, before any early return —
-+    // otherwise a session that consulted, or one past the valve, would never
-+    // record its own read-before-write outcome and the rate would be measured
-+    // over the nudged sessions alone.
-+    const measured: SessionState =
-+        state.artifactReadBeforeFirstUiWrite === undefined
-+            ? { ...state, artifactReadBeforeFirstUiWrite: state.artifactRead === true }
-+            : state;
-+
-+    if (measured.consulted) return { state: measured, warn: false };
-+    if (measured.nudges >= MAX_NUDGES) return { state: measured, warn: false };
-+    return { state: { ...measured, nudges: measured.nudges + 1 }, warn: true };
-+}
-+
 +/**
 + * Did anything worth persisting change?
 + *
-+ * Enumerated per field rather than deep-compared, and it is a real trap: the
-+ * predicate this replaced tested `consulted` and `nudges` only, so the two
-+ * capture-only fields would have been computed on every event and written on
-+ * none — an instrument that silently records nothing. A new field must be added
-+ * here or it does not persist.
++ * Enumerated per field rather than deep-compared. **A new field must be added
++ * here or it does not persist** — a review on this branch caught exactly that
++ * shape: two session fields were computed on every event and written on none,
++ * because the guard tested the two older fields by name. Those fields are gone
++ * (the measurement lives in the analyzer, one implementation instead of two),
++ * but the guard stays enumerated and this note stays with it.
 + */
 +export function stateChanged(before: SessionState, after: SessionState): boolean {
-+    return (
-+        before.consulted !== after.consulted ||
-+        before.nudges !== after.nudges ||
-+        before.artifactRead !== after.artifactRead ||
-+        before.artifactReadBeforeFirstUiWrite !== after.artifactReadBeforeFirstUiWrite
-+    );
- }
- 
++    return before.consulted !== after.consulted || before.nudges !== after.nudges;
++}
++
  export function nudgeReason(file: string): string {
-@@ -230,7 +301,7 @@ export function main(): number {
+     return `Non-trivial UI write to ${file} with no design consultation this session. Run \`existing-ui-audit\` first, then the fe-design loop (brief → build → review). Skip only if this is ui-trivial: <=1 file, <=5 lines, no new component, no new state, no new dependency.`;
+ }
+@@ -230,7 +274,7 @@ export function main(): number {
  
      const before = readState(root, session);
      const { state, warn } = decide(event, before);
@@ -1064,7 +1084,7 @@ index 5c9c53e42fa9241a61efea0b92ab61c025711cbe..c0e032c194353e1fc49d405dd34fac70
      }
      if (!warn) return EXIT_ALLOW;
 diff --git a/src/scripts/report_consultation_rate.ts b/src/scripts/report_consultation_rate.ts
-index 9b44de07c09e1425e017efebd6f86b89108366af..709e004972eabc507370ffd0bac33abb5bbe7cf5 100644
+index 9b44de07c09e1425e017efebd6f86b89108366af..5ee21f2b2d6e61e13c73846ed97ec29f7daa15dd 100644
 --- a/src/scripts/report_consultation_rate.ts
 +++ b/src/scripts/report_consultation_rate.ts
 @@ -48,6 +48,7 @@ import { fileURLToPath } from 'node:url';
@@ -1075,7 +1095,7 @@ index 9b44de07c09e1425e017efebd6f86b89108366af..709e004972eabc507370ffd0bac33abb
      isConsultation,
      isUiWrite,
      type ToolEvent,
-@@ -81,9 +82,21 @@ export interface SessionMeasurement {
+@@ -81,6 +82,24 @@ export interface SessionMeasurement {
      consulted: number;
      /** Those turns followed later by opening the review skill. */
      reviewOpenedAfter: number;
@@ -1089,15 +1109,35 @@ index 9b44de07c09e1425e017efebd6f86b89108366af..709e004972eabc507370ffd0bac33abb
 +     * being comparable.
 +     */
 +    artifactRead: number;
++    /** True when this session read a provided artifact at any point. */
++    sawArtifact: boolean;
++    /**
++     * True when this session's FIRST UI write came after an artifact read —
++     * the metric named "artifact read before first UI write". Meaningless
++     * unless `sawArtifact`, which is why it is reported over that denominator.
++     */
++    readBeforeFirstWrite: boolean;
  }
  
  export interface RateReport {
+@@ -96,6 +115,16 @@ export interface RateReport {
+     uiWriteTurns: number;
+     consulted: number;
+     reviewOpenedAfter: number;
 +    /** UI-write turns preceded by reading a provided design artifact. */
 +    artifactRead: number;
-     store: string;
-     /** False when the store directory does not exist — never the same as empty. */
-     storeExists: boolean;
-@@ -139,10 +152,18 @@ export function toolUseToEvent(part: Record<string, unknown>): ToolEvent | null
++    /**
++     * Sessions that read a provided artifact at all — the ONLY honest
++     * denominator for the read-before-write rate. A session with no handover
++     * cannot fail to read one.
++     */
++    handoverSessions: number;
++    /** Of those, the ones whose first UI write came after the read. */
++    handoverReadFirst: number;
+ }
+ 
+ /**
+@@ -139,10 +168,20 @@ export function toolUseToEvent(part: Record<string, unknown>): ToolEvent | null
   * consult for the file it already wrote.
   */
  export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement {
@@ -1107,6 +1147,8 @@ index 9b44de07c09e1425e017efebd6f86b89108366af..709e004972eabc507370ffd0bac33abb
 +        consulted: 0,
 +        reviewOpenedAfter: 0,
 +        artifactRead: 0,
++        sawArtifact: false,
++        readBeforeFirstWrite: false,
 +    };
      let consulted = false;
 +    let artifactRead = false;
@@ -1117,7 +1159,7 @@ index 9b44de07c09e1425e017efebd6f86b89108366af..709e004972eabc507370ffd0bac33abb
      let lastReviewOpenAt = -1;
      const reviewOpenPositions: number[] = [];
      const writePositions: Array<{ position: number; turn: number }> = [];
-@@ -151,10 +172,18 @@ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement
+@@ -151,10 +190,18 @@ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement
          if (isUiWrite(event)) {
              if (!writeTurns.has(turn)) {
                  writeTurns.set(turn, consulted);
@@ -1126,59 +1168,92 @@ index 9b44de07c09e1425e017efebd6f86b89108366af..709e004972eabc507370ffd0bac33abb
              }
              return;
          }
-+        // Checked before `isConsultation` and kept separate from it: an
-+        // artifact is not a design surface, and folding the two would make the
-+        // consultation rate move for a reason it never measured.
-+        if (isArtifactRead(event)) {
-+            artifactRead = true;
-+            return;
-+        }
++        // Evaluated INDEPENDENTLY of the consultation branch, never as an
++        // early return before it. The two predicates are not disjoint —
++        // `skills/design-review/references/design.html` satisfies both — so a
++        // `return` here would remove such an event from the consultation
++        // numerator and from the discharge-proxy latch. An earlier revision did
++        // exactly that while claiming in its comment to prevent it.
++        if (isArtifactRead(event)) artifactRead = true;
          if (isConsultation(event)) {
              consulted = true;
              if (event.file.replace(/\\/g, '/').toLowerCase().includes(`skills/${REVIEW_SURFACE}/`)) {
-@@ -166,6 +195,7 @@ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement
+@@ -166,6 +213,12 @@ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement
  
      out.uiWriteTurns = writeTurns.size;
      for (const wasConsulted of writeTurns.values()) if (wasConsulted) out.consulted += 1;
 +    for (const wasRead of artifactTurns.values()) if (wasRead) out.artifactRead += 1;
++    out.sawArtifact = artifactRead;
++    // The FIRST write's outcome — `artifactTurns` is insertion-ordered on the
++    // first UI write of each turn, so its first value is that write's state.
++    const firstWrite = artifactTurns.values().next();
++    out.readBeforeFirstWrite = firstWrite.done !== true && firstWrite.value === true;
      // A single max comparison, not a scan per write: the proxy asks only whether
      // ANY review-open follows, so the last one decides every earlier write.
      void reviewOpenPositions;
-@@ -216,6 +246,7 @@ export function measureStore(store: string, limit: number): RateReport {
+@@ -216,6 +269,9 @@ export function measureStore(store: string, limit: number): RateReport {
          uiWriteTurns: 0,
          consulted: 0,
          reviewOpenedAfter: 0,
 +        artifactRead: 0,
++        handoverSessions: 0,
++        handoverReadFirst: 0,
      };
      // A store that is not there and a store with nothing in it are different
      // findings, and only one of them is about the agent. Collapsing them into
-@@ -255,6 +286,7 @@ export function measureStore(store: string, limit: number): RateReport {
+@@ -255,6 +311,11 @@ export function measureStore(store: string, limit: number): RateReport {
          report.uiWriteTurns += measured.uiWriteTurns;
          report.consulted += measured.consulted;
          report.reviewOpenedAfter += measured.reviewOpenedAfter;
 +        report.artifactRead += measured.artifactRead;
++        if (measured.sawArtifact) {
++            report.handoverSessions += 1;
++            if (measured.readBeforeFirstWrite) report.handoverReadFirst += 1;
++        }
      }
      return report;
  }
-@@ -285,6 +317,22 @@ export function render(report: RateReport, threshold: number): string {
+@@ -285,6 +346,44 @@ export function render(report: RateReport, threshold: number): string {
      lines.push(
          `  discharge PROXY (review opened)  ${pct(report.reviewOpenedAfter, report.uiWriteTurns)}  (${report.reviewOpenedAfter}/${report.uiWriteTurns})`,
      );
 +    lines.push(
-+        `  ARTIFACT READ BEFORE WRITE       ${pct(report.artifactRead, report.uiWriteTurns)}  (${report.artifactRead}/${report.uiWriteTurns})`,
++        `  artifact read (all UI turns)      ${pct(report.artifactRead, report.uiWriteTurns)}  (${report.artifactRead}/${report.uiWriteTurns})`,
++    );
++    lines.push(
++        `  READ BEFORE FIRST WRITE          ${pct(report.handoverReadFirst, report.handoverSessions)}  (${report.handoverReadFirst}/${report.handoverSessions} handover session(s))`,
 +    );
 +    lines.push('');
 +    lines.push(
-+        '  The third rate shares the second denominator and answers a different',
++        '  READ BEFORE FIRST WRITE is the rate to quote. Its denominator is',
 +    );
 +    lines.push(
-+        '  question: not "did it open the design surface" but "did it read the',
++        '  sessions that read a provided artifact at all — a session with no',
 +    );
 +    lines.push(
-+        '  handed-over source". A session with no handover contributes 0/N to it',
++        '  handover cannot fail to read one, so including it would dilute the',
 +    );
 +    lines.push(
-+        '  by construction, so read it per-handover, never as an estate average.',
++        '  rate toward the size of the estate rather than the behaviour.',
++    );
++    lines.push(
++        '  The line above it shares the consultation denominator and is kept for',
++    );
++    lines.push(
++        '  comparability with that rate only.',
++    );
++    lines.push('');
++    lines.push(
++        '  KNOWN BLIND SPOT: a session handed an artifact that NEVER reads it is',
++    );
++    lines.push(
++        '  invisible here — nothing in a transcript marks a handover that was',
++    );
++    lines.push(
++        '  ignored. That case is the defect this measures, so the rate is a',
++    );
++    lines.push(
++        '  ceiling on the problem, never a measurement of it.',
 +    );
      lines.push('');
  
@@ -1226,15 +1301,16 @@ index 25acb2d8f9e72014914057ad50bbcaaa23cda186..f6b2b1bbd832e8a0c298f1635618bfb9
  
  For a review that needs browser probing, use an **async background verifier**
 diff --git a/src/skills/fe-design/SKILL.md b/src/skills/fe-design/SKILL.md
-index f21272a3b59089f2ef02a7bd5f3bbf52732d13bd..fca35f3ea49afb9fd8f376f22257d15acfb5b471 100644
+index f21272a3b59089f2ef02a7bd5f3bbf52732d13bd..6c64d8a519fb022b3dbcf93e6a5d9c2aa9247788 100644
 --- a/src/skills/fe-design/SKILL.md
 +++ b/src/skills/fe-design/SKILL.md
-@@ -40,7 +40,28 @@ else runs the loop.
+@@ -40,8 +40,29 @@ else runs the loop.
     `layout`, `components`, `states`, `microcopy`, `a11y`. `states` means all
     five of `empty`, `loading`, `error`, `success`, `disabled` — a brief missing
     one is unfinished, not concise.
 -3. **Build** — against the audit's primitives, in the project's stack.
-+2b. **Inventory — only when an artifact was provided, and before you build.**
+-4. **Review** — run [`design-review`](../design-review/SKILL.md) before calling
++3. **Inventory — only when an artifact was provided, and before you build.**
 +   List the artifact's **interactions, keyframes, and script includes** from its
 +   source (`design-fidelity-mechanics` § Data-basis ladder — read it, do not
 +   look at a picture of it). Then place **every** listed item in exactly one
@@ -1252,13 +1328,14 @@ index f21272a3b59089f2ef02a7bd5f3bbf52732d13bd..fca35f3ea49afb9fd8f376f22257d15a
 +   (`apply.ts`, `COVERAGE_BUCKETS`, an unaccounted item is a halt); out here it
 +   is a duty you carry, and nothing checks it for you. (fixture:
 +   `daf-adhoc-port-coverage`.)
-+3. **Build** — against the audit's primitives, in the project's stack. Where the
++4. **Build** — against the audit's primitives, in the project's stack. Where the
 +   artifact's own markup/CSS/JS is stack-compatible, adapt **that code**;
 +   re-deriving it from scratch is a deviation needing confirmation
 +   (`design-fidelity-mechanics` § Adopt the code).
- 4. **Review** — run [`design-review`](../design-review/SKILL.md) before calling
++5. **Review** — run [`design-review`](../design-review/SKILL.md) before calling
     it done, and scope the verdict honestly: render-scoped when you can render
     it, otherwise explicitly static-scoped, naming which checks actually ran.
+    "Looks good" with neither scope named is a verdict without evidence.
 diff --git a/tests/design-artifacts/eval-fixtures.md b/tests/design-artifacts/eval-fixtures.md
 index 086929088955ee11ca74dd4b32f5d6d74d7f1911..f49b312f6357e4aadf0229e50da6cde758ce8331 100644
 --- a/tests/design-artifacts/eval-fixtures.md
@@ -1346,63 +1423,54 @@ index 086929088955ee11ca74dd4b32f5d6d74d7f1911..f49b312f6357e4aadf0229e50da6cde7
  
  The `daf-lane-*` family, plus `daf-placeholder-in-array` and
 diff --git a/tests/scripts/consultation_rate.test.ts b/tests/scripts/consultation_rate.test.ts
-index b36eaa6f76750ddc6f3b4d891b581910dac4695e..04add896d66caee53f1f09fac54009fc3c29a57c 100644
+index b36eaa6f76750ddc6f3b4d891b581910dac4695e..82c5ebb1ddf4466aa3c939186e4698c9b1887809 100644
 --- a/tests/scripts/consultation_rate.test.ts
 +++ b/tests/scripts/consultation_rate.test.ts
-@@ -217,8 +217,18 @@ describe('render', () => {
+@@ -217,8 +217,29 @@ describe('render', () => {
          uiWriteTurns: 4,
          consulted: 1,
          reviewOpenedAfter: 2,
 +        artifactRead: 3,
++        handoverSessions: 2,
++        handoverReadFirst: 1,
      };
  
-+    it('publishes the artifact-read rate on the same denominator', () => {
++    it('publishes the read-before-first-write rate over handover sessions', () => {
 +        const out = render(report, 20);
-+        expect(out).toContain('ARTIFACT READ BEFORE WRITE');
-+        // 3 of the same 4 UI-write turns — the shared denominator is what makes
-+        // the two rates comparable, so it is asserted rather than assumed.
++        // The quotable rate uses the handover denominator, not the estate one:
++        // a session with no handover cannot fail to read one.
++        expect(out).toContain('READ BEFORE FIRST WRITE');
++        expect(out).toContain('(1/2 handover session(s))');
++        // The comparability line keeps the consultation denominator.
 +        expect(out).toContain('(3/4)');
 +        expect(out).toContain('(1/4)');
++    });
++
++    it('states the blind spot rather than implying the rate is complete', () => {
++        // A handed-over artifact that is never read leaves no transcript trace,
++        // and that case IS the defect — so the output has to say the rate is a
++        // ceiling rather than a measurement.
++        expect(render(report, 20)).toContain('KNOWN BLIND SPOT');
 +    });
 +
      it('reports the rate and marks the proxy as not the discharge rate', () => {
          const out = render(report, 20);
  
 diff --git a/tests/scripts/design_fidelity_routing.test.ts b/tests/scripts/design_fidelity_routing.test.ts
-index d8bca85cb213f33a4eae057d9365af9ef8f05840..abe4f9f3c3bc86a45453b9ed30b53e400055338b 100644
+index d8bca85cb213f33a4eae057d9365af9ef8f05840..e7a049101db368dda4589bc631bd20c0205bac29 100644
 --- a/tests/scripts/design_fidelity_routing.test.ts
 +++ b/tests/scripts/design_fidelity_routing.test.ts
-@@ -201,7 +201,56 @@ export const ROUTING_MATRIX: readonly Row[] = [
-         baseline: false,
+@@ -202,6 +202,36 @@ export const ROUTING_MATRIX: readonly Row[] = [
      },
  
-+    // --- Class 5: a third-party builder's share link -----------------------
-+    {
-+        id: 'none-lovable-share-link',
-+        klass: 'en',
-+        prompt: 'The page is done: https://lovable.dev/projects/9f2a — take it from there.',
-+        open_files: [],
-+        routes: true,
-+        baseline: false,
-+    },
-+    {
-+        id: 'none-v0-share-link',
-+        klass: 'en',
-+        prompt: 'https://v0.dev/chat/b7c1 — that is the layout we settled on.',
-+        open_files: [],
-+        routes: true,
-+        baseline: false,
-+    },
-+    {
-+        id: 'none-bolt-share-link',
-+        klass: 'en',
-+        prompt: 'Built it here: https://bolt.new/~/sb1-x9 — implement it in our stack.',
-+        open_files: [],
-+        routes: true,
-+        baseline: false,
-+    },
-+
      // --- Near-misses: must stay silent ------------------------------------
++    //
++    // The builder-URL class (`lovable.dev` / `v0.dev` / `bolt.new`) was
++    // attempted here and WITHDRAWN. `https://v0.dev/` is a substring of
++    // `https://v0.dev/docs`, so the trigger fired on the vendor's own
++    // documentation, pricing and changelog pages — every mention of the tool's
++    // site became a spec handover. The two rows below pin BOTH directions
++    // silent so a future attempt has to clear them before shipping the class.
 +    {
 +        id: 'near-bare-host-mention',
 +        klass: 'en',
@@ -1414,14 +1482,14 @@ index d8bca85cb213f33a4eae057d9365af9ef8f05840..abe4f9f3c3bc86a45453b9ed30b53e40
 +        baseline: false,
 +    },
 +    {
-+        id: 'known-gap-protocolless-share-link',
++        id: 'near-builder-host-non-handover-url',
 +        klass: 'en',
-+        // DELIBERATELY RED, and not a near-miss: this IS a handover the rule
-+        // does not catch. Closing it needs either a bare-host keyword (which
-+        // `near-bare-host-mention` proves is over-broad) or a guessed per-vendor
-+        // share-path segment. A trigger built on a guessed path is worse than a
-+        // stated gap, so the gap is pinned here instead of believed closed.
-+        prompt: 'lovable.dev/projects/9f2a — build that.',
++        // The row that would have caught the withdrawn trigger, and the reason
++        // it is here rather than the protocol-less one: a near-miss that tests
++        // a direction which was ALREADY silent cannot detect over-broadness a
++        // new trigger introduces. This URL is on the builder's host, carries
++        // the protocol, and is not a handover.
++        prompt: 'Per https://v0.dev/docs the free tier caps at three projects.',
 +        open_files: [],
 +        routes: false,
 +        baseline: false,
@@ -1431,29 +1499,24 @@ index d8bca85cb213f33a4eae057d9365af9ef8f05840..abe4f9f3c3bc86a45453b9ed30b53e40
          klass: 'en',
 diff --git a/tests/scripts/ui_route_nudge_artifact_read.test.ts b/tests/scripts/ui_route_nudge_artifact_read.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..b48f15222d4bc83fc5f2e43dddf8952775ffb15b
+index 0000000000000000000000000000000000000000..394aee2469ecb4075b426d301da34bf80e5758e5
 --- /dev/null
 +++ b/tests/scripts/ui_route_nudge_artifact_read.test.ts
-@@ -0,0 +1,191 @@
+@@ -0,0 +1,129 @@
 +/**
-+ * The capture-only artifact-read instrument on `ui-route-nudge`.
++ * `isArtifactRead` — the shared predicate the analyzer measures over.
 + *
-+ * Two things are asserted here and they are different in kind:
++ * It deliberately has NO decision role: `decide` does not branch on it, and the
++ * assertions below pin that, because the phase that introduced it declares
++ * `nothing behavioural` in its own rollback line. An earlier revision of this
++ * branch also latched two session fields on it inside the hook; a review caught
++ * that nothing read them, so the measurement now lives in
++ * `report_consultation_rate` alone — one implementation instead of two.
 + *
-+ * 1. **The instrument records what it claims to.** `artifactRead` latches on a
-+ *    handover file, `artifactReadBeforeFirstUiWrite` latches once at the first
-+ *    UI write, and `undefined` (no write yet) stays distinct from `false`
-+ *    (a write happened unread).
-+ * 2. **It changes NO behaviour.** The phase that added it declares `nothing
-+ *    behavioural` in its own rollback line, so every warn outcome must be
-+ *    identical with and without an artifact read in the session. That is the
-+ *    assertion a future "just fold it into `consulted`" edit has to break
-+ *    loudly rather than quietly.
-+ *
-+ * Plus the drift guard: the hook COPIES two of `design-fidelity`'s triggers
-+ * rather than reading the rule, exactly as it copies the UI-surface predicate.
-+ * A copy nothing pins is a copy that rots, so the rule's own frontmatter is
-+ * parsed here and compared.
++ * The drift guard at the bottom is the load-bearing part: the predicate COPIES
++ * two of `design-fidelity`'s triggers rather than reading the rule, exactly as
++ * the hook copies the UI-surface predicate. A copy nothing pins is a copy that
++ * rots, so the rule's own frontmatter is parsed here and compared.
 + */
 +import * as fs from 'node:fs';
 +import * as path from 'node:path';
@@ -1463,11 +1526,9 @@ index 0000000000000000000000000000000000000000..b48f15222d4bc83fc5f2e43dddf89527
 +import { describe, expect, it } from 'vitest';
 +
 +import {
-+    MAX_NUDGES,
 +    decide,
 +    isArtifactRead,
 +    isConsultation,
-+    stateChanged,
 +    type SessionState,
 +    type ToolEvent,
 +} from '../../src/scripts/hooks/ui_route_nudge_hook.js';
@@ -1509,97 +1570,42 @@ index 0000000000000000000000000000000000000000..b48f15222d4bc83fc5f2e43dddf89527
 +        // Producing an artifact is not reading one.
 +        expect(isArtifactRead(write('tests/design-artifacts/fixtures/design.html'))).toBe(false);
 +    });
++});
 +
-+    it('is disjoint from consultation — the two signals are not the same event', () => {
-+        expect(isConsultation(read('tests/design-artifacts/fixtures/design.html'))).toBe(false);
++describe('overlap with consultation — a property, not two examples', () => {
++    it('the two predicates are NOT disjoint, and the overlap is constructible', () => {
++        // This is the finding a review raised: an earlier revision returned
++        // early on `isArtifactRead`, which silently removed such an event from
++        // the consultation numerator. Asserting the overlap EXISTS is what
++        // makes that ordering bug expressible as a test rather than a comment.
++        const both = read('src/skills/design-review/references/design.html');
++        expect(isArtifactRead(both)).toBe(true);
++        expect(isConsultation(both)).toBe(true);
++    });
++
++    it('neither predicate implies the other', () => {
 +        expect(isArtifactRead(read('src/skills/fe-design/SKILL.md'))).toBe(false);
++        expect(isConsultation(read('tests/design-artifacts/fixtures/design.html'))).toBe(false);
 +    });
 +});
 +
-+describe('the instrument', () => {
-+    it('records the read without latching consultation', () => {
++describe('no behaviour change — the predicate never reaches a decision', () => {
++    it('an artifact read leaves the state untouched', () => {
 +        const { state, warn } = decide(read('a/design.html'), fresh);
-+        expect(state.artifactRead).toBe(true);
-+        expect(state.consulted).toBe(false);
++        expect(state).toEqual(fresh);
 +        expect(warn).toBe(false);
-+    });
-+
-+    it('leaves the before-first-write field undefined until a UI write happens', () => {
-+        const afterRead = decide(read('a/design.html'), fresh).state;
-+        expect(afterRead.artifactReadBeforeFirstUiWrite).toBeUndefined();
-+    });
-+
-+    it('latches true at the first UI write when the artifact was read', () => {
-+        const afterRead = decide(read('a/design.html'), fresh).state;
-+        const afterWrite = decide(write(UI_FILE), afterRead).state;
-+        expect(afterWrite.artifactReadBeforeFirstUiWrite).toBe(true);
-+    });
-+
-+    it('latches false at the first UI write when it was not', () => {
-+        const afterWrite = decide(write(UI_FILE), fresh).state;
-+        expect(afterWrite.artifactReadBeforeFirstUiWrite).toBe(false);
-+    });
-+
-+    it('does not re-latch on later writes — first write only', () => {
-+        const first = decide(write(UI_FILE), fresh).state;
-+        expect(first.artifactReadBeforeFirstUiWrite).toBe(false);
-+        const afterRead = decide(read('a/design.html'), first).state;
-+        const second = decide(write(UI_FILE), afterRead).state;
-+        // The read happened AFTER the first write; the instrument must keep
-+        // recording the outcome it measured, not the later, better one.
-+        expect(second.artifactReadBeforeFirstUiWrite).toBe(false);
-+    });
-+
-+    it('latches even when the session already consulted, so the rate is not measured over nudged sessions alone', () => {
-+        const consulted = decide(read('src/skills/fe-design/SKILL.md'), fresh).state;
-+        expect(consulted.consulted).toBe(true);
-+        const { state, warn } = decide(write(UI_FILE), consulted);
-+        expect(state.artifactReadBeforeFirstUiWrite).toBe(false);
-+        expect(warn).toBe(false);
-+    });
-+
-+    it('latches even past the nudge valve', () => {
-+        const exhausted: SessionState = { consulted: false, nudges: MAX_NUDGES };
-+        const { state, warn } = decide(write(UI_FILE), exhausted);
-+        expect(state.artifactReadBeforeFirstUiWrite).toBe(false);
-+        expect(warn).toBe(false);
-+    });
-+});
-+
-+describe('capture-only — no behaviour change', () => {
-+    it('warns identically whether or not an artifact was read', () => {
-+        const withRead = decide(read('a/design.html'), fresh).state;
-+        expect(decide(write(UI_FILE), withRead).warn).toBe(
-+            decide(write(UI_FILE), fresh).warn,
-+        );
-+    });
-+
-+    it('an artifact read does not consume a nudge', () => {
-+        const afterRead = decide(read('a/design.html'), fresh).state;
-+        expect(afterRead.nudges).toBe(fresh.nudges);
 +    });
 +
 +    it('an artifact read still leaves the session nudgeable', () => {
-+        // The failure this guards: folding the read into `consulted` would
++        // The failure this guards: latching the read as consultation would
 +        // silence the nudge for any session that opened a design.html.
 +        const afterRead = decide(read('a/design.html'), fresh).state;
 +        expect(decide(write(UI_FILE), afterRead).warn).toBe(true);
 +    });
-+});
 +
-+describe('persistence', () => {
-+    it('reports a change when only a capture-only field moved', () => {
-+        // The trap: the predicate this replaced compared `consulted` and
-+        // `nudges` only, so these fields would have been computed on every
-+        // event and persisted on none.
-+        expect(stateChanged(fresh, { ...fresh, artifactRead: true })).toBe(true);
-+        expect(stateChanged(fresh, { ...fresh, artifactReadBeforeFirstUiWrite: false })).toBe(
-+            true,
-+        );
-+    });
-+
-+    it('reports no change when nothing moved', () => {
-+        expect(stateChanged(fresh, { ...fresh })).toBe(false);
++    it('warns identically whether or not an artifact was read', () => {
++        const afterRead = decide(read('a/design.html'), fresh).state;
++        expect(decide(write(UI_FILE), afterRead).warn).toBe(decide(write(UI_FILE), fresh).warn);
 +    });
 +});
 +
@@ -1612,14 +1618,14 @@ index 0000000000000000000000000000000000000000..b48f15222d4bc83fc5f2e43dddf89527
 +        return fm['triggers'] as Array<Record<string, string>>;
 +    }
 +
-+    it('the rule still declares the file_pattern the hook copied', () => {
++    it('the rule still declares the file_pattern the predicate copied', () => {
 +        const patterns = ruleTriggers()
 +            .filter((t) => 'file_pattern' in t)
 +            .map((t) => t['file_pattern']);
 +        expect(patterns).toContain('*design.html');
 +    });
 +
-+    it('the rule still declares the path_prefix the hook copied', () => {
++    it('the rule still declares the path_prefix the predicate copied', () => {
 +        const prefixes = ruleTriggers()
 +            .filter((t) => 'path_prefix' in t)
 +            .map((t) => t['path_prefix']);

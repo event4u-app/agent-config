@@ -347,7 +347,7 @@ export function render(report: RateReport, threshold: number): string {
         `  discharge PROXY (review opened)  ${pct(report.reviewOpenedAfter, report.uiWriteTurns)}  (${report.reviewOpenedAfter}/${report.uiWriteTurns})`,
     );
     lines.push(
-        `  artifact read (all UI turns)      ${pct(report.artifactRead, report.uiWriteTurns)}  (${report.artifactRead}/${report.uiWriteTurns})`,
+        `  artifact read (all UI turns)     ${pct(report.artifactRead, report.uiWriteTurns)}  (${report.artifactRead}/${report.uiWriteTurns})`,
     );
     lines.push(
         `  READ BEFORE FIRST WRITE          ${pct(report.handoverReadFirst, report.handoverSessions)}  (${report.handoverReadFirst}/${report.handoverSessions} handover session(s))`,
@@ -373,16 +373,22 @@ export function render(report: RateReport, threshold: number): string {
     );
     lines.push('');
     lines.push(
-        '  KNOWN BLIND SPOT: a session handed an artifact that NEVER reads it is',
+        '  A CEILING, NOT A MEASUREMENT, for two reasons. A session handed an',
     );
     lines.push(
-        '  invisible here — nothing in a transcript marks a handover that was',
+        '  artifact that NEVER reads it is invisible — nothing in a transcript',
     );
     lines.push(
-        '  ignored. That case is the defect this measures, so the rate is a',
+        '  marks a handover that was ignored, and that case IS the defect. And a',
     );
     lines.push(
-        '  ceiling on the problem, never a measurement of it.',
+        '  search whose path argument happens to be the artifact counts as a read',
+    );
+    lines.push(
+        '  although nothing was read. Both errors point the same way: the true',
+    );
+    lines.push(
+        '  read-before-write rate is at most what is printed here.',
     );
     lines.push('');
 

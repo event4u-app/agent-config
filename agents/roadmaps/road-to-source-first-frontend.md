@@ -45,8 +45,9 @@ complexity: structural
 > fires on the vendor's documentation pages, which is the failure the rule's own
 > `claude.ai` precedent exists to avoid. Withdrawing it is the step's own
 > standard applied, not a shortfall.
-> The remaining eight are **blocked on named dependencies, not on effort**, and
-> each is recorded at its own phase:
+> That leaves eight open: **seven blocked on named dependencies rather than on
+> effort**, plus the withdrawn Step 3 above. The seven, each recorded at its own
+> phase:
 >
 > - **Phase 3** (`source-first-gate`) — its verifier exemption keys on a payload
 >   field that `road-to-subagent-lifecycle-integrity` Phase 0 Step 4 spikes and

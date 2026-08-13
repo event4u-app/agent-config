@@ -166,8 +166,10 @@ form stays pinned silent.
 that was already closed.** The withdrawn class is the worked example: its first
 near-miss row tested a protocol-less mention, which was silent *before* the
 change and therefore could not have caught the over-broadness the change
-introduced. The row that would have caught it — a documentation URL on the same
-host — was the one nobody wrote.
+introduced. The row that would have caught it is
+`near-builder-host-non-handover-url` — a documentation URL on the same host —
+and it exists only because a review asked for it after the trigger had already
+shipped. Write that row first next time; it is the cheap half.
 
 Body migrated to [`guideline:design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, third-party delivery is self-hosted by default, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

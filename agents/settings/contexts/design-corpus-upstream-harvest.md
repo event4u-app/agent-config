@@ -1,10 +1,17 @@
 # Design-corpus upstream — harvest verdicts (2026-08-13)
 
 > Durable record of what this suite takes, refuses, and parks from **Source C**,
-> the upstream of the vendored design corpus. Its real identity and pin live in
-> [`design-intelligence/ATTRIBUTION.md`](../../../src/skills/design-intelligence/ATTRIBUTION.md)
-> — the one place licence attribution belongs, per `source-confidentiality`.
-> Cite this file rather than re-reading the upstream.
+> an external design-corpus reference. Cite this file rather than re-reading the
+> upstream.
+>
+> **No pointer to the source's identity is given here, deliberately.** An earlier
+> revision named the tracked file where the identity and pin live, which made the
+> anonymisation nominal: a reader one hop away has the name, and the denylist
+> stays green only because the pointer itself carries no denied token. Naming the
+> route is naming the source with extra steps. A maintainer who needs the
+> identity for licence purposes already knows where attribution lives; a reader
+> of these verdicts does not need it, which is the whole point of the
+> `source-confidentiality` split.
 
 ## Why the verdicts exist
 

@@ -41,9 +41,14 @@ complexity: structural
 > document is rejected as duplicate or unfounded, that is the null to record
 > there.
 
-> **Execution status (2026-08-13).** Phases 1, 2, 4 Step 3 and 5 are closed —
-> 11 of 18 steps. The remaining seven are **blocked on named dependencies, not
-> on effort**, and each is recorded at its own phase:
+> **Execution status (2026-08-13).** Phases 1, 2 and 5 are closed — 10 of 18
+> steps. Phase 4 Step 3 was attempted and **withdrawn**: the completion review
+> showed the trigger form available without guessing a vendor's share path
+> fires on the vendor's documentation pages, which is the failure the rule's own
+> `claude.ai` precedent exists to avoid. Withdrawing it is the step's own
+> standard applied, not a shortfall.
+> The remaining eight are **blocked on named dependencies, not on effort**, and
+> each is recorded at its own phase:
 >
 > - **Phase 3** (`source-first-gate`) — its verifier exemption keys on a payload
 >   field that `road-to-subagent-lifecycle-integrity` Phase 0 Step 4 spikes and
@@ -220,16 +225,23 @@ discipline, and a pre-delivery checklist — harvest verdicts in Phase 4/5.)
       The step says "counts as consultation"; this phase's own rollback line
       says `nothing behavioural`. Folding the read into the `consulted` latch
       would **silence the nudge** for any session that opened a `design.html` —
-      a behaviour change — so the two cannot both be honoured by one field. The
-      read is captured in its own fields (`artifactRead`,
-      `artifactReadBeforeFirstUiWrite`), `decide()` never branches on them, and
-      a test asserts the warn outcome is identical with and without a read.
+      a behaviour change — so the two cannot both be honoured. The read is a
+      shared predicate (`isArtifactRead`) that `decide()` never branches on; a
+      test asserts the warn outcome is identical with and without a read.
       Whether an artifact read *should* latch consultation is a real question
       and now a separate decision — it wants this rate to answer it.
+      **Corrected after the completion review:** the first pass also latched two
+      session fields in the hook, which nothing read — the named metric was
+      computed and discarded while the published one was unnamed. The
+      measurement now lives in the analyzer alone, and it publishes
+      `READ BEFORE FIRST WRITE` over **handover sessions**, not over every UI
+      write, because a session with no handover cannot fail to read one.
       **The rate has no population in this repo:** 0 UI-write turns over 40
       sessions, because a governed instruction suite has almost no UI surface
-      for the predicate to match. Consequence for Phase 6 recorded in the
-      evidence file.
+      for the predicate to match. It also carries a stated blind spot — a
+      handover that is never read leaves no transcript trace, so the rate is a
+      ceiling on the defect rather than a measurement of it. Consequence for
+      Phase 6 recorded in the evidence file.
 
 **Falsifier.** Step 1 shows the ad-hoc run reading the source, adopting the
 markup, and reporting losses without any of the changes below → the symptom
@@ -367,18 +379,26 @@ concern logic.
       X4). This section owns the **producer sentence**: the documented easy path
       is a connected extractor MCP, with the manual Chrome-DevTools-MCP channel
       as fallback.
-- [x] **Step 3:** Extend `design-fidelity` triggers with `lovable.dev`,
+- [ ] **Step 3:** Extend `design-fidelity` triggers with `lovable.dev`,
       `v0.dev`, `bolt.new` URL phrases — each with its near-miss row in
       `ROUTING_MATRIX` per the rule's own extension discipline
       (`design-fidelity.md` § Routing). A bare-domain chat mention stays
       silent, same as the `claude.ai` precedent.
-      **Done 2026-08-13** — three `https://<host>/` phrases (the protocol
-      prefix is what separates a pasted link from a tool mention), plus
-      `near-bare-host-mention` and a **deliberately red**
-      `known-gap-protocolless-share-link` row. That gap is named rather than
-      closed: closing it needs either a bare-host keyword, which the near-miss
-      row proves over-broad, or a guessed per-vendor share path — and a trigger
-      built on a guessed path is worse than a stated gap. Matrix 21 → 26 green.
+      **ATTEMPTED AND WITHDRAWN 2026-08-13 — the available trigger form is
+      over-broad, and shipping it would fail this step's own standard.**
+      `https://v0.dev/` was tried; matching is plain substring containment, so
+      it also fires on `https://v0.dev/docs`, a pricing page or a changelog
+      link — every mention of the vendor's own site becomes a spec handover.
+      That is exactly the `claude.ai` failure the capability-URL trigger was
+      written to avoid. The completion review caught it: the near-miss row
+      shipped alongside tested a **protocol-less** mention, which was already
+      silent before the change and therefore could not detect the
+      over-broadness the change introduced.
+      Left behind so a retry cannot repeat it: `near-bare-host-mention` and
+      `near-builder-host-non-handover-url` pin both directions silent.
+      **What would close this step:** a verified share-path segment per vendor
+      (not a guessed one), or a matcher that can express handover-word
+      co-occurrence. Neither is available from the repo.
 
 **Falsifier.** The extraction-artifact path goes unused across two release
 cycles of real handovers (telemetry from Phase 1 Step 3) → the browser
@@ -426,6 +446,32 @@ never binds, it costs nothing.
 **Falsifier.** All four dimensions green with prose + warn-gate alone → the
 deterministic follow-ups stay closed; record it as the second data point for
 the estate-wide "when is prose enough" question.
+
+## Acceptance Criteria
+
+> Added 2026-08-13 after the completion review found the roadmap had none: the
+> phase-level Falsifiers state when a phase is **wrong**, which is not the same
+> as stating when it is **done**. A review over closed steps had nothing to
+> check against. Each criterion below is checkable from the tree.
+
+| # | Criterion | Met? |
+|---|---|---|
+| A1 | The data-basis ladder exists as one table in the mechanics guideline, cited by name from both the rule's Iron-Law block and `design-review`'s verification reference | yes |
+| A2 | `verification-automation.md` § Mockup-to-code branches on artifact kind; the code branch reads the code and the image branch survives unchanged | yes |
+| A3 | The adopt-the-code duty exists AND its `code-provenance` scope line is present, with the cross-link readable from both rules | yes |
+| A4 | `fe-design` § Ad-hoc mode carries an inventory step whose buckets are the engine's own `COVERAGE_BUCKETS` names, and it renders as a step of the loop | yes |
+| A5 | Three `daf-*` fixtures exist, each carrying its measured / skipped / unmeasured state rather than an assumed pass, and each cited by a scanned surface | yes |
+| A6 | The precedence chain names generative design-system tooling as its fourth member | yes |
+| A7 | The Source-C harvest verdicts are recorded anonymised, with the park carrying an un-park condition | yes |
+| A8 | The read-before-write rate is published over a denominator its own prose endorses, and its blind spot is stated in the output | yes |
+| A9 | No new trigger ships without a near-miss row testing the direction that trigger opens | yes — enforced by withdrawing the builder-URL class rather than shipping it |
+| A10 | Every Iron-Law line added to `design-fidelity` is consistent with that rule's own § What counts as the spec | yes — the screenshot line carries its scope clause |
+
+**Not claimed:** that the operator's symptom is fixed. Phase 1 could not
+reproduce it under conditions where it can occur (no capture tool, no URL
+handover), so these criteria cover the *defects verified in the tree*, not the
+symptom. Phase 6 is where the symptom claim would be earned, and it needs a
+consumer repo.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-12 | reviewer: claude/host -->

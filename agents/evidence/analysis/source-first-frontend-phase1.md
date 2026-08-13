@@ -84,9 +84,26 @@ matcher built from this census alone would watch the wrong surface.
 
 ## Step 3 — the instrument, and the population it does not have
 
-`artifactRead` and `artifactReadBeforeFirstUiWrite` are now captured by
-`ui-route-nudge`, and the rate is published by `report_consultation_rate`
-**on the consultation rate's own denominator** so the two are comparable.
+> **Corrected 2026-08-13 after the second review round.** An earlier revision of
+> this section described a design that no longer exists and endorsed a
+> denominator the shipped code tells readers not to quote. Both are fixed below;
+> the wrong version is left named rather than silently swapped, because an
+> evidence file that quietly re-describes itself is worth less than one that
+> records being wrong. It claimed the metric was captured by the nudge in two
+> session fields, and that the rate rides "the consultation rate's own
+> denominator". Neither holds: those fields were removed in the same review
+> pass, and the quotable rate uses handover sessions.
+
+The measurement lives in **one** place — `report_consultation_rate`, over
+transcripts — and the nudge contributes only the shared `isArtifactRead`
+predicate, which no decision branches on. Two rates are published:
+
+- `artifact read (all UI turns)` — shares the consultation denominator, kept for
+  comparability with that rate and for nothing else.
+- **`READ BEFORE FIRST WRITE`** — the quotable one. Denominator: sessions that
+  read a provided artifact **at all**, because a session with no handover cannot
+  fail to read one, and including it would dilute the rate toward the size of
+  the estate rather than the behaviour.
 
 Run live on both stores the same day:
 
@@ -98,8 +115,16 @@ Run live on both stores the same day:
 **Zero UI-write turns across 40 sessions, and that is correct rather than
 broken.** This repository is a governed instruction suite: it has almost no
 `*.tsx` / `*.blade.php` / component surface for `isUiPath` to match. The
-instrument works — its unit tests exercise every branch — but **it cannot be
-baselined here**, because the behaviour it measures barely occurs in this repo.
+instrument works — `measureSession`'s three new branches and `measureStore`'s
+handover accumulation are unit-tested, including the first-write ordering and
+the predicate overlap — but **it cannot be baselined here**, because the
+behaviour it measures barely occurs in this repo.
+
+> Those tests exist because the second review round found they did not. The
+> earlier claim here ("its unit tests exercise every branch") was false when
+> written: the three fields appeared in tests only inside a hand-built report
+> literal fed to the renderer, so the measurement logic — the load-bearing
+> half — was uncovered.
 
 That matters for the roadmap's Phase 6, which plans a before/after on these
 numbers: a re-measurement in this repo would compare `n/a` to `n/a`. The rate

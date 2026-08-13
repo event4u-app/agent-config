@@ -146,6 +146,15 @@ export function isUiWrite(event: ToolEvent): boolean {
  * must evaluate the two independently rather than branching on the first hit;
  * an early return on this predicate silently removes such an event from the
  * consultation numerator.
+ *
+ * **Known over-count, not fixed here.** A `Grep` / `Glob` whose `path` argument
+ * happens to be the artifact satisfies this predicate although nothing was
+ * read — the same search-is-not-a-read class `isConsultation` was narrowed to
+ * exclude. It is not excluded here because `ToolEvent` carries no tool name,
+ * and adding one would change the shared shape `isConsultation` and `isUiWrite`
+ * are measured through, moving a published rate this branch does not own. The
+ * consequence is stated where it matters: the rate is a CEILING on
+ * read-before-write, and `report_consultation_rate`'s output says so.
  */
 export function isArtifactRead(event: ToolEvent): boolean {
     if (event.isWrite || !event.file) return false;
@@ -248,7 +257,7 @@ export function stateChanged(before: SessionState, after: SessionState): boolean
 }
 
 export function nudgeReason(file: string): string {
-    return `Non-trivial UI write to ${file} with no design consultation this session. Run \`existing-ui-audit\` first, then the fe-design loop (brief → build → review). Skip only if this is ui-trivial: <=1 file, <=5 lines, no new component, no new state, no new dependency.`;
+    return `Non-trivial UI write to ${file} with no design consultation this session. Run \`existing-ui-audit\` first, then the fe-design loop (brief → inventory, if an artifact was provided → build → review). Skip only if this is ui-trivial: <=1 file, <=5 lines, no new component, no new state, no new dependency.`;
 }
 
 export function main(): number {

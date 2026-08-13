@@ -44,7 +44,10 @@ else runs the loop.
    List the artifact's **interactions, keyframes, and script includes** from its
    source (`design-fidelity-mechanics` § Data-basis ladder — read it, do not
    look at a picture of it). Then place **every** listed item in exactly one
-   bucket, using the engine's own names so the two surfaces cannot drift:
+   bucket, using the engine's own names (`apply.ts`, `COVERAGE_BUCKETS`) so the
+   two surfaces read the same. **Nothing enforces that they stay the same** —
+   this is a copied vocabulary, not a shared constant, and no test pins it;
+   renaming a bucket in the engine leaves this list stale and silent:
 
    | Bucket | Meaning |
    |---|---|
