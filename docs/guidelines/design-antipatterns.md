@@ -229,7 +229,7 @@ are listed in § Quality floors.
 | C3 | candidate | neon `box-shadow` / `text-shadow` accents on a dark surface |
 | C4 | floor | WCAG contrast, Q1 |
 | C5 | backed | |
-| C6 | backed | |
+| C6 | judgment-only | demoted 2026-08-13 at M1 = 4 of 32 clean files; the rule counted every saturated hue, so one accent plus a semantic danger colour reached its threshold — which is correct design, not the tell this entry describes |
 | C7 | judgment-only | theme inversion may be deliberate emphasis |
 | T1 | judgment-only | requires comparing optical weight across the document |
 | T2 | judgment-only | requires knowing which element is the hero |

@@ -473,27 +473,6 @@ export const SLOP_RULES: SlopRule[] = [
     },
   },
   {
-    id: "slop-c6-lock-colour",
-    catalogId: "C6",
-    severity: "P3",
-    engines: ["css"],
-    description: "Colour Lock — multiple saturated accent hue families",
-    message: "Several accent hue families read as no single accent identity; lock one (C6 / Colour Lock).",
-    gated: (ctx) => ctx.has("colour lock", "color lock"),
-    detect: ({ content }) => {
-      const buckets = new Set<number>();
-      for (const pm of content.matchAll(/#([0-9a-f]{3}|[0-9a-f]{6})\b/gi)) {
-        const b = hueBucket("#" + (pm[1] ?? ""));
-        if (b !== null) buckets.add(b);
-      }
-      if (buckets.size >= 3) {
-        const idx = content.search(/#[0-9a-f]{3,6}\b/i);
-        return [{ line: lineOf(content, Math.max(0, idx)), snippet: `${buckets.size} distinct accent hue families` }];
-      }
-      return [];
-    },
-  },
-  {
     id: "slop-l9-section-monotony",
     catalogId: "L9",
     severity: "P3",

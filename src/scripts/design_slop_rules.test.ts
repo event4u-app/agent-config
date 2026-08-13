@@ -105,11 +105,6 @@ const FIXTURES: Record<string, { ext: string; positive: string; negative: string
     positive: ".a{border-radius:4px}.b{border-radius:8px}.c{border-radius:12px}.d{border-radius:20px}",
     negative: ".a{border-radius:8px}.b{border-radius:12px}",
   },
-  "slop-c6-lock-colour": {
-    ext: "css",
-    positive: ".a{color:#e11d48}.b{background:#2563eb}.c{border-color:#16a34a}",
-    negative: ".a{color:#111827}.b{background:#6b7280}.c{border-color:#2563eb}",
-  },
   "slop-l9-section-monotony": {
     ext: "html",
     // 8 identical media+text sections → 1 distinct layout family (< 4)
