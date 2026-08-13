@@ -108,12 +108,20 @@ CI-side set still carried the 167 comment-derived phantoms. So the floor and its
 `corpus:` line now describe a population that no longer exists — the same shape
 as a stale pin that still reads as authoritative.
 
-This is **not** repaired here, deliberately. A `min_scanned` floor is a gate
-threshold, and lowering one is a weakening whichever way the arithmetic points;
-the honest re-anchor number is a judgement about margin, not a derivation. It is
-recorded under `blocker: ci-reachability-decision` § 5 with the candidate
-answers, because it is the same decision: what the tree does about a parity gate
-whose measured population just fell by 20 %.
+This was **not** repaired when the section was written, deliberately: a
+`min_scanned` floor is a gate threshold, lowering one is a weakening whichever
+way the arithmetic points, and the honest re-anchor number is a judgement about
+margin rather than a derivation. It was filed under
+`blocker: ci-reachability-decision` § 5 with the candidate answers, because it is
+the same decision.
+
+**Repaired 2026-08-13 when that blocker was resolved** — see Phase 4 Step 4. The
+floor moved 380 → **340** against a re-measured population of **360** (109 CI +
+251 local), with the argument written into the manifest, and the two meta-gates
+were wired into both `consistency.yml` and the `task ci` chain. The numbers in
+the block above are the reading taken when the red was *found*; they are left
+unedited because they are what the finding said, and the movement since is the
+repair rather than a correction.
 
 An AI council was asked to adjudicate the disposition and **could not be
 reached** — anthropic `cli_quota_exhausted` (50/50), openai
@@ -156,20 +164,40 @@ re-derive them.
       half was never actually gated by it. The roadmap named above now lives
       under `agents/roadmaps/archive/`.
 
-- [ ] Decide the disposition of `agents/roadmaps/road-to-august-program.md` and
-      apply it. `check_roadmap_trackable` fails it for carrying no
-      `## Phase <id>` heading and no `status: draft`, so the dashboard cannot
-      count it and a reader sees no planned work.
+- [x] Decide the disposition of `road-to-august-program.md` and apply it.
+      `check_roadmap_trackable` failed it for carrying no `## Phase <id>` heading
+      and no `status: draft`, so the dashboard could not count it and a reader saw
+      no planned work.
       **Measured:** 243 lines, 8 `##` sections, **zero** checkboxes of any
       glyph, zero `Phase` headings. It is a pure coordination file that
       schedules three sibling roadmaps and carries no executable work of its
       own; its own Risk 1 pre-registers archival if the two real dependencies
       hold without it.
-      The gate names exactly two remedies, and a third exists outside it —
-      which is why this is a decision and not a repair. See
-      `blocker: august-program-disposition`.
       *Verify:* `npx tsx src/scripts/check_roadmap_trackable.ts` exits 0.
-      <!-- blocked-by: august-program-disposition -->
+      → **Archived 2026-08-13 — and it stopped being a judgement call before it
+      was made.** The file's own falsifier decided it: *"If Wave 1 ships
+      fragmented anyway … retire this file to the archive."* Wave 1 was defined
+      as SLI Phase 1 + SFF Phase 1 Steps 1+3 + SHL Phase 1, **one release**. It
+      shipped as one roadmap already archived before the program existed (SHL),
+      plus PR #1325 at 06:59 (SFF) and PR #1330 at 10:04 (SLI) — three hours and
+      five first-parent merges apart, with **zero shared files**. The second
+      falsifier clause fired too: SLI's own PR flipped Phase 5 Step 1, a Wave-5
+      item, while the Wave-0 spikes it depends on stayed open. Wave 1's stated
+      exit — a baseline after ≥20 dispatches — is still unmet.
+      **Two premises in this step and its blocker were wrong.** The gate does not
+      name "exactly two remedies": that is true of its failure *string*, while
+      `EXCLUDE_DIRS` covers `archive`, `skipped`, **`stubs`** and **`later`**,
+      `PHASE_RE` accepts `###` as well as `##`, and `CHECKBOX_RE` accepts a single
+      `[~]` or `[-]` per phase. Six satisfying conditions, not two — so
+      "invent executable steps" was cheaper than the blocker implied, and
+      `later/` was an option nobody listed.
+      **What the move cost, and it is the known gap rather than a surprise.** The
+      archiver rewrites only exact repo-relative paths, so the three siblings'
+      bare-filename links (`](road-to-august-program.md)`) are invisible to both
+      it and `check_references` — the 530-dead-link class. All three were
+      re-pointed at `archive/` by hand, and the moved file's **own** eight
+      outbound links were re-depthed one level (its `../tmp.old/` target was
+      already absent before the move: that directory is gitignored local-only).
 
 ## Phase 2 — the self-test ratchet
 
@@ -246,8 +274,8 @@ re-derive them.
 
 ## Phase 3 — the roadmap that cannot archive
 
-- [ ] Resolve or record the three open blockers on
-      `agents/roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md`:
+- [x] Resolve or record the three open blockers on
+      `agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-release-integrity.md`:
       `release-head-cadence-decision`, `carrier-install-paths-decision`,
       `adr-221-acceptance`. The roadmap is 12/12 done with zero deferred steps,
       so `roadmap:progress-check` reports it as completed-but-unarchived and the
@@ -256,12 +284,33 @@ re-derive them.
       All three are maintainer calls; see `blocker: release-integrity-blockers`.
       *Verify:* each blocker reads `Status: resolved` with the decision recorded
       in the roadmap.
-      <!-- blocked-by: release-integrity-blockers -->
+      → **All three resolved 2026-08-13, and one of them was not the question it
+      asked.** `release-head-cadence-decision` demanded "(a) or (b), exactly one"
+      while **(b) was already picked, argued and shipped** on 2026-08-11 by an
+      AI-council 2/2 convergence recorded in `CHANGELOG-conventions.md:48` — its
+      own step 1.4 is `[-]` cancelled citing that. Only the `Status:` line was
+      ever left open. What the pass added is the number the concession lacked:
+      **3 of the 3 releases tagged since, 7 marked lines** (10.1.0 two fields,
+      10.2.0 three, 10.3.0 two; 10.0.0 curated), now published in the contract
+      with two pre-registered falsifiers. (b) stands — the rate shows curation is
+      not happening, not that blocking would be cheap.
+      `carrier-install-paths-decision` → **ADR-228**: the global install does not
+      emit `paths:`; the 24 stay as accepted over-delivery. Decided on the
+      *identity* of the 24, not their count — at least six are safety or
+      governance floors carrying an Iron Law, and ADR-227 records that
+      path-scoped rules are not re-injected after `/compact`, so scoping them
+      globally would convert a safe over-delivery into a silent under-delivery.
+      Its ownership premise was also stale: ADR-226, accepted the same day,
+      declines the remedy this blocker said already owned the fix.
+      `adr-221-acceptance` → **accepted**, index regenerated. The promoting
+      argument is not "already practised": ADR-226 and ADR-227 both argue in the
+      ladder's terms while being unable to cite it.
 
-- [ ] Archive it and regenerate the dashboard.
+- [x] Archive it and regenerate the dashboard.
       *Verify:* `npx tsx src/agent-src/scripts/archive_completed_roadmaps.ts`
       moves the file, and `agent-config roadmap:progress-check` exits 0.
-      <!-- blocked-by: release-integrity-blockers -->
+      → Sweep archived it with **2 references migrated**, once the three blockers
+      above read `resolved` — before that it refused, correctly.
 
 ## Phase 4 — close the class, or state why it stays open
 
@@ -350,16 +399,50 @@ class recurs.
       one-line change. Filed as an option under
       `blocker: ci-reachability-decision` rather than smuggled in.
 
-- [ ] Decide what follows from that number, and record the decision.
+- [x] Decide what follows from that number, and record the decision.
       The options are genuinely different in cost and none is obviously right:
       wire the local-only gates into an existing workflow; add one aggregate
       workflow job that runs the local-only remainder; or state explicitly that
       `task ci` is a superset local gate and that trunk-red on those gates is
       accepted, with a named cadence for checking it.
-      See `blocker: ci-reachability-decision`.
       *Verify:* the decision is recorded as an ADR or in
       `docs/contracts/ci-green-floor.md`, whichever the decision's scope fits.
-      <!-- blocked-by: ci-reachability-decision -->
+      → **Recorded in `docs/contracts/ci-green-floor.md` § The local-only backlog,
+      as the accept-with-a-shrink-only-ratchet answer plus one wiring.** Scope
+      fits the contract rather than an ADR: it states how an existing declared
+      mechanism is operated, and changes no architecture.
+      **Wired, because these two were the mechanism rather than part of the
+      backlog:** `check_ci_local_parity` — which exists to report gates with no
+      remote reach and had none itself — and `check_gate_coverage`, which reads
+      every other gate's floor and was referenced by **nothing at all**, not even
+      `task ci`, so its reds were visible only to someone running the script by
+      hand. That is one level worse than this roadmap's own § Correction claimed.
+      Both now run in `consistency.yml`, the only required status check; 0.53 s
+      measured against ~225 s of headroom under the 5-minute per-job ceiling.
+      **Not drained, and the number is why.** Reaching the old floor needed 23
+      gates wired; a 22-gate sample run individually found **3 already red**, so
+      wiring at that rate lands ~23 merge-blocking reds on the first run of the
+      required check — the instant-blocker shape the 167 were baselined to avoid.
+      Runtime was never the obstacle: sample mean 0.92 s, all 166 ≈ 154 s.
+      **Two numbers moved as a consequence and were locked in the same change:**
+      the wiring took `undeclared_local_only` 167 → **166** (the parity gate left
+      the set it reports), and the parsed population 357 → **360**, so the
+      `min_scanned` floor was re-anchored 380 → **340**, with the argument written
+      into the manifest rather than typed as a number.
+      **The wiring first introduced the mirror-image defect, and self-verification
+      nearly missed it.** Adding `check_gate_coverage` to `consistency.yml` made
+      it CI-reachable while it remained in no local chain — `undeclared_ci_only`,
+      the direction whose own message reads *"a contributor discovers this failure
+      only after pushing"*. Repaired by wiring it into the `task ci` chain too,
+      where its task definition had sat unreferenced since it was written; parity
+      then returns exit 0 at 360 (109 CI + 251 local).
+      It was missed on the first pass for exactly the reason Phase 2's own record
+      names: the check was a grep keyed on `CI ↔ local parity`, a line printed
+      **only on the green path**, so it matched nothing and the adjacent ratchet
+      line was read as the verdict. Twice now on this roadmap a success-vocabulary
+      grep has read past a failure. **Read the exit code.**
+      **Result:** `check_gate_coverage` reports `enforced 35 · pending 0 ·
+      failing 0` — `✅ every enforced gate cleared its coverage floor`.
 
 ## Acceptance criteria
 
@@ -369,6 +452,18 @@ class recurs.
   `gate-self-test:registered-non-adopters` at 24 or below, with the baseline
   unchanged or lowered — never raised.
 - `agent-config roadmap:progress-check` exits 0.
+  **UNMET at archival, and deliberately not forced — 2026-08-13.** It exits 1 on
+  `road-to-inbox-harvest-distillation` (9/9 done · **1 deferred**), which is an
+  Iron-Law-3 item belonging to a roadmap this one never touched. Verified
+  pre-existing by re-running the check at this branch's base: it already failed
+  there, on the same roadmap, plus a second finding (release-integrity
+  completed-but-unarchived) that this work cleared. So the criterion moved from
+  **2 findings to 1**, and the remainder is by rule the user's call — Iron Law 3
+  requires the deferred item be surfaced and resolved by a human, never
+  auto-archived. Writing a criterion whose satisfaction depends on an unrelated
+  roadmap's human decision was the drafting error; the criterion should have been
+  scoped to this roadmap's own contribution. Recorded rather than quietly
+  dropped.
 - The Phase 4 decision is recorded in a durable artefact, including the case
   where the decision is to change nothing.
 - `npx tsx src/scripts/check_gate_coverage.ts` reports **no gate red that this
@@ -397,11 +492,26 @@ remote CI on the PR is the authoritative gate
 ## Blockers
 
 ### blocker: august-program-disposition
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Blocks:** Phase 1 — the two mechanical repairs
+- **Resolution 2026-08-13 — (c) archive, decided by the file's own
+  pre-registered falsifier rather than by preference.** Wave 1 was required to be
+  one release and shipped as three separate ones (SHL pre-archived, SFF PR #1325
+  at 06:59, SLI PR #1330 at 10:04, no shared files), plus a Wave-5 item landing
+  ahead of its open Wave-0 prerequisites. Both falsifier clauses fired, so the
+  coordination layer is overhead by its own definition and its Risk 1 rollback
+  applies. The three siblings' bare-filename back-links and the moved file's own
+  eight outbound links were re-pointed and re-depthed by hand — neither the
+  archiver nor `check_references` sees that link shape. `check_roadmap_trackable`
+  now reports `34 active roadmap(s) — all parseable`.
+  **Correction to the option list below, for the record:** it claimed the gate
+  names two remedies. Six conditions satisfy it, `later/` and `stubs/` among them,
+  and a single `[~]` or `[-]` per phase counts as a checkbox — so (b) was cheaper
+  than described and a fourth option existed unlisted. The archival still wins,
+  because it is the one the file asked for.
 - **What to do:**
-  1. Decide what `agents/roadmaps/road-to-august-program.md` is. It has 243
+  1. Decide what `road-to-august-program.md` is. It has 243
      lines, 8 sections, zero checkboxes and zero `Phase` headings, and
      coordinates three sibling roadmaps that each back-link to it.
   2. Pick one, knowing what each asserts:
@@ -417,12 +527,19 @@ remote CI on the PR is the authoritative gate
   recorded in this roadmap with one sentence of reasoning.
 
 ### blocker: release-integrity-blockers
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
+- **Resolution 2026-08-13 — all three decided and recorded in that roadmap, so it
+  archived rather than moving to `later/`.** (b) confirmed for the release head
+  with its recurrence rate published; ADR-228 for the carrier paths; ADR-221
+  accepted. Two of the three carried a stale premise, both corrected in place
+  rather than worked around: the cadence question was already answered by a
+  council 2/2 on 2026-08-11 and only its `Status:` was open, and the carrier
+  blocker pointed at a remedy ADR-226 declined the same morning.
 - **Blocks:** Phase 3 — the roadmap that cannot archive
 - **What to do:**
   1. Read the three open blockers in
-     `agents/roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md`:
+     `agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-release-integrity.md`:
      `release-head-cadence-decision`, `carrier-install-paths-decision`,
      `adr-221-acceptance`.
   2. For each, either record the decision in that roadmap and flip
@@ -432,8 +549,19 @@ remote CI on the PR is the authoritative gate
   moved to `later/` with the reason recorded.
 
 ### blocker: ci-reachability-decision
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
+- **Resolution 2026-08-13 — option (d), the shrink-only baseline as the standing
+  answer, plus the one wiring that gives it teeth.** Recorded in
+  `docs/contracts/ci-green-floor.md` § The local-only backlog. The two gates
+  wired are the *mechanism*, not backlog members: the parity gate had no remote
+  reach itself, and `check_gate_coverage` ran nowhere at all. Draining the rest
+  was priced and declined — 23 gates to reach the old floor, 3 of 22 sampled
+  already red, i.e. ~23 merge-blocking reds on the first run of the only required
+  check. § 5's floor red is cleared by a re-anchor argued in the manifest rather
+  than typed: the 443 baseline counted 167 phantoms, so the population fell
+  without reach being lost, and the new 340 sits below the measured 359 exactly
+  as `gate-authoring.md` requires.
 - **Blocks:** Phase 4 — close the class, or state why it stays open
 - **Observed 2026-08-13, a two-gate contradiction worth folding into the choice:**
   `archive_completed_roadmaps.ts:151` treats `agents/evidence/` as a

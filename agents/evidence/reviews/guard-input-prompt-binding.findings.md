@@ -36,7 +36,14 @@ its own findings caused, and the extra part is named here rather than absorbed
 silently by the re-bind:
 
 - `578b33663` — `docs(roadmap): capture the four gates that are red on main and
-  unseen`. Adds `agents/roadmaps/road-to-local-only-gate-reds.md` and
+  unseen`. Adds `agents/roadmaps/road-to-local-only-gate-reds.md` and <!-- ref-ignore -->
+  <!-- The roadmap was archived on 2026-08-13. The path above is left verbatim
+       because this record states what THAT COMMIT added, and it added it there;
+       re-pointing it at archive/ would make a true historical statement false.
+       archive_completed_roadmaps treats agents/evidence/ as a frozen prefix and
+       does not migrate it, while check_references requires it to resolve — the
+       two-gate contradiction road-to-local-only-gate-reds recorded under its
+       ci-reachability-decision blocker. This marker is the documented discharge. -->
   regenerates `agents/roadmaps-progress.md`. **The reviewer never saw either
   file.** It is a roadmap capturing four pre-existing gate reds unrelated to this
   change, added on the operator's explicit instruction after the review closed.

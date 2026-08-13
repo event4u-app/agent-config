@@ -76,6 +76,41 @@ behaviour is pinned in `tests/scripts/check_release_highlights.test.ts` — a
 surviving marker warns and exits 0, verified to go red when that branch is
 flipped — so reversing the decision stays a one-line diff a test notices.
 
+**The conceded recurrence is now a measured rate, not a risk — 2026-08-13.**
+Re-confirming the decision without publishing this number would leave the
+paragraph above reading as a cautious forecast when it has become a
+description. Every release tagged after the 2026-08-11 decision shipped marked
+lines:
+
+| Release | Marked lines in the shipped head | Fields |
+|---|--:|---|
+| 10.0.0 | 0 | curated before merge |
+| 10.1.0 | 2 | Behaviour changes · Honest nulls |
+| 10.2.0 | 3 | Behaviour changes · Security and correctness · Honest nulls |
+| 10.3.0 | 2 | Behaviour changes · Default changes + migration |
+
+**3 of the 3 releases since, 7 marked lines**, all three tags published
+(`git tag --list '10.*'`), 10.1.0 and 10.2.0 now in
+[`docs/archive/CHANGELOG-pre-10.3.0.md`](../archive/CHANGELOG-pre-10.3.0.md) and
+10.3.0 still live in [`CHANGELOG.md`](../../CHANGELOG.md).
+
+**The decision stands, and the number does not by itself reverse it.** The
+rejected branch was rejected on a structural argument the rate does not touch:
+the marker is present *by construction* on every release carrying a
+substantiated category, so a hard block is red on the first run of every such
+release regardless of how diligent curation is. A 3-of-3 rate is evidence that
+curation is not happening, not evidence that blocking would be cheap.
+
+What the rate *does* change is what a future revisit is allowed to assume. Two
+falsifiers are pre-registered here so the next reader inherits a test rather
+than a habit: **(1)** a marked line reaches a consumer-visible surface that is
+*not* rewritable in place — an npm description, a GitHub Release body that
+nobody edits after the fact — at which point "unpolished, never false" stops
+being the whole story; or **(2)** retro-curation stops happening at all, i.e. a
+shipped marked line survives its next release cycle uncurated, which would mean
+the cadence named here is not the cadence being practised. Either one reopens
+the (a)/(b) choice with a stronger premise than 2026-08-11 had.
+
 Why it is a *head* and not a trailer: reviewers of 9.9.0 and 9.10.0 repeatedly
 could not tell, from a generated commit log, which entries change consumer
 behaviour, which need migration, which are internal gate repairs, and which

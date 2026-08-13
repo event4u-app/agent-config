@@ -172,6 +172,41 @@ The reverse direction (`local_only:`) is the more dangerous one and the manifest
 says so out loud: a gate that only runs locally is the direction that lets real
 defects merge. Prefer wiring it into a workflow over declaring it.
 
+### The local-only backlog — decided 2026-08-13
+
+**166 of 250 local gates have no remote reach, and that is an accepted standing
+state with a shrink-only ratchet, not an open task.** The number was 0 until the
+same day, by construction: `check_ci_local_parity` built its CI-side set by
+regexing raw workflow text for `task <name>`, and several workflow *comments*
+contain the literal string `task ci` while stating that no workflow invokes it.
+The prose documenting the gap was what suppressed the gate that would have
+reported it.
+
+**What was done instead of draining it.** The two gates that make the mechanism
+observable at all were wired into `consistency.yml`, the only required status
+check: `check_ci_local_parity` itself — which existed to report gates with no
+remote reach and had none — and `check_gate_coverage`, which reads every other
+gate's floor and was referenced by **nothing**, not even `task ci`, so its reds
+were visible only to whoever ran the script by hand. Measured cost: 0.53 s for
+the parity gate against ~225 s of headroom under the 5-minute per-job ceiling in
+[`ci-cost-budget.md`](ci-cost-budget.md).
+
+**Why the backlog is not drained.** Reaching the old coverage floor needed 23
+gates wired. A 22-gate sample run individually found **3 already red** locally,
+so wiring at that rate lands on the order of 23 merge-blocking reds on the first
+run of the only required check — the "gate that lands as N instant blockers"
+shape this repository has refused before, and the same reason the 166 were
+baselined rather than hard-failed. Serial runtime is not the obstacle: the sample
+mean was 0.92 s, so all 166 is roughly 154 s.
+
+**What the standing answer buys, stated narrowly.** A *new* gate registered in
+`task ci` with no workflow reds immediately, and the ratchet is now remotely
+enforced rather than local-only. What it does not buy: any of the existing 166
+running remotely. Draining happens the way this entry's own drain did — by wiring
+a gate into a workflow, or by declaring it under `local_only:` with a structural
+reason of the shape the two existing declarations establish (CI has no commit; CI
+has no staged set), never by growing the declaration list to move a number.
+
 ## What this contract is not
 
 - **Not a list of "all green workflows".** Advisory and phantom

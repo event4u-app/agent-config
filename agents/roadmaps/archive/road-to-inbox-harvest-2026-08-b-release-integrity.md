@@ -346,8 +346,23 @@ default flip); posting a mechanical review-summary comment on the release PR
 ## Blockers
 
 ### blocker: release-head-cadence-decision
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution 2026-08-13 — (b), and the question was already half-answered when
+  this blocker was written.** (b) had been picked, argued and shipped on
+  2026-08-11 in `docs/contracts/CHANGELOG-conventions.md:48` ("*The cadence is
+  retro-curation*"), on an AI-council 2/2 convergence, and step 1.4 is `[-]`
+  cancelled citing exactly that. So `Resolved when` was half-met all along: 1.2
+  had recorded the pick in the contract; only this `Status:` was never flipped.
+  What the 2026-08-13 pass added is the number the concession was missing. Every
+  release tagged since the decision shipped marked lines — **3 of 3, 7 lines
+  total**: 10.1.0 two fields, 10.2.0 three, 10.3.0 two, against a curated 10.0.0.
+  All three tags are published. The rate is now in the contract next to the
+  "accepts recurrence" paragraph, together with two pre-registered falsifiers, so
+  the next reader inherits a test rather than a habit. **(b) stands**: the rate
+  shows curation is not happening, which is not the same as showing a hard block
+  would be cheap — the marker is present by construction on every substantiated
+  release, so blocking is a guaranteed first-run red regardless of diligence.
 - **Blocks:** step 1.4 only. Steps 1.1-1.3 proceed either way.
 - **What to do:** Pick exactly one — (a) hard-block the placeholder string in the
   final release head, or (b) rewrite the head comment in
@@ -371,8 +386,26 @@ default flip); posting a mechanical review-summary comment on the release PR
 - **Resolved when:** (a) or (b) is named here and 1.2 records it in the contract.
 
 ### blocker: carrier-install-paths-decision
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution 2026-08-13 —
+  [`ADR-228`](../../docs/decisions/ADR-228-global-install-does-not-emit-paths.md):
+  the global install does not emit `paths:`; the 24 stay as accepted
+  over-delivery.** The premise held on re-measurement (109 shared rules, 0
+  byte-identical, 0 prose divergence, **24** `paths:` disagreements), but the
+  ownership claim below did not: `ADR-226`, accepted the same day, declines this
+  roadmap's named remedy (`--layer` suppression) for this repository, which left
+  install-time emission as the only remaining lever rather than something already
+  owned elsewhere. What decided it is the identity of the 24, not their count —
+  at least six are safety or governance floors carrying an Iron Law
+  (`lethal-trifecta-guard`, `low-impact-corpus-privacy-floor`,
+  `source-confidentiality`, `ui-audit-gate`, `doc-screenshot-hygiene`,
+  `image-likeness-and-rights`, and `roadmap-progress-sync` carries three), and
+  `ADR-227` records that path-scoped rules are **not re-injected after
+  `/compact`**. Scoping them globally would convert a safe over-delivery into a
+  silent under-delivery exactly where silence costs most. The second half of
+  `Resolved when` is discharged by the citation added to
+  `road-to-carrier-layer-convergence` § Non-goals.
 - **Blocks:** the fix for the 24 `paths:` disagreements, which lives in
   `road-to-carrier-layer-convergence.md` Phase 3. Nothing here is blocked — 2.3
   proceeds regardless.
@@ -382,8 +415,20 @@ default flip); posting a mechanical review-summary comment on the release PR
 - **Resolved when:** An ADR records the decision and that roadmap's Phase 3 cites it.
 
 ### blocker: adr-221-acceptance
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution 2026-08-13 — accepted.**
+  [`ADR-221`](../../docs/decisions/ADR-221-host-native-first-ladder.md) is
+  `status: accepted`, its § Status carries the acceptance and its reason, and
+  `regenerate_index --dir docs/decisions` has re-rendered the row (a one-line
+  diff; the generator defaults to `docs/adr`, which does not exist here, so the
+  `--dir` is required and a bare run exits 2 without writing). What promoted it
+  was not "already practised" — it was that `ADR-226` and `ADR-227`, both accepted
+  the same day, argue in the ladder's exact terms while being unable to cite it.
+  Acceptance obliges only what § Consequences names: a one-paragraph rung-1/2
+  check before new own-runtime machinery, and a per-host retirement judgement on
+  touch. No gate ships, because the ADR's own § Alternatives rejects one as
+  satisfiable by assertion — that rejection is part of what is accepted.
 - **Blocks:** nothing here. Named because four of the five reviews already treat
   host-native-first as settled doctrine while the record is not.
 - **What to do:** Accept or reject

@@ -1,6 +1,6 @@
 ---
 adr: 221
-status: proposed
+status: accepted
 date: 2026-08-10
 decision: host-native-first-ladder
 supersedes: —
@@ -23,9 +23,27 @@ review_trigger: >-
 
 ## Status
 
-**Proposed** · 2026-08-10. Codifies an ordering the tree already practices;
-acceptance is the maintainer's call. No existing surface is migrated by this
-record — it binds *new* capability work and *touched* surfaces only.
+**Accepted** · 2026-08-13 (proposed 2026-08-10). Codifies an ordering the tree
+already practices. No existing surface is migrated by this record — it binds
+*new* capability work and *touched* surfaces only.
+
+**What accepted the record, stated because "already practiced" is the weakest
+possible reason to promote one.** Two ADRs accepted on 2026-08-13 reason in this
+ladder's exact terms while being unable to cite it:
+[`ADR-226`](ADR-226-package-repo-keeps-both-rule-layers.md) picks the host's own
+`--layer` / `claudeMdExcludes` over a package-side mechanism, and
+[`ADR-227`](ADR-227-paths-scoping-is-saturated-not-a-corpus-lever.md) grounds its
+whole argument on the host reading `paths:` — a rung-1 fact taken from the
+capability layer rather than from inference, which is this record's second
+corollary. An ordering that two same-day structural decisions apply
+independently is being followed; leaving it `proposed` meant each future
+instance re-deriving it.
+
+Acceptance obliges exactly what § Consequences states and nothing more: one
+paragraph showing rungs 1–2 were checked before new own-runtime machinery, and
+a per-host retirement judgement when a surface is next touched. **No gate ships
+with this acceptance** — § Alternatives rejects one on its own terms, and that
+rejection is part of what is accepted here, not an omission.
 
 ## Context
 

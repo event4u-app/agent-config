@@ -12,11 +12,25 @@ surface it lacked.
 The 9.30→9.35 review span asks, as a P0, to "bring divergent carrier pairs to 0".
 There is nothing to bring to zero: all 109 pairs carry byte-identical prose, so
 convergence is already total on every governed sentence. The number that can
-move is **24** — the pairs disagreeing on `paths:` — and it is blocked on
-`carrier-install-paths-decision` (owner: maintainer) in
-`road-to-carrier-layer-convergence.md`, not on engineering effort. A plan phrased
-as "divergence → 0" therefore describes no work; it reads as 109 units of debt
-where 24 units of *decision* exist.
+move is **24** — the pairs disagreeing on `paths:` — and it was blocked on
+`carrier-install-paths-decision` (owner: maintainer), not on engineering effort.
+A plan phrased as "divergence → 0" therefore describes no work; it reads as 109
+units of debt where 24 units of *decision* exist.
+
+**Resolved 2026-08-13 —
+[`ADR-228`](../../../docs/decisions/ADR-228-global-install-does-not-emit-paths.md):
+the 24 stay, as accepted over-delivery.** At least six of them are safety or
+governance floors carrying an Iron Law, and path-scoped rules are not re-injected
+after `/compact` (`ADR-227`), so emitting `paths:` globally would convert a safe
+over-delivery into a silent under-delivery. The 24 are now a recorded acceptance;
+`report_carrier_divergence` still labels them ACTIONABLE and that label should be
+read against this record.
+
+Correction to the sentence above, kept rather than silently rewritten: it located
+the blocker in `road-to-carrier-layer-convergence.md`, where it never existed —
+the only definition was in `road-to-inbox-harvest-2026-08-b-release-integrity.md`.
+A pointer to the wrong owner is why a decision can sit unmade while two documents
+each believe the other holds it.
 
 ## What was measured (2026-08-10)
 

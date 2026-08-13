@@ -305,8 +305,8 @@ gates:
 
   - id: check_ci_local_parity
     argv: ["--quiet"]
-    min_scanned: 380
-    corpus: "CI + local gate invocations parsed from .github/workflows + taskfiles (443 at baseline)"
+    min_scanned: 340
+    corpus: "CI + local gate invocations parsed from .github/workflows + taskfiles (360 measured 2026-08-13: 109 CI + 251 local)"
     status: enforced
     note: >
       Registered 2026-08-02. It already emitted the contract line on every path,
@@ -317,6 +317,27 @@ gates:
       taskfile set, so the only plantable violation is a new file under
       .github/workflows — a surface the canary must not write to. Reported
       UNPROVEN by --canary, never green.
+      FLOOR RE-ANCHORED 380 → 340 on 2026-08-13, and the direction deserves an
+      argument rather than a diff.
+      The claim is NOT that 443 minus phantoms equals 360 — that arithmetic does
+      not close, and pretending otherwise would be the false-precision this
+      manifest exists to prevent. 443 was measured on 2026-08-02 against a
+      different tree: both a CI-side set inflated by 167 phantoms AND a smaller
+      local set than today's. The two totals are not comparable term by term.
+      What IS comparable is the repair's own before/after on ONE tree, which is
+      the measurement that matters here: CI-side 273 → 106, because gate names
+      were being read out of workflow COMMENTS by an extraction bug this gate's
+      own repair removed. So the fall is entries that never existed ceasing to be
+      counted, not reach being lost — the discriminator false-green.md § 5 asks
+      for ("a legitimate ratchet lowers severity while keeping reach"). Reach over
+      the real corpus is one unit HIGHER than before this change: the two gates
+      wired into consistency.yml were previously reachable from neither side.
+      Why 340 and not 360, the measured value: gate-authoring.md § registration
+      requires a floor BELOW the live count, because a floor pinned at today's
+      number reds on the very change that legitimately retires one unit. 340
+      leaves ~20 units (~5.5%) of headroom while still catching the collapse this
+      floor exists for — a re-broken extractor would drop the count by 164, not
+      by 20.
 
   - id: check_site_links
     argv: []

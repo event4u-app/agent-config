@@ -5,10 +5,10 @@ complexity: structural
 # Road to the August program — the four 2026-08-12 roadmaps, re-planned as one sequence
 
 > **The ask (2026-08-12):** re-plan the four roadmaps produced today —
-> [`road-to-subagent-lifecycle-integrity`](road-to-subagent-lifecycle-integrity.md) (SLI),
-> [`road-to-symptom-driven-harvest-loop`](archive/road-to-symptom-driven-harvest-loop.md) (SHL — **fully executed and archived** at adoption),
-> [`road-to-source-first-frontend`](road-to-source-first-frontend.md) (SFF),
-> [`road-to-design-system-onramp`](archive/road-to-design-system-onramp.md) (DSO) —
+> [`road-to-subagent-lifecycle-integrity`](../road-to-subagent-lifecycle-integrity.md) (SLI),
+> [`road-to-symptom-driven-harvest-loop`](road-to-symptom-driven-harvest-loop.md) (SHL — **fully executed and archived** at adoption),
+> [`road-to-source-first-frontend`](../road-to-source-first-frontend.md) (SFF),
+> [`road-to-design-system-onramp`](road-to-design-system-onramp.md) (DSO — **completed and archived** on this branch) —
 > in combination, with what each later roadmap learned that the earlier ones
 > did not know. This file is the **program layer**: it does not repeat the
 > children's evidence (their Context sections stay authoritative), it
@@ -21,9 +21,9 @@ complexity: structural
 > this program inherits that pin. *(proposal)* marks program-level suggestions.
 
 > **Source (consumed inbox):** the 2026-08-12 `optimize-agent-config` batch under
-> [`agents/tmp.old/`](../tmp.old/) — one chat transcript plus these five roadmap
+> [`agents/tmp.old/`](../../tmp.old/) — one chat transcript plus these five roadmap
 > drafts, authored in a session that did not have this repo's source in context.
-> Adopted by [`/analyze:inbox`](../../src/domains/analysis-workbench/analyze/inbox/command.md);
+> Adopted by [`/analyze:inbox`](../../../src/domains/analysis-workbench/analyze/inbox/command.md);
 > the verification that decided what survived is the next section.
 
 ## Verification at adoption (2026-08-12, tip `1432c7a45`)
@@ -52,13 +52,13 @@ section is the record of why the text differs from what the author wrote.
 **X8 — the adopt-the-code duty collides with an existing Iron Law, and no child
 noticed.** SFF Phase 2 Step 3 wants *"adaptation of the artifact's code is the
 default; a from-scratch re-derivation is a deviation"*. But
-[`code-provenance`](../../src/rules/code-provenance.md) opens with
+[`code-provenance`](../../../src/rules/code-provenance.md) opens with
 `NEVER ADOPT EXTERNAL CODE VERBATIM` and routes any conscious borrow through a
 license check plus a ledger entry. Shipped as drafted, the two rules would
 contradict each other on the same act. The resolution is a scope line, not a
 weakening of either: a **user-supplied design artifact is the user's own
 material**, not third-party external code — the same carve-out
-[`content-quoting-floor`](../../src/rules/content-quoting-floor.md) already makes
+[`content-quoting-floor`](../../../src/rules/content-quoting-floor.md) already makes
 for user-owned text. SFF Phase 2 Step 3 carries that sentence; without it the
 duty is unshippable.
 
