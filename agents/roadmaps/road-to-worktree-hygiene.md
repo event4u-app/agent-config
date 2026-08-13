@@ -74,6 +74,47 @@ duty, not just a permission gate:
 - [ ] Present the safe set as a list and remove **only after explicit approval** —
       per `scope-control`, branch and worktree deletion is permission-gated, and
       a bulk sweep does not inherit a single earlier approval.
+
+      **Re-presented 2026-08-13 on maintainer instruction ("re-run the inventory
+      first, then remove"). Still NOT removed, and the three findings below are
+      why — none of them was knowable on 2026-08-05.**
+
+      **Finding 1 — the inventory misclassifies when run from inside a worktree,
+      and the error is total.** Same binary, same repo, same minute:
+
+      | Invoked from | registered | safe | review | non-standard-location |
+      |---|---:|---:|---:|---:|
+      | inside `.claude/worktrees/<branch>` | 304 | **0** | 280 | 278 |
+      | the main checkout | 304 | **181** | 99 | 81 |
+
+      The conventional-worktree-root test resolves relative to the invocation
+      directory, so run from inside a worktree it judges every sibling worktree
+      "outside the conventional roots" and the safe set collapses to empty. A
+      maintainer who ran the tool from the wrong directory would read "nothing to
+      clean" and believe the estate was fine. This is the same
+      resolved-against-the-wrong-root shape this package has now hit in several
+      gates; it is recorded here as a defect against the tool, not worked around.
+
+      **Finding 2 — the estate grew, it did not shrink.** 249 registered on
+      2026-08-05, **304** today; safe 143 → **181**. Eight days, +55
+      registrations. The unapproved plan did not decay into a smaller problem.
+
+      **Finding 3 — the approved predicate is STRICTER than the tool's, and the
+      gap is not cosmetic.** The approval names three cumulative conditions:
+      merged, untouched **>60 days**, and absent from any live session's worktree
+      list. The tool's `safe` is merged + clean + conventional root + no git
+      activity for **48 hours** — and it has no cross-session check at all. 48
+      hours is not 60 days, and three other agent sessions are live on this
+      repository right now (one of them is the session writing this line, running
+      inside a worktree that would be in scope). Executing the tool's 181-item
+      set would therefore be removal under a predicate the maintainer did not
+      approve — the exact substitution the approval was written to prevent.
+
+      **What that leaves.** The removal needs either the tool taught the two
+      missing conditions, or an explicit approval of the 181-item set under the
+      predicate the tool actually implements. Both are maintainer calls, and the
+      second is a Hard-Floor bulk deletion that names its object. Nothing was
+      deleted.
       <!-- PRESENTED 2026-08-05, removal NOT run: `inventory --plan` emits the 143
       `git worktree remove` + `git branch -d` pairs (never `-D`, so git itself
       re-checks the merge). Running them is a Hard-Floor bulk deletion needing the
