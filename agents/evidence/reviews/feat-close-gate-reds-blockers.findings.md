@@ -1,37 +1,26 @@
 # Findings: feat-close-gate-reds-blockers
-<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: 6de6eb32b0b006cd5f748b998025a9f7e27931ecab984808c09621ac25921a45 | diff: e9d2efc389b81c5721374d0fc37829fabd046e22 | reviewer: r2-fresh-subagent-feat-close-gate-reds-blockers | prompt_hash: 969809a91f5273d7f7d8d49bb2ac809c3deb5b7d94cbf21534517b2ca82b08d6 -->
+<!-- completion-review: v1 | reviewed: 2026-08-13 | scope: faf1525aa307bd3db5bd628edeb27bc024a8459a7ec9bb6a76af8d76a49449e3 | diff: b271d078b70d3c177571fc152cc00315b5780aba | reviewer: r2-fresh-subagent-feat-close-gate-reds-blockers | prompt_hash: 8574b226ee70a51014ad4cb8db428027f24e0cb733cc80393eaa51d90cd5901a -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: e9d2efc389b81c5721374d0fc37829fabd046e22
-  scope_hash: 6de6eb32b0b006cd5f748b998025a9f7e27931ecab984808c09621ac25921a45
+  diff_sha: b271d078b70d3c177571fc152cc00315b5780aba
+  scope_hash: faf1525aa307bd3db5bd628edeb27bc024a8459a7ec9bb6a76af8d76a49449e3
   roadmap: agents/roadmaps/archive/road-to-local-only-gate-reds.md
-  roadmap_hash: a8d02b1532074468ffc5790dda5ffa8df72fe7d4d6462d4619de26f56d45cd6a
+  roadmap_hash: b01511dd3994dda701b7f628182ae7c042dce017b27722b314d277cab521a951
   ac_hash: 1438494c3dc1452f2504e2f8565d58313c734da2e18642969cdd7be17aaf0863
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-08-13T09:54:11Z
+dispatched: 2026-08-13T13:50:26Z
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
-**Skipped:** no code surface for this completion — records, contracts, workflow wiring and manifest values, plus a merge with main; `check_completion_review` classifies the diff as 0 code paths of 20, scope 6de6eb32b0b006cd5f748b998025a9f7e27931ecab984808c09621ac25921a45, declared 2026-08-13
+| 1 | medium | src/config/gate-violation-baselines.json:7 | The `ci-parity:local-only` note records the post-wiring parity population as "357 -> 359". Measured on this tree it is **360** (109 CI + 251 local). The same wrong figure survives at `agents/roadmaps/archive/road-to-local-only-gate-reds.md:563` ("the new 340 sits below the measured 359"), while the same roadmap states 360 correctly at :124 and :428 — so the branch contradicts itself in three places. Cause: the delta was computed as CI-side +2 only; wiring `check_gate_coverage` into the `task ci` chain also added a local-side unit. The committed skip declaration asserts "Two committed numbers were stale as a consequence (359 → 360) ... Both corrected" — neither site was corrected. | fixed | Fixed in 5ca429079: both stale figures corrected to 360, with the intermediate 359 named as the CI-side-only reading. |
+| 2 | medium | docs/contracts/ci-green-floor.md:177 | "**166 of 250 local gates** have no remote reach" pairs a post-wiring numerator with a pre-wiring denominator. Post-wiring the local set is 251 (166 of 251); pre-wiring it was 167 of 250. The stated pair describes neither state, and this is the sentence the contract leads its new section with. | fixed | Fixed in 5ca429079: reads 166 of 251, with both comparable pairs (167/250 before, 166/251 after) stated. |
+| 3 | medium | docs/contracts/ci-green-floor.md:194 | The argument that justifies keeping the backlog undrained conflates two different populations. "Reaching the old coverage floor needed 23 gates wired. A 22-gate sample run individually found 3 already red, so wiring at that rate lands on the order of 23 merge-blocking reds" — at 3/22 (13.6%), wiring the 23 gates that reach the old floor yields ~3 reds; ~23 reds requires wiring all 166. The option actually on the table (wire 23, keep the 380 floor) is therefore priced at roughly one eighth of the stated cost and is never compared against lowering the floor. Same conflation at `agents/roadmaps/archive/road-to-local-only-gate-reds.md:423` and :559. | fixed | Fixed in 5ca429079: the 8x mispricing is corrected and a PARTIAL drain is explicitly kept on the table — the sweep is what is declined. |
+| 4 | medium | src/config/gate-coverage.yml:339 | The headroom argument for the 380 -> 340 re-anchor rests on a failure mode this floor cannot detect: "a re-broken extractor would drop the count by 164, not by 20". 164 is 273 minus 109, the magnitude of the past comment-reading bug, which **inflated** the count — a `min_scanned` floor never fires on inflation. Measured downward break modes are 109 (workflow side lost), 251 (local closure lost), or 14 for the partial case of losing workflow task-expansion (360 -> 346) — and 346 passes the new 340 floor while it would have failed 380. So the one realistic partial regression now slips through, and the sentence offered as reassurance does not describe it. The rest of the note (false-green.md §5 reach discriminator, gate-authoring.md floor-below-live-count) checks out. | fixed | Fixed in 5ca429079: replaced with what the floor actually guards (collapses of 100+ units) plus the honest cost, a ~14-unit partial break passing 340. |
+| 5 | medium | agents/roadmaps/road-to-inbox-harvest-2026-08-b.md:130 | Archiving `road-to-inbox-harvest-2026-08-b-release-integrity.md` left its parent's family table pointing at the pre-archive path. The same table already re-points three archived siblings to `archive/...`, so the omission is inconsistent with the file's own convention, and step 2.1 just below still lists `-release-integrity` Phase 5 as open cheap work. The link is a bare filename, so `check_references` cannot see it (its path regex requires a known root segment) — this is exactly the 530-dead-link class the branch's own roadmap names at :196. | fixed | Fixed in 5ca429079: link re-pointed, and the defect class SEARCHED — 38 active roadmaps vs 485 archived files, 2 dangling, both fixed, sweep now 0. |
+| 6 | low | .github/workflows/consistency.yml:209 | The cost paragraph introduces two new steps but measures only the cheaper one: "Cost is negligible: 0.53 s measured for the parity gate". `check_gate_coverage` forks all 35 registered gates and measures ~19.4 s locally, roughly 50x the cited figure and ~26% on top of the 75 s this job is recorded at in ci-cost-budget.md. The conclusion still holds (well under the 300 s ceiling), but the evidence covers the minority of the added cost, and the 75 s row becomes stale. Repeated at docs/contracts/ci-green-floor.md:190 and the archived roadmap :420. | fixed | Fixed in 5ca429079: both steps timed (0.53 s + 18.6 s, ~26% on top of 75 s); the negligible claim is withdrawn. |
+| 7 | low | agents/roadmaps/archive/road-to-local-only-gate-reds.md:183 | The archival falsifier for `road-to-august-program` states PR #1325 and PR #1330 shipped "with **zero shared files**". They share `agents/roadmaps-progress.md`. The shared file is the generated dashboard and carries no integration weight, so the conclusion survives — but the claim as written is false, and the surrounding figures (06:59, 10:04, five intervening first-parent merges) were verified exact. | fixed | Fixed in 5ca429079: corrected to "no substantive file"; the conclusion survives since the shared file is the generated dashboard. |
 
-## What was attempted, and why this is a skip rather than a clean bill
-
-An independent R2 reviewer WAS dispatched over this scope and did **not** complete: it terminated on an account spend limit after 20 tool calls, having written nothing. No verdict exists and none is claimed here. Per the hard-blocker rule this is surfaced rather than retried — a spend ceiling is not cleared by trying again.
-
-What was done instead is **self-verification, which is not a review** and is labelled as such. Every number this branch commits was re-derived by running the command, not by reading the prose:
-
-- 109 shared rules / 24 `paths:` disagreements — `report_carrier_divergence`.
-- All six rules named as carrying an Iron Law do carry one; `roadmap-progress-sync` carries three — grep over the rule headings.
-- 3-of-3 release recurrence, 7 marked lines — counted per release head against `git tag --list`.
-- `undeclared_local_only` 167 → 166 and the parsed population — read from the gate exit code and its green summary line.
-
-That self-check found a real defect this branch had introduced, recorded here because a skip that hides one is worse than no artefact: wiring `check_gate_coverage` into `consistency.yml` made it CI-reachable while it remained in no local chain, i.e. `undeclared_ci_only` — the mirror image of the defect this roadmap closed, whose own message reads *"a contributor discovers this failure only after pushing"*. It was missed on the first pass because the verification grep was keyed on `CI ↔ local parity`, a line printed only on the green path. Repaired by wiring the gate into the `task ci` chain; parity now exits 0 at 360.
-
-Two committed numbers were stale as a consequence (359 → 360) and one committed claim over-reached (that 443 minus the phantoms explains today's total — it does not, the two totals are not comparable term by term). Both corrected.
-
-**Residual risk, stated rather than resolved:** the floor lowering 380 → 340 and the two additions to the only required status check have had no independent eyes on them. That is the part a reviewer would most usefully have checked.
-
-**Re-bound after a merge with `main` (PR #1331).** The merge changed the review scope, which under contract §2.1 forces a re-bind of this declaration. It brought no code into this branch subject — the only shared file is a roadmap whose checkboxes main advanced and whose back-link this branch re-pointed — so the skip classification is unchanged and no new claim is made about it.
+**Re-bound after the third merge with `main`.** PR #1333 merged an earlier state of this branch, so the seven fixes above are NOT yet on the trunk — the defects they repair are live there. The merge changed the review scope and contract §2.1 forces a re-bind; it brought no new subject matter into this branch, so no new claim is made about it.

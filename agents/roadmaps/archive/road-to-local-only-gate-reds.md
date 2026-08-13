@@ -180,7 +180,11 @@ re-derive them.
       as SLI Phase 1 + SFF Phase 1 Steps 1+3 + SHL Phase 1, **one release**. It
       shipped as one roadmap already archived before the program existed (SHL),
       plus PR #1325 at 06:59 (SFF) and PR #1330 at 10:04 (SLI) — three hours and
-      five first-parent merges apart, with **zero shared files**. The second
+      five first-parent merges apart, sharing only the generated dashboard
+      (`agents/roadmaps-progress.md`), i.e. no substantive file. The first
+      draft said "zero shared files", which the R2 review falsified; the
+      conclusion survives because a regenerated dashboard is not evidence of a
+      co-timed release. The second
       falsifier clause fired too: SLI's own PR flipped Phase 5 Step 1, a Wave-5
       item, while the Wave-0 spikes it depends on stayed open. Wave 1's stated
       exit — a baseline after ≥20 dispatches — is still unmet.
@@ -560,7 +564,7 @@ remote CI on the PR is the authoritative gate
   already red, i.e. ~23 merge-blocking reds on the first run of the only required
   check. § 5's floor red is cleared by a re-anchor argued in the manifest rather
   than typed: the 443 baseline counted 167 phantoms, so the population fell
-  without reach being lost, and the new 340 sits below the measured 359 exactly
+  without reach being lost, and the new 340 sits below the measured 360 exactly
   as `gate-authoring.md` requires.
 - **Blocks:** Phase 4 — close the class, or state why it stays open
 - **Observed 2026-08-13, a two-gate contradiction worth folding into the choice:**
