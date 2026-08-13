@@ -71,13 +71,24 @@ Scripts resolve all paths **skill-relative** (per
 
 ./scripts-run <skills-root>/corpus-grounding/scripts/ground ground \
   --manifest <skills-root>/<domain-skill>/data/manifest.json \
-  "luxury e-commerce" [--context '{"data_heavy": true}'] [--persist DIR]
+  "luxury e-commerce" [--context '{"data_heavy": true}'] [--persist DIR] \
+  [--variance 1-10] [--motion 1-10] [--density 1-10]
 
 ./scripts-run <skills-root>/corpus-grounding/scripts/ground validate --manifest …
 ```
 
 `<skills-root>` is wherever skills are deployed (`~/.claude/skills/` for
 Claude Code installs; `src/skills/` inside this repo).
+
+**The three `ground` dials are optional 1-10 preferences, and unset means
+unset** — a dial you do not pass changes nothing, so the no-flag result is
+byte-identical to what it was before they existed. `--variance` biases which
+style is **selected** from the rows the corpus returned (never which rows come
+back), and when it changes the pick away from the grounding rule's own choice
+the run says so in its evidence gaps. `--motion` needs a `gsap` domain in the
+manifest and reports when a tier matches nothing. `--density` overrides the
+spacing scale. All three render in the text output and in a persisted
+`MASTER.md`, not only under `--json`.
 
 ## Output format
 
