@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 31 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **40** open blockers, **9** need you → `agent-config gates`
+> 31 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **41** open blockers, **9** need you → `agent-config gates`
 
 ## Overall
 
-**281 / 410 steps done · 69%**
+**282 / 410 steps done · 69%**
 
 ```text
 ████████████████████████████░░░░░░░░░░░░   70%
@@ -40,7 +40,7 @@
 | 22 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 | 23 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
 | 24 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 8 | 9 | 1 | 0 | 0 | █████░░░░░ 53% |
-| 25 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 11 | 8 | 0 | 2 | 0 | ████░░░░░░ 42% |
+| 25 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 10 | 9 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | █████░░░░░ 47% |
 | 26 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 27 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 28 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
@@ -718,17 +718,41 @@ _1 blocker resolved._
 
 ### [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md)
 
-**Road to subagent lifecycle integrity — turn three production symptoms into deterministic guards** — 8 / 19 done (42%)
+**Road to subagent lifecycle integrity — turn three production symptoms into deterministic guards** — 9 / 19 done (47%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Spikes — pin the host, reproduce the two upstream premises | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
+| 0 | Spikes — pin the host, reproduce the two upstream premises | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
 | 1 | Measure — lifecycle capture, no behaviour change | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
 | 2 | Return-channel integrity — validate, fall back to disk, retry once | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | Runaway containment — spawn guard, ledger-aware stop gate, shadow stop-loss | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | Role axis binds on payload, not env | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 5 | Tier routing has a caller — measure whether it moved the distribution | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
 | 6 | Frontend amendments — SUPERSEDED by road-to-source-first-frontend | ⏭️ skipped | 0 | 0 | 0 | 2 | 0% |
+
+<a id="blockers-road-to-subagent-lifecycle-integrity"></a>
+**Blockers**
+
+- **raw-capture-needs-host-env** (owner: maintainer) — blocks Phase 0 Steps 2 and 4 — and only their raw-payload half. Step 3 is closed; Step 2's `agent_type` assertion is answered without it.
+  - **What to do:**
+    the capture facility is shipped and verified
+    (`_maybe_capture_payload`, `dispatch_hook.ts:486`, called unconditionally at
+    `:1082`); the variable just has to reach the process environment the host
+    spawns hooks from, which a command issued inside a session cannot do.
+    1. Add to `~/.claude/settings.json`:
+    `"env": { "AGENT_HOOK_CAPTURE_DIR": "~/.agent-hook-capture" }`
+    2. Start a **fresh** session — env and hooks are read at session start.
+    3. Dispatch one subagent, then read
+    `~/.agent-hook-capture/claude__SubagentStop__*.json` and the
+    `claude__PreToolUse__*.json` files written from inside it.
+    4. Remove the `env` entry afterwards — the capture writes every payload
+    verbatim, which is a standing egress surface, not a setting to leave on.
+    - **Why an agent must not do it:** the file is the agent's own tool
+    configuration, the change is user-global and reaches every other session live
+    on this repository, and `security-sensitive-stop` § self-modification routes a
+    self-config edit through the edit-permission gates rather than letting a
+    session apply it to itself.
+  - **Resolved when:** a raw `SubagentStop` payload and a raw in-subagent `PreToolUse` payload exist as captured files, and their field lists are recorded in `agents/evidence/investigations/subagent-lifecycle-phase0-return-channel.md`.
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 

@@ -175,19 +175,44 @@ roadmap does **not** duplicate that work.
       given event carries a given field — Steps 2 and 4 remain open and
       Phase 4 stays gated on Step 4.
       `agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md`.
-- [ ] **Step 2:** Payload spike: one throwaway `SubagentStop` command hook in a
-      scratch project; capture the raw stdin JSON. Assert `last_assistant_message`
-      and `agent_type` arrive as documented on THIS host version.
-- [ ] **Step 3:** Reproduce-or-refute #58109 on the installed host: a subagent
+- [ ] **Step 2:** Payload spike: capture the raw `SubagentStop` stdin JSON and
+      assert `last_assistant_message` and `agent_type` arrive as documented on
+      THIS host version.
+      **The throwaway hook this step specified is unnecessary — the capture is
+      already shipped.** `_maybe_capture_payload` (`dispatch_hook.ts:486`) writes
+      the raw stdin payload to `$AGENT_HOOK_CAPTURE_DIR` and is called
+      unconditionally at `:1082`, before concern resolution, so it captures every
+      event on every platform; it is in the built bundle and was verified against
+      the shipped dispatcher (F3 of
+      `subagent-lifecycle-phase0-return-channel.md`). What remains is a
+      host-environment act, not authoring — see `blocker: raw-capture-needs-host-env`.
+      **Second assertion already answered, and it fails:** `agent_type` does NOT
+      arrive on `SubagentStop` — 18 of 25 stop records read `agent_type: null`,
+      and the 7 that carry one inherited it from their start record (F4). The
+      first assertion stays open because the ledger cannot see it (F2).
+- [x] **Step 3:** Reproduce-or-refute #58109 on the installed host: a subagent
       instructed to end on a `tool_use` block, then asked for a structured
       report. Record whether the parent receives the report.
+      → **REPRODUCED** on 2.1.229, with a matched control dispatched in the same
+      turn: control (ends on assistant text) returned the full report; treatment
+      (ends on `echo done`) returned `(no output)` to the parent after 3 tool
+      uses and 18,242 tokens. The work was paid for in full and discarded in
+      full. `agents/evidence/investigations/subagent-lifecycle-phase0-return-channel.md`
+      § F1. This is the measurement Phase 2 Step 1's never-end-on-a-tool-call
+      clause was missing.
 - [ ] **Step 4:** Payload spike inside a subagent: confirm `agent_id` /
       `agent_type` are present on `PreToolUse`/`PostToolUse` stdin when the
       caller is a Task-spawned subagent (V6 refutation, verified locally).
+      Same method correction as Step 2 — no scratch hook, one env var; see
+      `blocker: raw-capture-needs-host-env`.
 
 **Falsifier.** Step 2 or 4 shows the documented fields absent on the installed
 host → Phases 2 and 4 are re-scoped to what the payload actually carries before
 any code is written; the doc claim is recorded as version-gated.
+**Partially FIRED 2026-08-13:** `agent_type` is absent on `SubagentStop` (F4),
+so the doc claim is version-gated on that field already and Phase 2 Step 2's
+per-agent logging is re-scoped accordingly. The `last_assistant_message` half is
+untouched — it needs Step 2's raw capture, not the ledger.
 
 **Rollback.** Spikes are scratch-project only; nothing lands in the tree except
 the evidence file.
@@ -243,6 +268,22 @@ dead (V2) and production evidence exists.
       return rate, parse-failure rate, duration distribution, nested-spawn
       count. This number replaces the 0.27% model-carried capture as the
       instrument (`archive/road-to-orchestrator-first-execution.md:299-305`).
+      **Two corrections before the number is published, both measured
+      2026-08-13** (`subagent-lifecycle-phase0-return-channel.md`):
+      (a) **the envelope-return column does not yet measure envelope return.**
+      `classifyEnvelope` reports `absent` both for "nothing came back" and for
+      "prose came back", and prose is what nearly every subagent returns — the
+      window reads 25 of 25 `absent`, including the #58109 control arm that
+      returned a complete report. A rate off this column would read 0 % and be
+      measuring the answer format. The three-way split (`no_message` /
+      `no_envelope` / `ok`) lands with Phase 2 Step 2, which needs the same
+      distinction.
+      (b) **the dispatch denominator is not per-session.** 7 starts against 25
+      stops in one window, but three sessions share the ledger file and one stop
+      record is a `general-purpose` agent this session never dispatched. The
+      `OpenRecord` already carries `session_id` (`subagent_ledger_hook.ts:592`)
+      and the appended line does not — write it before computing any rate, or
+      the baseline aggregates strangers.
 
 **Falsifier.** Envelope return rate ≥95% and no dispatch exceeds 2× its
 tier budget-equivalent duration over the window → symptoms (2)/(3) are not
@@ -278,6 +319,22 @@ mechanism (pre-register the threshold before reading the number).
       same anti-loop shape as `MAX_NUDGES` (`ui_route_nudge_hook.ts:53`) and
       `DEGRADE_AFTER` (`design_slop_hook.ts:34`). Activation posture per the
       concern activation policy (program X3) — this step does not re-argue it.
+      **Re-scoped 2026-08-13 by Phase 0's falsifier, on two measured points**
+      (`subagent-lifecycle-phase0-return-channel.md`):
+      (i) **"on failure" is not expressible against today's verdict.**
+      `classifyEnvelope` collapses "no message" and "prose, no JSON" into one
+      `absent`, so a fallback keyed on it would fire on nearly every dispatch —
+      25 of 25 in the measured window, the #58109 control arm included. Split
+      the verdict three ways (`no_message` / `no_envelope` / `ok`) **in this
+      step**, and key the disk fallback on `no_message` only; the split changes
+      the ledger's recorded shape and the 16 assertions in
+      `tests/hooks/subagent_ledger.test.ts`, so it belongs here rather than
+      retrofitted into Phase 1.
+      (ii) **there is no `agent_type` to log beside the valve.** `SubagentStop`
+      carries `agent_id` but not `agent_type` (F4), so a per-`agent_id` valve can
+      key correctly and cannot name what it blocked unless the start record is
+      joined to it — which the 18-of-25 uncorrelated stops show is not always
+      available.
 - [ ] **Step 3:** Snapshot tests under `tests/hooks/` for all four paths
       (ok / disk-fallback / block-once / release), per the manifest's own
       concern checklist (`hook_manifest.yaml:10-14`).
@@ -465,6 +522,36 @@ is fully closed**, correcting the draft's "open Phases 2–5".
 
 **Falsifier.** Owned by the destination roadmap's own falsifiers; these steps
 inherit them.
+
+## Blockers
+
+### blocker: raw-capture-needs-host-env
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** Phase 0 Steps 2 and 4 — and only their raw-payload half. Step 3 is
+  closed; Step 2's `agent_type` assertion is answered without it.
+- **What to do:** the capture facility is shipped and verified
+  (`_maybe_capture_payload`, `dispatch_hook.ts:486`, called unconditionally at
+  `:1082`); the variable just has to reach the process environment the host
+  spawns hooks from, which a command issued inside a session cannot do.
+  1. Add to `~/.claude/settings.json`:
+     `"env": { "AGENT_HOOK_CAPTURE_DIR": "~/.agent-hook-capture" }`
+  2. Start a **fresh** session — env and hooks are read at session start.
+  3. Dispatch one subagent, then read
+     `~/.agent-hook-capture/claude__SubagentStop__*.json` and the
+     `claude__PreToolUse__*.json` files written from inside it.
+  4. Remove the `env` entry afterwards — the capture writes every payload
+     verbatim, which is a standing egress surface, not a setting to leave on.
+- **Why an agent must not do it:** the file is the agent's own tool
+  configuration, the change is user-global and reaches every other session live
+  on this repository, and `security-sensitive-stop` § self-modification routes a
+  self-config edit through the edit-permission gates rather than letting a
+  session apply it to itself.
+- **Resolved when:** a raw `SubagentStop` payload and a raw in-subagent
+  `PreToolUse` payload exist as captured files, and their field lists are
+  recorded in
+  `agents/evidence/investigations/subagent-lifecycle-phase0-return-channel.md`.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-12 | reviewer: claude/host -->
