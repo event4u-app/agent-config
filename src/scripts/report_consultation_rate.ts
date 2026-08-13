@@ -215,6 +215,14 @@ export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement
     for (const wasConsulted of writeTurns.values()) if (wasConsulted) out.consulted += 1;
     for (const wasRead of artifactTurns.values()) if (wasRead) out.artifactRead += 1;
     out.sawArtifact = artifactRead;
+    // KNOWN IMPRECISION, accepted: ordering inside ONE assistant message comes
+    // from the `tool_use` part index, and parallel tool calls in a single
+    // message carry no real order. A read and a write issued together can
+    // therefore score either way. Not repaired here — a transcript carries no
+    // per-call timestamp, so the fix is a different data source rather than a
+    // different loop, and the error is bounded to same-message pairs. It is a
+    // third reason the published rate is a ceiling.
+    //
     // The FIRST write's outcome — `artifactTurns` is insertion-ordered on the
     // first UI write of each turn, so its first value is that write's state.
     const firstWrite = artifactTurns.values().next();
@@ -364,6 +372,18 @@ export function render(report: RateReport, threshold: number): string {
     );
     lines.push(
         '  rate toward the size of the estate rather than the behaviour.',
+    );
+    lines.push(
+        '  That denominator is narrower than it sounds, twice: "artifact" means',
+    );
+    lines.push(
+        '  a path ending design.html or under .claude/design-system/ — a handover',
+    );
+    lines.push(
+        '  under any other name is not counted — and a session that read one but',
+    );
+    lines.push(
+        '  wrote no UI is excluded, since it had nothing to be late for.',
     );
     lines.push(
         '  The line above it shares the consultation denominator and is kept for',

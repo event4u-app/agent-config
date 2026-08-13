@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: fe-design
-description: "Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, build, review. Use when building or changing any UI, not only when planning one."
+description: "Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, inventory, build, review. Use when building or changing any UI, not only when planning one."
 personas:
   - frontend-engineer
 domain: engineering

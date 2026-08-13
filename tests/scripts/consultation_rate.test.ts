@@ -341,6 +341,10 @@ describe('render', () => {
         const out = render(report, 20);
         expect(out).toContain('A CEILING, NOT A MEASUREMENT');
         expect(out).toContain('search whose path argument');
+        // The denominator is narrowed twice in code; both narrowings are named
+        // in the output rather than left for a reader to discover in the source.
+        expect(out).toContain('narrower than it sounds');
+        expect(out).toContain('wrote no UI is excluded');
     });
 
     it('reports the rate and marks the proxy as not the discharge rate', () => {

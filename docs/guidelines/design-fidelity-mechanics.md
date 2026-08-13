@@ -191,7 +191,9 @@ nothing acts on them.
    the consumer's own brand (`brand-source-of-truth`). Artifact-vs-brand
    conflicts are surfaced, never merged.
 
-**The fourth member, and why it is not obvious.** A generative design-system
+### The precedence chain's fourth member, and why it is not obvious
+
+A generative design-system
 skill — this suite's own or a third party's installed beside it — can carry an
 instruction of the shape *"always generate a design system first"*. On a
 greenfield brief that is right. On a **port** it is the same error the anti-slop

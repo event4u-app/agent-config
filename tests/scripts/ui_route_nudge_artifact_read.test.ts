@@ -11,7 +11,10 @@
  * The drift guard at the bottom is the load-bearing part: the predicate COPIES
  * two of `design-fidelity`'s triggers rather than reading the rule, exactly as
  * the hook copies the UI-surface predicate. A copy nothing pins is a copy that
- * rots, so the rule's own frontmatter is parsed here and compared.
+ * rots, so the rule's own frontmatter is parsed here and compared **as a set** —
+ * an earlier revision asserted only that the two copied triggers were still
+ * present, which stays green while the rule grows a third the predicate never
+ * learns about.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -113,17 +116,37 @@ describe('drift guard — the copied triggers still exist in the rule', () => {
         return fm['triggers'] as Array<Record<string, string>>;
     }
 
-    it('the rule still declares the file_pattern the predicate copied', () => {
-        const patterns = ruleTriggers()
-            .filter((t) => 'file_pattern' in t)
-            .map((t) => t['file_pattern']);
-        expect(patterns).toContain('*design.html');
+    // Asserting the SET, not membership. A `toContain` pair passes forever
+    // while the rule grows a third file-shaped trigger the predicate never
+    // learns about — the same shape as a near-miss row that tests an
+    // already-closed direction, which is why this branch withdrew a trigger
+    // rather than ship it. Adding a file_pattern/path_prefix must red this
+    // test and force a decision about `isArtifactRead`.
+    it('the rule declares EXACTLY the file-shaped triggers the predicate copied', () => {
+        const fileShaped = ruleTriggers().filter(
+            (t) => 'file_pattern' in t || 'path_prefix' in t,
+        );
+        expect(fileShaped).toEqual([
+            { file_pattern: '*design.html' },
+            { path_prefix: '.claude/design-system/' },
+        ]);
     });
 
-    it('the rule still declares the path_prefix the predicate copied', () => {
-        const prefixes = ruleTriggers()
-            .filter((t) => 'path_prefix' in t)
-            .map((t) => t['path_prefix']);
-        expect(prefixes).toContain('.claude/design-system/');
+    it('every file-shaped trigger is one `isArtifactRead` actually accepts', () => {
+        // The membership half, derived rather than restated: each declared
+        // trigger is turned into a path the predicate should latch on. A new
+        // trigger the predicate ignores fails here even if someone updates the
+        // set above without touching the predicate.
+        const samples: Record<string, string> = {
+            '*design.html': 'some/dir/design.html',
+            '.claude/design-system/': '.claude/design-system/tokens.json',
+        };
+        for (const trigger of ruleTriggers()) {
+            const value = trigger['file_pattern'] ?? trigger['path_prefix'];
+            if (value === undefined) continue;
+            const sample = samples[value];
+            expect(sample, `no sample path for trigger ${value}`).toBeDefined();
+            expect(isArtifactRead(read(sample as string))).toBe(true);
+        }
     });
 });
