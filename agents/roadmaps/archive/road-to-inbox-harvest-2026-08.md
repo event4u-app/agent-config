@@ -13,8 +13,8 @@ status: ready
 > already exist.
 
 > Source (consumed inbox): see the per-item `Source:` lines below; each names
-> its file under [`agents/tmp.old/`](../tmp.old/).
-> Produced by [`/analyze:inbox`](../../src/domains/analysis-workbench/analyze/inbox/command.md),
+> its file under [`agents/tmp.old/`](../../tmp.old/).
+> Produced by [`/analyze:inbox`](../../../src/domains/analysis-workbench/analyze/inbox/command.md),
 > which this harvest also created.
 
 ## Iron Law of this harvest
@@ -51,7 +51,7 @@ roadmap slice each, and a block of cancellations where they argue against locks.
 Source: `agents/tmp.old/feedback-9.18.1-1.txt`. Six reviewers, one convergent
 ask, and a large already-built fraction.
 
-- [~] **P1.1 JSON as the binding R1/R2 findings format — schema SHIPPED, the rendering half deferred with its reason.** The only item all six
+- [-] **P1.1 MIGRATED 2026-08-14 → [`road-to-inbox-harvest-residuals.md`](../road-to-inbox-harvest-residuals.md) R1.** Schema half shipped here; the rendering half moved with its full reasoning (the § 2.7 corpus-migration prohibition, and the Draft-07-subset trap that makes the schema look wrong). Not done, not abandoned. **JSON as the binding R1/R2 findings format — schema SHIPPED, the rendering half deferred with its reason.** The only item all six
   reviewers converge on and the only one still fully unbuilt:
   `check_completion_review.ts` parses `*.findings.md`, with `unbalanced-fence`
   and `malformed-row` as first-class violation kinds — i.e. it hand-parses
@@ -145,14 +145,14 @@ ask, and a large already-built fraction.
     beside the hardening ratchet, deriving adoption from the source
     (`_lib/gate_self_test.js` import, or `// self-test-exempt: <reason>`) rather
     than from a hand-maintained column that could drift from it.
-- [~] **P1.4 Deferred-finding owner + expiry.** Deferred. The stable-id index
+- [-] **P1.4 MIGRATED 2026-08-14 → [`road-to-inbox-harvest-residuals.md`](../road-to-inbox-harvest-residuals.md) R2**, together with its `deferred-finding-decision-reopen` blocker. Not done, not abandoned. **Deferred-finding owner + expiry.** Deferred. The stable-id index
   this needs was **explicitly declined** with a named revisit trigger at
   `check_review_dispositions.ts:16-22`, so this reopens a recorded decision —
   `decision-revisit-gate` applies and that is a maintainer call, not an agent's.
 - [-] **P1.5 Adoption items — CANCELLED, contradicts a lock.** "Adoption is the
   only work that counts", the `first-session` concierge as P0, and re-triggering
   the harvest freeze are all struck by
-  [`ADR-216`](../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
+  [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
   (accepted 2026-08-05, the day *after* these reviews): external adoption is
   explicitly not a project goal, and the ADR's own `review_trigger` says do NOT
   reopen on an external-adoption signal. Also cancelled: unified findings store,
@@ -198,7 +198,7 @@ its central gap is verified in code.
     null. The file's deterministic-vs-critic distinction is a legitimate reason
     the null may not bind here — but that argument is made before building, not
     after."* Confirmed: that distinction is the load-bearing one, and it holds.
-- [ ] **P2.2 Executable DoD + bounded self-fix loop.** Verified gap: the work
+- [x] **P2.2 Executable DoD + bounded self-fix loop.** Verified gap: the work
   engine halts to `Outcome.BLOCKED` on a red check with **no attempt counter**,
   so every red costs a user round-trip. Needs `dod.schema.json`, a `dod[]` slot
   on `refine`, an attempts/no-progress floor, and a PARTIAL honest exit.
@@ -216,9 +216,43 @@ its central gap is verified in code.
     that lists unproven `dod[]` items. 31 new assertions, 4 contract snapshots
     updated, 738 work-engine tests green, `docs/contracts/implement-ticket-flow.md`
     amended (state field + both ambiguity tables + two new sections).
-  - **Why it is not `[x]`:** the ≥50% is a run-level rate and the engine emits no
-    halt telemetry, so it is **unevaluated, not met** — and "unevaluated" does
-    not trigger the revert clause either, which fires on a measured miss.
+  - **CLOSED 2026-08-14.** The account below is kept because it is the record of
+    *why* this step sat open after its work was finished, and the two-stage
+    resolution is the reusable part: the blocker resolved first, then the Iron
+    Law 3 deferral disposition unblocked the flip. **The blocker**
+    `self-fix-halt-telemetry` **resolved** on 2026-08-14 via path (b): the
+    pre-registration was re-scoped to the structural claim (the loop exists, is
+    bounded, terminates) and the ≥50 % figure is preserved as **never
+    evaluated**, not as met. That resolution removed the only thing keeping this
+    step open. **On the work, P2.2 is done.**
+
+    It then stayed `[ ]` for a reason with nothing to do with the work. This
+    roadmap carried four `[~]` deferrals (P1.1, P1.4, P3.3, P5.6), so flipping
+    P2.2 would take `count_open` to 0 with `count_deferred` at 4 — exactly the
+    trigger for `roadmap-progress-sync` Iron Law 3: *"A roadmap with `[~]`
+    deferred items never auto-archives silently. Surface every deferred step.
+    Ask the user what happens to the plan."* The disposition of a deferral is
+    the user's call, and the closing commit is roadmap-touching by construction,
+    so it blocked itself until the four were disposed **in the same change**.
+
+    None of the four was honestly cancellable: P1.1 is a wanted rendering half
+    over a shipped schema, P1.4 reopens a decision whose revisit trigger has not
+    fired, P3.3 is "worth doing, not urgent", and P5.6 is a deliberate
+    ratchet-before-split stance. Marking any of them `[-]` merely to clear the
+    gate would have been the buried-work failure Iron Law 3 exists to stop.
+
+    **Disposed 2026-08-14, maintainer's call — option 1 of the deferral menu:**
+    all four migrated to
+    [`road-to-inbox-harvest-residuals.md`](../road-to-inbox-harvest-residuals.md)
+    as R1–R4, each carrying the reasoning that deferred it, together with the two
+    blockers that outlived this roadmap. `[-]` here means *migrated*, not
+    abandoned — the successor is on the dashboard, which is the whole point of
+    moving them rather than burying them in an archived file.
+  - **The original blocked-on-measurement reasoning, kept because it is the
+    evidence the re-scope rests on:** the ≥50% is a run-level rate and the
+    engine emits no halt telemetry, so it is **unevaluated, not met** — and
+    "unevaluated" does not trigger the revert clause either, which fires on a
+    measured miss.
     Structurally, no red reaches the user on first occurrence in either lane
     (before: 2 of 2 red exits were directive-free user halts; after: 0 of 2),
     and the one locked golden replay that reaches a red verdict (`GT-3`) moved
@@ -245,7 +279,7 @@ its central gap is verified in code.
   handoff bundle on the existing "port a provided artifact" branch. Add a
   near-miss row to `ROUTING_MATRIX` with each trigger — extending that set
   without one is how an over-broad trigger lands.
-- [~] **P3.3 Level A/B/C snapshot preference order** into
+- [-] **P3.3 MIGRATED 2026-08-14 → [`road-to-inbox-harvest-residuals.md`](../road-to-inbox-harvest-residuals.md) R3.** Not done, not abandoned — and the only one of the four with no structural obstacle recorded against it, so it is the first candidate when capacity appears. **Level A/B/C snapshot preference order** into
   `design-system-capture` — the one genuinely new idea in `claude-design.txt`,
   and independent of any bridge. Deferred: worth doing, not urgent.
 
@@ -395,14 +429,14 @@ before the file was written*.
     red when the cadence is genuinely missed.
 - [x] **P5.5 `agents/proposals/` does not exist** (from `hermes.txt`). Two
   artefacts name it as an output path. One directory closes a dangling contract.
-- [~] **P5.6 God-file LOC ratchet** (from `crytical-analysis.txt`). Seven files
+- [-] **P5.6 MIGRATED 2026-08-14 → [`road-to-inbox-harvest-residuals.md`](../road-to-inbox-harvest-residuals.md) R4**, with the ratchet-before-split ordering preserved as the decision it is. Not done, not abandoned. **God-file LOC ratchet** (from `crytical-analysis.txt`). Seven files
   confirmed oversized, plus `chat_history.ts` (2397) and `orchestrator.ts`
   (2106), with no ratchet and no roadmap. Deferred, and deliberately
   **ratchet-before-split**: splitting first is how a refactor becomes
   unreviewable.
 - [-] **P5.7 CANCELLED — items that argue against locks they never read.**
   - `crytical-analysis.txt`'s **flagship** B1 ("retire tracked `dist/agent-src`")
-    contradicts [`ADR-208`](../../docs/decisions/ADR-208-dist-agent-src-keep-forever.md),
+    contradicts [`ADR-208`](../../../docs/decisions/ADR-208-dist-agent-src-keep-forever.md),
     accepted **2026-08-03 — the day before the audit**, which explicitly closes
     the question ADR-201 left open.
   - Its Part D (hook latency) is **already shipped**: 164→82 ms p95, published;
@@ -432,15 +466,30 @@ before the file was written*.
 ## Blockers
 
 ### blocker: deferred-finding-decision-reopen
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 1
 - **What to do:** P1.4 needs a stable-finding-id index that was explicitly
   declined at `check_review_dispositions.ts:16-22` with a named revisit
   trigger. Reopening a recorded decision is a maintainer call under
   `decision-revisit-gate`, not something an agent does because a reviewer asked.
-- **Resolved when:** the decision is reopened with the trigger cited, or P1.4 is
-  cancelled against it.
+- **Resolution (2026-08-14): MIGRATED, not decided.** The blocker moved intact to
+  [`road-to-inbox-harvest-residuals.md`](../road-to-inbox-harvest-residuals.md)
+  alongside the step it blocks (P1.4 → R2). It is `resolved` **here** only in the
+  sense that this roadmap no longer owns it; the decision itself is untouched and
+  open in the successor. Recorded this way rather than left open, because an open
+  blocker refuses archival — and archiving a 100 %-closed roadmap while its one
+  live decision sits visible on the dashboard in its successor is the honest
+  shape, whereas keeping this file active to hold one migrated blocker is not.
+
+  **The 2026-08-14 blanket grant approved reopening; that is why this is a
+  migration and not a reopen.** `decision-revisit-gate`'s mechanism-match check
+  runs first, and the decline names a falsifiable trigger — *a disposition that
+  genuinely cannot be recorded in the round record itself* — with no instance on
+  record. A grant releases the permission to revisit; it does not create the
+  case the trigger asks for.
+- **Resolved when:** ~~the decision is reopened with the trigger cited, or P1.4 is
+  cancelled against it~~ — that clause now lives on the successor's copy.
 
 ### blocker: self-fix-halt-telemetry
 - **Status:** resolved
@@ -491,8 +540,19 @@ before the file was written*.
 - **Evidence:** `agents/evidence/analysis/self-fix-loop-halt-measurement.md`
 
 ### blocker: spent-inbox-artifacts-await-deletion
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution (2026-08-14): MIGRATED, not executed.** Moved intact to
+  [`road-to-inbox-harvest-residuals.md`](../road-to-inbox-harvest-residuals.md);
+  `resolved` here means this roadmap no longer owns it, not that the files are
+  gone. The blanket grant did approve the deletions, and two facts found while
+  attempting them stopped it: *"both `council-q-*.md` files"* names two objects
+  but the glob matches **12** in `agents/tmp.old/` (measured 2026-08-14), so
+  acting on the pattern would delete 10 files nobody approved and
+  `non-destructive-by-default` requires an approval to name its exact object;
+  and `agents/tmp.old/` is gitignored and per-checkout, so a deletion made in a
+  worktree is a no-op and one made in the main checkout appears in no diff. The
+  item needs two filenames, not a broader authorization.
 - **Blocks:** nothing
 - **What to do:** four items are spent and should be removed by a human, since
   the agent reports rather than deletes: both `council-q-*.md` files (answered

@@ -501,6 +501,70 @@ worse than none — it reads as a live control.
   `release-pr-gating.md` updated in the same change. (Number corrected 222→223
   on 2026-08-13; the acceptance leg stands — see 4.1.)
 
+- **Partially discharged 2026-08-14 (continuation sweep).** The blocker has two
+  legs and only one of them was ever a decision.
+
+  **Leg 1 — ADR acceptance: DONE.** ADR-223 is `accepted` as of 2026-08-14
+  under the maintainer's blanket grant, which names this blocker explicitly.
+  Note what that acceptance does *not* authorise: ADR-223's own decision is
+  **not to demote**, so accepting it settles the demotion question by closing
+  it, and licenses no ruleset write. The macOS leg and the `npm audit` gate were
+  never in the required set to begin with (ADR-223 § Context fact 1) — removing
+  them from a PR would be a *trigger* change, not a required-check change.
+
+  **Leg 2 — the ruleset write: HANDED BACK, deliberately.** Arming or enlarging
+  a required-check set changes the merge requirements for every future merge,
+  including the maintainer's own. That is an infrastructure/permission change
+  and a `non-destructive-by-default` Hard Floor trigger, which no category-level
+  grant lifts — the Hard Floor requires a this-turn approval naming the exact
+  object, and "all repo-admin blockers are approved" names a category. The
+  maintainer's own grant asked for the procedure to be written out rather than
+  performed, so it is:
+
+  ~~~bash
+  # 0. Preconditions: gh authenticated with repo-admin scope on event4u-app/agent-config.
+  #    Verify:  gh api repos/event4u-app/agent-config --jq .permissions.admin   # -> true
+
+  # 1. Capture the BEFORE artefact. Do not skip — it is the rollback.
+  gh api repos/event4u-app/agent-config/rulesets/17749383 > ruleset-before.json
+
+  # 2. Copy it and edit the required_status_checks array in the copy.
+  cp ruleset-before.json ruleset-after.json
+  #    Add, per branch-protection-policy.md:163 (each already runs and passes
+  #    on every feature PR — enlarging, not shrinking):
+  #      Smoke — kernel · Smoke — router · Smoke — schema · Smoke — skills
+  #      Static Checks (ESLint · typecheck · prepack) · skill-lint · Rule backstops
+  #    Keep the existing entry: Sync + Generate Tools Consistency
+
+  # 3. Write.
+  gh api -X PUT repos/event4u-app/agent-config/rulesets/17749383 --input ruleset-after.json
+
+  # 4. Verify, then keep the diff as the evidence artefact.
+  gh api repos/event4u-app/agent-config/rulesets/17749383 > ruleset-verify.json
+  diff <(jq -S . ruleset-before.json) <(jq -S . ruleset-verify.json)
+
+  # Rollback: gh api -X PUT .../rulesets/17749383 --input ruleset-before.json
+  ~~~
+
+  Browser path, if the CLI is not to hand: **github.com/event4u-app/agent-config
+  → Settings → Rules → Rulesets → the ruleset with id `17749383` → Branch
+  protections → "Require status checks to pass" → Add checks →** add the seven
+  names above → **Save changes**.
+
+  **One trap, recorded because it fails silently and permanently.** Do not add a
+  path filter to the PR trigger of any check you make required. A required check
+  whose trigger is path-filtered never reports on a PR touching none of those
+  paths, and GitHub treats never-reported as never-satisfied — the PR blocks
+  forever with no red X to explain it. This is the same trap
+  `road-to-skill-ecosystem-gate-integrity` Phase 5 Step 3 records against
+  `branch-protection-policy.md`.
+
+  **Second trap, from the sibling roadmap.** `road-to-maintainer-bus-factor`
+  Risk 3 records that nothing in CI observes whether the armed required-check
+  set still matches `branch-protection-policy.md`. Arm it *against that file*
+  and update the file in the same change, or the two drift apart with no gate
+  to notice.
+
 
 ### blocker: merge-queue-enablement
 - **Status:** open
@@ -510,3 +574,39 @@ worse than none — it reads as a live control.
   repo-admin setting that cannot be turned on from the tree.
 - **Resolved when:** the merge queue is enabled on `main` and at least one workflow
   declares a `merge_group` trigger (currently zero across `.github/`).
+
+- **Decision discharged 2026-08-14 (continuation sweep); the enablement is
+  handed back.** The maintainer's blanket grant names `merge-queue-enablement`,
+  so the *decision* to enable is taken. The act is not performed here for the
+  same reason as its sibling above: a merge queue changes how every future merge
+  to `main` lands, which is a Hard-Floor infrastructure change under
+  `non-destructive-by-default`, and a category grant does not name that object.
+
+  **The ordering matters and is the part worth writing down.** These two steps
+  must not be done in the order they are listed, because the obvious order
+  breaks `main`:
+
+  1. **First, in the tree** (agent-executable, and *not* yet done — see the note
+     at the end): add `merge_group:` to the trigger block of every workflow that
+     is, or is about to become, a required check. A required check with no
+     `merge_group` trigger never reports inside the queue, and the queue treats
+     never-reported as never-satisfied — the identical permanent-block failure
+     the path-filter trap produces on PRs. Currently **zero** workflows across
+     `.github/` declare it.
+  2. **Then, and only then**, enable the queue:
+     **github.com/event4u-app/agent-config → Settings → Rules → Rulesets →
+     ruleset `17749383` → Branch protections → "Require merge queue" → enable →
+     Save changes.** Leave the default merge method and group size unless a
+     measured reason exists; the CI-economy measurements in this roadmap say
+     nothing about queue batching.
+
+  Enabling the queue before step 1 lands is the failure mode: every PR enters
+  the queue, no required check reports there, and nothing merges until the queue
+  is disabled again.
+
+  **Step 1 is agent-executable and is deliberately NOT done in this sweep.**
+  Adding a `merge_group` trigger to a workflow that is not yet queue-gated is
+  inert, so it is safe in isolation — but this repo gates workflow edits, and a
+  workflow change riding a 26-roadmap sweep branch is the blast-radius mixing
+  `scope-control` refuses. It belongs in the same small PR as the enablement,
+  authored by whoever performs step 2.
