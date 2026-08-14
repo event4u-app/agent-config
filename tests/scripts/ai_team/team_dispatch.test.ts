@@ -700,15 +700,32 @@ describe('TeamReviewCliClient — ai_team.model sentinel', () => {
     });
 
     it('an explicit model passes through verbatim', () => {
+        // NOT `gpt-5`: that id is on the measured unservable deny-list since
+        // 2026-08-15, so `ask()` refuses it before an argv exists and this test
+        // would assert argv construction against a call that never happened.
+        // Any id the deny-list has no opinion about exercises pass-through.
         const { client, calls } = fake_client(
             { returncode: 0, stdout: codex_stdout('{"findings":[]}'), stderr: '' },
-            { model: 'gpt-5', cli_calls_path: path.join(make_tmp(), 'c.json') },
+            { model: 'gpt-5-codex', cli_calls_path: path.join(make_tmp(), 'c.json') },
         );
         client.ask('sys', 'user', 64);
         const cmd = calls[0]?.cmd ?? [];
         const i = cmd.indexOf('--model');
         expect(i).toBeGreaterThanOrEqual(0);
-        expect(cmd[i + 1]).toBe('gpt-5');
+        expect(cmd[i + 1]).toBe('gpt-5-codex');
+    });
+
+    it('a pinned unservable model is refused before any subprocess runs', () => {
+        const { client, calls } = fake_client(
+            { returncode: 0, stdout: codex_stdout('{"findings":[]}'), stderr: '' },
+            { model: 'gpt-4o', cli_calls_path: path.join(make_tmp(), 'c.json') },
+        );
+        const r = client.ask('sys', 'user', 64);
+        // The load-bearing assertion is the EMPTY call list: the refusal has to
+        // land before the spend, not as a nicer message after it.
+        expect(calls).toHaveLength(0);
+        expect(r.error).toContain('model_unservable');
+        expect(r.error).toContain('gpt-4o');
     });
 });
 

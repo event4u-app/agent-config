@@ -78,6 +78,10 @@ import {
     type TextInputStream,
     type TextOutputStream,
 } from '../../../src/scripts/ai_council/clients.js';
+import {
+    classifyCliFailure,
+    isFallbackEligible,
+} from '../../../src/scripts/ai_council/transport_resolver.js';
 import { hasPython3, oracleFile, runPyCode } from './_harness.js';
 
 const py3 = hasPython3();
@@ -595,7 +599,11 @@ describe('clients — CLI command construction', () => {
     it('OpenAICliClient argv (prompt on stdin, no --system)', () => {
         const { client, calls } = stubCli(OpenAICliClient, { returncode: 0, stdout: '', stderr: '' });
         client.ask('SYS', 'USER', 1);
-        expect(calls[0]!.cmd).toEqual(['/bin/echo', 'exec', '--json', '--model', 'gpt-5', '-']);
+        // No `--model`: the shipped default is the `'auto'` sentinel since
+        // 2026-08-15, because every pinned id this package shipped was refused
+        // by a subscription-authed account. `--skip-git-repo-check` because
+        // `codex exec` otherwise refuses outright from an untrusted CWD.
+        expect(calls[0]!.cmd).toEqual(['/bin/echo', 'exec', '--json', '--skip-git-repo-check', '-']);
         // One channel, so the boundary has to be in the text — the system prompt
         // is delimited and the user prompt is labelled as data.
         const stdin = calls[0]!.stdin ?? '';
@@ -620,8 +628,52 @@ describe('clients — CLI command construction', () => {
     it('OpenAICliClient sends the bare user prompt when the system prompt is empty', () => {
         const { client, calls } = stubCli(OpenAICliClient, { returncode: 0, stdout: '', stderr: '' });
         client.ask('', 'USER', 1);
-        expect(calls[0]!.cmd).toEqual(['/bin/echo', 'exec', '--json', '--model', 'gpt-5', '-']);
+        expect(calls[0]!.cmd).toEqual(['/bin/echo', 'exec', '--json', '--skip-git-repo-check', '-']);
         expect(calls[0]!.stdin).toBe('USER');
+    });
+
+    // The flag below is not cosmetic either: without it `codex exec` returns
+    // `Not inside a trusted directory and --skip-git-repo-check was not
+    // specified.` and emits no JSON at all — reproduced 2026-08-15 from a fresh
+    // non-git directory. A council pass does not choose its CWD.
+    it('OpenAICliClient always passes --skip-git-repo-check', () => {
+        for (const sys of ['', 'SYS']) {
+            const { client, calls } = stubCli(OpenAICliClient, { returncode: 0, stdout: '', stderr: '' });
+            client.ask(sys, 'USER', 1);
+            expect(calls[0]!.cmd).toContain('--skip-git-repo-check');
+        }
+    });
+
+    it('OpenAICliClient omits --model for the auto sentinel and keeps an explicit pin', () => {
+        const auto = stubCli(OpenAICliClient, { returncode: 0, stdout: '', stderr: '' }, { model: 'AUTO ' });
+        auto.client.ask('', 'USER', 1);
+        // Case- and whitespace-insensitive: this value is hand-written YAML, and
+        // `AUTO ` degrading into a model literally named `AUTO ` is the failure
+        // the sentinel exists to stop.
+        expect(auto.calls[0]!.cmd).not.toContain('--model');
+
+        const pinned = stubCli(OpenAICliClient, { returncode: 0, stdout: '', stderr: '' }, { model: 'gpt-5-codex' });
+        pinned.client.ask('', 'USER', 1);
+        const cmd = pinned.calls[0]!.cmd;
+        expect(cmd[cmd.indexOf('--model') + 1]).toBe('gpt-5-codex');
+    });
+
+    it('a model measured unservable on the CLI transport is refused before the subprocess', () => {
+        const { client, calls } = stubCli(
+            OpenAICliClient,
+            { returncode: 0, stdout: '', stderr: '' },
+            { model: 'gpt-4o' },
+        );
+        const r = client.ask('', 'USER', 1);
+        expect(calls).toHaveLength(0);
+        expect(r.text).toBe('');
+        expect(r.error).toContain('model_unservable');
+        // The message has to name the value the operator can actually set.
+        expect(r.error).toContain('auto');
+        expect(classifyCliFailure(r.error ?? '')).toBe('model_unservable');
+        // Falls through to the api rung: the constraint is the subscription
+        // transport's, not the model's.
+        expect(isFallbackEligible('model_unservable')).toBe(true);
     });
 
     it('GeminiCliClient argv + stdin (no --system)', () => {

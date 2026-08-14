@@ -53,7 +53,7 @@ import {
     ORCHESTRATION_HALT_MESSAGE,
     type TeamAvailability,
 } from './availability.js';
-import { AI_TEAM_MODEL_AUTO, type AiTeamConfig, load_ai_team_config } from './config.js';
+import { type AiTeamConfig, load_ai_team_config } from './config.js';
 
 // ── errors ──────────────────────────────────────────────────────────────
 
@@ -492,28 +492,23 @@ export function parse_review_findings(text: string): ParsedReview {
 // ── transport (reuses OpenAICliClient — quota + auth machinery intact) ──
 
 /**
- * Thin OpenAICliClient veneer honoring the `ai_team.model: 'auto'` sentinel:
- * `auto` passes NO `--model` flag so the codex CLI's own default applies
- * (tracks the subscription's strongest model). Everything else — quota gate,
- * call recording into the shared `counts.openai` bucket, stderr
- * classification via `_AUTH_FAILURE_PATTERNS` — is inherited unchanged.
+ * Named OpenAICliClient subclass for the team-review dispatch path.
+ *
+ * It used to carry an override that stripped `--model` back out of the argv
+ * whenever `ai_team.model` was `'auto'`, because the base client pinned a model
+ * unconditionally. Since 2026-08-15 the base client honours the same sentinel
+ * itself (`_isAutoModel`, and `DEFAULT_OPENAI_CLI_MODEL` is now `'auto'`), so
+ * that override was a provable no-op — the flag it removed was no longer being
+ * added. Deleting it is this change's own cleanup, not a drive-by: leaving a
+ * splice whose comment claims the base "passes `--model`" would be a stale
+ * description of behaviour this diff changed.
+ *
+ * The class stays because it is the named transport for this path — quota gate,
+ * call recording into the shared `counts.openai` bucket, and stderr
+ * classification via `_AUTH_FAILURE_PATTERNS` are all inherited unchanged, and
+ * a distinct type is what lets a reader tell a team dispatch from a council one.
  */
-export class TeamReviewCliClient extends OpenAICliClient {
-    protected override _build_command(
-        system_prompt: string,
-        user_prompt: string,
-        max_tokens: number,
-    ): string[] {
-        const cmd = super._build_command(system_prompt, user_prompt, max_tokens);
-        if (this.model === AI_TEAM_MODEL_AUTO) {
-            const i = cmd.indexOf('--model');
-            if (i >= 0) {
-                cmd.splice(i, 2);
-            }
-        }
-        return cmd;
-    }
-}
+export class TeamReviewCliClient extends OpenAICliClient {}
 
 // ── dispatch ────────────────────────────────────────────────────────────
 

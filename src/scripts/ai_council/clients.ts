@@ -115,7 +115,22 @@ export const DEFAULT_PERPLEXITY_MODEL = 'sonar-pro';
 // divergence is a one-line change, not a hunt through inline literals.
 // (`xai` / `perplexity` CLI reuse their API constants: their CLIs are
 // community wrappers around the same paid API, so the values do not diverge.)
-export const DEFAULT_OPENAI_CLI_MODEL = 'gpt-5';
+// `'auto'` — pass NO `--model` and let the codex CLI apply its own default.
+//
+// This was a pinned `gpt-5` until 2026-08-15, and the pin was dead: measured
+// against a subscription-authed (ChatGPT) account, `codex exec --model gpt-5`
+// returns `400 invalid_request_error: The 'gpt-5' model is not supported when
+// using Codex with a ChatGPT account.` — and so does `gpt-4o`, the value the
+// field guide had recommended pinning. The same call with no `--model` at all
+// returns a live answer. So the pin did not select a model; it disabled the
+// seat, while the run still reported itself as having concluded.
+//
+// A pinned id rots silently under a subscription, because only the CLI knows
+// what that account currently serves. `ai_team.model` reached the same
+// conclusion first and shipped `'auto'`; this constant now agrees with it
+// rather than documenting the opposite. A human-set value still passes through
+// verbatim — the loader never rewrites a pin, it only stops shipping one.
+export const DEFAULT_OPENAI_CLI_MODEL = 'auto';
 export const DEFAULT_ANTHROPIC_CLI_MODEL = 'claude-sonnet-4-5';
 export const DEFAULT_GEMINI_CLI_MODEL = 'gemini-2.5-pro';
 
@@ -210,6 +225,69 @@ export function assertCacheBreakpointOrder(ttls: readonly PromptCacheTtl[]): voi
 function _servedModel(response: unknown, field = 'model'): string {
     const value = _getattr(response, field, '');
     return typeof value === 'string' ? value : '';
+}
+
+/**
+ * `'auto'` (or an empty string) — "do not pin a model; let the CLI choose".
+ *
+ * The empty string is accepted alongside the sentinel because a config that
+ * clears the field means the same thing as one that spells it out, and reading
+ * a blank as a *model named ""* would ship `--model ''` to the CLI.
+ *
+ * Case- and whitespace-insensitive on purpose: this value is hand-written into
+ * a YAML file, and `Auto` silently degrading to a pinned model named `Auto`
+ * is the failure this whole constant exists to stop.
+ */
+export function _isAutoModel(model: string): boolean {
+    return model.trim().toLowerCase() === 'auto' || model.trim() === '';
+}
+
+/**
+ * Model ids MEASURED to be refused by a subscription-authed CLI transport.
+ *
+ * This is a **deny-list of observed failures, and it is deliberately not an
+ * allow-list.** Which models a given subscription serves is not knowable from
+ * inside this process — there is no enumeration endpoint on the CLI transport,
+ * and the answer differs per account tier and changes without notice. An
+ * allow-list would therefore be a guess that goes stale in the blocking
+ * direction: it would start refusing models the account can actually serve.
+ *
+ * A deny-list only ever fails in the direction of letting an unknown model
+ * through to the provider, which is the same behaviour as today plus a better
+ * error when it comes back. The entries below each carry the date the refusal
+ * was reproduced, so a stale one is visible rather than merely inherited.
+ */
+const _CLI_UNSERVABLE_MODELS: Readonly<Record<string, ReadonlySet<string>>> = {
+    // Reproduced 2026-08-15 against a ChatGPT-account codex CLI (v0.147.0):
+    // `400 invalid_request_error: The '<id>' model is not supported when using
+    // Codex with a ChatGPT account.` for both ids, on every argv shape tried.
+    // `gpt-5` was this package's own shipped default until the same day.
+    openai: new Set(['gpt-4o', 'gpt-5']),
+};
+
+/**
+ * Why this model cannot be served on this provider's CLI transport, or `null`
+ * when nothing is known against it.
+ *
+ * Names the model, the transport, and the one value that is always servable —
+ * never an invented "supported set", because this process cannot enumerate one.
+ */
+export function unservableCliModelReason(provider: string, model: string): string | null {
+    if (_isAutoModel(model)) {
+        return null;
+    }
+    const denied = _CLI_UNSERVABLE_MODELS[provider];
+    if (denied === undefined || !denied.has(model.trim().toLowerCase())) {
+        return null;
+    }
+    return (
+        `model "${model}" is not servable on the ${provider} CLI transport ` +
+        `(subscription-authed). This is a recorded refusal, not a guess: the ` +
+        `provider returns 400 invalid_request_error for it. The transport ` +
+        `cannot enumerate what it DOES serve, so there is no supported set to ` +
+        `print — set the model to "auto" to let the CLI choose its own ` +
+        `default, or pin an id the account is known to serve.`
+    );
 }
 
 /** Normalised output from a single council member (dataclass `CouncilResponse`). */
@@ -665,7 +743,14 @@ export class OpenAIClient extends ExternalAIClient {
 
     constructor(opts: ApiClientOptions = {}) {
         super();
-        this.model = opts.model ?? DEFAULT_OPENAI_MODEL;
+        // `'auto'` is the CLI transport's "let the host choose" sentinel, and
+        // one `model:` field in `.ai-council.yml` feeds BOTH transports — which
+        // one a member resolves to is decided at run time, not in the config.
+        // The API has no such sentinel (there is no endpoint named `auto`), so
+        // it resolves to this client's own default instead of being sent
+        // verbatim and rejected. Without this, making the template CLI-safe
+        // would have broken every api-transport user in the same commit.
+        this.model = opts.model === undefined || _isAutoModel(opts.model) ? DEFAULT_OPENAI_MODEL : opts.model;
         if (opts.client !== undefined && opts.client !== null) {
             this._client = opts.client;
             return;
@@ -1354,6 +1439,23 @@ export abstract class CliClient extends ExternalAIClient {
     ): CouncilResponse {
         const t0 = _nowMs();
 
+        // 0. model gate — BEFORE the quota gate, because a call that provably
+        // cannot be served should not consume a day's allowance to discover it.
+        // The failure this closes was measured: a pinned model the transport
+        // refuses came back as the opaque `exit_1`, the member was recorded
+        // `reason: unavailable`, and the pass still printed a verdict. Naming
+        // the cause here is what turns that into a reader-legible absence.
+        const unservable = unservableCliModelReason(this.name, this.model);
+        if (unservable !== null) {
+            return new CouncilResponse({
+                provider: this.name,
+                model: this.model,
+                text: '',
+                latency_ms: _elapsedMs(t0),
+                error: `model_unservable: ${unservable}`,
+            });
+        }
+
         // 1. quota gate — local counter check before spawning anything.
         if (this.max_calls_per_day !== null) {
             const counts = load_cli_call_counts(this._cli_calls_path);
@@ -1726,9 +1828,33 @@ export class OpenAICliClient extends CliClient {
         void system_prompt;
         void user_prompt;
         void max_tokens;
+        // `--skip-git-repo-check` because a council pass has no say in where it
+        // runs. Without it, `codex exec` refuses outright from any directory it
+        // does not consider trusted — measured 2026-08-15 from a fresh
+        // non-git directory: `Not inside a trusted directory and
+        // --skip-git-repo-check was not specified.`, no JSON, nothing to parse.
+        //
+        // The scope is narrower than the standing "the openai seat dies in a
+        // worktree" observation, and the correction is worth keeping: a worktree
+        // *inside* a trusted repo IS trusted, so the same probe from
+        // `.claude/worktrees/…` reached the model on both argv shapes. What the
+        // flag buys is the untrusted-CWD case (a temp dir, a fresh clone, a
+        // sandbox), which is where a scripted pass most often runs.
+        //
         // `-` is codex's documented "read the prompt from stdin" positional;
         // the payload itself is assembled in `_stdin_payload`.
-        return [this.binary, 'exec', '--json', '--model', this.model, '-'];
+        const argv = [this.binary, 'exec', '--json', '--skip-git-repo-check'];
+        // An UNPINNED model is the deliberate default for this transport — see
+        // `DEFAULT_OPENAI_CLI_MODEL`. Passing `--model` at all is what a
+        // subscription account rejects, so the flag ships only when a human
+        // named a model. `'auto'` is the same spelling `ai_team.model` already
+        // uses for "let the CLI choose" (`ai-team-config.md` § Why `model:
+        // 'auto'`); one vocabulary, two callers.
+        if (!_isAutoModel(this.model)) {
+            argv.push('--model', this.model);
+        }
+        argv.push('-');
+        return argv;
     }
 
     /**

@@ -356,6 +356,7 @@ export type CliFailureClass =
     | 'binary_missing'
     | 'auth_rejected'
     | 'cli_unsupported'
+    | 'model_unservable'
     | 'timeout'
     | 'server_error'
     | 'quota_exhausted'
@@ -376,6 +377,14 @@ const FALLBACK_ELIGIBLE: ReadonlySet<CliFailureClass> = new Set([
     'binary_missing',
     'auth_rejected',
     'cli_unsupported',
+    // `model_unservable` satisfies the same no-double-charge property in both
+    // of its shapes: the pre-spend gate refuses before any subprocess exists,
+    // and the call-time shape is a provider 400 — rejected at the request
+    // boundary, no generation performed. It is also the class most worth
+    // falling through, because the constraint is the SUBSCRIPTION transport's,
+    // not the model's: the same id the CLI refuses is routinely served on the
+    // api rung.
+    'model_unservable',
 ]);
 
 /** Normalise a raw client error / skip reason into a `CliFailureClass`. */
@@ -387,6 +396,15 @@ export function classifyCliFailure(raw: string): CliFailureClass {
     }
     if (s === 'cli_unsupported' || s === 'unsupported' || s === 'parse_failed') {
         return 'cli_unsupported';
+    }
+    // Prefix match, not equality: the detail carries the operator-facing reason
+    // after the code, and that sentence IS the value of this class — collapsing
+    // it back to a bare token would restore the opaque `exit_1` this replaced.
+    // Also matched on the provider's own wording, so a model refused at call
+    // time (one the deny-list has never seen) classifies the same as one the
+    // pre-spend gate caught.
+    if (s.startsWith('model_unservable') || s.includes('is not supported when using codex')) {
+        return 'model_unservable';
     }
     if (s === 'timeout') return 'timeout';
     if (s === 'cli_quota_exhausted' || s === 'quota_exhausted') return 'quota_exhausted';

@@ -307,11 +307,31 @@ members:
 
   openai:
     enabled: true
-    model: gpt-4o
+    # `auto` — do NOT pin an id here unless you know your transport serves it.
+    #
+    # This shipped as `gpt-4o` until 2026-08-15 and that value silently killed
+    # the seat for every subscription (ChatGPT-account) user: the codex CLI
+    # answers `400 invalid_request_error: The 'gpt-4o' model is not supported
+    # when using Codex with a ChatGPT account.` — and the pass still reported
+    # itself as having concluded, so the member simply went quiet. `gpt-5` is
+    # refused by the same account for the same reason; both are now on a
+    # measured deny-list that refuses the call BEFORE it spends a day's quota.
+    #
+    # Which transport a member resolves to is decided at run time (codex on
+    # PATH → cli; otherwise api), so one value has to be safe on both:
+    #   - cli  → `auto` passes no `--model` and the CLI applies its own default,
+    #            which tracks whatever the subscription currently serves.
+    #   - api  → there is no endpoint named `auto`, so the client resolves it to
+    #            its own default id instead of sending it verbatim.
+    # If you are on the api transport and want a specific model, pin it here —
+    # a set value always passes through verbatim and is never rewritten.
+    model: auto
     api_key_ref: file:openai.key
     # binary: /usr/local/bin/codex       # only valid when mode == cli
-    # Phase 7 — size-fit downgrade ladder (smallest → largest). The
-    # active `model:` above must appear on this list.
+    # Phase 7 — size-fit downgrade ladder (smallest → largest). A pinned
+    # `model:` must appear on this list; `auto` is a sentinel rather than an
+    # id, so it does not (and the ladder stays an api-transport concern —
+    # the CLI's own default is not something this package can order).
     model_ladder:
       - gpt-4o-mini
       - gpt-4o
