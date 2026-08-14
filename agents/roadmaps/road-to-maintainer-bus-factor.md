@@ -208,6 +208,15 @@ trailing-90-day reviewer count is tracked and reported truthfully.
 > unblocking decision. The inheritability + honest-reporting
 > slice is complete; the gate + admin + human-dry-run remain. Roadmap stays open.
 
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-14 | reviewer: claude/host -->
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | The proof-page claim is recorded while the gate is inert | product | The Phase-1 step records "PRs pass a dogfooded AI adversarial-review + security gate". The gate ships `enforce:false` and is inert without its secret, so recording the claim before a live run states as fact something no run backs — a `check_claims` / no-invented-facts breach on the package's most consumer-visible page | The step stays `[ ]` with the reason inline, and the honest advisory status lives in `docs/self-review-gate.md` instead. The claim is the maintainer's to create the moment the gate goes live with the secret — the step is deliberately not closable by an agent | Phase 1 |
+| 2 | The `>1` bus-factor target is reported as achieved when it is parked | product | Phase 4's target needs a second human reviewer. An explicit defer can be misread downstream as "phase complete", which would overstate the package's actual bus factor — the precise number this roadmap exists to be honest about | `second-reviewer-availability` is resolved as **deferred pending adoption**, wording chosen so it cannot read as met; it reopens automatically when a non-maintainer reviews a merged PR. Phases 1-3 are solo-achievable and do not depend on it | Phase 4 |
+| 3 | Branch protection is armed in the UI and drifts from the documented matrix | implementation | The Phase-2 step is a GitHub Settings action outside the tree, so nothing in CI can observe whether the required-check set matches `branch-protection-policy.md` after it is armed | The step stays maintainer-owned and is never closed from a code change; the sibling `-ci-economy` roadmap owns the required-check matrix and carries its own blocker for the same surface, so the two cannot silently disagree | Phase 2 |
+| 4 | The runbook passes a dry-run only because its author ran it | implementation | A release runbook read by the person who wrote it exercises their memory, not the document. A gap only shows when someone follows the written steps literally from cold | The Phase-3 dry-run step requires the maintainer to follow ONLY the written steps; it is explicitly not agent-satisfiable, and the step says so rather than accepting a simulated pass | Phase 3 |
+
 ## Blockers
 
 ### blocker: self-review-gate-cost
