@@ -74,10 +74,17 @@ through on a machine whose estate was counted at the same moment.
 
 Two further observations from the same experiment, neither of them planned:
 
-1. **The count is working-directory dependent.** The same estate reported 393
-   from one directory and 401 from another. A host catalogue is the global
-   estate *plus* whatever the cwd contributes, so any figure is only meaningful
-   next to the directory it was taken in.
+1. **The count is working-directory dependent — and not stable over time
+   either.** The same estate reported 393 from one directory and 401 from
+   another within minutes; later the *same* directory that had read 393 read
+   401. So "stable across two runs" above is a statement about one directory
+   within one window, and it is the strongest claim the data supports — it is
+   what makes the +5 delta readable, not a claim that the number holds.
+   Corrected here rather than left standing: an unqualified "stable" is exactly
+   the overclaim this file's own Risk-3 lesson warns about. Any figure is
+   meaningful only beside the directory *and* the moment it was taken in, which
+   is why the corpus row carries `observed_at` and why a limit must never be
+   cited from a remembered number.
 2. **All five added entries were dropped.** The budget was already exhausted, so
    new entries land past the surviving head rather than displacing anything.
    Adding a skill to an over-budget estate makes it invisible on this host.

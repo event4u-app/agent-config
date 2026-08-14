@@ -369,6 +369,18 @@ export interface ObservationRecord {
     /** Entries the host reported dropping. Only ever host-reported. */
     dropped_count?: number;
     observation_kind?: ObservationKind;
+    /**
+     * True when the host reported dropping more than the projection root
+     * offered, i.e. `bare_count` is the clamped floor and NOT a measurement.
+     *
+     * On the record rather than only in the human report, because the record is
+     * the artefact that outlives the terminal. The first version of this
+     * feature computed the condition inside the stdout branch alone, so
+     * `--json` and `--record` published a confident `bare_count: 0` with
+     * nothing marking it underived — the exact failure the surrounding comments
+     * claimed to have avoided, avoided on the one channel nobody persists.
+     */
+    projection_undercovers?: boolean;
 }
 
 export function buildObservationRecord(
@@ -502,6 +514,7 @@ export function buildCodexObservationRecord(
         truncation_mode: 'budget-strip-all',
         dropped_count: truncation.dropped,
         observation_kind: 'host-reported',
+        projection_undercovers: codexProjectionUndercovers(truncation, entriesTotal),
     };
 }
 
@@ -538,14 +551,22 @@ export function countCommandBodies(root: string): number {
     const walk = (dir: string): void => {
         for (const dirent of fs.readdirSync(dir, { withFileTypes: true })) {
             const abs = path.join(dir, dirent.name);
-            // `existsSync`-style resolution rather than `isDirectory()`, for the
-            // same symlink reason `readProjectedCatalogue` documents: these
-            // trees are projections and a Dirent reports a symlinked directory
-            // as not-a-directory.
-            if (dirent.name.endsWith('.md')) {
-                total += 1;
-            } else if (fs.existsSync(path.join(abs, '.')) && fs.statSync(abs).isDirectory()) {
+            // Directory test FIRST. Testing the `.md` suffix first counted a
+            // directory named `*.md` as one command and never descended into
+            // it — measured at 4 where 5 was correct. `statSync` (not
+            // `Dirent.isDirectory()`) because these trees are projections of
+            // symlinks and a Dirent reports a symlinked directory as not one.
+            let isDir = false;
+            try {
+                isDir = fs.statSync(abs).isDirectory();
+            } catch {
+                // A broken symlink is neither a directory nor a command body.
+                continue;
+            }
+            if (isDir) {
                 walk(abs);
+            } else if (dirent.name.endsWith('.md')) {
+                total += 1;
             }
         }
     };
@@ -623,10 +644,17 @@ function argValue(flag: string): string | null {
 }
 
 function main(): number {
-    const root = resolveCatalogueRoot(argValue('--catalogue-root'));
-    const projected = readProjectedCatalogue(root);
+    // Codex mode names its OWN roots and never reads `projected`, so resolving
+    // this repo's default catalogue first would fail a capture run with a
+    // message about a tree the invocation deliberately replaced. Resolved
+    // lazily, and only for the branch that uses it.
+    const codexMode = argValue('--codex-events') !== null;
+    const root = codexMode
+        ? resolveCatalogueRoot(argValue('--projection-root') ?? argValue('--catalogue-root'))
+        : resolveCatalogueRoot(argValue('--catalogue-root'));
+    const projected = codexMode ? [] : readProjectedCatalogue(root);
 
-    if (projected.length === 0) {
+    if (!codexMode && projected.length === 0) {
         process.stderr.write(
             `❌  catalogue root ${root} holds no SKILL.md entries — a scan that found nothing is not a clean result\n`,
         );
@@ -665,8 +693,8 @@ function main(): number {
         // host's own estate (`~/.codex/skills`) is what IT was handed, which is
         // not this repo's `src/skills` — measuring the wrong tree would put a
         // confident, wrong denominator under the host's own dropped count.
-        const projectionRoot = argValue('--projection-root');
-        const volume = projectedVolume(projectionRoot ? resolveCatalogueRoot(projectionRoot) : root);
+        // `root` already resolved `--projection-root` for this branch (see main).
+        const volume = projectedVolume(root);
         // `--command-root` is optional but almost always required for a HONEST
         // denominator: a host budget spans skills and commands together, and a
         // skills-only count under-reports the estate by whatever the command
@@ -698,7 +726,7 @@ function main(): number {
                     `  truncation_mode: ${record.truncation_mode}\n\n` +
                     (undercovers
                         ? `⚠️  projection under-coverage: the host reported dropping ${record.dropped_count} entries\n` +
-                          `    while this root offers only ${volume.entries}. That is a fact about the ROOT,\n` +
+                          `    while the roots given offer only ${catalogueEntries}. That is a fact about the ROOTS,\n` +
                           `    not a broken measurement: a host catalogue spans skills AND commands and\n` +
                           `    also picks up whatever the working directory contributes. The dropped\n` +
                           `    count stands; the survivor count does not, and is recorded as the clamped\n` +
@@ -717,7 +745,7 @@ function main(): number {
             const logPath = path.join(REPO, OBSERVATION_LOG);
             fs.mkdirSync(path.dirname(logPath), { recursive: true });
             fs.appendFileSync(logPath, `${JSON.stringify(record)}\n`);
-            process.stdout.write(`\nrecorded → ${OBSERVATION_LOG}\n`);
+            process.stderr.write(`\nrecorded → ${OBSERVATION_LOG}\n`);
         }
         return 0;
     }
@@ -782,7 +810,7 @@ function main(): number {
             logPath,
             `${JSON.stringify(buildObservationRecord(report, host, stampedAt))}\n`,
         );
-        process.stdout.write(`\nrecorded → ${OBSERVATION_LOG}\n`);
+        process.stderr.write(`\nrecorded → ${OBSERVATION_LOG}\n`);
     }
 
     return 0;

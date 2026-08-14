@@ -644,6 +644,25 @@ describe('clients — CLI command construction', () => {
         }
     });
 
+    it('every CLI adapter omits --model for the auto sentinel, not just codex', () => {
+        // The config loader now accepts `auto` for ANY provider (the ladder
+        // exemption is provider-agnostic), so an adapter that ignored the
+        // sentinel would take a value the loader blessed and ship it as a model
+        // literally named `auto` — trading a fail-fast config error for an
+        // opaque runtime one.
+        const canned = { returncode: 0, stdout: '{}', stderr: '' };
+        const runs = [
+            stubCli(AnthropicCliClient, canned, { model: 'auto' }),
+            stubCli(GeminiCliClient, canned, { model: 'auto' }),
+            stubCli(OpenAICliClient, canned, { model: 'auto' }),
+        ];
+        for (const { client, calls } of runs) {
+            client.ask('', 'USER', 1);
+            expect(calls[0]!.cmd).not.toContain('--model');
+            expect(calls[0]!.cmd).not.toContain('auto');
+        }
+    });
+
     it('OpenAICliClient omits --model for the auto sentinel and keeps an explicit pin', () => {
         const auto = stubCli(OpenAICliClient, { returncode: 0, stdout: '', stderr: '' }, { model: 'AUTO ' });
         auto.client.ask('', 'USER', 1);
@@ -671,8 +690,9 @@ describe('clients — CLI command construction', () => {
         // The message has to name the value the operator can actually set.
         expect(r.error).toContain('auto');
         expect(classifyCliFailure(r.error ?? '')).toBe('model_unservable');
-        // Falls through to the api rung: the constraint is the subscription
-        // transport's, not the model's.
+        // Declared fallback-ELIGIBLE. Not "falls through": `isFallbackEligible`
+        // has no caller in shipped code, so this asserts the class's stated
+        // property, never a behaviour a run performs.
         expect(isFallbackEligible('model_unservable')).toBe(true);
     });
 

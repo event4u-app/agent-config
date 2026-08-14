@@ -380,10 +380,16 @@ const FALLBACK_ELIGIBLE: ReadonlySet<CliFailureClass> = new Set([
     // `model_unservable` satisfies the same no-double-charge property in both
     // of its shapes: the pre-spend gate refuses before any subprocess exists,
     // and the call-time shape is a provider 400 — rejected at the request
-    // boundary, no generation performed. It is also the class most worth
-    // falling through, because the constraint is the SUBSCRIPTION transport's,
-    // not the model's: the same id the CLI refuses is routinely served on the
-    // api rung.
+    // boundary, no generation performed.
+    //
+    // HONEST SCOPE: this set is not consumed by any shipped path today.
+    // `isFallbackEligible` and `MidFlightFallback` have zero call sites outside
+    // this module and its tests, so membership here is a stated property of the
+    // class, NOT a behaviour a caller performs. Said plainly because the
+    // opposite reading is the attractive one — the constraint really is the
+    // subscription transport's rather than the model's, so the api rung really
+    // would serve the same id, and it would be easy to write that as if it
+    // happened. It does not happen yet.
     'model_unservable',
 ]);
 
@@ -424,8 +430,14 @@ export function isFallbackEligible(failure: CliFailureClass): boolean {
  * can bucket every absent member — whether it never got a transport at all
  * or lost one partway through — under one vocabulary. Returns `null` for a
  * failure class outside the four-value enum (`cli_unsupported`,
- * `server_error`, `other`); a caller falls back to the raw failure detail
- * for those rather than mis-classifying them.
+ * `server_error`, `model_unservable`, `other`); a caller falls back to the raw
+ * failure detail for those rather than mis-classifying them.
+ *
+ * `model_unservable` is deliberately unmapped rather than folded into
+ * `no_auth`: the credential is fine, the model is not, and the `detail` string
+ * carries the specific reason. So the bucket a reader sees is still the generic
+ * `unavailable`, while the line beside it now names the cause — an incomplete
+ * improvement, stated as one.
  */
 export function absentReasonFromCliFailure(failure: CliFailureClass): AbsentReason | null {
     switch (failure) {

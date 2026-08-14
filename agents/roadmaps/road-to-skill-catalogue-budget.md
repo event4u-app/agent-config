@@ -67,6 +67,15 @@ description, and that described entries reach position #325 while bare entries
 start at #45 — which no head-N budget explains, hence `no-selector`.
 
 On **codex** the host states the selector itself: a **budget**, discharged by
+> **Superseded 2026-08-15.** The hand-computed figures in the next paragraph
+> are the ones `projectedVolume` / `description_bytes` was built to replace.
+> Tool-measured on the same estate: **297** skills (not 298 — one directory
+> holds no `SKILL.md`, and membership is "does `SKILL.md` resolve"), **200**
+> command bodies, **55,114** description bytes. Read
+> [the analysis](../evidence/analysis/skill-catalogue-budget-codex.md), not
+> the numbers below; they are kept so the delta between a hand count and a
+> measurement stays visible.
+
 stripping *every* description and then dropping entries wholesale. Measured
 volume on this machine: `~/.codex/skills` holds 298 skill directories,
 `~/.codex/commands` holds 200 command bodies across 101 directories, and the

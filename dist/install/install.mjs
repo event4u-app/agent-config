@@ -19670,6 +19670,10 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
     }
     _emit_progress({ type: "reaped", tool: tool_id, count: reaped.length });
     results[tool_id] = [written_total, skipped_total, "deployed", written_paths];
+    const budget_note = catalogue_budget_warning(tool_id, written_paths);
+    if (budget_note !== null && !state.QUIET) {
+      info(budget_note);
+    }
     if (tool_id === "claude-code") {
       try {
         const manifest = path16.join(package_root, "src", "scripts", "hook_manifest.yaml");
@@ -19742,6 +19746,29 @@ function _preview_global_reap(tools, package_root) {
     if (paths.length > 0) preview[tool_id] = paths;
   }
   return preview;
+}
+var _MEASURED_CATALOGUE_LIMITS = {
+  codex: {
+    survivors: 104,
+    measured_on: "2026-08-15",
+    note: "a 497-artefact estate (297 skills + 200 commands) reported 393 entries dropped, with every description stripped first"
+  }
+};
+function catalogue_budget_warning(tool_id, written_paths) {
+  const limit = _MEASURED_CATALOGUE_LIMITS[tool_id];
+  if (limit === void 0) return null;
+  const entries = /* @__PURE__ */ new Set();
+  for (const p of written_paths) {
+    const norm = p.split(path16.sep).join("/");
+    const skill = /(?:^|\/)skills\/([^/]+)\//.exec(norm);
+    if (skill) {
+      entries.add(`skill:${skill[1]}`);
+      continue;
+    }
+    if (/(?:^|\/)commands\/.+\.md$/.test(norm)) entries.add(`command:${norm}`);
+  }
+  if (entries.size <= limit.survivors) return null;
+  return `  \u26A0\uFE0F  ${tool_id}: this deploy projects ${entries.size} catalogue entries. On ${limit.measured_on}, ${limit.note} \u2014 about ${limit.survivors} survived. Entries past the host's budget arrive without descriptions or not at all. Measurement: agents/evidence/analysis/skill-catalogue-budget-codex.md`;
 }
 function _verify_deploy_targets(anchor, plan) {
   const missing = [];
@@ -21271,6 +21298,7 @@ export {
   _wizard_should_launch,
   _write_settings_surface_snapshot,
   _yaml_scalar,
+  catalogue_budget_warning,
   deep_merge,
   detect_package_type,
   detect_package_type_for_project,

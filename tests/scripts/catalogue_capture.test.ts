@@ -21,6 +21,7 @@ import {
     analyzeSelector,
     buildCodexObservationRecord,
     buildObservationRecord,
+    countCommandBodies,
     formatReport,
     parseCodexTruncation,
     projectedVolume,
@@ -223,6 +224,7 @@ describe('observation record', () => {
             'host',
             'observation_kind',
             'observed_at',
+            'projection_undercovers',
             'schema',
             'separating_candidates',
             'truncation_mode',
@@ -250,6 +252,24 @@ describe('projectedVolume', () => {
         expect(v.declares_description).toBe(1);
         expect(v.description_bytes).toBe(5);
         expect(readProjectedCatalogue(root)[0]!.descriptionLength).toBe(3);
+    });
+});
+
+describe('countCommandBodies', () => {
+    it('descends into a directory whose name ends in .md instead of counting it', () => {
+        const root = path.join(TMP, 'commands-weird');
+        fs.mkdirSync(path.join(root, 'weird.md'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'weird.md', 'inner.md'), '# a');
+        fs.writeFileSync(path.join(root, 'weird.md', 'inner2.md'), '# b');
+        fs.writeFileSync(path.join(root, 'plain.md'), '# c');
+
+        // Testing the suffix before the directory branch counted `weird.md` as
+        // one command and never descended: 2 instead of 3.
+        expect(countCommandBodies(root)).toBe(3);
+    });
+
+    it('is zero for an absent root rather than throwing', () => {
+        expect(countCommandBodies(path.join(TMP, 'does-not-exist'))).toBe(0);
     });
 });
 
@@ -302,6 +322,20 @@ describe('codex truncation parsing', () => {
         // possibility (its estate is not ours), and a negative survivor count
         // would be nonsense rather than a finding.
         expect(buildCodexObservationRecord({ dropped: 900 }, 498, '2026-08-15').bare_count).toBe(0);
+    });
+
+    it('marks a clamped survivor count ON THE RECORD, not only in the human report', () => {
+        // The whole point: `--json` and `--record` are the channels that
+        // persist, and the first version computed under-coverage inside the
+        // stdout branch only. A corpus reader could not tell a measured 0 from
+        // a clamp.
+        const clamped = buildCodexObservationRecord({ dropped: 900 }, 498, '2026-08-15');
+        expect(clamped.bare_count).toBe(0);
+        expect(clamped.projection_undercovers).toBe(true);
+
+        const measured = buildCodexObservationRecord({ dropped: 393 }, 497, '2026-08-15');
+        expect(measured.bare_count).toBe(104);
+        expect(measured.projection_undercovers).toBe(false);
     });
 
     it('never runs the per-entry inference over a budget-shaped observation', () => {

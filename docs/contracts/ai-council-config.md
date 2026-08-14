@@ -244,15 +244,32 @@ Implications:
   brake: sized well above normal use, so an explicit override is only needed
   to tighten it (see the shipped `.ai-council.yml.example` for a
   worked-example tighter sizing) or to loosen it further.
-- **Omitting `model:` for a vendor `cli` member is a PIN, not "latest".**
-  Each vendor CLI client (`anthropic` / `openai` / `gemini`) falls back to a
-  dedicated `DEFAULT_*_CLI_MODEL` constant when `model` is unset
+- **Omitting `model:` for a vendor `cli` member is a PIN for `anthropic` and
+  `gemini`, and NOT a pin for `openai`.** Each vendor CLI client falls back to
+  a dedicated `DEFAULT_*_CLI_MODEL` constant when `model` is unset
   (`clients.ts`); `xai` / `perplexity` CLIs are community API wrappers and
-  reuse their `DEFAULT_*_MODEL` API constant. The value is a deliberate pin;
-  the vendor CLI's own default may be newer. Bump the constant intentionally —
-  never assume the omitted default tracks the provider's latest release. The
-  CLI constants are separate from the API ones because the two can legitimately
-  diverge — `openai` API `gpt-4o` vs CLI `gpt-5` is the proof.
+  reuse their `DEFAULT_*_MODEL` API constant. For `anthropic` and `gemini` that
+  value is a deliberate pin and the vendor CLI's own default may be newer —
+  bump the constant intentionally rather than assuming it tracks the latest
+  release.
+
+  **`DEFAULT_OPENAI_CLI_MODEL` is the `auto` sentinel since 2026-08-15, and
+  that is the opposite of a pin.** It passes NO `--model` flag, so the codex
+  CLI's own default applies. This paragraph previously cited "`openai` API
+  `gpt-4o` vs CLI `gpt-5`" as the proof that the two constant families
+  diverge; the divergence is real but that CLI value is gone, because a
+  subscription-authed (ChatGPT) account refuses **both** ids with `400
+  invalid_request_error`. A pinned id did not select a model there — it
+  disabled the seat, silently, while the pass still printed a verdict. Which
+  ids an account serves is not knowable from inside this process, so no id is
+  shipped for that transport.
+
+- **`model: auto` is accepted for any member and honoured by every adapter.**
+  It is a sentinel, not an id: CLI adapters omit `--model`, API clients resolve
+  it to their own `DEFAULT_*_MODEL`, and `_build_member` exempts it from the
+  `model_ladder` membership check (a downgrade ladder holds concrete ids, and
+  requiring a sentinel on one is a category error). A set value always passes
+  through verbatim — the loader never rewrites a pin.
 - **Quota observability (step-8 D1, D4):** every `council run` /
   `council debate` prints a one-line `council:quota · <provider>
   used/limit · …` summary before the first member fires. Every provider now

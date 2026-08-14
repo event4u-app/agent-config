@@ -560,7 +560,7 @@ export class AnthropicClient extends ExternalAIClient {
 
     constructor(opts: ApiClientOptions = {}) {
         super();
-        this.model = opts.model ?? DEFAULT_ANTHROPIC_MODEL;
+        this.model = opts.model === undefined || _isAutoModel(opts.model) ? DEFAULT_ANTHROPIC_MODEL : opts.model;
         this._enablePromptCache = opts.enable_prompt_cache ?? false;
         this._promptCacheTtl = opts.prompt_cache_ttl ?? DEFAULT_PROMPT_CACHE_TTL;
         if (opts.client !== undefined && opts.client !== null) {
@@ -859,7 +859,7 @@ export class GeminiClient extends ExternalAIClient {
 
     constructor(opts: ApiClientOptions = {}) {
         super();
-        this.model = opts.model ?? DEFAULT_GEMINI_MODEL;
+        this.model = opts.model === undefined || _isAutoModel(opts.model) ? DEFAULT_GEMINI_MODEL : opts.model;
         if (opts.client !== undefined && opts.client !== null) {
             this._client = opts.client;
             return;
@@ -1690,13 +1690,15 @@ export class AnthropicCliClient extends CliClient {
     ): string[] {
         void user_prompt;
         void max_tokens;
+        // `--model` only when a model is actually pinned — see the gemini and
+        // codex adapters for why the `auto` sentinel must not reach a CLI as a
+        // literal.
         return [
             this.binary,
             '--print',
             '--output-format',
             'json',
-            '--model',
-            this.model,
+            ...(_isAutoModel(this.model) ? [] : ['--model', this.model]),
             // A council member is a text-in/text-out oracle: it reads a question
             // and returns an opinion. It never edits, never runs a command,
             // never fetches. `claude` is an AGENTIC CLI and grants its full
@@ -2008,7 +2010,16 @@ export class GeminiCliClient extends CliClient {
         // nothing fired the `||` branch and the absent FLAG was reported as an
         // absent BINARY. A compound probe reports its last exit code, not the
         // fact you meant to test.
-        return [this.binary, '--output-format', 'json', '--model', this.model];
+        // Same sentinel handling as the codex adapter: `auto` means "let the
+        // CLI choose", so the flag is omitted rather than sent as a model
+        // literally named `auto`. The config loader now accepts `auto` for
+        // ANY provider (the ladder exemption is provider-agnostic), so a
+        // client that ignored it would take a value the loader blessed and
+        // fail opaquely at call time — trading a fail-fast config error for a
+        // runtime one.
+        const argv = [this.binary, '--output-format', 'json'];
+        if (!_isAutoModel(this.model)) argv.push('--model', this.model);
+        return argv;
     }
 
     /**
@@ -2147,7 +2158,7 @@ export class XAICliClient extends CliClient {
     ): string[] {
         void max_tokens;
         const cmd = [this.binary, '-p', _foldSystemPrompt(system_prompt, user_prompt)];
-        if (this.model) {
+        if (!_isAutoModel(this.model)) {
             cmd.push('--model', this.model);
         }
         return cmd;
@@ -2219,7 +2230,7 @@ export class PerplexityCliClient extends CliClient {
     ): string[] {
         void max_tokens;
         const cmd = [this.binary, '-p', _foldSystemPrompt(system_prompt, user_prompt)];
-        if (this.model) {
+        if (!_isAutoModel(this.model)) {
             cmd.push('--model', this.model);
         }
         return cmd;
