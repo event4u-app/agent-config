@@ -214,3 +214,20 @@ a grant-bearing budget.
 `task preflight` was green on the base commit **before** any edit, so anything red
 afterwards is attributable to this branch. Per-change verification is recorded in
 each commit message. Remote CI on the PR remains the authoritative gate.
+
+**One gate went red during the run and was repaired, not argued around.**
+`lint_plan_risk_register` failed on `road-to-maintainer-bus-factor` — closing a
+blocker and deduping a step counted as a substantial change, which lifts the
+grandfather exemption the file had been relying on. A four-row Risk Register was
+written. Green on re-run: 34 ready roadmaps scanned, clean.
+
+**One advisory is left standing deliberately, and a skip was REFUSED.**
+`check_completion_review` reports `missing-artifact` — 6 code paths across 23
+changed files with no R2 review artefact. The gate accepts a skip declaration,
+and this run did **not** file one: its grammar requires asserting *"no code
+surface for this completion"*, which would be false here. Filing it to clear an
+advisory would be exactly the defect this sweep's own triage flagged on PR
+#1349 — an undeclared or untrue skip on a code-bearing diff — and repeating a
+finding while reporting it would be worse than carrying the advisory. The
+advisory is therefore disclosed rather than silenced: **this branch's code
+changes have not had a completion review**, and one is owed before merge.
