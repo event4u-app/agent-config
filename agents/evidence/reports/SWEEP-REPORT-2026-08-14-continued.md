@@ -249,3 +249,67 @@ code surface for this completion"*, which was false there. This run adds **no
 code** — every change is roadmap prose, one ADR status field, and the
 regenerated dashboard — so it contributes no new code surface to that debt. It
 does not discharge it either.
+
+## Addendum — the maintainer disposed the deferrals, and the roadmap closed
+
+Nothing above is rewritten. This is the delta after the run's one question was
+answered: **option 1 — migrate all four deferrals to one successor roadmap.**
+
+`road-to-inbox-harvest-2026-08` is **closed at 100 % and archived**. P2.2 — the
+executable-DoD + bounded self-fix loop, whose blocker had resolved that morning
+and whose step still carried the superseded "MEASUREMENT HALF BLOCKED" premise —
+is `[x]`. The four `[~]` items are `[-] migrated` into
+`road-to-inbox-harvest-residuals.md` as R1–R4, each carrying the reasoning that
+deferred it, because in three of the four that reasoning is the load-bearing
+part: R1's acceptance clause demands the committed-corpus migration § 2.7 of the
+completion-review contract forbids, and its schema looks wrong deliberately (the
+repo's Draft-07 subset silently ignores `$ref` and `const`, so the obvious
+tidy-up would validate nothing); R2's declined design names a revisit trigger
+that has not fired; R4's ratchet-before-split is the decision, not a detail.
+
+Both blockers that outlived the roadmap moved with them, since an open blocker
+refuses archival and keeping the file active merely to hold them would be worse.
+
+**Revised counts.**
+
+| Measure | Run start | After the disposition | Δ |
+|---|---:|---:|---:|
+| Open roadmaps | 26 | 26 | 0 (one archived, one created) |
+| Steps done | 234 / 411 | 223 / 403 | one roadmap out of the active set |
+| Open blockers | 33 | 33 | 0 (two migrated, not closed) |
+| Blockers needing the user | 9 | 9 | 0 |
+
+The step total falls because a closed roadmap leaves the active denominator; it
+is not a regression. The blocker count is again flat and again conceals a real
+exchange — two moved home rather than closing.
+
+**`spent-inbox-artifacts-await-deletion` was migrated, not executed, and the
+reason was found by attempting it.** The grant approved deleting *"both
+`council-q-*.md` files"*. That glob matches **12** files in `agents/tmp.old/`
+(measured; the 9 sibling `council-question-*.md` do not match, since the glob
+requires `council-q-`), so acting on the pattern would delete 10 files nobody
+approved — and `non-destructive-by-default` requires an approval to name its
+exact object. The directory is also gitignored and per-checkout: a deletion made
+in a worktree is a no-op, and one made in the main checkout appears in no diff a
+reviewer reads. The item needs two filenames, not a broader authorization.
+
+**Link depth was re-done by hand, and a sibling proves why.** Moving into
+`archive/` breaks two classes at once: the new links to the successor need `../`,
+and pre-existing `../../docs/` links need `../../../`. An already-archived
+sibling carries `../../docs/`, which resolves to a nonexistent `agents/docs/` —
+that pattern was **not** copied. Every relative link in the moved file was
+resolved individually; `check-refs` could not have caught any of it, because it
+reports 580 targets under `excluded_directory` and `archive/` is among them.
+
+**Verification.** `lint_roadmap_blockers` 33 roadmaps clean ·
+`lint_plan_risk_register` clean over 32 ready roadmaps ·
+`lint_roadmap_family_cap` 2/2 slots (the successor is not a family slot) ·
+`roadmap:progress-check` up to date · `task preflight` green with zero
+advisories · `check_completion_review` clean at 13 changed files.
+
+**The skip was re-bound twice, and that is the mechanism working.** It held
+scopes `f4f2bda3…` → `83ff6329…` → `a7215cd7…`, once for the sweep report and
+once for the closure. Each re-bind touched the artifact and nothing else — the
+artifact is not itself counted in the scope, which is what makes the fixed point
+reachable. A skip that survived a content change would be asserting "no code
+surface" about a diff it had never seen.
