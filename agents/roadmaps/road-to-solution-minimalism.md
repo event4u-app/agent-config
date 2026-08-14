@@ -833,8 +833,24 @@ which is exactly the reader that must not be misled.
 
 ### blocker: benchmark-spend-authorization
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
+- **Resolution (2026-08-14):** **spend GRANTED in-session**, at the pre-registered
+  cost sheet — ceiling **$250**, to be passed as `--max-usd 250` so the
+  `collect_records` guard aborts rather than overruns. The decision half of this
+  blocker is permanently discharged; it never needs asking again.
+
+  **But the run was NOT fired, and the reason is the blocker's own item 3 rather
+  than a missing permission.** Deltas #10 (~30 hand-written oracles) and #11 (the
+  cognitive-complexity endpoint) are still absent, and the metric-pair acceptance
+  criterion **cannot report a pass without #11**. Firing a ~$150–250 sweep whose
+  acceptance criterion is structurally unreachable would spend the grant on an
+  unpublishable result — the grant unblocks the run, it does not unblock the
+  harness, exactly as written. Delta #11 is deterministic and offline
+  (implementable with no spend at all), so the cheap work comes first.
+
+  **PRE-AUTHORIZED — executes without further ask when** deltas #10 and #11 land.
+  No new spend question at that point; the ceiling above stands.
 - **Blocks:** Phase 3 — Pinned public-repo benchmark (the proof exhibit)
 - **What to do:**
   1. Read the cost sheet in

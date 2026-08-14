@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 28 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **36** open blockers, **10** need you → `agent-config gates`
+> 28 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **33** open blockers, **8** need you → `agent-config gates`
 
 ## Overall
 
-**255 / 435 steps done · 59%**
+**255 / 434 steps done · 59%**
 
 ```text
 ████████████████████████░░░░░░░░░░░░░░░░   59%
@@ -29,14 +29,14 @@
 | 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
 | 12 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
 | 13 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 14 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 14 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
 | 15 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 16 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
-| 17 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 17 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 18 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 19 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
 | 20 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 21 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+| 21 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | 0 | ███████░░░ 71% |
 | 22 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 8 | 9 | 1 | 0 | 0 | █████░░░░░ 53% |
 | 23 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 9 | 10 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | █████░░░░░ 53% |
 | 24 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -397,27 +397,14 @@ _1 blocker resolved._
 
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 
-**Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery** — 7 / 12 done (58%)
+**Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery** — 7 / 11 done (64%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Dogfood the review machinery as a pre-merge gate | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
+| 1 | Dogfood the review machinery as a pre-merge gate | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 2 | CODEOWNERS + branch protection | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 3 | Make a release inheritable (the runbook) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 4 | Lower bus-factor toward >1 (opportunistic, honest) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
-
-<a id="blockers-road-to-maintainer-bus-factor"></a>
-**Blockers**
-
-- **second-reviewer-availability** (owner: maintainer) — blocks Phase 4 (the >1 target only)
-  - **What to do:**
-    a second human reviewer cannot be manufactured; this phase is
-    opportunistic and gated on real external interest (couples to the adoption
-    roadmap). Phases 1–3 do NOT depend on it — reviewability and inheritability are
-    achievable solo.
-  - **Resolved when:** ≥1 non-maintainer has reviewed a merged PR, or the phase is explicitly deferred pending adoption.
-
-_1 blocker resolved._
 
 ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
 
@@ -497,17 +484,6 @@ _1 blocker resolved._
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Run and publish | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-scale-history-bench-run"></a>
-**Blockers**
-
-- **benchmark-spend-authorization** (owner: user) — blocks Phase 1 (both steps) — everything author-able is already committed and dry-verified in PR #1016.
-  - **What to do:**
-    1. Approve the run budget in-session (estimate rendered before the
-    first call: 3 arms × 16 runs × ≥2 families on the agentic build
-    task; same standing authorization the team-mode Phase-5 bench
-    waits on).
-  - **Resolved when:** the user confirms the run budget in-session.
 
 ### [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md)
 
@@ -640,25 +616,6 @@ _1 blocker resolved._
 | 1 | The ladder, as rule text | ✅ done | 0 | 12 | 0 | 1 | 100% |
 | 2 | Over-build review lens | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Pinned public-repo benchmark (the proof exhibit) | 🟡 in progress | 10 | 6 | 0 | 0 | 38% |
-
-<a id="blockers-road-to-solution-minimalism"></a>
-**Blockers**
-
-- **benchmark-spend-authorization** (owner: user) — blocks Phase 3 — Pinned public-repo benchmark (the proof exhibit)
-  - **What to do:**
-    1. Read the cost sheet in
-    [`solution-minimalism-phase0-spikes § S0.3`](../evidence/investigations/solution-minimalism-phase0-spikes.md):
-    30 tasks × 4 arms × 3 seeds on sonnet ≈ 360 runs ≈ 180M tokens ≈
-    **$150–250 as a floor**, higher on a real OSS repo.
-    2. Decide the grant, and state the ceiling you are granting. The sweep enforces
-    it: `--max-usd <ceiling>` aborts the sweep through the `collect_records`
-    guard (delta #4), and an unpriceable model plus `--max-usd` is refused rather
-    than silently uncapped.
-    3. Note what the grant does **not** buy on its own: deltas #10 (~30 hand-written
-    oracles) and #11 (the cognitive-complexity endpoint) are still absent, and
-    the metric-pair acceptance criterion cannot report a pass without #11. The
-    grant unblocks the run; it does not unblock the harness.
-  - **Resolved when:** the user states a spend ceiling for the Phase-3 sweep, or cancels Phase 3 against the cost sheet.
 
 ### [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md)
 

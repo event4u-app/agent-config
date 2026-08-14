@@ -99,10 +99,13 @@ maintainer after a gap) ship a correct release without tribal knowledge.
       CLAIM is the maintainer's to create the moment the gate goes live with the
       secret — not before. -->
       <!-- OPEN — same `self-review-gate-cost` block (the teeth decision). -->
-- [ ] Record it honestly on the proof page: "PRs pass a dogfooded AI
-      adversarial-review + security gate; this is a floor, not independent human
-      review."
-      <!-- OPEN — records the Phase-1 gate, which is deferred above. -->
+      <!-- DEDUPED 2026-08-14: this step appeared TWICE, verbatim, with the
+           second copy carrying only a weaker note ("records the Phase-1 gate,
+           which is deferred above"). Both described one act, so the duplicate
+           inflated count_open by 1 and would have needed closing twice. The
+           surviving copy keeps the fuller note, which names WHY the claim
+           cannot be recorded yet (check_claims / no-invented-facts while the
+           gate is inert without the secret). No obligation was dropped. -->
 
 **Exit:** a required, recorded self-review gate runs on every non-trivial PR.
 **Rollback:** demote to advisory (one workflow flag) — but a governance package
@@ -228,8 +231,18 @@ trailing-90-day reviewer count is tracked and reported truthfully.
   needed. The "Resolved when" stays Phase 1's exit criterion.
 
 ### blocker: second-reviewer-availability
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** 2026-08-14 — **explicitly deferred pending adoption**, which is
+  the second of the two branches this blocker's own Resolved-when offers.
+  Maintainer-delegated under the blanket in-session grant. The first branch
+  ("≥1 non-maintainer has reviewed a merged PR") cannot be discharged by any
+  authorization: it needs a second human, and this repo has no external adopter
+  yet. Taking the defer branch is therefore the only honest close — it records
+  that the >1 target is *parked on adoption*, not *achieved*. Phase 4's >1 target
+  stays out of reach and must not be reported as met; Phases 1–3 were never
+  gated on it and remain solo-achievable. **Reopens automatically** the day a
+  non-maintainer reviews a merged PR — no further ask needed to resume.
 - **Blocks:** Phase 4 (the >1 target only)
 - **What to do:** a second human reviewer cannot be manufactured; this phase is
   opportunistic and gated on real external interest (couples to the adoption
