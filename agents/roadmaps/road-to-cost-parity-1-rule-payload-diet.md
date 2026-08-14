@@ -378,6 +378,12 @@ part 0's table.
 - **Status:** resolved
 - **Owner:** user
 - **Blocks:** Phase 2 tranches landing
+- **What to do:** merging a cluster deletes published skill names from
+  consumer trees — a consumer-facing breaking change under
+  `downstream-changes § Breaking changes`. Each tranche needs explicit
+  permission plus its migration note; the pilot's note is the template for
+  the rest. **The permission half is discharged — see the resolution below;
+  the migration note is not, and rides each tranche as its deliverable.**
 - **Resolution (2026-08-14):** **ALL tranches authorized in-session**, not only
   the pilot — the maintainer's blanket grant names this blocker explicitly and
   says so in terms. The permission half is permanently discharged and needs no

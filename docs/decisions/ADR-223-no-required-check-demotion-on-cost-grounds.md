@@ -1,6 +1,6 @@
 ---
 adr: 223
-status: proposed
+status: accepted
 date: 2026-08-11
 decision: no-required-check-demotion-on-cost-grounds
 supersedes: —
@@ -22,10 +22,24 @@ review_trigger: >-
 
 ## Status
 
-**Proposed** · 2026-08-11. Records a decision *not* to change the required set,
-with the measurement that decided it. Acceptance is the maintainer's call. This
-record changes no enforcement by itself — it neither edits ruleset `17749383`
-nor any workflow.
+**Accepted** · 2026-08-14 (proposed 2026-08-11). Records a decision *not* to
+change the required set, with the measurement that decided it. This record
+changes no enforcement by itself — it neither edits ruleset `17749383` nor any
+workflow.
+
+**Accepted under the maintainer's blanket in-session grant of 2026-08-14**,
+which names `required-check-set-change` explicitly. The acceptance is a
+decision and nothing more, which is exactly the scope this ADR was written to
+have: its own decision is *not to demote*, so accepting it authorises **no
+ruleset write at all**. The enlargement direction recommended at
+[`branch-protection-policy.md:163`](../contracts/branch-protection-policy.md)
+is a separate act, is repo-admin, and stays with the maintainer — the procedure
+is written out in the `required-check-set-change` blocker rather than performed
+here, per the same grant's instruction to hand back the steps it cannot
+delegate.
+
+The `review_trigger` above is untouched by acceptance and both of its
+conditions remain observable events rather than dates.
 
 ## Context
 
