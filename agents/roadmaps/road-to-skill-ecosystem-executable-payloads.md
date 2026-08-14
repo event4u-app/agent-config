@@ -197,10 +197,41 @@ Closes D2. Steps 1, 2 and 4 are ungated; step 3 is gated on S0.3.
   **list** must not satisfy the rule, and a sixth that a flow-style
   `runtime_requires: {…}` does — 6 tests in
   `tests/scripts/skill_linter.test.ts`, 146 pass.
-- [ ] Deprecate free-text `compatibility` toward a structured `harness_compat`
+- [x] Deprecate free-text `compatibility` toward a structured `harness_compat`
   enum. **Human-gated:** `compatibility` is a public Agent-Skills spec field and
   2 skills use it; a deprecation is a consumer-visible schema decision, not an
   autonomous edit.
+
+  **Landed 2026-08-14 on the maintainer decision recorded below — option 2 of
+  three, additive.** `harness_compat` sits **beside** `compatibility`; the public
+  field is kept and marked `deprecated: true`
+  (`src/scripts/schemas/skill.schema.json:31-44`), not removed. Both users carry
+  the new field additively (`src/skills/docx-authoring/SKILL.md:9`,
+  `src/skills/pdf-tools/SKILL.md:9`).
+
+  **Enum: one value, `consumer-installed-deps`, derived not invented.** Both
+  declarations assert the identical class — a consumer-installed library/engine,
+  zero runtime shipped by this package — and `grep '^compatibility:' src/`
+  confirms those two are the complete population, so no second class is
+  attested. A `host-native` complement was deliberately **not** added: it is
+  implied, never declared. The schema states the growth rule — a value is added
+  when a skill attests it.
+
+  **The deprecation notice went to `docs/MIGRATION.md § Scheduled deprecations`,
+  NOT to the manifest `deprecations` block, and the reason is checkable.** That
+  block is scoped by its own schema to a deprecated *manifest key* still being
+  emitted; `compatibility` never reaches the manifest — verified against
+  `dist/discovery/discovery-manifest.json`, whose skill entries carry only
+  `category/checksum/install/lifecycle/name/packs/path/trust/workspaces`. An
+  entry there would announce the deprecation of a key no manifest consumer can
+  read. No removal date is pinned (`scope-control`: agents do not pin dates);
+  the row reads "next major after the notice".
+
+  A `deprecated_compatibility_field` **warning** (never an error) fires when
+  `compatibility` is declared without `harness_compat`, to stop new adoption
+  during the window. It matches **0 of 437** artefacts today, so it ships with
+  no `pass → pass_with_warnings` regression.
+  <!-- verify: ./scripts-run src/scripts/skill_linter --all -->
 
 ## Phase 2 — Executable payload pilots
 
@@ -385,8 +416,15 @@ prevented rather than merely bounded.
 
 ### blocker: compatibility-deprecation-is-a-consumer-visible-decision
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** decided 2026-08-14 under the blanket in-session maintainer
+  grant — **option 2, the additive path**: `harness_compat` lands beside
+  `compatibility`, which is kept and marked deprecated rather than removed. The
+  eventual removal is approved in principle and scheduled through the consumer-
+  notice mechanism (`docs/MIGRATION.md § Scheduled deprecations`), never dropped
+  silently and never date-pinned by an agent. The decision record the step cites
+  is the schema `$comment` plus that MIGRATION row.
 - **Blocks:** Phase 1, the `harness_compat` step.
 - **What to do:** decide whether this schema keeps mirroring the public
   Agent-Skills `compatibility` field, adds `harness_compat` beside it

@@ -256,6 +256,17 @@ const EXTERNAL_EXECUTION_HANDLERS = new Set(['shell', 'php', 'node']);
 const RUNTIME_REQUIRES_BLOCK_PATTERN = /^runtime_requires:[ \t]*(\{.*)?$/m;
 
 /**
+ * The deprecated free-text `compatibility:` key and its structured successor
+ * `harness_compat:`, both top-level. Anchored at column 0 so a `compatibility:`
+ * nested inside another block (or the word inside a quoted description) is not
+ * read as the frontmatter key — the same reason the neighbouring patterns above
+ * use `^` rather than a bare substring test. A value is required after the colon
+ * so a bare key with the value on the next line is not counted as a declaration.
+ */
+const COMPATIBILITY_KEY_PATTERN = /^compatibility:[ \t]*\S/m;
+const HARNESS_COMPAT_KEY_PATTERN = /^harness_compat:[ \t]*\S/m;
+
+/**
  * `safety_mode: strict` is a claim made in the frontmatter about a skill whose
  * execution path may mutate something. Nothing checked that the body honours it,
  * so the claim could be pure metadata. These patterns recognise the two shapes
@@ -1629,6 +1640,27 @@ export function lint_skill(p: string, text: string, absPath: string | null = nul
                 }
                 issues.push(new Issue('warning', 'superseded_skill', msg));
             }
+        }
+
+        // `compatibility:` is deprecated in favour of the structured
+        // `harness_compat:` (schema, 2026-08-14). The field is NOT removed — the
+        // schema still accepts it and both existing users still carry it — so this
+        // is a warning, not an error: its job is to stop NEW adoption during the
+        // window, which is the only thing a deprecation notice with no gate cannot
+        // do. Regex, not a YAML parse, to match the file's existing convention.
+        if (
+            COMPATIBILITY_KEY_PATTERN.test(frontmatter) &&
+            !HARNESS_COMPAT_KEY_PATTERN.test(frontmatter)
+        ) {
+            issues.push(
+                new Issue(
+                    'warning',
+                    'deprecated_compatibility_field',
+                    "Frontmatter declares the deprecated free-text 'compatibility:' without the structured " +
+                        "'harness_compat:' that supersedes it — add harness_compat (see skill.schema.json and " +
+                        'docs/MIGRATION.md § Scheduled deprecations); compatibility stays accepted until removal',
+                ),
+            );
         }
 
         const execution = parseExecutionBlock(frontmatter);

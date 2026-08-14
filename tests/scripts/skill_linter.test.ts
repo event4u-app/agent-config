@@ -1128,6 +1128,38 @@ ${frontmatterExtra}---
         expect(hasCode(result, 'missing_runtime_requires')).toBe(true);
     });
 
+    // road-to-skill-ecosystem-executable-payloads Phase 1, additive resolution of
+    // blocker `compatibility-deprecation-is-a-consumer-visible-decision`: free-text
+    // `compatibility:` is deprecated toward the structured `harness_compat:`, but
+    // NOT removed. The rule is a warning whose only job is to stop new adoption
+    // during the window, so the near-misses below are what keep it from firing on
+    // skills that never used the field at all.
+    it('compatibility without harness_compat warns', () => {
+        const result = lint_file(makeSkill('compatibility: "Requires a consumer-installed library."\n'));
+        expect(hasCode(result, 'deprecated_compatibility_field')).toBe(true);
+    });
+
+    it('compatibility alongside harness_compat is silent', () => {
+        const result = lint_file(
+            makeSkill('compatibility: "Requires a consumer-installed library."\nharness_compat: consumer-installed-deps\n'),
+        );
+        expect(hasCode(result, 'deprecated_compatibility_field')).toBe(false);
+    });
+
+    it('a skill declaring neither field is silent', () => {
+        const result = lint_file(makeSkill(''));
+        expect(hasCode(result, 'deprecated_compatibility_field')).toBe(false);
+    });
+
+    // The key is matched at column 0, so the word inside a quoted value is not the
+    // key. Without the anchor this fires on any skill whose description happens to
+    // discuss compatibility — a false positive on prose, which is the failure mode
+    // that makes a warning rule get ignored.
+    it('the word compatibility inside another value does not fire', () => {
+        const result = lint_file(makeSkill('replaced_by: some-other-skill\nstatus: active\n#  compatibility: not a key\n'));
+        expect(hasCode(result, 'deprecated_compatibility_field')).toBe(false);
+    });
+
     // road-to-skill-ecosystem-executable-payloads Phase 5 — the action-reference
     // split. `safety_mode: strict` is a frontmatter claim about a mutating path;
     // these pin that the body has to honour it one of the two allowed ways.
