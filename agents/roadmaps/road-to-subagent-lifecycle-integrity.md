@@ -448,13 +448,30 @@ infrastructure).
 - [ ] **Step 1:** Extend `_lib/session_role.ts` resolution: payload `agent_id`
       present ⇒ role `worker`, without touching the env path (CLI spawn
       wrappers keep working). Gated on the Phase-0 Step-4 spike.
-- [ ] **Step 2:** Supersede the stale blocker comment
+- [x] **Step 2:** Supersede the stale blocker comment
       (`hook_manifest.yaml:568-571` — the comment moved again when Phase 1
       Step 1 inserted the `subagent-ledger` concern above it; the draft's
       `:536-540` and the adoption note's `:547-550` are both stale)
       with the payload mechanism and the spike
       ref — corrected in place, the same way round 7 corrected the
       verify-before-complete path comment (`hook_manifest.yaml:63-66`).
+
+      **Landed 2026-08-14.** Written at `hook_manifest.yaml:593-612`, appended
+      after the blocker note now sitting at `:589-592`. **The cited `:568-571`
+      was stale for the third time** — that range currently holds the
+      `spawn-guard-shadow` warn-rung comment. Three successive line citations in
+      this step have now rotted (`:536-540`, `:547-550`, `:568-571`); the
+      finding is the pattern, not the third instance, and it is why the new
+      comment is anchored to the concern id rather than to a line number.
+      Comment-only, no behavioural key touched (`block-config-weakening` watches
+      this file). Content is deliberately **branch-neutral**, because Phase 4's
+      falsifier is still unresolved: it records that the env limitation stands,
+      that `subagent_start`/`subagent_stop` are bound and carry payload
+      `agent_id`, that the payload axis is unimplemented because the Phase-0
+      Step-4 spike is blocked rather than because it was decided against, and
+      that field presence is not assumed — the neighbouring `agent_type` probe
+      already came back negative at 18 of 25 null.
+      <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->
 - [ ] **Step 3:** Keep the invariant: `pre_tool_use` concerns are never
       droppable by role (the resolver already refuses this; add the payload
       path to the existing test).

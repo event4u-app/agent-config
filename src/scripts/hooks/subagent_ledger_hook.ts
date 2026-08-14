@@ -73,8 +73,9 @@
  * a `subagent_reaped` line is written for it. That line is not bookkeeping —
  * it is the closest thing this instrument has to a direct observation of a
  * never-returning dispatch, which is why the leak is reported rather than
- * quietly swept. `session_id` rides on the record so a future sweep can scope
- * by session; nothing reads it yet and it is not claimed to.
+ * quietly swept. `session_id` rides on the open record AND on both dispatch
+ * lines so a rate can be scoped by session; nothing reads it yet and it is not
+ * claimed to.
  *
  * ── Depth and concurrency (Step 3) ────────────────────────────────────────
  *
@@ -598,6 +599,13 @@ function handleStart(root: string, payload: JsonObject, nowIso: string, sessionI
         event: 'subagent_start',
         ts: nowIso,
         ref,
+        // Phase 1 Step 4 correction (b): without this the dispatch denominator
+        // is not per-session. Three sessions share one ledger file, so a rate
+        // computed over the file aggregates strangers — the measured window
+        // held 7 starts against 25 stops, one of them an agent type this
+        // session never dispatched. The open record already carried it; the
+        // appended line did not, and the line is what a rate is computed from.
+        session_id: sessionId,
         agent_type: rec.agent_type,
         parent_ref: parentRef,
         depth,
@@ -606,7 +614,7 @@ function handleStart(root: string, payload: JsonObject, nowIso: string, sessionI
     });
 }
 
-function handleStop(root: string, payload: JsonObject, nowIso: string): void {
+function handleStop(root: string, payload: JsonObject, nowIso: string, sessionId: string | null): void {
     const agentId = str(payload, 'agent_id', 'agentId');
     if (agentId === null) {
         appendUnidentified(root, 'subagent_stop', nowIso, payload);
@@ -631,6 +639,11 @@ function handleStop(root: string, payload: JsonObject, nowIso: string): void {
         event: 'subagent_stop',
         ts: nowIso,
         ref,
+        // The session this stop was OBSERVED in, read from the same envelope
+        // position as the start's — never back-filled from `rec`, which would
+        // relabel a cross-session stop as belonging to the dispatching session
+        // and hide exactly the mismatch this field exists to expose.
+        session_id: sessionId,
         agent_type: rec?.agent_type ?? str(payload, 'agent_type', 'agentType', 'subagent_type', 'subagentType'),
         depth: rec?.depth ?? null,
         depth_basis: rec?.depth_basis ?? null,
@@ -661,7 +674,7 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string): numb
         reapStaleOpenRecords(consumerRoot, nowIso);
 
         if (event === 'subagent_start') handleStart(consumerRoot, payload, nowIso, sessionId);
-        else handleStop(consumerRoot, payload, nowIso);
+        else handleStop(consumerRoot, payload, nowIso, sessionId);
     } catch {
         // Malformed payload, unreadable disk, anything — never disturb the run.
         return EXIT_ALLOW;

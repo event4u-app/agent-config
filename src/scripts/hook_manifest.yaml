@@ -590,6 +590,26 @@ concerns:
 # blocker: in-process Agent-tool subagents inherit the host process env and
 # cannot be marked per-spawn; the axis binds where the suite launches a CLI
 # session itself.
+#
+# Superseded in part, 2026-08-14 (road-to-subagent-lifecycle-integrity Phase 4
+# Step 2). The env half above still stands — nothing marks an in-process spawn
+# per-process. What has changed is that env is no longer the only candidate
+# channel: `subagent_start` / `subagent_stop` are bound on this host
+# (2.1.229, Phase 0 Step 1) and their payload carries `agent_id`, which
+# `subagent-ledger` correlates on today. So a payload-bound role axis —
+# `agent_id` present ⇒ role `worker` — is a live proposal (Phase 4 Step 1),
+# not a closed question.
+# It is NOT implemented, and the reason is a missing measurement rather than a
+# missing decision: whether `agent_id` reaches a `PreToolUse` / `PostToolUse`
+# payload inside a subagent is unverified on this host. That is Phase 0 Step 4,
+# blocked on `raw-capture-needs-host-env` (the capture itself is already
+# shipped — `dispatch_hook._maybe_capture_payload`). A neighbouring assertion
+# from the same spike already came back negative: `agent_type` does NOT arrive
+# on `SubagentStop` (18 of 25 stop records null), so the documented-field
+# presence is not assumed for `agent_id` either.
+# Until that spike lands the env path is the only one wired, and the
+# pre_tool_use exemption above is unaffected either way — a payload-resolved
+# `worker` still cannot drop a pre_tool_use concern.
 roles:
   worker:
     # Orchestrator-only concerns (Phase 2.3): a worker never talks to the

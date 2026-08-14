@@ -159,6 +159,44 @@ describe('subagent-ledger — start/stop correlation', () => {
     });
 });
 
+describe('subagent-ledger — per-session scoping (Phase 1 Step 4, correction b)', () => {
+    it('writes session_id onto BOTH dispatch lines, not just the open record', () => {
+        // Without it the denominator is the FILE, not the session: three
+        // sessions share one ledger and the measured window read 7 starts
+        // against 25 stops. A rate off that aggregates strangers.
+        processEnvelope(envelope('subagent_start', { agent_id: 'a', session_id: 's-1' }), root);
+        processEnvelope(envelope('subagent_stop', { agent_id: 'a', session_id: 's-1' }), root);
+
+        expect(ledgerLines().map((l) => l.session_id)).toEqual(['s-1', 's-1']);
+    });
+
+    it('reads session_id from the envelope when the payload omits it', () => {
+        // Same two positions the handler already sources every other field
+        // from — payload first, envelope second.
+        const env = { ...envelope('subagent_start', { agent_id: 'a' }), session_id: 's-2' };
+        processEnvelope(env, root);
+
+        expect(ledgerLines()[0]!.session_id).toBe('s-2');
+    });
+
+    it('records absence as null rather than inventing a session', () => {
+        processEnvelope(envelope('subagent_start', { agent_id: 'a' }), root);
+
+        expect(ledgerLines()[0]!.session_id).toBeNull();
+    });
+
+    it('labels a stop with the session it was OBSERVED in, never the start record one', () => {
+        // The cross-session stop is the exact artefact that made the window
+        // unreadable — one stop belonged to an agent the counting session
+        // never dispatched. Back-filling from `rec` would relabel it and hide
+        // the mismatch this field exists to expose.
+        processEnvelope(envelope('subagent_start', { agent_id: 'a', session_id: 's-1' }), root);
+        processEnvelope(envelope('subagent_stop', { agent_id: 'a', session_id: 's-2' }), root);
+
+        expect(ledgerLines().map((l) => l.session_id)).toEqual(['s-1', 's-2']);
+    });
+});
+
 describe('subagent-ledger — depth (Step 3)', () => {
     it('records a start with no parent field as depth 1, basis assumed-root', () => {
         processEnvelope(envelope('subagent_start', { agent_id: 'root-agent' }), root);
