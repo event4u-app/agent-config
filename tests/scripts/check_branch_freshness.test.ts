@@ -29,12 +29,14 @@ const GATE = path.resolve("src/scripts/check_branch_freshness.ts");
 /**
  * Forge stubs.
  *
- * Every `main()` call below passes one. Without a seam these tests spawned the
- * real `gh` against ambient credentials inside a temp fixture, so an
- * environment carrying `GH_REPO` could return a real PR base for a same-named
- * branch and change the base under test (R2 finding 6) — and the
- * forge-unavailable branch could only be reached by NOT having `gh`, which is
- * why the test for it used to assert conditionally (R2 finding 1).
+ * Every `main()` call below passes one — round-2 finding 7 caught the one that
+ * did not, which made this sentence and `main()`'s own JSDoc false. Without a
+ * seam these tests spawned the real `gh` against ambient credentials inside a
+ * temp fixture, so an environment carrying `GH_REPO` could return a real PR
+ * base for a same-named branch and change the base under test (round-1 finding
+ * 6) — and the forge-unavailable branch could only be reached by NOT having
+ * `gh`, which is why the test for it used to assert conditionally (round-1
+ * finding 1).
  */
 const noPr = (): ForgeAnswer => ({ kind: "none" });
 const forgeDown = (): ForgeAnswer => ({
@@ -138,7 +140,7 @@ describe("check_branch_freshness", () => {
     git(["checkout", "-b", "feat/z"], process.cwd());
     // An unknown base name is indistinguishable from an unreachable remote at
     // this layer, and both must report NOT VERIFIED rather than a false green.
-    expect(main(["--base", "no-such-base"])).toBe(0);
+    expect(main(["--base", "no-such-base"], noPr)).toBe(0);
   });
 
   it("is registered in preflight — the gate exists to run before a push", () => {
@@ -259,21 +261,21 @@ describe("check_branch_freshness", () => {
     }
   });
 
-  it("never invents a PR NUMBER either — no message may claim PR #0", () => {
-    // Symmetric with the missing-baseRefName case above (R2 finding 9): a
-    // coerced 0 would print "base of open PR #0" in the one message this gate
-    // insists must be unambiguous about provenance.
+  it("keeps a usable base when the PR NUMBER is missing, and never claims PR #0", () => {
+    // Round-2 finding 4: discarding the base over an unusable number made the
+    // gate check the repo default and warn "could not ask the forge" when it
+    // HAD asked and been answered — a correct verdict traded for a tidier
+    // message. The number is cosmetic; the base is the answer.
     for (const row of [{ baseRefName: "develop" }, { baseRefName: "develop", number: "7" }]) {
       const run = (): GhResult => ({ ok: true, stdout: JSON.stringify([row]) });
-      expect(askForgeForBase("feat/x", run).kind).toBe("unavailable");
+      const answer = askForgeForBase("feat/x", run);
+      expect(answer).toEqual({ kind: "pr", base: "develop" });
     }
-    const good = (): GhResult => ({
-      ok: true,
-      stdout: JSON.stringify([{ number: 7, baseRefName: "develop" }]),
-    });
-    const answer = askForgeForBase("feat/x", good);
-    expect(answer.kind).toBe("pr");
-    expect(describeBase({ base: "develop", source: "pull-request", pr: 7 })).not.toContain("#0");
+    // Round-2 finding 5: the old assertion passed pr: 7 and so could never
+    // render #0 — it asserted nothing. This exercises the branch that can.
+    expect(describeBase({ base: "develop", source: "pull-request" })).not.toContain("#0");
+    expect(describeBase({ base: "develop", source: "pull-request" })).toContain("open PR");
+    expect(describeBase({ base: "develop", source: "pull-request", pr: 7 })).toContain("#7");
   });
 
   it("rejects a --base that is really the next flag, instead of checking origin/--quiet", () => {
@@ -283,19 +285,33 @@ describe("check_branch_freshness", () => {
     expect(explicitBase(["--base", "--quiet"])).toBeNull();
     expect(explicitBase(["--base"])).toBeNull();
     expect(explicitBase(["--base", ""])).toBeNull();
+    // Round-2 finding 6: an indexOf("--base") lookup dropped the joined form
+    // silently, so the gate auto-resolved some OTHER base and reported a green
+    // about a base the caller never asked about.
+    expect(explicitBase(["--base=develop"])).toBe("develop");
+    expect(explicitBase(["--quiet", "--base=release/2.x"])).toBe("release/2.x");
+    expect(explicitBase(["--base="])).toBeNull();
     expect(explicitBase(["--base", "release/9"])).toBe("release/9");
   });
 
-  it("does not spend a forge round trip while standing on the default branch", () => {
-    // R2 finding 8: `gh pr list --head main` can never usefully answer, and the
-    // caller discards the result on the next line.
+  it("still asks the forge while standing on the apparent default branch", () => {
+    // Round-2 finding 1, and the reversal of a round-1 finding whose premise
+    // was false. Skipping the forge for `branch === localDefaultBase()` let the
+    // STALE clone-time ref decide a verdict: with origin/HEAD unset the local
+    // default falls back to "main", so on a repo whose real base is "develop"
+    // the branch was skipped with no check at all. `gh pr list --head main`
+    // CAN usefully answer — a PR from the default branch into a release line
+    // is exactly that answer, and exactly what this gate exists for.
     let asked = 0;
-    const forge = (): ForgeAnswer => {
+    const forge = (b: string): ForgeAnswer => {
       asked += 1;
-      return { kind: "none" };
+      expect(b).toBe("main");
+      return { kind: "pr", base: "develop", number: 5 };
     };
-    resolveBase([], "main", forge);
-    expect(asked).toBe(0);
+    const r = resolveBase([], "main", forge);
+    expect(asked).toBe(1);
+    expect(r.base).toBe("develop");
+    expect(r.source).toBe("pull-request");
   });
 
   it("asks for OPEN PRs on this head only — a merged PR's base is not the next push's base", () => {

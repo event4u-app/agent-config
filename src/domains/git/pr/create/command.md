@@ -81,12 +81,18 @@ Run, in order:
    not target, and it reads the local tracking ref, which is a fetch from earlier
    in the session — a memory, not a check (`direct-answers` Iron Law 2).
 
-   **Exit codes are two-valued; the verdicts are three.** `1` = behind. `0` = the
-   gate did not refuse — which is *either* "current" *or* "could not verify".
-   Read the line, not just the status: a run that could not reach the base prints
-   `NOT VERIFIED` and still exits `0`, deliberately, so an offline push is never
-   blocked by a network failure. Treating that as a clean pass is the one misread
-   this gate cannot protect you from.
+   **Exit `0` is not a verdict — it means only "did not refuse".** `1` = behind.
+   `0` covers "current", "could not verify", and every path with nothing to
+   check: a no-op in CI, a detached HEAD, and standing on the base branch
+   itself. Read the line, not just the status. A run that could not reach the
+   base prints `NOT VERIFIED` and still exits `0`, deliberately, so an offline
+   push is never blocked by a network failure; treating that as a clean pass is
+   the one misread this gate cannot protect you from.
+
+   **And under `--quiet` a genuine pass prints nothing at all** — that is how
+   `taskfiles/ci-fast.yml` invokes it, so silence there is the success case, not
+   a missing verdict. Every path that has NOT verified stays loud even under
+   `--quiet`. Run it without the flag when you need to read a verdict.
 
 2. `gh pr list --state open --base {resolved-base} --limit 20 --json number,headRefName,files`
    — open PRs targeting the same base, for the overlap question below.
@@ -100,6 +106,8 @@ Run, in order:
 | exit `1` | **Yes** | STOP — surface the overlapping PR number, ask: stack on top of it / wait for it to land / proceed-anyway-and-accept-conflicts / cancel |
 | exit `0`, prints `NOT VERIFIED` | — | The base could not be reached, so freshness is **unknown** — not confirmed. Re-run once; if it persists, say the check did not run rather than reporting a pass. A base that `ls-remote` cannot resolve (deleted or renamed after the PR opened, or a fork base) lands here too. |
 | warns `could not ask the forge` | — | The **default** base was checked and an open PR against a different base was **not** ruled out. Say so; do not report it as a clean freshness pass. |
+| exit `0`, prints nothing, `--quiet` given | — | The success case for the preflight invocation. Any non-verifying path would have printed even under `--quiet`. |
+| exit `0`, says `standing on <base> itself` / `detached HEAD` / `no-op in CI` | — | Nothing to check — a branch cannot be behind itself, a detached HEAD has no branch, and in CI the forge owns mergeability. Not a freshness pass; do not cite it as one. |
 
 A branch behind its base is **not** current — bring the base in **before** the PR
 exists, never after. Auto-merge when there is no file overlap (the common case);
