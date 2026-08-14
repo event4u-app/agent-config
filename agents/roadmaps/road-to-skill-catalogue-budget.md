@@ -248,6 +248,17 @@ the only phase that can change what a consumer receives, so it moves last.
       answer from its owner.
 - [ ] All quality gates pass — see `quality-tools`.
 
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-14 | reviewer: claude-opus-5 -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | Pooled verdict across unlike hosts | product | The parent's corpus holds one verdict field. Feeding codex into it without distinguishing mechanisms averages a budget-shaped truncation with a per-entry one and can report a confident `no-selector` that describes neither host. That would corrupt the very measurement the parent's Phase 2 is gated on. | Add `truncation_mode` to the record and report a per-host verdict; never a pooled one. The existing claude observation must still validate unchanged. | Phase 1 |
+| 2 | Narrowing an existing install | product | Scoped projection reduces what a consumer receives. Applied without an answer from the owner it silently removes surfaces someone may rely on, and the loss is invisible until a skill is missing mid-task. | Migration is an explicit choice with all three branches reachable; the packaged default moves for fresh installs only; the decision itself is a user-owned blocker. | Phase 4 |
+| 3 | Brittle dependence on host wording | implementation | The dropped count is read out of a host-emitted message. A reworded or removed message makes the capture report zero, which is indistinguishable from a fixed defect — the failure mode would look like success. | Parse the structured JSON event rather than the human-readable line, and treat an unparseable or absent event as a loud failure, never as a zero observation. | Phase 1 |
+| 4 | The 698 reading is inference | product | The command double-count closes the arithmetic exactly, which is persuasive and unproven. Building a payload estimate or a host limit on it would put a guess into a table other work then cites as measured. | Every phase is written to hold at the conservative count; the reading is marked as inference in the plan; the delta experiment settles it from host output or records it unresolved. | Phase 3 |
+| 5 | Council evidence quality shifts underneath recorded verdicts | implementation | Repairing the seat changes a one-member council into a two-member one. Verdicts already recorded elsewhere were produced DEGRADED, and a silent upgrade would make old and new verdicts look equally strong. | The fix makes non-convergence explicit rather than upgrading it silently; previously recorded DEGRADED verdicts stay labelled as such where they are cited. | Phase 2 |
+
 ## Blockers
 
 ### blocker: scoped-default-decision
