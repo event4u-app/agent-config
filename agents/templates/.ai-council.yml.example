@@ -309,9 +309,36 @@ members:
     enabled: true
     model: gpt-4o
     api_key_ref: file:openai.key
+    #
+    # SWITCHING THIS MEMBER TO SUBSCRIPTION AUTH? THE `model:` ABOVE MUST GO.
+    #
+    # `mode: cli` routes this member through the `codex` CLI on a ChatGPT
+    # account, and that transport refuses an explicitly pinned model. Measured
+    # 2026-08-15, every candidate tried — `gpt-4o`, `gpt-5`, `gpt-5.1-codex` —
+    # came back with:
+    #
+    #   400 invalid_request_error: The '<model>' model is not supported when
+    #   using Codex with a ChatGPT account.
+    #
+    # Omitting `--model` answered normally, so the working configuration is NO
+    # pin. The CLI publishes no list of models it does accept, which is why
+    # this note names what was refused rather than what to switch to. A member
+    # left pinned here fails every call and, before the pre-flight check
+    # landed, did so while the pass still printed a quorum line.
+    #
+    # So the subscription form of this member is:
+    #
+    #   openai:
+    #     enabled: true
+    #     mode: cli                      # ChatGPT Plus/Pro via the Codex CLI — free
+    #     model: codex-default           # the sentinel: let the CLI choose
+    #     # no api_key_ref, no model_ladder — both are API-transport concepts
+    #
     # binary: /usr/local/bin/codex       # only valid when mode == cli
-    # Phase 7 — size-fit downgrade ladder (smallest → largest). The
-    # active `model:` above must appear on this list.
+    #
+    # Phase 7 — size-fit downgrade ladder (smallest → largest). API transport
+    # only: the ladder picks a smaller MODEL, and the CLI transport has no
+    # model to pick. The active `model:` above must appear on this list.
     model_ladder:
       - gpt-4o-mini
       - gpt-4o

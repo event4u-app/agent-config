@@ -595,7 +595,17 @@ describe('clients — CLI command construction', () => {
     it('OpenAICliClient argv (prompt on stdin, no --system)', () => {
         const { client, calls } = stubCli(OpenAICliClient, { returncode: 0, stdout: '', stderr: '' });
         client.ask('SYS', 'USER', 1);
-        expect(calls[0]!.cmd).toEqual(['/bin/echo', 'exec', '--json', '--model', 'gpt-5', '-']);
+        // No `--model`: the subscription transport refuses every pinned model
+        // measured so far, so the default omits the flag and lets the CLI
+        // choose. `--skip-git-repo-check` is what makes a worktree usable at
+        // all — without it codex refuses the directory before reading a prompt.
+        expect(calls[0]!.cmd).toEqual([
+            '/bin/echo',
+            'exec',
+            '--json',
+            '--skip-git-repo-check',
+            '-',
+        ]);
         // One channel, so the boundary has to be in the text — the system prompt
         // is delimited and the user prompt is labelled as data.
         const stdin = calls[0]!.stdin ?? '';
@@ -609,6 +619,83 @@ describe('clients — CLI command construction', () => {
     // it outright with exit 2, so ANY argv carrying it fails every call. The
     // predecessor test pinned the flag as expected argv and therefore passed
     // for the wrong reason for as long as the defect shipped.
+    // The codex seat was dead for three independent reasons at once, and each
+    // one alone was enough. All three are pinned here because each failed
+    // SILENTLY — the pass still printed a quorum line every time.
+    it('OpenAICliClient reads the FLAT agent_message shape the CLI emits today', () => {
+        const stream = [
+            '{"type":"thread.started","thread_id":"t"}',
+            '{"type":"item.completed","item":{"id":"item_0","type":"error","message":"Exceeded skills context budget. All skill descriptions were removed and 401 additional skills were not included in the model-visible skills list."}}',
+            '{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"OK"}}',
+            '{"type":"turn.completed","usage":{"input_tokens":21998,"output_tokens":67}}',
+        ].join('\n');
+        const { client } = stubCli(OpenAICliClient, { returncode: 0, stdout: stream, stderr: '' });
+
+        const res = client.ask('', 'USER', 1);
+
+        // The load-bearing half: the budget WARNING is an `error` item that
+        // also carries a message. Reading any item's text would return that
+        // sentence as the member's answer.
+        expect(res.text).toBe('OK');
+        expect(res.error).toBeNull();
+        expect(res.output_tokens).toBe(67);
+    });
+
+    it('OpenAICliClient still reads the older nested content[] shape', () => {
+        const stream =
+            '{"type":"item.completed","item":{"id":"i","content":[{"text":"NESTED"}]}}\n' +
+            '{"type":"turn.completed","usage":{"input_tokens":1,"output_tokens":2}}';
+        const { client } = stubCli(OpenAICliClient, { returncode: 0, stdout: stream, stderr: '' });
+
+        expect(client.ask('', 'USER', 1).text).toBe('NESTED');
+    });
+
+    it('OpenAICliClient surfaces turn.failed instead of an empty answer', () => {
+        const stream = [
+            '{"type":"item.completed","item":{"type":"error","message":"Model metadata for `gpt-4o` not found."}}',
+            '{"type":"turn.failed","error":{"message":"{\\"type\\":\\"error\\",\\"status\\":400,\\"error\\":{\\"type\\":\\"invalid_request_error\\",\\"message\\":\\"The \'gpt-4o\' model is not supported when using Codex with a ChatGPT account.\\"}}"}}',
+        ].join('\n');
+        const { client } = stubCli(OpenAICliClient, { returncode: 0, stdout: stream, stderr: '' });
+
+        const res = client.ask('', 'USER', 1);
+
+        // codex exits 0 on this, so `_classify_stderr` never sees it and the
+        // response used to be an empty string with no error at all.
+        expect(res.error).toBe('model_unsupported_on_transport');
+        expect(String(res.metadata['detail'])).toContain('not supported when using Codex');
+    });
+
+    it('OpenAICliClient refuses a measured-unservable pin BEFORE spawning', () => {
+        const { client, calls } = stubCli(OpenAICliClient, { returncode: 0, stdout: '', stderr: '' });
+        client.model = 'gpt-4o';
+
+        const res = client.ask('', 'USER', 1);
+
+        // Nothing was spawned: the point of a pre-flight is that the refusal
+        // costs neither a call against the daily cap nor a subscription quota.
+        expect(calls).toHaveLength(0);
+        expect(res.error).toBe('model_unsupported_on_transport');
+        const detail = String(res.metadata['detail']);
+        expect(detail).toContain('gpt-4o');
+        expect(detail).toContain('codex CLI');
+        // No invented allow-list — the CLI publishes none, and the message
+        // says so rather than naming a model nobody verified.
+        expect(detail).toContain('no list of models it DOES accept');
+    });
+
+    it('OpenAICliClient passes an unmeasured pin through rather than guessing', () => {
+        const { client, calls } = stubCli(OpenAICliClient, { returncode: 0, stdout: '', stderr: '' });
+        client.model = 'some-future-model';
+
+        client.ask('', 'USER', 1);
+
+        // A deny-list must not become an allow-list by accident: a model the
+        // estate has never measured is attempted, not refused.
+        expect(calls).toHaveLength(1);
+        expect(calls[0]!.cmd).toContain('--model');
+        expect(calls[0]!.cmd).toContain('some-future-model');
+    });
+
     it('OpenAICliClient never passes --system, whatever the system prompt', () => {
         for (const sys of ['', 'SYS', 'multi\nline system']) {
             const { client, calls } = stubCli(OpenAICliClient, { returncode: 0, stdout: '', stderr: '' });
@@ -620,7 +707,13 @@ describe('clients — CLI command construction', () => {
     it('OpenAICliClient sends the bare user prompt when the system prompt is empty', () => {
         const { client, calls } = stubCli(OpenAICliClient, { returncode: 0, stdout: '', stderr: '' });
         client.ask('', 'USER', 1);
-        expect(calls[0]!.cmd).toEqual(['/bin/echo', 'exec', '--json', '--model', 'gpt-5', '-']);
+        expect(calls[0]!.cmd).toEqual([
+            '/bin/echo',
+            'exec',
+            '--json',
+            '--skip-git-repo-check',
+            '-',
+        ]);
         expect(calls[0]!.stdin).toBe('USER');
     });
 

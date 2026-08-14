@@ -115,7 +115,37 @@ export const DEFAULT_PERPLEXITY_MODEL = 'sonar-pro';
 // divergence is a one-line change, not a hunt through inline literals.
 // (`xai` / `perplexity` CLI reuse their API constants: their CLIs are
 // community wrappers around the same paid API, so the values do not diverge.)
-export const DEFAULT_OPENAI_CLI_MODEL = 'gpt-5';
+/**
+ * Sentinel: let the codex CLI pick its own model, by omitting `--model`.
+ *
+ * This is not a placeholder for a value nobody looked up. Measured
+ * 2026-08-15 against `codex exec --json` on a ChatGPT-account (subscription)
+ * transport, every explicitly named candidate was refused with
+ * `400 invalid_request_error: The '<model>' model is not supported when using
+ * Codex with a ChatGPT account.` — `gpt-4o`, `gpt-5` (this constant's previous
+ * value) and `gpt-5.1-codex` alike. Omitting the flag answered normally.
+ *
+ * So the only value known to work on this transport is "whatever the CLI
+ * chooses", and pinning ANY name here would re-break the seat the next time
+ * the vendor rotates its lineup. The label is carried into records as-is so a
+ * reader can see that no model was pinned, rather than a name being implied
+ * that nobody verified.
+ */
+export const OPENAI_CLI_VENDOR_DEFAULT = 'codex-default';
+
+/**
+ * Models MEASURED to be refused by the codex subscription transport, with the
+ * date they were measured. This is a deny-list on purpose: the CLI publishes
+ * no allow-list, so the honest claim is "these were rejected when we tried",
+ * never "only these are allowed".
+ */
+export const CODEX_MEASURED_UNSERVABLE: ReadonlyMap<string, string> = new Map([
+    ['gpt-4o', '2026-08-15'],
+    ['gpt-5', '2026-08-15'],
+    ['gpt-5.1-codex', '2026-08-15'],
+]);
+
+export const DEFAULT_OPENAI_CLI_MODEL = OPENAI_CLI_VENDOR_DEFAULT;
 export const DEFAULT_ANTHROPIC_CLI_MODEL = 'claude-sonnet-4-5';
 export const DEFAULT_GEMINI_CLI_MODEL = 'gemini-2.5-pro';
 
@@ -1252,6 +1282,20 @@ export abstract class CliClient extends ExternalAIClient {
         }
     }
 
+    /**
+     * Refuse a call this transport cannot serve, BEFORE spawning.
+     *
+     * `null` means "nothing known to be wrong" — deliberately not "verified
+     * servable". No vendor CLI here publishes the set of models its
+     * subscription tier accepts, so an allow-list would be invented and would
+     * reject valid pins the day the vendor adds one. What CAN be stated is the
+     * complement: models this estate has MEASURED being rejected. Subclasses
+     * override; the base transport knows of none.
+     */
+    protected _preflight_transport(): { code: string; detail: string } | null {
+        return null;
+    }
+
     /** Return text to send on stdin, or `null` to inherit caller's stdin. */
     protected _stdin_payload(system_prompt: string, user_prompt: string): string | null {
         void system_prompt;
@@ -1389,6 +1433,26 @@ export abstract class CliClient extends ExternalAIClient {
                     },
                 });
             }
+        }
+
+        // 1b. transport pre-flight — refuse BEFORE spending.
+        //
+        // A subscription transport can be structurally unable to serve the
+        // configured model. Discovering that by spawning costs a call against
+        // the daily cap and returns an opaque `exit_1`, which reads as "the CLI
+        // is flaky" rather than "this pin can never work here". A refusal that
+        // names the model and the transport is the difference between a config
+        // bug someone fixes in a minute and a seat that quietly stays dead.
+        const preflight = this._preflight_transport();
+        if (preflight !== null) {
+            return new CouncilResponse({
+                provider: this.name,
+                model: this.model,
+                text: '',
+                latency_ms: _elapsedMs(t0),
+                error: preflight.code,
+                metadata: { cli: true, transport: this.transport, detail: preflight.detail },
+            });
         }
 
         // 2. build command + spawn.
@@ -1726,9 +1790,46 @@ export class OpenAICliClient extends CliClient {
         void system_prompt;
         void user_prompt;
         void max_tokens;
+        // `--skip-git-repo-check` is not a convenience flag. Without it codex
+        // refuses any directory it does not consider trusted — captured
+        // `stderr_tail`: `Not inside a trusted directory and
+        // --skip-git-repo-check was not specified.` A worktree path is never
+        // trusted, which is the whole explanation for the standing observation
+        // that the openai seat dies in a worktree while working from the main
+        // checkout. The council reads a prompt and writes nothing through this
+        // process, so the trust gate protects nothing here that the council's
+        // own gates do not already cover.
+        //
         // `-` is codex's documented "read the prompt from stdin" positional;
         // the payload itself is assembled in `_stdin_payload`.
-        return [this.binary, 'exec', '--json', '--model', this.model, '-'];
+        const modelArgs =
+            this.model === OPENAI_CLI_VENDOR_DEFAULT ? [] : ['--model', this.model];
+        return [this.binary, 'exec', '--json', '--skip-git-repo-check', ...modelArgs, '-'];
+    }
+
+    /**
+     * Refuse a pin this estate has measured the transport rejecting.
+     *
+     * The remedy is named because it is not guessable: removing the `model:`
+     * line is the fix, and "remove a setting" is the last thing an operator
+     * tries when a member is silent.
+     */
+    protected override _preflight_transport(): { code: string; detail: string } | null {
+        const measuredOn = CODEX_MEASURED_UNSERVABLE.get(this.model);
+        if (measuredOn === undefined) return null;
+        return {
+            code: 'model_unsupported_on_transport',
+            detail:
+                `openai member pins model \`${this.model}\`, which the codex CLI ` +
+                `(subscription transport) refused when measured on ${measuredOn}: ` +
+                `"The '${this.model}' model is not supported when using Codex with a ` +
+                'ChatGPT account." The CLI publishes no list of models it DOES accept, ' +
+                'so there is no supported set to offer here — the one configuration ' +
+                'measured to work is no pin at all. Fix: remove the `model:` line from ' +
+                'the openai member (or set it to `codex-default`) to use the CLI\'s own ' +
+                'default. A pinned model is only reachable on the API transport ' +
+                '(`api_key_ref:` without `mode: cli`).',
+        };
     }
 
     /**
@@ -1752,6 +1853,7 @@ export class OpenAICliClient extends CliClient {
         let text = '';
         let input_tokens = 0;
         let output_tokens = 0;
+        let failure: string | null = null;
         const meta: Record<string, unknown> = {};
         for (let line of _splitlines(stdout)) {
             line = line.trim();
@@ -1794,6 +1896,23 @@ export class OpenAICliClient extends CliClient {
                             text = chunks.join('\n').trim();
                         }
                     }
+                    // The FLAT shape, and it is the one the CLI emits today:
+                    //   {"item":{"type":"agent_message","text":"OK"}}
+                    // The `content[]` branch above is the older nested form. Both
+                    // are read because this adapter has no way to pin a CLI
+                    // version, and reading only the nested one is why the seat
+                    // returned an empty string with NO error for every call —
+                    // measured 2026-08-15, and indistinguishable downstream from
+                    // a model that answered with nothing. Only an `agent_message`
+                    // is taken: an `error` item also carries `text`-adjacent
+                    // fields, and treating one as an answer would turn the
+                    // skills-budget warning into the member's response.
+                    if (!text && _dictGet(itemObj, 'type', undefined) === 'agent_message') {
+                        const flat = _pyStr(_dictGet(itemObj, 'text', '')).trim();
+                        if (flat) {
+                            text = flat;
+                        }
+                    }
                     if (_pyTruthy(_dictGet(itemObj, 'id', undefined))) {
                         meta['item_id'] = _pyStr(itemObj['id']);
                     }
@@ -1812,8 +1931,49 @@ export class OpenAICliClient extends CliClient {
                 if (_pyTruthy(_dictGet(ev, 'session_id', undefined))) {
                     meta['session_id'] = _pyStr(ev['session_id']);
                 }
+            } else if (event_type === 'turn.failed') {
+                // The turn's real cause lives ONLY here, and codex still exits
+                // 0. Without this branch the response is an empty text, which
+                // the caller reports as `no response` — indistinguishable from
+                // a model that answered with nothing. Measured 2026-08-15: a
+                // pinned `gpt-4o` produced exactly this shape, and the seat
+                // read as flaky for weeks instead of as misconfigured.
+                let err = _dictGet(ev, 'error', null);
+                if (!_pyTruthy(err)) err = {};
+                if (_isPlainObject(err)) {
+                    const raw = _pyStr(_dictGet(err as Record<string, unknown>, 'message', ''));
+                    if (raw) failure = raw;
+                }
             }
         }
+
+        if (failure !== null && !text) {
+            const unsupported = /not supported when using Codex/i.test(failure);
+            return new CouncilResponse({
+                provider: this.name,
+                model: this.model,
+                text: '',
+                input_tokens,
+                output_tokens,
+                error: unsupported ? 'model_unsupported_on_transport' : 'turn_failed',
+                metadata: {
+                    ...meta,
+                    // The vendor's own sentence, kept because it names the
+                    // model and the account type — the two facts an operator
+                    // needs and neither of which the error code carries.
+                    detail: failure.slice(0, 400),
+                    ...(unsupported
+                        ? {
+                              hint:
+                                  'the codex subscription transport serves no explicitly pinned ' +
+                                  'model measured so far — remove the `model:` line from the ' +
+                                  'openai member to use the CLI default',
+                          }
+                        : {}),
+                },
+            });
+        }
+
         return new CouncilResponse({
             provider: this.name,
             model: this.model,
