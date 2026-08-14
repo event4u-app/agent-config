@@ -3284,6 +3284,11 @@ function _deploy_global_content(
         _emit_progress({ type: 'reaped', tool: tool_id, count: reaped.length });
         results[tool_id] = [written_total, skipped_total, 'deployed', written_paths];
 
+        const budget_note = catalogue_budget_warning(tool_id, written_paths);
+        if (budget_note !== null && !state.QUIET) {
+            info(budget_note);
+        }
+
         // Single-surface model (road-to-claude-code-single-surface): the
         // deterministic hook matrix registers directly in the user-scope
         // settings file — the marketplace plugin is no longer required for
@@ -3369,6 +3374,66 @@ function _preview_global_reap(
         if (paths.length > 0) preview[tool_id] = paths;
     }
     return preview;
+}
+
+/**
+ * Hosts MEASURED to truncate their skill catalogue, with the measurement.
+ *
+ * One entry, and that is the point: a host earns a row here by having been
+ * observed, never by resembling one that was. An unmeasured host gets no
+ * warning at all rather than an invented threshold — the same discipline
+ * `capture_skill_catalogue` applies to its own verdicts.
+ *
+ * The number is a survivor count, not a documented cap: no host publishes its
+ * budget, so what is knowable is how many entries came through on a machine
+ * whose estate was counted at the same moment. Stated that way in the warning
+ * so nobody cites it as a limit.
+ */
+const _MEASURED_CATALOGUE_LIMITS: Readonly<
+    Record<string, { readonly survivors: number; readonly measured_on: string; readonly note: string }>
+> = {
+    codex: {
+        survivors: 104,
+        measured_on: '2026-08-15',
+        note:
+            'a 497-artefact estate (297 skills + 200 commands) reported 393 entries dropped, ' +
+            'with every description stripped first',
+    },
+};
+
+/**
+ * A one-line warning when a deploy pushes a measured-truncating host past what
+ * was observed to survive there — or `null`, which is the answer for every
+ * host nobody has measured.
+ *
+ * Warn, never block: over-shipping is the safe direction (the roadmap's own
+ * Non-goal), and refusing an install over a heuristic about someone else's
+ * context window would be exactly the kind of gate this package keeps finding
+ * it has to walk back.
+ */
+export function catalogue_budget_warning(tool_id: string, written_paths: readonly string[]): string | null {
+    const limit = _MEASURED_CATALOGUE_LIMITS[tool_id];
+    if (limit === undefined) return null;
+    // Count catalogue ENTRIES (a skill directory, a command file), not files:
+    // a skill ships a SKILL.md plus references, and counting those would
+    // inflate the number against a survivor count measured in entries.
+    const entries = new Set<string>();
+    for (const p of written_paths) {
+        const norm = p.split(path.sep).join('/');
+        const skill = /(?:^|\/)skills\/([^/]+)\//.exec(norm);
+        if (skill) {
+            entries.add(`skill:${skill[1]}`);
+            continue;
+        }
+        if (/(?:^|\/)commands\/.+\.md$/.test(norm)) entries.add(`command:${norm}`);
+    }
+    if (entries.size <= limit.survivors) return null;
+    return (
+        `  ⚠️  ${tool_id}: this deploy projects ${entries.size} catalogue entries. ` +
+        `On ${limit.measured_on}, ${limit.note} — about ${limit.survivors} survived. ` +
+        `Entries past the host's budget arrive without descriptions or not at all. ` +
+        `Measurement: agents/evidence/analysis/skill-catalogue-budget-codex.md`
+    );
 }
 
 function _verify_deploy_targets(anchor: string, plan: ReadonlyArray<readonly [string, string]>): string[] {
