@@ -287,3 +287,51 @@ advisory would be exactly the defect this sweep's own triage flagged on PR
 finding while reporting it would be worse than carrying the advisory. The
 advisory is therefore disclosed rather than silenced: **this branch's code
 changes have not had a completion review**, and one is owed before merge.
+
+## Addendum — a later session on the same branch (nothing above is rewritten)
+
+The three council verdicts this report recorded as **"Not implemented this run"**
+have since been implemented, in a continuation session on the same branch. The
+sections above are left exactly as written; this addendum is the delta.
+
+**Q2 — the third route shipped.** `src/config/agent-settings.template.yml` now
+carries `essential` as a commented-out preset directly under
+`discipline_profile`, with its token factor stated inline and both bars written
+out (the absolute automation prohibition, and the 5.4x miss against the <=30k
+pre-registration). The default is untouched. The step in
+`road-to-rule-coherence-followup` stays **open and not agent-executable**, with
+the reasoning recorded at the step.
+
+**Q3 — the queue is extracted and the roadmap is archived.** The standing
+deletion queue moved to `agents/settings/contexts/settings-deletion-queue.md`
+with the ordering rule, the scouted next drains and the seven downstream
+surfaces intact; `road-to-zero-settings` closed on step 3.1 marked `[-]`
+extracted (not done, not abandoned) and archived with a completion note. Worth
+stating because it is the load-bearing half: **the queue was never prose-carried
+anyway** — the shrink-only ratchet and its 56-day non-stagnation clause are what
+actually hold it, and neither depended on the roadmap existing.
+
+**Q4 — the record now says bypassed.** `road-to-orchestration-scope-decision`
+Phase 3 carries the distinction the seat drew: the later roadmap's structural
+decision stands, **and** the evidence gate this roadmap committed to was never
+passed — never evaluated at all. Explicitly left open, because it is doctrine
+rather than an instance: whether bypassing a previously-committed evidence gate
+should require a written justification, or whether "later decision wins" is
+sufficient governance.
+
+**One further repair, and it corrects a number in this report downward.** The
+"gating invisible to the dashboard in at least five roadmaps" finding above was
+checked one roadmap at a time. **Nine** roadmaps have no `## Blockers` section;
+exactly **one** was concealing a blocker — `road-to-council-blind-review`, whose
+user-owned maintainer blind ratings were encoded twice as HTML comments inside
+step bodies. Surfacing it moved the visible blocker count 8 -> 9. The other
+eight are correctly sectionless, on a distinction the original count elided: **a
+`## Blockers` section is for work waiting on a human; work waiting on other work
+is a dependency, not a blocker.** Listing dependencies there would make
+`agent-config gates` a queue nobody can act on. The finding and the distinction
+are recorded in `agents/settings/contexts/buried-roadmap-blockers.md`.
+
+**Still owed, unchanged.** The completion review disclosed above is still owed —
+it binds to a frozen code scope, and this addendum's own edits are part of what
+it must cover. The three kernel amendments still need standalone human PRs;
+`block-kernel-rule-writes` refuses them from an agent regardless of any grant.

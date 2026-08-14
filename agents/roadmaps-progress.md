@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 28 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **32** open blockers, **8** need you → `agent-config gates`
+> 27 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **33** open blockers, **9** need you → `agent-config gates`
 
 ## Overall
 
-**255 / 434 steps done · 59%**
+**241 / 419 steps done · 58%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   59%
+███████████████████████░░░░░░░░░░░░░░░░░   58%
 ```
 
 ## Open roadmaps
@@ -20,7 +20,7 @@
 | 2 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [3](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
-| 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
+| 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
 | 6 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
 | 8 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
@@ -43,7 +43,6 @@
 | 25 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 26 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 1 | 7 | 0 | 0 | 0 | █████████░ 88% |
 | 27 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 28 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 15 | 1 | 14 | 0 | 0 | 0 | █████████░ 93% |
 
 ---
 
@@ -190,6 +189,23 @@
 | 1 | Protocol diff (no model calls) | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 2 | Re-run test on existing artifacts (minimal spend) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
 | 3 | Landing & close | ⬜ not started | 1 | 0 | 0 | 1 | 0% |
+
+<a id="blockers-road-to-council-blind-review"></a>
+**Blockers**
+
+- **maintainer-blind-ratings** (owner: user) — blocks Ü2 and Ü3 adoption (Phase 2 pre-registered decision rules) and the Ü2/Ü3 half of Phase 3's merge-or-null. **Ü1 is NOT blocked** — it is decided, adopted and merged (`blind_chairman` default true, opt-out flag, mandatory post-verdict de-anon map, 26/26 test-pinned).
+  - **What to do:**
+    rate the prepared blind packet at
+    `internal/bench/council-blind-review/blind-rating-packet.md`, blind to arms.
+    Two independent readings: **R1** for Ü2 — majority preference across the 9
+    substantively-differing pairs; **R2** for Ü3 — is the `collective_blind_spot`
+    field *decision-influencing* in ≥2 of 3 sampled runs (boilerplate such as
+    "insufficient testing discussion" does not count).
+    - **Why no agent can close it:** the pre-registration names the *maintainer*
+    as the rater. Substituting an AI rater would break the pre-registration and
+    would itself be the self-preference bias this roadmap exists to measure — the
+    one substitution that invalidates the result it produces.
+  - **Resolved when:** both readings exist, and each of Ü2 / Ü3 carries an adopt-or-honest-null verdict rather than a deferral.
 
 ### [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md)
 
@@ -799,17 +815,6 @@ _1 blocker resolved._
     and chose the named blocker over a re-scope that changes a pre-registered
     input.
   - **Resolved when:** either a host-renderable framework lane exists (a build/serve step for the React lane, landed for its own reason) **or** a supported generic-lane override exists — at which point the re-scope is recorded as a dated amendment in `internal/bench/corpora/ui-track-integrity-PREREG.md` and Measurement B becomes executable.
-
-### [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md)
-
-**Road to zero settings — delete the flags whose answer the situation already carries** — 14 / 15 done (93%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | classify all 140, with the number published | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | delete the free tier | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 3 | the keys that need a mechanism first | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
-| 4 | state the floor and stop | ✅ done | 0 | 8 | 0 | 0 | 100% |
 
 ---
 
