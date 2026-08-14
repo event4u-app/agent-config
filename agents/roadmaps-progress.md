@@ -520,7 +520,7 @@ _1 blocker resolved._
     uncitable one.
   - **Resolved when:** a human rubric score exists per artifact, recorded before the secondary `lint_persistence` pass for that artifact. - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was never written down, which is why this roadmap read as spend-blocked-only.
 
-_1 blocker resolved._
+_2 blockers resolved._
 
 ### [road-to-skill-catalogue-budget.md](roadmaps/road-to-skill-catalogue-budget.md)
 
