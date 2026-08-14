@@ -1,6 +1,6 @@
 # Completion review — roadmap-sweep/2026-08-14-continued
 
-**Skipped:** no code surface for this completion — every changed file is roadmap prose, one ADR status field, the regenerated dashboard, or this artifact; the gate itself reports 0 code paths of 9 changed files, scope f4f2bda3a1c1c0a8b62633e718fadb5013e4492ffd71eb0fb9439acca611814b, declared 2026-08-14
+**Skipped:** no code surface for this completion — every changed file is roadmap prose, one ADR status field, the regenerated dashboard, the sweep report, or this artifact; the gate reports 0 code paths across the changed set, scope 83ff63293cb9073f35446adcb4ca2fe2a435543eeb95e407c86dfd85837adb45, declared 2026-08-14
 
 ## Why this skip is filed, when the predecessor refused one
 
@@ -36,6 +36,19 @@ reader to ignore the gate.
   three-to-four offender count, and the source of that correction.
 - `roadmap:progress-check` — dashboard up to date after every roadmap touch.
 - `task preflight` green again at `fa5728aaa`; the sole finding is this advisory.
+
+## Re-bound once, and the reason is worth recording
+
+This artifact first bound to scope `f4f2bda3…` and validated clean at that
+scope. Committing the sweep report alongside it moved the scope to
+`83ff6329…` — a new file under `agents/evidence/reports/` is part of the
+reviewed content, so the gate correctly reported `stale-review` on the next run.
+
+The artifact under `agents/evidence/reviews/` is **not** itself counted, which is
+what makes the fixed point reachable: re-binding by editing only this file leaves
+the scope where it is. Anything else committed alongside the re-bind would move
+the scope again and record a stale one — which is the whole trap, and why the
+re-bind commit touches this file and nothing else.
 
 ## What this skip does NOT discharge
 
