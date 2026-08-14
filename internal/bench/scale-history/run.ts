@@ -574,12 +574,20 @@ function executeRun(
             }
             if (r === maxRounds - 1) break;
 
-            // Feedback: collect what exists so far and lint it.
-            const staging = path.join(workspace, '.staged-for-lint');
-            fs.rmSync(staging, { recursive: true, force: true });
-            copyTree(workspace, staging);
-            const lint = lintArtifact(staging);
-            fs.rmSync(staging, { recursive: true, force: true });
+            // Feedback: collect what exists so far and lint it. The staging dir
+            // MUST live outside the workspace — nesting it inside makes
+            // copyTree walk the directory it is writing into, which recurses
+            // until the path length kills the process. That is not theoretical:
+            // it took down the first live arm-C run, and it would have taken
+            // down every arm B and C cell of a full sweep.
+            const staging = fs.mkdtempSync(path.join(os.tmpdir(), `scale-history-stage-${run_id}-`));
+            let lint: LintSummary | null = null;
+            try {
+                copyTree(workspace, staging);
+                lint = lintArtifact(staging);
+            } finally {
+                fs.rmSync(staging, { recursive: true, force: true });
+            }
             if (!lint || lint.gate_total === 0) break;
 
             prompt =
@@ -745,16 +753,31 @@ function renderEstimate(n: number): void {
     // Anchor the projection on MEASURED runs when any exist, never on list
     // price. With none recorded yet the projection is withheld rather than
     // guessed — an invented number in a cost sheet reads as measured later.
-    const priced = collectRecords().filter((r) => r.mode === 'live' && r.usage.cost_usd !== null && !r.errored);
+    const live = collectRecords().filter((r) => r.mode === 'live' && !r.errored && r.rounds > 0);
+    // Cost and wall-clock take DIFFERENT denominators on purpose. Only the
+    // anthropic family reports USD, so pricing off "runs with a cost" is
+    // correct; taking wall-clock from that same subset is not, because codex
+    // runs materially slower and would be excluded from its own projection.
+    // Wall is therefore summed per family over every live run and only then
+    // combined.
+    const priced = live.filter((r) => r.usage.cost_usd !== null);
     const perRound =
         priced.length > 0
             ? priced.reduce((a, r) => a + (r.usage.cost_usd ?? 0), 0) /
               Math.max(1, priced.reduce((a, r) => a + r.rounds, 0))
             : null;
-    const wallPerRound =
-        priced.length > 0
-            ? priced.reduce((a, r) => a + r.wall_seconds, 0) / Math.max(1, priced.reduce((a, r) => a + r.rounds, 0))
-            : null;
+    const roundsPerFamily = n * (roundsPerCell.A + roundsPerCell.B + roundsPerCell.C);
+    let wallSeconds: number | null = null;
+    const wallByFamily: string[] = [];
+    for (const f of FAMILIES) {
+        const fam = live.filter((r) => r.family === f);
+        if (fam.length === 0) continue;
+        const per = fam.reduce((a, r) => a + r.wall_seconds, 0) / Math.max(1, fam.reduce((a, r) => a + r.rounds, 0));
+        wallSeconds = (wallSeconds ?? 0) + per * roundsPerFamily;
+        wallByFamily.push(`${f} ${round(per, 0)}s/round`);
+    }
+    const measuredFamilies = new Set(live.map((r) => r.family)).size;
+    const wallPerRound = wallSeconds === null ? null : wallSeconds / totalCalls;
 
     const lines = [
         '# Cost estimate — scale-history bench',
@@ -768,10 +791,13 @@ function renderEstimate(n: number): void {
         const upper = perRound * totalCalls;
         const lower = upper * 0.45; // B/C often settle before their round bound
         lines.push(
-            `Measured anchor             : $${round(perRound, 4)}/round, ${round(wallPerRound ?? 0, 1)}s/round ` +
-                `(${priced.length} live run(s) recorded)`,
+            `Measured anchor             : $${round(perRound, 4)}/round priced on ${priced.length} run(s); ` +
+                `wall ${wallByFamily.join(', ')}`,
             `Projected USD, both families: $${round(lower, 2)} – $${round(upper, 2)}`,
-            `Projected wall-clock        : ${round(((wallPerRound ?? 0) * totalCalls) / 3600, 1)} h at the round bound`,
+            `Projected wall-clock        : ${round((wallSeconds ?? 0) / 3600, 1)} h at the round bound` +
+                (measuredFamilies < FAMILIES.length
+                    ? `  (⚠️  only ${measuredFamilies}/${FAMILIES.length} families measured — the unmeasured one is NOT projected, so this is a floor)`
+                    : ''),
             '',
             'The upper bound assumes every arm B and C run consumes its full round',
             'allowance; a run whose gate comes back clean stops early, which is why',
