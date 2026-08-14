@@ -150,27 +150,78 @@ fixed.
   raised in council, but it is an independent track.
 - **Not refusing at install time.** Warn, never block — see Phase 1.
 
+## Execution status (2026-08-15)
+
+Phases 1, 2 and 3 are closed — 12 of 14 steps, 8 of 9 acceptance criteria.
+Phase 4 stays open on its own user blocker. Evidence:
+[`skill-catalogue-budget-codex`](../evidence/analysis/skill-catalogue-budget-codex.md).
+
+**Four premises moved when they were re-measured, and two of them made the
+plan's case stronger rather than weaker.**
+
+1. **The `gpt-4o` pin was NOT machine-local.** A screening pass reported the
+   shipped default as `gpt-5` and concluded the plan's Phase 2 Step 4 rested on
+   the reporter's own config. Both readings were incomplete: the shipped
+   *template* (`agents/templates/.ai-council.yml.example`) pinned `gpt-4o`, and
+   the shipped *code default* was `gpt-5` — **and a ChatGPT-account codex
+   refuses both**, reproduced on every argv shape. So the seat was dead for
+   every subscription user on either path, which is worse than the plan said.
+   Both are now the `auto` sentinel, and both are covered by a measured
+   deny-list that refuses the call before it spends quota.
+2. **The trust-gate cause was narrower than stated.** "The openai seat dies in
+   a worktree" does not reproduce: a worktree inside a trusted repo IS trusted,
+   and `--skip-git-repo-check` changed nothing there. It is decisive from a
+   genuinely untrusted CWD (a temp dir, a fresh clone), where `codex exec`
+   refuses outright and emits no JSON. The flag ships; the reason is corrected.
+3. **The `concluded`-over-silence defect was already half-fixed, on the wrong
+   surface.** Round 7 shipped the DEGRADED marker on the CLI's stdout line and
+   not on the artefact renderer stdout was mirrored FROM. Stdout scrolls away;
+   the artefact is what gets committed and cited. The marker now ships on both,
+   with one wording so neither can drift into being the softer one.
+4. **The 698 double-count reading is RULED OUT** — from host output, as the
+   step demanded, not from arithmetic. Baseline stable at 393 across two runs
+   from one directory; +5 project-local skills moved it to exactly 398. Each
+   artefact is counted once.
+
+**One defect this work introduced and then found.** The first real capture
+reported 297 skills offered against 393 dropped — more dropped than offered —
+because the projection root covered skills only while the host counts skills
+*and* commands. Clamping the subtraction would have published a confident
+`survivors: 0`. Under-coverage is now a named condition that refuses to derive
+a survivor count across the gap, and `--command-root` supplies the missing half.
+
+**The instrument is a maintainer script, not a CLI verb.** There is no
+`capture:skill-catalogue` registered anywhere; it runs as
+`./scripts-run src/scripts/capture_skill_catalogue`.
+
+**One thing the maintainer has to do for their own seat.** The user-global
+`.ai-council.yml` still pins `model: gpt-4o` on a `cli · subscription`
+transport. Editing that file is a self-config change routed through the
+edit-permission gates, so it was not touched: set it to `auto` and the seat
+answers again. Until then the pass now names the cause instead of printing the
+opaque `exit_1` it printed before.
+
 ## Phase 1: Make the codex budget observable and deterministic
 
-- [ ] Extend `capture_skill_catalogue` with a codex observation source that
+- [x] Extend `capture_skill_catalogue` with a codex observation source that
       parses the `codex exec --json` error event into `entries_total` and a
       dropped count, recorded as a **deterministic** observation rather than a
       self-report. Keep the record type free of any field able to hold prompt
       text or user content, per the script's stated privacy-by-construction.
       `verify:` a captured codex run records an observation whose dropped count
       equals the number in the host's own message.
-- [ ] Extend the observation record with a `truncation_mode` distinguishing
+- [x] Extend the observation record with a `truncation_mode` distinguishing
       "host stripped all descriptions and dropped N" from the claude-shaped
       per-entry case, so one corpus can hold both without averaging two
       different mechanisms into one meaningless verdict.
       `verify:` the existing claude observation still validates and reports
       unchanged under the extended schema.
-- [ ] Report projected catalogue volume per host — artefacts, entry count,
+- [x] Report projected catalogue volume per host — artefacts, entry count,
       description bytes — so the projection half is stated next to the
       observation half instead of being recomputed by hand.
       `verify:` run against `~/.codex` and confirm the reported description
       payload matches a direct measurement of the same tree.
-- [ ] Warn at the end of a global deploy when a host with a **known** limit
+- [x] Warn at the end of a global deploy when a host with a **known** limit
       would be exceeded, naming the count, the limit, and the command that
       explains it. Silent for hosts whose limit is unknown — an unmeasured host
       gets no invented number.
@@ -179,40 +230,40 @@ fixed.
 
 ## Phase 2: Repair the council's openai seat
 
-- [ ] Pass `--skip-git-repo-check` in the codex `_build_command`, so a run from
+- [x] Pass `--skip-git-repo-check` in the codex `_build_command`, so a run from
       a worktree or any untrusted directory reaches the model.
       `verify:` a run from a fresh worktree returns a non-empty response.
-- [ ] Validate the configured model against the resolved transport **before**
+- [x] Validate the configured model against the resolved transport **before**
       spending, and fail loudly when a subscription transport cannot serve it,
       naming the model, the transport, and the supported set.
       `verify:` a config pinning `gpt-4o` on the CLI transport is rejected with
       that message instead of being billed and returning `exit_1`.
-- [ ] Stop printing `concluded` for a run whose members did not answer. The
+- [x] Stop printing `concluded` for a run whose members did not answer. The
       defect is the success line, not the absence.
       `verify:` a run with one dead member exits non-zero, or prints a verdict
       that cannot be read as convergence.
-- [ ] Correct the shipped council-config template so a subscription-authed
+- [x] Correct the shipped council-config template so a subscription-authed
       `openai` member is seeded with a model that transport serves.
       `verify:` a freshly seeded config returns a live response without
       hand-editing.
 
 ## Phase 3: Feed the parent's corpus and settle its conditional branch
 
-- [ ] Record codex observations into
+- [x] Record codex observations into
       `agents/evidence/metrics/skill-catalogue.jsonl` until the corpus carries
       two hosts, and report whether the two hosts' truncation modes differ.
       `verify:` `capture_skill_catalogue` reports a per-host verdict rather than
       one pooled verdict.
-- [ ] State whether codex's evidence discharges the parent's Phase 2 Step 2
+- [x] State whether codex's evidence discharges the parent's Phase 2 Step 2
       condition ("if the selector is estate size"). A negative answer is a
       result: it would mean the budget message is not estate-size evidence and
       the branch stays conditional.
-- [ ] Settle the command double-count question from host-observable output
+- [x] Settle the command double-count question from host-observable output
       rather than arithmetic — a controlled change in the projected command set
       moves the host's own dropped count by a measurable delta.
       `verify:` the delta is reported alongside the projected command count that
       produced it, and the conclusion names which reading it rules out.
-- [ ] Record the outcome either way, "unresolved" included.
+- [x] Record the outcome either way, "unresolved" included.
 
 ## Phase 4: A migration path for scoped projection
 
@@ -231,22 +282,32 @@ the only phase that can change what a consumer receives, so it moves last.
 
 ## Acceptance Criteria
 
-- [ ] **A:** a codex observation lands in the existing corpus with a dropped
+- [x] **A:** a codex observation lands in the existing corpus with a dropped
       count taken from the host's own output, not from a self-report.
-- [ ] **A:** projected catalogue volume per host is a reportable number, and
+- [x] **A:** projected catalogue volume per host is a reportable number, and
       crossing a known limit is visible at deploy time rather than only inside
       a host session.
-- [ ] **A:** no host limit is declared without the measurement it came from.
-- [ ] **B:** a two-member council run either returns two answers or reports a
+- [x] **A:** no host limit is declared without the measurement it came from.
+- [x] **B:** a two-member council run either returns two answers or reports a
       verdict that cannot be mistaken for convergence.
-- [ ] **B:** the openai seat returns a live response from a worktree.
-- [ ] **C:** the corpus holds two hosts, and whether their truncation modes
+- [~] **B:** the openai seat returns a live response from a worktree.
+      **Deferred, and the reason is not the seat.** The argv the client now
+      builds — `codex exec --json --skip-git-repo-check -`, no `--model` —
+      returns a live answer from this worktree, verified directly on
+      2026-08-15, and a test pins that the client builds exactly that argv.
+      What blocks the *council-path* proof is the shared openai quota bucket,
+      standing at **68/50**: a `--confirm` run refuses on `cli_quota_exhausted`
+      before reaching the transport. Resetting a cap the user deliberately set
+      is theirs (`council:quota --reset`), so the criterion is left open rather
+      than closed on the two halves that were provable.
+- [x] **C:** the corpus holds two hosts, and whether their truncation modes
       differ is published either way.
-- [ ] **C:** the parent's Phase 2 Step 2 condition is answered — discharged or
+- [x] **C:** the parent's Phase 2 Step 2 condition is answered — discharged or
       explicitly still conditional.
-- [ ] No existing install has what it receives narrowed without an explicit
-      answer from its owner.
-- [ ] All quality gates pass — see `quality-tools`.
+- [x] No existing install has what it receives narrowed without an explicit
+      answer from its owner. Nothing in Phases 1–3 narrows a projection; the
+      only phase that could is 4, and it is blocked on its owner.
+- [x] All quality gates pass — see `quality-tools`.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-14 | reviewer: claude-opus-5 -->
