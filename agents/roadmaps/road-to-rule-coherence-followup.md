@@ -43,6 +43,39 @@ preparing the evidence is in scope; an agent flipping the default is not.
   maintainer's.
   - Acceptance: fresh-install census — always-on rule prose ≤ 30k tok
     (pre-registered; measured ~163k as loaded at audit time).
+  <!-- THE FLIP IS BARRED, AND A THIRD ROUTE SHIPPED INSTEAD — 2026-08-14.
+  Put to an outside opinion as a two-option question (flip on the measurement /
+  drop the step). The seat rejected BOTH framings, and the rejection is
+  checkable rather than a preference. Provenance: 1 seat, 2 rounds; the second
+  seat failed to start, so this is a single-model judgement admitted on its
+  merit and NOT a convergence.
+
+  Two independent bars, either of which is sufficient:
+
+    1. `discipline_profile` carries "do not set this from automation". That
+       reads as ABSOLUTE for the key family — a prohibition on automated CHOICE
+       of the default, not merely on a script rewriting a user's file. Under
+       that reading no measurement, however clean, licenses the flip. The
+       evidence tells you the better configuration exists; the prohibition says
+       shipping it as the default needs human deliberation.
+    2. The pre-registered acceptance criterion on this very step fails on its
+       own terms: ~163k measured against a ≤30k target is 5.4x. Even reading
+       bar 1 charitably, the step cannot pass what it registered.
+
+  What landed instead (the seat's third route, and the reason this step is not
+  simply dropped): `src/config/agent-settings.template.yml` now carries
+  `essential` as a **commented-out preset with its token factor stated inline**,
+  directly under the key, with both bars written out. The default is untouched.
+  Users see the better-evidenced option and can uncomment it; nothing automated
+  chose for them.
+
+  This step therefore stays OPEN and is not agent-executable. It closes when a
+  human either flips the default deliberately or retires the step — and if the
+  ≤30k criterion is to survive, something must first measure what `essential`
+  actually costs at fresh install, which nothing yet has. F1.2 (`essential-plus`)
+  is downstream of a landing F1.1 and is unaffected by this note. -->
+  <!-- verify: grep -c "OPT-IN PRESET" src/config/agent-settings.template.yml returns 1, and the `discipline_profile:` assignment above it is still `__DISCIPLINE_PROFILE__` -->
+
 - [ ] **F1.2 `essential-plus` preset, if F1.1 lands.** The 30-rule whitelist
   formalized and versioned, diffable against `essential`. **Mandatory
   addition: `agent-authority`** — the whitelist as used excludes the only
