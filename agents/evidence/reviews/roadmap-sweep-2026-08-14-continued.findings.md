@@ -1,6 +1,6 @@
 # Completion review — roadmap-sweep/2026-08-14-continued
 
-**Skipped:** no code surface for this completion — every changed file is roadmap prose, one ADR status field, the regenerated dashboard, the sweep report, or this artifact; the gate reports 0 code paths across the changed set, scope 83ff63293cb9073f35446adcb4ca2fe2a435543eeb95e407c86dfd85837adb45, declared 2026-08-14
+**Skipped:** no code surface for this completion — every changed file is roadmap prose, one ADR status field, the regenerated dashboard, the sweep report, or this artifact; the gate reports 0 code paths across the changed set, scope a7215cd73fe0377ec7d0ae1d1dc29b7a6c3f4b6bda7b8a7dfd7566bbea00acee, declared 2026-08-14
 
 ## Why this skip is filed, when the predecessor refused one
 
@@ -39,10 +39,13 @@ reader to ignore the gate.
 
 ## Re-bound once, and the reason is worth recording
 
-This artifact first bound to scope `f4f2bda3…` and validated clean at that
-scope. Committing the sweep report alongside it moved the scope to
-`83ff6329…` — a new file under `agents/evidence/reports/` is part of the
-reviewed content, so the gate correctly reported `stale-review` on the next run.
+This artifact bound to `f4f2bda3…`, then `83ff6329…`, and now
+`a7215cd7…`. Each move was a real change to the reviewed content: the sweep
+report landing under `agents/evidence/reports/`, then the roadmap closure that
+archived `road-to-inbox-harvest-2026-08` and created its successor. The gate
+correctly reported `stale-review` each time, which is the mechanism working —
+a skip that survived a content change would be asserting "no code surface"
+about a diff it had never seen.
 
 The artifact under `agents/evidence/reviews/` is **not** itself counted, which is
 what makes the fixed point reachable: re-binding by editing only this file leaves
