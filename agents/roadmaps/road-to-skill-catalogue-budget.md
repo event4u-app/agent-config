@@ -310,7 +310,19 @@ the only phase that can change what a consumer receives, so it moves last.
 - [x] All quality gates pass — see `quality-tools`.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-14 | reviewer: claude-opus-5 -->
+<!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude-opus-5 -->
+
+**Re-review after executing Phases 1–3.** Risk 1 is CLOSED by construction
+rather than by discipline — the codex path does not call `analyzeSelector` at
+all, so a pooled verdict is unreachable, not merely discouraged. Risk 3 FIRED
+in a milder form than written: the host's wording held, but its *number* moved
+with the working directory (393 vs 401 on the same estate), which is the same
+lesson one step earlier — a count is only meaningful next to the conditions it
+was taken in. Risk 4 is RESOLVED: the delta experiment ruled the inference out
+from host output, and no phase had built on it. Risk 5 FIRED, and it is now the
+live one: the seat is repaired in code while the openai quota sits at 68/50, so
+verdicts recorded in the interval are still DEGRADED and must stay labelled.
+Risk 2 is unchanged and untouched — Phase 4 never started.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
