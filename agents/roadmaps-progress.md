@@ -6,10 +6,10 @@
 
 ## Overall
 
-**223 / 426 steps done · 52%**
+**244 / 426 steps done · 57%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   52%
+███████████████████████░░░░░░░░░░░░░░░░░   57%
 ```
 
 ## Open roadmaps
@@ -33,7 +33,7 @@
 | 15 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 16 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
 | 17 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 18 | [road-to-skill-catalogue-budget.md](roadmaps/road-to-skill-catalogue-budget.md) | 4 | 23 | 23 | 0 | 0 | 0 | [1](#blockers-road-to-skill-catalogue-budget) | ░░░░░░░░░░ 0% |
+| 18 | [road-to-skill-catalogue-budget.md](roadmaps/road-to-skill-catalogue-budget.md) | 4 | 23 | 2 | 21 | 0 | 0 | [1](#blockers-road-to-skill-catalogue-budget) | █████████░ 91% |
 | 19 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 20 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
 | 21 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
@@ -524,14 +524,14 @@ _2 blockers resolved._
 
 ### [road-to-skill-catalogue-budget.md](roadmaps/road-to-skill-catalogue-budget.md)
 
-**Road to a measured skill-catalogue budget — Codex as the second host** — 0 / 23 done (0%)
+**Road to a measured skill-catalogue budget — Codex as the second host** — 21 / 23 done (91%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Make the codex budget observable and deterministic | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Repair the council's openai seat | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | Feed the parent's corpus and settle its conditional branch | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | A migration path for scoped projection | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
+| 1 | Make the codex budget observable and deterministic | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | Repair the council's openai seat | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 3 | Feed the parent's corpus and settle its conditional branch | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 4 | A migration path for scoped projection | 🟡 in progress | 2 | 9 | 0 | 0 | 82% |
 
 <a id="blockers-road-to-skill-catalogue-budget"></a>
 **Blockers**
