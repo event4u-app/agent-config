@@ -75,12 +75,7 @@
  */
 
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const _HERE = fileURLToPath(import.meta.url);
-const REPO = path.resolve(path.dirname(_HERE), '..', '..');
 
 /** Catalogue roots tried in order; the first that exists wins. */
 export const DEFAULT_CATALOGUE_ROOTS = ['.claude/skills', 'src/skills'] as const;

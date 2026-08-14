@@ -49,6 +49,7 @@ function entry(overrides: Partial<CatalogueEntry> & { name: string; position: nu
     return {
         hasDescription: true,
         descriptionLength: 40,
+        description: 'x'.repeat(40),
         frontmatterKeys: ['name', 'description'],
         ...overrides,
     };
