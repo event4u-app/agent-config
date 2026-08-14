@@ -19,7 +19,7 @@
 | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
 | 2 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [3](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
+| 4 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
 | 6 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
@@ -32,7 +32,7 @@
 | 14 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
 | 15 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 16 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
-| 17 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 17 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 18 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 19 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
 | 20 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
@@ -163,14 +163,6 @@
     activation instrument's depth on this store is unverified until that eval
     runs.
   - **Resolved when:** the pilot tranche PR cites its activation baseline and the window it was measured over.
-- **consolidation-breaking-change-permission** (owner: user) — blocks Phase 2 tranches landing
-  - **What to do:**
-    merging a cluster deletes published skill names from
-    consumer trees — a consumer-facing breaking change under
-    `downstream-changes § Breaking changes`. Each tranche needs explicit
-    permission plus its migration note; the pilot's note is the template for
-    the rest.
-  - **Resolved when:** the pilot tranche is authorized with its migration note reviewed.
 - **utilization-sweep-window** (owner: maintainer) — blocks Phase 1 census starting with real utilization data
   - **What to do:**
     `road-to-surface-consolidation.md` Phase 3's sweep is
@@ -178,6 +170,8 @@
     blocker. The census reuses its mechanic, so it waits rather than building
     a parallel one.
   - **Resolved when:** that sweep has run and its vocabulary is available to reuse.
+
+_1 blocker resolved._
 
 ### [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md)
 
@@ -486,6 +480,28 @@ _1 blocker resolved._
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Run and publish | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-scale-history-bench-run"></a>
+**Blockers**
+
+- **manual-rubric-rater** (owner: user) — blocks Phase 1 step 1's scoring half, and thereby step 2's verdict
+  - **What to do:**
+    score each produced artifact against
+    `internal/bench/scale-history/rubric.md`, blind to arm, **before** any
+    `score.ts` output is viewed. The pre-registration makes this rubric the
+    PRIMARY defect count and `lint_persistence` merely SECONDARY
+    (`internal/bench/corpora/scale-history-PREREG.md:63-69`), and the rubric's
+    own first line makes the anti-anchor ordering binding
+    (`internal/bench/scale-history/rubric.md:4-5`).
+    - **Why no agent can close it:** an agent rating artifacts an agent produced
+    is the self-preference substitution that invalidates the result it is
+    meant to produce — the same refusal `road-to-council-blind-review` records
+    for its own blind ratings, and the reason `evaluator-independence` exists.
+    Substituting an AI rater here would not be a weaker result; it would be an
+    uncitable one.
+  - **Resolved when:** a human rubric score exists per artifact, recorded before the secondary `lint_persistence` pass for that artifact. - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was never written down, which is why this roadmap read as spend-blocked-only.
+
+_1 blocker resolved._
 
 ### [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md)
 
