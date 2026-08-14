@@ -81,6 +81,11 @@ import * as rule_layer_overlap from './_lib/rule_layer_overlap.js';
 import * as installed_tools from './_lib/installed_tools.js';
 import { collect_drift, format_drift_report } from './_lib/install_drift.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
+// The LIBRARY half, deliberately not `capture_skill_catalogue.js`: that module
+// is a CLI entry with a top-level `process.exit()`, and esbuild would bundle
+// that exit into the installer a consumer loads (`check_installer_import_purity`
+// catches exactly this). The lib has no entry and no exit.
+import * as catalogue from './_lib/skill_catalogue.js';
 import * as claude_desktop_bundler from './_lib/claude_desktop_bundler.js';
 import * as claude_settings_hooks from './_lib/claude_settings_hooks.js';
 import { find_project_root_with_anchor, load_agent_settings } from './_lib/agent_settings.js';
@@ -3899,12 +3904,68 @@ function install_global(
         if (!state.QUIET) warn(`settings-surface snapshot failed — ${String(e)}`);
     }
 
+    // Catalogue-budget warning (road-to-skill-catalogue-budget Phase 1).
+    // Some hosts silently truncate the skill catalogue they were handed: the
+    // deploy reports success, and the model never sees most of what was
+    // deployed. A host that publishes its own dropped count has a MEASURED
+    // ceiling; one that does not gets no warning and no invented number.
+    // Warn only — over-shipping is the safe direction, and a consumer who
+    // accepts truncation is making a legitimate choice.
+    if (!state.QUIET) {
+        try {
+            for (const line of _catalogue_truncation_warnings(deploy_results, project_root)) {
+                warn(line);
+            }
+        } catch {
+            // A measurement must never sink an install that otherwise worked.
+        }
+    }
+
     if (!state.QUIET) {
         process.stdout.write('\n');
         success(`Global install completed (v${installed_version}).`);
         process.stdout.write('\n');
     }
     return 0;
+}
+
+/**
+ * One line per deployed host whose catalogue exceeds a ceiling this machine has
+ * actually measured. Empty when nothing has been measured — the observation log
+ * lives where captures accumulate, and an install on a machine that never ran
+ * one has no basis to claim a limit.
+ *
+ * Returns lines rather than printing them so the decision is testable without
+ * capturing stdout.
+ */
+export function _catalogue_truncation_warnings(
+    deploy_results: Record<string, DeployResult>,
+    project_root: string | null,
+): string[] {
+    const log_candidates = [
+        path.join(user_global_paths.event4u_root(), 'state', 'skill-catalogue.jsonl'),
+        ...(project_root ? [path.join(project_root, catalogue.OBSERVATION_LOG)] : []),
+    ];
+    const records = log_candidates.flatMap((p) => catalogue.readObservationLog(p));
+    if (records.length === 0) return [];
+
+    const limits = catalogue.knownHostLimits(records);
+    if (limits.size === 0) return [];
+
+    const lines: string[] = [];
+    for (const tool_id of Object.keys(deploy_results).sort()) {
+        const [, , status] = deploy_results[tool_id] as DeployResult;
+        if (status !== 'deployed') continue;
+        const limit = limits.get(tool_id);
+        if (limit === undefined) continue;
+        const anchor_raw = USER_SCOPE_PATHS[tool_id];
+        if (!anchor_raw) continue;
+
+        const volume = catalogue.measureCatalogueVolume(tool_id, expanduser(anchor_raw));
+        const warning = catalogue.catalogueLimitWarning(volume, limit);
+        if (warning !== null) lines.push(warning);
+    }
+    return lines;
 }
 
 const SETTINGS_SURFACE_REL = path.join('state', 'settings-surface.json');
