@@ -375,16 +375,42 @@ part 0's table.
 
 ### blocker: consolidation-breaking-change-permission
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Blocks:** Phase 2 tranches landing
-- **What to do:** merging a cluster deletes published skill names from
-  consumer trees — a consumer-facing breaking change under
-  `downstream-changes § Breaking changes`. Each tranche needs explicit
-  permission plus its migration note; the pilot's note is the template for
-  the rest.
-- **Resolved when:** the pilot tranche is authorized with its migration note
-  reviewed.
+- **Resolution (2026-08-14):** **ALL tranches authorized in-session**, not only
+  the pilot — the maintainer's blanket grant names this blocker explicitly and
+  says so in terms. The permission half is permanently discharged and needs no
+  re-asking, per tranche or in aggregate.
+
+  **The migration note survives the grant as a deliverable, not as a gate.**
+  The grant states this directly: each tranche still ships its note per
+  `downstream-changes § Breaking changes`. What was released is the *asking*,
+  not the *documenting* — a tranche that deletes 24 published skill names
+  without enumerating the renames is still an incomplete change, and no
+  authorization makes it complete.
+
+  **What this does NOT unblock, stated plainly so the 49-step figure is not
+  misread.** `agent-config gates` renders this blocker as "unblocks: 49 steps"
+  because it counts the roadmap, not the critical path. Two independent
+  conditions still gate Phase 2, and neither is a decision:
+
+  - **`utilization-sweep-window`** (below) — Phase 1's census reuses
+    `road-to-surface-consolidation` Phase 3's verdict vocabulary, and that
+    sweep is time-gated to ~2026-08-26. A prerequisite at line 58 of this file
+    is unmet.
+  - **`skill-activation-window`** (below) — steps 2.1b/2.1c bind the
+    trigger-accuracy bar to an instrument that is not yet verified. 2.1b is
+    explicit that no bar is asserted until it is.
+
+  So the honest post-grant state is: **permission granted, tranches still
+  blocked on an instrument and a clock.** Recorded this way rather than
+  flipping steps, because a tranche landed today would publish an activation
+  comparison against a baseline that does not exist — the exact
+  silent-capability-loss trade Risk 1 refuses.
+- **Resolved when:** ~~the pilot tranche is authorized with its migration note
+  reviewed~~ — authorized 2026-08-14; the note requirement moves into 2.3 as
+  the tranche deliverable it always was.
 
 ### blocker: utilization-sweep-window
 
