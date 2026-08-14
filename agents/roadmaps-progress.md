@@ -6,10 +6,10 @@
 
 ## Overall
 
-**234 / 411 steps done · 57%**
+**223 / 403 steps done · 55%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   57%
+██████████████████████░░░░░░░░░░░░░░░░░░   55%
 ```
 
 ## Open roadmaps
@@ -27,7 +27,7 @@
 | 9 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
 | 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
 | 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
-| 12 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [2](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
+| 12 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
 | 13 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 14 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
 | 15 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
@@ -347,41 +347,59 @@ _1 blocker resolved._
     at all and creates the ledger — a step upstream of the one this blocker waits on.
   - **Resolved when:** at least one real `rate_missing` row exists and its field set is written down, so a backfill pass can be built against an observed shape rather than a guessed one.
 
-### [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md)
+### [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md)
 
-**Road to inbox harvest 2026-08** — 11 / 12 done (92%)
+**Road to the inbox-harvest residuals — four deferrals that outlived their parent** — 0 / 4 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | The release-review harvest (from `feedback-9.18.1-1.txt`) | ✅ done | 0 | 1 | 2 | 2 | 100% |
-| 2 | The self-fix loop (from `loops-feature.txt`) | 🟡 in progress | 1 | 1 | 0 | 1 | 50% |
-| 3 | Small verified fixes | ✅ done | 0 | 2 | 1 | 0 | 100% |
-| 4 | The review-mechanization residuals (from `optimize-plan.txt`) | ✅ done | 0 | 2 | 0 | 1 | 100% |
-| 5 | The four large chat-log audits | ✅ done | 0 | 5 | 1 | 1 | 100% |
+| 1 | The four residuals | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
-<a id="blockers-road-to-inbox-harvest-2026-08"></a>
+<a id="blockers-road-to-inbox-harvest-residuals"></a>
 **Blockers**
 
-- **deferred-finding-decision-reopen** (owner: maintainer) — blocks Phase 1
+- **deferred-finding-decision-reopen** (owner: maintainer) — blocks R2 only
   - **What to do:**
-    P1.4 needs a stable-finding-id index that was explicitly
-    declined at `check_review_dispositions.ts:16-22` with a named revisit
+    R2 needs a stable-finding-id index that was explicitly declined
+    at `src/scripts/check_review_dispositions.ts:16-22` with a named revisit
     trigger. Reopening a recorded decision is a maintainer call under
     `decision-revisit-gate`, not something an agent does because a reviewer asked.
-  - **Resolved when:** the decision is reopened with the trigger cited, or P1.4 is cancelled against it.
-- **spent-inbox-artifacts-await-deletion** (owner: maintainer) — blocks nothing
+    **Migrated from `road-to-inbox-harvest-2026-08` on 2026-08-14** when that
+    roadmap archived; the blocker is unchanged, only its home is.
+    **The 2026-08-14 blanket grant approved reopening, and that is not sufficient
+    on its own** — recorded here because it is the trap. `decision-revisit-gate`'s
+    first step is a mechanism-match check, and this decline names a specific
+    falsifiable trigger: *a disposition that genuinely cannot be recorded in the
+    round record itself.* No such case is on record. A grant releases the
+    permission to revisit; it does not supply the evidence the trigger asks for.
+    So the honest branch today is **cancel R2 against the decline** — which the
+    Resolved-when already allows — and let it reopen by itself the day the trigger
+    fires.
+  - **Resolved when:** the decision is reopened with the trigger cited (i.e. a real case exists), or R2 is cancelled against it.
+- **spent-inbox-artifacts-await-deletion** (owner: maintainer) — blocks nothing — pure housekeeping, carried so it is not lost
   - **What to do:**
-    four items are spent and should be removed by a human, since
-    the agent reports rather than deletes: both `council-q-*.md` files (answered
-    and shipped verbatim), `bench-local/` (null published, roadmap archived), and
-    the byte-identical `(1).md` duplicate plus `chat.txt` inside `memory-mcp/`.
-    Related finding worth a separate look: `check_council_layout` prints these as
-    findings and **exits 0** — an advisory gate nobody sees, currently carrying
-    ~18 permanent findings, which is the allowlist-fatigue shape this repo's own
-    rules warn about.
-  - **Resolved when:** the files are deleted, or a reason to keep them is recorded.
-
-_1 blocker resolved._
+    four spent items under `agents/tmp.old/` should be removed:
+    both `council-q-*.md` files (answered and shipped verbatim), `bench-local/`
+    (null published, roadmap archived), and the byte-identical `(1).md` duplicate
+    plus `chat.txt` inside `memory-mcp/`.
+    **Migrated from `road-to-inbox-harvest-2026-08` on 2026-08-14, and NOT executed
+    under the blanket grant, for a reason found while trying to execute it.** The
+    grant did approve these deletions. Two facts stopped it:
+    1. **The description does not name its objects.** It says *"both
+    `council-q-*.md` files"*, but that glob matches **12 files** in
+    `agents/tmp.old/` (`ls council-q-*.md | wc -l`, measured 2026-08-14 — the
+    9 sibling `council-question-*.md` files do *not* match, since the glob
+    requires `council-q-`). Which two were meant is not recoverable from the
+    text. `non-destructive-by-default` requires an approval to name its exact
+    object, and "both" against a 12-match glob names none of them — acting on
+    the glob would delete 10 files nobody approved.
+    2. **`agents/tmp.old/` is gitignored and does not follow a worktree.** It is
+    empty in every worktree and populated only in the main checkout, so a
+    deletion made here would be invisible and a deletion made there would not
+    appear in any diff a reviewer reads. Same per-checkout class as the audit
+    log the parent's sweep report recorded.
+    So the item needs the two filenames, not a broader authorization.
+  - **Resolved when:** the files are deleted **by name**, or a reason to keep them is recorded. - **Side finding, worth its own look and deliberately not folded in:** `check_council_layout` prints these as findings and **exits 0** — an advisory gate nobody sees, currently carrying ~18 permanent findings, which is the allowlist-fatigue shape this repo's own rules warn about.
 
 ### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
 

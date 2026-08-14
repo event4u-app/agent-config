@@ -71,7 +71,7 @@ The spine. Phases 2 and 3 both scope against the registry, so it lands first.
       `src/scripts/schemas/`, README section mirroring the `borrows`
       conventions. The schema stays inside this repo's Draft-07 subset — no
       `$ref`, no `const`, inline single-member `enum` — the trap
-      [`road-to-inbox-harvest-2026-08.md`](../road-to-inbox-harvest-2026-08.md)
+      [`road-to-inbox-harvest-2026-08.md`](road-to-inbox-harvest-2026-08.md)
       already paid for.
       <!-- verify: npx vitest run tests/scripts/lint_harvest_provenance.test.ts -->
       <!-- renamed from the drafted `claims.jsonl`/`claim_id`: `check_claims.ts`
