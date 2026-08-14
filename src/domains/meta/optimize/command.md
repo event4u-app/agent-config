@@ -7,7 +7,6 @@ pack: meta
 intent: "Optimization dispatcher — skills, rtk, augmentignore, agents-dir, project sweep, prompt, deep autonomous loop"
 routes_to: [optimize-skills, optimize-rtk, optimize-augmentignore, optimize-agents-dir, optimize-project, optimize-prompt, optimize-deep]
 replaces: []
-tier: 1
 visibility: advanced
 description: Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters, project (project-wide sweep), prompt (AI-prompt polish), deep (autonomous deep-refactoring loop)
 cluster: optimize

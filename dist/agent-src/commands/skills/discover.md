@@ -2,7 +2,6 @@
 model_tier: medium
 name: skills-discover
 pack: meta
-tier: 2
 visibility: internal
 cluster: skills
 sub: discover

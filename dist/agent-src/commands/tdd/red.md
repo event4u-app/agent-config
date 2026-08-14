@@ -2,7 +2,6 @@
 model_tier: medium
 name: tdd-red
 pack: engineering-base
-tier: 2
 visibility: internal
 cluster: tdd
 sub: red

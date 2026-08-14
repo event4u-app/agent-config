@@ -2,7 +2,6 @@
 model_tier: high
 name: research-deep
 pack: product-discovery
-tier: 2
 visibility: internal
 cluster: research
 sub: deep

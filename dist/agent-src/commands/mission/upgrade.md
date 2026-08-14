@@ -5,7 +5,6 @@ pack: engineering-base
 intent: "Upgrade a Laravel application one major version (10→11, 11→12) via the gated /work engine with a structured breaking-change catalog"
 routes_to: [dependency-upgrade]
 replaces: []
-tier: 1
 visibility: advanced
 skills: [dependency-upgrade]
 framework: laravel

@@ -2,7 +2,6 @@
 model_tier: medium
 name: profile-show
 pack: meta
-tier: 2
 visibility: internal
 cluster: profile
 sub: show

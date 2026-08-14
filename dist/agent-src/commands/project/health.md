@@ -2,7 +2,6 @@
 model_tier: medium
 name: project-health
 pack: engineering-base
-tier: 2
 visibility: internal
 sub: health
 cluster: project

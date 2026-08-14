@@ -2,7 +2,6 @@
 model_tier: medium
 name: bug-fix
 pack: engineering-base
-tier: 2
 visibility: internal
 sub: fix
 cluster: bug

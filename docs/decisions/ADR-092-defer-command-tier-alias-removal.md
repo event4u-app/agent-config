@@ -1,10 +1,10 @@
 ---
 adr: 092
-status: accepted
+status: superseded
 date: 2026-06-13
 decision: defer-command-tier-alias-removal
 supersedes: —
-superseded_by: —
+superseded_by: ADR-231
 phase: metadata-and-command-surface-leanness
 type: structural
 ---

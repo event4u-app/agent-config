@@ -2,7 +2,6 @@
 model_tier: inherit
 name: council-debate
 pack: product-reasoning
-tier: 2
 visibility: internal
 cluster: council
 sub: debate

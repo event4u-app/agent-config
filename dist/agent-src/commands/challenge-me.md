@@ -2,7 +2,6 @@
 model_tier: medium
 name: challenge-me
 pack: product-reasoning
-tier: 2
 visibility: internal
 description: Challenge-me orchestrator — routes to vision, with-docs
 argument-hint: "[vision|with-docs] [flags] [seed]"

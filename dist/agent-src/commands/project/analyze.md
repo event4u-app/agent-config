@@ -2,7 +2,6 @@
 model_tier: high
 name: project-analyze
 pack: engineering-base
-tier: 2
 visibility: internal
 sub: analyze
 cluster: project

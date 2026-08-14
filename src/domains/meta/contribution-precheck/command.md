@@ -2,7 +2,6 @@
 model_tier: medium
 name: contribution-precheck
 pack: meta
-tier: 2
 visibility: internal
 skills: [lint-skills, check-refs]
 description: "Contributor self-service precheck: run the PR-relevant lint subset (skill linter, originality gate, frontmatter schema) on changed files locally — a verdict with fix hints before opening a PR."

@@ -120,7 +120,7 @@ Promotion is **not implicit**. Each promotion requires:
 
 1. A short ADR under `docs/decisions/` citing this contract and
    the specific criterion satisfied.
-2. The frontmatter `tier:` change in the same commit as the ADR.
+2. The frontmatter `visibility:` change in the same commit as the ADR.
 3. CI green (`tests/test_command_surface_tiers.py` + `task ci`).
 
 Demotion is allowed without ADR (Tier-0 → Tier-1, Tier-1 → Tier-2)
@@ -128,12 +128,18 @@ but must update this contract's canonical list.
 
 ## Tagging shape
 
-Slash commands carry tier in YAML frontmatter:
+The three tiers above are the **taxonomy**; `visibility:` is the **key** that
+records which one a command sits in. The mapping is fixed: Tier-0 ↔ `visible`,
+Tier-1 ↔ `advanced`, Tier-2 ↔ `internal`. The integer `tier:` key that once
+carried this directly was removed in road-to-tier-removal Phase 4 — see the
+removal record below.
+
+Slash commands carry visibility in YAML frontmatter:
 
 ```yaml
 ---
 name: commit
-tier: 0
+visibility: visible
 description: Stage and commit all uncommitted changes …
 ---
 ```
@@ -147,8 +153,10 @@ the help text groups commands under `## Tier 0`, `## Tier 1`,
 
 `scripts/lint_command_tiers.py` enforces:
 
-1. Every file under `.agent-src.uncondensed/commands/**.md` has
-   a `tier:` frontmatter key whose value is `0`, `1`, or `2`.
+1. Every command file has a `visibility:` frontmatter key whose value is
+   `visible`, `advanced`, or `internal`. (A leftover `tier:` key is rejected
+   separately, by `command.schema.json`'s `additionalProperties: false` — the
+   linter no longer reconciles the two.)
 2. Every command listed under `## Tier 0` / `## Tier 1` /
    `## Tier 2` in this contract resolves to a real command file or
    a real CLI command name.
@@ -156,18 +164,31 @@ the help text groups commands under `## Tier 0`, `## Tier 1`,
 
 Hooked into `task lint-skills` so it runs in CI.
 
-## `tier` deprecation signal (discovery manifest v2)
+## `tier` removal record (discovery manifest v3)
 
-Since ADR-090 the named `visibility:` field is the command classifier source
-of truth and the integer `tier:` (`0/1/2`) is a back-compat alias. The
-published discovery manifest (`dist/discovery/discovery-manifest.json`) is now
-**v2** and carries a machine-readable top-level `deprecations` block
-announcing the `tier` key (replacement: `visibility`). `tier` is **still
-emitted** on command artefacts (non-breaking) — the block only signals the
-deprecation so external manifest consumers can migrate during a soak window.
-Removal of `tier` (frontmatter + schema + manifest emit) is tracked in
-`road-to-tier-removal` (ADR-092, Phase 4) and is **not** done yet; restoring
-`tier` after removal would be a sub-1h manifest-schema patch.
+Since ADR-090 the named `visibility:` field is the command classifier source of
+truth; the integer `tier:` (`0/1/2`) was its back-compat alias. ADR-092 deferred
+dropping the alias because the published discovery manifest dual-emitted it and
+external npm consumers were unknown. Manifest **v2** added a machine-readable
+top-level `deprecations` block announcing the key; ADR-137 then withdrew the
+second re-open trigger as structurally impossible in a no-runtime package,
+leaving one maintainer act — a concrete `sunset`.
+
+**Removed 2026-08-14 (road-to-tier-removal Phase 4).** `tier:` is gone from
+command frontmatter, from `command.schema.json`, and from the manifest; the
+manifest is **v3** because dropping a published field is a breaking change and
+this contract's own rule is to bump the version on one. The `deprecations` entry
+is RETAINED with `removed_in: 3`, so a consumer still reading the old key can
+find out what replaced it.
+
+Two honesty notes carried forward from the roadmap rather than quietly dropped.
+The soak's wait-for-it-to-pass leg was **waived by the maintainer, not
+satisfied** ("wir haben lange genug gewartet") — no evidence ever showed zero
+external reads, and none could: fetch telemetry is infeasible here, so the
+unknown-consumer risk was *accepted*, not disproved. The standing mitigation is
+that restoring `tier` is a regenerate-and-publish, not a redesign: the mapping
+`visible→0`, `advanced→1`, `internal→2` is frozen and lossless, so no
+information was destroyed by the removal.
 
 ## See also
 

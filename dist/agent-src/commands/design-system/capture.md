@@ -2,7 +2,6 @@
 model_tier: medium
 name: design-system-capture
 pack: engineering-base
-tier: 2
 visibility: internal
 cluster: design-system
 sub: capture

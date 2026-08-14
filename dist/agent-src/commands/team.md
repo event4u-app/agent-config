@@ -7,7 +7,6 @@ pack: meta
 intent: "Route a cross-model team-mode request (review, adversarial, delegate, status) to the official plugin under ai_team governance"
 routes_to: [team-review, team-adversarial, team-delegate, team-status]
 replaces: []
-tier: 2
 visibility: internal
 description: Team orchestrator — governed cross-model access layer (a second strong model reviews the real diff; read-only multi-host fallback); routes to review, adversarial, delegate, status
 cluster: team

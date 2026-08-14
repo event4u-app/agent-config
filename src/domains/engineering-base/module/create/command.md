@@ -2,7 +2,6 @@
 model_tier: medium
 name: module-create
 pack: engineering-base
-tier: 2
 visibility: internal
 cluster: module
 sub: create

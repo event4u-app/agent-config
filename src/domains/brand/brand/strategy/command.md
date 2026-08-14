@@ -2,7 +2,6 @@
 model_tier: high
 name: brand-strategy
 pack: brand
-tier: 2
 visibility: internal
 cluster: brand
 sub: strategy

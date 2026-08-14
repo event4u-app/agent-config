@@ -5,7 +5,6 @@ pack: engineering-base
 intent: "Implement a tracker ticket end-to-end from its id"
 routes_to: [refine-ticket, feature-planning]
 replaces: []
-tier: 0
 visibility: visible
 skills: [refine-ticket, feature-planning]
 description: Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` engine, block-on-ambiguity, no auto-git.

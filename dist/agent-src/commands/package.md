@@ -7,7 +7,6 @@ pack: meta
 intent: "Package dispatcher — test the package install or reset the installed state"
 routes_to: [package-test, package-reset]
 replaces: []
-tier: 2
 visibility: internal
 description: Package orchestrator — routes to test (verify the package install) and reset (restore installed state)
 cluster: package

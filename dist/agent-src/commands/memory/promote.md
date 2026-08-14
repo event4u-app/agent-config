@@ -2,7 +2,6 @@
 model_tier: medium
 name: memory-promote
 pack: memory
-tier: 2
 visibility: internal
 cluster: memory
 sub: promote

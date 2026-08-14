@@ -10,8 +10,17 @@
     0,
     1
   ],
-  "total_commands": 150,
+  "total_commands": 213,
   "packs": [
+    {
+      "pack": "(unassigned)",
+      "size_class": null,
+      "budget": null,
+      "visible_count": 0,
+      "internal_count": 13,
+      "over_budget": false,
+      "over_by": 0
+    },
     {
       "pack": "ai-video",
       "size_class": "large",
@@ -22,11 +31,38 @@
       "over_by": 0
     },
     {
+      "pack": "analysis-workbench",
+      "size_class": "medium",
+      "budget": 5,
+      "visible_count": 1,
+      "internal_count": 8,
+      "over_budget": false,
+      "over_by": 0
+    },
+    {
+      "pack": "analytics",
+      "size_class": "small",
+      "budget": 2,
+      "visible_count": 0,
+      "internal_count": 4,
+      "over_budget": false,
+      "over_by": 0
+    },
+    {
+      "pack": "brand",
+      "size_class": "medium",
+      "budget": 5,
+      "visible_count": 0,
+      "internal_count": 6,
+      "over_budget": false,
+      "over_by": 0
+    },
+    {
       "pack": "engineering-base",
       "size_class": "core",
       "budget": 8,
-      "visible_count": 8,
-      "internal_count": 37,
+      "visible_count": 7,
+      "internal_count": 50,
       "over_budget": false,
       "over_by": 0
     },
@@ -40,11 +76,29 @@
       "over_by": 0
     },
     {
+      "pack": "git",
+      "size_class": "small",
+      "budget": 2,
+      "visible_count": 2,
+      "internal_count": 2,
+      "over_budget": false,
+      "over_by": 0
+    },
+    {
       "pack": "gtm-marketing",
       "size_class": "medium",
       "budget": 5,
       "visible_count": 0,
-      "internal_count": 9,
+      "internal_count": 10,
+      "over_budget": false,
+      "over_by": 0
+    },
+    {
+      "pack": "memory",
+      "size_class": "small",
+      "budget": 2,
+      "visible_count": 1,
+      "internal_count": 8,
       "over_budget": false,
       "over_by": 0
     },
@@ -52,8 +106,8 @@
       "pack": "meta",
       "size_class": "core",
       "budget": 8,
-      "visible_count": 8,
-      "internal_count": 60,
+      "visible_count": 6,
+      "internal_count": 54,
       "over_budget": false,
       "over_by": 0
     },
@@ -62,7 +116,7 @@
       "size_class": "medium",
       "budget": 5,
       "visible_count": 4,
-      "internal_count": 5,
+      "internal_count": 7,
       "over_budget": false,
       "over_by": 0
     },
@@ -72,6 +126,15 @@
       "budget": 5,
       "visible_count": 0,
       "internal_count": 8,
+      "over_budget": false,
+      "over_by": 0
+    },
+    {
+      "pack": "product-reasoning",
+      "size_class": "medium",
+      "budget": 5,
+      "visible_count": 1,
+      "internal_count": 10,
       "over_budget": false,
       "over_by": 0
     }

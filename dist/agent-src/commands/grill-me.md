@@ -2,7 +2,6 @@
 model_tier: inherit
 name: grill-me
 pack: product-reasoning
-tier: 2
 visibility: internal
 description: Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch
 argument-hint: "[vision|with-docs] [flags] [seed]"

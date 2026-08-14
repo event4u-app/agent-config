@@ -1,9 +1,11 @@
 // Tests for src/scripts/lint_command_tiers.ts (py2ts Phase 4 / Wave 4b — VERIFY).
 //
-// Ports tests/test_lint_command_tiers.py 1:1 (clean pass, missing tier,
-// invalid tier, empty dir, missing dir, AGENTS.md companions, real-repo pass)
-// plus a golden-parity layer that runs python3 vs tsx on the REAL REPO
-// (skipped without python3).
+// Ported from tests/test_lint_command_tiers.py (clean pass, missing/invalid
+// value, empty dir, missing dir, AGENTS.md companions, real-repo pass). The
+// cases that pinned the integer `tier:` alias — missing tier, invalid tier,
+// tier↔visibility mismatch — were REPLACED when road-to-tier-removal Phase 4
+// dropped the alias; `visibility:` is the only key this linter checks now, and
+// `test_stray_tier_key_is_not_this_linters_business` pins that boundary.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -50,35 +52,26 @@ describe('lint_command_tiers — ported pytest suite', () => {
         fs.rmSync(tmp, { recursive: true, force: true });
     });
 
-    // ADR-092: commands now require a `visibility:` field consistent with the
-    // `tier:` alias. The helper derives it from tier by default so existing
-    // call sites stay valid; pass visibility=null to omit it, or a literal to
-    // force a (possibly inconsistent) value. The `_DERIVE` sentinel mirrors the
-    // Python helper's default.
-    const DERIVE = Symbol('derive');
-    const TIER_TO_VIS: Record<string, string> = { '0': 'visible', '1': 'advanced', '2': 'internal' };
-
+    // `visibility:` is the only classifier since road-to-tier-removal Phase 4.
+    // `tier` survives here as an opt-in fixture knob for exactly one test — the
+    // stray-key boundary case — and is omitted everywhere else.
     function writeCmd(
         root: string,
         rel: string,
         opts: {
-            tier: string | null;
+            visibility?: string | null;
             name?: string | null;
-            visibility?: string | null | typeof DERIVE;
+            tier?: string;
         },
     ): string {
-        let visibility: string | null | typeof DERIVE =
-            opts.visibility === undefined ? DERIVE : opts.visibility;
-        if (visibility === DERIVE) {
-            visibility = TIER_TO_VIS[opts.tier ?? ''] ?? null;
-        }
+        const visibility = opts.visibility === undefined ? 'internal' : opts.visibility;
         const p = path.join(root, rel);
         fs.mkdirSync(path.dirname(p), { recursive: true });
         const lines = ['---'];
         if (opts.name !== undefined && opts.name !== null) {
             lines.push(`name: ${opts.name}`);
         }
-        if (opts.tier !== null) {
+        if (opts.tier !== undefined) {
             lines.push(`tier: ${opts.tier}`);
         }
         if (visibility !== null) {
@@ -90,60 +83,45 @@ describe('lint_command_tiers — ported pytest suite', () => {
     }
 
     it('test_clean_pass', () => {
-        writeCmd(tmp, 'alpha.md', { tier: '0', name: 'alpha' });
-        writeCmd(tmp, 'beta.md', { tier: '1', name: 'beta' });
-        writeCmd(tmp, 'nested/gamma.md', { tier: '2', name: 'gamma' });
+        writeCmd(tmp, 'alpha.md', { visibility: 'visible', name: 'alpha' });
+        writeCmd(tmp, 'beta.md', { visibility: 'advanced', name: 'beta' });
+        writeCmd(tmp, 'nested/gamma.md', { visibility: 'internal', name: 'gamma' });
         const { rc, out } = captureLint(() => lct.lint(tmp));
         expect(rc).toBe(0);
         expect(out).toContain('3 commands');
     });
 
-    it('test_missing_tier_fails', () => {
-        writeCmd(tmp, 'good.md', { tier: '0', name: 'good' });
-        writeCmd(tmp, 'bad.md', { tier: null, name: 'bad' });
-        const { rc, err } = captureLint(() => lct.lint(tmp));
-        expect(rc).toBe(1);
-        expect(err).toContain('1 missing');
-        expect(err).toContain('bad.md');
-    });
-
-    it('test_invalid_tier_fails', () => {
-        writeCmd(tmp, 'good.md', { tier: '1', name: 'good' });
-        writeCmd(tmp, 'wrong.md', { tier: '3', name: 'wrong' });
-        writeCmd(tmp, 'alpha.md', { tier: 'critical', name: 'alpha' });
-        const { rc, err } = captureLint(() => lct.lint(tmp));
-        expect(rc).toBe(1);
-        expect(err).toContain('2 invalid');
-        expect(err).toContain('wrong.md');
-        expect(err).toContain('alpha.md');
-    });
-
     it('test_missing_visibility_fails', () => {
-        // ADR-092: a valid tier but no visibility field must fail.
-        writeCmd(tmp, 'good.md', { tier: '0', name: 'good' });
-        writeCmd(tmp, 'bad.md', { tier: '2', name: 'bad', visibility: null });
+        writeCmd(tmp, 'good.md', { visibility: 'visible', name: 'good' });
+        writeCmd(tmp, 'bad.md', { visibility: null, name: 'bad' });
         const { rc, err } = captureLint(() => lct.lint(tmp));
         expect(rc).toBe(1);
         expect(err).toContain('1 visibility');
         expect(err).toContain('missing visibility: bad.md');
     });
 
-    it('test_visibility_tier_mismatch_fails', () => {
-        // ADR-092: visibility must agree with the tier alias when both are set.
-        writeCmd(tmp, 'good.md', { tier: '0', name: 'good' });
-        writeCmd(tmp, 'wrong.md', { tier: '0', name: 'wrong', visibility: 'internal' });
+    it('test_invalid_visibility_fails', () => {
+        writeCmd(tmp, 'good.md', { visibility: 'advanced', name: 'good' });
+        writeCmd(tmp, 'wrong.md', { visibility: 'hidden', name: 'wrong' });
+        writeCmd(tmp, 'alpha.md', { visibility: '2', name: 'alpha' });
         const { rc, err } = captureLint(() => lct.lint(tmp));
         expect(rc).toBe(1);
-        expect(err).toContain('disagrees with tier');
-        expect(err).toContain('wrong.md');
+        // Both bad files are counted and named; the old integer value '2' is a
+        // plain invalid visibility now, not a tier that happens to parse.
+        expect(err).toContain('2 visibility');
+        expect(err).toContain("invalid visibility 'hidden': wrong.md");
+        expect(err).toContain("invalid visibility '2': alpha.md");
     });
 
-    it('test_invalid_visibility_fails', () => {
-        writeCmd(tmp, 'good.md', { tier: '1', name: 'good' });
-        writeCmd(tmp, 'bad.md', { tier: '1', name: 'bad', visibility: 'hidden' });
+    it('test_stray_tier_key_is_not_this_linters_business', () => {
+        // road-to-tier-removal Phase 4: the tier↔visibility consistency clause
+        // is gone. A leftover `tier:` — even one contradicting `visibility:` —
+        // is rejected by command.schema.json (`additionalProperties: false`),
+        // NOT reconciled here. This linter reads visibility and nothing else.
+        writeCmd(tmp, 'stray.md', { visibility: 'internal', name: 'stray', tier: '0' });
         const { rc, err } = captureLint(() => lct.lint(tmp));
-        expect(rc).toBe(1);
-        expect(err).toContain("invalid visibility 'hidden'");
+        expect(rc).toBe(0);
+        expect(err).toBe('');
     });
 
     it('test_empty_dir_fails', () => {
@@ -160,8 +138,8 @@ describe('lint_command_tiers — ported pytest suite', () => {
     });
 
     it('test_agents_md_companions_ignored', () => {
-        writeCmd(tmp, 'AGENTS.md', { tier: null, name: null });
-        writeCmd(tmp, 'real.md', { tier: '2', name: 'real' });
+        writeCmd(tmp, 'AGENTS.md', { visibility: null, name: null });
+        writeCmd(tmp, 'real.md', { visibility: 'internal', name: 'real' });
         const { rc, out } = captureLint(() => lct.lint(tmp));
         expect(rc).toBe(0);
         expect(out).toContain('1 commands');

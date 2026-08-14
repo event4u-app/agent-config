@@ -7,7 +7,6 @@ pack: engineering-base
 intent: "Fix-workflow dispatcher — ci, pr-comments, pr-comments-loop, refs, seeder, portability, comments, quality"
 routes_to: [fix-ci, fix-pr-comments, fix-pr-comments-loop, fix-refs, fix-seeder, fix-portability, fix-comments, fix-quality, fix-route]
 replaces: []
-tier: 1
 visibility: advanced
 description: Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, comments, quality
 cluster: fix

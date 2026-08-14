@@ -2,7 +2,6 @@
 model_tier: medium
 name: skill
 pack: meta
-tier: 2
 visibility: internal
 description: Single-skill orchestrator — routes to preview. Non-destructive "what will this skill do?" before you run it.
 argument-hint: "[preview] <skill-name>"

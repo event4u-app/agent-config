@@ -2,7 +2,6 @@
 model_tier: medium
 name: package-test
 pack: meta
-tier: 2
 visibility: internal
 sub: test
 cluster: package

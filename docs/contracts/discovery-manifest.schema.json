@@ -8,12 +8,12 @@
   "additionalProperties": false,
   "properties": {
     "version": {
-      "const": 2,
-      "description": "Manifest schema version. Bump on breaking change. v2 (road-to-tier-removal Phase 1 / ADR-092) adds the top-level `deprecations` block; the integer command `tier` field stays emitted (non-breaking)."
+      "const": 3,
+      "description": "Manifest schema version. Bump on breaking change. v2 (road-to-tier-removal Phase 1 / ADR-092) added the top-level `deprecations` block while the integer command `tier` field stayed emitted; v3 (Phase 4) DROPS `tier` from command artefacts — a breaking change for any consumer reading the integer, which is why the version carries it."
     },
     "deprecations": {
       "type": "array",
-      "description": "road-to-tier-removal Phase 1 / ADR-092 — machine-readable deprecation signals for keys still emitted (non-breaking) but scheduled for removal. Lets external manifest consumers migrate during the soak window before any field is dropped.",
+      "description": "road-to-tier-removal Phase 1 / ADR-092 — machine-readable deprecation signals. An entry announces a key still emitted but scheduled for removal, and is RETAINED after removal with `removed_in` set, so a consumer reading a dropped key can still find its replacement.",
       "items": { "$ref": "#/$defs/deprecation" }
     },
     "generated_at": {
@@ -62,13 +62,14 @@
       "type": "object",
       "required": ["key", "replacement", "since"],
       "additionalProperties": false,
-      "description": "A single deprecated manifest key still emitted during its soak window.",
+      "description": "A single deprecated manifest key — either still emitted during its soak window, or already removed (then `removed_in` names the manifest version that dropped it). The entry outlives the key on purpose: a consumer still reading the old name needs to learn what replaced it.",
       "properties": {
         "key": { "type": "string", "minLength": 1, "description": "The deprecated key (e.g. `tier`)." },
-        "scope": { "type": "string", "minLength": 1, "description": "Where the key appears (e.g. `command` artefact entries)." },
+        "scope": { "type": "string", "minLength": 1, "description": "Where the key appeared (e.g. `command` artefact entries)." },
         "replacement": { "type": "string", "minLength": 1, "description": "The canonical key consumers should read instead (e.g. `visibility`)." },
         "since": { "type": "string", "minLength": 1, "description": "The decision that deprecated it (e.g. an ADR id)." },
         "sunset": { "type": ["string", "null"], "description": "Maintainer-owned removal date/marker; null until the soak window clears (scope-control: agents do not pin dates)." },
+        "removed_in": { "type": "integer", "minimum": 1, "description": "The manifest `version` in which the key stopped being emitted. Absent while the key is still emitted." },
         "note": { "type": "string", "description": "Human-readable migration guidance." }
       }
     },
@@ -156,8 +157,7 @@
         "category": { "type": "string", "enum": ["skill", "rule", "command", "template", "subagent"] },
         "name": { "type": "string" },
         "pack": { "$ref": "#/$defs/pack_id", "description": "capability-packs.md — canonical OWNER pack (ownership/budget unit). Orthogonal to `packs` (discovery tags); the owner need not appear in `packs`." },
-        "tier": { "type": "integer", "enum": [0, 1, 2], "description": "6.0.0-C — command-surface tier surfaced on `category: command` artefacts so the CLI discovery surface reads the manifest, not a parallel catalog. DEPRECATED back-compat alias of `visibility` since ADR-090; still dual-emitted (non-breaking) but announced for removal in the top-level `deprecations` block (road-to-tier-removal Phase 1 / ADR-092). Read `visibility`." },
-        "visibility": { "type": "string", "enum": ["visible", "advanced", "internal"], "description": "ADR-090 — named command-surface visibility (visible↔tier 0, advanced↔tier 1, internal↔tier 2); the classifier source of truth. Dual-emitted alongside `tier` on `category: command` artefacts during the deprecation window." },
+        "visibility": { "type": "string", "enum": ["visible", "advanced", "internal"], "description": "ADR-090 — named command-surface visibility on `category: command` artefacts; the sole classifier since manifest v3 dropped the integer `tier` alias (road-to-tier-removal Phase 4). Former mapping, for consumers migrating off `tier`: 0↔visible, 1↔advanced, 2↔internal." },
         "intent": { "type": "string", "description": "6.0.0-C — command routing metadata (one-line existence justification). Present on visible command artefacts." },
         "routes_to": { "type": "array", "items": { "type": "string" }, "description": "6.0.0-C — command routing metadata (skill/cluster-sub/command slugs the intent routes to)." },
         "replaces": { "type": "array", "items": { "type": "string" }, "description": "6.0.0-C — command routing metadata (prior names/aliases this command absorbs; may be empty)." },

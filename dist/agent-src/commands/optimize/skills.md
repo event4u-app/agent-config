@@ -2,7 +2,6 @@
 model_tier: medium
 name: optimize-skills
 pack: meta
-tier: 2
 visibility: internal
 cluster: optimize
 sub: skills

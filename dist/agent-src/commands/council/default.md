@@ -2,7 +2,6 @@
 model_tier: inherit
 name: council-default
 pack: product-reasoning
-tier: 2
 visibility: internal
 cluster: council
 sub: default

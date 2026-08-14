@@ -82,15 +82,18 @@ jobs:
       - name: Run skill linter (changed files only)
         run: ./scripts-run src/scripts/skill_linter --changed
 
-      - name: Validate command + rule tier/visibility frontmatter
+      - name: Validate command visibility + rule tier frontmatter
         # These two lints are the sole CI enforcers that every command declares
-        # a valid tier + visibility (ADR-090: presence, enum, tier/visibility
-        # consistency) and every rule declares a valid tier. They are otherwise
+        # a valid `visibility` (ADR-090: presence + enum; the tier↔visibility
+        # consistency clause went with the integer alias in road-to-tier-removal
+        # Phase 4) and every rule declares a valid tier. They are otherwise
         # only reachable via the local `task ci`/`ci-strict` meta-tasks, which
         # no workflow invokes — and validate_frontmatter treats these fields as
-        # optional. Without this step a missing/invalid tier or visibility on a
-        # newly-created rule or command would slip through CI. The
-        # test_tier_visibility_ci_wired guard keeps this step from regressing.
+        # optional. Without this step a missing/invalid visibility on a
+        # newly-created rule or command would slip through CI. NOTE: the
+        # `test_tier_visibility_ci_wired` guard this comment used to cite no
+        # longer exists anywhere in the tree (verified 2026-08-14) — nothing
+        # keeps this step from being deleted, so treat it as load-bearing.
         run: |
           task lint-command-tiers
           task lint-rule-tiers
@@ -295,8 +298,16 @@ jobs:
           while IFS= read -r f; do
             [ -n "$f" ] && printf '  · %s\n' "$f"
           done <<< "$CHANGED"
+          # `--base` anchors "what is scaffold" to the corpus AT THE BASE, read
+          # from git. Without it the linter falls back to "on-disk minus the
+          # change set", which is empty — hence scaffold-free, hence a false
+          # fail — whenever a change set covers a whole class (e.g. a mechanical
+          # frontmatter edit across every command). The re-skin-batch guard is
+          # unaffected — a file absent at BASE contributes no scaffold, and a
+          # rewritten one contributes only its OLD text. Same BASE the diff
+          # above used, so scaffold and change set share one revision.
           # shellcheck disable=SC2086
-          ./scripts-run src/scripts/lint_originality --changed $CHANGED
+          ./scripts-run src/scripts/lint_originality --base "$BASE" --changed $CHANGED
 
   skill-lint-strict:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

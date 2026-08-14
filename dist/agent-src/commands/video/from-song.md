@@ -2,7 +2,6 @@
 model_tier: inherit
 name: video-from-song
 pack: ai-video
-tier: 2
 visibility: internal
 cluster: video
 sub: from-song

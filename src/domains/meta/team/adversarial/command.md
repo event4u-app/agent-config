@@ -4,7 +4,6 @@ name: team-adversarial
 disable-model-invocation: true
 argument-hint: "<focus>"
 pack: meta
-tier: 2
 visibility: internal
 skills: [adversarial-review]
 description: Thin wrapper — adversarial cross-model review on a named focus via the official plugin (/codex:adversarial-review). Escalation rung above the single-model adversarial-review skill.

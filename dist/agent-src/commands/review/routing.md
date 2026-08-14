@@ -2,7 +2,6 @@
 model_tier: high
 name: review-routing
 pack: engineering-base
-tier: 2
 visibility: internal
 sub: routing
 cluster: review

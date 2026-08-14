@@ -61,9 +61,9 @@ function writeSkill(repo: string, name: string, extra = ''): string {
     return p;
 }
 
-// ADR-092 visibility: a command artefact carrying `tier:` and optionally
-// `visibility:` frontmatter. `vis === undefined` omits the key (exercises the
-// tier→visibility derivation); a string value sets it explicitly.
+// A command artefact fixture. `vis === undefined` omits `visibility:`; the
+// `tier` knob writes the REMOVED integer alias on purpose, so the tests below
+// can prove the builder neither emits nor derives from it any more.
 function writeCommand(
     repo: string,
     name: string,
@@ -325,27 +325,34 @@ describe('build_discovery_manifest — builder contract (ported from pytest)', (
         expect((pack.by_trust_level as Record<string, number>).core).toBe(3);
     });
 
-    // ADR-092: explicit `visibility:` is the source of truth; the integer
-    // `tier:` derives one when visibility is absent ({0:visible, 1:advanced,
-    // 2:internal}); neither present → no key.
+    // road-to-tier-removal Phase 4: `visibility:` is the only classifier. The
+    // integer `tier:` is neither emitted nor derived from any more — these four
+    // cases pin both halves of that (nothing carried through, nothing derived).
     it('command emits explicit visibility verbatim', () => {
-        writeCommand(tmp, 'cmd-explicit', { tier: 2, vis: 'internal' });
+        writeCommand(tmp, 'cmd-explicit', { vis: 'internal' });
         const entry = build().artefacts.find((e) => e.path?.toString().endsWith('cmd-explicit.md'))!;
         expect(entry.category).toBe('command');
-        expect(entry.tier).toBe(2);
         expect(entry.visibility).toBe('internal');
     });
 
-    it('command derives visibility from tier when visibility absent', () => {
+    it('a leftover tier: key is never carried into the manifest', () => {
+        writeCommand(tmp, 'cmd-stray', { tier: 2, vis: 'internal' });
+        const entry = build().artefacts.find((e) => e.path?.toString().endsWith('cmd-stray.md'))!;
+        expect('tier' in entry).toBe(false);
+        expect(entry.visibility).toBe('internal');
+    });
+
+    it('visibility is no longer derived from the removed tier alias', () => {
+        // Pre-Phase-4 these emitted visible / advanced / internal respectively.
         writeCommand(tmp, 'cmd-derive-0', { tier: 0 });
         writeCommand(tmp, 'cmd-derive-1', { tier: 1 });
         writeCommand(tmp, 'cmd-derive-2', { tier: 2 });
         const arts = build().artefacts;
-        const vis = (suffix: string): unknown =>
-            arts.find((e) => e.path?.toString().endsWith(suffix))!.visibility;
-        expect(vis('cmd-derive-0.md')).toBe('visible');
-        expect(vis('cmd-derive-1.md')).toBe('advanced');
-        expect(vis('cmd-derive-2.md')).toBe('internal');
+        for (const suffix of ['cmd-derive-0.md', 'cmd-derive-1.md', 'cmd-derive-2.md']) {
+            const entry = arts.find((e) => e.path?.toString().endsWith(suffix))!;
+            expect('visibility' in entry).toBe(false);
+            expect('tier' in entry).toBe(false);
+        }
     });
 
     it('command without tier or visibility omits the key', () => {
@@ -355,12 +362,19 @@ describe('build_discovery_manifest — builder contract (ported from pytest)', (
         expect('visibility' in entry).toBe(false);
     });
 
-    it('out-of-range tier yields no derived visibility', () => {
-        // {0,1,2} only — tier 3 → Python dict .get returns None → key omitted.
-        writeCommand(tmp, 'cmd-tier3', { tier: 3 });
-        const entry = build().artefacts.find((e) => e.path?.toString().endsWith('cmd-tier3.md'))!;
-        expect(entry.tier).toBe(3);
-        expect('visibility' in entry).toBe(false);
+    it('manifest is v3 and records the tier removal for consumers', () => {
+        // Dropping a published field is breaking, so the version carries it; the
+        // deprecations entry OUTLIVES the key so a consumer still reading `tier`
+        // can find out what replaced it and when it went.
+        const manifest = build();
+        expect(manifest.version).toBe(3);
+        const entry = (manifest.deprecations as Array<Record<string, unknown>>).find(
+            (d) => d['key'] === 'tier',
+        )!;
+        expect(entry).toBeDefined();
+        expect(entry['replacement']).toBe('visibility');
+        expect(entry['removed_in']).toBe(3);
+        expect(entry['sunset']).toBe('2026-08-13');
     });
 
     it('subviews are deterministic', () => {

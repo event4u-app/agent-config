@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 29 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **39** open blockers, **10** need you → `agent-config gates`
+> 28 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **39** open blockers, **10** need you → `agent-config gates`
 
 ## Overall
 
-**253 / 437 steps done · 58%**
+**246 / 429 steps done · 57%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   58%
+███████████████████████░░░░░░░░░░░░░░░░░   57%
 ```
 
 ## Open roadmaps
@@ -42,9 +42,8 @@
 | 24 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 10 | 9 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | █████░░░░░ 47% |
 | 25 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 26 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 27 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 1 | 7 | 0 | 0 | 0 | █████████░ 88% |
-| 28 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 29 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 15 | 1 | 14 | 0 | 0 | 0 | █████████░ 93% |
+| 27 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 28 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 15 | 1 | 14 | 0 | 0 | 0 | █████████░ 93% |
 
 ---
 
@@ -824,17 +823,6 @@ _1 blocker resolved._
   - **Resolved when:** the maintainer authorizes the specific run with an estimate.
 
 _1 blocker resolved._
-
-### [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md)
-
-**Command `tier:` Alias Removal** — 7 / 8 done (88%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Evidence mechanism build-out | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Internal dependency audit (just-in-time) | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 3 | External soak confirmation | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 4 | Removal execution (blocked on Phases 1–3) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
 
 ### [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md)
 
