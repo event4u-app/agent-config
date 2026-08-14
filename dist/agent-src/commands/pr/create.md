@@ -71,16 +71,28 @@ Run, in order:
 1. **Ask the gate, never hand-roll the comparison:**
 
    ```bash
-   ./scripts-run src/scripts/check_branch_freshness
+   npx tsx node_modules/@event4u/agent-config/src/scripts/check_branch_freshness.ts
    ```
 
    It resolves the base itself — explicit `--base`, else the base of the **open
-   PR for this branch** as the forge reports it, else the repo default from
-   `origin/HEAD`. Do **not** substitute `git rev-list --count HEAD..origin/main`:
-   that hardcodes a base this branch may not target, and it reads the local
-   tracking ref, which is a fetch from earlier in the session — a memory, not a
-   check (`direct-answers` Iron Law 2). Exit `0` = current, `1` = behind, and the
-   refusal names the base **and where that base came from**.
+   PR for this branch** as the forge reports it, else the repo default the server
+   reports for `HEAD`. Do **not** substitute
+   `git rev-list --count HEAD..origin/main`: that hardcodes a base this branch may
+   not target, and it reads the local tracking ref, which is a fetch from earlier
+   in the session — a memory, not a check (`direct-answers` Iron Law 2).
+
+   **Exit `0` is not a verdict — it means only "did not refuse".** `1` = behind.
+   `0` covers "current", "could not verify", and every path with nothing to
+   check: a no-op in CI, a detached HEAD, and standing on the base branch
+   itself. Read the line, not just the status. A run that could not reach the
+   base prints `NOT VERIFIED` and still exits `0`, deliberately, so an offline
+   push is never blocked by a network failure; treating that as a clean pass is
+   the one misread this gate cannot protect you from.
+
+   **And under `--quiet` a genuine pass prints nothing at all** — that is how
+   `taskfiles/ci-fast.yml` invokes it, so silence there is the success case, not
+   a missing verdict. Every path that has NOT verified stays loud even under
+   `--quiet`. Run it without the flag when you need to read a verdict.
 
 2. `gh pr list --state open --base {resolved-base} --limit 20 --json number,headRefName,files`
    — open PRs targeting the same base, for the overlap question below.
@@ -89,10 +101,13 @@ Run, in order:
 
 | Gate | Overlapping open PR touches same files? | Action |
 |---|---|---|
-| exit `0` | — | Proceed to Step 2 |
+| exit `0`, prints `branch is current` | — | Proceed to Step 2 |
 | exit `1` | No | **Merge the base in** — `git fetch origin && git merge origin/{resolved-base} --no-edit` — then run the regeneration set below, then proceed. No need to ask; state that you did it. |
 | exit `1` | **Yes** | STOP — surface the overlapping PR number, ask: stack on top of it / wait for it to land / proceed-anyway-and-accept-conflicts / cancel |
+| exit `0`, prints `NOT VERIFIED` | — | The base could not be reached, so freshness is **unknown** — not confirmed. Re-run once; if it persists, say the check did not run rather than reporting a pass. A base that `ls-remote` cannot resolve (deleted or renamed after the PR opened, or a fork base) lands here too. |
 | warns `could not ask the forge` | — | The **default** base was checked and an open PR against a different base was **not** ruled out. Say so; do not report it as a clean freshness pass. |
+| exit `0`, prints nothing, `--quiet` given | — | The success case for the preflight invocation. Any non-verifying path would have printed even under `--quiet`. |
+| exit `0`, says `standing on <base> itself` / `detached HEAD` / `no-op in CI` | — | Nothing to check — a branch cannot be behind itself, a detached HEAD has no branch, and in CI the forge owns mergeability. Not a freshness pass; do not cite it as one. |
 
 A branch behind its base is **not** current — bring the base in **before** the PR
 exists, never after. Auto-merge when there is no file overlap (the common case);

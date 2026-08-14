@@ -34,15 +34,26 @@ tasks:
       # gate here inspects local content and none of them can see that. It asks
       # the SERVER rather than the tracking ref — comparing against the local ref
       # would reproduce the stale reading that caused the incident.
-      # Two round trips now, not one: a `gh pr list` to resolve WHICH base this
-      # branch's open PR actually targets, then the `git ls-remote` against it.
-      # The second was always here (~0.3s); the first was added because a
+      # Up to THREE round trips, not one: a `gh pr list` to resolve WHICH base
+      # this branch's open PR actually targets; when there is no open PR — the
+      # common case on the /create-pr path — an `ls-remote --symref` for the
+      # server's default branch; then the `ls-remote` against the base itself.
+      # The last was always here (~0.3s); the other two were added because a
       # hardcoded `main` reports a true-but-irrelevant green for any branch whose
-      # PR targets a release line or a parent PR. Budget note: that is ~1-2s
-      # against the 25s pre_push_budget_seconds ceiling in
-      # src/config/ci-local-parity.yml, and it degrades rather than fails —
-      # no `gh`, no auth, no GitHub remote falls back to the repo default and
-      # SAYS SO, so an offline push is never blocked by the resolution step.
+      # PR targets a release line or a parent PR, and because taking the default
+      # branch NAME from the local origin/HEAD reintroduces the stale-local-state
+      # failure the gate exists to catch.
+      # Budget: ~1-2s typical against the 25s pre_push_budget_seconds ceiling in
+      # src/config/ci-local-parity.yml. The WORST case is worth stating rather
+      # than averaging away: NETWORK_TIMEOUT_MS in the gate is 8s and bounds
+      # `git` as well as `gh`, so three hung calls spend 24s and stay under the
+      # ceiling by construction. Bounding `gh` alone was not enough — the two
+      # `ls-remote` calls went through an untimed `git`, so an unresponsive SSH
+      # remote could hang past any stated worst case.
+      # Fast failures (no `gh` -> ENOENT, no auth -> non-zero exit) return
+      # immediately; only an unresponsive endpoint reaches a timeout.
+      # Either way it degrades rather than fails: the run falls back to the repo
+      # default and SAYS SO, so an offline push is never blocked by the step.
       # No-op in CI, where the forge owns mergeability.
       - ./scripts-run src/scripts/check_branch_freshness --quiet
       # FIRST among the content gates, and the order is the whole point: this
