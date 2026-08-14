@@ -125,4 +125,58 @@ delta, and promotes only once the invariant checker signs off on the merge.`;
         }
         expect(main(['--changed', ...rel, '--quiet'])).toBe(1);
     });
+
+    it('stays closed under --base: files absent at the base contribute no scaffold', () => {
+        // The guard must not depend on which form resolves "established". These
+        // files exist nowhere in git, so their shared shingles cannot enter the
+        // base-derived boilerplate set either.
+        const rel: string[] = [];
+        for (let i = 1; i <= 7; i++) {
+            const dir = path.join(BATCH_DIR, `c${i}`);
+            fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(path.join(dir, 'command.md'), NOVEL, 'utf-8');
+            rel.push(`src/domains/__origtest_batch/c${i}/command.md`);
+        }
+        expect(main(['--base', 'HEAD', '--changed', ...rel, '--quiet'])).toBe(1);
+    });
+});
+
+describe('lint_originality — whole-class change sets do not fabricate overlap', () => {
+    // Regression pin for the degeneracy found in road-to-tier-removal Phase 4.
+    // A mechanical edit across EVERY file of a class (there: dropping one
+    // frontmatter key from all 200 commands) makes "on-disk corpus MINUS the
+    // change set" empty. Nothing then clears the DF floor, no shingle is
+    // scaffold, and the class's shared skeleton scores as authored overlap —
+    // 3 pairs above FAIL where the full audit reports none.
+    //
+    // The fixture is the REAL command corpus, deliberately: a synthetic one
+    // would not carry the cluster-head skeleton that produced the false fail.
+    const ALL_COMMANDS = (): string[] => {
+        const out: string[] = [];
+        const walk = (dir: string): void => {
+            for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+                const full = path.join(dir, ent.name);
+                if (ent.isDirectory()) walk(full);
+                else if (ent.name === 'command.md') out.push(path.relative(ROOT, full));
+            }
+        };
+        walk(path.join(ROOT, 'src', 'domains'));
+        return out.sort();
+    };
+
+    it('the entire command class as the change set passes with --base', () => {
+        // HEAD is the committed state of these same files, so the established
+        // corpus is non-empty and the scores match the full audit's.
+        expect(main(['--base', 'HEAD', '--changed', ...ALL_COMMANDS(), '--quiet'])).toBe(0);
+    });
+
+    it('the full audit agrees — no pair is genuinely above FAIL', () => {
+        // The pin above is only meaningful if the corpus really is clean; this
+        // is the independent reading of the same question.
+        expect(main(['--quiet'])).toBe(0);
+    });
+
+    it('--base is refused without --changed instead of being ignored', () => {
+        expect(main(['--base', 'HEAD', '--quiet'])).toBe(2);
+    });
 });

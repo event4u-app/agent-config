@@ -298,8 +298,16 @@ jobs:
           while IFS= read -r f; do
             [ -n "$f" ] && printf '  · %s\n' "$f"
           done <<< "$CHANGED"
+          # `--base` anchors "what is scaffold" to the corpus AT THE BASE, read
+          # from git. Without it the linter falls back to "on-disk minus the
+          # change set", which is empty — hence scaffold-free, hence a false
+          # fail — whenever a change set covers a whole class (e.g. a mechanical
+          # frontmatter edit across every command). The re-skin-batch guard is
+          # unaffected — a file absent at BASE contributes no scaffold, and a
+          # rewritten one contributes only its OLD text. Same BASE the diff
+          # above used, so scaffold and change set share one revision.
           # shellcheck disable=SC2086
-          ./scripts-run src/scripts/lint_originality --changed $CHANGED
+          ./scripts-run src/scripts/lint_originality --base "$BASE" --changed $CHANGED
 
   skill-lint-strict:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
