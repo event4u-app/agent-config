@@ -31,7 +31,16 @@
     "compatibility": {
       "type": "string",
       "maxLength": 500,
-      "description": "Agent-Skills spec field (optional): machine-readable declaration of environment requirements — system packages, network access, product/host constraints. Mirrors the public spec so media/doc skills can state requirements outside prose."
+      "deprecated": true,
+      "description": "DEPRECATED (announced 2026-08-14, removal maintainer-scheduled — see docs/MIGRATION.md § Scheduled deprecations). Agent-Skills spec field (optional): free-text declaration of environment requirements — system packages, network access, product/host constraints. Superseded by `harness_compat` (the machine-readable class) plus `runtime_requires` (the probeable detail). Still accepted and still emitted so the public-spec mirror keeps working during the window; new skills declare `harness_compat` instead."
+    },
+    "harness_compat": {
+      "type": "string",
+      "enum": [
+        "consumer-installed-deps"
+      ],
+      "description": "Structured replacement for the free-text `compatibility` class claim: WHAT KIND of harness constraint the skill carries, in a form `doctor`/`preflight` can branch on. Distinct from `runtime_requires`, which names WHICH bins/env/network to probe — a Python module such as `python-docx` is not a PATH binary, so it has no `bins` entry and would otherwise be invisible to any machine reader. Deliberately single-valued: the enum is derived from the only two skills that ever declared `compatibility`, and both attest exactly one class. A second value is added when a skill attests one, never pre-emptively — a speculative vocabulary is the pro-forma-field risk this schema already refuses for `runtime_requires`. `consumer-installed-deps` = the skill runs only where the consumer has itself installed named third-party libraries or engines; this package ships no runtime for it.",
+      "$comment": "road-to-skill-ecosystem-executable-payloads Phase 1, under the maintainer's 2026-08-14 resolution of blocker `compatibility-deprecation-is-a-consumer-visible-decision`: ADDITIVE — `harness_compat` lands beside `compatibility`, which is NOT removed here; its removal is approved in principle and scheduled through docs/MIGRATION.md § Scheduled deprecations, never dropped silently. Enum evidence (verbatim, the complete population of `compatibility` users): docx-authoring — \"Requires a consumer-installed OOXML library (python-docx …) … Ships zero runtime in this package.\"; pdf-tools — \"Requires consumer-installed PDF libraries: pypdf …, reportlab …; an OCR engine (e.g. tesseract) … Ships zero runtime in this package.\" Both state one class; the label generalises \"library\"/\"engine\" to \"deps\" and adds no claim neither text makes."
     },
     "runtime_requires": {
       "type": "object",

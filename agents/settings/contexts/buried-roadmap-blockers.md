@@ -50,6 +50,39 @@ stderr. Two limits, both real:
   roadmaps for months, the shape to revisit is surface-and-acknowledge rather
   than refuse.
 
+## The second burial shape — a blocker encoded as an HTML comment
+
+Distinct from the archival case above, and it needed its own sweep to find:
+a roadmap with **no `## Blockers` section at all**, whose gating lives as
+`<!-- blocker … -->` comments inside step bodies. Nothing counts those. Not
+`agent-config gates`, not the dashboard's blocker column, not a reader scanning
+for what is waiting on them. The work reads as ordinary open steps, so it is
+never requested, and it waits indefinitely.
+
+**Found and repaired once, 2026-08-14:** `road-to-council-blind-review` carried
+one user-owned blocker — a set of maintainer blind ratings the pre-registration
+names the maintainer as the only valid rater for — encoded twice as inline
+comments. Surfacing it moved the tree's visible blocker count 8 → 9. The inline
+comments were kept: they carry per-step evidence that belongs beside the step.
+The section is the index, not a replacement.
+
+**The census was smaller than the sweep that reported it assumed, and this is
+the part worth carrying forward.** That sweep flagged "gating invisible to the
+dashboard in at least five roadmaps". Checked one at a time, **nine** roadmaps
+have no `## Blockers` section and only **one** of them was concealing a blocker.
+The rest are correctly sectionless, because of a distinction the count elided:
+
+> **A `## Blockers` section is for work waiting on a HUMAN — a decision, a
+> rating, an authorization. Work waiting on other WORK is a dependency, not a
+> blocker.** A roadmap that says "Phase 3 needs the adapter another roadmap
+> owns" is fully readable as open work and needs no section; `agent-config
+> gates` would be actively worse for listing it, because a queue of things
+> nobody can act on is a queue people stop reading.
+
+So do not read "no `## Blockers` section" as a defect signal. The signal is a
+`blocker`/`waits on the maintainer` phrase **inside a step body or comment**
+with no section indexing it — that is the shape to grep for, and it is rare.
+
 ## See also
 
 - `src/agent-src/scripts/archive_completed_roadmaps.ts` — the guard.

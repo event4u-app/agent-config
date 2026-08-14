@@ -138,6 +138,42 @@ CLAIMS, `unbacked`.
       ships. It also runs directly against a roadmap that has already shipped
       orchestration as always-on, so the two must be reconciled by a human
       before either is acted on. -->
+      <!-- THE GATE WAS BYPASSED, NOT PASSED — recorded 2026-08-14 on an outside
+      opinion (1 seat, anthropic/claude-sonnet-4-5, 2 rounds; the second seat
+      failed to start, so this is a single-model judgement admitted on its
+      checkable merit and NOT a convergence).
+
+      The note above is accurate and stops one sentence short of the thing that
+      matters. It records that clause 1 names a mechanism the tree no longer has.
+      It does not record what happened to the *evidence gate* that clause was
+      guarding, and the difference sets a precedent.
+
+      This roadmap's Phase 3 committed to a gate: evidence first, then the
+      default. A later roadmap (always-on orchestration, Phase 1) made the
+      capability unconditional and deleted the switch **without ever evaluating
+      that evidence**. So the honest record is not "the question became moot when
+      the later decision superseded it" — it is:
+
+        1. The later roadmap's structural decision STANDS. That is not reopened
+           here, and this note is not an argument to reopen it.
+        2. The evidence gate this roadmap committed to was **never passed**. It
+           was never evaluated at all. Nothing in the later decision references
+           or satisfies the criterion stated above.
+        3. The telemetry exists and is uninterpretable (see the blocker below).
+           The question is therefore **unanswered**, not answered-and-obsolete.
+
+      Why the distinction is worth a paragraph: "superseded, therefore moot"
+      licenses the next roadmap to walk past its own evidence gate by shipping
+      something that makes the gate unreachable. "Superseded, gate never passed"
+      licenses nothing — it leaves the debt visible and named. Two different
+      claims, two different precedents, and only one of them is true here.
+
+      Left open by this note, deliberately: whether a bypass of a
+      previously-committed evidence gate should require an explicit written
+      justification, or whether "the later decision wins" is sufficient
+      governance on its own. That is a doctrine question about how this tree
+      records superseded commitments; it is maintainer-owned and is not settled
+      by recording one instance of it. -->
 
 **Exit:** a `backed` scoped claim + scoped flip, OR a recorded null + a public
 demotion of the front. No middle state where marketing implies a swarm the

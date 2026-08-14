@@ -124,18 +124,43 @@ cancellations with the lock cited inline.
 | [`-ledger-truth`](road-to-inbox-harvest-2026-08-b-ledger-truth.md) | `model_served` vs `model_requested` (0 hits), two un-cross-checked rate tables with different matching strategies, silent zero-costing | highest-value single item in the batch |
 | [`-council-integrity`](archive/road-to-inbox-harvest-2026-08-b-council-integrity.md) (archived; 1.6 carried to [`-followup`](archive/road-to-inbox-harvest-2026-08-b-council-integrity-followup.md)) | the quorum-attendance defect, shared model-field coercion, synthesis prose-vs-tally | the one fully-surviving source |
 | [`-authoring-contract`](archive/road-to-inbox-harvest-2026-08-b-authoring-contract.md) (archived) | three sections labelled *required* and enforced by nothing; failure-signature drills; 20 unbound research citations | sharpest finding the bundles missed |
-| [`-estate-lifecycle`](road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | staleness metadata, archive-not-delete, zero-inbound report | **opens with a decision-revisit offer** against a same-day lock |
+| [`-estate-lifecycle`](archive/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) (archived) | staleness metadata, archive-not-delete, zero-inbound report | **opened with a decision-revisit offer** against a same-day lock |
 | [`-install-lifecycle`](archive/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | there is no uninstall path in `install.ts` at all; plus the org-pack decision | the uninstall half needs no pack system |
 | [`-dispatch-safety`](road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | scoped-Bash expressibility, a confirmation primitive, checkable handoff fields | a live schema-vs-rule contradiction |
 | [`-release-integrity`](archive/road-to-inbox-harvest-2026-08-b-release-integrity.md) (archived) | the recurring release-head placeholder, the carrier remainder, four flags over existing data | most survivors of any single source |
 
-- [ ] **2.1 Record the execution order the maintainer picks.** Eight roadmaps opened
+- [x] **2.1 Record the execution order the maintainer picks.** Eight roadmaps opened
       in one pass is a capacity question, not a throughput one — `ADR-216` re-anchors
       restraint to maintainer capacity, and nothing here is urgent. Two are
       independently cheap and unblocked (`-ledger-truth` Phase 1,
       `-release-integrity` Phase 5); two open with a maintainer decision before any
       code (`-estate-lifecycle`, `-install-lifecycle` Phase 2). Write the chosen
       order into this step and strike the rest until they are reached.
+
+      **Closed 2026-08-14 — maintainer-delegated decision, authorized by the
+      blanket in-session grant of this date (`harvest-b-execution-order`).**
+      The ordering question had already dissolved by the time it was answered,
+      and the honest resolution is to say so rather than to invent a sequence.
+      Measured against the tree on 2026-08-14: **six of the eight siblings are
+      archived** — `-council-integrity` (+ `-followup`), `-authoring-contract`,
+      `-estate-lifecycle`, `-install-lifecycle`, `-release-integrity`. Three
+      remain active, and each is at or past 85 % closed:
+      `-ledger-truth` (1 open), `-dispatch-safety` (2 open), `-ci-economy` (1 open).
+
+      **Order, for the record:** `-ledger-truth` → `-dispatch-safety` →
+      `-ci-economy` — cheapest-remaining first, largest-scope last, which is the
+      ranking the blocker itself proposed. It costs nothing to honour and it is
+      the order a reader would otherwise have to re-derive.
+
+      **The "move the unchosen siblings to `later/`" leg is discharged as
+      vacuous, not as done.** That clause exists to stop unstarted siblings from
+      sitting in the active tree competing for attention. There are no unstarted
+      siblings: the batch drained itself through archival while the decision was
+      pending. Moving three ≥85 %-complete roadmaps to `later/` would be
+      checkbox motion that *loses* information, and `lint_roadmap_later_disposition`
+      would then demand a resume condition for work that is simply waiting on
+      accruing data. Each remaining sibling's own blocker already records that
+      condition where it belongs — in the sibling.
 
 ### Council convergence on the family's governance — 2026-08-11
 
@@ -208,8 +233,13 @@ for them persuasively and will outlive this file in `tmp.old/`.
 ## Blockers
 
 ### blocker: harvest-b-execution-order
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** discharged at 2.1 on 2026-08-14 under the blanket in-session
+  maintainer grant. Order recorded (`-ledger-truth` → `-dispatch-safety` →
+  `-ci-economy`); the `later/` leg discharged as vacuous — six of eight siblings
+  had already archived, and no unstarted sibling remained for it to apply to.
+  Reasoning in full at 2.1.
 - **Blocks:** 2.1 only. Every child roadmap is independently readable and
   independently executable; none waits on this.
 - **What to do:** decide which of the eight siblings open now and which wait.

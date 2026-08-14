@@ -133,6 +133,40 @@ projection:
 # (vendor-granular unknown_defaults in src/config/host-capabilities.yml).
 discipline_profile: __DISCIPLINE_PROFILE__
 
+# OPT-IN PRESET — the measured-lift configuration, shown but NOT shipped.
+#
+# The evidence above says `essential` carries the significant discipline lift
+# (+0.458, p=0.0135) while `full`'s residual over it is not significant
+# (p=0.37). That reads like an argument to flip the shipped default. It is not,
+# for two independent reasons, and both are worth stating where the key lives
+# rather than in a roadmap nobody reads at install time.
+#
+#   1. This key family is marked "do not set this from automation". That reads
+#      as ABSOLUTE — it forbids an automated CHOICE of default for the family,
+#      not merely a script rewriting your file. No measurement, however clean,
+#      licenses an agent to flip it on your behalf.
+#   2. The flip was pre-registered against a fresh-install census of
+#      <= 30k tokens of always-on rule prose. Measured at audit time: ~163k as
+#      loaded, i.e. 5.4x the target. The criterion fails on its own terms
+#      regardless of point 1.
+#
+# So the better-evidenced value is carried here as a visible option you may
+# uncomment, with its cost stated inline. Uncomment the line below to replace
+# the resolved value above:
+#
+#   discipline_profile: essential      # ~3.3x kernel tokens (vs ~11.7x for full)
+#
+# Read the two factors as what they are: multiples of the kernel-only baseline
+# from the cost-factor sweep, NOT the fresh-install census. They answer "what
+# does this tier cost relative to `off`", never "does this tier reach 30k" —
+# nothing has measured the latter for `essential`, and this comment does not
+# claim it does.
+#
+# Recorded 2026-08-14 on an outside opinion (1 seat, 2 rounds; the second seat
+# failed to start, so a single-model judgement on its checkable merit and NOT a
+# convergence). It rejected both the flip and the do-nothing, and proposed this
+# third route: you see the option, nothing automated chose for you.
+
 # --- Cost profile (legacy knob — superseded by discipline_profile above) ---
 #
 # Master switch that controls which rule tiers load each session.

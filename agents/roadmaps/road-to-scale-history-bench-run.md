@@ -41,8 +41,24 @@ POST-bench copy, never pre-bench).
 ## Blockers
 
 ### blocker: benchmark-spend-authorization
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
+- **Resolution (2026-08-14):** **run budget GRANTED in-session**, at the
+  pre-registered shape — 3 arms × 16 runs × ≥2 families on the agentic build
+  task. The decision half is permanently discharged and needs no re-asking; this
+  is the same standing authorization the team-mode Phase-5 bench references.
+
+  **The run was not fired in the granting session, for capacity rather than
+  permission.** A paid multi-family agentic sweep is long-running and its results
+  need shepherding into the Phase-1 verdict and the claims ledger; starting one
+  at the tail of a session that could not supervise it to completion would risk
+  spending the grant on a run nobody reads. No dollar figure is asserted here —
+  the cost sheet lives in the pre-registration, and inventing a number would be
+  worse than pointing at it.
+
+  **PRE-AUTHORIZED — executes without further ask.** The next session with
+  capacity renders the estimate from the prereg for the record, fires the run,
+  and proceeds to the Phase-1 verdict. No new spend question exists.
 - **Blocks:** Phase 1 (both steps) — everything author-able is already
   committed and dry-verified in PR #1016.
 - **What to do:**

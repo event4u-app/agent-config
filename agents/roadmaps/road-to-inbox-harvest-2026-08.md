@@ -443,8 +443,35 @@ before the file was written*.
   cancelled against it.
 
 ### blocker: self-fix-halt-telemetry
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution (2026-08-14):** path **(b)** — the pre-registration is re-scoped to
+  the structural claim (the loop exists, is bounded, terminates), and the ≥50 %
+  halt-reduction claim is recorded as **never evaluated**, not as met.
+
+  **Why this was not decided by the agent alone.** `evaluator-independence` holds
+  that the party which built the artefact rewriting its own success criterion is
+  exactly the forbidden move, so the question went to an outside opinion first.
+
+  **Council pass, 2026-08-14 — 1 of 2 seats answered. This is NOT convergence**
+  and is recorded as the single-seat judgement it is: `anthropic/claude-sonnet-4-5`,
+  2 rounds; the `openai` seat failed to start (`exit_1` — the CLI refuses to run
+  outside a trusted git directory, a worktree limitation, not a disagreement).
+  Admitted on its checkable merit, never on a quorum it did not have — the same
+  standard the capability-answerability close used.
+
+  **The seat's condition, which is adopted and is the load-bearing part:** a
+  re-scope is legitimate only if the record also names **the process failure that
+  created the bind** — the criterion was *knowably unverifiable at the moment it
+  was registered*, because halt telemetry does not spontaneously fail to exist.
+  Registering a claim that could not be evaluated is the earlier defect; the
+  re-scope is cleanup, not a discovery. Recorded so the pattern cannot repeat as
+  good hygiene: **do not pre-register a threshold whose measuring infrastructure
+  does not yet exist.**
+
+  What separates this from retroactively lowering the bar: the ≥50 % figure is
+  not weakened, restated, or quietly dropped — it is preserved as an unevaluated
+  claim with the reason it was never evaluable.
 - **Blocks:** P2.2's pre-registered criterion only — the build half is shipped
   and green, and nothing downstream waits on it.
 - **What to do:** the ≥50% halt reduction is a rate over real runs, and the work

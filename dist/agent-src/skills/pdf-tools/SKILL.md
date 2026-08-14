@@ -6,6 +6,7 @@ status: active
 tier: senior
 domain: process
 compatibility: "Requires consumer-installed PDF libraries: pypdf (merge/split/rotate/encrypt/extract), reportlab (create), a form library for AcroForm fill; an OCR engine (e.g. tesseract) only for the OCR task. No LibreOffice dependency. Ships zero runtime in this package."
+harness_compat: consumer-installed-deps
 workspaces:
   - agent-config-maintainer
 packs:

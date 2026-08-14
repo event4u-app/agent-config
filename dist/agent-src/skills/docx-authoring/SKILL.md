@@ -6,6 +6,7 @@ status: active
 tier: senior
 domain: process
 compatibility: "Requires a consumer-installed OOXML library (python-docx for create/fill; a zip+xml toolchain for the unpack→edit→pack path). No LibreOffice/soffice dependency — that surface is gated (see pptx, road-to-ecosystem-harvest-document-skills Phase 2). Ships zero runtime in this package."
+harness_compat: consumer-installed-deps
 workspaces:
   - agent-config-maintainer
 packs:

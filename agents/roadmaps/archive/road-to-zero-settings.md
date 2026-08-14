@@ -4,6 +4,22 @@ complexity: structural
 
 # Road to zero settings — delete the flags whose answer the situation already carries
 
+> **COMPLETED 2026-08-14 — and the direction it opened is still running.**
+> Every step is closed except 3.1, which was **extracted rather than finished**:
+> it was a standing deletion queue, and a roadmap is the wrong container for
+> work that is drained one row at a time forever. It now lives at
+> `agents/settings/contexts/settings-deletion-queue.md`, with the ordering rule,
+> the scouted next drains and the seven downstream surfaces intact.
+>
+> **What this roadmap actually delivered:** a classification anybody can re-run
+> (`task lint-settings-classes`), a shrink-only ratchet that refuses re-growth,
+> a 56-day non-stagnation clause, and a first drain of six unread keys — the one
+> batch that provably cannot change a default silently. The direction outlived
+> the artifact, which is the intended outcome and not a shortfall.
+>
+> **Do not read the archive date as the queue closing.** The queue is CI-carried
+> and independent of this file.
+
 > **The direction, in the maintainer's words (2026-08-12):** *"das package soll
 > immer weniger settings erhalten, bis es bald keine mehr gibt."* This roadmap
 > turns that into a classification anybody can re-run, and a deletion order that
@@ -137,11 +153,35 @@ the finding.
 
 ## Phase 3 — the keys that need a mechanism first
 
-- [ ] 3.1 For `derivable` rows whose replacement does **not** yet exist, write
+- [-] 3.1 For `derivable` rows whose replacement does **not** yet exist, write
   the replacement before touching the key. Order is the point: a key deleted
   ahead of its mechanism is a silently-changed default, not a simplification.
   `verify:` each such key's deletion commit is later than its mechanism's.
-  <!-- OPEN, and correctly so — not skipped. 83 derivable rows remain, and each
+  <!-- EXTRACTED 2026-08-14, not completed and not abandoned. The work is
+  entirely intact; it moved to `agents/settings/contexts/settings-deletion-queue.md`,
+  which now carries the ordering rule, the CI mechanism, the scouted next drains
+  and the seven downstream surfaces. Nothing below was discarded — the note it
+  replaces is reproduced there in substance.
+
+  Why the container changed, on an outside opinion (1 seat, 2 rounds; the second
+  seat failed to start, so a single-model judgement on its checkable merit and
+  NOT a convergence). The step's own note called this "a DELETION QUEUE, not 83
+  deletions" — an artifact stating it is the wrong kind of artifact. Two costs
+  follow, and the second is what decided it:
+
+    1. Standing work inside a completion percentage makes the dashboard
+       unreadable; readers learn to discount the number, which defeats tracking.
+    2. Draining a row moves 83 -> 82 and closes nothing, so under a completion
+       percentage doing the work moves the number the WRONG WAY. An artifact
+       that penalises progress on its own subject does not get drained.
+
+  The queue was never prose-carried anyway, which is what makes the extraction
+  safe rather than a quiet drop: the `lint_settings_classes:derivable-surface`
+  ratchet in `src/config/gate-violation-baselines.json` pins the count
+  shrink-only and reds on regrowth, and its 56-day non-stagnation clause is the
+  thing that actually notices a queue nobody is walking. Neither depends on this
+  file existing. -->
+  <!-- SUPERSEDED NOTE, kept for the reasoning it carries — 83 derivable rows remain, and each
   one is a mechanism to write plus a behaviour change to defend. This is a
   standing queue, not a step that closes in a pass: the roadmap's own framing
   ("a DELETION QUEUE, not 88 deletions") is what makes 83 an amount of work
