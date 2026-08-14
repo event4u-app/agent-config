@@ -281,9 +281,19 @@ dead (V2) and production evidence exists.
       (b) **the dispatch denominator is not per-session.** 7 starts against 25
       stops in one window, but three sessions share the ledger file and one stop
       record is a `general-purpose` agent this session never dispatched. The
-      `OpenRecord` already carries `session_id` (`subagent_ledger_hook.ts:592`)
-      and the appended line does not — write it before computing any rate, or
-      the baseline aggregates strangers.
+      `OpenRecord` already carries `session_id` and the appended line does not —
+      write it before computing any rate, or the baseline aggregates strangers.
+      **(b) is FIXED as of 2026-08-14 — do not re-implement it.** Both dispatch
+      lines now carry `session_id` (`subagent_ledger_hook.ts:593` and `:608`,
+      with the file header stating it at `:76`), recording the *observed*
+      session rather than back-filling from the start record. The line citation
+      is deliberately given as a pair plus the header rather than as a single
+      offset: this step's Phase-4 sibling has now had three successive line
+      citations rot, and the durable anchor is the field name.
+      **What (b) does NOT fix, and why this step is still open:** the window
+      that accrued *before* the fix is still cross-session and stays
+      undiscardable-by-filtering, so the ≥20-dispatch baseline starts counting
+      from the fix commit forward, not from the existing 25 stop records.
 
 **Falsifier.** Envelope return rate ≥95% and no dispatch exceeds 2× its
 tier budget-equivalent duration over the window → symptoms (2)/(3) are not

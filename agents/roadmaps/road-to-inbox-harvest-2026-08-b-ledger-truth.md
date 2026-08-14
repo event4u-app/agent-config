@@ -230,11 +230,24 @@ they are never cross-checked, and **they match model ids by different strategies
       *blocked*, which is what `[ ]` plus a recorded blocker already says — it
       is not half-shipped, and nothing about it was started. The correction is
       not cosmetic: with `count_open` at 0 and any `[~]` present, the
-      pre-commit dashboard gate refuses **every** commit in the repository
-      until a human disposes of the deferral, so a mis-glyph here would have
+      pre-commit dashboard gate refuses every **roadmap-touching** commit until
+      a human disposes of the deferral, so a mis-glyph here would have
       deadlocked the branch that finished the work. Restoring a genuinely
       blocked item to `[ ]` is the disposition the gate itself documents.
       Reverse it to `[~]` if the intent really was "deferred by choice".
+      **Scope corrected 2026-08-14 — it was written as "every commit in the
+      repository", and that is not what the hook does.** The installed
+      `pre-commit` guards the check behind
+      `git diff --cached --name-only | grep -qE '^agents/roadmaps(-progress\.md|/)'`,
+      with the comment *"only fires when staged changes touch a roadmap file or
+      the dashboard itself, so unrelated commits stay fast."* A commit touching
+      no roadmap is unaffected. The correction matters in the direction that
+      bites: an overstated hazard makes the next session refuse a correct
+      closure out of fear of a deadlock that would not have happened — which is
+      the near-miss that produced this note. The real hazard is narrower and
+      still real: the closing commit **is** roadmap-touching by construction, so
+      it blocks itself, and that is why the deferrals must be disposed in the
+      same change rather than after it.
 
 ## Phase 3 — Two aggregation lines and a cache signature
 

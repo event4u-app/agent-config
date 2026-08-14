@@ -31,18 +31,34 @@ is the only move that neither fakes the call nor loses the item.
 
 ## Phase 1 — The router-head retrofit
 
-- [ ] **Step 1: Retrofit the three offenders.** Restructure the `SKILL.md`
+- [ ] **Step 1: Retrofit the four offenders.** Restructure the `SKILL.md`
       files that exceed the published K6 cap into an entry head (when-to-use,
       mode table, routing) plus its detail, per the router-head contract that
       already shipped as Phase 4.1 of the predecessor. Blocked — see
       `blocker: router-head-retrofit-instrument`.
+      **Count corrected 2026-08-14: four, not three.** `lint_skill_router_head`
+      reports *"4 over the 400-line cap, all grandfathered or routed · allowlist
+      holds 4 entry(ies), shrink-only"*, and `GRANDFATHERED` in
+      `src/scripts/lint_skill_router_head.ts:60-65` names them with their
+      measured line counts — `ai-council` (1055), `skill-writing` (767),
+      `roadmap-management` (552), `quality-tools` (445). The allowlist is
+      shrink-only, so retrofitting three and closing this step would leave the
+      fourth entry unremovable and the step falsely done.
+      <!-- verify: ./scripts-run src/scripts/lint_skill_router_head -->
+
+  > **`quality-tools` at 445 is the one to check first, not last.** It is 45
+  > lines over a 400-line cap, i.e. the only offender where the retrofit might
+  > be a section move rather than a restructure — and if the instrument (see the
+  > blocker) ever arrives, the smallest offender is where a before/after reading
+  > is cheapest to take and least likely to be confounded by the restructure
+  > itself.
 
 **Falsifier.** The instrument arrives and its first before/after reading shows
 no measurable difference on one skill → the retrofit is not worth its churn;
 cancel this phase and record the reading, because a restructure that costs
 review attention and buys nothing is worse than the cap being unmet on paper.
 
-**Rollback.** Three skill files; the contract itself is already shipped and
+**Rollback.** Four skill files; the contract itself is already shipped and
 unaffected.
 
 ## Phase 2 — The untested contract path
