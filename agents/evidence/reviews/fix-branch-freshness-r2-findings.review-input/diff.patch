@@ -1,0 +1,657 @@
+diff --git a/dist/agent-src/commands/pr/create.md b/dist/agent-src/commands/pr/create.md
+index cba69425c1cadd89e03df25b2feff1c943dfe19d..d598144225ba4681cafd4d5d3c43b48c13156020 100644
+--- a/dist/agent-src/commands/pr/create.md
++++ b/dist/agent-src/commands/pr/create.md
+@@ -71,16 +71,22 @@ Run, in order:
+ 1. **Ask the gate, never hand-roll the comparison:**
+ 
+    ```bash
+-   ./scripts-run src/scripts/check_branch_freshness
++   npx tsx node_modules/@event4u/agent-config/src/scripts/check_branch_freshness.ts
+    ```
+ 
+    It resolves the base itself — explicit `--base`, else the base of the **open
+-   PR for this branch** as the forge reports it, else the repo default from
+-   `origin/HEAD`. Do **not** substitute `git rev-list --count HEAD..origin/main`:
+-   that hardcodes a base this branch may not target, and it reads the local
+-   tracking ref, which is a fetch from earlier in the session — a memory, not a
+-   check (`direct-answers` Iron Law 2). Exit `0` = current, `1` = behind, and the
+-   refusal names the base **and where that base came from**.
++   PR for this branch** as the forge reports it, else the repo default the server
++   reports for `HEAD`. Do **not** substitute
++   `git rev-list --count HEAD..origin/main`: that hardcodes a base this branch may
++   not target, and it reads the local tracking ref, which is a fetch from earlier
++   in the session — a memory, not a check (`direct-answers` Iron Law 2).
++
++   **Exit codes are two-valued; the verdicts are three.** `1` = behind. `0` = the
++   gate did not refuse — which is *either* "current" *or* "could not verify".
++   Read the line, not just the status: a run that could not reach the base prints
++   `NOT VERIFIED` and still exits `0`, deliberately, so an offline push is never
++   blocked by a network failure. Treating that as a clean pass is the one misread
++   this gate cannot protect you from.
+ 
+ 2. `gh pr list --state open --base {resolved-base} --limit 20 --json number,headRefName,files`
+    — open PRs targeting the same base, for the overlap question below.
+@@ -89,9 +95,10 @@ Run, in order:
+ 
+ | Gate | Overlapping open PR touches same files? | Action |
+ |---|---|---|
+-| exit `0` | — | Proceed to Step 2 |
++| exit `0`, prints `branch is current` | — | Proceed to Step 2 |
+ | exit `1` | No | **Merge the base in** — `git fetch origin && git merge origin/{resolved-base} --no-edit` — then run the regeneration set below, then proceed. No need to ask; state that you did it. |
+ | exit `1` | **Yes** | STOP — surface the overlapping PR number, ask: stack on top of it / wait for it to land / proceed-anyway-and-accept-conflicts / cancel |
++| exit `0`, prints `NOT VERIFIED` | — | The base could not be reached, so freshness is **unknown** — not confirmed. Re-run once; if it persists, say the check did not run rather than reporting a pass. A base that `ls-remote` cannot resolve (deleted or renamed after the PR opened, or a fork base) lands here too. |
+ | warns `could not ask the forge` | — | The **default** base was checked and an open PR against a different base was **not** ruled out. Say so; do not report it as a clean freshness pass. |
+ 
+ A branch behind its base is **not** current — bring the base in **before** the PR
+diff --git a/dist/agent-src/skills/git-workflow/SKILL.md b/dist/agent-src/skills/git-workflow/SKILL.md
+index 6bac869518bc97b10fe6bb512ed53c70d47809ca..9ad2fac544132c1d078e661bfd175d5782645bbd 100644
+--- a/dist/agent-src/skills/git-workflow/SKILL.md
++++ b/dist/agent-src/skills/git-workflow/SKILL.md
+@@ -55,7 +55,11 @@ gh pr view <number> --json number,state,mergeStateStatus,mergedAt,baseRefName
+   `npx tsx node_modules/@event4u/agent-config/src/scripts/check_branch_freshness.ts`;
+   exit `1` ⇒ the branch is behind and is **not** current — merge the base in,
+   regenerate the derived files, then open the PR (see
+-  [`/create-pr`](../../commands/pr/create.md) § 1b).
++  [`/create-pr`](../../commands/pr/create.md) § 1b). Exit `0` is two verdicts,
++  not one: read the line. `branch is current` is the pass; `NOT VERIFIED` means
++  the base could not be reached and freshness is **unknown** — the gate exits `0`
++  there on purpose so an offline push is not blocked, which makes reporting it as
++  "current" the one misread it cannot catch.
+   Prefer it over `git rev-list --count HEAD..origin/main`, which is wrong twice
+   over: it pins `main` as the base for a branch whose PR may target something
+   else, and it reads the local tracking ref — a fetch from earlier in the
+diff --git a/src/domains/git/pr/create/command.md b/src/domains/git/pr/create/command.md
+index cba69425c1cadd89e03df25b2feff1c943dfe19d..d598144225ba4681cafd4d5d3c43b48c13156020 100644
+--- a/src/domains/git/pr/create/command.md
++++ b/src/domains/git/pr/create/command.md
+@@ -71,16 +71,22 @@ Run, in order:
+ 1. **Ask the gate, never hand-roll the comparison:**
+ 
+    ```bash
+-   ./scripts-run src/scripts/check_branch_freshness
++   npx tsx node_modules/@event4u/agent-config/src/scripts/check_branch_freshness.ts
+    ```
+ 
+    It resolves the base itself — explicit `--base`, else the base of the **open
+-   PR for this branch** as the forge reports it, else the repo default from
+-   `origin/HEAD`. Do **not** substitute `git rev-list --count HEAD..origin/main`:
+-   that hardcodes a base this branch may not target, and it reads the local
+-   tracking ref, which is a fetch from earlier in the session — a memory, not a
+-   check (`direct-answers` Iron Law 2). Exit `0` = current, `1` = behind, and the
+-   refusal names the base **and where that base came from**.
++   PR for this branch** as the forge reports it, else the repo default the server
++   reports for `HEAD`. Do **not** substitute
++   `git rev-list --count HEAD..origin/main`: that hardcodes a base this branch may
++   not target, and it reads the local tracking ref, which is a fetch from earlier
++   in the session — a memory, not a check (`direct-answers` Iron Law 2).
++
++   **Exit codes are two-valued; the verdicts are three.** `1` = behind. `0` = the
++   gate did not refuse — which is *either* "current" *or* "could not verify".
++   Read the line, not just the status: a run that could not reach the base prints
++   `NOT VERIFIED` and still exits `0`, deliberately, so an offline push is never
++   blocked by a network failure. Treating that as a clean pass is the one misread
++   this gate cannot protect you from.
+ 
+ 2. `gh pr list --state open --base {resolved-base} --limit 20 --json number,headRefName,files`
+    — open PRs targeting the same base, for the overlap question below.
+@@ -89,9 +95,10 @@ Run, in order:
+ 
+ | Gate | Overlapping open PR touches same files? | Action |
+ |---|---|---|
+-| exit `0` | — | Proceed to Step 2 |
++| exit `0`, prints `branch is current` | — | Proceed to Step 2 |
+ | exit `1` | No | **Merge the base in** — `git fetch origin && git merge origin/{resolved-base} --no-edit` — then run the regeneration set below, then proceed. No need to ask; state that you did it. |
+ | exit `1` | **Yes** | STOP — surface the overlapping PR number, ask: stack on top of it / wait for it to land / proceed-anyway-and-accept-conflicts / cancel |
++| exit `0`, prints `NOT VERIFIED` | — | The base could not be reached, so freshness is **unknown** — not confirmed. Re-run once; if it persists, say the check did not run rather than reporting a pass. A base that `ls-remote` cannot resolve (deleted or renamed after the PR opened, or a fork base) lands here too. |
+ | warns `could not ask the forge` | — | The **default** base was checked and an open PR against a different base was **not** ruled out. Say so; do not report it as a clean freshness pass. |
+ 
+ A branch behind its base is **not** current — bring the base in **before** the PR
+diff --git a/src/scripts/check_branch_freshness.ts b/src/scripts/check_branch_freshness.ts
+index 009fce7e9accaf4611db8ca257b6d8ff8747aec2..6ebdf454eac1ed0e11fd47092cb8125010b1b81b 100644
+--- a/src/scripts/check_branch_freshness.ts
++++ b/src/scripts/check_branch_freshness.ts
+@@ -43,9 +43,16 @@
+  *
+  * So the base is resolved, in order: an explicit `--base`, then the base of the
+  * OPEN PR for this branch as the forge reports it, then the repo's default
+- * branch from `origin/HEAD`, then `main`. Every message names the base AND
+- * where it came from, because "I checked main because that is the PR's base"
+- * and "I checked main because I could not ask" must never print the same.
++ * branch AS THE SERVER REPORTS IT (`ls-remote --symref`), then the local
++ * `origin/HEAD`, then `main`. Every message names the base AND where it came
++ * from, because "I checked main because that is the PR's base" and "I checked
++ * main because I could not ask" must never print the same.
++ *
++ * The server symref matters for the same reason `remoteHead` exists: the local
++ * `refs/remotes/origin/HEAD` is written at clone time and never refreshed, so
++ * taking the base NAME from it would reintroduce the stale-local-state failure
++ * this module argues against everywhere else. It is kept only as the labelled
++ * fallback, and for the free short-circuit when standing on the default branch.
+  *
+  * When the forge cannot be asked (no `gh`, not authenticated, no GitHub remote)
+  * the run says so out loud even under `--quiet`: it has verified the default
+@@ -94,7 +101,12 @@ export type ForgeAnswer =
+   | { kind: "unavailable"; reason: string };
+ 
+ /** Where the base name came from — printed with every verdict. */
+-export type BaseSource = "flag" | "pull-request" | "origin-head" | "fallback";
++export type BaseSource =
++  | "flag"
++  | "pull-request"
++  | "origin-symref"
++  | "origin-head"
++  | "fallback";
+ 
+ export interface BaseResolution {
+   readonly base: string;
+@@ -153,11 +165,26 @@ export function askForgeForBase(branch: string, run: GhRunner = gh): ForgeAnswer
+   if (base === "") {
+     return { kind: "unavailable", reason: "gh answered without a baseRefName" };
+   }
+-  return { kind: "pr", base, number: typeof row.number === "number" ? row.number : 0 };
++  // Symmetric with the field above. Coercing a missing number to 0 would print
++  // "base of open PR #0" — a PR that cannot exist — in the one message this
++  // gate insists must be unambiguous about provenance.
++  if (typeof row.number !== "number" || !Number.isInteger(row.number) || row.number <= 0) {
++    return { kind: "unavailable", reason: "gh answered without a usable PR number" };
++  }
++  return { kind: "pr", base, number: row.number };
+ }
+ 
+-/** The repo's own default branch, so a consumer on `master` is not told about `main`. */
+-export function repoDefaultBase(): { base: string; source: "origin-head" | "fallback" } {
++/**
++ * The default branch as the LOCAL clone believes it — no network.
++ *
++ * `refs/remotes/origin/HEAD` is written at clone time and never refreshed
++ * without `git remote set-head`, so this is exactly the class of stale local
++ * state this module argues against everywhere else. It is used for two things
++ * only: the free short-circuit in `resolveBase`, and as the last fallback when
++ * the server cannot be asked. Whenever the name actually decides a verdict,
++ * `serverDefaultBase` asks the server instead.
++ */
++export function localDefaultBase(): { base: string; source: "origin-head" | "fallback" } {
+   const ref = git(["symbolic-ref", "--short", "refs/remotes/origin/HEAD"]);
+   if (ref !== null && ref.startsWith("origin/")) {
+     const name = ref.slice("origin/".length).trim();
+@@ -168,24 +195,76 @@ export function repoDefaultBase(): { base: string; source: "origin-head" | "fall
+   return { base: DEFAULT_BASE, source: "fallback" };
+ }
+ 
++/**
++ * The default branch as the SERVER reports it right now.
++ *
++ * Same discipline as `remoteHead`: a gate whose thesis is "ask the remote"
++ * must not take the branch NAME from a tracking ref either. Costs one
++ * `ls-remote`, the round trip this gate already pays, and degrades to the
++ * local ref (labelled as such) when the server cannot be reached.
++ */
++export function serverDefaultBase(): {
++  base: string;
++  source: "origin-symref" | "origin-head" | "fallback";
++} {
++  const out = git(["ls-remote", "--symref", "origin", "HEAD"]);
++  if (out !== null) {
++    for (const line of out.split("\n")) {
++      const trimmed = line.trim();
++      if (trimmed.startsWith("ref:")) {
++        const name = trimmed.slice("ref:".length).trim().split(/\s+/)[0] ?? "";
++        if (name.startsWith("refs/heads/")) {
++          const short = name.slice("refs/heads/".length).trim();
++          if (short !== "") {
++            return { base: short, source: "origin-symref" };
++          }
++        }
++      }
++    }
++  }
++  return localDefaultBase();
++}
++
++/** The value after `--base`, or null when the flag is absent or not followed by a value. */
++export function explicitBase(argv: readonly string[]): string | null {
++  const flag = argv.indexOf("--base");
++  if (flag < 0) {
++    return null;
++  }
++  const explicit = argv[flag + 1];
++  // A bare trailing `--base`, or one followed by another flag, is a typo rather
++  // than a base name. Accepting it produced `remoteHead("--quiet")`, which fails
++  // and lands on the exit-0 NOT-VERIFIED path — a typo reading as a pass.
++  if (explicit === undefined || explicit === "" || explicit.startsWith("-")) {
++    return null;
++  }
++  return explicit;
++}
++
+ /** `--base` wins, then the open PR's base, then the repo default. */
+ export function resolveBase(
+   argv: readonly string[],
+   branch: string,
+   forge: (b: string) => ForgeAnswer = (b) => askForgeForBase(b),
+ ): BaseResolution {
+-  const flag = argv.indexOf("--base");
+-  if (flag >= 0) {
+-    const explicit = argv[flag + 1];
+-    if (explicit !== undefined && explicit !== "") {
+-      return { base: explicit, source: "flag" };
+-    }
++  const explicit = explicitBase(argv);
++  if (explicit !== null) {
++    return { base: explicit, source: "flag" };
++  }
++  // Standing on the default branch: `gh pr list --head main` is a query that
++  // can never usefully answer, and the caller discards the result on the very
++  // next line. The local ref is right for this test precisely because it costs
++  // nothing — a wrong answer here only means we pay the round trip we would
++  // have paid anyway.
++  const local = localDefaultBase();
++  if (branch === local.base) {
++    return { base: local.base, source: local.source };
+   }
+   const answer = forge(branch);
+   if (answer.kind === "pr") {
+     return { base: answer.base, source: "pull-request", pr: answer.number };
+   }
+-  const fallback = repoDefaultBase();
++  const fallback = serverDefaultBase();
+   return answer.kind === "unavailable"
+     ? { base: fallback.base, source: fallback.source, unverified: answer.reason }
+     : { base: fallback.base, source: fallback.source };
+@@ -198,8 +277,10 @@ export function describeBase(r: BaseResolution): string {
+       return "base given on the command line";
+     case "pull-request":
+       return `base of open PR #${r.pr ?? 0}`;
++    case "origin-symref":
++      return "repo default branch, as the server reports it";
+     case "origin-head":
+-      return "repo default branch (origin/HEAD)";
++      return "repo default branch from the LOCAL origin/HEAD ref, which may be stale";
+     case "fallback":
+       return `repo default (assumed ${DEFAULT_BASE} — origin/HEAD is not set)`;
+   }
+@@ -243,7 +324,15 @@ export function containsCommit(sha: string): boolean | null {
+  * gate reading the tracking ref would pass it — which is exactly the false green
+  * this gate exists to remove.
+  */
+-function buildFixture(root: string, opts: { advanceRemote: boolean }): string {
++interface Scaffold {
++  origin: string;
++  work: string;
++  g: (args: string[], at: string) => void;
++  write: (at: string, name: string, body: string) => void;
++}
++
++/** The bare origin + working clone every fixture below starts from. */
++function scaffold(root: string): Scaffold {
+   const origin = path.join(root, "origin.git");
+   const work = path.join(root, "work");
+   fs.mkdirSync(origin, { recursive: true });
+@@ -260,6 +349,11 @@ function buildFixture(root: string, opts: { advanceRemote: boolean }): string {
+   g(["remote", "add", "origin", origin], work);
+   write(work, "a.txt", "one");
+   g(["push", "-u", "origin", DEFAULT_BASE], work);
++  return { origin, work, g, write };
++}
++
++function buildFixture(root: string, opts: { advanceRemote: boolean }): string {
++  const { origin, work, g, write } = scaffold(root);
+   g(["checkout", "-b", "feat/x"], work);
+   write(work, "b.txt", "two");
+   if (opts.advanceRemote) {
+@@ -272,37 +366,31 @@ function buildFixture(root: string, opts: { advanceRemote: boolean }): string {
+ }
+ 
+ /**
+- * A repo where the branch's real base is NOT the default branch: `feat/x` is
+- * cut from `develop`, `develop` then advances on the remote, and `main` never
+- * moves.
++ * A repo where the branch's real base is NOT `main`: `feat/x` is cut from
++ * `develop`, `develop` then advances on the remote, and `main` never moves.
++ * The SERVER's `HEAD` is pointed at `serverDefault`.
++ *
++ * The base is left for the gate to resolve — no `--base`. That is the whole
++ * point of the fixture, and the first version got it wrong: it passed
++ * `--base` on both cases, which exercises the flag branch that existed before
++ * this change. Deleting the entire forge/symref resolution would have left both
++ * cases green, so the pair proved nothing about the new behaviour and the raised
++ * self-test floors rested on coverage that did not exist. (R2 finding 2.)
+  *
+- * This is the fixture that demonstrates the defect the base resolution exists
+- * to remove. Checked against `main` the branch is perfectly current — a GREEN
+- * that is true and irrelevant. Checked against `develop`, the base it will
+- * actually merge into, it is behind. Both verdicts come from the same tree, so
+- * a regression that reinstates a hardcoded base flips exactly one of them.
++ * With `serverDefault = "develop"` the gate must refuse: that is the base this
++ * branch is actually behind. With `serverDefault = "main"` the same tree passes.
++ * A regression that reinstates a hardcoded `main` flips the first case, because
++ * nothing but the resolution decides which base is asked about.
+  */
+-function buildTwoBaseFixture(root: string): string {
+-  const origin = path.join(root, "origin.git");
+-  const work = path.join(root, "work");
+-  fs.mkdirSync(origin, { recursive: true });
+-  const g = (args: string[], at: string): void => {
+-    execFileSync("git", args, { cwd: at, stdio: "ignore" });
+-  };
+-  const write = (at: string, name: string, body: string): void => {
+-    fs.writeFileSync(path.join(at, name), body);
+-    g(["add", "-A"], at);
+-    g(["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-m", name], at);
+-  };
+-  g(["init", "--bare", "-b", DEFAULT_BASE], origin);
+-  g(["init", "-b", DEFAULT_BASE, work], root);
+-  g(["remote", "add", "origin", origin], work);
+-  write(work, "a.txt", "one");
+-  g(["push", "-u", "origin", DEFAULT_BASE], work);
++function buildTwoBaseFixture(root: string, serverDefault: string): string {
++  const { origin, work, g, write } = scaffold(root);
+   g(["checkout", "-b", "develop"], work);
+   g(["push", "-u", "origin", "develop"], work);
+   g(["checkout", "-b", "feat/x"], work);
+   write(work, "b.txt", "two");
++  // The bare repo's own HEAD is what `ls-remote --symref origin HEAD` reports,
++  // so this is the server-side default branch, not a local tracking ref.
++  g(["symbolic-ref", "HEAD", `refs/heads/${serverDefault}`], origin);
+   // A second clone advances `develop` only — `main` stays exactly where it was.
+   const other = path.join(root, "other");
+   g(["clone", origin, other], root);
+@@ -325,12 +413,13 @@ export function selfTest(repoRoot: string): number {
+     delete process.env["GITHUB_ACTIONS"];
+     return runGateCli(repoRoot, SCRIPT_REL, ["--quiet"], work);
+   };
+-  const runTwoBase = (base: string): number => {
++  const runTwoBase = (serverDefault: string): number => {
+     const dir = fs.mkdtempSync(path.join(root, "twobase-"));
+-    const work = buildTwoBaseFixture(dir);
++    const work = buildTwoBaseFixture(dir, serverDefault);
+     delete process.env["CI"];
+     delete process.env["GITHUB_ACTIONS"];
+-    return runGateCli(repoRoot, SCRIPT_REL, ["--quiet", "--base", base], work);
++    // No `--base`: the gate resolves it, which is the behaviour under test.
++    return runGateCli(repoRoot, SCRIPT_REL, ["--quiet"], work);
+   };
+   const cases: SelfTestCase[] = [
+     {
+@@ -339,12 +428,12 @@ export function selfTest(repoRoot: string): number {
+       run: () => run(true, false),
+     },
+     {
+-      name: "a branch behind its REAL base (develop) is refused when that base is checked",
++      name: "the RESOLVED base decides: server default develop, branch behind it, REFUSED",
+       expect: "reject",
+       run: () => runTwoBase("develop"),
+     },
+     {
+-      name: "the same branch passes against main — the false green a hardcoded base produces",
++      name: "same tree, server default main — passes, so the resolution is what moved the verdict",
+       expect: "accept",
+       run: () => runTwoBase(DEFAULT_BASE),
+     },
+@@ -389,7 +478,19 @@ function scanReport(scanned: number, allowEmpty?: string): void {
+   });
+ }
+ 
+-export function main(argv: string[] = process.argv.slice(2)): number {
++/**
++ * @param forge Seam for the forge lookup. Production passes nothing and gets the
++ * real `gh`. Tests MUST pass a stub: without this parameter the only way to
++ * reach the forge-unavailable branch was to not have `gh` installed, so the test
++ * for it could only assert conditionally — i.e. it passed whether or not the
++ * warning was emitted. It also stopped every fixture test from spawning `gh`
++ * against ambient credentials, where a `GH_REPO` override could return a real
++ * PR base for a same-named branch and silently change the base under test.
++ */
++export function main(
++  argv: string[] = process.argv.slice(2),
++  forge?: (b: string) => ForgeAnswer,
++): number {
+   if (argv.includes("--self-test")) {
+     return selfTest(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".."));
+   }
+@@ -408,7 +509,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+   }
+ 
+   // Resolved AFTER the branch is known: the PR's base is a fact about THIS branch.
+-  const resolved = resolveBase(argv, branch);
++  const resolved =
++    forge === undefined ? resolveBase(argv, branch) : resolveBase(argv, branch, forge);
+   const base = resolved.base;
+ 
+   if (branch === base) {
+diff --git a/src/skills/git-workflow/SKILL.md b/src/skills/git-workflow/SKILL.md
+index 6bac869518bc97b10fe6bb512ed53c70d47809ca..9ad2fac544132c1d078e661bfd175d5782645bbd 100644
+--- a/src/skills/git-workflow/SKILL.md
++++ b/src/skills/git-workflow/SKILL.md
+@@ -55,7 +55,11 @@ gh pr view <number> --json number,state,mergeStateStatus,mergedAt,baseRefName
+   `npx tsx node_modules/@event4u/agent-config/src/scripts/check_branch_freshness.ts`;
+   exit `1` ⇒ the branch is behind and is **not** current — merge the base in,
+   regenerate the derived files, then open the PR (see
+-  [`/create-pr`](../../commands/pr/create.md) § 1b).
++  [`/create-pr`](../../commands/pr/create.md) § 1b). Exit `0` is two verdicts,
++  not one: read the line. `branch is current` is the pass; `NOT VERIFIED` means
++  the base could not be reached and freshness is **unknown** — the gate exits `0`
++  there on purpose so an offline push is not blocked, which makes reporting it as
++  "current" the one misread it cannot catch.
+   Prefer it over `git rev-list --count HEAD..origin/main`, which is wrong twice
+   over: it pins `main` as the base for a branch whose PR may target something
+   else, and it reads the local tracking ref — a fetch from earlier in the
+diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
+index 65dec200ab83763c7a267d11f09beed1a7630192..d11a66d0f2322597932d5fb15ce726c4e73657c0 100644
+--- a/taskfiles/ci-fast.yml
++++ b/taskfiles/ci-fast.yml
+@@ -38,11 +38,15 @@ tasks:
+       # branch's open PR actually targets, then the `git ls-remote` against it.
+       # The second was always here (~0.3s); the first was added because a
+       # hardcoded `main` reports a true-but-irrelevant green for any branch whose
+-      # PR targets a release line or a parent PR. Budget note: that is ~1-2s
+-      # against the 25s pre_push_budget_seconds ceiling in
+-      # src/config/ci-local-parity.yml, and it degrades rather than fails —
+-      # no `gh`, no auth, no GitHub remote falls back to the repo default and
+-      # SAYS SO, so an offline push is never blocked by the resolution step.
++      # PR targets a release line or a parent PR.
++      # Budget: ~1-2s typical against the 25s pre_push_budget_seconds ceiling in
++      # src/config/ci-local-parity.yml. The WORST case is larger and is worth
++      # stating rather than averaging away: FORGE_TIMEOUT_MS in the gate is 10s,
++      # so one cold or hung `gh` can spend 10s — 40% of the ceiling — before the
++      # fallback. Fast failures (no `gh` -> ENOENT, no auth -> non-zero exit)
++      # return immediately; only an unresponsive forge reaches the timeout.
++      # Either way it degrades rather than fails: the run falls back to the repo
++      # default and SAYS SO, so an offline push is never blocked by the step.
+       # No-op in CI, where the forge owns mergeability.
+       - ./scripts-run src/scripts/check_branch_freshness --quiet
+       # FIRST among the content gates, and the order is the whole point: this
+diff --git a/tests/scripts/check_branch_freshness.test.ts b/tests/scripts/check_branch_freshness.test.ts
+index c4ae32536ff2e1a5f44566255ab49617ae4531eb..bf6ca74fe3547389457fc4de3971fd74183bcbd6 100644
+--- a/tests/scripts/check_branch_freshness.test.ts
++++ b/tests/scripts/check_branch_freshness.test.ts
+@@ -17,6 +17,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
+ import {
+   askForgeForBase,
+   describeBase,
++  explicitBase,
+   main,
+   resolveBase,
+   type ForgeAnswer,
+@@ -25,6 +26,41 @@ import {
+ 
+ const GATE = path.resolve("src/scripts/check_branch_freshness.ts");
+ 
++/**
++ * Forge stubs.
++ *
++ * Every `main()` call below passes one. Without a seam these tests spawned the
++ * real `gh` against ambient credentials inside a temp fixture, so an
++ * environment carrying `GH_REPO` could return a real PR base for a same-named
++ * branch and change the base under test (R2 finding 6) — and the
++ * forge-unavailable branch could only be reached by NOT having `gh`, which is
++ * why the test for it used to assert conditionally (R2 finding 1).
++ */
++const noPr = (): ForgeAnswer => ({ kind: "none" });
++const forgeDown = (): ForgeAnswer => ({
++  kind: "unavailable",
++  reason: "stubbed: forge unreachable",
++});
++const prBase =
++  (base: string, num = 42) =>
++  (): ForgeAnswer => ({ kind: "pr", base, number: num });
++
++/** Capture stdout for one call — the warning path is stdout, not an exit code. */
++function captureStdout(fn: () => void): string {
++  const said: string[] = [];
++  const write = process.stdout.write.bind(process.stdout);
++  process.stdout.write = ((chunk: string) => {
++    said.push(String(chunk));
++    return true;
++  }) as typeof process.stdout.write;
++  try {
++    fn();
++  } finally {
++    process.stdout.write = write;
++  }
++  return said.join("");
++}
++
+ let dir: string;
+ let cwd: string;
+ 
+@@ -66,7 +102,7 @@ describe("check_branch_freshness", () => {
+   it("passes when the branch contains the remote base", () => {
+     git(["checkout", "-b", "feat/x"], process.cwd());
+     commit(process.cwd(), "b.txt", "two");
+-    expect(main(["--quiet"])).toBe(0);
++    expect(main(["--quiet"], noPr)).toBe(0);
+   });
+ 
+   it("fails when the remote base has moved ahead", () => {
+@@ -87,14 +123,14 @@ describe("check_branch_freshness", () => {
+     expect(staleRef).not.toBe(trueRemote);
+ 
+     // A gate reading the tracking ref would pass here. This one must not.
+-    expect(main(["--quiet"])).toBe(1);
++    expect(main(["--quiet"], noPr)).toBe(1);
+   });
+ 
+   it("no-ops on the base branch itself and in CI", () => {
+-    expect(main(["--quiet"])).toBe(0); // still on main
++    expect(main(["--quiet"], noPr)).toBe(0); // still on main
+     git(["checkout", "-b", "feat/y"], process.cwd());
+     process.env["CI"] = "true";
+-    expect(main(["--quiet"])).toBe(0);
++    expect(main(["--quiet"], noPr)).toBe(0);
+     delete process.env["CI"];
+   });
+ 
+@@ -154,25 +190,46 @@ describe("check_branch_freshness", () => {
+   it("reports NOT-VERIFIED loudly even under --quiet when the forge is unreachable", () => {
+     git(["checkout", "-b", "feat/quiet"], process.cwd());
+     commit(process.cwd(), "b.txt", "two");
+-    const said: string[] = [];
+-    const write = process.stdout.write.bind(process.stdout);
+-    // `gh` is absent in CI for this repo's test job, so the unverified path is
+-    // the one this run actually takes — no stubbing needed to reach it.
+-    process.stdout.write = ((chunk: string) => {
+-      said.push(String(chunk));
+-      return true;
+-    }) as typeof process.stdout.write;
+-    try {
+-      main(["--quiet"]);
+-    } finally {
+-      process.stdout.write = write;
+-    }
+-    const out = said.join("");
+-    // Either the forge answered (a real gh in the dev environment) or it did
+-    // not; what must never happen is silence about which of the two it was.
+-    if (out.includes("could not ask the forge")) {
+-      expect(out).toContain("NOT verified");
+-    }
++
++    // Unconditional. The earlier version asserted inside `if (out.includes(...))`,
++    // so wherever `gh` answered it asserted nothing and passed identically
++    // whether the warning was emitted or suppressed (R2 finding 1). The stub
++    // forces the branch, so this test can actually fail.
++    const out = captureStdout(() => {
++      expect(main(["--quiet"], forgeDown)).toBe(0);
++    });
++    expect(out).toContain("could not ask the forge");
++    expect(out).toContain("stubbed: forge unreachable");
++    expect(out).toContain("NOT verified");
++  });
++
++  it("stays silent about the forge when it answered — the warning is not boilerplate", () => {
++    git(["checkout", "-b", "feat/answered"], process.cwd());
++    commit(process.cwd(), "b.txt", "two");
++    const out = captureStdout(() => {
++      expect(main(["--quiet"], noPr)).toBe(0);
++    });
++    expect(out).not.toContain("could not ask the forge");
++  });
++
++  it("main() judges against the PR base end to end, not just resolveBase", () => {
++    const work = process.cwd();
++    git(["checkout", "-b", "develop"], work);
++    git(["push", "-u", "origin", "develop"], work);
++    git(["checkout", "-b", "feat/stacked-e2e"], work);
++    commit(work, "b.txt", "two");
++
++    // A second clone advances `develop` only; `main` never moves.
++    const other = path.join(dir, "other");
++    git(["clone", path.join(dir, "origin.git"), other], dir);
++    git(["checkout", "develop"], other);
++    commit(other, "c.txt", "three");
++    git(["push"], other);
++
++    // Against main the branch is current — true and irrelevant.
++    expect(main(["--quiet"], prBase("main"))).toBe(0);
++    // Against the base the PR actually targets, it is behind.
++    expect(main(["--quiet"], prBase("develop", 77))).toBe(1);
+   });
+ 
+   it("treats a closed-PR-shaped empty answer as 'no open PR', not as a base", () => {
+@@ -202,6 +259,45 @@ describe("check_branch_freshness", () => {
+     }
+   });
+ 
++  it("never invents a PR NUMBER either — no message may claim PR #0", () => {
++    // Symmetric with the missing-baseRefName case above (R2 finding 9): a
++    // coerced 0 would print "base of open PR #0" in the one message this gate
++    // insists must be unambiguous about provenance.
++    for (const row of [{ baseRefName: "develop" }, { baseRefName: "develop", number: "7" }]) {
++      const run = (): GhResult => ({ ok: true, stdout: JSON.stringify([row]) });
++      expect(askForgeForBase("feat/x", run).kind).toBe("unavailable");
++    }
++    const good = (): GhResult => ({
++      ok: true,
++      stdout: JSON.stringify([{ number: 7, baseRefName: "develop" }]),
++    });
++    const answer = askForgeForBase("feat/x", good);
++    expect(answer.kind).toBe("pr");
++    expect(describeBase({ base: "develop", source: "pull-request", pr: 7 })).not.toContain("#0");
++  });
++
++  it("rejects a --base that is really the next flag, instead of checking origin/--quiet", () => {
++    // R2 finding 11: the guard used to accept anything non-empty, so
++    // `--base --quiet` produced remoteHead("--quiet"), which fails and lands on
++    // the exit-0 NOT-VERIFIED path — a typo reading as a pass.
++    expect(explicitBase(["--base", "--quiet"])).toBeNull();
++    expect(explicitBase(["--base"])).toBeNull();
++    expect(explicitBase(["--base", ""])).toBeNull();
++    expect(explicitBase(["--base", "release/9"])).toBe("release/9");
++  });
++
++  it("does not spend a forge round trip while standing on the default branch", () => {
++    // R2 finding 8: `gh pr list --head main` can never usefully answer, and the
++    // caller discards the result on the next line.
++    let asked = 0;
++    const forge = (): ForgeAnswer => {
++      asked += 1;
++      return { kind: "none" };
++    };
++    resolveBase([], "main", forge);
++    expect(asked).toBe(0);
++  });
++
+   it("asks for OPEN PRs on this head only — a merged PR's base is not the next push's base", () => {
+     let seen: string[] = [];
+     const run = (args: string[]): GhResult => {
