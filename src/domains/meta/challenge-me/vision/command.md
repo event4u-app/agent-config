@@ -2,7 +2,6 @@
 model_tier: inherit
 name: challenge-me-vision
 pack: product-reasoning
-tier: 2
 visibility: internal
 cluster: challenge-me
 sub: vision

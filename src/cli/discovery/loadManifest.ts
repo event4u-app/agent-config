@@ -74,11 +74,10 @@ export interface DiscoveryArtefact {
     readonly install: DiscoveryArtefactInstall;
     // 6.0.0-C command routing metadata (present on `category: 'command'`).
     readonly pack?: string;
-    // ADR-092: `visibility` is the named source of truth (visible | advanced |
-    // internal); `tier` is the back-compat integer alias, dual-emitted by the
-    // manifest builder. Consumers prefer `visibility`, fall back to `tier`.
+    // ADR-092: `visibility` (visible | advanced | internal) is the command-surface
+    // classifier. The integer `tier` alias it superseded is gone from the manifest
+    // since v3 (road-to-tier-removal Phase 4) and is not modelled here.
     readonly visibility?: string;
-    readonly tier?: number;
     readonly intent?: string;
     readonly routes_to?: readonly string[];
     readonly replaces?: readonly string[];

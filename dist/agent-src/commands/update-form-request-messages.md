@@ -2,7 +2,6 @@
 model_tier: medium
 name: update-form-request-messages
 pack: engineering-base
-tier: 2
 visibility: internal
 framework: laravel
 skills: [laravel-validation]

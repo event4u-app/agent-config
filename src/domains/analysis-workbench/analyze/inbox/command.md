@@ -2,7 +2,6 @@
 model_tier: high
 name: analyze-inbox
 pack: analysis-workbench
-tier: 2
 visibility: internal
 sub: inbox
 cluster: analyze

@@ -2,7 +2,6 @@
 model_tier: inherit
 name: roadmap-create
 pack: product-basic
-tier: 2
 visibility: internal
 cluster: roadmap
 sub: create

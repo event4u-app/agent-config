@@ -2,7 +2,6 @@
 model_tier: high
 name: context-refactor
 pack: meta
-tier: 2
 visibility: internal
 cluster: context
 sub: refactor

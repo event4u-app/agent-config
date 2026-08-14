@@ -2,7 +2,6 @@
 model_tier: medium
 name: package-reset
 pack: meta
-tier: 2
 visibility: internal
 sub: reset
 cluster: package

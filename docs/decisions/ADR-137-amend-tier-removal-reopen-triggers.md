@@ -23,7 +23,7 @@ review_trigger: >-
 
 - **Status:** Accepted (2026-07-28)
 - **Amends:** [`ADR-092`](ADR-092-defer-command-tier-alias-removal.md) (the defer decision and its trigger set). ADR-092 is **not** superseded — its deferral stands; only the trigger set is corrected.
-- **Related:** [`ADR-090`](ADR-090-visibility-command-frontmatter-field.md) (`visibility` as the named field); [`ADR-051`](ADR-051-uncondensed-source-container-relocation.md); `agents/roadmaps/road-to-tier-removal.md`; `docs/contracts/command-surface-tiers.md`; `src/rules/decision-revisit-gate.md`.
+- **Related:** [`ADR-090`](ADR-090-visibility-command-frontmatter-field.md) (`visibility` as the named field); [`ADR-051`](ADR-051-uncondensed-source-container-relocation.md); `agents/roadmaps/archive/road-to-tier-removal.md`; `docs/contracts/command-surface-tiers.md`; `src/rules/decision-revisit-gate.md`.
 
 ## Context
 
@@ -153,7 +153,7 @@ sufficient on its own terms and this amendment unnecessary.
 
 ## References
 
-- `agents/roadmaps/road-to-tier-removal.md` — Phase 1 soak evidence, Phase 2
+- `agents/roadmaps/archive/road-to-tier-removal.md` — Phase 1 soak evidence, Phase 2
   just-in-time audit + internal migration, blocker `trigger-set-amendment`.
 - `docs/contracts/command-surface-tiers.md` — the tier/visibility contract.
 - `src/scripts/build_discovery_manifest.ts` — the `deprecations` block where the

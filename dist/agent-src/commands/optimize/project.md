@@ -2,7 +2,6 @@
 model_tier: high
 name: optimize-project
 pack: meta
-tier: 2
 visibility: internal
 sub: project
 cluster: optimize

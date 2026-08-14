@@ -2,7 +2,6 @@
 model_tier: medium
 name: override-manage
 pack: meta
-tier: 2
 visibility: internal
 cluster: override
 sub: manage

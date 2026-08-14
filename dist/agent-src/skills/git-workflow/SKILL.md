@@ -55,7 +55,15 @@ gh pr view <number> --json number,state,mergeStateStatus,mergedAt,baseRefName
   `npx tsx node_modules/@event4u/agent-config/src/scripts/check_branch_freshness.ts`;
   exit `1` ⇒ the branch is behind and is **not** current — merge the base in,
   regenerate the derived files, then open the PR (see
-  [`/create-pr`](../../commands/pr/create.md) § 1b).
+  [`/create-pr`](../../commands/pr/create.md) § 1b). Exit `0` means only that
+  the gate did **not refuse**: read the line. `branch is current` is the pass;
+  `NOT VERIFIED` means the base could not be reached and freshness is
+  **unknown** — the gate exits `0` there on purpose so an offline push is not
+  blocked, which makes reporting it as "current" the one misread it cannot
+  catch. Exit `0` also covers the paths with nothing to check — a no-op in CI, a
+  detached HEAD, standing on the base itself — and under `--quiet` a genuine
+  pass prints nothing, so run it without the flag when you need a verdict to
+  read.
   Prefer it over `git rev-list --count HEAD..origin/main`, which is wrong twice
   over: it pins `main` as the base for a branch whose PR may target something
   else, and it reads the local tracking ref — a fetch from earlier in the

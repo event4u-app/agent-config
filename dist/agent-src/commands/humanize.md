@@ -2,7 +2,6 @@
 model_tier: inherit
 name: humanize
 pack: gtm-marketing
-tier: 2
 visibility: internal
 description: Remove AI-writing tells from pasted text or a file — runs the humanizer skill's draft→audit→final loop and prints the rewrite plus a detector summary.
 argument-hint: "[path] [--voice=<slug|me>] [--language=en|de|auto]"

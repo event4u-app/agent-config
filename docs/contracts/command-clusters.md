@@ -354,13 +354,15 @@ future cluster expansion.
 
 ## Tier-usage signal contract
 
-Empirical retiering needs evidence; evidence needs a signal. The minimum signal the package collects to validate command tiering, with **zero new external surface** and the same privacy floor as artefact-engagement telemetry:
+Empirical retiering needs evidence; evidence needs a signal. The minimum signal the package collects to validate command tiering, with **zero new external surface** and the same privacy floor as artefact-engagement telemetry.
+
+> **Unbuilt as of 2026-08-14 — stated plainly rather than left to be discovered.** Nothing in this tree appends to `.agent-tier-usage.jsonl`: there is a reader (`tier_usage_report`), a settings reader, and a `doctor` readiness check, but no dispatcher writer. So the shape below is a design, not an observed format, and the retiering rule under it has never run on real data. This note exists because road-to-tier-removal Phase 4 had to decide whether this contract was a live consumer of the integer `tier` key — it is not, which is why the removal did not have to rebuild it.
 
 | Field | Type | Source | Notes |
 |---|---|---|---|
 | `ts_bucket` | str (ISO-8601 UTC, hour-resolution) | clock at invocation | hour-bucket, not raw timestamp — limits re-identification |
 | `command` | str | dispatcher | the cluster + sub-command (`fix:ci`, `commit`, `work`) — never argv |
-| `tier` | int (0/1/2/3) | `command-surface-tiers.md` lookup at invocation | the tier the command had **at the time of the call** |
+| `tier` | str (`visible` / `advanced` / `internal`) | `command-surface-tiers.md` lookup at invocation | the visibility the command had **at the time of the call**. Was an int (0/1/2/3) until road-to-tier-removal Phase 4 deleted the integer alias; the field name is kept because the settings namespace, the log filename, and the report script all key on it — only the recorded value changed. |
 | `outcome` | str | dispatcher exit shape | one of `success` / `error` / `blocked` — no message bodies |
 | `user_hash` | str (sha256 first 16 hex chars) | hash of `$USER` + machine-id salt | distinct-user counting **without** identity recovery — never raw login |
 

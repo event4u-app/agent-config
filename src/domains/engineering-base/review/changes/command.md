@@ -5,7 +5,6 @@ pack: engineering-base
 intent: "Multi-judge review of the current diff — bugs, security, tests, quality, architecture"
 routes_to: [code-review, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens]
 replaces: []
-tier: 2
 visibility: internal
 sub: changes
 cluster: review

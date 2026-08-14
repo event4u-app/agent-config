@@ -7,7 +7,6 @@ pack: meta
 intent: "Sync dispatcher — agent settings or the managed .gitignore block"
 routes_to: [sync-agent-settings, sync-gitignore, sync-gitignore-fix]
 replaces: []
-tier: 2
 visibility: internal
 description: Sync orchestrator — routes to agent-settings (template sync) and gitignore (managed block sync, plus legacy-cleanup fix)
 cluster: sync

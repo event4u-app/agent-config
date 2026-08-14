@@ -2,7 +2,6 @@
 model_tier: medium
 name: sync-gitignore-fix
 pack: meta
-tier: 2
 visibility: internal
 cluster: sync
 sub: gitignore

@@ -1,20 +1,24 @@
 #!/usr/bin/env node
 /**
- * Lint slash-command frontmatter for the `tier:` key.
+ * Lint slash-command frontmatter for the `visibility:` key.
  *
  * Ported from the retired Python `src/scripts/lint_command_tiers.py` (ADR-200, Phase 4 /
- * Wave 4b). Mirrors the Python CLI contract exactly: same scan scope, file
- * ordering, finding messages, stdout/stderr split, and exit codes
- * (return-code bitwise-OR accumulation across the domain + per-root +
- * condensed-projection passes).
+ * Wave 4b). Keeps the Python CLI contract's shape: same scan scope, file
+ * ordering, stdout/stderr split, and exit codes (return-code bitwise-OR
+ * accumulation across the domain + per-root + condensed-projection passes).
  *
- * Hard-fails CI if any command lacks a `tier:` declaration or uses an unknown
- * tier value. The valid tier set is locked by
+ * The integer `tier:` alias this file was named for is GONE
+ * (road-to-tier-removal Phase 4): `visibility:` is now the sole command-surface
+ * classifier. The filename is retained because the gate id, its Taskfile entry,
+ * and the contract doc all key on it; only the checked key changed.
+ *
+ * Hard-fails CI if any command lacks a `visibility:` declaration or uses an
+ * unknown value. The valid set is locked by
  * docs/contracts/command-surface-tiers.md.
  *
  * Exit codes:
- *   0  every command declares a valid tier
- *   1  one or more commands missing or using an invalid tier
+ *   0  every command declares a valid visibility
+ *   1  one or more commands missing or using an invalid visibility
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -79,20 +83,13 @@ function COMMANDS_DIRS(): string[] {
 }
 
 const DOMAINS_DIR = path.join(REPO, "src", "domains");
-// Consumer-facing projection — must also carry tier so .augment/commands/
-// (which symlinks to dist/agent-src/commands/) renders the tier filter.
+// Consumer-facing projection — must also carry visibility so .augment/commands/
+// (which symlinks to dist/agent-src/commands/) renders the surface filter.
 const COMMANDS_DIR_CONDENSED = path.join(REPO, "dist/agent-src", "commands");
 
-const VALID_TIERS: ReadonlySet<string> = new Set(["0", "1", "2"]);
-// ADR-092: `visibility:` is the named source of truth; `tier:` is the
-// back-compat integer alias. Both are validated; when both are present they
-// MUST agree per this mapping.
+// ADR-092 named `visibility:` the source of truth; road-to-tier-removal Phase 4
+// removed the integer `tier:` alias, so this set is the whole vocabulary.
 const VALID_VISIBILITIES: ReadonlySet<string> = new Set(["visible", "advanced", "internal"]);
-const TIER_TO_VISIBILITY: Readonly<Record<string, string>> = {
-  "0": "visible",
-  "1": "advanced",
-  "2": "internal",
-};
 
 export function parse_field(text: string, key: string): string | null {
   if (!text.startsWith("---\n")) {
@@ -116,15 +113,13 @@ export function parse_field(text: string, key: string): string | null {
   return null;
 }
 
-export function parse_tier(text: string): string | null {
-  return parse_field(text, "tier");
-}
-
 /**
  * Validate the visibility field (ADR-092). Returns an error string or null.
  *
- * Requires a present + valid visibility, and consistency with the tier alias
- * whenever both are declared.
+ * Requires a present + valid visibility. The tier↔visibility consistency clause
+ * is gone with the alias itself (road-to-tier-removal Phase 4) — a stray `tier:`
+ * key is now rejected by `command.schema.json` (`additionalProperties: false`),
+ * not reconciled here.
  */
 export function visibility_error(text: string): string | null {
   const vis = parse_field(text, "visibility");
@@ -133,10 +128,6 @@ export function visibility_error(text: string): string | null {
   }
   if (!VALID_VISIBILITIES.has(vis)) {
     return `invalid visibility '${vis}'`;
-  }
-  const tier = parse_field(text, "tier");
-  if (tier !== null && tier in TIER_TO_VISIBILITY && TIER_TO_VISIBILITY[tier] !== vis) {
-    return `visibility '${vis}' disagrees with tier '${tier}' (expected '${TIER_TO_VISIBILITY[tier]}')`;
   }
   return null;
 }
@@ -151,12 +142,6 @@ function stripChar(s: string, ch: string): string {
   while (start < end && s[start] === ch) start += 1;
   while (end > start && s[end - 1] === ch) end -= 1;
   return s.slice(start, end);
-}
-
-// Mirror Python's `print(sorted(set))` list repr: ['0', '1', ...].
-function sortedTiersRepr(): string {
-  const items = [...VALID_TIERS].sort();
-  return `[${items.map((s) => `'${s}'`).join(", ")}]`;
 }
 
 // Mirror Python's `print(sorted(VALID_VISIBILITIES))` list repr.
@@ -184,43 +169,27 @@ export function lint(commands_dir: string, quiet = false): number {
     return 1;
   }
 
-  const missing: string[] = [];
-  const invalid: Array<[string, string]> = [];
   const vis_errors: Array<[string, string]> = [];
 
   for (const cmd of commands) {
     const rel = relPosix(cmd, commands_dir);
     const text = fs.readFileSync(cmd, "utf-8");
-    const tier = parse_tier(text);
-    if (tier === null) {
-      missing.push(rel);
-    } else if (!VALID_TIERS.has(tier)) {
-      invalid.push([rel, tier]);
-    }
     const ve = visibility_error(text);
     if (ve !== null) {
       vis_errors.push([rel, ve]);
     }
   }
 
-  if (missing.length > 0 || invalid.length > 0 || vis_errors.length > 0) {
+  if (vis_errors.length > 0) {
     process.stderr.write(
-      `❌  lint_command_tiers: ${missing.length} missing tier, ` +
-        `${invalid.length} invalid tier, ${vis_errors.length} visibility ` +
+      `❌  lint_command_tiers: ${vis_errors.length} visibility ` +
         `(of ${commands.length} commands)\n`,
     );
-    for (const name of missing) {
-      process.stderr.write(`    missing tier: ${name}\n`);
-    }
-    for (const [name, tier] of invalid) {
-      process.stderr.write(`    invalid tier '${tier}': ${name}\n`);
-    }
     for (const [name, err] of vis_errors) {
       process.stderr.write(`    ${err}: ${name}\n`);
     }
     process.stderr.write(
-      `    valid tiers: ${sortedTiersRepr()}; ` +
-        `valid visibility: ${sortedVisibilitiesRepr()}\n`,
+      `    valid visibility: ${sortedVisibilitiesRepr()}\n`,
     );
     process.stderr.write(
       "    contract: docs/contracts/command-surface-tiers.md (ADR-092)\n",
@@ -231,7 +200,7 @@ export function lint(commands_dir: string, quiet = false): number {
   if (!quiet) {
     process.stdout.write(
       `✅  lint_command_tiers: ${commands.length} commands, ` +
-        "all tier + visibility values valid\n",
+        "all visibility values valid\n",
     );
   }
   return 0;
@@ -246,35 +215,20 @@ export function lint_domain_sources(quiet = false): number {
     );
     return 1;
   }
-  const missing: string[] = [];
-  const invalid: Array<[string, string]> = [];
   const vis_errors: Array<[string, string]> = [];
   for (const c of commands) {
     const rel = relPosix(c, REPO);
     const text = fs.readFileSync(c, "utf-8");
-    const t = parse_tier(text);
-    if (t === null) {
-      missing.push(rel);
-    } else if (!VALID_TIERS.has(t)) {
-      invalid.push([rel, t]);
-    }
     const ve = visibility_error(text);
     if (ve !== null) {
       vis_errors.push([rel, ve]);
     }
   }
-  if (missing.length > 0 || invalid.length > 0 || vis_errors.length > 0) {
+  if (vis_errors.length > 0) {
     process.stderr.write(
-      `❌  lint_command_tiers: ${missing.length} missing tier, ` +
-        `${invalid.length} invalid tier, ${vis_errors.length} visibility ` +
+      `❌  lint_command_tiers: ${vis_errors.length} visibility ` +
         `(of ${commands.length} domain commands)\n`,
     );
-    for (const name of missing) {
-      process.stderr.write(`    missing tier: ${name}\n`);
-    }
-    for (const [name, tier] of invalid) {
-      process.stderr.write(`    invalid tier '${tier}': ${name}\n`);
-    }
     for (const [name, err] of vis_errors) {
       process.stderr.write(`    ${err}: ${name}\n`);
     }
@@ -283,7 +237,7 @@ export function lint_domain_sources(quiet = false): number {
   if (!quiet) {
     process.stdout.write(
       `✅  lint_command_tiers: ${commands.length} domain commands, ` +
-        "all tier + visibility values valid\n",
+        "all visibility values valid\n",
     );
   }
   return 0;
@@ -354,7 +308,7 @@ export function main(): number {
   }
   // The condensed projection is the consumer-facing tree (via the
   // .augment/commands → dist/agent-src/commands symlink). It must also
-  // carry tier so the surface stays uniform.
+  // carry visibility so the surface stays uniform.
   if (_isDir(COMMANDS_DIR_CONDENSED)) {
     rc |= lint(COMMANDS_DIR_CONDENSED, QUIET);
   }

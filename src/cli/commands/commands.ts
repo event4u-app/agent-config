@@ -3,10 +3,11 @@
  *
  *   agent-config commands [ls] [--pack <id>] [--visible] [--json]
  *       List the command surface from the discovery manifest. `--visible`
- *       restricts to tier 0/1; `--pack` restricts to one owning pack.
+ *       restricts to visibility `visible`/`advanced`; `--pack` restricts to one
+ *       owning pack.
  *
  *   agent-config commands explain <name> [--json]
- *       Print one command's intent, routes_to, owning pack, and tier.
+ *       Print one command's intent, routes_to, owning pack, and visibility.
  *
  *   agent-config commands ls --candidates [--json]
  *       Structural report over the WHOLE command estate. Report-only: it ranks
@@ -77,7 +78,7 @@ export interface CandidatesReport {
      * on the NEW canonical command pointing back", and the retirement marker is
      * `superseded_by`, "set on the OLD shim pointing forward". Labelling this
      * bucket "deprecation shims" named `git-commit`, `git-pr-create` and
-     * `fix-quality` — tier-0 daily drivers — as the one evidenced cut class.
+     * `fix-quality` — `visible` daily drivers — as the one evidenced cut class.
      *
      * The real shim population is **zero** and is NOT computable here:
      * `superseded_by` appears in no command file and is not emitted into the
@@ -121,27 +122,20 @@ function commandArtefacts(manifest: DiscoveryManifest): DiscoveryArtefact[] {
     return manifest.artefacts.filter((a) => a.category === 'command' && a.name);
 }
 
-function tierOf(a: DiscoveryArtefact): number {
-    return typeof a.tier === 'number' ? a.tier : 2;
-}
-
-function visibilityLabel(tier: number): string {
-    return tier === 0 ? 'visible' : tier === 1 ? 'advanced' : 'internal';
-}
-
-// ADR-092: prefer the named `visibility` field; fall back to the integer
-// `tier` alias when the manifest entry predates the backfill.
+// `visibility` is the sole classifier since manifest v3 dropped the integer
+// `tier` alias (road-to-tier-removal Phase 4). The default is the hidden one,
+// which is what the retired `tier ?? 2` fallback also resolved to — an entry
+// that names no visibility is never treated as a daily driver.
 function visibilityOf(a: DiscoveryArtefact): string {
-    return a.visibility ?? visibilityLabel(tierOf(a));
+    return a.visibility ?? 'internal';
 }
 
 function renderTable(cmds: readonly DiscoveryArtefact[]): string {
-    const header = ['command', 'pack', 'tier', 'visibility', 'intent'];
+    const header = ['command', 'pack', 'visibility', 'intent'];
     const rows: string[][] = cmds.map((c) => [
         // Canonical invocation slug (ADR-044) when present, else the name.
         c.slug ?? c.name ?? '',
         c.pack ?? (c.packs[0] ?? '—'),
-        String(tierOf(c)),
         visibilityOf(c),
         c.intent ?? '—',
     ]);
@@ -409,12 +403,10 @@ export function runCommandsExplain(name: string, opts: CommandsExplainOptions = 
         return 0;
     }
 
-    const tier = tierOf(match);
     const lines = [
         `/${match.name}`,
         `  pack:        ${match.pack ?? (match.packs[0] ?? '—')}`,
         `  visibility:  ${visibilityOf(match)}`,
-        `  tier:        ${tier} (alias)`,
         `  intent:      ${match.intent ?? '—'}`,
         `  routes_to:   ${(match.routes_to ?? []).join(', ') || '—'}`,
     ];

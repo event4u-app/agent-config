@@ -17,6 +17,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   askForgeForBase,
   describeBase,
+  explicitBase,
   main,
   resolveBase,
   type ForgeAnswer,
@@ -24,6 +25,43 @@ import {
 } from "../../src/scripts/check_branch_freshness.js";
 
 const GATE = path.resolve("src/scripts/check_branch_freshness.ts");
+
+/**
+ * Forge stubs.
+ *
+ * Every `main()` call below passes one — round-2 finding 7 caught the one that
+ * did not, which made this sentence and `main()`'s own JSDoc false. Without a
+ * seam these tests spawned the real `gh` against ambient credentials inside a
+ * temp fixture, so an environment carrying `GH_REPO` could return a real PR
+ * base for a same-named branch and change the base under test (round-1 finding
+ * 6) — and the forge-unavailable branch could only be reached by NOT having
+ * `gh`, which is why the test for it used to assert conditionally (round-1
+ * finding 1).
+ */
+const noPr = (): ForgeAnswer => ({ kind: "none" });
+const forgeDown = (): ForgeAnswer => ({
+  kind: "unavailable",
+  reason: "stubbed: forge unreachable",
+});
+const prBase =
+  (base: string, num = 42) =>
+  (): ForgeAnswer => ({ kind: "pr", base, number: num });
+
+/** Capture stdout for one call — the warning path is stdout, not an exit code. */
+function captureStdout(fn: () => void): string {
+  const said: string[] = [];
+  const write = process.stdout.write.bind(process.stdout);
+  process.stdout.write = ((chunk: string) => {
+    said.push(String(chunk));
+    return true;
+  }) as typeof process.stdout.write;
+  try {
+    fn();
+  } finally {
+    process.stdout.write = write;
+  }
+  return said.join("");
+}
 
 let dir: string;
 let cwd: string;
@@ -66,7 +104,7 @@ describe("check_branch_freshness", () => {
   it("passes when the branch contains the remote base", () => {
     git(["checkout", "-b", "feat/x"], process.cwd());
     commit(process.cwd(), "b.txt", "two");
-    expect(main(["--quiet"])).toBe(0);
+    expect(main(["--quiet"], noPr)).toBe(0);
   });
 
   it("fails when the remote base has moved ahead", () => {
@@ -87,14 +125,14 @@ describe("check_branch_freshness", () => {
     expect(staleRef).not.toBe(trueRemote);
 
     // A gate reading the tracking ref would pass here. This one must not.
-    expect(main(["--quiet"])).toBe(1);
+    expect(main(["--quiet"], noPr)).toBe(1);
   });
 
   it("no-ops on the base branch itself and in CI", () => {
-    expect(main(["--quiet"])).toBe(0); // still on main
+    expect(main(["--quiet"], noPr)).toBe(0); // still on main
     git(["checkout", "-b", "feat/y"], process.cwd());
     process.env["CI"] = "true";
-    expect(main(["--quiet"])).toBe(0);
+    expect(main(["--quiet"], noPr)).toBe(0);
     delete process.env["CI"];
   });
 
@@ -102,7 +140,7 @@ describe("check_branch_freshness", () => {
     git(["checkout", "-b", "feat/z"], process.cwd());
     // An unknown base name is indistinguishable from an unreachable remote at
     // this layer, and both must report NOT VERIFIED rather than a false green.
-    expect(main(["--base", "no-such-base"])).toBe(0);
+    expect(main(["--base", "no-such-base"], noPr)).toBe(0);
   });
 
   it("is registered in preflight — the gate exists to run before a push", () => {
@@ -154,25 +192,46 @@ describe("check_branch_freshness", () => {
   it("reports NOT-VERIFIED loudly even under --quiet when the forge is unreachable", () => {
     git(["checkout", "-b", "feat/quiet"], process.cwd());
     commit(process.cwd(), "b.txt", "two");
-    const said: string[] = [];
-    const write = process.stdout.write.bind(process.stdout);
-    // `gh` is absent in CI for this repo's test job, so the unverified path is
-    // the one this run actually takes — no stubbing needed to reach it.
-    process.stdout.write = ((chunk: string) => {
-      said.push(String(chunk));
-      return true;
-    }) as typeof process.stdout.write;
-    try {
-      main(["--quiet"]);
-    } finally {
-      process.stdout.write = write;
-    }
-    const out = said.join("");
-    // Either the forge answered (a real gh in the dev environment) or it did
-    // not; what must never happen is silence about which of the two it was.
-    if (out.includes("could not ask the forge")) {
-      expect(out).toContain("NOT verified");
-    }
+
+    // Unconditional. The earlier version asserted inside `if (out.includes(...))`,
+    // so wherever `gh` answered it asserted nothing and passed identically
+    // whether the warning was emitted or suppressed (R2 finding 1). The stub
+    // forces the branch, so this test can actually fail.
+    const out = captureStdout(() => {
+      expect(main(["--quiet"], forgeDown)).toBe(0);
+    });
+    expect(out).toContain("could not ask the forge");
+    expect(out).toContain("stubbed: forge unreachable");
+    expect(out).toContain("NOT verified");
+  });
+
+  it("stays silent about the forge when it answered — the warning is not boilerplate", () => {
+    git(["checkout", "-b", "feat/answered"], process.cwd());
+    commit(process.cwd(), "b.txt", "two");
+    const out = captureStdout(() => {
+      expect(main(["--quiet"], noPr)).toBe(0);
+    });
+    expect(out).not.toContain("could not ask the forge");
+  });
+
+  it("main() judges against the PR base end to end, not just resolveBase", () => {
+    const work = process.cwd();
+    git(["checkout", "-b", "develop"], work);
+    git(["push", "-u", "origin", "develop"], work);
+    git(["checkout", "-b", "feat/stacked-e2e"], work);
+    commit(work, "b.txt", "two");
+
+    // A second clone advances `develop` only; `main` never moves.
+    const other = path.join(dir, "other");
+    git(["clone", path.join(dir, "origin.git"), other], dir);
+    git(["checkout", "develop"], other);
+    commit(other, "c.txt", "three");
+    git(["push"], other);
+
+    // Against main the branch is current — true and irrelevant.
+    expect(main(["--quiet"], prBase("main"))).toBe(0);
+    // Against the base the PR actually targets, it is behind.
+    expect(main(["--quiet"], prBase("develop", 77))).toBe(1);
   });
 
   it("treats a closed-PR-shaped empty answer as 'no open PR', not as a base", () => {
@@ -200,6 +259,59 @@ describe("check_branch_freshness", () => {
       const answer = askForgeForBase("feat/x", run);
       expect(answer.kind).toBe("unavailable");
     }
+  });
+
+  it("keeps a usable base when the PR NUMBER is missing, and never claims PR #0", () => {
+    // Round-2 finding 4: discarding the base over an unusable number made the
+    // gate check the repo default and warn "could not ask the forge" when it
+    // HAD asked and been answered — a correct verdict traded for a tidier
+    // message. The number is cosmetic; the base is the answer.
+    for (const row of [{ baseRefName: "develop" }, { baseRefName: "develop", number: "7" }]) {
+      const run = (): GhResult => ({ ok: true, stdout: JSON.stringify([row]) });
+      const answer = askForgeForBase("feat/x", run);
+      expect(answer).toEqual({ kind: "pr", base: "develop" });
+    }
+    // Round-2 finding 5: the old assertion passed pr: 7 and so could never
+    // render #0 — it asserted nothing. This exercises the branch that can.
+    expect(describeBase({ base: "develop", source: "pull-request" })).not.toContain("#0");
+    expect(describeBase({ base: "develop", source: "pull-request" })).toContain("open PR");
+    expect(describeBase({ base: "develop", source: "pull-request", pr: 7 })).toContain("#7");
+  });
+
+  it("rejects a --base that is really the next flag, instead of checking origin/--quiet", () => {
+    // R2 finding 11: the guard used to accept anything non-empty, so
+    // `--base --quiet` produced remoteHead("--quiet"), which fails and lands on
+    // the exit-0 NOT-VERIFIED path — a typo reading as a pass.
+    expect(explicitBase(["--base", "--quiet"])).toBeNull();
+    expect(explicitBase(["--base"])).toBeNull();
+    expect(explicitBase(["--base", ""])).toBeNull();
+    // Round-2 finding 6: an indexOf("--base") lookup dropped the joined form
+    // silently, so the gate auto-resolved some OTHER base and reported a green
+    // about a base the caller never asked about.
+    expect(explicitBase(["--base=develop"])).toBe("develop");
+    expect(explicitBase(["--quiet", "--base=release/2.x"])).toBe("release/2.x");
+    expect(explicitBase(["--base="])).toBeNull();
+    expect(explicitBase(["--base", "release/9"])).toBe("release/9");
+  });
+
+  it("still asks the forge while standing on the apparent default branch", () => {
+    // Round-2 finding 1, and the reversal of a round-1 finding whose premise
+    // was false. Skipping the forge for `branch === localDefaultBase()` let the
+    // STALE clone-time ref decide a verdict: with origin/HEAD unset the local
+    // default falls back to "main", so on a repo whose real base is "develop"
+    // the branch was skipped with no check at all. `gh pr list --head main`
+    // CAN usefully answer — a PR from the default branch into a release line
+    // is exactly that answer, and exactly what this gate exists for.
+    let asked = 0;
+    const forge = (b: string): ForgeAnswer => {
+      asked += 1;
+      expect(b).toBe("main");
+      return { kind: "pr", base: "develop", number: 5 };
+    };
+    const r = resolveBase([], "main", forge);
+    expect(asked).toBe(1);
+    expect(r.base).toBe("develop");
+    expect(r.source).toBe("pull-request");
   });
 
   it("asks for OPEN PRs on this head only — a merged PR's base is not the next push's base", () => {

@@ -2,7 +2,6 @@
 model_tier: medium
 name: agents-user-accept
 pack: meta
-tier: 2
 visibility: internal
 cluster: agents
 sub: user

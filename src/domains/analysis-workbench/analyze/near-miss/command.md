@@ -2,7 +2,6 @@
 model_tier: inherit
 name: analyze-near-miss
 pack: analysis-workbench
-tier: 2
 visibility: internal
 cluster: analyze
 sub: near-miss

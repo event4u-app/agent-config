@@ -7,7 +7,6 @@ pack: meta
 intent: "Manage the repo-tracked team-knowledge layer — consolidate typed observation events into agents/knowledge/ pages, bootstrap a project baseline"
 routes_to: [team-knowledge-consolidate, team-knowledge-bootstrap]
 replaces: []
-tier: 2
 visibility: internal
 description: Team-knowledge orchestrator — routes to consolidate and bootstrap
 cluster: team-knowledge

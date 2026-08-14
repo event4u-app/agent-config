@@ -4,7 +4,6 @@ name: team-review
 disable-model-invocation: true
 argument-hint: "[--background]"
 pack: meta
-tier: 2
 visibility: internal
 description: Thin wrapper — cross-model review of the current diff via the official plugin (/codex:review). Gated on /team availability (codex CLI + auth); fails closed when the plugin is absent.
 cluster: team

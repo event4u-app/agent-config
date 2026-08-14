@@ -2,7 +2,6 @@
 model_tier: high
 name: brand-review
 pack: brand
-tier: 2
 visibility: internal
 cluster: brand
 sub: review

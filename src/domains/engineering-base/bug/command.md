@@ -7,7 +7,6 @@ pack: engineering-base
 intent: "Bug dispatcher — investigate the root cause or implement the fix"
 routes_to: [bug-investigate, bug-fix]
 replaces: []
-tier: 2
 visibility: internal
 description: Bug orchestrator — routes to investigate (root cause) and fix (plan + implement)
 cluster: bug

@@ -2,7 +2,6 @@
 model_tier: inherit
 name: brand
 pack: brand
-tier: 2
 visibility: internal
 cluster: brand
 type: orchestrator

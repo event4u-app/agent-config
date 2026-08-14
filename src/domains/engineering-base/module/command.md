@@ -4,7 +4,6 @@ name: module
 disable-model-invocation: true
 argument-hint: "[create|explore] [args]"
 pack: engineering-base
-tier: 2
 visibility: internal
 description: Module orchestrator — routes to create, explore
 cluster: module

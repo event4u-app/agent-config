@@ -2,7 +2,6 @@
 model_tier: medium
 name: cost-report
 pack: analytics
-tier: 2
 visibility: internal
 sub: report
 cluster: cost

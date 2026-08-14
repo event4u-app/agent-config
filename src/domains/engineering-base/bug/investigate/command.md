@@ -2,7 +2,6 @@
 model_tier: inherit
 name: bug-investigate
 pack: engineering-base
-tier: 2
 visibility: internal
 sub: investigate
 cluster: bug

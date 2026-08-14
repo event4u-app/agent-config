@@ -57,9 +57,14 @@ const SIZE_BUDGETS: Record<string, number> = {
     platform: 10,
 };
 // ADR-092: `visibility:` is the named source of truth (visible / advanced /
-// internal); the integer `tier:` is a back-compat alias. A command counts
-// toward the per-pack budget when it is surfaced — visibility in {visible,
-// advanced} (or, when only the alias is present, tier in {0,1}). `internal`
+// internal). The integer `tier:` alias was REMOVED from live command files in
+// road-to-tier-removal Phase 4, but this file still parses it on purpose: the
+// surface-growth check reads PAST git revisions (`_tier_at_ref`), and pre-ADR-092
+// blobs carry only the alias. The live-file tier read below is therefore a
+// harmless residue on current files and the correct read on historical ones.
+// A command counts toward the per-pack budget when it is surfaced — visibility
+// in {visible, advanced} (or, when only the alias is present, tier in {0,1}).
+// `internal`
 // (or absent → defaults to internal) is uncapped.
 const VISIBLE_TIERS: ReadonlySet<number> = new Set([0, 1]);
 const VISIBLE_VISIBILITIES: ReadonlySet<string> = new Set(['visible', 'advanced']);
@@ -622,17 +627,17 @@ export function render_md(commands: Command[], pairs: OverlapPair[]): string {
             '[`command-surface-synthesis.md`](command-surface-synthesis.md). Every command ' +
             "in this table maps to `keep` unless named in that file's tables.",
         '',
-        '| Name | Path | Tier | Cluster | Aliases | Lines | Commits | Age (d) | Bucket |',
+        '| Name | Path | Visibility | Cluster | Aliases | Lines | Commits | Age (d) | Bucket |',
         '|---|---|---:|---|---|---:|---:|---:|---|',
     );
     const sortedCmds = _stableSortStr(commands, (c) => c.relpath);
     for (const c of sortedCmds) {
         const aliases = c.aliases.length ? c.aliases.join(', ') : '—';
-        const tier = c.tier === null ? '—' : String(c.tier);
+        const visibility = c.visibility === null ? '—' : c.visibility;
         const cluster = c.cluster || '—';
         const age = c.days_since_first_commit === null ? '—' : String(c.days_since_first_commit);
         lines.push(
-            `| \`${c.name}\` | \`${c.relpath}\` | ${tier} | ${cluster} | ${aliases} | ` +
+            `| \`${c.name}\` | \`${c.relpath}\` | ${visibility} | ${cluster} | ${aliases} | ` +
                 `${c.line_count} | ${c.commit_count} | ${age} | |`,
         );
     }
@@ -738,7 +743,7 @@ function _is_visible(c: Command): boolean {
 
 interface VisibleCommand {
     name: string;
-    tier: number | null;
+    visibility: string | null;
     cluster: string;
     citations_docs: number;
     commit_count: number;
@@ -797,7 +802,7 @@ export function build_budget_audit(
         if (over) {
             const vis = visible.map((c) => ({
                 name: c.name,
-                tier: c.tier,
+                visibility: c.visibility,
                 cluster: c.cluster,
                 citations_docs: citation_count(c.name),
                 commit_count: c.commit_count,
@@ -832,8 +837,9 @@ export function render_budget_md(audit: BudgetAudit): string {
     L.push('# Command budget audit (6.0.0-B Phase 2 Step 4)\n');
     L.push(
         '> Per-pack VISIBLE-command counts vs. the `size_class` budget ' +
-            '(capability-packs.md). `visible` = tier ∈ {0,1}; tier 2 / absent = ' +
-            'internal (uncapped). Citations = docs/ files referencing `/<name>`.\n' +
+            '(capability-packs.md). `visible` = visibility ∈ {visible, advanced}; ' +
+            '`internal` / absent = uncapped. Citations = docs/ files referencing ' +
+            '`/<name>`.\n' +
             '>\n' +
             '> **Signal note:** docs-citations is the load-bearing signal (rank ' +
             'candidates low→high). The git commit/idle columns are low-variance on ' +
@@ -862,11 +868,11 @@ export function render_budget_md(audit: BudgetAudit): string {
                 `budget ${p.budget} (${p.size_class}), over by ${p.over_by}\n`,
         );
         L.push('Decide per command: keep-visible · set `internal` · relocate-to-pack-X.\n');
-        L.push('| Command | tier | cluster | docs citations | commits | days idle |');
-        L.push('|---|--:|---|--:|--:|--:|');
+        L.push('| Command | visibility | cluster | docs citations | commits | days idle |');
+        L.push('|---|---|---|--:|--:|--:|');
         for (const c of p.visible_commands ?? []) {
             L.push(
-                `| \`${c.name}\` | ${c.tier} | ${c.cluster || '—'} | ` +
+                `| \`${c.name}\` | ${c.visibility ?? '—'} | ${c.cluster || '—'} | ` +
                     `${c.citations_docs} | ${c.commit_count} | ` +
                     `${c.days_since_modified !== null ? c.days_since_modified : '—'} |`,
             );
@@ -1050,8 +1056,8 @@ export function check_new_budget(baseline: string, quiet: boolean): number {
             );
         }
         process.stdout.write(
-            '\nResolve by one of: set the command to `tier: 2` (internal, ' +
-                'uncapped) · merge into a sibling cluster · relocate to a pack ' +
+            '\nResolve by one of: set the command to `visibility: internal` ' +
+                '(uncapped) · merge into a sibling cluster · relocate to a pack ' +
                 'with budget headroom · file a budget-exemption ADR ' +
                 '(docs/contracts/capability-packs.md § Budget exemption process).\n',
         );

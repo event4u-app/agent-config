@@ -2,7 +2,6 @@
 model_tier: medium
 name: memory-learn-low-impact
 pack: memory
-tier: 2
 visibility: internal
 cluster: memory
 sub: learn-low-impact

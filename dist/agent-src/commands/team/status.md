@@ -3,7 +3,6 @@ model_tier: inherit
 name: team-status
 disable-model-invocation: true
 pack: meta
-tier: 2
 visibility: internal
 description: Thin wrapper — plugin job status via /codex:status plus a quota block (shared openai counter vs team + council ceilings). Gated on codex CLI/auth availability; fails closed without the plugin.
 cluster: team

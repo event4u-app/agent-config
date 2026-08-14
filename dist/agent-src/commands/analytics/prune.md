@@ -2,7 +2,6 @@
 model_tier: medium
 name: analytics-prune
 pack: analytics
-tier: 2
 visibility: internal
 cluster: analytics
 sub: prune

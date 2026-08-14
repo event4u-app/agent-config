@@ -2,7 +2,6 @@
 model_tier: medium
 name: analytics
 pack: analytics
-tier: 2
 visibility: internal
 description: Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`.
 argument-hint: "[show|prune] [args]"

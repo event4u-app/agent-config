@@ -20,6 +20,8 @@
  *
  * Modes:
  *   (no args)          full pairwise audit → agents/reports/originality.{json,md}
+ *   --base <ref>       the revision the change set is measured against; defines
+ *                      what counts as ESTABLISHED scaffold (see below)
  *   --changed <f...>   CI path: each changed file vs the whole same-class corpus
  *                      AND vs the other changed files of its class
  *
@@ -41,7 +43,7 @@
  *      it drifts as commands/skills are added or removed. Re-run the full audit
  *      after any large corpus change; do not treat 40 % as invariant.
  *   2. Adversarial batch masking. In `--changed` mode the boilerplate set is
- *      computed from the corpus MINUS the change set, so a batch of ≥ _dfFloor
+ *      derived from the ESTABLISHED corpus, so a batch of ≥ _dfFloor
  *      near-identical re-skins submitted together cannot classify its own shared
  *      shingles as boilerplate (see `_changed`). The full-audit sweep (no
  *      "changed" notion) does NOT have this guard — a batch of ≥ floor identical
@@ -51,8 +53,35 @@
  *      computes the PR's changed corpus files and runs `--changed` on them
  *      (empty changed set reports INCONCLUSIVE, never a pass).
  *
+ *      HOW "established" is resolved, and why it changed (2026-08-14):
+ *      With `--base <ref>` the established corpus is the class corpus AS IT
+ *      EXISTS AT THAT REVISION — content read from git, not from the worktree.
+ *      Without it, the older approximation applies: on-disk corpus MINUS the
+ *      change set.
+ *
+ *      That approximation has a degeneracy the base-ref form does not. When a
+ *      change set covers (nearly) the whole class — a mechanical edit such as
+ *      dropping one frontmatter key from every command — "corpus minus change
+ *      set" is EMPTY, no shingle clears the DF floor, nothing is scaffold, and
+ *      the class's shared skeleton is scored as authored overlap. Measured on
+ *      road-to-tier-removal Phase 4: the full audit reported worst 40 % / 0
+ *      failures, while `--changed` over the same 200 unmodified-in-substance
+ *      files reported 67.9 % and 3 failures — byte-identical on the base
+ *      revision's own content, so the delta was entirely the masking collapse.
+ *
+ *      The base-ref form does NOT weaken the guard, and it is worth being
+ *      precise about why rather than claiming more. Both forms close the
+ *      re-skin-batch axis, for different reasons: the old one excludes the
+ *      change set outright, the new one relies on those files' shared shingles
+ *      being absent from the base content (a NEW file contributes nothing at
+ *      all; a REWRITTEN file contributes only its OLD text). Either way a
+ *      batch cannot promote its own new shingles to scaffold. What changes is
+ *      only the degenerate case: an established corpus that is empty because
+ *      the change set swallowed it.
+ *
  * Exit 0 clean/warn · 1 fail · 2 usage.
  */
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -176,7 +205,11 @@ function _templateShingles(spec: ClassSpec): Set<string> {
 }
 
 function _load(abs: string, cls: ArtifactClass, tmpl: Set<string>): Artifact {
-    const text = fs.readFileSync(abs, 'utf-8');
+    return _loadText(fs.readFileSync(abs, 'utf-8'), abs, cls, tmpl);
+}
+
+/** `_load` over supplied text — used to load a file's content at a base ref. */
+function _loadText(text: string, abs: string, cls: ArtifactClass, tmpl: Set<string>): Artifact {
     const raw = shingles(text, K);
     // Subtract shared scaffold — a shingle also present in the class template
     // is boilerplate, not authored content.
@@ -332,14 +365,41 @@ function _writeReport(byClass: Map<ArtifactClass, Artifact[]>, pairs: Pair[], di
 
 // --- changed mode ------------------------------------------------------------
 
-function _changed(files: string[]): { pairs: Pair[]; fails: number } {
-    // The boilerplate DF set is derived from the ESTABLISHED corpus only — the
-    // change set under review is excluded. Without this, a batch of ≥ _dfFloor
-    // near-identical re-skins submitted together would lift its OWN shared
-    // shingles over the floor, be reclassified as boilerplate, subtracted from
-    // every copy, and score 0 against each other — the gate blinds itself on
-    // exactly the attack it exists to catch. "What is scaffold" must be defined
-    // by the corpus as it stands, never by the diff proposing to change it.
+/**
+ * A corpus file's content at `ref`, or null when the file does not exist there.
+ *
+ * Null is the load-bearing case: a file absent at the base revision is NEW in
+ * this change set, so it contributes nothing to the scaffold definition. That is
+ * what keeps a batch of re-skinned newcomers from masking itself.
+ *
+ * A git failure is indistinguishable from "absent" at this layer, and both
+ * resolve the same conservative way — the file is excluded from scaffold, which
+ * can only make the gate stricter, never blinder.
+ */
+function _textAtRef(ref: string, relpath: string): string | null {
+    const r = spawnSync('git', ['show', `${ref}:${relpath}`], {
+        cwd: ROOT,
+        encoding: 'utf-8',
+        maxBuffer: 32 * 1024 * 1024,
+    });
+    if (r.status !== 0 || typeof r.stdout !== 'string') return null;
+    return r.stdout;
+}
+
+function _changed(files: string[], base: string | null = null): { pairs: Pair[]; fails: number } {
+    // The boilerplate DF set is derived from the ESTABLISHED corpus only.
+    // Without this, a batch of ≥ _dfFloor near-identical re-skins submitted
+    // together would lift its OWN shared shingles over the floor, be
+    // reclassified as boilerplate, subtracted from every copy, and score 0
+    // against each other — the gate blinds itself on exactly the attack it
+    // exists to catch. "What is scaffold" must be defined by the corpus as it
+    // stands, never by the diff proposing to change it.
+    //
+    // `--base` makes "as it stands" literal: scaffold comes from the class
+    // corpus AT THAT REVISION. Without it we fall back to the older
+    // approximation (on-disk minus the change set), which is equivalent for a
+    // small change set but degenerates to an EMPTY established corpus when the
+    // change set covers the class — see the § 2 note in the module header.
     const changedRel = new Set(files.map((f) => _rel(path.resolve(ROOT, f))));
 
     // Build the corpus in RAW (template-subtracted, pre-DF) form per class so we
@@ -351,8 +411,18 @@ function _changed(files: string[]): { pairs: Pair[]; fails: number } {
         const tmpl = _templateShingles(spec);
         templateCache.set(spec.name, tmpl);
         const arts = spec.files().map((f) => _load(f, spec.name, tmpl));
-        // Established corpus = on-disk arts minus the change set.
-        const boiler = _boilerplateSet(arts.filter((a) => !changedRel.has(a.relpath)));
+        // Established corpus: at `base` when given (a file absent there is NEW
+        // and contributes no scaffold), else on-disk arts minus the change set.
+        const established =
+            base === null
+                ? arts.filter((a) => !changedRel.has(a.relpath))
+                : arts
+                      .map((a) => {
+                          const text = _textAtRef(base, a.relpath);
+                          return text === null ? null : _loadText(text, path.resolve(ROOT, a.relpath), spec.name, tmpl);
+                      })
+                      .filter((a): a is Artifact => a !== null);
+        const boiler = _boilerplateSet(established);
         for (const a of arts) _subtract(a, boiler);
         byClass.set(spec.name, arts);
         boilerByClass.set(spec.name, boiler);
@@ -404,12 +474,29 @@ export function main(argv?: string[]): number {
     }
     let quiet = false;
     let changedFiles: string[] | null = null;
+    let base: string | null = null;
     for (let i = 0; i < args.length; i++) {
         const a = args[i] as string;
         if (a === '--quiet') { quiet = true; }
+        else if (a === '--base') {
+            // `--changed` swallows the rest of argv, so `--base` must precede it.
+            const v = args[i + 1];
+            if (v === undefined || v.startsWith('-')) {
+                process.stderr.write(`--base needs a git ref\n${_usage()}`);
+                return 2;
+            }
+            base = v;
+            i += 1;
+        }
         else if (a === '--changed') { changedFiles = args.slice(i + 1).filter((x) => !x.startsWith('-')); break; }
         else if (a.startsWith('-')) { process.stderr.write(`unrecognized argument: ${a}\n${_usage()}`); return 2; }
         else { process.stderr.write(`unexpected argument: ${a} (did you mean --changed ${a}?)\n${_usage()}`); return 2; }
+    }
+    if (base !== null && changedFiles === null) {
+        // Silently ignoring it would let a workflow think the base-anchored
+        // scaffold was in effect when the full audit does not use one at all.
+        process.stderr.write(`--base is only meaningful with --changed\n${_usage()}`);
+        return 2;
     }
 
     // Asserted for BOTH modes, and before either: `--changed` compares each
@@ -434,7 +521,7 @@ export function main(argv?: string[]): number {
     }
 
     if (changedFiles !== null) {
-        const { pairs, fails } = _changed(changedFiles);
+        const { pairs, fails } = _changed(changedFiles, base);
         if (pairs.length > 0) {
             const stream = fails > 0 ? process.stderr : process.stdout;
             stream.write(`lint_originality: ${pairs.length} overlap(s) ≥ WARN ${WARN}% (${fails} ≥ FAIL ${FAIL}%):\n`);
@@ -466,7 +553,7 @@ export function main(argv?: string[]): number {
 }
 
 function _usage(): string {
-    return 'usage: lint_originality [--quiet] [--changed <file...>]\n';
+    return 'usage: lint_originality [--quiet] [--base <ref>] [--changed <file...>]\n';
 }
 
 function _isCliEntry(): boolean {

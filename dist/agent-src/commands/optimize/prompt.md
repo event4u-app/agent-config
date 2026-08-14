@@ -2,7 +2,6 @@
 model_tier: inherit
 name: optimize-prompt
 pack: meta
-tier: 2
 visibility: internal
 sub: prompt
 cluster: optimize

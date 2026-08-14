@@ -2,7 +2,6 @@
 model_tier: high
 name: judge-steps
 pack: engineering-base
-tier: 2
 visibility: internal
 cluster: judge
 sub: steps

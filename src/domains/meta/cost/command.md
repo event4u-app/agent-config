@@ -7,7 +7,6 @@ pack: meta
 intent: "Cost dispatcher — session cost report or rule-loading cost profile"
 routes_to: [cost-report, cost-profile]
 replaces: []
-tier: 2
 visibility: internal
 description: Cost orchestrator — routes to report (session token cost + budget ladder) and profile (change the rule_loading_tier)
 cluster: cost

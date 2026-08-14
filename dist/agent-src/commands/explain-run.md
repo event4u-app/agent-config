@@ -2,7 +2,6 @@
 model_tier: inherit
 name: explain-run
 pack: meta
-tier: 2
 visibility: internal
 description: "Read-only 'why did that happen' run report — resolved rule set, rules fired, artefact engagement, subagent dispatches, hook/loop/freshness state — even when the user just says 'explain the last run'."
 argument-hint: "[--task <id>] [--since <ref>]"

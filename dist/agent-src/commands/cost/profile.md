@@ -2,7 +2,6 @@
 model_tier: medium
 name: cost-profile
 pack: meta
-tier: 2
 visibility: internal
 replaces: [set-cost-profile]
 sub: profile

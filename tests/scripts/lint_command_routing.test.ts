@@ -49,10 +49,12 @@ describe('lint_command_routing — behavioural spec', () => {
         expect(reasons).toContain('missing/empty `intent` (Step 4b)');
     });
 
-    it('prefers `visibility` over the deprecated `tier` alias when both are present', () => {
-        // Disagreeing pair (lint_command_tiers hard-fails on this repo-wide, so
-        // it can only reach here from an unlinted external file): `visibility`
-        // wins, so the command is treated as internal and exempt.
+    it('prefers `visibility` over the removed `tier` alias when both are present', () => {
+        // Disagreeing pair. Since road-to-tier-removal Phase 4 the repo corpus
+        // carries no `tier:` at all and `command.schema.json` rejects a stray
+        // one, so this shape can only arrive from an unlinted external file —
+        // the precedence is retained precisely for that case: `visibility` wins,
+        // so the command is treated as internal and exempt.
         const md = write('cmd.md', '---\ntier: 0\nvisibility: internal\nname: x\n---\nbody\n');
         expect(lcr.check(md)).toHaveLength(0);
     });

@@ -88,7 +88,7 @@ install:
 ```yaml
 ---
 name: cost-report
-tier: 2
+visibility: internal
 description: "Capture token cost from the active session and surface the 50/75/90/100% budget ladder."
 workspaces:
   - agent-config-maintainer
