@@ -216,9 +216,39 @@ its central gap is verified in code.
     that lists unproven `dod[]` items. 31 new assertions, 4 contract snapshots
     updated, 738 work-engine tests green, `docs/contracts/implement-ticket-flow.md`
     amended (state field + both ambiguity tables + two new sections).
-  - **Why it is not `[x]`:** the ≥50% is a run-level rate and the engine emits no
-    halt telemetry, so it is **unevaluated, not met** — and "unevaluated" does
-    not trigger the revert clause either, which fires on a measured miss.
+  - **Why it is not `[x]` — SUPERSEDED 2026-08-14, and the reason changed
+    entirely. Read this before the paragraph under it.** The blocker
+    `self-fix-halt-telemetry` **resolved** on 2026-08-14 via path (b): the
+    pre-registration was re-scoped to the structural claim (the loop exists, is
+    bounded, terminates) and the ≥50 % figure is preserved as **never
+    evaluated**, not as met. That resolution removed the only thing keeping this
+    step open. **On the work, P2.2 is done.**
+
+    It is still `[ ]` for a reason that has nothing to do with the work, and the
+    next session should not re-derive it. This roadmap carries four `[~]`
+    deferrals (P1.1, P1.4, P3.3, P5.6). Flipping P2.2 takes `count_open` to 0
+    with `count_deferred` at 4, which is exactly the trigger for
+    `roadmap-progress-sync` Iron Law 3: *"A roadmap with `[~]` deferred items
+    never auto-archives silently. Surface every deferred step. Ask the user what
+    happens to the plan."* The disposition of a deferral is the user's call, and
+    the closing commit is roadmap-touching by construction, so it blocks itself
+    until the four are disposed **in the same change**.
+
+    The four were put to the maintainer by the continuation sweep of 2026-08-14.
+    None is honestly cancellable: P1.1 is a wanted rendering half over a shipped
+    schema, P1.4 reopens a decision the blanket grant has now approved reopening,
+    P3.3 is "worth doing, not urgent", and P5.6 is a deliberate
+    ratchet-before-split stance. Marking any of them `[-]` to clear the gate
+    would be the buried-work failure Iron Law 3 exists to stop.
+
+    **To close this roadmap:** dispose the four (complete / cancel / migrate to a
+    successor or to `later/`), flip P2.2 to `[x]`, regenerate, archive — one
+    change. Nothing else is outstanding.
+  - **The original blocked-on-measurement reasoning, kept because it is the
+    evidence the re-scope rests on:** the ≥50% is a run-level rate and the
+    engine emits no halt telemetry, so it is **unevaluated, not met** — and
+    "unevaluated" does not trigger the revert clause either, which fires on a
+    measured miss.
     Structurally, no red reaches the user on first occurrence in either lane
     (before: 2 of 2 red exits were directive-free user halts; after: 0 of 2),
     and the one locked golden replay that reaches a red verdict (`GT-3`) moved
