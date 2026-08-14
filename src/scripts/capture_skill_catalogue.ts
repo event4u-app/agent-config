@@ -69,6 +69,16 @@ export interface CatalogueEntry {
     hasDescription: boolean;
     /** Character length of the declared description; 0 when absent. */
     descriptionLength: number;
+    /**
+     * UTF-8 byte length of the declared description; 0 when absent.
+     *
+     * Separate from `descriptionLength` because a context budget is spent in
+     * bytes while the selector candidates above are stated in characters, and
+     * the two diverge on every non-ASCII description in the tree. Reporting one
+     * under the other's name is how a limit claim ends up off by the size of
+     * its own em-dashes.
+     */
+    descriptionBytes: number;
     /** Top-level frontmatter keys the entry declares. */
     frontmatterKeys: string[];
 }
@@ -178,6 +188,7 @@ export function readProjectedCatalogue(root: string): CatalogueEntry[] {
             position: index + 1,
             hasDescription: description.length > 0,
             descriptionLength: description.length,
+            descriptionBytes: Buffer.byteLength(description, 'utf-8'),
             frontmatterKeys: topLevelKeys(frontmatter),
         };
     });
@@ -309,6 +320,39 @@ export function analyzeSelector(
     };
 }
 
+/**
+ * HOW a host truncated — the field that keeps one corpus from averaging two
+ * unlike mechanisms into a verdict describing neither.
+ *
+ *   `per-entry`         — some entries arrive described and others bare, with
+ *                         no host-stated rule. The claude shape. A selector, if
+ *                         one exists, has to be INFERRED by joining projection
+ *                         against observation, which is what `analyzeSelector`
+ *                         does and why its `no-selector` verdict is meaningful.
+ *   `budget-strip-all`  — the host states a budget, strips EVERY description,
+ *                         then drops entries wholesale and reports how many.
+ *                         The codex shape. Nothing needs inferring: the host
+ *                         published its own selector, so running the inference
+ *                         over it would produce `insufficient-observation`
+ *                         (zero described entries) and read as a failed
+ *                         measurement rather than a decisive one.
+ *
+ * Absent on a record written before 2026-08-15. That is left as `undefined`
+ * rather than back-filled with a guess: the one pre-existing record was taken
+ * before the distinction existed, and stamping a mode onto it would be a claim
+ * about a mechanism nobody classified at the time.
+ */
+export type TruncationMode = 'per-entry' | 'budget-strip-all';
+
+/**
+ * Whether the numbers came from the agent reading its own context, or from the
+ * host publishing them.
+ *
+ * This is the whole reason a second host was worth having, so it is a recorded
+ * field rather than something a reader infers from `host`.
+ */
+export type ObservationKind = 'self-reported' | 'host-reported';
+
 /** One append-only observation record. No field can hold free-form content. */
 export interface ObservationRecord {
     schema: 1;
@@ -318,8 +362,13 @@ export interface ObservationRecord {
     bare_count: number;
     described_count: number;
     bare_names: string[];
-    verdict: SelectorReport['verdict'];
+    verdict: SelectorReport['verdict'] | 'host-declared-budget';
     separating_candidates: string[];
+    /** Absent on records written before the mechanisms were distinguished. */
+    truncation_mode?: TruncationMode;
+    /** Entries the host reported dropping. Only ever host-reported. */
+    dropped_count?: number;
+    observation_kind?: ObservationKind;
 }
 
 export function buildObservationRecord(
@@ -337,7 +386,184 @@ export function buildObservationRecord(
         bare_names: report.observedBare,
         verdict: report.verdict,
         separating_candidates: report.candidates.filter((c) => c.separates).map((c) => c.id),
+        truncation_mode: 'per-entry',
+        observation_kind: 'self-reported',
     };
+}
+
+// ── codex: the host publishes its own truncation ────────────────────────────
+
+/**
+ * The budget event codex emits on its structured channel.
+ *
+ * Matched against the STRUCTURED event's message, never the human-readable
+ * stderr line — a reworded banner should make this parser fail loudly, and it
+ * would silently match a looser regex over free text. The count is the only
+ * number extracted; nothing else in the message is load-bearing.
+ */
+const _CODEX_BUDGET_RE =
+    /Exceeded skills context budget\.\s*All skill descriptions were removed and (\d+) additional skills were not included/i;
+
+export interface CodexTruncation {
+    /** Entries the host said it dropped entirely. */
+    readonly dropped: number;
+}
+
+/**
+ * True when the host reported dropping more entries than the projection root
+ * offers — i.e. the root does not cover the catalogue the host was counting.
+ *
+ * Worth its own predicate because the naive reading of that arithmetic is
+ * "something is broken", and it is not: a host's catalogue is skills PLUS
+ * commands plus whatever the working directory contributes, while a projection
+ * root names one tree. A survivor count derived across that gap is not a
+ * measurement, so the caller must say so rather than print the subtraction.
+ */
+export function codexProjectionUndercovers(
+    truncation: CodexTruncation,
+    entriesTotal: number,
+): boolean {
+    return truncation.dropped > entriesTotal;
+}
+
+/**
+ * Parse a `codex exec --json` event stream for the budget event.
+ *
+ * Returns `null` when the stream carries no such event — which the caller MUST
+ * treat as "not measured", never as zero. Risk 3 of the plan names this
+ * exactly: a reworded or removed host message would otherwise report a clean
+ * `dropped: 0`, and a fixed defect and a broken parser would look identical.
+ *
+ * Non-JSON lines are skipped rather than fatal: the stream is newline-delimited
+ * JSON by contract, but a CLI is free to interleave a plain-text warning and
+ * that is not this parser's business.
+ */
+export function parseCodexTruncation(stream: string): CodexTruncation | null {
+    for (const line of stream.split('\n')) {
+        const trimmed = line.trim();
+        if (trimmed === '' || !trimmed.startsWith('{')) continue;
+        let event: unknown;
+        try {
+            event = JSON.parse(trimmed);
+        } catch {
+            continue;
+        }
+        const item = (event as { item?: { type?: unknown; message?: unknown } }).item;
+        if (item === undefined || item.type !== 'error' || typeof item.message !== 'string') {
+            continue;
+        }
+        const m = _CODEX_BUDGET_RE.exec(item.message);
+        if (m) {
+            return { dropped: Number(m[1]) };
+        }
+    }
+    return null;
+}
+
+/**
+ * Build the codex-shaped observation.
+ *
+ * Deliberately does NOT run `analyzeSelector`. On this host the selector is not
+ * something to infer — it is stated by the host, and every surviving entry is
+ * bare by construction because the budget strips all descriptions first. Piping
+ * it through the inference would report `insufficient-observation` (no described
+ * entries to separate against), which is the pooled-verdict failure this
+ * roadmap's Risk 1 exists to prevent.
+ *
+ * `entries_total` is the PROJECTED count — what the host was offered. `dropped`
+ * is what it said it discarded. The survivors are the difference, and they are
+ * all bare, so `bare_count` is a derived integer rather than a name list: the
+ * host publishes a count, not an identity, and inventing names for it would be
+ * a fabrication.
+ */
+export function buildCodexObservationRecord(
+    truncation: CodexTruncation,
+    entriesTotal: number,
+    observedAt: string,
+): ObservationRecord {
+    // `dropped > entriesTotal` is NOT a rounding case to clamp away — it is the
+    // measurement telling you the projection root under-covers what the host
+    // counted, and it fired the first time this ran for real (297 skills
+    // offered, 393 reported dropped, 2026-08-15). Clamping alone would have
+    // published a confident `bare_count: 0`. `codexProjectionUndercovers`
+    // below is what the caller reports instead; the clamp stays so the record
+    // never carries a negative count, but it is the floor, not the finding.
+    const survivors = Math.max(entriesTotal - truncation.dropped, 0);
+    return {
+        schema: 1,
+        observed_at: observedAt,
+        host: 'codex',
+        entries_total: entriesTotal,
+        bare_count: survivors,
+        described_count: 0,
+        bare_names: [],
+        verdict: 'host-declared-budget',
+        separating_candidates: ['host-declared-budget'],
+        truncation_mode: 'budget-strip-all',
+        dropped_count: truncation.dropped,
+        observation_kind: 'host-reported',
+    };
+}
+
+// ── projected volume — the input side, stated next to the observation ───────
+
+/**
+ * What a host is actually offered, in the units a budget is spent in.
+ *
+ * `description_bytes` is the payload a description-stripping host discards
+ * first, so it is the number that predicts whether a budget-shaped truncation
+ * fires at all — and it was being recomputed by hand in prose. Reporting it
+ * beside the observation is what lets a later reader check a limit claim
+ * against the measurement it came from rather than against a remembered figure.
+ */
+export interface ProjectedVolume {
+    readonly root: string;
+    readonly entries: number;
+    readonly declares_description: number;
+    readonly description_bytes: number;
+}
+
+/**
+ * Command bodies under a tree — the OTHER half of a host catalogue.
+ *
+ * Split from the skill scan because the two have different membership rules (a
+ * skill is a directory holding `SKILL.md`; a command is a markdown file, often
+ * nested a group deep) and because leaving commands out is what produced the
+ * first real run's contradiction: 297 skills offered against 393 reported
+ * dropped. The host was never counting only skills.
+ */
+export function countCommandBodies(root: string): number {
+    if (!fs.existsSync(root)) return 0;
+    let total = 0;
+    const walk = (dir: string): void => {
+        for (const dirent of fs.readdirSync(dir, { withFileTypes: true })) {
+            const abs = path.join(dir, dirent.name);
+            // `existsSync`-style resolution rather than `isDirectory()`, for the
+            // same symlink reason `readProjectedCatalogue` documents: these
+            // trees are projections and a Dirent reports a symlinked directory
+            // as not-a-directory.
+            if (dirent.name.endsWith('.md')) {
+                total += 1;
+            } else if (fs.existsSync(path.join(abs, '.')) && fs.statSync(abs).isDirectory()) {
+                walk(abs);
+            }
+        }
+    };
+    walk(root);
+    return total;
+}
+
+export function projectedVolume(root: string): ProjectedVolume {
+    const entries = readProjectedCatalogue(root);
+    let bytes = 0;
+    let described = 0;
+    for (const entry of entries) {
+        if (entry.hasDescription) {
+            described += 1;
+            bytes += entry.descriptionBytes;
+        }
+    }
+    return { root, entries: entries.length, declares_description: described, description_bytes: bytes };
 }
 
 export function formatReport(report: SelectorReport): string {
@@ -405,6 +631,95 @@ function main(): number {
             `❌  catalogue root ${root} holds no SKILL.md entries — a scan that found nothing is not a clean result\n`,
         );
         return 1;
+    }
+
+    // ── codex mode: the host reported its own truncation ────────────────────
+    //
+    // Deliberately consumes a CAPTURED stream rather than invoking `codex exec`
+    // itself. Spending a model call from inside a measurement tool would make
+    // the instrument itself billable and non-reproducible, and the operator
+    // already has the stream from any ordinary run:
+    //   codex exec --json --skip-git-repo-check - <<< 'reply OK' > events.jsonl
+    const codexEventsPath = argValue('--codex-events');
+    if (codexEventsPath) {
+        const stream =
+            codexEventsPath === '-'
+                ? fs.readFileSync(0, 'utf-8')
+                : fs.readFileSync(codexEventsPath, 'utf-8');
+        const truncation = parseCodexTruncation(stream);
+        if (truncation === null) {
+            // NEVER a zero observation. An absent event means the parser did
+            // not measure anything — a reworded host banner and a genuinely
+            // untruncated catalogue must not produce the same record.
+            process.stderr.write(
+                '❌  no skills-context-budget event found in the codex stream.\n' +
+                    '    This is "not measured", never "dropped 0" — a reworded or removed\n' +
+                    '    host message looks exactly like a fixed defect from here, so the\n' +
+                    '    honest outcome is a loud failure. Re-capture with:\n' +
+                    "      codex exec --json --skip-git-repo-check - <<< 'reply OK' > events.jsonl\n",
+            );
+            return 1;
+        }
+
+        // The projection this host was offered. `--projection-root` because a
+        // host's own estate (`~/.codex/skills`) is what IT was handed, which is
+        // not this repo's `src/skills` — measuring the wrong tree would put a
+        // confident, wrong denominator under the host's own dropped count.
+        const projectionRoot = argValue('--projection-root');
+        const volume = projectedVolume(projectionRoot ? resolveCatalogueRoot(projectionRoot) : root);
+        // `--command-root` is optional but almost always required for a HONEST
+        // denominator: a host budget spans skills and commands together, and a
+        // skills-only count under-reports the estate by whatever the command
+        // tree holds (200 of 497 on the machine this was first run on).
+        const commandRoot = argValue('--command-root');
+        const commandEntries = commandRoot ? countCommandBodies(commandRoot) : 0;
+        const catalogueEntries = volume.entries + commandEntries;
+        const stampedAt = argValue('--observed-at');
+        const record = buildCodexObservationRecord(truncation, catalogueEntries, stampedAt ?? '');
+
+        if (process.argv.includes('--json')) {
+            process.stdout.write(`${JSON.stringify({ volume, record }, null, 2)}\n`);
+        } else {
+            const undercovers = codexProjectionUndercovers(truncation, catalogueEntries);
+            const survivorLine = undercovers
+                ? `  survived: NOT DERIVABLE — the host counted more than this root offers (see below)\n`
+                : `  survived (all bare — the budget strips every description first): ${record.bare_count}\n`;
+            process.stdout.write(
+                `projection root: ${volume.root}\n` +
+                    `skills offered: ${volume.entries}\n` +
+                    (commandRoot ? `commands offered: ${commandEntries} (${commandRoot})\n` : '') +
+                    `catalogue entries offered: ${catalogueEntries}` +
+                    (commandRoot ? '\n' : '  ⚠️  skills only — pass --command-root for the full estate\n') +
+                    `declares a description: ${volume.declares_description}\n` +
+                    `description payload: ${volume.description_bytes} bytes\n\n` +
+                    `host-reported truncation (codex):\n` +
+                    `  dropped entirely: ${record.dropped_count}\n` +
+                    survivorLine +
+                    `  truncation_mode: ${record.truncation_mode}\n\n` +
+                    (undercovers
+                        ? `⚠️  projection under-coverage: the host reported dropping ${record.dropped_count} entries\n` +
+                          `    while this root offers only ${volume.entries}. That is a fact about the ROOT,\n` +
+                          `    not a broken measurement: a host catalogue spans skills AND commands and\n` +
+                          `    also picks up whatever the working directory contributes. The dropped\n` +
+                          `    count stands; the survivor count does not, and is recorded as the clamped\n` +
+                          `    floor rather than published as a measurement.\n\n`
+                        : '') +
+                    `verdict: host-declared-budget — the selector is published by the host, not inferred.\n` +
+                    `This is NOT poolable with a per-entry observation; read the two per host.\n`,
+            );
+        }
+
+        if (process.argv.includes('--record')) {
+            if (!stampedAt) {
+                process.stderr.write('❌  --record requires --observed-at <ISO date>\n');
+                return 1;
+            }
+            const logPath = path.join(REPO, OBSERVATION_LOG);
+            fs.mkdirSync(path.dirname(logPath), { recursive: true });
+            fs.appendFileSync(logPath, `${JSON.stringify(record)}\n`);
+            process.stdout.write(`\nrecorded → ${OBSERVATION_LOG}\n`);
+        }
+        return 0;
     }
 
     const observedPath = argValue('--observed');

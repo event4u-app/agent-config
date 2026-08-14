@@ -19,8 +19,11 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 import {
     analyzeSelector,
+    buildCodexObservationRecord,
     buildObservationRecord,
     formatReport,
+    parseCodexTruncation,
+    projectedVolume,
     readProjectedCatalogue,
     type CatalogueEntry,
 } from '../../src/scripts/capture_skill_catalogue.js';
@@ -41,6 +44,9 @@ function entry(overrides: Partial<CatalogueEntry> & { name: string; position: nu
     return {
         hasDescription: true,
         descriptionLength: 40,
+        // Default equal to the character length — these fixtures are ASCII, so
+        // the two coincide. A fixture that needs them to diverge overrides it.
+        descriptionBytes: 40,
         frontmatterKeys: ['name', 'description'],
         ...overrides,
     };
@@ -192,9 +198,11 @@ describe('observation record', () => {
             'described_count',
             'entries_total',
             'host',
+            'observation_kind',
             'observed_at',
             'schema',
             'separating_candidates',
+            'truncation_mode',
             'verdict',
         ]);
         // Every value is a scalar or an array of scalars: nothing can hold a body.
@@ -202,5 +210,107 @@ describe('observation record', () => {
             const values = Array.isArray(value) ? value : [value];
             for (const v of values) expect(typeof v).not.toBe('object');
         }
+    });
+
+    it('the codex record obeys the same no-free-form-field floor', () => {
+        const record = buildCodexObservationRecord({ dropped: 401 }, 498, '2026-08-15');
+        expect(Object.keys(record).sort()).toEqual([
+            'bare_count',
+            'bare_names',
+            'described_count',
+            'dropped_count',
+            'entries_total',
+            'host',
+            'observation_kind',
+            'observed_at',
+            'schema',
+            'separating_candidates',
+            'truncation_mode',
+            'verdict',
+        ]);
+        for (const value of Object.values(record)) {
+            const values = Array.isArray(value) ? value : [value];
+            for (const v of values) expect(typeof v).not.toBe('object');
+        }
+    });
+});
+
+describe('projectedVolume', () => {
+    it('reports bytes, not characters — they diverge on any non-ASCII description', () => {
+        const root = path.join(TMP, 'volume');
+        fs.mkdirSync(root, { recursive: true });
+        // `—` is one character and three UTF-8 bytes. A tool that reported the
+        // character count under a byte label would be wrong by exactly the size
+        // of this repo's own punctuation habit.
+        writeSkill(root, 'a', 'name: a\ndescription: "a—b"');
+        writeSkill(root, 'b', 'name: b');
+
+        const v = projectedVolume(root);
+        expect(v.entries).toBe(2);
+        expect(v.declares_description).toBe(1);
+        expect(v.description_bytes).toBe(5);
+        expect(readProjectedCatalogue(root)[0]!.descriptionLength).toBe(3);
+    });
+});
+
+describe('codex truncation parsing', () => {
+    // The exact stream shape, captured from `codex exec --json` on 2026-08-15.
+    const REAL_EVENT =
+        '{"type":"thread.started","thread_id":"01a0"}\n' +
+        '{"type":"turn.started"}\n' +
+        '{"type":"item.completed","item":{"id":"item_0","type":"error","message":"Exceeded skills context budget. All skill descriptions were removed and 401 additional skills were not included in the model-visible skills list."}}\n' +
+        '{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"OK"}}\n';
+
+    it('reads the dropped count off the structured event', () => {
+        expect(parseCodexTruncation(REAL_EVENT)).toEqual({ dropped: 401 });
+    });
+
+    it('returns null — never zero — when no budget event is present', () => {
+        // The load-bearing distinction of the whole parser: a host that stopped
+        // emitting the message and a host that truncated nothing must NOT
+        // produce the same record. `null` is "not measured".
+        const clean =
+            '{"type":"turn.started"}\n{"type":"item.completed","item":{"type":"agent_message","text":"OK"}}\n';
+        expect(parseCodexTruncation(clean)).toBeNull();
+    });
+
+    it('ignores non-JSON noise interleaved in the stream', () => {
+        expect(parseCodexTruncation(`warning: something\n${REAL_EVENT}`)).toEqual({ dropped: 401 });
+    });
+
+    it('does not match the same words outside the structured error event', () => {
+        // Matching free text would let an agent_message that QUOTES the banner
+        // — a transcript, a bug report pasted into a prompt — register as a
+        // measurement.
+        const quoted =
+            '{"type":"item.completed","item":{"type":"agent_message","text":"Exceeded skills context budget. All skill descriptions were removed and 999 additional skills were not included in the model-visible skills list."}}\n';
+        expect(parseCodexTruncation(quoted)).toBeNull();
+    });
+
+    it('derives survivors from the projection, and never a negative count', () => {
+        expect(buildCodexObservationRecord({ dropped: 401 }, 498, '2026-08-15')).toMatchObject({
+            host: 'codex',
+            entries_total: 498,
+            dropped_count: 401,
+            bare_count: 97,
+            described_count: 0,
+            truncation_mode: 'budget-strip-all',
+            observation_kind: 'host-reported',
+            verdict: 'host-declared-budget',
+        });
+        // A host reporting more dropped than this tree projects is a real
+        // possibility (its estate is not ours), and a negative survivor count
+        // would be nonsense rather than a finding.
+        expect(buildCodexObservationRecord({ dropped: 900 }, 498, '2026-08-15').bare_count).toBe(0);
+    });
+
+    it('never runs the per-entry inference over a budget-shaped observation', () => {
+        // Risk 1 of the plan: pooling the two mechanisms. `analyzeSelector`
+        // would return `insufficient-observation` here (zero described
+        // entries), which reads as a failed measurement rather than the
+        // decisive one it is.
+        const record = buildCodexObservationRecord({ dropped: 401 }, 498, '2026-08-15');
+        expect(record.verdict).not.toBe('insufficient-observation');
+        expect(record.verdict).not.toBe('no-selector');
     });
 });
