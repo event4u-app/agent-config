@@ -278,6 +278,41 @@ fails CI — and admits an optional `(...)` suffix.
   clean-path note names the corpus actually walked, so "is this root scanned?" is
   answerable by running the gate.
 
+## Amendment 5 (2026-08-14) — staged-confirmation semantics on a degraded host
+
+The `requires_confirmation` staging primitive shipped **unbound** because two
+questions were open: what a host **without** a `pre_tool_use` slot gets when an
+action is staged, and whether the primitive is default-on where the slot does
+exist. Both are answered here, so the flag stops meaning "undecided".
+
+- **Degraded host → carry the obligation, and say plainly that it is
+  model-carried. Never refuse to stage.** Five of eight hosts have no
+  `pre_tool_use` slot (`hook_manifest.yaml:531,539,578`), so there the staging
+  record is prose and nothing can refuse the action. That is stated, not
+  papered over — the same honesty boundary
+  [`security-sensitive-stop`](../../src/rules/security-sensitive-stop.md),
+  [`ui-audit-gate`](../../src/rules/ui-audit-gate.md) and
+  [`untrusted-input-defense`](../../src/rules/untrusted-input-defense.md) already
+  ship as `enforced_by: none`. **Refusing to stage was rejected**, and the
+  reason is recorded rather than assumed: it would withdraw the primitive
+  exactly where the least protection exists, and it reproduces the defect
+  `ui-audit-gate` names in its own text — "a gate whose sole compliant path is
+  inaction is not a gate". A staged record a human can read is strictly more
+  than no record.
+- **Where the slot exists → default-OFF, soak before it binds.** This is the
+  package's standing posture for a new concern, not a fresh judgement:
+  `docs/contracts/concern-activation-policy.md` governs the flip, the hook
+  manifest ships concerns `fail_closed: false`, and the sibling turn-end
+  detector in the same roadmap "leaves the master switch off, so a mistake
+  soaks before it binds". A confirmation guard that binds on the day it lands
+  can only be discovered to be wrong by blocking something real.
+- **What this does NOT decide.** Which channel confirms is still open by
+  design; the surface names no confirming command, and a test asserts
+  `--confirm` does not appear by default. Promotion from default-off to bound
+  runs through the activation policy's economic trigger, never through a
+  roadmap step.
+- **Additive.** No `status: accepted` change; no field added or removed.
+
 ## References
 
 - Council debate 2026-07-04 (claude-sonnet-4-5 + gpt-4o, 2 rounds).

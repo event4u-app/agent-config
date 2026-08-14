@@ -81,7 +81,7 @@ binds. Only a third detector is missing, and the soak stays.
       widened with the cases nothing covered: a scoped grant accepted,
       `Frobnicate(anything:*)` rejected, four malformed scopes rejected.
       <!-- verify: task test -- --filter=subagent_contract -->
-- [ ] **1.2 Narrow `production-validator` to the prefixes it needs.** Edit
+- [x] **1.2 Narrow `production-validator` to the prefixes it needs.** Edit
       `src/subagents/production-validator.md` so the shell grant becomes the command
       families the audit runs, then regenerate so
       `.claude/agents/production-validator.md:4` no longer carries a bare `Bash`.
@@ -97,7 +97,34 @@ binds. Only a third detector is missing, and the soak stays.
       this needs a call on which is worse — an over-broad grant on a read-only
       auditor, or an auditor that cannot run the project's own tests. Maintainer
       decision, not an agent edit.
-      <!-- verify: grep -n 'tools:' .claude/agents/production-validator.md -->
+
+      **Decided 2026-08-14 — KEEP the broad `Bash` grant. Maintainer-delegated
+      under the blanket in-session grant; this step closes as a decision, not as
+      an edit.** The two harms are not symmetric. `production-validator` is a
+      read-only auditor whose entire output is a READY line, and its procedure
+      step 3 must find evidence *the real path executed* against a runner only
+      the consumer knows. A guessed scope does not merely limit it — it makes it
+      report a missing run it was forbidden to attempt, which is a **false
+      finding on a gate**, the failure class `false-green.md` names as the worst
+      one available.
+
+      The mitigation that would have made narrowing safe is **not expressible
+      here**, and that is the deciding fact rather than a preference. `tool-safety`
+      § Scoped grants offers a `disallowed_tools` deny-list layered under a broad
+      allow — exactly the shape this case wants. Checked against the tree on
+      2026-08-14: `disallowed_tools` exists in `src/scripts/schemas/skill.schema.json:260`
+      and **has no counterpart in `src/scripts/schemas/subagent.schema.json`**. So
+      the only two options actually available are the two the finding names, and
+      Least Agency's own wording settles it — "the narrowest grant that still
+      satisfies the task, which is not the same as the narrowest grant", already
+      recorded verbatim in the file's frontmatter comment
+      (`src/subagents/production-validator.md:20-23`).
+
+      **Follow-up, deliberately NOT taken here** (`minimal-safe-diff`): adding
+      `disallowed_tools` to the subagent schema is a real improvement and a real
+      change — new schema field, host-support question, projection and linter
+      work. It belongs in its own change, not riding a decision commit.
+      <!-- verify: grep -n 'Bash' src/subagents/production-validator.md -->
 - [x] **1.3 Extend the existing safety linter to the subagent corpus and key.** Both
       halves were **already shipped** — `src/subagents` is the fourth scan root and
       `_RE_TOOLS_KEY` reads the top-level subagent `tools:` key, so the finding
@@ -217,11 +244,28 @@ binds. Only a third detector is missing, and the soak stays.
       `dist/agent-src/scripts` so the sibling `templates/` is present on both
       paths. 10 specs.
       <!-- verify: ./scripts-run dist/agent-src/scripts/roadmap_gates --pending -->
-- [~] **2.4 Decide whether the primitive binds, and what the other five hosts get.**
-      Deferred behind `blocker: confirmation-degraded-host-semantics` — a host without a
+- [x] **2.4 Decide whether the primitive binds, and what the other five hosts get.**
+      Was deferred behind `blocker: confirmation-degraded-host-semantics` — a host without a
       `pre_tool_use` slot (5 of 8, per `hook_manifest.yaml:531,539,578`) can only carry
       the obligation in prose, and shipping a mechanism that claims enforcement it does
       not have is the failure `src/rules/ui-audit-gate.md` already names.
+
+      **Decided 2026-08-14, recorded as ADR-109 Amendment 5** (the route this
+      step's own blocker named). Maintainer-delegated under the blanket
+      in-session grant; both halves follow existing precedent rather than a
+      fresh preference, which is why they were decidable at all:
+      - **Degraded host: carry the obligation, stated as model-carried. Do not
+        refuse to stage.** Refusing was considered and rejected — it withdraws
+        the primitive exactly where protection is weakest, and reproduces
+        `ui-audit-gate`'s own named defect, "a gate whose sole compliant path is
+        inaction is not a gate".
+      - **Where the slot exists: default-OFF, soak first** — the standing posture
+        in `docs/contracts/concern-activation-policy.md`, matching the sibling
+        turn-end detector that "leaves the master switch off, so a mistake soaks
+        before it binds".
+      Which channel confirms stays open by design; promotion to bound runs
+      through the activation policy, never through a roadmap step.
+      <!-- verify: grep -n 'Amendment 5' docs/decisions/ADR-109-subagent-v1-contract.md -->
 
 ## Phase 3 — Checkable handoff-envelope fields
 
@@ -446,8 +490,13 @@ binds. Only a third detector is missing, and the soak stays.
 ## Blockers
 
 ### blocker: confirmation-degraded-host-semantics
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** decided 2026-08-14 under the blanket in-session maintainer
+  grant and recorded as **ADR-109 Amendment 5** — the exact route this blocker's
+  Resolved-when named. Degraded host carries the obligation as model-carried and
+  still stages (refusal rejected, reasoned); default-OFF where the slot exists,
+  per `concern-activation-policy.md`. Step 2.4 carries the summary.
 - **Blocks:** step 2.4 only. Steps 2.1-2.3 are unblocked and land default-unbound;
   Phases 1, 3 and 4 are not blocked at all.
 - **What to do:** decide what a host without a `pre_tool_use` slot gets when a

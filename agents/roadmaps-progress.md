@@ -2,15 +2,23 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 29 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **39** open blockers, **10** need you → `agent-config gates`
+> 29 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **37** open blockers, **10** need you → `agent-config gates`
 
 ## Overall
 
-**253 / 437 steps done · 58%**
+**256 / 438 steps done · 58%**
 
 ```text
 ███████████████████████░░░░░░░░░░░░░░░░░   58%
 ```
+
+## ✅ Completed — pending archival
+
+These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but still sit in the active tree. They should be in `agents/roadmaps/archive/`. Run the archival sweep `archive_completed_roadmaps --all` (untracked-safe), or follow the manual fallback documented in the `roadmap-management` skill, then regenerate this dashboard.
+
+| Roadmap | Done | Total |
+|---|---:|---:|
+| [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 3 |
 
 ## Open roadmaps
 
@@ -25,9 +33,9 @@
 | 7 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
 | 8 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
-| 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 2 | 12 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █████████░ 86% |
+| 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
 | 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
-| 12 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
+| 12 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 0 | 3 | 0 | 3 | 0 | ██████████ 100% |
 | 13 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
 | 14 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 15 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
@@ -302,25 +310,14 @@ _1 blocker resolved._
 
 ### [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md)
 
-**Road to inbox harvest 2026-08-b — dispatch safety** — 12 / 14 done (86%)
+**Road to inbox harvest 2026-08-b — dispatch safety** — 14 / 15 done (93%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Scoped tool grants | 🟡 in progress | 1 | 3 | 0 | 2 | 75% |
-| 2 | A confirmation primitive for staged irreversible actions | ✅ done | 0 | 3 | 1 | 0 | 100% |
+| 1 | Scoped tool grants | ✅ done | 0 | 4 | 0 | 2 | 100% |
+| 2 | A confirmation primitive for staged irreversible actions | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Checkable handoff-envelope fields | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
 | 4 | Roles, lifecycles, and the two residues | ✅ done | 0 | 3 | 0 | 4 | 100% |
-
-<a id="blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety"></a>
-**Blockers**
-
-- **confirmation-degraded-host-semantics** (owner: maintainer) — blocks step 2.4 only. Steps 2.1-2.3 are unblocked and land default-unbound; Phases 1, 3 and 4 are not blocked at all.
-  - **What to do:**
-    decide what a host without a `pre_tool_use` slot gets when a
-    `requires_confirmation` action is staged — a model-carried obligation stated as such,
-    or a refusal to stage at all — and whether the primitive is default-on or default-off
-    where the slot does exist.
-  - **Resolved when:** the decision is recorded (an ADR, or the ADR-109 amendment note from 1.4) and names both the degraded-host behaviour and the default.
 
 ### [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md)
 
@@ -352,26 +349,13 @@ _1 blocker resolved._
 
 ### [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md)
 
-**Road to inbox harvest 2026-08-b** — 2 / 3 done (67%)
+**Road to inbox harvest 2026-08-b** — 3 / 3 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Landed in this PR | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 2 | The family | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 2 | The family | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 3 | Cancelled at batch level | ⏭️ skipped | 0 | 0 | 0 | 3 | 0% |
-
-<a id="blockers-road-to-inbox-harvest-2026-08-b"></a>
-**Blockers**
-
-- **harvest-b-execution-order** (owner: maintainer) — blocks 2.1 only. Every child roadmap is independently readable and independently executable; none waits on this.
-  - **What to do:**
-    decide which of the eight siblings open now and which wait.
-    `-ledger-truth` Phase 1 and `-release-integrity` Phase 5 are the two cheapest
-    unblocked items in the batch. `-estate-lifecycle` and `-install-lifecycle` Phase 2
-    each open with a decision-revisit offer against an accepted or council-parked lock,
-    so they need an answer before any code. `-ci-economy` is the largest and its
-    Phase 0 spends CI minutes recording a baseline.
-  - **Resolved when:** the chosen order is written into 2.1 and the unchosen siblings are moved to `agents/roadmaps/later/` with a resume condition, per `lint_roadmap_later_disposition`.
 
 ### [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md)
 
