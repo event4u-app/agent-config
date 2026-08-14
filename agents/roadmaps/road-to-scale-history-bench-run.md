@@ -151,7 +151,7 @@ POST-bench copy, never pre-bench).
 
 ### blocker: codex-family-auth
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Blocks:** the `openai` family of Phase 1 step 1 — half the pre-registered
   design. The `anthropic` family is unblocked and proven live.
@@ -172,3 +172,10 @@ POST-bench copy, never pre-bench).
   the runner's own smoke path (`--live --family openai --arm A --n 1`) is the
   check, and it names the auth case explicitly when it fails.
 - **Surfaced 2026-08-14** by the first live smoke run of the new runner.
+- **Resolved 2026-08-14, same day.** The maintainer confirmed the CLI works and
+  a fresh probe agreed: plain `codex exec` completes, `--ignore-user-config`
+  completes, and the runner's own openai smoke produced a 20-file artifact in
+  179.6s. The 07:23 failure was a genuinely expired token, not a runner defect —
+  `hardenedSpawnEnv` scrubs by family and never removes the auth environment, so
+  the earlier suspicion of the harness was wrong and is recorded as such. Both
+  required families are now proven live end-to-end.

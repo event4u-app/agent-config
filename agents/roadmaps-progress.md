@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 26 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **34** open blockers, **10** need you → `agent-config gates`
+> 26 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **33** open blockers, **9** need you → `agent-config gates`
 
 ## Overall
 
@@ -32,7 +32,7 @@
 | 14 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
 | 15 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 16 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
-| 17 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 17 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 18 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 19 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
 | 20 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
@@ -518,24 +518,8 @@ _1 blocker resolved._
     Substituting an AI rater here would not be a weaker result; it would be an
     uncitable one.
   - **Resolved when:** a human rubric score exists per artifact, recorded before the secondary `lint_persistence` pass for that artifact. - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was never written down, which is why this roadmap read as spend-blocked-only.
-- **codex-family-auth** (owner: user) — blocks the `openai` family of Phase 1 step 1 — half the pre-registered design. The `anthropic` family is unblocked and proven live.
-  - **What to do:**
-    run `codex login` interactively on the bench machine, then
-    re-run with `--resume` (completed cells are skipped, so nothing already paid
-    for is re-spent).
-    - **Why an agent cannot close it:** the login is an interactive browser
-    handshake. `codex login status` currently prints `Logged in using ChatGPT`
-    while the token is expired and refresh fails with HTTP 401 `token_expired` —
-    the status line is not a liveness check, which is why this looked available
-    until a real call was attempted.
-    - **Do NOT work around it by running one family.** The pre-registration fixes
-    **≥2 model families** with per-family reporting and a cross-family regression
-    guardrail (`internal/bench/corpora/scale-history-PREREG.md:37-46`, `:82-86`).
-    A single-family sweep is a protocol deviation and would have to be registered
-    before the run, never justified after it.
-  - **Resolved when:** `codex exec` completes a live turn on the bench machine — the runner's own smoke path (`--live --family openai --arm A --n 1`) is the check, and it names the auth case explicitly when it fails. - **Surfaced 2026-08-14** by the first live smoke run of the new runner.
 
-_1 blocker resolved._
+_2 blockers resolved._
 
 ### [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md)
 
