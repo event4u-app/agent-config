@@ -93,6 +93,8 @@ const REGISTERED_N = 16;
 /** Bounded fix-or-waive rounds for arm C. Unbounded would let one run eat the sweep. */
 const MAX_GATING_ROUNDS = 3;
 const DEFAULT_TIMEOUT_S = 900;
+/** Consecutive identical transport failures that abort a family (see the loop). */
+const FAILURE_STREAK_ABORT = 3;
 
 interface Usage {
     input_tokens: number | null;
@@ -497,6 +499,15 @@ function artifactDirFor(family: Family, arm: Arm, replicate: number): string {
     return path.join(ARTIFACT_ROOT, family, `arm-${arm}`, cell);
 }
 
+/**
+ * A model id is meaningful only inside its own family — `claude-sonnet-4-5` is
+ * a 400 on codex ("not supported when using Codex with a ChatGPT account").
+ * The first full sweep passed one global `--model` to both and lost all 47
+ * openai cells to that error, so the selection is per-family by construction
+ * now and a bare `--model` is refused under `--all`.
+ */
+type ModelByFamily = Record<Family, string | null>;
+
 function executeRun(
     family: Family,
     arm: Arm,
@@ -851,6 +862,7 @@ function main(argv: string[]): number {
     let resume = false;
     let n = REGISTERED_N;
     let model: string | null = null;
+    const modelBy: ModelByFamily = { anthropic: null, openai: null };
     let timeoutS = DEFAULT_TIMEOUT_S;
     let family: Family | null = null;
     let arm: Arm | null = null;
@@ -866,6 +878,8 @@ function main(argv: string[]): number {
         else if (a === '--resume') resume = true;
         else if (a === '--n') n = Number(argv[++i] ?? REGISTERED_N);
         else if (a === '--model') model = argv[++i] ?? null;
+        else if (a === '--model-anthropic') modelBy.anthropic = argv[++i] ?? null;
+        else if (a === '--model-openai') modelBy.openai = argv[++i] ?? null;
         else if (a === '--timeout') timeoutS = Number(argv[++i] ?? DEFAULT_TIMEOUT_S);
         else if (a === '--family') family = (argv[++i] ?? '') as Family;
         else if (a === '--arm') arm = (argv[++i] ?? '') as Arm;
@@ -929,6 +943,20 @@ function main(argv: string[]): number {
         }
     }
 
+    // A bare --model cannot mean two things at once. Under --all it is refused
+    // rather than silently applied to a family it is invalid for, which is
+    // exactly how the first sweep lost 47 cells.
+    if (model !== null) {
+        if (families.length > 1) {
+            process.stderr.write(
+                `❌  --model is ambiguous across families ('${model}' is not valid for every transport). ` +
+                    `Use --model-anthropic / --model-openai.\n`,
+            );
+            return 1;
+        }
+        modelBy[families[0] as Family] = model;
+    }
+
     if (live && n !== REGISTERED_N) {
         process.stderr.write(
             `⚠️   N=${n} is not the registered ${REGISTERED_N}. Per prereg:60 the achievable α must be ` +
@@ -938,20 +966,50 @@ function main(argv: string[]): number {
 
     const done: RunRecord[] = [];
     for (const f of families) {
+        // Fail-fast per family. 47 consecutive identical transport rejections
+        // is not data, it is a misconfiguration burning the sweep; the first
+        // run produced exactly that and finished "96/96" with two thirds of the
+        // design empty. Three identical consecutive failures abort the family.
+        let streak = 0;
+        let streakReason = '';
         for (const a of arms) {
+            if (streak >= FAILURE_STREAK_ABORT) break;
             for (let rep = 1; rep <= n; rep += 1) {
                 const dir = artifactDirFor(f, a, rep);
                 if (resume && fs.existsSync(path.join(dir, 'run.json'))) {
                     try {
-                        done.push(JSON.parse(fs.readFileSync(path.join(dir, 'run.json'), 'utf8')) as RunRecord);
-                        process.stdout.write(`⏭   ${f}-${a}-${rep} (resume)\n`);
-                        continue;
+                        const prev = JSON.parse(fs.readFileSync(path.join(dir, 'run.json'), 'utf8')) as RunRecord;
+                        // Resume skips COMPLETED cells only. Skipping errored
+                        // ones too would make "fix the cause and re-run with
+                        // --resume" a no-op — the exact recovery path the
+                        // fail-fast abort above tells the operator to take.
+                        if (!prev.errored) {
+                            done.push(prev);
+                            process.stdout.write(`⏭   ${f}-${a}-${rep} (resume)\n`);
+                            continue;
+                        }
                     } catch {
                         // Unreadable record: fall through and re-run the cell.
                     }
                 }
-                const rec = executeRun(f, a, rep, { live, model, timeoutS });
+                const rec = executeRun(f, a, rep, { live, model: modelBy[f], timeoutS });
                 done.push(rec);
+                const sig = (rec.reason ?? '').slice(0, 80);
+                if (rec.errored && sig === streakReason) streak += 1;
+                else if (rec.errored) {
+                    streak = 1;
+                    streakReason = sig;
+                } else {
+                    streak = 0;
+                    streakReason = '';
+                }
+                if (streak >= FAILURE_STREAK_ABORT) {
+                    process.stderr.write(
+                        `\n❌  aborting family '${f}': ${streak} consecutive identical failures — ${streakReason}\n` +
+                            `    Fix the cause and re-run with --resume; completed cells are kept.\n`,
+                    );
+                    break;
+                }
                 const cost = rec.usage.cost_usd === null ? 'n/a' : `$${round(rec.usage.cost_usd, 4)}`;
                 process.stdout.write(
                     `${rec.errored ? '❌' : '✅'}  ${rec.run_id} · rounds ${rec.rounds} · ` +
