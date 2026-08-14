@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 28 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **33** open blockers, **8** need you → `agent-config gates`
+> 28 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **32** open blockers, **8** need you → `agent-config gates`
 
 ## Overall
 
@@ -27,7 +27,7 @@
 | 9 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
 | 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
 | 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
-| 12 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
+| 12 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [2](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
 | 13 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 14 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
 | 15 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
@@ -360,21 +360,6 @@ _1 blocker resolved._
     trigger. Reopening a recorded decision is a maintainer call under
     `decision-revisit-gate`, not something an agent does because a reviewer asked.
   - **Resolved when:** the decision is reopened with the trigger cited, or P1.4 is cancelled against it.
-- **self-fix-halt-telemetry** (owner: maintainer) — blocks P2.2's pre-registered criterion only — the build half is shipped and green, and nothing downstream waits on it.
-  - **What to do:**
-    the ≥50% halt reduction is a rate over real runs, and the work
-    engine records no halts. Either (a) emit one line per red-check halt (lane,
-    attempt, exit kind) into the existing audit stream and accumulate over real
-    usage — the same accumulation-takes-time shape as the
-    `road-to-subagent-value-realization-followup` telemetry blocker — then evaluate
-    the threshold against it; or (b) re-scope the pre-registration to the
-    structural claim that IS provable here (no red reaches the user on first
-    occurrence; every loop exit stays PARTIAL with the failure visible) and record
-    the run-level rate as an explicit non-claim. Both are maintainer calls: (a)
-    spends real sessions, (b) rewrites a pre-registration, and an agent rewriting
-    its own success criterion after building the thing is the exact move
-    `evaluator-independence` forbids.
-  - **Resolved when:** the threshold is evaluated against recorded halts, or the pre-registration is re-scoped with the non-claim recorded. - **Evidence:** `agents/evidence/analysis/self-fix-loop-halt-measurement.md`
 - **spent-inbox-artifacts-await-deletion** (owner: maintainer) — blocks nothing
   - **What to do:**
     four items are spent and should be removed by a human, since
@@ -386,6 +371,8 @@ _1 blocker resolved._
     ~18 permanent findings, which is the allowlist-fatigue shape this repo's own
     rules warn about.
   - **Resolved when:** the files are deleted, or a reason to keep them is recorded.
+
+_1 blocker resolved._
 
 ### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
 

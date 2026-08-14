@@ -191,11 +191,67 @@ not a reopen.
 | scale-history bench | per prereg cost sheet | **$0** — not fired |
 | AI council | n/a | **$0** — not invoked |
 
-**Total incurred: $0.** No paid external run was fired and the council was not
-called. Both council seats resolve over CLI/subscription transport rather than
-metered API keys, so a council pass would not have drawn on a token budget in any
-case. Session model tokens were spent on triage and implementation; those are not
-a grant-bearing budget.
+**Total incurred: $0.0297** — one council pass. No paid external benchmark was
+fired.
+
+**The estimate was wrong, and the direction matters.** `council estimate`
+rendered **$0.0000** with `billable=0`, because both seats resolve over
+CLI/subscription transport rather than metered keys. The actual charge was
+**$0.029745**. A subscription-transport seat is therefore **not** free at the
+ledger, and an estimate of exactly zero should not be read as "this run cannot
+cost anything". Two earlier invocations cost nothing at all and are worth
+recording as the tool behaving well: one lacked `--confirm` (estimate only), one
+used an out-of-convention `--output` path — **both were refused before the call**,
+leaving quota untouched at 0/50 per seat.
+
+## Council pass — 2026-08-14, one seat, NOT convergence
+
+Four open decisions were put to the council with a deliberately neutral prompt
+(no pre-loaded verdict — the sweep author writing the evaluator's prompt is the
+steering `evaluator-independence` forbids).
+
+**Quorum: 1 of 2 present.** `anthropic/claude-sonnet-4-5` answered over 2 rounds;
+the `openai` seat failed to start — `exit_1`, *"Not inside a trusted directory
+and --skip-git-repo-check was not specified"*. That is a **worktree limitation,
+not a dissent**, and it means this is a single-seat judgement admitted on its
+checkable merit, never a convergence. Recorded that way everywhere it is cited.
+
+| | Question | Verdict |
+|---|---|---|
+| **Q1** | Unmeasurable pre-registered criterion | **(b) re-scope — conditional.** Applied; see the `self-fix-halt-telemetry` blocker |
+| **Q2** | `discipline_profile` default flip | **Neither (a) nor (b)** — a third route |
+| **Q3** | The 83-row standing queue | **(b)** extract the queue, archive the roadmap |
+| **Q4** | DROP clause with a dead premise | Later roadmap stands, **but the record must say the gate was bypassed** |
+
+**Q2 — the seat rejected both options I framed, and it is right to.** It reads
+*"Do not set this from automation"* as **absolute** for the key family, not
+merely as "no script may rewrite a user's file" — so no measurement, however
+good, licenses route (a). Its third route: carry the measured configuration in
+the template as a **commented-out preset with its token cost stated inline**,
+leaving the default untouched. Users see the option; nothing automated chose for
+them. It also notes the census is disqualifying on its own — 163k against a 30k
+target is 5.4×, so route (a) fails twice over. **Not implemented this run**
+(context exhausted); it is a template edit plus a doc line.
+
+**Q3 — (b), with a cost I had not named.** Beyond dashboard readability: leaving
+a permanently-open standing queue in a completion percentage creates a **perverse
+incentive to never drain it**, because draining moves the number the wrong way.
+**Not implemented this run.**
+
+**Q4 — the correction is the valuable part.** I had framed this as "the later
+roadmap wins, the question is moot". The seat distinguishes *answered* from
+**bypassed**: the original Phase 3 committed to an evidence gate before defaulting
+the capability, and a later roadmap made it unconditional **without ever
+evaluating that evidence**. So the record must say the gate was **never passed**,
+not that it was satisfied and the clause is obsolete — different claims, different
+precedents for the next roadmap that wants to skip its own gate. **Not
+implemented this run.**
+
+**Meta-finding, and it names this whole sweep:** all four are instances of
+**artifacts outliving their premises**. Q1 and Q4 are evaluation criteria never
+satisfied *and* never formally cancelled; Q2 and Q3 are category errors — a
+config change that looks like a default flip but is governed by an absolute
+prohibition, and a standing queue wearing a roadmap step's clothes.
 
 ## What landed as code
 
