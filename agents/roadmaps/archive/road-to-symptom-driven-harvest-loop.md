@@ -28,7 +28,7 @@ complexity: lightweight
 
 **The existing harvest machinery is source-driven, not symptom-driven.** The
 inbox-harvest family starts from external material pushed onto the repo
-(`agents/roadmaps/road-to-inbox-harvest-2026-08-b.md` triages a batch of
+(`agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b.md` triages a batch of
 dropped files) and ADR-211 C/D already corrected the direction once: start from
 a confirmed repo defect, draw sources in. What has no surface at all is the
 step **before** that — a production symptom arriving from an operator. The
