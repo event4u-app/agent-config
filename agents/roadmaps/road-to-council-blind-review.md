@@ -206,6 +206,42 @@ production host mode; method in `internal/bench/council-blind-review/`.
    a documentation paragraph at most, with a demand-signal condition for
    anything beyond.
 
+## Blockers
+
+### blocker: maintainer-blind-ratings
+
+- **Status:** open
+- **Owner:** user
+- **Blocks:** Ü2 and Ü3 adoption (Phase 2 pre-registered decision rules) and
+  the Ü2/Ü3 half of Phase 3's merge-or-null. **Ü1 is NOT blocked** — it is
+  decided, adopted and merged (`blind_chairman` default true, opt-out flag,
+  mandatory post-verdict de-anon map, 26/26 test-pinned).
+- **What to do:** rate the prepared blind packet at
+  `internal/bench/council-blind-review/blind-rating-packet.md`, blind to arms.
+  Two independent readings: **R1** for Ü2 — majority preference across the 9
+  substantively-differing pairs; **R2** for Ü3 — is the `collective_blind_spot`
+  field *decision-influencing* in ≥2 of 3 sampled runs (boilerplate such as
+  "insufficient testing discussion" does not count).
+- **Why no agent can close it:** the pre-registration names the *maintainer*
+  as the rater. Substituting an AI rater would break the pre-registration and
+  would itself be the self-preference bias this roadmap exists to measure — the
+  one substitution that invalidates the result it produces.
+- **Resolved when:** both readings exist, and each of Ü2 / Ü3 carries an
+  adopt-or-honest-null verdict rather than a deferral.
+
+<!-- SURFACED 2026-08-14. This blocker existed and was invisible: it was
+encoded twice as HTML comments inside step bodies (Phase 2's decision-rules
+step and Phase 3's merge step) and this roadmap carried no `## Blockers`
+section at all. A blocker sweep — `agent-config gates`, the dashboard's blocker
+count, any reader scanning for what is waiting on them — could see none of it,
+so a user-owned gate sat unrequested for weeks while reading as ordinary open
+work. The two inline comments are deliberately LEFT IN PLACE: they carry the
+per-step evidence (spend, degradation counts, evaluator facts) that belongs
+next to the step it describes. This section is the index, not a replacement.
+The same shape is the standing lesson recorded in
+`agents/settings/contexts/buried-roadmap-blockers.md`: gating that only a
+prose reader can see is gating the tooling cannot count. -->
+
 ## Explicitly NOT in this roadmap
 
 - No adoption of the one-model five-persona mechanism as a mode, skill, or
