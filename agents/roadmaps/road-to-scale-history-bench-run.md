@@ -87,8 +87,38 @@ POST-bench copy, never pre-bench).
   **authorized, and blocked on two builds the roadmap does not contain**: a
   runner, and a human rater. Recorded so the next three sessions do not
   re-derive it. Neither gap is a spend question and neither reopens the grant.
+
+  **Update (2026-08-14, later the same day) — gap 1 is closed. The runner
+  exists.** `internal/bench/scale-history/run.ts` produces the artifacts: two
+  agentic families (`claude --print`, `codex exec`), the three arms, the
+  bounded fix-or-waive loop for arm C, per-run token/wall/USD capture, resume,
+  and a blind rating workbook for the human PRIMARY rater. It refuses `--score`
+  until that workbook exists, so the tooling cannot itself break the
+  anti-anchor ordering.
+
+  Three findings from its first live run, kept because each would otherwise be
+  re-derived:
+
+  1. **Arm A was not arm A.** The globally-installed plugin rode along on every
+     invocation — proven by its `agents/runtime/state/` hook output landing
+     inside the artifact — so the "neither pack loaded" arm ran with the full
+     package active. That is a confound on precisely the A-vs-C contrast this
+     bench measures. Dropping it per-arm (`--setting-sources project,local`,
+     the `bench_ab_task_runner.ts:61-69` precedent) also cut one run from 73
+     files to 13, 145s to 73s, and $1.71 to $0.22.
+  2. **The arms are injected, not installed** — a mechanism the prereg left
+     open and this run had to fix. `codex` has no plugin concept, so a
+     clone-based mechanism would exist on one family only and would confound
+     family with mechanism. Injection is uniform across families. A
+     post-registration mechanism choice, recorded here rather than silently.
+  3. **The cost sheet is now measured, not withheld**: $22–50 and ~4.6 h for
+     the full 224 invocations, anchored on real runs rather than list price.
+
+  What remains is gap 2 (the human rater, unchanged and unchangeable) plus one
+  newly-surfaced external gap, `codex-family-auth`, below.
 - **Blocks:** Phase 1 (both steps) — the *scoring* half is committed and
-  dry-verified in PR #1016; the *producing* half does not exist.
+  dry-verified in PR #1016; the *producing* half landed 2026-08-14 and is
+  proven live on one of the two required families.
 - **What to do:**
   1. Approve the run budget in-session (estimate rendered before the
      first call: 3 arms × 16 runs × ≥2 families on the agentic build
@@ -118,3 +148,27 @@ POST-bench copy, never pre-bench).
   the secondary `lint_persistence` pass for that artifact.
 - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was
   never written down, which is why this roadmap read as spend-blocked-only.
+
+### blocker: codex-family-auth
+
+- **Status:** open
+- **Owner:** user
+- **Blocks:** the `openai` family of Phase 1 step 1 — half the pre-registered
+  design. The `anthropic` family is unblocked and proven live.
+- **What to do:** run `codex login` interactively on the bench machine, then
+  re-run with `--resume` (completed cells are skipped, so nothing already paid
+  for is re-spent).
+- **Why an agent cannot close it:** the login is an interactive browser
+  handshake. `codex login status` currently prints `Logged in using ChatGPT`
+  while the token is expired and refresh fails with HTTP 401 `token_expired` —
+  the status line is not a liveness check, which is why this looked available
+  until a real call was attempted.
+- **Do NOT work around it by running one family.** The pre-registration fixes
+  **≥2 model families** with per-family reporting and a cross-family regression
+  guardrail (`internal/bench/corpora/scale-history-PREREG.md:37-46`, `:82-86`).
+  A single-family sweep is a protocol deviation and would have to be registered
+  before the run, never justified after it.
+- **Resolved when:** `codex exec` completes a live turn on the bench machine —
+  the runner's own smoke path (`--live --family openai --arm A --n 1`) is the
+  check, and it names the auth case explicitly when it fails.
+- **Surfaced 2026-08-14** by the first live smoke run of the new runner.
