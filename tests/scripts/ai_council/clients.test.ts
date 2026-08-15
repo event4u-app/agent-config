@@ -641,6 +641,21 @@ describe('clients — CLI command construction', () => {
         expect(res.output_tokens).toBe(67);
     });
 
+    it('OpenAICliClient keeps the LAST agent_message, not the preamble', () => {
+        // A real codex turn opens with throat-clearing and answers after it.
+        // Keeping the first message billed 1,479 output tokens and captured
+        // 134 characters on a live council run (2026-08-15). A one-word probe
+        // cannot distinguish first from last, which is how it shipped.
+        const stream = [
+            '{"type":"item.completed","item":{"id":"i0","type":"agent_message","text":"I will check the repo first, then answer."}}',
+            '{"type":"item.completed","item":{"id":"i1","type":"agent_message","text":"Answer: option B."}}',
+            '{"type":"turn.completed","usage":{"input_tokens":10,"output_tokens":20}}',
+        ].join('\n');
+        const { client } = stubCli(OpenAICliClient, { returncode: 0, stdout: stream, stderr: '' });
+
+        expect(client.ask('', 'USER', 1).text).toBe('Answer: option B.');
+    });
+
     it('OpenAICliClient still reads the older nested content[] shape', () => {
         const stream =
             '{"type":"item.completed","item":{"id":"i","content":[{"text":"NESTED"}]}}\n' +

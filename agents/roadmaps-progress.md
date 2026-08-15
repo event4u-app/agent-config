@@ -2,15 +2,23 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 27 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **34** open blockers, **10** need you → `agent-config gates`
+> 27 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **33** open blockers, **9** need you → `agent-config gates`
 
 ## Overall
 
-**244 / 426 steps done · 57%**
+**246 / 426 steps done · 58%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   57%
+███████████████████████░░░░░░░░░░░░░░░░░   58%
 ```
+
+## ✅ Completed — pending archival
+
+These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but still sit in the active tree. They should be in `agents/roadmaps/archive/`. Run the archival sweep `archive_completed_roadmaps --all` (untracked-safe), or follow the manual fallback documented in the `roadmap-management` skill, then regenerate this dashboard.
+
+| Roadmap | Done | Total |
+|---|---:|---:|
+| [road-to-skill-catalogue-budget.md](roadmaps/road-to-skill-catalogue-budget.md) | 23 | 23 |
 
 ## Open roadmaps
 
@@ -33,7 +41,7 @@
 | 15 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 16 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
 | 17 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 18 | [road-to-skill-catalogue-budget.md](roadmaps/road-to-skill-catalogue-budget.md) | 4 | 23 | 2 | 21 | 0 | 0 | [1](#blockers-road-to-skill-catalogue-budget) | █████████░ 91% |
+| 18 | [road-to-skill-catalogue-budget.md](roadmaps/road-to-skill-catalogue-budget.md) | 4 | 23 | 0 | 23 | 0 | 0 | 0 | ██████████ 100% |
 | 19 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 20 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
 | 21 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
@@ -524,26 +532,14 @@ _2 blockers resolved._
 
 ### [road-to-skill-catalogue-budget.md](roadmaps/road-to-skill-catalogue-budget.md)
 
-**Road to a measured skill-catalogue budget — Codex as the second host** — 21 / 23 done (91%)
+**Road to a measured skill-catalogue budget — Codex as the second host** — 23 / 23 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Make the codex budget observable and deterministic | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | Repair the council's openai seat | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Feed the parent's corpus and settle its conditional branch | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 4 | A migration path for scoped projection | 🟡 in progress | 2 | 9 | 0 | 0 | 82% |
-
-<a id="blockers-road-to-skill-catalogue-budget"></a>
-**Blockers**
-
-- **scoped-default-decision** (owner: user) — blocks Phase 4
-  - **What to do:**
-    decide whether the shipped default for fresh installs becomes
-    `scoped`, and whether the migration writer may prompt an existing install at
-    all. Both are consumer-visible defaults, so neither is an agent decision.
-    Phase 1's measured numbers and Phase 3's verdict are the inputs this decision
-    waits on.
-  - **Resolved when:** the user states the default for fresh installs and whether prompting an existing install is permitted.
+| 4 | A migration path for scoped projection | ✅ done | 0 | 11 | 0 | 0 | 100% |
 
 ### [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md)
 
