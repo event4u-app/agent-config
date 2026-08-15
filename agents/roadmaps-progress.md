@@ -6,10 +6,10 @@
 
 ## Overall
 
-**223 / 468 steps done · 48%**
+**244 / 468 steps done · 52%**
 
 ```text
-███████████████████░░░░░░░░░░░░░░░░░░░░░   48%
+█████████████████████░░░░░░░░░░░░░░░░░░░   52%
 ```
 
 ## Open roadmaps
@@ -37,7 +37,7 @@
 | 19 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 20 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
 | 21 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 22 | [road-to-skill-catalogue-budget.md](roadmaps/road-to-skill-catalogue-budget.md) | 4 | 23 | 23 | 0 | 0 | 0 | [1](#blockers-road-to-skill-catalogue-budget) | ░░░░░░░░░░ 0% |
+| 22 | [road-to-skill-catalogue-budget.md](roadmaps/road-to-skill-catalogue-budget.md) | 4 | 23 | 2 | 21 | 0 | 0 | [1](#blockers-road-to-skill-catalogue-budget) | █████████░ 91% |
 | 23 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 24 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
 | 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |

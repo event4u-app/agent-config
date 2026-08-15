@@ -18,7 +18,11 @@
 // max_tokens / max_cost_usd are read by the planner).
 import { describe, expect, it } from 'vitest';
 
-import { CouncilResponse, ExternalAIClient } from '../../../src/scripts/ai_council/clients.js';
+import {
+    CouncilResponse,
+    ExternalAIClient,
+    OPENAI_CLI_VENDOR_DEFAULT,
+} from '../../../src/scripts/ai_council/clients.js';
 import type { LowImpactFastPathConfig, MemberConfig } from '../../../src/scripts/ai_council/config.js';
 import {
     build_fast_path_budget,
@@ -428,5 +432,27 @@ describe('fast-path model downgrade (A3 — cheapest ladder rung, one-shot)', ()
         const client = new Mock('anthropic', { model: 'm', text: RESOLVED });
         resolve_low_impact('q?', plan, { anthropic: client }, null, CLOCK, { enabled: true });
         expect(client.model).toBe('m');
+    });
+    // The fast path is the one place that writes a model id onto a client
+    // immediately before the call, so it is where an unpinned member can be
+    // re-pinned past the seat repair. The ladder here is the shipped one, and
+    // every rung on it is an id `CODEX_MEASURED_UNSERVABLE` records as refused.
+    it('an unpinned member is NOT downgraded off the ladder', () => {
+        const plan = plan_fast_path({ openai: memWithLadder('openai') }, cfg(1));
+        const client = new Mock('openai', { model: OPENAI_CLI_VENDOR_DEFAULT, text: RESOLVED });
+        resolve_low_impact('q?', plan, { openai: client }, null, CLOCK, { enabled: true });
+        expect(client.model).toBe(OPENAI_CLI_VENDOR_DEFAULT);
+    });
+
+    it('an explicit per-run override still wins over the unpinned sentinel', () => {
+        // A human naming a model for this run is a decision, not a silent
+        // re-pin — the guard must not swallow it.
+        const plan = plan_fast_path({ openai: memWithLadder('openai') }, cfg(1));
+        const client = new Mock('openai', { model: OPENAI_CLI_VENDOR_DEFAULT, text: RESOLVED });
+        resolve_low_impact('q?', plan, { openai: client }, null, CLOCK, {
+            enabled: true,
+            model_tier_override: { openai: 'pinned-model' },
+        });
+        expect(client.model).toBe('pinned-model');
     });
 });

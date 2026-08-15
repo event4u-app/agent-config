@@ -307,7 +307,23 @@ members:
 
   openai:
     enabled: true
-    model: gpt-4o
+    # `codex-default` — the vendor-default SENTINEL, not a model id. It passes
+    # NO `--model` flag, so the codex CLI applies whatever the subscription
+    # currently serves.
+    #
+    # This shipped as `gpt-4o` and that value did not select a model, it
+    # disabled the seat: a subscription-authed (ChatGPT) account answers
+    # `400 invalid_request_error` for `gpt-4o`, `gpt-5` and `gpt-5.1-codex`
+    # alike — all three are on `CODEX_MEASURED_UNSERVABLE`. The deny-list now
+    # refuses such a pin before it spends quota, which makes the failure loud
+    # rather than silent; it does not make a freshly seeded config WORK. Only
+    # not shipping a pin does that.
+    #
+    # On the api transport the sentinel resolves to the client's own default,
+    # so one value stays correct whichever transport a member resolves to. Pin
+    # a real id here if you are on api and want a specific model — a set value
+    # always passes through verbatim and is never rewritten.
+    model: codex-default
     api_key_ref: file:openai.key
     #
     # SWITCHING THIS MEMBER TO SUBSCRIPTION AUTH? THE `model:` ABOVE MUST GO.

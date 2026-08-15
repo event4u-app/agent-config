@@ -731,6 +731,35 @@ describe('render — absent_members / quorum sections (Phase 3.2/3.3)', () => {
         expect(out).not.toContain('solo');
     });
 
+    // The DEGRADED marker shipped on the CLI's stdout line in round 7 and did
+    // NOT ship on this renderer, although stdout was mirrored FROM here. The
+    // artefact is the surface that gets committed and cited, so it was the
+    // worse of the two to leave soft.
+    it('a partial-attendance pass is marked DEGRADED in the artefact, not only on stdout', () => {
+        const out = render(rs, {
+            quorum: { status: 'concluded', threshold: 1, total: 2, present: 1 },
+        });
+        expect(out).toContain('DEGRADED — 1 member(s) did not answer; this is not convergence.');
+    });
+
+    // The case the solo marker structurally cannot cover: present > 1 but still
+    // short of total, so `isSoloConcluded` is false and the line read as a plain
+    // "concluded" with nothing naming the two silent members.
+    it('DEGRADED covers partial attendance the solo marker misses (2 of 4)', () => {
+        const out = render(rs, {
+            quorum: { status: 'concluded', threshold: 2, total: 4, present: 2 },
+        });
+        expect(out).not.toContain('solo');
+        expect(out).toContain('DEGRADED — 2 member(s) did not answer; this is not convergence.');
+    });
+
+    it('full attendance carries NO degraded marker', () => {
+        const out = render(rs, {
+            quorum: { status: 'concluded', threshold: 1, total: 2, present: 2 },
+        });
+        expect(out).not.toContain('DEGRADED');
+    });
+
     it('an inconclusive pass is never marked solo, however few were present', () => {
         const out = render(rs, {
             quorum: { status: 'inconclusive', threshold: 2, total: 3, present: 1 },
