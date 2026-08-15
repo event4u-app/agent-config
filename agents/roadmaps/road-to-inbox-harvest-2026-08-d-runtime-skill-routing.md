@@ -153,13 +153,36 @@ stale, the current ones are used and the correction is named.
 - **Owner:** user
 - **Blocks:** Step 3.3
 - **Question:** the precision reading that admits or rejects a seeded tranche
-  comes from a live trigger evaluation, and the existing instrument for that is
-  itself human-gated in `road-to-skill-description-measurement`. May the seeding
-  tranche reuse that evaluation, or does it need its own run?
-- **What to do:** pick exactly one — (a) run the existing live trigger
-  evaluation once and let both roadmaps read it, or (b) declare the skill-side
-  census a separate measurement and state who runs it.
-- **Resolved when:** the user states which of (a) or (b) holds.
+  comes from a live trigger evaluation, and the existing instrument is
+  human-gated in `road-to-skill-description-measurement`. May the seeding
+  tranche reuse that evaluation? **Measured answer: the harness yes, the run
+  no** — and the shape of the reuse is now known:
+  - **Two different instruments are easy to conflate.** The 302-prompt matrix
+    corpus and its 495 → 433 unintended-activation census are the *mechanical*
+    router matcher (`router_match.ts` / `trigger_coverage.ts`) — deterministic,
+    no model calls. The human-gated one is the *live LLM* eval
+    (`skill_trigger_eval.ts`, with `rule_trigger_eval.ts` as its sibling),
+    which hard-aborts under automation via a `/dev/tty` confirmation gate.
+  - **The harness is already proven reusable across catalogues.**
+    `rule_trigger_eval.ts` exists precisely by importing `MockRouter`,
+    `compute_metrics` and `_extract_field` from the skill one and swapping the
+    catalogue and suite loaders (`export type RuleMeta = SkillMeta`). A
+    skill-trigger variant is the same move a third time.
+  - **The run is not reusable.** It needs its own corpus — a skill-trigger
+    suite analogous to `tests/eval/routing-matrix/*.yaml` — which does not
+    exist, so there is no existing execution to piggyback on.
+  - **The predecessor eval has never been run.** The only artefact,
+    `agents/evidence/reports/skill-selection-accuracy.json`, carries
+    `"source": "tfidf-baseline"` and predates both the description rewrite and
+    the scorer's 2026-08-09 repoint; that roadmap disqualifies it explicitly.
+    So (a) as originally written was never available.
+- **What to do:** pick exactly one — (a) author the skill-trigger suite and run
+  the live eval as its own human-gated session, accepting that it is a third
+  sibling script plus a new corpus; (b) gate the seeding tranche on the
+  *mechanical* 433 census alone, accepting a weaker precision signal and saying
+  so in the step; or (c) defer Phase 3 entirely until the predecessor roadmap's
+  own live eval has run, so one human session produces both readings.
+- **Resolved when:** the user states which of (a), (b) or (c) holds.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude/host -->

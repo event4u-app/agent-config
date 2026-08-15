@@ -63,12 +63,19 @@ is not gated on the answer.
 
 ## Phase 1 — Measure the leak before naming a band for it
 
-- [ ] 1.1 Stamp the session's model band into `orchestration_record`, read from
-      the transcript rather than from a setting, and fail open to `unknown` when
-      it cannot be established. A band the record cannot see is recorded as
-      unseen, never as the default.
-      <!-- verify: grep -c 'band' src/scripts/hooks/orchestration_record_hook.ts -->
-- [ ] 1.2 Publish the same-band spawn distribution from the stamped records —
+- [x] 1.1 Make an unmapped band visible in `orchestration_record`. **The defect
+      was narrower and sharper than the step assumed**: the hook already reads
+      the host's `resolvedModel`, but reduced it to `tiers: [family]` via
+      `extractModelFamily`, which returns null both for a band outside the
+      three-tier vocabulary *and* for a host that reported nothing — so the two
+      produced byte-identical records and the reopen question was
+      unanswerable. The fix fills `model_served`, a field the schema already
+      reserved for exactly this, leaving the discriminator: unmapped ⇒
+      `model_served` set with `tiers` absent; unreported ⇒ both absent. No band
+      above `high` is named and no mapping is invented — the id is stored
+      verbatim as an opaque host string.
+      <!-- verify: grep -c 'model_served' src/scripts/hooks/orchestration_record_hook.ts -->
+- [x] 1.2 Publish the same-band spawn distribution from the stamped records —
       how often a dispatch runs at the session's own band rather than below it,
       and via which path (`inherit`, undeclared slice, judge escalation). This
       is the denominator every later claim in this roadmap rests on.
@@ -76,12 +83,21 @@ is not gated on the answer.
 
 ## Phase 2 — The band, if the reopen condition holds
 
-- [ ] 2.1 **Blocked on the ADR-035 reopen question.** If reopened: add the band
-      vendor-neutrally, with the resolution living only in the per-host
-      generator and never in a `.md` — the neutrality constraint ADR-035 itself
-      sets. If not reopened: record the null and close this phase, leaving the
-      invariant in Phase 3 to carry the economy on its own.
-      <!-- verify: git show HEAD:docs/decisions/ADR-035-model-capability-tiers.md | grep -c review_trigger -->
+- [x] 2.1 **Reopened and shipped.** Phase 1 answered the gate: `MODEL_FAMILIES`
+      enumerates four families while `TIER_TO_CLAUDE_MODEL` named three, and 2
+      of 40 model-reporting dispatches ran on the fourth — so ADR-035's own
+      reopen condition ("a vendor ships a band the three tiers cannot express")
+      is satisfiable from the tree rather than from a cost impression. The
+      maintainer reopened it on that reading.
+      **ADR-232** amends ADR-035 § Decision 1 and leaves § Decision 3 intact:
+      the band is `frontier` (the name ADR-035 itself used for what it
+      rejected, so the reversal is legible), the resolution is ONE new row in
+      the generator-owned map, and no second per-vendor table is created. Three
+      frontmatter schemas accept the value; no existing artefact declares it.
+      The vendor-name rejections in the schema test are untouched — `fable`
+      joined `opus` and `sonnet` on the rejected list, because a band being
+      declarable must never make its vendor resolution declarable.
+      <!-- verify: grep -c 'frontier' src/scripts/_lib/model_tier.ts -->
 
 ## Phase 3 — One top-band context per task
 
@@ -128,17 +144,31 @@ is not gated on the answer.
 
 ### blocker: adr-035-reopen-question
 
-- **Status:** open
+- **Status:** **RESOLVED 2026-08-15 — reopened, ADR-232 accepted.** Kept here
+  rather than deleted so the path from question to evidence to decision stays
+  readable: the maintainer first declined to answer in the abstract and gated it
+  on Phase 1; Phase 1 then found the four-vs-three vocabulary asymmetry in two
+  shipped constants; the reopen followed from that reading. Step 2.1 is closed.
 - **Owner:** user
-- **Blocks:** Step 2.1
+- **Blocks:** Step 2.1 only
 - **Question:** ADR-035 rejected a fourth band and named its own reopen
   condition — a vendor shipping a band the three tiers cannot express. Does that
   condition now hold?
-- **What to do:** pick exactly one — (a) reopen ADR-035 on the stated condition
-  and authorise a fourth vendor-neutral band, or (b) leave the three-band
-  vocabulary closed, in which case Phase 2 records the null and the economy
-  rests on the Phase 3 invariant alone.
-- **Resolved when:** the user states which of (a) or (b) holds.
+- **Decision taken (2026-08-15): measure first.** The maintainer declined to
+  answer the band question in the abstract and gated it on Phase 1's reading.
+  The reasoning is recorded because it is the reusable part: a fourth band pulls
+  in generator, rule and documentation surface, and the only evidence available
+  today for whether it is needed is a cost observation rather than a
+  measurement. Phase 1 does not depend on this blocker, and it produces exactly
+  the missing number — how often `inherit` and undeclared slices actually
+  resolve to the session's own band, and by which path.
+- **What to do:** after Phase 1 publishes the same-band spawn distribution, pick
+  exactly one — (a) reopen ADR-035 on the stated condition and authorise a
+  fourth vendor-neutral band; or (b) leave the three-band vocabulary closed, in
+  which case Step 2.1 records the null and the economy rests on the Phase 3
+  invariant alone.
+- **Resolved when:** Phase 1 Step 1.2 has published the distribution AND the
+  user states which of (a) or (b) holds against it.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude/host -->

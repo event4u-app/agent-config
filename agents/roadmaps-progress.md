@@ -6,7 +6,7 @@
 
 ## Overall
 
-**237 / 497 steps done · 48%**
+**240 / 497 steps done · 48%**
 
 ```text
 ███████████████████░░░░░░░░░░░░░░░░░░░░░   48%
@@ -34,7 +34,7 @@
 | 16 | [road-to-inbox-harvest-2026-08-d-context-ledger.md](roadmaps/road-to-inbox-harvest-2026-08-d-context-ledger.md) | 5 | 16 | 1 | 14 | 0 | 1 | [1](#blockers-road-to-inbox-harvest-2026-08-d-context-ledger) | █████████░ 93% |
 | 17 | [road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md](roadmaps/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md) | 4 | 14 | 14 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-runtime-skill-routing) | ░░░░░░░░░░ 0% |
 | 18 | [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md) | 2 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-scheduled-deprecation) | ░░░░░░░░░░ 0% |
-| 19 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 14 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy) | ░░░░░░░░░░ 0% |
+| 19 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 11 | 3 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy) | ██░░░░░░░░ 21% |
 | 20 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
 | 21 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 22 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
@@ -434,14 +434,18 @@ _1 blocker resolved._
 <a id="blockers-road-to-inbox-harvest-2026-08-d-context-ledger"></a>
 **Blockers**
 
-- **paths-scoping-consumer-flip** (owner: user) — blocks Step 5.2 - **Question:** may a rule that loads unconditionally today be scoped to `paths:`, given that this narrows what an existing install receives?
+- **paths-scoping-consumer-flip** (owner: user) — blocks Step 5.2 - **Question:** **The premise changed and the question narrowed.** Scoping is not a future option — it is live: `.claude/rules/` carries **25 of 110** scoped rules today, emitted from existing path-shaped `triggers:` entries. And it is not additive: `condense.ts::derive_trigger_globs` keeps only `file_pattern` / `path_prefix` and drops `keyword:` / `phrase:`, so a scoped rule's `paths:` block becomes its *whole* gate on Claude Code, Cursor and Windsurf. **19 of the 25 also carry keyword triggers** and therefore lose their conversational reach there — `design-fidelity` loses 21 of them, in exactly the handover classes its own routing section says it exists to catch. Meanwhile the safely-scopable remainder is small: about 4 % of the rule payload. So the question is no longer "may we scope" but "what do we do about what is already scoped".
   - **What to do:**
-    pick exactly one — (a) authorise scoping the top-weight
-    tranche identified by 5.1, accepting that those rules stop loading outside
-    their declared paths, or (b) keep every rule unconditional and let the census
-    stand as a measurement only, with the payload target repointed to what
-    coverage-free delivery can reach.
-  - **Resolved when:** the user states which of (a) or (b) holds.
+    pick exactly one — (a) treat the keyword-drop as a **defect**
+    and repair the emitter so path and keyword triggers OR together, leaving the
+    25 scoped rules in place with their reach restored; (b) treat it as
+    **intended** and record the trade-off in `rule-router.md` so the next reader
+    finds a decision instead of a surprise, leaving behaviour unchanged; or
+    (c) **narrow the blast radius** by removing the path triggers from the rules
+    whose obligation is conversational (`design-fidelity`,
+    `settings-ask-protocol`), so they return to unconditional loading, and leave
+    the emitter alone.
+  - **Resolved when:** the user states which of (a), (b) or (c) holds. Extending the scoped set is a separate, smaller decision that only becomes worth making after this one.
 
 ### [road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md](roadmaps/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md)
 
@@ -457,12 +461,15 @@ _1 blocker resolved._
 <a id="blockers-road-to-inbox-harvest-2026-08-d-runtime-skill-routing"></a>
 **Blockers**
 
-- **skill-trigger-seeding-precision-gate** (owner: user) — blocks Step 3.3 - **Question:** the precision reading that admits or rejects a seeded tranche comes from a live trigger evaluation, and the existing instrument for that is itself human-gated in `road-to-skill-description-measurement`. May the seeding tranche reuse that evaluation, or does it need its own run?
+- **skill-trigger-seeding-precision-gate** (owner: user) — blocks Step 3.3 - **Question:** the precision reading that admits or rejects a seeded tranche comes from a live trigger evaluation, and the existing instrument is human-gated in `road-to-skill-description-measurement`. May the seeding tranche reuse that evaluation? **Measured answer: the harness yes, the run no** — and the shape of the reuse is now known: - **Two different instruments are easy to conflate.** The 302-prompt matrix corpus and its 495 → 433 unintended-activation census are the *mechanical* router matcher (`router_match.ts` / `trigger_coverage.ts`) — deterministic, no model calls. The human-gated one is the *live LLM* eval (`skill_trigger_eval.ts`, with `rule_trigger_eval.ts` as its sibling), which hard-aborts under automation via a `/dev/tty` confirmation gate. - **The harness is already proven reusable across catalogues.** `rule_trigger_eval.ts` exists precisely by importing `MockRouter`, `compute_metrics` and `_extract_field` from the skill one and swapping the catalogue and suite loaders (`export type RuleMeta = SkillMeta`). A skill-trigger variant is the same move a third time. - **The run is not reusable.** It needs its own corpus — a skill-trigger suite analogous to `tests/eval/routing-matrix/*.yaml` — which does not exist, so there is no existing execution to piggyback on. - **The predecessor eval has never been run.** The only artefact, `agents/evidence/reports/skill-selection-accuracy.json`, carries `"source": "tfidf-baseline"` and predates both the description rewrite and the scorer's 2026-08-09 repoint; that roadmap disqualifies it explicitly. So (a) as originally written was never available.
   - **What to do:**
-    pick exactly one — (a) run the existing live trigger
-    evaluation once and let both roadmaps read it, or (b) declare the skill-side
-    census a separate measurement and state who runs it.
-  - **Resolved when:** the user states which of (a) or (b) holds.
+    pick exactly one — (a) author the skill-trigger suite and run
+    the live eval as its own human-gated session, accepting that it is a third
+    sibling script plus a new corpus; (b) gate the seeding tranche on the
+    *mechanical* 433 census alone, accepting a weaker precision signal and saying
+    so in the step; or (c) defer Phase 3 entirely until the predecessor roadmap's
+    own live eval has run, so one human session produces both readings.
+  - **Resolved when:** the user states which of (a), (b) or (c) holds.
 
 ### [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md)
 
@@ -476,35 +483,39 @@ _1 blocker resolved._
 <a id="blockers-road-to-inbox-harvest-2026-08-d-scheduled-deprecation"></a>
 **Blockers**
 
-- **code-graph-removal-authorisation** (owner: user) — blocks nothing in this roadmap — recorded so the overdue surface has an owner rather than only a report - **Question:** the code-graph removal is one major overdue against a recorded honest null. Does it execute at the next major cut, or does the commitment change?
+- **code-graph-removal-authorisation** (owner: user) — blocks nothing in this roadmap — recorded so the overdue surface has an owner rather than only a report - **Question:** the code-graph removal is one major overdue against a recorded honest null. Does it execute at the next major cut, or does the commitment change? **The blast radius is now measured, and it reframes the choice:** - **The payload this deprecation was about has already shipped.** The ~51 MB `web-tree-sitter` / `tree-sitter-wasms` pair moved to `devDependencies` ahead of schedule, so no consumer install carries it today. What removal would still free is 112 K of source against a 27 M tree — 0.4 %. - **It is a breaking change.** Consumer-visible surfaces: the `agent-config code-graph <verb>` CLI, the `code-intelligence` skill (`official` in the catalogue), the `external-code-graph-interop` rule, and the `hooks.code_graph.enabled` settings key. - **One surface is not deletable, it is re-plumbing.** `auto_dispatch.ts` routes the `definition` / `references` lookup classes to `primitive: 'code-graph-query'`, and `judgment_ladder.ts` calls that live at Rung 0. Removing the engine without touching it leaves Rung 0 pointing at a primitive that resolves to nothing. - **There is no cheap middle.** `detect.ts` handles the `consumer` / `scip` / `native` source kinds in one type union, so stripping "just the native engine" while keeping consumer-index interop is a redesign, not a deletion. So the honest framing is **"keep a stated promise" versus "this particular removal buys nothing measurable"** — not "ship a meaningful cleanup".
   - **What to do:**
     pick exactly one — (a) authorise the removal at the next major
-    cut, in its own change with the migration note and the manifest test updated
-    together, or (b) revise the table's commitment for this surface and record why
-    the engine stays despite the null.
-  - **Resolved when:** the user states which of (a) or (b) holds.
+    cut, accepting the re-plumbing of Rung 0 and the four consumer surfaces as
+    part of it; (b) revise the table's commitment for this surface, recording that
+    the dependency-weight win already landed and the source removal is a rounding
+    error; or (c) split it — retire the consumer-visible surfaces (CLI verb,
+    skill, rule, settings key) at the next major and keep the internals until a
+    reason to delete them appears.
+  - **Resolved when:** the user states which of (a), (b) or (c) holds.
 
 ### [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md)
 
-**Road to at most one top-band context per task** — 0 / 14 done (0%)
+**Road to at most one top-band context per task** — 3 / 14 done (21%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Measure the leak before naming a band for it | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | The band, if the reopen condition holds | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 1 | Measure the leak before naming a band for it | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 2 | The band, if the reopen condition holds | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 3 | One top-band context per task | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | Close the documented-but-unwired exposure | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy"></a>
 **Blockers**
 
-- **adr-035-reopen-question** (owner: user) — blocks Step 2.1 - **Question:** ADR-035 rejected a fourth band and named its own reopen condition — a vendor shipping a band the three tiers cannot express. Does that condition now hold?
+- **adr-035-reopen-question** (owner: user) — blocks Step 2.1 only - **Question:** ADR-035 rejected a fourth band and named its own reopen condition — a vendor shipping a band the three tiers cannot express. Does that condition now hold? - **Decision taken (2026-08-15): measure first.** The maintainer declined to answer the band question in the abstract and gated it on Phase 1's reading. The reasoning is recorded because it is the reusable part: a fourth band pulls in generator, rule and documentation surface, and the only evidence available today for whether it is needed is a cost observation rather than a measurement. Phase 1 does not depend on this blocker, and it produces exactly the missing number — how often `inherit` and undeclared slices actually resolve to the session's own band, and by which path.
   - **What to do:**
-    pick exactly one — (a) reopen ADR-035 on the stated condition
-    and authorise a fourth vendor-neutral band, or (b) leave the three-band
-    vocabulary closed, in which case Phase 2 records the null and the economy
-    rests on the Phase 3 invariant alone.
-  - **Resolved when:** the user states which of (a) or (b) holds.
+    after Phase 1 publishes the same-band spawn distribution, pick
+    exactly one — (a) reopen ADR-035 on the stated condition and authorise a
+    fourth vendor-neutral band; or (b) leave the three-band vocabulary closed, in
+    which case Step 2.1 records the null and the economy rests on the Phase 3
+    invariant alone.
+  - **Resolved when:** Phase 1 Step 1.2 has published the distribution AND the user states which of (a) or (b) holds against it.
 
 ### [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md)
 
