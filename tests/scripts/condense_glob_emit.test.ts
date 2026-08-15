@@ -278,6 +278,10 @@ describe("_emit_claude_rule — frontmatter carries `paths:` and nothing else", 
     for (const [name, fm] of [
       ["ui-audit-gate-c", UI_AUDIT_FM],
       ["php-rule-c", FILE_PATTERN_FM],
+      // Mixed AND carrying a placeholder: the mixed-trigger suppression runs
+      // before the placeholder and budget filters, so this rule is
+      // unconditional for the first reason and never reaches the second.
+      ["roadmap-ci-mixed-c", PLACEHOLDER_FM],
     ] as Array<[string, string]>) {
       const src = writeRule(name, fm);
       const target = path.join(tmp, "out", `${name}.md`);
