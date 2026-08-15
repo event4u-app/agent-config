@@ -461,12 +461,27 @@ _1 blocker resolved._
 **Blockers**
 
 - **code-graph-removal-authorisation** (owner: user) — blocks nothing in this roadmap — recorded so the overdue surface has an owner rather than only a report
+  - **Recommendation:** (a), authorise the removal at the next major cut. The measurement behind it is closed and one-sided — `docs/CLAIMS.md` `code-graph-retrieval-null`, recall 0.365 against disciplined grep's 0.797 — the engine has shipped `enabled: false` as permanent since, and its parser pair already left `dependencies`, so (b) would be re-committing to a surface nothing consumes and nothing measures favourably.
+  - **If you do nothing:** the next major cut is **refused** by `lint_scheduled_deprecations --cutting`, so this is one of the few blockers that is not cheap to leave open. Minor and patch releases are unaffected; ~112 K of dormant runtime paths keep shipping inert in the meantime.
   - **What to do:**
-    pick exactly one — (a) authorise the removal at the next major
-    cut, in its own change with the migration note and the manifest test updated
-    together, or (b) revise the table's commitment for this surface and record why
-    the engine stays despite the null.
-  - **Resolved when:** the user states which of (a) or (b) holds.
+    pick exactly one.
+    1. **(a) Authorise the removal.** Say so here (`Status: resolved`, decision
+    recorded), then execute it in its OWN change at the next major:
+    `git rm -r src/scripts/code_graph/ src/scripts/hooks/code_graph_nudge_hook.ts`,
+    drop the `code-graph-nudge` entries from `src/scripts/hook_manifest.yaml`
+    (`:180-181`, `:625`, `:633`, `:677`) together with the test that pins that
+    list (`:192`), retire the `code-intelligence` skill's native arm, and move
+    the row out of § Scheduled deprecations into a shipped-change section of
+    `docs/MIGRATION.md`. Expected outcome:
+    `./scripts-run src/scripts/lint_scheduled_deprecations --cutting <X.0.0>`
+    exits 0.
+    2. **(b) Revise the commitment.** Edit the `code_graph` row's `Removal due`
+    cell in `docs/MIGRATION.md` to `**not pinned here**` (the form the
+    `compatibility` and `telegraph-speak` rows already use) and state in the
+    § Row status section why the engine stays despite the recorded null.
+    Expected outcome: the same command exits 0, and the ⚠️ on every branch run
+    stops.
+  - **Resolved when:** this entry reads `Status: resolved` with (a) or (b) named, AND `./scripts-run src/scripts/lint_scheduled_deprecations --cutting 13.0.0` exits 0.
 
 ### [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md)
 
