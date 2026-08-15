@@ -1,0 +1,1127 @@
+diff --git a/.github/workflows/consistency.yml b/.github/workflows/consistency.yml
+index 02fca67207bd69c6643c96cfb0f5849023982d95..3ada2eb8c94a08adfdab32519d057c24d0c9a239 100644
+--- a/.github/workflows/consistency.yml
++++ b/.github/workflows/consistency.yml
+@@ -448,6 +448,15 @@ jobs:
+       - name: Design-antipattern catalog ↔ rule parity
+         run: task lint-design-antipattern-parity
+ 
++      # Fourth instance, wired at birth rather than after the ratchet caught it.
++      # Reports on an ordinary branch and exits 0; the refusal lives behind
++      # `--release-major`, which the release flow passes at the cut. Remote reach
++      # matters here specifically: the row this gate found overdue was missed by
++      # a human pre-flight checkbox, so a local-only registration would repeat
++      # the failure mode with a different reader.
++      - name: Scheduled deprecations are checked by arithmetic, not by memory
++        run: task lint-scheduled-deprecations
++
+       - name: Cloud bundle dry-run (source invariants)
+         run: task ci-cloud-bundle
+ 
+diff --git a/Taskfile.yml b/Taskfile.yml
+index fe971f94ce7834cff37f2ce9326b1e80ff7d09c0..30fc2758ddc67b7fcef8dd805c6fcbd13d2c9834 100644
+--- a/Taskfile.yml
++++ b/Taskfile.yml
+@@ -168,6 +168,9 @@ tasks:
+       - task: lint-roadmap-blockers
+       - task: lint-roadmap-later-disposition
+       - task: lint-roadmap-family-cap
++      # src/scripts/lint_scheduled_deprecations — the MIGRATION.md scheduled-
++      # deprecations table, checked by arithmetic against the shipped major.
++      - task: lint-scheduled-deprecations
+       - task: check-gate-completeness
+       - task: check-suppression-hygiene
+       - task: check-review-dispositions
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 3c570c0237f10971a954170a482d6425fa899265..e3223a32beec91a2e509fe200893174544e02318 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,16 +2,24 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **39** open blockers, **13** need you → `agent-config gates`
++> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **40** open blockers, **13** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**246 / 495 steps done · 50%**
++**265 / 495 steps done · 54%**
+ 
+ ```text
+-████████████████████░░░░░░░░░░░░░░░░░░░░   50%
++██████████████████████░░░░░░░░░░░░░░░░░░   54%
+ ```
+ 
++## ✅ Completed — pending archival
++
++These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but still sit in the active tree. They should be in `agents/roadmaps/archive/`. Run the archival sweep `archive_completed_roadmaps --all` (untracked-safe), or follow the manual fallback documented in the `roadmap-management` skill, then regenerate this dashboard.
++
++| Roadmap | Done | Total |
++|---|---:|---:|
++| [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md) | 10 | 10 |
++
+ ## Open roadmaps
+ 
+ | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
+@@ -29,11 +37,11 @@
+ | 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
+ | 12 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
+ | 13 | [road-to-inbox-harvest-2026-08-c-prompt-deinflation.md](roadmaps/road-to-inbox-harvest-2026-08-c-prompt-deinflation.md) | 2 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 14 | [road-to-inbox-harvest-2026-08-c-release-head-truth.md](roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md) | 3 | 11 | 10 | 0 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-c-release-head-truth) | ░░░░░░░░░░ 0% |
++| 14 | [road-to-inbox-harvest-2026-08-c-release-head-truth.md](roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md) | 3 | 11 | 1 | 9 | 1 | 0 | [2](#blockers-road-to-inbox-harvest-2026-08-c-release-head-truth) | █████████░ 90% |
+ | 15 | [road-to-inbox-harvest-2026-08-d-archive-index.md](roadmaps/road-to-inbox-harvest-2026-08-d-archive-index.md) | 2 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+ | 16 | [road-to-inbox-harvest-2026-08-d-context-ledger.md](roadmaps/road-to-inbox-harvest-2026-08-d-context-ledger.md) | 5 | 16 | 1 | 14 | 0 | 1 | [1](#blockers-road-to-inbox-harvest-2026-08-d-context-ledger) | █████████░ 93% |
+ | 17 | [road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md](roadmaps/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md) | 4 | 14 | 14 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-runtime-skill-routing) | ░░░░░░░░░░ 0% |
+-| 18 | [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md) | 2 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-scheduled-deprecation) | ░░░░░░░░░░ 0% |
++| 18 | [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md) | 2 | 10 | 0 | 10 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-scheduled-deprecation) | ██████████ 100% |
+ | 19 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 14 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy) | ░░░░░░░░░░ 0% |
+ | 20 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
+ | 21 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+@@ -476,12 +484,12 @@ _1 blocker resolved._
+ 
+ ### [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md)
+ 
+-**Road to a deprecation table that cannot miss its own dates** — 0 / 10 done (0%)
++**Road to a deprecation table that cannot miss its own dates** — 10 / 10 done (100%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+-| 1 | Make the dates checkable | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+-| 2 | Give the two loose surfaces a tracked state | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
++| 1 | Make the dates checkable | ✅ done | 0 | 3 | 0 | 0 | 100% |
++| 2 | Give the two loose surfaces a tracked state | ✅ done | 0 | 7 | 0 | 0 | 100% |
+ 
+ <a id="blockers-road-to-inbox-harvest-2026-08-d-scheduled-deprecation"></a>
+ **Blockers**
+diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md
+index fe049087201bc9566dae87542b957315e72e3af4..3db56713796042857c8ec0bb1cdba770f3c9b3a9 100644
+--- a/agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md
++++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md
+@@ -56,16 +56,16 @@ actual defect-fix — is not held hostage to a release window.
+ 
+ ## Phase 1 — Make the dates checkable
+ 
+-- [ ] 1.1 Add `lint_scheduled_deprecations`: parse the `docs/MIGRATION.md`
++- [x] 1.1 Add `lint_scheduled_deprecations`: parse the `docs/MIGRATION.md`
+       table, resolve each due version to a concrete number, and compare against
+       the version in `package.json`. An overdue surface that still has runtime
+       paths is reported by name, with the paths.
+       <!-- verify: test -f src/scripts/lint_scheduled_deprecations.ts -->
+-- [ ] 1.2 Register the check so it runs where it can be seen, and have it exit
++- [x] 1.2 Register the check so it runs where it can be seen, and have it exit
+       non-zero on an overdue surface only at a major cut — an ordinary branch
+       gets the report, a release gets the refusal.
+       <!-- verify: grep -c 'lint_scheduled_deprecations' Taskfile.yml -->
+-- [ ] 1.3 Give the check a fixture that is overdue by construction, so a green
++- [x] 1.3 Give the check a fixture that is overdue by construction, so a green
+       run means the arithmetic ran rather than that the table was empty. A gate
+       that scans nothing exits green, and that is the failure mode this whole
+       roadmap is about.
+@@ -73,22 +73,55 @@ actual defect-fix — is not held hostage to a release window.
+ 
+ ## Phase 2 — Give the two loose surfaces a tracked state
+ 
+-- [ ] 2.1 Add the code-graph row's current status to the table: overdue by one
++- [x] 2.1 Add the code-graph row's current status to the table: overdue by one
+       major, with the removal owner named. The row already exists; what it lacks
+       is the fact that it was missed.
+       <!-- verify: git show HEAD:docs/MIGRATION.md | grep -c 'code_graph' -->
+-- [ ] 2.2 Give `telegraph` a tracked state — either a removal row with a due
++- [x] 2.2 Give `telegraph` a tracked state — either a removal row with a due
+       version, or a documented permanent-keep with the reason. Untracked
+       dormancy is the one outcome this step removes.
+       <!-- verify: grep -ci 'telegraph' docs/MIGRATION.md -->
+ 
++## Execution notes (2026-08-15)
++
++Three departures from the text as written, recorded rather than taken quietly.
++
++- **2.2 took a third shape the step did not offer, and the reason is a record
++  that already existed.** The step said "either a removal row with a due
++  version, or a documented permanent-keep". ADR `telegraph/0002` § Decision
++  part 3 is titled *"Deletion — AUTHORIZED IN PRINCIPLE, NOT EXECUTED"* and
++  names its own pre-condition (a `prose_only` bench, ~$0.80). So a due version
++  would invent a commitment that ADR declined to make, and a permanent keep
++  would contradict its authorisation. The row therefore uses the **not-pinned**
++  form the `compatibility` row already carries — a tracked state with a
++  maintainer-owned date, which the gate resolves as tracked rather than as
++  overdue or as a parse failure. Untracked dormancy, which is what the step
++  exists to remove, is gone either way.
++- **1.2's verify hook cannot be satisfied as written.** `grep -c
++  'lint_scheduled_deprecations' Taskfile.yml` returns 0 for a conventionally
++  named task: every sibling gate is defined in `taskfiles/ci-fast.yml` and
++  referenced from `Taskfile.yml` by its hyphenated task name. Satisfying the
++  literal would have meant naming the task with underscores, breaking the
++  convention to please a grep. Registered the sibling way instead — definition
++  in `taskfiles/ci-fast.yml`, `ci:` entry in `Taskfile.yml` (with the script
++  name in a comment beside it), and a step in `consistency.yml`, because a gate
++  registered only in the `ci:` list has zero remote reach.
++- **1.2's "a release gets the refusal" needed a caller, or it was a claim.**
++  `--release-major` with nothing invoking it is the defined-but-not-wired shape.
++  It is called from `release.ts` at the point the target version resolves —
++  covering the forced `--as major`, an explicit `--version`, and auto-detection
++  from a `feat!:` commit alike — rather than from `task release:major`, which
++  is only one of those three paths. **Consequence worth stating plainly: the
++  next major cut is now blocked until the blocker below is answered**, which is
++  the gate working as specified, not a side effect.
++
+ ## Acceptance criteria
+ 
+-- [ ] An overdue scheduled deprecation is reported by a check, not by a reader.
+-- [ ] The check has a by-construction-overdue fixture, so green means it ran.
+-- [ ] The code-graph row records that its commitment was missed and by how much.
+-- [ ] `telegraph` is either scheduled or documented as a keep.
+-- [ ] No public surface is removed by this roadmap.
++- [x] An overdue scheduled deprecation is reported by a check, not by a reader.
++- [x] The check has a by-construction-overdue fixture, so green means it ran.
++- [x] The code-graph row records that its commitment was missed and by how much.
++- [x] `telegraph` is either scheduled or documented as a keep.
++- [x] No public surface is removed by this roadmap.
+ 
+ ## Blockers
+ 
+diff --git a/docs/MIGRATION.md b/docs/MIGRATION.md
+index 24d150ba5c8b009ab03bb637e518216fbf1e0208..d07ff4c6fde116ae27dedc0cbef2e2a0aa07d523 100644
+--- a/docs/MIGRATION.md
++++ b/docs/MIGRATION.md
+@@ -17,7 +17,8 @@ releaser here on every `release:major`.
+ | Surface | Committed | Deprecation notice due | Removal due | Reversal condition |
+ |---|---|---|---|---|
+ | Free-text `compatibility` skill-frontmatter field (`src/scripts/schemas/skill.schema.json`) | 2026-08-14 | shipped 2026-08-14 — `deprecated: true` + superseded-by note in the schema; `harness_compat` lands beside it, additively | next major after the notice — **not pinned here** (removal date is maintainer-owned, same stance as the manifest `tier` entry, whose `sunset` shipped `null`) | The public Agent-Skills spec makes `compatibility` load-bearing for cross-host portability, or an external consumer is found reading it. `harness_compat` is package-local; `compatibility` mirrors the public spec, so keeping the mirror stays cheaply reversible. Superseded by `harness_compat` (class) + `runtime_requires` (probeable detail); both users (`docx-authoring`, `pdf-tools`) already carry both fields, so nothing breaks on removal day. |
+-| `code_graph` native code-graph engine (`code_graph.enabled`, the `code-intelligence` skill's native arm, `code_graph_nudge_hook`) | 2026-07-28 | next major after 9.x | the major after that | A consumer case the graph answers and disciplined grep cannot. Measured null: recall 0.365 vs grep 0.797 (`docs/CLAIMS.md` `code-graph-retrieval-null`). Until then `enabled: false` is permanent. **Its parser pair (`web-tree-sitter@0.24.7` / `tree-sitter-wasms@0.1.13`, ~51 MB unpacked) moved from `dependencies` to `devDependencies` ahead of the schedule, so consumers no longer install it — the runtime paths (CLI leaf, nudge hook, skill, rule) stay registered until the removal date above, but re-enabling now also means installing that ABI-locked pair yourself.** |
++| `code_graph` native code-graph engine (`code_graph.enabled`, the `code-intelligence` skill's native arm, `code_graph_nudge_hook`; runtime paths `src/scripts/code_graph/`, `src/scripts/hooks/code_graph_nudge_hook.ts`) | 2026-07-28 | next major after 9.x | the major after that | ⚠️ **OVERDUE BY ONE MAJOR, and recorded here rather than only reported.** The removal resolves to **11.0**; `package.json` shipped **12.0.0**, so the commitment was missed — by exactly the decay this table exists to prevent, since nothing checked it until `lint_scheduled_deprecations` did. **Removal owner: the maintainer** (`### blocker: code-graph-removal-authorisation`); it is a public-surface change gated by `downstream-changes` and `scope-control` and lands at a major cut, so recording the slip here is not authorisation to act on it. A consumer case the graph answers and disciplined grep cannot. Measured null: recall 0.365 vs grep 0.797 (`docs/CLAIMS.md` `code-graph-retrieval-null`). Until then `enabled: false` is permanent. **Its parser pair (`web-tree-sitter@0.24.7` / `tree-sitter-wasms@0.1.13`, ~51 MB unpacked) moved from `dependencies` to `devDependencies` ahead of the schedule, so consumers no longer install it — the runtime paths (CLI leaf, nudge hook, skill, rule) stay registered until the removal date above, but re-enabling now also means installing that ABI-locked pair yourself.** |
++| `telegraph-speak` condenser (`telegraph.speak`, `src/rules/telegraph-speak.md`, `src/scripts/_lib/compile_time_toggles.ts`, `src/scripts/validate_telegraph_carveouts.ts`) | 2026-07-29 | shipped 2026-07-29 — dormant by default, `speak` defaults `false` | **not pinned here** — removal is authorized in principle and deliberately not executed (ADR `telegraph/0002` § Decision part 3), pending a `prose_only` bench (~$0.80). The date is maintainer-owned, same stance as the `compatibility` row above | An output-side bench clears the kill-criterion bar, at which point `telegraph.speak: true` restores the feature intact. Measured basis for dormancy: median vs_terse **−9.27 %** (API) / −5.47 % (exact `cl100k_base`) — the condenser emits MORE than a plain "be terse". Tracked as a row rather than left dormant-and-unlisted: dormancy without a row is untracked in *both* directions, neither scheduled nor recorded as a keep. Deliberately NOT a due version (that would invent a commitment ADR 0002 declined to make) and NOT a permanent keep (that would contradict its authorized removal). |
+ 
+ **Adding a row:** any change that ships a capability as default-off-pending-removal,
+ or that promises a future breaking removal, gets a row here in the same commit
+diff --git a/docs/release-runbook.md b/docs/release-runbook.md
+index 650629bc966bd3ac17cc7695acec55b384baab78..be8f86619eb533a0cf58a1d7e9b5b71f2ea50a14 100644
+--- a/docs/release-runbook.md
++++ b/docs/release-runbook.md
+@@ -51,7 +51,16 @@ the **workflow_dispatch** on `release.yml` (inputs: `bump`, `version`,
+       and act on every row whose "deprecation notice due" or "removal due"
+       lands on this major: ship the notice, or perform the removal, or record
+       why the reversal condition fired. A row left unread is how a removal
+-      commitment becomes folklore.
++      commitment becomes folklore — **and one already was**: the `code_graph`
++      removal reached one major past its 11.0 commitment with this checkbox in
++      place the whole time. So the arithmetic no longer depends on this line
++      being read: `src/scripts/lint_scheduled_deprecations` compares every
++      resolved due version against the shipped `package.json` major, `task ci`
++      and the consistency workflow print the report on every branch, and
++      `release.ts` **refuses** a major cut whose table still carries an overdue
++      or unresolvable row. This checkbox now covers the judgement the gate
++      cannot make — whether to remove or to revise the commitment — not the
++      arithmetic it can.
+ - [ ] The release satisfies [`release-sizing.md`](contracts/release-sizing.md) —
+       one primary product goal, and a `Rollback:` line for every new /
+       substantially reworked subsystem (gate: `src/scripts/lint_changelog_rollback.ts`).
+diff --git a/src/config/gate-coverage.yml b/src/config/gate-coverage.yml
+index 3f98cabfa8fc9858aa76c4969306725a2f8c1ec0..a23690aa37da0a3900b4b70adf0de9e5aed5d766 100644
+--- a/src/config/gate-coverage.yml
++++ b/src/config/gate-coverage.yml
+@@ -42,18 +42,19 @@
+ #
+ # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-13)
+ # ----------------------------------------------------------
+-# 257 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
++# 259 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+ # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
+-# **35 of them emit the machine-readable `scanned: <N>` line under their
+-# CI-identical argv, and all 35 are listed below.** The manifest is therefore
++# **36 of them emit the machine-readable `scanned: <N>` line under their
++# CI-identical argv, and all 36 are listed below.** The manifest is therefore
+ # complete with respect to its own contract, and covers ~14 % of the population.
+ # (The 2026-08-05 reading said "32 … and all 31 are listed"; the 2026-08-10
+-# reading said "33 … and all 33" while 34 entries were listed. Both halves are
+-# RECOUNTED here: 257 is what `count_gate_scripts()` returns on the tree that
+-# carries this change, and 35 is the entries counted directly. It read 255 while
+-# this change was being written and 257 after `main` merged in two further gate
+-# scripts — re-measured at the merge rather than left at the earlier reading,
+-# which is the same discipline the note below records failing.)
++# reading said "33 … and all 33" while 34 entries were listed; the 2026-08-13
++# reading said "257 … 35 of them" and both halves were correct at the time.
++# Both halves are RECOUNTED here on 2026-08-15: 259 is what
++# `count_gate_scripts()` returns on the tree that carries this change — the
++# reading was 258 with `lint_scheduled_deprecations` absent — and 36 is
++# `grep -c '^  - id:'` on this file. Neither number was derived by adding one to
++# the previous prose, which is the move the note below forbids.)
+ #
+ # A 2026-08-13 revision of this paragraph first wrote 256, derived as "255 before
+ # this change plus the one it adds" — inside the sentence claiming to have
+@@ -769,3 +770,26 @@ gates:
+       The canary plants a manifest whose declared CSV does not exist — the exact
+       gap `corpus-grounding/scripts/schema_validator.ts` leaves open, since it
+       computes the path and never opens the file.
++
++  - id: lint_scheduled_deprecations
++    argv: []
++    min_scanned: 1
++    corpus: "rows of the `docs/MIGRATION.md` scheduled-deprecations table (3 at baseline)"
++    status: enforced
++    note: >
++      The floor is 1, not "a floor comfortably below the corpus", and the reason
++      is worth stating rather than hiding: the corpus is two rows, so no floor
++      exists that is both below it and far above a collapse. What the floor
++      actually buys here is the contract that the count is PUBLISHED; the
++      collapse case — a drifted heading or a reformatted table parsing to zero
++      rows — is caught one layer up by the gate's own `reportScanned`
++      assertion, which reds instead of printing a green line over nothing.
++      That case is the gate's own subject, so it is pinned by a test fixture
++      too (`a table that parses to zero rows reds rather than exiting green`).
++      No `canary:` recipe: this gate's only violation shape is a MODIFICATION of
++      a tracked artefact (`docs/MIGRATION.md`), and the canary contract is
++      create-only, so it reports UNPROVEN rather than green. Discrimination is
++      proven instead by paired fixtures in
++      `tests/scripts/lint_scheduled_deprecations.test.ts`, verified by mutation:
++      widening the overdue threshold fails the overdue-by-construction case, and
++      granting `allowEmpty` fails the zero-row case.
+diff --git a/src/scripts/lint_scheduled_deprecations.ts b/src/scripts/lint_scheduled_deprecations.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb4ce041a4
+--- /dev/null
++++ b/src/scripts/lint_scheduled_deprecations.ts
+@@ -0,0 +1,490 @@
++#!/usr/bin/env node
++/**
++ * Gate: the scheduled-deprecations table in `docs/MIGRATION.md` is checked by
++ * arithmetic, not by somebody remembering to read it.
++ *
++ * WHY THIS EXISTS. The table records commitments due at a *future* major, and
++ * the release runbook's pre-flight sends the releaser to it with a manual
++ * checkbox whose own text says "A row left unread is how a removal commitment
++ * becomes folklore". The row for the `code_graph` engine committed its removal
++ * to the major after the one after 9.x — 11.0 — and `package.json` reads
++ * 12.0.0. The row existed, was correct, and was missed anyway. So the defect is
++ * the absence of a check, not the absence of a row, and a second manual reminder
++ * would repeat the failure at a higher frequency.
++ *
++ * WHAT IT DOES NOT DO. It never removes anything. Acting on an overdue row is a
++ * public-surface change gated by `downstream-changes` and `scope-control` and
++ * lands at a major cut; this gate reports and, at a cut, refuses. It also does
++ * not invent a due version: a cell it cannot resolve is reported as
++ * *unresolved* and reds, because a table whose format drifted silently is
++ * exactly the shape "a gate that scans nothing exits green" describes.
++ *
++ * EXIT CONTRACT
++ *   0  no overdue surface, or overdue surfaces reported on an ordinary branch
++ *   1  a row could not be parsed / resolved, the table is missing or empty, or
++ *      an overdue surface was found while `--release-major` was passed
++ *   2  usage error
++ *
++ * `--release-major` is the major-cut switch: an ordinary branch gets the
++ * report, a release gets the refusal. That asymmetry is deliberate — an overdue
++ * row can be a considered deferral, and a hard refusal on every branch would
++ * turn a judgement into an outage. A deliberate deferral is expressible in the
++ * table itself (a `permanent keep` row), which is what keeps the refusal honest
++ * at the cut.
++ */
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import { GateLedger } from './_lib/gate_ledger.js';
++import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
++import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
++
++const MIGRATION_PATH = path.join('docs', 'MIGRATION.md');
++const PACKAGE_PATH = 'package.json';
++
++/** The heading the table lives under. Matched case-insensitively on the stem. */
++const SECTION_MARKER = /^##\s+scheduled deprecations\b/i;
++
++/**
++ * A row whose removal date is deliberately not pinned. The marker is the
++ * table's own wording, so a maintainer-owned removal date stays expressible
++ * without becoming an unresolved parse.
++ */
++const UNPINNED_MARKER = /not pinned/i;
++
++/** A row explicitly recorded as staying — the "documented keep" state. */
++const PERMANENT_KEEP_MARKER = /permanent keep|no removal scheduled/i;
++
++export interface DeprecationRow {
++    /** Raw first cell — the surface, as written. */
++    surface: string;
++    /** Short name for reporting: the first backticked token, else a truncation. */
++    name: string;
++    /** Raw "Deprecation notice due" cell. */
++    noticeDueRaw: string;
++    /** Raw "Removal due" cell. */
++    removalDueRaw: string;
++    /** Path-shaped tokens found in the surface cell (contain a `/`). */
++    paths: string[];
++    /** 1-based row number within the table, for error messages. */
++    index: number;
++}
++
++export type Resolution =
++    | { kind: 'major'; major: number }
++    | { kind: 'unpinned' }
++    | { kind: 'keep' }
++    | { kind: 'unresolved'; cell: string };
++
++/**
++ * Resolve a due-version cell to a concrete major.
++ *
++ * The grammar is deliberately small, and every form below appears in the table
++ * today. A form outside it resolves to `unresolved` and reds rather than being
++ * guessed at — an invented due version is worse than a parse failure, because
++ * it would silently move a commitment.
++ *
++ *   `11.0` / `11.0.0` / `11`        → 11
++ *   `next major after 9.x`          → 10
++ *   `the major after that`          → (notice major) + 1
++ *   `next major after the notice`   → (notice major) + 1
++ *   `… not pinned …`                → unpinned  (maintainer-owned date)
++ *   `… permanent keep …`            → keep      (documented, not scheduled)
++ *
++ * @param cell        the raw table cell
++ * @param noticeMajor the already-resolved notice major, when one exists — the
++ *                    relative forms are only resolvable against it
++ */
++export function resolveDueMajor(cell: string, noticeMajor?: number): Resolution {
++    const text = cell.trim();
++    if (text === '') return { kind: 'unresolved', cell };
++
++    // Checked before the relative forms on purpose: the unpinned row also
++    // contains the words "next major after the notice", and the explicit
++    // not-pinned statement is the load-bearing half of that cell.
++    if (UNPINNED_MARKER.test(text)) return { kind: 'unpinned' };
++    if (PERMANENT_KEEP_MARKER.test(text)) return { kind: 'keep' };
++
++    const explicit = /(?:^|[^\d.])(\d+)(?:\.\d+){0,2}\b/.exec(text);
++    const relativeAfterVersion = /next major after\s+(?:v)?(\d+)(?:\.(?:x|\d+))?/i.exec(text);
++    const relativeToNotice = /(?:the major after that|next major after the notice)/i.test(text);
++
++    if (relativeAfterVersion) {
++        return { kind: 'major', major: Number(relativeAfterVersion[1]) + 1 };
++    }
++    if (relativeToNotice) {
++        if (noticeMajor === undefined) return { kind: 'unresolved', cell };
++        return { kind: 'major', major: noticeMajor + 1 };
++    }
++    if (explicit) {
++        return { kind: 'major', major: Number(explicit[1]) };
++    }
++    return { kind: 'unresolved', cell };
++}
++
++/** Split one markdown table line into trimmed cells, dropping the outer pipes. */
++function splitRow(line: string): string[] {
++    const trimmed = line.trim().replace(/^\|/, '').replace(/\|$/, '');
++    return trimmed.split('|').map((c) => c.trim());
++}
++
++/** A separator line — `|---|---|` and its alignment variants. */
++function isSeparator(line: string): boolean {
++    return /^\|?[\s:|-]+\|[\s:|-]*$/.test(line.trim()) && line.includes('-');
++}
++
++/**
++ * Extract the scheduled-deprecations table from a `MIGRATION.md` body.
++ *
++ * Reads only the first table under the section heading and stops at the next
++ * `##`, so the version sections below it — every one of which records a change
++ * that already shipped — can never be parsed as commitments.
++ */
++export function parseRows(markdown: string): DeprecationRow[] {
++    const lines = markdown.split('\n');
++    let inSection = false;
++    let header: string[] | undefined;
++    const rows: DeprecationRow[] = [];
++
++    for (const line of lines) {
++        if (/^##\s/.test(line)) {
++            if (inSection) break;
++            inSection = SECTION_MARKER.test(line);
++            continue;
++        }
++        if (!inSection) continue;
++        if (!line.trim().startsWith('|')) continue;
++        if (isSeparator(line)) continue;
++
++        const cells = splitRow(line);
++        if (header === undefined) {
++            header = cells.map((c) => c.toLowerCase());
++            continue;
++        }
++
++        const idxNotice = header.findIndex((h) => h.includes('notice due'));
++        const idxRemoval = header.findIndex((h) => h.includes('removal due'));
++        const surface = cells[0] ?? '';
++        const backticked = [...surface.matchAll(/`([^`]+)`/g)].map((m) => m[1] ?? '');
++
++        rows.push({
++            surface,
++            name: backticked[0] ?? surface.slice(0, 60),
++            noticeDueRaw: idxNotice >= 0 ? (cells[idxNotice] ?? '') : '',
++            removalDueRaw: idxRemoval >= 0 ? (cells[idxRemoval] ?? '') : '',
++            paths: backticked.filter((t) => t.includes('/')),
++            index: rows.length + 1,
++        });
++    }
++    return rows;
++}
++
++export interface Finding {
++    row: DeprecationRow;
++    /** `overdue` = removal was due at an earlier major than the shipped one. */
++    kind: 'overdue' | 'unresolved';
++    /** How many majors late; 0 for `unresolved`. */
++    overdueBy: number;
++    /** Path tokens from the row that still exist on disk. */
++    livePaths: string[];
++}
++
++/** Compare every row against the shipped major and return what is wrong. */
++export function evaluate(
++    rows: readonly DeprecationRow[],
++    currentMajor: number,
++    root: string,
++    ledger?: GateLedger,
++): Finding[] {
++    const findings: Finding[] = [];
++    ledger?.plan(rows.map((r) => `row-${String(r.index)}:${r.name}`));
++
++    for (const row of rows) {
++        const key = `row-${String(row.index)}:${row.name}`;
++        const notice = resolveDueMajor(row.noticeDueRaw);
++        const noticeMajor = notice.kind === 'major' ? notice.major : undefined;
++        const removal = resolveDueMajor(row.removalDueRaw, noticeMajor);
++
++        if (removal.kind === 'unpinned' || removal.kind === 'keep') {
++            // A tracked state, which is the outcome the table exists to record.
++            ledger?.complete(key);
++            continue;
++        }
++        if (removal.kind === 'unresolved') {
++            findings.push({ row, kind: 'unresolved', overdueBy: 0, livePaths: [] });
++            ledger?.fail(key, `removal-due cell not resolvable: ${removal.cell}`);
++            continue;
++        }
++
++        const overdueBy = currentMajor - removal.major;
++        if (overdueBy > 0) {
++            const livePaths = row.paths.filter((p) => fs.existsSync(path.join(root, p)));
++            findings.push({ row, kind: 'overdue', overdueBy, livePaths });
++            ledger?.fail(key, `removal due at ${String(removal.major)}.0, shipped major is ${String(currentMajor)}`);
++            continue;
++        }
++        ledger?.complete(key);
++    }
++    return findings;
++}
++
++function _isDir(p: string): boolean {
++    try {
++        return fs.statSync(p).isDirectory();
++    } catch {
++        return false;
++    }
++}
++
++/** Walk up from CWD until a dir containing `docs/MIGRATION.md` is found. */
++function repoRoot(): string {
++    let cur = process.cwd();
++    const chain = [cur];
++    for (;;) {
++        const parent = path.dirname(cur);
++        if (parent === cur) break;
++        chain.push(parent);
++        cur = parent;
++    }
++    for (const candidate of chain) {
++        if (_isDir(path.join(candidate, 'docs')) && fs.existsSync(path.join(candidate, MIGRATION_PATH))) {
++            return candidate;
++        }
++    }
++    return process.cwd();
++}
++
++/** The major from `package.json`'s `version`. */
++export function shippedMajor(root: string): number {
++    const raw = fs.readFileSync(path.join(root, PACKAGE_PATH), 'utf-8');
++    const parsed: unknown = JSON.parse(raw);
++    const version =
++        typeof parsed === 'object' && parsed !== null && 'version' in parsed
++            ? (parsed as { version?: unknown }).version
++            : undefined;
++    if (typeof version !== 'string') {
++        throw new Error(`${PACKAGE_PATH}: no string \`version\` field`);
++    }
++    const major = /^(\d+)\./.exec(version);
++    if (!major) {
++        throw new Error(`${PACKAGE_PATH}: version "${version}" has no leading major`);
++    }
++    return Number(major[1]);
++}
++
++/** Floors for `--self-test`, declared here so a truncation is a visible diff. */
++const SELF_TEST_MIN_CASES = 4;
++const SELF_TEST_MIN_REJECT = 3;
++
++/**
++ * Prove, on demand, that this gate's rejections still fire against its own CLI.
++ *
++ * The unit suite covers the same ground against imported functions; this covers
++ * the binary a contributor actually runs, including argv parsing and the entry
++ * guard — the layers that have silently no-opped in this repository before.
++ */
++function selfTest(): number {
++    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'lsd-selftest-'));
++    const repo = repoRoot();
++    const script = path.join('src', 'scripts', 'lint_scheduled_deprecations.ts');
++
++    const header = [
++        '# Migration Guide',
++        '',
++        '## Scheduled deprecations (forward-looking)',
++        '',
++        '| Surface | Committed | Deprecation notice due | Removal due | Reversal condition |',
++        '|---|---|---|---|---|',
++    ].join('\n');
++
++    /** Build a fixture tree and run the real CLI against it. */
++    const fixture = (name: string, major: number, table: string, args: string[] = []): number => {
++        const dir = path.join(root, name);
++        fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
++        fs.writeFileSync(
++            path.join(dir, 'package.json'),
++            JSON.stringify({ name: 'fixture', version: `${String(major)}.0.0` }),
++            'utf8',
++        );
++        fs.writeFileSync(path.join(dir, 'docs', 'MIGRATION.md'), `${header}\n${table}\n`, 'utf8');
++        return runGateCli(repo, script, args, dir);
++    };
++
++    const cases: SelfTestCase[] = [
++        {
++            name: 'overdue row at a major cut is refused',
++            expect: 'reject',
++            run: () =>
++                fixture(
++                    'overdue',
++                    12,
++                    '| `legacy` | 2026-01-01 | 10.0 | 11.0 | none |',
++                    ['--release-major'],
++                ),
++        },
++        {
++            name: 'unresolvable removal-due cell reds on an ordinary branch',
++            expect: 'reject',
++            run: () => fixture('vague', 12, '| `vague` | 2026-01-01 | soon | eventually | none |'),
++        },
++        {
++            name: 'a table parsing to zero rows reds rather than exiting green',
++            expect: 'reject',
++            run: () => {
++                const dir = path.join(root, 'dead');
++                fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
++                fs.writeFileSync(
++                    path.join(dir, 'package.json'),
++                    JSON.stringify({ name: 'fixture', version: '12.0.0' }),
++                    'utf8',
++                );
++                fs.writeFileSync(
++                    path.join(dir, 'docs', 'MIGRATION.md'),
++                    '# Migration Guide\n\n## Planned removals\n\n| Surface | Removal due |\n|---|---|\n| `x` | 1.0 |\n',
++                    'utf8',
++                );
++                return runGateCli(repo, script, [], dir);
++            },
++        },
++        {
++            name: 'a future-dated row passes at a major cut',
++            expect: 'accept',
++            run: () =>
++                fixture(
++                    'future',
++                    12,
++                    '| `later` | 2026-01-01 | 13.0 | 14.0 | none |',
++                    ['--release-major'],
++                ),
++        },
++    ];
++
++    try {
++        return runSelfTest({
++            gate: 'lint_scheduled_deprecations',
++            cases,
++            minCases: SELF_TEST_MIN_CASES,
++            minRejectCases: SELF_TEST_MIN_REJECT,
++        });
++    } finally {
++        fs.rmSync(root, { recursive: true, force: true });
++    }
++}
++
++export function main(argv: readonly string[]): number {
++    if (argv.includes('--self-test')) return selfTest();
++    const quiet = argv.includes('--quiet');
++    const releaseMajor = argv.includes('--release-major');
++    const root = repoRoot();
++
++    const migration = path.join(root, MIGRATION_PATH);
++    if (!fs.existsSync(migration)) {
++        process.stderr.write(`❌  lint_scheduled_deprecations: ${MIGRATION_PATH} not found under ${root}\n`);
++        return 1;
++    }
++
++    const rows = parseRows(fs.readFileSync(migration, 'utf-8'));
++    const currentMajor = shippedMajor(root);
++    const ledger = new GateLedger('lint_scheduled_deprecations');
++    const findings = evaluate(rows, currentMajor, root, ledger);
++    const tally = ledger.finalize();
++
++    // Anti-vacuity. Zero rows means the heading moved or the table's format
++    // drifted — the failure this gate is about, so it is never a pass. No
++    // `allowEmpty`: an empty scheduled-deprecations table is not a success
++    // state while `MIGRATION.md` itself instructs that a promise without a row
++    // is untracked.
++    try {
++        reportScanned({
++            gate: 'lint_scheduled_deprecations',
++            scanned: tally.planned,
++            units: 'scheduled-deprecation row(s)',
++            roots: [MIGRATION_PATH],
++        });
++    } catch (exc) {
++        if (exc instanceof DeadScopeError) {
++            process.stderr.write(`❌  ${exc.message}\n`);
++            return 1;
++        }
++        throw exc;
++    }
++
++    const unresolved = findings.filter((f) => f.kind === 'unresolved');
++    const overdue = findings.filter((f) => f.kind === 'overdue');
++
++    for (const f of unresolved) {
++        process.stderr.write(
++            `❌  lint_scheduled_deprecations: row ${String(f.row.index)} (${f.row.name}) — ` +
++                `removal-due cell not resolvable: "${f.row.removalDueRaw}"\n` +
++                '    The grammar is documented at the top of this gate. Either write a\n' +
++                '    concrete major, or record the row as not pinned / a permanent keep.\n',
++        );
++    }
++
++    for (const f of overdue) {
++        process.stdout.write(
++            `⚠️  lint_scheduled_deprecations: ${f.row.name} — removal is ` +
++                `${String(f.overdueBy)} major(s) overdue against shipped ${String(currentMajor)}.x\n` +
++                `      removal due: ${f.row.removalDueRaw}\n`,
++        );
++        if (f.livePaths.length > 0) {
++            for (const p of f.livePaths) {
++                process.stdout.write(`      still on disk: ${p}\n`);
++            }
++        } else {
++            process.stdout.write(
++                '      no path token in the row — the surface is named but its runtime\n' +
++                    '      paths are not, so this gate cannot say whether they still ship.\n',
++            );
++        }
++    }
++
++    if (unresolved.length > 0) return 1;
++
++    if (overdue.length > 0) {
++        if (releaseMajor) {
++            process.stderr.write(
++                `\n❌  lint_scheduled_deprecations: ${String(overdue.length)} overdue surface(s) at a major cut.\n` +
++                    '    Act on each row: perform the removal in its own change, or revise the\n' +
++                    "    row's commitment and record why the surface stays. A deliberate\n" +
++                    '    deferral belongs in the table, not in a release decision nobody can read.\n',
++            );
++            return 1;
++        }
++        if (!quiet) {
++            process.stdout.write(
++                `\n   Reported, not refused — this is an ordinary branch. \`--release-major\`\n` +
++                    '   turns the same finding into a refusal at the cut.\n',
++            );
++        }
++        return 0;
++    }
++
++    if (!quiet) {
++        ledger.report();
++        process.stdout.write(
++            `✅  lint_scheduled_deprecations: ${String(tally.planned)} row(s), none overdue ` +
++                `against shipped ${String(currentMajor)}.x\n`,
++        );
++    }
++    return 0;
++}
++
++function isCliEntry(): boolean {
++    if (process.argv[1] === undefined) return false;
++    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
++    if (import.meta.url === argvUrl) return true;
++    try {
++        const here = fs.realpathSync(fileURLToPath(import.meta.url));
++        const argv = fs.realpathSync(path.resolve(process.argv[1]));
++        return here === argv;
++    } catch {
++        return false;
++    }
++}
++
++if (isCliEntry()) {
++    process.exitCode = main(process.argv.slice(2));
++}
+diff --git a/src/scripts/release.ts b/src/scripts/release.ts
+index bc79d417123977d6786bf6b6d82a08168b295ad8..833518939d6c9fc01d010c2df93cc2691ccfc0ec 100644
+--- a/src/scripts/release.ts
++++ b/src/scripts/release.ts
+@@ -536,7 +536,7 @@ function die(msg: string, code = 2): never {
+     throw new SystemExitError(code);
+ }
+ 
+-interface RunResult {
++export interface RunResult {
+     returncode: number;
+     stdout: string;
+     stderr: string;
+@@ -1623,6 +1623,53 @@ function set_template_pin(p: string, version: string): void {
+     fs.writeFileSync(p, lines.join('\n'), 'utf-8');
+ }
+ 
++/**
++ * Refuse a MAJOR cut that still carries an overdue scheduled deprecation.
++ *
++ * Placed at the resolved TARGET rather than at a `--as major` flag on purpose:
++ * a major can be reached three ways — the flag, an explicit `--version`, and
++ * auto-detection from a `feat!:` commit — and gating only the flag would leave
++ * the two paths the unattended release workflow actually uses wide open. The
++ * target is where all three converge.
++ *
++ * The check is a no-op on minor and patch cuts, which is the asymmetry
++ * `lint_scheduled_deprecations` is built around: an ordinary branch gets the
++ * report, a release gets the refusal. Skipped under `--dry-run` with the rest
++ * of preflight, so a preview stays fast and side-effect-free.
++ *
++ * Wired here rather than left to the runbook's manual pre-flight checkbox
++ * because that checkbox already failed once: the `code_graph` removal reached
++ * one major past its commitment with the checkbox in place the whole time.
++ *
++ * @param runner Seam for the gate invocation. Production passes nothing and
++ * gets the real `run`; tests inject a stub, because the alternative — reaching
++ * this branch only by mutating `docs/MIGRATION.md` — would make the refusal
++ * path testable exclusively through a tracked-file edit.
++ */
++export function assert_scheduled_deprecations_clear(
++    current: string,
++    target: string,
++    runner: (args: readonly string[]) => RunResult = (args) => run(args, { check: false, capture: true }),
++): void {
++    const [targetMajor] = parse_version(target);
++    const [currentMajor] = parse_version(current);
++    if (targetMajor <= currentMajor) {
++        return;
++    }
++    const res = runner(['./scripts-run', 'src/scripts/lint_scheduled_deprecations', '--release-major']);
++    if (res.returncode === 0) {
++        return;
++    }
++    process.stderr.write(res.stdout);
++    process.stderr.write(res.stderr);
++    die(
++        `refusing a major cut (${current} → ${target}): the scheduled-deprecations table ` +
++            'in docs/MIGRATION.md has an overdue or unresolvable row. Act on it — perform ' +
++            "the removal in its own change, or revise the row's commitment and record why " +
++            'the surface stays — then re-run.',
++    );
++}
++
+ // ─── preflight ────────────────────────────────────────────────────────────────
+ 
+ /**
+@@ -2579,6 +2626,7 @@ function main(argv: readonly string[] | null = null): number {
+     parse_version(target);
+ 
+     if (!args.dry_run) {
++        assert_scheduled_deprecations_clear(current, target);
+         preflight(target, { resume: args.resume, ci: args.ci });
+     }
+ 
+diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
+index eec12e3ff020ea32001c822a64f2746dfafac0b4..97ee67f3bc9a8d1d51ca26f4367a9621ff56740c 100644
+--- a/taskfiles/ci-fast.yml
++++ b/taskfiles/ci-fast.yml
+@@ -885,6 +885,24 @@ tasks:
+       archive/ later/ skipped/ stubs/ are not concurrently open.
+     cmd: ./scripts-run src/scripts/lint_roadmap_family_cap {{.QUIET_FLAG}}
+ 
++  lint-scheduled-deprecations:
++    silent: true
++    desc: |
++      Check the `docs/MIGRATION.md` scheduled-deprecations table by arithmetic
++      against the shipped `package.json` major, instead of by somebody
++      remembering to read it. The release runbook's pre-flight already sends the
++      releaser there with a manual checkbox whose own text says "A row left
++      unread is how a removal commitment becomes folklore" — and a row was
++      missed anyway, so the defect is the absence of a check.
++
++      Deliberately asymmetric: an ordinary branch gets the report and exits 0,
++      because an overdue row can be a considered deferral and a hard refusal
++      everywhere would turn a judgement into an outage. `--release-major`
++      (the major cut) turns the same finding into a refusal. A row the grammar
++      cannot resolve reds in BOTH modes — an invented due version would move a
++      commitment silently, which is worse than a parse failure.
++    cmd: ./scripts-run src/scripts/lint_scheduled_deprecations {{.QUIET_FLAG}}
++
+   check-gate-completeness:
+     silent: true
+     desc: |
+diff --git a/tests/scripts/lint_scheduled_deprecations.test.ts b/tests/scripts/lint_scheduled_deprecations.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..f794d97e5079353d6290994423337351e8472fbc
+--- /dev/null
++++ b/tests/scripts/lint_scheduled_deprecations.test.ts
+@@ -0,0 +1,184 @@
++/**
++ * Tests for `src/scripts/lint_scheduled_deprecations.ts`.
++ *
++ * The load-bearing case is the **overdue-by-construction fixture**. This gate
++ * reports an absence — "nothing is overdue" — and the failure mode the whole
++ * roadmap is about is a green run that scanned nothing: a table whose heading
++ * moved or whose format drifted parses to zero rows and the gate exits 0
++ * looking healthy. So the suite proves the gate discriminates in both
++ * directions and that an empty parse reds:
++ *
++ *   1. a fixture overdue by construction is REPORTED (and refused at a cut),
++ *   2. a fixture entirely in the future passes,
++ *   3. an unpinned / permanent-keep row is tracked, not overdue and not a
++ *      parse failure,
++ *   4. an unresolvable removal-due cell reds rather than being guessed at,
++ *   5. a table that parses to zero rows reds (anti-vacuity),
++ *   6. the REAL repo tree reproduces the reading the roadmap is built on.
++ *
++ * Case 1 is what makes a green run mean the arithmetic ran. Case 5 is what
++ * makes it mean the arithmetic ran over something.
++ */
++import { spawnSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import { parseRows, resolveDueMajor } from '../../src/scripts/lint_scheduled_deprecations.js';
++
++const HERE = path.dirname(fileURLToPath(import.meta.url));
++const REPO_ROOT = path.resolve(HERE, '..', '..');
++const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_scheduled_deprecations.ts');
++const TSX_BIN = path.join(
++    REPO_ROOT,
++    'node_modules',
++    '.bin',
++    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
++);
++
++function run(cwd: string, args: string[] = []) {
++    return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd, encoding: 'utf8' });
++}
++
++const HEADER = [
++    '# Migration Guide',
++    '',
++    '## Scheduled deprecations (forward-looking)',
++    '',
++    '| Surface | Committed | Deprecation notice due | Removal due | Reversal condition |',
++    '|---|---|---|---|---|',
++].join('\n');
++
++/** Write a fixture tree: `package.json` at `major`, plus a table of rows. */
++function writeFixture(root: string, major: number, rows: string[]): void {
++    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
++    fs.writeFileSync(
++        path.join(root, 'package.json'),
++        JSON.stringify({ name: 'fixture', version: `${String(major)}.0.0` }, null, 2),
++        'utf8',
++    );
++    fs.writeFileSync(
++        path.join(root, 'docs', 'MIGRATION.md'),
++        `${HEADER}\n${rows.join('\n')}\n\n## 1.x → 2.0.0 — already shipped\n\nProse.\n`,
++        'utf8',
++    );
++}
++
++describe('lint_scheduled_deprecations', () => {
++    let tmp: string;
++
++    beforeEach(() => {
++        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sched-depr-'));
++    });
++
++    afterEach(() => {
++        fs.rmSync(tmp, { recursive: true, force: true });
++    });
++
++    it('overdue by construction: reported on a branch, refused at a major cut', () => {
++        // Shipped 12, removal committed at 11 — one major late, by construction.
++        writeFixture(tmp, 12, [
++            '| `legacy_engine` (`src/scripts/legacy/`) | 2026-01-01 | 10.0 | 11.0 | none |',
++        ]);
++        fs.mkdirSync(path.join(tmp, 'src', 'scripts', 'legacy'), { recursive: true });
++
++        const branch = run(tmp);
++        expect(branch.stdout).toContain('scanned: 1');
++        expect(branch.stdout).toContain('legacy_engine');
++        expect(branch.stdout).toContain('1 major(s) overdue');
++        // The runtime path is on disk, so the gate must say so by name.
++        expect(branch.stdout).toContain('still on disk: src/scripts/legacy/');
++        // An ordinary branch reports; it does not refuse.
++        expect(branch.status).toBe(0);
++
++        const cut = run(tmp, ['--release-major']);
++        expect(cut.status).toBe(1);
++        expect(cut.stderr).toContain('1 overdue surface(s) at a major cut');
++    });
++
++    it('a green run means the arithmetic ran: future rows pass in both modes', () => {
++        writeFixture(tmp, 12, ['| `future_thing` | 2026-01-01 | 13.0 | 14.0 | none |']);
++
++        const branch = run(tmp);
++        expect(branch.status).toBe(0);
++        expect(branch.stdout).toContain('scanned: 1');
++        expect(branch.stdout).toContain('none overdue');
++
++        const cut = run(tmp, ['--release-major']);
++        expect(cut.status).toBe(0);
++    });
++
++    it('unpinned and permanent-keep rows are tracked states, not findings', () => {
++        writeFixture(tmp, 12, [
++            '| `unpinned_thing` | 2026-01-01 | shipped 2026-01-02 | next major after the notice — **not pinned here** | none |',
++            '| `kept_thing` | 2026-01-01 | n/a | documented permanent keep | none |',
++        ]);
++
++        const r = run(tmp);
++        expect(r.status).toBe(0);
++        expect(r.stdout).toContain('scanned: 2');
++        expect(r.stdout).toContain('none overdue');
++    });
++
++    it('an unresolvable removal-due cell reds instead of being guessed at', () => {
++        writeFixture(tmp, 12, ['| `vague_thing` | 2026-01-01 | soon | eventually | none |']);
++
++        const r = run(tmp);
++        expect(r.status).toBe(1);
++        expect(r.stderr).toContain('not resolvable');
++        expect(r.stderr).toContain('vague_thing');
++    });
++
++    it('a table that parses to zero rows reds rather than exiting green', () => {
++        // The heading drifted — the table below it is no longer reachable, which
++        // is precisely the silent-green shape this gate exists to prevent.
++        fs.mkdirSync(path.join(tmp, 'docs'), { recursive: true });
++        fs.writeFileSync(
++            path.join(tmp, 'package.json'),
++            JSON.stringify({ name: 'fixture', version: '12.0.0' }),
++            'utf8',
++        );
++        fs.writeFileSync(
++            path.join(tmp, 'docs', 'MIGRATION.md'),
++            '# Migration Guide\n\n## Planned removals\n\n| Surface | Removal due |\n|---|---|\n| `x` | 1.0 |\n',
++            'utf8',
++        );
++
++        const r = run(tmp);
++        expect(r.status).toBe(1);
++        expect(r.stderr).toContain('scanned 0');
++    });
++
++    it('the version grammar resolves exactly the forms the table uses', () => {
++        expect(resolveDueMajor('11.0')).toEqual({ kind: 'major', major: 11 });
++        expect(resolveDueMajor('12.0.0')).toEqual({ kind: 'major', major: 12 });
++        expect(resolveDueMajor('next major after 9.x')).toEqual({ kind: 'major', major: 10 });
++        expect(resolveDueMajor('the major after that', 10)).toEqual({ kind: 'major', major: 11 });
++        // Relative with nothing to be relative to is a parse failure, never a guess.
++        expect(resolveDueMajor('the major after that').kind).toBe('unresolved');
++        // The unpinned row also contains "next major after the notice"; the
++        // explicit not-pinned statement is the load-bearing half and must win.
++        expect(
++            resolveDueMajor('next major after the notice — **not pinned here** (maintainer-owned)', 10),
++        ).toEqual({ kind: 'unpinned' });
++        expect(resolveDueMajor('')).toEqual({ kind: 'unresolved', cell: '' });
++    });
++
++    it('only the scheduled-deprecations table is parsed, never the shipped sections', () => {
++        writeFixture(tmp, 12, ['| `only_row` | 2026-01-01 | 13.0 | 14.0 | none |']);
++        const rows = parseRows(fs.readFileSync(path.join(tmp, 'docs', 'MIGRATION.md'), 'utf8'));
++        expect(rows).toHaveLength(1);
++        expect(rows[0]?.name).toBe('only_row');
++    });
++
++    it('real repo: reproduces the reading this gate was built on', () => {
++        const r = run(REPO_ROOT);
++        // Two rows today; the floor is what matters, not the exact number.
++        expect(r.stdout).toMatch(/scanned: [1-9]\d*/);
++        // No unresolved cell in the shipped table — that would be a live defect.
++        expect(r.stderr).not.toContain('not resolvable');
++        expect(r.status).toBe(0);
++    });
++});
+diff --git a/tests/scripts/release.test.ts b/tests/scripts/release.test.ts
+index 364cf8cb684ea1a4c9deaa9fcca1ec8595f90e4f..6b95c319475ad7ed56174db213b5732eef95eed8 100644
+--- a/tests/scripts/release.test.ts
++++ b/tests/scripts/release.test.ts
+@@ -49,6 +49,7 @@ import {
+     _failed_checks_report,
+     Commit,
+     SystemExitError,
++    assert_scheduled_deprecations_clear,
+     CONVENTIONAL_RE,
+     SEMVER_RE,
+     _RELEASE_BRANCH_RE,
+@@ -878,3 +879,45 @@ describe('watch_pr_checks — failing-check summary (the scrolled-away-failure f
+         expect(_failed_checks_report([])).toBe('');
+     });
+ });
++
++describe('assert_scheduled_deprecations_clear', () => {
++    /** A stub gate that records whether it was called at all. */
++    function stub(returncode: number, calls: string[][]) {
++        return (args: readonly string[]) => {
++            calls.push([...args]);
++            return { returncode, stdout: '', stderr: '' };
++        };
++    }
++
++    it('does not even run the gate on a minor or patch cut', () => {
++        const calls: string[][] = [];
++        assert_scheduled_deprecations_clear('12.0.0', '12.1.0', stub(1, calls));
++        assert_scheduled_deprecations_clear('12.0.0', '12.0.1', stub(1, calls));
++        // A red gate that is never consulted proves the guard is bounded to
++        // major cuts: it is the asymmetry the whole check is built around.
++        expect(calls).toEqual([]);
++    });
++
++    it('a major cut with a clear table proceeds, and consults the gate exactly once', () => {
++        const calls: string[][] = [];
++        expect(() => assert_scheduled_deprecations_clear('12.0.0', '13.0.0', stub(0, calls))).not.toThrow();
++        expect(calls).toHaveLength(1);
++        expect(calls[0]).toContain('--release-major');
++    });
++
++    it('a major cut with an overdue row refuses the release', () => {
++        const calls: string[][] = [];
++        expect(() => assert_scheduled_deprecations_clear('12.0.0', '13.0.0', stub(1, calls))).toThrow(
++            SystemExitError,
++        );
++        expect(calls).toHaveLength(1);
++    });
++
++    it('a multi-major jump is still a major cut', () => {
++        const calls: string[][] = [];
++        expect(() => assert_scheduled_deprecations_clear('12.0.0', '14.0.0', stub(1, calls))).toThrow(
++            SystemExitError,
++        );
++        expect(calls).toHaveLength(1);
++    });
++});
