@@ -86,6 +86,7 @@ import * as user_global_paths from './_lib/user_global_paths.js';
 // that exit into the installer a consumer loads (`check_installer_import_purity`
 // catches exactly this). The lib has no entry and no exit.
 import * as catalogue from './_lib/skill_catalogue.js';
+import { isInteractiveSession, type SessionProbe } from '../shared/interactiveContext.js';
 import * as claude_desktop_bundler from './_lib/claude_desktop_bundler.js';
 import * as claude_settings_hooks from './_lib/claude_settings_hooks.js';
 import { find_project_root_with_anchor, load_agent_settings } from './_lib/agent_settings.js';
@@ -3916,6 +3917,15 @@ function install_global(
             for (const line of _catalogue_truncation_warnings(deploy_results, project_root)) {
                 warn(line);
             }
+            const notice = _scoped_migration_notice(deploy_results, project_root, package_root, {
+                env: process.env,
+                stdinTty: process.stdin.isTTY === true,
+                stdoutTty: process.stdout.isTTY === true,
+            });
+            if (notice.length > 0) {
+                process.stdout.write('\n');
+                for (const line of notice) info(line);
+            }
         } catch {
             // A measurement must never sink an install that otherwise worked.
         }
@@ -3966,6 +3976,64 @@ export function _catalogue_truncation_warnings(
         if (warning !== null) lines.push(warning);
     }
     return lines;
+}
+
+/**
+ * The scoped-projection migration notice for an EXISTING install.
+ *
+ * Shape decided by AI council 2026-08-15 (2/2 converged, both members present):
+ * option B — the existing warning PLUS an interactive notice that persists
+ * NOTHING and names the manual edit and the GUI route. `projection.mode` is
+ * settings class C, so no agent may write it; a notice that offered a CLI
+ * write would send the reader to a command guaranteed to refuse them.
+ *
+ * Eligibility and delivery are separate on purpose. A non-interactive run can
+ * be fully eligible; it simply gets the warning and no notice, and the two
+ * outcomes stay distinguishable instead of collapsing into "nothing printed".
+ *
+ * Known and accepted: with nothing persisted, a qualifying install sees this
+ * on every deploy. The council named that as the strongest argument for doing
+ * nothing at all, and it does not outweigh making a measured, silent
+ * capability loss an explicit human decision.
+ */
+export function _scoped_migration_notice(
+    deploy_results: Record<string, DeployResult>,
+    project_root: string | null,
+    package_root: string,
+    probe: SessionProbe,
+): string[] {
+    if (!isInteractiveSession(probe)) return [];
+
+    const log_candidates = [
+        path.join(user_global_paths.event4u_root(), 'state', 'skill-catalogue.jsonl'),
+        ...(project_root ? [path.join(project_root, catalogue.OBSERVATION_LOG)] : []),
+    ];
+    const limits = catalogue.knownHostLimits(log_candidates.flatMap((p) => catalogue.readObservationLog(p)));
+    if (limits.size === 0) return [];
+
+    const resolved = _resolve_scoped_projection(package_root);
+    const settings_path =
+        _resolve_global_settings_path() ??
+        path.join(user_global_paths.event4u_root(), 'settings', SETTINGS_FILE);
+
+    for (const tool_id of Object.keys(deploy_results).sort()) {
+        const [, , status] = deploy_results[tool_id] as DeployResult;
+        if (status !== 'deployed') continue;
+        const anchor_raw = USER_SCOPE_PATHS[tool_id];
+        if (!anchor_raw) continue;
+
+        const volume = catalogue.measureCatalogueVolume(tool_id, expanduser(anchor_raw));
+        const eligibility = catalogue.migrationEligibility(
+            tool_id,
+            resolved.mode,
+            volume.skillEntries,
+            limits,
+        );
+        if (eligibility.eligible) {
+            return catalogue.migrationPromptLines(tool_id, eligibility, settings_path);
+        }
+    }
+    return [];
 }
 
 const SETTINGS_SURFACE_REL = path.join('state', 'settings-surface.json');

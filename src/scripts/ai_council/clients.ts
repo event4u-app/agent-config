@@ -1918,7 +1918,15 @@ export class OpenAICliClient extends CliClient {
                     // is taken: an `error` item also carries `text`-adjacent
                     // fields, and treating one as an answer would turn the
                     // skills-budget warning into the member's response.
-                    if (!text && _dictGet(itemObj, 'type', undefined) === 'agent_message') {
+                    //
+                    // LAST message wins, never the first. A codex turn emits
+                    // several `agent_message` items — a preamble ("I'll check X
+                    // first…") and then the answer — so keeping the first one
+                    // truncates the response to its throat-clearing. Measured
+                    // 2026-08-15 on a real council run: 1,479 output tokens
+                    // billed, 134 characters captured. A one-word probe cannot
+                    // catch this, which is why it survived the first fix.
+                    if (_dictGet(itemObj, 'type', undefined) === 'agent_message') {
                         const flat = _pyStr(_dictGet(itemObj, 'text', '')).trim();
                         if (flat) {
                             text = flat;

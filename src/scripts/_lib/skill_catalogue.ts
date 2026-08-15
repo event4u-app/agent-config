@@ -383,6 +383,14 @@ export interface ObservationRecord {
     /** Absent on records written before the two sources were distinguished. */
     observation_source?: ObservationSource;
     /**
+     * Skills projected at this observation — the ONLY population the drop
+     * tracks. `entries_total` counts every artefact, and a controlled probe
+     * (2026-08-15) moved the host's dropped count by 0 when 60 commands were
+     * added and by +53 when 60 skills were. Comparing artefact totals would
+     * fire on command growth that causes no truncation at all.
+     */
+    projected_skill_count?: number;
+    /**
      * Entries the host dropped wholesale, read from the host's own event.
      * Only ever present on a `budget-strip-and-drop` record — a `per-entry`
      * host publishes no such count, and inventing one is the failure the
@@ -498,6 +506,7 @@ export function buildHostEventRecord(
     observedAt: string,
     entriesOffered: number,
     event: HostBudgetEvent,
+    projectedSkillCount?: number,
 ): ObservationRecord {
     return {
         schema: 1,
@@ -523,6 +532,7 @@ export function buildHostEventRecord(
         truncation_mode: 'budget-strip-and-drop',
         observation_source: 'host-event',
         dropped_count: event.droppedCount,
+        ...(projectedSkillCount === undefined ? {} : { projected_skill_count: projectedSkillCount }),
     };
 }
 
@@ -603,6 +613,13 @@ export interface KnownHostLimit {
     droppedEntries: number;
     /** What THIS tool projected for that host at that observation. */
     projectedVolume: number;
+    /**
+     * SKILLS projected at that observation — the comparable quantity.
+     * Absent on a record written before the skill-only count existed, and
+     * absence is load-bearing: without it the observation is not comparable
+     * and yields no eligibility (see `migrationEligibility`).
+     */
+    projectedSkills: number | null;
     observedAt: string;
 }
 
@@ -619,6 +636,7 @@ export function knownHostLimits(records: readonly ObservationRecord[]): Map<stri
             host: record.host,
             droppedEntries: record.dropped_count,
             projectedVolume: record.entries_total,
+            projectedSkills: record.projected_skill_count ?? null,
             observedAt: record.observed_at,
         });
     }
@@ -638,14 +656,115 @@ export function catalogueLimitWarning(
     limit: KnownHostLimit | undefined,
 ): string | null {
     if (limit === undefined) return null;
-    if (volume.artefacts < limit.projectedVolume) return null;
+    // SKILLS, not artefacts. The council's correction, and it rests on this
+    // estate's own probe: +60 commands moved the host's dropped count by 0.
+    // An artefact-total comparison would warn on command growth that truncates
+    // nothing. An observation with no skill count is not comparable, so it
+    // yields no warning rather than a guess.
+    if (limit.projectedSkills === null) return null;
+    if (volume.skillEntries < limit.projectedSkills) return null;
     return (
-        `${volume.host}: deploying ${volume.artefacts} catalogue artefacts. ` +
+        `${volume.host}: deploying ${volume.skillEntries} skills. ` +
         `This host reported dropping ${limit.droppedEntries} entries from the ` +
-        `model-visible list when last measured (${limit.observedAt}, at a projection of ` +
-        `${limit.projectedVolume}) — that much never reaches the model. ` +
+        `model-visible list when last measured (${limit.observedAt}, at ` +
+        `${limit.projectedSkills} skills) — that much never reaches the model. ` +
         'Explain: `agent-config exec capture_skill_catalogue --limits`'
     );
+}
+
+/* ------------------------------------------------------------------ *
+ * Migration eligibility — AI council, 2026-08-15, 2/2 converged.
+ * ------------------------------------------------------------------ */
+
+/**
+ * Why an install is (not) eligible to be ASKED about scoped projection.
+ *
+ * Eligibility is deliberately separate from whether a prompt can be shown.
+ * The council's refinement: an install can qualify while the session is
+ * non-interactive, and collapsing the two would make "not asked because CI"
+ * indistinguishable from "not asked because it does not qualify".
+ */
+export interface MigrationEligibility {
+    eligible: boolean;
+    /** Machine-readable reason, always set — including on the eligible path. */
+    reason:
+        | 'eligible'
+        | 'no-observation-for-host'
+        | 'observation-not-comparable'
+        | 'no-truncation-observed'
+        | 'already-scoped'
+        | 'below-observed-skill-volume';
+    /** Populated only when eligible, for the message. */
+    droppedEntries?: number;
+    observedAt?: string;
+}
+
+/**
+ * Is this install worth asking about?
+ *
+ * `currentSkillCount` is the SKILL population only, and that is the whole
+ * correction the council made to the original predicate. A controlled probe
+ * (2026-08-15) moved the host's dropped count by 0 when 60 command files were
+ * added and by +53 when 60 skills were, so a comparison over total artefacts
+ * would fire on command growth that truncates nothing.
+ *
+ * An observation with no recorded skill count is NOT comparable — the two
+ * numbers would be counted by different rules — and returns
+ * `observation-not-comparable` rather than being coerced into a verdict.
+ * Never extrapolate from another host.
+ */
+export function migrationEligibility(
+    host: string,
+    resolvedMode: 'scoped' | 'legacy-all',
+    currentSkillCount: number,
+    limits: ReadonlyMap<string, KnownHostLimit>,
+): MigrationEligibility {
+    if (resolvedMode === 'scoped') return { eligible: false, reason: 'already-scoped' };
+    const limit = limits.get(host);
+    if (limit === undefined) return { eligible: false, reason: 'no-observation-for-host' };
+    if (limit.projectedSkills === null) return { eligible: false, reason: 'observation-not-comparable' };
+    if (limit.droppedEntries <= 0) return { eligible: false, reason: 'no-truncation-observed' };
+    if (currentSkillCount < limit.projectedSkills) {
+        return { eligible: false, reason: 'below-observed-skill-volume' };
+    }
+    return {
+        eligible: true,
+        reason: 'eligible',
+        droppedEntries: limit.droppedEntries,
+        observedAt: limit.observedAt,
+    };
+}
+
+/**
+ * The prompt body. Returns lines; WRITES NOTHING, by contract.
+ *
+ * `projection.mode` is settings class C, so `settings:set` refuses it by
+ * construction and only a human edit or the GUI write route may set it. The
+ * message therefore never offers a CLI write — suggesting one would send the
+ * reader to a command guaranteed to reject them, which the council caught in
+ * the first draft of this text.
+ */
+export function migrationPromptLines(
+    host: string,
+    eligibility: MigrationEligibility,
+    settingsPath: string,
+): string[] {
+    return [
+        `${host}: ${eligibility.droppedEntries} catalogue entries never reach the model.`,
+        `Measured on this machine (${eligibility.observedAt}). This install is on \`legacy-all\`,`,
+        'which ships everything and lets the host drop what does not fit — silently.',
+        '',
+        'Scoping the projection to your active packs is the alternative. Nothing here',
+        'changes it for you: `projection.mode` is yours to set, by hand or in the GUI.',
+        '',
+        `  edit  ${settingsPath}`,
+        '        projection:',
+        '          mode: scoped',
+        '',
+        '  or    agent-config config      (Settings → projection)',
+        '',
+        'Keeping `legacy-all` is a legitimate choice — this is a notification, not a gate.',
+    ];
 }
 
 /** Read the append-only observation log; a missing or broken line is skipped. */

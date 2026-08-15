@@ -238,7 +238,7 @@ function runHostEventMode(source: string): number {
         }
         const logPath = path.join(REPO, OBSERVATION_LOG);
         fs.mkdirSync(path.dirname(logPath), { recursive: true });
-        const record = buildHostEventRecord(host, stampedAt, volume.artefacts, event);
+        const record = buildHostEventRecord(host, stampedAt, volume.artefacts, event, volume.skillEntries);
         fs.appendFileSync(logPath, `${JSON.stringify(record)}\n`);
         process.stdout.write(`recorded → ${OBSERVATION_LOG}\n`);
     }
