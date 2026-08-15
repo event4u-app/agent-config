@@ -167,9 +167,13 @@ That is why the spike below gates the threshold work.
       115 at the base commit, so the census is a ranking exercise, not a
       discovery one.
       <!-- verify: test -f agents/evidence/analysis/rule-paths-coverage-census.md -->
-- [ ] 5.2 Scope the top-weight tranche identified by 5.1. **Blocked** — a rule
-      that stops loading unconditionally is a consumer-visible behaviour change.
-      <!-- verify: grep -c '^paths:' dist/agent-src/rules/*.md 2>/dev/null | grep -cv ':0$' -->
+- [ ] 5.2 Act on what 5.1 found about scoping. **Blocked, and the blocker's
+      question changed**: the census surfaced that 25 of 110 rules are already
+      scoped in the Claude host projection and that scoping *replaces* rather
+      than extends the activation surface, so 19 rules silently lost their
+      keyword reach. Repairing or ratifying that comes before extending the
+      scoped set, and both are consumer-visible.
+      <!-- verify: grep -c 'derive_trigger_globs' agents/evidence/analysis/rule-paths-coverage-census.md -->
 - [x] 5.3 Convert the parked 40k/50k destination into dated milestones in
       `preamble-payload-budget.json`, so the ratchet has a schedule rather than
       a target it only defends against growth. Milestones are recorded with
@@ -200,14 +204,30 @@ That is why the spike below gates the threshold work.
 - **Status:** open
 - **Owner:** user
 - **Blocks:** Step 5.2
-- **Question:** may a rule that loads unconditionally today be scoped to
-  `paths:`, given that this narrows what an existing install receives?
-- **What to do:** pick exactly one — (a) authorise scoping the top-weight
-  tranche identified by 5.1, accepting that those rules stop loading outside
-  their declared paths, or (b) keep every rule unconditional and let the census
-  stand as a measurement only, with the payload target repointed to what
-  coverage-free delivery can reach.
-- **Resolved when:** the user states which of (a) or (b) holds.
+- **Question:** **The premise changed and the question narrowed.** Scoping is
+  not a future option — it is live: `.claude/rules/` carries **25 of 110**
+  scoped rules today, emitted from existing path-shaped `triggers:` entries.
+  And it is not additive: `condense.ts::derive_trigger_globs` keeps only
+  `file_pattern` / `path_prefix` and drops `keyword:` / `phrase:`, so a scoped
+  rule's `paths:` block becomes its *whole* gate on Claude Code, Cursor and
+  Windsurf. **19 of the 25 also carry keyword triggers** and therefore lose
+  their conversational reach there — `design-fidelity` loses 21 of them, in
+  exactly the handover classes its own routing section says it exists to catch.
+  Meanwhile the safely-scopable remainder is small: about 4 % of the rule
+  payload. So the question is no longer "may we scope" but "what do we do about
+  what is already scoped".
+- **What to do:** pick exactly one — (a) treat the keyword-drop as a **defect**
+  and repair the emitter so path and keyword triggers OR together, leaving the
+  25 scoped rules in place with their reach restored; (b) treat it as
+  **intended** and record the trade-off in `rule-router.md` so the next reader
+  finds a decision instead of a surprise, leaving behaviour unchanged; or
+  (c) **narrow the blast radius** by removing the path triggers from the rules
+  whose obligation is conversational (`design-fidelity`,
+  `settings-ask-protocol`), so they return to unconditional loading, and leave
+  the emitter alone.
+- **Resolved when:** the user states which of (a), (b) or (c) holds. Extending
+  the scoped set is a separate, smaller decision that only becomes worth making
+  after this one.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude/host -->

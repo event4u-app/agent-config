@@ -10,14 +10,23 @@
 
 | Measure | Value |
 |---|---:|
-| Projected rule files | **115** |
-| Rules declaring `paths:` in frontmatter | **0** |
-| Total bytes | **441,965** |
+| Projected rule files (`dist/agent-src/rules/`) | **115** |
+| …declaring `paths:` | **0** |
+| Rule files in the Claude host projection (`.claude/rules/`) | **110** |
+| …declaring `paths:` | **25** |
+| Total bytes (neutral projection) | **441,965** |
 | Estimated tokens (bytes ÷ 4) | **110,491** |
 
-Coverage is zero, so this census is a **ranking** exercise rather than a
-discovery one: nothing is scoped today, and the only open question is which
-rules would be worth scoping first.
+> **Correction, 2026-08-15 — the "zero" is true of one projection only, and the
+> first version of this page did not say so.** `dist/agent-src/rules/` is
+> host-neutral and carries no `paths:` by construction. The *host* projection
+> does: `.claude/rules/` has **25 of 110** scoped today, emitted by
+> `condense.ts::derive_trigger_globs` (`:1332`) from each rule's existing
+> path-shaped `triggers:` entries, with Cursor `globs:` and Windsurf
+> `trigger: glob` equivalents. Read alone, the original headline invited the
+> conclusion that scoping does not happen. **It does, on three hosts, in
+> production.** The question is therefore not "may we start scoping" but
+> "is what is already scoped correct" — see the finding below.
 
 The zero was checked two ways — a per-file extraction of the region between the
 first two `---` fences, and a concatenated-frontmatter sweep. Both return zero.
@@ -80,6 +89,43 @@ into a session that touches no UI is the case `paths:` exists for.
 an existing install receives, which is a consumer-visible change and the reason
 Step 5.2 is blocked on an explicit decision. This page ranks; it does not
 choose.
+
+## The finding this census did not set out to make
+
+Scoping a rule on Claude Code, Cursor and Windsurf **replaces** its activation
+surface rather than adding to it. `derive_trigger_globs` (`condense.ts:1332`)
+walks a rule's `triggers:` list and keeps **only** `file_pattern` and
+`path_prefix` entries; `keyword:` and `phrase:` entries are skipped. The emitted
+`paths:` block then becomes the whole gate, because a rule *with* `paths:` loads
+on a path match and a rule *without* it loads unconditionally
+(`docs/contracts/rule-router.md`).
+
+So a rule carrying both kinds of trigger loses its conversational reach on those
+three hosts. Measured over the live host projection:
+
+| | Count |
+|---|---:|
+| Rules scoped in `.claude/rules/` | 25 |
+| …of those, also carrying `keyword:`/`phrase:` triggers in `src/rules/` | **19** |
+
+Two worked cases, both live on this machine right now:
+
+- **`design-fidelity`** — 21 keyword/phrase triggers, 2 path globs
+  (`*design.html`, `.claude/design-system/**`). Its own routing section names a
+  pasted screenshot and a capability URL as handover classes it must catch,
+  explicitly *because* they arrive with no matching file. Under path-only
+  gating those classes do not fire at all — the rule is silent in precisely the
+  case it documents as its reason for existing.
+- **`settings-ask-protocol`** — 10 keyword/phrase triggers, 1 path prefix
+  pointing at a contract document. A settings question arising mid-session
+  nowhere near that document gets none of the four-slot shape or the
+  one-question budget.
+
+**This reads as an unreviewed side effect rather than a decision.** Nothing in
+the tree records a choice to trade keyword reach for path precision, and the
+rules most affected are the ones whose own bodies argue hardest for the reach.
+It is stated here as a finding, not repaired: changing the emitter is a
+consumer-visible behaviour change and belongs to whoever owns that call.
 
 ## Method note
 
