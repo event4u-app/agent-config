@@ -77,8 +77,10 @@ labels. Measured over the six most recent released spans (341 commits) in
 `Security and correctness` derived **1 of 45** in-category commits — the rule
 looked only for `security` while the label also names *correctness*, and
 nothing derived the correctness half — and `Honest nulls` **3 of 9**, matching a
-literal marker string only. On those two labels `_none_` could not be
-contradicted and shipped uncontested on five of six curated heads.
+literal marker string only. `Security and correctness` could not be
+contradicted at all and shipped `_none_` on **five of six** curated heads;
+`Honest nulls` fired on three of the six and shipped a derived line on those,
+so the five-of-six rate belongs to the first label only.
 
 **Widening a derivation is therefore not a reversal of the decision above; it
 is a repair of the check the decision depends on.** The two are independent
@@ -90,6 +92,29 @@ reason the rejection rests on — the generator pre-fills every substantiated
 label, so a wider derivation produces a marked line rather than a `_none_` to
 contradict. That is pinned in
 `tests/scripts/check_release_highlights.test.ts`, not assumed.
+
+**But that pre-fill is also what fires falsifier (2), and this section must say
+so rather than re-affirm the lock over it.** The falsifier below reads: *"a
+shipped marked line survives its next release cycle uncurated"*. Measured
+2026-08-15 across the era archives and the live head: **11 marked lines across
+6 of 6 releases, none curated in place since** — 10.1.0's are still verbatim
+five releases later. The condition the 2026-08-11 decision pre-registered for
+reopening the (a)/(b) choice is **met**, and it was met before this branch
+touched anything.
+
+The widening moves the same dial further, by construction and not by accident:
+`Security and correctness` now derives on **6 of 6** spans against **1 of 6**
+before, so it adds a marked line to nearly every future release on a label that
+used to ship `_none_`. The counterweight this plan offers — a publish-side
+unresolved-marker invariant — is deferred behind an open maintainer blocker, so
+merging this on its own increases the marked-line rate without adding anything
+that curates them.
+
+**This is surfaced, not decided.** Nothing here reverses the lock: reopening the
+(a)/(b) choice is the maintainer's call under the contract's own terms, and the
+honest state is that the falsifier has fired and the rate is rising. Whoever
+revisits it inherits a fired trigger and a measured rate rather than the
+cautious forecast the paragraph below was written as.
 
 **What that concedes.** The advisory already failed once, and no non-gate
 mechanism is added here to make the next survivor less likely; this branch
@@ -110,11 +135,21 @@ lines:
 | 10.1.0 | 2 | Behaviour changes · Honest nulls |
 | 10.2.0 | 3 | Behaviour changes · Security and correctness · Honest nulls |
 | 10.3.0 | 2 | Behaviour changes · Default changes + migration |
+| 10.4.0 | 1 | Honest nulls |
+| 11.0.0 | 1 | Behaviour changes |
+| 12.0.0 | 2 | Behaviour changes · Default changes + migration |
 
-**3 of the 3 releases since, 7 marked lines**, all three tags published
-(`git tag --list '10.*'`), 10.1.0 and 10.2.0 now in
-[`docs/archive/CHANGELOG-pre-10.3.0.md`](../archive/CHANGELOG-pre-10.3.0.md) and
-10.3.0 still live in [`CHANGELOG.md`](../../CHANGELOG.md).
+**Refreshed 2026-08-15: 6 of the 6 releases since, 11 marked lines** — the
+figure below the table read "3 of the 3 releases since, 7 marked lines" and was
+three releases stale. All six tags are published; 10.1.0 and 10.2.0 sit in
+[`docs/archive/CHANGELOG-pre-10.3.0.md`](../archive/CHANGELOG-pre-10.3.0.md),
+10.3.0 through 11.0.0 in
+[`docs/archive/CHANGELOG-pre-12.0.0.md`](../archive/CHANGELOG-pre-12.0.0.md),
+and 12.0.0 is live in [`CHANGELOG.md`](../../CHANGELOG.md).
+
+**Not one of the eleven has been curated in place.** The rate is not merely
+holding, it is the full population — which is what makes falsifier (2) a fired
+trigger rather than a forecast.
 
 **The decision stands, and the number does not by itself reverse it.** The
 rejected branch was rejected on a structural argument the rate does not touch:
