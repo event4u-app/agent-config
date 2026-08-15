@@ -64,12 +64,14 @@ stale, the current ones are used and the correction is named.
 ## What this roadmap does not touch
 
 - **The scoped-projection default and the migration notice.** Those belong to
-  `road-to-skill-catalogue-budget` Phase 4 and to the decision recorded for it
-  on 2026-08-15 (owner ruling plus a 2/2 council): fresh installs stay `scoped`,
+  `road-to-skill-catalogue-budget` and to the decision recorded for it on
+  2026-08-15 (owner ruling plus a 2/2 council): fresh installs stay `scoped`,
   an existing install may be *asked* and never written, and the notice never
-  offers `settings:set` because `projection.mode` is a class-C key. Phase 1
-  below produces a per-host measurement that *feeds* that decision; it does not
-  re-open it, re-implement the notice, or flip any default.
+  offers `settings:set` because `projection.mode` is a class-C key. **That work
+  shipped and the roadmap archived while this one was being written** — the
+  decision is closed, not pending. Phase 1 below produces a per-host
+  measurement that stands on its own; it does not re-open the decision,
+  re-implement the notice, or flip any default.
 - **The comparison basis the proposal assumed.** The same decision falsified it
   on this estate's own probe: adding 60 command files moved the measured host's
   dropped count by 0, adding 60 skills moved it by 53, against run-to-run noise

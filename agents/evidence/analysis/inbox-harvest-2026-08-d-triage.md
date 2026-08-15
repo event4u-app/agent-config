@@ -84,9 +84,12 @@ because each one would have shaped work:
 ## 3. Ownership screen — what was already spoken for
 
 - **The scoped-projection default and its migration notice** belong to
-  `road-to-skill-catalogue-budget` Phase 4 and to the decision recorded for it
-  on 2026-08-15 (owner ruling plus a 2/2 council), with an implementation open
-  in PR #1359 at the time of this harvest. That decision also **falsified the
+  `road-to-skill-catalogue-budget` and to the decision recorded for it on
+  2026-08-15 (owner ruling plus a 2/2 council). That work was open when the
+  harvest ran and **merged before this branch was pushed**; the roadmap has
+  since archived, so the decision is closed rather than pending — re-checked
+  live rather than carried from the earlier reading. That decision also
+  **falsified the
   comparison basis** the routing proposal assumed: a controlled probe moved the
   measured host's dropped count by 0 for +60 command files and by 53 for +60
   skills. The adopted roadmap compares skill counts only, never artefact totals,
