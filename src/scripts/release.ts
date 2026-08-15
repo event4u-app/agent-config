@@ -1651,7 +1651,10 @@ function set_template_pin(p: string, version: string): void {
  * subprocess reading two files, so the "keep a preview fast" rationale that
  * excludes the ~15s test-trend collection does not apply — and a preview that
  * reports green for the single condition that will refuse the real run is the
- * case an operator runs a preview to discover.
+ * case an operator runs a preview to discover. It REPORTS there rather than
+ * dying: `--dry-run` exiting 0 before `execute()` and before `preflight()` is a
+ * contract this file's own tests assert, and an earlier revision of this guard
+ * broke it by sitting above the dry-run branch with no preview mode.
  *
  * @param runner Seam for the gate invocation. Production passes nothing and
  * gets the real `run`; tests inject a stub, because the alternative — reaching
@@ -1661,6 +1664,7 @@ function set_template_pin(p: string, version: string): void {
 export function assert_scheduled_deprecations_clear(
     target: string,
     runner: (args: readonly string[]) => RunResult = (args) => run(args, { check: false, capture: true }),
+    opts: { previewOnly?: boolean } = {},
 ): void {
     const [, minor, patch] = parse_version(target);
     if (minor !== 0 || patch !== 0) {
@@ -1677,6 +1681,17 @@ export function assert_scheduled_deprecations_clear(
     }
     process.stderr.write(res.stdout);
     process.stderr.write(res.stderr);
+    if (opts.previewOnly === true) {
+        // The preview's job is to SHOW what the real run will refuse. Dying
+        // here would break the `--dry-run exits 0` contract asserted elsewhere
+        // in this file's tests — trading a documented exit code for a message
+        // that has already been printed above.
+        process.stderr.write(
+            `\n(dry-run) the ${target} cut WOULD BE REFUSED for the reason above. ` +
+                'Previewing only; exit code unchanged.\n',
+        );
+        return;
+    }
     die(
         `refusing the ${target} cut: the scheduled-deprecations table in docs/MIGRATION.md ` +
             'has a row due at or before this major, or one that cannot be resolved. Act on ' +
@@ -2640,10 +2655,12 @@ function main(argv: readonly string[] | null = null): number {
     }
     parse_version(target);
 
-    // Outside the dry-run guard on purpose — see the function's own note: it is
-    // one subprocess over two files, and a preview that hides the one condition
-    // that will refuse the real run is worse than useless.
-    assert_scheduled_deprecations_clear(target);
+    // Runs in dry-run too — a preview that hides the one condition which will
+    // refuse the real run is the case previews are for — but REPORTS there
+    // instead of dying: `--dry-run returns 0` is a contract this file's tests
+    // assert, and breaking it to surface a warning would trade a documented
+    // exit code for a message.
+    assert_scheduled_deprecations_clear(target, undefined, { previewOnly: args.dry_run });
 
     if (!args.dry_run) {
         preflight(target, { resume: args.resume, ci: args.ci });

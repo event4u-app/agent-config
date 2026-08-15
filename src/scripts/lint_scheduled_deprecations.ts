@@ -194,7 +194,11 @@ export function parseRows(markdown: string): DeprecationRow[] {
     const rows: DeprecationRow[] = [];
 
     for (const line of lines) {
-        if (/^##\s/.test(line)) {
+        // ANY heading closes the span, not just a sibling `## `. The table now
+        // has a `### Row status` subsection under it; with a `^##\s` close the
+        // span ran past it, so a table added there would have been appended as
+        // data rows with its header parsed as one.
+        if (/^#{1,6}\s/.test(line)) {
             if (inSection) break;
             inSection = SECTION_MARKER.test(line);
             continue;
@@ -259,6 +263,15 @@ export function evaluate(
     comparand: number,
     root: string,
     ledger?: GateLedger,
+    /**
+     * `>= 0` at a cut (a row due AT the target must be acted on now), `> 0` on
+     * an ordinary branch (a row due at the shipped major is being worked, not
+     * missed). Without the split, a row committed to the current major warned
+     * on every branch and every CI run for a whole release cycle — a standing
+     * notice for something nobody is late on, which is the habituation this
+     * gate exists to avoid producing.
+     */
+    dueAtComparandCounts = false,
 ): Finding[] {
     const findings: Finding[] = [];
     ledger?.plan(rows.map((r) => `row-${String(r.index)}:${r.name}`));
@@ -281,7 +294,7 @@ export function evaluate(
         }
 
         const overdueBy = comparand - removal.major;
-        if (overdueBy >= 0) {
+        if (overdueBy > 0 || (overdueBy === 0 && dueAtComparandCounts)) {
             const livePaths = row.paths.filter((p) => fs.existsSync(path.join(root, p)));
             findings.push({ row, kind: 'overdue', overdueBy, livePaths });
             ledger?.fail(
@@ -340,8 +353,8 @@ export function shippedMajor(root: string): number {
 }
 
 /** Floors for `--self-test`, declared here so a truncation is a visible diff. */
-const SELF_TEST_MIN_CASES = 7;
-const SELF_TEST_MIN_REJECT = 5;
+const SELF_TEST_MIN_CASES = 9;
+const SELF_TEST_MIN_REJECT = 6;
 
 /**
  * Prove, on demand, that this gate's rejections still fire against its own CLI.
@@ -409,6 +422,25 @@ function selfTest(): number {
             name: 'the same row is silent on an ordinary branch — it is not late yet',
             expect: 'accept',
             run: () => fixture('due-at-cut-branch', 12, '| `due_now` | 2026-01-01 | 12.0 | 13.0 | none |'),
+        },
+        {
+            // due == SHIPPED, which is the case the contract calls silent on a
+            // branch and neither the earlier fixtures nor the self-test covered
+            // (both used due 13 against shipped 12, i.e. due == TARGET).
+            name: 'a row due at the SHIPPED major is silent on an ordinary branch',
+            expect: 'accept',
+            run: () => fixture('due-at-shipped', 12, '| `due_at_shipped` | 2026-01-01 | 11.0 | 12.0 | none |'),
+        },
+        {
+            name: 'the same row IS refused at the very next cut',
+            expect: 'reject',
+            run: () =>
+                fixture(
+                    'due-at-shipped-cut',
+                    12,
+                    '| `due_at_shipped` | 2026-01-01 | 11.0 | 12.0 | none |',
+                    ['--cutting', '13.0.0'],
+                ),
         },
         {
             name: 'a header with no Removal due column reds once, naming the header',
@@ -496,6 +528,21 @@ export function main(argv: readonly string[]): number {
         }
     }
 
+    // Shape-checked BEFORE any file work: a usage error cannot need the tree,
+    // and validating it after the parse let a HeaderMismatchError mask it with
+    // exit 1 where the caller had simply mistyped the version.
+    let cutMajor: number | undefined;
+    if (cutting !== undefined) {
+        const m = /^v?(\d+)\./.exec(cutting.trim());
+        if (!m) {
+            process.stderr.write(
+                `usage: --cutting expects a bare version (X.Y.Z), got "${cutting}"\n`,
+            );
+            return 2;
+        }
+        cutMajor = Number(m[1]);
+    }
+
     const migration = path.join(root, MIGRATION_PATH);
     if (!fs.existsSync(migration)) {
         process.stderr.write(`❌  lint_scheduled_deprecations: ${MIGRATION_PATH} not found under ${root}\n`);
@@ -513,21 +560,24 @@ export function main(argv: readonly string[]): number {
         throw exc;
     }
 
-    const shipped = shippedMajor(root);
-    let comparand = shipped;
-    if (cutting !== undefined) {
-        const m = /^v?(\d+)\./.exec(cutting.trim());
-        if (!m) {
-            process.stderr.write(
-                `usage: --cutting expects a bare version (X.Y.Z), got "${cutting}"\n`,
-            );
-            return 2;
-        }
-        comparand = Number(m[1]);
+    // A missing or malformed package.json is an environment error, not a
+    // finding: without it the gate has no comparand at all. Reported as exit 2
+    // per the contract at the top of this file, rather than as an unlisted
+    // code and a stack trace.
+    let shipped: number;
+    try {
+        shipped = shippedMajor(root);
+    } catch (exc) {
+        process.stderr.write(
+            `❌  lint_scheduled_deprecations: cannot read the shipped major — ` +
+                `${exc instanceof Error ? exc.message : String(exc)}\n`,
+        );
+        return 2;
     }
+    const comparand = cutMajor ?? shipped;
 
     const ledger = new GateLedger('lint_scheduled_deprecations');
-    const findings = evaluate(rows, comparand, root, ledger);
+    const findings = evaluate(rows, comparand, root, ledger, cutting !== undefined);
     const tally = ledger.finalize();
 
     // Anti-vacuity. Zero rows means the heading moved or the table's format

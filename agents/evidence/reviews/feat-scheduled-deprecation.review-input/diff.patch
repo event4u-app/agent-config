@@ -33,24 +33,19 @@ index fe971f94ce7834cff37f2ce9326b1e80ff7d09c0..30fc2758ddc67b7fcef8dd805c6fcbd1
        - task: check-suppression-hygiene
        - task: check-review-dispositions
 diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
-index 3c570c0237f10971a954170a482d6425fa899265..e3223a32beec91a2e509fe200893174544e02318 100644
+index a62b9494f1e5d76173dd3c045b980e8ebced549a..b33248e064c827b01f2f3486e4c48bc021817363 100644
 --- a/agents/roadmaps-progress.md
 +++ b/agents/roadmaps-progress.md
-@@ -2,16 +2,24 @@
- 
- > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
- >
--> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **39** open blockers, **13** need you → `agent-config gates`
-+> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **40** open blockers, **13** need you → `agent-config gates`
+@@ -6,12 +6,20 @@
  
  ## Overall
  
--**246 / 495 steps done · 50%**
-+**265 / 495 steps done · 54%**
+-**246 / 485 steps done · 51%**
++**256 / 485 steps done · 53%**
  
  ```text
--████████████████████░░░░░░░░░░░░░░░░░░░░   50%
-+██████████████████████░░░░░░░░░░░░░░░░░░   54%
+-████████████████████░░░░░░░░░░░░░░░░░░░░   51%
++█████████████████████░░░░░░░░░░░░░░░░░░░   53%
  ```
  
 +## ✅ Completed — pending archival
@@ -64,21 +59,43 @@ index 3c570c0237f10971a954170a482d6425fa899265..e3223a32beec91a2e509fe2008931745
  ## Open roadmaps
  
  | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
-@@ -29,11 +37,11 @@
- | 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
- | 12 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
- | 13 | [road-to-inbox-harvest-2026-08-c-prompt-deinflation.md](roadmaps/road-to-inbox-harvest-2026-08-c-prompt-deinflation.md) | 2 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
--| 14 | [road-to-inbox-harvest-2026-08-c-release-head-truth.md](roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md) | 3 | 11 | 10 | 0 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-c-release-head-truth) | ░░░░░░░░░░ 0% |
-+| 14 | [road-to-inbox-harvest-2026-08-c-release-head-truth.md](roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md) | 3 | 11 | 1 | 9 | 1 | 0 | [2](#blockers-road-to-inbox-harvest-2026-08-c-release-head-truth) | █████████░ 90% |
- | 15 | [road-to-inbox-harvest-2026-08-d-archive-index.md](roadmaps/road-to-inbox-harvest-2026-08-d-archive-index.md) | 2 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
- | 16 | [road-to-inbox-harvest-2026-08-d-context-ledger.md](roadmaps/road-to-inbox-harvest-2026-08-d-context-ledger.md) | 5 | 16 | 1 | 14 | 0 | 1 | [1](#blockers-road-to-inbox-harvest-2026-08-d-context-ledger) | █████████░ 93% |
- | 17 | [road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md](roadmaps/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md) | 4 | 14 | 14 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-runtime-skill-routing) | ░░░░░░░░░░ 0% |
--| 18 | [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md) | 2 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-scheduled-deprecation) | ░░░░░░░░░░ 0% |
-+| 18 | [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md) | 2 | 10 | 0 | 10 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-scheduled-deprecation) | ██████████ 100% |
- | 19 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 14 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy) | ░░░░░░░░░░ 0% |
- | 20 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
- | 21 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-@@ -476,12 +484,12 @@ _1 blocker resolved._
+@@ -32,7 +40,7 @@
+ | 14 | [road-to-inbox-harvest-2026-08-d-archive-index.md](roadmaps/road-to-inbox-harvest-2026-08-d-archive-index.md) | 2 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+ | 15 | [road-to-inbox-harvest-2026-08-d-context-ledger.md](roadmaps/road-to-inbox-harvest-2026-08-d-context-ledger.md) | 5 | 16 | 1 | 14 | 0 | 1 | [1](#blockers-road-to-inbox-harvest-2026-08-d-context-ledger) | █████████░ 93% |
+ | 16 | [road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md](roadmaps/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md) | 4 | 14 | 14 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-runtime-skill-routing) | ░░░░░░░░░░ 0% |
+-| 17 | [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md) | 2 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-scheduled-deprecation) | ░░░░░░░░░░ 0% |
++| 17 | [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md) | 2 | 10 | 0 | 10 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-scheduled-deprecation) | ██████████ 100% |
+ | 18 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 14 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy) | ░░░░░░░░░░ 0% |
+ | 19 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
+ | 20 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+@@ -367,7 +375,7 @@ _1 blocker resolved._
+ <a id="blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle"></a>
+ **Blockers**
+ 
+-- **evidence-compaction-approval** (owner: maintainer - **Question:** may provably-reproducible `diff.patch` bodies be dropped in favour of their recorded base/head revisions? Phase 3 produces the list and the proof of reproducibility; the removal itself is a bulk deletion of committed evidence and is not an agent's call.) — blocks step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2 proceed either way. - **Evidence now available (Phase 3, 2026-08-15):** the list and the proof the blocker was waiting for exist. **30** directories totalling **3.24 MB**, 29 of them `archived`. **11** were re-derived byte-for-byte (**1.12 MB**); **19** were not (**2.12 MB**) and stay regardless. So option (b) reclaims at most **34.7 %** of the tree — and the tier boundary it would need to name is not a tier at all, since 29 of 30 sit in the same one. The only line that separates them is the per-directory re-derivation verdict in `agents/evidence/analysis/review-binding-drift.md`.
++- **evidence-compaction-approval** (owner: maintainer) — blocks step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2 proceed either way. - **Evidence now available (Phase 3, 2026-08-15):** the list and the proof the blocker was waiting for exist. **30** directories totalling **3.24 MB**, 29 of them `archived`. **11** were re-derived byte-for-byte (**1.12 MB**); **19** were not (**2.12 MB**) and stay regardless. So option (b) reclaims at most **34.7 %** of the tree — and the tier boundary it would need to name is not a tier at all, since 29 of 30 sit in the same one. The only line that separates them is the per-directory re-derivation verdict in `agents/evidence/analysis/review-binding-drift.md`.
+   - **What to do:**
+     pick exactly one — (a) no compaction: the tiering and the
+     reproducibility verdict are the whole deliverable, and step 3.3 is marked
+@@ -410,7 +418,7 @@ _1 blocker resolved._
+ <a id="blockers-road-to-inbox-harvest-2026-08-d-context-ledger"></a>
+ **Blockers**
+ 
+-- **paths-scoping-consumer-flip** (owner: user) — blocks Step 5.2 - **Question:** may a rule that loads unconditionally today be scoped to `paths:`, given that this narrows what an existing install receives?
++- **paths-scoping-consumer-flip** (owner: user) — blocks Step 5.2
+   - **What to do:**
+     pick exactly one — (a) authorise scoping the top-weight
+     tranche identified by 5.1, accepting that those rules stop loading outside
+@@ -433,7 +441,7 @@ _1 blocker resolved._
+ <a id="blockers-road-to-inbox-harvest-2026-08-d-runtime-skill-routing"></a>
+ **Blockers**
+ 
+-- **skill-trigger-seeding-precision-gate** (owner: user) — blocks Step 3.3 - **Question:** the precision reading that admits or rejects a seeded tranche comes from a live trigger evaluation, and the existing instrument for that is itself human-gated in `road-to-skill-description-measurement`. May the seeding tranche reuse that evaluation, or does it need its own run?
++- **skill-trigger-seeding-precision-gate** (owner: user) — blocks Step 3.3
+   - **What to do:**
+     pick exactly one — (a) run the existing live trigger
+     evaluation once and let both roadmaps read it, or (b) declare the skill-side
+@@ -442,23 +450,38 @@ _1 blocker resolved._
  
  ### [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md)
  
@@ -94,8 +111,50 @@ index 3c570c0237f10971a954170a482d6425fa899265..e3223a32beec91a2e509fe2008931745
  
  <a id="blockers-road-to-inbox-harvest-2026-08-d-scheduled-deprecation"></a>
  **Blockers**
+ 
+-- **code-graph-removal-authorisation** (owner: user) — blocks nothing in this roadmap — recorded so the overdue surface has an owner rather than only a report - **Question:** the code-graph removal is one major overdue against a recorded honest null. Does it execute at the next major cut, or does the commitment change?
+-  - **What to do:**
+-    pick exactly one — (a) authorise the removal at the next major
+-    cut, in its own change with the migration note and the manifest test updated
+-    together, or (b) revise the table's commitment for this surface and record why
+-    the engine stays despite the null.
+-  - **Resolved when:** the user states which of (a) or (b) holds.
++- **code-graph-removal-authorisation** (owner: user) — blocks nothing in this roadmap — recorded so the overdue surface has an owner rather than only a report
++  - **Recommendation:** (a), authorise the removal at the next major cut. The measurement behind it is closed and one-sided — `docs/CLAIMS.md` `code-graph-retrieval-null`, recall 0.365 against disciplined grep's 0.797 — the engine has shipped `enabled: false` as permanent since, and its parser pair already left `dependencies`, so (b) would be re-committing to a surface nothing consumes and nothing measures favourably.
++  - **If you do nothing:** the next major cut is **refused** by `lint_scheduled_deprecations --cutting`, so this is one of the few blockers that is not cheap to leave open. Minor and patch releases are unaffected; ~112 K of dormant runtime paths keep shipping inert in the meantime.
++  - **What to do:**
++    pick exactly one.
++    1. **(a) Authorise the removal.** Say so here (`Status: resolved`, decision
++    recorded), then execute it in its OWN change at the next major:
++    `git rm -r src/scripts/code_graph/ src/scripts/hooks/code_graph_nudge_hook.ts`,
++    drop the `code-graph-nudge` entries from `src/scripts/hook_manifest.yaml`
++    (`:180-181`, `:625`, `:633`, `:677`) together with the test that pins that
++    list (`:192`), retire the `code-intelligence` skill's native arm, and move
++    the row out of § Scheduled deprecations into a shipped-change section of
++    `docs/MIGRATION.md`. Expected outcome:
++    `./scripts-run src/scripts/lint_scheduled_deprecations --cutting <X.0.0>`
++    exits 0.
++    2. **(b) Revise the commitment.** Edit the `code_graph` row's `Removal due`
++    cell in `docs/MIGRATION.md` to `**not pinned here**` (the form the
++    `compatibility` and `telegraph-speak` rows already use) and state in the
++    § Row status section why the engine stays despite the recorded null.
++    Expected outcome: the same command exits 0, and the ⚠️ on every branch run
++    stops.
++  - **Resolved when:** this entry reads `Status: resolved` with (a) or (b) named, AND `./scripts-run src/scripts/lint_scheduled_deprecations --cutting 13.0.0` exits 0.
+ 
+ ### [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md)
+ 
+@@ -474,7 +497,7 @@ _1 blocker resolved._
+ <a id="blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy"></a>
+ **Blockers**
+ 
+-- **adr-035-reopen-question** (owner: user) — blocks Step 2.1 - **Question:** ADR-035 rejected a fourth band and named its own reopen condition — a vendor shipping a band the three tiers cannot express. Does that condition now hold?
++- **adr-035-reopen-question** (owner: user) — blocks Step 2.1
+   - **What to do:**
+     pick exactly one — (a) reopen ADR-035 on the stated condition
+     and authorise a fourth vendor-neutral band, or (b) leave the three-band
 diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md
-index fe049087201bc9566dae87542b957315e72e3af4..63bf30b14fa272816e6107ba4d33cfeeb4d57aac 100644
+index fe049087201bc9566dae87542b957315e72e3af4..19963a26667c1b58879ac901cf76361a410090a5 100644
 --- a/agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md
 +++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md
 @@ -56,16 +56,16 @@ actual defect-fix — is not held hostage to a release window.
@@ -215,6 +274,48 @@ index fe049087201bc9566dae87542b957315e72e3af4..63bf30b14fa272816e6107ba4d33cfee
  
  ## Blockers
  
+@@ -101,11 +168,36 @@ actual defect-fix — is not held hostage to a release window.
+ - **Question:** the code-graph removal is one major overdue against a recorded
+   honest null. Does it execute at the next major cut, or does the commitment
+   change?
+-- **What to do:** pick exactly one — (a) authorise the removal at the next major
+-  cut, in its own change with the migration note and the manifest test updated
+-  together, or (b) revise the table's commitment for this surface and record why
+-  the engine stays despite the null.
+-- **Resolved when:** the user states which of (a) or (b) holds.
++- **Recommendation:** (a), authorise the removal at the next major cut. The
++  measurement behind it is closed and one-sided — `docs/CLAIMS.md`
++  `code-graph-retrieval-null`, recall 0.365 against disciplined grep's 0.797 —
++  the engine has shipped `enabled: false` as permanent since, and its parser
++  pair already left `dependencies`, so (b) would be re-committing to a surface
++  nothing consumes and nothing measures favourably.
++- **If you do nothing:** the next major cut is **refused** by
++  `lint_scheduled_deprecations --cutting`, so this is one of the few blockers
++  that is not cheap to leave open. Minor and patch releases are unaffected;
++  ~112 K of dormant runtime paths keep shipping inert in the meantime.
++- **What to do:** pick exactly one.
++  1. **(a) Authorise the removal.** Say so here (`Status: resolved`, decision
++     recorded), then execute it in its OWN change at the next major:
++     `git rm -r src/scripts/code_graph/ src/scripts/hooks/code_graph_nudge_hook.ts`,
++     drop the `code-graph-nudge` entries from `src/scripts/hook_manifest.yaml`
++     (`:180-181`, `:625`, `:633`, `:677`) together with the test that pins that
++     list (`:192`), retire the `code-intelligence` skill's native arm, and move
++     the row out of § Scheduled deprecations into a shipped-change section of
++     `docs/MIGRATION.md`. Expected outcome:
++     `./scripts-run src/scripts/lint_scheduled_deprecations --cutting <X.0.0>`
++     exits 0.
++  2. **(b) Revise the commitment.** Edit the `code_graph` row's `Removal due`
++     cell in `docs/MIGRATION.md` to `**not pinned here**` (the form the
++     `compatibility` and `telegraph-speak` rows already use) and state in the
++     § Row status section why the engine stays despite the recorded null.
++     Expected outcome: the same command exits 0, and the ⚠️ on every branch run
++     stops.
++- **Resolved when:** this entry reads `Status: resolved` with (a) or (b) named,
++  AND `./scripts-run src/scripts/lint_scheduled_deprecations --cutting 13.0.0`
++  exits 0.
+ 
+ ## Risk Register
+ <!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude/host -->
 diff --git a/docs/MIGRATION.md b/docs/MIGRATION.md
 index 24d150ba5c8b009ab03bb637e518216fbf1e0208..19341ffddc82f6eb6ded14373e656b2540e5462f 100644
 --- a/docs/MIGRATION.md
@@ -335,6 +436,22 @@ index 3f98cabfa8fc9858aa76c4969306725a2f8c1ec0..6fa954a31bd0ab1639d93499e4771dbc
 +      `tests/scripts/lint_scheduled_deprecations.test.ts`, verified by mutation:
 +      widening the overdue threshold fails the overdue-by-construction case, and
 +      granting `allowEmpty` fails the zero-row case.
+diff --git a/src/config/gate-violation-baselines.json b/src/config/gate-violation-baselines.json
+index 76bbdcf0f9570c368a763d213629b4920d1a3bc3..88a5de726440af31c43efe865ad4bb0fc798ce8b 100644
+--- a/src/config/gate-violation-baselines.json
++++ b/src/config/gate-violation-baselines.json
+@@ -23,9 +23,9 @@
+       "note": "All 18 are `handoff_tier_mismatch`: a senior-tier skill links to a peer whose frontmatter carries no `tier` (reported as tier='unset') — e.g. build-buy-partner → adr-create, customer-research → po-discovery, gated-reach → threat-modeling. This is a tier-metadata backfill backlog on the LINKED-TO skills, not a broken link. The one genuinely dangling link revealed by the same repair (competitive-positioning → a non-existent ../analyze-reference-repo/SKILL.md; it is a command, not a skill) was FIXED in the repairing commit rather than baselined. Clearing this entry means backfilling `tier` on the linked-to skills, or deciding that `tier: unset` on a link target is not a violation and narrowing the rule."
+     },
+     "lint_roadmap_blockers:decidability": {
+-      "count": 38,
++      "count": 37,
+       "landed": "2026-08-15",
+-      "note": "Open blocker entries that are not yet DECIDABLE by the person who owns them — missing `Recommendation:` (which option and why), missing `If you do nothing:` (the cost of the non-decision), or a `What to do:` carrying no command, path or enumerated option set. Revealed by adding the decidability half to lint_roadmap_blockers, not created by it: the five original fields describe a situation and never made it actionable, so a blocker could pass the contract while handing the analysis back to the person least equipped to redo it. Measured at introduction: 36 open entries, ALL 36 undecidable, and 14 of the 46 total entries carry no command/path/option at all in `What to do`. Baselined rather than hard-failed because 36 findings nobody can clear in the change that reveals them is the gate-that-lands-as-N-instant-blockers failure this repository has refused before — the same reasoning as ci-parity:local-only above. First measured at 34 rather than 36 because the two blockers on the branch that introduced this (`ac3-false-positive-reading`, `publish-side-marker-invariant`) were rewritten to the new standard and then closed in the same change; a baseline above the truth silently permits new violations. Re-measured at 38 when the branch was re-pointed at current main, and the +4 is population growth rather than a loosening: main gained the four `road-to-inbox-harvest-2026-08-d-*` roadmaps (context-ledger, runtime-skill-routing, scheduled-deprecation, top-band-model-economy), each carrying one open blocker authored before this requirement existed. That is the honest number for the population this gate now scans — recording 34 against a 38-entry tree would have failed the gate on its own introducing commit and taught the next reader to distrust it. Lowering happens one blocker at a time, and every roadmap touched for other reasons is a chance to lower it. The 56-day expiry is the point, not a hazard: if this number has not moved in two months, the fields are not being written and the gate should fail until someone decides whether the requirement is real.",
++      "note": "Open blocker entries that are not yet DECIDABLE by the person who owns them — missing `Recommendation:` (which option and why), missing `If you do nothing:` (the cost of the non-decision), or a `What to do:` carrying no command, path or enumerated option set. Revealed by adding the decidability half to lint_roadmap_blockers, not created by it: the five original fields describe a situation and never made it actionable, so a blocker could pass the contract while handing the analysis back to the person least equipped to redo it. Measured at introduction: 36 open entries, ALL 36 undecidable, and 14 of the 46 total entries carry no command/path/option at all in `What to do`. Baselined rather than hard-failed because 36 findings nobody can clear in the change that reveals them is the gate-that-lands-as-N-instant-blockers failure this repository has refused before — the same reasoning as ci-parity:local-only above. First measured at 34 rather than 36 because the two blockers on the branch that introduced this (`ac3-false-positive-reading`, `publish-side-marker-invariant`) were rewritten to the new standard and then closed in the same change; a baseline above the truth silently permits new violations. Re-measured at 38 when the branch was re-pointed at current main, and the +4 is population growth rather than a loosening: main gained the four `road-to-inbox-harvest-2026-08-d-*` roadmaps (context-ledger, runtime-skill-routing, scheduled-deprecation, top-band-model-economy), each carrying one open blocker authored before this requirement existed. That is the honest number for the population this gate now scans — recording 34 against a 38-entry tree would have failed the gate on its own introducing commit and taught the next reader to distrust it. Lowering happens one blocker at a time, and every roadmap touched for other reasons is a chance to lower it. Lowered 38→37 by the scheduled-deprecation PR, which is exactly that shape: code-graph-removal-authorisation was rewritten to the new standard because the roadmap was being touched anyway. Its `If you do nothing:` is one of the few that is not the common no-cost answer — the release gate that PR ships refuses the next major cut while the blocker is open, which is the field doing the work it was added for. The 56-day expiry is the point, not a hazard: if this number has not moved in two months, the fields are not being written and the gate should fail until someone decides whether the requirement is real.",
+       "falsifier": "./scripts-run src/scripts/lint_roadmap_blockers --quiet"
+     },
+     "lint_pack_boundaries": {
 diff --git a/src/scripts/lint_scheduled_deprecations.ts b/src/scripts/lint_scheduled_deprecations.ts
 new file mode 100644
 index 0000000000000000000000000000000000000000..5167df208370a3c3bfc97a35397e0d1f1a86e0b5

@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head cdae71b306da55b6dbb1aa6122c5f228eee98a6a, review
-  artefacts excluded), scope hash `88e46ff2918db4a5e45c99ef0dc6e2feddcb724f8e5c6d145e0313f9fcd77ba4`
+- diff: `diff.patch` — the review scope (branch head 9a1cc8a78a1a97158d833b44755c4ccb89a49e1d, review
+  artefacts excluded), scope hash `72cd7dc5c1861d5168fc48265fb8669c800dc1d6b1289a6c8fa8437ab3d51b63`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -34,6 +34,7 @@ Changed files:
 - docs/MIGRATION.md
 - docs/release-runbook.md
 - src/config/gate-coverage.yml
+- src/config/gate-violation-baselines.json
 - src/scripts/lint_scheduled_deprecations.ts
 - src/scripts/release.ts
 - taskfiles/ci-fast.yml
@@ -60,5 +61,5 @@ Fill the findings table in `feat-scheduled-deprecation.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 88e46ff2918db4a5e45c99ef0dc6e2feddcb724f8e5c6d145e0313f9fcd77ba4, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 72cd7dc5c1861d5168fc48265fb8669c800dc1d6b1289a6c8fa8437ab3d51b63, reviewed <YYYY-MM-DD>
 ```

@@ -922,17 +922,18 @@ describe('assert_scheduled_deprecations_clear', () => {
         expect(calls).toHaveLength(1);
     });
 
-    it('a resumed major is still checked — target === current is not an exemption', () => {
-        // On --resume, _detect_in_flight_target() returns the already-bumped
-        // package.json version, so target and current are equal. A guard keyed
-        // on target > current returns silently here; keying on the X.0.0 shape
-        // does not. Stranding a resumed release is the deliberate trade against
-        // shipping a major over a missed commitment.
+    it('the guard cannot see the current version at all — which is what covers resume', () => {
+        // Resume is the path where target === current, and an earlier revision
+        // keyed on target > current returned silently there. It is not pinned
+        // by a separate case, because there is no input that distinguishes it:
+        // the guard takes ONE version and never reads the current one. That is
+        // the property, so assert the property rather than staging a duplicate
+        // of the refusal test that cannot fail independently of it.
+        expect(assert_scheduled_deprecations_clear.length).toBeLessThanOrEqual(3);
         const calls: string[][] = [];
-        expect(() => assert_scheduled_deprecations_clear('13.0.0', stub(1, calls))).toThrow(
-            SystemExitError,
-        );
-        expect(calls).toHaveLength(1);
+        assert_scheduled_deprecations_clear('13.0.0', stub(0, calls));
+        // Exactly one version reaches the gate, and it is the target.
+        expect(calls[0]?.filter((a) => /^\d+\.\d+\.\d+$/.test(a))).toEqual(['13.0.0']);
     });
 
     it('a multi-major jump is still a major cut', () => {
