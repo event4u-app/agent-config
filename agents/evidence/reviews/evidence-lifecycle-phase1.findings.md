@@ -1,10 +1,10 @@
 # Findings: evidence-lifecycle-phase1
-<!-- completion-review: v1 | reviewed: 2026-08-15 | scope: bcdcb5b97d5b6aca78e6b9fc9554702d8cf59948139cc9748f7a975ed0909058 | diff: 5efb15097a8567ce2666b06669dbcbdb45e90bfb | reviewer: r2-fresh-subagent-evidence-lifecycle-phase1 | prompt_hash: 1c78d83b83f9352e77e59b1e8e8499e2a636ee8dec993087d19f5a92872a4fe2 -->
+<!-- completion-review: v1 | reviewed: 2026-08-15 | scope: 42c290396509adcf4948fc649f6d7f91b6e88f3db302cd4eba918e3de892d47b | diff: 6f62fa3165c0284047a243f646d8c05e9422ad01 | reviewer: r2-fresh-subagent-evidence-lifecycle-phase1 | prompt_hash: 1c78d83b83f9352e77e59b1e8e8499e2a636ee8dec993087d19f5a92872a4fe2 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 5efb15097a8567ce2666b06669dbcbdb45e90bfb
-  scope_hash: bcdcb5b97d5b6aca78e6b9fc9554702d8cf59948139cc9748f7a975ed0909058
+  diff_sha: 6f62fa3165c0284047a243f646d8c05e9422ad01
+  scope_hash: 42c290396509adcf4948fc649f6d7f91b6e88f3db302cd4eba918e3de892d47b
   roadmap: agents/roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md
   roadmap_hash: bb946b80996f14fe288c91e77fafdf99e47a0acd3e2ee9e531726f4645861e23
   ac_hash: 694bb735c11ffdfc843d3ab31cd5f9393745195f4647c9b5ef199fe34d685a26
