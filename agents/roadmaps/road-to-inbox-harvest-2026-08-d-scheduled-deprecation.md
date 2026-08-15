@@ -1,0 +1,117 @@
+---
+complexity: lightweight
+status: ready
+---
+
+# Road to a deprecation table that cannot miss its own dates
+
+**Goal.** The scheduled-deprecations table stops depending on somebody
+remembering to read it: its due versions get checked by arithmetic against the
+shipped version, and the one entry that already slipped past its own commitment
+gets an owner instead of a note.
+
+**Source:** a proposal roadmap that arrived in the inbox, pinned at `e44e87865`,
+archived local-only at `agents/tmp.old/context-custodian/`. Triage, claim
+verification, and the arithmetic correction:
+`agents/evidence/analysis/inbox-harvest-2026-08-d-triage.md`.
+
+## Context
+
+Re-verified against the tree at `e3bd96158`.
+
+- **The table's own largest entry slipped past its commitment.**
+  `docs/MIGRATION.md:20` commits the code-graph removal to the major after the
+  next one after 9.x — which resolves to **11.0**. `package.json:4` reads
+  **12.0.0**. The removal is therefore **one major overdue**. The proposal's
+  headline said two; its own body said one, and one is correct. The corrected
+  figure is used throughout here.
+- **The runtime paths still ship.** `src/scripts/code_graph/` holds 11 files,
+  roughly 112 K on disk, and `code-graph-nudge` remains bound in
+  `src/scripts/hook_manifest.yaml:180-181` (with further bindings at `:625`,
+  `:633` and `:677`). A test pins the manifest list against the hook
+  (`hook_manifest.yaml:192`), so removal is a coordinated change, not a delete.
+- **The verdict behind the removal is recorded and unambiguous.**
+  `docs/CLAIMS.md:387` carries `code-graph-retrieval-null`: recall 0.365 against
+  disciplined grep's 0.797, a 43.2-point deficit, engine permanently disabled.
+- **Nothing machine-checks the table.** A sweep of all 128 `src/scripts/lint_*`
+  entries finds none that parses the scheduled-deprecation table or compares a
+  due version against `package.json`. The row existed, was correct, and was
+  missed anyway — so the defect is the absence of a check, not the absence of a
+  row.
+- **One dormant surface has a verdict and no row.** `telegraph` ships with
+  `speak` defaulting false (`src/scripts/_lib/compile_time_toggles.ts:56-57`)
+  after missing its kill criterion by 9.27 % against the terse baseline. It has
+  **no entry in `docs/MIGRATION.md`** at all, so its dormancy is untracked in
+  either direction — neither scheduled for removal nor recorded as a permanent
+  keep.
+
+## What is deliberately not executed here
+
+**The code-graph removal itself.** Deleting a CLI leaf, a skill arm and a rule
+route is a public-surface change: `downstream-changes` requires the user's word
+before removing a public surface, and `scope-control` gates it independently.
+It also lands at a major cut, not on an ordinary branch. It is carried as a
+blocker below rather than as a step, so that the check in Phase 1 — which is the
+actual defect-fix — is not held hostage to a release window.
+
+## Phase 1 — Make the dates checkable
+
+- [ ] 1.1 Add `lint_scheduled_deprecations`: parse the `docs/MIGRATION.md`
+      table, resolve each due version to a concrete number, and compare against
+      the version in `package.json`. An overdue surface that still has runtime
+      paths is reported by name, with the paths.
+      <!-- verify: test -f src/scripts/lint_scheduled_deprecations.ts -->
+- [ ] 1.2 Register the check so it runs where it can be seen, and have it exit
+      non-zero on an overdue surface only at a major cut — an ordinary branch
+      gets the report, a release gets the refusal.
+      <!-- verify: grep -c 'lint_scheduled_deprecations' Taskfile.yml -->
+- [ ] 1.3 Give the check a fixture that is overdue by construction, so a green
+      run means the arithmetic ran rather than that the table was empty. A gate
+      that scans nothing exits green, and that is the failure mode this whole
+      roadmap is about.
+      <!-- verify: grep -rc 'overdue' tests/scripts/lint_scheduled_deprecations.test.ts -->
+
+## Phase 2 — Give the two loose surfaces a tracked state
+
+- [ ] 2.1 Add the code-graph row's current status to the table: overdue by one
+      major, with the removal owner named. The row already exists; what it lacks
+      is the fact that it was missed.
+      <!-- verify: git show HEAD:docs/MIGRATION.md | grep -c 'code_graph' -->
+- [ ] 2.2 Give `telegraph` a tracked state — either a removal row with a due
+      version, or a documented permanent-keep with the reason. Untracked
+      dormancy is the one outcome this step removes.
+      <!-- verify: grep -ci 'telegraph' docs/MIGRATION.md -->
+
+## Acceptance criteria
+
+- [ ] An overdue scheduled deprecation is reported by a check, not by a reader.
+- [ ] The check has a by-construction-overdue fixture, so green means it ran.
+- [ ] The code-graph row records that its commitment was missed and by how much.
+- [ ] `telegraph` is either scheduled or documented as a keep.
+- [ ] No public surface is removed by this roadmap.
+
+## Blockers
+
+### blocker: code-graph-removal-authorisation
+
+- **Status:** open
+- **Owner:** user
+- **Blocks:** nothing in this roadmap — recorded so the overdue surface has an
+  owner rather than only a report
+- **Question:** the code-graph removal is one major overdue against a recorded
+  honest null. Does it execute at the next major cut, or does the commitment
+  change?
+- **What to do:** pick exactly one — (a) authorise the removal at the next major
+  cut, in its own change with the migration note and the manifest test updated
+  together, or (b) revise the table's commitment for this surface and record why
+  the engine stays despite the null.
+- **Resolved when:** the user states which of (a) or (b) holds.
+
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | The check blocks a release on a surface the maintainer meant to keep | product | An overdue row can be a deliberate deferral rather than a slip, and a hard refusal at a major cut turns a judgement into an outage | 2.2 makes "documented keep" a first-class tracked state, so a deliberate deferral is expressible in the table the check reads rather than only in someone's memory | Phase 2 — Give the two loose surfaces a tracked state |
+| 2 | The check ships green because it parses nothing | implementation | A table-parsing gate over a table whose format drifts silently reports success while scanning zero rows | 1.3 requires a by-construction-overdue fixture, so a green run proves the arithmetic executed rather than that the parse returned empty | Phase 1 — Make the dates checkable |
+| 3 | Recording the slip reads as authorisation to remove | implementation | A row that says "overdue, owner named" is one step from being actioned by a later run that skips the release window | The removal is a blocker with a named owner and is explicitly excluded from the steps, and the scope section states the two rules that gate it | What is deliberately not executed here |

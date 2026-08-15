@@ -1,5 +1,5 @@
 ---
-complexity: lightweight
+complexity: structural
 parent_roadmap: road-to-inbox-harvest-2026-08-b.md
 ---
 
