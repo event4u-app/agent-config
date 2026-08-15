@@ -15,11 +15,15 @@ been costing re-binds.
 
 The ratio that decided it, over **81** recorded re-bind events:
 
-| Cause | Events | Share |
-|---|---:|---:|
-| Code changed — the review correctly noticed it | 64 | **79.0 %** |
-| Only non-code paths changed | 10 | 12.3 % |
-| No in-scope path changed at all — the merge base moved | 7 | 8.6 % |
+| Cause (by changed paths) | Events | Share | of those, span carried a merge |
+|---|---:|---:|---:|
+| `code` — a code path changed | 64 | **79.0 %** | 23 |
+| `non-code` — only roadmap / dashboard / docs | 10 | 12.3 % | 2 |
+| `base-moved` — no path changed, but a merge landed | 0 | 0.0 % | 0 |
+| `unattributable` — no path changed and no merge | 7 | 8.6 % | 0 |
+
+**Addressable by the proposed fix: 8 of 81 events (9.9 %)** — non-code paths only
+AND no merge in the span.
 
 Step 2.1 pre-registered the stop condition in the roadmap's own words: *"A ratio
 that shows code changes dominate is a legitimate stop: the churn would then be
@@ -30,30 +34,34 @@ recorded outcome rather than a failure to build.
 Three findings sharpen that, and each would have to be answered before anyone
 reopens this:
 
-**1. The addressable share is 12.3 %, not the whole non-code remainder.** A
-segment-aware verdict consults roadmap and AC content. In the 7 `base-moved`
-events no in-scope path changed at all — the scope is `base...HEAD`, so merging
-the trunk into a branch rewrites the diff and therefore the hash without anyone
-touching a reviewed file. Neither the roadmap segment nor the AC segment moved
-in those, so the proposed fix does not reach them. This cause is not in the
-roadmap's Context section; it was found by the measurement.
+**1. The addressable share is 9.9 %, not the whole non-code remainder.** A
+segment-aware verdict consults roadmap and AC content. Two axes are measured
+independently — which path classes changed, and whether a merge landed in the
+span — because the scope is `base...head`, so merging the trunk rewrites the
+diff without anyone touching a reviewed file. Subtracting the events where a
+merge did the rewriting leaves 8 the fix would actually have prevented. The
+merge axis is not in the roadmap's Context; it was found by the measurement,
+and it also bounds the row above it: with 23 of the 64 `code` events carrying a
+merge, 79 % is an upper bound on "the review correctly noticed a change", not an
+exact count.
 
-**2. The relaxation would buy 10 events at the cost of a silent failure mode.**
+**2. The relaxation would buy 8 events at the cost of a silent failure mode.**
 Risk 1 of the roadmap states it: the value of the binding is that it notices when
 reviewed content moved, and a verdict that forgives one segment is "one careless
 predicate away from forgiving a code change that rode along with a roadmap edit".
 That failure is silent by construction — a review that wrongly reports current
-looks exactly like one that is. Trading a stated 12.3 % of re-bind churn against
-a silent integrity hole in the gate is not a trade this evidence supports.
+looks exactly like one that is. Trading 9.9 % of re-bind churn against a silent
+integrity hole in the gate is not a trade this evidence supports.
 
-**3. A cheaper repair exists for the same 12.3 %, and it is out of scope here.**
-Of the 10 non-code events, the dashboard `agents/roadmaps-progress.md` appears in
-6. It is a GENERATED file that regenerates on every roadmap touch, which is why
-the roadmap's Context observes that "a single checkbox produces two in-scope file
-changes". Excluding a generated artefact from a diff scope is a different act
-from excluding authored roadmap content — the latter is what Risk 4 rejects, and
-rightly. Whether the dashboard belongs in `REVIEW_SCOPE_EXCLUDES` is a separate,
-smaller question this plan did not ask and this analysis does not answer.
+**3. A cheaper repair exists for most of that 9.9 %, and it is out of scope
+here.** Of the 10 non-code events, the dashboard `agents/roadmaps-progress.md`
+appears in 6. It is a GENERATED file that regenerates on every roadmap touch,
+which is why the roadmap's Context observes that "a single checkbox produces two
+in-scope file changes". Excluding a generated artefact from a diff scope is a
+different act from excluding authored roadmap content — the latter is what Risk 4
+rejects, and rightly. Whether the dashboard belongs in `REVIEW_SCOPE_EXCLUDES` is
+a separate, smaller question this plan did not ask and this analysis does not
+answer.
 
 ## Two integrity findings the measurement surfaced
 
@@ -75,6 +83,13 @@ the input does not. The directory is therefore a record of the ORIGINAL review,
 not of the current binding. That is a retention fact, and Phase 3 tiers against
 it rather than against an assumption that the input still describes the binding.
 
+**A stored input can outlive its artefact.** The tier pass enumerates
+`*.review-input/` DIRECTORIES rather than findings artefacts, which is why it
+reports 30 where the segment table reports 28 with a stored patch: one directory
+has no committed artefact at all, and driving the tiering off the artefact list
+skipped it silently while acceptance criterion 4 said "every directory". Found
+by the R2 review of this very change.
+
 <!-- BEGIN probe_review_binding_drift -->
 
 ## Measurement
@@ -83,9 +98,9 @@ Generated by `./scripts-run src/scripts/probe_review_binding_drift --write`.
 Re-run it rather than editing the tables by hand; every number below is derived.
 Everything outside the two markers is preserved across runs.
 
-- Findings artefacts scanned: **52**
-- Carrying a stored `review-input/diff.patch`: **28**
-- `scope_hash` still reproduces that stored input: **8**
+- Findings artefacts scanned: **53**
+- Carrying a stored `review-input/diff.patch`: **29**
+- `scope_hash` still reproduces that stored input: **9**
 - `scope_hash` moved after dispatch: **20**
 - Recorded re-bind events across all artefacts: **81**
 
@@ -95,16 +110,29 @@ Counted per re-bind **event** — one artefact re-bound three times cost three
 re-binds. A re-bind is attributed to the in-scope paths that changed between
 the previous binding state and the commit that moved the hash.
 
-| Cause of the re-bind | Events | Share |
-|---|---:|---:|
-| Code changed — the review correctly noticed it | 64 | 79.0 % |
-| Only non-code paths changed (roadmap / dashboard / docs / other `agents/`) | 10 | 12.3 % |
-| No in-scope path changed at all — the merge base moved | 7 | 8.6 % |
+Two independent axes are measured, and neither is inferred from the other:
+the path classes that changed, and whether a MERGE landed in the span. The
+second matters because the scope is `base...head` — merging the trunk into a
+branch rewrites the diff, and therefore the hash, without anyone touching a
+reviewed file.
 
-The third row is a cause the roadmap did not anticipate and Phase 2 would not
-address: the scope is `base...HEAD`, so merging the trunk into a branch rewrites
-the diff — and therefore the hash — without anyone touching a reviewed file. A
-segment-aware verdict consults roadmap and AC content; neither moved in these.
+| Cause (by changed paths) | Events | Share | of those, span carried a merge |
+|---|---:|---:|---:|
+| `code` — a code path changed | 64 | 79.0 % | 23 |
+| `non-code` — only roadmap / dashboard / docs | 10 | 12.3 % | 2 |
+| `base-moved` — no path changed, but a merge landed | 0 | 0.0 % | 0 |
+| `unattributable` — no path changed and no merge | 7 | 8.6 % | 0 |
+
+A merge landed in the span of **25** of 81 events
+(30.9 %), including 23 filed under `code`. Those
+are re-binds where the diff was rewritten by the merge as well as by an edit, so
+the `code` row is an upper bound on "the review correctly noticed a change",
+not an exact count.
+
+**Addressable by a segment-aware verdict: 8 of 81 events
+(9.9 %)** — non-code paths only AND no merge in the span.
+Every other class moved either code or the diff itself, and consulting the roadmap
+and AC segments does not reach any of them.
 
 ## Non-code-only re-binds, in full
 
@@ -138,7 +166,7 @@ Re-bind events landing in `11.0.0..12.0.0`: **4**.
 | `fix-branch-freshness-r2-findings` | `e63511efd` | code | dist/agent-src/commands/pr/create.md, dist/agent-src/skills/git-workflow/SKILL.md, src/domains/git/pr/create/command.md, src/scripts/check_branch_freshness.ts, src/skills/git-workflow/SKILL.md, taskfiles/ci-fast.yml, tests/scripts/check_branch_freshness.test.ts |
 | `roadmap-sweep-2026-08-14-continued` | `922271617` | non-code | agents/evidence/reports/SWEEP-REPORT-2026-08-14-continued.md |
 | `roadmap-sweep-2026-08-14-continued` | `f16bfa68a` | non-code | agents/roadmaps-progress.md, agents/roadmaps/archive/road-to-inbox-harvest-2026-08.md, agents/roadmaps/archive/road-to-inbox-harvest-distillation.md, agents/roadmaps/road-to-inbox-harvest-2026-08.md, agents/roadmaps/road-to-inbox-harvest-residuals.md |
-| `roadmap-sweep-2026-08-14-continued` | `4094b92f9` | base-moved | (none in scope) |
+| `roadmap-sweep-2026-08-14-continued` | `4094b92f9` | unattributable | (none in scope) |
 
 ## Per-binding segment verdicts
 
@@ -159,7 +187,8 @@ Re-bind events landing in `11.0.0..12.0.0`: **4**.
 | `council-remaining-adapters` | moved | none | none | 1 | code | — |
 | `dead-citations-after-rule-migration` | prose-bound | none | none | 0 | — | skip artefact — scope hash in prose |
 | `dispatch-safety-phase2` | no-input | moved | same | 3 | code | — |
-| `feat-close-gate-reds-blockers` | same | same | same | 3 | code, base-moved | — |
+| `evidence-lifecycle-phase1` | same | same | same | 0 | — | — |
+| `feat-close-gate-reds-blockers` | same | same | same | 3 | code, unattributable | — |
 | `feat-conformance-round6-measurement` | no-input | moved | moved | 0 | — | roadmap archived since dispatch |
 | `feat-cost-parity-3-handoff-envelope` | moved | none | none | 1 | code | — |
 | `feat-council-solo-floor-implementation` | moved | none | none | 1 | code | — |
@@ -169,13 +198,13 @@ Re-bind events landing in `11.0.0..12.0.0`: **4**.
 | `feat-inbox-harvest-b-ci-economy.round1` | no-input | moved | same | 0 | — | — |
 | `feat-inbox-harvest-b-ci-economy.round2` | no-input | moved | same | 0 | — | — |
 | `feat-inbox-harvest-b-ledger-truth` | moved | none | none | 1 | code | — |
-| `feat-inbox-harvest-b-quorum-telemetry` | same | moved | same | 1 | base-moved | roadmap archived since dispatch |
+| `feat-inbox-harvest-b-quorum-telemetry` | same | moved | same | 1 | unattributable | roadmap archived since dispatch |
 | `feat-local-only-gate-reds` | same | moved | moved | 3 | non-code, code | roadmap archived since dispatch |
 | `feat-parallel-session-collision-hardening` | moved | none | none | 3 | code | — |
-| `feat-road-to-rule-delivery-integrity` | no-input | moved | same | 1 | base-moved | roadmap archived since dispatch |
+| `feat-road-to-rule-delivery-integrity` | no-input | moved | same | 1 | unattributable | roadmap archived since dispatch |
 | `feat-road-to-skill-ecosystem-authoring-discipline` | no-input | moved | moved | 1 | code | roadmap archived since dispatch |
 | `feat-road-to-zero-ceremony-settings` | no-input | moved | moved | 1 | code | — |
-| `feat-source-first-frontend` | same | moved | same | 4 | code, base-moved | — |
+| `feat-source-first-frontend` | same | moved | same | 4 | code, unattributable | — |
 | `feat-subagent-lifecycle-integrity` | moved | moved | same | 3 | code | — |
 | `feat-subagent-lifecycle-phase0-payload-spikes` | prose-bound | none | none | 0 | — | skip artefact — scope hash in prose |
 | `fix-branch-freshness-r2-findings` | moved | none | none | 1 | code | — |
@@ -189,14 +218,14 @@ Re-bind events landing in `11.0.0..12.0.0`: **4**.
 | `orchestrator-discipline-closeout` | no-input | none | none | 2 | code | — |
 | `road-to-inbox-harvest-2026-08-b-authoring-contract` | same | none | none | 2 | code | — |
 | `roadmap-blocker-premise-corrections` | prose-bound | none | none | 0 | — | skip artefact — scope hash in prose |
-| `roadmap-sweep-2026-08-14-continued` | prose-bound | none | none | 3 | non-code, base-moved | skip artefact — scope hash in prose |
-| `rootless-write-refusal` | moved | none | none | 1 | base-moved | — |
+| `roadmap-sweep-2026-08-14-continued` | prose-bound | none | none | 3 | non-code, unattributable | skip artefact — scope hash in prose |
+| `rootless-write-refusal` | moved | none | none | 1 | unattributable | — |
 | `structured-guard-input-phase1` | prose-bound | none | none | 1 | non-code | skip artefact — scope hash in prose |
 | `turn-end-gate-r2-fixes` | same | none | none | 0 | — | — |
 | `waiter-discipline` | prose-bound | none | none | 0 | — | skip artefact — scope hash in prose |
 | `workspace-identity` | moved | same | same | 2 | code | — |
 | `worktree-feat-turn-end-gate-always-on` | moved | moved | same | 2 | non-code, code | — |
-| `zcs-close-2026-08-09` | moved | same | same | 3 | code, non-code, base-moved | — |
+| `zcs-close-2026-08-09` | moved | same | same | 3 | code, non-code, unattributable | — |
 | `zcs-closure-round2` | no-input | moved | moved | 0 | — | — |
 | `zcs-closure` | no-input | moved | moved | 0 | — | — |
 
@@ -208,16 +237,17 @@ Re-bind events landing in `11.0.0..12.0.0`: **4**.
 
 | Tier | Dirs | Bytes |
 |---|---:|---:|
-| archived | 28 | 3.11 MB |
-| **total** | **28** | **3.11 MB** |
+| active | 1 | 0.09 MB |
+| archived | 29 | 3.15 MB |
+| **total** | **30** | **3.24 MB** |
 
 ### Regeneration guarantee
 
-Re-derived successfully: **10** of 28 — 1.03 MB.
-Not re-derivable from the record: **18** — 2.08 MB, which stays regardless.
+Re-derived successfully: **11** of 30 — 1.12 MB.
+Not re-derivable from the record: **19** — 2.12 MB, which stays regardless.
 
 That bounds the `evidence-compaction-approval` blocker: the most any compaction
-could reclaim is **1.03 MB** of 3.11 MB (33 %), and only
+could reclaim is **1.12 MB** of 3.24 MB (34.7 %), and only
 from the directories listed as re-derivable below.
 
 A stored patch counts as reproducible only when it was ACTUALLY re-derived
@@ -241,6 +271,7 @@ what the verdict reports.
 - `feat-parallel-session-collision-hardening.review-input` (0.06 MB, archived) — no — not re-derivable from the recorded head alone
 - `frontend-skill-application.review-input` (0.17 MB, archived) — no — not re-derivable from the recorded head alone
 - `guard-input-prompt-binding.review-input` (0.09 MB, archived) — no — not re-derivable from the recorded head alone
+- `pr-target-base-freshness.review-input` (0.04 MB, archived) — no — not re-derivable from the recorded head alone
 - `turn-end-gate-r2-fixes.review-input` (0.07 MB, archived) — no — not re-derivable from the recorded head alone
 - `workspace-identity.review-input` (0.13 MB, archived) — no — not re-derivable from the recorded head alone
 - `worktree-feat-turn-end-gate-always-on.review-input` (0.08 MB, archived) — no — not re-derivable from the recorded head alone
@@ -255,6 +286,7 @@ what the verdict reports.
 | `council-codex-transport.review-input` | archived | 18 kB | no — not re-derivable from the recorded head alone |
 | `council-integrity.review-input` | archived | 92 kB | no — not re-derivable from the recorded head alone |
 | `council-remaining-adapters.review-input` | archived | 18 kB | no — not re-derivable from the recorded head alone |
+| `evidence-lifecycle-phase1.review-input` | active | 95 kB | yes — current `origin/main` |
 | `feat-close-gate-reds-blockers.review-input` | archived | 60 kB | yes — trunk at merge `af9b8d7ff` |
 | `feat-cost-parity-3-handoff-envelope.review-input` | archived | 134 kB | yes — trunk at merge `c3e51cc70` |
 | `feat-council-solo-floor-implementation.review-input` | archived | 90 kB | yes — trunk at merge `196ff8bec` |
@@ -270,6 +302,7 @@ what the verdict reports.
 | `fix-branch-freshness-r2-findings.review-input` | archived | 35 kB | yes — trunk at merge `b3fec2881` |
 | `frontend-skill-application.review-input` | archived | 175 kB | no — not re-derivable from the recorded head alone |
 | `guard-input-prompt-binding.review-input` | archived | 89 kB | no — not re-derivable from the recorded head alone |
+| `pr-target-base-freshness.review-input` | archived | 39 kB | no — not re-derivable from the recorded head alone |
 | `road-to-inbox-harvest-2026-08-b-authoring-contract.review-input` | archived | 184 kB | yes — trunk at merge `86cc1d778` |
 | `rootless-write-refusal.review-input` | archived | 52 kB | yes — trunk at merge `42f22fd27` |
 | `turn-end-gate-r2-fixes.review-input` | archived | 74 kB | no — not re-derivable from the recorded head alone |

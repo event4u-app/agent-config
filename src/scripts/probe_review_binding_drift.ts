@@ -78,7 +78,7 @@ type PathClass = 'roadmap' | 'docs' | 'agents-other' | 'code';
  *     file. Counting these as `code` would overstate the gate's usefulness;
  *     counting them as `non-code` would overstate the roadmap mechanism.
  */
-type RebindCause = 'code' | 'non-code' | 'base-moved';
+type RebindCause = 'code' | 'non-code' | 'base-moved' | 'unattributable';
 
 interface Attribution {
     /** Commit at which the artefact's `scope_hash` changed value. */
@@ -87,7 +87,29 @@ interface Attribution {
     /** In-scope paths that changed since the previous binding state. */
     paths: string[];
     classes: PathClass[];
+    /** The trunk merge base differs between the two binding states. */
+    baseMoved: boolean;
     cause: RebindCause;
+}
+
+/**
+ * Did a merge land between the two binding states?
+ *
+ * This is the observable signature of the scope being rewritten by something
+ * other than an edit: the scope is `base...head`, so merging the trunk into
+ * the branch changes the diff — and the hash — without anyone touching a
+ * reviewed file.
+ *
+ * Comparing `merge-base origin/main <rev>` at the two states does NOT work and
+ * was tried: almost every reviewed commit has since landed in the trunk, which
+ * makes its merge base itself, so the comparison degenerates into "are these
+ * two commits different" and reported 100 % of events as base-moved. The merge
+ * commit inside the span is a local fact that stays true after the branch
+ * lands.
+ */
+function mergeInSpan(from: string, to: string): boolean {
+    const merges = gitOrNull('rev-list', '--merges', `${from}..${to}`);
+    return merges !== null && merges.trim() !== '';
 }
 
 interface Row {
@@ -185,10 +207,16 @@ function transitions(findingsRel: string): Attribution[] {
     if (log === null) return [];
     const commits = log.trim().split('\n').filter(Boolean); // newest first
 
+    const hashCache = new Map<string, string | null>();
     const hashAt = (commit: string): string | null => {
+        // Each revision is the `now` of one iteration and the `before` of the
+        // next; without the cache every blob is fetched twice.
+        const cached = hashCache.get(commit);
+        if (cached !== undefined) return cached;
         const blob = gitOrNull('show', `${commit}:${findingsRel}`);
-        if (blob === null) return null;
-        return scopeHashOf(blob)?.hash ?? null;
+        const hash = blob === null ? null : (scopeHashOf(blob)?.hash ?? null);
+        hashCache.set(commit, hash);
+        return hash;
     };
 
     const found: Attribution[] = [];
@@ -200,18 +228,38 @@ function transitions(findingsRel: string): Attribution[] {
         if (now === null || before === null || now === before) continue;
 
         const names = gitOrNull(...reviewScopeNameOnlyArgs(previousState, commit));
-        if (names === null) continue;
+        const subject = (gitOrNull('log', '--format=%s', '-1', commit) ?? '').trim();
+        if (names === null) {
+            // Do NOT drop it: a silently skipped event shrinks the denominator
+            // of the published ratio, which is the one number that must not be
+            // quietly optimistic.
+            found.push({
+                commit: commit.slice(0, 9),
+                subject,
+                paths: [],
+                classes: [],
+                baseMoved: false,
+                cause: 'unattributable',
+            });
+            continue;
+        }
         const paths = names.trim().split('\n').filter(Boolean);
         const classes = [...new Set(paths.map(classifyPath))];
-        const cause: RebindCause =
-            paths.length === 0 ? 'base-moved' : classes.includes('code') ? 'code' : 'non-code';
-        found.push({
-            commit: commit.slice(0, 9),
-            subject: (gitOrNull('log', '--format=%s', '-1', commit) ?? '').trim(),
-            paths,
-            classes,
-            cause,
-        });
+
+        // Measured, never inferred: the scope is `base...head`, so if the merge
+        // base against the trunk differs between the two binding states, the
+        // diff was rewritten no matter what anyone edited. Deriving this from
+        // "no paths changed" instead would mis-file every trunk merge that also
+        // carried a real edit — and those are the majority of them.
+        const baseMoved = mergeInSpan(previousState, commit);
+        const cause: RebindCause = classes.includes('code')
+            ? 'code'
+            : paths.length > 0
+              ? 'non-code'
+              : baseMoved
+                ? 'base-moved'
+                : 'unattributable';
+        found.push({ commit: commit.slice(0, 9), subject, paths, classes, baseMoved, cause });
     }
     return found;
 }
@@ -354,21 +402,47 @@ function tryReproduce(head: string, patchSha: string): string {
     return 'no — not re-derivable from the recorded head alone';
 }
 
+/**
+ * Tier every `*.review-input/` DIRECTORY on disk.
+ *
+ * Enumerating directories rather than findings artefacts is load-bearing: a
+ * stored input whose artefact was never committed (or was renamed) still
+ * occupies bytes and still has to carry a tier, and acceptance criterion 4
+ * says "every `review-input/` directory" — not "every one with an artefact".
+ * Driving this off the artefact list silently omitted exactly such a case.
+ */
 function retention(rows: Row[]): Retention[] {
+    const scopeBySlug = new Map(rows.map((r) => [r.slug, r.scope]));
+    const dirs = fs
+        .readdirSync(REVIEWS_DIR, { withFileTypes: true })
+        .filter((e) => e.isDirectory() && e.name.endsWith('.review-input'))
+        .map((e) => e.name)
+        .sort();
+
     const out: Retention[] = [];
-    for (const r of rows) {
-        const dir = path.join(REVIEWS_DIR, `${r.slug}.review-input`);
-        if (!fs.existsSync(dir)) continue;
+    for (const dirName of dirs) {
+        const slug = dirName.replace(/\.review-input$/, '');
+        const dir = path.join(REVIEWS_DIR, dirName);
 
         const promptPath = path.join(dir, 'prompt.md');
         const prompt = fs.existsSync(promptPath) ? fs.readFileSync(promptPath, 'utf-8') : '';
         const head = /branch head ([0-9a-f]{40})/.exec(prompt)?.[1] ?? null;
         const headReachable = head !== null && gitOrNull('cat-file', '-e', head) !== null;
 
+        // `merge-base --is-ancestor` exits 1 for "not an ancestor" and also
+        // fails when `origin/main` does not resolve. Distinguish them: an
+        // unresolvable trunk must not silently tier every directory.
         let tier: Tier = 'unknown';
-        if (head !== null && headReachable) {
+        if (head !== null && headReachable && gitOrNull('rev-parse', '--verify', 'origin/main') !== null) {
             const merged = gitOrNull('merge-base', '--is-ancestor', head, 'origin/main') !== null;
-            tier = merged ? 'archived' : r.scope === 'same' ? 'active' : 'recent';
+            const scope = scopeBySlug.get(slug);
+            tier = merged
+                ? 'archived'
+                : scope === 'same'
+                  ? 'active'
+                  : scope === 'moved'
+                    ? 'recent'
+                    : 'unknown'; // prose-bound / no artefact: not comparable, not "re-bound"
         }
 
         const patchPath = path.join(dir, 'diff.patch');
@@ -377,7 +451,7 @@ function retention(rows: Row[]): Retention[] {
             : null;
 
         out.push({
-            slug: r.slug,
+            slug,
             tier,
             bytes: dirBytes(dir),
             head,
@@ -422,6 +496,7 @@ function render(rows: Row[]): string {
     const nonCode = events.filter((e) => e.a.cause === 'non-code');
     const code = events.filter((e) => e.a.cause === 'code');
     const baseMoved = events.filter((e) => e.a.cause === 'base-moved');
+    const unattributable = events.filter((e) => e.a.cause === 'unattributable');
 
     const pct = (n: number, d: number): string => (d === 0 ? 'n/a' : `${((n / d) * 100).toFixed(1)} %`);
 
@@ -446,22 +521,45 @@ function render(rows: Row[]): string {
     out.push('re-binds. A re-bind is attributed to the in-scope paths that changed between');
     out.push('the previous binding state and the commit that moved the hash.');
     out.push('');
-    out.push('| Cause of the re-bind | Events | Share |');
-    out.push('|---|---:|---:|');
+    const withMerge = events.filter((e) => e.a.baseMoved);
+    const codeWithMerge = code.filter((e) => e.a.baseMoved);
+    const addressable = nonCode.filter((e) => !e.a.baseMoved);
+
+    out.push('Two independent axes are measured, and neither is inferred from the other:');
+    out.push('the path classes that changed, and whether a MERGE landed in the span. The');
+    out.push('second matters because the scope is `base...head` — merging the trunk into a');
+    out.push('branch rewrites the diff, and therefore the hash, without anyone touching a');
+    out.push('reviewed file.');
+    out.push('');
+    out.push('| Cause (by changed paths) | Events | Share | of those, span carried a merge |');
+    out.push('|---|---:|---:|---:|');
     out.push(
-        `| Code changed — the review correctly noticed it | ${code.length} | ${pct(code.length, events.length)} |`,
+        `| \`code\` — a code path changed | ${code.length} | ${pct(code.length, events.length)} | ${codeWithMerge.length} |`,
     );
     out.push(
-        `| Only non-code paths changed (roadmap / dashboard / docs / other \`agents/\`) | ${nonCode.length} | ${pct(nonCode.length, events.length)} |`,
+        `| \`non-code\` — only roadmap / dashboard / docs | ${nonCode.length} | ${pct(nonCode.length, events.length)} | ${nonCode.length - addressable.length} |`,
     );
     out.push(
-        `| No in-scope path changed at all — the merge base moved | ${baseMoved.length} | ${pct(baseMoved.length, events.length)} |`,
+        `| \`base-moved\` — no path changed, but a merge landed | ${baseMoved.length} | ${pct(baseMoved.length, events.length)} | ${baseMoved.length} |`,
+    );
+    out.push(
+        `| \`unattributable\` — no path changed and no merge | ${unattributable.length} | ${pct(unattributable.length, events.length)} | 0 |`,
     );
     out.push('');
-    out.push('The third row is a cause the roadmap did not anticipate and Phase 2 would not');
-    out.push('address: the scope is `base...HEAD`, so merging the trunk into a branch rewrites');
-    out.push('the diff — and therefore the hash — without anyone touching a reviewed file. A');
-    out.push('segment-aware verdict consults roadmap and AC content; neither moved in these.');
+    out.push(
+        `A merge landed in the span of **${withMerge.length}** of ${events.length} events`,
+        `(${pct(withMerge.length, events.length)}), including ${codeWithMerge.length} filed under \`code\`. Those`,
+        'are re-binds where the diff was rewritten by the merge as well as by an edit, so',
+        'the `code` row is an upper bound on "the review correctly noticed a change",',
+        'not an exact count.',
+    );
+    out.push('');
+    out.push(
+        `**Addressable by a segment-aware verdict: ${addressable.length} of ${events.length} events`,
+        `(${pct(addressable.length, events.length)})** — non-code paths only AND no merge in the span.`,
+        'Every other class moved either code or the diff itself, and consulting the roadmap',
+        'and AC segments does not reach any of them.',
+    );
     out.push('');
     out.push('## Non-code-only re-binds, in full');
     out.push('');
@@ -540,15 +638,22 @@ function render(rows: Row[]): string {
     out.push('### Regeneration guarantee');
     out.push('');
     const provenBytes = proven.reduce((s, r) => s + r.bytes, 0);
+    // Summed over the SAME rows the count reports — `ret` also holds `n/a`
+    // rows (no stored patch), so `total - proven` would mix two populations.
+    const unprovenBytes = unproven.reduce((s, r) => s + r.bytes, 0);
     const totalBytes = ret.reduce((s, r) => s + r.bytes, 0);
     out.push(`Re-derived successfully: **${proven.length}** of ${ret.length} — ${mb(provenBytes)}.`);
     out.push(
-        `Not re-derivable from the record: **${unproven.length}** — ${mb(totalBytes - provenBytes)}, which stays regardless.`,
+        `Not re-derivable from the record: **${unproven.length}** — ${mb(unprovenBytes)}, which stays regardless.`,
     );
+    const other = ret.length - proven.length - unproven.length;
+    if (other > 0) {
+        out.push(`Neither (no stored patch): **${other}** — ${mb(totalBytes - provenBytes - unprovenBytes)}.`);
+    }
     out.push('');
     out.push(
         'That bounds the `evidence-compaction-approval` blocker: the most any compaction',
-        `could reclaim is **${mb(provenBytes)}** of ${mb(totalBytes)} (${((provenBytes / totalBytes) * 100).toFixed(0)} %), and only`,
+        `could reclaim is **${mb(provenBytes)}** of ${mb(totalBytes)} (${pct(provenBytes, totalBytes)}), and only`,
         'from the directories listed as re-derivable below.',
     );
     out.push('');

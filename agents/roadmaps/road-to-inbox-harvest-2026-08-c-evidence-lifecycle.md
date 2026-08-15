@@ -65,9 +65,11 @@ changelog era alone.
       changed" (roadmaps, dashboard, docs), and report the ratio. That ratio is
       the whole case for Phase 2.
       *verify:* the analysis states both counts and the ratio.
-      → **64 code (79.0 %) · 10 non-code (12.3 %) · 7 base-moved (8.6 %)** over 81
-      re-bind events. The third class was not anticipated by the plan: no in-scope
-      path changed at all — merging the trunk moved the merge base.
+      → **64 code (79.0 %) · 10 non-code (12.3 %) · 7 unattributable (8.6 %)** over
+      81 re-bind events. A second, independent axis the plan did not anticipate:
+      a MERGE landed in the span of 25 events (30.9 %), including 23 filed under
+      `code` — so 79 % is an upper bound, not an exact count. Netting the merge
+      axis out leaves **8 of 81 (9.9 %)** the proposed fix would have prevented.
 - [x] Record what each of the four 12.0.0-era re-binds was actually caused by,
       from the same data.
       *verify:* the analysis names a cause per re-bind, or says the data cannot
@@ -109,20 +111,20 @@ changelog era alone.
       recent, or archived (the reviewed content is merged and the binding is
       historical), and record the tier plus its byte cost per directory.
       *verify:* every one of the 28 carries a tier in the analysis file.
-      → § Retention tiers: all **28 are `archived`** (every reviewed head is an
-      ancestor of `origin/main`), **3.11 MB** total, per-directory bytes in the
-      table. The `active`/`recent` tiers are empty — a real result, not a gap:
-      no stored input still binds a live review.
+      → § Retention tiers: **30 directories, 3.24 MB** — 29 `archived`, 1 `active`
+      (this change's own review). The pass enumerates DIRECTORIES, not artefacts:
+      one directory has no committed artefact and was silently skipped until the
+      R2 review of this change caught it.
 - [x] State the regeneration guarantee per tier: for which tiers a stored
       `diff.patch` can be re-derived from the recorded revisions, and for which
       it cannot (a force-push or a rewritten history makes it irreproducible, in
       which case the patch is the only copy and stays).
       *verify:* the analysis names the irreproducible directories explicitly.
-      → **10 of 28 re-derived byte-for-byte (1.03 MB); 18 could not (2.08 MB)**,
+      → **11 of 30 re-derived byte-for-byte (1.12 MB); 19 could not (2.12 MB)**,
       each named in § Regeneration guarantee. Reproducibility is ATTEMPTED, not
       asserted: the manifest records no base revision, so the probe reconstructs
       it from the merge commit's first parent and reports what actually
-      happened. That bounds the compaction blocker at 33 % of the tree.
+      happened. That bounds the compaction blocker at 34.7 % of the tree.
 - [ ] Compact the tiers that are provably reproducible. Blocked behind the
       blocker below — it removes committed evidence, which is a maintainer's
       call, not an agent's.
@@ -144,12 +146,12 @@ changelog era alone.
 - **Blocks:** step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2
   proceed either way.
 - **Evidence now available (Phase 3, 2026-08-15):** the list and the proof the
-  blocker was waiting for exist. All 28 directories are `archived`, totalling
-  **3.11 MB**. **10** were re-derived byte-for-byte (**1.03 MB**); **18** were
-  not (**2.08 MB**) and stay regardless. So option (b) reclaims at most **33 %**
-  of the tree, and the tier boundary it would need to name is not a tier at all
-  — every directory sits in the same one, and the only line that separates them
-  is the per-directory re-derivation verdict in
+  blocker was waiting for exist. **30** directories totalling **3.24 MB**, 29 of
+  them `archived`. **11** were re-derived byte-for-byte (**1.12 MB**); **19**
+  were not (**2.12 MB**) and stay regardless. So option (b) reclaims at most
+  **34.7 %** of the tree — and the tier boundary it would need to name is not a
+  tier at all, since 29 of 30 sit in the same one. The only line that separates
+  them is the per-directory re-derivation verdict in
   `agents/evidence/analysis/review-binding-drift.md`.
 - **What to do:** pick exactly one — (a) no compaction: the tiering and the
   reproducibility verdict are the whole deliverable, and step 3.3 is marked
