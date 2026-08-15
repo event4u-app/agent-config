@@ -81,7 +81,7 @@ import * as user_global_paths from '../_lib/user_global_paths.js';
 // `import type` and is erased at build, so there is no runtime cycle today.
 // Converting it to a value import — or adding any other runtime import from
 // quorum into config — creates a real ESM cycle in the loader's init path.
-import { _isAutoModel } from './clients.js';
+import { OPENAI_CLI_VENDOR_DEFAULT } from './clients.js';
 import { SOLO_FLOOR_MIN_PRESENT } from './quorum.js';
 
 const _VALID_PROVIDERS: ReadonlySet<string> = new Set([
@@ -1844,15 +1844,21 @@ function _build_member(
             }
             entries.push(entry);
         }
-        // `auto` is a SENTINEL, not a model id — "let the transport choose".
-        // Requiring it to appear on a downgrade ladder of concrete ids is a
-        // category error, and it is the check that would reject the shipped
-        // template: that template must not pin an id (a subscription-authed
-        // codex account refuses every id this package ever shipped), and its
-        // ladder is an api-transport concern the CLI's own default cannot be
-        // ordered against. Exempting the sentinel is narrower than dropping
-        // the check: a real pin is still required to be on its own ladder.
-        if (member_enabled && model && !_isAutoModel(model) && !entries.includes(model)) {
+        // `codex-default` is a SENTINEL, not a model id — "let the transport
+        // choose". Requiring it to appear on a downgrade ladder of concrete ids
+        // is a category error, and it is the check that blocks the one config
+        // that actually works on a subscription account: the shipped template
+        // cannot pin an id (every id this package shipped is on
+        // `CODEX_MEASURED_UNSERVABLE`), and its ladder is an api-transport
+        // concern the CLI's own default cannot be ordered against. Exempting
+        // the sentinel is narrower than dropping the check — a real pin is
+        // still required to be on its own ladder.
+        if (
+            member_enabled &&
+            model &&
+            model !== OPENAI_CLI_VENDOR_DEFAULT &&
+            !entries.includes(model)
+        ) {
             throw new CouncilConfigError(
                 `members.${name}.model_ladder must include the active ` +
                     `\`model\` (${_pyReprStr(model)}); got ${_pyRepr(entries)}.`,

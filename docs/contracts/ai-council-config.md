@@ -253,23 +253,35 @@ Implications:
   bump the constant intentionally rather than assuming it tracks the latest
   release.
 
-  **`DEFAULT_OPENAI_CLI_MODEL` is the `auto` sentinel since 2026-08-15, and
-  that is the opposite of a pin.** It passes NO `--model` flag, so the codex
-  CLI's own default applies. This paragraph previously cited "`openai` API
-  `gpt-4o` vs CLI `gpt-5`" as the proof that the two constant families
-  diverge; the divergence is real but that CLI value is gone, because a
-  subscription-authed (ChatGPT) account refuses **both** ids with `400
-  invalid_request_error`. A pinned id did not select a model there — it
-  disabled the seat, silently, while the pass still printed a verdict. Which
-  ids an account serves is not knowable from inside this process, so no id is
-  shipped for that transport.
+  **`DEFAULT_OPENAI_CLI_MODEL` is `OPENAI_CLI_VENDOR_DEFAULT`
+  (`'codex-default'`) since 2026-08-15, and that is the opposite of a pin.** It
+  passes NO `--model` flag, so the codex CLI's own default applies. This
+  paragraph previously cited "`openai` API `gpt-4o` vs CLI `gpt-5`" as the
+  proof that the two constant families diverge; the divergence is real but that
+  CLI value is gone, because a subscription-authed (ChatGPT) account refuses
+  both ids with `400 invalid_request_error` — they and `gpt-5.1-codex` are
+  recorded in `CODEX_MEASURED_UNSERVABLE`. A pinned id did not select a model
+  there, it disabled the seat. Which ids an account serves is not knowable from
+  inside this process, so no id is shipped for that transport.
 
-- **`model: auto` is accepted for any member and honoured by every adapter.**
-  It is a sentinel, not an id: CLI adapters omit `--model`, API clients resolve
-  it to their own `DEFAULT_*_MODEL`, and `_build_member` exempts it from the
-  `model_ladder` membership check (a downgrade ladder holds concrete ids, and
-  requiring a sentinel on one is a category error). A set value always passes
-  through verbatim — the loader never rewrites a pin.
+- **`model: codex-default` is a SENTINEL, and both transports honour it.** The
+  codex adapter omits `--model`; `OpenAIClient` (api) resolves it to
+  `DEFAULT_OPENAI_MODEL` rather than sending a value no endpoint answers to.
+  That symmetry is required, not cosmetic: one `model:` field feeds both, and
+  which transport a member resolves to is decided at run time.
+
+  `_build_member` also exempts the sentinel from the `model_ladder` membership
+  check. A downgrade ladder holds concrete ids; requiring a sentinel to appear
+  on one is a category error, and it is the check that would otherwise reject
+  the shipped template outright. A real pin is still required to be on its own
+  ladder, and a set value always passes through verbatim — the loader never
+  rewrites a pin.
+
+  **The low-impact fast path does not downgrade an unpinned member.** With
+  `model_downgrade.enabled` (default `true`) it would otherwise write
+  `model_ladder[0]` onto the client immediately before the call, re-creating the
+  pinned-id shape on a member that deliberately carries none. An explicit
+  `model_tier_override` still wins — that is a human naming a model.
 - **Quota observability (step-8 D1, D4):** every `council run` /
   `council debate` prints a one-line `council:quota · <provider>
   used/limit · …` summary before the first member fires. Every provider now

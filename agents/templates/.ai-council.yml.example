@@ -307,31 +307,54 @@ members:
 
   openai:
     enabled: true
-    # `auto` — do NOT pin an id here unless you know your transport serves it.
+    # `codex-default` — the vendor-default SENTINEL, not a model id. It passes
+    # NO `--model` flag, so the codex CLI applies whatever the subscription
+    # currently serves.
     #
-    # This shipped as `gpt-4o` until 2026-08-15 and that value silently killed
-    # the seat for every subscription (ChatGPT-account) user: the codex CLI
-    # answers `400 invalid_request_error: The 'gpt-4o' model is not supported
-    # when using Codex with a ChatGPT account.` — and the pass still reported
-    # itself as having concluded, so the member simply went quiet. `gpt-5` is
-    # refused by the same account for the same reason; both are now on a
-    # measured deny-list that refuses the call BEFORE it spends a day's quota.
+    # This shipped as `gpt-4o` and that value did not select a model, it
+    # disabled the seat: a subscription-authed (ChatGPT) account answers
+    # `400 invalid_request_error` for `gpt-4o`, `gpt-5` and `gpt-5.1-codex`
+    # alike — all three are on `CODEX_MEASURED_UNSERVABLE`. The deny-list now
+    # refuses such a pin before it spends quota, which makes the failure loud
+    # rather than silent; it does not make a freshly seeded config WORK. Only
+    # not shipping a pin does that.
     #
-    # Which transport a member resolves to is decided at run time (codex on
-    # PATH → cli; otherwise api), so one value has to be safe on both:
-    #   - cli  → `auto` passes no `--model` and the CLI applies its own default,
-    #            which tracks whatever the subscription currently serves.
-    #   - api  → there is no endpoint named `auto`, so the client resolves it to
-    #            its own default id instead of sending it verbatim.
-    # If you are on the api transport and want a specific model, pin it here —
-    # a set value always passes through verbatim and is never rewritten.
-    model: auto
+    # On the api transport the sentinel resolves to the client's own default,
+    # so one value stays correct whichever transport a member resolves to. Pin
+    # a real id here if you are on api and want a specific model — a set value
+    # always passes through verbatim and is never rewritten.
+    model: codex-default
     api_key_ref: file:openai.key
+    #
+    # SWITCHING THIS MEMBER TO SUBSCRIPTION AUTH? THE `model:` ABOVE MUST GO.
+    #
+    # `mode: cli` routes this member through the `codex` CLI on a ChatGPT
+    # account, and that transport refuses an explicitly pinned model. Measured
+    # 2026-08-15, every candidate tried — `gpt-4o`, `gpt-5`, `gpt-5.1-codex` —
+    # came back with:
+    #
+    #   400 invalid_request_error: The '<model>' model is not supported when
+    #   using Codex with a ChatGPT account.
+    #
+    # Omitting `--model` answered normally, so the working configuration is NO
+    # pin. The CLI publishes no list of models it does accept, which is why
+    # this note names what was refused rather than what to switch to. A member
+    # left pinned here fails every call and, before the pre-flight check
+    # landed, did so while the pass still printed a quorum line.
+    #
+    # So the subscription form of this member is:
+    #
+    #   openai:
+    #     enabled: true
+    #     mode: cli                      # ChatGPT Plus/Pro via the Codex CLI — free
+    #     model: codex-default           # the sentinel: let the CLI choose
+    #     # no api_key_ref, no model_ladder — both are API-transport concepts
+    #
     # binary: /usr/local/bin/codex       # only valid when mode == cli
-    # Phase 7 — size-fit downgrade ladder (smallest → largest). A pinned
-    # `model:` must appear on this list; `auto` is a sentinel rather than an
-    # id, so it does not (and the ladder stays an api-transport concern —
-    # the CLI's own default is not something this package can order).
+    #
+    # Phase 7 — size-fit downgrade ladder (smallest → largest). API transport
+    # only: the ladder picks a smaller MODEL, and the CLI transport has no
+    # model to pick. The active `model:` above must appear on this list.
     model_ladder:
       - gpt-4o-mini
       - gpt-4o

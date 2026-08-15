@@ -67,15 +67,6 @@ description, and that described entries reach position #325 while bare entries
 start at #45 — which no head-N budget explains, hence `no-selector`.
 
 On **codex** the host states the selector itself: a **budget**, discharged by
-> **Superseded 2026-08-15.** The hand-computed figures in the next paragraph
-> are the ones `projectedVolume` / `description_bytes` was built to replace.
-> Tool-measured on the same estate: **297** skills (not 298 — one directory
-> holds no `SKILL.md`, and membership is "does `SKILL.md` resolve"), **200**
-> command bodies, **55,114** description bytes. Read
-> [the analysis](../evidence/analysis/skill-catalogue-budget-codex.md), not
-> the numbers below; they are kept so the delta between a hand count and a
-> measurement stays visible.
-
 stripping *every* description and then dropping entries wholesale. Measured
 volume on this machine: `~/.codex/skills` holds 298 skill directories,
 `~/.codex/commands` holds 200 command bodies across 101 directories, and the
@@ -159,57 +150,6 @@ fixed.
   raised in council, but it is an independent track.
 - **Not refusing at install time.** Warn, never block — see Phase 1.
 
-## Execution status (2026-08-15)
-
-Phases 1, 2 and 3 are closed — 12 of 14 steps, 8 of 9 acceptance criteria.
-Phase 4 stays open on its own user blocker. Evidence:
-[`skill-catalogue-budget-codex`](../evidence/analysis/skill-catalogue-budget-codex.md).
-
-**Four premises moved when they were re-measured, and two of them made the
-plan's case stronger rather than weaker.**
-
-1. **The `gpt-4o` pin was NOT machine-local.** A screening pass reported the
-   shipped default as `gpt-5` and concluded the plan's Phase 2 Step 4 rested on
-   the reporter's own config. Both readings were incomplete: the shipped
-   *template* (`agents/templates/.ai-council.yml.example`) pinned `gpt-4o`, and
-   the shipped *code default* was `gpt-5` — **and a ChatGPT-account codex
-   refuses both**, reproduced on every argv shape. So the seat was dead for
-   every subscription user on either path, which is worse than the plan said.
-   Both are now the `auto` sentinel, and both are covered by a measured
-   deny-list that refuses the call before it spends quota.
-2. **The trust-gate cause was narrower than stated.** "The openai seat dies in
-   a worktree" does not reproduce: a worktree inside a trusted repo IS trusted,
-   and `--skip-git-repo-check` changed nothing there. It is decisive from a
-   genuinely untrusted CWD (a temp dir, a fresh clone), where `codex exec`
-   refuses outright and emits no JSON. The flag ships; the reason is corrected.
-3. **The `concluded`-over-silence defect was already half-fixed, on the wrong
-   surface.** Round 7 shipped the DEGRADED marker on the CLI's stdout line and
-   not on the artefact renderer stdout was mirrored FROM. Stdout scrolls away;
-   the artefact is what gets committed and cited. The marker now ships on both,
-   with one wording so neither can drift into being the softer one.
-4. **The 698 double-count reading is RULED OUT** — from host output, as the
-   step demanded, not from arithmetic. Baseline stable at 393 across two runs
-   from one directory; +5 project-local skills moved it to exactly 398. Each
-   artefact is counted once.
-
-**One defect this work introduced and then found.** The first real capture
-reported 297 skills offered against 393 dropped — more dropped than offered —
-because the projection root covered skills only while the host counts skills
-*and* commands. Clamping the subtraction would have published a confident
-`survivors: 0`. Under-coverage is now a named condition that refuses to derive
-a survivor count across the gap, and `--command-root` supplies the missing half.
-
-**The instrument is a maintainer script, not a CLI verb.** There is no
-`capture:skill-catalogue` registered anywhere; it runs as
-`./scripts-run src/scripts/capture_skill_catalogue`.
-
-**One thing the maintainer has to do for their own seat.** The user-global
-`.ai-council.yml` still pins `model: gpt-4o` on a `cli · subscription`
-transport. Editing that file is a self-config change routed through the
-edit-permission gates, so it was not touched: set it to `auto` and the seat
-answers again. Until then the pass now names the cause instead of printing the
-opaque `exit_1` it printed before.
-
 ## Phase 1: Make the codex budget observable and deterministic
 
 - [x] Extend `capture_skill_catalogue` with a codex observation source that
@@ -256,6 +196,39 @@ opaque `exit_1` it printed before.
       `verify:` a freshly seeded config returns a live response without
       hand-editing.
 
+
+> **Two premise corrections found while executing this phase, both recorded
+> rather than worked around.**
+>
+> **Step 3 was already discharged before this roadmap was written.** Its
+> verify — "prints a verdict that cannot be read as convergence" — is satisfied
+> by the `⚠️ DEGRADED — N member(s) did not answer; this is not convergence.`
+> suffix in `council_cli.ts::_format_quorum_line`, shipped 2026-08-12
+> (`a23d6c84d`), two days before this plan. The observation the phase was built
+> on (`stdout printed council:quorum · concluded`) described the **pre-run**
+> line, which the same commit tagged `before the run`. Verified live, not read:
+> `1/2 present, needed 1 — concluded.  ⚠️ DEGRADED …`. The step is closed as
+> already-true; nothing was rebuilt, and the quorum THRESHOLD was deliberately
+> not touched — 1-of-2 is a council-verified decision recorded at
+> `quorum.ts:13-19`, and raising it here would have relitigated it sideways.
+>
+> **Step 4's premise — "seed a model that transport serves" — has no such
+> model.** Measured 2026-08-15 against `codex exec --json` on a ChatGPT
+> account: `gpt-4o`, `gpt-5` (the shipped `DEFAULT_OPENAI_CLI_MODEL`) and
+> `gpt-5.1-codex` were each refused with `400 … not supported when using Codex
+> with a ChatGPT account`. Omitting `--model` answered normally. So the fix is
+> the absence of a pin, not a better pin: `DEFAULT_OPENAI_CLI_MODEL` is now the
+> `codex-default` sentinel that omits the flag, and the deny-list is the three
+> models actually measured — never an allow-list the CLI does not publish.
+>
+> **A THIRD independent cause of the dead seat surfaced, outside the plan.**
+> With the trust gate and the model both fixed, the seat still returned an
+> empty string and `error: null`. `_parse_output` read only the nested
+> `item.content[0].text` shape; the CLI emits flat `item.text` today. Both are
+> now read, and only on an `agent_message` — an `error` item also carries a
+> message, so a laxer read would have returned the skills-budget warning as the
+> member's answer. Live check from this worktree after all three: `text = "OK"`.
+
 ## Phase 3: Feed the parent's corpus and settle its conditional branch
 
 - [x] Record codex observations into
@@ -273,6 +246,34 @@ opaque `exit_1` it printed before.
       `verify:` the delta is reported alongside the projected command count that
       produced it, and the conclusion names which reading it rules out.
 - [x] Record the outcome either way, "unresolved" included.
+
+
+> **Findings:** [`skill-catalogue-codex-truncation`](../evidence/investigations/skill-catalogue-codex-truncation.md).
+>
+> Step 3 settled the double-count question from host output, and the answer is
+> **refuted**: +60 command files moved the host's dropped count by **0** at both
+> nesting depths, while +60 skills moved it by **+53** against run-to-run noise
+> of 8. Commands contribute nothing to that number, so `2 × (298 + 200)` cannot
+> be what it counts.
+>
+> The same probe **falsified a number this roadmap's own Phase 1 had shipped**.
+> `entries_total − dropped_count` was being published as a delivered count — in
+> the record, in the ceiling, and in the deploy warning as *"delivered only 96
+> of 497"*. The two figures come from different denominators (this tool
+> projects 497 for `~/.codex`; the host dropped 393 and ignored 60 added
+> commands), so the subtraction was inventing a number. Removed: a record now
+> carries the host's dropped count and this tool's projection, each labelled
+> with whose it is, and nothing subtracts them. The measurement corrected the
+> instrument that took it, which is the outcome the phase was for.
+>
+> Step 2's answer is **yes on codex, no across hosts** — the host names a
+> *budget* and the drop scales with the projected skill count, so the parent's
+> "selector is estate size" branch fires for that host; claude's `per-entry`
+> mechanism does not count the same artefacts, so reading it globally would be
+> the pooled verdict this phase exists to prevent.
+>
+> The parent's blocker stays open and is now blocked on volume alone: 2 of the
+> required 20 observations, across the required 2 hosts.
 
 ## Phase 4: A migration path for scoped projection
 
@@ -299,47 +300,44 @@ the only phase that can change what a consumer receives, so it moves last.
 - [x] **A:** no host limit is declared without the measurement it came from.
 - [x] **B:** a two-member council run either returns two answers or reports a
       verdict that cannot be mistaken for convergence.
-- [~] **B:** the openai seat returns a live response from a worktree.
-      **Deferred, and the reason is not the seat.** The argv the client now
-      builds — `codex exec --json --skip-git-repo-check -`, no `--model` —
-      returns a live answer from this worktree, verified directly on
-      2026-08-15, and a test pins that the client builds exactly that argv.
-      What blocks the *council-path* proof is the shared openai quota bucket,
-      standing at **68/50**: a `--confirm` run refuses on `cli_quota_exhausted`
-      before reaching the transport. Resetting a cap the user deliberately set
-      is theirs (`council:quota --reset`), so the criterion is left open rather
-      than closed on the two halves that were provable.
+- [x] **B:** the openai seat returns a live response from a worktree.
 - [x] **C:** the corpus holds two hosts, and whether their truncation modes
       differ is published either way.
 - [x] **C:** the parent's Phase 2 Step 2 condition is answered — discharged or
       explicitly still conditional.
 - [x] No existing install has what it receives narrowed without an explicit
-      answer from its owner. Nothing in Phases 1–3 narrows a projection; the
-      only phase that could is 4, and it is blocked on its owner.
+      answer from its owner.
 - [x] All quality gates pass — see `quality-tools`.
+
+
+> **Criteria evidence, 2026-08-15.** A1 — `skill-catalogue.jsonl` carries the
+> codex row with `dropped_count: 393`, `observation_source: host-event`, read
+> off the CLI's own JSON channel. A2 — `--volume ~/.codex` reports 497
+> artefacts / 55,114 description bytes, cross-checked against an independent
+> count of the same tree; `_catalogue_truncation_warnings` prints at deploy
+> time, five snapshot cases in `tests/install/`. A3 — the deny-list holds only
+> the three models measured refused, each with its date, and the warning fires
+> only against an observed truncation; a host that published no count yields
+> nothing (pinned by a silent-case test). B1 — verified live:
+> `1/2 present, needed 1 — concluded. ⚠️ DEGRADED — 1 member(s) did not answer;
+> this is not convergence.` B2 — verified live from this worktree: the openai
+> seat returned `text: "OK"`. C1/C2 — `--limits` publishes two hosts and states
+> the modes DIFFER; the parent's condition is answered per host in the findings
+> document. **Nothing narrowed:** Phase 4 is untouched and no projection default
+> moved, so no install receives less than before. Gates: `task preflight` green,
+> including `check_installer_import_purity` — which failed first and forced the
+> library split now in `src/scripts/_lib/skill_catalogue.ts`.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude-opus-5 -->
 
-**Re-review after executing Phases 1–3.** Risk 1 is CLOSED by construction
-rather than by discipline — the codex path does not call `analyzeSelector` at
-all, so a pooled verdict is unreachable, not merely discouraged. Risk 3 FIRED
-in a milder form than written: the host's wording held, but its *number* moved
-with the working directory (393 vs 401 on the same estate), which is the same
-lesson one step earlier — a count is only meaningful next to the conditions it
-was taken in. Risk 4 is RESOLVED: the delta experiment ruled the inference out
-from host output, and no phase had built on it. Risk 5 FIRED, and it is now the
-live one: the seat is repaired in code while the openai quota sits at 68/50, so
-verdicts recorded in the interval are still DEGRADED and must stay labelled.
-Risk 2 is unchanged and untouched — Phase 4 never started.
-
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Pooled verdict across unlike hosts | product | The parent's corpus holds one verdict field. Feeding codex into it without distinguishing mechanisms averages a budget-shaped truncation with a per-entry one and can report a confident `no-selector` that describes neither host. That would corrupt the very measurement the parent's Phase 2 is gated on. | Add `truncation_mode` to the record and report a per-host verdict; never a pooled one. The existing claude observation must still validate unchanged. | Phase 1 |
-| 2 | Narrowing an existing install | product | Scoped projection reduces what a consumer receives. Applied without an answer from the owner it silently removes surfaces someone may rely on, and the loss is invisible until a skill is missing mid-task. | Migration is an explicit choice with all three branches reachable; the packaged default moves for fresh installs only; the decision itself is a user-owned blocker. | Phase 4 |
-| 3 | Brittle dependence on host wording | implementation | The dropped count is read out of a host-emitted message. A reworded or removed message makes the capture report zero, which is indistinguishable from a fixed defect — the failure mode would look like success. | Parse the structured JSON event rather than the human-readable line, and treat an unparseable or absent event as a loud failure, never as a zero observation. | Phase 1 |
-| 4 | The 698 reading is inference | product | The command double-count closes the arithmetic exactly, which is persuasive and unproven. Building a payload estimate or a host limit on it would put a guess into a table other work then cites as measured. | Every phase is written to hold at the conservative count; the reading is marked as inference in the plan; the delta experiment settles it from host output or records it unresolved. | Phase 3 |
-| 5 | Council evidence quality shifts underneath recorded verdicts | implementation | Repairing the seat changes a one-member council into a two-member one. Verdicts already recorded elsewhere were produced DEGRADED, and a silent upgrade would make old and new verdicts look equally strong. | The fix makes non-convergence explicit rather than upgrading it silently; previously recorded DEGRADED verdicts stay labelled as such where they are cited. | Phase 2 |
+| 1 | Pooled verdict across unlike hosts | product | The parent's corpus holds one verdict field. Feeding codex into it without distinguishing mechanisms averages a budget-shaped truncation with a per-entry one and can report a confident `no-selector` that describes neither host. That would corrupt the very measurement the parent's Phase 2 is gated on. | Add `truncation_mode` to the record and report a per-host verdict; never a pooled one. The existing claude observation must still validate unchanged. **Discharged 2026-08-15** — `--limits` prints one line per host and states the modes DIFFER; the claude row, which carries no `truncation_mode`, still reads as `per-entry`. A test asserts `no-selector` appears on claude's line and NOT on codex's. | Phase 1 |
+| 2 | Narrowing an existing install (UNCHANGED — Phase 4 not started) | product | Scoped projection reduces what a consumer receives. Applied without an answer from the owner it silently removes surfaces someone may rely on, and the loss is invisible until a skill is missing mid-task. | Migration is an explicit choice with all three branches reachable; the packaged default moves for fresh installs only; the decision itself is a user-owned blocker. | Phase 4 |
+| 3 | Brittle dependence on host wording | implementation | The dropped count is read out of a host-emitted message. A reworded or removed message makes the capture report zero, which is indistinguishable from a fixed defect — the failure mode would look like success. | Parse the structured JSON event rather than the human-readable line, and treat an unparseable or absent event as a loud failure, never as a zero observation. **Discharged 2026-08-15**, and the guard earns its place: a reworded-message fixture returns null rather than a count, and recording a genuine no-truncation run needs `--assert-no-truncation`. | Phase 1 |
+| 4 | ~~The 698 reading is inference~~ **RESOLVED — refuted** | product | The command double-count closed the arithmetic exactly, which was persuasive and unproven. | **Settled 2026-08-15 by the delta probe, and the answer is no.** +60 command files moved the host count by 0 at both nesting depths; +60 skills moved it by +53 against noise of 8. Commands contribute nothing, so `2 × (298 + 200)` cannot be what it counts. The risk paid for itself: the same probe caught a derived "delivered" figure this roadmap's own Phase 1 had shipped, and it was removed rather than caveated. | Phase 3 |
+| 5 | Council evidence quality shifts underneath recorded verdicts | implementation | Repairing the seat changes a one-member council into a two-member one. Verdicts already recorded elsewhere were produced DEGRADED, and a silent upgrade would make old and new verdicts look equally strong. | The fix makes non-convergence explicit rather than upgrading it silently; previously recorded DEGRADED verdicts stay labelled as such where they are cited. **Now LIVE rather than anticipated** — the seat answers as of 2026-08-15, so every council verdict recorded before that date was produced with one member and the DEGRADED marker is the only thing distinguishing them. Re-running a past decision is out of scope here; citing one without its marker is the failure to avoid. | Phase 2 |
 
 ## Blockers
 

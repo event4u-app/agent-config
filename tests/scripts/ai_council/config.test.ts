@@ -5,6 +5,10 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import {
+    CODEX_MEASURED_UNSERVABLE,
+    OPENAI_CLI_VENDOR_DEFAULT,
+} from '../../../src/scripts/ai_council/clients';
 import * as cfg from '../../../src/scripts/ai_council/config';
 
 const _REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
@@ -914,12 +918,14 @@ describe('config — the shipped .ai-council.yml.example', () => {
         // The assertion is on the SENTINEL, not merely "not gpt-4o": a future
         // edit that swaps one dead pin for another would pass the negative form
         // and reproduce the exact defect this replaced.
-        expect(openai?.model.trim().toLowerCase()).toBe('auto');
+        expect(openai?.model).toBe(OPENAI_CLI_VENDOR_DEFAULT);
+        // And it must be one the deny-list has never recorded as refused.
+        expect(CODEX_MEASURED_UNSERVABLE.has(openai?.model ?? '')).toBe(false);
     });
 
-    it('the auto sentinel is exempt from ladder membership, a real pin is not', () => {
+    it('the vendor-default sentinel is exempt from ladder membership, a real pin is not', () => {
         const base = `enabled: true\ndefaults:\n  mode: api\ncost_budget:\n  max_total_usd: 20.0\nmembers:\n  anthropic:\n    enabled: true\n    api_key_ref: env:ANTHROPIC_KEY\n`;
-        const withAuto = `${base}    model: auto\n    model_ladder:\n      - claude-haiku-4-5\n`;
+        const withAuto = `${base}    model: ${OPENAI_CLI_VENDOR_DEFAULT}\n    model_ladder:\n      - claude-haiku-4-5\n`;
         expect(() => cfg.load_council_config(write_yaml(make_tmp(), withAuto))).not.toThrow();
 
         const withDeadPin = `${base}    model: claude-not-on-the-ladder\n    model_ladder:\n      - claude-haiku-4-5\n`;

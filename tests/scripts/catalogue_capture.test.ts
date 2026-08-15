@@ -19,14 +19,18 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 import {
     analyzeSelector,
-    buildCodexObservationRecord,
+    buildHostEventRecord,
     buildObservationRecord,
-    countCommandBodies,
+    catalogueLimitWarning,
+    formatPerHostVerdicts,
     formatReport,
-    parseCodexTruncation,
-    projectedVolume,
+    knownHostLimits,
+    observationSourceOf,
+    parseHostBudgetEvent,
     readProjectedCatalogue,
+    truncationModeOf,
     type CatalogueEntry,
+    type ObservationRecord,
 } from '../../src/scripts/capture_skill_catalogue.js';
 
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'catalogue-capture-'));
@@ -45,9 +49,7 @@ function entry(overrides: Partial<CatalogueEntry> & { name: string; position: nu
     return {
         hasDescription: true,
         descriptionLength: 40,
-        // Default equal to the character length — these fixtures are ASCII, so
-        // the two coincide. A fixture that needs them to diverge overrides it.
-        descriptionBytes: 40,
+        description: 'x'.repeat(40),
         frontmatterKeys: ['name', 'description'],
         ...overrides,
     };
@@ -199,7 +201,7 @@ describe('observation record', () => {
             'described_count',
             'entries_total',
             'host',
-            'observation_kind',
+            'observation_source',
             'observed_at',
             'schema',
             'separating_candidates',
@@ -213,8 +215,12 @@ describe('observation record', () => {
         }
     });
 
-    it('the codex record obeys the same no-free-form-field floor', () => {
-        const record = buildCodexObservationRecord({ dropped: 401 }, 498, '2026-08-15');
+    it('keeps the host-event record to integers and closed enums', () => {
+        const record = buildHostEventRecord('codex', '2026-08-15', 497, {
+            droppedCount: 401,
+            descriptionsStripped: true,
+        });
+
         expect(Object.keys(record).sort()).toEqual([
             'bare_count',
             'bare_names',
@@ -222,14 +228,19 @@ describe('observation record', () => {
             'dropped_count',
             'entries_total',
             'host',
-            'observation_kind',
+            'observation_source',
             'observed_at',
-            'projection_undercovers',
             'schema',
             'separating_candidates',
             'truncation_mode',
             'verdict',
         ]);
+        // The host's message is READ; only the integer in it is kept. If any
+        // record field could hold that sentence, the parser would have become
+        // an egress path for whatever the host decides to say next.
+        const serialized = JSON.stringify(record);
+        expect(serialized).not.toContain('Exceeded');
+        expect(serialized).not.toContain('skills context budget');
         for (const value of Object.values(record)) {
             const values = Array.isArray(value) ? value : [value];
             for (const v of values) expect(typeof v).not.toBe('object');
@@ -237,114 +248,121 @@ describe('observation record', () => {
     });
 });
 
-describe('projectedVolume', () => {
-    it('reports bytes, not characters — they diverge on any non-ASCII description', () => {
-        const root = path.join(TMP, 'volume');
-        fs.mkdirSync(root, { recursive: true });
-        // `—` is one character and three UTF-8 bytes. A tool that reported the
-        // character count under a byte label would be wrong by exactly the size
-        // of this repo's own punctuation habit.
-        writeSkill(root, 'a', 'name: a\ndescription: "a—b"');
-        writeSkill(root, 'b', 'name: b');
+describe('host budget event', () => {
+    // Verbatim from `codex exec --json --skip-git-repo-check`, 2026-08-15.
+    const REAL_STREAM = [
+        '{"type":"thread.started","thread_id":"01a00286-dcc4-7ba2-8e09-e52e7320128c"}',
+        '{"type":"turn.started"}',
+        '{"type":"item.completed","item":{"id":"item_0","type":"error","message":"Exceeded skills context budget. All skill descriptions were removed and 401 additional skills were not included in the model-visible skills list."}}',
+        '{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"OK"}}',
+        '{"type":"turn.completed","usage":{"input_tokens":21998}}',
+    ].join('\n');
 
-        const v = projectedVolume(root);
-        expect(v.entries).toBe(2);
-        expect(v.declares_description).toBe(1);
-        expect(v.description_bytes).toBe(5);
-        expect(readProjectedCatalogue(root)[0]!.descriptionLength).toBe(3);
-    });
-});
-
-describe('countCommandBodies', () => {
-    it('descends into a directory whose name ends in .md instead of counting it', () => {
-        const root = path.join(TMP, 'commands-weird');
-        fs.mkdirSync(path.join(root, 'weird.md'), { recursive: true });
-        fs.writeFileSync(path.join(root, 'weird.md', 'inner.md'), '# a');
-        fs.writeFileSync(path.join(root, 'weird.md', 'inner2.md'), '# b');
-        fs.writeFileSync(path.join(root, 'plain.md'), '# c');
-
-        // Testing the suffix before the directory branch counted `weird.md` as
-        // one command and never descended: 2 instead of 3.
-        expect(countCommandBodies(root)).toBe(3);
+    it('reads the dropped count off the host event', () => {
+        expect(parseHostBudgetEvent(REAL_STREAM)).toEqual({
+            droppedCount: 401,
+            descriptionsStripped: true,
+        });
     });
 
-    it('is zero for an absent root rather than throwing', () => {
-        expect(countCommandBodies(path.join(TMP, 'does-not-exist'))).toBe(0);
-    });
-});
-
-describe('codex truncation parsing', () => {
-    // The exact stream shape, captured from `codex exec --json` on 2026-08-15.
-    const REAL_EVENT =
-        '{"type":"thread.started","thread_id":"01a0"}\n' +
-        '{"type":"turn.started"}\n' +
-        '{"type":"item.completed","item":{"id":"item_0","type":"error","message":"Exceeded skills context budget. All skill descriptions were removed and 401 additional skills were not included in the model-visible skills list."}}\n' +
-        '{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"OK"}}\n';
-
-    it('reads the dropped count off the structured event', () => {
-        expect(parseCodexTruncation(REAL_EVENT)).toEqual({ dropped: 401 });
+    it('skips the CLI plain-text chatter interleaved with the JSON channel', () => {
+        expect(parseHostBudgetEvent(`Reading additional input from stdin...\n${REAL_STREAM}`)).toEqual(
+            { droppedCount: 401, descriptionsStripped: true },
+        );
     });
 
     it('returns null — never zero — when no budget event is present', () => {
-        // The load-bearing distinction of the whole parser: a host that stopped
-        // emitting the message and a host that truncated nothing must NOT
-        // produce the same record. `null` is "not measured".
-        const clean =
-            '{"type":"turn.started"}\n{"type":"item.completed","item":{"type":"agent_message","text":"OK"}}\n';
-        expect(parseCodexTruncation(clean)).toBeNull();
+        expect(parseHostBudgetEvent('{"type":"turn.completed"}')).toBeNull();
     });
 
-    it('ignores non-JSON noise interleaved in the stream', () => {
-        expect(parseCodexTruncation(`warning: something\n${REAL_EVENT}`)).toEqual({ dropped: 401 });
+    // The failure this guard exists for: upstream rewords the message, the
+    // count no longer parses, and a scanner that fell back to zero would
+    // report a fixed defect. Null is the only honest answer.
+    it('returns null when the event fires but its wording changed', () => {
+        const reworded =
+            '{"type":"item.completed","item":{"type":"error","message":"Exceeded skills context budget. Some skills were omitted."}}';
+
+        expect(parseHostBudgetEvent(reworded)).toBeNull();
     });
 
-    it('does not match the same words outside the structured error event', () => {
-        // Matching free text would let an agent_message that QUOTES the banner
-        // — a transcript, a bug report pasted into a prompt — register as a
-        // measurement.
-        const quoted =
-            '{"type":"item.completed","item":{"type":"agent_message","text":"Exceeded skills context budget. All skill descriptions were removed and 999 additional skills were not included in the model-visible skills list."}}\n';
-        expect(parseCodexTruncation(quoted)).toBeNull();
-    });
+    it('records descriptionsStripped=false when only entries were dropped', () => {
+        const stripless =
+            '{"type":"item.completed","item":{"type":"error","message":"Exceeded skills context budget. 12 additional skills were not included in the model-visible skills list."}}';
 
-    it('derives survivors from the projection, and never a negative count', () => {
-        expect(buildCodexObservationRecord({ dropped: 401 }, 498, '2026-08-15')).toMatchObject({
-            host: 'codex',
-            entries_total: 498,
-            dropped_count: 401,
-            bare_count: 97,
-            described_count: 0,
-            truncation_mode: 'budget-strip-all',
-            observation_kind: 'host-reported',
-            verdict: 'host-declared-budget',
+        expect(parseHostBudgetEvent(stripless)).toEqual({
+            droppedCount: 12,
+            descriptionsStripped: false,
         });
-        // A host reporting more dropped than this tree projects is a real
-        // possibility (its estate is not ours), and a negative survivor count
-        // would be nonsense rather than a finding.
-        expect(buildCodexObservationRecord({ dropped: 900 }, 498, '2026-08-15').bare_count).toBe(0);
+    });
+});
+
+describe('per-host verdicts and measured truncations', () => {
+    const claudeRecord: ObservationRecord = {
+        schema: 1,
+        observed_at: '2026-08-12',
+        host: 'claude',
+        entries_total: 336,
+        bare_count: 16,
+        described_count: 19,
+        bare_names: ['command-routing'],
+        verdict: 'no-selector',
+        separating_candidates: [],
+        // No `truncation_mode` — exactly the shape written before hosts were
+        // distinguished. It must keep reading as `per-entry`.
+    };
+    const codexRecord = buildHostEventRecord('codex', '2026-08-15', 497, {
+        droppedCount: 401,
+        descriptionsStripped: true,
     });
 
-    it('marks a clamped survivor count ON THE RECORD, not only in the human report', () => {
-        // The whole point: `--json` and `--record` are the channels that
-        // persist, and the first version computed under-coverage inside the
-        // stdout branch only. A corpus reader could not tell a measured 0 from
-        // a clamp.
-        const clamped = buildCodexObservationRecord({ dropped: 900 }, 498, '2026-08-15');
-        expect(clamped.bare_count).toBe(0);
-        expect(clamped.projection_undercovers).toBe(true);
-
-        const measured = buildCodexObservationRecord({ dropped: 393 }, 497, '2026-08-15');
-        expect(measured.bare_count).toBe(104);
-        expect(measured.projection_undercovers).toBe(false);
+    it('reads a pre-existing record as per-entry rather than relabelling it', () => {
+        expect(truncationModeOf(claudeRecord)).toBe('per-entry');
+        expect(observationSourceOf(claudeRecord)).toBe('self-report');
     });
 
-    it('never runs the per-entry inference over a budget-shaped observation', () => {
-        // Risk 1 of the plan: pooling the two mechanisms. `analyzeSelector`
-        // would return `insufficient-observation` here (zero described
-        // entries), which reads as a failed measurement rather than the
-        // decisive one it is.
-        const record = buildCodexObservationRecord({ dropped: 401 }, 498, '2026-08-15');
-        expect(record.verdict).not.toBe('insufficient-observation');
-        expect(record.verdict).not.toBe('no-selector');
+    it('yields a truncation record only for a host that published its own count', () => {
+        const limits = knownHostLimits([claudeRecord, codexRecord]);
+
+        expect(limits.has('claude')).toBe(false);
+        // Only the two numbers that were actually measured: what the host said
+        // it dropped, and what this tool projected. No delivered count — the
+        // two figures do not share a denominator (see buildHostEventRecord).
+        expect(limits.get('codex')).toEqual({
+            host: 'codex',
+            droppedEntries: 401,
+            projectedVolume: 497,
+            observedAt: '2026-08-15',
+        });
+    });
+
+    it('reports that the two hosts truncate by DIFFERENT mechanisms', () => {
+        const report = formatPerHostVerdicts([claudeRecord, codexRecord]);
+
+        expect(report).toContain('truncation modes DIFFER');
+        expect(report).toContain('per-entry');
+        expect(report).toContain('budget-strip-and-drop');
+        // The pooled verdict is the thing that must not appear: `no-selector`
+        // belongs to claude's line and must not be stated over codex, which
+        // has no per-entry selector to find.
+        expect(report).toMatch(/claude:.*\n.*no-selector/);
+        expect(report).not.toMatch(/codex:.*\n.*no-selector/);
+    });
+
+    it('warns only against a MEASURED truncation volume', () => {
+        const limits = knownHostLimits([claudeRecord, codexRecord]);
+        const over = {
+            host: 'codex',
+            root: '/x',
+            skillEntries: 297,
+            commandEntries: 200,
+            artefacts: 497,
+            descriptionBytes: 55114,
+        };
+        const under = { ...over, artefacts: 40, skillEntries: 40, commandEntries: 0 };
+
+        expect(catalogueLimitWarning(over, limits.get('codex'))).toContain('dropping 401 entries');
+        expect(catalogueLimitWarning(under, limits.get('codex'))).toBeNull();
+        // An unmeasured host gets no invented number, so it gets no warning.
+        expect(catalogueLimitWarning({ ...over, host: 'claude' }, limits.get('claude'))).toBeNull();
     });
 });
