@@ -77,31 +77,83 @@ const _PUBLIC_SURFACE_PREFIXES = [
 const _RULE_OR_SCHEMA_PREFIXES = ['src/rules/', 'src/scripts/schemas/'];
 
 /**
+ * Paths whose repair is a correctness fix to shipped *behaviour* rather than a
+ * record of one. The distinction is load-bearing: 43 % of `fix(...)` commits
+ * over the six spans measured in
+ * `agents/evidence/analysis/release-head-derivation-recall.md` touch no
+ * executable file at all — `52d7fe1 fix(worktrees): the inventory
+ * misclassifies from inside a worktree, totally` changes two markdown files and
+ * repairs nothing. Keying on the touched surface is what separates a bug fix
+ * from a bug report, and it moves hand-judged precision from 54 % to 96 %.
+ */
+const _EXECUTABLE_SUFFIX = /\.(?:ts|tsx|js|mjs|cjs|sh|py)$/u;
+const _EXECUTABLE_PREFIXES = ['.github/workflows/'];
+
+function _touches_executable(files: SpanCommit['files']): boolean {
+    return files.some(
+        (f) =>
+            _EXECUTABLE_SUFFIX.test(f.path) ||
+            _EXECUTABLE_PREFIXES.some((p) => f.path.startsWith(p)),
+    );
+}
+
+/** Conventional-commit type, or `''` when the subject carries none. */
+function _commit_type(subject: string): string {
+    return /^(\w+)/u.exec(subject)?.[1] ?? '';
+}
+
+/**
+ * Recorded-null forms beyond the literal marker, taken from real subjects and
+ * bodies over the six measured spans rather than invented: a waived-rather-than-
+ * met condition, a published or recorded null, an archival on a roadmap's own
+ * falsifier. All six commits these add across the six spans are true positives.
+ */
+const _NULL_FORMS: readonly RegExp[] = [
+    /honest[ -]null/iu,
+    /\bwaived,? (?:rather than|not) met\b/iu,
+    /\bsoak was waived\b/iu,
+    /\b(?:publish(?:es|ed|ing)?|record(?:s|ed|ing)?|report(?:s|ed|ing)?) (?:the |a |its )?(?:honest )?null\b/iu,
+    /\bnull(?: result)? (?:stands|is the answer)\b/iu,
+    /\bon (?:its|the) own falsifier\b/iu,
+];
+
+/**
  * Why a label fired, in generator-facing prose. Keyed by label; a label absent
  * here is never derived (`Known limitations` is pure prose, not checkable).
  */
 const _DERIVED_REASON: Readonly<Record<string, string>> = {
     'Behaviour changes': 'rule/schema diffs, breaking commits or removed public surface',
     'Default changes + migration': 'commits naming a default, migration or migrate',
-    'Security and correctness': 'security-scoped commits',
-    'Honest nulls': 'commits carrying an honest-null marker',
+    'Security and correctness': 'security-scoped commits or fixes to executable surface',
+    'Honest nulls': 'commits recording a null, waived or falsified result',
 };
 
 /**
  * Derive evidence per curated label from the span. Rules per label:
  *
  * - Security and correctness: conventional scope matching /secur/i, or the
- *   whole word "security" in the subject.
+ *   whole word "security" in the subject — plus the *correctness* half the
+ *   label names: a `fix` or `revert` commit touching executable surface.
  * - Behaviour changes: breaking (`!` / BREAKING CHANGE) commits, diffs
  *   touching `src/rules/` or `src/scripts/schemas/`, and deletions under the
  *   public artefact trees (removed public surface).
  * - Default changes + migration: subject carrying the whole word "default",
  *   "migration", or "migrate".
- * - Honest nulls: subject or body carrying an "honest null" marker.
+ * - Honest nulls: subject or body carrying one of the recorded-null forms —
+ *   the literal marker, a waived-rather-than-met condition, a published or
+ *   recorded null, an archival on a roadmap's own falsifier.
  * - Known limitations: never derived — pure prose, not gate-checkable.
  *
  * Derivation is deliberately conservative: a false red makes every release
- * annoying, a miss only returns the head to the pre-gate state.
+ * annoying, a miss only returns the head to the pre-gate state. Conservative
+ * is not the same as silent, and two labels had crossed that line: measured
+ * over the six spans in
+ * `agents/evidence/analysis/release-head-derivation-recall.md`, `Security and
+ * correctness` fired **1 of 45** times and `Honest nulls` **3 of 9**, so the
+ * curated `_none_` shipped uncontested where the span carried the evidence.
+ * The widening is aimed at those two and measured before it landed; the naive
+ * "any `fix(` counts" alternative was rejected on data (54 % precision against
+ * 96 %), not on taste.
  */
 export function derive_category_hits(
     commits: readonly SpanCommit[],
@@ -113,7 +165,10 @@ export function derive_category_hits(
     for (const c of commits) {
         const scopeMatch = /^\w+\(([^)]*)\)!?:/u.exec(c.subject);
         const scope = scopeMatch ? scopeMatch[1]! : '';
-        if (/secur/iu.test(scope) || /\bsecurity\b/iu.test(c.subject)) {
+        const type = _commit_type(c.subject);
+        const correctnessFix =
+            (type === 'fix' || type === 'revert') && _touches_executable(c.files);
+        if (/secur/iu.test(scope) || /\bsecurity\b/iu.test(c.subject) || correctnessFix) {
             out['Security and correctness']!.push({ sha: c.sha, text: c.subject });
         }
         const removedPublic = c.files.filter(
@@ -134,7 +189,8 @@ export function derive_category_hits(
         if (/\b(default|migration|migrate)\b/iu.test(c.subject)) {
             out['Default changes + migration']!.push({ sha: c.sha, text: c.subject });
         }
-        if (/honest[ -]null/iu.test(`${c.subject}\n${c.body}`)) {
+        const subjectAndBody = `${c.subject}\n${c.body}`;
+        if (_NULL_FORMS.some((re) => re.test(subjectAndBody))) {
             out['Honest nulls']!.push({ sha: c.sha, text: c.subject });
         }
     }

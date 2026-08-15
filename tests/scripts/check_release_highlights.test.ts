@@ -22,7 +22,11 @@ import {
     parse_curated_head,
     type SpanCommit,
 } from '../../src/scripts/check_release_highlights.js';
-import { DERIVED_MARKER } from '../../src/scripts/_lib/release_highlights.js';
+import {
+    DERIVED_MARKER,
+    derive_category_hits,
+    render_derived_head_values,
+} from '../../src/scripts/_lib/release_highlights.js';
 import { render_release_head } from '../../src/scripts/release.js';
 
 const SHA = 'a'.repeat(40);
@@ -115,6 +119,126 @@ describe('derive_categories — per-label rules', () => {
             commit({ subject: 'fix(security)!: everything at once — known limitation' }),
         ]);
         expect(derived['Known limitations']).toEqual([]);
+    });
+});
+
+/**
+ * The correctness half of `Security and correctness`. Before this the label
+ * derived on security alone, so it fired 1 time in 45 over the six spans
+ * measured in `agents/evidence/analysis/release-head-derivation-recall.md` and
+ * the curated `_none_` shipped uncontested.
+ *
+ * Every fixture below is a REAL commit from those spans, not a constructed
+ * one — the false-positive case in particular, because a hand-written
+ * near-miss would only test the regex against itself.
+ */
+describe('derive_categories — the correctness half', () => {
+    it('catches a fix that repairs executable surface (missed by the old rule)', () => {
+        // 591369c, span 11.0.0..12.0.0 — no "security" anywhere in it.
+        const c = commit({
+            subject: 'fix(dispatch): refuse a cli-delegate bundle older than its sources',
+            files: [{ status: 'M', path: 'src/scripts/_lib/dispatch_guard.ts' }],
+        });
+        expect(derive_categories([c])['Security and correctness']).toHaveLength(1);
+        // The old rule keyed only on /secur/ — assert this subject carries none,
+        // so the case genuinely distinguishes new from old.
+        expect(/secur/i.test(c.subject)).toBe(false);
+    });
+
+    it('stays uncaught on the Phase 1 false-positive fixture (a fix that fixes prose)', () => {
+        // 52d7fe1, span 11.0.0..12.0.0 — reads like a repair, changes two
+        // markdown files, and repairs nothing. The naive "any fix( counts"
+        // rule reads this bug REPORT as a bug FIX.
+        const derived = derive_categories([
+            commit({
+                subject: 'fix(worktrees): the inventory misclassifies from inside a worktree, totally',
+                files: [
+                    { status: 'M', path: 'agents/roadmaps-progress.md' },
+                    { status: 'M', path: 'agents/roadmaps/road-to-worktree-hygiene.md' },
+                ],
+            }),
+        ]);
+        expect(derived['Security and correctness']).toEqual([]);
+    });
+
+    it('keys on the fix/revert type, not on touching code at all', () => {
+        const derived = derive_categories([
+            commit({
+                subject: 'feat(bench): build the scale-history producer',
+                files: [{ status: 'A', path: 'src/scripts/bench/producer.ts' }],
+            }),
+        ]);
+        expect(derived['Security and correctness']).toEqual([]);
+    });
+
+    it('counts a revert of executable surface, and a workflow change', () => {
+        const derived = derive_categories([
+            commit({
+                subject: 'revert(gates): restore the previous scan root',
+                files: [{ status: 'M', path: 'src/scripts/check_thing.ts' }],
+            }),
+            commit({
+                subject: 'fix(ci): stop the job resolving the wrong base',
+                files: [{ status: 'M', path: '.github/workflows/tests.yml' }],
+            }),
+        ]);
+        expect(derived['Security and correctness']).toHaveLength(2);
+    });
+});
+
+describe('derive_categories — recorded-null forms beyond the literal marker', () => {
+    it('derives the 12.0.0-era waived soak', () => {
+        // ef5ca46, span 11.0.0..12.0.0 — the specimen the roadmap names.
+        const c = commit({
+            subject:
+                'feat(manifest): set the tier sunset, and record that the soak was waived not met',
+        });
+        expect(derive_categories([c])['Honest nulls']).toHaveLength(1);
+        expect(/honest[ -]null/i.test(c.subject)).toBe(false);
+    });
+
+    it('derives a published null and a falsifier archival', () => {
+        const derived = derive_categories([
+            // 92f9b9a, span 10.1.0..10.2.0
+            commit({
+                subject: 'chore(roadmaps): archive road-to-completion-loop, closed as a published null',
+            }),
+            // 3fd5a77, span 10.3.0..10.4.0
+            commit({ subject: 'docs(roadmap): archive road-to-august-program on its own falsifier' }),
+        ]);
+        expect(derived['Honest nulls']).toHaveLength(2);
+    });
+
+    it('the widening does not make the next release red — the generator pre-fills', () => {
+        // Risk 2 of the roadmap: "a wider derivation makes every release red".
+        // It does not, and this is why: the generator renders a derived line for
+        // every SUBSTANTIATED label, so the curated field is no longer `_none_`
+        // and there is nothing for the gate to contradict. A wider derivation
+        // moves work to the generator, not to the release PR.
+        const span = [
+            commit({
+                subject: 'fix(dispatch): refuse a cli-delegate bundle older than its sources',
+                files: [{ status: 'M', path: 'src/scripts/_lib/dispatch_guard.ts' }],
+            }),
+            commit({
+                subject: 'feat(manifest): record that the soak was waived not met',
+            }),
+        ];
+        const prefilled = render_derived_head_values(derive_category_hits(span));
+        expect(prefilled['Security and correctness']).toContain(DERIVED_MARKER);
+        expect(prefilled['Honest nulls']).toContain(DERIVED_MARKER);
+
+        const curated = parse_curated_head(render_release_head(prefilled).join('\n'))!;
+        expect(highlight_contradictions(curated, derive_categories(span))).toEqual([]);
+    });
+
+    it('does not fire on a commit that merely mentions a soak or a nullable field', () => {
+        const derived = derive_categories([
+            commit({ subject: 'chore(kernel): start the 24h soak for the rule edit' }),
+            commit({ subject: 'fix(schema): allow a nullable owner field' }),
+            commit({ subject: 'docs: the token_delta is null by design' }),
+        ]);
+        expect(derived['Honest nulls']).toEqual([]);
     });
 });
 
