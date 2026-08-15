@@ -61,6 +61,33 @@ export interface EolReport {
         compact_summary_records: number;
         marker_drift: boolean;
     };
+    /**
+     * State-destroyed vs state-captured, as ONE reading
+     * (road-to-inbox-harvest-2026-08-d-context-ledger Step 2.2).
+     *
+     * Before this, a compaction count and an advisory count sat in two places
+     * and nobody correlated them, so "how often was state destroyed with no
+     * capture in front of it" had no answer at all.
+     *
+     * HONEST LIMIT, stated in the shape rather than in prose only: the two
+     * sides come from different corpora — compactions are scanned out of
+     * transcripts, the advisory stamps live in per-session state files under a
+     * hashed key — and no field joins a transcript to its state file. So this
+     * is an AGGREGATE comparison over the same store, not a per-session join,
+     * and `join_basis` says so on every emitted report. A reader may compare
+     * the totals; a reader may NOT conclude that a specific compaction lacked
+     * a capture.
+     */
+    capture: {
+        /** Session-eol state files found. `null` ⇒ the directory is absent. */
+        state_files: number | null;
+        /** State files carrying an `advisory_fired_at` stamp. */
+        advisory_fired: number;
+        /** State files that additionally recorded "advised, but no envelope". */
+        advised_without_envelope: number;
+        /** Always `"aggregate"` today. See the doc comment. */
+        join_basis: 'aggregate';
+    };
     /** Pearson r of file bytes vs final context tokens over the readable set. */
     bytes_tokens_pearson_r: number | null;
     threshold_crossings: Record<string, number>;
@@ -130,6 +157,47 @@ export function scanSessionFile(file: string): SessionSummary | null {
     return { file, bytes, counters, last_ts };
 }
 
+/** Where `session_eol_hook` persists its per-session state (gitignored). */
+export const SESSION_EOL_STATE_REL = path.join('agents', 'runtime', 'state', 'session-eol');
+
+/**
+ * The capture side of the Step-2.2 reading.
+ *
+ * `state_files: null` distinguishes "the directory is not there" from "it is
+ * there and empty" — an instrument that reports 0 for both cannot tell a quiet
+ * estate from one it cannot see, which is the failure the sibling ledger fixed
+ * for its own open-record set.
+ */
+export function scanCaptureState(root: string): EolReport['capture'] {
+    const dir = path.join(root, SESSION_EOL_STATE_REL);
+    let names: string[];
+    try {
+        names = fs.readdirSync(dir).filter((n) => n.endsWith('.json'));
+    } catch {
+        return { state_files: null, advisory_fired: 0, advised_without_envelope: 0, join_basis: 'aggregate' };
+    }
+
+    let advisoryFired = 0;
+    let advisedWithoutEnvelope = 0;
+    for (const name of names) {
+        try {
+            const parsed: unknown = JSON.parse(fs.readFileSync(path.join(dir, name), 'utf-8'));
+            if (typeof parsed !== 'object' || parsed === null) continue;
+            const rec = parsed as Record<string, unknown>;
+            if (typeof rec['advisory_fired_at'] === 'string') advisoryFired++;
+            if (typeof rec['missing_envelope_warned_at'] === 'string') advisedWithoutEnvelope++;
+        } catch {
+            // A torn or hand-edited state file is data we do not have.
+        }
+    }
+    return {
+        state_files: names.length,
+        advisory_fired: advisoryFired,
+        advised_without_envelope: advisedWithoutEnvelope,
+        join_basis: 'aggregate',
+    };
+}
+
 export function buildReport(root: string, now: Date = new Date()): EolReport {
     const files = listTranscriptFiles({ root });
     const sessions: SessionSummary[] = [];
@@ -176,6 +244,7 @@ export function buildReport(root: string, now: Date = new Date()): EolReport {
             compact_summary_records: summaryRecords,
             marker_drift: summaryRecords !== allEvents.length,
         },
+        capture: scanCaptureState(root),
         bytes_tokens_pearson_r: pearson(
             withUsage
                 .filter((s) => (s.counters.final_context_tokens as number) > 1_000)
@@ -214,6 +283,18 @@ export function renderText(r: EolReport): string {
     if (c.pre_tokens) {
         lines.push(
             `  trigger pre-tokens: min=${fmt(c.pre_tokens.min)} median=${fmt(c.pre_tokens.median)} max=${fmt(c.pre_tokens.max)}`,
+        );
+    }
+    // Step 2.2: the capture side, printed directly under the destruction side
+    // so the two are read together. `join_basis` is printed every time — a
+    // reader must not mistake an aggregate comparison for a per-session join.
+    const cap = r.capture;
+    if (cap.state_files === null) {
+        lines.push(`  capture: no session-eol state directory — capture side UNOBSERVED (not zero)`);
+    } else {
+        lines.push(
+            `  capture: ${cap.advisory_fired} of ${cap.state_files} state file(s) advised, ` +
+                `${cap.advised_without_envelope} advised with no envelope [join: ${cap.join_basis}]`,
         );
     }
     if (c.post_tokens) {

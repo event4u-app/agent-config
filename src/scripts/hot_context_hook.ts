@@ -379,7 +379,19 @@ export function main(): number {
         if (_is_replay_mode()) {
             return 0; // replay fixtures: read-only, no state mutation
         }
-        if (event === 'stop' || event === 'session_end') {
+        // `pre_compact` joins the write set (road-to-inbox-harvest-2026-08-d-
+        // context-ledger Step 2.1). It is the only slot that fires WHILE state
+        // is being destroyed, and until now it carried no writer at all: the
+        // cache a post-compaction `session_start` restores was written at the
+        // last `stop`, so everything the session did since then was lost with
+        // the compaction. Writing here makes the restore reflect the moment
+        // before the loss instead of the moment before the last turn.
+        //
+        // Cheap and idempotent by construction: `_write_hot_context` is a
+        // deterministic rebuild from the history file, so an extra fire costs
+        // one rebuild and can never produce a worse cache than the older one it
+        // replaces. It emits nothing — the restore side is unchanged.
+        if (event === 'stop' || event === 'session_end' || event === 'pre_compact') {
             _write_hot_context(root);
         } else if (event === 'session_start') {
             const source = String(payload.source ?? '');
