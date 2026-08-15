@@ -1,0 +1,1957 @@
+diff --git a/agents/evidence/analysis/workspace-identity-census.md b/agents/evidence/analysis/workspace-identity-census.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..c6784168b03ef69c7a356a316890d1178042eeae
+--- /dev/null
++++ b/agents/evidence/analysis/workspace-identity-census.md
+@@ -0,0 +1,220 @@
++# Workspace-identity census
++
++Phase 1 of `road-to-inbox-harvest-2026-08-c-workspace-identity`. Measured on
++`feat/workspace-identity`, based on `origin/main` @ `e3bd96158`, 2026-08-15.
++
++Scope: every site in `src/` that answers one of the five workspace-identity
++questions **for itself** — repo root, main worktree, current worktree, branch,
++PR base — rather than importing an answer.
++
++The `GIT_DIR-safe` column is the load-bearing one. Git hooks export `GIT_DIR`,
++every child inherits it, and an inherited `GIT_DIR` **overrides** repository
++discovery — so `execFileSync('git', …, { cwd })` silently resolves against the
++hook's repository instead of `cwd`. `src/scripts/_lib/git_env.ts` exists to
++strip exactly that; a site that does not use it, and does not read files
++directly, answers wrongly under a hook with no error to show for it.
++
++## 1. Repo root — 8 call sites, 6 files
++
++| # | Site | Primitive | GIT_DIR-safe | Fallback when git fails | Migrate? |
++|---|---|---|---|---|---|
++| R1 | `src/agent-src/scripts/archive_completed_roadmaps.ts:93` (`_repo_root`) | `git rev-parse --show-toplevel`, `cwd = process.cwd()` | no | `process.cwd()` — a **silently wrong root** | yes |
++| R2 | `src/agent-src/scripts/roadmap_gates.ts:440` (`_resolveRepoRoot`) | marker probe (`agents/roadmaps`) first, `--show-toplevel` second | no | marker walk; root must contain the marker | yes |
++| R3 | `src/agent-src/scripts/update_roadmap_progress.ts:972` (`_fallback_git_toplevel`) | `--show-toplevel`, validated against the `agents/roadmaps` marker | no | caller-supplied `--repo-root` | yes |
++| R4 | `src/scripts/evidence_report.ts:44` (`_repo_root`) | `--show-toplevel` with **no `cwd` at all** | no | `dirname(import.meta.url)/../..` | yes |
++| R5 | `src/scripts/lint_plan_risk_register.ts:511` (`fileHistory`) | `_git(dir, …)` → `env: gitEnv()` | **yes** | `[]` (explicit unresolved) | yes — behaviour-identical |
++| R6 | `src/scripts/lint_plan_risk_register.ts:543` (`hasUncommittedChanges`) | `_git(dir, …)` → `env: gitEnv()` | **yes** | `false` (explicit unresolved) | yes — behaviour-identical |
++| R7 | `src/scripts/lint_plan_risk_register.ts:554` (`_blobAt`) | `_git(dir, …)` → `env: gitEnv()` | **yes** | `null` (explicit unresolved) | yes — behaviour-identical |
++| R8 | `src/scripts/migration_status.ts:161` (`repoRoot`) | `--show-toplevel`, `cwd = process.cwd()` | no | **throws** (`execFileSync` unguarded) | yes |
++
++R8 is the tree's only exported `repoRoot()`. It lives in a report script, which
++is why nothing imports it — the roadmap's Context states this and it is
++confirmed: `grep -rn "from '.*migration_status" src/` returns no importer of
++`repoRoot`.
++
++**Three of the eight already strip `GIT_DIR`** (R5–R7) and three of the eight
++fall back to a value that is *plausible but wrong* rather than to an explicit
++unresolved marker (R1 → `process.cwd()`, R4 → a path derived from the script's
++own location, R8 → an exception). That split is the whole case for a resolver
++whose fields are `resolved | unresolved`, never a silent default.
++
++## 2. Main worktree — 3 call sites
++
++| # | Site | Primitive | GIT_DIR-safe | Notes |
++|---|---|---|---|---|
++| M1 | `src/scripts/worktree_cleanup_check.ts:406` (`buildInventoryInner`) | first entry of `git worktree list --porcelain`, `canonical()`-normalised | no | correct **since** `5cf7450da`; see § 5 |
++| M2 | `src/scripts/cache_realization_report.ts:449` | first entry of `git worktree list --porcelain` | no | same technique, independently re-derived |
++| M3 | `src/scripts/sessions_cli.ts:109` | `git worktree list --porcelain` (enumeration, not main-selection) | no | consumes the list; does not select a main |
++
++The `git worktree list --porcelain` first-entry rule is documented twice
++(`sessions_cli.ts:85`, `cache_realization_report.ts:442`) and implemented three
++times. It is the same fact stated in three places.
++
++## 3. Current worktree / git dir — the existing primitive
++
++| # | Site | Primitive | GIT_DIR-safe | Notes |
++|---|---|---|---|---|
++| C1 | `src/scripts/_lib/git_common_dir.ts:59` (`git_dir`) | reads `<root>/.git` as file or dir | **yes** (reads files, never shells out) | the foundation |
++| C2 | `src/scripts/_lib/git_common_dir.ts:106` (`git_common_dir`) | reads `commondir` | **yes** | realpath-normalised |
++| C3 | `src/scripts/session_register_hook.ts:53` | imports C1/C2/`current_branch` | **yes** | the model consumer |
++
++`git_dir` and `git_common_dir` both take `project_root` as an **input**. Neither
++discovers it. That is precisely the gap the eight § 1 sites fill by hand.
++
++## 4. Branch — 5 call sites, 1 correct
++
++| # | Site | Primitive | GIT_DIR-safe | Migrate? |
++|---|---|---|---|---|
++| B1 | `src/scripts/session_register_hook.ts:330,377` | `current_branch()` from the shared module | **yes** | already correct |
++| B2 | `src/scripts/hot_context_hook.ts:84` (`_current_branch`) | `rev-parse --abbrev-ref HEAD`, `env: hardenedSpawnEnv()` | partial — hardened env, not `gitEnv()` | yes |
++| B3 | `src/scripts/check_release_trunk_sync.ts:40` (`_current_branch`) | `rev-parse --abbrev-ref HEAD`, **no `cwd`, no env scrub** | no | yes |
++| B4 | `src/scripts/check_branch_freshness.ts:551` | `rev-parse --abbrev-ref HEAD` | no | yes |
++| B5 | `src/scripts/check_release_published.ts:68` | `rev-parse --abbrev-ref HEAD` | no | yes |
++
++Four private `_current_branch` implementations exist beside one shared,
++file-based, `GIT_DIR`-immune `current_branch()`.
++
++## 5. PR base — 5 call sites, three different definitions
++
++| # | Site | Definition of "base" | Resolvable offline |
++|---|---|---|---|
++| P1 | `src/scripts/check_branch_freshness.ts:162` | `gh pr list --json baseRefName` — the real PR base | no (network + auth) |
++| P2 | `src/scripts/check_branch_freshness.ts:204` | `symbolic-ref --short refs/remotes/origin/HEAD` — the remote default | yes |
++| P3 | `src/scripts/worktree_cleanup_check.ts:287` (`resolveTrunk`) | first of a candidate ref list that `rev-parse --verify` resolves | yes |
++| P4 | `src/scripts/lint_breaking_changes_index.ts:125` | `BASE_REF` module constant | yes |
++| P5 | `src/scripts/check_structural_breaking.ts:68` | `BASE_REF` module constant | yes |
++
++**Risk 2 verdict — `prBase` is added, `sessionId` is not.** The roadmap's Risk 2
++requires each field to be justified by census rows rather than by the review
++that asked for it. `prBase` has five rows and three incompatible definitions, so
++it earns a field — resolved from the offline P2 form (the remote default
++branch), with `gh`-derived bases left to their existing caller. `sessionId` has
++**zero** rows in this census: nothing in `src/` resolves a session id as part of
++answering a location question; `session_register_hook.ts` receives it from the
++host envelope. It is therefore **not added** to the resolver.
++
++## 6. The two shipped misclassification defects (Phase 1 step 2)
++
++| Defect | Commit | Identity question answered wrongly | Primitive at fault |
++|---|---|---|---|
++| D1 — the inventory misclassifies from inside a worktree, totally | `52d7fe1b8` (2026-08-14, defect recorded) | **main worktree** — the conventional-root test resolved against the *invoking* checkout | ad-hoc: `isStandardLocation(basePath, …)` was passed `repoPath` (the invocation directory), not the main worktree |
++| D2 — judge location against the main worktree | `5cf7450da` (2026-08-14, fix) | **main worktree** — same question, fixed by passing `mainPath`, which `buildInventory` had already computed and was not passing | same site; `worktree_cleanup_check.ts:427` now carries the comment `` `mainPath`, NOT `repoPath` `` |
++
++Both are one defect at one call site, recorded twice because the first commit
++diagnosed it and the second repaired it. The measured symptom is identical in
++both: from `.claude/worktrees/<branch>` the tool reported **safe 0 of 304** with
++278 disqualified as outside the conventional roots; from the main checkout,
++**safe 181**. Same binary, same repo, same minute.
++
++**No third instance was found.** The census surfaces the *conditions* for one —
++M2 re-derives the same main-worktree rule independently, and B2–B5 re-derive the
++branch rule four times — but neither is currently wrong. Recorded as zero rather
++than left unstated: the roadmap's step 2 allows a third instance to count as a
++row, and there is none.
++
++## 7. What `git_common_dir.ts` already answers under an inherited `GIT_DIR`
++
++Five-row support table (Phase 1 step 3):
++
++| Identity field | Answered today? | Under inherited `GIT_DIR` | Why |
++|---|---|---|---|
++| Repo root | **no** | n/a | `project_root` is an input, never derived; nothing walks up to find it |
++| Main worktree | **no** | n/a | `git_common_dir()` returns `<main>/.git`, not the worktree path; the one-step `dirname` is never taken, and is wrong for a bare/separate-gitdir layout |
++| Current worktree | **no** | n/a | same as repo root — supplied by the caller |
++| Branch | **yes** | **correct** | `current_branch()` reads `<git-dir>/HEAD` with `fs.readFileSync`; there is no `git` process to redirect |
++| PR base | **no** | n/a | no notion of a remote, a default branch, or a trunk |
++
++One of five is answered, and it is the only one that shells out to nothing. The
++resolver extends this module rather than starting a new one so the hazard note
++stays adjacent to the code (Risk 4).
++
++## 8. Migration ledger (Phase 2)
++
++`workspaceIdentity()` ships in `src/scripts/_lib/git_common_dir.ts`. Every row
++below is either migrated or carries a written reason it is not.
++
++| Row | Migrated? | Reason if not |
++|---|---|---|
++| R1 `archive_completed_roadmaps.ts:93` | **no** | projection boundary — see § 9 |
++| R2 `roadmap_gates.ts:440` | **no** | projection boundary — see § 9 |
++| R3 `update_roadmap_progress.ts:972` | **no** | projection boundary — see § 9 |
++| R4 `evidence_report.ts:44` | **yes** | primary path now file-based; the `import.meta.url` fallback is unchanged |
++| R5 `lint_plan_risk_register.ts:511` | **yes** | via a local `_repoRootOf`; already `GIT_DIR`-safe, so behaviour-identical by construction |
++| R6 `lint_plan_risk_register.ts:543` | **yes** | same |
++| R7 `lint_plan_risk_register.ts:554` | **yes** | same |
++| R8 `migration_status.ts:161` | **yes** | the throw is preserved; the message now names the reason |
++| M1 `worktree_cleanup_check.ts:406` | **no** | already correct since `5cf7450da`, and `buildInventoryInner` needs the full `git worktree list` enumeration regardless — selecting the main from a second source would be two answers to one question, which is the defect this roadmap exists to remove. Pinned by regression test instead (§ 10). |
++| M2 `cache_realization_report.ts:449` | **no** | same shape as M1: the site already enumerates worktrees for its own report |
++| M3 `sessions_cli.ts:109` | **no** | enumerates; never selects a main worktree, so it answers no identity question |
++| C1 `git_common_dir.ts:59` | n/a | the primitive itself |
++| C2 `git_common_dir.ts:106` | n/a | the primitive itself |
++| C3 `session_register_hook.ts:53` | n/a | already the model consumer |
++| B1 `session_register_hook.ts:330,377` | n/a | already uses the shared `current_branch()` |
++| B2 `hot_context_hook.ts:84` | **no** | **behaviour would change.** On a detached HEAD it returns the literal `HEAD`, and lines 302–304 discard the hot context on `stampedBranch !== currentBranch` while explicitly excluding the sentinel `'unknown'`. Mapping unresolved onto `'unknown'` would silently stop that discard from firing on a detached HEAD. Migrating it needs its own change with a test for that transition. |
++| B3 `check_release_trunk_sync.ts:40` | **yes** | `main()` already collapses `'HEAD'` and `''` onto one skip path |
++| B4 `check_branch_freshness.ts:551` | **yes** | the guard already collapses `null` and `'HEAD'` onto one skip path |
++| B5 `check_release_published.ts:68` | **yes** | a detached `'HEAD'` failed the `MAIN_BRANCH` comparison; unresolved fails it identically |
++| P1 `check_branch_freshness.ts:162` | **no** | different question — the `gh`-derived base of a real open PR needs network and auth. `prBase` is deliberately the offline form; both are correct and neither replaces the other. |
++| P2 `check_branch_freshness.ts:204` | **no** | same question, but this is a push-time gate and `prBase` is currently **unresolved in this repository** (§ 11). Swapping a live code path onto a field that resolves to nothing here would change the gate's behaviour on the one repo that runs it. |
++| P3 `worktree_cleanup_check.ts:287` | **no** | `resolveTrunk` walks a candidate ref list and verifies each; that is a trunk *search*, not a recorded default |
++| P4 `lint_breaking_changes_index.ts:125` | **no** | module constant, not a resolution |
++| P5 `check_structural_breaking.ts:68` | **no** | module constant, not a resolution |
++
++**7 migrated, 11 deliberately not, 3 n/a** (of 21 rows).
++
++## 9. The projection boundary — why R1–R3 cannot migrate
++
++`src/agent-src/scripts/*` is projected to `dist/agent-src/scripts/` and shipped
++to consumers. Measured on this branch:
++
++- every import in those files resolves inside `src/agent-src/` (`./`,
++  `../templates/`); not one reaches into `src/scripts/`;
++- `dist/agent-src/` carries `scripts/` but **no** `_lib/git_common_dir.ts`, and
++  the only `_lib` under it is `templates/scripts/work_engine/_lib`.
++
++So the three sites that would benefit most — two of them roadmap gates, all
++three consumer-facing — are structurally outside the resolver's reach. Closing
++that needs either projecting the lib or duplicating it, and both are a wider
++change than this roadmap's Non-goals allow ("does not add a subsystem").
++
++Recorded as the finding it is: **the resolver reaches the maintainer-side tree
++and not the consumer-side one.** Anyone extending this should start here.
++
++## 10. What pins the two defects
++
++`tests/scripts/workspace_identity.test.ts`, 14 assertions over real git repos
++and a real linked worktree. Two of them are the regression pins:
++
++- `mainWorktree is the main checkout even when called from inside a worktree`;
++- `mainWorktree is invariant across checkouts; the pre-migration primitive is
++  not` — which asserts, in the same test, that
++  `git rev-parse --show-toplevel` **does** differ between the two locations.
++  That control is what makes the pin falsifiable rather than vacuous: an
++  implementation built on the pre-migration primitive fails it by construction.
++
++A third pair asserts the inherited-`GIT_DIR` hazard directly, with its own
++control proving the variable really does redirect a `git` child (Risk 4).
++
++## 11. `prBase` is unresolved in this repository, and that is the design
++
++Probed on this branch, from both locations:
++
++```
++prBase  UNRESOLVED: no refs/remotes/origin/HEAD on disk —
++        run `git remote set-head origin -a`; not guessed
++```
++
++`refs/remotes/origin/HEAD` is a **symbolic** ref. `git pack-refs` never packs
++one, so `packed-refs` is not a fallback — this repo's `packed-refs` carries
++`refs/remotes/origin/main` but no `HEAD`, and there is no loose file. A repo
++that has never run `git remote set-head` simply has no recorded answer.
++
++Reporting that is the whole point of the type. The alternative — defaulting to
++`main` — is exactly the "plausible but wrong" shape § 1 measured at three of
++eight sites, and it would be wrong on any repo whose trunk is `master`,
++`develop`, or a release line.
++
++The same probe confirms the acceptance criterion: `mainWorktree` reads
++`…/event4u/agent-config` from inside `.worktrees/workspace-identity` and from
++the main checkout alike, while `repoRoot` and `currentWorktree` differ between
++them and say which they are.
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 03fe35eae4c9f9f67ff3c059ab41dbf9698d6393..30e7e307e5c2b7c59ab963f6f16cc6d30c01d88f 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 31 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **37** open blockers, **10** need you → `agent-config gates`
++> 30 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **36** open blockers, **10** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**223 / 468 steps done · 48%**
++**244 / 457 steps done · 53%**
+ 
+ ```text
+-███████████████████░░░░░░░░░░░░░░░░░░░░░   48%
++█████████████████████░░░░░░░░░░░░░░░░░░░   53%
+ ```
+ 
+ ## Open roadmaps
+@@ -30,23 +30,22 @@
+ | 12 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 12 | 0 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | ░░░░░░░░░░ 0% |
+ | 13 | [road-to-inbox-harvest-2026-08-c-prompt-deinflation.md](roadmaps/road-to-inbox-harvest-2026-08-c-prompt-deinflation.md) | 2 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+ | 14 | [road-to-inbox-harvest-2026-08-c-release-head-truth.md](roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md) | 3 | 11 | 10 | 0 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-c-release-head-truth) | ░░░░░░░░░░ 0% |
+-| 15 | [road-to-inbox-harvest-2026-08-c-workspace-identity.md](roadmaps/road-to-inbox-harvest-2026-08-c-workspace-identity.md) | 3 | 12 | 11 | 0 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-c-workspace-identity) | ░░░░░░░░░░ 0% |
+-| 16 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
+-| 17 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
+-| 19 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+-| 20 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+-| 21 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+-| 22 | [road-to-skill-catalogue-budget.md](roadmaps/road-to-skill-catalogue-budget.md) | 4 | 23 | 23 | 0 | 0 | 0 | [1](#blockers-road-to-skill-catalogue-budget) | ░░░░░░░░░░ 0% |
+-| 23 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+-| 24 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
+-| 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+-| 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | 0 | ███████░░░ 71% |
+-| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 8 | 9 | 1 | 0 | 0 | █████░░░░░ 53% |
+-| 28 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 9 | 10 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | █████░░░░░ 53% |
+-| 29 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+-| 30 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+-| 31 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 15 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
++| 16 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 17 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
++| 18 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
++| 19 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
++| 20 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
++| 21 | [road-to-skill-catalogue-budget.md](roadmaps/road-to-skill-catalogue-budget.md) | 4 | 23 | 2 | 21 | 0 | 0 | [1](#blockers-road-to-skill-catalogue-budget) | █████████░ 91% |
++| 22 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
++| 23 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
++| 24 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
++| 25 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | 0 | ███████░░░ 71% |
++| 26 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 8 | 9 | 1 | 0 | 0 | █████░░░░░ 53% |
++| 27 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 9 | 10 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | █████░░░░░ 53% |
++| 28 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
++| 29 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
++| 30 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+ 
+ ---
+ 
+@@ -407,29 +406,6 @@ _1 blocker resolved._
+     should be preferred absent a reason to differ.
+   - **Resolved when:** the maintainer records a yes or a no in this blocker.
+ 
+-### [road-to-inbox-harvest-2026-08-c-workspace-identity.md](roadmaps/road-to-inbox-harvest-2026-08-c-workspace-identity.md)
+-
+-**Road to one answer for "where am I"** — 0 / 11 done (0%)
+-
+-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+-|---|---|---|---:|---:|---:|---:|---:|
+-| 1 | Census the question and its wrong answers | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+-| 2 | One resolver, in the module that already owns the hazard | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+-| 3 | Read the state, do not act on it | ⬜ not started | 5 | 0 | 1 | 0 | 0% |
+-
+-<a id="blockers-road-to-inbox-harvest-2026-08-c-workspace-identity"></a>
+-**Blockers**
+-
+-- **worktree-disposal-policy** (owner: maintainer - **Question:** what may be disposed of automatically, if anything? The pressure read makes the population legible for the first time, but every disposal is a bulk deletion and therefore Hard-Floor. The plausible answers range from "nothing, ever — the report is the whole deliverable" to "merged, commit-free and session-free entries are proposed for deletion in one confirmable batch".) — blocks step 3.3 only. Phases 1 and 2 and the read in 3.1–3.2 proceed either way.
+-  - **What to do:**
+-    pick exactly one — (a) report-only forever: the pressure read
+-    is the whole deliverable, and step 3.3 is marked `[-]` cancelled; or
+-    (b) propose a disposal batch from the read, listing merged, commit-free and
+-    session-free entries for one confirmable deletion under the Hard Floor.
+-    Mutually exclusive; (a) needs no further work, (b) reopens 3.3 with the tier
+-    boundary written into it.
+-  - **Resolved when:** the maintainer records which of those the policy is.
+-
+ ### [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md)
+ 
+ **Road to the inbox-harvest residuals — four deferrals that outlived their parent** — 0 / 4 done (0%)
+diff --git a/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-c-workspace-identity.md b/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-c-workspace-identity.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..a59e10382bb99d556c81b329e318bdd7d2411618
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-c-workspace-identity.md
+@@ -0,0 +1,226 @@
++---
++complexity: lightweight
++status: ready
++---
++
++# Road to one answer for "where am I"
++
++**Goal.** Give the tree a single resolver for workspace identity — repo root,
++main worktree, current worktree, branch, PR base — and put the worktree
++inventory on top of it, so the recurring "misclassifies from inside a worktree"
++defect class has one place to be fixed instead of eight.
++
++**Source:** `agents/tmp.old/feedback-12.0.0.txt`, raised as a P0 by two of its
++five passes. Triage:
++`agents/evidence/analysis/inbox-harvest-2026-08-c-triage.md`.
++
++## Context
++
++Measured on this branch:
++
++- **8** call sites run `git rev-parse --show-toplevel` themselves, spread over
++  **6** files (`update_roadmap_progress.ts`, `archive_completed_roadmaps.ts`,
++  `roadmap_gates.ts`, `evidence_report.ts`, `lint_plan_risk_register.ts`,
++  `migration_status.ts`).
++- Exactly **one** exported `repoRoot()` exists, and it lives in
++  `src/scripts/migration_status.ts:160` — a report script, which is why nothing
++  imports it.
++- A worktree-aware primitive already exists and is the right foundation:
++  `src/scripts/_lib/git_common_dir.ts` exports `git_dir`, `current_branch` and
++  `git_common_dir`, with the inherited-`GIT_DIR` hazard documented in its own
++  header. It has **4** consumers and no notion of repo root, main worktree, or
++  PR base.
++- `git worktree list` currently reports **306** entries. Age-based cleanup was
++  measured against roughly the same population and addressed two of them.
++
++The defect class this produces is already in the release history: the 12.0.0
++span carries `fix(worktrees): the inventory misclassifies from inside a worktree,
++totally` and `fix(worktrees): judge location against the main worktree, and
++teach the two missing conditions`. Both are the same bug wearing different
++call sites.
++
++This roadmap **extends the existing primitive**. It does not add a subsystem —
++the reviews that raised it also ask, in the same breath, for no new platforms.
++
++## Non-goals
++
++- Deleting worktrees. Bulk deletion is a Hard-Floor action; everything here is
++  report-only, and the disposal question is a blocker, not a step.
++- A session/claim redesign. `session_register` keeps its semantics; it becomes
++  a consumer of the identity resolver rather than a co-owner of the question.
++- Any change to how branches or PRs are created.
++
++## Phase 1 — Census the question and its wrong answers
++
++- [x] List every site that answers a workspace-identity question for itself
++      (repo root, main worktree, current worktree, branch, PR base) and record
++      which primitive each uses, in
++      `agents/evidence/analysis/workspace-identity-census.md`.
++      *verify:* the file has one row per call site with a `file:line`.
++      **21 rows** across five questions: 8 repo-root (6 files, premise
++      confirmed), 3 main-worktree, 3 current-worktree, 5 branch, 5 PR-base.
++- [x] For each of the two shipped worktree misclassification fixes in the
++      12.0.0 span, record which identity question was answered wrongly and by
++      which primitive. A third instance found in the census counts as a row.
++      *verify:* the census names the primitive per defect.
++      Both are the **main worktree** question at one call site
++      (`worktree_cleanup_check.ts` `isStandardLocation`), diagnosed in
++      `52d7fe1b8` and repaired in `5cf7450da`. **No third instance** — recorded
++      as zero rather than left unstated.
++- [x] State which of the five identity fields `git_common_dir.ts` already
++      answers correctly under an inherited `GIT_DIR`, and which it does not.
++      *verify:* the census carries a five-row support table.
++      **1 of 5** — branch only, and correct precisely because it reads
++      `<git-dir>/HEAD` with `fs` instead of spawning `git`.
++
++## Phase 2 — One resolver, in the module that already owns the hazard
++
++- [x] Extend `src/scripts/_lib/git_common_dir.ts` with a `workspaceIdentity()`
++      returning repo root, main worktree, current worktree, branch and PR base,
++      each field carrying whether it was resolved or unresolvable — never a
++      silently wrong default.
++      *verify:* a test asserts every field is either a value or an explicit
++      unresolved marker, from inside a worktree and from the main checkout.
++      `IdentityField` is a two-shape union, so a third shape is not
++      expressible; totality asserted from the main checkout, from inside a
++      worktree, and from outside any repository. **`sessionId` was not added** —
++      zero census rows (Risk 2).
++- [x] Migrate the census's call sites to it, one commit per file, leaving
++      behaviour identical where the site was already correct.
++      *verify:* the census file records, per row, migrated or deliberately not,
++      with a reason for each not.
++      **7 migrated, 11 deliberately not, 3 n/a** of 21 rows. The largest "not"
++      is structural and is the run's main finding: `src/agent-src/scripts/` is
++      projected to `dist/agent-src/scripts/`, which carries no
++      `_lib/git_common_dir.ts`, so the three consumer-facing sites cannot
++      import the resolver at all (census § 9).
++- [x] Pin the two shipped misclassification defects as regression tests against
++      the new resolver.
++      *verify:* both tests fail against the pre-migration primitive and pass
++      after.
++      The pin carries its own control: the same test asserts
++      `rev-parse --show-toplevel` **does** differ between the two locations, so
++      an implementation built on the pre-migration primitive fails it by
++      construction rather than the pin passing vacuously.
++
++## Phase 3 — Read the state, do not act on it
++
++- [x] Add a read-only `workspace doctor` report: repo root, main worktree,
++      current worktree, branch, PR base, session claim, conflicting session
++      records, stale records, path containment — every field with its
++      provenance, in the shape `routing:doctor` already uses.
++      *verify:* the command exits 0 in a clean checkout and in a worktree, and
++      its output names the provenance of each field.
++      `agent-config workspace:doctor` — exit 0 from the main checkout, from
++      inside a worktree, and under an inherited `GIT_DIR`; the CLI-registry
++      budget moved in the same change (97 → 98), per that record's contract.
++- [x] Add a worktree pressure read to the same report: total registered,
++      how many are fully merged into the trunk, how many carry commits that are
++      not, how many have a live session record.
++      *verify:* the counts sum to the `git worktree list` total.
++      The three buckets **partition** the registered set and the report prints
++      the sum against the total (live probe: 307 of 307 ✅). A fourth bucket for
++      detached entries was added rather than folding them into "merged" — an
++      unclassifiable entry must not be assumed merged. The live-session count
++      overlaps every bucket, so it is reported *outside* the partition and the
++      test asserts that separation.
++- [-] Propose a disposal policy from the pressure read (merged and
++      session-free is eligible; unmerged is preserved). **Cancelled** — the
++      blocker resolved to option (a), report-only. See the blocker below for
++      the resolution and its honest quorum caveat.
++
++## Blockers
++
++### blocker: worktree-disposal-policy
++- **Status:** resolved
++- **Owner:** maintainer
++- **Question:** what may be disposed of automatically, if anything? The pressure
++  read makes the population legible for the first time, but every disposal is a
++  bulk deletion and therefore Hard-Floor. The plausible answers range from
++  "nothing, ever — the report is the whole deliverable" to "merged, commit-free
++  and session-free entries are proposed for deletion in one confirmable batch".
++- **Resolved when:** the maintainer records which of those the policy is.
++- **Blocks:** step 3.3 only. Phases 1 and 2 and the read in 3.1–3.2 proceed
++  either way.
++- **What to do:** pick exactly one — (a) report-only forever: the pressure read
++  is the whole deliverable, and step 3.3 is marked `[-]` cancelled; or
++  (b) propose a disposal batch from the read, listing merged, commit-free and
++  session-free entries for one confirmable deletion under the Hard Floor.
++  Mutually exclusive; (a) needs no further work, (b) reopens 3.3 with the tier
++  boundary written into it.
++
++**Resolution 2026-08-15 — (a) report-only, and the quorum is stated honestly.**
++
++Routed to the AI council with the live pressure read as evidence (307
++registered · 298 merged · 7 unmerged · 2 unclassifiable · 2 with a live session).
++The run came back **1 of 2 present — DEGRADED, which is not convergence**: the
++openai seat failed with `model_unsupported_on_transport` (its pinned model is
++refused by the CLI on a subscription account — a known, separately-tracked
++defect, not a judgement about this question). Actual cost $0.0313.
++
++So this is **one reasoned answer, not a two-member convergence**, and it is
++recorded as such rather than dressed up as a quorum. What makes it enough to act
++on is that it agrees with three independent sources that already existed:
++
++1. **This roadmap's own text.** Non-goals: "Deleting worktrees … everything here
++   is report-only". Risk 3: "the pressure read becomes a disposal path by
++   accident". (b) is the risk the plan was written to avoid.
++2. **The maintainer's own recorded conclusion in the 12.0.0 span.** Under the
++   approved predicate the safe set was **2, not 181**; both were removed by name
++   and a re-run reported safe 0 — "the approval is spent". The same commit found
++   **275 of 304** worktrees with git activity inside 60 days and concluded that
++   reclaiming disk means deciding about *recent* worktrees, "a policy call and it
++   is not made here".
++3. **The delta test in the blocker's own question 2.** (b) either reuses the
++   predicate `worktree:cleanup` has already tested — redundant — or drops the age
++   floor, which *is* the policy call source 2 deferred. Neither is a technical
++   gap this roadmap can close.
++
++The 298-merged figure does not reverse it: merged is not the same as
++safe-to-delete (recently integrated, still referenced, under review), and it is
++the 275-of-304 activity finding wearing a different number.
++
++**What this does not decide.** Disposal is scoped out of *this* roadmap, not
++ruled out forever — the answering member made that correction to its own
++framing explicitly. If disk pressure becomes the binding constraint, it is a
++separate roadmap carrying an explicit disposal policy, and the pressure read
++shipped here is what makes that decision legible for the first time.
++
++Reversing this costs one checkbox: flip 3.3 back to `[ ]` and reopen with the
++tier boundary written in.
++
++## Acceptance criteria
++
++- [x] Every census row is either migrated to the shared resolver or carries a
++      written reason it is not.
++      21 rows: **7 migrated · 11 deliberately not · 3 n/a**, each with a reason
++      (census § 8).
++- [x] Both shipped worktree misclassification defects have a regression test
++      that fails against the pre-migration primitive.
++      `tests/scripts/workspace_identity.test.ts`, plus a control assertion that
++      `rev-parse --show-toplevel` genuinely differs between the two locations —
++      so the pin cannot pass vacuously.
++- [x] `workspace doctor` reports the same repo root and main worktree from
++      inside a worktree as from the main checkout, and says so under an
++      inherited `GIT_DIR`.
++      **Discharged with one correction to the criterion's own wording, stated
++      rather than quietly worked around.** `mainWorktree` is identical from both
++      locations and under an inherited `GIT_DIR` — verified by live probe and by
++      test, and it is the invariant the criterion exists for. `repoRoot` is
++      **not** identical between the two, and cannot be: `git rev-parse
++      --show-toplevel` is defined as the top level of the *invoking* working
++      tree, so inside a linked worktree it is the worktree's own root. That is
++      also why the roadmap's Phase 2 lists repo root, main worktree and current
++      worktree as three fields rather than one. What the criterion is really
++      asking — "the answer does not change depending on where you stand" — holds
++      for `mainWorktree`, and `currentWorktree` names which checkout you are in
++      so the difference is legible instead of silent.
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude/host -->
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | The migration silently changes a gate's scope | implementation | Several call sites are gate scripts that resolve a root and then scan it; a resolver that returns a different root turns a green gate red or, worse, makes it scan nothing and exit green | Phase 2 migrates one file per commit and the census records behaviour-identical per row, so a scope change is visible in a single diff rather than buried in a sweep | Phase 2 — One resolver, in the module that already owns the hazard |
++| 2 | A new field is added that nothing consumes | product | `prBase` and `sessionId` are the two fields most likely to be declared because the review named them rather than because a call site needs them, which is the metadata-without-a-consumer failure this package has already recorded twice | Phase 1 derives the field list from the census rather than from the review, and a field with zero census rows is not added | Phase 1 — Census the question and its wrong answers |
++| 3 | The pressure read becomes a disposal path by accident | product | A report that classifies entries as eligible is one small step from a command that removes them, and that step crosses a Hard Floor | 3.3 is `[~]` behind a maintainer blocker whose own question names "nothing, ever" as a legitimate answer, and the Non-goals section states deletion is out of scope | Phase 3 — Read the state, do not act on it |
++| 4 | The inherited-`GIT_DIR` hazard is re-introduced | implementation | The existing module documents that hooks export `GIT_DIR` and that discovery must not trust it; a new function added beside it can easily forget, and the failure is silent and environment-dependent | The resolver lands in that same module rather than a new one, so the hazard note is adjacent to the code, and the acceptance criteria require the inherited-`GIT_DIR` case to be asserted | Phase 2 — One resolver, in the module that already owns the hazard |
+diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-c-workspace-identity.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-c-workspace-identity.md
+deleted file mode 100644
+index 2e8edc0cf900b715ba7c6eaa97a5384acd46c5e1..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-inbox-harvest-2026-08-c-workspace-identity.md
++++ /dev/null
+@@ -1,138 +0,0 @@
+----
+-complexity: lightweight
+-status: ready
+----
+-
+-# Road to one answer for "where am I"
+-
+-**Goal.** Give the tree a single resolver for workspace identity — repo root,
+-main worktree, current worktree, branch, PR base — and put the worktree
+-inventory on top of it, so the recurring "misclassifies from inside a worktree"
+-defect class has one place to be fixed instead of eight.
+-
+-**Source:** `agents/tmp.old/feedback-12.0.0.txt`, raised as a P0 by two of its
+-five passes. Triage:
+-`agents/evidence/analysis/inbox-harvest-2026-08-c-triage.md`.
+-
+-## Context
+-
+-Measured on this branch:
+-
+-- **8** call sites run `git rev-parse --show-toplevel` themselves, spread over
+-  **6** files (`update_roadmap_progress.ts`, `archive_completed_roadmaps.ts`,
+-  `roadmap_gates.ts`, `evidence_report.ts`, `lint_plan_risk_register.ts`,
+-  `migration_status.ts`).
+-- Exactly **one** exported `repoRoot()` exists, and it lives in
+-  `src/scripts/migration_status.ts:160` — a report script, which is why nothing
+-  imports it.
+-- A worktree-aware primitive already exists and is the right foundation:
+-  `src/scripts/_lib/git_common_dir.ts` exports `git_dir`, `current_branch` and
+-  `git_common_dir`, with the inherited-`GIT_DIR` hazard documented in its own
+-  header. It has **4** consumers and no notion of repo root, main worktree, or
+-  PR base.
+-- `git worktree list` currently reports **306** entries. Age-based cleanup was
+-  measured against roughly the same population and addressed two of them.
+-
+-The defect class this produces is already in the release history: the 12.0.0
+-span carries `fix(worktrees): the inventory misclassifies from inside a worktree,
+-totally` and `fix(worktrees): judge location against the main worktree, and
+-teach the two missing conditions`. Both are the same bug wearing different
+-call sites.
+-
+-This roadmap **extends the existing primitive**. It does not add a subsystem —
+-the reviews that raised it also ask, in the same breath, for no new platforms.
+-
+-## Non-goals
+-
+-- Deleting worktrees. Bulk deletion is a Hard-Floor action; everything here is
+-  report-only, and the disposal question is a blocker, not a step.
+-- A session/claim redesign. `session_register` keeps its semantics; it becomes
+-  a consumer of the identity resolver rather than a co-owner of the question.
+-- Any change to how branches or PRs are created.
+-
+-## Phase 1 — Census the question and its wrong answers
+-
+-- [ ] List every site that answers a workspace-identity question for itself
+-      (repo root, main worktree, current worktree, branch, PR base) and record
+-      which primitive each uses, in
+-      `agents/evidence/analysis/workspace-identity-census.md`.
+-      *verify:* the file has one row per call site with a `file:line`.
+-- [ ] For each of the two shipped worktree misclassification fixes in the
+-      12.0.0 span, record which identity question was answered wrongly and by
+-      which primitive. A third instance found in the census counts as a row.
+-      *verify:* the census names the primitive per defect.
+-- [ ] State which of the five identity fields `git_common_dir.ts` already
+-      answers correctly under an inherited `GIT_DIR`, and which it does not.
+-      *verify:* the census carries a five-row support table.
+-
+-## Phase 2 — One resolver, in the module that already owns the hazard
+-
+-- [ ] Extend `src/scripts/_lib/git_common_dir.ts` with a `workspaceIdentity()`
+-      returning repo root, main worktree, current worktree, branch and PR base,
+-      each field carrying whether it was resolved or unresolvable — never a
+-      silently wrong default.
+-      *verify:* a test asserts every field is either a value or an explicit
+-      unresolved marker, from inside a worktree and from the main checkout.
+-- [ ] Migrate the census's call sites to it, one commit per file, leaving
+-      behaviour identical where the site was already correct.
+-      *verify:* the census file records, per row, migrated or deliberately not,
+-      with a reason for each not.
+-- [ ] Pin the two shipped misclassification defects as regression tests against
+-      the new resolver.
+-      *verify:* both tests fail against the pre-migration primitive and pass
+-      after.
+-
+-## Phase 3 — Read the state, do not act on it
+-
+-- [ ] Add a read-only `workspace doctor` report: repo root, main worktree,
+-      current worktree, branch, PR base, session claim, conflicting session
+-      records, stale records, path containment — every field with its
+-      provenance, in the shape `routing:doctor` already uses.
+-      *verify:* the command exits 0 in a clean checkout and in a worktree, and
+-      its output names the provenance of each field.
+-- [ ] Add a worktree pressure read to the same report: total registered,
+-      how many are fully merged into the trunk, how many carry commits that are
+-      not, how many have a live session record.
+-      *verify:* the counts sum to the `git worktree list` total.
+-- [~] Propose a disposal policy from the pressure read (merged and
+-      session-free is eligible; unmerged is preserved). Deferred behind the
+-      blocker below.
+-
+-## Blockers
+-
+-### blocker: worktree-disposal-policy
+-- **Status:** open
+-- **Owner:** maintainer
+-- **Question:** what may be disposed of automatically, if anything? The pressure
+-  read makes the population legible for the first time, but every disposal is a
+-  bulk deletion and therefore Hard-Floor. The plausible answers range from
+-  "nothing, ever — the report is the whole deliverable" to "merged, commit-free
+-  and session-free entries are proposed for deletion in one confirmable batch".
+-- **Resolved when:** the maintainer records which of those the policy is.
+-- **Blocks:** step 3.3 only. Phases 1 and 2 and the read in 3.1–3.2 proceed
+-  either way.
+-- **What to do:** pick exactly one — (a) report-only forever: the pressure read
+-  is the whole deliverable, and step 3.3 is marked `[-]` cancelled; or
+-  (b) propose a disposal batch from the read, listing merged, commit-free and
+-  session-free entries for one confirmable deletion under the Hard Floor.
+-  Mutually exclusive; (a) needs no further work, (b) reopens 3.3 with the tier
+-  boundary written into it.
+-
+-## Acceptance criteria
+-
+-- [ ] Every census row is either migrated to the shared resolver or carries a
+-      written reason it is not.
+-- [ ] Both shipped worktree misclassification defects have a regression test
+-      that fails against the pre-migration primitive.
+-- [ ] `workspace doctor` reports the same repo root and main worktree from
+-      inside a worktree as from the main checkout, and says so under an
+-      inherited `GIT_DIR`.
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude/host -->
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | The migration silently changes a gate's scope | implementation | Several call sites are gate scripts that resolve a root and then scan it; a resolver that returns a different root turns a green gate red or, worse, makes it scan nothing and exit green | Phase 2 migrates one file per commit and the census records behaviour-identical per row, so a scope change is visible in a single diff rather than buried in a sweep | Phase 2 — One resolver, in the module that already owns the hazard |
+-| 2 | A new field is added that nothing consumes | product | `prBase` and `sessionId` are the two fields most likely to be declared because the review named them rather than because a call site needs them, which is the metadata-without-a-consumer failure this package has already recorded twice | Phase 1 derives the field list from the census rather than from the review, and a field with zero census rows is not added | Phase 1 — Census the question and its wrong answers |
+-| 3 | The pressure read becomes a disposal path by accident | product | A report that classifies entries as eligible is one small step from a command that removes them, and that step crosses a Hard Floor | 3.3 is `[~]` behind a maintainer blocker whose own question names "nothing, ever" as a legitimate answer, and the Non-goals section states deletion is out of scope | Phase 3 — Read the state, do not act on it |
+-| 4 | The inherited-`GIT_DIR` hazard is re-introduced | implementation | The existing module documents that hooks export `GIT_DIR` and that discovery must not trust it; a new function added beside it can easily forget, and the failure is silent and environment-dependent | The resolver lands in that same module rather than a new one, so the hazard note is adjacent to the code, and the acceptance criteria require the inherited-`GIT_DIR` case to be asserted | Phase 2 — One resolver, in the module that already owns the hazard |
+diff --git a/src/cli/registry.ts b/src/cli/registry.ts
+index a25f213aeb8d945f002aedea19672cc51c666b4d..1b497d19ae658efba9b39065aa03b1562840c118 100644
+--- a/src/cli/registry.ts
++++ b/src/cli/registry.ts
+@@ -82,6 +82,7 @@ export const REGISTRY: readonly CommandEntry[] = [
+     { name: 'hooks:status', disposition: 'delegate', synopsis: 'Print the runtime hook matrix (per-platform install + bindings).' },
+     { name: 'hooks:doctor', disposition: 'delegate', synopsis: 'Diagnose hook health: concerns, posture, missing trampolines (read-only).' },
+     { name: 'routing:doctor', disposition: 'delegate', synopsis: 'Live routing diagnosis: per-gate ACTIVE/INACTIVE with reason, chain, freshness, orchestration state (read-only).' },
++    { name: 'workspace:doctor', disposition: 'delegate', synopsis: 'Workspace identity with provenance (repo root, main worktree, current worktree, branch, PR base) + session claim and worktree pressure (read-only).' },
+     { name: 'route:explain', disposition: 'delegate', synopsis: 'Deterministic rule-routing trace for one prompt: matched triggers, tier, disposition, budget, rejected candidates (trigger-match level only).' },
+     { name: 'route:audit', disposition: 'delegate', synopsis: 'Replay the router matcher over the last N chat-history prompts; opt-in recorder + --weekly rolling render (trigger-match level only).' },
+     { name: 'hooks:replay', disposition: 'delegate', synopsis: 'Replay a fixture through the universal hook dispatcher (no state writes).' },
+diff --git a/src/config/evaluator-budgets.json b/src/config/evaluator-budgets.json
+index 4a6d0907450568fc61638fae2cedc36e1a413e58..f992eb40a2e8f7e278f8fa7f72eaf93857cb9033 100644
+--- a/src/config/evaluator-budgets.json
++++ b/src/config/evaluator-budgets.json
+@@ -58,11 +58,11 @@
+       "deterministic": false
+     },
+     "cli_help_command_count": {
+-      "max": 97,
+-      "last_measured": 97,
+-      "last_measured_at": "2026-08-10",
++      "max": 98,
++      "last_measured": 98,
++      "last_measured_at": "2026-08-15",
+       "method": "registry enumeration — count of `{ name: '...', disposition` entries in src/cli/registry.ts (NOT --help prose parsing; methods historically disagreed 74 vs 76 vs 79)",
+-      "baseline_note": "80 → 81 on 2026-08-03 (release 9.15.0 gate). This RECORDS growth that already shipped through its own reviewed PR; it does not authorize new surface. The +1 is f02db54c2 (fix(cli): register routing:doctor in the CLI registry) — the command existed, only its registry entry was missing, and the registering PR did not move this budget. The gate did its job again: breach WARNS on main and BLOCKS on release, which is the conscious-decision point rather than a silently raised cap. Re-measured 2026-08-03 via the pinned method: 81. Headroom stays zero by design — the next registry addition must move this number in its own PR. 81 → 82 on 2026-08-04: the `handoff` subcommand (road-to-agent-handoff-resume Phase 4) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 82. 82 → 84 on 2026-08-04: the `route:explain` + `route:audit` verbs (routing-correctness validation surface) register in the same PR that adds the surface. Re-measured via the pinned method: 84. 84 → 85 on 2026-08-05: the `settings:set` verb (road-to-zero-ceremony-settings Phase 2 — the one agent-reachable settings writer) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 85. 85 → 86 on 2026-08-06: the `conformance:behavior` verb (road-to-agent-behavior-conformance Phase 5 — replays the local transcript store through the four mechanised conformance checks) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 86. 86 → 88 on 2026-08-07: the `sessions:list` + `sessions:claim` verbs (road-to-parallel-session-coordination — the shell surface of the shared session register, needed because /roadmap:next is command markdown and can only reach the register through a shell call) register in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 88. 88 → 89 on 2026-08-08: the `council:status` verb registers in the same PR that adds the surface, per this record's own contract. It exists because an agent in a consumer project announced \"kein Council konfiguriert (keine .agent-settings.yml)\" and substituted a weaker path while the council was configured user-globally the whole time — there was no verb that answered availability, so the only route was an inference from a filename, and the intuitive filename is the one location ADR-104 guarantees is never consulted. Re-measured via the pinned method: 89. 89 → 91 on 2026-08-08: the `self-repair:status` + `self-repair:release` verbs (the queued-defect reader and the single Hard-Floor-gated outward step of the self-repair loop — the loop is deliberately unable to publish unless a human runs the release command) register in the same PR that adds the surface, per this record's own contract. Landed alongside the +1 council:status move in the same branch. Re-measured via the pinned method: 91. 91 → 94 on 2026-08-08: the `packs:active`, `settings:get` and `mcp:available` verbs (road-to-capability-answerability Phase 2 — the three capability probes for the gaps that had none) register in the same PR that adds the surface, per this record's own contract. Each answers a question that was previously only inferable from a filename: which packs are active and from which file, what a setting resolves to and which file set it, and what is declared in mcp.json versus what can actually launch. 94 -> 95 in the same PR: `brand:status` (Phase 2.4 — brand-layer presence, which the rule depended on and no surface could answer). Re-measured twice via the pinned method on the unchanged tree: 95/95. 95 → 96 on 2026-08-10: the `session:recycle` verb (road-to-token-economy-recycling Phase 2.2 — the deterministic producer of the main-session recycle envelope; the recycle advisory names this exact verb, so it must exist as a shell surface) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 96. 96 -> 97 on 2026-08-10: the `gates` verb registers in the same PR that adds the surface, per this record's own contract. It exists because the blocker fields the dashboard already parses (Owner, What to do, Resolved when — CI-enforced by lint_roadmap_blockers) had no owner-filtered reader: the dashboard counts the open blockers across a 600-line file and links each to a per-roadmap anchor, so \"which of these are mine\" was a manual read of every anchor. The same inference-from-a-filename shape as the council:status entry above, one layer up. This branch and the session:recycle branch each measured 96 independently and landed on the same number for different verbs; the merge makes it 97, re-measured twice via the pinned method on the merged tree: 97/97."
++      "baseline_note": "80 → 81 on 2026-08-03 (release 9.15.0 gate). This RECORDS growth that already shipped through its own reviewed PR; it does not authorize new surface. The +1 is f02db54c2 (fix(cli): register routing:doctor in the CLI registry) — the command existed, only its registry entry was missing, and the registering PR did not move this budget. The gate did its job again: breach WARNS on main and BLOCKS on release, which is the conscious-decision point rather than a silently raised cap. Re-measured 2026-08-03 via the pinned method: 81. Headroom stays zero by design — the next registry addition must move this number in its own PR. 81 → 82 on 2026-08-04: the `handoff` subcommand (road-to-agent-handoff-resume Phase 4) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 82. 82 → 84 on 2026-08-04: the `route:explain` + `route:audit` verbs (routing-correctness validation surface) register in the same PR that adds the surface. Re-measured via the pinned method: 84. 84 → 85 on 2026-08-05: the `settings:set` verb (road-to-zero-ceremony-settings Phase 2 — the one agent-reachable settings writer) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 85. 85 → 86 on 2026-08-06: the `conformance:behavior` verb (road-to-agent-behavior-conformance Phase 5 — replays the local transcript store through the four mechanised conformance checks) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 86. 86 → 88 on 2026-08-07: the `sessions:list` + `sessions:claim` verbs (road-to-parallel-session-coordination — the shell surface of the shared session register, needed because /roadmap:next is command markdown and can only reach the register through a shell call) register in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 88. 88 → 89 on 2026-08-08: the `council:status` verb registers in the same PR that adds the surface, per this record's own contract. It exists because an agent in a consumer project announced \"kein Council konfiguriert (keine .agent-settings.yml)\" and substituted a weaker path while the council was configured user-globally the whole time — there was no verb that answered availability, so the only route was an inference from a filename, and the intuitive filename is the one location ADR-104 guarantees is never consulted. Re-measured via the pinned method: 89. 89 → 91 on 2026-08-08: the `self-repair:status` + `self-repair:release` verbs (the queued-defect reader and the single Hard-Floor-gated outward step of the self-repair loop — the loop is deliberately unable to publish unless a human runs the release command) register in the same PR that adds the surface, per this record's own contract. Landed alongside the +1 council:status move in the same branch. Re-measured via the pinned method: 91. 91 → 94 on 2026-08-08: the `packs:active`, `settings:get` and `mcp:available` verbs (road-to-capability-answerability Phase 2 — the three capability probes for the gaps that had none) register in the same PR that adds the surface, per this record's own contract. Each answers a question that was previously only inferable from a filename: which packs are active and from which file, what a setting resolves to and which file set it, and what is declared in mcp.json versus what can actually launch. 94 -> 95 in the same PR: `brand:status` (Phase 2.4 — brand-layer presence, which the rule depended on and no surface could answer). Re-measured twice via the pinned method on the unchanged tree: 95/95. 95 → 96 on 2026-08-10: the `session:recycle` verb (road-to-token-economy-recycling Phase 2.2 — the deterministic producer of the main-session recycle envelope; the recycle advisory names this exact verb, so it must exist as a shell surface) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 96. 96 -> 97 on 2026-08-10: the `gates` verb registers in the same PR that adds the surface, per this record's own contract. It exists because the blocker fields the dashboard already parses (Owner, What to do, Resolved when — CI-enforced by lint_roadmap_blockers) had no owner-filtered reader: the dashboard counts the open blockers across a 600-line file and links each to a per-roadmap anchor, so \"which of these are mine\" was a manual read of every anchor. The same inference-from-a-filename shape as the council:status entry above, one layer up. This branch and the session:recycle branch each measured 96 independently and landed on the same number for different verbs; the merge makes it 97, re-measured twice via the pinned method on the merged tree: 97/97. 97 -> 98 on 2026-08-15: the `workspace:doctor` verb (road-to-inbox-harvest-2026-08-c-workspace-identity Phase 3 — the read-only report over the new `workspaceIdentity()` resolver) registers in the same PR that adds the surface, per this record's own contract. It exists for the same inference-from-a-filename shape as the council:status and gates entries above, one layer down: the tree answered \"where am I\" in eight ad-hoc places across six files, and the 12.0.0 span shipped the same worktree misclassification twice, so no verb could be asked which checkout is the main one. Read-only by construction — the roadmap's Non-goals put worktree disposal out of scope and its Risk 3 names \"the pressure read becomes a disposal path by accident\" as the failure to design against, so the command carries no --fix and no --prune. Re-measured twice via the pinned method on the unchanged tree: 98/98."
+     },
+     "mcp_public_tool_count": {
+       "max": 19,
+diff --git a/src/scripts/_dispatch.bash b/src/scripts/_dispatch.bash
+index 89054e4b5bb2d9aceba011adc8a5472452e5422b..643ccb4122432743e22cefd09817d2ad1f6c3141 100755
+--- a/src/scripts/_dispatch.bash
++++ b/src/scripts/_dispatch.bash
+@@ -250,6 +250,11 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
+                              router + projection freshness, host bridge status.
+                              Flags: --platform <p>, --workspace <path>, --json, --strict,
+                              --no-freshness
++  workspace:doctor           One answer to "where am I": repo root, main worktree, current
++                             worktree, branch, PR base — each with its provenance — plus
++                             session claim, conflicting records and worktree pressure.
++                             Read-only; no disposal path by design.
++                             Flags: --from <dir>, --json, --strict
+   route:explain              Deterministic rule-routing trace for one prompt: matched
+                              triggers, tier, injected-vs-pointer disposition, budget
+                              consumption, rejected candidates. Trigger-match level only
+@@ -899,6 +904,10 @@ cmd_routing_doctor() {
+   exec_hook "src/scripts/routing_doctor" "$@"
+ }
+ 
++cmd_workspace_doctor() {
++  exec_hook "src/scripts/workspace_doctor" "$@"
++}
++
+ cmd_hooks_replay() {
+   exec_hook "src/scripts/hooks/replay_hook" "$@"
+ }
+@@ -1422,6 +1431,7 @@ main() {
+     hooks:status)            cmd_hooks_status "$@" ;;
+     hooks:doctor)            cmd_hooks_doctor "$@" ;;
+     routing:doctor)          cmd_routing_doctor "$@" ;;
++    workspace:doctor)        cmd_workspace_doctor "$@" ;;
+     route:explain)           cmd_route_explain "$@" ;;
+     route:audit)             cmd_route_audit "$@" ;;
+     hooks:replay)            cmd_hooks_replay "$@" ;;
+diff --git a/src/scripts/_lib/git_common_dir.ts b/src/scripts/_lib/git_common_dir.ts
+index ae34f6b4bc0dcc22190b392d75ea71875e304485..61f62b422c552f3aa806cb84b9934f540eb679f6 100644
+--- a/src/scripts/_lib/git_common_dir.ts
++++ b/src/scripts/_lib/git_common_dir.ts
+@@ -126,3 +126,176 @@ export function git_common_dir(project_root: string): string | null {
+         return null;
+     }
+ }
++
++// ---------------------------------------------------------------------------
++// Workspace identity
++// ---------------------------------------------------------------------------
++
++/**
++ * One answer to one identity question, and never a silent default.
++ *
++ * The census that motivated this type (`agents/evidence/analysis/
++ * workspace-identity-census.md`) found three of eight repo-root sites falling
++ * back to a value that is *plausible but wrong* when git cannot answer —
++ * `process.cwd()`, a path derived from the script's own location, an
++ * exception. A caller cannot distinguish those from a real answer, which is
++ * how a gate ends up scanning the wrong tree and exiting green.
++ */
++export type IdentityField =
++    | { readonly resolved: true; readonly value: string; readonly provenance: string }
++    | { readonly resolved: false; readonly reason: string };
++
++/** The five workspace-identity questions, each independently resolvable. */
++export interface WorkspaceIdentity {
++    /**
++     * Top level of the working tree the caller is in — the drop-in for
++     * `git rev-parse --show-toplevel`. Inside a linked worktree this is the
++     * worktree's own root, exactly as git reports it.
++     */
++    readonly repoRoot: IdentityField;
++    /**
++     * The main (non-linked) checkout. Derived from the common git dir, so it
++     * is the same value from every worktree of the repo. This is the field the
++     * two shipped misclassification defects needed and did not have.
++     */
++    readonly mainWorktree: IdentityField;
++    /**
++     * The checkout the caller is in. Its `value` equals `repoRoot` by git's own
++     * definition; the two fields exist separately because the *provenance*
++     * differs and that is the part callers need — `main-checkout` versus
++     * `linked-worktree` is precisely the question `isStandardLocation` got
++     * wrong twice.
++     */
++    readonly currentWorktree: IdentityField;
++    /** Branch of the current checkout; unresolved on a detached HEAD. */
++    readonly branch: IdentityField;
++    /**
++     * The remote's default branch, as a `refs/remotes/<remote>/<name>` ref —
++     * the offline notion of "what a PR from here would target".
++     *
++     * Deliberately NOT the `gh`-derived base of an actual open PR: that needs
++     * network and auth, and `check_branch_freshness.ts` already owns it. This
++     * field answers the question a gate can answer without leaving the disk,
++     * and reports `unresolved` rather than guessing `main` when the repo has
++     * no recorded default.
++     */
++    readonly prBase: IdentityField;
++}
++
++function resolved(value: string, provenance: string): IdentityField {
++    return { resolved: true, value, provenance };
++}
++
++function unresolved(reason: string): IdentityField {
++    return { resolved: false, reason };
++}
++
++/**
++ * Walk up from `start` to the first directory holding a `.git` entry.
++ *
++ * File-based on purpose, like everything else here: `rev-parse --show-toplevel`
++ * would be redirected by an inherited `GIT_DIR`, and the symptom is a wrong
++ * path rather than an error.
++ */
++function discover_root(start: string): string | null {
++    let dir = realpath_or_self(path.resolve(start));
++    for (;;) {
++        if (fs.existsSync(path.join(dir, '.git'))) return dir;
++        const parent = path.dirname(dir);
++        if (parent === dir) return null;
++        dir = parent;
++    }
++}
++
++/**
++ * Is `project_root`'s `.git` a linked-worktree pointer file rather than a
++ * directory? Returns `null` when there is no `.git` entry at all.
++ */
++function is_linked_worktree(project_root: string): boolean | null {
++    try {
++        return !fs.statSync(path.join(project_root, '.git')).isDirectory();
++    } catch {
++        return null;
++    }
++}
++
++/** The remote default branch ref, read from disk. `null` when unrecorded. */
++function remote_head_ref(common_dir: string, remote: string): string | null {
++    // A symbolic ref is stored loose; `git pack-refs` never packs one, so
++    // packed-refs is not a fallback for this specific ref — a repo that has
++    // never run `git remote set-head` simply has no answer on disk.
++    try {
++        const raw = fs.readFileSync(path.join(common_dir, 'refs', 'remotes', remote, 'HEAD'), 'utf-8');
++        const m = raw.match(/^ref:\s*(refs\/remotes\/.+?)\s*$/m);
++        return m === null ? null : m[1]!.trim();
++    } catch {
++        return null;
++    }
++}
++
++/**
++ * Resolve all five workspace-identity questions from `start` (default: the
++ * process cwd), reading files only.
++ *
++ * Every field is either a value with its provenance or an explicit reason it
++ * could not be resolved. Nothing here throws and nothing guesses.
++ */
++export function workspaceIdentity(
++    start: string = process.cwd(),
++    remote = 'origin',
++): WorkspaceIdentity {
++    const root = discover_root(start);
++    if (root === null) {
++        const why = `no .git entry in ${path.resolve(start)} or any ancestor`;
++        return {
++            repoRoot: unresolved(why),
++            mainWorktree: unresolved(why),
++            currentWorktree: unresolved(why),
++            branch: unresolved(why),
++            prBase: unresolved(why),
++        };
++    }
++
++    const linked = is_linked_worktree(root);
++    const repoRoot = resolved(root, 'upward .git walk from cwd');
++    const currentWorktree = resolved(
++        root,
++        linked === true
++            ? 'linked-worktree (.git is a gitdir pointer file)'
++            : 'main-checkout (.git is a directory)',
++    );
++
++    const common = git_common_dir(root);
++    let mainWorktree: IdentityField;
++    if (common === null) {
++        mainWorktree = unresolved('no common git dir resolvable from the repo root');
++    } else if (path.basename(common) === '.git') {
++        mainWorktree = resolved(path.dirname(common), 'dirname of the common git dir');
++    } else {
++        // Bare repo, `core.worktree`, or a separate-gitdir layout: the common
++        // dir is not `<main>/.git`, so `dirname` would name a directory that is
++        // not a checkout. Refusing is the point of the type.
++        mainWorktree = unresolved(
++            `common git dir ${common} is not named .git — bare or separate-gitdir layout has no main worktree to derive`,
++        );
++    }
++
++    const br = current_branch(root);
++    const branch = br === null
++        ? unresolved('detached HEAD, or HEAD unreadable in the per-worktree git dir')
++        : resolved(br, 'ref line of <git-dir>/HEAD');
++
++    let prBase: IdentityField;
++    if (common === null) {
++        prBase = unresolved('no common git dir resolvable from the repo root');
++    } else {
++        const ref = remote_head_ref(common, remote);
++        prBase = ref === null
++            ? unresolved(
++                `no refs/remotes/${remote}/HEAD on disk — run \`git remote set-head ${remote} -a\`; not guessed`,
++            )
++            : resolved(ref, `symbolic ref refs/remotes/${remote}/HEAD`);
++    }
++
++    return { repoRoot, mainWorktree, currentWorktree, branch, prBase };
++}
+diff --git a/src/scripts/check_branch_freshness.ts b/src/scripts/check_branch_freshness.ts
+index 75d01d96017e1f10263f8763dc634a4654de4d59..f8fecac2fa045520470a5a54c8a1e24ce87d4d2f 100644
+--- a/src/scripts/check_branch_freshness.ts
++++ b/src/scripts/check_branch_freshness.ts
+@@ -66,6 +66,7 @@ import path from "node:path";
+ import { fileURLToPath } from "node:url";
+ 
+ import { runGateCli, runSelfTest, type SelfTestCase } from "./_lib/gate_self_test.js";
++import { workspaceIdentity } from "./_lib/git_common_dir.js";
+ import { reportScanned } from "./_lib/scan_scope.js";
+ 
+ // ledger-exempt: single remote-ref probe — the entire scope is ONE ls-remote answer (0 or 1 refs) resolved to one aggregate ancestor verdict, and every empty path already publishes its reason via reportScanned allowEmpty; there is no per-target collection to account.
+@@ -548,7 +549,12 @@ export function main(
+     return 0;
+   }
+ 
+-  const branch = git(["rev-parse", "--abbrev-ref", "HEAD"]);
++  // Census row B4. The file-based resolver is immune to an inherited `GIT_DIR`
++  // (hooks export one, and this gate runs at push time). Behaviour-identical
++  // here by construction: the guard below already collapses `null` and the
++  // detached-HEAD literal onto the same skip, and unresolved maps to `null`.
++  const branchField = workspaceIdentity().branch;
++  const branch = branchField.resolved ? branchField.value : null;
+   if (branch === null || branch === "HEAD") {
+     scanReport(0, "detached HEAD — there is no branch whose freshness could be asked");
+     return 0;
+diff --git a/src/scripts/check_release_published.ts b/src/scripts/check_release_published.ts
+index b8adafb3a25ecc3f03fc3a5e18b0c7947fcbdf1a..166519493b99353fa09f9ee0921f6d741e29d2ad 100644
+--- a/src/scripts/check_release_published.ts
++++ b/src/scripts/check_release_published.ts
+@@ -26,6 +26,7 @@ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
++import { workspaceIdentity } from './_lib/git_common_dir.js';
+ import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+ 
+ const SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$/;
+@@ -65,8 +66,11 @@ function _on_main(): boolean {
+     if (ref === 'refs/heads/main' || ref === 'refs/heads/master') {
+         return true;
+     }
+-    const [rc, head] = _git('rev-parse', '--abbrev-ref', 'HEAD');
+-    return rc === 0 && head === MAIN_BRANCH;
++    // Census row B5. Behaviour-identical: a detached HEAD used to compare the
++    // literal `HEAD` against MAIN_BRANCH and fail; unresolved fails the same
++    // way, without a subprocess an inherited `GIT_DIR` could redirect.
++    const branch = workspaceIdentity().branch;
++    return branch.resolved && branch.value === MAIN_BRANCH;
+ }
+ 
+ function _npm_latest(pkg: string): string | null {
+diff --git a/src/scripts/check_release_trunk_sync.ts b/src/scripts/check_release_trunk_sync.ts
+index 04d3e0b50296898e98052fc21bdde0424b9e1b26..40dd0c02134baf9648f0a34c465d097193f32daf 100644
+--- a/src/scripts/check_release_trunk_sync.ts
++++ b/src/scripts/check_release_trunk_sync.ts
+@@ -21,6 +21,7 @@ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
++import { workspaceIdentity } from './_lib/git_common_dir.js';
+ import { assertScanned } from './_lib/scan_scope.js';
+ 
+ const RELEASE_BRANCH_RE = /^release\/(\d+)\.(\d+)\.(\d+)$/;
+@@ -37,8 +38,19 @@ function _git(...args: string[]): string {
+     return (proc.stdout ?? '').trim();
+ }
+ 
++/**
++ * Census row B3 — one of four private `_current_branch` implementations that
++ * existed beside the shared, file-based one.
++ *
++ * This one spawned `rev-parse --abbrev-ref HEAD` with **no `cwd` and no env
++ * scrub**, so an inherited `GIT_DIR` answered about the hook's repository.
++ * The migration is behaviour-identical at the only call site: `main()` treats
++ * `'HEAD'` and `''` the same ("detached HEAD — gate skipped"), and the
++ * resolver's unresolved case maps onto `''`.
++ */
+ function _current_branch(): string {
+-    return _git('rev-parse', '--abbrev-ref', 'HEAD');
++    const branch = workspaceIdentity().branch;
++    return branch.resolved ? branch.value : '';
+ }
+ 
+ function _parse_semver(text: string): SemVer | null {
+diff --git a/src/scripts/evidence_report.ts b/src/scripts/evidence_report.ts
+index 43068d32e0a93e321c18797cd78b1075431f3106..5f82a07b60c88a9758986ef5218a2e32c8ae0ad9 100644
+--- a/src/scripts/evidence_report.ts
++++ b/src/scripts/evidence_report.ts
+@@ -29,6 +29,8 @@ import * as path from 'node:path';
+ import process from 'node:process';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
++import { workspaceIdentity } from './_lib/git_common_dir.js';
++
+ // argparse `prog` is hardcoded to "evidence_report.py" in the retired Python implementation,
+ // so usage strings stay byte-identical regardless of the `.py`/`.ts` filename.
+ const PROG = 'evidence_report.py';
+@@ -39,15 +41,24 @@ const DESCRIPTION = 'Evidence Report template automation.';
+ // Repo-root resolution
+ // ---------------------------------------------------------------------------
+ 
+-/** Return repo root via git, falling back to relative-path heuristic. */
++/**
++ * Return repo root, falling back to the relative-path heuristic.
++ *
++ * Census row R4. The previous implementation spawned
++ * `git rev-parse --show-toplevel` with **no `cwd` and no env scrub**, so an
++ * inherited `GIT_DIR` (every git hook exports one) silently answered about the
++ * hook's repository instead of this one. `workspaceIdentity()` reads files, so
++ * there is no child process to redirect. The fallback is unchanged, and in a
++ * plain invocation both forms return the same path.
++ */
+ function _repo_root(): string {
+-    const result = spawnSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf-8' });
+-    if (result.error || result.status !== 0 || typeof result.stdout !== 'string') {
++    const root = workspaceIdentity().repoRoot;
++    if (!root.resolved) {
+         // Script lives at src/scripts/; repo root is two levels up.
+         const here = fileURLToPath(import.meta.url);
+         return path.resolve(path.dirname(here), '..', '..');
+     }
+-    return result.stdout.trim();
++    return root.value;
+ }
+ 
+ function _git_head_short(): string {
+diff --git a/src/scripts/lint_plan_risk_register.ts b/src/scripts/lint_plan_risk_register.ts
+index ad06c8153840d5ca6e857137ae9301b8de029c89..36bd24dbdfd862c46cc56d2845ba2a3a39603f7c 100644
+--- a/src/scripts/lint_plan_risk_register.ts
++++ b/src/scripts/lint_plan_risk_register.ts
+@@ -39,6 +39,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
+ import { parse as parseYaml } from 'yaml';
+ 
++import { workspaceIdentity } from './_lib/git_common_dir.js';
+ import { gitEnv } from './_lib/git_env.js';
+ import { splitMarkdownRow } from './_lib/md_table.js';
+ import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+@@ -505,12 +506,26 @@ interface HistoryEntry {
+     date: string; // %cs — YYYY-MM-DD
+ }
+ 
++/**
++ * Repo root containing `dir`, or `null` outside a repository.
++ *
++ * Census rows R5–R7. The three call sites below each spawned
++ * `rev-parse --show-toplevel` through `_git` — already `GIT_DIR`-safe via
++ * `gitEnv()`, so this migration is behaviour-identical by construction and
++ * exists to remove the third, fourth and fifth re-derivation of one question,
++ * not to fix a defect. The resolver reads files instead of spawning, so the
++ * three checks also stop costing three subprocesses.
++ */
++function _repoRootOf(dir: string): string | null {
++    const root = workspaceIdentity(dir).repoRoot;
++    return root.resolved ? root.value : null;
++}
++
+ /** Newest-first commit history of a file; empty for untracked / non-repo paths. */
+ export function fileHistory(absPath: string): HistoryEntry[] {
+     const dir = path.dirname(absPath);
+-    const top = _git(dir, ['rev-parse', '--show-toplevel']);
+-    if (top === null) return [];
+-    const root = top.trim();
++    const root = _repoRootOf(dir);
++    if (root === null) return [];
+     // Normalize separators: git pathspecs use `/` on every platform, so a raw
+     // Windows `path.relative()` result matches nothing and would silently yield
+     // an empty history — which the grandfather clause reads as "no baseline".
+@@ -540,9 +555,8 @@ export function fileHistory(absPath: string): HistoryEntry[] {
+  */
+ export function hasUncommittedChanges(absPath: string): boolean {
+     const dir = path.dirname(absPath);
+-    const top = _git(dir, ['rev-parse', '--show-toplevel']);
+-    if (top === null) return false;
+-    const root = top.trim();
++    const root = _repoRootOf(dir);
++    if (root === null) return false;
+     const rel = path.relative(root, absPath).split(path.sep).join('/');
+     const out = _git(root, ['status', '--porcelain', '--', rel]);
+     if (out === null) return false;
+@@ -551,9 +565,8 @@ export function hasUncommittedChanges(absPath: string): boolean {
+ 
+ function _blobAt(absPath: string, sha: string): string | null {
+     const dir = path.dirname(absPath);
+-    const top = _git(dir, ['rev-parse', '--show-toplevel']);
+-    if (top === null) return null;
+-    const root = top.trim();
++    const root = _repoRootOf(dir);
++    if (root === null) return null;
+     const rel = path.relative(root, absPath).split(path.sep).join('/');
+     return _git(root, ['show', `${sha}:${rel}`]);
+ }
+diff --git a/src/scripts/migration_status.ts b/src/scripts/migration_status.ts
+index 0ef7e3b858b703fc3b35dcc01de819a5dd553f3e..fbf2bf40b2858f778242b03d3950ded8fc9fe1e8 100644
+--- a/src/scripts/migration_status.ts
++++ b/src/scripts/migration_status.ts
+@@ -21,6 +21,8 @@ import { dirname, resolve } from 'node:path';
+ import process from 'node:process';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
++import { workspaceIdentity } from './_lib/git_common_dir.js';
++
+ // ---------------------------------------------------------------------------
+ // Categories and phase mapping
+ // ---------------------------------------------------------------------------
+@@ -157,8 +159,22 @@ function git(args: readonly string[], cwd: string): string {
+     return execFileSync('git', [...args], { cwd, encoding: 'utf-8' }).trim();
+ }
+ 
++/**
++ * Census row R8 — the tree's only exported `repoRoot()`, which is why nothing
++ * imports it: it lives in a report script.
++ *
++ * It used to spawn `rev-parse --show-toplevel` with no env scrub, so an
++ * inherited `GIT_DIR` answered about the hook's repository, and it threw an
++ * `execFileSync` error outside a repo. The throw is preserved deliberately —
++ * every caller here treats a missing root as fatal — but it is now a message
++ * that names the reason instead of a git subprocess failure.
++ */
+ export function repoRoot(): string {
+-    return git(['rev-parse', '--show-toplevel'], process.cwd());
++    const root = workspaceIdentity(process.cwd()).repoRoot;
++    if (!root.resolved) {
++        throw new Error(`cannot resolve repo root: ${root.reason}`);
++    }
++    return root.value;
+ }
+ 
+ export function trackedPythonFiles(root: string): string[] {
+diff --git a/src/scripts/workspace_doctor.ts b/src/scripts/workspace_doctor.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..6ed6e8f9129071d75e52e16ea25565182008147a
+--- /dev/null
++++ b/src/scripts/workspace_doctor.ts
+@@ -0,0 +1,414 @@
++#!/usr/bin/env tsx
++/**
++ * workspace:doctor — read-only answer to "where am I", with provenance.
++ *
++ * Phase 3 of `road-to-inbox-harvest-2026-08-c-workspace-identity`. Two reads,
++ * one command, and **no action**: the roadmap's Non-goals put worktree deletion
++ * out of scope, and its Risk 3 names "the pressure read becomes a disposal path
++ * by accident" as the failure to design against. There is therefore no `--fix`,
++ * no `--prune`, and no removal plan here — `worktree_cleanup_check.ts` owns
++ * that question behind its own approval.
++ *
++ * 1. **Identity** — the five fields of `workspaceIdentity()` plus the session
++ *    facts a location question actually needs: the roadmap claim, foreign live
++ *    records, expired-but-unpruned records, and whether this checkout is
++ *    contained in the main worktree. Every field prints its provenance, in the
++ *    shape `routing:doctor` uses, because a value whose source is invisible is
++ *    indistinguishable from a guess.
++ *
++ * 2. **Worktree pressure** — how large the estate is and how much of it is
++ *    merged. The buckets **partition** the registered set, so they sum to the
++ *    `git worktree list` total exactly. The live-session count is deliberately
++ *    NOT one of them: it overlaps every bucket, and printing it inside the
++ *    partition would invite a reader to add it in.
++ *
++ * Exit code is 0 whenever the command could read the repository. It is a
++ * report, not a gate: nothing here has a pass/fail opinion, so a non-zero exit
++ * would have to invent one. `--strict` exits 1 only when an identity field the
++ * caller asked to rely on is unresolved.
++ */
++
++import { execFileSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import {
++    type IdentityField,
++    type WorkspaceIdentity,
++    workspaceIdentity,
++} from './_lib/git_common_dir.js';
++import { gitEnv } from './_lib/git_env.js';
++import {
++    read_live_records,
++    register_dir,
++    type SessionRecord,
++} from './_lib/session_register.js';
++
++const IDENTITY_FIELDS = ['repoRoot', 'mainWorktree', 'currentWorktree', 'branch', 'prBase'] as const;
++type IdentityFieldName = (typeof IDENTITY_FIELDS)[number];
++
++interface SessionView {
++    /** Roadmap slug this session claims, or `null`; `source` says where from. */
++    readonly claim: string | null;
++    readonly claim_source: string;
++    /** Live foreign records, i.e. every live record that is not this session's. */
++    readonly live_records: number;
++    /** Live records whose `worktree` is this checkout — a real collision. */
++    readonly conflicting: number;
++    /** Record files on disk that `read_live_records` judged expired. */
++    readonly stale: number;
++    /** Where the register lives, or why it could not be located. */
++    readonly register: string;
++}
++
++interface ContainmentView {
++    /** Is the current checkout inside the main worktree's directory tree? */
++    readonly contained: boolean | null;
++    readonly reason: string;
++}
++
++interface PressureView {
++    readonly trunk: string | null;
++    readonly registered: number;
++    /** Branch is an ancestor of the trunk. */
++    readonly merged: number;
++    /** Branch exists and is NOT an ancestor of the trunk. */
++    readonly unmerged: number;
++    /** No branch to ask about (detached HEAD, or a bare entry). */
++    readonly unclassifiable: number;
++    /** Overlaps the three buckets above on purpose; never summed with them. */
++    readonly with_live_session: number;
++    /** `merged + unmerged + unclassifiable`, printed so the sum is auditable. */
++    readonly partition_total: number;
++    readonly note: string | null;
++}
++
++export interface WorkspaceDoctorReport {
++    readonly identity: Record<IdentityFieldName, IdentityField>;
++    readonly session: SessionView;
++    readonly containment: ContainmentView;
++    readonly pressure: PressureView;
++}
++
++function _git(cwd: string, args: readonly string[]): string | null {
++    try {
++        return execFileSync('git', [...args], {
++            cwd,
++            encoding: 'utf-8',
++            stdio: ['ignore', 'pipe', 'ignore'],
++            timeout: 15_000,
++            // cwd decides, never an inherited GIT_DIR (hook environments).
++            env: gitEnv(),
++        }).trim();
++    } catch {
++        return null;
++    }
++}
++
++/** `git worktree list --porcelain` → one `{path, branch}` per registered entry. */
++export function listRegistered(repoPath: string): { path: string; branch: string | null }[] {
++    const out = _git(repoPath, ['worktree', 'list', '--porcelain']);
++    if (out === null) return [];
++    const rows: { path: string; branch: string | null }[] = [];
++    let current: { path?: string; branch: string | null } = { branch: null };
++    for (const line of out.split('\n')) {
++        if (line.startsWith('worktree ')) {
++            if (current.path !== undefined) rows.push({ path: current.path, branch: current.branch });
++            current = { path: line.slice('worktree '.length).trim(), branch: null };
++        } else if (line.startsWith('branch ')) {
++            current.branch = line.slice('branch '.length).trim();
++        }
++    }
++    if (current.path !== undefined) rows.push({ path: current.path, branch: current.branch });
++    return rows;
++}
++
++/** First trunk ref that resolves; `null` when none does. */
++function resolveTrunk(repoPath: string): string | null {
++    for (const ref of ['origin/main', 'origin/master', 'main', 'master']) {
++        if (_git(repoPath, ['rev-parse', '--verify', '--quiet', ref]) !== null) return ref;
++    }
++    return null;
++}
++
++function realpathOrSelf(p: string): string {
++    try {
++        return fs.realpathSync(p);
++    } catch {
++        return p;
++    }
++}
++
++/**
++ * Is `child` inside `parent`?
++ *
++ * Both sides are realpath-normalised first, and the comparison is
++ * separator-anchored: a plain `startsWith` would report `/a/repo-backup` as
++ * contained in `/a/repo`.
++ */
++export function isContained(parent: string, child: string): boolean {
++    const p = realpathOrSelf(parent);
++    const c = realpathOrSelf(child);
++    if (p === c) return false; // the main worktree is not "inside" itself
++    return c.startsWith(p.endsWith(path.sep) ? p : p + path.sep);
++}
++
++function collectSession(identity: WorkspaceIdentity, sessionId: string | null): SessionView {
++    const main = identity.mainWorktree;
++    const here = identity.currentWorktree;
++    if (!main.resolved) {
++        return {
++            claim: null,
++            claim_source: 'unavailable — no main worktree to anchor the register on',
++            live_records: 0,
++            conflicting: 0,
++            stale: 0,
++            register: `unresolvable: ${main.reason}`,
++        };
++    }
++    const dir = register_dir(main.value);
++    if (dir === null) {
++        return {
++            claim: null,
++            claim_source: 'unavailable — register_dir declined to resolve',
++            live_records: 0,
++            conflicting: 0,
++            stale: 0,
++            register: 'unresolvable',
++        };
++    }
++
++    // `read_live_records` filters expired ones out; the difference against the
++    // files on disk is the stale count. Never prune here — this is a report.
++    const live = read_live_records(dir);
++    let onDisk = 0;
++    try {
++        onDisk = fs.readdirSync(dir).filter((n) => n.endsWith('.json')).length;
++    } catch {
++        onDisk = 0;
++    }
++
++    const mine = sessionId === null ? null : live.find((r) => r.session_id === sessionId) ?? null;
++    const foreign: SessionRecord[] = live.filter((r) => r.session_id !== sessionId);
++    const hereValue = here.resolved ? realpathOrSelf(here.value) : null;
++    const conflicting =
++        hereValue === null ? 0 : foreign.filter((r) => realpathOrSelf(r.worktree) === hereValue).length;
++
++    let claim: string | null = null;
++    let claimSource: string;
++    if (mine?.roadmap_slug != null && mine.roadmap_slug !== '') {
++        claim = mine.roadmap_slug;
++        claimSource = 'this session\'s register record';
++    } else if (sessionId === null) {
++        claimSource = 'no session id in the environment — the host exports none, or this is not an agent session';
++    } else {
++        claimSource = 'no claim in this session\'s record (none picked, or the heartbeat has not lifted it yet)';
++    }
++
++    return {
++        claim,
++        claim_source: claimSource,
++        live_records: foreign.length,
++        conflicting,
++        stale: Math.max(0, onDisk - live.length),
++        register: dir,
++    };
++}
++
++function collectContainment(identity: WorkspaceIdentity): ContainmentView {
++    const main = identity.mainWorktree;
++    const here = identity.currentWorktree;
++    if (!main.resolved) return { contained: null, reason: `main worktree unresolved: ${main.reason}` };
++    if (!here.resolved) return { contained: null, reason: `current worktree unresolved: ${here.reason}` };
++    if (realpathOrSelf(main.value) === realpathOrSelf(here.value)) {
++        return { contained: false, reason: 'this IS the main worktree' };
++    }
++    const contained = isContained(main.value, here.value);
++    return {
++        contained,
++        reason: contained
++            ? 'this checkout lives inside the main worktree'
++            : 'this checkout lives outside the main worktree — a sibling or unrelated directory',
++    };
++}
++
++function collectPressure(identity: WorkspaceIdentity, live: SessionRecord[]): PressureView {
++    const main = identity.mainWorktree;
++    if (!main.resolved) {
++        return {
++            trunk: null,
++            registered: 0,
++            merged: 0,
++            unmerged: 0,
++            unclassifiable: 0,
++            with_live_session: 0,
++            partition_total: 0,
++            note: `no main worktree to enumerate from: ${main.reason}`,
++        };
++    }
++    const rows = listRegistered(main.value);
++    const trunk = resolveTrunk(main.value);
++    const liveePaths = new Set(live.map((r) => realpathOrSelf(r.worktree)));
++
++    let merged = 0;
++    let unmerged = 0;
++    let unclassifiable = 0;
++    let withLive = 0;
++    for (const row of rows) {
++        if (liveePaths.has(realpathOrSelf(row.path))) withLive += 1;
++        if (row.branch === null || trunk === null) {
++            unclassifiable += 1;
++            continue;
++        }
++        const ok = _git(main.value, ['merge-base', '--is-ancestor', row.branch, trunk]);
++        // `_git` returns null on a non-zero exit, i.e. "not an ancestor".
++        if (ok === null) unmerged += 1;
++        else merged += 1;
++    }
++
++    return {
++        trunk,
++        registered: rows.length,
++        merged,
++        unmerged,
++        unclassifiable,
++        with_live_session: withLive,
++        partition_total: merged + unmerged + unclassifiable,
++        note:
++            trunk === null
++                ? 'no trunk ref resolved (origin/main, origin/master, main, master) — every entry is unclassifiable rather than assumed merged'
++                : null,
++    };
++}
++
++export function collectReport(start: string, sessionId: string | null): WorkspaceDoctorReport {
++    const identity = workspaceIdentity(start);
++    const session = collectSession(identity, sessionId);
++    const main = identity.mainWorktree;
++    const dir = main.resolved ? register_dir(main.value) : null;
++    const live = dir === null ? [] : read_live_records(dir);
++    return {
++        identity: {
++            repoRoot: identity.repoRoot,
++            mainWorktree: identity.mainWorktree,
++            currentWorktree: identity.currentWorktree,
++            branch: identity.branch,
++            prBase: identity.prBase,
++        },
++        session,
++        containment: collectContainment(identity),
++        pressure: collectPressure(identity, live),
++    };
++}
++
++function renderField(name: string, f: IdentityField): string {
++    const marker = f.resolved ? '✅' : '⚠️';
++    const body = f.resolved ? `${f.value}   [${f.provenance}]` : `UNRESOLVED — ${f.reason}`;
++    return `  ${marker} ${name.padEnd(16)} ${body}`;
++}
++
++export function render(report: WorkspaceDoctorReport): string {
++    const lines: string[] = [];
++    lines.push('workspace:doctor · read-only · no disposal path by design');
++    lines.push('');
++    lines.push('Identity (every field with its provenance):');
++    for (const name of IDENTITY_FIELDS) {
++        lines.push(renderField(name, report.identity[name]));
++    }
++    lines.push('');
++
++    const s = report.session;
++    lines.push('Session:');
++    lines.push(`  claim: ${s.claim ?? 'none'}   [${s.claim_source}]`);
++    lines.push(`  register: ${s.register}`);
++    lines.push(
++        `  foreign live records: ${s.live_records} · conflicting on THIS checkout: ${s.conflicting} · expired-not-pruned: ${s.stale}`,
++    );
++    lines.push(
++        '  advisory, never a lock — two sessions can claim in the same millisecond, and an idle session leaves the register while its user returns',
++    );
++    lines.push('');
++
++    const c = report.containment;
++    lines.push(`Path containment: ${c.contained === null ? 'unknown' : c.contained ? 'inside' : 'outside'} — ${c.reason}`);
++    lines.push('');
++
++    const p = report.pressure;
++    lines.push(`Worktree pressure (trunk = ${p.trunk ?? 'unresolved'}):`);
++    lines.push(`  registered: ${p.registered}`);
++    lines.push(`    merged into trunk:        ${p.merged}`);
++    lines.push(`    carrying unmerged commits:${String(p.unmerged).padStart(4)}`);
++    lines.push(`    unclassifiable (no branch):${String(p.unclassifiable).padStart(3)}`);
++    lines.push(
++        `    ── partition sums to ${p.partition_total} of ${p.registered}${p.partition_total === p.registered ? ' ✅' : ' ❌ MISMATCH'}`,
++    );
++    lines.push(
++        `  with a live session record: ${p.with_live_session}   (overlaps the buckets above — not part of the partition)`,
++    );
++    if (p.note !== null) lines.push(`  note: ${p.note}`);
++    lines.push('');
++    lines.push('Disposal is out of scope here (roadmap Non-goals; Risk 3). `worktree:cleanup` owns it, behind its own approval.');
++    return lines.join('\n');
++}
++
++export function main(argv: readonly string[] = process.argv.slice(2)): number {
++    let start = process.cwd();
++    let json = false;
++    let strict = false;
++    for (let i = 0; i < argv.length; i += 1) {
++        const a = argv[i];
++        if (a === '--from' && argv[i + 1] !== undefined) {
++            start = path.resolve(String(argv[(i += 1)]));
++        } else if (a === '--json') {
++            json = true;
++        } else if (a === '--strict') {
++            strict = true;
++        } else if (a === '--help' || a === '-h') {
++            process.stdout.write(
++                'workspace:doctor [--from <dir>] [--json] [--strict]\n' +
++                    '  Read-only workspace identity + worktree pressure report.\n' +
++                    '  --strict exits 1 when any identity field is unresolved.\n',
++            );
++            return 0;
++        }
++    }
++
++    const sessionId = process.env['CLAUDE_CODE_SESSION_ID'] ?? process.env['AGENT_SESSION_ID'] ?? null;
++    const report = collectReport(start, sessionId);
++    process.stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : `${render(report)}\n`);
++
++    if (strict) {
++        const unresolved = IDENTITY_FIELDS.filter((n) => !report.identity[n].resolved);
++        if (unresolved.length > 0) {
++            process.stderr.write(`unresolved identity field(s): ${unresolved.join(', ')}\n`);
++            return 1;
++        }
++    }
++    return 0;
++}
++
++declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
++function _isCliEntry(): boolean {
++    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
++        return false;
++    }
++    if (process.argv[1] === undefined) {
++        return false;
++    }
++    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
++    if (import.meta.url === argvUrl) {
++        return true;
++    }
++    try {
++        const here = fs.realpathSync(fileURLToPath(import.meta.url));
++        const argv1 = fs.realpathSync(path.resolve(process.argv[1]));
++        return here === argv1;
++    } catch {
++        return false;
++    }
++}
++
++if (_isCliEntry()) {
++    process.exit(main());
++}
+diff --git a/tests/scripts/workspace_doctor.test.ts b/tests/scripts/workspace_doctor.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..7aa34d0385a54159bbfef98c61ba5d76fb7cf20e
+--- /dev/null
++++ b/tests/scripts/workspace_doctor.test.ts
+@@ -0,0 +1,144 @@
++// `workspace:doctor` — the read-only identity + pressure report
++// (road-to-inbox-harvest-2026-08-c-workspace-identity Phase 3).
++//
++// The load-bearing assertion is the PARTITION: merged + unmerged +
++// unclassifiable must equal the `git worktree list` total, because a bucket
++// count that silently drops entries is exactly the shape of the defect this
++// roadmap exists to remove — a report that reads plausible while describing
++// less than the estate.
++import { execFileSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import { collectReport, isContained, listRegistered, main, render } from '../../src/scripts/workspace_doctor.js';
++
++let tmp = '';
++let repo = '';
++let merged = '';
++let ahead = '';
++
++function git(cwd: string, args: string[]): string {
++    return execFileSync('git', ['-C', cwd, ...args], {
++        encoding: 'utf-8',
++        stdio: ['ignore', 'pipe', 'pipe'],
++    }).trim();
++}
++
++beforeEach(() => {
++    tmp = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'wsdoc-'));
++    repo = path.join(tmp, 'repo');
++    fs.mkdirSync(repo);
++    git(repo, ['init', '--initial-branch=main', '-q']);
++    git(repo, ['config', 'user.email', 'test@example.com']);
++    git(repo, ['config', 'user.name', 'test']);
++    fs.writeFileSync(path.join(repo, 'README.md'), 'x\n');
++    git(repo, ['add', '-A']);
++    git(repo, ['commit', '-qm', 'init']);
++
++    // One worktree whose branch is an ancestor of main (merged), one that
++    // carries a commit main does not have (unmerged).
++    merged = path.join(tmp, 'wt-merged');
++    git(repo, ['worktree', 'add', '-q', merged, '-b', 'feat/merged']);
++    ahead = path.join(tmp, 'wt-ahead');
++    git(repo, ['worktree', 'add', '-q', ahead, '-b', 'feat/ahead']);
++    fs.writeFileSync(path.join(ahead, 'new.txt'), 'y\n');
++    git(ahead, ['add', '-A']);
++    git(ahead, ['commit', '-qm', 'ahead']);
++});
++
++afterEach(() => {
++    if (tmp !== '' && fs.existsSync(tmp)) fs.rmSync(tmp, { recursive: true, force: true });
++    tmp = '';
++});
++
++describe('workspace_doctor — the pressure partition', () => {
++    it('the buckets sum to the git worktree list total', () => {
++        const report = collectReport(repo, null);
++        const p = report.pressure;
++        expect(p.registered).toBe(listRegistered(repo).length);
++        expect(p.merged + p.unmerged + p.unclassifiable).toBe(p.registered);
++        expect(p.partition_total).toBe(p.registered);
++    });
++
++    it('classifies a merged branch and an ahead branch into different buckets', () => {
++        // No remote here, so the trunk resolves to the local `main`.
++        const p = collectReport(repo, null).pressure;
++        expect(p.trunk).toBe('main');
++        expect(p.registered).toBe(3); // main checkout + two worktrees
++        expect(p.unmerged).toBe(1); // feat/ahead only
++        expect(p.merged).toBe(2); // main + feat/merged
++        expect(p.unclassifiable).toBe(0);
++    });
++
++    it('a detached worktree lands in unclassifiable rather than being assumed merged', () => {
++        git(merged, ['checkout', '-q', '--detach', 'HEAD']);
++        const p = collectReport(repo, null).pressure;
++        expect(p.unclassifiable).toBe(1);
++        expect(p.partition_total).toBe(p.registered);
++    });
++
++    it('the live-session count is reported outside the partition', () => {
++        const p = collectReport(repo, null).pressure;
++        // Nothing is added to the register here, so this is 0 — the point of
++        // the assertion is that it is a SEPARATE field, not a fourth bucket.
++        expect(p.with_live_session).toBe(0);
++        expect(p.merged + p.unmerged + p.unclassifiable + p.with_live_session).not.toBe(
++            p.registered + 1,
++        );
++        expect(p.partition_total).toBe(p.registered);
++    });
++});
++
++describe('workspace_doctor — identity and containment', () => {
++    it('reports the same main worktree from the main checkout and from a worktree', () => {
++        const fromMain = collectReport(repo, null).identity.mainWorktree;
++        const fromWorktree = collectReport(ahead, null).identity.mainWorktree;
++        expect(fromMain.resolved && fromWorktree.resolved).toBe(true);
++        expect(fromMain.resolved && fromMain.value).toBe(fromWorktree.resolved && fromWorktree.value);
++    });
++
++    it('every rendered identity line names its provenance or its reason', () => {
++        const text = render(collectReport(ahead, null));
++        for (const field of ['repoRoot', 'mainWorktree', 'currentWorktree', 'branch', 'prBase']) {
++            const line = text.split('\n').find((l) => l.includes(field));
++            expect(line, `${field} has a line`).toBeTruthy();
++            expect(line!.includes('[') || line!.includes('UNRESOLVED')).toBe(true);
++        }
++    });
++
++    it('a sibling worktree outside the main tree reports outside', () => {
++        // `ahead` is at <tmp>/wt-ahead, a SIBLING of <tmp>/repo — not inside it.
++        const c = collectReport(ahead, null).containment;
++        expect(c.contained).toBe(false);
++        expect(c.reason).toContain('outside');
++    });
++
++    it('containment is separator-anchored, not a bare prefix match', () => {
++        // The bug a `startsWith` would ship: `/a/repo-backup` is NOT in `/a/repo`.
++        const base = path.join(tmp, 'repo');
++        expect(isContained(base, path.join(tmp, 'repo-backup'))).toBe(false);
++        expect(isContained(base, path.join(base, 'nested'))).toBe(true);
++        expect(isContained(base, base)).toBe(false);
++    });
++});
++
++describe('workspace_doctor — exit codes', () => {
++    it('exits 0 in a clean checkout and in a worktree', () => {
++        expect(main(['--from', repo, '--json'])).toBe(0);
++        expect(main(['--from', ahead, '--json'])).toBe(0);
++    });
++
++    it('--help exits 0 and does not read the repo', () => {
++        expect(main(['--help'])).toBe(0);
++    });
++
++    it('--strict exits 1 outside any repository, where every field is unresolved', () => {
++        const outside = path.join(tmp, 'plain');
++        fs.mkdirSync(outside);
++        // `--from` a directory with no .git ancestor: tmp itself is not a repo.
++        expect(main(['--from', outside, '--json', '--strict'])).toBe(1);
++    });
++});
+diff --git a/tests/scripts/workspace_identity.test.ts b/tests/scripts/workspace_identity.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..4baf6320dfd7271551ad321c75df664866f0e0b6
+--- /dev/null
++++ b/tests/scripts/workspace_identity.test.ts
+@@ -0,0 +1,209 @@
++// `workspaceIdentity()` — the single resolver for the five workspace-identity
++// questions (road-to-inbox-harvest-2026-08-c-workspace-identity Phase 2).
++//
++// Every row builds a REAL git repo plus a REAL linked worktree in a tmp dir.
++// Two things are asserted that nothing else in the tree asserts:
++//
++//  1. TOTALITY — every field is either a value WITH its provenance or an
++//     explicit reason. There is no third shape, and in particular no silently
++//     plausible default. The census found three of eight repo-root sites
++//     returning one.
++//  2. THE MAIN-WORKTREE ANSWER FROM INSIDE A WORKTREE — the identity question
++//     the 12.0.0 span shipped wrong twice (`52d7fe1b8`, `5cf7450da`).
++import { execFileSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import {
++    type IdentityField,
++    type WorkspaceIdentity,
++    workspaceIdentity,
++} from '../../src/scripts/_lib/git_common_dir.js';
++
++let tmp = '';
++let repo = '';
++let worktree = '';
++
++function git(cwd: string, args: string[]): string {
++    return execFileSync('git', ['-C', cwd, ...args], {
++        encoding: 'utf-8',
++        stdio: ['ignore', 'pipe', 'pipe'],
++    }).trim();
++}
++
++const FIELDS = ['repoRoot', 'mainWorktree', 'currentWorktree', 'branch', 'prBase'] as const;
++
++/** The totality assertion, applied to one field. */
++function expectTotal(name: string, f: IdentityField): void {
++    expect(typeof f.resolved, `${name}.resolved is a boolean`).toBe('boolean');
++    if (f.resolved) {
++        expect(f.value, `${name} resolved with a non-empty value`).toBeTruthy();
++        expect(f.provenance, `${name} resolved with a non-empty provenance`).toBeTruthy();
++    } else {
++        expect(f.reason, `${name} unresolved with a non-empty reason`).toBeTruthy();
++    }
++}
++
++function expectAllTotal(where: string, id: WorkspaceIdentity): void {
++    for (const name of FIELDS) {
++        expectTotal(`${where}.${name}`, id[name]);
++    }
++}
++
++/** Narrow a field to its resolved value, failing the test when it is not. */
++function value(f: IdentityField): string {
++    if (!f.resolved) throw new Error(`expected resolved, got unresolved: ${f.reason}`);
++    return f.value;
++}
++
++beforeEach(() => {
++    tmp = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'wsid-'));
++    repo = path.join(tmp, 'repo');
++    fs.mkdirSync(repo);
++    git(repo, ['init', '--initial-branch=main', '-q']);
++    git(repo, ['config', 'user.email', 'test@example.com']);
++    git(repo, ['config', 'user.name', 'test']);
++    fs.writeFileSync(path.join(repo, 'README.md'), 'x\n');
++    git(repo, ['add', '-A']);
++    git(repo, ['commit', '-qm', 'init']);
++    worktree = path.join(tmp, 'wt');
++    git(repo, ['worktree', 'add', '-q', worktree, '-b', 'feat/side']);
++});
++
++afterEach(() => {
++    delete process.env.GIT_DIR;
++    if (tmp !== '' && fs.existsSync(tmp)) fs.rmSync(tmp, { recursive: true, force: true });
++    tmp = '';
++});
++
++describe('workspaceIdentity — totality', () => {
++    it('every field is a value-with-provenance or a reason, from the main checkout', () => {
++        expectAllTotal('main', workspaceIdentity(repo));
++    });
++
++    it('every field is a value-with-provenance or a reason, from inside a worktree', () => {
++        expectAllTotal('worktree', workspaceIdentity(worktree));
++    });
++
++    it('every field is unresolved with a reason outside any repository', () => {
++        const outside = path.join(tmp, 'not-a-repo');
++        fs.mkdirSync(outside);
++        const id = workspaceIdentity(outside);
++        expectAllTotal('outside', id);
++        for (const name of FIELDS) {
++            expect(id[name].resolved, `${name} must not resolve outside a repo`).toBe(false);
++        }
++    });
++});
++
++describe('workspaceIdentity — the five answers', () => {
++    it('repoRoot is the invoking checkout, in both locations', () => {
++        expect(value(workspaceIdentity(repo).repoRoot)).toBe(fs.realpathSync(repo));
++        expect(value(workspaceIdentity(worktree).repoRoot)).toBe(fs.realpathSync(worktree));
++    });
++
++    it('repoRoot is found from a nested subdirectory', () => {
++        const nested = path.join(worktree, 'a', 'b');
++        fs.mkdirSync(nested, { recursive: true });
++        expect(value(workspaceIdentity(nested).repoRoot)).toBe(fs.realpathSync(worktree));
++    });
++
++    it('currentWorktree carries the distinguishing provenance', () => {
++        const main = workspaceIdentity(repo).currentWorktree;
++        expect(main.resolved && main.provenance).toContain('main-checkout');
++        const wt = workspaceIdentity(worktree).currentWorktree;
++        expect(wt.resolved && wt.provenance).toContain('linked-worktree');
++    });
++
++    it('branch is per-checkout', () => {
++        expect(value(workspaceIdentity(repo).branch)).toBe('main');
++        expect(value(workspaceIdentity(worktree).branch)).toBe('feat/side');
++    });
++
++    it('branch is unresolved, not guessed, on a detached HEAD', () => {
++        const head = git(worktree, ['rev-parse', 'HEAD']);
++        git(worktree, ['checkout', '-q', '--detach', head]);
++        const f = workspaceIdentity(worktree).branch;
++        expect(f.resolved).toBe(false);
++        expect(f.resolved === false && f.reason).toMatch(/detached/i);
++    });
++
++    it('prBase is unresolved with an actionable reason when no remote HEAD is recorded', () => {
++        const f = workspaceIdentity(repo).prBase;
++        expect(f.resolved).toBe(false);
++        // Never `main` by assumption — the census names the guessed default as
++        // the failure mode this type exists to remove.
++        expect(f.resolved === false && f.reason).toMatch(/git remote set-head/);
++    });
++
++    it('prBase resolves from a recorded remote HEAD symbolic ref', () => {
++        const refs = path.join(repo, '.git', 'refs', 'remotes', 'origin');
++        fs.mkdirSync(refs, { recursive: true });
++        fs.writeFileSync(path.join(refs, 'HEAD'), 'ref: refs/remotes/origin/main\n');
++        expect(value(workspaceIdentity(repo).prBase)).toBe('refs/remotes/origin/main');
++        // and the same answer from the worktree, because it reads the COMMON dir
++        expect(value(workspaceIdentity(worktree).prBase)).toBe('refs/remotes/origin/main');
++    });
++});
++
++describe('regression — the two shipped worktree misclassification defects', () => {
++    // `52d7fe1b8` (diagnosis) and `5cf7450da` (fix): `isStandardLocation` took
++    // the INVOKING checkout as its base, so from inside a linked worktree every
++    // conventional sibling resolved to `..` and the safe set collapsed to 0 of
++    // 304. Both commits are the same identity question — "which checkout is the
++    // main one" — answered against the wrong root.
++
++    it('mainWorktree is the main checkout even when called from inside a worktree', () => {
++        expect(value(workspaceIdentity(worktree).mainWorktree)).toBe(fs.realpathSync(repo));
++    });
++
++    it('mainWorktree is invariant across checkouts; the pre-migration primitive is not', () => {
++        const fromMain = value(workspaceIdentity(repo).mainWorktree);
++        const fromWorktree = value(workspaceIdentity(worktree).mainWorktree);
++        expect(fromWorktree).toBe(fromMain);
++
++        // The primitive the defective sites used. It is NOT invariant — this is
++        // the assertion that fails against the pre-migration answer and passes
++        // against the resolver, i.e. what pins the defect.
++        const topFromMain = fs.realpathSync(git(repo, ['rev-parse', '--show-toplevel']));
++        const topFromWorktree = fs.realpathSync(git(worktree, ['rev-parse', '--show-toplevel']));
++        expect(topFromWorktree).not.toBe(topFromMain);
++        expect(topFromWorktree).toBe(fs.realpathSync(worktree));
++
++        // Stated as the defect: a location test based on the invoking toplevel
++        // judges the worktree against itself; based on mainWorktree it judges
++        // against the main checkout, which is the only stable base.
++        expect(topFromWorktree).not.toBe(fromWorktree);
++    });
++});
++
++describe('regression — inherited GIT_DIR does not redirect the answers', () => {
++    // Hooks export GIT_DIR and every child inherits it; an inherited GIT_DIR
++    // OVERRIDES repository discovery, so a `git`-based resolver silently
++    // answers about the hook's repository. This resolver reads files, so there
++    // is no process to redirect — asserted rather than assumed.
++    //
++    it('resolves the worktree correctly with GIT_DIR pointing at the main repo', () => {
++        process.env.GIT_DIR = path.join(repo, '.git');
++        const id = workspaceIdentity(worktree);
++        expectAllTotal('worktree-with-GIT_DIR', id);
++        expect(value(id.repoRoot)).toBe(fs.realpathSync(worktree));
++        expect(value(id.branch)).toBe('feat/side');
++        expect(value(id.mainWorktree)).toBe(fs.realpathSync(repo));
++    });
++
++    it('a git-based read of the same question IS redirected, which is the hazard', () => {
++        // Control: proves the environment variable really does redirect, so the
++        // assertion above is testing something rather than passing vacuously.
++        const redirected = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
++            cwd: worktree,
++            encoding: 'utf-8',
++            env: { ...process.env, GIT_DIR: path.join(repo, '.git') },
++        }).trim();
++        expect(redirected).toBe('main'); // the MAIN repo's branch, from inside the worktree
++        expect(value(workspaceIdentity(worktree).branch)).toBe('feat/side');
++    });
++});
