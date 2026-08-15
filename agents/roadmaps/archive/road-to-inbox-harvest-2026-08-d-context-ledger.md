@@ -59,9 +59,12 @@ over from either proposal.
   the project layer alone at 75,107, and names the lever: `paths:` scoping plus
   the digest, not dedup. `docs/contracts/rule-router.md:47,50-53` states that a
   rule without `paths:` loads unconditionally on Claude Code and that the
-  residual gap is per-rule coverage rather than a missing mechanism. **Coverage
-  today is 0 of 115 rules** — the gap is maximal, which also makes it the
-  cheapest thing in this document to measure.
+  residual gap is per-rule coverage rather than a missing mechanism. Coverage in
+  the host-neutral projection is 0 of 115. **Corrected 2026-08-15:** that is one
+  projection only — `.claude/rules/` carried 25 of 110, and scoping there
+  *replaced* rather than extended the activation surface, so 19 rules had
+  silently lost their keyword reach. Repaired under Step 5.2; the measurement
+  and its cost are in the census page.
 
 ## What was dropped from the two proposals, and why
 
@@ -167,7 +170,7 @@ That is why the spike below gates the threshold work.
       115 at the base commit, so the census is a ranking exercise, not a
       discovery one.
       <!-- verify: test -f agents/evidence/analysis/rule-paths-coverage-census.md -->
-- [ ] 5.2 Act on what 5.1 found about scoping. **Blocked, and the blocker's
+- [x] 5.2 Act on what 5.1 found about scoping. **Blocked, and the blocker's
       question changed**: the census surfaced that 25 of 110 rules are already
       scoped in the Claude host projection and that scoping *replaces* rather
       than extends the activation surface, so 19 rules silently lost their
@@ -201,7 +204,21 @@ That is why the spike below gates the threshold work.
 
 ### blocker: paths-scoping-consumer-flip
 
-- **Status:** open
+- **Status:** resolved
+
+- **Resolution:** 2026-08-15 — option (a), treated as a defect and
+  repaired.** `_claude_paths_plan` now suppresses `paths:` for any rule that
+  also declares keyword or phrase triggers, and reports each suppressed pattern
+  rather than dropping it silently. Scoped rules went 25 → 6; the six that
+  remain are path-shaped only, with zero keyword triggers between them.
+  The repair is Claude-only, and that is the whole argument: globs are
+  **additive** on Cursor and Windsurf but **exclusive** on Claude Code, and one
+  emitter had been feeding both semantics from one list.
+  **The cost is recorded, not hidden:** the 19 restored rules add ≈13,630
+  tokens, about 12 % more rule payload per Claude session. That points at the
+  same work the payload schedule does — those 19 should earn real `paths:`
+  coverage or shed keyword triggers they do not need. The repair made that
+  visible instead of paying for it with capability nobody chose to give up.
 - **Owner:** user
 - **Blocks:** Step 5.2
 - **Question:** **The premise changed and the question narrowed.** Scoping is

@@ -144,7 +144,9 @@ is not gated on the answer.
 
 ### blocker: adr-035-reopen-question
 
-- **Status:** **RESOLVED 2026-08-15 — reopened, ADR-232 accepted.** Kept here
+- **Status:** resolved
+
+- **Resolution:** 2026-08-15 — reopened, ADR-232 accepted. Kept here
   rather than deleted so the path from question to evidence to decision stays
   readable: the maintainer first declined to answer in the abstract and gated it
   on Phase 1; Phase 1 then found the four-vs-three vocabulary asymmetry in two

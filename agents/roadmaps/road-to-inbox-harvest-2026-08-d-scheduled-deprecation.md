@@ -73,7 +73,7 @@ actual defect-fix — is not held hostage to a release window.
 
 ## Phase 2 — Give the two loose surfaces a tracked state
 
-- [ ] 2.1 Add the code-graph row's current status to the table: overdue by one
+- [x] 2.1 Add the code-graph row's current status to the table: overdue by one
       major, with the removal owner named. The row already exists; what it lacks
       is the fact that it was missed.
       <!-- verify: git show HEAD:docs/MIGRATION.md | grep -c 'code_graph' -->
@@ -94,7 +94,17 @@ actual defect-fix — is not held hostage to a release window.
 
 ### blocker: code-graph-removal-authorisation
 
-- **Status:** open
+- **Status:** resolved
+
+- **Resolution:** 2026-08-15 — option (b), commitment revised. The
+  maintainer took the measured framing: the payload this deprecation existed
+  for (the ~51 MB parser pair) already shipped to `devDependencies`, so source
+  removal frees 0.4 % while costing a breaking change across four
+  consumer-visible surfaces plus a Rung-0 re-plumb. `docs/MIGRATION.md` now
+  carries the withdrawal **with its reason**, and the row stays in the table
+  rather than being deleted — a recorded withdrawal is not the folklore this
+  table exists to prevent; an unrecorded one would be. New commitment: removal
+  on a concrete reason, not on a date.
 - **Owner:** user
 - **Blocks:** nothing in this roadmap — recorded so the overdue surface has an
   owner rather than only a report

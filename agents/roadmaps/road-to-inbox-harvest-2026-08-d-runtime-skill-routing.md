@@ -119,7 +119,13 @@ stale, the current ones are used and the correction is named.
 - [ ] 3.3 Seed the first tranche of skill triggers and measure it against the
       302-prompt corpus. **The unintended-activation census may not rise above
       433.** A tranche that raises it is reverted, and the reading is published
-      either way.
+      either way. **The gate is the MECHANICAL matcher, by decision, and its
+      limit is stated rather than hidden:** it measures substring/regex
+      activation, not model-judged relevance, so it catches a tranche that fires
+      too widely and cannot catch one that fires plausibly but unhelpfully. The
+      live LLM evaluation was not chosen because it has never run — its blocker
+      has stood since the description rewrite shipped, and gating on it would
+      gate on never. If it ever runs, it supersedes this gate.
       <!-- verify: git show HEAD:docs/contracts/rule-router.md | grep -c '433' -->
 
 ## Phase 4 — Recover what the host dropped
@@ -149,7 +155,21 @@ stale, the current ones are used and the correction is named.
 
 ### blocker: skill-trigger-seeding-precision-gate
 
-- **Status:** open
+- **Status:** resolved
+
+- **Resolution:** 2026-08-15 — option (b), the mechanical census gates
+  the tranche.** The deciding fact is that option (a) was never available: the
+  predecessor live evaluation has **never been run**, its only artefact carries
+  `"source": "tfidf-baseline"` and its own roadmap disqualifies it, and its
+  blocker has stood since the rewrite shipped. Gating a seeding tranche on a
+  human-gated run that has not happened in months is gating it on never.
+  The 302-prompt matrix corpus is deterministic, available now, and its
+  unintended-activation census (495 → 433) is a real ceiling a tranche can be
+  measured against. **Its weakness is named rather than hidden:** it measures
+  mechanical substring/regex activation, not model-judged relevance, so it can
+  catch a tranche that fires too widely and cannot catch one that fires
+  plausibly but unhelpfully. Step 3.3 states that limit inline. If the live
+  evaluation ever runs, it supersedes this gate rather than duplicating it.
 - **Owner:** user
 - **Blocks:** Step 3.3
 - **Question:** the precision reading that admits or rejects a seeded tranche
