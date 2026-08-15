@@ -606,14 +606,14 @@ _2 blockers resolved._
 
 ### [road-to-skill-catalogue-budget.md](roadmaps/road-to-skill-catalogue-budget.md)
 
-**Road to a measured skill-catalogue budget — Codex as the second host** — 0 / 23 done (0%)
+**Road to a measured skill-catalogue budget — Codex as the second host** — 21 / 23 done (91%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Make the codex budget observable and deterministic | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Repair the council's openai seat | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | Feed the parent's corpus and settle its conditional branch | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | A migration path for scoped projection | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
+| 1 | Make the codex budget observable and deterministic | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | Repair the council's openai seat | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 3 | Feed the parent's corpus and settle its conditional branch | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 4 | A migration path for scoped projection | 🟡 in progress | 2 | 9 | 0 | 0 | 82% |
 
 <a id="blockers-road-to-skill-catalogue-budget"></a>
 **Blockers**
