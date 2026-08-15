@@ -264,7 +264,12 @@ function commandFm(extra: FM = {}): FM {
 }
 
 describe('model_tier / context enum (test_model_tier_schema.py)', () => {
-    it.each(['lite', 'medium', 'high', 'inherit'])('valid tier %s passes', (value) => {
+    // `frontier` joined the valid set via ADR-232, which amends ADR-035
+    // § Decision 1 on that record's own reopen condition. It moved from the
+    // rejected list below to this one — the vendor-name rejections are
+    // untouched, and that separation is the point: the band is neutral, its
+    // Claude resolution stays generator-owned.
+    it.each(['lite', 'medium', 'high', 'frontier', 'inherit'])('valid tier %s passes', (value) => {
         for (const [at, fm] of [
             ['skill', skillFm({ model_tier: value })],
             ['command', commandFm({ model_tier: value })],
@@ -273,7 +278,9 @@ describe('model_tier / context enum (test_model_tier_schema.py)', () => {
         }
     });
 
-    it.each(['opus', 'sonnet', 'gpt', 'haiku', 'frontier', '', 'High'])(
+    // `fable` is here for the same reason `opus` is: a band being valid must
+    // never make its vendor resolution valid as a declaration.
+    it.each(['opus', 'sonnet', 'gpt', 'haiku', 'fable', '', 'High'])(
         'vendor name / unknown %s rejected',
         (value) => {
             for (const [at, fm] of [

@@ -158,8 +158,8 @@
     },
     "model_tier": {
       "type": "string",
-      "enum": ["lite", "medium", "high", "inherit"],
-      "description": "Vendor-neutral capability band the command needs (ADR-035). Commands project as Claude skills, so high/medium/lite produce a native Claude `model:` (high→opus, medium→sonnet, lite→haiku) when model.auto_switch=auto; the generator owns that mapping. inherit keeps the session model. Non-Claude agents are suggestion-only. No vendor model names here."
+      "enum": ["lite", "medium", "high", "frontier", "inherit"],
+      "description": "Vendor-neutral capability band the command needs (ADR-035, amended by ADR-232). Commands project as Claude skills, so frontier/high/medium/lite produce a native Claude `model:` when model.auto_switch=auto; the generator owns that mapping. inherit keeps the session model. `frontier` is the band above the strongest generally-recommended one - opt-in and expected to stay rare. Non-Claude agents are suggestion-only. No vendor model names here."
     },
     "context": {
       "type": "string",
