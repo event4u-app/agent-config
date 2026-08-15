@@ -69,6 +69,28 @@ mode `check_release_highlights.ts` names in its own source. A marked line is a
 prose gap, not a contradiction, and contradictions (`_none_` against derived
 evidence) remain the sole blocking condition.
 
+**The derivation is the load-bearing half of that sentence — 2026-08-15.** "A
+contradiction remains the sole blocking condition" only carries the rejected
+branch while a contradiction is *detectable*. It was not, on two of the five
+labels. Measured over the six most recent released spans (341 commits) in
+[`release-head-derivation-recall.md`](../../agents/evidence/analysis/release-head-derivation-recall.md):
+`Security and correctness` derived **1 of 45** in-category commits — the rule
+looked only for `security` while the label also names *correctness*, and
+nothing derived the correctness half — and `Honest nulls` **3 of 9**, matching a
+literal marker string only. On those two labels `_none_` could not be
+contradicted and shipped uncontested on five of six curated heads.
+
+**Widening a derivation is therefore not a reversal of the decision above; it
+is a repair of the check the decision depends on.** The two are independent
+axes and the next reader should not re-derive that: making a contradiction
+*detectable* changes what the sole blocking condition can see, while making an
+unrewritten *marker* block is the branch that stays rejected. The widening also
+does not reintroduce the guaranteed-first-run red, and for the same structural
+reason the rejection rests on — the generator pre-fills every substantiated
+label, so a wider derivation produces a marked line rather than a `_none_` to
+contradict. That is pinned in
+`tests/scripts/check_release_highlights.test.ts`, not assumed.
+
 **What that concedes.** The advisory already failed once, and no non-gate
 mechanism is added here to make the next survivor less likely; this branch
 accepts recurrence rather than claiming a process reminder prevents it. The
