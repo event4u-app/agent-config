@@ -53,52 +53,83 @@ changelog era alone.
 
 ## Phase 1 — Measure which segment actually moves
 
-- [ ] For every tracked binding under `agents/evidence/reviews/`, recompute the
+- [x] For every tracked binding under `agents/evidence/reviews/`, recompute the
       three segments at the recorded revision and at the branch tip, and record
       which segments differ. Write it to
       `agents/evidence/analysis/review-binding-drift.md`.
       *verify:* the file has one row per binding with three per-segment verdicts.
-- [ ] Split the differing rows into "code changed" and "only non-code paths
+      → 52 artefacts, one row each, in § Per-binding segment verdicts. Measured by
+      `probe_review_binding_drift`, which imports the scope definition from
+      `dispatch_r2_reviewer` rather than restating it.
+- [x] Split the differing rows into "code changed" and "only non-code paths
       changed" (roadmaps, dashboard, docs), and report the ratio. That ratio is
       the whole case for Phase 2.
       *verify:* the analysis states both counts and the ratio.
-- [ ] Record what each of the four 12.0.0-era re-binds was actually caused by,
+      → **64 code (79.0 %) · 10 non-code (12.3 %) · 7 base-moved (8.6 %)** over 81
+      re-bind events. The third class was not anticipated by the plan: no in-scope
+      path changed at all — merging the trunk moved the merge base.
+- [x] Record what each of the four 12.0.0-era re-binds was actually caused by,
       from the same data.
       *verify:* the analysis names a cause per re-bind, or says the data cannot
       attribute it.
+      → All four attributed in § The 12.0.0-era re-binds, derived from the
+      `11.0.0..12.0.0` tag span. Three hit one SKIP artefact (`roadmap-sweep-…`):
+      two non-code-only, one `base-moved`. The fourth
+      (`fix-branch-freshness-r2-findings`) was a genuine code change.
 
 ## Phase 2 — Make the verdict segment-aware, only if Phase 1 earns it
 
-- [ ] Decide from the Phase 1 ratio whether to act, and write the decision into
+- [x] Decide from the Phase 1 ratio whether to act, and write the decision into
       the analysis file either way. A ratio that shows code changes dominate is
       a legitimate stop: the churn would then be reviews correctly noticing
       code, and nothing here should ship.
       *verify:* the analysis carries an explicit proceed or stop with the ratio
       that decided it.
-- [ ] If proceeding: make the currency verdict consult all three segments, so a
+      → **STOP.** § Decision — Phase 2 STOPS, citing 79.0 % code. The
+      pre-registered stop condition is met, so this is the recorded outcome, not
+      a failure to build. Three qualifications recorded there: the addressable
+      share is 12.3 % (not the whole non-code remainder — `base-moved` is out of
+      reach of a segment-aware verdict), Risk 1's failure mode is silent by
+      construction, and a cheaper repair exists for 6 of the 10 events.
+- [-] If proceeding: make the currency verdict consult all three segments, so a
       binding whose `scope_hash` moved solely through roadmap content is
       reported as `roadmap-drifted` rather than `stale` — a distinct verdict,
       not a pass.
-      *verify:* a test constructs both cases and asserts the two verdicts differ
-      and that a real code change still reports `stale`.
-- [ ] Pin the negative case: a diff that touches code **and** a roadmap in the
+      → Cancelled by the step 2.1 stop. Conditional on "if proceeding"; the
+      ratio decided against.
+- [-] Pin the negative case: a diff that touches code **and** a roadmap in the
       same range must still report `stale`. The failure mode of a segmented
       verdict is exactly a code change hiding behind a roadmap edit.
-      *verify:* that test exists and fails when the segment check is inverted.
+      → Cancelled with 2.2 — it pins a relaxation that is not shipping. Nothing
+      about the current verdict changed, so the case it guards cannot arise.
 
 ## Phase 3 — Give the evidence a retention shape
 
-- [ ] Classify the 28 `review-input/` directories as active (binding current),
+- [x] Classify the 28 `review-input/` directories as active (binding current),
       recent, or archived (the reviewed content is merged and the binding is
       historical), and record the tier plus its byte cost per directory.
       *verify:* every one of the 28 carries a tier in the analysis file.
-- [ ] State the regeneration guarantee per tier: for which tiers a stored
+      → § Retention tiers: all **28 are `archived`** (every reviewed head is an
+      ancestor of `origin/main`), **3.11 MB** total, per-directory bytes in the
+      table. The `active`/`recent` tiers are empty — a real result, not a gap:
+      no stored input still binds a live review.
+- [x] State the regeneration guarantee per tier: for which tiers a stored
       `diff.patch` can be re-derived from the recorded revisions, and for which
       it cannot (a force-push or a rewritten history makes it irreproducible, in
       which case the patch is the only copy and stays).
       *verify:* the analysis names the irreproducible directories explicitly.
-- [~] Compact the tiers that are provably reproducible. Deferred behind
-      the blocker below — it removes committed evidence.
+      → **10 of 28 re-derived byte-for-byte (1.03 MB); 18 could not (2.08 MB)**,
+      each named in § Regeneration guarantee. Reproducibility is ATTEMPTED, not
+      asserted: the manifest records no base revision, so the probe reconstructs
+      it from the merge commit's first parent and reports what actually
+      happened. That bounds the compaction blocker at 33 % of the tree.
+- [ ] Compact the tiers that are provably reproducible. Blocked behind the
+      blocker below — it removes committed evidence, which is a maintainer's
+      call, not an agent's.
+      → Held as `[ ]` rather than `[~]` on purpose: the step is open-and-blocked,
+      which a `[ ]` plus a recorded blocker already expresses, and nothing about
+      it is half-shipped. Phase 3 has now supplied the list and the proof the
+      blocker was waiting on — see the evidence note under it.
 
 ## Blockers
 
@@ -112,6 +143,14 @@ changelog era alone.
 - **Resolved when:** the maintainer records yes with a tier boundary, or no.
 - **Blocks:** step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2
   proceed either way.
+- **Evidence now available (Phase 3, 2026-08-15):** the list and the proof the
+  blocker was waiting for exist. All 28 directories are `archived`, totalling
+  **3.11 MB**. **10** were re-derived byte-for-byte (**1.03 MB**); **18** were
+  not (**2.08 MB**) and stay regardless. So option (b) reclaims at most **33 %**
+  of the tree, and the tier boundary it would need to name is not a tier at all
+  — every directory sits in the same one, and the only line that separates them
+  is the per-directory re-derivation verdict in
+  `agents/evidence/analysis/review-binding-drift.md`.
 - **What to do:** pick exactly one — (a) no compaction: the tiering and the
   reproducibility verdict are the whole deliverable, and step 3.3 is marked
   `[-]` cancelled; or (b) compact at a named tier boundary, dropping only
@@ -121,12 +160,13 @@ changelog era alone.
 
 ## Acceptance criteria
 
-- [ ] The per-binding segment-drift table exists and states the
+- [x] The per-binding segment-drift table exists and states the
       code-vs-non-code ratio.
-- [ ] Phase 2 carries an explicit proceed or stop decision citing that ratio.
-- [ ] If Phase 2 proceeded: a test asserts that a code change accompanied by a
+- [x] Phase 2 carries an explicit proceed or stop decision citing that ratio.
+- [-] If Phase 2 proceeded: a test asserts that a code change accompanied by a
       roadmap edit still reports `stale`.
-- [ ] Every `review-input/` directory carries a retention tier and a
+      → Conditional on a proceed; Phase 2 stopped.
+- [x] Every `review-input/` directory carries a retention tier and a
       reproducible-or-not verdict.
 
 ## Risk Register
