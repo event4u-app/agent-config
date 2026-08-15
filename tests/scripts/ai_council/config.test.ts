@@ -5,6 +5,10 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import {
+    CODEX_MEASURED_UNSERVABLE,
+    OPENAI_CLI_VENDOR_DEFAULT,
+} from '../../../src/scripts/ai_council/clients';
 import * as cfg from '../../../src/scripts/ai_council/config';
 
 const _REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
@@ -889,5 +893,44 @@ describe('cli_call_budget.max_calls_per_day — generous per-provider defaults (
         expect(() => cfg.load_council_config(write_yaml(tmp, badProvider))).toThrow(/unknown/);
         const badValue = `${MINIMAL_VALID}cli_call_budget:\n  max_calls_per_day:\n    anthropic: -1\n`;
         expect(() => cfg.load_council_config(write_yaml(tmp, badValue))).toThrow(/non-negative integer/);
+    });
+});
+
+// === the SHIPPED template must survive the real loader ======================
+//
+// Nothing asserted this before 2026-08-15: the template was referenced by an
+// allowlist and a path check, and read by neither. So a template edit could
+// ship a file the loader rejects, and the first reader to find out would be a
+// consumer seeding a fresh config. This is the cheapest possible guard for it —
+// one real `load_council_config` call against the real file.
+describe('config — the shipped .ai-council.yml.example', () => {
+    const TEMPLATE = path.join(_REPO_ROOT, 'agents', 'templates', '.ai-council.yml.example');
+
+    it('loads through the real loader without hand-editing', () => {
+        expect(fs.existsSync(TEMPLATE)).toBe(true);
+        expect(() => cfg.load_council_config(TEMPLATE)).not.toThrow();
+    });
+
+    it('pins no openai model id — every id this package shipped is refused by a subscription account', () => {
+        const c = cfg.load_council_config(TEMPLATE);
+        const openai = c.members.get('openai');
+        expect(openai).toBeDefined();
+        // The assertion is on the SENTINEL, not merely "not gpt-4o": a future
+        // edit that swaps one dead pin for another would pass the negative form
+        // and reproduce the exact defect this replaced.
+        expect(openai?.model).toBe(OPENAI_CLI_VENDOR_DEFAULT);
+        // And it must be one the deny-list has never recorded as refused.
+        expect(CODEX_MEASURED_UNSERVABLE.has(openai?.model ?? '')).toBe(false);
+    });
+
+    it('the vendor-default sentinel is exempt from ladder membership, a real pin is not', () => {
+        const base = `enabled: true\ndefaults:\n  mode: api\ncost_budget:\n  max_total_usd: 20.0\nmembers:\n  anthropic:\n    enabled: true\n    api_key_ref: env:ANTHROPIC_KEY\n`;
+        const withAuto = `${base}    model: ${OPENAI_CLI_VENDOR_DEFAULT}\n    model_ladder:\n      - claude-haiku-4-5\n`;
+        expect(() => cfg.load_council_config(write_yaml(make_tmp(), withAuto))).not.toThrow();
+
+        const withDeadPin = `${base}    model: claude-not-on-the-ladder\n    model_ladder:\n      - claude-haiku-4-5\n`;
+        expect(() => cfg.load_council_config(write_yaml(make_tmp(), withDeadPin))).toThrow(
+            /model_ladder must include the active/,
+        );
     });
 });
