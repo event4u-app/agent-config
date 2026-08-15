@@ -2,15 +2,23 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **39** open blockers, **13** need you → `agent-config gates`
+> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **40** open blockers, **13** need you → `agent-config gates`
 
 ## Overall
 
-**246 / 495 steps done · 50%**
+**265 / 495 steps done · 54%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   50%
+██████████████████████░░░░░░░░░░░░░░░░░░   54%
 ```
+
+## ✅ Completed — pending archival
+
+These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but still sit in the active tree. They should be in `agents/roadmaps/archive/`. Run the archival sweep `archive_completed_roadmaps --all` (untracked-safe), or follow the manual fallback documented in the `roadmap-management` skill, then regenerate this dashboard.
+
+| Roadmap | Done | Total |
+|---|---:|---:|
+| [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md) | 10 | 10 |
 
 ## Open roadmaps
 
@@ -29,11 +37,11 @@
 | 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
 | 12 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
 | 13 | [road-to-inbox-harvest-2026-08-c-prompt-deinflation.md](roadmaps/road-to-inbox-harvest-2026-08-c-prompt-deinflation.md) | 2 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 14 | [road-to-inbox-harvest-2026-08-c-release-head-truth.md](roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md) | 3 | 11 | 10 | 0 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-c-release-head-truth) | ░░░░░░░░░░ 0% |
+| 14 | [road-to-inbox-harvest-2026-08-c-release-head-truth.md](roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md) | 3 | 11 | 1 | 9 | 1 | 0 | [2](#blockers-road-to-inbox-harvest-2026-08-c-release-head-truth) | █████████░ 90% |
 | 15 | [road-to-inbox-harvest-2026-08-d-archive-index.md](roadmaps/road-to-inbox-harvest-2026-08-d-archive-index.md) | 2 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 16 | [road-to-inbox-harvest-2026-08-d-context-ledger.md](roadmaps/road-to-inbox-harvest-2026-08-d-context-ledger.md) | 5 | 16 | 1 | 14 | 0 | 1 | [1](#blockers-road-to-inbox-harvest-2026-08-d-context-ledger) | █████████░ 93% |
 | 17 | [road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md](roadmaps/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md) | 4 | 14 | 14 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-runtime-skill-routing) | ░░░░░░░░░░ 0% |
-| 18 | [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md) | 2 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-scheduled-deprecation) | ░░░░░░░░░░ 0% |
+| 18 | [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md) | 2 | 10 | 0 | 10 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-scheduled-deprecation) | ██████████ 100% |
 | 19 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 14 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy) | ░░░░░░░░░░ 0% |
 | 20 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
 | 21 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -476,12 +484,12 @@ _1 blocker resolved._
 
 ### [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md)
 
-**Road to a deprecation table that cannot miss its own dates** — 0 / 10 done (0%)
+**Road to a deprecation table that cannot miss its own dates** — 10 / 10 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Make the dates checkable | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | Give the two loose surfaces a tracked state | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 1 | Make the dates checkable | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | Give the two loose surfaces a tracked state | ✅ done | 0 | 7 | 0 | 0 | 100% |
 
 <a id="blockers-road-to-inbox-harvest-2026-08-d-scheduled-deprecation"></a>
 **Blockers**

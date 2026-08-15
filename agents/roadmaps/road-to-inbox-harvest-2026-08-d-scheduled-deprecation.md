@@ -56,16 +56,16 @@ actual defect-fix — is not held hostage to a release window.
 
 ## Phase 1 — Make the dates checkable
 
-- [ ] 1.1 Add `lint_scheduled_deprecations`: parse the `docs/MIGRATION.md`
+- [x] 1.1 Add `lint_scheduled_deprecations`: parse the `docs/MIGRATION.md`
       table, resolve each due version to a concrete number, and compare against
       the version in `package.json`. An overdue surface that still has runtime
       paths is reported by name, with the paths.
       <!-- verify: test -f src/scripts/lint_scheduled_deprecations.ts -->
-- [ ] 1.2 Register the check so it runs where it can be seen, and have it exit
+- [x] 1.2 Register the check so it runs where it can be seen, and have it exit
       non-zero on an overdue surface only at a major cut — an ordinary branch
       gets the report, a release gets the refusal.
       <!-- verify: grep -c 'lint_scheduled_deprecations' Taskfile.yml -->
-- [ ] 1.3 Give the check a fixture that is overdue by construction, so a green
+- [x] 1.3 Give the check a fixture that is overdue by construction, so a green
       run means the arithmetic ran rather than that the table was empty. A gate
       that scans nothing exits green, and that is the failure mode this whole
       roadmap is about.
@@ -73,22 +73,55 @@ actual defect-fix — is not held hostage to a release window.
 
 ## Phase 2 — Give the two loose surfaces a tracked state
 
-- [ ] 2.1 Add the code-graph row's current status to the table: overdue by one
+- [x] 2.1 Add the code-graph row's current status to the table: overdue by one
       major, with the removal owner named. The row already exists; what it lacks
       is the fact that it was missed.
       <!-- verify: git show HEAD:docs/MIGRATION.md | grep -c 'code_graph' -->
-- [ ] 2.2 Give `telegraph` a tracked state — either a removal row with a due
+- [x] 2.2 Give `telegraph` a tracked state — either a removal row with a due
       version, or a documented permanent-keep with the reason. Untracked
       dormancy is the one outcome this step removes.
       <!-- verify: grep -ci 'telegraph' docs/MIGRATION.md -->
 
+## Execution notes (2026-08-15)
+
+Three departures from the text as written, recorded rather than taken quietly.
+
+- **2.2 took a third shape the step did not offer, and the reason is a record
+  that already existed.** The step said "either a removal row with a due
+  version, or a documented permanent-keep". ADR `telegraph/0002` § Decision
+  part 3 is titled *"Deletion — AUTHORIZED IN PRINCIPLE, NOT EXECUTED"* and
+  names its own pre-condition (a `prose_only` bench, ~$0.80). So a due version
+  would invent a commitment that ADR declined to make, and a permanent keep
+  would contradict its authorisation. The row therefore uses the **not-pinned**
+  form the `compatibility` row already carries — a tracked state with a
+  maintainer-owned date, which the gate resolves as tracked rather than as
+  overdue or as a parse failure. Untracked dormancy, which is what the step
+  exists to remove, is gone either way.
+- **1.2's verify hook cannot be satisfied as written.** `grep -c
+  'lint_scheduled_deprecations' Taskfile.yml` returns 0 for a conventionally
+  named task: every sibling gate is defined in `taskfiles/ci-fast.yml` and
+  referenced from `Taskfile.yml` by its hyphenated task name. Satisfying the
+  literal would have meant naming the task with underscores, breaking the
+  convention to please a grep. Registered the sibling way instead — definition
+  in `taskfiles/ci-fast.yml`, `ci:` entry in `Taskfile.yml` (with the script
+  name in a comment beside it), and a step in `consistency.yml`, because a gate
+  registered only in the `ci:` list has zero remote reach.
+- **1.2's "a release gets the refusal" needed a caller, or it was a claim.**
+  `--release-major` with nothing invoking it is the defined-but-not-wired shape.
+  It is called from `release.ts` at the point the target version resolves —
+  covering the forced `--as major`, an explicit `--version`, and auto-detection
+  from a `feat!:` commit alike — rather than from `task release:major`, which
+  is only one of those three paths. **Consequence worth stating plainly: the
+  next major cut is now blocked until the blocker below is answered**, which is
+  the gate working as specified, not a side effect.
+
 ## Acceptance criteria
 
-- [ ] An overdue scheduled deprecation is reported by a check, not by a reader.
-- [ ] The check has a by-construction-overdue fixture, so green means it ran.
-- [ ] The code-graph row records that its commitment was missed and by how much.
-- [ ] `telegraph` is either scheduled or documented as a keep.
-- [ ] No public surface is removed by this roadmap.
+- [x] An overdue scheduled deprecation is reported by a check, not by a reader.
+- [x] The check has a by-construction-overdue fixture, so green means it ran.
+- [x] The code-graph row records that its commitment was missed and by how much.
+- [x] `telegraph` is either scheduled or documented as a keep.
+- [x] No public surface is removed by this roadmap.
 
 ## Blockers
 
