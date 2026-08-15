@@ -885,6 +885,24 @@ tasks:
       archive/ later/ skipped/ stubs/ are not concurrently open.
     cmd: ./scripts-run src/scripts/lint_roadmap_family_cap {{.QUIET_FLAG}}
 
+  lint-scheduled-deprecations:
+    silent: true
+    desc: |
+      Check the `docs/MIGRATION.md` scheduled-deprecations table by arithmetic
+      against the shipped `package.json` major, instead of by somebody
+      remembering to read it. The release runbook's pre-flight already sends the
+      releaser there with a manual checkbox whose own text says "A row left
+      unread is how a removal commitment becomes folklore" — and a row was
+      missed anyway, so the defect is the absence of a check.
+
+      Deliberately asymmetric: an ordinary branch gets the report and exits 0,
+      because an overdue row can be a considered deferral and a hard refusal
+      everywhere would turn a judgement into an outage. `--release-major`
+      (the major cut) turns the same finding into a refusal. A row the grammar
+      cannot resolve reds in BOTH modes — an invented due version would move a
+      commitment silently, which is worse than a parse failure.
+    cmd: ./scripts-run src/scripts/lint_scheduled_deprecations {{.QUIET_FLAG}}
+
   check-gate-completeness:
     silent: true
     desc: |

@@ -168,6 +168,9 @@ tasks:
       - task: lint-roadmap-blockers
       - task: lint-roadmap-later-disposition
       - task: lint-roadmap-family-cap
+      # src/scripts/lint_scheduled_deprecations — the MIGRATION.md scheduled-
+      # deprecations table, checked by arithmetic against the shipped major.
+      - task: lint-scheduled-deprecations
       - task: check-gate-completeness
       - task: check-suppression-hygiene
       - task: check-review-dispositions

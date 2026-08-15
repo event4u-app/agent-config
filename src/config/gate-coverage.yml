@@ -42,18 +42,19 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-13)
 # ----------------------------------------------------------
-# 257 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 259 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
-# **35 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and all 35 are listed below.** The manifest is therefore
+# **36 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and all 36 are listed below.** The manifest is therefore
 # complete with respect to its own contract, and covers ~14 % of the population.
 # (The 2026-08-05 reading said "32 … and all 31 are listed"; the 2026-08-10
-# reading said "33 … and all 33" while 34 entries were listed. Both halves are
-# RECOUNTED here: 257 is what `count_gate_scripts()` returns on the tree that
-# carries this change, and 35 is the entries counted directly. It read 255 while
-# this change was being written and 257 after `main` merged in two further gate
-# scripts — re-measured at the merge rather than left at the earlier reading,
-# which is the same discipline the note below records failing.)
+# reading said "33 … and all 33" while 34 entries were listed; the 2026-08-13
+# reading said "257 … 35 of them" and both halves were correct at the time.
+# Both halves are RECOUNTED here on 2026-08-15: 259 is what
+# `count_gate_scripts()` returns on the tree that carries this change — the
+# reading was 258 with `lint_scheduled_deprecations` absent — and 36 is
+# `grep -c '^  - id:'` on this file. Neither number was derived by adding one to
+# the previous prose, which is the move the note below forbids.)
 #
 # A 2026-08-13 revision of this paragraph first wrote 256, derived as "255 before
 # this change plus the one it adds" — inside the sentence claiming to have
@@ -769,3 +770,26 @@ gates:
       The canary plants a manifest whose declared CSV does not exist — the exact
       gap `corpus-grounding/scripts/schema_validator.ts` leaves open, since it
       computes the path and never opens the file.
+
+  - id: lint_scheduled_deprecations
+    argv: []
+    min_scanned: 1
+    corpus: "rows of the `docs/MIGRATION.md` scheduled-deprecations table (3 at baseline)"
+    status: enforced
+    note: >
+      The floor is 1, not "a floor comfortably below the corpus", and the reason
+      is worth stating rather than hiding: the corpus is two rows, so no floor
+      exists that is both below it and far above a collapse. What the floor
+      actually buys here is the contract that the count is PUBLISHED; the
+      collapse case — a drifted heading or a reformatted table parsing to zero
+      rows — is caught one layer up by the gate's own `reportScanned`
+      assertion, which reds instead of printing a green line over nothing.
+      That case is the gate's own subject, so it is pinned by a test fixture
+      too (`a table that parses to zero rows reds rather than exiting green`).
+      No `canary:` recipe: this gate's only violation shape is a MODIFICATION of
+      a tracked artefact (`docs/MIGRATION.md`), and the canary contract is
+      create-only, so it reports UNPROVEN rather than green. Discrimination is
+      proven instead by paired fixtures in
+      `tests/scripts/lint_scheduled_deprecations.test.ts`, verified by mutation:
+      widening the overdue threshold fails the overdue-by-construction case, and
+      granting `allowEmpty` fails the zero-row case.
