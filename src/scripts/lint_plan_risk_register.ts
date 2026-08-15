@@ -39,6 +39,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { workspaceIdentity } from './_lib/git_common_dir.js';
 import { gitEnv } from './_lib/git_env.js';
 import { splitMarkdownRow } from './_lib/md_table.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
@@ -505,12 +506,26 @@ interface HistoryEntry {
     date: string; // %cs — YYYY-MM-DD
 }
 
+/**
+ * Repo root containing `dir`, or `null` outside a repository.
+ *
+ * Census rows R5–R7. The three call sites below each spawned
+ * `rev-parse --show-toplevel` through `_git` — already `GIT_DIR`-safe via
+ * `gitEnv()`, so this migration is behaviour-identical by construction and
+ * exists to remove the third, fourth and fifth re-derivation of one question,
+ * not to fix a defect. The resolver reads files instead of spawning, so the
+ * three checks also stop costing three subprocesses.
+ */
+function _repoRootOf(dir: string): string | null {
+    const root = workspaceIdentity(dir).repoRoot;
+    return root.resolved ? root.value : null;
+}
+
 /** Newest-first commit history of a file; empty for untracked / non-repo paths. */
 export function fileHistory(absPath: string): HistoryEntry[] {
     const dir = path.dirname(absPath);
-    const top = _git(dir, ['rev-parse', '--show-toplevel']);
-    if (top === null) return [];
-    const root = top.trim();
+    const root = _repoRootOf(dir);
+    if (root === null) return [];
     // Normalize separators: git pathspecs use `/` on every platform, so a raw
     // Windows `path.relative()` result matches nothing and would silently yield
     // an empty history — which the grandfather clause reads as "no baseline".
@@ -540,9 +555,8 @@ export function fileHistory(absPath: string): HistoryEntry[] {
  */
 export function hasUncommittedChanges(absPath: string): boolean {
     const dir = path.dirname(absPath);
-    const top = _git(dir, ['rev-parse', '--show-toplevel']);
-    if (top === null) return false;
-    const root = top.trim();
+    const root = _repoRootOf(dir);
+    if (root === null) return false;
     const rel = path.relative(root, absPath).split(path.sep).join('/');
     const out = _git(root, ['status', '--porcelain', '--', rel]);
     if (out === null) return false;
@@ -551,9 +565,8 @@ export function hasUncommittedChanges(absPath: string): boolean {
 
 function _blobAt(absPath: string, sha: string): string | null {
     const dir = path.dirname(absPath);
-    const top = _git(dir, ['rev-parse', '--show-toplevel']);
-    if (top === null) return null;
-    const root = top.trim();
+    const root = _repoRootOf(dir);
+    if (root === null) return null;
     const rel = path.relative(root, absPath).split(path.sep).join('/');
     return _git(root, ['show', `${sha}:${rel}`]);
 }

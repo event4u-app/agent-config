@@ -21,6 +21,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { workspaceIdentity } from './_lib/git_common_dir.js';
 import { assertScanned } from './_lib/scan_scope.js';
 
 const RELEASE_BRANCH_RE = /^release\/(\d+)\.(\d+)\.(\d+)$/;
@@ -37,8 +38,19 @@ function _git(...args: string[]): string {
     return (proc.stdout ?? '').trim();
 }
 
+/**
+ * Census row B3 — one of four private `_current_branch` implementations that
+ * existed beside the shared, file-based one.
+ *
+ * This one spawned `rev-parse --abbrev-ref HEAD` with **no `cwd` and no env
+ * scrub**, so an inherited `GIT_DIR` answered about the hook's repository.
+ * The migration is behaviour-identical at the only call site: `main()` treats
+ * `'HEAD'` and `''` the same ("detached HEAD — gate skipped"), and the
+ * resolver's unresolved case maps onto `''`.
+ */
 function _current_branch(): string {
-    return _git('rev-parse', '--abbrev-ref', 'HEAD');
+    const branch = workspaceIdentity().branch;
+    return branch.resolved ? branch.value : '';
 }
 
 function _parse_semver(text: string): SemVer | null {

@@ -66,6 +66,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runGateCli, runSelfTest, type SelfTestCase } from "./_lib/gate_self_test.js";
+import { workspaceIdentity } from "./_lib/git_common_dir.js";
 import { reportScanned } from "./_lib/scan_scope.js";
 
 // ledger-exempt: single remote-ref probe — the entire scope is ONE ls-remote answer (0 or 1 refs) resolved to one aggregate ancestor verdict, and every empty path already publishes its reason via reportScanned allowEmpty; there is no per-target collection to account.
@@ -548,7 +549,12 @@ export function main(
     return 0;
   }
 
-  const branch = git(["rev-parse", "--abbrev-ref", "HEAD"]);
+  // Census row B4. The file-based resolver is immune to an inherited `GIT_DIR`
+  // (hooks export one, and this gate runs at push time). Behaviour-identical
+  // here by construction: the guard below already collapses `null` and the
+  // detached-HEAD literal onto the same skip, and unresolved maps to `null`.
+  const branchField = workspaceIdentity().branch;
+  const branch = branchField.resolved ? branchField.value : null;
   if (branch === null || branch === "HEAD") {
     scanReport(0, "detached HEAD — there is no branch whose freshness could be asked");
     return 0;
