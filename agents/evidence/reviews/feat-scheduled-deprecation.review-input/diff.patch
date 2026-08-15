@@ -95,7 +95,7 @@ index 3c570c0237f10971a954170a482d6425fa899265..e3223a32beec91a2e509fe2008931745
  <a id="blockers-road-to-inbox-harvest-2026-08-d-scheduled-deprecation"></a>
  **Blockers**
 diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md
-index fe049087201bc9566dae87542b957315e72e3af4..3db56713796042857c8ec0bb1cdba770f3c9b3a9 100644
+index fe049087201bc9566dae87542b957315e72e3af4..63bf30b14fa272816e6107ba4d33cfeeb4d57aac 100644
 --- a/agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md
 +++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md
 @@ -56,16 +56,16 @@ actual defect-fix — is not held hostage to a release window.
@@ -118,7 +118,7 @@ index fe049087201bc9566dae87542b957315e72e3af4..3db56713796042857c8ec0bb1cdba770
        run means the arithmetic ran rather than that the table was empty. A gate
        that scans nothing exits green, and that is the failure mode this whole
        roadmap is about.
-@@ -73,22 +73,55 @@ actual defect-fix — is not held hostage to a release window.
+@@ -73,22 +73,89 @@ actual defect-fix — is not held hostage to a release window.
  
  ## Phase 2 — Give the two loose surfaces a tracked state
  
@@ -134,6 +134,20 @@ index fe049087201bc9566dae87542b957315e72e3af4..3db56713796042857c8ec0bb1cdba770
        <!-- verify: grep -ci 'telegraph' docs/MIGRATION.md -->
  
 +## Execution notes (2026-08-15)
++
++**The R2 completion review returned 11 findings (2 high, 3 medium, 6 low) and
++one of them was a construction defect this implementation had shipped.** It is
++recorded here because the fix changed the gate's central comparison, not a
++detail: the overdue test measured the due major against the **shipped**
++version, so at the cut to N — where `package.json` still reads N-1 — a row
++committed to N resolved as one major *early* and passed. The refusal could
++therefore only ever fire on a row that was already a major late, which is
++exactly the `code_graph` lateness this roadmap exists to prevent; the gate
++would have reproduced its own subject. Neither the fixture nor the self-test
++covered `due == target`, which is why it survived to review. The comparand is
++now the TARGET, passed in via `--cutting <X.Y.Z>`, and the case is pinned at
++both layers — a mutation back to the shipped-major semantics fails one unit
++test and one self-test case.
 +
 +Three departures from the text as written, recorded rather than taken quietly.
 +
@@ -164,7 +178,27 @@ index fe049087201bc9566dae87542b957315e72e3af4..3db56713796042857c8ec0bb1cdba770
 +  from a `feat!:` commit alike — rather than from `task release:major`, which
 +  is only one of those three paths. **Consequence worth stating plainly: the
 +  next major cut is now blocked until the blocker below is answered**, which is
-+  the gate working as specified, not a side effect.
++  the gate working as specified, not a side effect. The trigger is the target's
++  `X.0.0` shape rather than target-vs-current, which also covers `--resume` —
++  a fourth path where the two are equal and any comparison silently passes.
++
++Three things this roadmap knowingly leaves open, none of them fixed here:
++
++- **A standing ⚠️ nobody but the maintainer can clear.** While `code_graph` is
++  overdue the gate prints its warning on every branch and every CI run. A
++  notice that cannot be cleared is the same habituation mechanism that made the
++  runbook checkbox fail, so it is bounded rather than waved through: the row is
++  a hard refusal at the next major cut, which habituation does not survive.
++- **The dashboard's "pending archival" criterion ignores blockers; the sweep
++  does not.** So `agents/roadmaps-progress.md` prints an
++  `archive_completed_roadmaps --all` instruction for this roadmap that cannot
++  succeed while its blocker is open. That is a generator-side inconsistency
++  older than this branch and is not repaired here.
++- **The regenerated dashboard corrects a stale base, and the delta is not this
++  roadmap's.** `-c-release-head-truth` moves 10 open / 0 done → 1 open / 9
++  done. Verified rather than assumed: on `origin/main` the dashboard says 10
++  open / 0 done while that roadmap's own file at the same commit has 0 open and
++  7 done — the base was stale, and the mandated regeneration corrects it.
 +
  ## Acceptance criteria
  
@@ -182,43 +216,67 @@ index fe049087201bc9566dae87542b957315e72e3af4..3db56713796042857c8ec0bb1cdba770
  ## Blockers
  
 diff --git a/docs/MIGRATION.md b/docs/MIGRATION.md
-index 24d150ba5c8b009ab03bb637e518216fbf1e0208..d07ff4c6fde116ae27dedc0cbef2e2a0aa07d523 100644
+index 24d150ba5c8b009ab03bb637e518216fbf1e0208..19341ffddc82f6eb6ded14373e656b2540e5462f 100644
 --- a/docs/MIGRATION.md
 +++ b/docs/MIGRATION.md
-@@ -17,7 +17,8 @@ releaser here on every `release:major`.
+@@ -17,7 +17,28 @@ releaser here on every `release:major`.
  | Surface | Committed | Deprecation notice due | Removal due | Reversal condition |
  |---|---|---|---|---|
  | Free-text `compatibility` skill-frontmatter field (`src/scripts/schemas/skill.schema.json`) | 2026-08-14 | shipped 2026-08-14 — `deprecated: true` + superseded-by note in the schema; `harness_compat` lands beside it, additively | next major after the notice — **not pinned here** (removal date is maintainer-owned, same stance as the manifest `tier` entry, whose `sunset` shipped `null`) | The public Agent-Skills spec makes `compatibility` load-bearing for cross-host portability, or an external consumer is found reading it. `harness_compat` is package-local; `compatibility` mirrors the public spec, so keeping the mirror stays cheaply reversible. Superseded by `harness_compat` (class) + `runtime_requires` (probeable detail); both users (`docx-authoring`, `pdf-tools`) already carry both fields, so nothing breaks on removal day. |
 -| `code_graph` native code-graph engine (`code_graph.enabled`, the `code-intelligence` skill's native arm, `code_graph_nudge_hook`) | 2026-07-28 | next major after 9.x | the major after that | A consumer case the graph answers and disciplined grep cannot. Measured null: recall 0.365 vs grep 0.797 (`docs/CLAIMS.md` `code-graph-retrieval-null`). Until then `enabled: false` is permanent. **Its parser pair (`web-tree-sitter@0.24.7` / `tree-sitter-wasms@0.1.13`, ~51 MB unpacked) moved from `dependencies` to `devDependencies` ahead of the schedule, so consumers no longer install it — the runtime paths (CLI leaf, nudge hook, skill, rule) stay registered until the removal date above, but re-enabling now also means installing that ABI-locked pair yourself.** |
-+| `code_graph` native code-graph engine (`code_graph.enabled`, the `code-intelligence` skill's native arm, `code_graph_nudge_hook`; runtime paths `src/scripts/code_graph/`, `src/scripts/hooks/code_graph_nudge_hook.ts`) | 2026-07-28 | next major after 9.x | the major after that | ⚠️ **OVERDUE BY ONE MAJOR, and recorded here rather than only reported.** The removal resolves to **11.0**; `package.json` shipped **12.0.0**, so the commitment was missed — by exactly the decay this table exists to prevent, since nothing checked it until `lint_scheduled_deprecations` did. **Removal owner: the maintainer** (`### blocker: code-graph-removal-authorisation`); it is a public-surface change gated by `downstream-changes` and `scope-control` and lands at a major cut, so recording the slip here is not authorisation to act on it. A consumer case the graph answers and disciplined grep cannot. Measured null: recall 0.365 vs grep 0.797 (`docs/CLAIMS.md` `code-graph-retrieval-null`). Until then `enabled: false` is permanent. **Its parser pair (`web-tree-sitter@0.24.7` / `tree-sitter-wasms@0.1.13`, ~51 MB unpacked) moved from `dependencies` to `devDependencies` ahead of the schedule, so consumers no longer install it — the runtime paths (CLI leaf, nudge hook, skill, rule) stay registered until the removal date above, but re-enabling now also means installing that ABI-locked pair yourself.** |
++| `code_graph` native code-graph engine (`code_graph.enabled`, the `code-intelligence` skill's native arm, `code_graph_nudge_hook`; runtime paths `src/scripts/code_graph/`, `src/scripts/hooks/code_graph_nudge_hook.ts`) | 2026-07-28 | next major after 9.x | the major after that | A consumer case the graph answers and disciplined grep cannot. Measured null: recall 0.365 vs grep 0.797 (`docs/CLAIMS.md` `code-graph-retrieval-null`). Until then `enabled: false` is permanent. **Its parser pair (`web-tree-sitter@0.24.7` / `tree-sitter-wasms@0.1.13`, ~51 MB unpacked) moved from `dependencies` to `devDependencies` ahead of the schedule, so consumers no longer install it — the runtime paths (CLI leaf, nudge hook, skill, rule) stay registered until the removal date above, but re-enabling now also means installing that ABI-locked pair yourself.** |
 +| `telegraph-speak` condenser (`telegraph.speak`, `src/rules/telegraph-speak.md`, `src/scripts/_lib/compile_time_toggles.ts`, `src/scripts/validate_telegraph_carveouts.ts`) | 2026-07-29 | shipped 2026-07-29 — dormant by default, `speak` defaults `false` | **not pinned here** — removal is authorized in principle and deliberately not executed (ADR `telegraph/0002` § Decision part 3), pending a `prose_only` bench (~$0.80). The date is maintainer-owned, same stance as the `compatibility` row above | An output-side bench clears the kill-criterion bar, at which point `telegraph.speak: true` restores the feature intact. Measured basis for dormancy: median vs_terse **−9.27 %** (API) / −5.47 % (exact `cl100k_base`) — the condenser emits MORE than a plain "be terse". Tracked as a row rather than left dormant-and-unlisted: dormancy without a row is untracked in *both* directions, neither scheduled nor recorded as a keep. Deliberately NOT a due version (that would invent a commitment ADR 0002 declined to make) and NOT a permanent keep (that would contradict its authorized removal). |
++
++### Row status — what is currently late, and who owns it
++
++Kept as prose under the table rather than inside a cell: every column above
++carries what its header names, so the table stays a contract a reader (and the
++parser) can rely on. `src/scripts/lint_scheduled_deprecations` derives the
++lateness itself from `Removal due` and `package.json`; this section records the
++ownership and the reason, which no arithmetic can.
++
++- **`code_graph` — ⚠️ OVERDUE BY ONE MAJOR.** The removal resolves to **11.0**;
++  `package.json` shipped **12.0.0**. The commitment was missed by exactly the
++  decay this table exists to prevent: nothing checked it until the gate above
++  did, and the release runbook's manual pre-flight checkbox was in place the
++  whole time. **Owner: the maintainer**, via the roadmap blocker
++  `code-graph-removal-authorisation` — the removal is a public-surface change
++  gated by `downstream-changes` and `scope-control` and lands at a major cut, so
++  recording the slip here is emphatically not authorisation to act on it. Until
++  it is answered, the next major cut is refused.
++- **`telegraph-speak` — tracked, not late.** Removal authorized in principle and
++  deliberately not executed; the date is maintainer-owned. Nothing is overdue.
  
  **Adding a row:** any change that ships a capability as default-off-pending-removal,
  or that promises a future breaking removal, gets a row here in the same commit
 diff --git a/docs/release-runbook.md b/docs/release-runbook.md
-index 650629bc966bd3ac17cc7695acec55b384baab78..be8f86619eb533a0cf58a1d7e9b5b71f2ea50a14 100644
+index 650629bc966bd3ac17cc7695acec55b384baab78..e2fa6df684794ba799e8811a2f1868199b3ca7cf 100644
 --- a/docs/release-runbook.md
 +++ b/docs/release-runbook.md
-@@ -51,7 +51,16 @@ the **workflow_dispatch** on `release.yml` (inputs: `bump`, `version`,
+@@ -51,7 +51,20 @@ the **workflow_dispatch** on `release.yml` (inputs: `bump`, `version`,
        and act on every row whose "deprecation notice due" or "removal due"
        lands on this major: ship the notice, or perform the removal, or record
        why the reversal condition fired. A row left unread is how a removal
 -      commitment becomes folklore.
 +      commitment becomes folklore — **and one already was**: the `code_graph`
 +      removal reached one major past its 11.0 commitment with this checkbox in
-+      place the whole time. So the arithmetic no longer depends on this line
-+      being read: `src/scripts/lint_scheduled_deprecations` compares every
-+      resolved due version against the shipped `package.json` major, `task ci`
-+      and the consistency workflow print the report on every branch, and
-+      `release.ts` **refuses** a major cut whose table still carries an overdue
-+      or unresolvable row. This checkbox now covers the judgement the gate
-+      cannot make — whether to remove or to revise the commitment — not the
-+      arithmetic it can.
++      place the whole time. So half of this line no longer depends on being
++      read: `src/scripts/lint_scheduled_deprecations` compares every resolved
++      **Removal due** version — against the shipped major on an ordinary
++      branch, against the TARGET major at a cut — and `release.ts` **refuses**
++      a major cut whose table carries a row due at or before it, or one it
++      cannot resolve.
++      **The "ship the notice" half stays yours.** The Deprecation-notice-due
++      column is parsed only as the anchor for a relative removal cell and is
++      compared against nothing, because a shipped notice is written as a date
++      and has no comparand. So read the notice column here; the removal column
++      is checked for you, and the judgement behind it — remove, or revise the
++      commitment — always was and remains yours.
  - [ ] The release satisfies [`release-sizing.md`](contracts/release-sizing.md) —
        one primary product goal, and a `Rollback:` line for every new /
        substantially reworked subsystem (gate: `src/scripts/lint_changelog_rollback.ts`).
 diff --git a/src/config/gate-coverage.yml b/src/config/gate-coverage.yml
-index 3f98cabfa8fc9858aa76c4969306725a2f8c1ec0..a23690aa37da0a3900b4b70adf0de9e5aed5d766 100644
+index 3f98cabfa8fc9858aa76c4969306725a2f8c1ec0..6fa954a31bd0ab1639d93499e4771dbc1e35f190 100644
 --- a/src/config/gate-coverage.yml
 +++ b/src/config/gate-coverage.yml
 @@ -42,18 +42,19 @@
@@ -262,7 +320,7 @@ index 3f98cabfa8fc9858aa76c4969306725a2f8c1ec0..a23690aa37da0a3900b4b70adf0de9e5
 +    status: enforced
 +    note: >
 +      The floor is 1, not "a floor comfortably below the corpus", and the reason
-+      is worth stating rather than hiding: the corpus is two rows, so no floor
++      is worth stating rather than hiding: the corpus is three rows, so no floor
 +      exists that is both below it and far above a collapse. What the floor
 +      actually buys here is the contract that the count is PUBLISHED; the
 +      collapse case — a drifted heading or a reformatted table parsing to zero
@@ -279,10 +337,10 @@ index 3f98cabfa8fc9858aa76c4969306725a2f8c1ec0..a23690aa37da0a3900b4b70adf0de9e5
 +      granting `allowEmpty` fails the zero-row case.
 diff --git a/src/scripts/lint_scheduled_deprecations.ts b/src/scripts/lint_scheduled_deprecations.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb4ce041a4
+index 0000000000000000000000000000000000000000..5167df208370a3c3bfc97a35397e0d1f1a86e0b5
 --- /dev/null
 +++ b/src/scripts/lint_scheduled_deprecations.ts
-@@ -0,0 +1,490 @@
+@@ -0,0 +1,637 @@
 +#!/usr/bin/env node
 +/**
 + * Gate: the scheduled-deprecations table in `docs/MIGRATION.md` is checked by
@@ -305,17 +363,32 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 + * exactly the shape "a gate that scans nothing exits green" describes.
 + *
 + * EXIT CONTRACT
-+ *   0  no overdue surface, or overdue surfaces reported on an ordinary branch
++ *   0  nothing due, or due surfaces reported on an ordinary branch
 + *   1  a row could not be parsed / resolved, the table is missing or empty, or
-+ *      an overdue surface was found while `--release-major` was passed
++ *      a due surface was found while `--cutting <version>` was passed
 + *   2  usage error
 + *
-+ * `--release-major` is the major-cut switch: an ordinary branch gets the
++ * `--cutting <X.Y.Z>` is the major-cut switch: an ordinary branch gets the
 + * report, a release gets the refusal. That asymmetry is deliberate — an overdue
 + * row can be a considered deferral, and a hard refusal on every branch would
 + * turn a judgement into an outage. A deliberate deferral is expressible in the
 + * table itself (a `permanent keep` row), which is what keeps the refusal honest
 + * at the cut.
++ *
++ * **THE COMPARAND IS THE TARGET, NOT THE SHIPPED VERSION, AND THE DIFFERENCE IS
++ * THE WHOLE POINT.** An earlier version of this gate compared against
++ * `package.json` in both modes. At the cut to N, `package.json` still reads
++ * N-1, so a row committed to N resolved to "one major early" and passed — the
++ * refusal could only ever fire on a row that was ALREADY a major late, which is
++ * precisely the lateness this gate exists to prevent. `--cutting` takes the
++ * target so the cut that would CREATE the miss is the one that gets refused.
++ *
++ * SCOPE BOUND, stated because the runbook checkbox above it is wider: only the
++ * **Removal due** column is compared. The Deprecation-notice-due cell is parsed
++ * solely as the anchor for a relative removal cell and is never checked against
++ * anything, because a shipped notice is written as a date rather than a version
++ * and has no comparand. The "ship the notice" half of the pre-flight obligation
++ * therefore remains a human read.
 + */
 +import * as fs from 'node:fs';
 +import * as os from 'node:os';
@@ -392,7 +465,6 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 +    if (UNPINNED_MARKER.test(text)) return { kind: 'unpinned' };
 +    if (PERMANENT_KEEP_MARKER.test(text)) return { kind: 'keep' };
 +
-+    const explicit = /(?:^|[^\d.])(\d+)(?:\.\d+){0,2}\b/.exec(text);
 +    const relativeAfterVersion = /next major after\s+(?:v)?(\d+)(?:\.(?:x|\d+))?/i.exec(text);
 +    const relativeToNotice = /(?:the major after that|next major after the notice)/i.test(text);
 +
@@ -403,10 +475,35 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 +        if (noticeMajor === undefined) return { kind: 'unresolved', cell };
 +        return { kind: 'major', major: noticeMajor + 1 };
 +    }
++    // ANCHORED, not "a digit run somewhere in the cell". The loose form matched
++    // any number and so resolved `shipped 2026-07-29 — dormant by default` to
++    // major 2026 — a confidently wrong commitment, which is the one outcome the
++    // contract at the top of this file rules out. The whole cell (bare of
++    // markdown emphasis) must BE a version, or the cell is unresolved.
++    const explicit = /^\**\s*v?(\d+)(?:\.(?:\d+|x)){0,2}\s*\**$/.exec(text);
 +    if (explicit) {
 +        return { kind: 'major', major: Number(explicit[1]) };
 +    }
 +    return { kind: 'unresolved', cell };
++}
++
++/**
++ * The table's header no longer carries a `Removal due` column.
++ *
++ * Its own error, rather than N per-row "cell not resolvable" findings: a
++ * renamed column has exactly one cause and one fix, and reporting it per row
++ * buries that under noise proportional to the table's length.
++ */
++export class HeaderMismatchError extends Error {
++    constructor(readonly header: readonly string[]) {
++        super(
++            'lint_scheduled_deprecations: the scheduled-deprecations table has no ' +
++                `"Removal due" column — header reads [${header.join(' | ')}]. Either the ` +
++                'column was renamed (update this gate in the same change) or the heading ' +
++                'now sits above a different table.',
++        );
++        this.name = 'HeaderMismatchError';
++    }
 +}
 +
 +/** Split one markdown table line into trimmed cells, dropping the outer pipes. */
@@ -431,6 +528,12 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 +    const lines = markdown.split('\n');
 +    let inSection = false;
 +    let header: string[] | undefined;
++    // Resolved ONCE when the header row is read, not per data row. Recomputing
++    // them inside the loop made a renamed column red every row independently
++    // with an empty cell quoted, burying the one true cause — a header that no
++    // longer matches — under N identical findings.
++    let idxNotice = -1;
++    let idxRemoval = -1;
 +    const rows: DeprecationRow[] = [];
 +
 +    for (const line of lines) {
@@ -446,11 +549,14 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 +        const cells = splitRow(line);
 +        if (header === undefined) {
 +            header = cells.map((c) => c.toLowerCase());
++            idxNotice = header.findIndex((h) => h.includes('notice due'));
++            idxRemoval = header.findIndex((h) => h.includes('removal due'));
++            if (idxRemoval < 0) {
++                throw new HeaderMismatchError(header);
++            }
 +            continue;
 +        }
 +
-+        const idxNotice = header.findIndex((h) => h.includes('notice due'));
-+        const idxRemoval = header.findIndex((h) => h.includes('removal due'));
 +        const surface = cells[0] ?? '';
 +        const backticked = [...surface.matchAll(/`([^`]+)`/g)].map((m) => m[1] ?? '');
 +
@@ -468,18 +574,32 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 +
 +export interface Finding {
 +    row: DeprecationRow;
-+    /** `overdue` = removal was due at an earlier major than the shipped one. */
++    /**
++     * `overdue` — the removal is due at or before the comparand major.
++     * `unresolved` — the removal-due cell could not be resolved to a version.
++     */
 +    kind: 'overdue' | 'unresolved';
-+    /** How many majors late; 0 for `unresolved`. */
++    /**
++     * `comparand − dueMajor`. Positive = late by that many majors; **zero =
++     * due exactly at the major being cut**, which is a refusal at a cut and
++     * silent on an ordinary branch, since a row due at the shipped major is
++     * being acted on right now rather than missed.
++     */
 +    overdueBy: number;
 +    /** Path tokens from the row that still exist on disk. */
 +    livePaths: string[];
 +}
 +
-+/** Compare every row against the shipped major and return what is wrong. */
++/**
++ * Compare every row's removal-due major against `comparand`.
++ *
++ * `comparand` is the SHIPPED major on an ordinary branch and the TARGET major
++ * at a cut — the distinction the gate's header paragraph explains, and the
++ * reason this parameter is not simply read from `package.json` in here.
++ */
 +export function evaluate(
 +    rows: readonly DeprecationRow[],
-+    currentMajor: number,
++    comparand: number,
 +    root: string,
 +    ledger?: GateLedger,
 +): Finding[] {
@@ -503,11 +623,14 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 +            continue;
 +        }
 +
-+        const overdueBy = currentMajor - removal.major;
-+        if (overdueBy > 0) {
++        const overdueBy = comparand - removal.major;
++        if (overdueBy >= 0) {
 +            const livePaths = row.paths.filter((p) => fs.existsSync(path.join(root, p)));
 +            findings.push({ row, kind: 'overdue', overdueBy, livePaths });
-+            ledger?.fail(key, `removal due at ${String(removal.major)}.0, shipped major is ${String(currentMajor)}`);
++            ledger?.fail(
++                key,
++                `removal due at ${String(removal.major)}.0, comparand major is ${String(comparand)}`,
++            );
 +            continue;
 +        }
 +        ledger?.complete(key);
@@ -560,8 +683,8 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 +}
 +
 +/** Floors for `--self-test`, declared here so a truncation is a visible diff. */
-+const SELF_TEST_MIN_CASES = 4;
-+const SELF_TEST_MIN_REJECT = 3;
++const SELF_TEST_MIN_CASES = 7;
++const SELF_TEST_MIN_REJECT = 5;
 +
 +/**
 + * Prove, on demand, that this gate's rejections still fire against its own CLI.
@@ -606,8 +729,50 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 +                    'overdue',
 +                    12,
 +                    '| `legacy` | 2026-01-01 | 10.0 | 11.0 | none |',
-+                    ['--release-major'],
++                    ['--cutting', '13.0.0'],
 +                ),
++        },
++        {
++            // THE CASE THE FIRST VERSION OF THIS GATE MISSED. A row committed
++            // to the major being cut is due NOW; measured against the shipped
++            // version it reads as one major early and passes, so the cut that
++            // creates the miss goes through. This case is what pins the
++            // comparand to the target.
++            name: 'a row due AT the major being cut is refused, not waved through',
++            expect: 'reject',
++            run: () =>
++                fixture(
++                    'due-at-cut',
++                    12,
++                    '| `due_now` | 2026-01-01 | 12.0 | 13.0 | none |',
++                    ['--cutting', '13.0.0'],
++                ),
++        },
++        {
++            name: 'the same row is silent on an ordinary branch — it is not late yet',
++            expect: 'accept',
++            run: () => fixture('due-at-cut-branch', 12, '| `due_now` | 2026-01-01 | 12.0 | 13.0 | none |'),
++        },
++        {
++            name: 'a header with no Removal due column reds once, naming the header',
++            expect: 'reject',
++            run: () => {
++                const dir = path.join(root, 'renamed-header');
++                fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
++                fs.writeFileSync(
++                    path.join(dir, 'package.json'),
++                    JSON.stringify({ name: 'fixture', version: '12.0.0' }),
++                    'utf8',
++                );
++                fs.writeFileSync(
++                    path.join(dir, 'docs', 'MIGRATION.md'),
++                    `${header.replace('| Removal due ', '| Retirement date ')}\n` +
++                        '| `a` | 2026-01-01 | 10.0 | 11.0 | none |\n' +
++                        '| `b` | 2026-01-01 | 10.0 | 11.0 | none |\n',
++                    'utf8',
++                );
++                return runGateCli(repo, script, [], dir);
++            },
 +        },
 +        {
 +            name: 'unresolvable removal-due cell reds on an ordinary branch',
@@ -641,7 +806,7 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 +                    'future',
 +                    12,
 +                    '| `later` | 2026-01-01 | 13.0 | 14.0 | none |',
-+                    ['--release-major'],
++                    ['--cutting', '13.0.0'],
 +                ),
 +        },
 +    ];
@@ -661,8 +826,18 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 +export function main(argv: readonly string[]): number {
 +    if (argv.includes('--self-test')) return selfTest();
 +    const quiet = argv.includes('--quiet');
-+    const releaseMajor = argv.includes('--release-major');
 +    const root = repoRoot();
++
++    // `--cutting <X.Y.Z>` — the version being released. Present = refusal mode.
++    const cutIdx = argv.indexOf('--cutting');
++    let cutting: string | undefined;
++    if (cutIdx >= 0) {
++        cutting = argv[cutIdx + 1];
++        if (cutting === undefined || cutting.startsWith('--')) {
++            process.stderr.write('usage: lint_scheduled_deprecations [--cutting <X.Y.Z>] [--quiet]\n');
++            return 2;
++        }
++    }
 +
 +    const migration = path.join(root, MIGRATION_PATH);
 +    if (!fs.existsSync(migration)) {
@@ -670,10 +845,32 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 +        return 1;
 +    }
 +
-+    const rows = parseRows(fs.readFileSync(migration, 'utf-8'));
-+    const currentMajor = shippedMajor(root);
++    let rows: DeprecationRow[];
++    try {
++        rows = parseRows(fs.readFileSync(migration, 'utf-8'));
++    } catch (exc) {
++        if (exc instanceof HeaderMismatchError) {
++            process.stderr.write(`❌  ${exc.message}\n`);
++            return 1;
++        }
++        throw exc;
++    }
++
++    const shipped = shippedMajor(root);
++    let comparand = shipped;
++    if (cutting !== undefined) {
++        const m = /^v?(\d+)\./.exec(cutting.trim());
++        if (!m) {
++            process.stderr.write(
++                `usage: --cutting expects a bare version (X.Y.Z), got "${cutting}"\n`,
++            );
++            return 2;
++        }
++        comparand = Number(m[1]);
++    }
++
 +    const ledger = new GateLedger('lint_scheduled_deprecations');
-+    const findings = evaluate(rows, currentMajor, root, ledger);
++    const findings = evaluate(rows, comparand, root, ledger);
 +    const tally = ledger.finalize();
 +
 +    // Anti-vacuity. Zero rows means the heading moved or the table's format
@@ -708,10 +905,18 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 +        );
 +    }
 +
++    const against =
++        cutting === undefined
++            ? `shipped ${String(shipped)}.x`
++            : `the ${String(comparand)}.0 cut (shipped is ${String(shipped)}.x)`;
++
 +    for (const f of overdue) {
++        const late =
++            f.overdueBy === 0
++                ? 'comes due AT'
++                : `is ${String(f.overdueBy)} major(s) overdue against`;
 +        process.stdout.write(
-+            `⚠️  lint_scheduled_deprecations: ${f.row.name} — removal is ` +
-+                `${String(f.overdueBy)} major(s) overdue against shipped ${String(currentMajor)}.x\n` +
++            `⚠️  lint_scheduled_deprecations: ${f.row.name} — removal ${late} ${against}\n` +
 +                `      removal due: ${f.row.removalDueRaw}\n`,
 +        );
 +        if (f.livePaths.length > 0) {
@@ -729,9 +934,10 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 +    if (unresolved.length > 0) return 1;
 +
 +    if (overdue.length > 0) {
-+        if (releaseMajor) {
++        if (cutting !== undefined) {
 +            process.stderr.write(
-+                `\n❌  lint_scheduled_deprecations: ${String(overdue.length)} overdue surface(s) at a major cut.\n` +
++                `\n❌  lint_scheduled_deprecations: ${String(overdue.length)} surface(s) due at or before ` +
++                    `the ${String(comparand)}.0 cut.\n` +
 +                    '    Act on each row: perform the removal in its own change, or revise the\n' +
 +                    "    row's commitment and record why the surface stays. A deliberate\n" +
 +                    '    deferral belongs in the table, not in a release decision nobody can read.\n',
@@ -740,8 +946,8 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 +        }
 +        if (!quiet) {
 +            process.stdout.write(
-+                `\n   Reported, not refused — this is an ordinary branch. \`--release-major\`\n` +
-+                    '   turns the same finding into a refusal at the cut.\n',
++                '\n   Reported, not refused — this is an ordinary branch. `--cutting <X.Y.Z>`\n' +
++                    '   turns the same finding into a refusal, measured against the TARGET major.\n',
 +            );
 +        }
 +        return 0;
@@ -750,8 +956,7 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 +    if (!quiet) {
 +        ledger.report();
 +        process.stdout.write(
-+            `✅  lint_scheduled_deprecations: ${String(tally.planned)} row(s), none overdue ` +
-+                `against shipped ${String(currentMajor)}.x\n`,
++            `✅  lint_scheduled_deprecations: ${String(tally.planned)} row(s), none due against ${against}\n`,
 +        );
 +    }
 +    return 0;
@@ -774,7 +979,7 @@ index 0000000000000000000000000000000000000000..351a51f894ee9cfc6faba06a5c024cdb
 +    process.exitCode = main(process.argv.slice(2));
 +}
 diff --git a/src/scripts/release.ts b/src/scripts/release.ts
-index bc79d417123977d6786bf6b6d82a08168b295ad8..833518939d6c9fc01d010c2df93cc2691ccfc0ec 100644
+index bc79d417123977d6786bf6b6d82a08168b295ad8..2aea8aebb062cc24f106c18178952257aee07972 100644
 --- a/src/scripts/release.ts
 +++ b/src/scripts/release.ts
 @@ -536,7 +536,7 @@ function die(msg: string, code = 2): never {
@@ -786,27 +991,39 @@ index bc79d417123977d6786bf6b6d82a08168b295ad8..833518939d6c9fc01d010c2df93cc269
      returncode: number;
      stdout: string;
      stderr: string;
-@@ -1623,6 +1623,53 @@ function set_template_pin(p: string, version: string): void {
+@@ -1623,6 +1623,68 @@ function set_template_pin(p: string, version: string): void {
      fs.writeFileSync(p, lines.join('\n'), 'utf-8');
  }
  
 +/**
-+ * Refuse a MAJOR cut that still carries an overdue scheduled deprecation.
++ * Refuse a MAJOR cut that carries a scheduled deprecation due at or before it.
 + *
-+ * Placed at the resolved TARGET rather than at a `--as major` flag on purpose:
-+ * a major can be reached three ways — the flag, an explicit `--version`, and
-+ * auto-detection from a `feat!:` commit — and gating only the flag would leave
-+ * the two paths the unattended release workflow actually uses wide open. The
-+ * target is where all three converge.
++ * **The trigger is the shape of the TARGET, not a comparison with the current
++ * version.** A major target is `X.0.0` — and that one predicate covers every
++ * path to a major: the `--as major` flag, an explicit `--version 13.0.0`,
++ * auto-detection from a `feat!:` commit, AND `--resume`, where
++ * `_detect_in_flight_target()` returns the already-bumped `package.json`
++ * version so `target === current` and any current-vs-target comparison
++ * silently returns. Resume was the fourth path an earlier version of this
++ * guard missed while its own comment claimed three paths converged.
 + *
-+ * The check is a no-op on minor and patch cuts, which is the asymmetry
-+ * `lint_scheduled_deprecations` is built around: an ordinary branch gets the
-+ * report, a release gets the refusal. Skipped under `--dry-run` with the rest
-+ * of preflight, so a preview stays fast and side-effect-free.
++ * Refusing a resumed release can strand a partially-completed one, and that is
++ * the deliberate trade: a stranded release is recoverable by fixing the table
++ * and resuming again, whereas a major shipped over a missed commitment is the
++ * failure this whole surface exists to prevent.
 + *
-+ * Wired here rather than left to the runbook's manual pre-flight checkbox
-+ * because that checkbox already failed once: the `code_graph` removal reached
-+ * one major past its commitment with the checkbox in place the whole time.
++ * The target version is PASSED to the gate. Without it the gate falls back to
++ * `package.json`, which at the cut to N still reads N-1 — so a row committed
++ * to N reads as one major early and passes, and only rows already a major late
++ * could ever be refused. That is the lateness being prevented, so measuring
++ * against the shipped version would have made the refusal fire exactly one
++ * major too late, forever.
++ *
++ * Runs under `--dry-run` too, unlike the rest of preflight: this check is one
++ * subprocess reading two files, so the "keep a preview fast" rationale that
++ * excludes the ~15s test-trend collection does not apply — and a preview that
++ * reports green for the single condition that will refuse the real run is the
++ * case an operator runs a preview to discover.
 + *
 + * @param runner Seam for the gate invocation. Production passes nothing and
 + * gets the real `run`; tests inject a stub, because the alternative — reaching
@@ -814,45 +1031,52 @@ index bc79d417123977d6786bf6b6d82a08168b295ad8..833518939d6c9fc01d010c2df93cc269
 + * path testable exclusively through a tracked-file edit.
 + */
 +export function assert_scheduled_deprecations_clear(
-+    current: string,
 +    target: string,
 +    runner: (args: readonly string[]) => RunResult = (args) => run(args, { check: false, capture: true }),
 +): void {
-+    const [targetMajor] = parse_version(target);
-+    const [currentMajor] = parse_version(current);
-+    if (targetMajor <= currentMajor) {
++    const [, minor, patch] = parse_version(target);
++    if (minor !== 0 || patch !== 0) {
 +        return;
 +    }
-+    const res = runner(['./scripts-run', 'src/scripts/lint_scheduled_deprecations', '--release-major']);
++    const res = runner([
++        './scripts-run',
++        'src/scripts/lint_scheduled_deprecations',
++        '--cutting',
++        target,
++    ]);
 +    if (res.returncode === 0) {
 +        return;
 +    }
 +    process.stderr.write(res.stdout);
 +    process.stderr.write(res.stderr);
 +    die(
-+        `refusing a major cut (${current} → ${target}): the scheduled-deprecations table ` +
-+            'in docs/MIGRATION.md has an overdue or unresolvable row. Act on it — perform ' +
-+            "the removal in its own change, or revise the row's commitment and record why " +
-+            'the surface stays — then re-run.',
++        `refusing the ${target} cut: the scheduled-deprecations table in docs/MIGRATION.md ` +
++            'has a row due at or before this major, or one that cannot be resolved. Act on ' +
++            "it — perform the removal in its own change, or revise the row's commitment and " +
++            'record why the surface stays — then re-run.',
 +    );
 +}
 +
  // ─── preflight ────────────────────────────────────────────────────────────────
  
  /**
-@@ -2579,6 +2626,7 @@ function main(argv: readonly string[] | null = null): number {
+@@ -2578,6 +2640,11 @@ function main(argv: readonly string[] | null = null): number {
+     }
      parse_version(target);
  
++    // Outside the dry-run guard on purpose — see the function's own note: it is
++    // one subprocess over two files, and a preview that hides the one condition
++    // that will refuse the real run is worse than useless.
++    assert_scheduled_deprecations_clear(target);
++
      if (!args.dry_run) {
-+        assert_scheduled_deprecations_clear(current, target);
          preflight(target, { resume: args.resume, ci: args.ci });
      }
- 
 diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
-index eec12e3ff020ea32001c822a64f2746dfafac0b4..97ee67f3bc9a8d1d51ca26f4367a9621ff56740c 100644
+index eec12e3ff020ea32001c822a64f2746dfafac0b4..452d5f78efc9ee7b0a1790890cb31e25ea5955d3 100644
 --- a/taskfiles/ci-fast.yml
 +++ b/taskfiles/ci-fast.yml
-@@ -885,6 +885,24 @@ tasks:
+@@ -885,6 +885,34 @@ tasks:
        archive/ later/ skipped/ stubs/ are not concurrently open.
      cmd: ./scripts-run src/scripts/lint_roadmap_family_cap {{.QUIET_FLAG}}
  
@@ -868,10 +1092,20 @@ index eec12e3ff020ea32001c822a64f2746dfafac0b4..97ee67f3bc9a8d1d51ca26f4367a9621
 +
 +      Deliberately asymmetric: an ordinary branch gets the report and exits 0,
 +      because an overdue row can be a considered deferral and a hard refusal
-+      everywhere would turn a judgement into an outage. `--release-major`
-+      (the major cut) turns the same finding into a refusal. A row the grammar
-+      cannot resolve reds in BOTH modes — an invented due version would move a
++      everywhere would turn a judgement into an outage. `--cutting <X.Y.Z>`
++      turns the same finding into a refusal, measured against the TARGET major
++      rather than the shipped one — at the cut to N, package.json still reads
++      N-1, so comparing against it would let the cut that CREATES a miss pass
++      and only ever refuse rows already a major late. A row the grammar cannot
++      resolve reds in BOTH modes: an invented due version would move a
 +      commitment silently, which is worse than a parse failure.
++
++      Known and accepted: while a row is overdue the ⚠️ block prints on every
++      run and no contributor can clear it — only the maintainer answering the
++      row's blocker can. That is a standing notice, which is the mechanism that
++      let the runbook checkbox fail in the first place, so it is bounded rather
++      than assumed harmless: the row is refused at the next major cut, which is
++      a hard stop no amount of habituation survives.
 +    cmd: ./scripts-run src/scripts/lint_scheduled_deprecations {{.QUIET_FLAG}}
 +
    check-gate-completeness:
@@ -879,10 +1113,10 @@ index eec12e3ff020ea32001c822a64f2746dfafac0b4..97ee67f3bc9a8d1d51ca26f4367a9621
      desc: |
 diff --git a/tests/scripts/lint_scheduled_deprecations.test.ts b/tests/scripts/lint_scheduled_deprecations.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..f794d97e5079353d6290994423337351e8472fbc
+index 0000000000000000000000000000000000000000..f68efb25dde31eaf3c12d104ee2ed861bbc55b77
 --- /dev/null
 +++ b/tests/scripts/lint_scheduled_deprecations.test.ts
-@@ -0,0 +1,184 @@
+@@ -0,0 +1,239 @@
 +/**
 + * Tests for `src/scripts/lint_scheduled_deprecations.ts`.
 + *
@@ -911,7 +1145,7 @@ index 0000000000000000000000000000000000000000..f794d97e5079353d6290994423337351
 +import { fileURLToPath } from 'node:url';
 +import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 +
-+import { parseRows, resolveDueMajor } from '../../src/scripts/lint_scheduled_deprecations.js';
++import { HeaderMismatchError, parseRows, resolveDueMajor } from '../../src/scripts/lint_scheduled_deprecations.js';
 +
 +const HERE = path.dirname(fileURLToPath(import.meta.url));
 +const REPO_ROOT = path.resolve(HERE, '..', '..');
@@ -978,9 +1212,51 @@ index 0000000000000000000000000000000000000000..f794d97e5079353d6290994423337351
 +        // An ordinary branch reports; it does not refuse.
 +        expect(branch.status).toBe(0);
 +
-+        const cut = run(tmp, ['--release-major']);
++        const cut = run(tmp, ['--cutting', '13.0.0']);
 +        expect(cut.status).toBe(1);
-+        expect(cut.stderr).toContain('1 overdue surface(s) at a major cut');
++        expect(cut.stderr).toContain('due at or before');
++    });
++
++    it('a row due AT the major being cut is refused — the comparand is the target', () => {
++        // The defect this pins. Shipped is 12 and the row is committed to 13,
++        // so measured against package.json it reads as one major EARLY and
++        // passes. Measured against the 13.0.0 being cut it is due now. Getting
++        // this backwards means the refusal can only ever fire on a row that is
++        // already a major late — which is the lateness the gate exists to stop.
++        writeFixture(tmp, 12, ['| `due_now` | 2026-01-01 | 12.0 | 13.0 | none |']);
++
++        const branch = run(tmp);
++        expect(branch.status).toBe(0);
++        expect(branch.stdout).toContain('none due');
++
++        const cut = run(tmp, ['--cutting', '13.0.0']);
++        expect(cut.status).toBe(1);
++        expect(cut.stdout).toContain('comes due AT');
++        expect(cut.stderr).toContain('due at or before');
++    });
++
++    it('a renamed Removal-due column reds ONCE naming the header, not once per row', () => {
++        fs.mkdirSync(path.join(tmp, 'docs'), { recursive: true });
++        fs.writeFileSync(
++            path.join(tmp, 'package.json'),
++            JSON.stringify({ name: 'fixture', version: '12.0.0' }),
++            'utf8',
++        );
++        fs.writeFileSync(
++            path.join(tmp, 'docs', 'MIGRATION.md'),
++            `${HEADER.replace('| Removal due ', '| Retirement date ')}\n` +
++                '| `a` | 2026-01-01 | 10.0 | 11.0 | none |\n' +
++                '| `b` | 2026-01-01 | 10.0 | 11.0 | none |\n',
++            'utf8',
++        );
++
++        const r = run(tmp);
++        expect(r.status).toBe(1);
++        expect(r.stderr).toContain('no "Removal due" column');
++        // Two rows, ONE finding: the cause is the header, and repeating it per
++        // row buries it under noise proportional to the table's length.
++        expect(r.stderr.match(/Removal due/g) ?? []).toHaveLength(1);
++        expect(r.stderr).not.toContain('not resolvable');
 +    });
 +
 +    it('a green run means the arithmetic ran: future rows pass in both modes', () => {
@@ -989,9 +1265,9 @@ index 0000000000000000000000000000000000000000..f794d97e5079353d6290994423337351
 +        const branch = run(tmp);
 +        expect(branch.status).toBe(0);
 +        expect(branch.stdout).toContain('scanned: 1');
-+        expect(branch.stdout).toContain('none overdue');
++        expect(branch.stdout).toContain('none due');
 +
-+        const cut = run(tmp, ['--release-major']);
++        const cut = run(tmp, ['--cutting', '13.0.0']);
 +        expect(cut.status).toBe(0);
 +    });
 +
@@ -1004,7 +1280,7 @@ index 0000000000000000000000000000000000000000..f794d97e5079353d6290994423337351
 +        const r = run(tmp);
 +        expect(r.status).toBe(0);
 +        expect(r.stdout).toContain('scanned: 2');
-+        expect(r.stdout).toContain('none overdue');
++        expect(r.stdout).toContain('none due');
 +    });
 +
 +    it('an unresolvable removal-due cell reds instead of being guessed at', () => {
@@ -1049,6 +1325,13 @@ index 0000000000000000000000000000000000000000..f794d97e5079353d6290994423337351
 +            resolveDueMajor('next major after the notice — **not pinned here** (maintainer-owned)', 10),
 +        ).toEqual({ kind: 'unpinned' });
 +        expect(resolveDueMajor('')).toEqual({ kind: 'unresolved', cell: '' });
++        // A date is NOT a version. The loose `\\d+` fallback resolved
++        // `shipped 2026-07-29` to major 2026 — a confidently wrong commitment,
++        // which is the one outcome the gate's contract rules out.
++        expect(resolveDueMajor('shipped 2026-07-29 — dormant by default').kind).toBe('unresolved');
++        expect(resolveDueMajor('see ADR-135').kind).toBe('unresolved');
++        // Markdown emphasis around a bare version still resolves.
++        expect(resolveDueMajor('**11.0**')).toEqual({ kind: 'major', major: 11 });
 +    });
 +
 +    it('only the scheduled-deprecations table is parsed, never the shipped sections', () => {
@@ -1058,9 +1341,15 @@ index 0000000000000000000000000000000000000000..f794d97e5079353d6290994423337351
 +        expect(rows[0]?.name).toBe('only_row');
 +    });
 +
++    it('a header missing the Removal-due column throws HeaderMismatchError', () => {
++        expect(() =>
++            parseRows(`${HEADER.replace('| Removal due ', '| Retirement date ')}\n| \`a\` | x | y | z | w |\n`),
++        ).toThrow(HeaderMismatchError);
++    });
++
 +    it('real repo: reproduces the reading this gate was built on', () => {
 +        const r = run(REPO_ROOT);
-+        // Two rows today; the floor is what matters, not the exact number.
++        // Three rows today; the floor is what matters, not the exact number.
 +        expect(r.stdout).toMatch(/scanned: [1-9]\d*/);
 +        // No unresolved cell in the shipped table — that would be a live defect.
 +        expect(r.stderr).not.toContain('not resolvable');
@@ -1068,7 +1357,7 @@ index 0000000000000000000000000000000000000000..f794d97e5079353d6290994423337351
 +    });
 +});
 diff --git a/tests/scripts/release.test.ts b/tests/scripts/release.test.ts
-index 364cf8cb684ea1a4c9deaa9fcca1ec8595f90e4f..6b95c319475ad7ed56174db213b5732eef95eed8 100644
+index 364cf8cb684ea1a4c9deaa9fcca1ec8595f90e4f..82a70421763a04b2b1752d017651738940fa9fd9 100644
 --- a/tests/scripts/release.test.ts
 +++ b/tests/scripts/release.test.ts
 @@ -49,6 +49,7 @@ import {
@@ -1079,13 +1368,13 @@ index 364cf8cb684ea1a4c9deaa9fcca1ec8595f90e4f..6b95c319475ad7ed56174db213b5732e
      CONVENTIONAL_RE,
      SEMVER_RE,
      _RELEASE_BRANCH_RE,
-@@ -878,3 +879,45 @@ describe('watch_pr_checks — failing-check summary (the scrolled-away-failure f
+@@ -878,3 +879,67 @@ describe('watch_pr_checks — failing-check summary (the scrolled-away-failure f
          expect(_failed_checks_report([])).toBe('');
      });
  });
 +
 +describe('assert_scheduled_deprecations_clear', () => {
-+    /** A stub gate that records whether it was called at all. */
++    /** A stub gate that records the argv it was handed. */
 +    function stub(returncode: number, calls: string[][]) {
 +        return (args: readonly string[]) => {
 +            calls.push([...args]);
@@ -1093,25 +1382,47 @@ index 364cf8cb684ea1a4c9deaa9fcca1ec8595f90e4f..6b95c319475ad7ed56174db213b5732e
 +        };
 +    }
 +
-+    it('does not even run the gate on a minor or patch cut', () => {
++    it('does not consult the gate on a minor or patch target', () => {
 +        const calls: string[][] = [];
-+        assert_scheduled_deprecations_clear('12.0.0', '12.1.0', stub(1, calls));
-+        assert_scheduled_deprecations_clear('12.0.0', '12.0.1', stub(1, calls));
-+        // A red gate that is never consulted proves the guard is bounded to
-+        // major cuts: it is the asymmetry the whole check is built around.
++        assert_scheduled_deprecations_clear('12.1.0', stub(1, calls));
++        assert_scheduled_deprecations_clear('12.0.1', stub(1, calls));
++        // A red gate that is never consulted is what proves the guard is bounded
++        // to major cuts — the asymmetry the whole check is built around.
 +        expect(calls).toEqual([]);
 +    });
 +
-+    it('a major cut with a clear table proceeds, and consults the gate exactly once', () => {
++    it('a clear table lets the cut proceed, consulting the gate exactly once', () => {
 +        const calls: string[][] = [];
-+        expect(() => assert_scheduled_deprecations_clear('12.0.0', '13.0.0', stub(0, calls))).not.toThrow();
++        expect(() => assert_scheduled_deprecations_clear('13.0.0', stub(0, calls))).not.toThrow();
 +        expect(calls).toHaveLength(1);
-+        expect(calls[0]).toContain('--release-major');
 +    });
 +
-+    it('a major cut with an overdue row refuses the release', () => {
++    it('passes the TARGET to the gate, not the shipped version', () => {
++        // The defect this pins: without --cutting the gate falls back to
++        // package.json, which at the cut to N still reads N-1, so a row due at
++        // N reads as one major early and the cut that creates the miss passes.
 +        const calls: string[][] = [];
-+        expect(() => assert_scheduled_deprecations_clear('12.0.0', '13.0.0', stub(1, calls))).toThrow(
++        assert_scheduled_deprecations_clear('13.0.0', stub(0, calls));
++        expect(calls[0]).toContain('--cutting');
++        expect(calls[0]?.[calls[0].indexOf('--cutting') + 1]).toBe('13.0.0');
++    });
++
++    it('a due or overdue row refuses the cut', () => {
++        const calls: string[][] = [];
++        expect(() => assert_scheduled_deprecations_clear('13.0.0', stub(1, calls))).toThrow(
++            SystemExitError,
++        );
++        expect(calls).toHaveLength(1);
++    });
++
++    it('a resumed major is still checked — target === current is not an exemption', () => {
++        // On --resume, _detect_in_flight_target() returns the already-bumped
++        // package.json version, so target and current are equal. A guard keyed
++        // on target > current returns silently here; keying on the X.0.0 shape
++        // does not. Stranding a resumed release is the deliberate trade against
++        // shipping a major over a missed commitment.
++        const calls: string[][] = [];
++        expect(() => assert_scheduled_deprecations_clear('13.0.0', stub(1, calls))).toThrow(
 +            SystemExitError,
 +        );
 +        expect(calls).toHaveLength(1);
@@ -1119,7 +1430,7 @@ index 364cf8cb684ea1a4c9deaa9fcca1ec8595f90e4f..6b95c319475ad7ed56174db213b5732e
 +
 +    it('a multi-major jump is still a major cut', () => {
 +        const calls: string[][] = [];
-+        expect(() => assert_scheduled_deprecations_clear('12.0.0', '14.0.0', stub(1, calls))).toThrow(
++        expect(() => assert_scheduled_deprecations_clear('14.0.0', stub(1, calls))).toThrow(
 +            SystemExitError,
 +        );
 +        expect(calls).toHaveLength(1);
