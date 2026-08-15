@@ -556,6 +556,30 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+  # road-to-inbox-harvest-2026-08-d-context-ledger Phase 1 Step 1.1 — the
+  # tool-result byte counter. `hook-token-budget.json` registers the gap it
+  # closes in its own words: bytes-into-context from tool RESULTS are
+  # instrumented nowhere, so every context-cost claim in this tree is made
+  # against a denominator missing its dominant term.
+  #
+  # CAPTURE ONLY. It appends `{ts, tool, bytes, measurable}` to a gitignored
+  # census file and emits NOTHING to the model — zero injection bytes, which
+  # is why it carries a metric registration rather than a per-concern byte
+  # cap. The threshold question (when is a result too large) is deliberately
+  # unanswered: the distribution has never been observed, and the house rule
+  # is baseline before mechanism.
+  #
+  # The record type has four fields and none can hold free text — a tool
+  # NAME, a byte COUNT, a timestamp and a measurable flag. Tool results
+  # routinely carry file contents and command output; none of it can reach
+  # this output because the output has no field able to carry it.
+  #
+  # Never blocks, never warns: exit 0 on every path. fail_closed: false.
+  tool-result-bytes:
+    script: src/scripts/hooks/tool_result_bytes_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
   # road-to-subagent-lifecycle-integrity Phase 3 Step 1 — spawn guard, SHADOW
   # ONLY, per docs/contracts/concern-activation-policy.md. On every Agent/Task
   # call it appends one `spawn_guard_shadow` line recording what a guard WOULD
@@ -623,7 +647,7 @@ platforms:
     session_end:      [chat-history, memory-learn, session-register]
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, reread-guard]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
 
   claude:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
@@ -631,14 +655,24 @@ platforms:
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, git-authorization, session-canary, self-repair, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, reread-guard, spawn-guard-shadow]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape, language-mirror]
-    # round-5 § 6.1 — the ONLY binding on this slot in the tree. `pre_compact`
-    # sets a pin-lost marker; the `post_tool_use` entry above re-emits the pin
-    # exactly once while that marker is set, then clears it. One extra
-    # injection per compaction EVENT — never one per tool call, which is the
-    # shape § 6.2 refuses. claude only: it is the sole verified platform, and
-    # the measured compaction defect is a Claude Code transcript fact.
-    pre_compact:      [language-mirror]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape, language-mirror]
+    # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;
+    # the `post_tool_use` entry above re-emits the pin exactly once while that
+    # marker is set, then clears it. One extra injection per compaction EVENT —
+    # never one per tool call, which is the shape § 6.2 refuses. claude only: it
+    # is the sole verified platform, and the measured compaction defect is a
+    # Claude Code transcript fact. (It was the ONLY binding on this slot until
+    # the entry below; that sentence is retired rather than left to rot.)
+    #
+    # `hot-context` — road-to-inbox-harvest-2026-08-d-context-ledger Step 2.1.
+    # This is the one slot that fires WHILE state is being destroyed, and it
+    # carried no WRITER at all: the cache a post-compaction `session_start`
+    # restores was written at the last `stop`, so everything the session did
+    # between that stop and the compaction was lost with it. The concern is
+    # already bound on `stop` and `session_start`; this adds the write at the
+    # moment the loss actually happens. Deterministic rebuild, emits nothing
+    # here — the 4,096-byte row it carries is for its session_start restore.
+    pre_compact:      [language-mirror, hot-context]
     # road-to-subagent-lifecycle-integrity Phase 1 Step 1. `claude` is the only
     # platform where both native events were measured present on the installed
     # binary (2.1.229 — see the evidence page cited on the alias rows below).
@@ -675,7 +709,7 @@ platforms:
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, reread-guard, spawn-guard-shadow]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
     # subagent-ledger IS bound here, unlike the two nudges above, and the
     # difference is the delivery channel rather than the platform: the nudges
     # depend on stdout reaching the model, which this trampoline discards by
@@ -698,7 +732,7 @@ platforms:
     session_end:        [chat-history, memory-learn, session-register]
     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
 
   # Phase 7.6 — Cline. Hooks live under `.clinerules/hooks/<HookName>`
   # (project, no file extension, must be executable per Cline docs) or
@@ -713,7 +747,7 @@ platforms:
     session_end:        [chat-history, memory-learn, session-register]
     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
 
   # Phase 7.7 — Windsurf (Cascade). Hooks live at `.windsurf/hooks.json`
   # (project) or `~/.codeium/windsurf/hooks.json` (user). Cascade has
@@ -749,7 +783,7 @@ platforms:
     session_end:        [chat-history, memory-learn, session-register]
     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
 
   # Phase 7.9 — Copilot has no hook surface. Concerns route through
   # rule-only fallback; the dispatcher silently no-ops on --platform copilot.

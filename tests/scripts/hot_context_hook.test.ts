@@ -69,6 +69,56 @@ function wordCount(text: string): number {
     return text.split(/\s+/).filter((w) => w.length > 0).length;
 }
 
+describe('pre_compact — capture before the state is destroyed', () => {
+    // road-to-inbox-harvest-2026-08-d-context-ledger Step 2.1. The slot fires
+    // WHILE state is being destroyed; before this it carried no writer, so the
+    // cache a post-compaction restore reads was written at the last `stop`.
+    it('writes the cache on pre_compact, exactly as stop does', () => {
+        writeHistory([
+            { t: 'header', v: 1 },
+            { t: 'user_prompt', s: 's1', text: 'the intent that must survive compaction' },
+            { t: 'stop', s: 's1', text: 'summary of the work so far' },
+        ]);
+
+        expect(runHook('pre_compact').status).toBe(0);
+        const text = fs.readFileSync(hotFile, 'utf-8');
+        expect(text).toContain('the intent that must survive compaction');
+        expect(text).toMatch(/^Last Updated: \d{4}-\d{2}-\d{2}T/m);
+    });
+
+    it('captures work done AFTER the last stop — the whole point of the slot', () => {
+        // A stop writes the cache; the session then continues and compacts.
+        // Without a pre_compact writer the post-stop work is lost with the
+        // compaction, which is exactly the defect this step closes.
+        writeHistory([{ t: 'user_prompt', s: 's1', text: 'work before the stop' }]);
+        expect(runHook('stop').status).toBe(0);
+        expect(fs.readFileSync(hotFile, 'utf-8')).not.toContain('work after the stop');
+
+        writeHistory([
+            { t: 'user_prompt', s: 's1', text: 'work before the stop' },
+            { t: 'user_prompt', s: 's1', text: 'work after the stop' },
+        ]);
+        expect(runHook('pre_compact').status).toBe(0);
+        expect(fs.readFileSync(hotFile, 'utf-8')).toContain('work after the stop');
+    });
+
+    it('emits nothing on this slot — it is a writer, not an injector', () => {
+        writeHistory([{ t: 'user_prompt', s: 's1', text: 'some intent' }]);
+        const { status, stdout } = runHook('pre_compact');
+        expect(status).toBe(0);
+        expect(stdout.trim()).toBe('');
+    });
+
+    it('is idempotent — a second fire cannot degrade the cache', () => {
+        writeHistory([{ t: 'user_prompt', s: 's1', text: 'stable intent' }]);
+        expect(runHook('pre_compact').status).toBe(0);
+        const first = fs.readFileSync(hotFile, 'utf-8').replace(/^Last Updated: .*$/m, '');
+        expect(runHook('pre_compact').status).toBe(0);
+        const second = fs.readFileSync(hotFile, 'utf-8').replace(/^Last Updated: .*$/m, '');
+        expect(second).toBe(first);
+    });
+});
+
 describe('stop — deterministic write', () => {
     it('writes the capped, stamped cache and drops privacy-floor violations', () => {
         const long = 'word '.repeat(120).trim(); // exceeds every snippet cap
