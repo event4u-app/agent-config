@@ -87,19 +87,51 @@ const _RULE_OR_SCHEMA_PREFIXES = ['src/rules/', 'src/scripts/schemas/'];
  * from a bug report, and it moves hand-judged precision from 54 % to 96 %.
  */
 const _EXECUTABLE_SUFFIX = /\.(?:ts|tsx|js|mjs|cjs|sh|py)$/u;
-const _EXECUTABLE_PREFIXES = ['.github/workflows/'];
+const _EXECUTABLE_PREFIXES = ['.github/workflows/', '.github/actions/'];
+
+/**
+ * Shebang entry points with no extension, which a suffix test cannot see. An
+ * exact set rather than a heuristic: the alternative is reading file contents,
+ * which a span commit does not carry.
+ *
+ * The recall limit that remains, named rather than left for a reader to
+ * discover: a NEW extensionless entry point is invisible until it is added
+ * here. Precision was measured over six spans; this predicate's recall was not,
+ * and adding to this set is the maintenance that follows a new entry point.
+ */
+const _EXECUTABLE_EXACT: ReadonlySet<string> = new Set([
+    'scripts-run',
+    'src/scripts/agent-config',
+]);
 
 function _touches_executable(files: SpanCommit['files']): boolean {
     return files.some(
         (f) =>
             _EXECUTABLE_SUFFIX.test(f.path) ||
+            _EXECUTABLE_EXACT.has(f.path) ||
             _EXECUTABLE_PREFIXES.some((p) => f.path.startsWith(p)),
     );
 }
 
-/** Conventional-commit type, or `''` when the subject carries none. */
+/**
+ * Conventional-commit type, lower-cased, or `''` when the subject carries no
+ * conventional prefix.
+ *
+ * Two things this deliberately does, both of which an earlier version got
+ * wrong. It requires the conventional `:` separator, so `fix the flaky runner`
+ * is not classified as type `fix` — otherwise this function disagrees with the
+ * scope regex three lines below it and with every prose description of the
+ * rule. And it recognises `Revert "<subject>"`, the form `git revert` writes by
+ * default, which is not conventional at all: without it the documented revert
+ * half only ever applied to a hand-written `revert(scope):`, and a revert of
+ * shipped behaviour is the commit class most likely to be a correctness repair.
+ */
 function _commit_type(subject: string): string {
-    return /^(\w+)/u.exec(subject)?.[1] ?? '';
+    if (/^Revert\s+"/u.test(subject)) {
+        return 'revert';
+    }
+    const m = /^(\w+)(?:\([^)]*\))?!?:/u.exec(subject);
+    return m ? m[1]!.toLowerCase() : '';
 }
 
 /**
@@ -112,7 +144,19 @@ const _NULL_FORMS: readonly RegExp[] = [
     /honest[ -]null/iu,
     /\bwaived,? (?:rather than|not) met\b/iu,
     /\bsoak was waived\b/iu,
-    /\b(?:publish(?:es|ed|ing)?|record(?:s|ed|ing)?|report(?:s|ed|ing)?) (?:the |a |its )?(?:honest )?null\b/iu,
+    // The trailing lookahead keeps a recorded *result* apart from a field that
+    // merely holds null. This pattern is applied to the body as well as the
+    // subject, and a body is where "records null token_delta" appears — a
+    // telemetry field, not a null result. Excluding an identifier-shaped token
+    // after `null` costs nothing real: "records the null result" and "closed as
+    // a published null" both still derive. The lookahead is deliberately
+    // SAME-LINE (`[ \t]`, never `\s`): the first version used `\s+` and dropped
+    // a true positive, because 92f9b9a ends its subject on "closed as a
+    // published null" and its body then opens with `count_open reached 0` — an
+    // identifier on the NEXT line, which `\s+` happily crossed. The residual
+    // limit, named rather than left to be discovered: a field name with no
+    // underscore ("records null delta") is still caught.
+    /\b(?:publish(?:es|ed|ing)?|record(?:s|ed|ing)?|report(?:s|ed|ing)?) (?:the |an |a |its )?(?:honest )?null\b(?![ \t]+`?[a-z][a-z0-9]*_[a-z0-9_]*)/iu,
     /\bnull(?: result)? (?:stands|is the answer)\b/iu,
     /\bon (?:its|the) own falsifier\b/iu,
 ];
@@ -149,7 +193,8 @@ const _DERIVED_REASON: Readonly<Record<string, string>> = {
  * is not the same as silent, and two labels had crossed that line: measured
  * over the six spans in
  * `agents/evidence/analysis/release-head-derivation-recall.md`, `Security and
- * correctness` fired **1 of 45** times and `Honest nulls` **3 of 9**, so the
+ * correctness` fired **1 of 45** hand-confirmed in-category commits and
+ * `Honest nulls` **3 of 9**, so the
  * curated `_none_` shipped uncontested where the span carried the evidence.
  * The widening is aimed at those two and measured before it landed; the naive
  * "any `fix(` counts" alternative was rejected on data (54 % precision against

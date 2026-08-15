@@ -124,9 +124,10 @@ describe('derive_categories — per-label rules', () => {
 
 /**
  * The correctness half of `Security and correctness`. Before this the label
- * derived on security alone, so it fired 1 time in 45 over the six spans
- * measured in `agents/evidence/analysis/release-head-derivation-recall.md` and
- * the curated `_none_` shipped uncontested.
+ * derived on security alone, so it fired 1 time against 45 hand-confirmed
+ * in-category commits over the six spans measured in
+ * `agents/evidence/analysis/release-head-derivation-recall.md`, and the curated
+ * `_none_` shipped uncontested.
  *
  * Every fixture below is a REAL commit from those spans, not a constructed
  * one — the false-positive case in particular, because a hand-written
@@ -180,6 +181,43 @@ describe('derive_categories — the correctness half', () => {
             commit({
                 subject: 'fix(ci): stop the job resolving the wrong base',
                 files: [{ status: 'M', path: '.github/workflows/tests.yml' }],
+            }),
+        ]);
+        expect(derived['Security and correctness']).toHaveLength(2);
+    });
+
+    it('counts the revert subject git itself writes, not only the conventional one', () => {
+        // `git revert` produces `Revert "<original subject>"`, which is not a
+        // conventional commit at all. Keying on the conventional form alone
+        // silently excluded the class most likely to be a correctness repair.
+        const derived = derive_categories([
+            commit({
+                subject: 'Revert "feat(dispatch): resolve the bundle lazily"',
+                files: [{ status: 'M', path: 'src/scripts/_lib/dispatch_guard.ts' }],
+            }),
+        ]);
+        expect(derived['Security and correctness']).toHaveLength(1);
+    });
+
+    it('needs the conventional separator — a subject that merely starts with "fix" is not a fix', () => {
+        const derived = derive_categories([
+            commit({
+                subject: 'fix the flaky runner',
+                files: [{ status: 'M', path: 'src/scripts/runner.ts' }],
+            }),
+        ]);
+        expect(derived['Security and correctness']).toEqual([]);
+    });
+
+    it('sees composite actions and extensionless shebang entry points', () => {
+        const derived = derive_categories([
+            commit({
+                subject: 'fix(ci): the composite action resolved the wrong node',
+                files: [{ status: 'M', path: '.github/actions/setup-task/action.yml' }],
+            }),
+            commit({
+                subject: 'fix(cli): the entry point swallowed a non-zero exit',
+                files: [{ status: 'M', path: 'scripts-run' }],
             }),
         ]);
         expect(derived['Security and correctness']).toHaveLength(2);
@@ -239,6 +277,38 @@ describe('derive_categories — recorded-null forms beyond the literal marker', 
             commit({ subject: 'docs: the token_delta is null by design' }),
         ]);
         expect(derived['Honest nulls']).toEqual([]);
+    });
+
+    it('separates a recorded null RESULT from a field that merely holds null — in the body', () => {
+        // The loose form is applied to subject AND body, and the body is where
+        // a field name shows up. Both halves pinned in one place so narrowing
+        // the pattern cannot silently cost the true positive.
+        const derived = derive_categories([
+            commit({
+                subject: 'feat(ledger): widen the dispatch record',
+                body: 'The emitter records null token_delta when the provider omits usage.',
+            }),
+            commit({
+                subject: 'docs(evidence): close the probe',
+                body: 'Publishes the null rather than leaving the question open.',
+            }),
+        ]);
+        expect(derived['Honest nulls']).toHaveLength(1);
+        expect(derived['Honest nulls']![0]).toContain('close the probe');
+    });
+
+    it('does not let the field-name exclusion reach across a line break', () => {
+        // 92f9b9a's real shape, and the bug the first narrowing shipped: the
+        // subject ends on "a published null" and the body opens with an
+        // identifier. A `\s`-based lookahead crossed the newline and dropped a
+        // true positive; the exclusion is same-line only.
+        const derived = derive_categories([
+            commit({
+                subject: 'chore(roadmaps): archive road-to-completion-loop, closed as a published null',
+                body: 'count_open reached 0 with count_deferred 0 — 5 steps done.',
+            }),
+        ]);
+        expect(derived['Honest nulls']).toHaveLength(1);
     });
 });
 
