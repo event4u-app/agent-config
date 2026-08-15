@@ -243,6 +243,27 @@ export function buildRecordInput(facts: DispatchFacts, ts: string, id: string): 
 
     if (!facts.isAsync) {
         if (facts.resolvedModel) {
+            // road-to-inbox-harvest-2026-08-d-top-band-model-economy Step 1.1.
+            //
+            // The raw id goes into the field the schema already reserves for it
+            // ("the model id the provider reported SERVING"). Without it, a
+            // dispatch that ran on a band the three-tier vocabulary cannot
+            // express is byte-identical in the record to one where the host
+            // reported no model at all: `extractModelFamily` returns null for
+            // both, so `tiers` is omitted for both.
+            //
+            // That collapse is precisely what blocks ADR-035's reopen
+            // condition. "Did a vendor ship a band the three tiers cannot
+            // express" is answerable only if an unmapped id is distinguishable
+            // from an absent one, and recording the served id separates them:
+            // unmapped ⇒ `model_served` set with `tiers` absent; unreported ⇒
+            // both absent.
+            //
+            // Vendor-neutral by construction: the id is stored verbatim as an
+            // opaque host string. No band above `high` is named and no mapping
+            // is invented — naming a fourth band is the decision this
+            // measurement exists to inform, never one it may pre-empt.
+            input.model_served = facts.resolvedModel;
             const family = extractModelFamily(facts.resolvedModel);
             if (family) input.tiers = [family];
         }

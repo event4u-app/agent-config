@@ -267,7 +267,67 @@ describe('extractModelFamily — F9: reduce a full model id to the tiers-contrac
         expect(extractModelFamily('some-unrecognised-model-id')).toBeNull();
     });
 
-    it('is case-insensitive', () => {
+    it('is case-insensitive (mapped families only)', () => {
         expect(extractModelFamily('CLAUDE-SONNET-4-5')).toBe('sonnet');
+    });
+});
+
+describe('model_served — an unmapped band must not look like a silent host', () => {
+    // road-to-inbox-harvest-2026-08-d-top-band-model-economy Step 1.1. Before
+    // this, `tiers` was the only place a model reached the record, and
+    // `extractModelFamily` returns null both for a band outside the three-tier
+    // vocabulary AND for a host that reported nothing — so the two collapsed
+    // into one indistinguishable record shape. ADR-035's reopen condition is
+    // unanswerable while that holds.
+    const ts = '2026-08-15T00:00:00.000Z';
+
+    function factsFor(resolvedModel: string | null) {
+        return extractDispatchFacts(
+            resolvedModel === null
+                ? { tool_name: 'Agent', tool_response: { totalTokens: 1 } }
+                : { tool_name: 'Agent', tool_response: { resolvedModel, totalTokens: 1 } },
+        );
+    }
+
+    it('records the served id verbatim for a mapped model', () => {
+        const input = buildRecordInput(factsFor('claude-sonnet-4-5'), ts, 'id');
+        expect(input.model_served).toBe('claude-sonnet-4-5');
+        expect(input.tiers).toEqual(['sonnet']);
+    });
+
+    it('separates an UNMAPPED band from an ABSENT one — the whole point', () => {
+        const unmapped = buildRecordInput(factsFor('some-frontier-model-v9'), ts, 'id');
+        const absent = buildRecordInput(factsFor(null), ts, 'id');
+
+        // Unmapped: the id survives, the tier vocabulary cannot name it.
+        expect(unmapped.model_served).toBe('some-frontier-model-v9');
+        expect(unmapped.tiers).toBeUndefined();
+
+        // Absent: nothing to record, and nothing is fabricated.
+        expect(absent.model_served).toBeUndefined();
+        expect(absent.tiers).toBeUndefined();
+
+        // The discriminator exists — this assertion is the regression guard.
+        expect(unmapped.model_served).not.toBe(absent.model_served);
+    });
+
+    it('names no band above the mapped three — the id stays opaque', () => {
+        // The measurement must not pre-empt the decision it informs: an
+        // unmapped id is stored as-is, never classified into an invented tier.
+        const input = buildRecordInput(factsFor('some-frontier-model-v9'), ts, 'id');
+        expect(input.tiers).toBeUndefined();
+        expect(input.tier_chosen ?? null).toBeNull();
+    });
+
+    it('stays absent on an async launch ack, like every other metric', () => {
+        const input = buildRecordInput(
+            extractDispatchFacts({
+                tool_name: 'Agent',
+                tool_response: { resolvedModel: 'claude-opus-4-1', status: 'async_launched' },
+            }),
+            ts,
+            'id',
+        );
+        expect(input.model_served).toBeUndefined();
     });
 });
