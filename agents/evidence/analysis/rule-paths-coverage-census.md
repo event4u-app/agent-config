@@ -121,11 +121,45 @@ Two worked cases, both live on this machine right now:
   nowhere near that document gets none of the four-slot shape or the
   one-question budget.
 
-**This reads as an unreviewed side effect rather than a decision.** Nothing in
-the tree records a choice to trade keyword reach for path precision, and the
-rules most affected are the ones whose own bodies argue hardest for the reach.
-It is stated here as a finding, not repaired: changing the emitter is a
-consumer-visible behaviour change and belongs to whoever owns that call.
+**This read as an unreviewed side effect rather than a decision.** Nothing in
+the tree recorded a choice to trade keyword reach for path precision, and the
+rules most affected were the ones whose own bodies argue hardest for the reach.
+
+## Repaired 2026-08-15 — and what it cost
+
+The maintainer took it as a defect. `_claude_paths_plan` now emits **no**
+`paths:` for a rule that also declares keyword or phrase triggers, so such a
+rule keeps loading unconditionally on Claude Code. Each suppressed pattern is
+**reported**, not dropped silently, so a rule whose obligation genuinely is
+path-bound stays visible as a candidate for removing its keyword triggers — an
+authoring decision rather than an emitter side effect.
+
+The repair is Claude-only by construction, and that asymmetry is the reason it
+is correct: Cursor and Windsurf treat globs as **additive** (an empty glob list
+still leaves the rule reachable through its description), while Claude Code
+treats `paths:` as **exclusive**. One emitter had been feeding both semantics
+from one list.
+
+Effect, measured:
+
+| | Before | After |
+|---|---:|---:|
+| Rules scoped in `.claude/rules/` | 25 | **6** |
+| …of those, mixed-trigger | 19 | **0** |
+
+The six that remain declare path-shaped triggers and nothing else —
+`no-roadmap-references`, `roadmap-progress-sync`, `rule-type-governance`,
+`skill-quality`, `source-confidentiality`, `source-of-truth`. Verified: none of
+them carries a keyword trigger.
+
+**The cost, stated plainly because it cuts against this roadmap's other half:**
+the 19 restored rules total **54,521 bytes ≈ 13,630 estimated tokens**, so
+Claude Code sessions now carry about **12 % more rule payload** than they did
+while the rules were silently narrowed. That is real, and it points the same
+way the payload schedule does: these 19 are exactly the rules that should
+either earn genuine `paths:` coverage or drop the keyword triggers they do not
+need. The repair did not create that work — it made it visible instead of
+paying for it with capability nobody chose to give up.
 
 ## Method note
 

@@ -1450,7 +1450,31 @@ export interface ClaudePathsPlan {
     /** Patterns to emit under `paths:`, in declaration order. */
     globs: string[];
     /** Patterns deliberately not emitted, with the reason a reader can act on. */
-    dropped: { pattern: string; reason: 'unresolved-placeholder' | 'over-budget' }[];
+    dropped: { pattern: string; reason: 'unresolved-placeholder' | 'over-budget' | 'mixed-triggers' }[];
+}
+
+/**
+ * Does this rule declare any trigger that is NOT path-shaped?
+ *
+ * Load-bearing for `_claude_paths_plan` below, because one `triggers:` list
+ * means two different things on two hosts. Cursor and Windsurf treat globs as
+ * ADDITIVE — a rule with empty globs still reaches the agent through its
+ * description (see `_emit_cursor_mdc`'s own comment). Claude Code treats
+ * `paths:` as EXCLUSIVE: with it the rule loads on a path match; without it the
+ * rule loads unconditionally. The emitter fed both semantics from one list, so
+ * a rule that declared keywords *and* one path glob silently became
+ * path-gated-only on Claude.
+ */
+export function _has_non_path_trigger(meta: Record<string, unknown>): boolean {
+    const triggers = meta['triggers'];
+    if (!Array.isArray(triggers)) return false;
+    for (const t of triggers) {
+        if (t === null || typeof t !== 'object' || Array.isArray(t)) continue;
+        const obj = t as Record<string, unknown>;
+        if (typeof obj['keyword'] === 'string' && obj['keyword']) return true;
+        if (typeof obj['phrase'] === 'string' && obj['phrase']) return true;
+    }
+    return false;
 }
 
 /**
@@ -1470,6 +1494,31 @@ export function _claude_paths_plan(meta: Record<string, unknown>): ClaudePathsPl
     }
     const globs: string[] = [];
     const dropped: ClaudePathsPlan['dropped'] = [];
+
+    // A rule that ALSO declares keyword / phrase triggers gets no `paths:` at
+    // all, and therefore keeps loading unconditionally on Claude Code.
+    //
+    // Emitting `paths:` here would narrow the rule to a path match and discard
+    // every keyword the author wrote, because this host reads the list as the
+    // whole gate rather than as one way in. Measured before this guard: 25 of
+    // 110 projected rules carried `paths:` and 19 of them also carried keyword
+    // triggers — `design-fidelity` lost 21 of them, in exactly the pasted-
+    // screenshot and capability-URL handovers its own routing section names as
+    // the classes it exists to catch. Nothing in the tree recorded a decision
+    // to make that trade, which is why it is treated as a defect.
+    //
+    // The drop is REPORTED rather than silent, so a rule whose obligation
+    // really is path-bound is visible as a candidate for removing its keyword
+    // triggers — the narrowing then becomes an authoring decision instead of an
+    // emitter side effect. Cursor and Windsurf are untouched: globs are
+    // additive there, so the same rule keeps both routes.
+    if (_has_non_path_trigger(meta)) {
+        for (const raw of derive_trigger_globs(meta)) {
+            dropped.push({ pattern: raw, reason: 'mixed-triggers' });
+        }
+        return { globs, dropped };
+    }
+
     let spent = 0;
     for (const raw of derive_trigger_globs(meta)) {
         if (_is_unresolved_placeholder(raw)) {

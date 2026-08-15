@@ -60,6 +60,25 @@ triggers:
   - file_pattern: "*.php"
   - keyword: "phpstan"`;
 
+// Path-shaped triggers and NOTHING else. This is the only shape Claude Code
+// may narrow on, because narrowing there is exclusive rather than additive —
+// see `_has_non_path_trigger` in condense.ts. Every other fixture above is
+// MIXED and must therefore stay unconditional on that host.
+const PATH_ONLY_FM = `type: "auto"
+tier: "1"
+alwaysApply: false
+description: "Path-only rule"
+triggers:
+  - file_pattern: "*.tf"
+  - path_prefix: "infra/"`;
+
+const PATH_ONLY_PLACEHOLDER_FM = `type: "auto"
+alwaysApply: false
+description: "Path-only with a placeholder"
+triggers:
+  - path_prefix: "agents/roadmaps/"
+  - path_prefix: "{module_root}/"`;
+
 const ALWAYS_FM = `type: "always"
 alwaysApply: true
 description: "Kernel rule"`;
@@ -242,21 +261,50 @@ describe("_emit_claude_rule — frontmatter carries `paths:` and nothing else", 
   }
 
   it("path_prefix triggers become a paths list, one entry per glob", () => {
-    const src = writeRule("ui-audit-gate-c", UI_AUDIT_FM);
-    const target = path.join(tmp, "out", "ui-audit-gate-c.md");
+    const src = writeRule("path-only-c", PATH_ONLY_FM);
+    const target = path.join(tmp, "out", "path-only-c.md");
     _emit_claude_rule(src, target);
     const out = fs.readFileSync(target, "utf-8");
-    expect(out).toBe(
-      '---\npaths:\n  - "resources/views/**"\n  - "resources/js/**"\n---\n\nBody.\n',
-    );
+    expect(out).toBe('---\npaths:\n  - "*.tf"\n  - "infra/**"\n---\n\nBody.\n');
     expect(emittedKeys(out)).toEqual(["paths"]);
   });
 
-  it("file_pattern maps verbatim", () => {
-    const src = writeRule("php-rule-c", FILE_PATTERN_FM);
-    const target = path.join(tmp, "out", "php-rule-c.md");
-    _emit_claude_rule(src, target);
-    expect(fs.readFileSync(target, "utf-8")).toBe('---\npaths:\n  - "*.php"\n---\n\nBody.\n');
+  it("a MIXED rule gets no paths at all — narrowing here would discard its keywords", () => {
+    // Claude Code reads `paths:` as the whole gate, so emitting it for a rule
+    // that also declares keywords silently drops every keyword the author
+    // wrote. Measured before this guard: 19 of 25 scoped rules were mixed, and
+    // `design-fidelity` lost 21 keyword triggers in exactly the handovers its
+    // own routing section names as its reason for existing.
+    for (const [name, fm] of [
+      ["ui-audit-gate-c", UI_AUDIT_FM],
+      ["php-rule-c", FILE_PATTERN_FM],
+    ] as Array<[string, string]>) {
+      const src = writeRule(name, fm);
+      const target = path.join(tmp, "out", `${name}.md`);
+      _emit_claude_rule(src, target);
+      expect(fs.readFileSync(target, "utf-8"), name).toBe("Body.\n");
+    }
+  });
+
+  it("reports each suppressed pattern rather than dropping it silently", () => {
+    // A rule whose obligation really is path-bound should be visible as a
+    // candidate for removing its keyword triggers — an authoring decision,
+    // not an emitter side effect.
+    const plan = _claude_paths_plan({
+      triggers: [{ file_pattern: "*.php" }, { keyword: "phpstan" }],
+    });
+    expect(plan.globs).toEqual([]);
+    expect(plan.dropped).toEqual([{ pattern: "*.php", reason: "mixed-triggers" }]);
+  });
+
+  it("Cursor is UNTOUCHED by that suppression — globs are additive there", () => {
+    // The whole reason the suppression is Claude-only: on Cursor an empty
+    // glob list still leaves the rule reachable via its description, so a
+    // mixed rule keeps both routes.
+    const src = writeRule("php-rule-cursor", FILE_PATTERN_FM);
+    const target = path.join(tmp, "out", "php-rule-cursor.mdc");
+    _emit_cursor_mdc(src, target);
+    expect(fs.readFileSync(target, "utf-8")).toContain("globs: *.php");
   });
 
   it("keyword-only rules get NO frontmatter — absent paths is how the host says load-always", () => {
@@ -276,7 +324,7 @@ describe("_emit_claude_rule — frontmatter carries `paths:` and nothing else", 
   });
 
   it("a placeholder is dropped while the rule keeps its real pattern", () => {
-    const src = writeRule("roadmap-ci-c", PLACEHOLDER_FM);
+    const src = writeRule("roadmap-ci-c", PATH_ONLY_PLACEHOLDER_FM);
     const target = path.join(tmp, "out", "roadmap-ci-c.md");
     _emit_claude_rule(src, target);
     const out = fs.readFileSync(target, "utf-8");
