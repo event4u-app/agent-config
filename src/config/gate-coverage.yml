@@ -778,7 +778,7 @@ gates:
     status: enforced
     note: >
       The floor is 1, not "a floor comfortably below the corpus", and the reason
-      is worth stating rather than hiding: the corpus is two rows, so no floor
+      is worth stating rather than hiding: the corpus is three rows, so no floor
       exists that is both below it and far above a collapse. What the floor
       actually buys here is the contract that the count is PUBLISHED; the
       collapse case — a drifted heading or a reformatted table parsing to zero

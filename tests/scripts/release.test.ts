@@ -881,7 +881,7 @@ describe('watch_pr_checks — failing-check summary (the scrolled-away-failure f
 });
 
 describe('assert_scheduled_deprecations_clear', () => {
-    /** A stub gate that records whether it was called at all. */
+    /** A stub gate that records the argv it was handed. */
     function stub(returncode: number, calls: string[][]) {
         return (args: readonly string[]) => {
             calls.push([...args]);
@@ -889,25 +889,47 @@ describe('assert_scheduled_deprecations_clear', () => {
         };
     }
 
-    it('does not even run the gate on a minor or patch cut', () => {
+    it('does not consult the gate on a minor or patch target', () => {
         const calls: string[][] = [];
-        assert_scheduled_deprecations_clear('12.0.0', '12.1.0', stub(1, calls));
-        assert_scheduled_deprecations_clear('12.0.0', '12.0.1', stub(1, calls));
-        // A red gate that is never consulted proves the guard is bounded to
-        // major cuts: it is the asymmetry the whole check is built around.
+        assert_scheduled_deprecations_clear('12.1.0', stub(1, calls));
+        assert_scheduled_deprecations_clear('12.0.1', stub(1, calls));
+        // A red gate that is never consulted is what proves the guard is bounded
+        // to major cuts — the asymmetry the whole check is built around.
         expect(calls).toEqual([]);
     });
 
-    it('a major cut with a clear table proceeds, and consults the gate exactly once', () => {
+    it('a clear table lets the cut proceed, consulting the gate exactly once', () => {
         const calls: string[][] = [];
-        expect(() => assert_scheduled_deprecations_clear('12.0.0', '13.0.0', stub(0, calls))).not.toThrow();
+        expect(() => assert_scheduled_deprecations_clear('13.0.0', stub(0, calls))).not.toThrow();
         expect(calls).toHaveLength(1);
-        expect(calls[0]).toContain('--release-major');
     });
 
-    it('a major cut with an overdue row refuses the release', () => {
+    it('passes the TARGET to the gate, not the shipped version', () => {
+        // The defect this pins: without --cutting the gate falls back to
+        // package.json, which at the cut to N still reads N-1, so a row due at
+        // N reads as one major early and the cut that creates the miss passes.
         const calls: string[][] = [];
-        expect(() => assert_scheduled_deprecations_clear('12.0.0', '13.0.0', stub(1, calls))).toThrow(
+        assert_scheduled_deprecations_clear('13.0.0', stub(0, calls));
+        expect(calls[0]).toContain('--cutting');
+        expect(calls[0]?.[calls[0].indexOf('--cutting') + 1]).toBe('13.0.0');
+    });
+
+    it('a due or overdue row refuses the cut', () => {
+        const calls: string[][] = [];
+        expect(() => assert_scheduled_deprecations_clear('13.0.0', stub(1, calls))).toThrow(
+            SystemExitError,
+        );
+        expect(calls).toHaveLength(1);
+    });
+
+    it('a resumed major is still checked — target === current is not an exemption', () => {
+        // On --resume, _detect_in_flight_target() returns the already-bumped
+        // package.json version, so target and current are equal. A guard keyed
+        // on target > current returns silently here; keying on the X.0.0 shape
+        // does not. Stranding a resumed release is the deliberate trade against
+        // shipping a major over a missed commitment.
+        const calls: string[][] = [];
+        expect(() => assert_scheduled_deprecations_clear('13.0.0', stub(1, calls))).toThrow(
             SystemExitError,
         );
         expect(calls).toHaveLength(1);
@@ -915,7 +937,7 @@ describe('assert_scheduled_deprecations_clear', () => {
 
     it('a multi-major jump is still a major cut', () => {
         const calls: string[][] = [];
-        expect(() => assert_scheduled_deprecations_clear('12.0.0', '14.0.0', stub(1, calls))).toThrow(
+        expect(() => assert_scheduled_deprecations_clear('14.0.0', stub(1, calls))).toThrow(
             SystemExitError,
         );
         expect(calls).toHaveLength(1);

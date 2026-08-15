@@ -897,10 +897,20 @@ tasks:
 
       Deliberately asymmetric: an ordinary branch gets the report and exits 0,
       because an overdue row can be a considered deferral and a hard refusal
-      everywhere would turn a judgement into an outage. `--release-major`
-      (the major cut) turns the same finding into a refusal. A row the grammar
-      cannot resolve reds in BOTH modes — an invented due version would move a
+      everywhere would turn a judgement into an outage. `--cutting <X.Y.Z>`
+      turns the same finding into a refusal, measured against the TARGET major
+      rather than the shipped one — at the cut to N, package.json still reads
+      N-1, so comparing against it would let the cut that CREATES a miss pass
+      and only ever refuse rows already a major late. A row the grammar cannot
+      resolve reds in BOTH modes: an invented due version would move a
       commitment silently, which is worse than a parse failure.
+
+      Known and accepted: while a row is overdue the ⚠️ block prints on every
+      run and no contributor can clear it — only the maintainer answering the
+      row's blocker can. That is a standing notice, which is the mechanism that
+      let the runbook checkbox fail in the first place, so it is bounded rather
+      than assumed harmless: the row is refused at the next major cut, which is
+      a hard stop no amount of habituation survives.
     cmd: ./scripts-run src/scripts/lint_scheduled_deprecations {{.QUIET_FLAG}}
 
   check-gate-completeness:

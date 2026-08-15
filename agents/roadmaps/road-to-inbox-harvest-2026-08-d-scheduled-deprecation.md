@@ -84,6 +84,20 @@ actual defect-fix — is not held hostage to a release window.
 
 ## Execution notes (2026-08-15)
 
+**The R2 completion review returned 11 findings (2 high, 3 medium, 6 low) and
+one of them was a construction defect this implementation had shipped.** It is
+recorded here because the fix changed the gate's central comparison, not a
+detail: the overdue test measured the due major against the **shipped**
+version, so at the cut to N — where `package.json` still reads N-1 — a row
+committed to N resolved as one major *early* and passed. The refusal could
+therefore only ever fire on a row that was already a major late, which is
+exactly the `code_graph` lateness this roadmap exists to prevent; the gate
+would have reproduced its own subject. Neither the fixture nor the self-test
+covered `due == target`, which is why it survived to review. The comparand is
+now the TARGET, passed in via `--cutting <X.Y.Z>`, and the case is pinned at
+both layers — a mutation back to the shipped-major semantics fails one unit
+test and one self-test case.
+
 Three departures from the text as written, recorded rather than taken quietly.
 
 - **2.2 took a third shape the step did not offer, and the reason is a record
@@ -113,7 +127,27 @@ Three departures from the text as written, recorded rather than taken quietly.
   from a `feat!:` commit alike — rather than from `task release:major`, which
   is only one of those three paths. **Consequence worth stating plainly: the
   next major cut is now blocked until the blocker below is answered**, which is
-  the gate working as specified, not a side effect.
+  the gate working as specified, not a side effect. The trigger is the target's
+  `X.0.0` shape rather than target-vs-current, which also covers `--resume` —
+  a fourth path where the two are equal and any comparison silently passes.
+
+Three things this roadmap knowingly leaves open, none of them fixed here:
+
+- **A standing ⚠️ nobody but the maintainer can clear.** While `code_graph` is
+  overdue the gate prints its warning on every branch and every CI run. A
+  notice that cannot be cleared is the same habituation mechanism that made the
+  runbook checkbox fail, so it is bounded rather than waved through: the row is
+  a hard refusal at the next major cut, which habituation does not survive.
+- **The dashboard's "pending archival" criterion ignores blockers; the sweep
+  does not.** So `agents/roadmaps-progress.md` prints an
+  `archive_completed_roadmaps --all` instruction for this roadmap that cannot
+  succeed while its blocker is open. That is a generator-side inconsistency
+  older than this branch and is not repaired here.
+- **The regenerated dashboard corrects a stale base, and the delta is not this
+  roadmap's.** `-c-release-head-truth` moves 10 open / 0 done → 1 open / 9
+  done. Verified rather than assumed: on `origin/main` the dashboard says 10
+  open / 0 done while that roadmap's own file at the same commit has 0 open and
+  7 done — the base was stale, and the mandated regeneration corrects it.
 
 ## Acceptance criteria
 

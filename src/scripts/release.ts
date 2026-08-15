@@ -1624,22 +1624,34 @@ function set_template_pin(p: string, version: string): void {
 }
 
 /**
- * Refuse a MAJOR cut that still carries an overdue scheduled deprecation.
+ * Refuse a MAJOR cut that carries a scheduled deprecation due at or before it.
  *
- * Placed at the resolved TARGET rather than at a `--as major` flag on purpose:
- * a major can be reached three ways — the flag, an explicit `--version`, and
- * auto-detection from a `feat!:` commit — and gating only the flag would leave
- * the two paths the unattended release workflow actually uses wide open. The
- * target is where all three converge.
+ * **The trigger is the shape of the TARGET, not a comparison with the current
+ * version.** A major target is `X.0.0` — and that one predicate covers every
+ * path to a major: the `--as major` flag, an explicit `--version 13.0.0`,
+ * auto-detection from a `feat!:` commit, AND `--resume`, where
+ * `_detect_in_flight_target()` returns the already-bumped `package.json`
+ * version so `target === current` and any current-vs-target comparison
+ * silently returns. Resume was the fourth path an earlier version of this
+ * guard missed while its own comment claimed three paths converged.
  *
- * The check is a no-op on minor and patch cuts, which is the asymmetry
- * `lint_scheduled_deprecations` is built around: an ordinary branch gets the
- * report, a release gets the refusal. Skipped under `--dry-run` with the rest
- * of preflight, so a preview stays fast and side-effect-free.
+ * Refusing a resumed release can strand a partially-completed one, and that is
+ * the deliberate trade: a stranded release is recoverable by fixing the table
+ * and resuming again, whereas a major shipped over a missed commitment is the
+ * failure this whole surface exists to prevent.
  *
- * Wired here rather than left to the runbook's manual pre-flight checkbox
- * because that checkbox already failed once: the `code_graph` removal reached
- * one major past its commitment with the checkbox in place the whole time.
+ * The target version is PASSED to the gate. Without it the gate falls back to
+ * `package.json`, which at the cut to N still reads N-1 — so a row committed
+ * to N reads as one major early and passes, and only rows already a major late
+ * could ever be refused. That is the lateness being prevented, so measuring
+ * against the shipped version would have made the refusal fire exactly one
+ * major too late, forever.
+ *
+ * Runs under `--dry-run` too, unlike the rest of preflight: this check is one
+ * subprocess reading two files, so the "keep a preview fast" rationale that
+ * excludes the ~15s test-trend collection does not apply — and a preview that
+ * reports green for the single condition that will refuse the real run is the
+ * case an operator runs a preview to discover.
  *
  * @param runner Seam for the gate invocation. Production passes nothing and
  * gets the real `run`; tests inject a stub, because the alternative — reaching
@@ -1647,26 +1659,29 @@ function set_template_pin(p: string, version: string): void {
  * path testable exclusively through a tracked-file edit.
  */
 export function assert_scheduled_deprecations_clear(
-    current: string,
     target: string,
     runner: (args: readonly string[]) => RunResult = (args) => run(args, { check: false, capture: true }),
 ): void {
-    const [targetMajor] = parse_version(target);
-    const [currentMajor] = parse_version(current);
-    if (targetMajor <= currentMajor) {
+    const [, minor, patch] = parse_version(target);
+    if (minor !== 0 || patch !== 0) {
         return;
     }
-    const res = runner(['./scripts-run', 'src/scripts/lint_scheduled_deprecations', '--release-major']);
+    const res = runner([
+        './scripts-run',
+        'src/scripts/lint_scheduled_deprecations',
+        '--cutting',
+        target,
+    ]);
     if (res.returncode === 0) {
         return;
     }
     process.stderr.write(res.stdout);
     process.stderr.write(res.stderr);
     die(
-        `refusing a major cut (${current} → ${target}): the scheduled-deprecations table ` +
-            'in docs/MIGRATION.md has an overdue or unresolvable row. Act on it — perform ' +
-            "the removal in its own change, or revise the row's commitment and record why " +
-            'the surface stays — then re-run.',
+        `refusing the ${target} cut: the scheduled-deprecations table in docs/MIGRATION.md ` +
+            'has a row due at or before this major, or one that cannot be resolved. Act on ' +
+            "it — perform the removal in its own change, or revise the row's commitment and " +
+            'record why the surface stays — then re-run.',
     );
 }
 
@@ -2625,8 +2640,12 @@ function main(argv: readonly string[] | null = null): number {
     }
     parse_version(target);
 
+    // Outside the dry-run guard on purpose — see the function's own note: it is
+    // one subprocess over two files, and a preview that hides the one condition
+    // that will refuse the real run is worse than useless.
+    assert_scheduled_deprecations_clear(target);
+
     if (!args.dry_run) {
-        assert_scheduled_deprecations_clear(current, target);
         preflight(target, { resume: args.resume, ci: args.ci });
     }
 

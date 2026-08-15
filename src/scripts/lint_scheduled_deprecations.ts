@@ -20,17 +20,32 @@
  * exactly the shape "a gate that scans nothing exits green" describes.
  *
  * EXIT CONTRACT
- *   0  no overdue surface, or overdue surfaces reported on an ordinary branch
+ *   0  nothing due, or due surfaces reported on an ordinary branch
  *   1  a row could not be parsed / resolved, the table is missing or empty, or
- *      an overdue surface was found while `--release-major` was passed
+ *      a due surface was found while `--cutting <version>` was passed
  *   2  usage error
  *
- * `--release-major` is the major-cut switch: an ordinary branch gets the
+ * `--cutting <X.Y.Z>` is the major-cut switch: an ordinary branch gets the
  * report, a release gets the refusal. That asymmetry is deliberate — an overdue
  * row can be a considered deferral, and a hard refusal on every branch would
  * turn a judgement into an outage. A deliberate deferral is expressible in the
  * table itself (a `permanent keep` row), which is what keeps the refusal honest
  * at the cut.
+ *
+ * **THE COMPARAND IS THE TARGET, NOT THE SHIPPED VERSION, AND THE DIFFERENCE IS
+ * THE WHOLE POINT.** An earlier version of this gate compared against
+ * `package.json` in both modes. At the cut to N, `package.json` still reads
+ * N-1, so a row committed to N resolved to "one major early" and passed — the
+ * refusal could only ever fire on a row that was ALREADY a major late, which is
+ * precisely the lateness this gate exists to prevent. `--cutting` takes the
+ * target so the cut that would CREATE the miss is the one that gets refused.
+ *
+ * SCOPE BOUND, stated because the runbook checkbox above it is wider: only the
+ * **Removal due** column is compared. The Deprecation-notice-due cell is parsed
+ * solely as the anchor for a relative removal cell and is never checked against
+ * anything, because a shipped notice is written as a date rather than a version
+ * and has no comparand. The "ship the notice" half of the pre-flight obligation
+ * therefore remains a human read.
  */
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -107,7 +122,6 @@ export function resolveDueMajor(cell: string, noticeMajor?: number): Resolution 
     if (UNPINNED_MARKER.test(text)) return { kind: 'unpinned' };
     if (PERMANENT_KEEP_MARKER.test(text)) return { kind: 'keep' };
 
-    const explicit = /(?:^|[^\d.])(\d+)(?:\.\d+){0,2}\b/.exec(text);
     const relativeAfterVersion = /next major after\s+(?:v)?(\d+)(?:\.(?:x|\d+))?/i.exec(text);
     const relativeToNotice = /(?:the major after that|next major after the notice)/i.test(text);
 
@@ -118,10 +132,35 @@ export function resolveDueMajor(cell: string, noticeMajor?: number): Resolution 
         if (noticeMajor === undefined) return { kind: 'unresolved', cell };
         return { kind: 'major', major: noticeMajor + 1 };
     }
+    // ANCHORED, not "a digit run somewhere in the cell". The loose form matched
+    // any number and so resolved `shipped 2026-07-29 — dormant by default` to
+    // major 2026 — a confidently wrong commitment, which is the one outcome the
+    // contract at the top of this file rules out. The whole cell (bare of
+    // markdown emphasis) must BE a version, or the cell is unresolved.
+    const explicit = /^\**\s*v?(\d+)(?:\.(?:\d+|x)){0,2}\s*\**$/.exec(text);
     if (explicit) {
         return { kind: 'major', major: Number(explicit[1]) };
     }
     return { kind: 'unresolved', cell };
+}
+
+/**
+ * The table's header no longer carries a `Removal due` column.
+ *
+ * Its own error, rather than N per-row "cell not resolvable" findings: a
+ * renamed column has exactly one cause and one fix, and reporting it per row
+ * buries that under noise proportional to the table's length.
+ */
+export class HeaderMismatchError extends Error {
+    constructor(readonly header: readonly string[]) {
+        super(
+            'lint_scheduled_deprecations: the scheduled-deprecations table has no ' +
+                `"Removal due" column — header reads [${header.join(' | ')}]. Either the ` +
+                'column was renamed (update this gate in the same change) or the heading ' +
+                'now sits above a different table.',
+        );
+        this.name = 'HeaderMismatchError';
+    }
 }
 
 /** Split one markdown table line into trimmed cells, dropping the outer pipes. */
@@ -146,6 +185,12 @@ export function parseRows(markdown: string): DeprecationRow[] {
     const lines = markdown.split('\n');
     let inSection = false;
     let header: string[] | undefined;
+    // Resolved ONCE when the header row is read, not per data row. Recomputing
+    // them inside the loop made a renamed column red every row independently
+    // with an empty cell quoted, burying the one true cause — a header that no
+    // longer matches — under N identical findings.
+    let idxNotice = -1;
+    let idxRemoval = -1;
     const rows: DeprecationRow[] = [];
 
     for (const line of lines) {
@@ -161,11 +206,14 @@ export function parseRows(markdown: string): DeprecationRow[] {
         const cells = splitRow(line);
         if (header === undefined) {
             header = cells.map((c) => c.toLowerCase());
+            idxNotice = header.findIndex((h) => h.includes('notice due'));
+            idxRemoval = header.findIndex((h) => h.includes('removal due'));
+            if (idxRemoval < 0) {
+                throw new HeaderMismatchError(header);
+            }
             continue;
         }
 
-        const idxNotice = header.findIndex((h) => h.includes('notice due'));
-        const idxRemoval = header.findIndex((h) => h.includes('removal due'));
         const surface = cells[0] ?? '';
         const backticked = [...surface.matchAll(/`([^`]+)`/g)].map((m) => m[1] ?? '');
 
@@ -183,18 +231,32 @@ export function parseRows(markdown: string): DeprecationRow[] {
 
 export interface Finding {
     row: DeprecationRow;
-    /** `overdue` = removal was due at an earlier major than the shipped one. */
+    /**
+     * `overdue` — the removal is due at or before the comparand major.
+     * `unresolved` — the removal-due cell could not be resolved to a version.
+     */
     kind: 'overdue' | 'unresolved';
-    /** How many majors late; 0 for `unresolved`. */
+    /**
+     * `comparand − dueMajor`. Positive = late by that many majors; **zero =
+     * due exactly at the major being cut**, which is a refusal at a cut and
+     * silent on an ordinary branch, since a row due at the shipped major is
+     * being acted on right now rather than missed.
+     */
     overdueBy: number;
     /** Path tokens from the row that still exist on disk. */
     livePaths: string[];
 }
 
-/** Compare every row against the shipped major and return what is wrong. */
+/**
+ * Compare every row's removal-due major against `comparand`.
+ *
+ * `comparand` is the SHIPPED major on an ordinary branch and the TARGET major
+ * at a cut — the distinction the gate's header paragraph explains, and the
+ * reason this parameter is not simply read from `package.json` in here.
+ */
 export function evaluate(
     rows: readonly DeprecationRow[],
-    currentMajor: number,
+    comparand: number,
     root: string,
     ledger?: GateLedger,
 ): Finding[] {
@@ -218,11 +280,14 @@ export function evaluate(
             continue;
         }
 
-        const overdueBy = currentMajor - removal.major;
-        if (overdueBy > 0) {
+        const overdueBy = comparand - removal.major;
+        if (overdueBy >= 0) {
             const livePaths = row.paths.filter((p) => fs.existsSync(path.join(root, p)));
             findings.push({ row, kind: 'overdue', overdueBy, livePaths });
-            ledger?.fail(key, `removal due at ${String(removal.major)}.0, shipped major is ${String(currentMajor)}`);
+            ledger?.fail(
+                key,
+                `removal due at ${String(removal.major)}.0, comparand major is ${String(comparand)}`,
+            );
             continue;
         }
         ledger?.complete(key);
@@ -275,8 +340,8 @@ export function shippedMajor(root: string): number {
 }
 
 /** Floors for `--self-test`, declared here so a truncation is a visible diff. */
-const SELF_TEST_MIN_CASES = 4;
-const SELF_TEST_MIN_REJECT = 3;
+const SELF_TEST_MIN_CASES = 7;
+const SELF_TEST_MIN_REJECT = 5;
 
 /**
  * Prove, on demand, that this gate's rejections still fire against its own CLI.
@@ -321,8 +386,50 @@ function selfTest(): number {
                     'overdue',
                     12,
                     '| `legacy` | 2026-01-01 | 10.0 | 11.0 | none |',
-                    ['--release-major'],
+                    ['--cutting', '13.0.0'],
                 ),
+        },
+        {
+            // THE CASE THE FIRST VERSION OF THIS GATE MISSED. A row committed
+            // to the major being cut is due NOW; measured against the shipped
+            // version it reads as one major early and passes, so the cut that
+            // creates the miss goes through. This case is what pins the
+            // comparand to the target.
+            name: 'a row due AT the major being cut is refused, not waved through',
+            expect: 'reject',
+            run: () =>
+                fixture(
+                    'due-at-cut',
+                    12,
+                    '| `due_now` | 2026-01-01 | 12.0 | 13.0 | none |',
+                    ['--cutting', '13.0.0'],
+                ),
+        },
+        {
+            name: 'the same row is silent on an ordinary branch — it is not late yet',
+            expect: 'accept',
+            run: () => fixture('due-at-cut-branch', 12, '| `due_now` | 2026-01-01 | 12.0 | 13.0 | none |'),
+        },
+        {
+            name: 'a header with no Removal due column reds once, naming the header',
+            expect: 'reject',
+            run: () => {
+                const dir = path.join(root, 'renamed-header');
+                fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
+                fs.writeFileSync(
+                    path.join(dir, 'package.json'),
+                    JSON.stringify({ name: 'fixture', version: '12.0.0' }),
+                    'utf8',
+                );
+                fs.writeFileSync(
+                    path.join(dir, 'docs', 'MIGRATION.md'),
+                    `${header.replace('| Removal due ', '| Retirement date ')}\n` +
+                        '| `a` | 2026-01-01 | 10.0 | 11.0 | none |\n' +
+                        '| `b` | 2026-01-01 | 10.0 | 11.0 | none |\n',
+                    'utf8',
+                );
+                return runGateCli(repo, script, [], dir);
+            },
         },
         {
             name: 'unresolvable removal-due cell reds on an ordinary branch',
@@ -356,7 +463,7 @@ function selfTest(): number {
                     'future',
                     12,
                     '| `later` | 2026-01-01 | 13.0 | 14.0 | none |',
-                    ['--release-major'],
+                    ['--cutting', '13.0.0'],
                 ),
         },
     ];
@@ -376,8 +483,18 @@ function selfTest(): number {
 export function main(argv: readonly string[]): number {
     if (argv.includes('--self-test')) return selfTest();
     const quiet = argv.includes('--quiet');
-    const releaseMajor = argv.includes('--release-major');
     const root = repoRoot();
+
+    // `--cutting <X.Y.Z>` — the version being released. Present = refusal mode.
+    const cutIdx = argv.indexOf('--cutting');
+    let cutting: string | undefined;
+    if (cutIdx >= 0) {
+        cutting = argv[cutIdx + 1];
+        if (cutting === undefined || cutting.startsWith('--')) {
+            process.stderr.write('usage: lint_scheduled_deprecations [--cutting <X.Y.Z>] [--quiet]\n');
+            return 2;
+        }
+    }
 
     const migration = path.join(root, MIGRATION_PATH);
     if (!fs.existsSync(migration)) {
@@ -385,10 +502,32 @@ export function main(argv: readonly string[]): number {
         return 1;
     }
 
-    const rows = parseRows(fs.readFileSync(migration, 'utf-8'));
-    const currentMajor = shippedMajor(root);
+    let rows: DeprecationRow[];
+    try {
+        rows = parseRows(fs.readFileSync(migration, 'utf-8'));
+    } catch (exc) {
+        if (exc instanceof HeaderMismatchError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+
+    const shipped = shippedMajor(root);
+    let comparand = shipped;
+    if (cutting !== undefined) {
+        const m = /^v?(\d+)\./.exec(cutting.trim());
+        if (!m) {
+            process.stderr.write(
+                `usage: --cutting expects a bare version (X.Y.Z), got "${cutting}"\n`,
+            );
+            return 2;
+        }
+        comparand = Number(m[1]);
+    }
+
     const ledger = new GateLedger('lint_scheduled_deprecations');
-    const findings = evaluate(rows, currentMajor, root, ledger);
+    const findings = evaluate(rows, comparand, root, ledger);
     const tally = ledger.finalize();
 
     // Anti-vacuity. Zero rows means the heading moved or the table's format
@@ -423,10 +562,18 @@ export function main(argv: readonly string[]): number {
         );
     }
 
+    const against =
+        cutting === undefined
+            ? `shipped ${String(shipped)}.x`
+            : `the ${String(comparand)}.0 cut (shipped is ${String(shipped)}.x)`;
+
     for (const f of overdue) {
+        const late =
+            f.overdueBy === 0
+                ? 'comes due AT'
+                : `is ${String(f.overdueBy)} major(s) overdue against`;
         process.stdout.write(
-            `⚠️  lint_scheduled_deprecations: ${f.row.name} — removal is ` +
-                `${String(f.overdueBy)} major(s) overdue against shipped ${String(currentMajor)}.x\n` +
+            `⚠️  lint_scheduled_deprecations: ${f.row.name} — removal ${late} ${against}\n` +
                 `      removal due: ${f.row.removalDueRaw}\n`,
         );
         if (f.livePaths.length > 0) {
@@ -444,9 +591,10 @@ export function main(argv: readonly string[]): number {
     if (unresolved.length > 0) return 1;
 
     if (overdue.length > 0) {
-        if (releaseMajor) {
+        if (cutting !== undefined) {
             process.stderr.write(
-                `\n❌  lint_scheduled_deprecations: ${String(overdue.length)} overdue surface(s) at a major cut.\n` +
+                `\n❌  lint_scheduled_deprecations: ${String(overdue.length)} surface(s) due at or before ` +
+                    `the ${String(comparand)}.0 cut.\n` +
                     '    Act on each row: perform the removal in its own change, or revise the\n' +
                     "    row's commitment and record why the surface stays. A deliberate\n" +
                     '    deferral belongs in the table, not in a release decision nobody can read.\n',
@@ -455,8 +603,8 @@ export function main(argv: readonly string[]): number {
         }
         if (!quiet) {
             process.stdout.write(
-                `\n   Reported, not refused — this is an ordinary branch. \`--release-major\`\n` +
-                    '   turns the same finding into a refusal at the cut.\n',
+                '\n   Reported, not refused — this is an ordinary branch. `--cutting <X.Y.Z>`\n' +
+                    '   turns the same finding into a refusal, measured against the TARGET major.\n',
             );
         }
         return 0;
@@ -465,8 +613,7 @@ export function main(argv: readonly string[]): number {
     if (!quiet) {
         ledger.report();
         process.stdout.write(
-            `✅  lint_scheduled_deprecations: ${String(tally.planned)} row(s), none overdue ` +
-                `against shipped ${String(currentMajor)}.x\n`,
+            `✅  lint_scheduled_deprecations: ${String(tally.planned)} row(s), none due against ${against}\n`,
         );
     }
     return 0;
