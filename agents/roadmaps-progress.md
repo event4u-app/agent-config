@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 30 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **36** open blockers, **9** need you → `agent-config gates`
+> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **39** open blockers, **13** need you → `agent-config gates`
 
 ## Overall
 
-**223 / 445 steps done · 50%**
+**237 / 497 steps done · 48%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   50%
+███████████████████░░░░░░░░░░░░░░░░░░░░░   48%
 ```
 
 ## Open roadmaps
@@ -30,22 +30,26 @@
 | 12 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 12 | 0 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | ░░░░░░░░░░ 0% |
 | 13 | [road-to-inbox-harvest-2026-08-c-prompt-deinflation.md](roadmaps/road-to-inbox-harvest-2026-08-c-prompt-deinflation.md) | 2 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 14 | [road-to-inbox-harvest-2026-08-c-release-head-truth.md](roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md) | 3 | 11 | 10 | 0 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-c-release-head-truth) | ░░░░░░░░░░ 0% |
-| 15 | [road-to-inbox-harvest-2026-08-c-workspace-identity.md](roadmaps/road-to-inbox-harvest-2026-08-c-workspace-identity.md) | 3 | 12 | 11 | 0 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-c-workspace-identity) | ░░░░░░░░░░ 0% |
-| 16 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
-| 17 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
-| 19 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 20 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
-| 21 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 22 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
-| 23 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
-| 24 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 25 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | 0 | ███████░░░ 71% |
-| 26 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 8 | 9 | 1 | 0 | 0 | █████░░░░░ 53% |
-| 27 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 9 | 10 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | █████░░░░░ 53% |
-| 28 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 29 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 30 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 15 | [road-to-inbox-harvest-2026-08-d-archive-index.md](roadmaps/road-to-inbox-harvest-2026-08-d-archive-index.md) | 2 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 16 | [road-to-inbox-harvest-2026-08-d-context-ledger.md](roadmaps/road-to-inbox-harvest-2026-08-d-context-ledger.md) | 5 | 16 | 1 | 14 | 0 | 1 | [1](#blockers-road-to-inbox-harvest-2026-08-d-context-ledger) | █████████░ 93% |
+| 17 | [road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md](roadmaps/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md) | 4 | 14 | 14 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-runtime-skill-routing) | ░░░░░░░░░░ 0% |
+| 18 | [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md) | 2 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-scheduled-deprecation) | ░░░░░░░░░░ 0% |
+| 19 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 14 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy) | ░░░░░░░░░░ 0% |
+| 20 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
+| 21 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 22 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
+| 23 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 24 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+| 25 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 26 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+| 27 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
+| 28 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 29 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | 0 | ███████░░░ 71% |
+| 30 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 8 | 9 | 1 | 0 | 0 | █████░░░░░ 53% |
+| 31 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 9 | 10 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | █████░░░░░ 53% |
+| 32 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 33 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 34 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -405,6 +409,102 @@ _1 blocker resolved._
     closes the blocker; (b) is the answer consistent with the 2026-08-13 lock and
     should be preferred absent a reason to differ.
   - **Resolved when:** the maintainer records a yes or a no in this blocker.
+
+### [road-to-inbox-harvest-2026-08-d-archive-index.md](roadmaps/road-to-inbox-harvest-2026-08-d-archive-index.md)
+
+**Road to an archive index, so sweeps stop paying for history** — 0 / 10 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Build the index, then prove it paid | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Point the consumers at it | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+
+### [road-to-inbox-harvest-2026-08-d-context-ledger.md](roadmaps/road-to-inbox-harvest-2026-08-d-context-ledger.md)
+
+**Road to a context ledger that captures before the state is destroyed** — 14 / 15 done (93%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Meter what is dark | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 2 | Capture before the state is destroyed | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 3 | A recycle threshold that knows what it is advising | ⏭️ skipped | 0 | 0 | 0 | 1 | 0% |
+| 4 | Collect what accretes, with the sweeper that exists | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 5 | Give the payload a direction | 🟡 in progress | 1 | 8 | 0 | 0 | 89% |
+
+<a id="blockers-road-to-inbox-harvest-2026-08-d-context-ledger"></a>
+**Blockers**
+
+- **paths-scoping-consumer-flip** (owner: user) — blocks Step 5.2 - **Question:** may a rule that loads unconditionally today be scoped to `paths:`, given that this narrows what an existing install receives?
+  - **What to do:**
+    pick exactly one — (a) authorise scoping the top-weight
+    tranche identified by 5.1, accepting that those rules stop loading outside
+    their declared paths, or (b) keep every rule unconditional and let the census
+    stand as a measurement only, with the payload target repointed to what
+    coverage-free delivery can reach.
+  - **Resolved when:** the user states which of (a) or (b) holds.
+
+### [road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md](roadmaps/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md)
+
+**Road to a ranker that actually routes** — 0 / 14 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Measure what each host would actually receive | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | Bind the ranker | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | Give skill triggers a schema before giving them content | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Recover what the host dropped | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-inbox-harvest-2026-08-d-runtime-skill-routing"></a>
+**Blockers**
+
+- **skill-trigger-seeding-precision-gate** (owner: user) — blocks Step 3.3 - **Question:** the precision reading that admits or rejects a seeded tranche comes from a live trigger evaluation, and the existing instrument for that is itself human-gated in `road-to-skill-description-measurement`. May the seeding tranche reuse that evaluation, or does it need its own run?
+  - **What to do:**
+    pick exactly one — (a) run the existing live trigger
+    evaluation once and let both roadmaps read it, or (b) declare the skill-side
+    census a separate measurement and state who runs it.
+  - **Resolved when:** the user states which of (a) or (b) holds.
+
+### [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md)
+
+**Road to a deprecation table that cannot miss its own dates** — 0 / 10 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Make the dates checkable | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Give the two loose surfaces a tracked state | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-inbox-harvest-2026-08-d-scheduled-deprecation"></a>
+**Blockers**
+
+- **code-graph-removal-authorisation** (owner: user) — blocks nothing in this roadmap — recorded so the overdue surface has an owner rather than only a report - **Question:** the code-graph removal is one major overdue against a recorded honest null. Does it execute at the next major cut, or does the commitment change?
+  - **What to do:**
+    pick exactly one — (a) authorise the removal at the next major
+    cut, in its own change with the migration note and the manifest test updated
+    together, or (b) revise the table's commitment for this surface and record why
+    the engine stays despite the null.
+  - **Resolved when:** the user states which of (a) or (b) holds.
+
+### [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md)
+
+**Road to at most one top-band context per task** — 0 / 14 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Measure the leak before naming a band for it | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | The band, if the reopen condition holds | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 3 | One top-band context per task | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Close the documented-but-unwired exposure | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy"></a>
+**Blockers**
+
+- **adr-035-reopen-question** (owner: user) — blocks Step 2.1 - **Question:** ADR-035 rejected a fourth band and named its own reopen condition — a vendor shipping a band the three tiers cannot express. Does that condition now hold?
+  - **What to do:**
+    pick exactly one — (a) reopen ADR-035 on the stated condition
+    and authorise a fourth vendor-neutral band, or (b) leave the three-band
+    vocabulary closed, in which case Phase 2 records the null and the economy
+    rests on the Phase 3 invariant alone.
+  - **Resolved when:** the user states which of (a) or (b) holds.
 
 ### [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md)
 

@@ -24,22 +24,82 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.join(path.dirname(_HERE), '..', '..');
 
-// TTL configuration per directory (days)
-const TTL_CONFIG: ReadonlyArray<{ dir: string; ttlDays: number; description: string }> = [
+// TTL configuration per directory (days).
+//
+// `owner` / `reviewBy` (road-to-inbox-harvest-2026-08-d-context-ledger Step
+// 4.1) put every TTL under the same discipline the two budget config files
+// carry: a retention number nobody owns and nobody revisits is a guess that
+// hardens into a fact. The falsifier is printed per run — see the reclaim
+// total in `main` — so a TTL that reclaims nothing over a review window is
+// removed rather than defended.
+const TTL_CONFIG: ReadonlyArray<{
+    dir: string;
+    ttlDays: number;
+    description: string;
+    owner: string;
+    reviewBy: string;
+}> = [
     {
         dir: 'agents/tmp.old',
         ttlDays: 30,
         description: 'Processed inbox archive (consumed agents/tmp/ files)',
+        owner: 'maintainer',
+        reviewBy: '2026-11-10',
     },
     {
         dir: 'agents/runtime/tmp',
         ttlDays: 7,
         description: 'Agent scratch / runtime tmp',
+        owner: 'maintainer',
+        reviewBy: '2026-11-10',
     },
     {
         dir: 'agents/runtime/council/responses',
         ttlDays: 7,
         description: 'Council response cache',
+        owner: 'maintainer',
+        reviewBy: '2026-11-10',
+    },
+    // ── Session-scoped runtime state (Step 4.1) ────────────────────────────
+    //
+    // These four directories accrete ONE entry per session behind a
+    // once-per-session latch, and nothing in the tree removed them: writers
+    // and readers existed, no reaper did. They are named INDIVIDUALLY rather
+    // than sweeping `agents/runtime/state` as a whole, and that is the
+    // load-bearing decision in this step.
+    //
+    // `agents/runtime/state` also holds the CUMULATIVE measurement streams —
+    // `audit/`, `injection-census.jsonl`, `tool-result-census.jsonl`,
+    // `ai-video-telemetry.jsonl`, the memory index — and a directory-level
+    // TTL would delete exactly the corpora this roadmap exists to build. A
+    // sweeper that eats the instrument's own data is worse than no sweeper.
+    {
+        dir: 'agents/runtime/state/session-eol',
+        ttlDays: 7,
+        description: 'Per-session end-of-life counters (one file per session)',
+        owner: 'maintainer',
+        reviewBy: '2026-11-10',
+    },
+    {
+        dir: 'agents/runtime/state/reread-guard',
+        ttlDays: 7,
+        description: 'Per-session re-read latch',
+        owner: 'maintainer',
+        reviewBy: '2026-11-10',
+    },
+    {
+        dir: 'agents/runtime/state/end-review-nudge',
+        ttlDays: 7,
+        description: 'Per-session end-review latch',
+        owner: 'maintainer',
+        reviewBy: '2026-11-10',
+    },
+    {
+        dir: 'agents/runtime/state/probe-throttle',
+        ttlDays: 7,
+        description: 'Per-session probe throttle latch',
+        owner: 'maintainer',
+        reviewBy: '2026-11-10',
     },
 ];
 
@@ -227,6 +287,21 @@ function report(apply: boolean): void {
         );
     } else if (apply && totalExpired > 0) {
         process.stdout.write(`Total deleted: ${totalExpired} file(s), ${_humanSize(totalSize)} freed.\n`);
+    } else {
+        // road-to-inbox-harvest-2026-08-d-context-ledger Step 4.2 — the TTL's
+        // own falsifier, and it only works if a ZERO is printed.
+        //
+        // Until now a run that reclaimed nothing printed no total at all, so
+        // "the sweeper ran and found nothing expired" and "the sweeper did not
+        // run" produced byte-identical output. That is the difference between
+        // evidence that a retention policy is unnecessary and no evidence at
+        // all — and the first is what removes a TTL entry rather than letting
+        // it harden into an unexamined default.
+        process.stdout.write(
+            `Total ${apply ? 'deleted' : 'reclaimable'}: 0 file(s), 0 B — nothing was past its TTL.\n` +
+                `A reclaim that stays at zero across a review window is the signal to drop the ` +
+                `TTL entry, not to keep it: see the owner / reviewBy fields on each entry.\n`,
+        );
     }
 }
 

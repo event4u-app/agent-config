@@ -63,6 +63,7 @@ import { main as editShapeMain } from './edit_shape_hook.js';
 import { main as rereadGuardMain } from './reread_guard_hook.js';
 import { main as sessionEolMain } from './session_eol_hook.js';
 import { main as subagentLedgerMain } from './subagent_ledger_hook.js';
+import { main as toolResultBytesMain } from './tool_result_bytes_hook.js';
 import { main as spawnGuardShadowMain } from './spawn_guard_shadow_hook.js';
 
 /** A concern `main` — argv-taking or not; both shapes exist. */
@@ -109,5 +110,6 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/reread_guard_hook.ts': rereadGuardMain as ConcernMain,
     'src/scripts/hooks/session_eol_hook.ts': sessionEolMain as ConcernMain,
     'src/scripts/hooks/subagent_ledger_hook.ts': subagentLedgerMain as ConcernMain,
+    'src/scripts/hooks/tool_result_bytes_hook.ts': toolResultBytesMain as ConcernMain,
     'src/scripts/hooks/spawn_guard_shadow_hook.ts': spawnGuardShadowMain as ConcernMain,
 };

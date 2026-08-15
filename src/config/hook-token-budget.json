@@ -58,9 +58,15 @@
             "instrument": "rule-trips.json warn counters per concern"
         },
         "unbounded_output_advisory_rate": {
-            "definition": "Roadmap 4.3 + 4.4 registration (advisory-degraded per the resolved pretooluse-rewrite-semantics blocker: no updatedInput in the v1 contract, so nothing caps and nothing can be bypassed - the demand signal is the fire count itself). rtk-wrap cap-advisory fires per session from the OUTPUT_CAP_TABLE branch; adoption (did the next run use a bounded form) via conformance audits. HONEST GAP: bytes-into-context from tool RESULTS is not instrumented anywhere (the census covers hook payloads only) - the pre/post bytes half of roadmap 4.4 is registered as unmeasurable until a tool-result byte counter exists.",
+            "definition": "Roadmap 4.3 + 4.4 registration (advisory-degraded per the resolved pretooluse-rewrite-semantics blocker: no updatedInput in the v1 contract, so nothing caps and nothing can be bypassed - the demand signal is the fire count itself). rtk-wrap cap-advisory fires per session from the OUTPUT_CAP_TABLE branch; adoption (did the next run use a bounded form) via conformance audits. GAP CLOSED 2026-08-15 (road-to-inbox-harvest-2026-08-d-context-ledger Step 1.1): the tool-result byte counter now exists and its stream is registered below as `tool_result_bytes`. The pre/post bytes half of roadmap 4.4 is measurable from that census once it carries data; it stays unread, not unmeasurable, until a baseline is published.",
             "instrument": "rule-trips.json warn counters for the rtk-wrap concern + conformance audits",
             "threshold": "none committed before data - baseline first, threshold at review date"
+        },
+        "tool_result_bytes": {
+            "definition": "road-to-inbox-harvest-2026-08-d-context-ledger 1.1: UTF-8 bytes of every tool RESULT entering context, per call, keyed by tool name. Closes the gap `unbounded_output_advisory_rate` registered above - the injection census measures what this suite puts into context, this measures what the host's tools do, and the second is the larger term. CAPTURE ONLY: the concern emits zero bytes to the model, so it carries no per-concern injection cap; it is registered here because this file already owns the owner/review discipline for context-cost instruments.",
+            "instrument": "the `tool-result-bytes` concern (src/scripts/hooks/tool_result_bytes_hook.ts) on post_tool_use, appending {ts, tool, bytes, measurable} to agents/runtime/state/tool-result-census.jsonl",
+            "privacy": "census lines carry a tool NAME, a byte COUNT and a timestamp - the record type has no field able to hold file contents, command output or any free text, so there is no scrubber that can fail",
+            "threshold": "none committed before data - baseline first, threshold at review date. A `measurable: false` line means the host's payload carried no readable result; that absence is itself a coverage finding and is never counted as zero bytes"
         },
         "turns_per_task": {
             "definition": "user_prompt_submit count keyed to the task envelope - the invisible multiplier (every turn re-pays the accumulated context at read rates).",
