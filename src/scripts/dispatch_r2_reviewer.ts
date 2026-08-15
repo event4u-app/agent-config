@@ -222,13 +222,23 @@ export const REVIEW_SCOPE_NAME_ONLY_FLAGS: readonly string[] = [
     '-O/dev/null',
 ];
 
-/** `git diff` argv for the review scope (patch body), config-pinned. */
-export function reviewScopeDiffArgs(base: string): string[] {
+/**
+ * `git diff` argv for the review scope (patch body), config-pinned.
+ *
+ * `head` defaults to `HEAD` — the only value the dispatcher and the validator
+ * ever pass, since both bind the scope being dispatched *now*. It is a
+ * parameter so that an out-of-band measurement can re-derive the scope at a
+ * HISTORICAL revision through this same definition instead of assembling a
+ * second `git diff` argv beside it: a private copy would drift from the
+ * normative flag list above the first time a flag changes, and then report a
+ * hash no gate would ever produce.
+ */
+export function reviewScopeDiffArgs(base: string, head = 'HEAD'): string[] {
     return [
         ...REVIEW_SCOPE_GIT_CONFIG,
         'diff',
         ...REVIEW_SCOPE_DIFF_FLAGS,
-        `${base}...HEAD`,
+        `${base}...${head}`,
         '--',
         ':/',
         ...REVIEW_SCOPE_EXCLUDES,
@@ -236,12 +246,12 @@ export function reviewScopeDiffArgs(base: string): string[] {
 }
 
 /** `git diff --name-only` argv for the review scope (changed-file list), config-pinned. */
-export function reviewScopeNameOnlyArgs(base: string): string[] {
+export function reviewScopeNameOnlyArgs(base: string, head = 'HEAD'): string[] {
     return [
         ...REVIEW_SCOPE_GIT_CONFIG,
         'diff',
         ...REVIEW_SCOPE_NAME_ONLY_FLAGS,
-        `${base}...HEAD`,
+        `${base}...${head}`,
         '--',
         ':/',
         ...REVIEW_SCOPE_EXCLUDES,

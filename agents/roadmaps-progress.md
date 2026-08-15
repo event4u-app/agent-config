@@ -6,10 +6,10 @@
 
 ## Overall
 
-**237 / 497 steps done · 48%**
+**246 / 495 steps done · 50%**
 
 ```text
-███████████████████░░░░░░░░░░░░░░░░░░░░░   48%
+████████████████████░░░░░░░░░░░░░░░░░░░░   50%
 ```
 
 ## Open roadmaps
@@ -27,7 +27,7 @@
 | 9 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
 | 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
 | 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
-| 12 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 12 | 0 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | ░░░░░░░░░░ 0% |
+| 12 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
 | 13 | [road-to-inbox-harvest-2026-08-c-prompt-deinflation.md](roadmaps/road-to-inbox-harvest-2026-08-c-prompt-deinflation.md) | 2 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 14 | [road-to-inbox-harvest-2026-08-c-release-head-truth.md](roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md) | 3 | 11 | 10 | 0 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-c-release-head-truth) | ░░░░░░░░░░ 0% |
 | 15 | [road-to-inbox-harvest-2026-08-d-archive-index.md](roadmaps/road-to-inbox-harvest-2026-08-d-archive-index.md) | 2 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -357,18 +357,18 @@ _1 blocker resolved._
 
 ### [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md)
 
-**Road to a review binding that survives a checkbox** — 0 / 12 done (0%)
+**Road to a review binding that survives a checkbox** — 9 / 10 done (90%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Measure which segment actually moves | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | Make the verdict segment-aware, only if Phase 1 earns it | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Give the evidence a retention shape | ⬜ not started | 6 | 0 | 1 | 0 | 0% |
+| 1 | Measure which segment actually moves | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | Make the verdict segment-aware, only if Phase 1 earns it | ✅ done | 0 | 1 | 0 | 2 | 100% |
+| 3 | Give the evidence a retention shape | 🟡 in progress | 1 | 5 | 0 | 1 | 83% |
 
 <a id="blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle"></a>
 **Blockers**
 
-- **evidence-compaction-approval** (owner: maintainer - **Question:** may provably-reproducible `diff.patch` bodies be dropped in favour of their recorded base/head revisions? Phase 3 produces the list and the proof of reproducibility; the removal itself is a bulk deletion of committed evidence and is not an agent's call.) — blocks step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2 proceed either way.
+- **evidence-compaction-approval** (owner: maintainer - **Question:** may provably-reproducible `diff.patch` bodies be dropped in favour of their recorded base/head revisions? Phase 3 produces the list and the proof of reproducibility; the removal itself is a bulk deletion of committed evidence and is not an agent's call.) — blocks step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2 proceed either way. - **Evidence now available (Phase 3, 2026-08-15):** the list and the proof the blocker was waiting for exist. **30** directories totalling **3.24 MB**, 29 of them `archived`. **11** were re-derived byte-for-byte (**1.12 MB**); **19** were not (**2.12 MB**) and stay regardless. So option (b) reclaims at most **34.7 %** of the tree — and the tier boundary it would need to name is not a tier at all, since 29 of 30 sit in the same one. The only line that separates them is the per-directory re-derivation verdict in `agents/evidence/analysis/review-binding-drift.md`.
   - **What to do:**
     pick exactly one — (a) no compaction: the tiering and the
     reproducibility verdict are the whole deliverable, and step 3.3 is marked
