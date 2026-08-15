@@ -125,7 +125,7 @@ turned into a roadmap. The reason column is the point.
 | 15 | Never label a council pass `concluded` when answered < configured | Would reverse a council-locked quorum decision (`ceil(n/2)` is deliberate, so one absent member cannot deadlock an n=2 gate). The labelling half already shipped. |
 | 16 | Ledger as sole source of truth for session-recycle / orchestration-explain / cost-tracking | Genuine and small, but it is the tail of a roadmap that already owns the ledger; add it there rather than opening a track for three call sites. |
 | 17 | Requirements traceability graph (REQ→AC→PLAN→…→EVIDENCE) | A governance layer over a governance layer, in a package whose reviews name roadmap-about-roadmap work as its dominant failure mode. |
-| 18 | Graphify the code-intelligence adapter | The reviewer deprioritises it themselves; the orchestrator-first stance is already recorded. |
+| 18 | Write a code-intelligence adapter for a named third-party graph service | The reviewer deprioritises it themselves; the orchestrator-first stance is already recorded, and the service is named in the source rather than here. |
 | 19 | Viral-prompt proposal Phase 2 (`evals.json` fixtures) | Rests on a parity claim the tree does not hold: 247 of 289 skills carry no `evals.json`, so "the only one without fixtures" describes an 86 % norm, not a defect. The eval harness is also stubbed, so the fixtures could not execute. |
 | 20 | Viral-prompt proposal Phase 4 (full-collection sweep) | Gated on an export from a source that already returned an honest null, and its own pre-registration expects "additional fixtures at most, zero template adoptions". That is a null worth publishing now, not a step worth parking. |
 
