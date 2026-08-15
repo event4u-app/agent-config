@@ -85,10 +85,16 @@ ai_team:
 
 ### Why `model: 'auto'` instead of a pinned ID
 
-A hardcoded model ID rots silently (the council's own CLI default is a
-deliberate, documented *pin* — `DEFAULT_OPENAI_CLI_MODEL` in
-`src/scripts/ai_council/clients.ts`, see
-[ai-council-config.md](ai-council-config.md)). Team mode inverts that:
+A hardcoded model ID rots silently — and the council side has since agreed
+rather than contrasted. `DEFAULT_OPENAI_CLI_MODEL`
+(`src/scripts/ai_council/clients.ts`) was a deliberate, documented *pin* when
+this section was written; on 2026-08-15 it became a sentinel of the same shape
+(`OPENAI_CLI_VENDOR_DEFAULT`, spelled `codex-default` rather than `auto` —
+the two are separate constants and neither is an alias of the other), because
+the pinned ids were refused outright by a subscription-authed account and a pin
+that no account serves disables the seat instead of selecting a model (see
+[ai-council-config.md](ai-council-config.md)). Team mode reached the conclusion
+first:
 under a subscription the *strongest* available model is the rational
 default, and only the codex CLI knows what that currently is. `'auto'`
 therefore delegates the choice to the CLI; a set value is a user pin and

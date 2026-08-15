@@ -356,6 +356,7 @@ export type CliFailureClass =
     | 'binary_missing'
     | 'auth_rejected'
     | 'cli_unsupported'
+    | 'model_unservable'
     | 'timeout'
     | 'server_error'
     | 'quota_exhausted'
@@ -376,6 +377,20 @@ const FALLBACK_ELIGIBLE: ReadonlySet<CliFailureClass> = new Set([
     'binary_missing',
     'auth_rejected',
     'cli_unsupported',
+    // `model_unservable` satisfies the same no-double-charge property in both
+    // of its shapes: the pre-spend gate refuses before any subprocess exists,
+    // and the call-time shape is a provider 400 — rejected at the request
+    // boundary, no generation performed.
+    //
+    // HONEST SCOPE: this set is not consumed by any shipped path today.
+    // `isFallbackEligible` and `MidFlightFallback` have zero call sites outside
+    // this module and its tests, so membership here is a stated property of the
+    // class, NOT a behaviour a caller performs. Said plainly because the
+    // opposite reading is the attractive one — the constraint really is the
+    // subscription transport's rather than the model's, so the api rung really
+    // would serve the same id, and it would be easy to write that as if it
+    // happened. It does not happen yet.
+    'model_unservable',
 ]);
 
 /** Normalise a raw client error / skip reason into a `CliFailureClass`. */
@@ -387,6 +402,15 @@ export function classifyCliFailure(raw: string): CliFailureClass {
     }
     if (s === 'cli_unsupported' || s === 'unsupported' || s === 'parse_failed') {
         return 'cli_unsupported';
+    }
+    // Prefix match, not equality: the detail carries the operator-facing reason
+    // after the code, and that sentence IS the value of this class — collapsing
+    // it back to a bare token would restore the opaque `exit_1` this replaced.
+    // Also matched on the provider's own wording, so a model refused at call
+    // time (one the deny-list has never seen) classifies the same as one the
+    // pre-spend gate caught.
+    if (s.startsWith('model_unservable') || s.includes('is not supported when using codex')) {
+        return 'model_unservable';
     }
     if (s === 'timeout') return 'timeout';
     if (s === 'cli_quota_exhausted' || s === 'quota_exhausted') return 'quota_exhausted';
@@ -406,8 +430,14 @@ export function isFallbackEligible(failure: CliFailureClass): boolean {
  * can bucket every absent member — whether it never got a transport at all
  * or lost one partway through — under one vocabulary. Returns `null` for a
  * failure class outside the four-value enum (`cli_unsupported`,
- * `server_error`, `other`); a caller falls back to the raw failure detail
- * for those rather than mis-classifying them.
+ * `server_error`, `model_unservable`, `other`); a caller falls back to the raw
+ * failure detail for those rather than mis-classifying them.
+ *
+ * `model_unservable` is deliberately unmapped rather than folded into
+ * `no_auth`: the credential is fine, the model is not, and the `detail` string
+ * carries the specific reason. So the bucket a reader sees is still the generic
+ * `unavailable`, while the line beside it now names the cause — an incomplete
+ * improvement, stated as one.
  */
 export function absentReasonFromCliFailure(failure: CliFailureClass): AbsentReason | null {
     switch (failure) {

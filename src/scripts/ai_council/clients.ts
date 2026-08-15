@@ -695,7 +695,18 @@ export class OpenAIClient extends ExternalAIClient {
 
     constructor(opts: ApiClientOptions = {}) {
         super();
-        this.model = opts.model ?? DEFAULT_OPENAI_MODEL;
+        // `codex-default` is the CLI transport's "let the host choose" sentinel,
+        // and ONE `model:` field in `.ai-council.yml` feeds both transports —
+        // which one a member resolves to is decided at run time, not in the
+        // config. The API has no such sentinel (there is no endpoint named
+        // `codex-default`), so it resolves to this client's own default instead
+        // of being sent verbatim and rejected. Without this, making the shipped
+        // template CLI-safe would break every api-transport user in the same
+        // commit.
+        this.model =
+            opts.model === undefined || opts.model === OPENAI_CLI_VENDOR_DEFAULT
+                ? DEFAULT_OPENAI_MODEL
+                : opts.model;
         if (opts.client !== undefined && opts.client !== null) {
             this._client = opts.client;
             return;

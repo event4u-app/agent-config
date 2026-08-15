@@ -2029,7 +2029,20 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
 function _render_quorum_line(q: QuorumResult): string {
     const verdict = q.status === 'concluded' ? 'concluded' : 'INCONCLUSIVE — release gate holds';
     const solo = isSoloConcluded(q) ? ' · **solo** — one voice concluded this pass' : '';
-    return `**Quorum:** ${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.${solo}`;
+    // The DEGRADED marker shipped on stdout (`council_cli.ts::_format_quorum_line`,
+    // round 7 § 5.3) and did NOT ship here, although this function is the one
+    // the mirror was copied FROM. The two then diverged in the worse direction:
+    // stdout scrolls away, this string is what gets committed as evidence and
+    // cited months later. `1/2 present, needed 1 — concluded` is literally true
+    // and reads as agreement; the solo marker alone covers only present === 1,
+    // so 2-of-4 rendered as plain "concluded" with nothing to stop a reader
+    // inferring convergence. Same sentence as stdout on purpose — one wording,
+    // so neither surface can drift into being the softer one again.
+    const degraded =
+        q.present < q.total
+            ? `  ⚠️  DEGRADED — ${String(q.total - q.present)} member(s) did not answer; this is not convergence.`
+            : '';
+    return `**Quorum:** ${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.${solo}${degraded}`;
 }
 
 /**
