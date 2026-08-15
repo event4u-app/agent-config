@@ -113,7 +113,8 @@ Three departures from the text as written, recorded rather than taken quietly.
   maintainer-owned date, which the gate resolves as tracked rather than as
   overdue or as a parse failure. Untracked dormancy, which is what the step
   exists to remove, is gone either way.
-- **1.2's verify hook cannot be satisfied as written.** `grep -c
+- **1.2's verify hook could not be satisfied by the obvious route, and the
+  workaround happens to satisfy it anyway.** `grep -c
   'lint_scheduled_deprecations' Taskfile.yml` returns 0 for a conventionally
   named task: every sibling gate is defined in `taskfiles/ci-fast.yml` and
   referenced from `Taskfile.yml` by its hyphenated task name. Satisfying the
@@ -121,7 +122,11 @@ Three departures from the text as written, recorded rather than taken quietly.
   convention to please a grep. Registered the sibling way instead — definition
   in `taskfiles/ci-fast.yml`, `ci:` entry in `Taskfile.yml` (with the script
   name in a comment beside it), and a step in `consistency.yml`, because a gate
-  registered only in the `ci:` list has zero remote reach.
+  registered only in the `ci:` list has zero remote reach. **The comment carries
+  the literal, so the hook does return non-zero** — recorded as a coincidence
+  rather than a satisfaction: a grep that passes because of a comment is
+  measuring the comment, and the next reader should know the hook does not
+  actually check registration.
 - **1.2's "a release gets the refusal" needed a caller, or it was a claim.**
   `--release-major` with nothing invoking it is the defined-but-not-wired shape.
   It is called from `release.ts` at the point the target version resolves —
@@ -145,18 +150,25 @@ Three things this roadmap knowingly leaves open, none of them fixed here:
   `archive_completed_roadmaps --all` instruction for this roadmap that cannot
   succeed while its blocker is open. That is a generator-side inconsistency
   older than this branch and is not repaired here.
-- **The regenerated dashboard corrects a stale base, and the delta is not this
-  roadmap's.** `-c-release-head-truth` moves 10 open / 0 done → 1 open / 9
-  done. Verified rather than assumed: on `origin/main` the dashboard says 10
-  open / 0 done while that roadmap's own file at the same commit has 0 open and
-  7 done — the base was stale, and the mandated regeneration corrects it.
+- **A `-c-release-head-truth` delta was recorded here and no longer exists —
+  corrected rather than left standing.** The first regeneration on this branch
+  did move that roadmap from 10 open / 0 done, because the dashboard committed
+  on `origin/main` was stale against that roadmap's own file at the same
+  commit. Then `main` moved: it closed and **archived** `-c-release-head-truth`
+  outright, and the merge brought that in, so the roadmap is absent from the
+  dashboard entirely and the delta this note claimed to have verified is not in
+  the shipped diff. What the diff now carries is one changed open-roadmaps row
+  — this roadmap's — and an Overall move of exactly its own 10 steps over an
+  unchanged denominator. The original reading was true when written and stopped
+  being true at the merge; a "verified" claim that outlives its evidence is
+  worse than no claim, which is why it is rewritten instead of deleted.
 
 ## Acceptance criteria
 
 - [x] An overdue scheduled deprecation is reported by a check, not by a reader.
 - [x] The check has a by-construction-overdue fixture, so green means it ran.
 - [x] The code-graph row records that its commitment was missed and by how much.
-- [x] `telegraph` is either scheduled or documented as a keep.
+- [x] `telegraph` has a tracked state. **Criterion reworded from "either scheduled or documented as a keep":** the implementation took a third state — a not-pinned row — and argued why under 2.2 in the execution notes, so leaving the original text would have ticked a box asserting an outcome the change explicitly declined to produce. Untracked dormancy, which is what the criterion existed to remove, is gone.
 - [x] No public surface is removed by this roadmap.
 
 ## Blockers
