@@ -536,7 +536,7 @@ function die(msg: string, code = 2): never {
     throw new SystemExitError(code);
 }
 
-interface RunResult {
+export interface RunResult {
     returncode: number;
     stdout: string;
     stderr: string;
@@ -1623,6 +1623,53 @@ function set_template_pin(p: string, version: string): void {
     fs.writeFileSync(p, lines.join('\n'), 'utf-8');
 }
 
+/**
+ * Refuse a MAJOR cut that still carries an overdue scheduled deprecation.
+ *
+ * Placed at the resolved TARGET rather than at a `--as major` flag on purpose:
+ * a major can be reached three ways — the flag, an explicit `--version`, and
+ * auto-detection from a `feat!:` commit — and gating only the flag would leave
+ * the two paths the unattended release workflow actually uses wide open. The
+ * target is where all three converge.
+ *
+ * The check is a no-op on minor and patch cuts, which is the asymmetry
+ * `lint_scheduled_deprecations` is built around: an ordinary branch gets the
+ * report, a release gets the refusal. Skipped under `--dry-run` with the rest
+ * of preflight, so a preview stays fast and side-effect-free.
+ *
+ * Wired here rather than left to the runbook's manual pre-flight checkbox
+ * because that checkbox already failed once: the `code_graph` removal reached
+ * one major past its commitment with the checkbox in place the whole time.
+ *
+ * @param runner Seam for the gate invocation. Production passes nothing and
+ * gets the real `run`; tests inject a stub, because the alternative — reaching
+ * this branch only by mutating `docs/MIGRATION.md` — would make the refusal
+ * path testable exclusively through a tracked-file edit.
+ */
+export function assert_scheduled_deprecations_clear(
+    current: string,
+    target: string,
+    runner: (args: readonly string[]) => RunResult = (args) => run(args, { check: false, capture: true }),
+): void {
+    const [targetMajor] = parse_version(target);
+    const [currentMajor] = parse_version(current);
+    if (targetMajor <= currentMajor) {
+        return;
+    }
+    const res = runner(['./scripts-run', 'src/scripts/lint_scheduled_deprecations', '--release-major']);
+    if (res.returncode === 0) {
+        return;
+    }
+    process.stderr.write(res.stdout);
+    process.stderr.write(res.stderr);
+    die(
+        `refusing a major cut (${current} → ${target}): the scheduled-deprecations table ` +
+            'in docs/MIGRATION.md has an overdue or unresolvable row. Act on it — perform ' +
+            "the removal in its own change, or revise the row's commitment and record why " +
+            'the surface stays — then re-run.',
+    );
+}
+
 // ─── preflight ────────────────────────────────────────────────────────────────
 
 /**
@@ -2579,6 +2626,7 @@ function main(argv: readonly string[] | null = null): number {
     parse_version(target);
 
     if (!args.dry_run) {
+        assert_scheduled_deprecations_clear(current, target);
         preflight(target, { resume: args.resume, ci: args.ci });
     }
 

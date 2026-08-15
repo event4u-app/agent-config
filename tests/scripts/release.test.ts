@@ -49,6 +49,7 @@ import {
     _failed_checks_report,
     Commit,
     SystemExitError,
+    assert_scheduled_deprecations_clear,
     CONVENTIONAL_RE,
     SEMVER_RE,
     _RELEASE_BRANCH_RE,
@@ -876,5 +877,47 @@ describe('watch_pr_checks — failing-check summary (the scrolled-away-failure f
 
     it('an empty name list yields an empty report — raw watch output stands alone', () => {
         expect(_failed_checks_report([])).toBe('');
+    });
+});
+
+describe('assert_scheduled_deprecations_clear', () => {
+    /** A stub gate that records whether it was called at all. */
+    function stub(returncode: number, calls: string[][]) {
+        return (args: readonly string[]) => {
+            calls.push([...args]);
+            return { returncode, stdout: '', stderr: '' };
+        };
+    }
+
+    it('does not even run the gate on a minor or patch cut', () => {
+        const calls: string[][] = [];
+        assert_scheduled_deprecations_clear('12.0.0', '12.1.0', stub(1, calls));
+        assert_scheduled_deprecations_clear('12.0.0', '12.0.1', stub(1, calls));
+        // A red gate that is never consulted proves the guard is bounded to
+        // major cuts: it is the asymmetry the whole check is built around.
+        expect(calls).toEqual([]);
+    });
+
+    it('a major cut with a clear table proceeds, and consults the gate exactly once', () => {
+        const calls: string[][] = [];
+        expect(() => assert_scheduled_deprecations_clear('12.0.0', '13.0.0', stub(0, calls))).not.toThrow();
+        expect(calls).toHaveLength(1);
+        expect(calls[0]).toContain('--release-major');
+    });
+
+    it('a major cut with an overdue row refuses the release', () => {
+        const calls: string[][] = [];
+        expect(() => assert_scheduled_deprecations_clear('12.0.0', '13.0.0', stub(1, calls))).toThrow(
+            SystemExitError,
+        );
+        expect(calls).toHaveLength(1);
+    });
+
+    it('a multi-major jump is still a major cut', () => {
+        const calls: string[][] = [];
+        expect(() => assert_scheduled_deprecations_clear('12.0.0', '14.0.0', stub(1, calls))).toThrow(
+            SystemExitError,
+        );
+        expect(calls).toHaveLength(1);
     });
 });
