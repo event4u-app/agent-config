@@ -29,8 +29,8 @@ does not hold for two of the five labels:
 
 | label | derivation | span hits | curated value shipped |
 |---|---|---:|---|
-| `Security and correctness` | `/secur/i` in the conventional scope, or whole-word `security` in the subject — `src/scripts/_lib/release_highlights.ts:116` | **0** | `_none_` (`CHANGELOG.md:367`) |
-| `Honest nulls` | literal `honest[ -]null` in subject or body — `release_highlights.ts:137` | **0** | `_none_` (`CHANGELOG.md:368`) |
+| `Security and correctness` | `/secur/i` in the conventional scope, or whole-word `security` in the subject — the security branch of `derive_category_hits` in `src/scripts/_lib/release_highlights.ts` | **0** | `_none_` (`CHANGELOG.md:367`) |
+| `Honest nulls` | literal `honest[ -]null` in subject or body — the honest-null branch of the same function | **0** | `_none_` (`CHANGELOG.md:368`) |
 
 The same span carries **13** `fix(...)`-scoped commits, and one commit whose
 subject records that a soak was waived rather than met. The label reads
@@ -120,6 +120,28 @@ make an unrewritten marker block, which stays exactly as decided.
   closes the blocker; (b) is the answer consistent with the 2026-08-13 lock and
   should be preferred absent a reason to differ.
 
+### blocker: ac3-false-positive-reading
+- **Status:** open
+- **Owner:** maintainer
+- **Question:** acceptance criterion 3 was measured and is false as written —
+  five of six previously-green spans turn red under the widened derivation.
+  Does the criterion mean *no span whose head was correct becomes falsely
+  contradicted* (a false-positive guarantee, which the measured 96 % precision
+  satisfies), or does it mean *no span turns red at all* (which cannot hold
+  while criterion 2 also holds, since populating a green span's field is
+  exactly what turns it red)?
+- **Resolved when:** the maintainer records which reading governs, or re-cuts
+  the criterion.
+- **Blocks:** acceptance criterion 3 only. Phases 1 and 2 are closed and Phase
+  3 step 3.1 is closed either way; nothing else waits on this.
+- **What to do:** pick exactly one — (a) adopt the false-positive reading, tick
+  criterion 3 citing `release-head-derivation-recall.md` § 5 and the 96 %
+  precision, and leave the five historical heads alone (they are curation, an
+  explicit Non-goal); or (b) re-cut the criterion to name the false-positive
+  bar directly, e.g. "no span gains a hit a hand pass calls out-of-category",
+  which the same measurement already answers. Mutually exclusive. Neither
+  option touches the widened derivation, which is measured and shipped.
+
 ## Acceptance criteria
 
 - [x] A recall table for all five labels over six released spans exists and is
@@ -141,8 +163,9 @@ make an unrewritten marker block, which stays exactly as decided.
       red; and **no future release is red because of this** — the generator
       pre-fills every substantiated label, pinned as a regression test, so
       Risk 2 does not fire. Left open deliberately rather than ticked under a
-      reading that would pass it. **The maintainer's call:** accept the
-      false-positive reading (§ 5) and close this, or re-cut the criterion.
+      reading that would pass it. **The maintainer's call is registered as
+      `blocker: ac3-false-positive-reading` above**, so the decision surfaces
+      in `agent-config gates` rather than living only in this checkbox body.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude/host -->

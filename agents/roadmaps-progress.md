@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 29 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **35** open blockers, **9** need you → `agent-config gates`
+> 29 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **36** open blockers, **9** need you → `agent-config gates`
 
 ## Overall
 
@@ -29,7 +29,7 @@
 | 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
 | 12 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 12 | 0 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | ░░░░░░░░░░ 0% |
 | 13 | [road-to-inbox-harvest-2026-08-c-prompt-deinflation.md](roadmaps/road-to-inbox-harvest-2026-08-c-prompt-deinflation.md) | 2 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 14 | [road-to-inbox-harvest-2026-08-c-release-head-truth.md](roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md) | 3 | 11 | 1 | 9 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-c-release-head-truth) | █████████░ 90% |
+| 14 | [road-to-inbox-harvest-2026-08-c-release-head-truth.md](roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md) | 3 | 11 | 1 | 9 | 1 | 0 | [2](#blockers-road-to-inbox-harvest-2026-08-c-release-head-truth) | █████████░ 90% |
 | 15 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
 | 16 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 17 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
@@ -404,6 +404,16 @@ _1 blocker resolved._
     closes the blocker; (b) is the answer consistent with the 2026-08-13 lock and
     should be preferred absent a reason to differ.
   - **Resolved when:** the maintainer records a yes or a no in this blocker.
+- **ac3-false-positive-reading** (owner: maintainer - **Question:** acceptance criterion 3 was measured and is false as written — five of six previously-green spans turn red under the widened derivation. Does the criterion mean *no span whose head was correct becomes falsely contradicted* (a false-positive guarantee, which the measured 96 % precision satisfies), or does it mean *no span turns red at all* (which cannot hold while criterion 2 also holds, since populating a green span's field is exactly what turns it red)?) — blocks acceptance criterion 3 only. Phases 1 and 2 are closed and Phase 3 step 3.1 is closed either way; nothing else waits on this.
+  - **What to do:**
+    pick exactly one — (a) adopt the false-positive reading, tick
+    criterion 3 citing `release-head-derivation-recall.md` § 5 and the 96 %
+    precision, and leave the five historical heads alone (they are curation, an
+    explicit Non-goal); or (b) re-cut the criterion to name the false-positive
+    bar directly, e.g. "no span gains a hit a hand pass calls out-of-category",
+    which the same measurement already answers. Mutually exclusive. Neither
+    option touches the widened derivation, which is measured and shipped.
+  - **Resolved when:** the maintainer records which reading governs, or re-cuts the criterion.
 
 ### [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md)
 
