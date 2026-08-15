@@ -16699,6 +16699,7 @@ function detect_module_roots(project_root) {
 // src/scripts/_lib/model_tier.ts
 import fs16 from "node:fs";
 var TIER_TO_CLAUDE_MODEL = {
+  frontier: "fable",
   high: "opus",
   medium: "sonnet",
   lite: "haiku"
