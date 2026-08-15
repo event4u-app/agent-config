@@ -9460,6 +9460,7 @@ function knownHostLimits(records) {
       host: record.host,
       droppedEntries: record.dropped_count,
       projectedVolume: record.entries_total,
+      projectedSkills: record.projected_skill_count ?? null,
       observedAt: record.observed_at
     });
   }
@@ -9467,8 +9468,43 @@ function knownHostLimits(records) {
 }
 function catalogueLimitWarning(volume, limit) {
   if (limit === void 0) return null;
-  if (volume.artefacts < limit.projectedVolume) return null;
-  return `${volume.host}: deploying ${volume.artefacts} catalogue artefacts. This host reported dropping ${limit.droppedEntries} entries from the model-visible list when last measured (${limit.observedAt}, at a projection of ${limit.projectedVolume}) \u2014 that much never reaches the model. Explain: \`agent-config exec capture_skill_catalogue --limits\``;
+  if (limit.projectedSkills === null) return null;
+  if (volume.skillEntries < limit.projectedSkills) return null;
+  return `${volume.host}: deploying ${volume.skillEntries} skills. This host reported dropping ${limit.droppedEntries} entries from the model-visible list when last measured (${limit.observedAt}, at ${limit.projectedSkills} skills) \u2014 that much never reaches the model. Explain: \`agent-config exec capture_skill_catalogue --limits\``;
+}
+function migrationEligibility(host, resolvedMode, currentSkillCount, limits) {
+  if (resolvedMode === "scoped") return { eligible: false, reason: "already-scoped" };
+  const limit = limits.get(host);
+  if (limit === void 0) return { eligible: false, reason: "no-observation-for-host" };
+  if (limit.projectedSkills === null) return { eligible: false, reason: "observation-not-comparable" };
+  if (limit.droppedEntries <= 0) return { eligible: false, reason: "no-truncation-observed" };
+  if (currentSkillCount < limit.projectedSkills) {
+    return { eligible: false, reason: "below-observed-skill-volume" };
+  }
+  return {
+    eligible: true,
+    reason: "eligible",
+    droppedEntries: limit.droppedEntries,
+    observedAt: limit.observedAt
+  };
+}
+function migrationPromptLines(host, eligibility, settingsPath) {
+  return [
+    `${host}: ${eligibility.droppedEntries} catalogue entries never reach the model.`,
+    `Measured on this machine (${eligibility.observedAt}). This install is on \`legacy-all\`,`,
+    "which ships everything and lets the host drop what does not fit \u2014 silently.",
+    "",
+    "Scoping the projection to your active packs is the alternative. Nothing here",
+    "changes it for you: `projection.mode` is yours to set, by hand or in the GUI.",
+    "",
+    `  edit  ${settingsPath}`,
+    "        projection:",
+    "          mode: scoped",
+    "",
+    "  or    agent-config config      (Settings \u2192 projection)",
+    "",
+    "Keeping `legacy-all` is a legitimate choice \u2014 this is a notification, not a gate."
+  ];
 }
 function readObservationLog(logPath) {
   if (!fs10.existsSync(logPath)) return [];
@@ -9483,6 +9519,33 @@ function readObservationLog(logPath) {
     }
   }
   return out;
+}
+
+// src/shared/interactiveContext.ts
+var CI_ENV_KEYS = ["CI", "GITHUB_ACTIONS", "AGENT_CONFIG_CI"];
+function _flagSet(env, key) {
+  const raw = (env[key] ?? "").trim();
+  return raw !== "" && raw !== "0";
+}
+function nonInteractiveReason(probe) {
+  for (const key of CI_ENV_KEYS) {
+    if (_flagSet(probe.env, key)) {
+      return "ci";
+    }
+  }
+  if (_flagSet(probe.env, "AGENT_CONFIG_NO_UI")) {
+    return "no-ui-requested";
+  }
+  if (!probe.stdinTty || !probe.stdoutTty) {
+    return "not-a-tty";
+  }
+  if (probe.headless === true) {
+    return "headless";
+  }
+  return null;
+}
+function isInteractiveSession(probe) {
+  return nonInteractiveReason(probe) === null;
 }
 
 // src/scripts/_lib/claude_desktop_bundler.ts
@@ -20192,6 +20255,15 @@ function install_global(tools, force, project_root = null, core_only = false) {
       for (const line of _catalogue_truncation_warnings(deploy_results, project_root)) {
         warn(line);
       }
+      const notice = _scoped_migration_notice(deploy_results, project_root, package_root, {
+        env: process3.env,
+        stdinTty: process3.stdin.isTTY === true,
+        stdoutTty: process3.stdout.isTTY === true
+      });
+      if (notice.length > 0) {
+        process3.stdout.write("\n");
+        for (const line of notice) info(line);
+      }
     } catch {
     }
   }
@@ -20224,6 +20296,34 @@ function _catalogue_truncation_warnings(deploy_results, project_root) {
     if (warning !== null) lines.push(warning);
   }
   return lines;
+}
+function _scoped_migration_notice(deploy_results, project_root, package_root, probe) {
+  if (!isInteractiveSession(probe)) return [];
+  const log_candidates = [
+    path17.join(event4u_root(), "state", "skill-catalogue.jsonl"),
+    ...project_root ? [path17.join(project_root, OBSERVATION_LOG)] : []
+  ];
+  const limits = knownHostLimits(log_candidates.flatMap((p) => readObservationLog(p)));
+  if (limits.size === 0) return [];
+  const resolved = _resolve_scoped_projection(package_root);
+  const settings_path = _resolve_global_settings_path() ?? path17.join(event4u_root(), "settings", SETTINGS_FILE);
+  for (const tool_id of Object.keys(deploy_results).sort()) {
+    const [, , status] = deploy_results[tool_id];
+    if (status !== "deployed") continue;
+    const anchor_raw = USER_SCOPE_PATHS[tool_id];
+    if (!anchor_raw) continue;
+    const volume = measureCatalogueVolume(tool_id, expanduser6(anchor_raw));
+    const eligibility = migrationEligibility(
+      tool_id,
+      resolved.mode,
+      volume.skillEntries,
+      limits
+    );
+    if (eligibility.eligible) {
+      return migrationPromptLines(tool_id, eligibility, settings_path);
+    }
+  }
+  return [];
 }
 var SETTINGS_SURFACE_REL = path17.join("state", "settings-surface.json");
 var SETTINGS_DELTA_REL = path17.join("state", "settings-delta.json");
@@ -21424,6 +21524,7 @@ export {
   _resolve_scope,
   _resolve_scoped_projection,
   _resolve_settings_read,
+  _scoped_migration_notice,
   _team_setup_hint_line,
   _tools_was_all,
   _validate_scope,

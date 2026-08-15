@@ -83,13 +83,14 @@ describe('deploy-time catalogue-truncation warning', () => {
                 truncation_mode: 'budget-strip-and-drop',
                 observation_source: 'host-event',
                 dropped_count: 42,
+                projected_skill_count: 30,
             },
         ]);
 
         const lines = _catalogue_truncation_warnings(DEPLOYED, null);
 
         expect(lines).toHaveLength(1);
-        expect(lines[0]).toContain('codex: deploying 50 catalogue artefacts');
+        expect(lines[0]).toContain('codex: deploying 30 skills');
         expect(lines[0]).toContain('dropping 42 entries');
         // A number with no way to reproduce it is noise.
         expect(lines[0]).toContain('capture_skill_catalogue --limits');
@@ -138,6 +139,7 @@ describe('deploy-time catalogue-truncation warning', () => {
                 truncation_mode: 'budget-strip-and-drop',
                 observation_source: 'host-event',
                 dropped_count: 42,
+                projected_skill_count: 30,
             },
         ]);
 
@@ -160,6 +162,7 @@ describe('deploy-time catalogue-truncation warning', () => {
                 truncation_mode: 'budget-strip-and-drop',
                 observation_source: 'host-event',
                 dropped_count: 42,
+                projected_skill_count: 30,
             },
         ]);
 
