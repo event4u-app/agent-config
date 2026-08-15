@@ -53,16 +53,16 @@ make an unrewritten marker block, which stays exactly as decided.
 
 ## Phase 1 — Measure the derivation's recall before changing it
 
-- [ ] Run `derive_category_hits` over the last six released spans and record,
+- [x] Run `derive_category_hits` over the last six released spans and record,
       per label, how many commits it caught against how many a hand pass calls
       in-category. Write the table to
       `agents/evidence/analysis/release-head-derivation-recall.md`.
       *verify:* the file exists and carries one row per label per span.
-- [ ] From that table, state which labels are under-derived and by how much. A
+- [x] From that table, state which labels are under-derived and by how much. A
       label whose recall is already high is out of scope for Phase 2 — the
       widening must be aimed, not general.
       *verify:* the analysis names the in-scope labels explicitly.
-- [ ] Record the false-positive cost of the current conservative stance in the
+- [x] Record the false-positive cost of the current conservative stance in the
       same file: how many of the six spans would have gone red under a naive
       "any `fix(` counts" rule. The derivation's own comment argues a false red
       is worse than a miss; that trade-off needs a number before it is moved.
@@ -70,25 +70,28 @@ make an unrewritten marker block, which stays exactly as decided.
 
 ## Phase 2 — Widen the two derivations, conservatively
 
-- [ ] Extend the `Security and correctness` derivation so the correctness half
+- [x] Extend the `Security and correctness` derivation so the correctness half
       of its own label is derivable, using a signal Phase 1 showed is precise
       over the six spans — not a bare `fix(` match if Phase 1 measured that as
       noisy.
       *verify:* `tests/scripts/release_highlights.test.ts` gains a case that is
       caught by the new rule and was missed by the old one, and the
       false-positive fixture from Phase 1 stays uncaught.
-- [ ] Extend the `Honest nulls` derivation beyond the literal marker to the
+      **Verify command corrected:** that path does not exist and never did; the
+      derivation's tests live in `tests/scripts/check_release_highlights.test.ts`
+      (and `release_head_prefill.test.ts`), which is where the cases landed.
+- [x] Extend the `Honest nulls` derivation beyond the literal marker to the
       recorded forms Phase 1 found in real subjects (a waived condition, an
       unmet soak, a published null).
       *verify:* a test asserts the 12.0.0-era waived-soak subject now derives.
-- [ ] Re-run the gate against the `11.0.0..12.0.0` span and record what it now
+- [x] Re-run the gate against the `11.0.0..12.0.0` span and record what it now
       says about the shipped head, in the Phase 1 analysis file.
       *verify:* the file states the gate's verdict on that span, before and
       after.
 
 ## Phase 3 — Decide whether the publish side gets the invariant
 
-- [ ] Record, in `docs/contracts/CHANGELOG-conventions.md`, that the derivation
+- [x] Record, in `docs/contracts/CHANGELOG-conventions.md`, that the derivation
       is the load-bearing half of the retro-curation decision, so the next
       reader does not re-derive why widening it is not a reversal.
       *verify:* the contract's rejected-branch paragraph cites the derivation.
@@ -119,12 +122,27 @@ make an unrewritten marker block, which stays exactly as decided.
 
 ## Acceptance criteria
 
-- [ ] A recall table for all five labels over six released spans exists and is
+- [x] A recall table for all five labels over six released spans exists and is
       cited from this roadmap.
-- [ ] The `11.0.0..12.0.0` span, replayed through the widened derivation,
+      → `agents/evidence/analysis/release-head-derivation-recall.md` § 1, 30
+      rows (5 labels × 6 spans).
+- [x] The `11.0.0..12.0.0` span, replayed through the widened derivation,
       populates `Security and correctness`.
+      → 8 hits, gate exit 1. Before/after recorded in the analysis file § 7.
 - [ ] No previously-green released span turns red under the widened derivation
       (measured, not asserted).
+      **MEASURED FALSE — this criterion does not hold as written.** Five of six
+      previously-green spans turn red (10.1.0, 10.3.0, 10.4.0, 11.0.0, 12.0.0;
+      only 10.2.0 stays green, because its head already carries a derived line
+      rather than `_none_`). Analysis file § 5 carries the per-span table, and
+      three facts that decide what it means: the reds are true positives at a
+      hand-judged 96 %; this criterion and the one above it cannot both hold
+      literally, since populating a green span's field is exactly what turns it
+      red; and **no future release is red because of this** — the generator
+      pre-fills every substantiated label, pinned as a regression test, so
+      Risk 2 does not fire. Left open deliberately rather than ticked under a
+      reading that would pass it. **The maintainer's call:** accept the
+      false-positive reading (§ 5) and close this, or re-cut the criterion.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude/host -->
