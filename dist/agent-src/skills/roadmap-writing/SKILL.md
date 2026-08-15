@@ -176,12 +176,25 @@ file exists, test passes — never "user reviews" / "looks good" (§ 4c).
 A gate only the user or a maintainer can clear — a decision, an
 external dependency, an evidence threshold, a kernel-budget soak
 window — is recorded as a `## Blockers` entry (`### blocker: <id>`
-with `Status` / `Owner` / `Blocks` / `What to do` / `Resolved when`),
-never a stray "blocked on X" sentence. The dashboard generator parses
-these into the overview's `Blocker` column and the per-roadmap
-breakdown. Full shape: [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md).
+with `Status` / `Owner` / `Blocks` / `Recommendation` / `If you do
+nothing` / `What to do` / `Resolved when`), never a stray "blocked on
+X" sentence. The dashboard generator parses these into the overview's
+`Blocker` column and the per-roadmap breakdown. Full shape:
+[`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md).
 Omit the section entirely when the roadmap has no such gate; run the
 § 4c gate-test before adding one.
+
+**Write it so the owner can decide in one sitting.** The first three
+fields describe the situation and do not make it answerable — a blocker
+that stops there hands the analysis to the person with the least
+context. `Recommendation:` names one option and the reason (or names the
+missing fact that would decide it); `If you do nothing:` states what the
+non-decision costs, and "nothing, the roadmap just stays open" is a
+complete answer; `What to do:` gives each option its **change**, its
+**file path or command**, and its **cost**. When you hand a blocker to a
+human, offer to walk them through it in the same reply — deciding is not
+executing. `lint_roadmap_blockers` ratchets this; measured 2026-08-15,
+14 of 46 entries carried no command, path or option at all.
 
 ### 5c. Risk review (Gate R1) — after draft, before save
 

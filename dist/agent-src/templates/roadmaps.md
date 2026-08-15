@@ -137,19 +137,55 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
     - **Status:** open            <!-- open | resolved -->
     - **Owner:** user             <!-- user | maintainer | external -->
     - **Blocks:** Phase N — {phase name}
+    - **Question:** {optional — the one line saying what is being decided.}
+    - **Recommendation:** {which option, and the one sentence why.}
+    - **If you do nothing:** {what the non-decision costs, concretely.}
     - **What to do:**
       1. {Concrete, copy-pasteable step the owner must execute.}
       2. {Include commands, file paths, and expected outcomes.}
     - **Resolved when:** {decidable signal, e.g. "task X exits 0"}
     ```
     `### blocker: <id>` is the parse anchor the dashboard generator
-    reads; ids are unique within the roadmap. All five fields are
-    required. A cleared blocker flips `Status: resolved` (kept for
+    reads; ids are unique within the roadmap. All seven fields are
+    required; `Question:` is optional and recognised (before it was
+    named, the parser folded it silently into `Blocks:`). A cleared blocker flips `Status: resolved` (kept for
     history) instead of being deleted — the resolve-flip runs in the
     same reply as the checkbox flip that cleared it, per
     [`roadmap-progress-sync`](../rules/roadmap-progress-sync.md). A
     step gated by a specific blocker may cross-reference it inline:
     `- [ ] … <!-- blocked-by: <blocker-id> -->`.
+
+    **A blocker is a decision the owner can make in one sitting, or it
+    is not finished being written.** The five original fields describe
+    the *situation*; they do not make it decidable, and a blocker that
+    only describes a situation hands the analysis back to the person
+    least able to do it. Measured 2026-08-15 across the 46 blocker
+    entries in this tree: **14 carry no command, path, or option at all**
+    in `What to do`. Each of those is a research task wearing a
+    decision's clothes.
+
+    - **`Recommendation:` names one option and why.** "Pick exactly one
+      — (a) … or (b) …" without a recommendation is not neutrality, it is
+      an unfinished analysis. The agent read the evidence; the owner did
+      not. If the agent genuinely cannot recommend, the field says so
+      **and names the missing fact** that would decide it.
+    - **`If you do nothing:` states the cost of the non-decision.** Most
+      blockers are cheap to leave open and a few are not; the owner
+      cannot tell which without being told. "Nothing — the roadmap simply
+      stays open" is a complete and common answer.
+    - **`What to do:` is executable, not descriptive.** Each option
+      names **what changes**, **where** (the file path or the command),
+      and **what it costs**. A step a reader cannot execute without first
+      re-deriving the analysis is a finding, not a step.
+    - **Offer to run it.** When the agent hands a blocker to a human, it
+      offers to walk them through it step by step in the same reply. The
+      owner deciding does not mean the owner executing.
+
+    `lint_roadmap_blockers` enforces the field set and probes `What to
+    do` for executable substance. The 14-entry backlog is recorded as a
+    ratchet baseline (`gate-violation-baselines.json`), so existing
+    entries stay legal while any **new** one that skips a field or ships
+    a command-free `What to do` fails.
 
     **Legacy fallback.** A body-level `> Blocked until <condition>`
     note (the follow-up-roadmap convention from rule 17) is parsed by
@@ -383,8 +419,10 @@ complexity: lightweight
 - **Status:** open
 - **Owner:** user
 - **Blocks:** Phase N — {phase name}
+- **Recommendation:** {which option, and the one sentence why}
+- **If you do nothing:** {what the non-decision costs}
 - **What to do:**
-  1. {step}
+  1. {step — what changes, where (`path` or command), what it costs}
 - **Resolved when:** {decidable signal} -->
 
 ## Notes
