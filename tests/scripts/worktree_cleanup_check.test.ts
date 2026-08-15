@@ -359,6 +359,31 @@ describe('trunk resolution + location convention', () => {
         // The defect: judging sibling `a` from inside sibling `b`.
         expect(isStandardLocation(wtB, wtA)).toBe(false);
     });
+
+    // The assertion above is a UNIT test of the predicate. The shipped defect
+    // (52d7fe1b8 / 5cf7450da) was in the CALLER: `buildInventoryInner` had
+    // `mainPath` computed and passed `repoPath` instead, so run from inside a
+    // worktree the safe set collapsed from 181 to 0. Re-introducing exactly
+    // that one-word substitution leaves the unit test above green, so it needs
+    // its own pin at the level the defect actually shipped at.
+    it('regression: the INVENTORY classifies identically from a worktree and from the main checkout', () => {
+        const wtA = path.join(repo, '.claude', 'worktrees', 'a');
+        const wtB = path.join(repo, '.worktrees', 'b');
+        git(repo, ['worktree', 'add', '-q', wtA, '-b', 'feat/a']);
+        git(repo, ['worktree', 'add', '-q', wtB, '-b', 'feat/b']);
+
+        const fromMain = buildInventory(repo);
+        const fromWorktree = buildInventory(wtA);
+
+        const flags = (inv: ReturnType<typeof buildInventory>): Record<string, boolean> =>
+            Object.fromEntries(inv.rows.map((r) => [fs.realpathSync(r.path), r.standardLocation]));
+
+        expect(fromWorktree.rows.length).toBe(fromMain.rows.length);
+        expect(flags(fromWorktree)).toEqual(flags(fromMain));
+        // And not vacuously — both conventional siblings must read as standard.
+        expect(flags(fromMain)[fs.realpathSync(wtA)]).toBe(true);
+        expect(flags(fromMain)[fs.realpathSync(wtB)]).toBe(true);
+    });
 });
 
 describe('ownsOverlap glob-prefix semantics', () => {

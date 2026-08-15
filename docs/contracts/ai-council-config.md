@@ -244,15 +244,44 @@ Implications:
   brake: sized well above normal use, so an explicit override is only needed
   to tighten it (see the shipped `.ai-council.yml.example` for a
   worked-example tighter sizing) or to loosen it further.
-- **Omitting `model:` for a vendor `cli` member is a PIN, not "latest".**
-  Each vendor CLI client (`anthropic` / `openai` / `gemini`) falls back to a
-  dedicated `DEFAULT_*_CLI_MODEL` constant when `model` is unset
+- **Omitting `model:` for a vendor `cli` member is a PIN for `anthropic` and
+  `gemini`, and NOT a pin for `openai`.** Each vendor CLI client falls back to
+  a dedicated `DEFAULT_*_CLI_MODEL` constant when `model` is unset
   (`clients.ts`); `xai` / `perplexity` CLIs are community API wrappers and
-  reuse their `DEFAULT_*_MODEL` API constant. The value is a deliberate pin;
-  the vendor CLI's own default may be newer. Bump the constant intentionally —
-  never assume the omitted default tracks the provider's latest release. The
-  CLI constants are separate from the API ones because the two can legitimately
-  diverge — `openai` API `gpt-4o` vs CLI `gpt-5` is the proof.
+  reuse their `DEFAULT_*_MODEL` API constant. For `anthropic` and `gemini` that
+  value is a deliberate pin and the vendor CLI's own default may be newer —
+  bump the constant intentionally rather than assuming it tracks the latest
+  release.
+
+  **`DEFAULT_OPENAI_CLI_MODEL` is `OPENAI_CLI_VENDOR_DEFAULT`
+  (`'codex-default'`) since 2026-08-15, and that is the opposite of a pin.** It
+  passes NO `--model` flag, so the codex CLI's own default applies. This
+  paragraph previously cited "`openai` API `gpt-4o` vs CLI `gpt-5`" as the
+  proof that the two constant families diverge; the divergence is real but that
+  CLI value is gone, because a subscription-authed (ChatGPT) account refuses
+  both ids with `400 invalid_request_error` — they and `gpt-5.1-codex` are
+  recorded in `CODEX_MEASURED_UNSERVABLE`. A pinned id did not select a model
+  there, it disabled the seat. Which ids an account serves is not knowable from
+  inside this process, so no id is shipped for that transport.
+
+- **`model: codex-default` is a SENTINEL, and both transports honour it.** The
+  codex adapter omits `--model`; `OpenAIClient` (api) resolves it to
+  `DEFAULT_OPENAI_MODEL` rather than sending a value no endpoint answers to.
+  That symmetry is required, not cosmetic: one `model:` field feeds both, and
+  which transport a member resolves to is decided at run time.
+
+  `_build_member` also exempts the sentinel from the `model_ladder` membership
+  check. A downgrade ladder holds concrete ids; requiring a sentinel to appear
+  on one is a category error, and it is the check that would otherwise reject
+  the shipped template outright. A real pin is still required to be on its own
+  ladder, and a set value always passes through verbatim — the loader never
+  rewrites a pin.
+
+  **The low-impact fast path does not downgrade an unpinned member.** With
+  `model_downgrade.enabled` (default `true`) it would otherwise write
+  `model_ladder[0]` onto the client immediately before the call, re-creating the
+  pinned-id shape on a member that deliberately carries none. An explicit
+  `model_tier_override` still wins — that is a human naming a model.
 - **Quota observability (step-8 D1, D4):** every `council run` /
   `council debate` prints a one-line `council:quota · <provider>
   used/limit · …` summary before the first member fires. Every provider now

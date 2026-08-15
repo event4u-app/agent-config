@@ -29,6 +29,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { workspaceIdentity } from './_lib/git_common_dir.js';
+
 // argparse `prog` is hardcoded to "evidence_report.py" in the retired Python implementation,
 // so usage strings stay byte-identical regardless of the `.py`/`.ts` filename.
 const PROG = 'evidence_report.py';
@@ -39,15 +41,24 @@ const DESCRIPTION = 'Evidence Report template automation.';
 // Repo-root resolution
 // ---------------------------------------------------------------------------
 
-/** Return repo root via git, falling back to relative-path heuristic. */
+/**
+ * Return repo root, falling back to the relative-path heuristic.
+ *
+ * Census row R4. The previous implementation spawned
+ * `git rev-parse --show-toplevel` with **no `cwd` and no env scrub**, so an
+ * inherited `GIT_DIR` (every git hook exports one) silently answered about the
+ * hook's repository instead of this one. `workspaceIdentity()` reads files, so
+ * there is no child process to redirect. The fallback is unchanged, and in a
+ * plain invocation both forms return the same path.
+ */
 function _repo_root(): string {
-    const result = spawnSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf-8' });
-    if (result.error || result.status !== 0 || typeof result.stdout !== 'string') {
+    const root = workspaceIdentity().repoRoot;
+    if (!root.resolved) {
         // Script lives at src/scripts/; repo root is two levels up.
         const here = fileURLToPath(import.meta.url);
         return path.resolve(path.dirname(here), '..', '..');
     }
-    return result.stdout.trim();
+    return root.value;
 }
 
 function _git_head_short(): string {

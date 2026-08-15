@@ -26,6 +26,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { workspaceIdentity } from './_lib/git_common_dir.js';
 import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 const SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$/;
@@ -65,8 +66,11 @@ function _on_main(): boolean {
     if (ref === 'refs/heads/main' || ref === 'refs/heads/master') {
         return true;
     }
-    const [rc, head] = _git('rev-parse', '--abbrev-ref', 'HEAD');
-    return rc === 0 && head === MAIN_BRANCH;
+    // Census row B5. Behaviour-identical: a detached HEAD used to compare the
+    // literal `HEAD` against MAIN_BRANCH and fail; unresolved fails the same
+    // way, without a subprocess an inherited `GIT_DIR` could redirect.
+    const branch = workspaceIdentity().branch;
+    return branch.resolved && branch.value === MAIN_BRANCH;
 }
 
 function _npm_latest(pkg: string): string | null {

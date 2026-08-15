@@ -35,6 +35,7 @@
 // - dict insertion order + `dict(sorted(...))` for the stats aggregation.
 
 import { pyRound } from '../_lib/value_ladder.js';
+import { OPENAI_CLI_VENDOR_DEFAULT } from './clients.js';
 import type { CouncilResponse, ExternalAIClient } from './clients.js';
 import type { LowImpactFastPathConfig, MemberConfig } from './config.js';
 import type { ImpactVerdict } from './necessity.js';
@@ -630,7 +631,19 @@ export function resolve_low_impact(
             const pinned = model_downgrade.model_tier_override?.[member.name];
             const cheapest = member.model_ladder.length > 0 ? member.model_ladder[0] : null;
             const target = pinned && pinned.length > 0 ? pinned : cheapest;
-            if (target && target !== client.model) {
+            // A member left on the vendor-default sentinel is NOT downgradable
+            // off the ladder. There is nothing to downgrade FROM — the
+            // transport picks the model — and writing a rung onto it re-creates
+            // the pinned-id shape the seat repair removed. Concretely: the
+            // shipped ladder's cheapest rung is `gpt-4o-mini` and its
+            // neighbours are `gpt-4o` / `gpt-4.1`, so this line could hand the
+            // codex transport an id `CODEX_MEASURED_UNSERVABLE` already records
+            // as refused — on a path whose `model_downgrade.enabled` defaults
+            // to true. An explicit per-run `model_tier_override` still wins,
+            // because that is a human naming a model for this run.
+            const unpinned = client.model === OPENAI_CLI_VENDOR_DEFAULT;
+            const overrideWins = pinned !== undefined && pinned.length > 0;
+            if (target && target !== client.model && (!unpinned || overrideWins)) {
                 client.model = target;
             }
         }

@@ -25,6 +25,8 @@ import {
     formatPerHostVerdicts,
     formatReport,
     knownHostLimits,
+    migrationEligibility,
+    migrationPromptLines,
     observationSourceOf,
     parseHostBudgetEvent,
     readProjectedCatalogue,
@@ -310,10 +312,13 @@ describe('per-host verdicts and measured truncations', () => {
         // No `truncation_mode` — exactly the shape written before hosts were
         // distinguished. It must keep reading as `per-entry`.
     };
-    const codexRecord = buildHostEventRecord('codex', '2026-08-15', 497, {
-        droppedCount: 401,
-        descriptionsStripped: true,
-    });
+    const codexRecord = buildHostEventRecord(
+        'codex',
+        '2026-08-15',
+        497,
+        { droppedCount: 401, descriptionsStripped: true },
+        297,
+    );
 
     it('reads a pre-existing record as per-entry rather than relabelling it', () => {
         expect(truncationModeOf(claudeRecord)).toBe('per-entry');
@@ -331,6 +336,7 @@ describe('per-host verdicts and measured truncations', () => {
             host: 'codex',
             droppedEntries: 401,
             projectedVolume: 497,
+            projectedSkills: 297,
             observedAt: '2026-08-15',
         });
     });
@@ -362,7 +368,74 @@ describe('per-host verdicts and measured truncations', () => {
 
         expect(catalogueLimitWarning(over, limits.get('codex'))).toContain('dropping 401 entries');
         expect(catalogueLimitWarning(under, limits.get('codex'))).toBeNull();
+        // Skills decide, not artefacts: a tree with MORE artefacts but fewer
+        // skills than the observation is not comparable evidence of truncation.
+        expect(
+            catalogueLimitWarning({ ...over, artefacts: 900, skillEntries: 10 }, limits.get('codex')),
+        ).toBeNull();
         // An unmeasured host gets no invented number, so it gets no warning.
         expect(catalogueLimitWarning({ ...over, host: 'claude' }, limits.get('claude'))).toBeNull();
+    });
+});
+
+describe('migration eligibility (AI council 2026-08-15, 2/2)', () => {
+    const limits = knownHostLimits([
+        buildHostEventRecord('codex', '2026-08-15', 497, { droppedCount: 393, descriptionsStripped: true }, 297),
+    ]);
+
+    it('is eligible when this host truncated and the install is legacy-all', () => {
+        const e = migrationEligibility('codex', 'legacy-all', 297, limits);
+
+        expect(e).toMatchObject({ eligible: true, reason: 'eligible', droppedEntries: 393 });
+    });
+
+    it('never fires on an install that already scoped', () => {
+        expect(migrationEligibility('codex', 'scoped', 297, limits).reason).toBe('already-scoped');
+    });
+
+    it('never extrapolates from another host', () => {
+        expect(migrationEligibility('claude', 'legacy-all', 900, limits).reason).toBe(
+            'no-observation-for-host',
+        );
+    });
+
+    // The correction the council made, and the reason it matters: a probe
+    // moved the host's dropped count by 0 for +60 commands and +53 for +60
+    // skills. Comparing artefact TOTALS would fire here — 600 artefacts is
+    // far above the 497 recorded — while the skill population has shrunk and
+    // nothing is being truncated.
+    it('compares SKILLS, so command growth alone never triggers it', () => {
+        expect(migrationEligibility('codex', 'legacy-all', 100, limits).reason).toBe(
+            'below-observed-skill-volume',
+        );
+    });
+
+    it('refuses an observation with no comparable skill count', () => {
+        const old = knownHostLimits([
+            buildHostEventRecord('codex', '2026-08-15', 497, {
+                droppedCount: 393,
+                descriptionsStripped: true,
+            }),
+        ]);
+
+        expect(migrationEligibility('codex', 'legacy-all', 999, old).reason).toBe(
+            'observation-not-comparable',
+        );
+    });
+
+    it('never offers a CLI write for a class-C key', () => {
+        const lines = migrationPromptLines(
+            'codex',
+            migrationEligibility('codex', 'legacy-all', 297, limits),
+            '/x/.agent-settings.yml',
+        ).join('\n');
+
+        // `settings:set` refuses class-C keys by construction, so naming it
+        // would send the reader to a command guaranteed to reject them.
+        expect(lines).not.toContain('settings:set');
+        expect(lines).toContain('/x/.agent-settings.yml');
+        expect(lines).toContain('mode: scoped');
+        expect(lines).toContain('agent-config config');
+        expect(lines).toContain('legitimate choice');
     });
 });

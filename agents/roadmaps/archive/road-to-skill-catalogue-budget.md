@@ -280,15 +280,52 @@ fixed.
 Gated on Phase 1's numbers, Phase 3's verdict, and the blocker below — this is
 the only phase that can change what a consumer receives, so it moves last.
 
-- [ ] Write the migration path as an explicit **choice**, not an imposed
+- [x] Write the migration path as an explicit **choice**, not an imposed
       default: keep everything and accept truncation, scope to active packs, or
       select manually. A writer that imposes `scoped` substitutes the
       maintainer's judgment for the user's.
       `verify:` an existing install with explicit `legacy-all` is not modified
       without an answer, and every branch is reachable.
-- [ ] Make the packaged default meaningful for fresh installs only, so the
+- [x] Make the packaged default meaningful for fresh installs only, so the
       upgrade-compat contract stays intact.
       `verify:` an install carrying a settings doc keeps its resolved mode.
+
+> **Resolved 2026-08-15 — owner's ruling, then the AI council on its condition.**
+> The owner ruled: `scoped` for fresh installs, and an existing install *may*
+> be asked **when it makes sense**. The council (2 members, both present, 2/2
+> converged — the first genuine two-member run after the Phase-2 seat repair)
+> settled what that condition is, and corrected two things on the way.
+>
+> **Step 2 needed no work: it was already true.** The template has shipped
+> `projection.mode: scoped` since the maintainer-approved flip of 2026-07-13,
+> and `_resolve_scoped_projection` honours the packaged template ONLY when no
+> global settings file exists — an existing install resolves to `legacy-all`
+> from a missing key, an unreadable file, or any non-`scoped` value, which is a
+> documented carve-out in `settingsCarveOut.ts`. Both members agreed
+> explicitly: mark complete rather than reimplement.
+>
+> **Step 1 shipped as council option B** — the deploy warning plus an
+> interactive notice that **persists nothing** and names the manual edit and
+> the GUI route. It never offers `settings:set`: `projection.mode` is settings
+> class C and that command refuses class-C keys by construction, so suggesting
+> it would send the reader to a guaranteed rejection. A member caught that in
+> the first draft of the message. Eligibility is computed independently of
+> whether a prompt can be shown, so "not asked because CI" stays
+> distinguishable from "does not qualify".
+>
+> **The council overruled the trigger this roadmap proposed.** The candidate
+> compared *projection volume*; Phase 3's own probe shows commands contribute
+> **nothing** to the drop (+60 commands → Δ0; +60 skills → +53). The shipped
+> predicate therefore compares **skills only**, and an observation carrying no
+> skill count is treated as not comparable rather than coerced into a verdict.
+> That correction also reached the Phase-1 deploy warning, which had the same
+> artefact-total comparison.
+>
+> **Accepted cost, named by the council as the strongest counter-argument:**
+> with nothing persisted, a qualifying install sees the notice on every deploy.
+> That does not outweigh making a measured, silent capability loss an explicit
+> human decision. Artefact: `agents/runtime/council/responses/` (gitignored,
+> local-only per retention).
 
 ## Acceptance Criteria
 
@@ -343,7 +380,7 @@ the only phase that can change what a consumer receives, so it moves last.
 
 ### blocker: scoped-default-decision
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Blocks:** Phase 4
 - **What to do:** decide whether the shipped default for fresh installs becomes
@@ -353,3 +390,16 @@ the only phase that can change what a consumer receives, so it moves last.
   waits on.
 - **Resolved when:** the user states the default for fresh installs and whether
   prompting an existing install is permitted.
+- **Resolved 2026-08-15 by the owner**, with the condition delegated to the AI
+  council on the owner's instruction:
+  1. **Fresh installs → `scoped`.** Already the shipped state since the
+     2026-07-13 flip; the council confirmed it needs no further work.
+  2. **An existing install MAY be prompted — "when it makes sense".** The
+     council turned that into a script-evaluable predicate: a comparable
+     observation for THIS host, a non-zero dropped count, a resolved mode of
+     `legacy-all`, and a current **skill** volume at or above the skill volume
+     recorded at truncation. Delivery is gated separately on an interactive
+     session.
+  3. **Nothing is written on the user's behalf.** `projection.mode` is settings
+     class C; the notice names the manual edit and the GUI route and persists
+     nothing.
