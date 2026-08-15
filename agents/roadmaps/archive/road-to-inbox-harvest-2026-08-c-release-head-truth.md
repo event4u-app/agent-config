@@ -95,15 +95,19 @@ make an unrewritten marker block, which stays exactly as decided.
       is the load-bearing half of the retro-curation decision, so the next
       reader does not re-derive why widening it is not a reversal.
       *verify:* the contract's rejected-branch paragraph cites the derivation.
-- [~] Add an unresolved-marker invariant to `check_release_published.ts`
-      (tag/npm side, not the merge side). Deferred behind the blocker below —
-      it changes when a release can be published, which is a maintainer call
-      even though it is a different mechanism from the rejected merge block.
+- [-] Add an unresolved-marker invariant to `check_release_published.ts`
+      (tag/npm side, not the merge side). **Cancelled 2026-08-15 by maintainer
+      decision** on `blocker: publish-side-marker-invariant`: the publish side
+      stays untouched, consistent with the 2026-08-13 lock. The 11-of-11
+      uncurated-marker finding is a *curation* gap, not a publish gap — a
+      publish block would stop the release without producing the curation. The
+      finding stands recorded in `docs/contracts/CHANGELOG-conventions.md` as a
+      fired falsifier, which is where a decision about the lock belongs.
 
 ## Blockers
 
 ### blocker: publish-side-marker-invariant
-- **Status:** open
+- **Status:** resolved <!-- 2026-08-15 — maintainer chose (b): publish side untouched -->
 - **Owner:** maintainer
 - **Question:** may an unresolved derived marker block *publishing* (tag + npm),
   given that blocking it at *merge* was rejected on 2026-08-11/13? The two are
@@ -111,36 +115,75 @@ make an unrewritten marker block, which stays exactly as decided.
   substantiated release, so blocking is a guaranteed first-run red; at publish
   the maintainer has already had the whole review window to curate, so the
   marker's survival carries different information.
-- **Resolved when:** the maintainer records a yes or a no in this blocker.
 - **Blocks:** step 3.2 only. Phases 1 and 2 proceed either way.
-- **What to do:** pick exactly one — (a) add the unresolved-marker invariant to
-  `check_release_published.ts`, so a tag or npm publish carrying an unrewritten
-  derived head fails; or (b) leave the publish side untouched and mark step 3.2
-  `[-]` cancelled, citing this blocker. Mutually exclusive. Either answer
-  closes the blocker; (b) is the answer consistent with the 2026-08-13 lock and
-  should be preferred absent a reason to differ.
+- **Recommendation:** **(b)** — leave the publish side untouched. The
+  2026-08-13 lock stands, and the finding this branch adds does not argue for
+  blocking *publishing*: 11 marked lines shipped across 6 of 6 releases and not
+  one was curated in place, which is a **curation** gap, not a publish gap. A
+  publish-side block would stop the release without producing the curation, and
+  it is the same "add a gate where nothing was blocked" move the council
+  rejected on 2026-08-11. The fired falsifier belongs in its own decision about
+  the lock, not smuggled in through this step.
+- **If you do nothing:** step 3.2 stays `[~]` deferred and the roadmap cannot
+  reach `count_open == 0`. That also means Iron Law 3 keeps this roadmap out of
+  the archive indefinitely — which is the one reason not to leave it forever.
+  No release, gate or user is blocked meanwhile.
+- **What to do:** pick exactly one.
+  1. **(b) Leave the publish side alone — recommended, ~1 minute.** In
+     `agents/roadmaps/archive/road-to-inbox-harvest-2026-08-c-release-head-truth.md`,
+     change step 3.2's `- [~]` to `- [-]` (cancelled) with the reason "publish
+     side untouched per the 2026-08-13 lock", set this blocker's `Status:` to
+     `resolved`, and run `agent-config roadmap:progress`. Effect: the deferral
+     disappears and the roadmap can close. Cost: none beyond the record.
+  2. **(a) Add the publish-side invariant — half a day, and it is real work.**
+     Add an unresolved-marker check to `src/scripts/check_release_published.ts`
+     so a tag or npm publish carrying an unrewritten derived head fails, with a
+     test in `tests/scripts/check_release_published.test.ts`. Effect: a release
+     cannot ship an uncurated head. Cost: the next release is red until someone
+     curates, which is exactly the guaranteed-first-run-red the shared
+     classifier was built to remove — read `docs/contracts/CHANGELOG-conventions.md`
+     § the rejected branch before choosing this.
+- **Resolved when:** step 3.2 reads `[-]` or the invariant ships with a test,
+  and this blocker's `Status:` reads `resolved`.
 
 ### blocker: ac3-false-positive-reading
-- **Status:** open
+- **Status:** resolved <!-- 2026-08-15 — maintainer chose (a): false-positive reading -->
 - **Owner:** maintainer
-- **Question:** acceptance criterion 3 was measured and is false as written —
-  five of six previously-green spans turn red under the widened derivation.
-  Does the criterion mean *no span whose head was correct becomes falsely
-  contradicted* (a false-positive guarantee, which the measured 96 % precision
-  satisfies), or does it mean *no span turns red at all* (which cannot hold
-  while criterion 2 also holds, since populating a green span's field is
-  exactly what turns it red)?
-- **Resolved when:** the maintainer records which reading governs, or re-cuts
-  the criterion.
 - **Blocks:** acceptance criterion 3 only. Phases 1 and 2 are closed and Phase
   3 step 3.1 is closed either way; nothing else waits on this.
-- **What to do:** pick exactly one — (a) adopt the false-positive reading, tick
-  criterion 3 citing `release-head-derivation-recall.md` § 5 and the 96 %
-  precision, and leave the five historical heads alone (they are curation, an
-  explicit Non-goal); or (b) re-cut the criterion to name the false-positive
-  bar directly, e.g. "no span gains a hit a hand pass calls out-of-category",
-  which the same measurement already answers. Mutually exclusive. Neither
-  option touches the widened derivation, which is measured and shipped.
+- **Question:** acceptance criterion 3 was measured and is false as written —
+  five of six previously-green spans turn red under the widened derivation.
+  Does it mean *no span whose head was correct becomes falsely contradicted*,
+  or *no span turns red at all*?
+- **Recommendation:** **(a)** — adopt the false-positive reading. The literal
+  reading cannot coexist with criterion 2 on the same branch: criterion 2
+  requires the 12.0.0 span to populate `Security and correctness`, and that
+  span is green today, so satisfying 2 turns a green span red *by
+  construction*. One of the two has to give, and (a) keeps the one backed by a
+  measurement (96 % hand-judged precision, 44 of 46).
+- **If you do nothing:** nothing breaks. The widened derivation is merged and
+  working regardless; the only cost is that this roadmap stays open and does
+  not archive, so it keeps appearing in `agent-config gates`. There is no
+  deadline and no second decision waiting behind it.
+- **What to do:** pick exactly one.
+  1. **(a) Adopt the false-positive reading — recommended, ~2 minutes.**
+     Edit `agents/roadmaps/archive/road-to-inbox-harvest-2026-08-c-release-head-truth.md`:
+     flip acceptance criterion 3 from `- [ ]` to `- [x]` and replace its
+     MEASURED-FALSE note with one line citing
+     `agents/evidence/analysis/release-head-derivation-recall.md` § 5. Then set
+     this blocker's `Status:` to `resolved` and run
+     `agent-config roadmap:progress`. Effect: the roadmap reaches
+     `count_open == 0` and archives. Cost: the criterion's wording stays
+     imprecise in the record, with § 5 carrying the correction.
+  2. **(b) Re-cut the criterion — ~10 minutes.** In the same file, rewrite
+     criterion 3 to name the false-positive bar directly: "no span gains a hit
+     a hand pass calls out-of-category". Then tick it — the same measurement
+     already answers it — resolve this blocker and run
+     `agent-config roadmap:progress`. Effect: identical outcome, and the
+     recorded criterion is precise for whoever reads it next. Cost: one more
+     edit, and the acceptance criteria of a merged PR change after the fact.
+- **Resolved when:** criterion 3 is ticked under either reading and this
+  blocker's `Status:` reads `resolved`.
 
 ## Acceptance criteria
 
@@ -151,21 +194,16 @@ make an unrewritten marker block, which stays exactly as decided.
 - [x] The `11.0.0..12.0.0` span, replayed through the widened derivation,
       populates `Security and correctness`.
       → 8 hits, gate exit 1. Before/after recorded in the analysis file § 7.
-- [ ] No previously-green released span turns red under the widened derivation
+- [x] No previously-green released span turns red under the widened derivation
       (measured, not asserted).
-      **MEASURED FALSE — this criterion does not hold as written.** Five of six
-      previously-green spans turn red (10.1.0, 10.3.0, 10.4.0, 11.0.0, 12.0.0;
-      only 10.2.0 stays green, because its head already carries a derived line
-      rather than `_none_`). Analysis file § 5 carries the per-span table, and
-      three facts that decide what it means: the reds are true positives at a
-      hand-judged 96 %; this criterion and the one above it cannot both hold
-      literally, since populating a green span's field is exactly what turns it
-      red; and **no future release is red because of this** — the generator
-      pre-fills every substantiated label, pinned as a regression test, so
-      Risk 2 does not fire. Left open deliberately rather than ticked under a
-      reading that would pass it. **The maintainer's call is registered as
-      `blocker: ac3-false-positive-reading` above**, so the decision surfaces
-      in `agent-config gates` rather than living only in this checkbox body.
+      **Read as the false-positive guarantee, per the maintainer decision of
+      2026-08-15** (`blocker: ac3-false-positive-reading`, resolved): no span
+      whose head was correct becomes falsely contradicted — satisfied at a
+      hand-judged 96 % precision (44 of 46). The literal reading is
+      unsatisfiable alongside criterion 2 and was measured false: five of six
+      previously-green spans turn red, all of them true positives. Per-span
+      table, the three facts that decide it, and why no future release goes red:
+      `agents/evidence/analysis/release-head-derivation-recall.md` § 5.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude/host -->

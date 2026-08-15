@@ -27,7 +27,15 @@ import { putPending } from '../../src/agent-src/templates/scripts/work_engine/ho
 
 function entry(
     owner: string,
-    opts: { id?: string; openSteps?: number; roadmap?: string; todo?: string[] } = {},
+    opts: {
+        id?: string;
+        openSteps?: number;
+        roadmap?: string;
+        todo?: string[];
+        recommendation?: string;
+        ifNothing?: string;
+        question?: string;
+    } = {},
 ): Entry {
     return {
         blocker: {
@@ -37,11 +45,59 @@ function entry(
             blocks: 'Phase 1',
             todo: opts.todo ?? ['1. Do the thing.'],
             resolvedWhen: 'the thing is done',
+            // Default to the pre-field shape on purpose: most entries in the
+            // tree still carry neither, and the renderer has to stay correct
+            // for them rather than for the happy case only.
+            recommendation: opts.recommendation ?? '',
+            ifNothing: opts.ifNothing ?? '',
+            question: opts.question ?? '',
         },
         roadmapRel: opts.roadmap ?? 'road-to-x.md',
         openSteps: opts.openSteps ?? 3,
     };
 }
+
+describe('decidability fields — the half that makes a blocker answerable', () => {
+    it('leads with the recommendation when one is recorded', () => {
+        const out = render([entry('user', { recommendation: 'take (b) — it is reversible' })], false);
+        expect(out).toContain('Recommendation:');
+        expect(out).toContain('take (b) — it is reversible');
+        // The answer comes before the instructions that carry it out.
+        expect(out.indexOf('Recommendation:')).toBeLessThan(out.indexOf('Do this:'));
+    });
+
+    it('says the recommendation is MISSING rather than rendering a silent gap', () => {
+        const out = render([entry('user')], false);
+        expect(out).toContain('Recommendation:');
+        expect(out).toMatch(/none recorded/i);
+    });
+
+    it('renders the cost of the non-decision when recorded, and omits the line otherwise', () => {
+        const withCost = render([entry('user', { ifNothing: 'the roadmap never archives' })], false);
+        expect(withCost).toContain('If you do nothing:');
+        expect(withCost).toContain('the roadmap never archives');
+        expect(render([entry('user')], false)).not.toContain('If you do nothing:');
+    });
+
+    it('offers the guided path — deciding is not the same as executing', () => {
+        const out = render([entry('user')], false);
+        expect(out).toContain('guide me through');
+    });
+
+    it('offers nothing to guide when nothing is waiting on the user', () => {
+        expect(render([entry('maintainer')], false)).not.toContain('guide me through');
+    });
+
+    it('renders the question as its own field instead of gluing it onto Blocks', () => {
+        // Three entries in the tree already wrote `- **Question:**`, and the
+        // parser did not know the label — so the decision's subject arrived
+        // appended to the end of the Blocks sentence.
+        const out = render([entry('user', { question: 'which reading governs?' })], false);
+        expect(out).toContain('The question:');
+        expect(out).toContain('which reading governs?');
+        expect(out.indexOf('The question:')).toBeLessThan(out.indexOf('Recommendation:'));
+    });
+});
 
 describe('needsUser — the owner split', () => {
     it('claims the plain user owner', () => {
