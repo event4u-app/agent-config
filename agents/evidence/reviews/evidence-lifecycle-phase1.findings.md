@@ -6,7 +6,7 @@ inputs:
   diff_sha: 5efb15097a8567ce2666b06669dbcbdb45e90bfb
   scope_hash: bcdcb5b97d5b6aca78e6b9fc9554702d8cf59948139cc9748f7a975ed0909058
   roadmap: agents/roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md
-  roadmap_hash: 2bc23b8e24739e5b7b4262f5d3ec1b41c4ca06d252035c7f66878edcc583aa5b
+  roadmap_hash: bb946b80996f14fe288c91e77fafdf99e47a0acd3e2ee9e531726f4645861e23
   ac_hash: 694bb735c11ffdfc843d3ab31cd5f9393745195f4647c9b5ef199fe34d685a26
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]

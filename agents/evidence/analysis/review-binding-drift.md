@@ -63,6 +63,30 @@ rejects, and rightly. Whether the dashboard belongs in `REVIEW_SCOPE_EXCLUDES` i
 a separate, smaller question this plan did not ask and this analysis does not
 answer.
 
+## The other two segments ARE consulted — by a different gate
+
+The roadmap's Context says the two remaining segments "are written, parsed, and
+never consulted for currency". That is true of `artefactStaleness`
+(`dispatch_r2_reviewer.ts`), which compares `scope_hash` alone — and it is the
+verdict the plan proposed to change.
+
+It is NOT true of the suite as a whole. `--verify-current`, which CI runs as
+"Gate R2 — context-manifest re-derivation", re-derives all three segments and
+blocks on any of them. This PR proved it the expensive way: the fix pass edited
+the roadmap, `roadmap_hash` diverged, and CI refused the artefact with
+`manifest mismatch (stale review): roadmap_hash diverged` while every local
+check was green.
+
+Two consequences worth keeping:
+
+- **The roadmap segment already has teeth**, just not in the verdict the plan
+  targeted. Any future proposal to make the currency verdict segment-aware has
+  to say how it interacts with a CI gate that already treats a roadmap edit as
+  disqualifying — otherwise the two disagree about what "current" means.
+- **A re-bind must update every segment the artefact records, not just the
+  scope.** Updating `scope_hash` and `diff_sha` alone passes
+  `check_completion_review` locally and fails CI.
+
 ## Two integrity findings the measurement surfaced
 
 Neither is in the roadmap's scope. Both are recorded because they were found.
