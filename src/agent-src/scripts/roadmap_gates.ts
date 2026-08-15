@@ -126,10 +126,10 @@ function wrap(text: string, width: number, indent: string): string[] {
 
 /**
  * Column width for the label gutter — sized to the longest label in use
- * (`Blocked until:`, 14 chars) plus one separating space, so no value ever
+ * (`If you do nothing:`, 18 chars) plus one separating space, so no value ever
  * runs flush against its own label.
  */
-const LABEL_W = 15;
+const LABEL_W = 19;
 
 /** A labelled block: `  Label:  value`, wrapped and hanging-indented. */
 function field(label: string, value: string): string[] {
@@ -183,6 +183,23 @@ function renderEntry(e: Entry, index: number): string[] {
         ...field('Blocks:', e.blocker.blocks),
     ];
 
+    // What is actually being decided, when the entry says so.
+    if (e.blocker.question) {
+        out.push(...field('The question:', e.blocker.question));
+    }
+
+    // The recommendation leads, because it is the answer — everything below it
+    // is how to carry the answer out. An entry that predates the field says so
+    // rather than rendering a silent gap: the reader needs to know the analysis
+    // is missing, not merely that a line is absent.
+    out.push(
+        ...field(
+            'Recommendation:',
+            e.blocker.recommendation ||
+                '(none recorded — this entry predates the field; ask for one before deciding)',
+        ),
+    );
+
     const doLabel = isLegacy(e.blocker) ? 'Blocked until:' : 'Do this:';
     const steps = regroupTodo(e.blocker.todo);
     if (steps.length === 0) {
@@ -202,6 +219,9 @@ function renderEntry(e: Entry, index: number): string[] {
             const lines = wrap(s, WIDTH - LABEL_W - 2, indent);
             out.push(...lines.map((l, i) => (i === 0 ? indent + l : l)));
         }
+    }
+    if (e.blocker.ifNothing) {
+        out.push(...field('If you do nothing:', e.blocker.ifNothing));
     }
     out.push(...field('Done when:', e.blocker.resolvedWhen));
     return out;
@@ -237,6 +257,14 @@ function render(entries: readonly Entry[], all: boolean): string {
         lines.push(...renderEntry(e, n));
     }
     if (shown.length > 0) {
+        lines.push('');
+        // Deciding is not the same as executing, and a list that only decides
+        // leaves the second half with the person who has the least context.
+        // Naming the guided path here is the cheapest place to close that gap:
+        // it is on screen at exactly the moment the reader is looking at a
+        // decision they did not write.
+        lines.push('Not sure about one of these? Ask your agent:');
+        lines.push('  "guide me through <id>"   — one decision, step by step');
         lines.push('');
     }
     return lines.join('\n') + '\n';

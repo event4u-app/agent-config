@@ -175,13 +175,13 @@ file exists, test passes — never "user reviews" / "looks good" (§ 4c).
 
 A gate only the user or a maintainer can clear — a decision, an
 external dependency, an evidence threshold, a kernel-budget soak
-window — is recorded as a `## Blockers` entry (`### blocker: <id>`
-with `Status` / `Owner` / `Blocks` / `What to do` / `Resolved when`),
-never a stray "blocked on X" sentence. The dashboard generator parses
-these into the overview's `Blocker` column and the per-roadmap
-breakdown. Full shape: [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md).
-Omit the section entirely when the roadmap has no such gate; run the
-§ 4c gate-test before adding one.
+window — is recorded as a `## Blockers` entry (`### blocker: <id>` with the
+seven fields of rule 20), never a stray "blocked on X" sentence. Write it so
+the owner can decide in one sitting: one option named and why, what the delay
+costs, a command or path per option rather than prose, and an offer to walk
+them through it. Ratcheted by `lint_roadmap_blockers`. Full shape:
+[`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md).
+Omit it entirely when there is no such gate; run the § 4c gate-test first.
 
 ### 5c. Risk review (Gate R1) — after draft, before save
 

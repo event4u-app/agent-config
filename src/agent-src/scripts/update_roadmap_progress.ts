@@ -347,6 +347,24 @@ interface Blocker {
     blocks: string;
     todo: string[];
     resolvedWhen: string;
+    /**
+     * The two fields that make a blocker *decidable* rather than merely
+     * described. Empty string when the entry predates them — the ratchet in
+     * `lint_roadmap_blockers` keeps the backlog legal, so the renderer has to
+     * cope with absence rather than assume it away.
+     */
+    recommendation: string;
+    ifNothing: string;
+    /**
+     * Optional one-line statement of what is actually being decided.
+     *
+     * Not required, but recognised: three entries in the tree already used
+     * `- **Question:**` and, because the field list did not know it, the
+     * continuation logic silently appended it to `Blocks` — the decision's
+     * subject arrived glued to the end of an unrelated sentence. Naming it
+     * costs one enum entry and turns a silent swallow into a rendered field.
+     */
+    question: string;
 }
 
 // Strip fenced code blocks before blocker detection — a roadmap that shows the
@@ -362,7 +380,8 @@ function _stripFencedCode(text: string): string {
     return text.replace(FENCED_CODE_RE, (m) => '\n'.repeat(_splitlines(m).length));
 }
 
-const BLOCKER_FIELD_RE = /^-[ \t]*\*\*(Status|Owner|Blocks|Resolved when|What to do):\*\*/i;
+const BLOCKER_FIELD_RE =
+    /^-[ \t]*\*\*(Status|Owner|Blocks|Resolved when|What to do|Recommendation|If you do nothing|Question):\*\*/i;
 
 /** Strip an inline `<!-- comment -->` and trim. */
 function _stripComment(s: string): string {
@@ -471,6 +490,9 @@ function parse_blockers(raw_text: string): Blocker[] {
                 blocks: _blockerField(body, 'Blocks') ?? '(unspecified)',
                 todo: _blockerTodo(body),
                 resolvedWhen: _blockerField(body, 'Resolved when') ?? '(unspecified)',
+                recommendation: _blockerField(body, 'Recommendation') ?? '',
+                ifNothing: _blockerField(body, 'If you do nothing') ?? '',
+                question: _blockerField(body, 'Question') ?? '',
             });
         }
     }
@@ -502,6 +524,9 @@ function parse_blockers(raw_text: string): Blocker[] {
             blocks: 'entire roadmap',
             todo: [parts.join(' ')],
             resolvedWhen: 'condition described above clears',
+            recommendation: '',
+            ifNothing: '',
+            question: '',
         });
     }
     return blockers;
@@ -869,6 +894,12 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null = null): stri
             lines.push('**Blockers**\n');
             for (const b of openBlockers) {
                 lines.push(`- **${b.id}** (owner: ${b.owner}) — blocks ${b.blocks}`);
+                if (b.recommendation) {
+                    lines.push(`  - **Recommendation:** ${b.recommendation}`);
+                }
+                if (b.ifNothing) {
+                    lines.push(`  - **If you do nothing:** ${b.ifNothing}`);
+                }
                 lines.push('  - **What to do:**');
                 for (const step of b.todo) {
                     lines.push(`    ${step}`);
