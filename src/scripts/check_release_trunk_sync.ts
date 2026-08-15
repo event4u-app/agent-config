@@ -21,6 +21,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { workspaceIdentity } from './_lib/git_common_dir.js';
 import { assertScanned } from './_lib/scan_scope.js';
 
 const RELEASE_BRANCH_RE = /^release\/(\d+)\.(\d+)\.(\d+)$/;
@@ -37,8 +38,19 @@ function _git(...args: string[]): string {
     return (proc.stdout ?? '').trim();
 }
 
+/**
+ * Census row B3 — one of four private `_current_branch` implementations that
+ * existed beside the shared, file-based one.
+ *
+ * This one spawned `rev-parse --abbrev-ref HEAD` with **no `cwd` and no env
+ * scrub**, so an inherited `GIT_DIR` answered about the hook's repository.
+ * The migration is behaviour-identical at the only call site: `main()` treats
+ * `'HEAD'` and `''` the same ("detached HEAD — gate skipped"), and the
+ * resolver's unresolved case maps onto `''`.
+ */
 function _current_branch(): string {
-    return _git('rev-parse', '--abbrev-ref', 'HEAD');
+    const branch = workspaceIdentity().branch;
+    return branch.resolved ? branch.value : '';
 }
 
 function _parse_semver(text: string): SemVer | null {
@@ -148,7 +160,11 @@ function main(): number {
             gate: 'check_release_trunk_sync',
             scanned: 0,
             units: 'release-prep branch(es)',
-            roots: ['git rev-parse --abbrev-ref HEAD'],
+            // Names what the gate actually reads. It stopped spawning
+            // `rev-parse --abbrev-ref HEAD` when B3 moved to the file-based
+            // resolver; a scan root naming a command the gate does not run is
+            // a false scope declaration.
+            roots: ['<git-dir>/HEAD via workspaceIdentity().branch'],
             allowEmpty:
                 'OPTIONAL_INPUT: the checked-out branch is not release/X.Y.Z, so there is no ' +
                 'target version to compare main against — an absent question, not an empty ' +

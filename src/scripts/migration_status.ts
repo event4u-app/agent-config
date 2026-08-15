@@ -21,6 +21,8 @@ import { dirname, resolve } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { workspaceIdentity } from './_lib/git_common_dir.js';
+
 // ---------------------------------------------------------------------------
 // Categories and phase mapping
 // ---------------------------------------------------------------------------
@@ -157,8 +159,22 @@ function git(args: readonly string[], cwd: string): string {
     return execFileSync('git', [...args], { cwd, encoding: 'utf-8' }).trim();
 }
 
+/**
+ * Census row R8 — the tree's only exported `repoRoot()`, which is why nothing
+ * imports it: it lives in a report script.
+ *
+ * It used to spawn `rev-parse --show-toplevel` with no env scrub, so an
+ * inherited `GIT_DIR` answered about the hook's repository, and it threw an
+ * `execFileSync` error outside a repo. The throw is preserved deliberately —
+ * every caller here treats a missing root as fatal — but it is now a message
+ * that names the reason instead of a git subprocess failure.
+ */
 export function repoRoot(): string {
-    return git(['rev-parse', '--show-toplevel'], process.cwd());
+    const root = workspaceIdentity(process.cwd()).repoRoot;
+    if (!root.resolved) {
+        throw new Error(`cannot resolve repo root: ${root.reason}`);
+    }
+    return root.value;
 }
 
 export function trackedPythonFiles(root: string): string[] {

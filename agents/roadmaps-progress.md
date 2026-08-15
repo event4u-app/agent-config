@@ -406,29 +406,6 @@ _1 blocker resolved._
     should be preferred absent a reason to differ.
   - **Resolved when:** the maintainer records a yes or a no in this blocker.
 
-### [road-to-inbox-harvest-2026-08-c-workspace-identity.md](roadmaps/road-to-inbox-harvest-2026-08-c-workspace-identity.md)
-
-**Road to one answer for "where am I"** — 0 / 11 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Census the question and its wrong answers | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | One resolver, in the module that already owns the hazard | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Read the state, do not act on it | ⬜ not started | 5 | 0 | 1 | 0 | 0% |
-
-<a id="blockers-road-to-inbox-harvest-2026-08-c-workspace-identity"></a>
-**Blockers**
-
-- **worktree-disposal-policy** (owner: maintainer - **Question:** what may be disposed of automatically, if anything? The pressure read makes the population legible for the first time, but every disposal is a bulk deletion and therefore Hard-Floor. The plausible answers range from "nothing, ever — the report is the whole deliverable" to "merged, commit-free and session-free entries are proposed for deletion in one confirmable batch".) — blocks step 3.3 only. Phases 1 and 2 and the read in 3.1–3.2 proceed either way.
-  - **What to do:**
-    pick exactly one — (a) report-only forever: the pressure read
-    is the whole deliverable, and step 3.3 is marked `[-]` cancelled; or
-    (b) propose a disposal batch from the read, listing merged, commit-free and
-    session-free entries for one confirmable deletion under the Hard Floor.
-    Mutually exclusive; (a) needs no further work, (b) reopens 3.3 with the tier
-    boundary written into it.
-  - **Resolved when:** the maintainer records which of those the policy is.
-
 ### [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md)
 
 **Road to the inbox-harvest residuals — four deferrals that outlived their parent** — 0 / 4 done (0%)

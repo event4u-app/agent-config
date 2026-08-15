@@ -250,6 +250,11 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              router + projection freshness, host bridge status.
                              Flags: --platform <p>, --workspace <path>, --json, --strict,
                              --no-freshness
+  workspace:doctor           One answer to "where am I": repo root, main worktree, current
+                             worktree, branch, PR base — each with its provenance — plus
+                             session claim, conflicting records and worktree pressure.
+                             Read-only; no disposal path by design.
+                             Flags: --from <dir>, --json, --strict
   route:explain              Deterministic rule-routing trace for one prompt: matched
                              triggers, tier, injected-vs-pointer disposition, budget
                              consumption, rejected candidates. Trigger-match level only
@@ -899,6 +904,10 @@ cmd_routing_doctor() {
   exec_hook "src/scripts/routing_doctor" "$@"
 }
 
+cmd_workspace_doctor() {
+  exec_hook "src/scripts/workspace_doctor" "$@"
+}
+
 cmd_hooks_replay() {
   exec_hook "src/scripts/hooks/replay_hook" "$@"
 }
@@ -1422,6 +1431,7 @@ main() {
     hooks:status)            cmd_hooks_status "$@" ;;
     hooks:doctor)            cmd_hooks_doctor "$@" ;;
     routing:doctor)          cmd_routing_doctor "$@" ;;
+    workspace:doctor)        cmd_workspace_doctor "$@" ;;
     route:explain)           cmd_route_explain "$@" ;;
     route:audit)             cmd_route_audit "$@" ;;
     hooks:replay)            cmd_hooks_replay "$@" ;;

@@ -122,8 +122,9 @@ export function checkWorktree(worktreePath: string): CheckResult {
     return { allowed: reasons.length === 0, reasons };
 }
 
-interface WorktreeEntry {
+export interface WorktreeEntry {
     path: string;
+    /** Short branch name (`refs/heads/` stripped), or `null` when detached. */
     branch: string | null;
 }
 
