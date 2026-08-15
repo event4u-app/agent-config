@@ -20,6 +20,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { checkRatchet } from './_lib/gate_baseline.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -46,6 +47,41 @@ const REQUIRED_FIELDS: ReadonlyArray<readonly [string, RegExp]> = [
     ['Resolved when', /^-[ \t]*\*\*Resolved when:\*\*/im],
 ];
 
+/**
+ * The fields that make a blocker DECIDABLE rather than merely described.
+ *
+ * Separated from `REQUIRED_FIELDS` on purpose: the five above are a settled
+ * contract every entry in the tree already satisfies, so a missing one is a
+ * hard failure. These three are new, and 36 open entries predate them — held
+ * to the same bar on day one they would red the whole backlog, which is the
+ * "strict gate fires on ~283 files" failure this repo has already recorded
+ * once. They run through the ratchet instead: the backlog is legal at its
+ * measured size, and every entry added or edited after this must clear them.
+ */
+const DECIDABILITY_FIELDS: ReadonlyArray<readonly [string, RegExp]> = [
+    ['Recommendation', /^-[ \t]*\*\*Recommendation:\*\*[ \t]*\S/im],
+    ['If you do nothing', /^-[ \t]*\*\*If you do nothing:\*\*[ \t]*\S/im],
+];
+
+/** `What to do:` body — everything up to the next field marker. */
+const WHAT_TO_DO_SLICE_RE =
+    /^-[ \t]*\*\*What to do:\*\*([\s\S]*?)(?=^-[ \t]*\*\*[A-Z]|^###[ \t]|$(?![\s\S]))/im;
+
+/**
+ * Does `What to do` carry anything the owner can actually execute?
+ *
+ * A backticked span (a command, a path, a flag) or an enumerated option set
+ * (`(a)` / `1.`) both count. Bare prose does not: "pick exactly one — accept
+ * the reading, or re-cut the criterion" names no file, no command and no
+ * consequence, and hands the analysis back to the person least equipped to
+ * redo it. Measured 2026-08-15: 14 of 46 entries in this tree are that shape.
+ */
+function _hasExecutableSubstance(body: string): boolean {
+    const m = WHAT_TO_DO_SLICE_RE.exec(body);
+    const slice = m ? (m[1] as string) : '';
+    return /`[^`\n]+`/.test(slice) || /(^|\s)\((?:[a-z]|[0-9]+)\)\s/i.test(slice);
+}
+
 interface Violation {
     line: number;
     message: string;
@@ -68,7 +104,19 @@ function _stripFencedCode(text: string): string {
 }
 
 function _scan(rawText: string): Violation[] {
+    return _scanBoth(rawText).hard;
+}
+
+interface ScanResult {
+    /** Contract violations — always fatal. */
+    hard: Violation[];
+    /** Open entries that are not yet decidable — counted against the ratchet. */
+    decidability: Violation[];
+}
+
+function _scanBoth(rawText: string): ScanResult {
     const violations: Violation[] = [];
+    const decidability: Violation[] = [];
     const text = _stripFencedCode(rawText);
     const declaredIds = new Set<string>();
 
@@ -105,6 +153,23 @@ function _scan(rawText: string): Violation[] {
                     message: `blocker '${cur.id}' missing required field(s): ${missing.join(', ')}`,
                 });
             }
+            // Resolved entries are history — re-litigating a decision already
+            // made would be churn, and the ratchet would never reach zero.
+            const isResolved = /^-[ \t]*\*\*Status:\*\*[ \t]*resolved/im.test(body);
+            if (!isResolved) {
+                const gaps = DECIDABILITY_FIELDS.filter(([, re]) => !re.test(body)).map(
+                    ([name]) => name,
+                );
+                if (!_hasExecutableSubstance(body)) {
+                    gaps.push('What to do (no command, path or option set)');
+                }
+                if (gaps.length) {
+                    decidability.push({
+                        line: _lineAt(text, sectionStart + cur.start),
+                        message: `blocker '${cur.id}' is not decidable yet: ${gaps.join(', ')}`,
+                    });
+                }
+            }
         }
     }
 
@@ -131,7 +196,8 @@ function _scan(rawText: string): Violation[] {
         }
     }
     violations.sort((a, b) => a.line - b.line);
-    return violations;
+    decidability.sort((a, b) => a.line - b.line);
+    return { hard: violations, decidability };
 }
 
 /** Sorted `agents/roadmaps/*.md` (non-recursive — active roadmaps only). */
@@ -206,14 +272,18 @@ function main(): number {
         return 0;
     }
     let failed = 0;
+    const undecidable: Array<{ rel: string; v: Violation }> = [];
     for (const roadmap of roadmaps) {
         const rel = _relPosix(roadmap, REPO_ROOT);
         const text = fs.readFileSync(roadmap, 'utf-8');
-        const violations = _scan(text);
-        if (violations.length) {
+        const { hard, decidability } = _scanBoth(text);
+        for (const v of decidability) {
+            undecidable.push({ rel, v });
+        }
+        if (hard.length) {
             failed += 1;
             process.stderr.write(`❌  ${rel}\n`);
-            for (const v of violations) {
+            for (const v of hard) {
                 process.stderr.write(`    line ${v.line}: ${v.message}\n`);
             }
         } else if (!QUIET) {
@@ -228,8 +298,31 @@ function main(): number {
         );
         return 1;
     }
+
+    // The decidability ratchet. A blocker that names no option, no command and
+    // no recommendation is a research task handed to the person with the least
+    // context — the defect this half of the gate exists to stop growing.
+    const verdict = checkRatchet({
+        gate: 'lint_roadmap_blockers:decidability',
+        actual: undecidable.length,
+        repoRoot: REPO_ROOT,
+    });
+    if (!verdict.ok) {
+        process.stderr.write(`❌  ${verdict.message}\n`);
+        for (const { rel, v } of undecidable) {
+            process.stderr.write(`    ${rel}:${v.line}: ${v.message}\n`);
+        }
+        process.stderr.write(
+            '\n    Every open blocker needs **Recommendation:** (which option, and why),\n' +
+                '    **If you do nothing:** (the cost of the non-decision), and a\n' +
+                '    **What to do:** carrying a command, a path or an enumerated option set.\n' +
+                '    See templates/roadmaps.md rule 20.\n',
+        );
+        return 1;
+    }
     if (!QUIET) {
         process.stdout.write(`\n✅  ${roadmaps.length} roadmap(s) blocker-contract-clean\n`);
+        process.stdout.write(`✅  ${verdict.message}\n`);
     }
     return 0;
 }
@@ -260,5 +353,15 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
     process.exit(main());
 }
 
-export { REPO_ROOT, ROADMAP_GLOB, REQUIRED_FIELDS, _scan, _globRoadmaps, main };
-export type { Violation };
+export {
+    REPO_ROOT,
+    ROADMAP_GLOB,
+    REQUIRED_FIELDS,
+    DECIDABILITY_FIELDS,
+    _hasExecutableSubstance,
+    _scan,
+    _scanBoth,
+    _globRoadmaps,
+    main,
+};
+export type { Violation, ScanResult };

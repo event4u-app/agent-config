@@ -6,7 +6,100 @@
 // the sibling linters in this family).
 import { describe, expect, it } from 'vitest';
 
-import { _scan } from '../../src/scripts/lint_roadmap_blockers.js';
+import { _hasExecutableSubstance, _scan, _scanBoth } from '../../src/scripts/lint_roadmap_blockers.js';
+
+describe('lint_roadmap_blockers — the decidability half', () => {
+    const decidable = [
+        '## Blockers',
+        '',
+        '### blocker: pick-a-reading',
+        '- **Status:** open',
+        '- **Owner:** maintainer',
+        '- **Blocks:** acceptance criterion 3',
+        '- **Recommendation:** (a) — it is the only one backed by a measurement.',
+        '- **If you do nothing:** the roadmap stays open; nothing else breaks.',
+        '- **What to do:**',
+        '  1. (a) Edit `agents/roadmaps/x.md` and tick the criterion.',
+        '  2. (b) Re-cut the criterion, then run `agent-config roadmap:progress`.',
+        '- **Resolved when:** the criterion is ticked',
+        '',
+    ].join('\n');
+
+    it('a fully decidable blocker raises nothing', () => {
+        expect(_scanBoth(decidable).decidability).toEqual([]);
+    });
+
+    it('flags the shape that started this — options in prose, no command, no recommendation', () => {
+        const prose = decidable
+            .replace('- **Recommendation:** (a) — it is the only one backed by a measurement.\n', '')
+            .replace('- **If you do nothing:** the roadmap stays open; nothing else breaks.\n', '')
+            .replace(
+                '  1. (a) Edit `agents/roadmaps/x.md` and tick the criterion.\n' +
+                    '  2. (b) Re-cut the criterion, then run `agent-config roadmap:progress`.',
+                '  pick exactly one — accept the reading, or re-cut the criterion.',
+            );
+        const gaps = _scanBoth(prose).decidability;
+        expect(gaps).toHaveLength(1);
+        expect(gaps[0]!.message).toContain('Recommendation');
+        expect(gaps[0]!.message).toContain('If you do nothing');
+        expect(gaps[0]!.message).toContain('What to do');
+    });
+
+    it('never re-litigates a resolved blocker — history is not a backlog', () => {
+        const resolved = decidable
+            .replace('- **Status:** open', '- **Status:** resolved')
+            .replace('- **Recommendation:** (a) — it is the only one backed by a measurement.\n', '');
+        expect(_scanBoth(resolved).decidability).toEqual([]);
+    });
+
+    it('keeps the five-field contract hard while the new fields ratchet', () => {
+        const noOwner = decidable.replace('- **Owner:** maintainer\n', '');
+        // Missing Owner is a contract violation → hard, not deferred to the ratchet.
+        expect(_scanBoth(noOwner).hard).toHaveLength(1);
+        expect(_scanBoth(noOwner).hard[0]!.message).toContain('Owner');
+    });
+
+    it('an empty field header does not count as a recommendation', () => {
+        const blank = decidable.replace(
+            '- **Recommendation:** (a) — it is the only one backed by a measurement.',
+            '- **Recommendation:**',
+        );
+        expect(_scanBoth(blank).decidability[0]!.message).toContain('Recommendation');
+    });
+
+    describe('_hasExecutableSubstance', () => {
+        it('accepts a backticked command or path', () => {
+            expect(
+                _hasExecutableSubstance('- **What to do:**\n  1. Run `agent-config gates`.\n'),
+            ).toBe(true);
+        });
+
+        it('accepts an enumerated option set', () => {
+            expect(
+                _hasExecutableSubstance('- **What to do:**\n  pick one — (a) do this (b) do that\n'),
+            ).toBe(true);
+        });
+
+        it('rejects bare prose, however confident', () => {
+            expect(
+                _hasExecutableSubstance(
+                    '- **What to do:** pick exactly one — accept the false-positive reading, ' +
+                        'or re-cut the criterion. Mutually exclusive.\n',
+                ),
+            ).toBe(false);
+        });
+
+        it('does not borrow substance from a neighbouring field', () => {
+            // A backtick in `Resolved when:` must not make `What to do:` look
+            // executable — the slice has to stop at the next field marker.
+            expect(
+                _hasExecutableSubstance(
+                    '- **What to do:** decide it.\n- **Resolved when:** `task ci` exits 0\n',
+                ),
+            ).toBe(false);
+        });
+    });
+});
 
 describe('lint_roadmap_blockers — _scan', () => {
     const VALID_BLOCKER = [
