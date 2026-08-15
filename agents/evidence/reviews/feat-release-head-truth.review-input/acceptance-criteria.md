@@ -19,5 +19,6 @@
       red; and **no future release is red because of this** — the generator
       pre-fills every substantiated label, pinned as a regression test, so
       Risk 2 does not fire. Left open deliberately rather than ticked under a
-      reading that would pass it. **The maintainer's call:** accept the
-      false-positive reading (§ 5) and close this, or re-cut the criterion.
+      reading that would pass it. **The maintainer's call is registered as
+      `blocker: ac3-false-positive-reading` above**, so the decision surfaces
+      in `agent-config gates` rather than living only in this checkbox body.

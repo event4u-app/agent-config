@@ -1,13 +1,13 @@
 diff --git a/agents/evidence/analysis/release-head-derivation-recall.md b/agents/evidence/analysis/release-head-derivation-recall.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..30c5b9587c1c71de5b09bb5daafa7cacf4d70ea4
+index 0000000000000000000000000000000000000000..c8a0c072a5bed804f03a91b1e1f71beecc686f96
 --- /dev/null
 +++ b/agents/evidence/analysis/release-head-derivation-recall.md
-@@ -0,0 +1,265 @@
+@@ -0,0 +1,305 @@
 +# Release-head derivation: recall over six released spans
 +
 +Phase 1 of `road-to-inbox-harvest-2026-08-c-release-head-truth`. Measures what
-+`derive_category_hits` (`src/scripts/_lib/release_highlights.ts:106`) actually
++`derive_category_hits` (`src/scripts/_lib/release_highlights.ts`) actually
 +catches, so Phase 2's widening is aimed rather than general.
 +
 +- **Measured:** 2026-08-15, on `feat/release-head-truth` at `origin/main`
@@ -83,6 +83,21 @@ index 0000000000000000000000000000000000000000..30c5b9587c1c71de5b09bb5daafa7cac
 +Totals over the six spans: `Security and correctness` **1 derived / 45
 +in-category**; `Honest nulls` **3 derived / 9 in-category**.
 +
++**Three numbers, three scopes — stated together because quoting one without
++the others is how they read as contradicting.** For `Security and correctness`:
++
++| number | scope |
++|---:|---|
++| **1** | what the *old* rule derived (security signal only) |
++| **47** | what the *widened* rule derives mechanically (46 correctness + 1 security-only) |
++| **45** | hand-confirmed in-category (44 correctness + 1 security-only; § 3 names the 2 misses) |
++
++The `hand` column above is the third of these. § 3's "44 of 46 = 96 %" is the
++precision of the **correctness criterion alone** and excludes the security-only
++hit, which is why the two totals differ by one. For `Honest nulls` the three
++numbers are 3 / 9 / 9 — every added hit is a true positive, so mechanical and
++hand-confirmed coincide.
++
 +### 1a. The hand-pass criterion, stated before the count
 +
 +- **Security and correctness** — in-category iff the commit repairs shipped
@@ -109,7 +124,8 @@ index 0000000000000000000000000000000000000000..30c5b9587c1c71de5b09bb5daafa7cac
 +
 +- **`Security and correctness`: 1 of 45.** The rule looks only for
 +  `/secur/i` in the conventional scope or the whole word `security` in the
-+  subject (`release_highlights.ts:116`). The label reads *Security **and
++  subject (the security branch of `derive_category_hits`). The label reads
++  *Security **and
 +  correctness***, and **nothing in the tree derives the correctness half**. Over
 +  341 commits it fired once.
 +- **`Honest nulls`: 3 of 9.** The rule matches the literal `honest[ -]null`
@@ -127,13 +143,19 @@ index 0000000000000000000000000000000000000000..30c5b9587c1c71de5b09bb5daafa7cac
 +  gate can act on. Auditing them would have produced numbers with no decision
 +  attached to them.
 +- **`Known limitations`** is never derived by design — pure prose, not
-+  gate-checkable (`release_highlights.ts:101`). Nothing to measure.
++  gate-checkable (the `Known limitations` line of the rules docblock in
++  `release_highlights.ts`). Nothing to measure.
 +
 +## 3. False-positive cost of the naive rule
 +
 +The derivation's own comment argues the conservative stance: *"a false red
 +makes every release annoying, a miss only returns the head to the pre-gate
-+state"* (`release_highlights.ts:103-104`). Step 1.3 puts a number on it.
++state"* (the conservative-stance note in the `derive_category_hits` docblock).
++Step 1.3 puts a number on it.
++
++Line-number citations are deliberately absent throughout this file: the branch
++it documents moves the very code it cites, so every `file:NNN` written during
++Phase 1 was stale by the end of Phase 2. Symbol names survive the diff.
 +
 +Naive rule = **any `fix(` commit counts as `Security and correctness`**.
 +
@@ -173,10 +195,28 @@ index 0000000000000000000000000000000000000000..30c5b9587c1c71de5b09bb5daafa7cac
 +- **`Honest nulls`** — keep the literal marker, and add the recorded forms
 +  found in real subjects: a waived-rather-than-met condition, a
 +  published/recorded null, an archival on a roadmap's own falsifier. **All 6
-+  commits this adds across the six spans are true positives** (2 in
-+  `11.0.0..12.0.0`, 3 in `10.1.0..10.2.0`, 1 in `10.3.0..10.4.0` — with
-+  `10.1.0..10.2.0` and `10.3.0..10.4.0` each already carrying 1 from the
-+  literal marker).
++  commits this adds across the six spans are true positives**, and they land
++  **2 / 2 / 2** — in `10.1.0..10.2.0`, `10.3.0..10.4.0` and `11.0.0..12.0.0`.
++  Post-widening per-span totals are 1 / 3 / 0 / 3 / 0 / 2, against the old
++  rule's 1 / 1 / 0 / 1 / 0 / 0.
++
++Two coverage repairs landed with the completion review and are measured here
++rather than claimed:
++
++- The correctness half now recognises **`Revert "<subject>"`**, the form
++  `git revert` writes by default. The earlier version compared case-sensitively
++  against a conventional `revert(scope):`, so the documented revert half applied
++  to a hand-written form only. Zero such subjects exist in the six spans, so this
++  is forward-looking coverage, not a recount.
++- The executable-path set now includes `.github/actions/` and the two
++  extensionless shebang entry points (`scripts-run`, `src/scripts/agent-config`).
++  The residual limit is named in the source: a **new** extensionless entry point
++  is invisible until it is added to that set.
++
++Neither changes a per-span number above: re-measured after both, the widened
++rule derives 3 / 15 / 12 / 5 / 4 / 8 for `Security and correctness` and
++1 / 3 / 0 / 3 / 0 / 2 for `Honest nulls` — identical to the pre-repair
++measurement.
 +
 +## 5. Acceptance criterion 3 is VIOLATED under its literal reading
 +
@@ -270,7 +310,7 @@ index 0000000000000000000000000000000000000000..30c5b9587c1c71de5b09bb5daafa7cac
 +
 +The field can now be contradicted. That was the whole goal.
 diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
-index c26ce7c2a2468598cfef0c6c6db91945c2af0752..ff32b2b9c9c77e628d531007abab9fc0b0b5888f 100644
+index c26ce7c2a2468598cfef0c6c6db91945c2af0752..ed8ad240829f111b7af3f260dcf9a58bbaec13b8 100644
 --- a/agents/roadmaps-progress.md
 +++ b/agents/roadmaps-progress.md
 @@ -2,14 +2,14 @@
@@ -278,7 +318,7 @@ index c26ce7c2a2468598cfef0c6c6db91945c2af0752..ff32b2b9c9c77e628d531007abab9fc0
  > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
  >
 -> 30 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **36** open blockers, **9** need you → `agent-config gates`
-+> 29 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **35** open blockers, **9** need you → `agent-config gates`
++> 29 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **36** open blockers, **9** need you → `agent-config gates`
  
  ## Overall
  
@@ -312,7 +352,7 @@ index c26ce7c2a2468598cfef0c6c6db91945c2af0752..ff32b2b9c9c77e628d531007abab9fc0
 -| 28 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 -| 29 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 -| 30 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-+| 14 | [road-to-inbox-harvest-2026-08-c-release-head-truth.md](roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md) | 3 | 11 | 1 | 9 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-c-release-head-truth) | █████████░ 90% |
++| 14 | [road-to-inbox-harvest-2026-08-c-release-head-truth.md](roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md) | 3 | 11 | 1 | 9 | 1 | 0 | [2](#blockers-road-to-inbox-harvest-2026-08-c-release-head-truth) | █████████░ 90% |
 +| 15 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
 +| 16 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 +| 17 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
@@ -349,10 +389,38 @@ index c26ce7c2a2468598cfef0c6c6db91945c2af0752..ff32b2b9c9c77e628d531007abab9fc0
  
  <a id="blockers-road-to-inbox-harvest-2026-08-c-release-head-truth"></a>
  **Blockers**
+@@ -405,6 +404,16 @@ _1 blocker resolved._
+     closes the blocker; (b) is the answer consistent with the 2026-08-13 lock and
+     should be preferred absent a reason to differ.
+   - **Resolved when:** the maintainer records a yes or a no in this blocker.
++- **ac3-false-positive-reading** (owner: maintainer - **Question:** acceptance criterion 3 was measured and is false as written — five of six previously-green spans turn red under the widened derivation. Does the criterion mean *no span whose head was correct becomes falsely contradicted* (a false-positive guarantee, which the measured 96 % precision satisfies), or does it mean *no span turns red at all* (which cannot hold while criterion 2 also holds, since populating a green span's field is exactly what turns it red)?) — blocks acceptance criterion 3 only. Phases 1 and 2 are closed and Phase 3 step 3.1 is closed either way; nothing else waits on this.
++  - **What to do:**
++    pick exactly one — (a) adopt the false-positive reading, tick
++    criterion 3 citing `release-head-derivation-recall.md` § 5 and the 96 %
++    precision, and leave the five historical heads alone (they are curation, an
++    explicit Non-goal); or (b) re-cut the criterion to name the false-positive
++    bar directly, e.g. "no span gains a hit a hand pass calls out-of-category",
++    which the same measurement already answers. Mutually exclusive. Neither
++    option touches the widened derivation, which is measured and shipped.
++  - **Resolved when:** the maintainer records which reading governs, or re-cuts the criterion.
+ 
+ ### [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md)
+ 
 diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md
-index cd0d3fc46580e75193ebefe71a6b9a2e3de61716..8ef8777b8a45f6b9b87b4892913fe6d3797a4715 100644
+index cd0d3fc46580e75193ebefe71a6b9a2e3de61716..051032d9020b08ef3739c23c86dc5f1de9779df0 100644
 --- a/agents/roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md
 +++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md
+@@ -29,8 +29,8 @@ does not hold for two of the five labels:
+ 
+ | label | derivation | span hits | curated value shipped |
+ |---|---|---:|---|
+-| `Security and correctness` | `/secur/i` in the conventional scope, or whole-word `security` in the subject — `src/scripts/_lib/release_highlights.ts:116` | **0** | `_none_` (`CHANGELOG.md:367`) |
+-| `Honest nulls` | literal `honest[ -]null` in subject or body — `release_highlights.ts:137` | **0** | `_none_` (`CHANGELOG.md:368`) |
++| `Security and correctness` | `/secur/i` in the conventional scope, or whole-word `security` in the subject — the security branch of `derive_category_hits` in `src/scripts/_lib/release_highlights.ts` | **0** | `_none_` (`CHANGELOG.md:367`) |
++| `Honest nulls` | literal `honest[ -]null` in subject or body — the honest-null branch of the same function | **0** | `_none_` (`CHANGELOG.md:368`) |
+ 
+ The same span carries **13** `fix(...)`-scoped commits, and one commit whose
+ subject records that a soak was waived rather than met. The label reads
 @@ -53,16 +53,16 @@ make an unrewritten marker block, which stays exactly as decided.
  
  ## Phase 1 — Measure the derivation's recall before changing it
@@ -406,8 +474,32 @@ index cd0d3fc46580e75193ebefe71a6b9a2e3de61716..8ef8777b8a45f6b9b87b4892913fe6d3
        is the load-bearing half of the retro-curation decision, so the next
        reader does not re-derive why widening it is not a reversal.
        *verify:* the contract's rejected-branch paragraph cites the derivation.
-@@ -119,12 +122,27 @@ make an unrewritten marker block, which stays exactly as decided.
+@@ -117,14 +120,52 @@ make an unrewritten marker block, which stays exactly as decided.
+   closes the blocker; (b) is the answer consistent with the 2026-08-13 lock and
+   should be preferred absent a reason to differ.
  
++### blocker: ac3-false-positive-reading
++- **Status:** open
++- **Owner:** maintainer
++- **Question:** acceptance criterion 3 was measured and is false as written —
++  five of six previously-green spans turn red under the widened derivation.
++  Does the criterion mean *no span whose head was correct becomes falsely
++  contradicted* (a false-positive guarantee, which the measured 96 % precision
++  satisfies), or does it mean *no span turns red at all* (which cannot hold
++  while criterion 2 also holds, since populating a green span's field is
++  exactly what turns it red)?
++- **Resolved when:** the maintainer records which reading governs, or re-cuts
++  the criterion.
++- **Blocks:** acceptance criterion 3 only. Phases 1 and 2 are closed and Phase
++  3 step 3.1 is closed either way; nothing else waits on this.
++- **What to do:** pick exactly one — (a) adopt the false-positive reading, tick
++  criterion 3 citing `release-head-derivation-recall.md` § 5 and the 96 %
++  precision, and leave the five historical heads alone (they are curation, an
++  explicit Non-goal); or (b) re-cut the criterion to name the false-positive
++  bar directly, e.g. "no span gains a hit a hand pass calls out-of-category",
++  which the same measurement already answers. Mutually exclusive. Neither
++  option touches the widened derivation, which is measured and shipped.
++
  ## Acceptance criteria
  
 -- [ ] A recall table for all five labels over six released spans exists and is
@@ -431,16 +523,17 @@ index cd0d3fc46580e75193ebefe71a6b9a2e3de61716..8ef8777b8a45f6b9b87b4892913fe6d3
 +      red; and **no future release is red because of this** — the generator
 +      pre-fills every substantiated label, pinned as a regression test, so
 +      Risk 2 does not fire. Left open deliberately rather than ticked under a
-+      reading that would pass it. **The maintainer's call:** accept the
-+      false-positive reading (§ 5) and close this, or re-cut the criterion.
++      reading that would pass it. **The maintainer's call is registered as
++      `blocker: ac3-false-positive-reading` above**, so the decision surfaces
++      in `agent-config gates` rather than living only in this checkbox body.
  
  ## Risk Register
  <!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude/host -->
 diff --git a/docs/contracts/CHANGELOG-conventions.md b/docs/contracts/CHANGELOG-conventions.md
-index 866d1599f292e354c5cec7969347668e87ff0bc8..fce08d997b5522e9247b0340e01499d4d24d19d3 100644
+index 866d1599f292e354c5cec7969347668e87ff0bc8..cd3e3d5e6236dad125e0a9b9f4e2f00ab7e50323 100644
 --- a/docs/contracts/CHANGELOG-conventions.md
 +++ b/docs/contracts/CHANGELOG-conventions.md
-@@ -69,6 +69,28 @@ mode `check_release_highlights.ts` names in its own source. A marked line is a
+@@ -69,6 +69,53 @@ mode `check_release_highlights.ts` names in its own source. A marked line is a
  prose gap, not a contradiction, and contradictions (`_none_` against derived
  evidence) remain the sole blocking condition.
  
@@ -452,8 +545,10 @@ index 866d1599f292e354c5cec7969347668e87ff0bc8..fce08d997b5522e9247b0340e01499d4
 +`Security and correctness` derived **1 of 45** in-category commits — the rule
 +looked only for `security` while the label also names *correctness*, and
 +nothing derived the correctness half — and `Honest nulls` **3 of 9**, matching a
-+literal marker string only. On those two labels `_none_` could not be
-+contradicted and shipped uncontested on five of six curated heads.
++literal marker string only. `Security and correctness` could not be
++contradicted at all and shipped `_none_` on **five of six** curated heads;
++`Honest nulls` fired on three of the six and shipped a derived line on those,
++so the five-of-six rate belongs to the first label only.
 +
 +**Widening a derivation is therefore not a reversal of the decision above; it
 +is a repair of the check the decision depends on.** The two are independent
@@ -466,14 +561,64 @@ index 866d1599f292e354c5cec7969347668e87ff0bc8..fce08d997b5522e9247b0340e01499d4
 +contradict. That is pinned in
 +`tests/scripts/check_release_highlights.test.ts`, not assumed.
 +
++**But that pre-fill is also what fires falsifier (2), and this section must say
++so rather than re-affirm the lock over it.** The falsifier below reads: *"a
++shipped marked line survives its next release cycle uncurated"*. Measured
++2026-08-15 across the era archives and the live head: **11 marked lines across
++6 of 6 releases, none curated in place since** — 10.1.0's are still verbatim
++five releases later. The condition the 2026-08-11 decision pre-registered for
++reopening the (a)/(b) choice is **met**, and it was met before this branch
++touched anything.
++
++The widening moves the same dial further, by construction and not by accident:
++`Security and correctness` now derives on **6 of 6** spans against **1 of 6**
++before, so it adds a marked line to nearly every future release on a label that
++used to ship `_none_`. The counterweight this plan offers — a publish-side
++unresolved-marker invariant — is deferred behind an open maintainer blocker, so
++merging this on its own increases the marked-line rate without adding anything
++that curates them.
++
++**This is surfaced, not decided.** Nothing here reverses the lock: reopening the
++(a)/(b) choice is the maintainer's call under the contract's own terms, and the
++honest state is that the falsifier has fired and the rate is rising. Whoever
++revisits it inherits a fired trigger and a measured rate rather than the
++cautious forecast the paragraph below was written as.
++
  **What that concedes.** The advisory already failed once, and no non-gate
  mechanism is added here to make the next survivor less likely; this branch
  accepts recurrence rather than claiming a process reminder prevents it. The
+@@ -88,11 +135,21 @@ lines:
+ | 10.1.0 | 2 | Behaviour changes · Honest nulls |
+ | 10.2.0 | 3 | Behaviour changes · Security and correctness · Honest nulls |
+ | 10.3.0 | 2 | Behaviour changes · Default changes + migration |
+-
+-**3 of the 3 releases since, 7 marked lines**, all three tags published
+-(`git tag --list '10.*'`), 10.1.0 and 10.2.0 now in
+-[`docs/archive/CHANGELOG-pre-10.3.0.md`](../archive/CHANGELOG-pre-10.3.0.md) and
+-10.3.0 still live in [`CHANGELOG.md`](../../CHANGELOG.md).
++| 10.4.0 | 1 | Honest nulls |
++| 11.0.0 | 1 | Behaviour changes |
++| 12.0.0 | 2 | Behaviour changes · Default changes + migration |
++
++**Refreshed 2026-08-15: 6 of the 6 releases since, 11 marked lines** — the
++figure below the table read "3 of the 3 releases since, 7 marked lines" and was
++three releases stale. All six tags are published; 10.1.0 and 10.2.0 sit in
++[`docs/archive/CHANGELOG-pre-10.3.0.md`](../archive/CHANGELOG-pre-10.3.0.md),
++10.3.0 through 11.0.0 in
++[`docs/archive/CHANGELOG-pre-12.0.0.md`](../archive/CHANGELOG-pre-12.0.0.md),
++and 12.0.0 is live in [`CHANGELOG.md`](../../CHANGELOG.md).
++
++**Not one of the eleven has been curated in place.** The rate is not merely
++holding, it is the full population — which is what makes falsifier (2) a fired
++trigger rather than a forecast.
+ 
+ **The decision stands, and the number does not by itself reverse it.** The
+ rejected branch was rejected on a structural argument the rate does not touch:
 diff --git a/src/scripts/_lib/release_highlights.ts b/src/scripts/_lib/release_highlights.ts
-index 7d33d1f3c8244c02662f726f9d34f4c020e91d28..3a1ca5287a33d41a2e90415a6b329789fcb6a1a1 100644
+index 7d33d1f3c8244c02662f726f9d34f4c020e91d28..7ce8a2892c6cdd2ee0f2cbe4eca593a242f7a46b 100644
 --- a/src/scripts/_lib/release_highlights.ts
 +++ b/src/scripts/_lib/release_highlights.ts
-@@ -76,6 +76,47 @@ const _PUBLIC_SURFACE_PREFIXES = [
+@@ -76,6 +76,91 @@ const _PUBLIC_SURFACE_PREFIXES = [
  
  const _RULE_OR_SCHEMA_PREFIXES = ['src/rules/', 'src/scripts/schemas/'];
  
@@ -488,19 +633,51 @@ index 7d33d1f3c8244c02662f726f9d34f4c020e91d28..3a1ca5287a33d41a2e90415a6b329789
 + * from a bug report, and it moves hand-judged precision from 54 % to 96 %.
 + */
 +const _EXECUTABLE_SUFFIX = /\.(?:ts|tsx|js|mjs|cjs|sh|py)$/u;
-+const _EXECUTABLE_PREFIXES = ['.github/workflows/'];
++const _EXECUTABLE_PREFIXES = ['.github/workflows/', '.github/actions/'];
++
++/**
++ * Shebang entry points with no extension, which a suffix test cannot see. An
++ * exact set rather than a heuristic: the alternative is reading file contents,
++ * which a span commit does not carry.
++ *
++ * The recall limit that remains, named rather than left for a reader to
++ * discover: a NEW extensionless entry point is invisible until it is added
++ * here. Precision was measured over six spans; this predicate's recall was not,
++ * and adding to this set is the maintenance that follows a new entry point.
++ */
++const _EXECUTABLE_EXACT: ReadonlySet<string> = new Set([
++    'scripts-run',
++    'src/scripts/agent-config',
++]);
 +
 +function _touches_executable(files: SpanCommit['files']): boolean {
 +    return files.some(
 +        (f) =>
 +            _EXECUTABLE_SUFFIX.test(f.path) ||
++            _EXECUTABLE_EXACT.has(f.path) ||
 +            _EXECUTABLE_PREFIXES.some((p) => f.path.startsWith(p)),
 +    );
 +}
 +
-+/** Conventional-commit type, or `''` when the subject carries none. */
++/**
++ * Conventional-commit type, lower-cased, or `''` when the subject carries no
++ * conventional prefix.
++ *
++ * Two things this deliberately does, both of which an earlier version got
++ * wrong. It requires the conventional `:` separator, so `fix the flaky runner`
++ * is not classified as type `fix` — otherwise this function disagrees with the
++ * scope regex three lines below it and with every prose description of the
++ * rule. And it recognises `Revert "<subject>"`, the form `git revert` writes by
++ * default, which is not conventional at all: without it the documented revert
++ * half only ever applied to a hand-written `revert(scope):`, and a revert of
++ * shipped behaviour is the commit class most likely to be a correctness repair.
++ */
 +function _commit_type(subject: string): string {
-+    return /^(\w+)/u.exec(subject)?.[1] ?? '';
++    if (/^Revert\s+"/u.test(subject)) {
++        return 'revert';
++    }
++    const m = /^(\w+)(?:\([^)]*\))?!?:/u.exec(subject);
++    return m ? m[1]!.toLowerCase() : '';
 +}
 +
 +/**
@@ -513,7 +690,19 @@ index 7d33d1f3c8244c02662f726f9d34f4c020e91d28..3a1ca5287a33d41a2e90415a6b329789
 +    /honest[ -]null/iu,
 +    /\bwaived,? (?:rather than|not) met\b/iu,
 +    /\bsoak was waived\b/iu,
-+    /\b(?:publish(?:es|ed|ing)?|record(?:s|ed|ing)?|report(?:s|ed|ing)?) (?:the |a |its )?(?:honest )?null\b/iu,
++    // The trailing lookahead keeps a recorded *result* apart from a field that
++    // merely holds null. This pattern is applied to the body as well as the
++    // subject, and a body is where "records null token_delta" appears — a
++    // telemetry field, not a null result. Excluding an identifier-shaped token
++    // after `null` costs nothing real: "records the null result" and "closed as
++    // a published null" both still derive. The lookahead is deliberately
++    // SAME-LINE (`[ \t]`, never `\s`): the first version used `\s+` and dropped
++    // a true positive, because 92f9b9a ends its subject on "closed as a
++    // published null" and its body then opens with `count_open reached 0` — an
++    // identifier on the NEXT line, which `\s+` happily crossed. The residual
++    // limit, named rather than left to be discovered: a field name with no
++    // underscore ("records null delta") is still caught.
++    /\b(?:publish(?:es|ed|ing)?|record(?:s|ed|ing)?|report(?:s|ed|ing)?) (?:the |an |a |its )?(?:honest )?null\b(?![ \t]+`?[a-z][a-z0-9]*_[a-z0-9_]*)/iu,
 +    /\bnull(?: result)? (?:stands|is the answer)\b/iu,
 +    /\bon (?:its|the) own falsifier\b/iu,
 +];
@@ -521,7 +710,7 @@ index 7d33d1f3c8244c02662f726f9d34f4c020e91d28..3a1ca5287a33d41a2e90415a6b329789
  /**
   * Why a label fired, in generator-facing prose. Keyed by label; a label absent
   * here is never derived (`Known limitations` is pure prose, not checkable).
-@@ -83,25 +124,36 @@ const _RULE_OR_SCHEMA_PREFIXES = ['src/rules/', 'src/scripts/schemas/'];
+@@ -83,25 +168,37 @@ const _RULE_OR_SCHEMA_PREFIXES = ['src/rules/', 'src/scripts/schemas/'];
  const _DERIVED_REASON: Readonly<Record<string, string>> = {
      'Behaviour changes': 'rule/schema diffs, breaking commits or removed public surface',
      'Default changes + migration': 'commits naming a default, migration or migrate',
@@ -555,7 +744,8 @@ index 7d33d1f3c8244c02662f726f9d34f4c020e91d28..3a1ca5287a33d41a2e90415a6b329789
 + * is not the same as silent, and two labels had crossed that line: measured
 + * over the six spans in
 + * `agents/evidence/analysis/release-head-derivation-recall.md`, `Security and
-+ * correctness` fired **1 of 45** times and `Honest nulls` **3 of 9**, so the
++ * correctness` fired **1 of 45** hand-confirmed in-category commits and
++ * `Honest nulls` **3 of 9**, so the
 + * curated `_none_` shipped uncontested where the span carried the evidence.
 + * The widening is aimed at those two and measured before it landed; the naive
 + * "any `fix(` counts" alternative was rejected on data (54 % precision against
@@ -563,7 +753,7 @@ index 7d33d1f3c8244c02662f726f9d34f4c020e91d28..3a1ca5287a33d41a2e90415a6b329789
   */
  export function derive_category_hits(
      commits: readonly SpanCommit[],
-@@ -113,7 +165,10 @@ export function derive_category_hits(
+@@ -113,7 +210,10 @@ export function derive_category_hits(
      for (const c of commits) {
          const scopeMatch = /^\w+\(([^)]*)\)!?:/u.exec(c.subject);
          const scope = scopeMatch ? scopeMatch[1]! : '';
@@ -575,7 +765,7 @@ index 7d33d1f3c8244c02662f726f9d34f4c020e91d28..3a1ca5287a33d41a2e90415a6b329789
              out['Security and correctness']!.push({ sha: c.sha, text: c.subject });
          }
          const removedPublic = c.files.filter(
-@@ -134,7 +189,8 @@ export function derive_category_hits(
+@@ -134,7 +234,8 @@ export function derive_category_hits(
          if (/\b(default|migration|migrate)\b/iu.test(c.subject)) {
              out['Default changes + migration']!.push({ sha: c.sha, text: c.subject });
          }
@@ -586,7 +776,7 @@ index 7d33d1f3c8244c02662f726f9d34f4c020e91d28..3a1ca5287a33d41a2e90415a6b329789
          }
      }
 diff --git a/tests/scripts/check_release_highlights.test.ts b/tests/scripts/check_release_highlights.test.ts
-index 9b2d4117391444829c720cc41d530ef675291b78..6261326d9e09b15e7f9e8b4d8fa3b96091e765db 100644
+index 9b2d4117391444829c720cc41d530ef675291b78..6adc0ca34570128f802955351991d08f7bf5af44 100644
 --- a/tests/scripts/check_release_highlights.test.ts
 +++ b/tests/scripts/check_release_highlights.test.ts
 @@ -22,7 +22,11 @@ import {
@@ -602,15 +792,16 @@ index 9b2d4117391444829c720cc41d530ef675291b78..6261326d9e09b15e7f9e8b4d8fa3b960
  import { render_release_head } from '../../src/scripts/release.js';
  
  const SHA = 'a'.repeat(40);
-@@ -118,6 +122,126 @@ describe('derive_categories — per-label rules', () => {
+@@ -118,6 +122,196 @@ describe('derive_categories — per-label rules', () => {
      });
  });
  
 +/**
 + * The correctness half of `Security and correctness`. Before this the label
-+ * derived on security alone, so it fired 1 time in 45 over the six spans
-+ * measured in `agents/evidence/analysis/release-head-derivation-recall.md` and
-+ * the curated `_none_` shipped uncontested.
++ * derived on security alone, so it fired 1 time against 45 hand-confirmed
++ * in-category commits over the six spans measured in
++ * `agents/evidence/analysis/release-head-derivation-recall.md`, and the curated
++ * `_none_` shipped uncontested.
 + *
 + * Every fixture below is a REAL commit from those spans, not a constructed
 + * one — the false-positive case in particular, because a hand-written
@@ -664,6 +855,43 @@ index 9b2d4117391444829c720cc41d530ef675291b78..6261326d9e09b15e7f9e8b4d8fa3b960
 +            commit({
 +                subject: 'fix(ci): stop the job resolving the wrong base',
 +                files: [{ status: 'M', path: '.github/workflows/tests.yml' }],
++            }),
++        ]);
++        expect(derived['Security and correctness']).toHaveLength(2);
++    });
++
++    it('counts the revert subject git itself writes, not only the conventional one', () => {
++        // `git revert` produces `Revert "<original subject>"`, which is not a
++        // conventional commit at all. Keying on the conventional form alone
++        // silently excluded the class most likely to be a correctness repair.
++        const derived = derive_categories([
++            commit({
++                subject: 'Revert "feat(dispatch): resolve the bundle lazily"',
++                files: [{ status: 'M', path: 'src/scripts/_lib/dispatch_guard.ts' }],
++            }),
++        ]);
++        expect(derived['Security and correctness']).toHaveLength(1);
++    });
++
++    it('needs the conventional separator — a subject that merely starts with "fix" is not a fix', () => {
++        const derived = derive_categories([
++            commit({
++                subject: 'fix the flaky runner',
++                files: [{ status: 'M', path: 'src/scripts/runner.ts' }],
++            }),
++        ]);
++        expect(derived['Security and correctness']).toEqual([]);
++    });
++
++    it('sees composite actions and extensionless shebang entry points', () => {
++        const derived = derive_categories([
++            commit({
++                subject: 'fix(ci): the composite action resolved the wrong node',
++                files: [{ status: 'M', path: '.github/actions/setup-task/action.yml' }],
++            }),
++            commit({
++                subject: 'fix(cli): the entry point swallowed a non-zero exit',
++                files: [{ status: 'M', path: 'scripts-run' }],
 +            }),
 +        ]);
 +        expect(derived['Security and correctness']).toHaveLength(2);
@@ -723,6 +951,38 @@ index 9b2d4117391444829c720cc41d530ef675291b78..6261326d9e09b15e7f9e8b4d8fa3b960
 +            commit({ subject: 'docs: the token_delta is null by design' }),
 +        ]);
 +        expect(derived['Honest nulls']).toEqual([]);
++    });
++
++    it('separates a recorded null RESULT from a field that merely holds null — in the body', () => {
++        // The loose form is applied to subject AND body, and the body is where
++        // a field name shows up. Both halves pinned in one place so narrowing
++        // the pattern cannot silently cost the true positive.
++        const derived = derive_categories([
++            commit({
++                subject: 'feat(ledger): widen the dispatch record',
++                body: 'The emitter records null token_delta when the provider omits usage.',
++            }),
++            commit({
++                subject: 'docs(evidence): close the probe',
++                body: 'Publishes the null rather than leaving the question open.',
++            }),
++        ]);
++        expect(derived['Honest nulls']).toHaveLength(1);
++        expect(derived['Honest nulls']![0]).toContain('close the probe');
++    });
++
++    it('does not let the field-name exclusion reach across a line break', () => {
++        // 92f9b9a's real shape, and the bug the first narrowing shipped: the
++        // subject ends on "a published null" and the body opens with an
++        // identifier. A `\s`-based lookahead crossed the newline and dropped a
++        // true positive; the exclusion is same-line only.
++        const derived = derive_categories([
++            commit({
++                subject: 'chore(roadmaps): archive road-to-completion-loop, closed as a published null',
++                body: 'count_open reached 0 with count_deferred 0 — 5 steps done.',
++            }),
++        ]);
++        expect(derived['Honest nulls']).toHaveLength(1);
 +    });
 +});
 +
