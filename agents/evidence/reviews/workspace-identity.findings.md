@@ -1,10 +1,10 @@
 # Findings: workspace-identity
-<!-- completion-review: v1 | reviewed: 2026-08-15 | scope: 87ea6396620741b25e2ffead9c6702be6f91f3fb64a8eb77bf140a6920c127e1 | diff: 6c3f220a17ae68cfe96ff0bd269a962b1a139b7b | reviewer: r2-fresh-subagent-workspace-identity | prompt_hash: e3e9884071a1ff96f36b8dedb4e7fedd6ff7bd7e20f935b139e27a0052a168e5 -->
+<!-- completion-review: v1 | reviewed: 2026-08-15 | scope: dfc2b7df7241690286f0dd5d0269faa9989fff36deb6774810f9a5cd1ae653e1 | diff: a75f60f96f76ea4e0061ede2c91518668bc12c13 | reviewer: r2-fresh-subagent-workspace-identity | prompt_hash: e3e9884071a1ff96f36b8dedb4e7fedd6ff7bd7e20f935b139e27a0052a168e5 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 6c3f220a17ae68cfe96ff0bd269a962b1a139b7b
-  scope_hash: 87ea6396620741b25e2ffead9c6702be6f91f3fb64a8eb77bf140a6920c127e1
+  diff_sha: a75f60f96f76ea4e0061ede2c91518668bc12c13
+  scope_hash: dfc2b7df7241690286f0dd5d0269faa9989fff36deb6774810f9a5cd1ae653e1
   roadmap: agents/roadmaps/archive/road-to-inbox-harvest-2026-08-c-workspace-identity.md
   roadmap_hash: 1ce15c97c06cc750e3741b53af731f4109dffd9b43219ccc38f5426ef4386a59
   ac_hash: ce3a5744227034894136d9d1b8e3a37e26fe1ab1a5f1a7233db868e296b7fd7c
@@ -32,6 +32,22 @@ Each fix and its verification is in the `fix(workspace):` commit message; the
 two that matter most are F3 (the duplication this PR existed to remove, present
 in the PR itself) and F8 (a regression pin that protected the wrong layer, now
 mutation-verified at the caller).
+
+**Second re-bind, after merging `origin/main` — and it is a re-bind rather than
+a re-review, measured rather than asserted.** The merge moved the scope hash,
+and § 2.1 forces a fresh review when the reviewed *content* changes. It did not:
+
+- the scope file set is **identical** before and after — 24 files both sides,
+  `comm` reports nothing entering and nothing leaving;
+- among those files the only content delta between the two heads is this
+  artefact, which lives in an excluded path;
+- the dashboard regenerated after the merge is **byte-identical** to the
+  pre-merge one (`git diff 6c3f220a1 HEAD -- agents/roadmaps-progress.md` is
+  empty), so even the one generated file in scope did not move.
+
+The hash moved because the merge **base** moved, not because the reviewed work
+did. Renaming to `.round1-review.md` would have been wrong here for the reason
+the contract gives: that shape is for content that was *withdrawn*, and none was.
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
