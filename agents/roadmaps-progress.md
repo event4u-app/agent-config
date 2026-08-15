@@ -389,13 +389,13 @@ _1 blocker resolved._
 
 ### [road-to-inbox-harvest-2026-08-c-release-head-truth.md](roadmaps/road-to-inbox-harvest-2026-08-c-release-head-truth.md)
 
-**Road to a release head that can be contradicted** — 0 / 10 done (0%)
+**Road to a release head that can be contradicted** — 9 / 10 done (90%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Measure the derivation's recall before changing it | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | Widen the two derivations, conservatively | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Decide whether the publish side gets the invariant | ⬜ not started | 4 | 0 | 1 | 0 | 0% |
+| 1 | Measure the derivation's recall before changing it | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | Widen the two derivations, conservatively | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | Decide whether the publish side gets the invariant | 🟡 in progress | 1 | 3 | 1 | 0 | 75% |
 
 <a id="blockers-road-to-inbox-harvest-2026-08-c-release-head-truth"></a>
 **Blockers**
@@ -409,6 +409,16 @@ _1 blocker resolved._
     closes the blocker; (b) is the answer consistent with the 2026-08-13 lock and
     should be preferred absent a reason to differ.
   - **Resolved when:** the maintainer records a yes or a no in this blocker.
+- **ac3-false-positive-reading** (owner: maintainer - **Question:** acceptance criterion 3 was measured and is false as written — five of six previously-green spans turn red under the widened derivation. Does the criterion mean *no span whose head was correct becomes falsely contradicted* (a false-positive guarantee, which the measured 96 % precision satisfies), or does it mean *no span turns red at all* (which cannot hold while criterion 2 also holds, since populating a green span's field is exactly what turns it red)?) — blocks acceptance criterion 3 only. Phases 1 and 2 are closed and Phase 3 step 3.1 is closed either way; nothing else waits on this.
+  - **What to do:**
+    pick exactly one — (a) adopt the false-positive reading, tick
+    criterion 3 citing `release-head-derivation-recall.md` § 5 and the 96 %
+    precision, and leave the five historical heads alone (they are curation, an
+    explicit Non-goal); or (b) re-cut the criterion to name the false-positive
+    bar directly, e.g. "no span gains a hit a hand pass calls out-of-category",
+    which the same measurement already answers. Mutually exclusive. Neither
+    option touches the widened derivation, which is measured and shipped.
+  - **Resolved when:** the maintainer records which reading governs, or re-cuts the criterion.
 
 ### [road-to-inbox-harvest-2026-08-d-archive-index.md](roadmaps/road-to-inbox-harvest-2026-08-d-archive-index.md)
 
