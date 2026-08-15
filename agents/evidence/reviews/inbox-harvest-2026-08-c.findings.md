@@ -1,6 +1,6 @@
 # Completion review — inbox harvest 2026-08-c
 
-**Skipped:** no code surface for this completion — the branch adds one evidence page, four roadmaps and the regenerated dashboard, and the gate itself measures zero code paths of six changed files, scope fc9a7ca955502c00433152050717895f62dbcdd3d02e3a5795e6e578bda406fa, declared 2026-08-15
+**Skipped:** no code surface for this completion — the branch adds one evidence page, four roadmaps and the regenerated dashboard, and the gate itself measures zero code paths of six changed files, scope b3b72e0fcd61c247a81bd361c196a5da6c876b0d7656444d056bce69c37a062e, declared 2026-08-15
 
 ## Why a skip rather than a review
 
@@ -53,6 +53,21 @@ Gates green on this branch: `lint_plan_risk_register`, `lint_roadmap_blockers`,
 the one failure is pre-existing on `main`), `check_references`,
 `check_no_roadmap_refs`, `check_no_external_sources`, `lint_output_slop`,
 `lint_hidden_unicode`, and `check_md_language` on all five new markdown files.
+
+## Re-bound once, and the cause is this branch's own subject
+
+The first binding went stale on a one-row wording fix in
+`agents/evidence/analysis/inbox-harvest-2026-08-c-triage.md` — anonymising a
+vendor name that `check_no_external_sources` denylists. Nothing about the
+reviewed judgement changed; `agents/evidence/analysis` simply is not one of the
+two paths `REVIEW_SCOPE_EXCLUDES` holds, so the scope hash moved and the skip
+had to be re-bound in place.
+
+That is the mechanism `-evidence-lifecycle` describes, observed on the branch
+that describes it, and it is worth recording as one data point rather than as a
+vindication: one prose fix, one forced re-bind. It is exactly the shape that
+roadmap's Phase 1 has to count before Phase 2 is allowed to act — and a single
+instance is a sample, not the ratio.
 
 ## Standing caveat
 
