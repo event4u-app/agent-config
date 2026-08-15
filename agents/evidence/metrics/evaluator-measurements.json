@@ -1,10 +1,10 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-08-15T05:38:39.841Z",
-    "git_sha": "e3bd961588ce0923ddd252f3d9aa4bb28b8cb46f",
+    "recorded_at": "2026-08-15T06:12:54.760Z",
+    "git_sha": "371e891274116dd249d6179848f1559d5f1e9d47",
     "run_url": null,
-    "conditions": "Refresh for the 97 -> 98 cli_help_command_count move: the workspace:doctor verb (road-to-inbox-harvest-2026-08-c-workspace-identity Phase 3) registers in the same PR that adds the surface. Re-measured twice via the pinned registry-enumeration method on the unchanged tree: 98/98. mcp_public_tool_count carried at 19 - this branch adds no MCP server tool.",
+    "conditions": "Refresh for the 97 -> 98 cli_help_command_count move: the workspace:doctor verb (road-to-inbox-harvest-2026-08-c-workspace-identity Phase 3) registers in the same PR that adds the surface. Re-measured twice via the pinned registry-enumeration method on THIS branch's tree: 98/98. The git_sha is this branch's HEAD, not origin/main: an earlier stamp named origin/main while asserting 98, and the registry carries 97 at that SHA - a provenance claim the gate does not check and that was therefore false. mcp_public_tool_count carried at 19 - this branch adds no MCP server tool.",
     "measurements": {
         "cli_help_command_count": 98,
         "mcp_public_tool_count": 19

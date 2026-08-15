@@ -61,18 +61,32 @@ times. It is the same fact stated in three places.
 `git_dir` and `git_common_dir` both take `project_root` as an **input**. Neither
 discovers it. That is precisely the gap the eight § 1 sites fill by hand.
 
-## 4. Branch — 5 call sites, 1 correct
+## 4. Branch — 15 call sites, 1 correct
+
+> **Corrected after review.** The first pass of this section listed **5** sites
+> and asserted "four private `_current_branch` implementations". Both numbers
+> were wrong: the census grep was piped through `head -20` and the output was
+> truncated mid-result. A truncated grep produces a census that looks complete
+> and is not, and the failure is silent — the *transferable* half of this
+> correction. Ten further sites across five files are below; the review that
+> caught it is `workspace-identity.findings.md` finding 2.
 
 | # | Site | Primitive | GIT_DIR-safe | Migrate? |
 |---|---|---|---|---|
 | B1 | `src/scripts/session_register_hook.ts:330,377` | `current_branch()` from the shared module | **yes** | already correct |
-| B2 | `src/scripts/hot_context_hook.ts:84` (`_current_branch`) | `rev-parse --abbrev-ref HEAD`, `env: hardenedSpawnEnv()` | partial — hardened env, not `gitEnv()` | yes |
-| B3 | `src/scripts/check_release_trunk_sync.ts:40` (`_current_branch`) | `rev-parse --abbrev-ref HEAD`, **no `cwd`, no env scrub** | no | yes |
-| B4 | `src/scripts/check_branch_freshness.ts:551` | `rev-parse --abbrev-ref HEAD` | no | yes |
-| B5 | `src/scripts/check_release_published.ts:68` | `rev-parse --abbrev-ref HEAD` | no | yes |
+| B2 | `src/scripts/hot_context_hook.ts:84` (`_current_branch`) | `rev-parse --abbrev-ref HEAD`, `env: hardenedSpawnEnv()` | partial — hardened env, not `gitEnv()` | no — behaviour change, § 8 |
+| B3 | `src/scripts/check_release_trunk_sync.ts:40` (`_current_branch`) | `rev-parse --abbrev-ref HEAD`, **no `cwd`, no env scrub** | no | **yes** |
+| B4 | `src/scripts/check_branch_freshness.ts:551` | `rev-parse --abbrev-ref HEAD` | no | **yes** |
+| B5 | `src/scripts/check_release_published.ts:68` | `rev-parse --abbrev-ref HEAD` | no | **yes** |
+| B6 | `src/scripts/print_required_checks.ts:136` | `rev-parse --abbrev-ref HEAD`, no env scrub, **throws** on non-zero | no | no — § 8 |
+| B7 | `src/scripts/_cli/handoff_generate.ts:289` | `rev-parse --abbrev-ref HEAD` | no | no — § 8 |
+| B8 | `src/scripts/_lib/envelope_grounding.ts:105` | `rev-parse --abbrev-ref HEAD` — in a `_lib/` module that **already imports `git_common_dir` at :94** | no | no — § 8 |
+| B9 | `src/scripts/dispatch_r2_reviewer.ts:539` | `rev-parse --abbrev-ref HEAD`; deliberately reads the literal `HEAD` on a detached CI checkout (`:544`) | no | no — § 8 |
+| B10–B15 | `src/scripts/release.ts:987, 1677, 1911, 2094, 2213, 2431` | `git(['rev-parse','--abbrev-ref','HEAD'])`, six sites | no | no — § 8 |
 
-Four private `_current_branch` implementations exist beside one shared,
-file-based, `GIT_DIR`-immune `current_branch()`.
+**Fourteen** re-derivations of one question beside one shared, file-based,
+`GIT_DIR`-immune `current_branch()`. B8 is the sharpest: the module has the
+resolver imported on the line above and spawns `git` anyway.
 
 ## 5. PR base — 5 call sites, three different definitions
 
@@ -143,7 +157,7 @@ below is either migrated or carries a written reason it is not.
 | R6 `lint_plan_risk_register.ts:543` | **yes** | same |
 | R7 `lint_plan_risk_register.ts:554` | **yes** | same |
 | R8 `migration_status.ts:161` | **yes** | the throw is preserved; the message now names the reason |
-| M1 `worktree_cleanup_check.ts:406` | **no** | already correct since `5cf7450da`, and `buildInventoryInner` needs the full `git worktree list` enumeration regardless — selecting the main from a second source would be two answers to one question, which is the defect this roadmap exists to remove. Pinned by regression test instead (§ 10). |
+| M1 `worktree_cleanup_check.ts:406` | **no** | already correct since `5cf7450da`, and `buildInventoryInner` needs the full `git worktree list` enumeration regardless — selecting the main from a second source would be two answers to one question, which is the defect this roadmap exists to remove. Pinned by a **caller-level** regression test in `worktree_cleanup_check.test.ts` (§ 10). |
 | M2 `cache_realization_report.ts:449` | **no** | same shape as M1: the site already enumerates worktrees for its own report |
 | M3 `sessions_cli.ts:109` | **no** | enumerates; never selects a main worktree, so it answers no identity question |
 | C1 `git_common_dir.ts:59` | n/a | the primitive itself |
@@ -154,13 +168,25 @@ below is either migrated or carries a written reason it is not.
 | B3 `check_release_trunk_sync.ts:40` | **yes** | `main()` already collapses `'HEAD'` and `''` onto one skip path |
 | B4 `check_branch_freshness.ts:551` | **yes** | the guard already collapses `null` and `'HEAD'` onto one skip path |
 | B5 `check_release_published.ts:68` | **yes** | a detached `'HEAD'` failed the `MAIN_BRANCH` comparison; unresolved fails it identically |
+| B6 `print_required_checks.ts:136` | **no** | it **throws** on a non-zero exit and callers treat that as fatal; the resolver never throws, so the migration is a behaviour change needing its own test |
+| B7 `_cli/handoff_generate.ts:289` | **no** | `_cli/` is bundled by `build:cli-delegate`; adding an import there is a bundle-surface change this roadmap's Non-goals exclude |
+| B8 `_lib/envelope_grounding.ts:105` | **no** | **the strongest remaining candidate and deliberately deferred**: it already imports `git_common_dir`, so the change is two lines — but it feeds the R2 evidence envelope, where a changed branch value re-keys recorded artefacts. That is its own change with its own review, not a rider on this one. |
+| B9 `dispatch_r2_reviewer.ts:539` | **no** | it *relies* on the literal `'HEAD'` to detect a detached CI checkout (`:544`); `current_branch()` returns `null` there, so migrating would delete the signal |
+| B10–B15 `release.ts` (6 sites) | **no** | the release path is gated separately and its six comparisons are `=== branch` / `=== MAIN_BRANCH` guards; migrating six sites inside one release script is a change that needs a release drill, not a refactor rider |
 | P1 `check_branch_freshness.ts:162` | **no** | different question — the `gh`-derived base of a real open PR needs network and auth. `prBase` is deliberately the offline form; both are correct and neither replaces the other. |
 | P2 `check_branch_freshness.ts:204` | **no** | same question, but this is a push-time gate and `prBase` is currently **unresolved in this repository** (§ 11). Swapping a live code path onto a field that resolves to nothing here would change the gate's behaviour on the one repo that runs it. |
 | P3 `worktree_cleanup_check.ts:287` | **no** | `resolveTrunk` walks a candidate ref list and verifies each; that is a trunk *search*, not a recorded default |
 | P4 `lint_breaking_changes_index.ts:125` | **no** | module constant, not a resolution |
 | P5 `check_structural_breaking.ts:68` | **no** | module constant, not a resolution |
 
-**7 migrated, 11 deliberately not, 3 n/a** (of 21 rows).
+**7 migrated, 21 deliberately not, 3 n/a** (of 31 rows).
+
+The migrated fraction fell from 7-of-21 to 7-of-31 when the review corrected
+§ 4, and the honest reading is that the *ratio* was never the deliverable. What
+the resolver removes is the class of silent wrongness — a `git` child an
+inherited `GIT_DIR` redirects, and a fallback that looks like an answer. Every
+row above is now classified against that, with the reason written down, which is
+what AC-1 actually asks for.
 
 ## 9. The projection boundary — why R1–R3 cannot migrate
 
@@ -195,6 +221,17 @@ and a real linked worktree. Two of them are the regression pins:
 A third pair asserts the inherited-`GIT_DIR` hazard directly, with its own
 control proving the variable really does redirect a `git` child (Risk 4).
 
+**The M1 pin is separate and lives where the defect shipped.** The review
+(finding 8) was right that the two tests above protect the *resolver* and never
+touch `worktree_cleanup_check` — re-introducing the shipped defect would have
+left every test this change adds green. The pin is now
+`worktree_cleanup_check.test.ts` § "the INVENTORY classifies identically from a
+worktree and from the main checkout", at the **caller** level, because the
+pre-existing test covered `isStandardLocation` in isolation while the defect was
+one word in `buildInventoryInner`. Verified falsifiable by mutation: restoring
+`isStandardLocation(repoPath, resolved)` fails that test and only that test
+(1 failed / 24 passed), and reverting returns 25/25.
+
 ## 11. `prBase` is unresolved in this repository, and that is the design
 
 Probed on this branch, from both locations:
@@ -218,3 +255,36 @@ The same probe confirms the acceptance criterion: `mainWorktree` reads
 `…/event4u/agent-config` from inside `.worktrees/workspace-identity` and from
 the main checkout alike, while `repoRoot` and `currentWorktree` differ between
 them and say which they are.
+
+## 12. Two review findings that are recorded rather than repaired
+
+Both are real; neither is this branch's to fix, and saying so beats a silent
+drop.
+
+**A load-bearing file sat inside a review-scope exclusion.** The R2 review's
+scope omitted `agents/evidence/metrics/evaluator-measurements.json`, which this
+branch changed and which is the third leg of `check_cli_registry_budget_sync`'s
+three-number invariant. The reviewer read this as a scope bug; it is not.
+`REVIEW_SCOPE_EXCLUDES` (`dispatch_r2_reviewer.ts:112`) excludes exactly two
+paths — `agents/evidence/reviews` and `agents/evidence/metrics` — and the
+docstring at `:103` states why the second one is there: the review process
+itself appends to `agents/evidence/metrics/gate-metrics.jsonl`, so including
+that directory would make the scope hash unstable against the review's own
+writes.
+
+The substantive point survives the misattribution, and it is the part worth
+keeping: a directory excluded because the *process* writes to it also hides
+every **product** file that happens to live there. The budget record is exactly
+that — a maintainer-reviewed number, not review exhaust. Whether the exclusion
+should narrow to `gate-metrics.jsonl` is a change to the completion-review
+contract, with its own scope-hash consequences, and it is not made here.
+Recorded so the next reader does not re-derive it from scratch.
+
+**The dashboard regeneration absorbed an unrelated correction.** Regenerating
+`agents/roadmaps-progress.md` moved the totals by +21 done, and that delta is
+entirely `road-to-skill-catalogue-budget.md`, which this branch does not touch:
+`origin/main`'s committed dashboard was stale against its own roadmap files, and
+any regeneration anywhere would have absorbed the same correction. Leaving the
+dashboard stale to keep the diff clean is the worse option — the dashboard's
+whole contract is that it is derived. Named here, and in the PR body, so the
+movement is not read as this roadmap's progress.

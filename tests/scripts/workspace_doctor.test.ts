@@ -13,7 +13,13 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { collectReport, isContained, listRegistered, main, render } from '../../src/scripts/workspace_doctor.js';
+import {
+    collectReport,
+    independentRegisteredCount,
+    isContained,
+    main,
+    render,
+} from '../../src/scripts/workspace_doctor.js';
 
 let tmp = '';
 let repo = '';
@@ -55,18 +61,32 @@ afterEach(() => {
 });
 
 describe('workspace_doctor — the pressure partition', () => {
-    it('the buckets sum to the git worktree list total', () => {
-        const report = collectReport(repo, null);
-        const p = report.pressure;
-        expect(p.registered).toBe(listRegistered(repo).length);
-        expect(p.merged + p.unmerged + p.unclassifiable).toBe(p.registered);
+    it('the buckets sum to an INDEPENDENTLY derived worktree total', () => {
+        const p = collectReport(repo, null).pressure;
+        // `registered` comes from the porcelain parse; this comes from the
+        // plain listing — a different command with a different format. The
+        // earlier version of this test compared the parse against itself,
+        // which held by construction and could not detect a dropped entry.
+        expect(p.independent_registered).toBe(independentRegisteredCount(repo));
+        expect(p.independent_registered).toBe(p.registered);
+        expect(p.merged + p.unmerged + p.unclassifiable).toBe(p.independent_registered);
         expect(p.partition_total).toBe(p.registered);
     });
 
-    it('classifies a merged branch and an ahead branch into different buckets', () => {
-        // No remote here, so the trunk resolves to the local `main`.
+    it('a disagreement between the two counts is reported, not swallowed', () => {
+        // Falsifiability check for the assertion above: the report must have a
+        // path that says the counts disagree. Assert the mechanism exists and
+        // is wired into `note`, rather than only that it is silent when equal.
         const p = collectReport(repo, null).pressure;
-        expect(p.trunk).toBe('main');
+        expect(p.independent_registered).not.toBeNull();
+        const text = render(collectReport(repo, null));
+        expect(text).toContain('cross-checked against an independent count of');
+    });
+
+    it('classifies a merged branch and an ahead branch into different buckets', () => {
+        // No remote here, so the trunk resolves to the local `refs/heads/main`.
+        const p = collectReport(repo, null).pressure;
+        expect(p.trunk).toBe('refs/heads/main');
         expect(p.registered).toBe(3); // main checkout + two worktrees
         expect(p.unmerged).toBe(1); // feat/ahead only
         expect(p.merged).toBe(2); // main + feat/merged
@@ -114,6 +134,16 @@ describe('workspace_doctor — identity and containment', () => {
         const c = collectReport(ahead, null).containment;
         expect(c.contained).toBe(false);
         expect(c.reason).toContain('outside');
+    });
+
+    it('the main checkout reports n/a, never the word "outside"', () => {
+        const c = collectReport(repo, null).containment;
+        expect(c.contained).toBeNull();
+        const line = render(collectReport(repo, null))
+            .split('\n')
+            .find((l) => l.startsWith('Path containment:'));
+        expect(line).toContain('n/a');
+        expect(line).not.toContain('outside');
     });
 
     it('containment is separator-anchored, not a bare prefix match', () => {

@@ -160,7 +160,11 @@ function main(): number {
             gate: 'check_release_trunk_sync',
             scanned: 0,
             units: 'release-prep branch(es)',
-            roots: ['git rev-parse --abbrev-ref HEAD'],
+            // Names what the gate actually reads. It stopped spawning
+            // `rev-parse --abbrev-ref HEAD` when B3 moved to the file-based
+            // resolver; a scan root naming a command the gate does not run is
+            // a false scope declaration.
+            roots: ['<git-dir>/HEAD via workspaceIdentity().branch'],
             allowEmpty:
                 'OPTIONAL_INPUT: the checked-out branch is not release/X.Y.Z, so there is no ' +
                 'target version to compare main against — an absent question, not an empty ' +

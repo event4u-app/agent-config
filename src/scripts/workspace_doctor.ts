@@ -24,8 +24,13 @@
  *
  * Exit code is 0 whenever the command could read the repository. It is a
  * report, not a gate: nothing here has a pass/fail opinion, so a non-zero exit
- * would have to invent one. `--strict` exits 1 only when an identity field the
- * caller asked to rely on is unresolved.
+ * would have to invent one.
+ *
+ * `--strict` exits 1 when **any** identity field is unresolved. Note what that
+ * means in a repo with no `refs/remotes/origin/HEAD` on disk: `prBase` is
+ * unresolved *correctly*, so `--strict` is red there by design. It is a probe
+ * for "is every field answerable here", not a health check — and this file
+ * previously claimed a per-field selection that does not exist.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -44,6 +49,7 @@ import {
     register_dir,
     type SessionRecord,
 } from './_lib/session_register.js';
+import { listWorktrees, resolveTrunk } from './worktree_cleanup_check.js';
 
 const IDENTITY_FIELDS = ['repoRoot', 'mainWorktree', 'currentWorktree', 'branch', 'prBase'] as const;
 type IdentityFieldName = (typeof IDENTITY_FIELDS)[number];
@@ -70,12 +76,16 @@ interface ContainmentView {
 
 interface PressureView {
     readonly trunk: string | null;
+    /** Where `trunk` came from — a candidate search, not a recorded default. */
+    readonly trunk_provenance: string;
     readonly registered: number;
-    /** Branch is an ancestor of the trunk. */
+    /** Same count from a DIFFERENT command; a mismatch is the real signal. */
+    readonly independent_registered: number | null;
+    /** Branch appears in `for-each-ref --merged <trunk>`. */
     readonly merged: number;
-    /** Branch exists and is NOT an ancestor of the trunk. */
+    /** Branch exists and is NOT merged into the trunk. */
     readonly unmerged: number;
-    /** No branch to ask about (detached HEAD, or a bare entry). */
+    /** No branch to ask about (detached), or the merged probe was unavailable. */
     readonly unclassifiable: number;
     /** Overlaps the three buckets above on purpose; never summed with them. */
     readonly with_live_session: number;
@@ -106,30 +116,36 @@ function _git(cwd: string, args: readonly string[]): string | null {
     }
 }
 
-/** `git worktree list --porcelain` → one `{path, branch}` per registered entry. */
-export function listRegistered(repoPath: string): { path: string; branch: string | null }[] {
-    const out = _git(repoPath, ['worktree', 'list', '--porcelain']);
-    if (out === null) return [];
-    const rows: { path: string; branch: string | null }[] = [];
-    let current: { path?: string; branch: string | null } = { branch: null };
-    for (const line of out.split('\n')) {
-        if (line.startsWith('worktree ')) {
-            if (current.path !== undefined) rows.push({ path: current.path, branch: current.branch });
-            current = { path: line.slice('worktree '.length).trim(), branch: null };
-        } else if (line.startsWith('branch ')) {
-            current.branch = line.slice('branch '.length).trim();
-        }
-    }
-    if (current.path !== undefined) rows.push({ path: current.path, branch: current.branch });
-    return rows;
+/**
+ * Independent count of registered worktrees, parsed from the **plain**
+ * `git worktree list` rather than the porcelain form `listWorktrees` reads.
+ *
+ * This exists so the partition assertion below is falsifiable. Comparing
+ * `merged + unmerged + unclassifiable` against `rows.length` — where the
+ * buckets are incremented once per row — is a tautology that holds by
+ * construction and cannot detect a dropped entry. Two different commands with
+ * two different output formats can disagree; that disagreement is the signal.
+ */
+export function independentRegisteredCount(repoPath: string): number | null {
+    const out = _git(repoPath, ['worktree', 'list']);
+    if (out === null) return null;
+    return out.split('\n').filter((l) => l.trim() !== '').length;
 }
 
-/** First trunk ref that resolves; `null` when none does. */
-function resolveTrunk(repoPath: string): string | null {
-    for (const ref of ['origin/main', 'origin/master', 'main', 'master']) {
-        if (_git(repoPath, ['rev-parse', '--verify', '--quiet', ref]) !== null) return ref;
-    }
-    return null;
+/**
+ * Short branch names merged into `trunk`, in **one** subprocess.
+ *
+ * Replaces one `merge-base --is-ancestor` spawn per registered worktree —
+ * measured at 307 spawns and 15.2 s wall for a read-only report. It also
+ * removes a silent misclassification: `_git` returns `null` on any failure
+ * (bad ref, timeout, git absent), and mapping that onto "not an ancestor"
+ * reported a failed probe as `unmerged`. Here a failed call is `null` and the
+ * caller sends every row to `unclassifiable` instead of guessing a side.
+ */
+function mergedBranches(repoPath: string, trunk: string): Set<string> | null {
+    const out = _git(repoPath, ['for-each-ref', '--merged', trunk, '--format=%(refname:short)', 'refs/heads/']);
+    if (out === null) return null;
+    return new Set(out.split('\n').map((l) => l.trim()).filter((l) => l !== ''));
 }
 
 function realpathOrSelf(p: string): string {
@@ -222,7 +238,10 @@ function collectContainment(identity: WorkspaceIdentity): ContainmentView {
     if (!main.resolved) return { contained: null, reason: `main worktree unresolved: ${main.reason}` };
     if (!here.resolved) return { contained: null, reason: `current worktree unresolved: ${here.reason}` };
     if (realpathOrSelf(main.value) === realpathOrSelf(here.value)) {
-        return { contained: false, reason: 'this IS the main worktree' };
+        // `null`, not `false`: the question does not apply, and rendering it as
+        // the word "outside" beside the reason "this IS the main worktree" was
+        // a self-contradicting line.
+        return { contained: null, reason: 'this IS the main worktree — containment does not apply' };
     }
     const contained = isContained(main.value, here.value);
     return {
@@ -238,7 +257,9 @@ function collectPressure(identity: WorkspaceIdentity, live: SessionRecord[]): Pr
     if (!main.resolved) {
         return {
             trunk: null,
+            trunk_provenance: 'not attempted — no main worktree to resolve from',
             registered: 0,
+            independent_registered: null,
             merged: 0,
             unmerged: 0,
             unclassifiable: 0,
@@ -247,38 +268,63 @@ function collectPressure(identity: WorkspaceIdentity, live: SessionRecord[]): Pr
             note: `no main worktree to enumerate from: ${main.reason}`,
         };
     }
-    const rows = listRegistered(main.value);
-    const trunk = resolveTrunk(main.value);
-    const liveePaths = new Set(live.map((r) => realpathOrSelf(r.worktree)));
+    // Both helpers are the EXPORTED ones from worktree_cleanup_check. Re-deriving
+    // them here would have been a fourth `worktree list --porcelain` parser and a
+    // second `resolveTrunk` beside the two this roadmap's own census counts — the
+    // duplication the whole change exists to remove.
+    const rows = listWorktrees(main.value);
+    // `resolveTrunk` returns the literal 'HEAD' when no trunk candidate resolves.
+    const trunkRef = resolveTrunk(main.value);
+    const trunk = trunkRef === 'HEAD' ? null : trunkRef;
+    const merged_set = trunk === null ? null : mergedBranches(main.value, trunk);
+    const livePaths = new Set(live.map((r) => realpathOrSelf(r.worktree)));
 
     let merged = 0;
     let unmerged = 0;
     let unclassifiable = 0;
     let withLive = 0;
     for (const row of rows) {
-        if (liveePaths.has(realpathOrSelf(row.path))) withLive += 1;
-        if (row.branch === null || trunk === null) {
+        if (livePaths.has(realpathOrSelf(row.path))) withLive += 1;
+        if (row.branch === null || merged_set === null) {
             unclassifiable += 1;
-            continue;
+        } else if (merged_set.has(row.branch)) {
+            merged += 1;
+        } else {
+            unmerged += 1;
         }
-        const ok = _git(main.value, ['merge-base', '--is-ancestor', row.branch, trunk]);
-        // `_git` returns null on a non-zero exit, i.e. "not an ancestor".
-        if (ok === null) unmerged += 1;
-        else merged += 1;
+    }
+
+    const independent = independentRegisteredCount(main.value);
+    const notes: string[] = [];
+    if (trunk === null) {
+        notes.push(
+            'no trunk ref resolved — every entry is unclassifiable rather than assumed merged',
+        );
+    } else if (merged_set === null) {
+        notes.push(
+            `the merged-branch probe against ${trunk} failed — every entry is unclassifiable rather than assumed unmerged`,
+        );
+    }
+    if (independent !== null && independent !== rows.length) {
+        notes.push(
+            `COUNT DISAGREEMENT: the porcelain parse sees ${rows.length}, the plain listing ${independent}`,
+        );
     }
 
     return {
         trunk,
+        trunk_provenance:
+            trunk === null
+                ? 'unresolved — no candidate ref verified'
+                : 'candidate-ref search (first of origin/main, origin/master, main, master that resolves) — NOT a recorded remote default, which is what identity.prBase reports',
         registered: rows.length,
+        independent_registered: independent,
         merged,
         unmerged,
         unclassifiable,
         with_live_session: withLive,
         partition_total: merged + unmerged + unclassifiable,
-        note:
-            trunk === null
-                ? 'no trunk ref resolved (origin/main, origin/master, main, master) — every entry is unclassifiable rather than assumed merged'
-                : null,
+        note: notes.length === 0 ? null : notes.join(' · '),
     };
 }
 
@@ -331,17 +377,21 @@ export function render(report: WorkspaceDoctorReport): string {
     lines.push('');
 
     const c = report.containment;
-    lines.push(`Path containment: ${c.contained === null ? 'unknown' : c.contained ? 'inside' : 'outside'} — ${c.reason}`);
+    lines.push(`Path containment: ${c.contained === null ? 'n/a' : c.contained ? 'inside' : 'outside'} — ${c.reason}`);
     lines.push('');
 
     const p = report.pressure;
     lines.push(`Worktree pressure (trunk = ${p.trunk ?? 'unresolved'}):`);
+    lines.push(`  trunk provenance: ${p.trunk_provenance}`);
     lines.push(`  registered: ${p.registered}`);
     lines.push(`    merged into trunk:        ${p.merged}`);
     lines.push(`    carrying unmerged commits:${String(p.unmerged).padStart(4)}`);
-    lines.push(`    unclassifiable (no branch):${String(p.unclassifiable).padStart(3)}`);
+    lines.push(`    unclassifiable:           ${String(p.unclassifiable).padStart(4)}   (detached, or no merged probe)`);
+    const independentOk = p.independent_registered === null || p.independent_registered === p.registered;
     lines.push(
-        `    ── partition sums to ${p.partition_total} of ${p.registered}${p.partition_total === p.registered ? ' ✅' : ' ❌ MISMATCH'}`,
+        `    ── partition sums to ${p.partition_total} of ${p.registered}` +
+            `, cross-checked against an independent count of ${p.independent_registered ?? 'n/a'}` +
+            `${p.partition_total === p.registered && independentOk ? ' ✅' : ' ❌ MISMATCH'}`,
     );
     lines.push(
         `  with a live session record: ${p.with_live_session}   (overlaps the buckets above — not part of the partition)`,
