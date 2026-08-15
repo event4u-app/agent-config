@@ -1,7 +1,7 @@
 # Release-head derivation: recall over six released spans
 
 Phase 1 of `road-to-inbox-harvest-2026-08-c-release-head-truth`. Measures what
-`derive_category_hits` (`src/scripts/_lib/release_highlights.ts:106`) actually
+`derive_category_hits` (`src/scripts/_lib/release_highlights.ts`) actually
 catches, so Phase 2's widening is aimed rather than general.
 
 - **Measured:** 2026-08-15, on `feat/release-head-truth` at `origin/main`
@@ -77,6 +77,21 @@ why that is a scope decision rather than an omission.
 Totals over the six spans: `Security and correctness` **1 derived / 45
 in-category**; `Honest nulls` **3 derived / 9 in-category**.
 
+**Three numbers, three scopes — stated together because quoting one without
+the others is how they read as contradicting.** For `Security and correctness`:
+
+| number | scope |
+|---:|---|
+| **1** | what the *old* rule derived (security signal only) |
+| **47** | what the *widened* rule derives mechanically (46 correctness + 1 security-only) |
+| **45** | hand-confirmed in-category (44 correctness + 1 security-only; § 3 names the 2 misses) |
+
+The `hand` column above is the third of these. § 3's "44 of 46 = 96 %" is the
+precision of the **correctness criterion alone** and excludes the security-only
+hit, which is why the two totals differ by one. For `Honest nulls` the three
+numbers are 3 / 9 / 9 — every added hit is a true positive, so mechanical and
+hand-confirmed coincide.
+
 ### 1a. The hand-pass criterion, stated before the count
 
 - **Security and correctness** — in-category iff the commit repairs shipped
@@ -103,7 +118,8 @@ unfireable:**
 
 - **`Security and correctness`: 1 of 45.** The rule looks only for
   `/secur/i` in the conventional scope or the whole word `security` in the
-  subject (`release_highlights.ts:116`). The label reads *Security **and
+  subject (the security branch of `derive_category_hits`). The label reads
+  *Security **and
   correctness***, and **nothing in the tree derives the correctness half**. Over
   341 commits it fired once.
 - **`Honest nulls`: 3 of 9.** The rule matches the literal `honest[ -]null`
@@ -121,13 +137,19 @@ unfireable:**
   gate can act on. Auditing them would have produced numbers with no decision
   attached to them.
 - **`Known limitations`** is never derived by design — pure prose, not
-  gate-checkable (`release_highlights.ts:101`). Nothing to measure.
+  gate-checkable (the `Known limitations` line of the rules docblock in
+  `release_highlights.ts`). Nothing to measure.
 
 ## 3. False-positive cost of the naive rule
 
 The derivation's own comment argues the conservative stance: *"a false red
 makes every release annoying, a miss only returns the head to the pre-gate
-state"* (`release_highlights.ts:103-104`). Step 1.3 puts a number on it.
+state"* (the conservative-stance note in the `derive_category_hits` docblock).
+Step 1.3 puts a number on it.
+
+Line-number citations are deliberately absent throughout this file: the branch
+it documents moves the very code it cites, so every `file:NNN` written during
+Phase 1 was stale by the end of Phase 2. Symbol names survive the diff.
 
 Naive rule = **any `fix(` commit counts as `Security and correctness`**.
 
@@ -167,10 +189,28 @@ Both were measured above before being chosen, per Risk 3 of the roadmap.
 - **`Honest nulls`** — keep the literal marker, and add the recorded forms
   found in real subjects: a waived-rather-than-met condition, a
   published/recorded null, an archival on a roadmap's own falsifier. **All 6
-  commits this adds across the six spans are true positives** (2 in
-  `11.0.0..12.0.0`, 3 in `10.1.0..10.2.0`, 1 in `10.3.0..10.4.0` — with
-  `10.1.0..10.2.0` and `10.3.0..10.4.0` each already carrying 1 from the
-  literal marker).
+  commits this adds across the six spans are true positives**, and they land
+  **2 / 2 / 2** — in `10.1.0..10.2.0`, `10.3.0..10.4.0` and `11.0.0..12.0.0`.
+  Post-widening per-span totals are 1 / 3 / 0 / 3 / 0 / 2, against the old
+  rule's 1 / 1 / 0 / 1 / 0 / 0.
+
+Two coverage repairs landed with the completion review and are measured here
+rather than claimed:
+
+- The correctness half now recognises **`Revert "<subject>"`**, the form
+  `git revert` writes by default. The earlier version compared case-sensitively
+  against a conventional `revert(scope):`, so the documented revert half applied
+  to a hand-written form only. Zero such subjects exist in the six spans, so this
+  is forward-looking coverage, not a recount.
+- The executable-path set now includes `.github/actions/` and the two
+  extensionless shebang entry points (`scripts-run`, `src/scripts/agent-config`).
+  The residual limit is named in the source: a **new** extensionless entry point
+  is invisible until it is added to that set.
+
+Neither changes a per-span number above: re-measured after both, the widened
+rule derives 3 / 15 / 12 / 5 / 4 / 8 for `Security and correctness` and
+1 / 3 / 0 / 3 / 0 / 2 for `Honest nulls` — identical to the pre-repair
+measurement.
 
 ## 5. Acceptance criterion 3 is VIOLATED under its literal reading
 
