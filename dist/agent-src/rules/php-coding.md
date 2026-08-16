@@ -4,8 +4,6 @@ tier: "3"
 description: "Writing/reviewing PHP — strict types, naming, comparisons, early returns, Eloquent conventions"
 triggers:
   - file_pattern: "*.php"
-  - keyword: "phpstan"
-  - keyword: "ecs"
 routes_to:
   - "guideline:php/php-coding-patterns"
 workspaces: [engineering]

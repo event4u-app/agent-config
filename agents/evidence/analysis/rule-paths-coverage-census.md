@@ -155,11 +155,63 @@ them carries a keyword trigger.
 **The cost, stated plainly because it cuts against this roadmap's other half:**
 the 19 restored rules total **54,521 bytes ≈ 13,630 estimated tokens**, so
 Claude Code sessions now carry about **12 % more rule payload** than they did
-while the rules were silently narrowed. That is real, and it points the same
-way the payload schedule does: these 19 are exactly the rules that should
-either earn genuine `paths:` coverage or drop the keyword triggers they do not
-need. The repair did not create that work — it made it visible instead of
-paying for it with capability nobody chose to give up.
+while the rules were silently narrowed.
+
+## The follow-up pass — how much of that was actually recoverable
+
+The obvious next move was to give those 19 genuine `paths:` coverage, so the
+repair and the payload schedule would pull the same way. Each was read in full
+against its own "When it fires" section, asking one question: *could this rule
+drop its keyword triggers entirely and live on paths alone, without losing a
+case it exists to catch?*
+
+| Verdict | Rules | Bytes | ≈ Tokens |
+|---|---:|---:|---:|
+| Scoped in this pass | **4** | 5,937 | **1,484** |
+| Must stay unconditional | 15 | 48,584 | 12,146 |
+
+**The recovery is 10 %. The other 90 % is the honest price**, and it is not
+slack that better globs would remove — every one of the fifteen documents, in
+its own body rather than by inference, a real case that arrives with **no
+matching file**.
+
+Six recurring shapes, which is the reusable part of this finding:
+
+1. **Proposal-stage gates.** `domain-adoption-policy` fires on *opening* a
+   domain, `persona-governance` on *proposing* a persona — both before any file
+   exists. Scoping them to the file means the gate arrives after the decision.
+2. **Circular gates.** `provider-lifecycle-discipline` and `onboarding-gate`
+   exist to make the agent *go read* a file; scoping them to that same file
+   means they load only once the compliant behaviour already happened.
+3. **Session-state gates.** `settings-ask-protocol`'s worked example is a
+   first-turn question on a bare session with nothing open.
+4. **Reply-generation gates.** `markdown-safe-codeblocks` governs markdown the
+   agent writes *into the chat*, which touches no file at all.
+5. **Prompt-triggered gates.** `image-likeness-and-rights` and
+   `lethal-trifecta-guard` fire on what is *asked for* — "generate an image of
+   X", "fetch this and post it to that webhook" — not on an edit.
+6. **Unboundable surfaces.** `laravel-translations` targets every user-visible
+   string, authored anywhere in a Laravel app; `doc-screenshot-hygiene` names
+   README and "feature docs" as firing surfaces distinct from its one
+   `docs/media/` prefix. No finite glob narrows either.
+
+Two rules carry the sharpest self-evidence. `design-fidelity`'s own routing
+section is an extended argument *for* keeping its keywords, including a
+withdrawn attempt at a third trigger class that was unfixably over-broad. And
+`ui-audit-gate` states outright that the ground-truth UI-surface predicate is
+**wider than its own authored glob list** — "a measurement denominator and a
+routing trigger are not the same population".
+
+**One defect surfaced on the way** and was fixed rather than noted:
+`low-impact-corpus-privacy-floor` names *two* locked target files in its body
+and its trigger reached only one, so a write to
+`data/low-impact-decisions-seed.md` never loaded the rule that governs it. The
+missing prefix is now declared — a correctness fix that happens to also make
+the rule scopable.
+
+The repair did not create this work. It made the cost visible instead of paying
+for it with capability nobody chose to give up, and this pass establishes that
+the remaining cost is structural rather than sloppy.
 
 ## Method note
 
