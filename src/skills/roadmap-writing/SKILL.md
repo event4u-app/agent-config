@@ -393,8 +393,8 @@ to every roadmap you author.
   reads as open questions. For source-derived/contested plans, council
   *first* (§ 8.B), then author the verdicts.
 
-## Examples
+## Examples & the "already tried?" check
 
-Browse `agents/roadmaps/` (active set) and `agents/roadmaps/archive/`
-(closed work) for canonical structural / tactical / structural-with-council
-examples.
+Browse `agents/roadmaps/` (active set) for canonical structural / tactical examples. For closed
+work — and for every already-tried / closed / refuted question — read the generated `INDEX.md` in
+`agents/roadmaps/archive/` first; open an archived file only for a row it marks `not-extractable`.

@@ -48,17 +48,17 @@ Counted against the tree at `e3bd96158`, not carried over from the proposal.
 
 ## Phase 1 — Build the index, then prove it paid
 
-- [ ] 1.1 A deterministic extractor emits `INDEX.md` and `index.json` over the
+- [x] 1.1 A deterministic extractor emits `INDEX.md` and `index.json` over the
       archive: slug, title, closing disposition, phase count, and the extracted
       verdict where the frontmatter carries one. It reuses
       `validate_frontmatter`'s reader rather than parsing again.
       <!-- verify: test -f src/scripts/build_archive_index.ts -->
-- [ ] 1.2 A `--check` mode fails when the committed index and a fresh
+- [x] 1.2 A `--check` mode fails when the committed index and a fresh
       regeneration differ, following the drift-gate shape `compile_router`
       already uses. A generated artefact nobody re-derives goes stale in one
       merge.
       <!-- verify: grep -c 'check' src/scripts/build_archive_index.ts -->
-- [ ] 1.3 Measure the saving before anything depends on it: take a real dedup
+- [x] 1.3 Measure the saving before anything depends on it: take a real dedup
       question, count archive files opened with the index and without it.
       **Bar: at least 80 % fewer files opened.** Below the bar, the index is
       reverted and the reading is published as a null.
@@ -66,22 +66,22 @@ Counted against the tree at `e3bd96158`, not carried over from the proposal.
 
 ## Phase 2 — Point the consumers at it
 
-- [ ] 2.1 Once 1.3 clears its bar, state in the roadmap-authoring surface that a
+- [x] 2.1 Once 1.3 clears its bar, state in the roadmap-authoring surface that a
       "already tried / closed / refuted?" check consults the index first and
       falls back to the archive only for what the index marks not extractable.
       <!-- verify: grep -c 'INDEX' src/skills/roadmap-writing/SKILL.md -->
-- [ ] 2.2 Register the index in the generated-artefact set so it regenerates
+- [x] 2.2 Register the index in the generated-artefact set so it regenerates
       with the rest rather than by memory.
       <!-- verify: grep -c 'archive_index' Taskfile.yml -->
 
 ## Acceptance criteria
 
-- [ ] `INDEX.md` and `index.json` cover every top-level archived roadmap.
-- [ ] A drift check fails on a stale index.
-- [ ] The before/after file-open measurement is published, and the index either
+- [x] `INDEX.md` and `index.json` cover every top-level archived roadmap.
+- [x] A drift check fails on a stale index.
+- [x] The before/after file-open measurement is published, and the index either
       cleared the 80 % bar or was reverted with the null recorded.
-- [ ] No archived file was deleted or rewritten.
-- [ ] Verdicts that cannot be extracted deterministically say so.
+- [x] No archived file was deleted or rewritten.
+- [x] Verdicts that cannot be extracted deterministically say so.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude/host -->
