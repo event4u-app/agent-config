@@ -29,6 +29,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { GateLedger } from './_lib/gate_ledger.js';
 import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 const QUIET = process.argv.includes('--quiet');
@@ -44,6 +45,14 @@ export type Status = (typeof STATUSES)[number];
 export interface ParityFinding {
     kind: string;
     msg: string;
+    /**
+     * The catalog id this finding is about, when it is about one.
+     *
+     * Carried explicitly so the per-target ledger can attribute a failure
+     * without parsing it back out of `msg`. Absent on structural findings
+     * (a missing § Detector status section is about the document, not an id).
+     */
+    id?: string;
 }
 
 const ENTRY_ROW = /^\|\s*((?:V|C|T|L|M|CP)\d+)\s*\|/gm;
@@ -89,7 +98,7 @@ export function parityFindings(catalogMd: string, registryTs: string): ParityFin
     const entries = catalogEntries(catalogMd);
     const seen = new Set<string>();
     for (const id of entries) {
-        if (seen.has(id)) out.push({ kind: 'duplicate-entry', msg: `${id}: appears more than once in the catalog tables` });
+        if (seen.has(id)) out.push({ kind: 'duplicate-entry', id, msg: `${id}: appears more than once in the catalog tables` });
         seen.add(id);
     }
 
@@ -98,13 +107,13 @@ export function parityFindings(catalogMd: string, registryTs: string): ParityFin
     // A — every catalog entry is classified.
     for (const id of seen) {
         if (!rows.has(id)) {
-            out.push({ kind: 'unclassified', msg: `${id}: catalog entry missing from § Detector status` });
+            out.push({ kind: 'unclassified', id, msg: `${id}: catalog entry missing from § Detector status` });
         }
     }
     // B — every classified row names a real entry.
     for (const id of rows.keys()) {
         if (!seen.has(id)) {
-            out.push({ kind: 'orphan-status', msg: `${id}: § Detector status row names an entry that no catalog table defines` });
+            out.push({ kind: 'orphan-status', id, msg: `${id}: § Detector status row names an entry that no catalog table defines` });
         }
     }
     // D + E — status vocabulary and reasons.
@@ -112,12 +121,13 @@ export function parityFindings(catalogMd: string, registryTs: string): ParityFin
         if (!(STATUSES as readonly string[]).includes(row.status)) {
             out.push({
                 kind: 'bad-status',
+                id,
                 msg: `${id}: status '${row.status || '(empty)'}' is not one of ${STATUSES.join(', ')}`,
             });
             continue;
         }
         if (row.status !== 'backed' && row.note === '') {
-            out.push({ kind: 'missing-reason', msg: `${id}: status '${row.status}' carries no reason` });
+            out.push({ kind: 'missing-reason', id, msg: `${id}: status '${row.status}' carries no reason` });
         }
     }
 
@@ -126,7 +136,7 @@ export function parityFindings(catalogMd: string, registryTs: string): ParityFin
     const registry = new Set(registryCatalogIds(registryTs));
     for (const id of backed) {
         if (!registry.has(id)) {
-            out.push({ kind: 'backed-without-rule', msg: `${id}: marked backed but no registry rule declares that catalogId` });
+            out.push({ kind: 'backed-without-rule', id, msg: `${id}: marked backed but no registry rule declares that catalogId` });
         }
     }
     for (const id of registry) {
@@ -134,6 +144,7 @@ export function parityFindings(catalogMd: string, registryTs: string): ParityFin
             const known = rows.get(id);
             out.push({
                 kind: 'rule-without-backed',
+                id,
                 msg: known
                     ? `${id}: a registry rule declares this catalogId but § Detector status marks it '${known.status}'`
                     : `${id}: a registry rule declares this catalogId and no catalog entry carries it`,
@@ -167,8 +178,31 @@ export function main(): number {
     const registryTs = fs.readFileSync(REGISTRY, 'utf-8');
     const findings = parityFindings(catalogMd, registryTs);
 
+    const rows = statusRows(catalogMd);
     const entries = catalogEntries(catalogMd).length;
-    const backed = [...statusRows(catalogMd).values()].filter((r) => r.status === 'backed').length;
+    const backed = [...rows.values()].filter((r) => r.status === 'backed').length;
+
+    // Per-target completeness accounting. The target is a catalog ID, and the
+    // planned set is the UNION of the three places an id can appear — catalog
+    // tables, the § Detector status table, and the rule registry — because this
+    // gate's whole subject is parity BETWEEN those sets. Planning only the
+    // catalog would leave an orphan status row or a registry-only id
+    // unaccounted, which is the direction the gate exists to catch.
+    const ledger = new GateLedger('lint_design_antipattern_parity');
+    const targets = [
+        ...new Set([
+            ...catalogEntries(catalogMd),
+            ...rows.keys(),
+            ...registryCatalogIds(registryTs),
+        ]),
+    ].sort();
+    ledger.plan(targets);
+    const failedIds = new Set(findings.map((f) => f.id).filter((v): v is string => v !== undefined));
+    for (const id of targets) {
+        if (failedIds.has(id)) ledger.fail(id, 'parity finding');
+        else ledger.complete(id);
+    }
+    ledger.report();
 
     if (findings.length === 0) {
         _print(`✅  catalog ↔ rule parity OK — ${entries} entries classified, ${backed} detector-backed`);

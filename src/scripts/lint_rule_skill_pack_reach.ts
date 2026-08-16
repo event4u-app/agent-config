@@ -66,6 +66,7 @@ import { fileURLToPath } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -403,6 +404,48 @@ function main(argv: readonly string[] = process.argv.slice(2)): number {
     const findings = analyze(rules, skillPacks, packs);
     const errors = findings.filter((f) => f.kind === 'unreachable-route');
     const advisories = findings.filter((f) => f.kind === 'unrouted-skill');
+
+    // Per-target completeness accounting over BOTH populations this gate
+    // reasons about, id-prefixed so they stay distinguishable in one tally.
+    // The skips are the point: check 1 walks past every unscoped rule and
+    // check 2 past every unscoped skill, because "ships everywhere" makes the
+    // reachability question inapplicable rather than satisfied. Without the
+    // ledger those walk-pasts were indistinguishable from checks that passed —
+    // the exact "checked 20 of 300, printed one green line" shape.
+    //
+    // This tally is deliberately NOT the `scanned:` line below. That line is
+    // the machine-read coverage contract and stays the rule count; this is the
+    // human-auditable breakdown beside it, per `_lib/gate_ledger` § report.
+    const ledger = new GateLedger('lint_rule_skill_pack_reach');
+    const routedSkills = [...new Set(rules.flatMap((r) => r.routesToSkills))]
+        .filter((sk) => skillPacks.has(sk))
+        .sort();
+    ledger.plan([
+        ...rules.map((r) => `rule:${r.name}`),
+        ...routedSkills.map((sk) => `skill:${sk}`),
+    ]);
+    const failedSubjects = new Set(findings.map((f) => f.subject));
+    for (const rule of rules) {
+        const id = `rule:${rule.name}`;
+        if (rule.packs.length === 0) {
+            ledger.skip(id, 'not_applicable_kind');
+        } else if ([...failedSubjects].some((sub) => sub.startsWith(`${rule.name} → skill:`))) {
+            ledger.fail(id, 'unreachable-route');
+        } else {
+            ledger.complete(id);
+        }
+    }
+    for (const sk of routedSkills) {
+        const id = `skill:${sk}`;
+        if ((skillPacks.get(sk) ?? []).length === 0) {
+            ledger.skip(id, 'not_applicable_kind');
+        } else if (failedSubjects.has(id)) {
+            ledger.fail(id, 'unrouted-skill');
+        } else {
+            ledger.complete(id);
+        }
+    }
+    ledger.report();
 
     // --quiet suppresses the per-finding lines but never the count line: this
     // gate is expected to stay non-empty for a while, and a quiet run that
