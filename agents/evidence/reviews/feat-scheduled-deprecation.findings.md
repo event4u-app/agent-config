@@ -1,12 +1,12 @@
 # Findings: feat-scheduled-deprecation
-<!-- completion-review: v1 | reviewed: 2026-08-16 | scope: 31560810e2179e6ce1dba2a130bc02ccb51ae4ee58692db15f9fb624ed8455eb | diff: a05cd1cd223c60de70c980d07ecbe8bb154217e5 | reviewer: r2-fresh-subagent-feat-scheduled-deprecation | prompt_hash: 7ccf193f42f360d22bae806f9bab036885b0d60fa717b335a44851b86b9c4dbc -->
+<!-- completion-review: v1 | reviewed: 2026-08-16 | scope: 1f6931ad909f1f146c728b8aae3f9f02e8132e9e1640d9769822bc8e761e5efc | diff: f5873b283cd6beb59528f346a552a60846f9ae9d | reviewer: r2-fresh-subagent-feat-scheduled-deprecation | prompt_hash: 7ccf193f42f360d22bae806f9bab036885b0d60fa717b335a44851b86b9c4dbc -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: a05cd1cd223c60de70c980d07ecbe8bb154217e5
-  scope_hash: 31560810e2179e6ce1dba2a130bc02ccb51ae4ee58692db15f9fb624ed8455eb
+  diff_sha: f5873b283cd6beb59528f346a552a60846f9ae9d
+  scope_hash: 1f6931ad909f1f146c728b8aae3f9f02e8132e9e1640d9769822bc8e761e5efc
   roadmap: agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md
-  roadmap_hash: 139e567a3719c5c10da6a8a1aecd289a13563b01b2c8b244f616b18c4cd90633
+  roadmap_hash: 6e680399b1c07913fdfb2c51524b0bf6dadf816a56c052a84db5f01e3dd4041a
   ac_hash: 4b53e297a51e10e2f762c99a14f20ece1394f927d02f3438e29d6015c03bf229
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]

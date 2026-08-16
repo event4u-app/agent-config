@@ -85,7 +85,7 @@ index d29c5a598423a23ca45a43dbd32cc175473184fd..e8931a18b95b7377277f6161fd1493ed
  ### [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md)
  
 diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md
-index 86344ca3896fadb9ed01bda9c3b26511652a340b..f651339460158b25c317bbb1f9f7446c94243108 100644
+index 86344ca3896fadb9ed01bda9c3b26511652a340b..8e03a1a4bf9fcbf232cede2c1d22c1c192169b0d 100644
 --- a/agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md
 +++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md
 @@ -56,16 +56,16 @@ actual defect-fix — is not held hostage to a release window.
@@ -108,7 +108,7 @@ index 86344ca3896fadb9ed01bda9c3b26511652a340b..f651339460158b25c317bbb1f9f7446c
        run means the arithmetic ran rather than that the table was empty. A gate
        that scans nothing exits green, and that is the failure mode this whole
        roadmap is about.
-@@ -77,18 +77,106 @@ actual defect-fix — is not held hostage to a release window.
+@@ -77,18 +77,112 @@ actual defect-fix — is not held hostage to a release window.
        major, with the removal owner named. The row already exists; what it lacks
        is the fact that it was missed.
        <!-- verify: git show HEAD:docs/MIGRATION.md | grep -c 'code_graph' -->
@@ -189,7 +189,10 @@ index 86344ca3896fadb9ed01bda9c3b26511652a340b..f651339460158b25c317bbb1f9f7446c
 +  stays worth stating for the next overdue row: the warning is backed by a hard
 +  refusal at the cut, which habituation does not survive.
 +- **The dashboard's "pending archival" criterion ignores blockers; the sweep
-+  does not.** So `agents/roadmaps-progress.md` prints an
++  does not — no longer obstructing here, kept because the shape recurs.** With
++  the blocker now `Status: resolved` on the trunk, this roadmap is genuinely
++  archivable and the printed instruction does succeed. The inconsistency itself
++  is unrepaired: So `agents/roadmaps-progress.md` prints an
 +  `archive_completed_roadmaps --all` instruction for this roadmap that cannot
 +  succeed while its blocker is open. That is a generator-side inconsistency
 +  older than this branch and is not repaired here.
@@ -201,8 +204,11 @@ index 86344ca3896fadb9ed01bda9c3b26511652a340b..f651339460158b25c317bbb1f9f7446c
 +  outright, and the merge brought that in, so the roadmap is absent from the
 +  dashboard entirely and the delta this note claimed to have verified is not in
 +  the shipped diff. What the diff now carries is one changed open-roadmaps row
-+  — this roadmap's — and an Overall move of exactly its own 10 steps over an
-+  unchanged denominator. The original reading was true when written and stopped
++  — this roadmap's — and an Overall move of **+9** over an unchanged
++  denominator — not the 10 an earlier draft of this bullet asserted, because
++  the base row already read 9 open / 1 done rather than 10 / 0. Corrected
++  because a paragraph whose subject is an outlived claim cannot carry an
++  unchecked number of its own. The original reading was true when written and stopped
 +  being true at the merge; a "verified" claim that outlives its evidence is
 +  worse than no claim, which is why it is rewritten instead of deleted.
 +
@@ -361,10 +367,10 @@ index 76bbdcf0f9570c368a763d213629b4920d1a3bc3..57c0f4562601459a6b734c093e501444
      "lint_pack_boundaries": {
 diff --git a/src/scripts/lint_scheduled_deprecations.ts b/src/scripts/lint_scheduled_deprecations.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..260409572cfc6394a5b32bea63a4397d3f7a738e
+index 0000000000000000000000000000000000000000..7b0b2479a0f7d1d58530f36d113ef811511e38f6
 --- /dev/null
 +++ b/src/scripts/lint_scheduled_deprecations.ts
-@@ -0,0 +1,737 @@
+@@ -0,0 +1,738 @@
 +#!/usr/bin/env node
 +/**
 + * Gate: the scheduled-deprecations table in `docs/MIGRATION.md` is checked by
@@ -390,7 +396,8 @@ index 0000000000000000000000000000000000000000..260409572cfc6394a5b32bea63a4397d
 + *   0  nothing due, or due surfaces reported on an ordinary branch
 + *   1  a row could not be parsed / resolved, the table is missing or empty, or
 + *      a due surface was found while `--cutting <version>` was passed
-+ *   2  usage error
++ *   2  usage error, or an environment failure that leaves the gate with no
++ *      comparand at all (missing / malformed `package.json`)
 + *
 + * `--cutting <X.Y.Z>` is the major-cut switch: an ordinary branch gets the
 + * report, a release gets the refusal. That asymmetry is deliberate — an overdue
@@ -970,7 +977,7 @@ index 0000000000000000000000000000000000000000..260409572cfc6394a5b32bea63a4397d
 +        shipped = shippedMajor(root);
 +    } catch (exc) {
 +        process.stderr.write(
-+            `❌  lint_scheduled_deprecations: cannot read the shipped major — ` +
++            `❌  lint_scheduled_deprecations: cannot read the shipped major (environment, not a finding) — ` +
 +                `${exc instanceof Error ? exc.message : String(exc)}\n`,
 +        );
 +        return 2;
@@ -1103,7 +1110,7 @@ index 0000000000000000000000000000000000000000..260409572cfc6394a5b32bea63a4397d
 +    process.exitCode = main(process.argv.slice(2));
 +}
 diff --git a/src/scripts/release.ts b/src/scripts/release.ts
-index bc79d417123977d6786bf6b6d82a08168b295ad8..cb03628bbd875fd25bbbe2d4706a625f3d4d6bad 100644
+index bc79d417123977d6786bf6b6d82a08168b295ad8..2b5ef5a8c85ac6261008fbd4e65e59e633758c8b 100644
 --- a/src/scripts/release.ts
 +++ b/src/scripts/release.ts
 @@ -536,7 +536,7 @@ function die(msg: string, code = 2): never {
@@ -1115,7 +1122,7 @@ index bc79d417123977d6786bf6b6d82a08168b295ad8..cb03628bbd875fd25bbbe2d4706a625f
      returncode: number;
      stdout: string;
      stderr: string;
-@@ -1623,6 +1623,83 @@ function set_template_pin(p: string, version: string): void {
+@@ -1623,6 +1623,93 @@ function set_template_pin(p: string, version: string): void {
      fs.writeFileSync(p, lines.join('\n'), 'utf-8');
  }
  
@@ -1177,6 +1184,16 @@ index bc79d417123977d6786bf6b6d82a08168b295ad8..cb03628bbd875fd25bbbe2d4706a625f
 +    }
 +    process.stderr.write(res.stdout);
 +    process.stderr.write(res.stderr);
++    if (res.returncode !== 1) {
++        // The gate reserves 1 for a finding and 2 for a usage/environment
++        // failure. Diagnosing the latter as "the table has an overdue row"
++        // sends the releaser to edit a file that is not the problem.
++        die(
++            `refusing the ${target} cut: the scheduled-deprecations check could not run ` +
++                `(exit ${String(res.returncode)}). That is an environment or usage failure, not a ` +
++                'finding in docs/MIGRATION.md — fix the invocation or the checkout, then re-run.',
++        );
++    }
 +    if (opts.previewOnly === true) {
 +        // The preview's job is to SHOW what the real run will refuse. Dying
 +        // here would break the `--dry-run exits 0` contract asserted elsewhere
@@ -1199,7 +1216,7 @@ index bc79d417123977d6786bf6b6d82a08168b295ad8..cb03628bbd875fd25bbbe2d4706a625f
  // ─── preflight ────────────────────────────────────────────────────────────────
  
  /**
-@@ -2578,6 +2655,13 @@ function main(argv: readonly string[] | null = null): number {
+@@ -2578,6 +2665,13 @@ function main(argv: readonly string[] | null = null): number {
      }
      parse_version(target);
  
@@ -1254,10 +1271,10 @@ index eec12e3ff020ea32001c822a64f2746dfafac0b4..452d5f78efc9ee7b0a1790890cb31e25
      desc: |
 diff --git a/tests/scripts/lint_scheduled_deprecations.test.ts b/tests/scripts/lint_scheduled_deprecations.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..5312c1580e32926e91dde7436825ac9563c58a67
+index 0000000000000000000000000000000000000000..4fc6c4630f35df024cdbc9c9b7b85208974ec908
 --- /dev/null
 +++ b/tests/scripts/lint_scheduled_deprecations.test.ts
-@@ -0,0 +1,273 @@
+@@ -0,0 +1,280 @@
 +/**
 + * Tests for `src/scripts/lint_scheduled_deprecations.ts`.
 + *
@@ -1522,7 +1539,14 @@ index 0000000000000000000000000000000000000000..5312c1580e32926e91dde7436825ac95
 +        ).toThrow(HeaderMismatchError);
 +    });
 +
-+    it('real repo: reproduces the reading this gate was built on', () => {
++    it('real repo: parses the shipped table and resolves every cell', () => {
++        // Renamed: it used to say "reproduces the reading this gate was built
++        // on", and that reading was `code_graph` one major overdue. The
++        // maintainer withdrew that commitment, so the shipped table now has
++        // nothing overdue — asserting the old outcome would pin a state the
++        // trunk deliberately left. What still matters, and is what this asserts,
++        // is that every shipped cell RESOLVES: an unresolvable one is a live
++        // defect regardless of which way the arithmetic then falls.
 +        const r = run(REPO_ROOT);
 +        // Three rows today; the floor is what matters, not the exact number.
 +        expect(r.stdout).toMatch(/scanned: [1-9]\d*/);
