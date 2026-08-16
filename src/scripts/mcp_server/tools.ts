@@ -1215,7 +1215,8 @@ async function _readResourceBodyHandler(
  *
  * Promoted from a discovery stub because the defect it answers is measured, not
  * hypothetical: on the one host that publishes its own truncation, a default
- * install had 402 of its skills dropped from the model-visible list
+ * install had 402 entries dropped from the model-visible skills list — the
+ * host's own count against its own denominator, not a subtraction over ours
  * (`agents/evidence/analysis/scoped-projection-host-delivery.md`). An agent
  * that cannot see a skill also cannot ask for it by name, so the only reachable
  * question is "what fits this task" — which is what the deterministic ranker
@@ -1272,8 +1273,9 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
             'Match a free-form task description to the most relevant skills, ' +
             'ranked by a deterministic keyword scorer over SKILL.md ' +
             'frontmatter. Use when a skill you need is not in the catalogue ' +
-            'the host delivered — a measured host dropped 402 of them — so ' +
-            'asking by name is impossible while asking by task is not. ' +
+            'the host delivered — a measured host dropped 402 entries from ' +
+            'its model-visible list — so asking by name is impossible while ' +
+            'asking by task is not. ' +
             'Read-only: no shell, no writes, and no skill bodies are returned, ' +
             'only names, scores and declared personas.',
         input_schema: {

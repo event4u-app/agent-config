@@ -544,7 +544,7 @@
     },
     {
       "name": "suggest_skill_for_task",
-      "description": "Match a free-form task description to the most relevant skills, ranked by a deterministic keyword scorer over SKILL.md frontmatter. Use when a skill you need is not in the catalogue the host delivered — a measured host dropped 402 of them — so asking by name is impossible while asking by task is not. Read-only: no shell, no writes, and no skill bodies are returned, only names, scores and declared personas.",
+      "description": "Match a free-form task description to the most relevant skills, ranked by a deterministic keyword scorer over SKILL.md frontmatter. Use when a skill you need is not in the catalogue the host delivered — a measured host dropped 402 entries from its model-visible list — so asking by name is impossible while asking by task is not. Read-only: no shell, no writes, and no skill bodies are returned, only names, scores and declared personas.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"

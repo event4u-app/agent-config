@@ -18,16 +18,30 @@
  * than no line when the ranking is poor, so what is injected is the cheapest
  * thing that can still be acted on — and the cheapest thing to ignore.
  *
- * SILENCE IS THE DEFAULT, AND THE FLOOR IS MEASURED, NOT GUESSED. `rank`
+ * SILENCE IS THE DEFAULT, AND BOTH FLOORS ARE MEASURED, NOT GUESSED. `rank`
  * already drops every zero-scoring skill, but on real prompts it almost always
  * returns SOMETHING, so "non-empty" is not a usable trigger. Measured over the
  * routing-matrix corpus (496 prompt lines, `tests/eval/routing-matrix/*.yaml`,
  * 2026-08-16): top-score median 18, p75 28, p90 30, max 70, and only 4 prompts
- * score nothing at all. `MIN_TOP_SCORE = 30` is that p90 — the concern speaks
- * on roughly the top decile of prompts by ranker confidence (69 of 496, 13.9 %)
- * and stays silent on the rest. A floor at the median would fire on half of all
- * turns, which is the per-turn-reminder shape this estate has already measured
- * failing at a 24/29 miss rate.
+ * score nothing at all.
+ *
+ * TWO floors are needed, because the score alone cannot express the failure at
+ * the short end. `MIN_TOP_SCORE` gates confidence; `MIN_TASK_TERMS` gates the
+ * denominator that confidence is computed over — the scorer divides by the task
+ * term count, so a one-term prompt scores 70/100 against whatever shares that
+ * term. Together they fire on 9.1 % of the corpus. A score floor at the median
+ * with no term floor would fire on half of all turns AND still hand 70/100 to
+ * `"fix it"` — the per-turn-reminder shape this estate has already measured
+ * failing at a 24/29 miss rate. Each constant carries its own derivation below.
+ *
+ * COST, MEASURED RATHER THAN ASSUMED. Ranking re-reads the skill catalogue per
+ * prompt, uncached. Measured 2026-08-16 on this tree: **12.3 ms warm** for a
+ * prompt that reaches the ranker, against the slot's 250 ms p95 budget — about
+ * 5 % of it. A prompt below `MIN_TASK_TERMS` costs **0 ms**, because the term
+ * floor is checked BEFORE the catalogue read; that ordering is deliberate and
+ * is what keeps conversational turns free. No cache is added: a cache would
+ * need an invalidation story for a tree that changes under the session, and
+ * 12.3 ms does not buy one.
  *
  * NO ADOPTION THRESHOLD IS COMMITTED HERE. Whether the line changes behaviour
  * is a question for data, not for this header: `skill_route_pointer_rate` is
@@ -60,18 +74,40 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { readHookStdin } from "./hook_stdin.js";
 import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
 import { resolveSkillsRoot } from "../_lib/skill_catalogue.js";
-import { rank, type RankRow } from "../skill_tools/score_skill_relevance.js";
+import { _tokenize, rank, type RankRow } from "../skill_tools/score_skill_relevance.js";
 
 const EXIT_ALLOW = 0;
 /** See the header: reduced to a real exit of 0 by `emitFor`'s warn branch. */
 const EXIT_WARN = 2;
 
 /**
- * Minimum top-1 ranker score before this concern speaks — the p90 of the
- * measured distribution. Exported so a future recalibration is a visible
- * one-line diff with a new measurement beside it, never an inlined edit.
+ * Minimum top-1 ranker score before this concern speaks.
+ *
+ * **31, not the measured p90 of 30, and the extra point is load-bearing.** The
+ * scorer is `overlap * 70 + personaHit * 30`, so a skill whose PERSONA slug
+ * appears in the prompt scores exactly 30 with zero keyword overlap. A floor of
+ * 30 with a `>=` test therefore admits a pure persona coincidence as if it were
+ * a ranked match. 31 is the smallest floor strictly above that value; it moves
+ * the corpus fire rate from 13.9 % to 9.1 %.
  */
-export const MIN_TOP_SCORE = 30;
+export const MIN_TOP_SCORE = 31;
+
+/**
+ * Minimum distinct task terms before the score is trusted at all.
+ *
+ * The scorer divides by `|task_terms|`, so the score is inversely proportional
+ * to prompt length and degenerates at the short end: `"fix it"` tokenizes to
+ * ONE term and hands 70/100 to whichever skills happen to share it, which on
+ * this catalogue means the alphabetically first three. `MIN_TOP_SCORE` cannot
+ * fix that — the number is not too low, the denominator is too small.
+ *
+ * **3 is the routing-matrix corpus's own minimum**, so this floor excludes
+ * ZERO of the 496 prompt lines the score calibration rests on while removing
+ * every degenerate short prompt measured (`"fix it"` 1, `"mach das"` 2,
+ * `"was denkst du dazu"` 2, `"weiter"` 1). A floor of 4 would have cost 10 real
+ * corpus prompts for one tenth of a percentage point.
+ */
+export const MIN_TASK_TERMS = 3;
 
 /** Pointers per line. Three is the ranker's own default `--top`. */
 export const TOP_K = 3;
@@ -92,6 +128,13 @@ function _isObject(v: unknown): v is JsonObject {
  */
 export function routePointers(prompt: string, skillsDir: string | null): RankRow[] {
   if (skillsDir === null) return [];
+  // Denominator floor BEFORE the catalogue read: a prompt too short to score
+  // meaningfully cannot produce a pointer worth 337 file reads either.
+  try {
+    if (_tokenize(prompt).size < MIN_TASK_TERMS) return [];
+  } catch {
+    return [];
+  }
   let rows: RankRow[];
   try {
     rows = rank(prompt, skillsDir);

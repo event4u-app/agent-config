@@ -609,6 +609,12 @@ export function buildNoTruncationRecord(
         observed_at: observedAt,
         host,
         entries_total: entriesOffered,
+        // BOTH counts stay 0, and neither is a claim that nothing arrived
+        // described. The host published no per-entry breakdown at all — it
+        // published nothing, which is what `truncation_mode: 'none'` records.
+        // Writing `described_count: entriesOffered` would look like a
+        // measurement and be an inference; 0 here means "not counted", exactly
+        // as it does on the strip-and-drop record beside it.
         bare_count: 0,
         described_count: 0,
         bare_names: [],
@@ -825,15 +831,54 @@ export interface KnownHostLimit {
     observedAt: string;
 }
 
+/**
+ * Is `candidate` the record a host's headline should quote, given `incumbent`?
+ *
+ * Shared by `knownHostLimits` and `formatPerHostVerdicts` because they used to
+ * disagree, and the disagreement was visible in one run: two arms of the same
+ * experiment recorded on the same date made `--limits` print `dropped 402` in
+ * the verdict block and `dropped 330` in the measured-truncations block, for
+ * one host on one day. Two reducers over one log must not break a tie in
+ * opposite directions.
+ *
+ * Later date always wins. On an EQUAL date the larger drop wins, which is also
+ * the conservative direction this module already takes elsewhere: over-warning
+ * about truncation is safe, under-warning is the failure. It is also what keeps
+ * a `scoped` arm from being quoted at a `legacy-all` install — the scoped arm
+ * is by construction the smaller number.
+ */
+function _supersedes(candidate: ObservationRecord, incumbent: ObservationRecord): boolean {
+    if (candidate.observed_at !== incumbent.observed_at) {
+        return candidate.observed_at > incumbent.observed_at;
+    }
+    return (candidate.dropped_count ?? 0) > (incumbent.dropped_count ?? 0);
+}
+
+/** The record whose truncation a host's headline quotes, per `_supersedes`. */
+export function headlineRecordPerHost(
+    records: readonly ObservationRecord[],
+): Map<string, ObservationRecord> {
+    const out = new Map<string, ObservationRecord>();
+    for (const record of records) {
+        const previous = out.get(record.host);
+        if (previous === undefined || _supersedes(record, previous)) {
+            out.set(record.host, record);
+        }
+    }
+    return out;
+}
+
 /** The most recent observed truncation per host. */
 export function knownHostLimits(records: readonly ObservationRecord[]): Map<string, KnownHostLimit> {
     const out = new Map<string, KnownHostLimit>();
+    const chosen = new Map<string, ObservationRecord>();
     for (const record of records) {
         if (truncationModeOf(record) !== 'budget-strip-and-drop') continue;
         if (typeof record.dropped_count !== 'number') continue;
         if (record.dropped_count <= 0) continue;
-        const previous = out.get(record.host);
-        if (previous !== undefined && previous.observedAt > record.observed_at) continue;
+        const previous = chosen.get(record.host);
+        if (previous !== undefined && !_supersedes(record, previous)) continue;
+        chosen.set(record.host, record);
         out.set(record.host, {
             host: record.host,
             droppedEntries: record.dropped_count,
@@ -1001,10 +1046,16 @@ export function formatPerHostVerdicts(records: readonly ObservationRecord[]): st
         byHost.set(record.host, bucket);
     }
 
+    const headline = headlineRecordPerHost(records);
+
     const lines: string[] = [];
     for (const host of [...byHost.keys()].sort()) {
         const bucket = byHost.get(host)!;
-        const latest = bucket.reduce((a, b) => (a.observed_at >= b.observed_at ? a : b));
+        // One selector for both reducers — see `_supersedes`. The previous
+        // `>=` reduce here kept the FIRST of two same-date rows while
+        // `knownHostLimits` kept the LAST, so one run printed two different
+        // drop counts for one host on one day.
+        const latest = headline.get(host)!;
         const mode = truncationModeOf(latest);
         lines.push(
             `${host}: ${bucket.length} observation(s) · mode ${mode} · ` +
@@ -1018,7 +1069,7 @@ export function formatPerHostVerdicts(records: readonly ObservationRecord[]): st
         );
     }
 
-    const modes = new Set([...byHost.values()].map((b) => truncationModeOf(b[b.length - 1]!)));
+    const modes = new Set([...headline.values()].map((r) => truncationModeOf(r)));
     lines.push('');
     lines.push(
         modes.size > 1

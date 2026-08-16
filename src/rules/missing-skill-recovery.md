@@ -15,7 +15,7 @@ applies_to_user_types:
 self_contained: true
 workspaces: [engineering]
 packs: [meta]
-# obligation: line 30
+# obligation: line 41
 obligation_frequency: "per-turn"
 ---
 
@@ -24,9 +24,14 @@ obligation_frequency: "per-turn"
 The catalogue a host shows you is not the catalogue that exists. Hosts truncate,
 and at least one truncates hard: measured 2026-08-16 on a default install, the
 host published its own budget event stating it had stripped every description
-and dropped **402** skills from the model-visible list
+and dropped **402 entries** from the model-visible skills list
 (`agents/evidence/analysis/scoped-projection-host-delivery.md`). Scoping the
 projection moved that to 330 and stripped the descriptions anyway.
+
+402 is the **host's own count against the host's own denominator**, which is not
+this package's: the same install projects 297 skills, so the figure is a
+magnitude, never a subtraction anyone can perform. What it establishes is that
+most of the catalogue is not model-visible — which is all this rule needs.
 
 So "I do not see a skill for this" is evidence about the **delivery**, never
 about the tree.

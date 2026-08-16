@@ -114,9 +114,23 @@ stale, the current ones are used and the correction is named.
       Shipped: `src/scripts/hooks/skill_route_hook.ts`, bound on `claude` only
       (the one platform whose exit-2 warn delivery is verified) and dropped for
       the `worker` role. Budget row **512** — half the default, so a later
-      change that starts injecting bodies fails the build; measured emission is
-      323 bytes. Silence floor is the measured p90 (top-1 ≥ 30/100), not a
-      guess: median 18 over 496 routing-matrix prompt lines.
+      change that starts injecting bodies fails the build. Emission on a real
+      firing prompt is **323 bytes**; `bench_hook_injection` reports the concern
+      at **0 B** because its synthetic probe does not clear the floor. Both
+      readings are stated rather than the flattering one.
+      **TWO floors, both measured — the R2 review found one of them
+      insufficient and the correction is the substance of this step.** Score
+      ≥ **31**, not the p90 of 30: the scorer is `overlap*70 + persona*30`, so a
+      persona-only coincidence scores exactly 30 and a floor of 30 admitted it.
+      Task terms ≥ **3**: the scorer divides by the term count, so `"fix it"`
+      (1 term) scored 70/100 and emitted the alphabetically first three skills —
+      a defect no score floor can fix, because the denominator is the problem.
+      3 is the corpus's own minimum, so it excludes **none** of the 496 prompt
+      lines the calibration rests on. Corpus fire rate 9.1 %.
+      Cost measured rather than assumed: 12.3 ms warm when it ranks, 0 ms below
+      the term floor (checked before the catalogue read), against a 250 ms p95
+      slot budget. Ten tests pin both floors; mutating them back to 30/0 fails
+      three.
       <!-- verify: grep -c 'skill-route' src/scripts/hook_manifest.yaml -->
 - [x] 2.2 Register its adoption metric alongside the existing advisory metrics,
       with no threshold committed before data — the house baseline-first rule.
@@ -215,11 +229,15 @@ stale, the current ones are used and the correction is named.
       the shared matcher; tranche of 4 skills → 3 activations over 496 prompt
       lines.
 - [x] The unintended-activation census is at or below 433 after seeding.
-      **Unchanged, and structurally unreachable from this scope** — skills are
-      not compiled into the router (verified: zero skill references in
+      **Unchanged.** The skill SEED is structurally unreachable from the census
+      — skills are not compiled into the router (zero skill references in
       `compile_router.ts`; `dist/router.json` byte-identical after the seed;
-      rule scope still 26/26). Recorded as the correction it is rather than
-      claimed as a passed gate.
+      rule scope still 26/26). **That argument does not cover the tier-2 rule
+      this same branch adds**, which IS routed and therefore can move the
+      number; the R2 review caught the gap and replayed the corpus, and the new
+      rule's contribution is **0**. So the outcome holds on evidence and the
+      structural argument holds only for the half it actually covers — recorded
+      that way rather than as one sweeping claim.
 - [x] No survivor count is computed anywhere, and no host limit is extrapolated
       from another host.
       No subtraction across the two denominators appears in the new code, the

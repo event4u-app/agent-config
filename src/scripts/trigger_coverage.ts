@@ -180,7 +180,15 @@ export function loadSkillTriggers(skillsDir: string): SkillTriggerEntry[] {
     return out;
 }
 
-/** Every prompt line in the matrix corpus, positives and near-misses alike. */
+/**
+ * Every prompt in the matrix corpus, positives and near-misses alike.
+ *
+ * Parsed with the YAML reader this module already imports, not with a
+ * line regex. A regex anchored on `- prompt: "…"` silently drops any entry
+ * written unquoted or in single quotes, and a corpus that shrinks without
+ * saying so moves every rate computed against it — the denominator would
+ * change while the number kept its old name.
+ */
 export function loadMatrixPrompts(matrixDir: string): string[] {
     let files: string[];
     try {
@@ -190,9 +198,21 @@ export function loadMatrixPrompts(matrixDir: string): string[] {
     }
     const out: string[] = [];
     for (const f of files) {
-        for (const line of fs.readFileSync(path.join(matrixDir, f), 'utf-8').split('\n')) {
-            const m = /^\s*-\s*prompt:\s*"(.*)"\s*$/.exec(line);
-            if (m) out.push(m[1]!);
+        let doc: unknown;
+        try {
+            doc = parseYaml(fs.readFileSync(path.join(matrixDir, f), 'utf-8'), { version: '1.1' });
+        } catch {
+            continue; // an unparseable corpus file is skipped, never guessed at
+        }
+        if (typeof doc !== 'object' || doc === null) continue;
+        const record = doc as Record<string, unknown>;
+        for (const section of ['positives', 'near_misses']) {
+            const entries = record[section];
+            if (!Array.isArray(entries)) continue;
+            for (const raw of entries) {
+                const prompt = (raw as Record<string, unknown> | null)?.['prompt'];
+                if (typeof prompt === 'string' && prompt.trim() !== '') out.push(prompt);
+            }
         }
     }
     return out;
