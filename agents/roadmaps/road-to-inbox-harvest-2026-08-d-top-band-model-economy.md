@@ -101,46 +101,164 @@ is not gated on the answer.
 
 ## Phase 3 — One top-band context per task
 
-- [ ] 3.1 Commit the invariant: under a top-band session, `inherit` resolves to
-      at most the top *mapped* tier. A slice that genuinely needs the session's
-      own band declares it, which makes the cost visible rather than default.
+- [x] 3.1 Commit the invariant. **The step's own rung name went stale between
+      authoring and execution, and the tree already half-stated the fix.** It
+      says "at most the top *mapped* tier"; ADR-232 (step 2.1, this roadmap)
+      then mapped `frontier`, so the top mapped rung became the new band and
+      clamping there would clamp nothing. The clamp shipped is **`high`** — the
+      top *generally-recommended* band — which is what
+      `model-recommendations.md` already asserted from the other side, its
+      `frontier` row reading "Never the resolution of `inherit`". The invariant
+      is now written where the resolution happens, with the declaration path
+      kept open so a genuine `frontier` need is authored rather than removed.
       <!-- verify: grep -c 'at most' src/agent-src/contexts/execution/subagent-routing.md -->
-- [ ] 3.2 Cap the judge ladder at the top mapped tier, and route the saturation
-      case cross-vendor through the council rather than into a second same-vendor
-      top-band agent. The council path already exists; this names it as the
-      escalation instead of a second context.
+- [x] 3.2 Cap the judge ladder at `high` and name the council as the saturation
+      escalation. The step's premise held on inspection: the council path exists
+      and is genuinely cross-vendor (Anthropic + OpenAI, outside the host
+      session), so it is independent of the implementer's framing in a way a
+      second same-vendor agent is not. **One thing the step did not ask for was
+      unavoidable to do it correctly:** the ladder was written in vendor model
+      names (`haiku → sonnet → opus`), i.e. a second per-vendor table beside the
+      one ADR-035 § 3 permits — exactly the two-clocks drift ADR-232 avoided. It
+      is now band vocabulary, and the file names zero vendor models, which moves
+      acceptance criterion 6 rather than merely not breaking it.
       <!-- verify: grep -c 'saturat' src/agent-src/contexts/subagent-configuration.md -->
-- [ ] 3.3 State the non-escalation floor: a slice whose dispatch overhead exceeds
-      the saving from downshifting stays in-session. Splitting work whose
-      overhead eats its own saving is the anti-goal, and 1.2's distribution is
-      what makes the floor a number rather than a preference.
+- [x] 3.3 State the non-escalation floor. **The step's premise is false and the
+      corpus falsifies it precisely: 1.2's distribution cannot make the floor a
+      number.** The modelled reduction needs `dispatch_tokens`, `session_tier`
+      and `tier_chosen` on one dispatch; over the full 327-record corpus the
+      non-null counts are 40, **0** and 1, so the usable intersection is empty —
+      not small, empty. `orchestration_savings_report.ts` already prints that
+      conclusion verbatim, and `token_delta` cannot substitute because the hook
+      writes it as a constant `0` (provenance `estimated`) for want of an
+      in-session counterfactual. The floor therefore ships as a judgement with a
+      named direction plus a falsifiable *revisit-if*: one record carrying all
+      three fields makes it computable, and filling `session_tier` — present in
+      the schema and on the manual CLI path, never set by the hook — is the
+      blocking gap.
       <!-- verify: grep -c 'in-session' src/agent-src/contexts/execution/subagent-routing.md -->
 
 ## Phase 4 — Close the documented-but-unwired exposure
 
-- [ ] 4.1 Wire or archive `pickTier`. Wiring means a named production caller in
-      the dispatch path; archiving means the relation and its prose leave
-      together, with a migration note. Carrying it undecided is the third
-      option and it is the one this step exists to remove.
+- [ ] 4.1 Wire or archive `pickTier`. **Blocked on `picktier-wire-or-archive`
+      below — a maintainer call, not a withheld agent decision.** The evidence
+      is gathered and one live defect in the same surface is already repaired
+      (see below); what remains is a reversal of a council-locked v1 contract,
+      and the council could not reach quorum on it (1/2, `openai` absent with
+      `model_unsupported_on_transport`). Escalating rather than acting on a
+      non-converged single opinion is what `decision-revisit-gate` and
+      `evaluator-independence` prescribe.
+      **Repaired here regardless, because it needed no decision:**
+      `routing_doctor` rendered a per-tier `COOLING` marker whose only writer
+      (`tripCooldown`) has zero production callers, so the marker could only
+      ever be absent and its absence read as a measured "not cooling". It now
+      reports cool-down state as *unavailable, no producer* — mirroring the
+      unavailable-vs-false distinction the capability-provenance line two lines
+      above it already makes.
       <!-- verify: grep -rln 'pickTier' src/ --include=*.ts | grep -vc test -->
-- [ ] 4.2 Run the pre-registered downshift-versus-cache measurement and publish
-      the result whichever way it falls, so the trade-off `subagent-routing.md`
-      declines to resolve stops being open indefinitely.
+- [x] 4.2 Published: `agents/evidence/analysis/downshift-vs-cache.md`, measured
+      over 611 subagent legs / 16,612 calls via the existing
+      `cache_realization_report` — no new instrument. **It falls against the
+      concern as written.** The first half ("a downshifted leg forfeits its
+      model-scoped cache reads") is false at the dispatch boundary: a leg's
+      first call realizes **2.8 %** cache read, i.e. it starts cold and never
+      inherited the session's cache, so a downshift forfeits a cache the leg
+      did not have — the cache moves rather than disappearing, and is then read
+      across a median 18 further calls at ~96.9 %. The second half (prefix
+      splitting) holds but is write-side, and writes are **3.1 %** of subagent
+      billable input — about an order of magnitude below the read surface the
+      saving applies to. Limit stated on the page: this is the cache mechanics
+      a downshift would meet, **not** realized savings, which stay unmeasurable
+      for 3.3's reason. `subagent-routing.md`'s open paragraph is closed and
+      now cites the reading.
       <!-- verify: test -f agents/evidence/analysis/downshift-vs-cache.md -->
 
 ## Acceptance criteria
 
-- [ ] The session band is stamped in the dispatch record, or recorded as
-      unestablishable with the reason.
-- [ ] The same-band spawn distribution is published before any invariant is
-      argued from it.
-- [ ] `inherit` under a top-band session resolves to at most the top mapped
-      tier, and the judge ladder is capped at the same rung.
+- [x] The session band is stamped in the dispatch record, or recorded as
+      unestablishable with the reason. **It is the second branch, with the
+      count:** `session_tier` is non-null in **0 of 327** records — the field
+      exists in the schema and on the manual `orchestration_record --session-tier`
+      CLI path, and the hook that produced every record never sets it. Recorded
+      in `subagent-routing.md` § non-escalation floor and in
+      `downshift-vs-cache.md` § Limits, both with the blocking gap named.
+- [x] The same-band spawn distribution is published before any invariant is
+      argued from it. Published by 1.2 on 2026-08-15; independently reproduced
+      today from the raw corpus (40 model-reporting records; opus 35 / haiku 2 /
+      fable 2 / sonnet 1) before Phase 3 argued from it.
+- [x] `inherit` under a top-band session resolves to at most the top mapped
+      tier, and the judge ladder is capped at the same rung. **Shipped at
+      `high`, not at the top mapped rung — see 3.1:** ADR-232 mapped `frontier`
+      mid-roadmap, so the literal wording would clamp nothing. Both clauses use
+      the same rung, which is what the criterion is actually protecting.
 - [ ] `pickTier` has either a named production caller or a removal note.
-- [ ] The downshift-versus-cache reading is published, in either direction.
-- [ ] No `.md` in the tree names a vendor model as the resolution of a band.
+      Blocked — see `picktier-wire-or-archive`.
+- [x] The downshift-versus-cache reading is published, in either direction.
+- [~] No `.md` in the tree names a vendor model as the resolution of a band.
+      **Unsatisfiable as literally written, and the contradiction is with
+      ADR-035 itself.** ADR-035 § 3 mandates exactly one tier→model mapping,
+      and `model-recommendations.md` is it; 10+ further `.md` files carry the
+      resolution, several of them ADRs, which are historical records and are not
+      rewritten. Under the reading the criterion can actually mean — *no
+      **second** vendor mapping beyond the ADR-035 § 3 one* — it holds, and 3.2
+      **moved** it: `subagent-configuration.md` carried a second ladder in
+      vendor names (`haiku → sonnet → opus`) and now names zero vendor models.
 
 ## Blockers
+
+### blocker: picktier-wire-or-archive
+
+- **Status:** open
+- **Owner:** user
+- **Blocks:** Step 4.1 only. Phase 3 and Step 4.2 are closed and independent.
+- **Question:** `pickTier` and the permit lifecycle around it have no
+  production caller. Wire them, or archive them with a migration note?
+
+**Why this is not the agent's call.** Archiving reverses a v1 contract an AI
+council locked on 2026-08-03 and deletes its pre-registered acceptance criteria
+AC1–AC5. The council was asked and **could not reach quorum: 1 of 2 present**,
+`openai` absent with `model_unsupported_on_transport` — a known infra defect,
+not a considered abstention. One non-converged opinion is not the basis for a
+reversal of a converged one.
+
+**Verified facts, so the decision needs no re-derivation:**
+
+- `pickTier`, `acquireBudgetPermit`, `settlePermit`, `tripCooldown`: zero
+  production callers. The only non-test importer of the module is
+  `routing_doctor.ts`, and it imports `TIER_ORDER` and `readCooldowns` only.
+- `pickTier` requires a `routing_switch` input whose sole source — the
+  `subagents.budget_routing` settings key — was **deleted** by always-on
+  orchestration. Wiring therefore requires inventing a source for a category
+  that was removed on purpose.
+- The state is **already disclosed and monitored**, which is the fact that most
+  weakens the urgency: `docs/CLAIMS.md § budget-routing-relation` states in its
+  own text *"no code caller dispatches through pickTier at runtime"*, and
+  `check_budget_delivery` in `routing_doctor.ts` is live and adapted to the
+  deleted key. Nothing in the tree misrepresents this.
+- Realized savings are unmeasurable: `session_tier` 0 / `tier_chosen` 1 of 327
+  records.
+
+**The single present member voted (c)** — archive the unwired decision layer,
+keep `TIER_ORDER` / `readCooldowns` which have a live consumer, and repair the
+misleading cool-down display. It also corrected a premise in the question put
+to it: the contract says the council-side `cli_call_budget` / `cost_budget`
+caps *replace* the deleted switch, but they gate total council spend rather
+than per-tier selection — **complementary mechanisms, not replacements**. That
+correction belongs in any migration note.
+
+The third part of (c) — the cool-down repair — **is already done** (Step 4.1
+note), because it carried no decision content: a marker that can only ever be
+absent was reporting absence as measurement.
+
+- **What to do:** pick exactly one —
+  (a) **wire** it, naming where `routing_switch` now comes from;
+  (b) **archive** the decision layer and permit lifecycle with a migration note
+  carrying the 0/327 reading and the complementary-not-replacement correction,
+  keeping `TIER_ORDER` / `readCooldowns`;
+  (c) **carry it deliberately**, on the ground that the state is disclosed and
+  monitored — which the step as written excludes, so choosing this amends the
+  step rather than satisfying it.
+- **Resolved when:** the user states which of (a), (b) or (c) holds.
 
 ### blocker: adr-035-reopen-question
 
