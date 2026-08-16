@@ -30,6 +30,19 @@
 # project; re-verify on upstream breaking minors and bump last_verified +
 # pinned_to_enc together. Drop the entry when the skill is removed or rewritten
 # from scratch with no upstream lineage.
+#
+# Recorded non-entries — asked, answered NO, so nobody re-opens them:
+#
+#   prompt-optimizer (2026-08-16) — NO ENTRY. Two reasons, and either alone
+#   suffices. (1) Its de-inflation content is own analysis: the three stripped
+#   patterns are named from this package's own reading, not adopted from an
+#   outside collection, and the skill body says so at the point of use.
+#   (2) Its only relation to a named upstream is a REJECTION — the skill and
+#   `docs/guidelines/prompt-templates.md` both refuse that upstream's
+#   "5 safe techniques" whitelist. Refusing a claim is not deriving from it,
+#   and `kind: inspired_by` would misfile a disagreement as a lineage.
+#   Re-open if the skill ever adopts an upstream structure rather than
+#   arguing against one.
 
 markitdown:
   author_enc: ENC1:ydmNDSW06DCe1Mhuq0sITlK3eLiwfg+6qEZ2rvKa6AM4K+iUEiOk0TWEsupwFRbHMk4P43UOnt5vspEbhaxdvOtg3HjtQfz2ERSEZtaFo1VZGxheKW++3P8SAWkXsVbyV8rdP1/copgYXo4Q
