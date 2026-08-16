@@ -164,10 +164,13 @@ is not gated on the answer.
       first call realizes **2.8 %** cache read, i.e. it starts cold and never
       inherited the session's cache, so a downshift forfeits a cache the leg
       did not have — the cache moves rather than disappearing, and is then read
-      across a median 18 further calls at ~96.9 %. The second half (prefix
-      splitting) holds but is write-side, and writes are **3.1 %** of subagent
-      billable input — about an order of magnitude below the read surface the
-      saving applies to. Limit stated on the page: this is the cache mechanics
+      across the leg's remaining calls at ~96.9 % (median **18 calls per leg**,
+      so ~17 after the cold start). The second half (prefix splitting) is
+      **not measured** — nothing on the page sizes cohort prefix sharing — but
+      it is bounded above by total write volume, **3.1 %** of subagent billable
+      input, about an order of magnitude below the read surface the saving
+      applies to. The conclusion is insensitive to the unmeasured fraction,
+      which is why the gap is named rather than closed. Limit: this is the cache mechanics
       a downshift would meet, **not** realized savings, which stay unmeasurable
       for 3.3's reason. `subagent-routing.md`'s open paragraph is closed and
       now cites the reading.

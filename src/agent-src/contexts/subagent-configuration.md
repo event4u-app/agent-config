@@ -33,21 +33,40 @@ runs at **`medium`**, judge defaults to `high`. If the session runs at
 ### The judge cap (binding)
 
 ```
-THE JUDGE LADDER STOPS AT `high`. IT NEVER CLIMBS TO `frontier`.
+THE ONE-TIER-UP ESCALATION STOPS AT `high` — IT NEVER CLIMBS INTO `frontier`.
+A JUDGE IS NEVER BELOW ITS OWN IMPLEMENTER: A DECLARED `frontier`
+IMPLEMENTER KEEPS A `frontier` JUDGE.
 A SATURATED LADDER ESCALATES CROSS-VENDOR VIA THE COUNCIL —
 NEVER INTO A SECOND SAME-VENDOR TOP-BAND AGENT.
 ```
 
-`frontier` (ADR-232) sits above `high` in the vocabulary, so a naive
-"one tier up" would now resolve a `high` implementer's judge to
-`frontier` and buy the most expensive band available for every
-verification pass. The cap forecloses that: `frontier` is opt-in by
-declaration only, on both the implementer and the judge side.
+Two clauses that are easy to collapse into one and must not be. The cap
+binds the **escalation**, not the floor:
 
-**What to do when the ladder saturates.** A `high` implementer's judge
-is also `high`, so the verification is same-band — the reviewer is no
-stronger than the author, which is the condition the one-tier-up rule
-existed to avoid. The answer is *different vendor*, not *bigger model*:
+| Implementer band | Judge band | Why |
+|---|---|---|
+| `lite` | `medium` | one tier up |
+| `medium` | `high` | one tier up |
+| `high` | `high` | escalation capped — never climbs into `frontier` |
+| `frontier` | **`frontier`** | the floor wins: a judge is never below its author |
+
+`frontier` (ADR-232) sits above `high` in the vocabulary, so a naive
+"one tier up" would resolve a `high` implementer's judge to `frontier`
+and buy the most expensive band available for every verification pass.
+The cap forecloses that — `frontier` is opt-in by declaration only.
+
+**But the cap must not invert the ladder it protects.** Reading it as a
+flat ceiling would give a declared `frontier` implementer a `high`
+judge, i.e. a reviewer strictly *weaker* than the author — worse than
+the same-band case the one-tier-up rule exists to avoid, and a direct
+contradiction of "never downshifts its judge below what the verify
+contract requires" below. So `frontier` reaches the judge only where
+the implementer already declared it, never by escalation from `high`.
+
+**What to do when the ladder saturates.** At `high` and at `frontier`
+the judge is same-band — the reviewer is no stronger than the author,
+which is the condition the one-tier-up rule existed to avoid. The
+answer is *different vendor*, not *bigger model*:
 
 - Route the saturation case through
   [`ai-council`](../skills/ai-council/SKILL.md), which polls models
@@ -70,10 +89,11 @@ time. `enforced_by: none`, stated rather than implied.
 implementer on a downshifted tier (per the category → tier defaults in
 [`model-recommendations § Subagent Category → Tier Defaults`](model-recommendations.md)),
 the judge still resolves one tier above the IMPLEMENTER's resolved tier,
-**capped at `high` per the judge cap above** — so a `lite` implementer
-gets at least a `medium` judge, and no implementer tier resolves a
-`frontier` judge. Downshifting an implementer never downshifts its judge
-below what the verify contract requires, and a judge is never `lite`.
+**with the escalation capped at `high` per the judge cap above** — so a
+`lite` implementer gets at least a `medium` judge, and no *downshifted*
+implementer escalates its judge into `frontier`. Downshifting an
+implementer never downshifts its judge below what the verify contract
+requires, and a judge is never `lite`.
 
 ## Resolution order
 

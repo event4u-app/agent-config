@@ -63,7 +63,20 @@ read — at the downshifted price — for the rest of the leg.
 
 ## Claim 2 — "splits a cohort's shared prefix into two caches"
 
-**True, and bounded to roughly 2 % of billable input.**
+**Not measured — and bounded above by ~2 % of billable input, which is why
+it cannot change the reading.**
+
+Stated precisely, because the distinction matters: nothing here measures
+*cohort prefix sharing*, so the split-induced write volume is unknown. What is
+measured is **total** write volume, which is a ceiling on it — split writes are
+a subset of writes. The claim is therefore neither confirmed nor refuted; it is
+capped.
+
+The page's own claim-1 finding argues the premise is largely absent anyway: a
+leg's first call realizes 2.8 % cache read, and (§ Limits) **zero** dispatches
+in the corpus were downshifted — so legs are not measurably reading a shared
+cohort prefix today, and there is no observed two-cache split to size. Treat
+the ceiling below as the conservative bound, not as the effect.
 
 | Measure | Share of subagent billable input |
 |---|---:|
@@ -73,12 +86,15 @@ read — at the downshifted price — for the rest of the leg.
 
 Prefix splitting is a *write*-side cost: it makes a cohort pay for two cache
 creations instead of one. Writes are 3.1 % of billable input, and cold starts
-are 64.6 % of that — so the entire cost surface this concern names sits inside
-about **2 %** of subagent spend. The per-call model saving a downshift buys
-applies against the **96.9 %** read share.
+are 64.6 % of that — so the entire cost surface this concern *could* occupy
+sits inside about **2 %** of subagent spend, whatever fraction of it splitting
+actually accounts for. The per-call model saving a downshift buys applies
+against the **96.9 %** read share.
 
-The two effects are therefore roughly an order of magnitude apart, in the
-direction that favours downshifting.
+Even at the ceiling — every write attributed to splitting, which is certainly
+an over-attribution — the two effects are roughly an order of magnitude apart,
+in the direction that favours downshifting. The conclusion is insensitive to
+the unmeasured fraction, which is why the gap was not closed before publishing.
 
 ## Why leg length is the variable that matters, not tier
 

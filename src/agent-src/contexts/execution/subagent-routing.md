@@ -8,8 +8,10 @@ provider's model or billing rule.
 
 ## Inputs
 
-- The sub-task's declared `model_tier` (`lite | medium | high | inherit`,
-  per [`model-recommendations`](../model-recommendations.md)).
+- The sub-task's declared `model_tier` (`lite | medium | high | frontier |
+  inherit`, per [`model-recommendations`](../model-recommendations.md)).
+  `frontier` (ADR-232) is declarable and opt-in; it is never the resolution of
+  `inherit` — see the top-band invariant below.
 - `subagents.downshift`, `subagents.quota_arbitrage`, `subagents.model_map`
   (see [`auto-orchestration-activation`](auto-orchestration-activation.md)).
 - The host-capability manifest's `separate_quota_pool`
@@ -30,6 +32,32 @@ THE SAME MINUS THE QUOTA WIN.
    runs on the session tier, **bounded by the top-band invariant below**. The
    tier resolves to a model alias via `model_map`; an empty entry means "use
    the tier's runtime default" — never a baked-in provider model name.
+3. **Quota arbitrage** → prefer the **separate** quota pool for the sub-task
+   **only when** `subagents.quota_arbitrage == true` **and**
+   `manifest.separate_quota_pool == true`. Otherwise the shared pool is used and
+   the tier/model choice is unchanged. This is the only place the
+   "Sonnet-has-its-own-allowance" idea lives, and it lives as a runtime-detected
+   flag, never as portable prose.
+4. **Budget routing** (design:
+   [`budget-routing` contract](../../../../docs/contracts/budget-routing.md)) →
+   AFTER the tier resolves per 1–3, the budget relation via `pickTier`
+   (`src/scripts/_lib/tier_budget_routing.ts`) would apply: cheapest
+   classifier-adequate tier WITH available budget; that tier exhausted or
+   cooling → next tier up with budget; all unavailable → session model +
+   surfaced one-line notice. Work is never blocked to save money. Before
+   the dispatch is created, acquire the atomic reserve
+   (`acquireBudgetPermit`; check state via `node src/scripts/cost/budget.mjs
+   tier <t>`); a 429/quota error trips `tripCooldown` for that tier and
+   falls back per the relation — never a retry loop.
+   `subagents.budget_routing` was removed as a settings key (always-on
+   orchestration, road-to-always-on-orchestration Phase 1: no per-layer
+   on/off switch survives) — `pickTier` has NO production caller today, so
+   this point documents the DESIGNED relation, not a currently wired one;
+   wiring it is a later phase of that roadmap (council-side
+   `cli_call_budget`/`cost_budget` are the caps that replace the settings
+   gate). Every budget-routed dispatch, once wired, would emit one
+   `orchestration_record` line (tier + provenance-tagged token delta) so
+   realized savings are measured, not asserted.
 
 ### The top-band invariant (binding)
 
@@ -57,45 +85,25 @@ This clause is that same rule written where the resolution actually happens.
 
 Consequences, stated so the cost stays visible rather than removed:
 
-- A slice that needs `frontier` **declares `model_tier: frontier`**. The
-  declaration is the whole point: the spend becomes an authored decision with
-  a name on it instead of a default nobody chose.
+- A slice that needs `frontier` **declares `model_tier: frontier`** — a value
+  § Inputs above lists as declarable, precisely so this escape hatch is legal
+  rather than instructed-but-forbidden. The declaration is the whole point:
+  the spend becomes an authored decision with a name on it instead of a
+  default nobody chose.
 - The clamp changes only the **undeclared** case. Every explicit
   `model_tier:` is honoured verbatim, upward included.
 - A session running *below* `high` is untouched — `inherit` still resolves to
   the session tier. "At most" is a ceiling, never a floor, and this clause
   never promotes a slice.
+- A **declared `frontier` implementer** keeps its band, and its judge is
+  governed by [`subagent-configuration`](../subagent-configuration.md)
+  § The judge cap — which handles that case explicitly rather than leaving
+  the reviewer weaker than the author.
 
 **Honest scope.** This is a policy clause in a context file, so it binds the
 agent that reads it and nothing else; no gate re-derives an `inherit`
 resolution at dispatch time. `enforced_by: none`, deliberately — the same
 boundary the safety-floor rules state for their own obligations.
-3. **Quota arbitrage** → prefer the **separate** quota pool for the sub-task
-   **only when** `subagents.quota_arbitrage == true` **and**
-   `manifest.separate_quota_pool == true`. Otherwise the shared pool is used and
-   the tier/model choice is unchanged. This is the only place the
-   "Sonnet-has-its-own-allowance" idea lives, and it lives as a runtime-detected
-   flag, never as portable prose.
-4. **Budget routing** (design:
-   [`budget-routing` contract](../../../../docs/contracts/budget-routing.md)) →
-   AFTER the tier resolves per 1–3, the budget relation via `pickTier`
-   (`src/scripts/_lib/tier_budget_routing.ts`) would apply: cheapest
-   classifier-adequate tier WITH available budget; that tier exhausted or
-   cooling → next tier up with budget; all unavailable → session model +
-   surfaced one-line notice. Work is never blocked to save money. Before
-   the dispatch is created, acquire the atomic reserve
-   (`acquireBudgetPermit`; check state via `node src/scripts/cost/budget.mjs
-   tier <t>`); a 429/quota error trips `tripCooldown` for that tier and
-   falls back per the relation — never a retry loop.
-   `subagents.budget_routing` was removed as a settings key (always-on
-   orchestration, road-to-always-on-orchestration Phase 1: no per-layer
-   on/off switch survives) — `pickTier` has NO production caller today, so
-   this point documents the DESIGNED relation, not a currently wired one;
-   wiring it is a later phase of that roadmap (council-side
-   `cli_call_budget`/`cost_budget` are the caps that replace the settings
-   gate). Every budget-routed dispatch, once wired, would emit one
-   `orchestration_record` line (tier + provenance-tagged token delta) so
-   realized savings are measured, not asserted.
 
 ### The non-escalation floor (binding)
 
@@ -161,10 +169,12 @@ session-tier legs).
 leg's **first call realizes 2.8 % cache read**, so it starts cold and does not
 inherit the session's cache — a downshift forfeits a cache the leg never had.
 The cache is not lost, it is created on the other model and then read for the
-rest of the leg (median 18 calls, ~96.9 % read share). The second half holds
-but is small: prefix splitting is a write-side cost, and writes are **3.1 %**
-of subagent billable input against a 96.9 % read surface. The two sit about an
-order of magnitude apart, in favour of the downshift.
+rest of the leg (median 18 calls per leg, ~96.9 % read share). The second half
+is **not measured** — nothing sizes cohort prefix sharing — but it is bounded
+above: prefix splitting is a write-side cost, and writes are **3.1 %** of
+subagent billable input against a 96.9 % read surface. Even attributing every
+write to splitting, the two sit about an order of magnitude apart, in favour of
+the downshift, so the direction does not depend on the unmeasured fraction.
 
 This resolves the direction; it does not license downshifting as a target. The
 cold start is paid per leg regardless of tier, which is precisely what the

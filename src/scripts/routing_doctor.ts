@@ -63,7 +63,7 @@ import {
   classifyTask,
   type ActivationInputs,
 } from "./_lib/auto_dispatch.js";
-import { TIER_ORDER, readCooldowns } from "./_lib/tier_budget_routing.js";
+import { COOLDOWN_FILE, TIER_ORDER, readCooldowns } from "./_lib/tier_budget_routing.js";
 import {
   instructionsLoadedRecord,
   measureStandingDelivery,
@@ -111,6 +111,13 @@ export interface OrchestrationReport {
   downshift: boolean;
   /** cost.budgets.per_tier ceilings + live cool-down state per tier. */
   tier_budgets: Record<string, { ceiling_usd: number | null; cooldown_until_ms: number }>;
+  /**
+   * Whether the cool-down store exists on disk. `readCooldowns` returns all
+   * zeros both when no tier is cooling AND when nothing has ever written the
+   * file, so a bare zero cannot distinguish "measured: live" from "no reading
+   * exists". This flag is what separates them.
+   */
+  cooldown_store_present: boolean;
   host_manifest: HostCapabilityManifest;
   /**
    * The host identifier the capability registry was keyed on, and whether it
@@ -356,6 +363,7 @@ export function collect_orchestration(
   const ledger_present = fs.existsSync(path.join(tracking_dir, "sessions.jsonl"));
   const per_tier = (cost_budgets["per_tier"] ?? {}) as Record<string, unknown>;
   const cooldowns = readCooldowns(tracking_dir);
+  const cooldown_store_present = fs.existsSync(path.join(tracking_dir, COOLDOWN_FILE));
   const tier_budgets: OrchestrationReport["tier_budgets"] = {};
   for (const t of TIER_ORDER) {
     const v = per_tier[t];
@@ -382,6 +390,7 @@ export function collect_orchestration(
     halted,
     downshift,
     tier_budgets,
+    cooldown_store_present,
     host_manifest,
     host_platform: platform,
     host_platform_assumed: platform_assumed,
@@ -640,16 +649,19 @@ function _render(report: DoctorReport): string {
     return `${t}=${cap}${cool}`;
   });
   lines.push(`  tier budgets (rolling-24h): ${tierBits.join(" · ")}`);
-  // Cool-down state has no producer in the tree: `tripCooldown` is the only
-  // writer of the cool-down file and has zero production callers, so the
-  // COOLING marker above can only ever be absent. Say so, rather than let a
-  // silent "" read as a measured "not cooling" — the same
-  // unavailable-vs-false distinction the capability-provenance line above
-  // makes two lines earlier.
-  lines.push(
-    `  cool-down state: unavailable (no producer — tripCooldown has no ` +
-      `production caller); absence of COOLING is not evidence of a live tier`,
-  );
+  // `readCooldowns` returns all zeros both when no tier is cooling and when
+  // nothing has ever written the store, so a missing COOLING marker alone
+  // cannot be read as a measured "this tier is live". Report which of the two
+  // it is — the same unavailable-vs-false distinction the capability-
+  // provenance line above makes two lines earlier. Derived from the store's
+  // existence rather than from a caller count, so it stays true if the
+  // cool-down producer is ever wired.
+  if (!o.cooldown_store_present) {
+    lines.push(
+      `  cool-down state: no reading on disk (${COOLDOWN_FILE} absent) — ` +
+        `absence of COOLING above is not evidence of a live tier`,
+    );
+  }
   if (o.delivery.warning) {
     lines.push(`  ⚠️ ${o.delivery.warning}`);
   } else if (o.delivery.eligible_dispatches > 0) {
