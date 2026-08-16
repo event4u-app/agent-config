@@ -261,10 +261,25 @@ reversal of a converged one.
 > symptom. Measured instead of assumed: the same question file, handed to the
 > same CLI from `/tmp`, returns a complete 1,766-character answer in **55 s**,
 > exit 0. `--output-format json` (72 s) and `--tools ''` (38 s) were each ruled
-> out separately. So the 968 s is roughly three capped calls (round 1, round 2,
-> and the `blind_chairman` pass the artefact records as `true`), and the cause
-> lies in what the orchestration adds — not in the model's thinking time. Raising
-> `DEFAULT_CLI_TIMEOUT_SECONDS` would have shipped a number that changes nothing.
+> out separately, and `ask()` has no retry loop. **The decomposition first written
+> here — "roughly three capped calls (round 1, round 2, and the `blind_chairman`
+> pass)" — was wrong, and the R2 review killed it.** `latency_ms` is set once per
+> `ask()` and summed nowhere; `consult()` returns only the FINAL round's responses
+> (`council_cli.ts:2761`, verbatim: *"one `CouncilResponse` per member from the
+> final round"*), so round 1 is not in the artefact at all; and `blind_chairman:
+> true` is the CLI flag recorded unconditionally — on the default
+> `chairman.mode: 'host'` the chairman returns before spawning anything
+> (`chairman.ts:48`). So the figure is **one call that overran its own 300 s cap
+> by ~668 s**, which is what the paragraph above already said.
+>
+> **Why the cap did not hold is NOT established, and this entry does not guess a
+> second time.** The obvious candidate — `spawnSync`'s `timeout`/SIGTERM failing
+> to kill the child — is not supported by the one controlled measurement taken: a
+> 10 s cap against the same binary produced 12.9 s wall clock, an overrun of
+> 1.29×, not 3.2×. So the overrun is not a fixed teardown cost, and naming a cause
+> here would repeat the error this paragraph exists to correct. What holds is the
+> narrow fact: raising `DEFAULT_CLI_TIMEOUT_SECONDS` is not the fix, because a cap
+> the call already exceeded by 668 s is not the thing bounding it.
 > **That is a separate defect in the council transport and does not belong to
 > this roadmap** — recorded here only because it is what stands between this
 > entry and a mechanically converged verdict.
@@ -377,6 +392,15 @@ be absent was reporting absence as measurement.
   which reads as coverage. **This is advice from the entry's own evidence, not a
   verdict** — a converged council reversal is still what (b) needs, which is why
   the quorum fix is first and not optional.
+  **Superseded in part, 2026-08-16 — the (b) half stands, the ordering half does
+  not.** "It costs one line" was true of the openai seat and is not true of what
+  is left: the anthropic seat is a council-transport defect with no established
+  cause, so "fix the quorum, THEN decide" now reads as "wait indefinitely". The
+  two bullets below were corrected and this one was not, which is how a
+  maintainer reading the field named for the decision got the pre-correction
+  instruction. What replaces it: (b) is still where the evidence points, both
+  vendors now say so independently, and `Resolved when:` states the one question
+  that remains — whether that substitutes for the mechanism.
 - **If you do nothing:** nothing breaks and no user sees anything wrong — the
   same honest no-cost answer four of the six entries rewritten on 2026-08-16
   carry. What accrues is measurement debt in three places: 365 LOC of source and
@@ -399,8 +423,10 @@ be absent was reporting absence as measurement.
   council-locked v1 contract. **Yes** → (b) executes on the plan below. **No** →
   this entry waits on the transport fix, and nobody re-gathers the opinions,
   because they are recorded above.
-
-  The execution plan, from the two answers, so it needs no re-derivation:
+  The execution plan, from the two answers, so it needs no re-derivation (kept
+  blank-line-free on purpose: `_blockerField` terminates a field at the first
+  blank line, so a plan separated by one never reaches the generated dashboard or
+  `agent-config gates` — the two surfaces this entry routes the maintainer to):
   1. Archive the smallest coherent boundary — confirm first whether
      `reserveTtlMs`, `RESERVE_FILE` or `COOLDOWN_FILE` back the live cool-down
      diagnostics indirectly, and keep whatever does alongside `TIER_ORDER` and

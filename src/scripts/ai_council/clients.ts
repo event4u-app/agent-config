@@ -1694,7 +1694,7 @@ export class AnthropicCliClient extends CliClient {
             // neutralising the cwd" — both false since `_runSubprocess` set
             // `cwd: os.tmpdir()` for a DIFFERENT contamination (a member
             // answering this repo's `end-review-nudge`). Two repairs, one
-            // symptom, neither aware of the other, so a reader here concluded
+            // cause, neither aware of the other, so a reader here concluded
             // the cwd is inherited. Both are live; this flag bounds what a member may DO.
             '--tools',
             '',
@@ -1836,10 +1836,10 @@ export class OpenAICliClient extends CliClient {
                 `"The '${this.model}' model is not supported when using Codex with a ` +
                 'ChatGPT account." The CLI publishes no list of models it DOES accept, ' +
                 'so there is no supported set to offer here — the one configuration ' +
-                'measured to work is no pin at all. Fix: remove the `model:` line from ' +
-                'the openai member (or set it to `codex-default`) to use the CLI\'s own ' +
-                'default. A pinned model is only reachable on the API transport ' +
-                '(`api_key_ref:` without `mode: cli`).',
+                'measured to work is no pin at all. Fix: set `model: codex-default` on ' +
+                'the openai member. Do NOT delete the `model:` line — an enabled member ' +
+                'with no model fails config load, so that takes EVERY provider to NOT ' +
+                'CONFIGURED. A pin is reachable only on the API transport.',
         };
     }
 
@@ -1985,8 +1985,8 @@ export class OpenAICliClient extends CliClient {
                         ? {
                               hint:
                                   'the codex subscription transport serves no explicitly pinned ' +
-                                  'model measured so far — remove the `model:` line from the ' +
-                                  'openai member to use the CLI default',
+                                  'model measured so far — set `model: codex-default` on the ' +
+                                  'openai member; deleting the line fails config load',
                           }
                         : {}),
                 },
