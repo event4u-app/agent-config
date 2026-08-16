@@ -89,6 +89,18 @@ Apply the table above. State: *"Running in BASIC — say `DETAIL` to switch."* (
 
 Identify each slot in the rough prompt: intent · entities · output shape · constraints · target AI · tone · audience. List every missing slot. Check for ambiguity, unstated assumptions, and contradictory requirements.
 
+#### 3b. De-inflate before you sharpen
+
+Diagnose asks what is *missing*. The de-inflation pass asks what must **go** — because sharpening a premise the target model will confabulate around makes the output worse, not better. Strip exactly these three, and nothing else:
+
+| Pattern | What it looks like | What it costs |
+|---|---|---|
+| **Grandiose persona** | "You are the world's foremost / legendary / 10× expert in X" | Tokens without behaviour change — a superlative is not a constraint, and the model cannot act on it |
+| **Presupposed canon** | "Apply the 7 laws of X", "use the standard X framework" for a body of knowledge that may not exist | The model invents a canon to satisfy the presupposition, and the confabulation reads as authority |
+| **Scope stuffing** | One prompt demanding analysis *and* strategy *and* copy *and* a checklist | An answer to a question nobody asked, at the cost of the one that was |
+
+Strip only these three. Anything else the author wrote is a requirement, not inflation — see § Gotcha for the failure mode on both sides. A stripped persona is replaced by the concrete role the task actually needs ("a senior X" is a role; "the world's foremost X" is decoration), and a presupposed canon becomes a question in DETAIL mode or a stated assumption in BASIC. **This is own analysis, not adopted material** — the three patterns are named here rather than cited from an external collection.
+
 ### 4a. BASIC path
 
 Fill missing slots with safe defaults (general audience, neutral tone, the named AI or "any modern LLM"). Skip to step 5.
@@ -120,7 +132,11 @@ Format per § Output format. Do **not** execute the optimized prompt yourself un
 - The model tends to over-engineer BASIC mode — for a one-line ask, the optimized prompt should still be short. No 800-word system prompts for "help with my resume".
 - Don't drift into German welcome text. The optimized prompt mirrors the user's source-language preference; the skill's own scaffolding stays English (per `language-and-tone` for `.md`).
 - The model tends to **mix languages** in the optimized prompt when the user wrote in German but named an English-speaking target audience — pick one language for the whole optimized prompt body (default: source-language of the rough prompt unless the user explicitly named the target audience's language).
-- The model tends to inherit upstream dogma that "only 5 techniques are safe" (few-shot, role, structured-output, constraint-based, chain-of-thought). That claim travels with `nidhinjs/prompt-master` and is **rejected here** — CO-STAR, RISEN, CRISPE, ReAct, and the image-AI templates land in [`docs/guidelines/prompt-templates.md`](../../../docs/guidelines/prompt-templates.md) and are first-class. Pick by request type, not by upstream whitelist.
+- The model tends to **polish a grandiose persona instead of removing it** — "you are the world's foremost expert in X" gets tightened into a better-written superlative. It is decoration either way: replace it with the concrete role the task needs, or drop it.
+- The model tends to **preserve a presupposed canon while sharpening around it** — asked to improve "apply the 7 laws of X", it produces a cleaner prompt that still presupposes seven laws, and the target model then invents them. Turn the presupposition into a DETAIL question or a stated BASIC assumption; never carry it through polished.
+- The model tends to **keep every demand in a scope-stuffed prompt** because each one came from the author — four deliverables in one prompt produce four shallow answers. Name the primary deliverable, and surface the rest as a numbered option rather than silently answering all of them.
+- The model tends to **over-apply de-inflation once it has the concept** — stripping a constraint the author meant, because it read as verbose. Exactly three patterns are strippable (§ 3b); everything else the author wrote is a requirement. Removing a requirement is the worse failure of the two, and it is silent.
+- The model tends to inherit upstream dogma that "only 5 techniques are safe" (few-shot, role, structured-output, constraint-based, chain-of-thought). That claim travels with an external prompt-collection and is **rejected here** — CO-STAR, RISEN, CRISPE, ReAct, and the image-AI templates land in [`docs/guidelines/prompt-templates.md`](../../../docs/guidelines/prompt-templates.md) and are first-class. Pick by request type, not by upstream whitelist.
 
 ## Do NOT
 

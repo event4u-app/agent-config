@@ -2,6 +2,7 @@
   "_README": "Denylist for check_no_external_sources.py — blocks readable inspiration/harvest/comparison source names from re-entering the tracked tree. See rule source-confidentiality + the 2026-06-13 source-confidentiality sweep. Recommending an integrated tool is allowed; recording that we copied/derived/were-inspired-by an external source is not. To intentionally retain a source link, encrypt it via src/scripts/_lib/link_crypto.py.",
   "deny": [
     "kdcllc",
+    "nidhinjs",
     "\\bmicrock\\b",
     "obra/superpowers",
     "composiohq",

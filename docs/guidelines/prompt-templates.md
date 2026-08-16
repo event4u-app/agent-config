@@ -138,9 +138,32 @@ Given an existing good output, reconstruct the prompt that would
 produce it. Used to mine prompts from public LLM artifacts. Not a
 shaping template — a forensic one.
 
+## Viral-prompt anti-patterns — what this catalogue deliberately omits
+
+Prompt collections that circulate socially optimise for looking impressive
+on the way in, not for what the target model can act on. None of the
+templates above encodes the three patterns below, and that is a decision
+rather than an oversight — a template is a slot structure, and these three
+are slots the model cannot fill honestly.
+
+| Anti-pattern | Why no template carries it |
+|---|---|
+| **Grandiose persona** — "world's foremost", "legendary", "10× expert" | Every template's role slot takes a *capability* (`RTF` Role, `CRISPE` Capacity, `CO-STAR` Style). A superlative is not a capability: it spends tokens and changes nothing the model does. |
+| **Presupposed canon** — "the 7 laws of X", "the standard X framework", for a body of knowledge that may not exist | A presupposition in the context slot is answered by confabulation, and the invented canon inherits the authority of the frame. `Few-Shot` exists precisely so that a real pattern is *shown* rather than asserted. |
+| **Scope stuffing** — analysis *and* strategy *and* copy *and* a checklist in one prompt | Each template has one Expectation / Objective / Format slot by construction. Four deliverables in one prompt produce four shallow ones; split them, or name the primary. |
+
+The catalogue's own position: a template earns its place by making a
+request *checkable*, not by making it sound authoritative. Where a rough
+prompt carries one of these three, the
+[`prompt-optimizer`](../../.agent-src.uncondensed/skills/prompt-optimizer/SKILL.md)
+strips it in its de-inflation sub-step before any template is picked —
+and strips nothing else, because everything outside these three is a
+requirement the author meant. This section is own analysis; it records a
+decision about this catalogue rather than adopting an outside claim.
+
 ## Rejection note
 
-Upstream `nidhinjs/prompt-master` claims that only five techniques
+An external prompt-collection claims that only five techniques
 are "safe" for production prompting:
 
 - few-shot
