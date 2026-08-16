@@ -47,7 +47,6 @@ evidence pointer, or `task check-claims` fails the build.
 |---|---|---|---|
 | `adversarial-review` structures its critique as branching exploration with explicit pruning rather than a single pass, following the Tree-of-Thoughts formulation. | qual | `https://arxiv.org/abs/2305.10601 (2026-08-11)` | ✅ |
 | `analysis-autonomous-mode` runs iterative self-critique between steps rather than only at the end, following the Self-Refine formulation. | qual | `https://arxiv.org/abs/2303.17651 (2026-08-11)` | ✅ |
-| The budget-routing relation (cheapest classifier-adequate tier WITH available budget; exhausted/cooling tier falls back upward; all unavailable → session model, work never blocked; session model never switched) is implemented and deterministically tested, including the atomic reserve lifecycle (acquire → TTL-expire/settle → compact, shared-TTL single source, stale-lock breakage; pre-registered AC1–AC5). DELIVERY is agent-adherent policy — no code caller dispatches through pickTier at runtime — and is monitored by routing:doctor's delivery-evidence check, which WARNs UNCONDITIONALLY when recorded dispatches carry zero tier decisions: always-on orchestration removed the `subagents.budget_routing` key, so there is no binding left to condition the warning on (`routing_doctor.ts` check_budget_delivery says so in its own docstring). The reserve arithmetic is dead on the same evidence — `tier-reserves.jsonl` has exactly one writer (`acquireBudgetPermit`, no production caller), so the `reserved_usd` term `budget.mjs tier` sums is structurally always 0 in production, and `budget.mjs tier` itself has no production caller either. This entry deliberately does NOT claim "budget-aware delegation shipped" as autonomous runtime behavior. | qual | `tests/scripts/tier_budget_routing.test.ts` | ✅ |
 | `bug-analyzer` verifies each candidate root cause against a concrete trigger before reporting it, following the Chain-of-Verification formulation — which is the mechanism behind its "never invent issues" constraint. | qual | `https://arxiv.org/abs/2309.11495 (2026-08-11)` | ✅ |
 | The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (trailing-90-day distinct human reviewers) is tracked and reported truthfully — currently 1, not implied to be more. | qual | `docs/succession.md#trailing 90 days` | ✅ |
 | On the pre-registered 2-arm retrieval benchmark (18 hand-verified code-structure questions across 3 real repos, ground truth hash-bound before the run, deterministic, zero model calls), the native code graph scored mean recall 0.365 vs grep 0.797 on the 15 graph-shaped questions (delta -43.2 pp against a pre-declared +10 pp win threshold) and 0.111 vs 0.833 on the negative controls. HONEST NULL — measured root cause: TS arrow-function exports produce no symbol nodes (170 TS vs 13,428 PHP symbol nodes on same-shaped repos) and string-keyed dynamic consumers have no static edge. Consequence bound: code_graph.enabled stays false permanently; deprecation at the next major, removal the major after unless external evidence appears. | quant | `internal/bench/reports/code-graph-vs-grep.md#Verdict — NULL, decisively` | ✅ |
@@ -94,14 +93,14 @@ evidence pointer, or `task check-claims` fails the build.
 | On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex reviewer gpt-5.5), the cross-model team-review arm produced NO recall lift over single-model self-review — all three arms recalled every planted defect (Δ = 0, H1 not met). Honest null, ceiling-limited (recall 1.00 everywhere: the seeded defects are too obvious to discriminate the arms on recall); the only non-null signal is a single self-review false positive on the controversial-but-correct control vs 0 for team/council. No cross-model quality/lift claim binds; team mode stays workflow-value-only. Re-open: a judge-survivable-subtlety corpus or a new model generation. | quant | `internal/bench/reports/defect-finding.json#honest_null` | ✅ |
 | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate. | quant | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` | ✅ |
 
-**48 backed claim(s)** — all evidence pointers resolve in CI.
+**47 backed claim(s)** — all evidence pointers resolve in CI.
 
 ### How many of those re-derive themselves
 
-**12 of 48** backed claims carry `exec:` evidence —
+**12 of 47** backed claims carry `exec:` evidence —
 CI re-runs the command and compares its exit code to the claim, so a
 stale one turns the build red. The other
-**36** rest on a pointer: CI checks that the artefact
+**35** rest on a pointer: CI checks that the artefact
 exists and contains what it should, which cannot distinguish a live
 claim from one whose producer nobody has run in months.
 
@@ -114,7 +113,6 @@ given:
 |---|---|
 | `adversarial-review` structures its critique as branching exploration with explicit pruning rather than a sing | external cite — CI does not fetch the network |
 | `analysis-autonomous-mode` runs iterative self-critique between steps rather than only at the end, following t | external cite — CI does not fetch the network |
-| The budget-routing relation (cheapest classifier-adequate tier WITH available budget; exhausted/cooling tier f | prose or contract artefact — no exit code carries the verdict |
 | `bug-analyzer` verifies each candidate root cause against a concrete trigger before reporting it, following th | external cite — CI does not fetch the network |
 | The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (tr | prose or contract artefact — no exit code carries the verdict |
 | On the pre-registered 2-arm retrieval benchmark (18 hand-verified code-structure questions across 3 real repos | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
@@ -160,7 +158,7 @@ We also publish our **debt**: 10 claim(s) are logged as
 allowed to carry a marker in public prose. Hiding them would be the
 opposite of the point.
 
-And our **nulls**: 4 claim(s) are `resolved-null` —
+And our **nulls**: 5 claim(s) are `resolved-null` —
 measured, the threshold was missed, and the entry is closed rather than
 left open forever. A null that stays filed as pending debt is a claim
 quietly waiting to be re-argued.
@@ -327,14 +325,14 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (84) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 62 ledger entries · 48 backed · 10 unbacked inventory · 4 resolved-null.
+**Axis 2 — evidence form per public claim.** 62 ledger entries · 47 backed · 10 unbacked inventory · 5 resolved-null.
 
 | Claim id | Kind | Status | Evidence pointer |
 |---|---|---|---|
 | `adversarial-council-finding-coverage` | quant | resolved-null | `docs/benchmark.md#adversarial-verification-council` |
 | `adversarial-review-tree-of-thoughts` | qual | backed | `https://arxiv.org/abs/2305.10601 (2026-08-11)` |
 | `autonomous-analysis-self-refine` | qual | backed | `https://arxiv.org/abs/2303.17651 (2026-08-11)` |
-| `budget-routing-relation` | qual | backed | `tests/scripts/tier_budget_routing.test.ts` |
+| `budget-routing-relation` | qual | resolved-null | `docs/contracts/budget-routing.md#Why it was retired` |
 | `bug-analyzer-chain-of-verification` | qual | backed | `https://arxiv.org/abs/2309.11495 (2026-08-11)` |
 | `bus-factor-tracked` | qual | backed | `docs/succession.md#trailing 90 days` |
 | `code-graph-retrieval-null` | quant | backed | `internal/bench/reports/code-graph-vs-grep.md#Verdict — NULL, decisively` |

@@ -17,7 +17,9 @@ parent_roadmap: road-to-inbox-harvest-2026-08-b.md
 The ledger itself is not missing — it ships under other names
 (`agents/cost-tracking/sessions.jsonl`, `src/scripts/cost/track.mjs`,
 `src/scripts/cost_summary.ts`, [`cost-summary-schema`](../../docs/contracts/cost-summary-schema.md),
-`/cost:report`, `src/scripts/cost/budget.mjs`, `src/config/budget-routing.json`).
+`/cost:report`, `src/scripts/cost/budget.mjs`; the reserve-lifecycle config
+that used to sit beside them was deleted 2026-08-16 with the permit lifecycle it
+served — see [`budget-routing`](../../docs/contracts/budget-routing.md)).
 What is missing is **truthfulness at two joints**: the model an entry claims, and
 the rate it was priced at. Both are live defects with in-tree citations, both are
 single-file fixes, and neither needs an ADR. Six proposals are cancelled against a
@@ -312,8 +314,9 @@ they are never cross-checked, and **they match model ids by different strategies
       writes `agents/runtime/state/context-fill.json` as "display substrate for an
       **external** statusline".
 - [-] **Spend caps and an alert ladder.** Shipped, and a separate surface:
-      `src/scripts/cost/budget.mjs`, `src/config/budget-routing.json`,
-      [`budget-routing`](../../docs/contracts/budget-routing.md), 50/75/90/100%
+      `src/scripts/cost/budget.mjs`,
+      [`budget-routing`](../../docs/contracts/budget-routing.md) — now a migration
+      record, its reserve config deleted 2026-08-16 — 50/75/90/100%
       ladder at [`/cost:report`](../../src/domains/meta/cost/report/command.md):67-71.
       [`ADR-133`](../../docs/decisions/ADR-133-subsystem-freeze-unblock-list.md):26
       rejected a standing WIP cap as "accounting theater for a solo maintainer".
