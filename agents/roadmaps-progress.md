@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 30 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **34** open blockers, **9** need you → `agent-config gates`
+> 30 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **35** open blockers, **10** need you → `agent-config gates`
 
 ## Overall
 
-**235 / 446 steps done · 53%**
+**243 / 445 steps done · 55%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   53%
+██████████████████████░░░░░░░░░░░░░░░░░░   55%
 ```
 
 ## Open roadmaps
@@ -30,7 +30,7 @@
 | 12 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
 | 13 | [road-to-inbox-harvest-2026-08-c-prompt-deinflation.md](roadmaps/road-to-inbox-harvest-2026-08-c-prompt-deinflation.md) | 2 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 14 | [road-to-inbox-harvest-2026-08-d-archive-index.md](roadmaps/road-to-inbox-harvest-2026-08-d-archive-index.md) | 2 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 15 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 11 | 3 | 0 | 0 | 0 | ██░░░░░░░░ 21% |
+| 15 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 2 | 11 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy) | ████████░░ 85% |
 | 16 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
 | 17 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
@@ -394,14 +394,31 @@ _1 blocker resolved._
 
 ### [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md)
 
-**Road to at most one top-band context per task** — 3 / 14 done (21%)
+**Road to at most one top-band context per task** — 11 / 13 done (85%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Measure the leak before naming a band for it | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 2 | The band, if the reopen condition holds | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 3 | One top-band context per task | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | Close the documented-but-unwired exposure | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+| 3 | One top-band context per task | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 4 | Close the documented-but-unwired exposure | 🟡 in progress | 2 | 5 | 1 | 0 | 71% |
+
+<a id="blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy"></a>
+**Blockers**
+
+- **picktier-wire-or-archive** (owner: user) — blocks Step 4.1 only. Phase 3 and Step 4.2 are closed and independent.
+  - **What to do:**
+    pick exactly one —
+    (a) **wire** it, naming where `routing_switch` now comes from;
+    (b) **archive** the decision layer and permit lifecycle with a migration note
+    carrying the 0/327 reading and the complementary-not-replacement correction,
+    keeping `TIER_ORDER` / `readCooldowns`;
+    (c) **carry it deliberately**, on the ground that the state is disclosed and
+    monitored — which the step as written excludes, so choosing this amends the
+    step rather than satisfying it.
+  - **Resolved when:** the user states which of (a), (b) or (c) holds.
+
+_1 blocker resolved._
 
 ### [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md)
 
