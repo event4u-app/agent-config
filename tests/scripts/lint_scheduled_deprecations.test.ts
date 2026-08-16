@@ -152,15 +152,16 @@ describe('lint_scheduled_deprecations', () => {
         expect(cut.status).toBe(0);
     });
 
-    it('unpinned and permanent-keep rows are tracked states, not findings', () => {
+    it('unpinned, permanent-keep and withdrawn rows are tracked states, not findings', () => {
         writeFixture(tmp, 12, [
             '| `unpinned_thing` | 2026-01-01 | shipped 2026-01-02 | next major after the notice — **not pinned here** | none |',
             '| `kept_thing` | 2026-01-01 | n/a | documented permanent keep | none |',
+            '| `withdrawn_thing` | 2026-01-01 | 10.0 | **REVISED 2026-08-15 — no removal date; see below** | none |',
         ]);
 
         const r = run(tmp);
         expect(r.status).toBe(0);
-        expect(r.stdout).toContain('scanned: 2');
+        expect(r.stdout).toContain('scanned: 3');
         expect(r.stdout).toContain('none due');
     });
 
@@ -213,6 +214,12 @@ describe('lint_scheduled_deprecations', () => {
         expect(resolveDueMajor('see ADR-135').kind).toBe('unresolved');
         // Markdown emphasis around a bare version still resolves.
         expect(resolveDueMajor('**11.0**')).toEqual({ kind: 'major', major: 11 });
+        // A withdrawn commitment is a tracked state, not a parse failure. The
+        // table grew this shape the day after the gate shipped; forcing the
+        // table into the gate's grammar would have the dependency backwards.
+        expect(
+            resolveDueMajor('**REVISED 2026-08-15 — no removal date; see below**'),
+        ).toEqual({ kind: 'withdrawn' });
     });
 
     it('only the scheduled-deprecations table is parsed, never the shipped sections', () => {

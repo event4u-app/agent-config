@@ -168,9 +168,10 @@
         "lite",
         "medium",
         "high",
+        "frontier",
         "inherit"
       ],
-      "description": "Vendor-neutral capability band the skill needs (ADR-035). high/medium/lite project to a native Claude `model:` (high→opus, medium→sonnet, lite→haiku) when model.auto_switch=auto; the generator owns that mapping exclusively. inherit keeps the session model. Non-Claude agents are suggestion-only — the model-recommendation rule names the tier and the agent resolves its own model. No vendor model names here."
+      "description": "Vendor-neutral capability band the skill needs (ADR-035, amended by ADR-232). frontier/high/medium/lite project to a native Claude `model:` when model.auto_switch=auto; the generator owns that mapping exclusively. inherit keeps the session model. `frontier` means reasoning capability above the strongest generally-recommended band - opt-in and expected to stay rare, so work that genuinely needs it says so instead of inheriting it silently. Non-Claude agents are suggestion-only - the model-recommendation rule names the tier and the agent resolves its own model. No vendor model names here."
     },
     "context": {
       "type": "string",

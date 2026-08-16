@@ -72,6 +72,20 @@ const UNPINNED_MARKER = /not pinned/i;
 /** A row explicitly recorded as staying — the "documented keep" state. */
 const PERMANENT_KEEP_MARKER = /permanent keep|no removal scheduled/i;
 
+/**
+ * A commitment WITHDRAWN with its reason recorded, rather than re-dated.
+ *
+ * The third tracked state, and it exists because the table grew one the day
+ * after this gate shipped: the `code_graph` commitment was withdrawn rather
+ * than moved, on the argument that the payload it existed for had already
+ * landed. That is a legitimate outcome — the table's own prose calls a
+ * withdrawn commitment recorded "not the folklore this table exists to
+ * prevent" — so the gate must read it as tracked, not red it as unresolvable.
+ * The table is the contract; a gate that forces the table into its own grammar
+ * has the dependency backwards.
+ */
+const WITHDRAWN_MARKER = /no removal date|commitment withdrawn|withdrawn \d{4}-\d{2}-\d{2}/i;
+
 export interface DeprecationRow {
     /** Raw first cell — the surface, as written. */
     surface: string;
@@ -91,6 +105,7 @@ export type Resolution =
     | { kind: 'major'; major: number }
     | { kind: 'unpinned' }
     | { kind: 'keep' }
+    | { kind: 'withdrawn' }
     | { kind: 'unresolved'; cell: string };
 
 /**
@@ -107,6 +122,7 @@ export type Resolution =
  *   `next major after the notice`   → (notice major) + 1
  *   `… not pinned …`                → unpinned  (maintainer-owned date)
  *   `… permanent keep …`            → keep      (documented, not scheduled)
+ *   `… no removal date …`           → withdrawn (commitment withdrawn, reason recorded)
  *
  * @param cell        the raw table cell
  * @param noticeMajor the already-resolved notice major, when one exists — the
@@ -121,6 +137,7 @@ export function resolveDueMajor(cell: string, noticeMajor?: number): Resolution 
     // not-pinned statement is the load-bearing half of that cell.
     if (UNPINNED_MARKER.test(text)) return { kind: 'unpinned' };
     if (PERMANENT_KEEP_MARKER.test(text)) return { kind: 'keep' };
+    if (WITHDRAWN_MARKER.test(text)) return { kind: 'withdrawn' };
 
     const relativeAfterVersion = /next major after\s+(?:v)?(\d+)(?:\.(?:x|\d+))?/i.exec(text);
     const relativeToNotice = /(?:the major after that|next major after the notice)/i.test(text);
@@ -282,7 +299,7 @@ export function evaluate(
         const noticeMajor = notice.kind === 'major' ? notice.major : undefined;
         const removal = resolveDueMajor(row.removalDueRaw, noticeMajor);
 
-        if (removal.kind === 'unpinned' || removal.kind === 'keep') {
+        if (removal.kind === 'unpinned' || removal.kind === 'keep' || removal.kind === 'withdrawn') {
             // A tracked state, which is the outcome the table exists to record.
             ledger?.complete(key);
             continue;
@@ -353,7 +370,7 @@ export function shippedMajor(root: string): number {
 }
 
 /** Floors for `--self-test`, declared here so a truncation is a visible diff. */
-const SELF_TEST_MIN_CASES = 9;
+const SELF_TEST_MIN_CASES = 10;
 const SELF_TEST_MIN_REJECT = 6;
 
 /**
@@ -439,6 +456,17 @@ function selfTest(): number {
                     'due-at-shipped-cut',
                     12,
                     '| `due_at_shipped` | 2026-01-01 | 11.0 | 12.0 | none |',
+                    ['--cutting', '13.0.0'],
+                ),
+        },
+        {
+            name: 'a withdrawn commitment is tracked, not an unresolvable cell',
+            expect: 'accept',
+            run: () =>
+                fixture(
+                    'withdrawn',
+                    12,
+                    '| `withdrawn_thing` | 2026-01-01 | 10.0 | **REVISED 2026-08-15 — no removal date; see below** | none |',
                     ['--cutting', '13.0.0'],
                 ),
         },
@@ -608,7 +636,8 @@ export function main(argv: readonly string[]): number {
             `❌  lint_scheduled_deprecations: row ${String(f.row.index)} (${f.row.name}) — ` +
                 `removal-due cell not resolvable: "${f.row.removalDueRaw}"\n` +
                 '    The grammar is documented at the top of this gate. Either write a\n' +
-                '    concrete major, or record the row as not pinned / a permanent keep.\n',
+                '    concrete major, or record the row as not pinned, a permanent keep, or a\n' +
+                '    withdrawn commitment with its reason.\n',
         );
     }
 

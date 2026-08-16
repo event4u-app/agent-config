@@ -130,19 +130,28 @@ Three departures from the text as written, recorded rather than taken quietly.
   It is called from `release.ts` at the point the target version resolves —
   covering the forced `--as major`, an explicit `--version`, and auto-detection
   from a `feat!:` commit alike — rather than from `task release:major`, which
-  is only one of those three paths. **Consequence worth stating plainly: the
-  next major cut is now blocked until the blocker below is answered**, which is
-  the gate working as specified, not a side effect. The trigger is the target's
+  is only one of those three paths. **The consequence this note used to state —
+  "the next major cut is now blocked" — is no longer true, and the reason is the
+  best possible one:** while this branch was in review the maintainer answered
+  the blocker below and withdrew the `code_graph` commitment with its reason
+  recorded, so nothing is overdue and nothing refuses a cut. The gate went from
+  reporting a real miss to reporting none, which is what a closed commitment
+  looks like. It also grew a third tracked state in the same breath — a
+  withdrawn commitment — because the table gained that shape the day after the
+  gate shipped, and a gate that forces the table into its own grammar has the
+  dependency backwards. The trigger is the target's
   `X.0.0` shape rather than target-vs-current, which also covers `--resume` —
   a fourth path where the two are equal and any comparison silently passes.
 
 Three things this roadmap knowingly leaves open, none of them fixed here:
 
-- **A standing ⚠️ nobody but the maintainer can clear.** While `code_graph` is
-  overdue the gate prints its warning on every branch and every CI run. A
-  notice that cannot be cleared is the same habituation mechanism that made the
-  runbook checkbox fail, so it is bounded rather than waved through: the row is
-  a hard refusal at the next major cut, which habituation does not survive.
+- **A standing ⚠️ nobody but the maintainer can clear — no longer live, kept
+  because the shape recurs.** While `code_graph` was overdue the gate printed
+  its warning on every branch and CI run, and a notice nobody can clear is the
+  same habituation mechanism that made the runbook checkbox fail. The
+  maintainer's withdrawal cleared it, so the tree is quiet today. The bound
+  stays worth stating for the next overdue row: the warning is backed by a hard
+  refusal at the cut, which habituation does not survive.
 - **The dashboard's "pending archival" criterion ignores blockers; the sweep
   does not.** So `agents/roadmaps-progress.md` prints an
   `archive_completed_roadmaps --all` instruction for this roadmap that cannot
@@ -173,43 +182,49 @@ Three things this roadmap knowingly leaves open, none of them fixed here:
 
 ### blocker: code-graph-removal-authorisation
 
-- **Status:** open
+- **Status:** resolved
+
+- **Resolution:** 2026-08-15 — option (b), commitment revised. The
+  maintainer took the measured framing: the payload this deprecation existed
+  for (the ~51 MB parser pair) already shipped to `devDependencies`, so source
+  removal frees 0.4 % while costing a breaking change across four
+  consumer-visible surfaces plus a Rung-0 re-plumb. `docs/MIGRATION.md` now
+  carries the withdrawal **with its reason**, and the row stays in the table
+  rather than being deleted — a recorded withdrawal is not the folklore this
+  table exists to prevent; an unrecorded one would be. New commitment: removal
+  on a concrete reason, not on a date.
 - **Owner:** user
 - **Blocks:** nothing in this roadmap — recorded so the overdue surface has an
   owner rather than only a report
 - **Question:** the code-graph removal is one major overdue against a recorded
   honest null. Does it execute at the next major cut, or does the commitment
-  change?
-- **Recommendation:** (a), authorise the removal at the next major cut. The
-  measurement behind it is closed and one-sided — `docs/CLAIMS.md`
-  `code-graph-retrieval-null`, recall 0.365 against disciplined grep's 0.797 —
-  the engine has shipped `enabled: false` as permanent since, and its parser
-  pair already left `dependencies`, so (b) would be re-committing to a surface
-  nothing consumes and nothing measures favourably.
-- **If you do nothing:** the next major cut is **refused** by
-  `lint_scheduled_deprecations --cutting`, so this is one of the few blockers
-  that is not cheap to leave open. Minor and patch releases are unaffected;
-  ~112 K of dormant runtime paths keep shipping inert in the meantime.
-- **What to do:** pick exactly one.
-  1. **(a) Authorise the removal.** Say so here (`Status: resolved`, decision
-     recorded), then execute it in its OWN change at the next major:
-     `git rm -r src/scripts/code_graph/ src/scripts/hooks/code_graph_nudge_hook.ts`,
-     drop the `code-graph-nudge` entries from `src/scripts/hook_manifest.yaml`
-     (`:180-181`, `:625`, `:633`, `:677`) together with the test that pins that
-     list (`:192`), retire the `code-intelligence` skill's native arm, and move
-     the row out of § Scheduled deprecations into a shipped-change section of
-     `docs/MIGRATION.md`. Expected outcome:
-     `./scripts-run src/scripts/lint_scheduled_deprecations --cutting <X.0.0>`
-     exits 0.
-  2. **(b) Revise the commitment.** Edit the `code_graph` row's `Removal due`
-     cell in `docs/MIGRATION.md` to `**not pinned here**` (the form the
-     `compatibility` and `telegraph-speak` rows already use) and state in the
-     § Row status section why the engine stays despite the recorded null.
-     Expected outcome: the same command exits 0, and the ⚠️ on every branch run
-     stops.
-- **Resolved when:** this entry reads `Status: resolved` with (a) or (b) named,
-  AND `./scripts-run src/scripts/lint_scheduled_deprecations --cutting 13.0.0`
-  exits 0.
+  change? **The blast radius is now measured, and it reframes the choice:**
+  - **The payload this deprecation was about has already shipped.** The ~51 MB
+    `web-tree-sitter` / `tree-sitter-wasms` pair moved to `devDependencies`
+    ahead of schedule, so no consumer install carries it today. What removal
+    would still free is 112 K of source against a 27 M tree — 0.4 %.
+  - **It is a breaking change.** Consumer-visible surfaces: the
+    `agent-config code-graph <verb>` CLI, the `code-intelligence` skill
+    (`official` in the catalogue), the `external-code-graph-interop` rule, and
+    the `hooks.code_graph.enabled` settings key.
+  - **One surface is not deletable, it is re-plumbing.** `auto_dispatch.ts`
+    routes the `definition` / `references` lookup classes to
+    `primitive: 'code-graph-query'`, and `judgment_ladder.ts` calls that live at
+    Rung 0. Removing the engine without touching it leaves Rung 0 pointing at a
+    primitive that resolves to nothing.
+  - **There is no cheap middle.** `detect.ts` handles the `consumer` / `scip` /
+    `native` source kinds in one type union, so stripping "just the native
+    engine" while keeping consumer-index interop is a redesign, not a deletion.
+  So the honest framing is **"keep a stated promise" versus "this particular
+  removal buys nothing measurable"** — not "ship a meaningful cleanup".
+- **What to do:** pick exactly one — (a) authorise the removal at the next major
+  cut, accepting the re-plumbing of Rung 0 and the four consumer surfaces as
+  part of it; (b) revise the table's commitment for this surface, recording that
+  the dependency-weight win already landed and the source removal is a rounding
+  error; or (c) split it — retire the consumer-visible surfaces (CLI verb,
+  skill, rule, settings key) at the next major and keep the internals until a
+  reason to delete them appears.
+- **Resolved when:** the user states which of (a), (b) or (c) holds.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude/host -->

@@ -10,14 +10,23 @@
 
 | Measure | Value |
 |---|---:|
-| Projected rule files | **115** |
-| Rules declaring `paths:` in frontmatter | **0** |
-| Total bytes | **441,965** |
+| Projected rule files (`dist/agent-src/rules/`) | **115** |
+| …declaring `paths:` | **0** |
+| Rule files in the Claude host projection (`.claude/rules/`) | **110** |
+| …declaring `paths:` | **25** |
+| Total bytes (neutral projection) | **441,965** |
 | Estimated tokens (bytes ÷ 4) | **110,491** |
 
-Coverage is zero, so this census is a **ranking** exercise rather than a
-discovery one: nothing is scoped today, and the only open question is which
-rules would be worth scoping first.
+> **Correction, 2026-08-15 — the "zero" is true of one projection only, and the
+> first version of this page did not say so.** `dist/agent-src/rules/` is
+> host-neutral and carries no `paths:` by construction. The *host* projection
+> does: `.claude/rules/` has **25 of 110** scoped today, emitted by
+> `condense.ts::derive_trigger_globs` (`:1332`) from each rule's existing
+> path-shaped `triggers:` entries, with Cursor `globs:` and Windsurf
+> `trigger: glob` equivalents. Read alone, the original headline invited the
+> conclusion that scoping does not happen. **It does, on three hosts, in
+> production.** The question is therefore not "may we start scoping" but
+> "is what is already scoped correct" — see the finding below.
 
 The zero was checked two ways — a per-file extraction of the region between the
 first two `---` fences, and a concatenated-frontmatter sweep. Both return zero.
@@ -80,6 +89,77 @@ into a session that touches no UI is the case `paths:` exists for.
 an existing install receives, which is a consumer-visible change and the reason
 Step 5.2 is blocked on an explicit decision. This page ranks; it does not
 choose.
+
+## The finding this census did not set out to make
+
+Scoping a rule on Claude Code, Cursor and Windsurf **replaces** its activation
+surface rather than adding to it. `derive_trigger_globs` (`condense.ts:1332`)
+walks a rule's `triggers:` list and keeps **only** `file_pattern` and
+`path_prefix` entries; `keyword:` and `phrase:` entries are skipped. The emitted
+`paths:` block then becomes the whole gate, because a rule *with* `paths:` loads
+on a path match and a rule *without* it loads unconditionally
+(`docs/contracts/rule-router.md`).
+
+So a rule carrying both kinds of trigger loses its conversational reach on those
+three hosts. Measured over the live host projection:
+
+| | Count |
+|---|---:|
+| Rules scoped in `.claude/rules/` | 25 |
+| …of those, also carrying `keyword:`/`phrase:` triggers in `src/rules/` | **19** |
+
+Two worked cases, both live on this machine right now:
+
+- **`design-fidelity`** — 21 keyword/phrase triggers, 2 path globs
+  (`*design.html`, `.claude/design-system/**`). Its own routing section names a
+  pasted screenshot and a capability URL as handover classes it must catch,
+  explicitly *because* they arrive with no matching file. Under path-only
+  gating those classes do not fire at all — the rule is silent in precisely the
+  case it documents as its reason for existing.
+- **`settings-ask-protocol`** — 10 keyword/phrase triggers, 1 path prefix
+  pointing at a contract document. A settings question arising mid-session
+  nowhere near that document gets none of the four-slot shape or the
+  one-question budget.
+
+**This read as an unreviewed side effect rather than a decision.** Nothing in
+the tree recorded a choice to trade keyword reach for path precision, and the
+rules most affected were the ones whose own bodies argue hardest for the reach.
+
+## Repaired 2026-08-15 — and what it cost
+
+The maintainer took it as a defect. `_claude_paths_plan` now emits **no**
+`paths:` for a rule that also declares keyword or phrase triggers, so such a
+rule keeps loading unconditionally on Claude Code. Each suppressed pattern is
+**reported**, not dropped silently, so a rule whose obligation genuinely is
+path-bound stays visible as a candidate for removing its keyword triggers — an
+authoring decision rather than an emitter side effect.
+
+The repair is Claude-only by construction, and that asymmetry is the reason it
+is correct: Cursor and Windsurf treat globs as **additive** (an empty glob list
+still leaves the rule reachable through its description), while Claude Code
+treats `paths:` as **exclusive**. One emitter had been feeding both semantics
+from one list.
+
+Effect, measured:
+
+| | Before | After |
+|---|---:|---:|
+| Rules scoped in `.claude/rules/` | 25 | **6** |
+| …of those, mixed-trigger | 19 | **0** |
+
+The six that remain declare path-shaped triggers and nothing else —
+`no-roadmap-references`, `roadmap-progress-sync`, `rule-type-governance`,
+`skill-quality`, `source-confidentiality`, `source-of-truth`. Verified: none of
+them carries a keyword trigger.
+
+**The cost, stated plainly because it cuts against this roadmap's other half:**
+the 19 restored rules total **54,521 bytes ≈ 13,630 estimated tokens**, so
+Claude Code sessions now carry about **12 % more rule payload** than they did
+while the rules were silently narrowed. That is real, and it points the same
+way the payload schedule does: these 19 are exactly the rules that should
+either earn genuine `paths:` coverage or drop the keyword triggers they do not
+need. The repair did not create that work — it made it visible instead of
+paying for it with capability nobody chose to give up.
 
 ## Method note
 

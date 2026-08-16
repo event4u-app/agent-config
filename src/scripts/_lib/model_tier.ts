@@ -25,7 +25,16 @@ import fs from "node:fs";
 
 // Tier → Claude model. The ONLY per-vendor mapping the package maintains
 // (ADR-035 § 3); other agents resolve the tier band to their own line-up.
+//
+// `frontier` was added by ADR-232, which amends ADR-035 § Decision 1 on that
+// record's own reopen condition. The asymmetry that triggered it is worth
+// keeping visible here: `MODEL_FAMILIES` in the orchestration-record hook has
+// enumerated four families since it shipped, while this map named three — so a
+// dispatch on the fourth band was recordable but not declarable. Adding the row
+// here rather than a second table elsewhere is what keeps ADR-035 § 3 intact:
+// one mapping, one owner, no two-clocks drift.
 export const TIER_TO_CLAUDE_MODEL: Record<string, string> = {
+  frontier: "fable",
   high: "opus",
   medium: "sonnet",
   lite: "haiku",

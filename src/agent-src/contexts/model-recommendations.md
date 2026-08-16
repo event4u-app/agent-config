@@ -1,15 +1,17 @@
 # Model Recommendations
 
 Loaded by the `model-recommendation` rule. Expresses recommendations as
-**vendor-neutral capability tiers** (`lite | medium | high`, ADR-035), never
-vendor model names. Each agent resolves a tier to its own best model in that
-band; the package's only tier→model mapping is the Claude generator's
-(`high→opus`, `medium→sonnet`, `lite→haiku`).
+**vendor-neutral capability tiers** (`lite | medium | high | frontier`,
+ADR-035 as amended by ADR-232), never vendor model names. Each agent resolves a
+tier to its own best model in that band; the package's only tier→model mapping
+is the Claude generator's (`frontier→fable`, `high→opus`, `medium→sonnet`,
+`lite→haiku`).
 
 ## Tier Profiles
 
 | Tier | Band | Claude resolution | Use for |
 |---|---|---|---|
+| `frontier` | above the strongest generally-recommended band | Fable | **Opt-in, expected to stay rare.** Declare it only where the work genuinely needs capability beyond `high` — the point of the band is that such work *says so* rather than inheriting the session's model silently. Never the resolution of `inherit` |
 | `high` | strongest reasoning | Opus | Architecture, refactoring, complex debugging, code review, design decisions, multi-file changes, large-scale analysis / research / planning |
 | `medium` | balanced daily | Sonnet (latest) | Daily coding, known-cause bug fixes, tests, single-layer features, quality checks, config, documentation, implementation after a `high`-tier plan |
 | `lite` | fastest / cheapest | Haiku | Trivial mechanical edits — formatting, one-line config, rote renames, boilerplate stamping |

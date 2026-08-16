@@ -37,12 +37,34 @@ function write_skill(body: string): string {
 }
 
 describe("TIER_TO_CLAUDE_MODEL", () => {
-  it("maps the three rewriteable tiers (ADR-035 § 3)", () => {
+  it("maps the four rewriteable tiers (ADR-035 § 3, amended by ADR-232)", () => {
+    // `frontier` was added by ADR-232 on ADR-035's own reopen condition: the
+    // orchestration-record hook's MODEL_FAMILIES has enumerated four families
+    // since it shipped while this map named three, so the fourth band was
+    // recordable but not declarable.
     expect(TIER_TO_CLAUDE_MODEL).toEqual({
+      frontier: "fable",
       high: "opus",
       medium: "sonnet",
       lite: "haiku",
     });
+  });
+
+  it("stays the ONLY per-vendor mapping — one owner, no second table", () => {
+    // ADR-035 § 3 is the decision ADR-232 explicitly did NOT amend. The guard
+    // is that adding a band adds a row here rather than a table elsewhere.
+    expect(Object.keys(TIER_TO_CLAUDE_MODEL).sort()).toEqual([
+      "frontier",
+      "high",
+      "lite",
+      "medium",
+    ]);
+  });
+
+  it("does not map `inherit` — it is a passthrough sentinel, not a band", () => {
+    // Load-bearing for ADR-232: `frontier` must never become what `inherit`
+    // silently resolves to, which is the cost path the band exists to expose.
+    expect(TIER_TO_CLAUDE_MODEL["inherit"]).toBeUndefined();
   });
 });
 
