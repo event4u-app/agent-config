@@ -348,7 +348,26 @@ function _diff_line_count(
     clone_root: string,
     changed: Set<string>,
 ): number {
-    let total = 0;
+    const { added, removed } = diff_line_counts(fixture_root, clone_root, changed);
+    return added + removed;
+}
+
+/**
+ * The same tally, split into its two halves.
+ *
+ * `_diff_line_count` needs the sum (its oracle is `max_lines_changed`); the
+ * Phase-3 T1 endpoint needs **added** lines specifically. Both read one
+ * implementation on purpose — a second line counter beside this one is exactly
+ * the re-derivation a de-duplication change is supposed to remove, and the two
+ * would drift on the next `SequenceMatcher` fix.
+ */
+export function diff_line_counts(
+    fixture_root: string,
+    clone_root: string,
+    changed: Iterable<string>,
+): { added: number; removed: number } {
+    let added = 0;
+    let removed = 0;
     for (const rel of changed) {
         const a = _splitlines(_read(path.join(fixture_root, rel)));
         const b = _splitlines(_read(path.join(clone_root, rel)));
@@ -357,9 +376,15 @@ function _diff_line_count(
         for (const [, , size] of sm.getMatchingBlocks()) {
             matched += size;
         }
-        total += a.length - matched + (b.length - matched);
+        removed += a.length - matched;
+        added += b.length - matched;
     }
-    return total;
+    return { added, removed };
+}
+
+/** The scorer's own changed-file set, exported for the offline re-scorer. */
+export function changed_files(fixture_root: string, clone_root: string): Set<string> {
+    return _changed_files(fixture_root, clone_root);
 }
 
 /**

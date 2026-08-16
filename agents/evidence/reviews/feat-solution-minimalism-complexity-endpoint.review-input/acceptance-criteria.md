@@ -1,0 +1,54 @@
+## Acceptance criteria
+
+- [x] S0.1 produced a rung-by-rung table and the new-vs-extend decision follows
+      the stated disjointness test, not preference.
+      14 rows, one collision citation each, 12 EXTEND / 2 NEW. The re-scope
+      followed the tally, and the repo's own complexity budget corroborated it
+      independently.
+- [x] S0.2 answered both questions with committed transcript evidence, and any
+      real subagent-propagation gap left as its own change rather than being
+      fixed here.
+      YES / YES. No gap exists, so nothing was handed back and nothing was fixed
+      here. The `SubagentStart` finding supersedes a prior "unverified" record.
+- [x] The ladder ships as projected rule text (never a description-triggered
+      skill), carrying **both axes** and the precedence table, with floors
+      routed, zero safety-floor files touched, credits landed, and no effect
+      claim anywhere.
+      Ships as edits to `improve-before-implement` (a projected rule) and its
+      routed guideline — never as a description-triggered skill, per F1. Both
+      axes and the precedence ladder are in. Floors are **routed and untouched**:
+      `engineering-safety-floor`, `security-sensitive-stop`,
+      `senior-engineering-discipline` and `scale-discipline` have zero changed
+      lines in this diff. No percentage appears anywhere in it. **Credits:
+      cancelled, not forgotten** — see the cancelled Phase-1 step for the three
+      reasons and the recorded council split.
+- [x] The review lens passes its golden set **including** the lean fixture where
+      it must emit the null and the fixture where the simpler form is longer, and
+      no `delete:` finding can be emitted without its fence line.
+      17 assertions green over five fixtures, with four negative cases proving
+      the scorer discriminates. Contract-level, deterministic, no model call —
+      the find-the-plant half is stated as needing a scored eval run rather than
+      claimed.
+- [ ] Phase 3 either reports from the full tier with every pre-registered <!-- blocked-by: phase3-harness-deltas-9-10 -->
+      endpoint — added lines **paired** with cognitive complexity, plus
+      search-adherence and the safety tier — or publishes the null; no number
+      appears anywhere except rendered from the pinned report.
+      **Open — blocked, see the Phase 3 halt note.** Spend is the user's grant;
+      the metric pair additionally needs a complexity endpoint that does not
+      exist yet.
+- [x] The scorer demonstrably refuses a size win that came with a complexity
+      regression (proven on a golfed fixture, not asserted).
+      ~~**Open — blocked with Phase 3.** The *lens* scorer already demonstrably
+      refuses a golfed finding (`shrink:` where `flatten:` was required, proven
+      on the `flatten-longer` fixture); the *benchmark* scorer this criterion
+      names cannot exist before delta #11.~~
+      **Closed 2026-08-16 — delta #11 landed, so the precondition this note named
+      is spent.** The struck text is left in place rather than rewritten: it was
+      an accurate reading at the time, and the pattern that keeps costing screens
+      is a stale claim silently replaced instead of visibly superseded.
+      The *benchmark* scorer now refuses on the same golfed pair the unit suite
+      scores — a flat three-branch `classify` against its one-line nested-ternary
+      twin, 1 added line and complexity 3 against the original's 1. Lines win
+      significantly and the verdict is still `REFUSED-GOLFING`, which is what
+      makes the refusal load-bearing rather than an artefact of a weak sample.
+- [ ] All quality gates pass — see `quality-tools`.

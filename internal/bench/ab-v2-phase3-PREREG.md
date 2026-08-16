@@ -78,10 +78,18 @@ Registered as reopen terms, so the next attempt starts from a declared bar:
 1. **The spend grant.** `benchmark-spend-authorization`, owner: user. ~$150–250 as
    a floor for 30 tasks × 4 arms × 3 seeds on sonnet. Firing a paid external run
    without it is a Hard-Floor action.
-2. **T2's endpoint does not exist.** No cognitive- or cyclomatic-complexity
+2. ~~**T2's endpoint does not exist.** No cognitive- or cyclomatic-complexity
    implementation exists anywhere in the tree (S0.3 delta #11, sized large). Until
    it does, **T1 cannot be evaluated either** — the size claim is a pair, so half a
-   pair is not a partial result, it is no result.
+   pair is not a partial result, it is no result.~~
+   **DISCHARGED 2026-08-16.** `_lib/bench_ab_complexity.ts` computes Campbell
+   cognitive complexity per changed function; `bench_ab_v2_stats.size_claim_verdict`
+   evaluates T1 and T2 together and refuses a size win when complexity rose. T1 is
+   evaluable. The pair reasoning is unchanged and now enforced in code rather than
+   recorded here: an **unmeasured** endpoint returns `INCONCLUSIVE`, never a pass,
+   so half a pair still cannot be reported as a partial result.
+   Thresholds are untouched — they were registered while the run was impossible,
+   which is the point, and nothing about this record has been fitted to data.
 3. **T4's and T5's endpoints do not exist.** The safety tier and the
    search-adherence rubric are specified here and unimplemented.
 4. **A pinned external repo and its task oracles do not exist** (deltas #9 + #10).
@@ -104,5 +112,10 @@ project.
   reports `null`, never `0`.
 - Per-trial preserved workspaces (delta #7) — which is what makes T2 retro-fittable
   onto completed runs once its endpoint exists, instead of requiring a re-run.
+- The T1/T2 endpoints and the Goodhart guard (delta #11, 2026-08-16), plus
+  `bench_ab_v2_complexity.ts` — the offline re-scorer that cashes in the previous
+  line: it reads a finished report's preserved workspaces and writes `added_lines`
+  and `median_cognitive_complexity` onto each trial, so a sweep that already ran
+  gains the pair without spending again.
 - A no-network `--mode selftest` (delta #8) and
   [`REPRODUCE-ab-v2.md`](REPRODUCE-ab-v2.md).

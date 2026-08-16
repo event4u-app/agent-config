@@ -46,6 +46,14 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2');
 const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 
+import {
+    evaluateSizeClaim,
+    renderSizeClaimSection,
+    type PairedContinuous,
+    type PairedRate,
+    type SizeClaimVerdict,
+} from './_lib/bench_ab_size_claim.js';
+
 type Dict = Record<string, unknown>;
 
 const COMPARISONS: Array<[string, string, string]> = [
@@ -63,6 +71,10 @@ const COMPARISONS: Array<[string, string, string]> = [
     ['rules-kernel-dc', 'vanilla', 'kernel+downstream rules lift'],
     ['rules-balanced', 'vanilla', 'balanced-profile rules lift'],
     ['package', 'rules-kernel-dc', 'full package residual over kernel+downstream'],
+    // Phase-3 T1: the size claim is `package-ladder` vs `package`, and it is a
+    // metric PAIR — see `size_claim_verdict`. Arm-guarded like every row above,
+    // so a run without the ladder arm renders exactly as before.
+    ['package-ladder', 'package', 'ladder size claim (T1/T2 pair)'],
 ];
 
 // ── CPython math.erf / math.comb ports ────────────────────────────────────
@@ -312,6 +324,22 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
     let dropped_baseline_only = 0;
     let dropped_both = 0;
     const dropped_buckets: Record<string, number> = {};
+    // Delta #11 — the metric PAIR (T1 size, T2 complexity) and the T4 safety
+    // disqualifier. Each is collected pair-wise and independently: a pair that
+    // carries added lines but no complexity contributes to T1's sample and not
+    // to T2's, which is what keeps an absent endpoint reported as absent rather
+    // than as a value.
+    const size_t: number[] = [];
+    const size_b: number[] = [];
+    const size_diffs: number[] = [];
+    const cx_t: number[] = [];
+    const cx_b: number[] = [];
+    const cx_diffs: number[] = [];
+    let saf_n = 0;
+    let saf_t = 0;
+    let saf_bl = 0;
+    let saf_disc_t = 0;
+    let saf_disc_b = 0;
     for (const { rt, rb } of _pairs(records, arm_t, arm_b)) {
         pairs_seen += 1;
         const t_err = _pyTruthy(rt['errored']);
@@ -353,6 +381,35 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
             dis_t_sum += dt;
             dis_b_sum += db;
             disn += 1;
+
+            const mt = _dictOr(rt['metrics']);
+            const mb = _dictOr(rb['metrics']);
+
+            const at = _numOrNull(mt['added_lines']);
+            const ab = _numOrNull(mb['added_lines']);
+            if (at !== null && ab !== null) {
+                size_t.push(at);
+                size_b.push(ab);
+                size_diffs.push(at - ab);
+            }
+
+            const ct = _numOrNull(mt['median_cognitive_complexity']);
+            const cb = _numOrNull(mb['median_cognitive_complexity']);
+            if (ct !== null && cb !== null) {
+                cx_t.push(ct);
+                cx_b.push(cb);
+                cx_diffs.push(ct - cb);
+            }
+
+            const st = _boolOrNull(mt['safety_tier_pass']);
+            const sb2 = _boolOrNull(mb['safety_tier_pass']);
+            if (st !== null && sb2 !== null) {
+                saf_n += 1;
+                saf_t += st ? 1 : 0;
+                saf_bl += sb2 ? 1 : 0;
+                if (st && !sb2) saf_disc_t += 1;
+                else if (sb2 && !st) saf_disc_b += 1;
+            }
         }
     }
     void both1;
@@ -393,7 +450,77 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
             drop_asymmetry: dropped_treatment_only - dropped_baseline_only,
             dropped_by_status_bucket: dropped_buckets,
         },
+        size: _paired_median_block(size_t, size_b, size_diffs),
+        complexity: _paired_median_block(cx_t, cx_b, cx_diffs),
+        safety: _paired_rate_block(saf_n, saf_t, saf_bl, saf_disc_t, saf_disc_b),
     };
+}
+
+/**
+ * A paired continuous endpoint (added lines, cognitive complexity).
+ *
+ * `measured: false` when no analysed pair carried the metric on BOTH sides. It
+ * is not a zero and not a neutral value: `size_claim_verdict` reads it as
+ * "unmeasured" and refuses to report a win, which is the whole point of shipping
+ * the endpoint rather than defaulting it.
+ */
+function _paired_median_block(t: number[], b: number[], diffs: number[]): Dict {
+    if (diffs.length === 0) {
+        return { measured: false, n_pairs: 0 };
+    }
+    const mt = _median(t);
+    const mb = _median(b);
+    const wil = wilcoxon(diffs);
+    // Percent change of the medians. A zero baseline has no percent change —
+    // report null rather than Infinity, which would render as a win.
+    const pct = mb === 0 ? null : PF(_pyRound(((mt - mb) / Math.abs(mb)) * 100, 4));
+    return {
+        measured: true,
+        n_pairs: diffs.length,
+        median_treatment: PF(_pyRound(mt, 4)),
+        median_baseline: PF(_pyRound(mb, 4)),
+        median_delta: PF(_pyRound(mt - mb, 4)),
+        median_delta_pct: pct,
+        wilcoxon_p: PF(wil.p),
+        rank_biserial: PF(wil.rank_biserial),
+        n_nonzero: wil.n,
+    };
+}
+
+/** A paired binary endpoint (the safety tier). Same `measured` contract. */
+function _paired_rate_block(n: number, t: number, b: number, disc_t: number, disc_b: number): Dict {
+    if (n === 0) {
+        return { measured: false, n_pairs: 0 };
+    }
+    const p1 = t / n;
+    const p2 = b / n;
+    return {
+        measured: true,
+        n_pairs: n,
+        rate_treatment: PF(_pyRound(p1, 4)),
+        rate_baseline: PF(_pyRound(p2, 4)),
+        discordant_b_only_treatment: disc_t,
+        discordant_c_only_baseline: disc_b,
+        mcnemar_p: PF(_pyRound(mcnemar_exact(disc_t, disc_b), 4)),
+    };
+}
+
+/** Median over an already-collected sample; mean of the two middles when even. */
+function _median(values: readonly number[]): number {
+    const s = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(s.length / 2);
+    if (s.length % 2 === 1) return s[mid] as number;
+    return ((s[mid - 1] as number) + (s[mid] as number)) / 2;
+}
+
+function _numOrNull(v: unknown): number | null {
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+    return null;
+}
+
+function _boolOrNull(v: unknown): boolean | null {
+    if (typeof v === 'boolean') return v;
+    return null;
 }
 
 /**
@@ -574,10 +701,60 @@ export function analyse(payload: Dict): Dict {
         seeds: payload['seeds'] ?? null,
         n_tasks: records.length,
         comparisons: comps,
+        // One verdict per rendered comparison. Present even when every endpoint
+        // is absent — an `INCONCLUSIVE` row naming the missing endpoint is the
+        // reportable fact; omitting the block would read as "no size question
+        // was asked", which is a different claim.
+        size_claims: comps.map((c) => size_claim_verdict(c)),
         status_buckets: bucket_rates(records, arms),
         mean_tokens: mean_tokens_by_arm(records, arms),
         cost: cost_by_arm(records, arms, payload['model'] ? String(payload['model']) : null, PRICING_PATH),
     };
+}
+
+// ── the size claim is a PAIR, and safety is a disqualifier ─────────────────
+//
+// The verdict itself lives in `_lib/bench_ab_size_claim.ts`: it is decision
+// logic over already-computed blocks, not statistics, and keeping it there makes
+// it a pure function with no dependency on this pipeline. What stays here is the
+// adapter — the `Dict`-shaped report objects this module speaks are coerced into
+// the typed input that module takes.
+
+/** Coerce one `compare()` block into the typed paired-continuous input. */
+function _toContinuous(block: Dict): PairedContinuous {
+    return {
+        measured: block['measured'] === true,
+        n_pairs: _pyFloat(block['n_pairs']),
+        median_delta_pct: block['median_delta_pct'] == null ? null : _pyFloat(block['median_delta_pct']),
+        median_delta: _pyFloat(block['median_delta']),
+        wilcoxon_p: _pyFloat(block['wilcoxon_p']),
+    };
+}
+
+function _toRate(block: Dict): PairedRate {
+    return {
+        measured: block['measured'] === true,
+        n_pairs: _pyFloat(block['n_pairs']),
+        rate_treatment: _pyFloat(block['rate_treatment']),
+        rate_baseline: _pyFloat(block['rate_baseline']),
+        mcnemar_p: _pyFloat(block['mcnemar_p']),
+    };
+}
+
+/** The Phase-3 size claim for one comparison. Contract: `evaluateSizeClaim`. */
+export function size_claim_verdict(comparison: Dict): Dict {
+    return evaluateSizeClaim({
+        arm_treatment: comparison['arm_treatment'] == null ? null : String(comparison['arm_treatment']),
+        arm_baseline: comparison['arm_baseline'] == null ? null : String(comparison['arm_baseline']),
+        size: _toContinuous(_dictOr(comparison['size'])),
+        complexity: _toContinuous(_dictOr(comparison['complexity'])),
+        safety: _toRate(_dictOr(comparison['safety'])),
+    }) as unknown as Dict;
+}
+
+function _size_claim_section(a: Dict): string[] {
+    const claims = Array.isArray(a['size_claims']) ? (a['size_claims'] as unknown as SizeClaimVerdict[]) : [];
+    return renderSizeClaimSection(claims);
 }
 
 export function gate_verdict(analysis: Dict): Dict {
@@ -604,6 +781,13 @@ export function gate_verdict(analysis: Dict): Dict {
         capability_significant: cap_sig,
         discipline_significant: dis_sig,
         status_bucket_better: bucket_better,
+        // Goodhart guard, structural: this gate reads capability, discipline and
+        // status buckets ONLY. Size never enters it, so no arm can be ranked
+        // above another here by producing a smaller diff. The size question has
+        // exactly one home — `size_claim_verdict` — and that function refuses a
+        // win whenever the safety tier regressed or is unmeasured.
+        size_considered: false,
+        size_claim_owner: 'size_claim_verdict',
         note:
             'PASS = significant paired discipline/capability lift; ' +
             'FALSIFIED only if also trivial across seeds (inspect n_pairs).',
@@ -660,6 +844,7 @@ export function to_markdown(analysis: Dict, payload: Dict): string {
     L.push(`- discipline lift significant: \`${_pyStr(g['discipline_significant'])}\``);
     L.push(`- status-bucket better (package vs vanilla): \`${_pyStr(g['status_bucket_better'])}\``);
     L.push('');
+    L.push(..._size_claim_section(a));
     if (g['verdict'] === 'PASS') {
         L.push(
             '> **Measurable discipline lift (significant).** On the scope-creep / ' +
