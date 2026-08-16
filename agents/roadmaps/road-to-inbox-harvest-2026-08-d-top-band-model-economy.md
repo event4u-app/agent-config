@@ -224,6 +224,22 @@ AC1–AC5. The council was asked and **could not reach quorum: 1 of 2 present**,
 not a considered abstention. One non-converged opinion is not the basis for a
 reversal of a converged one.
 
+> **Re-measured 2026-08-16: the council route is worse, not better — 0 of 2
+> present, and the blocker is gated on infrastructure rather than on judgement.**
+> The question was put to the council again with the premises re-verified against
+> the tree. Neither member answered. `anthropic` returned `timeout` after
+> 968,101 ms against its own 300 s ceiling; `openai` returned the SAME
+> `model_unsupported_on_transport` as before, and its detail field names the
+> exact repair: the member pins `model: gpt-4o`, which the codex CLI refuses on a
+> ChatGPT-account transport, so the pin must be removed (or the member moved to
+> the API transport) — a one-line edit in the **user-global**
+> `~/.event4u/agent-config/settings/.ai-council.yml`, outside this repository.
+> Recorded rather than retried: a retry can at best restore the 1-of-2 this
+> entry already rejected, and re-running a member that just timed out is the
+> wasted attempt the hard-blocker class names.
+
+
+
 **Verified facts, so the decision needs no re-derivation:**
 
 - `pickTier`, `acquireBudgetPermit`, `settlePermit`, `tripCooldown`: zero
@@ -238,6 +254,24 @@ reversal of a converged one.
   own text *"no code caller dispatches through pickTier at runtime"*, and
   `check_budget_delivery` in `routing_doctor.ts` is live and adapted to the
   deleted key. Nothing in the tree misrepresents this.
+  **Correction 2026-08-16 — the last sentence was false, and it is repaired in
+  the same change that records this.** The CLAIMS entry additionally said the
+  doctor *"WARNs when budget_routing is bound but zero recorded dispatches carry
+  a tier decision"*. There is no binding: the key was deleted, and
+  `check_budget_delivery`'s own docstring says the doctor therefore **always**
+  checks delivery evidence. A reader following the claim looked for a conditional
+  that cannot exist. The bullet is left standing with this correction above it so
+  the wrong reading stays auditable.
+- **The dead surface is wider than this entry stated, and the extra piece is the
+  same defect class Step 4.1 already repaired once** (measured 2026-08-16):
+  `tier-reserves.jsonl` has exactly ONE writer — `acquireBudgetPermit`, which has
+  no production caller — while `src/scripts/cost/budget.mjs` (`tier` subcommand)
+  READS it and sums a `reserved_usd` term from it. In production that term is
+  structurally always 0, and its absence reads as "nothing reserved" rather than
+  as "nobody writes this". That is the unavailable-vs-false confusion the
+  cool-down marker repair fixed at the display layer. `budget.mjs tier` itself
+  has no production caller either — the only non-usage-string references are in
+  `tests/scripts/tier_budget_routing.test.ts`.
 - Realized savings are unmeasurable: `session_tier` 0 / `tier_chosen` 1 of 327
   records.
 
@@ -249,9 +283,17 @@ caps *replace* the deleted switch, but they gate total council spend rather
 than per-tier selection — **complementary mechanisms, not replacements**. That
 correction belongs in any migration note.
 
-The third part of (c) — the cool-down repair — **is already done** (Step 4.1
-note), because it carried no decision content: a marker that can only ever be
-absent was reporting absence as measurement.
+> **Letter correction 2026-08-16 — that vote is option `(b)`, not `(c)`.** The
+> content described (archive the decision layer, keep `TIER_ORDER` /
+> `readCooldowns`, repair the cool-down display) is verbatim what the option list
+> below letters as **(b)**; the list's `(c)` is *carry it deliberately*, the
+> opposite disposition. Left in place with this correction rather than rewritten,
+> so the drift stays auditable — but a reader resolving this entry must read the
+> vote as (b), or they will record the reverse of what was argued.
+
+The third part of that vote — the cool-down repair — **is already done** (Step
+4.1 note), because it carried no decision content: a marker that can only ever
+be absent was reporting absence as measurement.
 
 - **What to do:** pick exactly one —
   (a) **wire** it, naming where `routing_switch` now comes from;
@@ -261,7 +303,38 @@ absent was reporting absence as measurement.
   (c) **carry it deliberately**, on the ground that the state is disclosed and
   monitored — which the step as written excludes, so choosing this amends the
   step rather than satisfying it.
-- **Resolved when:** the user states which of (a), (b) or (c) holds.
+  **A fourth thing has to happen first, and it is not one of the three:** restore
+  the council quorum, by removing the `model: gpt-4o` pin from the `openai`
+  member in `~/.event4u/agent-config/settings/.ai-council.yml` (or moving that
+  member to the API transport). Until that lands, the mechanism this entry
+  defers to cannot produce the converged verdict it defers to it FOR.
+- **Recommendation:** fix the quorum, then take **(b)**. Two separate claims, and
+  the order is the point. The quorum fix is unconditional — it costs one line,
+  it is the only reason this entry has escalated twice, and every future
+  contract-reversal question in this repository hits the same wall. On the
+  disposition itself, (b) is where the evidence points: `decision-revisit-gate`
+  says a lock is a decision under past conditions, and the condition that
+  changed is not an opinion — the input `pickTier` requires has had no source
+  since the settings key was deleted, so (a) does not mean "wire the contract",
+  it means "invent a replacement for a category that was removed on purpose".
+  (c) is the honest description of today and the weakest option to CHOOSE,
+  because it leaves AC1–AC5 pre-registered against a mechanism that cannot run,
+  which reads as coverage. **This is advice from the entry's own evidence, not a
+  verdict** — a converged council reversal is still what (b) needs, which is why
+  the quorum fix is first and not optional.
+- **If you do nothing:** nothing breaks and no user sees anything wrong — the
+  same honest no-cost answer four of the six entries rewritten on 2026-08-16
+  carry. What accrues is measurement debt in three places: 365 LOC of source and
+  355 LOC of tests keep asserting a lifecycle nothing runs; `budget.mjs tier`
+  keeps summing a `reserved_usd` term whose store has no writer; and the v1
+  contract keeps five pre-registered acceptance criteria that can never fire,
+  which a reader counts as coverage that exists. Step 4.1 and the acceptance
+  criterion below it stay open indefinitely, so this roadmap cannot reach a
+  terminal state.
+- **Resolved when:** the council quorum is restored AND the user states which of
+  (a), (b) or (c) holds — or the user decides without the council and says so,
+  which is theirs to do but is the reversal-of-a-converged-decision this entry
+  escalated to avoid.
 
 ### blocker: adr-035-reopen-question
 
@@ -294,7 +367,7 @@ absent was reporting absence as measurement.
   user states which of (a) or (b) holds against it.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-16 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -303,3 +376,4 @@ absent was reporting absence as measurement.
 | 3 | The band cannot be established from the transcript and Phase 1 produces nothing usable | implementation | Band detection depends on what the host records, which is outside this package's control | 1.1 fails open to `unknown` and records it as unseen, so a null is a published reading rather than a silent default; the invariant in Phase 3 does not require the stamp to be complete | Phase 1 — Measure the leak before naming a band for it |
 | 4 | Archiving `pickTier` removes a relation a later phase wanted | implementation | Wire-or-archive forecloses an option, and the budget-routing idea has been carried precisely because it seemed useful | 4.1 requires a migration note either way, and 4.2's measurement lands beside it so the decision is made with the trade-off reading rather than before it | Phase 4 — Close the documented-but-unwired exposure |
 | 5 | A vendor model name leaks into a `.md` while naming the new band | implementation | The band has to be described somewhere, and the nearest existing prose names concrete models | The acceptance criteria pin the neutrality constraint as a checkable condition, and 2.1 places the resolution in the per-host generator by construction | Phase 2 — The band, if the reopen condition holds |
+| 6 | The roadmap cannot close because the mechanism its last blocker defers to is broken, and that reads as an undecided maintainer | implementation | Step 4.1 escalates to a converged council verdict; the council reached 1/2 on 2026-08-15 and 0/2 on 2026-08-16 (anthropic `timeout`, openai `model_unsupported_on_transport`). Nothing in the entry distinguished "the owner has not decided" from "the mechanism cannot run", so the blocker aged as if it were waiting on a person | The blocker now names the exact one-line repair (drop the `model: gpt-4o` pin in the user-global council config) as a prerequisite ahead of (a)/(b)/(c), and `Resolved when:` requires it — so the next reader sees an executable step rather than a stalled decision | Phase 4 — Close the documented-but-unwired exposure |

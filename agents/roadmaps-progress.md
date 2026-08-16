@@ -6,7 +6,7 @@
 
 ## Overall
 
-**246 / 426 steps done · 58%**
+**248 / 426 steps done · 58%**
 
 ```text
 ███████████████████████░░░░░░░░░░░░░░░░░   58%
@@ -99,7 +99,7 @@
     when the experimental flag is on in a real environment,
     run the 5.1 spike, then bind the concerns with the same fail-open
     discipline as the #1223 set.
-  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts.
+  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts. - **Probed 2026-08-09:** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is unset on this host — condition unchanged, 5.4 stays open. - **Re-probed 2026-08-13:** still unset (`env | grep -i EXPERIMENTAL` returns nothing). Four days, no change. Recorded rather than left silent because the absence of a dated line is indistinguishable from nobody having looked — but the repetition is also the finding: this blocker does not clear by waiting on this host, so 5.4's realistic paths are an upstream flag flip or the "teams leave the experimental state" branch already named in the resolution clause.
 - **cross-vendor-worker-slices** (owner: maintainer) — blocks routing ordinary work slices to second-vendor CLI workers (huge-context analysis, independence-critical review — Source G shape)
   - **What to do:**
     the drafts cited a direction-policy artefact that does not
@@ -196,6 +196,10 @@ _1 blocker resolved._
     substantively-differing pairs; **R2** for Ü3 — is the `collective_blind_spot`
     field *decision-influencing* in ≥2 of 3 sampled runs (boilerplate such as
     "insufficient testing discussion" does not count).
+    - **Why no agent can close it:** the pre-registration names the *maintainer*
+    as the rater. Substituting an AI rater would break the pre-registration and
+    would itself be the self-preference bias this roadmap exists to measure — the
+    one substitution that invalidates the result it produces.
   - **Resolved when:** both readings exist, and each of Ü2 / Ü3 carries an adopt-or-honest-null verdict rather than a deferral.
 
 ### [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md)
@@ -358,7 +362,7 @@ _1 blocker resolved._
 <a id="blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle"></a>
 **Blockers**
 
-- **evidence-compaction-approval** (owner: maintainer) — blocks step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2 proceed either way.
+- **evidence-compaction-approval** (owner: maintainer) — blocks step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2 proceed either way. - **Evidence now available (Phase 3, 2026-08-15):** the list and the proof the blocker was waiting for exist. **30** directories totalling **3.24 MB**, 29 of them `archived`. **11** were re-derived byte-for-byte (**1.12 MB**); **19** were not (**2.12 MB**) and stay regardless. So option (b) reclaims at most **34.7 %** of the tree — and the tier boundary it would need to name is not a tier at all, since 29 of 30 sit in the same one. The only line that separates them is the per-directory re-derivation verdict in `agents/evidence/analysis/review-binding-drift.md`.
   - **What to do:**
     pick exactly one — (a) no compaction: the tiering and the
     reproducibility verdict are the whole deliverable, and step 3.3 is marked
@@ -383,6 +387,8 @@ _1 blocker resolved._
 **Blockers**
 
 - **picktier-wire-or-archive** (owner: user) — blocks Step 4.1 only. Phase 3 and Step 4.2 are closed and independent.
+  - **Recommendation:** fix the quorum, then take **(b)**. Two separate claims, and the order is the point. The quorum fix is unconditional — it costs one line, it is the only reason this entry has escalated twice, and every future contract-reversal question in this repository hits the same wall. On the disposition itself, (b) is where the evidence points: `decision-revisit-gate` says a lock is a decision under past conditions, and the condition that changed is not an opinion — the input `pickTier` requires has had no source since the settings key was deleted, so (a) does not mean "wire the contract", it means "invent a replacement for a category that was removed on purpose". (c) is the honest description of today and the weakest option to CHOOSE, because it leaves AC1–AC5 pre-registered against a mechanism that cannot run, which reads as coverage. **This is advice from the entry's own evidence, not a verdict** — a converged council reversal is still what (b) needs, which is why the quorum fix is first and not optional.
+  - **If you do nothing:** nothing breaks and no user sees anything wrong — the same honest no-cost answer four of the six entries rewritten on 2026-08-16 carry. What accrues is measurement debt in three places: 365 LOC of source and 355 LOC of tests keep asserting a lifecycle nothing runs; `budget.mjs tier` keeps summing a `reserved_usd` term whose store has no writer; and the v1 contract keeps five pre-registered acceptance criteria that can never fire, which a reader counts as coverage that exists. Step 4.1 and the acceptance criterion below it stay open indefinitely, so this roadmap cannot reach a terminal state.
   - **What to do:**
     pick exactly one —
     (a) **wire** it, naming where `routing_switch` now comes from;
@@ -392,7 +398,12 @@ _1 blocker resolved._
     (c) **carry it deliberately**, on the ground that the state is disclosed and
     monitored — which the step as written excludes, so choosing this amends the
     step rather than satisfying it.
-  - **Resolved when:** the user states which of (a), (b) or (c) holds.
+    **A fourth thing has to happen first, and it is not one of the three:** restore
+    the council quorum, by removing the `model: gpt-4o` pin from the `openai`
+    member in `~/.event4u/agent-config/settings/.ai-council.yml` (or moving that
+    member to the API transport). Until that lands, the mechanism this entry
+    defers to cannot produce the converged verdict it defers to it FOR.
+  - **Resolved when:** the council quorum is restored AND the user states which of (a), (b) or (c) holds — or the user decides without the council and says so, which is theirs to do but is the reversal-of-a-converged-decision this entry escalated to avoid.
 
 _1 blocker resolved._
 
@@ -409,7 +420,7 @@ _1 blocker resolved._
 
 - **deferred-finding-decision-reopen** (owner: maintainer) — blocks R2 only
   - **Recommendation:** **cancel R2 against the decline** — option (b) below. The decline names a falsifiable trigger (*a disposition that genuinely cannot be recorded in the round record itself*), and no such case is on record; the 2026-08-14 blanket grant released the permission to revisit but supplies none of the evidence the trigger asks for. Building the index anyway adds a second artefact to keep in sync — a new drift source guarding a failure mode that has not occurred. Cancelling is not a refusal: the decline reopens by itself the day a real case appears.
-  - **If you do nothing:** R2 stays open indefinitely and this roadmap can never reach a terminal state, so it sits on the dashboard as permanent open work that no run can close. Nothing else is blocked, and no correctness or safety property degrades — the cost is purely that the backlog carries an item nobody can act on. That is a low cost, which is exactly why this has already survived two migrations without being decided.
+  - **If you do nothing:** R2 stays open indefinitely and this roadmap can never reach a terminal state, so it sits on the dashboard as permanent open work that no run can close. Nothing else is blocked, and no correctness or safety property degrades — the cost is purely that the backlog carries an item nobody can act on. That is a low cost, which is exactly why this has already survived two migrations without being decided. - **Options:** (a) reopen the decision, citing the real case that fired the trigger, and build the stable-finding-id index · (b) cancel R2 against the decline (`[-]`, recommended) · (c) leave it open and re-read at the next harvest.
   - **What to do:**
     R2 needs a stable-finding-id index that was explicitly declined
     at `src/scripts/check_review_dispositions.ts:16-22` with a named revisit
@@ -429,7 +440,7 @@ _1 blocker resolved._
   - **Resolved when:** the decision is reopened with the trigger cited (i.e. a real case exists), or R2 is cancelled against it.
 - **spent-inbox-artifacts-await-deletion** (owner: maintainer) — blocks nothing — pure housekeeping, carried so it is not lost
   - **Recommendation:** **record a keep-reason and close it** — option (c) below. The deletion frees nothing anyone measures: the objects live under a gitignored, per-checkout directory, so they are already invisible to every diff, every clone and every consumer. Set against that, naming the two files costs a human read of a 12-match glob whose intended two are not recoverable from the text. Deleting the wrong ten is the only outcome with a real cost, and it is the one an unaided agent would produce.
-  - **If you do nothing:** four spent items keep sitting in a local, gitignored scratch directory in one checkout. **Blocks nothing** — the entry itself says so — and the housekeeping value does not decay. Concretely: no gate reds, no reviewer sees them, and the directory is not replicated to any worktree. This is the cheapest non-decision on the board.
+  - **If you do nothing:** four spent items keep sitting in a local, gitignored scratch directory in one checkout. **Blocks nothing** — the entry itself says so — and the housekeeping value does not decay. Concretely: no gate reds, no reviewer sees them, and the directory is not replicated to any worktree. This is the cheapest non-decision on the board. - **Options:** (a) name the two `council-q-*.md` files explicitly and delete those four objects by name · (b) delete nothing and drop the entry as housekeeping noise · (c) record a keep-reason and close it (recommended).
   - **What to do:**
     four spent items under `agents/tmp.old/` should be removed:
     both `council-q-*.md` files (answered and shipped verbatim), `bench-local/`
@@ -452,7 +463,7 @@ _1 blocker resolved._
     appear in any diff a reviewer reads. Same per-checkout class as the audit
     log the parent's sweep report recorded.
     So the item needs the two filenames, not a broader authorization.
-  - **Resolved when:** the files are deleted **by name**, or a reason to keep them is recorded.
+  - **Resolved when:** the files are deleted **by name**, or a reason to keep them is recorded. - **Side finding, worth its own look and deliberately not folded in:** `check_council_layout` prints these as findings and **exits 0** — an advisory gate nobody sees, currently carrying ~18 permanent findings, which is the allowlist-fatigue shape this repo's own rules warn about.
 
 ### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
 
@@ -564,6 +575,12 @@ _1 blocker resolved._
     (`internal/bench/corpora/scale-history-PREREG.md:63-69`), and the rubric's
     own first line makes the anti-anchor ordering binding
     (`internal/bench/scale-history/rubric.md:4-5`).
+    - **Why no agent can close it:** an agent rating artifacts an agent produced
+    is the self-preference substitution that invalidates the result it is
+    meant to produce — the same refusal `road-to-council-blind-review` records
+    for its own blind ratings, and the reason `evaluator-independence` exists.
+    Substituting an AI rater here would not be a weaker result; it would be an
+    uncitable one.
   - **Resolved when:** a human rubric score exists per artifact, recorded before the secondary `lint_persistence` pass for that artifact. - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was never written down, which is why this roadmap read as spend-blocked-only.
 
 _2 blockers resolved._
@@ -746,6 +763,11 @@ _1 blocker resolved._
     `claude__PreToolUse__*.json` files written from inside it.
     4. Remove the `env` entry afterwards — the capture writes every payload
     verbatim, which is a standing egress surface, not a setting to leave on.
+    - **Why an agent must not do it:** the file is the agent's own tool
+    configuration, the change is user-global and reaches every other session live
+    on this repository, and `security-sensitive-stop` § self-modification routes a
+    self-config edit through the edit-permission gates rather than letting a
+    session apply it to itself.
   - **Resolved when:** a raw `SubagentStop` payload and a raw in-subagent `PreToolUse` payload exist as captured files, and their field lists are recorded in `agents/evidence/investigations/subagent-lifecycle-phase0-return-channel.md`.
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
