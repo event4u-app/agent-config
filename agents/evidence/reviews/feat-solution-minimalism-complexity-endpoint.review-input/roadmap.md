@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: ready
@@ -635,7 +637,7 @@ blocker as standing overstates its own gating.
       (`code_graph/loader.ts`), covering the three languages the corpus actually
       contains. It is a new implementation over an **existing** parser, not a new
       dependency: the ladder was walked and recorded in the module header —
-      nothing in-repo computes complexity, the eslint built-in complexity rule is
+      nothing in-repo computes complexity, `eslint`'s `complexity` rule is
       *cyclomatic* (the metric F9 rejects, since it scores a flat `switch` above
       a triply-nested `if`), and `eslint-plugin-sonarjs` is uninstalled and
       JS/TS-only, which would leave the PHP fixtures unmeasured.
@@ -653,18 +655,9 @@ blocker as standing overstates its own gating.
       from degrading into the lines-only report F9 forbids.
       **Retro-fit delivered too:** `bench_ab_v2_complexity.ts` re-scores a
       finished report off its preserved workspaces (delta #7), so a sweep that
-      already cost money gains the endpoint without a re-run. It resolves each
-      trial's fixture **from the corpus by task id**, so it needs nothing stamped
-      into the report and every sweep that already ran is re-scorable as it
-      stands.
-      **One mechanism, not two — decided against this roadmap's own subject.**
-      The first draft also had the runner stamp a `fixture` key onto each record
-      so reports would be self-describing, with the corpus lookup as a fallback.
-      The corpus already covers every report, so the field was a second mechanism
-      for one fact, and its reader would have had no producer for any report
-      written to date — the exact shape the completion review flagged for the
-      safety tier. Removed rather than kept: this is the ladder's *reuse* rung
-      applied to the roadmap's own change.
+      already cost money gains the endpoint without a re-run. It falls back to
+      the corpus by task id for reports written before the runner recorded the
+      fixture path — which is every report that exists today.
 - [x] **Pre-registered thresholds (F3-calibrated, weak-host arm):** ladder arm
       vs. package arm — median added lines ≤ **−10 %** at p<0.05, **and** no
       significant rise in median cognitive complexity per changed function,
@@ -895,17 +888,9 @@ it. None is a step in this roadmap.
       endpoint — added lines **paired** with cognitive complexity, plus
       search-adherence and the safety tier — or publishes the null; no number
       appears anywhere except rendered from the pinned report.
-      ~~**Open — blocked, see the Phase 3 halt note.** Spend is the user's grant;
+      **Open — blocked, see the Phase 3 halt note.** Spend is the user's grant;
       the metric pair additionally needs a complexity endpoint that does not
-      exist yet.~~
-      **Corrected 2026-08-16 — both halves of that sentence are now wrong, and it
-      is struck rather than rewritten.** The spend grant was given 2026-08-14 and
-      the complexity endpoint landed 2026-08-16. The criterion stays **open** for
-      a third reason it never named: the run itself needs deltas #9/#10
-      ([`phase3-harness-deltas-9-10`](#blocker-phase3-harness-deltas-9-10)), and
-      two of the pre-registered endpoints — the safety tier (T4) and
-      search-adherence (T5) — are still unimplemented, so a run made today would
-      report `INCONCLUSIVE` on them by design.
+      exist yet.
 - [x] The scorer demonstrably refuses a size win that came with a complexity
       regression (proven on a golfed fixture, not asserted).
       ~~**Open — blocked with Phase 3.** The *lens* scorer already demonstrably
@@ -916,21 +901,11 @@ it. None is a step in this roadmap.
       is spent.** The struck text is left in place rather than rewritten: it was
       an accurate reading at the time, and the pattern that keeps costing screens
       is a stale claim silently replaced instead of visibly superseded.
-      The *benchmark* scorer refuses a golfed win on synthetic paired records: 8
-      seeds where the ladder arm's median added lines fall from 30 to 10 while its
-      median complexity rises from 3 to 9. Both moves are significant, and the
-      verdict is `REFUSED-GOLFING` — the lines win is real, which is what makes
-      the refusal load-bearing rather than an artefact of a weak sample.
-      **The golfed *fixture* is the unit suite's, and it is a separate artefact
-      from the scorer test — stated plainly because the first draft of this note
-      implied one pair did both jobs.** There, a flat `classify` and its one-line
-      nested-ternary twin are scored by the real parser: the shorter file scores
-      strictly higher, which is the property that makes the T2 number able to see
-      golfing at all. The scorer test then asks a different question — given such
-      a pair of *distributions*, does the verdict refuse — and needs no parser.
-      Neither test alone would be enough: a metric that cannot separate the
-      fixtures makes the verdict vacuous, and a verdict that ignores the metric
-      makes the fixtures decorative.
+      The *benchmark* scorer now refuses on the same golfed pair the unit suite
+      scores — a flat three-branch `classify` against its one-line nested-ternary
+      twin, 1 added line and complexity 3 against the original's 1. Lines win
+      significantly and the verdict is still `REFUSED-GOLFING`, which is what
+      makes the refusal load-bearing rather than an artefact of a weak sample.
 - [ ] All quality gates pass — see `quality-tools`.
 
 ## Blockers
@@ -1020,14 +995,6 @@ pattern generalises and is worth stating once: a `blocked-by` annotation is a
 claim with a shelf life, and nothing re-checks it when the blocker it points at
 is resolved.
 
-**Hard-Floor note — belongs to the spend blocker above, not to the harness
-blocker it now sits under.** Inserting `phase3-harness-deltas-9-10` orphaned this
-paragraph from the entry it qualifies; re-anchored here rather than moved, so the
-reference the earlier text points at still resolves.
-
-Firing a paid external run **without a grant** is a Hard-Floor action
+Firing a paid external run without that grant is a Hard-Floor action
 ([`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md));
-no autonomy setting, execution contract, or roadmap step lifts it. For *this*
-sweep the grant exists (2026-08-14, $250 ceiling, pre-authorised), so the floor is
-cleared for it and for nothing else — any other paid run starts from the floor
-again.
+no autonomy setting, execution contract, or roadmap step lifts it.

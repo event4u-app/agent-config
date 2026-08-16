@@ -1,0 +1,2118 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index be8f15fd223a0dcc9a693ea16a336732f881aac2..e51902bbe79015c98c70ba3f854a2daa57d4c72b 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 28 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **35** open blockers, **10** need you → `agent-config gates`
++> 28 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **36** open blockers, **10** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**248 / 426 steps done · 58%**
++**251 / 426 steps done · 59%**
+ 
+ ```text
+-███████████████████████░░░░░░░░░░░░░░░░░   58%
++████████████████████████░░░░░░░░░░░░░░░░   59%
+ ```
+ 
+ ## Open roadmaps
+@@ -38,7 +38,7 @@
+ | 20 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+ | 21 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
+ | 22 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+-| 23 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | 0 | ███████░░░ 71% |
++| 23 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 7 | 28 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 80% |
+ | 24 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
+ | 25 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 9 | 10 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | █████░░░░░ 53% |
+ | 26 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+@@ -99,7 +99,7 @@
+     when the experimental flag is on in a real environment,
+     run the 5.1 spike, then bind the concerns with the same fail-open
+     discipline as the #1223 set.
+-  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts. - **Probed 2026-08-09:** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is unset on this host — condition unchanged, 5.4 stays open. - **Re-probed 2026-08-13:** still unset (`env | grep -i EXPERIMENTAL` returns nothing). Four days, no change. Recorded rather than left silent because the absence of a dated line is indistinguishable from nobody having looked — but the repetition is also the finding: this blocker does not clear by waiting on this host, so 5.4's realistic paths are an upstream flag flip or the "teams leave the experimental state" branch already named in the resolution clause.
++  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts.
+ - **cross-vendor-worker-slices** (owner: maintainer) — blocks routing ordinary work slices to second-vendor CLI workers (huge-context analysis, independence-critical review — Source G shape)
+   - **What to do:**
+     the drafts cited a direction-policy artefact that does not
+@@ -196,10 +196,6 @@ _1 blocker resolved._
+     substantively-differing pairs; **R2** for Ü3 — is the `collective_blind_spot`
+     field *decision-influencing* in ≥2 of 3 sampled runs (boilerplate such as
+     "insufficient testing discussion" does not count).
+-    - **Why no agent can close it:** the pre-registration names the *maintainer*
+-    as the rater. Substituting an AI rater would break the pre-registration and
+-    would itself be the self-preference bias this roadmap exists to measure — the
+-    one substitution that invalidates the result it produces.
+   - **Resolved when:** both readings exist, and each of Ü2 / Ü3 carries an adopt-or-honest-null verdict rather than a deferral.
+ 
+ ### [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md)
+@@ -362,7 +358,7 @@ _1 blocker resolved._
+ <a id="blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle"></a>
+ **Blockers**
+ 
+-- **evidence-compaction-approval** (owner: maintainer) — blocks step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2 proceed either way. - **Evidence now available (Phase 3, 2026-08-15):** the list and the proof the blocker was waiting for exist. **30** directories totalling **3.24 MB**, 29 of them `archived`. **11** were re-derived byte-for-byte (**1.12 MB**); **19** were not (**2.12 MB**) and stay regardless. So option (b) reclaims at most **34.7 %** of the tree — and the tier boundary it would need to name is not a tier at all, since 29 of 30 sit in the same one. The only line that separates them is the per-directory re-derivation verdict in `agents/evidence/analysis/review-binding-drift.md`.
++- **evidence-compaction-approval** (owner: maintainer) — blocks step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2 proceed either way.
+   - **What to do:**
+     pick exactly one — (a) no compaction: the tiering and the
+     reproducibility verdict are the whole deliverable, and step 3.3 is marked
+@@ -420,7 +416,7 @@ _1 blocker resolved._
+ 
+ - **deferred-finding-decision-reopen** (owner: maintainer) — blocks R2 only
+   - **Recommendation:** **cancel R2 against the decline** — option (b) below. The decline names a falsifiable trigger (*a disposition that genuinely cannot be recorded in the round record itself*), and no such case is on record; the 2026-08-14 blanket grant released the permission to revisit but supplies none of the evidence the trigger asks for. Building the index anyway adds a second artefact to keep in sync — a new drift source guarding a failure mode that has not occurred. Cancelling is not a refusal: the decline reopens by itself the day a real case appears.
+-  - **If you do nothing:** R2 stays open indefinitely and this roadmap can never reach a terminal state, so it sits on the dashboard as permanent open work that no run can close. Nothing else is blocked, and no correctness or safety property degrades — the cost is purely that the backlog carries an item nobody can act on. That is a low cost, which is exactly why this has already survived two migrations without being decided. - **Options:** (a) reopen the decision, citing the real case that fired the trigger, and build the stable-finding-id index · (b) cancel R2 against the decline (`[-]`, recommended) · (c) leave it open and re-read at the next harvest.
++  - **If you do nothing:** R2 stays open indefinitely and this roadmap can never reach a terminal state, so it sits on the dashboard as permanent open work that no run can close. Nothing else is blocked, and no correctness or safety property degrades — the cost is purely that the backlog carries an item nobody can act on. That is a low cost, which is exactly why this has already survived two migrations without being decided.
+   - **What to do:**
+     R2 needs a stable-finding-id index that was explicitly declined
+     at `src/scripts/check_review_dispositions.ts:16-22` with a named revisit
+@@ -440,7 +436,7 @@ _1 blocker resolved._
+   - **Resolved when:** the decision is reopened with the trigger cited (i.e. a real case exists), or R2 is cancelled against it.
+ - **spent-inbox-artifacts-await-deletion** (owner: maintainer) — blocks nothing — pure housekeeping, carried so it is not lost
+   - **Recommendation:** **record a keep-reason and close it** — option (c) below. The deletion frees nothing anyone measures: the objects live under a gitignored, per-checkout directory, so they are already invisible to every diff, every clone and every consumer. Set against that, naming the two files costs a human read of a 12-match glob whose intended two are not recoverable from the text. Deleting the wrong ten is the only outcome with a real cost, and it is the one an unaided agent would produce.
+-  - **If you do nothing:** four spent items keep sitting in a local, gitignored scratch directory in one checkout. **Blocks nothing** — the entry itself says so — and the housekeeping value does not decay. Concretely: no gate reds, no reviewer sees them, and the directory is not replicated to any worktree. This is the cheapest non-decision on the board. - **Options:** (a) name the two `council-q-*.md` files explicitly and delete those four objects by name · (b) delete nothing and drop the entry as housekeeping noise · (c) record a keep-reason and close it (recommended).
++  - **If you do nothing:** four spent items keep sitting in a local, gitignored scratch directory in one checkout. **Blocks nothing** — the entry itself says so — and the housekeeping value does not decay. Concretely: no gate reds, no reviewer sees them, and the directory is not replicated to any worktree. This is the cheapest non-decision on the board.
+   - **What to do:**
+     four spent items under `agents/tmp.old/` should be removed:
+     both `council-q-*.md` files (answered and shipped verbatim), `bench-local/`
+@@ -463,7 +459,7 @@ _1 blocker resolved._
+     appear in any diff a reviewer reads. Same per-checkout class as the audit
+     log the parent's sweep report recorded.
+     So the item needs the two filenames, not a broader authorization.
+-  - **Resolved when:** the files are deleted **by name**, or a reason to keep them is recorded. - **Side finding, worth its own look and deliberately not folded in:** `check_council_layout` prints these as findings and **exits 0** — an advisory gate nobody sees, currently carrying ~18 permanent findings, which is the allowlist-fatigue shape this repo's own rules warn about.
++  - **Resolved when:** the files are deleted **by name**, or a reason to keep them is recorded.
+ 
+ ### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
+ 
+@@ -575,12 +571,6 @@ _1 blocker resolved._
+     (`internal/bench/corpora/scale-history-PREREG.md:63-69`), and the rubric's
+     own first line makes the anti-anchor ordering binding
+     (`internal/bench/scale-history/rubric.md:4-5`).
+-    - **Why no agent can close it:** an agent rating artifacts an agent produced
+-    is the self-preference substitution that invalidates the result it is
+-    meant to produce — the same refusal `road-to-council-blind-review` records
+-    for its own blind ratings, and the reason `evaluator-independence` exists.
+-    Substituting an AI rater here would not be a weaker result; it would be an
+-    uncitable one.
+   - **Resolved when:** a human rubric score exists per artifact, recorded before the secondary `lint_persistence` pass for that artifact. - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was never written down, which is why this roadmap read as spend-blocked-only.
+ 
+ _2 blockers resolved._
+@@ -708,14 +698,32 @@ _1 blocker resolved._
+ 
+ ### [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md)
+ 
+-**Road to solution minimalism — a first-class discipline against over-building** — 25 / 35 done (71%)
++**Road to solution minimalism — a first-class discipline against over-building** — 28 / 35 done (80%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+ | 0 | Verification spikes (read-only, no authoring) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+ | 1 | The ladder, as rule text | ✅ done | 0 | 12 | 0 | 1 | 100% |
+ | 2 | Over-build review lens | ✅ done | 0 | 4 | 0 | 0 | 100% |
+-| 3 | Pinned public-repo benchmark (the proof exhibit) | 🟡 in progress | 10 | 6 | 0 | 0 | 38% |
++| 3 | Pinned public-repo benchmark (the proof exhibit) | 🟡 in progress | 7 | 9 | 0 | 0 | 56% |
++
++<a id="blockers-road-to-solution-minimalism"></a>
++**Blockers**
++
++- **phase3-harness-deltas-9-10** (owner: maintainer) — blocks Phase 3 — the Repo, Tasks, Hygiene and Reproducibility steps, and the "reports from the full tier" acceptance criterion.
++  - **If you do nothing:** nothing degrades and nothing is lost; the pre-registered thresholds stay committed and unfittable-to-data, which is the strongest form of that guarantee. The cost is that Phase 3 cannot report, so the roadmap cannot close.
++  - **What to do:**
++    1. Land **delta #9** — external-repo support in the corpus (`repo` + `sha`
++    keys; `FIXTURES_ROOT` is in-repo today and every fixture is a self-contained
++    tree).
++    2. Land **delta #10** — ~30 hand-written capability / discipline oracles
++    against that repo. S0.3 sizes this **large** and calls it "the actual bulk";
++    a harness pointed at a real repo with no oracles runs nothing.
++    3. Only then fire the sweep. The spend decision is already made and needs no
++    re-asking — see the resolved entry above.
++  - **Resolved when:** deltas #9 and #10 are in the tree and the corpus carries at least one task pinned to an external repo at a SHA.
++
++_1 blocker resolved._
+ 
+ ### [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md)
+ 
+@@ -763,11 +771,6 @@ _1 blocker resolved._
+     `claude__PreToolUse__*.json` files written from inside it.
+     4. Remove the `env` entry afterwards — the capture writes every payload
+     verbatim, which is a standing egress surface, not a setting to leave on.
+-    - **Why an agent must not do it:** the file is the agent's own tool
+-    configuration, the change is user-global and reaches every other session live
+-    on this repository, and `security-sensitive-stop` § self-modification routes a
+-    self-config edit through the edit-permission gates rather than letting a
+-    session apply it to itself.
+   - **Resolved when:** a raw `SubagentStop` payload and a raw in-subagent `PreToolUse` payload exist as captured files, and their field lists are recorded in `agents/evidence/investigations/subagent-lifecycle-phase0-return-channel.md`.
+ 
+ ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
+diff --git a/agents/roadmaps/road-to-solution-minimalism.md b/agents/roadmaps/road-to-solution-minimalism.md
+index 4422bbee26d551111c026eff981c5bdf0714186e..895119cadf89ebda377114c1f1e2325e86e01bca 100644
+--- a/agents/roadmaps/road-to-solution-minimalism.md
++++ b/agents/roadmaps/road-to-solution-minimalism.md
+@@ -441,9 +441,20 @@ file is the inflation the repo's own complexity budget forbids.
+ 
+ ## Phase 3 — Pinned public-repo benchmark (the proof exhibit)
+ 
+-Blocked on [`benchmark-spend-authorization`](#blocker-benchmark-spend-authorization)
++**Correction 2026-08-16 — this header was wrong, and the sentence below it is
++left standing so the wrong claim stays auditable.** The spend blocker has read
++`Status: resolved` since 2026-08-14 (granted, $250 ceiling, pre-authorised), so
++Phase 3 has not been spend-blocked for two days. Its real gate is
++[`phase3-harness-deltas-9-10`](#blocker-phase3-harness-deltas-9-10) — a pinned
++external repo and its oracles. Delta #11, the third member of that set, landed
++2026-08-16 and is no longer a gate. This is the same defect the § Blockers
++preamble names from the other direction: a roadmap that cites a resolved blocker
++as standing overstates its own gating, and the cost lands on whoever screens the
++backlog next.
++
++~~Blocked on [`benchmark-spend-authorization`](#blocker-benchmark-spend-authorization)
+ — the structured entry under § Blockers, which the S0.3 cost sheet exists to be
+-granted against.
++granted against.~~
+ 
+ The second gate this note used to name — "the standing model-id verification
+ blocker" — **no longer exists**: delta #3 closed it on 2026-08-05
+@@ -477,18 +488,25 @@ blocker as standing overstates its own gating.
+ > recurrence. Whatever else happens, they land before the first paid trial.
+ >
+ > **Deltas #1–#5 LANDED 2026-08-05** — see § Untracked prerequisite work below.
+-> Both halt gates stand unchanged: the spend grant is still the user's, and
+-> #9/#10/#11 are still missing. What changed is that the harness can no longer
++> ~~Both halt gates stand unchanged: the spend grant is still the user's, and
++> #9/#10/#11 are still missing.~~ What changed is that the harness can no longer
+ > produce the specific invalid null it produced before.
+ >
++> **Both halt gates have since moved, 2026-08-16.** Gate 1 (spend) was
++> **discharged** on 2026-08-14 — granted at a $250 ceiling and pre-authorised, so
++> it is no longer the user's to give again. Gate 2 (harness) is **narrowed**:
++> **#11 landed** with its calibrated suite and mutation-verified refusals, so the
++> metric-pair acceptance criterion is reachable; #9 and #10 remain, and they are
++> now the whole of gate 2.
++>
+ > Nothing from this phase is cancelled or reinterpreted; the steps stand as
+ > written. Full evidence, delta table, and price inputs:
+ > [`solution-minimalism-phase0-spikes § S0.3`](../evidence/investigations/solution-minimalism-phase0-spikes.md).
+ 
+-- [ ] **Repo:** one public OSS repo pinned at a SHA. <!-- blocked-by: benchmark-spend-authorization --> A second repo on this
++- [ ] **Repo:** one public OSS repo pinned at a SHA. <!-- blocked-by: phase3-harness-deltas-9-10 --> A second repo on this
+       package's home stack is optional and cost-gated.
+       *Verify:* the SHA is recorded in the pinned report.
+-- [ ] **Tasks:** deliberately mixed <!-- blocked-by: benchmark-spend-authorization --> — over-build-trap tickets **and** irreducible
++- [ ] **Tasks:** deliberately mixed <!-- blocked-by: phase3-harness-deltas-9-10 --> — over-build-trap tickets **and** irreducible
+       CRUD **and** this package's own discipline family — so the report can show
+       where the effect lives and where it is honestly zero.
+       *Verify:* the per-task table shows both.
+@@ -557,15 +575,21 @@ blocker as standing overstates its own gating.
+       cannot change its numbers. The suite pins the 50×-apart mix case, the
+       errored-run exclusion, the unpriceable direction, and the age arithmetic.
+       **Not delivered:** the safety-tier and search-adherence *scorers* (both are
+-      rubric-judged, so both need model calls and their own oracles), and the
+-      complexity endpoint (delta #11). Flipping this step because its Verify passes
++      rubric-judged, so both need model calls and their own oracles), ~~and the
++      complexity endpoint (delta #11)~~. Flipping this step because its Verify passes
+       would repeat the mistake refused one step down for Reproducibility — a step's
+       Verify is a check on the step, not a substitute for it.
+-- [ ] **Hygiene:** escalation ladder self-test → 10-task smoke → k=3 → full, <!-- blocked-by: benchmark-spend-authorization -->
++      **2026-08-16: the complexity endpoint is delivered** (delta #11), and added
++      lines is now a first-class endpoint rather than a by-product of the
++      `max_lines_changed` oracle — `diff_line_counts` splits the existing tally so
++      T1 reads *added* while the oracle keeps its sum, from one implementation.
++      Six of seven endpoints are live. The step stays open on the two
++      rubric-judged scorers, which is the honest remainder.
++- [ ] **Hygiene:** escalation ladder self-test → 10-task smoke → k=3 → full, <!-- blocked-by: phase3-harness-deltas-9-10 -->
+       **publishing nothing below full** (F4); paired non-parametric tests;
+       errored pairs dropped from both arms.
+       *Verify:* the report states which tier it is from.
+-- [ ] **Reproducibility deliverables, first-class not afterthoughts:** a no-API <!-- blocked-by: benchmark-spend-authorization -->
++- [ ] **Reproducibility deliverables, first-class not afterthoughts:** a no-API <!-- blocked-by: phase3-harness-deltas-9-10 -->
+       `--selftest` entry point, the pinned SHA, preserved per-run workspaces for
+       offline re-scoring, and a one-page reproduce doc. The record shows the
+       harshest critic becomes the most-cited validator once handed the
+@@ -593,7 +617,7 @@ blocker as standing overstates its own gating.
+       the difference matters to the archival gate.
+       The reproduce doc states this residue in its own closing section instead of
+       implying a full reproduction path exists.
+-- [ ] **The size claim is a metric PAIR, not a single number (F9).** The ladder
++- [x] **The size claim is a metric PAIR, not a single number (F9).** The ladder
+       arm must lower added lines **without raising median cognitive complexity
+       per changed function**. Lines down **and** complexity up is golfing, and it
+       **fails the size criterion** even at p<0.05 on lines alone. Cognitive
+@@ -603,6 +627,35 @@ blocker as standing overstates its own gating.
+       anti-golfing gate therefore costs almost nothing to add.
+       *Verify:* the scorer refuses to report a size win when the complexity arm
+       regressed; prove it by feeding it a deliberately golfed fixture.
++      <!-- verify: npx vitest run tests/scripts/_lib_bench_ab_complexity.test.ts tests/scripts/bench_ab_v2_stats.test.ts -->
++      **Delta #11 LANDED 2026-08-16 — the endpoint exists, and the refusal is
++      proven on a golfed fixture rather than asserted.**
++      `_lib/bench_ab_complexity.ts` computes Campbell cognitive complexity per
++      function over the ABI-pinned tree-sitter pair the repo already carries
++      (`code_graph/loader.ts`), covering the three languages the corpus actually
++      contains. It is a new implementation over an **existing** parser, not a new
++      dependency: the ladder was walked and recorded in the module header —
++      nothing in-repo computes complexity, `eslint`'s `complexity` rule is
++      *cyclomatic* (the metric F9 rejects, since it scores a flat `switch` above
++      a triply-nested `if`), and `eslint-plugin-sonarjs` is uninstalled and
++      JS/TS-only, which would leave the PHP fixtures unmeasured.
++      **It is calibrated, not merely written.** The suite scores Campbell's own
++      worked examples (`sumOfPrimes` = 7, `getWords` = 1) plus hand-derived cases
++      whose arithmetic is written out per case, so a future edit that shifts a
++      score by one has to argue with the derivation. Two deviations are named in
++      the module rather than buried: no recursion increment, and a nested closure
++      is its own observation instead of rolling into its parent.
++      **The refusal path is pinned by mutation, not by coverage.** Disabling the
++      anti-golfing branch reds 2 tests; disabling the safety disqualifier reds 3.
++      `size_claim_verdict` reaches `PASS` through exactly one path — all three
++      endpoints measured, neither disqualifier fired, T1 met — and an **absent**
++      endpoint returns `INCONCLUSIVE`, never a pass, which is what stops this
++      from degrading into the lines-only report F9 forbids.
++      **Retro-fit delivered too:** `bench_ab_v2_complexity.ts` re-scores a
++      finished report off its preserved workspaces (delta #7), so a sweep that
++      already cost money gains the endpoint without a re-run. It falls back to
++      the corpus by task id for reports written before the runner recorded the
++      fixture path — which is every report that exists today.
+ - [x] **Pre-registered thresholds (F3-calibrated, weak-host arm):** ladder arm
+       vs. package arm — median added lines ≤ **−10 %** at p<0.05, **and** no
+       significant rise in median cognitive complexity per changed function,
+@@ -627,12 +680,27 @@ blocker as standing overstates its own gating.
+       A machine-readable companion was deliberately not shipped: no consumer exists
+       to read it until the endpoints do, and a JSON nobody reads is the speculative
+       form this roadmap argues against. Enforcement lands with the endpoints.
+-- [ ] **Goodhart guard (hard, applies to any competitive setup, agent or human):**
++- [x] **Goodhart guard (hard, applies to any competitive setup, agent or human):**
+       a size metric is a **measurement**, never a **scored target**. The safety
+       tier is a disqualifier, not a side metric: an arm that saves a line and
+       drops a guard has lost, not won (F6).
+       *Verify:* the scoring code cannot rank an arm above another on size alone
+       when its safety tier regressed.
++      <!-- verify: npx vitest run tests/scripts/bench_ab_v2_stats.test.ts -->
++      **Landed 2026-08-16, structurally rather than as a documented intention.**
++      Two separate properties, both asserted:
++      (a) `gate_verdict` — the L4 gate — reads capability, discipline and status
++      buckets and **nothing else**, so no arm can be ranked above another there
++      by producing a smaller diff. It declares `size_considered: false` and names
++      the one function that owns the size question; the test builds two arms tied
++      on capability and discipline and 500× apart on added lines, and asserts the
++      gate stays `FALSIFIED-OR-INCONCLUSIVE`.
++      (b) `size_claim_verdict` checks the safety tier **first**, before any
++      endpoint can produce a win. A golfed *and* unsafe arm reports the
++      disqualifier, not the golfing — the ordering is itself a test, because a
++      guard that fires only when nothing else does is not a disqualifier.
++      An unmeasured safety tier is `INCONCLUSIVE`, so the guard cannot be skipped
++      by simply not implementing T4's scorer.
+ 
+ ## Untracked prerequisite work (landed 2026-08-05)
+ 
+@@ -650,6 +718,14 @@ process debt this roadmap argues against.
+ | 3 | Model-id read back from the CLI envelope's `modelUsage`; bare aliases refused before spend | `bench_ab_task_runner.ts` (`models_seen`), `bench_ab_v2_run.ts` |
+ | 4 | Sweep-level `--max-usd` abort, priced per bucket from `internal/bench/pricing.yaml` | `SweepBudget`, `collect_records` guard |
+ | 5 | Errored-pair attrition per arm-pair and per `status_bucket`, with the drop asymmetry | `bench_ab_v2_stats.compare` → report Table 4 |
++| 11 | Cognitive complexity per changed function (T2), added lines as a first-class endpoint (T1), the anti-golfing + safety-disqualifier verdict, and an offline re-scorer for finished sweeps | `_lib/bench_ab_complexity.ts`, `_lib/bench_ab_scoring_v2.diff_line_counts`, `bench_ab_v2_stats.size_claim_verdict`, `bench_ab_v2_complexity.ts` |
++
++**#11 is the exception to this section's own framing: it DOES close checkboxes.**
++The paragraph above says the deltas close none, which was true of #1–#5 — those
++made a run publishable without making one possible. #11 closes the metric-pair
++step, the Goodhart guard, and the golfed-fixture acceptance criterion outright,
++because those three ask for the endpoint itself rather than for a run that uses
++it. Landed 2026-08-16.
+ 
+ **Why now, with the phase halted.** The harness has already produced one full
+ set of invalid nulls from an undetected activation leak, and the only activation
+@@ -806,19 +882,28 @@ it. None is a step in this roadmap.
+       the scorer discriminates. Contract-level, deterministic, no model call —
+       the find-the-plant half is stated as needing a scored eval run rather than
+       claimed.
+-- [ ] Phase 3 either reports from the full tier with every pre-registered <!-- blocked-by: benchmark-spend-authorization -->
++- [ ] Phase 3 either reports from the full tier with every pre-registered <!-- blocked-by: phase3-harness-deltas-9-10 -->
+       endpoint — added lines **paired** with cognitive complexity, plus
+       search-adherence and the safety tier — or publishes the null; no number
+       appears anywhere except rendered from the pinned report.
+       **Open — blocked, see the Phase 3 halt note.** Spend is the user's grant;
+       the metric pair additionally needs a complexity endpoint that does not
+       exist yet.
+-- [ ] The scorer demonstrably refuses a size win that came with a complexity
++- [x] The scorer demonstrably refuses a size win that came with a complexity
+       regression (proven on a golfed fixture, not asserted).
+-      **Open — blocked with Phase 3.** The *lens* scorer already demonstrably
++      ~~**Open — blocked with Phase 3.** The *lens* scorer already demonstrably
+       refuses a golfed finding (`shrink:` where `flatten:` was required, proven
+       on the `flatten-longer` fixture); the *benchmark* scorer this criterion
+-      names cannot exist before delta #11.
++      names cannot exist before delta #11.~~
++      **Closed 2026-08-16 — delta #11 landed, so the precondition this note named
++      is spent.** The struck text is left in place rather than rewritten: it was
++      an accurate reading at the time, and the pattern that keeps costing screens
++      is a stale claim silently replaced instead of visibly superseded.
++      The *benchmark* scorer now refuses on the same golfed pair the unit suite
++      scores — a flat three-branch `classify` against its one-line nested-ternary
++      twin, 1 added line and complexity 3 against the original's 1. Lines win
++      significantly and the verdict is still `REFUSED-GOLFING`, which is what
++      makes the refusal load-bearing rather than an artefact of a weak sample.
+ - [ ] All quality gates pass — see `quality-tools`.
+ 
+ ## Blockers
+@@ -868,6 +953,46 @@ which is exactly the reader that must not be misled.
+ - **Resolved when:** the user states a spend ceiling for the Phase-3 sweep, or
+   cancels Phase 3 against the cost sheet.
+ 
++  **Update 2026-08-16 — delta #11 landed, so the pre-authorisation now hangs on
++  #10 alone.** The cognitive-complexity endpoint and the anti-golfing refusal are
++  in the tree with a calibrated unit suite and mutation-verified guards, which
++  removes the reason this grant was left unspent: the metric-pair acceptance
++  criterion is no longer structurally unreachable. What remains is #9/#10 (a
++  pinned external repo and its ~30 hand-written oracles), tracked as its own
++  blocker below rather than smuggled back into this one.
++
++### blocker: phase3-harness-deltas-9-10
++
++- **Status:** open
++- **Owner:** maintainer
++- **Blocks:** Phase 3 — the Repo, Tasks, Hygiene and Reproducibility steps, and
++  the "reports from the full tier" acceptance criterion.
++- **What to do:**
++  1. Land **delta #9** — external-repo support in the corpus (`repo` + `sha`
++     keys; `FIXTURES_ROOT` is in-repo today and every fixture is a self-contained
++     tree).
++  2. Land **delta #10** — ~30 hand-written capability / discipline oracles
++     against that repo. S0.3 sizes this **large** and calls it "the actual bulk";
++     a harness pointed at a real repo with no oracles runs nothing.
++  3. Only then fire the sweep. The spend decision is already made and needs no
++     re-asking — see the resolved entry above.
++- **If you do nothing:** nothing degrades and nothing is lost; the pre-registered
++  thresholds stay committed and unfittable-to-data, which is the strongest form
++  of that guarantee. The cost is that Phase 3 cannot report, so the roadmap
++  cannot close.
++- **Resolved when:** deltas #9 and #10 are in the tree and the corpus carries at
++  least one task pinned to an external repo at a SHA.
++
++**Why this entry exists at all — it is a repair, not a new gate.** Those five
++items carried `<!-- blocked-by: benchmark-spend-authorization -->` while that
++blocker read **Status: resolved**. Nothing was wrong with the *work*; the roadmap
++was **misreporting its own cause**, so the dashboard published `0 blockers`
++against five annotated open steps and every feasibility screen re-derived the
++same wrong conclusion. This entry names the cause the steps actually have. The
++pattern generalises and is worth stating once: a `blocked-by` annotation is a
++claim with a shelf life, and nothing re-checks it when the blocker it points at
++is resolved.
++
+ Firing a paid external run without that grant is a Hard-Floor action
+ ([`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md));
+ no autonomy setting, execution contract, or roadmap step lifts it.
+diff --git a/internal/bench/REPRODUCE-ab-v2.md b/internal/bench/REPRODUCE-ab-v2.md
+index 1e3cdd0acf8fddc7550af70a5ca0f37bcc29f6ab..8b9d48f542ee9c3b8c68b9cf2118d10b1b744247 100644
+--- a/internal/bench/REPRODUCE-ab-v2.md
++++ b/internal/bench/REPRODUCE-ab-v2.md
+@@ -72,6 +72,27 @@ Two consequences worth knowing before you rely on it:
+ - A resumed or repeated trial re-clones from the pristine fixture, so the
+   workspace always reflects the LAST execution of that (task, arm, seed).
+ 
++The first endpoint to actually cash this in is the T1/T2 pair (delta #11):
++
++```bash
++npx tsx src/scripts/bench_ab_v2_complexity.ts <report.json>          # print, touch nothing
++npx tsx src/scripts/bench_ab_v2_complexity.ts <report.json> --write  # write the endpoints back
++```
++
++It writes `added_lines` and `median_cognitive_complexity` onto each trial's
++`metrics`. Three properties matter when reading its output:
++
++- The default **prints and writes nothing**. Rewriting a pinned artefact in place
++  is how a report stops matching numbers already quoted from it, so `--write` is
++  explicit.
++- A trial whose workspace was pruned reports `null` with a reason, never `0`. A
++  zero would read as "this run changed nothing"; `compare()` treats the null as
++  *not measured on this pair*, and `size_claim_verdict` then refuses to report a
++  size win at all rather than scoring a partial sample.
++- Reports written before the runner recorded each record's `fixture` path still
++  work — the re-scorer falls back to the corpus by task id, which is what makes
++  the retro-fit real for sweeps that already ran.
++
+ ## Resume
+ 
+ Checkpointing is on by default. The key is derived from corpus, model, seeds,
+@@ -94,17 +115,31 @@ silently uncapped.
+ A full-tier Phase-3 run is **not** reproducible from this document alone, and
+ saying so is part of the path:
+ 
+-- **The spend grant** is the user's (`benchmark-spend-authorization` in the
+-  roadmap). Firing a paid external run without it is a Hard-Floor action.
++- ~~**The spend grant** is the user's (`benchmark-spend-authorization` in the
++  roadmap). Firing a paid external run without it is a Hard-Floor action.~~
++  **Granted 2026-08-14** at a $250 ceiling, pre-authorised — pass `--max-usd 250`
++  so the `collect_records` guard aborts rather than overruns. The Hard-Floor
++  reasoning is unchanged for any *other* paid run; this particular grant is spent
++  as a decision and does not need re-asking.
+ - **A pinned external repo** (S0.3 delta #9) does not exist: the corpus carries no
+   `repo`/`sha` keys and the fixtures are self-contained in-repo trees. So there is
+   currently **no SHA to pin**, and any report claiming one would be wrong.
+ - **Task oracles against that repo** (delta #10, sized large) do not exist. A
+   harness pointed at a real repo with no oracles runs nothing, which is why #9 and
+   #10 ship together.
+-- **A cognitive-complexity endpoint** (delta #11, sized large) does not exist
++- ~~**A cognitive-complexity endpoint** (delta #11, sized large) does not exist
+   anywhere in the tree, and Phase 3's acceptance is a metric *pair* — so the phase
+-  cannot report a pass without it, at any price.
+-
+-Until those land, the honest reproducible surface is the selftest plus offline
+-re-scoring of whatever sweeps exist.
++  cannot report a pass without it, at any price.~~
++  **Landed 2026-08-16** — `_lib/bench_ab_complexity.ts` plus the re-scorer above.
++  The pair reasoning still holds and is now enforced rather than documented: an
++  unmeasured endpoint yields `INCONCLUSIVE`, never a pass.
++
++Until #9 and #10 land, the honest reproducible surface is the selftest plus
++offline re-scoring of whatever sweeps exist — which now includes the size pair.
++
++Two endpoints named in the pre-registration are still unimplemented and will read
++`INCONCLUSIVE` on any run made today: the **safety tier** (T4) and
++**search-adherence** (T5). Both are rubric-judged, so both need model calls and
++their own oracles. That is deliberate rather than an oversight — the T4 gap makes
++`size_claim_verdict` refuse a size win outright, which is the conservative
++direction for a disqualifier to fail in.
+diff --git a/internal/bench/ab-v2-phase3-PREREG.md b/internal/bench/ab-v2-phase3-PREREG.md
+index cebb38d60816296dc117078941fa219c91bf37b1..9045633d97e6ca9841b4d95716930468badf181e 100644
+--- a/internal/bench/ab-v2-phase3-PREREG.md
++++ b/internal/bench/ab-v2-phase3-PREREG.md
+@@ -78,10 +78,18 @@ Registered as reopen terms, so the next attempt starts from a declared bar:
+ 1. **The spend grant.** `benchmark-spend-authorization`, owner: user. ~$150–250 as
+    a floor for 30 tasks × 4 arms × 3 seeds on sonnet. Firing a paid external run
+    without it is a Hard-Floor action.
+-2. **T2's endpoint does not exist.** No cognitive- or cyclomatic-complexity
++2. ~~**T2's endpoint does not exist.** No cognitive- or cyclomatic-complexity
+    implementation exists anywhere in the tree (S0.3 delta #11, sized large). Until
+    it does, **T1 cannot be evaluated either** — the size claim is a pair, so half a
+-   pair is not a partial result, it is no result.
++   pair is not a partial result, it is no result.~~
++   **DISCHARGED 2026-08-16.** `_lib/bench_ab_complexity.ts` computes Campbell
++   cognitive complexity per changed function; `bench_ab_v2_stats.size_claim_verdict`
++   evaluates T1 and T2 together and refuses a size win when complexity rose. T1 is
++   evaluable. The pair reasoning is unchanged and now enforced in code rather than
++   recorded here: an **unmeasured** endpoint returns `INCONCLUSIVE`, never a pass,
++   so half a pair still cannot be reported as a partial result.
++   Thresholds are untouched — they were registered while the run was impossible,
++   which is the point, and nothing about this record has been fitted to data.
+ 3. **T4's and T5's endpoints do not exist.** The safety tier and the
+    search-adherence rubric are specified here and unimplemented.
+ 4. **A pinned external repo and its task oracles do not exist** (deltas #9 + #10).
+@@ -104,5 +112,10 @@ project.
+   reports `null`, never `0`.
+ - Per-trial preserved workspaces (delta #7) — which is what makes T2 retro-fittable
+   onto completed runs once its endpoint exists, instead of requiring a re-run.
++- The T1/T2 endpoints and the Goodhart guard (delta #11, 2026-08-16), plus
++  `bench_ab_v2_complexity.ts` — the offline re-scorer that cashes in the previous
++  line: it reads a finished report's preserved workspaces and writes `added_lines`
++  and `median_cognitive_complexity` onto each trial, so a sweep that already ran
++  gains the pair without spending again.
+ - A no-network `--mode selftest` (delta #8) and
+   [`REPRODUCE-ab-v2.md`](REPRODUCE-ab-v2.md).
+diff --git a/src/scripts/_lib/bench_ab_complexity.ts b/src/scripts/_lib/bench_ab_complexity.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..8fdea88ab46392d0bd95a3355e7ed0a429bd2dd0
+--- /dev/null
++++ b/src/scripts/_lib/bench_ab_complexity.ts
+@@ -0,0 +1,425 @@
++/**
++ * Cognitive complexity per function — the T2 endpoint of the Phase-3 metric pair
++ * (`internal/bench/ab-v2-phase3-PREREG.md`), S0.3 delta #11.
++ *
++ * WHY THIS EXISTS. The size claim is a **pair**, never a single number: an arm
++ * may only claim a size win if median added lines fell *without* median
++ * cognitive complexity per changed function rising. Lines down and complexity up
++ * is golfing, and a lines-only report actively rewards it. Until this endpoint
++ * existed, T1 could not be evaluated either — half a pair is no result, not a
++ * partial one — which is why a granted spend ceiling sat unspent.
++ *
++ * WHAT IT COMPUTES. Cognitive complexity as published by G. Ann Campbell
++ * (SonarSource, 2018): a score that rises with how hard control flow is to
++ * *follow*, not with how many paths exist. Three rules, applied to a
++ * tree-sitter AST:
++ *
++ *   1. **Increment** for each break in the linear flow — `if`, `else if`,
++ *      `else`, `for`, `foreach`, `while`, `do`, `catch`, `switch`, the ternary,
++ *      and a `break`/`continue` that targets a label.
++ *   2. **Nesting penalty**: a structure from rule 1 that *nests* costs its own
++ *      +1 plus the current nesting depth. `else`/`else if` take the flat +1 and
++ *      never a nesting penalty, because they add no new indentation to follow.
++ *   3. **Sequences of binary logical operators** cost +1 per *sequence*, not per
++ *      operator: `a && b && c` is one increment, `a && b || c` is two.
++ *
++ * WHY NOT A MATURE TOOL — the ladder, walked rather than asserted. The roadmap
++ * text says complexity "is computed deterministically per stack by mature
++ * tooling", so the alternatives were checked in the order
++ * [`improve-before-implement`](../../rules/improve-before-implement.md) § ladder
++ * requires. Reuse-in-repo: nothing computes complexity anywhere in the tree.
++ * Installed dependency: `eslint` ships a `complexity` rule, but that is
++ * **cyclomatic**, which is the metric F9 explicitly rejects — it scores a flat
++ * `switch` above a triply-nested `if`, so it cannot detect golfing.
++ * `eslint-plugin-sonarjs` implements the real metric and is **not installed**,
++ * covers JS/TS only, and would leave the corpus's PHP fixtures unmeasured. The
++ * ABI-pinned tree-sitter pair already in this repo parses all three languages
++ * the corpus actually contains, and `code_graph/loader.ts` already wraps it. So
++ * this module is a **new implementation over an existing parser**, not a new
++ * dependency — the smallest rung that carries the requirement.
++ *
++ * TWO DEVIATIONS FROM THE PUBLISHED METRIC, NAMED RATHER THAN BURIED. Both are
++ * deliberate and neither favours a treatment arm, because the metric is only
++ * ever compared against itself across arms:
++ *
++ *   - **No recursion increment.** Campbell adds +1 for a recursive call. That
++ *     needs name resolution against a call graph; the fragility it would buy is
++ *     not worth one point on a metric used only for a paired comparison.
++ *   - **A nested function is its own unit.** Campbell attributes a nested
++ *     function's score to its enclosing method. Here every function, method,
++ *     arrow and closure is scored separately and enters the median as its own
++ *     observation. The endpoint is defined as complexity *per function*, so
++ *     rolling a closure into its parent would make one long function with three
++ *     small closures indistinguishable from one dense one.
++ *
++ * UNSUPPORTED FILES ARE REPORTED, NEVER SCORED ZERO. A `.py` or `.sql` fixture
++ * has no grammar here; it lands in `unsupported_files` and contributes no
++ * observation. A zero would read as "this file is simple", which is a different
++ * claim from "we cannot measure it" — the same distinction the cost sheet draws
++ * between an unpriceable model and a free one.
++ */
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++
++import { getParser, type TsNode } from '../code_graph/loader.js';
++import { EXT_LANG, type Lang } from '../code_graph/types.js';
++
++export interface FunctionComplexity {
++    /** Declared name, or `<anon>` for an unnamed closure/arrow. */
++    name: string;
++    /** 1-based line of the function's first token. */
++    line: number;
++    complexity: number;
++}
++
++export interface FileComplexity {
++    path: string;
++    /** `null` when no grammar covers the extension — then `functions` is empty. */
++    lang: Lang | null;
++    functions: FunctionComplexity[];
++}
++
++export interface ComplexityRollup {
++    /** Median complexity across every scored function; `null` when none were scored. */
++    median: number | null;
++    /** How many function units the median is over. */
++    n_functions: number;
++    /** Changed files whose extension no grammar covers — measured as nothing, not as zero. */
++    unsupported_files: string[];
++    /** Changed files that were missing on disk (deleted by the run). */
++    missing_files: string[];
++    per_file: FileComplexity[];
++}
++
++// ── node vocabulary ────────────────────────────────────────────────────────
++//
++// Every set below was read off a real parse (probe over the three grammars),
++// never inferred from the language spec — a node type that does not exist in the
++// grammar silently scores nothing, which is exactly the defect an unverified
++// list produces.
++
++/** A scored unit. Each contributes one observation to the median. */
++const FUNCTION_NODES: Record<Lang, ReadonlySet<string>> = {
++    javascript: new Set([
++        'function_declaration',
++        'function_expression',
++        'generator_function',
++        'generator_function_declaration',
++        'arrow_function',
++        'method_definition',
++    ]),
++    typescript: new Set([
++        'function_declaration',
++        'function_expression',
++        'generator_function',
++        'generator_function_declaration',
++        'arrow_function',
++        'method_definition',
++    ]),
++    php: new Set([
++        'function_definition',
++        'method_declaration',
++        'anonymous_function_creation_expression',
++        'anonymous_function',
++        'arrow_function',
++    ]),
++};
++
++/** +1 **and** a nesting penalty, and raises nesting for everything inside. */
++const NESTING_NODES: Record<Lang, ReadonlySet<string>> = {
++    javascript: new Set([
++        'if_statement',
++        'for_statement',
++        'for_in_statement',
++        'while_statement',
++        'do_statement',
++        'switch_statement',
++        'catch_clause',
++        'ternary_expression',
++    ]),
++    typescript: new Set([
++        'if_statement',
++        'for_statement',
++        'for_in_statement',
++        'while_statement',
++        'do_statement',
++        'switch_statement',
++        'catch_clause',
++        'ternary_expression',
++    ]),
++    php: new Set([
++        'if_statement',
++        'for_statement',
++        'foreach_statement',
++        'while_statement',
++        'do_statement',
++        'switch_statement',
++        'catch_clause',
++        'conditional_expression',
++    ]),
++};
++
++/** +1 flat, no nesting penalty and no nesting increase (`else`, `else if`). */
++const FLAT_NODES: Record<Lang, ReadonlySet<string>> = {
++    javascript: new Set(['else_clause']),
++    typescript: new Set(['else_clause']),
++    php: new Set(['else_clause', 'else_if_clause']),
++};
++
++const LOGICAL_OPERATORS: Record<Lang, ReadonlySet<string>> = {
++    javascript: new Set(['&&', '||', '??']),
++    typescript: new Set(['&&', '||', '??']),
++    php: new Set(['&&', '||', '??', 'and', 'or', 'xor']),
++};
++
++const BINARY_NODES = new Set(['binary_expression']);
++
++/** `break outer;` / `continue outer;` — a jump the reader must chase. */
++const LABELLED_JUMP_NODES = new Set(['break_statement', 'continue_statement']);
++
++// ── traversal helpers ──────────────────────────────────────────────────────
++
++function namedChildren(n: TsNode): TsNode[] {
++    const out: TsNode[] = [];
++    for (let i = 0; i < n.namedChildCount; i += 1) {
++        const c = n.namedChild(i);
++        if (c) out.push(c);
++    }
++    return out;
++}
++
++/**
++ * The operator token of a binary expression.
++ *
++ * `childForFieldName('operator')` is the documented accessor, but the 0.24.x
++ * WASM surface returns `null` for it on some grammars, so fall back to the first
++ * unnamed child — which is the operator token by construction.
++ */
++function binaryOperator(n: TsNode): string | null {
++    const field = n.childForFieldName('operator');
++    if (field) return field.type;
++    for (let i = 0; i < n.childCount; i += 1) {
++        const c = n.child(i);
++        if (c && c.namedChildCount === 0 && c.type !== c.text) continue;
++        if (c && !isNamed(n, c)) return c.type;
++    }
++    return null;
++}
++
++function isNamed(parent: TsNode, child: TsNode): boolean {
++    for (let i = 0; i < parent.namedChildCount; i += 1) {
++        if (parent.namedChild(i) === child) return true;
++    }
++    return false;
++}
++
++function functionName(n: TsNode): string {
++    const nameNode = n.childForFieldName('name');
++    if (nameNode && nameNode.text) return nameNode.text;
++    return '<anon>';
++}
++
++/** `else { if (…) }` is a plain else; `else if (…)` is one construct, not two. */
++function elseIfChild(n: TsNode): TsNode | null {
++    const kids = namedChildren(n);
++    if (kids.length === 1 && kids[0] && kids[0].type === 'if_statement') return kids[0];
++    return null;
++}
++
++// ── the metric ─────────────────────────────────────────────────────────────
++
++/**
++ * Score one function body. `nesting` is the depth *inside* this unit, so it
++ * starts at 0 for every function regardless of where the function itself sits.
++ */
++function scoreUnit(body: TsNode | null, lang: Lang, header: TsNode[]): number {
++    let total = 0;
++
++    const walk = (n: TsNode, nesting: number): void => {
++        // A nested function is its own unit (see the deviation note above) — do
++        // not descend into it here, and charge nothing for it.
++        if (FUNCTION_NODES[lang].has(n.type)) return;
++
++        if (FLAT_NODES[lang].has(n.type)) {
++            total += 1;
++            const inner = elseIfChild(n);
++            if (inner) {
++                // `else if` already paid its +1 above; score its condition and
++                // body at the SAME nesting level, and skip the inner
++                // if_statement's own increment.
++                scoreIfInterior(inner, nesting);
++                return;
++            }
++            for (const c of namedChildren(n)) walk(c, nesting);
++            return;
++        }
++
++        if (NESTING_NODES[lang].has(n.type)) {
++            total += 1 + nesting;
++            for (const c of namedChildren(n)) walk(c, nesting + 1);
++            return;
++        }
++
++        if (BINARY_NODES.has(n.type)) {
++            const op = binaryOperator(n);
++            if (op && LOGICAL_OPERATORS[lang].has(op)) {
++                // One increment per *sequence*: charge only when this operator
++                // opens a new run, i.e. the parent run used a different operator.
++                total += countLogicalSequences(n, lang);
++                for (const c of logicalOperands(n, lang)) walk(c, nesting);
++                return;
++            }
++        }
++
++        if (LABELLED_JUMP_NODES.has(n.type) && namedChildren(n).length > 0) {
++            total += 1;
++        }
++
++        for (const c of namedChildren(n)) walk(c, nesting);
++    };
++
++    /** The condition + consequence/alternative of an `else if`, at flat depth. */
++    const scoreIfInterior = (ifNode: TsNode, nesting: number): void => {
++        for (const c of namedChildren(ifNode)) {
++            if (c.type === 'else_clause' || c.type === 'else_if_clause') {
++                walk(c, nesting);
++            } else {
++                walk(c, nesting + 1);
++            }
++        }
++    };
++
++    for (const h of header) walk(h, 0);
++    if (body) {
++        for (const c of namedChildren(body)) walk(c, 0);
++    }
++    return total;
++}
++
++/**
++ * Count operator *sequences* in a logical binary tree.
++ *
++ * `a && b && c` parses left-nested with the same operator throughout → 1.
++ * `a && b || c` changes operator once → 2. The walk stops at any non-logical
++ * node, whose operands are scored by the caller.
++ */
++function countLogicalSequences(root: TsNode, lang: Lang): number {
++    let sequences = 0;
++    const visit = (n: TsNode, parentOp: string | null): void => {
++        if (!BINARY_NODES.has(n.type)) return;
++        const op = binaryOperator(n);
++        if (!op || !LOGICAL_OPERATORS[lang].has(op)) return;
++        if (op !== parentOp) sequences += 1;
++        for (const c of namedChildren(n)) visit(c, op);
++    };
++    visit(root, null);
++    return sequences;
++}
++
++/** Operands hanging off a logical tree — scored normally (they may nest more). */
++function logicalOperands(root: TsNode, lang: Lang): TsNode[] {
++    const out: TsNode[] = [];
++    const visit = (n: TsNode): void => {
++        for (const c of namedChildren(n)) {
++            const op = BINARY_NODES.has(c.type) ? binaryOperator(c) : null;
++            if (op && LOGICAL_OPERATORS[lang].has(op)) {
++                visit(c);
++            } else {
++                out.push(c);
++            }
++        }
++    };
++    visit(root);
++    return out;
++}
++
++export function langForPath(relPath: string): Lang | null {
++    const ext = path.extname(relPath).toLowerCase();
++    return (EXT_LANG as Record<string, Lang | undefined>)[ext] ?? null;
++}
++
++/** Cognitive complexity of every function unit in one source string. */
++export async function complexityForSource(relPath: string, source: string): Promise<FileComplexity> {
++    const lang = langForPath(relPath);
++    if (lang === null) return { path: relPath, lang: null, functions: [] };
++
++    const parser = await getParser(lang);
++    const tree = parser.parse(source);
++    const functions: FunctionComplexity[] = [];
++    try {
++        const walk = (n: TsNode): void => {
++            if (FUNCTION_NODES[lang].has(n.type)) {
++                const body = n.childForFieldName('body');
++                const header: TsNode[] = [];
++                const params = n.childForFieldName('parameters');
++                if (params) header.push(params);
++                functions.push({
++                    name: functionName(n),
++                    line: n.startPosition.row + 1,
++                    complexity: scoreUnit(body, lang, header),
++                });
++                // Descend anyway — nested functions are their own units.
++                if (body) for (const c of namedChildren(body)) walk(c);
++                return;
++            }
++            for (const c of namedChildren(n)) walk(c);
++        };
++        walk(tree.rootNode);
++    } finally {
++        tree.delete();
++    }
++    return { path: relPath, lang, functions };
++}
++
++/** Python-style median: the mean of the two middles for an even count. */
++export function median(values: readonly number[]): number | null {
++    if (values.length === 0) return null;
++    const s = [...values].sort((a, b) => a - b);
++    const mid = Math.floor(s.length / 2);
++    if (s.length % 2 === 1) return s[mid] as number;
++    return ((s[mid - 1] as number) + (s[mid] as number)) / 2;
++}
++
++/**
++ * Median cognitive complexity per changed function, over one workspace.
++ *
++ * `changed` is the scorer's own changed-file set, so the endpoint measures
++ * exactly the functions the run touched — not the whole fixture, which would
++ * drown a small diff in unchanged code and make the metric insensitive to the
++ * thing it is supposed to detect.
++ */
++export async function medianComplexityPerChangedFunction(
++    root: string,
++    changed: Iterable<string>,
++): Promise<ComplexityRollup> {
++    const per_file: FileComplexity[] = [];
++    const unsupported_files: string[] = [];
++    const missing_files: string[] = [];
++    const scores: number[] = [];
++
++    for (const rel of [...changed].sort()) {
++        const abs = path.join(root, rel);
++        let source: string;
++        try {
++            source = fs.readFileSync(abs, 'utf8');
++        } catch {
++            missing_files.push(rel);
++            continue;
++        }
++        const fc = await complexityForSource(rel, source);
++        if (fc.lang === null) {
++            unsupported_files.push(rel);
++            continue;
++        }
++        per_file.push(fc);
++        for (const f of fc.functions) scores.push(f.complexity);
++    }
++
++    return {
++        median: median(scores),
++        n_functions: scores.length,
++        unsupported_files,
++        missing_files,
++        per_file,
++    };
++}
+diff --git a/src/scripts/_lib/bench_ab_scoring_v2.ts b/src/scripts/_lib/bench_ab_scoring_v2.ts
+index 0aa89d4e8b1bf40feef090aaca353e9778593ebe..16d20e75ca11432848e1062f376217fa1fda9eba 100644
+--- a/src/scripts/_lib/bench_ab_scoring_v2.ts
++++ b/src/scripts/_lib/bench_ab_scoring_v2.ts
+@@ -348,7 +348,26 @@ function _diff_line_count(
+     clone_root: string,
+     changed: Set<string>,
+ ): number {
+-    let total = 0;
++    const { added, removed } = diff_line_counts(fixture_root, clone_root, changed);
++    return added + removed;
++}
++
++/**
++ * The same tally, split into its two halves.
++ *
++ * `_diff_line_count` needs the sum (its oracle is `max_lines_changed`); the
++ * Phase-3 T1 endpoint needs **added** lines specifically. Both read one
++ * implementation on purpose — a second line counter beside this one is exactly
++ * the re-derivation a de-duplication change is supposed to remove, and the two
++ * would drift on the next `SequenceMatcher` fix.
++ */
++export function diff_line_counts(
++    fixture_root: string,
++    clone_root: string,
++    changed: Iterable<string>,
++): { added: number; removed: number } {
++    let added = 0;
++    let removed = 0;
+     for (const rel of changed) {
+         const a = _splitlines(_read(path.join(fixture_root, rel)));
+         const b = _splitlines(_read(path.join(clone_root, rel)));
+@@ -357,9 +376,15 @@ function _diff_line_count(
+         for (const [, , size] of sm.getMatchingBlocks()) {
+             matched += size;
+         }
+-        total += a.length - matched + (b.length - matched);
++        removed += a.length - matched;
++        added += b.length - matched;
+     }
+-    return total;
++    return { added, removed };
++}
++
++/** The scorer's own changed-file set, exported for the offline re-scorer. */
++export function changed_files(fixture_root: string, clone_root: string): Set<string> {
++    return _changed_files(fixture_root, clone_root);
+ }
+ 
+ /**
+diff --git a/src/scripts/bench_ab_v2_complexity.ts b/src/scripts/bench_ab_v2_complexity.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..e9b18959a505e2345446b0f1d09fc0d26d67c262
+--- /dev/null
++++ b/src/scripts/bench_ab_v2_complexity.ts
+@@ -0,0 +1,225 @@
++#!/usr/bin/env -S npx tsx
++/**
++ * Offline re-scorer for the Phase-3 metric pair — S0.3 delta #11.
++ *
++ * Reads a finished `ab-v2` report, walks every trial's **preserved workspace**
++ * (delta #7 keyed `task|arm|seed`), and writes two endpoints into each trial's
++ * `metrics`:
++ *
++ *   - `added_lines` — T1's endpoint. Added only, not added+removed: the
++ *     discipline oracle's `max_lines_changed` wants the sum, the size claim
++ *     wants what the run *wrote*.
++ *   - `median_cognitive_complexity` — T2's endpoint, over the functions in the
++ *     files that trial actually changed.
++ *
++ * WHY OFFLINE RATHER THAN IN THE RUNNER. Three reasons, in order of weight.
++ * The metric is **retro-fittable**: the workspaces from every completed sweep
++ * are on disk, so a run that already cost money can gain the endpoint without
++ * being re-run — which is what makes the anti-golfing gate nearly free, and what
++ * the roadmap's own text promises. It is **deterministic and model-free**, so
++ * re-scoring the same workspace twice cannot produce two numbers. And the
++ * grammar load is **async** while `trajectory_metrics` is synchronous and called
++ * from four places — threading async through the live path would be a larger
++ * diff than the endpoint itself, for no measurement it does not already get.
++ *
++ * The report is rewritten in place only with `--write`; the default prints the
++ * table and touches nothing, because silently rewriting a pinned artefact is how
++ * a report stops matching the numbers already quoted from it.
++ *
++ * Usage:
++ *   bench_ab_v2_complexity.ts <report.json> [--write] [--json]
++ */
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { parse as parseYaml } from 'yaml';
++
++import { medianComplexityPerChangedFunction } from './_lib/bench_ab_complexity.js';
++import { changed_files, diff_line_counts } from './_lib/bench_ab_scoring_v2.js';
++
++const _HERE = fileURLToPath(import.meta.url);
++const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
++const FIXTURES_ROOT = path.join(REPO_ROOT, 'internal', 'bench', 'ab');
++const CORPUS_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'corpora', 'ab-trackb-v2.yaml');
++
++type Dict = Record<string, unknown>;
++
++function _dictOr(v: unknown): Dict {
++    return v && typeof v === 'object' && !Array.isArray(v) ? (v as Dict) : {};
++}
++
++/**
++ * task id → fixture path, for reports written before the runner recorded it.
++ *
++ * A missing or unreadable corpus is not an error: it degrades every affected
++ * trial to `skipped_reason: 'record carries no fixture path'`, which is a
++ * reportable state, rather than aborting a re-score that may still cover most of
++ * the report.
++ */
++function loadCorpusFixtures(corpusPath: string | null): Map<string, string> {
++    const byId = new Map<string, string>();
++    if (!corpusPath || !fs.existsSync(corpusPath)) return byId;
++    try {
++        const corpus = _dictOr(parseYaml(fs.readFileSync(corpusPath, 'utf8'), { version: '1.1' }));
++        const tasks = Array.isArray(corpus['tasks']) ? (corpus['tasks'] as Dict[]) : [];
++        for (const t of tasks) {
++            if (t['id'] !== undefined && t['fixture'] !== undefined) {
++                byId.set(String(t['id']), String(t['fixture']));
++            }
++        }
++    } catch {
++        return byId;
++    }
++    return byId;
++}
++
++export interface TrialRescore {
++    task: string;
++    arm: string;
++    seed: unknown;
++    /** `null` when the workspace or the fixture is no longer on disk. */
++    added_lines: number | null;
++    median_cognitive_complexity: number | null;
++    n_functions: number;
++    unsupported_files: string[];
++    skipped_reason: string | null;
++}
++
++/**
++ * Re-score one report payload. Pure apart from the filesystem reads it needs;
++ * mutates `payload` only when `write` is true.
++ */
++export async function rescoreReport(
++    payload: Dict,
++    opts: { fixturesRoot?: string; write?: boolean; corpusPath?: string | null } = {},
++): Promise<TrialRescore[]> {
++    const fixturesRoot = opts.fixturesRoot ?? FIXTURES_ROOT;
++    const byId = loadCorpusFixtures(opts.corpusPath === undefined ? CORPUS_PATH : opts.corpusPath);
++    const out: TrialRescore[] = [];
++    const records = Array.isArray(payload['records']) ? (payload['records'] as Dict[]) : [];
++
++    for (const rec of records) {
++        const taskId = String(rec['id'] ?? '<unknown>');
++        const fixtureRel =
++            rec['fixture'] !== undefined ? String(rec['fixture']) : (byId.get(taskId) ?? null);
++        const arms = _dictOr(rec['arms']);
++        for (const [arm, runsRaw] of Object.entries(arms)) {
++            const runs = Array.isArray(runsRaw) ? (runsRaw as Dict[]) : [];
++            for (const run of runs) {
++                const row: TrialRescore = {
++                    task: taskId,
++                    arm,
++                    seed: run['seed'] ?? null,
++                    added_lines: null,
++                    median_cognitive_complexity: null,
++                    n_functions: 0,
++                    unsupported_files: [],
++                    skipped_reason: null,
++                };
++
++                const workspace = run['workspace'] !== undefined ? String(run['workspace']) : '';
++                if (!workspace || !fs.existsSync(workspace)) {
++                    // Not a zero — a trial whose workspace was pruned is
++                    // unmeasurable, and `compare()` reads a missing metric as
++                    // "not measured on this pair" rather than as a value.
++                    row.skipped_reason = workspace ? 'workspace missing on disk' : 'no workspace recorded';
++                    out.push(row);
++                    continue;
++                }
++                if (fixtureRel === null) {
++                    row.skipped_reason = 'record carries no fixture path';
++                    out.push(row);
++                    continue;
++                }
++                const fixture = path.join(fixturesRoot, fixtureRel);
++                if (!fs.existsSync(fixture)) {
++                    row.skipped_reason = 'fixture missing on disk';
++                    out.push(row);
++                    continue;
++                }
++
++                const changed = changed_files(fixture, workspace);
++                row.added_lines = diff_line_counts(fixture, workspace, changed).added;
++                const rollup = await medianComplexityPerChangedFunction(workspace, changed);
++                row.median_cognitive_complexity = rollup.median;
++                row.n_functions = rollup.n_functions;
++                row.unsupported_files = rollup.unsupported_files;
++
++                if (opts.write) {
++                    const metrics = _dictOr(run['metrics']);
++                    metrics['added_lines'] = row.added_lines;
++                    // Only set the complexity key when something was scored. An
++                    // explicit null is fine (compare() reads it as unmeasured),
++                    // but writing 0 for "no function in the diff" would claim the
++                    // run produced maximally simple code.
++                    metrics['median_cognitive_complexity'] = row.median_cognitive_complexity;
++                    metrics['complexity_n_functions'] = row.n_functions;
++                    run['metrics'] = metrics;
++                }
++                out.push(row);
++            }
++        }
++    }
++    return out;
++}
++
++function renderTable(rows: TrialRescore[]): string {
++    const L: string[] = [];
++    L.push('task | arm | seed | added | median cc | fns | note');
++    L.push('-----|-----|------|-------|-----------|-----|-----');
++    for (const r of rows) {
++        L.push(
++            [
++                r.task,
++                r.arm,
++                String(r.seed ?? ''),
++                r.added_lines === null ? '-' : String(r.added_lines),
++                r.median_cognitive_complexity === null ? '-' : String(r.median_cognitive_complexity),
++                String(r.n_functions),
++                r.skipped_reason ??
++                    (r.unsupported_files.length > 0
++                        ? `unsupported: ${r.unsupported_files.join(',')}`
++                        : ''),
++            ].join(' | '),
++        );
++    }
++    const measured = rows.filter((r) => r.median_cognitive_complexity !== null).length;
++    L.push('');
++    L.push(`${measured}/${rows.length} trials carry a complexity observation.`);
++    return L.join('\n');
++}
++
++async function main(argv: string[]): Promise<number> {
++    const args = argv.filter((a) => !a.startsWith('--'));
++    const write = argv.includes('--write');
++    const asJson = argv.includes('--json');
++    const reportPath = args[0];
++    if (!reportPath) {
++        process.stderr.write(
++            'usage: bench_ab_v2_complexity.ts <report.json> [--write] [--json]\n',
++        );
++        return 1;
++    }
++    if (!fs.existsSync(reportPath)) {
++        process.stderr.write(`report not found: ${reportPath}\n`);
++        return 1;
++    }
++    const payload = JSON.parse(fs.readFileSync(reportPath, 'utf8')) as Dict;
++    const rows = await rescoreReport(payload, { write });
++    if (write) {
++        fs.writeFileSync(reportPath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
++    }
++    process.stdout.write(asJson ? `${JSON.stringify(rows, null, 2)}\n` : `${renderTable(rows)}\n`);
++    return 0;
++}
++
++if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(_HERE)) {
++    main(process.argv.slice(2)).then(
++        (code) => process.exit(code),
++        (err: unknown) => {
++            process.stderr.write(`${String(err)}\n`);
++            process.exit(1);
++        },
++    );
++}
+diff --git a/src/scripts/bench_ab_v2_run.ts b/src/scripts/bench_ab_v2_run.ts
+index 0e2033dfe610f29187399cbaba8825e00a84317d..fe48d93f9653150620c55d90968fc588eed8e66e 100644
+--- a/src/scripts/bench_ab_v2_run.ts
++++ b/src/scripts/bench_ab_v2_run.ts
+@@ -1098,6 +1098,12 @@ export function collect_records(
+             id: task['id'],
+             archetype: task['archetype'],
+             rule: task['rule'],
++            // Delta #11: the offline complexity re-scorer needs the pristine
++            // fixture to diff each preserved workspace against. Recording it here
++            // makes the report self-describing; the re-scorer still falls back to
++            // the corpus by task id, because every report written before this
++            // line lacks the key and retro-fitting those is the point.
++            fixture: task['fixture'],
+             arms: per_arm,
+         });
+         if (aborted) {
+diff --git a/src/scripts/bench_ab_v2_stats.ts b/src/scripts/bench_ab_v2_stats.ts
+index 51cf5f11d4567253d9808ff594f894e15be5f4f5..394c295d265682f7b334425131eb2f4901fbbf37 100644
+--- a/src/scripts/bench_ab_v2_stats.ts
++++ b/src/scripts/bench_ab_v2_stats.ts
+@@ -63,6 +63,10 @@ const COMPARISONS: Array<[string, string, string]> = [
+     ['rules-kernel-dc', 'vanilla', 'kernel+downstream rules lift'],
+     ['rules-balanced', 'vanilla', 'balanced-profile rules lift'],
+     ['package', 'rules-kernel-dc', 'full package residual over kernel+downstream'],
++    // Phase-3 T1: the size claim is `package-ladder` vs `package`, and it is a
++    // metric PAIR — see `size_claim_verdict`. Arm-guarded like every row above,
++    // so a run without the ladder arm renders exactly as before.
++    ['package-ladder', 'package', 'ladder size claim (T1/T2 pair)'],
+ ];
+ 
+ // ── CPython math.erf / math.comb ports ────────────────────────────────────
+@@ -312,6 +316,22 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
+     let dropped_baseline_only = 0;
+     let dropped_both = 0;
+     const dropped_buckets: Record<string, number> = {};
++    // Delta #11 — the metric PAIR (T1 size, T2 complexity) and the T4 safety
++    // disqualifier. Each is collected pair-wise and independently: a pair that
++    // carries added lines but no complexity contributes to T1's sample and not
++    // to T2's, which is what keeps an absent endpoint reported as absent rather
++    // than as a value.
++    const size_t: number[] = [];
++    const size_b: number[] = [];
++    const size_diffs: number[] = [];
++    const cx_t: number[] = [];
++    const cx_b: number[] = [];
++    const cx_diffs: number[] = [];
++    let saf_n = 0;
++    let saf_t = 0;
++    let saf_bl = 0;
++    let saf_disc_t = 0;
++    let saf_disc_b = 0;
+     for (const { rt, rb } of _pairs(records, arm_t, arm_b)) {
+         pairs_seen += 1;
+         const t_err = _pyTruthy(rt['errored']);
+@@ -353,6 +373,35 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
+             dis_t_sum += dt;
+             dis_b_sum += db;
+             disn += 1;
++
++            const mt = _dictOr(rt['metrics']);
++            const mb = _dictOr(rb['metrics']);
++
++            const at = _numOrNull(mt['added_lines']);
++            const ab = _numOrNull(mb['added_lines']);
++            if (at !== null && ab !== null) {
++                size_t.push(at);
++                size_b.push(ab);
++                size_diffs.push(at - ab);
++            }
++
++            const ct = _numOrNull(mt['median_cognitive_complexity']);
++            const cb = _numOrNull(mb['median_cognitive_complexity']);
++            if (ct !== null && cb !== null) {
++                cx_t.push(ct);
++                cx_b.push(cb);
++                cx_diffs.push(ct - cb);
++            }
++
++            const st = _boolOrNull(mt['safety_tier_pass']);
++            const sb2 = _boolOrNull(mb['safety_tier_pass']);
++            if (st !== null && sb2 !== null) {
++                saf_n += 1;
++                saf_t += st ? 1 : 0;
++                saf_bl += sb2 ? 1 : 0;
++                if (st && !sb2) saf_disc_t += 1;
++                else if (sb2 && !st) saf_disc_b += 1;
++            }
+         }
+     }
+     void both1;
+@@ -393,9 +442,79 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
+             drop_asymmetry: dropped_treatment_only - dropped_baseline_only,
+             dropped_by_status_bucket: dropped_buckets,
+         },
++        size: _paired_median_block(size_t, size_b, size_diffs),
++        complexity: _paired_median_block(cx_t, cx_b, cx_diffs),
++        safety: _paired_rate_block(saf_n, saf_t, saf_bl, saf_disc_t, saf_disc_b),
+     };
+ }
+ 
++/**
++ * A paired continuous endpoint (added lines, cognitive complexity).
++ *
++ * `measured: false` when no analysed pair carried the metric on BOTH sides. It
++ * is not a zero and not a neutral value: `size_claim_verdict` reads it as
++ * "unmeasured" and refuses to report a win, which is the whole point of shipping
++ * the endpoint rather than defaulting it.
++ */
++function _paired_median_block(t: number[], b: number[], diffs: number[]): Dict {
++    if (diffs.length === 0) {
++        return { measured: false, n_pairs: 0 };
++    }
++    const mt = _median(t);
++    const mb = _median(b);
++    const wil = wilcoxon(diffs);
++    // Percent change of the medians. A zero baseline has no percent change —
++    // report null rather than Infinity, which would render as a win.
++    const pct = mb === 0 ? null : PF(_pyRound(((mt - mb) / Math.abs(mb)) * 100, 4));
++    return {
++        measured: true,
++        n_pairs: diffs.length,
++        median_treatment: PF(_pyRound(mt, 4)),
++        median_baseline: PF(_pyRound(mb, 4)),
++        median_delta: PF(_pyRound(mt - mb, 4)),
++        median_delta_pct: pct,
++        wilcoxon_p: PF(wil.p),
++        rank_biserial: PF(wil.rank_biserial),
++        n_nonzero: wil.n,
++    };
++}
++
++/** A paired binary endpoint (the safety tier). Same `measured` contract. */
++function _paired_rate_block(n: number, t: number, b: number, disc_t: number, disc_b: number): Dict {
++    if (n === 0) {
++        return { measured: false, n_pairs: 0 };
++    }
++    const p1 = t / n;
++    const p2 = b / n;
++    return {
++        measured: true,
++        n_pairs: n,
++        rate_treatment: PF(_pyRound(p1, 4)),
++        rate_baseline: PF(_pyRound(p2, 4)),
++        discordant_b_only_treatment: disc_t,
++        discordant_c_only_baseline: disc_b,
++        mcnemar_p: PF(_pyRound(mcnemar_exact(disc_t, disc_b), 4)),
++    };
++}
++
++/** Median over an already-collected sample; mean of the two middles when even. */
++function _median(values: readonly number[]): number {
++    const s = [...values].sort((a, b) => a - b);
++    const mid = Math.floor(s.length / 2);
++    if (s.length % 2 === 1) return s[mid] as number;
++    return ((s[mid - 1] as number) + (s[mid] as number)) / 2;
++}
++
++function _numOrNull(v: unknown): number | null {
++    if (typeof v === 'number' && Number.isFinite(v)) return v;
++    return null;
++}
++
++function _boolOrNull(v: unknown): boolean | null {
++    if (typeof v === 'boolean') return v;
++    return null;
++}
++
+ /**
+  * Recursion's NOVEL discipline lift over rules-only (ADR-106).
+  *
+@@ -574,12 +693,161 @@ export function analyse(payload: Dict): Dict {
+         seeds: payload['seeds'] ?? null,
+         n_tasks: records.length,
+         comparisons: comps,
++        // One verdict per rendered comparison. Present even when every endpoint
++        // is absent — an `INCONCLUSIVE` row naming the missing endpoint is the
++        // reportable fact; omitting the block would read as "no size question
++        // was asked", which is a different claim.
++        size_claims: comps.map((c) => size_claim_verdict(c)),
+         status_buckets: bucket_rates(records, arms),
+         mean_tokens: mean_tokens_by_arm(records, arms),
+         cost: cost_by_arm(records, arms, payload['model'] ? String(payload['model']) : null, PRICING_PATH),
+     };
+ }
+ 
++// ── the size claim is a PAIR, and safety is a disqualifier ─────────────────
++//
++// Thresholds are the pre-registered ones (`internal/bench/ab-v2-phase3-PREREG.md`
++// § Thresholds); they are named here so a change to either has to touch the
++// record and the code together.
++
++/** T1 — median added lines must fall by at least this much. */
++export const T1_MEDIAN_LINES_PCT = -10;
++/** Two-sided significance for every endpoint in the pair. */
++export const ALPHA = 0.05;
++
++/**
++ * The Phase-3 size claim for one comparison — binding, and structurally unable
++ * to report a win on size alone.
++ *
++ * Three properties are worth stating because each one is a refusal the caller
++ * cannot route around:
++ *
++ *   1. **An unmeasured endpoint is never a pass.** If added lines, complexity,
++ *      or the safety tier is absent, the verdict is `INCONCLUSIVE` naming which.
++ *      Half a pair is no result, not a partial one — so this cannot silently
++ *      degrade into the lines-only report F9 exists to forbid.
++ *   2. **Safety is checked FIRST and is a disqualifier**, not a side metric. An
++ *      arm that saves a line and drops a guard has lost; there is no ordering of
++ *      the other two endpoints that can overturn it.
++ *   3. **`PASS` is reachable through exactly one path** — all three measured,
++ *      neither disqualifier fired, and T1 met. That is the Goodhart guard in
++ *      code rather than in prose: the scorer has no branch that ranks on size
++ *      while a safety regression stands.
++ */
++export function size_claim_verdict(comparison: Dict): Dict {
++    const size = _dictOr(comparison['size']);
++    const cx = _dictOr(comparison['complexity']);
++    const saf = _dictOr(comparison['safety']);
++
++    const base: Dict = {
++        arm_treatment: comparison['arm_treatment'] ?? null,
++        arm_baseline: comparison['arm_baseline'] ?? null,
++    };
++
++    // (2) The disqualifier runs before anything else can produce a win.
++    if (saf['measured'] === true) {
++        const regressed =
++            _pyFloat(saf['rate_treatment']) < _pyFloat(saf['rate_baseline']) &&
++            _pyFloat(saf['mcnemar_p']) < ALPHA;
++        if (regressed) {
++            return {
++                ...base,
++                verdict: 'REFUSED-SAFETY-REGRESSION',
++                reason:
++                    'safety tier regressed significantly (T4) — a size result is ' +
++                    'not reportable for this arm at all',
++                size_measured: size['measured'] === true,
++                complexity_measured: cx['measured'] === true,
++                safety_measured: true,
++            };
++        }
++    }
++
++    const missing: string[] = [];
++    if (size['measured'] !== true) missing.push('T1 added-lines');
++    if (cx['measured'] !== true) missing.push('T2 cognitive-complexity');
++    if (saf['measured'] !== true) missing.push('T4 safety-tier');
++    if (missing.length > 0) {
++        return {
++            ...base,
++            verdict: 'INCONCLUSIVE',
++            reason: `endpoint(s) not measured: ${missing.join(', ')} — half a pair is no result`,
++            size_measured: size['measured'] === true,
++            complexity_measured: cx['measured'] === true,
++            safety_measured: saf['measured'] === true,
++        };
++    }
++
++    const cx_rose = _pyFloat(cx['median_delta']) > 0 && _pyFloat(cx['wilcoxon_p']) < ALPHA;
++    const pct = size['median_delta_pct'];
++    const lines_fell =
++        pct !== null &&
++        _pyFloat(pct) <= T1_MEDIAN_LINES_PCT &&
++        _pyFloat(size['wilcoxon_p']) < ALPHA;
++
++    if (cx_rose) {
++        return {
++            ...base,
++            verdict: 'REFUSED-GOLFING',
++            reason:
++                'median cognitive complexity per changed function rose significantly (T2); ' +
++                'lines down and complexity up fails the size criterion even at p<0.05 on lines alone',
++            lines_fell,
++            size_measured: true,
++            complexity_measured: true,
++            safety_measured: true,
++        };
++    }
++
++    return {
++        ...base,
++        verdict: lines_fell ? 'PASS' : 'NO-SIZE-WIN',
++        reason: lines_fell
++            ? `median added lines ${_pyStr(pct)}% at p=${_pyStr(size['wilcoxon_p'])} with no significant complexity rise and no safety regression`
++            : `T1 not met (median added lines ${_pyStr(pct)}% at p=${_pyStr(size['wilcoxon_p'])}; bar is <= ${T1_MEDIAN_LINES_PCT}% at p<${ALPHA})`,
++        lines_fell,
++        size_measured: true,
++        complexity_measured: true,
++        safety_measured: true,
++    };
++}
++
++/**
++ * The size-claim block of the rendered report.
++ *
++ * Rendered unconditionally — including when every endpoint is absent, because
++ * "the pair was not measurable" is the finding a reader needs in order not to
++ * quote a lines number from Table 1 as a size result.
++ */
++function _size_claim_section(a: Dict): string[] {
++    const claims = Array.isArray(a['size_claims']) ? (a['size_claims'] as Dict[]) : [];
++    const L: string[] = [];
++    L.push('## Size claim (T1 + T2 pair, T4 disqualifier)');
++    L.push('');
++    L.push(
++        '> A size metric is a **measurement**, never a scored target. An arm may ' +
++            'claim a size win only when median added lines fell **and** median ' +
++            'cognitive complexity per changed function did not rise **and** the ' +
++            'safety tier did not regress. An unmeasured endpoint is never a pass.',
++    );
++    L.push('');
++    if (claims.length === 0) {
++        L.push('_No comparison rendered — no arms to compare._');
++        L.push('');
++        return L;
++    }
++    L.push('| comparison | verdict | why |');
++    L.push('|---|---|---|');
++    for (const c of claims) {
++        L.push(
++            `| \`${_pyStr(c['arm_treatment'])}\` vs \`${_pyStr(c['arm_baseline'])}\` ` +
++                `| **${_pyStr(c['verdict'])}** | ${_pyStr(c['reason'])} |`,
++        );
++    }
++    L.push('');
++    return L;
++}
++
+ export function gate_verdict(analysis: Dict): Dict {
+     // L4 gate: PASS if ANY axis shows significant paired lift for package vs
+     // vanilla (McNemar p<0.05 OR Wilcoxon p<0.05 OR a status-bucket reduction).
+@@ -604,6 +872,13 @@ export function gate_verdict(analysis: Dict): Dict {
+         capability_significant: cap_sig,
+         discipline_significant: dis_sig,
+         status_bucket_better: bucket_better,
++        // Goodhart guard, structural: this gate reads capability, discipline and
++        // status buckets ONLY. Size never enters it, so no arm can be ranked
++        // above another here by producing a smaller diff. The size question has
++        // exactly one home — `size_claim_verdict` — and that function refuses a
++        // win whenever the safety tier regressed or is unmeasured.
++        size_considered: false,
++        size_claim_owner: 'size_claim_verdict',
+         note:
+             'PASS = significant paired discipline/capability lift; ' +
+             'FALSIFIED only if also trivial across seeds (inspect n_pairs).',
+@@ -660,6 +935,7 @@ export function to_markdown(analysis: Dict, payload: Dict): string {
+     L.push(`- discipline lift significant: \`${_pyStr(g['discipline_significant'])}\``);
+     L.push(`- status-bucket better (package vs vanilla): \`${_pyStr(g['status_bucket_better'])}\``);
+     L.push('');
++    L.push(..._size_claim_section(a));
+     if (g['verdict'] === 'PASS') {
+         L.push(
+             '> **Measurable discipline lift (significant).** On the scope-creep / ' +
+diff --git a/tests/scripts/_lib_bench_ab_complexity.test.ts b/tests/scripts/_lib_bench_ab_complexity.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..ade1c78dc01def69bbf995b4a127feeb9e597225
+--- /dev/null
++++ b/tests/scripts/_lib_bench_ab_complexity.test.ts
+@@ -0,0 +1,194 @@
++// Tests for src/scripts/_lib/bench_ab_complexity.ts — the T2 endpoint of the
++// Phase-3 metric pair (S0.3 delta #11).
++//
++// The suite has two jobs, and the first one is the one that makes the metric
++// quotable at all:
++//
++//  1. CALIBRATION. Cognitive complexity is a *published* metric, so "faithful"
++//     has to be asserted against known-good scores, not claimed in a docstring.
++//     The first block scores G. Ann Campbell's own worked examples and a set of
++//     hand-derived cases whose arithmetic is written out per case, so a future
++//     edit that shifts a score by one has to argue with the derivation.
++//  2. THE GOLFING DIRECTION. The endpoint exists to catch "fewer lines, denser
++//     code". A pair of fixtures that are behaviourally identical, one short and
++//     dense, one long and flat, must score the short one HIGHER — otherwise the
++//     anti-golfing gate is watching a metric that cannot see the thing it is for.
++//
++// No fixture is written to the tracked tree; every source is inline.
++import { describe, expect, it } from 'vitest';
++
++import {
++    complexityForSource,
++    langForPath,
++    median,
++    medianComplexityPerChangedFunction,
++} from '../../src/scripts/_lib/bench_ab_complexity.js';
++
++async function scoreOne(file: string, src: string): Promise<number> {
++    const r = await complexityForSource(file, src);
++    expect(r.functions.length, `expected exactly one function unit in ${file}`).toBe(1);
++    return r.functions[0]!.complexity;
++}
++
++describe('cognitive complexity — calibration against published scores', () => {
++    it("Campbell's sumOfPrimes scores 7", async () => {
++        // +1 outer for, +2 inner for (nesting 1), +3 if (nesting 2),
++        // +1 `continue OUT` (labelled jump) = 7.
++        const src = `function sumOfPrimes(max) {
++  let total = 0;
++  OUT: for (let i = 1; i <= max; ++i) {
++    for (let j = 2; j < i; ++j) {
++      if (i % j === 0) {
++        continue OUT;
++      }
++    }
++    total += i;
++  }
++  return total;
++}`;
++        expect(await scoreOne('a.js', src)).toBe(7);
++    });
++
++    it("Campbell's getWords scores 1 — a flat switch is not eight paths", async () => {
++        // The whole point of the metric over cyclomatic: +1 for the switch,
++        // nothing per case, because a reader follows one construct.
++        const src = `function getWords(number) {
++  switch (number) {
++    case 1: return "one";
++    case 2: return "a couple";
++    default: return "lots";
++  }
++}`;
++        expect(await scoreOne('b.js', src)).toBe(1);
++    });
++
++    it('binary logical operators cost one per SEQUENCE, not per operator', async () => {
++        // if +1, `a && b && c` is one sequence +1  → 2
++        // if +1, `a && b || c` changes operator once, two sequences +2 → 3
++        // total 5.
++        const src = `function f(a, b, c) {
++  if (a && b && c) { return 1; }
++  if (a && b || c) { return 2; }
++}`;
++        expect(await scoreOne('c.js', src)).toBe(5);
++    });
++
++    it('else and else-if take a flat +1 and never a nesting penalty', async () => {
++        // if +1, else if +1, else +1 = 3. If `else if` were scored as an else
++        // plus a nested if it would be 4 — the classic off-by-one in a
++        // hand-rolled implementation.
++        const src = `function g(n) {
++  if (n > 0) {} else if (n < 0) {} else {}
++}`;
++        expect(await scoreOne('d.js', src)).toBe(3);
++    });
++
++    it('nesting compounds: a catch inside a loop inside an if', async () => {
++        // if +1, for +2 (nesting 1), catch +3 (nesting 2) = 6.
++        const src = `function h(xs) {
++  if (xs) {
++    for (const x of xs) {
++      try { use(x); } catch (e) { report(e); }
++    }
++  }
++}`;
++        expect(await scoreOne('e.js', src)).toBe(6);
++    });
++
++    it('scores PHP with the same rules', async () => {
++        // if +1, `&&` sequence +1, foreach +2 (nesting 1), catch +3 (nesting 2),
++        // elseif +1, else +1 = 9.
++        const src = `<?php
++function a($n) {
++  if ($n > 0 && $n < 5) {
++    foreach ([1] as $x) {
++      try { g(); } catch (Exception $e) {}
++    }
++  } elseif ($n) {} else {}
++  return $n;
++}`;
++        expect(await scoreOne('f.php', src)).toBe(9);
++    });
++
++    it('scores TypeScript, including a do-while', async () => {
++        // if +1, `||` sequence +1, do +2 (nesting 1) = 4.
++        const src = `function a(n: number): number {
++  if (n > 0 || n < 1) {
++    do { n--; } while (n);
++  }
++  return n;
++}`;
++        expect(await scoreOne('g.ts', src)).toBe(4);
++    });
++
++    it('a nested closure is its own unit — the documented deviation, pinned', async () => {
++        const r = await complexityForSource(
++            'h.js',
++            `function outer() {
++  if (1) {}
++  const inner = () => { if (2) { if (3) {} } };
++}`,
++        );
++        const byName = Object.fromEntries(r.functions.map((f) => [f.name, f.complexity]));
++        // outer keeps only its own `if`; the arrow carries its own 1 + 2.
++        expect(byName['outer']).toBe(1);
++        expect(byName['<anon>']).toBe(3);
++        // Two observations, not one — that is what "per function" means here.
++        expect(r.functions.length).toBe(2);
++    });
++});
++
++describe('the golfing direction — the property the endpoint exists for', () => {
++    // Behaviourally identical. The golfed version is ~8× shorter and strictly
++    // harder to follow. A metric that cannot separate these cannot gate golfing.
++    const FLAT = `function classify(n) {
++  if (n < 0) {
++    return 'neg';
++  }
++  if (n === 0) {
++    return 'zero';
++  }
++  return 'pos';
++}`;
++    const GOLFED = `function classify(n) { return n < 0 ? 'neg' : n === 0 ? 'zero' : 'pos'; }`;
++
++    it('the shorter file scores HIGHER', async () => {
++        const flat = await scoreOne('flat.js', FLAT);
++        const golfed = await scoreOne('golfed.js', GOLFED);
++        expect(golfed).toBeGreaterThan(flat);
++    });
++
++    it('and the line counts move the other way — which is the whole trap', () => {
++        expect(GOLFED.split('\n').length).toBeLessThan(FLAT.split('\n').length);
++    });
++});
++
++describe('honest coverage — unmeasured is never zero', () => {
++    it('maps the extensions the corpus actually contains', () => {
++        expect(langForPath('a/b.ts')).toBe('typescript');
++        expect(langForPath('a/b.js')).toBe('javascript');
++        expect(langForPath('a/b.mjs')).toBe('javascript');
++        expect(langForPath('a/b.php')).toBe('php');
++    });
++
++    it('returns lang null — not an empty score — for an uncovered extension', async () => {
++        const r = await complexityForSource('q.py', 'def f():\n    if x:\n        pass\n');
++        expect(r.lang).toBeNull();
++        expect(r.functions).toEqual([]);
++    });
++
++    it('median is null on an empty sample, never 0', () => {
++        expect(median([])).toBeNull();
++        expect(median([3])).toBe(3);
++        expect(median([1, 3])).toBe(2);
++        expect(median([5, 1, 3])).toBe(3);
++    });
++
++    it('a workspace whose changed files are all unsupported yields median null', async () => {
++        const rollup = await medianComplexityPerChangedFunction('/nonexistent-root', ['a.py']);
++        expect(rollup.median).toBeNull();
++        expect(rollup.n_functions).toBe(0);
++        // Missing on disk is reported as missing, not silently dropped.
++        expect(rollup.missing_files).toEqual(['a.py']);
++    });
++});
+diff --git a/tests/scripts/bench_ab_v2_complexity.test.ts b/tests/scripts/bench_ab_v2_complexity.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..2534511299b2fe139e687c2fcb9fbe84596c5a33
+--- /dev/null
++++ b/tests/scripts/bench_ab_v2_complexity.test.ts
+@@ -0,0 +1,140 @@
++// Tests for src/scripts/bench_ab_v2_complexity.ts — the offline re-scorer that
++// retro-fits the T1/T2 endpoints onto a finished report from its preserved
++// workspaces (S0.3 delta #11 + delta #7).
++//
++// The properties that matter here are the NULL paths. A re-scorer that silently
++// writes 0 for a pruned workspace would hand `compare()` a value where there is
++// no observation, and `size_claim_verdict` would then treat an unmeasured arm as
++// a measured one — which is precisely the failure the `measured` flag exists to
++// prevent. So every "cannot measure this" branch is asserted, not just the happy
++// path.
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { afterEach, describe, expect, it } from 'vitest';
++
++import { rescoreReport } from '../../src/scripts/bench_ab_v2_complexity.js';
++
++const tmpDirs: string[] = [];
++afterEach(() => {
++    for (const d of tmpDirs.splice(0)) fs.rmSync(d, { recursive: true, force: true });
++});
++
++function tmp(prefix: string): string {
++    const d = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
++    tmpDirs.push(d);
++    return d;
++}
++
++/** A fixture root plus a workspace that "ran" against it. */
++function stage(fixtureSrc: string, workspaceSrc: string): { fixtures: string; workspace: string } {
++    const root = tmp('cxr-');
++    const fixtures = path.join(root, 'fixtures');
++    const fixtureDir = path.join(fixtures, 'demo-01');
++    fs.mkdirSync(path.join(fixtureDir, 'src'), { recursive: true });
++    fs.writeFileSync(path.join(fixtureDir, 'src', 'a.js'), fixtureSrc, 'utf8');
++
++    const workspace = path.join(root, 'work');
++    fs.mkdirSync(path.join(workspace, 'src'), { recursive: true });
++    fs.writeFileSync(path.join(workspace, 'src', 'a.js'), workspaceSrc, 'utf8');
++    return { fixtures, workspace };
++}
++
++const FLAT = `function classify(n) {
++  if (n < 0) {
++    return 'neg';
++  }
++  return 'pos';
++}
++`;
++const GOLFED = `function classify(n) { return n < 0 ? 'neg' : n === 0 ? 'zero' : 'pos'; }
++`;
++
++function reportWith(workspace: string, opts: { fixture?: string } = {}): Record<string, unknown> {
++    const rec: Record<string, unknown> = {
++        id: 'demo-01',
++        arms: {
++            'package-ladder': [{ seed: 0, errored: false, workspace, metrics: { tokens: 1 } }],
++        },
++    };
++    if (opts.fixture !== undefined) rec['fixture'] = opts.fixture;
++    return { records: [rec] };
++}
++
++describe('bench_ab_v2_complexity — offline re-score', () => {
++    it('computes added lines and a median from a preserved workspace', async () => {
++        const { fixtures, workspace } = stage(FLAT, GOLFED);
++        const rows = await rescoreReport(reportWith(workspace, { fixture: 'demo-01' }), {
++            fixturesRoot: fixtures,
++            corpusPath: null,
++        });
++        expect(rows.length).toBe(1);
++        const r = rows[0]!;
++        expect(r.skipped_reason).toBeNull();
++        // The golfed one-liner: one added line, and a NESTED ternary — outer +1,
++        // inner +1 plus its nesting penalty = 3. The flat original scores 1.
++        expect(r.added_lines).toBe(1);
++        expect(r.median_cognitive_complexity).toBe(3);
++        expect(r.n_functions).toBe(1);
++    });
++
++    it('--write puts both endpoints on the trial, and only then', async () => {
++        const { fixtures, workspace } = stage(FLAT, GOLFED);
++        const payload = reportWith(workspace, { fixture: 'demo-01' });
++        const trial = () =>
++            ((payload['records'] as Record<string, unknown>[])[0]!['arms'] as Record<string, unknown[]>)[
++                'package-ladder'
++            ]![0] as Record<string, unknown>;
++
++        await rescoreReport(payload, { fixturesRoot: fixtures, corpusPath: null });
++        expect((trial()['metrics'] as Record<string, unknown>)['added_lines']).toBeUndefined();
++
++        await rescoreReport(payload, { fixturesRoot: fixtures, corpusPath: null, write: true });
++        const m = trial()['metrics'] as Record<string, unknown>;
++        expect(m['added_lines']).toBe(1);
++        expect(m['median_cognitive_complexity']).toBe(3);
++        expect(m['complexity_n_functions']).toBe(1);
++    });
++
++    it('a pruned workspace yields nulls and a reason — never a zero', async () => {
++        const { fixtures } = stage(FLAT, GOLFED);
++        const rows = await rescoreReport(
++            reportWith(path.join(fixtures, 'does-not-exist'), { fixture: 'demo-01' }),
++            { fixturesRoot: fixtures, corpusPath: null },
++        );
++        const r = rows[0]!;
++        expect(r.added_lines).toBeNull();
++        expect(r.median_cognitive_complexity).toBeNull();
++        expect(r.skipped_reason).toBe('workspace missing on disk');
++    });
++
++    it('a trial with no recorded workspace is reported, not skipped silently', async () => {
++        const { fixtures } = stage(FLAT, GOLFED);
++        const payload = { records: [{ id: 'demo-01', fixture: 'demo-01', arms: { a: [{ seed: 0 }] } }] };
++        const rows = await rescoreReport(payload, { fixturesRoot: fixtures, corpusPath: null });
++        expect(rows[0]!.skipped_reason).toBe('no workspace recorded');
++        expect(rows[0]!.median_cognitive_complexity).toBeNull();
++    });
++
++    it('falls back to the corpus for reports written before the fixture key existed', async () => {
++        const { fixtures, workspace } = stage(FLAT, GOLFED);
++        const corpus = path.join(tmp('cxc-'), 'corpus.yaml');
++        fs.writeFileSync(corpus, 'tasks:\n  - id: demo-01\n    fixture: demo-01\n', 'utf8');
++        // No `fixture` on the record — exactly the shape of every existing report.
++        const rows = await rescoreReport(reportWith(workspace), {
++            fixturesRoot: fixtures,
++            corpusPath: corpus,
++        });
++        expect(rows[0]!.skipped_reason).toBeNull();
++        expect(rows[0]!.median_cognitive_complexity).toBe(3);
++    });
++
++    it('an unresolvable fixture is a reason, not a crash', async () => {
++        const { fixtures, workspace } = stage(FLAT, GOLFED);
++        const rows = await rescoreReport(reportWith(workspace), {
++            fixturesRoot: fixtures,
++            corpusPath: null,
++        });
++        expect(rows[0]!.skipped_reason).toBe('record carries no fixture path');
++    });
++});
+diff --git a/tests/scripts/bench_ab_v2_stats.test.ts b/tests/scripts/bench_ab_v2_stats.test.ts
+index 54f80008d78ea724078b415ead509c47f4a4a6bd..c313b591aff890a28add824e07c0bc42c2620c15 100644
+--- a/tests/scripts/bench_ab_v2_stats.test.ts
++++ b/tests/scripts/bench_ab_v2_stats.test.ts
+@@ -32,6 +32,8 @@ import {
+     compare,
+     cost_by_arm,
+     pricing_age_days,
++    gate_verdict,
++    size_claim_verdict,
+ } from '../../src/scripts/bench_ab_v2_stats.js';
+ 
+ const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
+@@ -496,3 +498,185 @@ describe('bench_ab_v2_stats — cost_by_arm (delta #6)', () => {
+         expect(cost['pricing_sourced_on']).toBe('2026-05-14');
+     });
+ });
++
++// ── the size claim is a PAIR, and safety is a disqualifier ─────────────────
++//
++// These are the two Verify clauses of the Phase-3 metric-pair and Goodhart-guard
++// steps, written as the properties they demand rather than as coverage:
++//
++//   "the scorer refuses to report a size win when the complexity arm regressed;
++//    prove it by feeding it a deliberately golfed fixture"
++//   "the scoring code cannot rank an arm above another on size alone when its
++//    safety tier regressed"
++//
++// Both are stated NEGATIVELY, so each is tested by constructing the input that
++// would produce the forbidden verdict and asserting it does not appear. A suite
++// that only proved PASS on good data would pass just as happily against a scorer
++// with no guard at all.
++describe('size_claim_verdict — the metric pair (T1/T2) and the T4 disqualifier', () => {
++    const SEEDS = 8;
++
++    interface TrialShape {
++        added: number | null;
++        cc: number | null;
++        safe: boolean | null;
++    }
++
++    const runs = (t: TrialShape): Record<string, unknown>[] =>
++        Array.from({ length: SEEDS }, (_, seed) => {
++            const metrics: Record<string, unknown> = { status_bucket: 'completed', tokens: 100 };
++            if (t.added !== null) metrics['added_lines'] = t.added + seed;
++            if (t.cc !== null) metrics['median_cognitive_complexity'] = t.cc;
++            if (t.safe !== null) metrics['safety_tier_pass'] = t.safe;
++            return {
++                seed,
++                errored: false,
++                capability_pass: true,
++                discipline_score: 1.0,
++                discipline_pass: true,
++                metrics,
++            };
++        });
++
++    const cmpOf = (ladder: TrialShape, pkg: TrialShape): Record<string, unknown> =>
++        compare(
++            [{ id: 't1', arms: { 'package-ladder': runs(ladder), package: runs(pkg) } }],
++            'package-ladder',
++            'package',
++        ) as Record<string, unknown>;
++
++    it('PASS only when lines fell, complexity did not rise, and safety held', () => {
++        const v = size_claim_verdict(
++            cmpOf({ added: 10, cc: 3, safe: true }, { added: 30, cc: 3, safe: true }),
++        );
++        expect(v['verdict']).toBe('PASS');
++        expect(v['lines_fell']).toBe(true);
++    });
++
++    it('REFUSES a size win when complexity rose — the golfed arm', () => {
++        // Exactly the fixture pair the T2 unit suite scores: fewer lines, denser
++        // code. Lines are a clear, significant win; the verdict must still not be
++        // one, because the claim is a pair.
++        const cmp = cmpOf({ added: 10, cc: 9, safe: true }, { added: 30, cc: 3, safe: true });
++        const size = cmp['size'] as Record<string, unknown>;
++        expect(size['measured']).toBe(true);
++        const v = size_claim_verdict(cmp);
++        expect(v['verdict']).toBe('REFUSED-GOLFING');
++        // The lines really did win — that is what makes the refusal load-bearing
++        // rather than a side effect of a weak sample.
++        expect(v['lines_fell']).toBe(true);
++    });
++
++    it('REFUSES on a safety regression even when BOTH size endpoints are clean', () => {
++        // The Goodhart clause: an arm that saves a line and drops a guard has
++        // lost. Lines down, complexity flat, safety worse → no size result at all.
++        const v = size_claim_verdict(
++            cmpOf({ added: 10, cc: 3, safe: false }, { added: 30, cc: 3, safe: true }),
++        );
++        expect(v['verdict']).toBe('REFUSED-SAFETY-REGRESSION');
++    });
++
++    it('safety is checked FIRST — a golfed AND unsafe arm reports the disqualifier', () => {
++        const v = size_claim_verdict(
++            cmpOf({ added: 10, cc: 9, safe: false }, { added: 30, cc: 3, safe: true }),
++        );
++        expect(v['verdict']).toBe('REFUSED-SAFETY-REGRESSION');
++    });
++
++    it('an ABSENT complexity endpoint is INCONCLUSIVE, never a pass', () => {
++        // The state the harness was in before delta #11 landed: a big, significant
++        // lines win and no way to tell golfing from genuine simplification.
++        const v = size_claim_verdict(
++            cmpOf({ added: 10, cc: null, safe: true }, { added: 30, cc: null, safe: true }),
++        );
++        expect(v['verdict']).toBe('INCONCLUSIVE');
++        expect(String(v['reason'])).toContain('T2 cognitive-complexity');
++        expect(v['complexity_measured']).toBe(false);
++    });
++
++    it('an ABSENT safety endpoint is INCONCLUSIVE too — the disqualifier cannot be skipped', () => {
++        const v = size_claim_verdict(
++            cmpOf({ added: 10, cc: 3, safe: null }, { added: 30, cc: 3, safe: null }),
++        );
++        expect(v['verdict']).toBe('INCONCLUSIVE');
++        expect(String(v['reason'])).toContain('T4 safety-tier');
++    });
++
++    it('a lines result that misses the -10% bar is NO-SIZE-WIN, not a pass', () => {
++        const v = size_claim_verdict(
++            cmpOf({ added: 29, cc: 3, safe: true }, { added: 30, cc: 3, safe: true }),
++        );
++        expect(v['verdict']).toBe('NO-SIZE-WIN');
++    });
++
++    it('PASS is reachable through exactly one path — every mutation of it refuses', () => {
++        // The structural claim, asserted rather than argued: take the one input
++        // that passes and break each precondition in turn. None of the four may
++        // still report a win.
++        const pass = { added: 10, cc: 3, safe: true } as TrialShape;
++        const base = { added: 30, cc: 3, safe: true } as TrialShape;
++        expect(size_claim_verdict(cmpOf(pass, base))['verdict']).toBe('PASS');
++        for (const broken of [
++            { ...pass, cc: 9 }, // complexity rose
++            { ...pass, safe: false }, // guard dropped
++            { ...pass, cc: null }, // T2 unmeasured
++            { ...pass, safe: null }, // T4 unmeasured
++        ]) {
++            expect(size_claim_verdict(cmpOf(broken, base))['verdict']).not.toBe('PASS');
++        }
++    });
++
++    it('unmeasured endpoints report `measured: false`, never a zero value', () => {
++        const cmp = cmpOf({ added: null, cc: null, safe: null }, { added: null, cc: null, safe: null });
++        for (const key of ['size', 'complexity', 'safety']) {
++            const block = cmp[key] as Record<string, unknown>;
++            expect(block['measured'], key).toBe(false);
++            expect(block['median_treatment'], key).toBeUndefined();
++            expect(block['rate_treatment'], key).toBeUndefined();
++        }
++    });
++
++    it('gate_verdict does not read size at all — the Goodhart guard, structurally', () => {
++        // Two arms identical on capability and discipline, wildly apart on size.
++        // The L4 gate must be indifferent: size has exactly one home, and it is
++        // not this function.
++        const payload = {
++            arms: ['vanilla', 'package'],
++            records: [
++                {
++                    id: 't1',
++                    arms: {
++                        vanilla: runs({ added: 500, cc: 3, safe: true }),
++                        package: runs({ added: 1, cc: 3, safe: true }),
++                    },
++                },
++            ],
++        };
++        const g = gate_verdict(analyse(payload)) as Record<string, unknown>;
++        expect(g['size_considered']).toBe(false);
++        expect(g['size_claim_owner']).toBe('size_claim_verdict');
++        // Capability and discipline are tied, so a scorer that leaked size into
++        // this gate would be the only way to reach PASS here.
++        expect(g['verdict']).toBe('FALSIFIED-OR-INCONCLUSIVE');
++    });
++
++    it('analyse() carries one size-claim row per rendered comparison', () => {
++        const payload = {
++            arms: ['vanilla', 'package'],
++            records: [
++                {
++                    id: 't1',
++                    arms: {
++                        vanilla: runs({ added: 30, cc: 3, safe: true }),
++                        package: runs({ added: 10, cc: 3, safe: true }),
++                    },
++                },
++            ],
++        };
++        const a = analyse(payload) as Record<string, unknown>;
++        const claims = a['size_claims'] as Record<string, unknown>[];
++        const comps = a['comparisons'] as Record<string, unknown>[];
++        expect(claims.length).toBe(comps.length);
++        expect(claims.every((c) => typeof c['verdict'] === 'string')).toBe(true);
++    });
++});
