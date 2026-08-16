@@ -238,7 +238,11 @@ export const SUPPRESSION_INVENTORY: readonly SuppressionSpec[] = [
         listKey: 'entries',
         tier: 'object',
         keyFields: ['slug'],
-        newInThisChange: true,
+        // `newInThisChange` removed: the baseline now resolves at the base ref,
+        // so the bootstrap window this flag exists for has closed. That is the
+        // self-closing contract below working as designed — the gate reported
+        // the stale flag rather than leaving it to silently accept a future
+        // mistyped path as a fresh baseline.
         what: 'review prompts whose recorded prompt_hash does not re-derive',
     },
 ];
