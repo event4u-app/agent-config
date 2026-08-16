@@ -9448,14 +9448,22 @@ function measureCatalogueVolume(host, root) {
     descriptionBytes: skills.reduce((sum, e) => sum + Buffer.byteLength(e.description), 0)
   };
 }
+function _supersedes(candidate, incumbent) {
+  if (candidate.observed_at !== incumbent.observed_at) {
+    return candidate.observed_at > incumbent.observed_at;
+  }
+  return (candidate.dropped_count ?? 0) > (incumbent.dropped_count ?? 0);
+}
 function knownHostLimits(records) {
   const out = /* @__PURE__ */ new Map();
+  const chosen = /* @__PURE__ */ new Map();
   for (const record of records) {
     if (truncationModeOf(record) !== "budget-strip-and-drop") continue;
     if (typeof record.dropped_count !== "number") continue;
     if (record.dropped_count <= 0) continue;
-    const previous = out.get(record.host);
-    if (previous !== void 0 && previous.observedAt > record.observed_at) continue;
+    const previous = chosen.get(record.host);
+    if (previous !== void 0 && !_supersedes(record, previous)) continue;
+    chosen.set(record.host, record);
     out.set(record.host, {
       host: record.host,
       droppedEntries: record.dropped_count,

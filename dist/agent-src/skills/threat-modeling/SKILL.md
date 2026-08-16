@@ -10,6 +10,9 @@ workspaces:
   - engineering
 packs:
   - engineering-base
+triggers:
+  - phrase: "threat model"
+  - phrase: "abuse case"
 ---
 
 # threat-modeling

@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **708 public artefacts** shipped by
+Consumer-facing catalog of all **709 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -317,7 +317,7 @@ are excluded.
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (114)
+## Rules (115)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -383,6 +383,7 @@ are excluded.
 | rule | [`media-governance-routing`](../dist/agent-src/rules/media-governance-routing.md) | auto | Generating AI video/image/voice — surface the project-local media policies (likeness, style, voice-cloning, disclosure) |
 | rule | [`media-sync-ground-truth`](../dist/agent-src/rules/media-sync-ground-truth.md) | auto | Audio-synced video — timing + singer come from the transcribed real audio; sign-off before paid renders |
 | rule | [`minimal-safe-diff`](../dist/agent-src/rules/minimal-safe-diff.md) | auto | Writing or reviewing a diff — smallest change that solves the problem; no drive-by edits or reformatting |
+| rule | [`missing-skill-recovery`](../dist/agent-src/rules/missing-skill-recovery.md) | auto | A skill exists in the tree but not in the host's catalogue — ask for it by TASK via suggest_skill_for_task, never conclude it does not exist |
 | rule | [`missing-tool-handling`](../dist/agent-src/rules/missing-tool-handling.md) | auto | CLI tool needed for the task is not installed — ask before working around it; do NOT install silently |
 | rule | [`model-recommendation`](../dist/agent-src/rules/model-recommendation.md) | auto | Task start, type switch, or skill/command with a model_tier — switch or suggest the right capability tier |
 | rule | [`no-attribution-footers`](../dist/agent-src/rules/no-attribution-footers.md) | auto | PR/issue/comment/commit bodies — no 'Generated with' / 'Co-authored by' / 'opened by' attribution footers |

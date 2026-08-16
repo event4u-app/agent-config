@@ -75,16 +75,24 @@ import {
     OBSERVATION_LOG,
     analyzeSelector,
     buildHostEventRecord,
+    buildNoTruncationRecord,
     buildObservationRecord,
+    classifyHostProjection,
     formatPerHostVerdicts,
+    formatProjectionModes,
     formatReport,
     knownHostLimits,
     measureCatalogueVolume,
     parseHostBudgetEvent,
     readObservationLog,
     readProjectedCatalogue,
+    type HostProjectionRow,
+    type ProjectionMode,
+    type ProjectionModeCounts,
     type SelectorReport,
 } from './_lib/skill_catalogue.js';
+import { scoped_projection_stats } from './_lib/scoped_projection.js';
+import { iter_skills } from './update_counts.js';
 
 // Re-exported so the CLI module stays the one public name for this tool.
 export * from './_lib/skill_catalogue.js';
@@ -112,6 +120,30 @@ function argValue(flag: string): string | null {
     const index = process.argv.indexOf(flag);
     if (index === -1 || index + 1 >= process.argv.length) return null;
     return process.argv[index + 1]!;
+}
+
+/** Every occurrence of a repeatable flag, in argv order. */
+function argValues(flag: string): string[] {
+    const out: string[] = [];
+    for (let i = 0; i < process.argv.length - 1; i += 1) {
+        if (process.argv[i] === flag) out.push(process.argv[i + 1]!);
+    }
+    return out;
+}
+
+/**
+ * `--projection-mode <scoped|legacy-all>`, validated against the closed enum.
+ *
+ * Returns `undefined` when the flag is absent — which the record schema reads
+ * as "not captured", never as `legacy-all`. An unrecognised value throws
+ * rather than falling back: a typo silently recorded as the wrong mode is the
+ * failure this whole module refuses elsewhere.
+ */
+function argProjectionMode(): ProjectionMode | undefined {
+    const raw = argValue('--projection-mode');
+    if (raw === null) return undefined;
+    if (raw === 'scoped' || raw === 'legacy-all') return raw;
+    throw new Error(`--projection-mode must be scoped or legacy-all, got: ${raw}`);
 }
 
 /** `~` expanded against the current user's home. */
@@ -148,6 +180,47 @@ function runLimitsMode(): number {
                 `at a projection of ${limit.projectedVolume}\n`,
         );
     }
+    return 0;
+}
+
+/**
+ * `--projection-modes` — the two modes side by side, as a MEASUREMENT.
+ *
+ * It reads no setting, writes no setting, and recommends no default. The
+ * scoped-projection default and its migration notice are owned by a different
+ * roadmap and were decided on 2026-08-15; this mode exists so the size of the
+ * difference is a published number instead of an intuition, and it deliberately
+ * offers no flag that would change anything.
+ *
+ * `--host-root` is repeatable, so several installed hosts are read against the
+ * same pair of numbers in one run. Each host is reported on its own row: no
+ * host's count is ever used to say anything about another's.
+ */
+function runProjectionModesMode(): number {
+    const stats = scoped_projection_stats(REPO, iter_skills());
+    const counts: ProjectionModeCounts = {
+        scoped: stats.projected,
+        legacyAll: stats.total,
+        prunedUnderScoped: stats.pruned,
+        activePacks: stats.active_packs,
+    };
+
+    const rows: HostProjectionRow[] = [];
+    for (const rootArg of argValues('--host-root')) {
+        const root = expandHome(rootArg);
+        if (!fs.existsSync(root)) {
+            process.stderr.write(`❌  host root does not exist: ${root}\n`);
+            return 1;
+        }
+        const host = path.basename(root).replace(/^\./, '');
+        rows.push(classifyHostProjection(measureCatalogueVolume(host, root), counts));
+    }
+
+    if (process.argv.includes('--json')) {
+        process.stdout.write(`${JSON.stringify({ counts, hosts: rows }, null, 2)}\n`);
+        return 0;
+    }
+    process.stdout.write(`${formatProjectionModes(counts, rows)}\n`);
     return 0;
 }
 
@@ -213,8 +286,32 @@ function runHostEventMode(source: string): number {
             return 1;
         }
         process.stdout.write(
-            `host: ${host}\noffered: ${volume.artefacts}\ndropped: 0 (asserted — no budget event in the stream)\n`,
+            `host: ${host}\noffered: ${volume.artefacts} (${volume.skillEntries} skills + ${volume.commandEntries} commands)\n` +
+                `dropped: 0 (asserted — no budget event in the stream)\n` +
+                'descriptions stripped: no — the host published nothing to strip.\n',
         );
+        if (process.argv.includes('--record')) {
+            const stampedAt = argValue('--observed-at');
+            if (!stampedAt) {
+                process.stderr.write('❌  --record requires --observed-at <ISO date>\n');
+                return 1;
+            }
+            const logPath = path.join(REPO, OBSERVATION_LOG);
+            fs.mkdirSync(path.dirname(logPath), { recursive: true });
+            fs.appendFileSync(
+                logPath,
+                `${JSON.stringify(
+                    buildNoTruncationRecord(
+                        host,
+                        stampedAt,
+                        volume.artefacts,
+                        volume.skillEntries,
+                        argProjectionMode(),
+                    ),
+                )}\n`,
+            );
+            process.stdout.write(`recorded → ${OBSERVATION_LOG}\n`);
+        }
         return 0;
     }
 
@@ -238,7 +335,14 @@ function runHostEventMode(source: string): number {
         }
         const logPath = path.join(REPO, OBSERVATION_LOG);
         fs.mkdirSync(path.dirname(logPath), { recursive: true });
-        const record = buildHostEventRecord(host, stampedAt, volume.artefacts, event, volume.skillEntries);
+        const record = buildHostEventRecord(
+            host,
+            stampedAt,
+            volume.artefacts,
+            event,
+            volume.skillEntries,
+            argProjectionMode(),
+        );
         fs.appendFileSync(logPath, `${JSON.stringify(record)}\n`);
         process.stdout.write(`recorded → ${OBSERVATION_LOG}\n`);
     }
@@ -247,6 +351,7 @@ function runHostEventMode(source: string): number {
 
 function main(): number {
     if (process.argv.includes('--limits')) return runLimitsMode();
+    if (process.argv.includes('--projection-modes')) return runProjectionModesMode();
 
     const volumeRoot = argValue('--volume');
     if (volumeRoot) return runVolumeMode(volumeRoot);

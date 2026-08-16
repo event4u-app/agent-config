@@ -96,30 +96,12 @@ export const STUB_TOOLS: readonly StubToolSource[] = [
             additionalProperties: false,
         },
     },
-    {
-        name: 'suggest_skill_for_task',
-        description:
-            'Match a free-form task description to the most relevant ' +
-            'skills, ranked by their frontmatter triggers. Use to pick a ' +
-            'skill for a described task before starting work. Read-only. ' +
-            'Returns a ranked list of skills with name, description, and ' +
-            'match reason.',
-        side_effect: 'ro',
-        input_schema: {
-            type: 'object',
-            properties: {
-                task: { type: 'string', description: 'Free-form description of the task to find a skill for.' },
-                limit: {
-                    type: 'integer',
-                    minimum: 1,
-                    default: 5,
-                    description: 'Maximum number of skills to return. Defaults to 5.',
-                },
-            },
-            required: ['task'],
-            additionalProperties: false,
-        },
-    },
+    // `suggest_skill_for_task` moved to ALLOWLIST in mcp_server/tools.ts
+    // (road-to-inbox-harvest-2026-08-d-runtime-skill-routing 4.1) — it is
+    // implemented now, and `build_mcp_catalog` refuses a name registered in
+    // both places. Its published input schema (`task` + `limit`) was carried
+    // over verbatim rather than re-designed: the stub is a contract consumers
+    // may already have read.
     {
         name: 'mine_session',
         description:

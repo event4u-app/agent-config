@@ -80,6 +80,27 @@ import * as path from 'node:path';
 /** Catalogue roots tried in order; the first that exists wins. */
 export const DEFAULT_CATALOGUE_ROOTS = ['.claude/skills', 'src/skills'] as const;
 
+/**
+ * First existing catalogue root under `workspaceRoot`, or `null`.
+ *
+ * `.claude/skills` before `src/skills` because a CONSUMER install carries the
+ * former and only a maintainer checkout carries the latter. Shared by the
+ * `skill-route` concern and the `suggest_skill_for_task` MCP handler on
+ * purpose: two resolvers over one catalogue is how a ranker and the tool that
+ * exposes it start ranking different trees.
+ */
+export function resolveSkillsRoot(workspaceRoot: string): string | null {
+    for (const candidate of DEFAULT_CATALOGUE_ROOTS) {
+        const abs = path.join(workspaceRoot, candidate);
+        try {
+            if (fs.existsSync(abs) && fs.statSync(abs).isDirectory()) return abs;
+        } catch {
+            // Unreadable candidate is not a match; try the next.
+        }
+    }
+    return null;
+}
+
 /** Where observations accumulate. Append-only, one JSON object per line. */
 export const OBSERVATION_LOG = path.join(
     'agents',
@@ -356,11 +377,26 @@ export function analyzeSelector(
  * `budget-strip-and-drop` — the host strips EVERY description, then drops N
  * entries from the list entirely. There is no per-entry selector to find; the
  * quantity that matters is N.
+ *
+ * `none` — the host truncated in NO way on this run: every entry arrived and
+ * every description survived. It is a mode a record must be able to state
+ * explicitly, because the alternative is leaving the field absent, and absent
+ * reads as `per-entry` — a mode this run did not exercise. A `none` record is
+ * the only shape that can say "the same host that strips today did not strip
+ * here" without inventing a mechanism.
  */
-export type TruncationMode = 'per-entry' | 'budget-strip-and-drop';
+export type TruncationMode = 'per-entry' | 'budget-strip-and-drop' | 'none';
 
 /** Where the observation half came from. See the header. */
 export type ObservationSource = 'self-report' | 'host-event';
+
+/**
+ * The projection mode the observed install was deployed under.
+ *
+ * A closed enum, never a free-form label: the record type's privacy contract
+ * is that no field can hold arbitrary text, and this one is no exception.
+ */
+export type ProjectionMode = 'scoped' | 'legacy-all';
 
 /** One append-only observation record. No field can hold free-form content. */
 export interface ObservationRecord {
@@ -390,6 +426,15 @@ export interface ObservationRecord {
      * fire on command growth that causes no truncation at all.
      */
     projected_skill_count?: number;
+    /**
+     * Projection mode the observed install was deployed under.
+     *
+     * Absent on every record written before the mode was captured, and absence
+     * is NOT `legacy-all`: those observations were taken without asking, so
+     * defaulting them either way would relabel a reading nobody took. A
+     * consumer comparing modes must skip a record that carries none.
+     */
+    projection_mode?: ProjectionMode;
     /**
      * Entries the host dropped wholesale, read from the host's own event.
      * Only ever present on a `budget-strip-and-drop` record — a `per-entry`
@@ -507,6 +552,7 @@ export function buildHostEventRecord(
     entriesOffered: number,
     event: HostBudgetEvent,
     projectedSkillCount?: number,
+    projectionMode?: ProjectionMode,
 ): ObservationRecord {
     return {
         schema: 1,
@@ -533,6 +579,55 @@ export function buildHostEventRecord(
         observation_source: 'host-event',
         dropped_count: event.droppedCount,
         ...(projectedSkillCount === undefined ? {} : { projected_skill_count: projectedSkillCount }),
+        ...(projectionMode === undefined ? {} : { projection_mode: projectionMode }),
+    };
+}
+
+/**
+ * A run on which the host published NO budget event and the caller asserted
+ * that this is a genuine no-truncation observation.
+ *
+ * The assertion is the caller's and the record says so by carrying
+ * `observation_source: 'host-event'` together with `truncation_mode: 'none'`:
+ * the host's channel was read, and what it contained was nothing. That pairing
+ * is what distinguishes this from a broken parser, which the CLI refuses to
+ * record at all without the explicit flag.
+ *
+ * `dropped_count: 0` is written rather than omitted, and it is safe: every
+ * consumer of a dropped count filters on `budget-strip-and-drop`, so a `none`
+ * record can never become a measured limit or a deploy-time warning.
+ */
+export function buildNoTruncationRecord(
+    host: string,
+    observedAt: string,
+    entriesOffered: number,
+    projectedSkillCount?: number,
+    projectionMode?: ProjectionMode,
+): ObservationRecord {
+    return {
+        schema: 1,
+        observed_at: observedAt,
+        host,
+        entries_total: entriesOffered,
+        // BOTH counts stay 0, and neither is a claim that nothing arrived
+        // described. The host published no per-entry breakdown at all — it
+        // published nothing, which is what `truncation_mode: 'none'` records.
+        // Writing `described_count: entriesOffered` would look like a
+        // measurement and be an inference; 0 here means "not counted", exactly
+        // as it does on the strip-and-drop record beside it.
+        bare_count: 0,
+        described_count: 0,
+        bare_names: [],
+        // Nothing arrived bare, so no property separated bare from described —
+        // which is what `no-selector` states. Unlike the strip-and-drop case,
+        // here the label is literally true rather than merely available.
+        verdict: 'no-selector',
+        separating_candidates: [],
+        truncation_mode: 'none',
+        observation_source: 'host-event',
+        dropped_count: 0,
+        ...(projectedSkillCount === undefined ? {} : { projected_skill_count: projectedSkillCount }),
+        ...(projectionMode === undefined ? {} : { projection_mode: projectionMode }),
     };
 }
 
@@ -589,6 +684,119 @@ export function measureCatalogueVolume(host: string, root: string): CatalogueVol
 }
 
 /* ------------------------------------------------------------------ *
+ * Projection modes — what a host would be offered under `scoped`
+ * versus under `legacy-all`, side by side.
+ * ------------------------------------------------------------------ */
+
+/**
+ * The two SKILL counts a package projects, plus the pack closure behind the
+ * smaller one.
+ *
+ * SKILLS, not artefacts, and the distinction is load-bearing rather than
+ * pedantic: a controlled probe on 2026-08-15 moved the measured host's dropped
+ * count by 0 when 60 commands were added and by +53 when 60 skills were, so a
+ * threshold read off artefact totals would fire on growth that causes no
+ * truncation at all.
+ *
+ * Both numbers come from ONE walk in the caller, partitioned by the
+ * installer's own prune predicate, so `scoped + prunedUnderScoped ===
+ * legacyAll` holds by construction rather than by two counters agreeing.
+ */
+export interface ProjectionModeCounts {
+    /** Skills a default `projection.mode: scoped` install deploys. */
+    scoped: number;
+    /** Every skill in the catalogue — what `legacy-all` deploys. */
+    legacyAll: number;
+    /** `legacyAll - scoped`; the reduction `scoped` buys. */
+    prunedUnderScoped: number;
+    /** Pack ids active by default under `scoped`, sorted. */
+    activePacks: string[];
+}
+
+/**
+ * Which mode an installed host root is consistent with.
+ *
+ * `indeterminate` is a real answer and the common one. A host root is not
+ * required to hold exactly what this package projects — another suite, a
+ * plugin, or a stale install all put skills there — so a count matching
+ * neither number says the root was not installed from this tree at this
+ * revision, never that the install is broken. And when the two modes yield the
+ * same number (no pack-tagged skills), NO root can discriminate them, so every
+ * row is `indeterminate` by construction rather than by measurement.
+ */
+export type ProjectionModeMatch = 'scoped' | 'legacy-all' | 'indeterminate';
+
+/** One host's installed skill count, read against the two mode counts. */
+export interface HostProjectionRow {
+    host: string;
+    root: string;
+    /** Skills present in the host root right now — file-measured. */
+    installedSkills: number;
+    matches: ProjectionModeMatch;
+}
+
+/**
+ * Classify one measured host root against the package's two mode counts.
+ *
+ * Deliberately an equality test and nothing cleverer. A nearest-neighbour rule
+ * would label every root with whichever number happens to be closer, which
+ * reports a mode for a root that carries neither — the confident-number
+ * failure this module's header forbids twice over.
+ */
+export function classifyHostProjection(
+    volume: CatalogueVolume,
+    counts: ProjectionModeCounts,
+): HostProjectionRow {
+    const ambiguous = counts.scoped === counts.legacyAll;
+    let matches: ProjectionModeMatch = 'indeterminate';
+    if (!ambiguous) {
+        if (volume.skillEntries === counts.scoped) matches = 'scoped';
+        else if (volume.skillEntries === counts.legacyAll) matches = 'legacy-all';
+    }
+    return {
+        host: volume.host,
+        root: volume.root,
+        installedSkills: volume.skillEntries,
+        matches,
+    };
+}
+
+/** The side-by-side report. Measurement only — it flips no default. */
+export function formatProjectionModes(
+    counts: ProjectionModeCounts,
+    rows: readonly HostProjectionRow[],
+): string {
+    const lines = [
+        'projected SKILL counts by projection mode (package side, one walk):',
+        `  scoped:      ${counts.scoped}`,
+        `  legacy-all:  ${counts.legacyAll}`,
+        `  pruned under scoped: ${counts.prunedUnderScoped}`,
+        `  active packs under scoped: ${counts.activePacks.length}`,
+        '',
+    ];
+    if (rows.length === 0) {
+        lines.push(
+            'No host root measured. Pass --host-root <dir> (repeatable) to read what',
+            'each host currently holds against the two numbers above.',
+        );
+        return lines.join('\n');
+    }
+    lines.push('installed host roots:');
+    for (const row of [...rows].sort((a, b) => a.host.localeCompare(b.host))) {
+        lines.push(`  ${row.host}: ${row.installedSkills} skills — consistent with ${row.matches}`);
+    }
+    lines.push(
+        '',
+        'This is the PROJECTION half only, and it is a measurement: no default was',
+        'read, changed, or recommended here. `indeterminate` means the root carries',
+        'neither count — another suite, a plugin, or a stale install all produce it.',
+        'No host limit is extrapolated from another host, and no delivered or',
+        'survivor count is computed anywhere.',
+    );
+    return lines.join('\n');
+}
+
+/* ------------------------------------------------------------------ *
  * Known limits — read off recorded observations, never invented.
  * ------------------------------------------------------------------ */
 
@@ -623,15 +831,54 @@ export interface KnownHostLimit {
     observedAt: string;
 }
 
+/**
+ * Is `candidate` the record a host's headline should quote, given `incumbent`?
+ *
+ * Shared by `knownHostLimits` and `formatPerHostVerdicts` because they used to
+ * disagree, and the disagreement was visible in one run: two arms of the same
+ * experiment recorded on the same date made `--limits` print `dropped 402` in
+ * the verdict block and `dropped 330` in the measured-truncations block, for
+ * one host on one day. Two reducers over one log must not break a tie in
+ * opposite directions.
+ *
+ * Later date always wins. On an EQUAL date the larger drop wins, which is also
+ * the conservative direction this module already takes elsewhere: over-warning
+ * about truncation is safe, under-warning is the failure. It is also what keeps
+ * a `scoped` arm from being quoted at a `legacy-all` install — the scoped arm
+ * is by construction the smaller number.
+ */
+function _supersedes(candidate: ObservationRecord, incumbent: ObservationRecord): boolean {
+    if (candidate.observed_at !== incumbent.observed_at) {
+        return candidate.observed_at > incumbent.observed_at;
+    }
+    return (candidate.dropped_count ?? 0) > (incumbent.dropped_count ?? 0);
+}
+
+/** The record whose truncation a host's headline quotes, per `_supersedes`. */
+export function headlineRecordPerHost(
+    records: readonly ObservationRecord[],
+): Map<string, ObservationRecord> {
+    const out = new Map<string, ObservationRecord>();
+    for (const record of records) {
+        const previous = out.get(record.host);
+        if (previous === undefined || _supersedes(record, previous)) {
+            out.set(record.host, record);
+        }
+    }
+    return out;
+}
+
 /** The most recent observed truncation per host. */
 export function knownHostLimits(records: readonly ObservationRecord[]): Map<string, KnownHostLimit> {
     const out = new Map<string, KnownHostLimit>();
+    const chosen = new Map<string, ObservationRecord>();
     for (const record of records) {
         if (truncationModeOf(record) !== 'budget-strip-and-drop') continue;
         if (typeof record.dropped_count !== 'number') continue;
         if (record.dropped_count <= 0) continue;
-        const previous = out.get(record.host);
-        if (previous !== undefined && previous.observedAt > record.observed_at) continue;
+        const previous = chosen.get(record.host);
+        if (previous !== undefined && !_supersedes(record, previous)) continue;
+        chosen.set(record.host, record);
         out.set(record.host, {
             host: record.host,
             droppedEntries: record.dropped_count,
@@ -799,10 +1046,16 @@ export function formatPerHostVerdicts(records: readonly ObservationRecord[]): st
         byHost.set(record.host, bucket);
     }
 
+    const headline = headlineRecordPerHost(records);
+
     const lines: string[] = [];
     for (const host of [...byHost.keys()].sort()) {
         const bucket = byHost.get(host)!;
-        const latest = bucket.reduce((a, b) => (a.observed_at >= b.observed_at ? a : b));
+        // One selector for both reducers — see `_supersedes`. The previous
+        // `>=` reduce here kept the FIRST of two same-date rows while
+        // `knownHostLimits` kept the LAST, so one run printed two different
+        // drop counts for one host on one day.
+        const latest = headline.get(host)!;
         const mode = truncationModeOf(latest);
         lines.push(
             `${host}: ${bucket.length} observation(s) · mode ${mode} · ` +
@@ -816,7 +1069,7 @@ export function formatPerHostVerdicts(records: readonly ObservationRecord[]): st
         );
     }
 
-    const modes = new Set([...byHost.values()].map((b) => truncationModeOf(b[b.length - 1]!)));
+    const modes = new Set([...headline.values()].map((r) => truncationModeOf(r)));
     lines.push('');
     lines.push(
         modes.size > 1
