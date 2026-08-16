@@ -50,6 +50,22 @@ complexity: structural
 > effort**, plus the withdrawn Step 3 above. The seven, each recorded at its own
 > phase:
 >
+> **Correction (2026-08-16) — it is six, not seven.** The Phase 4 Steps 1–2
+> bullet below was true when written and is now false: it says the import
+> adapter and the persistence discipline do not exist. Both do.
+> `road-to-design-system-onramp` closed and archived (`c4e95d36a`,
+> `agents/roadmaps/archive/road-to-design-system-onramp.md`, zero open steps);
+> the adapter ships as `src/scripts/design_system_import.ts` plus
+> `src/scripts/_lib/design_system_import.ts` behind `/design-system:import`, and
+> the persistence discipline ships in `/design-system:generate`'s own body
+> (*"never overwrite a confirmed `DESIGN.md`"*, *"Never persist silently."*).
+> The contract Step 1 must cite —
+> `src/skills/design-system-capture/references/design-system-json.md` — and the
+> `path_prefix: ".claude/design-system/"` route both exist. Steps 1–2 were
+> therefore executable, and are closed on this branch. The bullet is left in
+> place with this correction above it rather than rewritten, so the stale claim
+> stays auditable.
+>
 > - **Phase 3** (`source-first-gate`) — **two** open dependencies, not one. Its
 >   verifier exemption keys on a payload field that
 >   `road-to-subagent-lifecycle-integrity` Phase 0 Step 4 spikes and its Phase 4
@@ -362,7 +378,24 @@ concern logic.
 
 ## Phase 4: The browser handover — extraction into files, inside the lock
 
-- [ ] **Step 1:** § *URL / live-page handover* in the mechanics guideline
+> **Landed 2026-08-16 — Steps 1–2.** Both are one section,
+> `docs/guidelines/design-fidelity-mechanics.md` § *URL / live-page handover*,
+> placed directly after § Data-basis ladder because it operationalises that
+> ladder's rung 2. It defines no format: the extraction artifact is the existing
+> `design-system.json` contract at the `.claude/design-system/` prefix the
+> fidelity rule already routes, consumed by the existing three-lane
+> `/design-system:import` adapter (program X4 satisfied by citation, not by a
+> second shape). The lock boundary is stated in the section — contract, adapter
+> and instructions ship; crawler, Playwright runtime and font-bundler do not.
+> Step 2's retrieval order is a three-row table (project `design-system.json` →
+> extraction artifact → live page); the persistence discipline is **cited**, not
+> restated, because `/design-system:generate` owns it. The section closes with an
+> honest coverage line: no fixture scores the URL-handover class yet, and the
+> reason is the same absent page-reaching capture primitive that made
+> `daf-source-over-screenshot` skip. **Step 3 stays withdrawn**, so Phase 4 is
+> 2/3, not closed.
+
+- [x] **Step 1:** § *URL / live-page handover* in the mechanics guideline
       *(proposal)*: when the artifact is handed over as a URL (Claude Design
       share, Lovable, v0, bolt, staging/localhost), extract **through the
       user's connected browser tools** — DOM, stylesheets, scripts, assets —
@@ -378,7 +411,7 @@ concern logic.
       files feed the builder, images feed review). State the lock boundary in
       the section itself: the package ships instructions and validation, never
       the crawler/runtime — accept-side, per the council's sharpened reading.
-- [ ] **Step 2:** State the **retrieval order** in this section — project
+- [x] **Step 2:** State the **retrieval order** in this section — project
       `design-system.json` → extraction artifact → live page — so the source
       survives sessions instead of being re-screenshotted next time. The
       **persistence discipline itself** (skip-if-exists unless explicitly forced;
