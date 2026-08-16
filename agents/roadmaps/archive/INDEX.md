@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**501 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 166 · completed 244 · completed-with-deferrals 25 · not-extractable 34
+**502 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 166 · completed 245 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -281,6 +281,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-inbox-harvest-2026-08-b-install-lifecycle`](road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | Road to install lifecycle — every write recorded, org packs decided | closed-with-cancellations | 2 | 6/13 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b-release-integrity`](road-to-inbox-harvest-2026-08-b-release-integrity.md) | Road to release-surface integrity | closed-with-cancellations | 5 | 12/25 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b`](road-to-inbox-harvest-2026-08-b.md) | Road to inbox harvest 2026-08-b | closed-with-cancellations | 3 | 3/6 | _not extractable_ |
+| [`road-to-inbox-harvest-2026-08-c-prompt-deinflation`](road-to-inbox-harvest-2026-08-c-prompt-deinflation.md) | Road to a prompt optimizer that deflates before it polishes | completed | 2 | 9/9 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-c-release-head-truth`](road-to-inbox-harvest-2026-08-c-release-head-truth.md) | Road to a release head that can be contradicted | closed-with-cancellations | 3 | 10/11 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-c-workspace-identity`](road-to-inbox-harvest-2026-08-c-workspace-identity.md) | Road to one answer for "where am I" | closed-with-cancellations | 3 | 11/12 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-d-archive-index`](road-to-inbox-harvest-2026-08-d-archive-index.md) | Road to an archive index, so sweeps stop paying for history | completed | 2 | 10/10 | _not extractable_ |

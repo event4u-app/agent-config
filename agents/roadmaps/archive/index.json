@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 501,
+  "count": 502,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -3600,6 +3600,20 @@
       },
       "verdict": null,
       "status": null
+    },
+    {
+      "slug": "road-to-inbox-harvest-2026-08-c-prompt-deinflation",
+      "title": "Road to a prompt optimizer that deflates before it polishes",
+      "disposition": "completed",
+      "phases": 2,
+      "steps": {
+        "open": 0,
+        "done": 9,
+        "deferred": 0,
+        "cancelled": 0
+      },
+      "verdict": null,
+      "status": "ready"
     },
     {
       "slug": "road-to-inbox-harvest-2026-08-c-release-head-truth",
