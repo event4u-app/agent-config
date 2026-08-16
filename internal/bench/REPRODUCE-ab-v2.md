@@ -72,6 +72,27 @@ Two consequences worth knowing before you rely on it:
 - A resumed or repeated trial re-clones from the pristine fixture, so the
   workspace always reflects the LAST execution of that (task, arm, seed).
 
+The first endpoint to actually cash this in is the T1/T2 pair (delta #11):
+
+```bash
+npx tsx src/scripts/bench_ab_v2_complexity.ts <report.json>          # print, touch nothing
+npx tsx src/scripts/bench_ab_v2_complexity.ts <report.json> --write  # write the endpoints back
+```
+
+It writes `added_lines` and `median_cognitive_complexity` onto each trial's
+`metrics`. Three properties matter when reading its output:
+
+- The default **prints and writes nothing**. Rewriting a pinned artefact in place
+  is how a report stops matching numbers already quoted from it, so `--write` is
+  explicit.
+- A trial whose workspace was pruned reports `null` with a reason, never `0`. A
+  zero would read as "this run changed nothing"; `compare()` treats the null as
+  *not measured on this pair*, and `size_claim_verdict` then refuses to report a
+  size win at all rather than scoring a partial sample.
+- Reports written before the runner recorded each record's `fixture` path still
+  work — the re-scorer falls back to the corpus by task id, which is what makes
+  the retro-fit real for sweeps that already ran.
+
 ## Resume
 
 Checkpointing is on by default. The key is derived from corpus, model, seeds,
@@ -94,17 +115,31 @@ silently uncapped.
 A full-tier Phase-3 run is **not** reproducible from this document alone, and
 saying so is part of the path:
 
-- **The spend grant** is the user's (`benchmark-spend-authorization` in the
-  roadmap). Firing a paid external run without it is a Hard-Floor action.
+- ~~**The spend grant** is the user's (`benchmark-spend-authorization` in the
+  roadmap). Firing a paid external run without it is a Hard-Floor action.~~
+  **Granted 2026-08-14** at a $250 ceiling, pre-authorised — pass `--max-usd 250`
+  so the `collect_records` guard aborts rather than overruns. The Hard-Floor
+  reasoning is unchanged for any *other* paid run; this particular grant is spent
+  as a decision and does not need re-asking.
 - **A pinned external repo** (S0.3 delta #9) does not exist: the corpus carries no
   `repo`/`sha` keys and the fixtures are self-contained in-repo trees. So there is
   currently **no SHA to pin**, and any report claiming one would be wrong.
 - **Task oracles against that repo** (delta #10, sized large) do not exist. A
   harness pointed at a real repo with no oracles runs nothing, which is why #9 and
   #10 ship together.
-- **A cognitive-complexity endpoint** (delta #11, sized large) does not exist
+- ~~**A cognitive-complexity endpoint** (delta #11, sized large) does not exist
   anywhere in the tree, and Phase 3's acceptance is a metric *pair* — so the phase
-  cannot report a pass without it, at any price.
+  cannot report a pass without it, at any price.~~
+  **Landed 2026-08-16** — `_lib/bench_ab_complexity.ts` plus the re-scorer above.
+  The pair reasoning still holds and is now enforced rather than documented: an
+  unmeasured endpoint yields `INCONCLUSIVE`, never a pass.
 
-Until those land, the honest reproducible surface is the selftest plus offline
-re-scoring of whatever sweeps exist.
+Until #9 and #10 land, the honest reproducible surface is the selftest plus
+offline re-scoring of whatever sweeps exist — which now includes the size pair.
+
+Two endpoints named in the pre-registration are still unimplemented and will read
+`INCONCLUSIVE` on any run made today: the **safety tier** (T4) and
+**search-adherence** (T5). Both are rubric-judged, so both need model calls and
+their own oracles. That is deliberate rather than an oversight — the T4 gap makes
+`size_claim_verdict` refuse a size win outright, which is the conservative
+direction for a disqualifier to fail in.

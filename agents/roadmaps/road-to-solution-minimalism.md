@@ -441,9 +441,20 @@ file is the inflation the repo's own complexity budget forbids.
 
 ## Phase 3 — Pinned public-repo benchmark (the proof exhibit)
 
-Blocked on [`benchmark-spend-authorization`](#blocker-benchmark-spend-authorization)
+**Correction 2026-08-16 — this header was wrong, and the sentence below it is
+left standing so the wrong claim stays auditable.** The spend blocker has read
+`Status: resolved` since 2026-08-14 (granted, $250 ceiling, pre-authorised), so
+Phase 3 has not been spend-blocked for two days. Its real gate is
+[`phase3-harness-deltas-9-10`](#blocker-phase3-harness-deltas-9-10) — a pinned
+external repo and its oracles. Delta #11, the third member of that set, landed
+2026-08-16 and is no longer a gate. This is the same defect the § Blockers
+preamble names from the other direction: a roadmap that cites a resolved blocker
+as standing overstates its own gating, and the cost lands on whoever screens the
+backlog next.
+
+~~Blocked on [`benchmark-spend-authorization`](#blocker-benchmark-spend-authorization)
 — the structured entry under § Blockers, which the S0.3 cost sheet exists to be
-granted against.
+granted against.~~
 
 The second gate this note used to name — "the standing model-id verification
 blocker" — **no longer exists**: delta #3 closed it on 2026-08-05
@@ -477,18 +488,25 @@ blocker as standing overstates its own gating.
 > recurrence. Whatever else happens, they land before the first paid trial.
 >
 > **Deltas #1–#5 LANDED 2026-08-05** — see § Untracked prerequisite work below.
-> Both halt gates stand unchanged: the spend grant is still the user's, and
-> #9/#10/#11 are still missing. What changed is that the harness can no longer
+> ~~Both halt gates stand unchanged: the spend grant is still the user's, and
+> #9/#10/#11 are still missing.~~ What changed is that the harness can no longer
 > produce the specific invalid null it produced before.
+>
+> **Both halt gates have since moved, 2026-08-16.** Gate 1 (spend) was
+> **discharged** on 2026-08-14 — granted at a $250 ceiling and pre-authorised, so
+> it is no longer the user's to give again. Gate 2 (harness) is **narrowed**:
+> **#11 landed** with its calibrated suite and mutation-verified refusals, so the
+> metric-pair acceptance criterion is reachable; #9 and #10 remain, and they are
+> now the whole of gate 2.
 >
 > Nothing from this phase is cancelled or reinterpreted; the steps stand as
 > written. Full evidence, delta table, and price inputs:
 > [`solution-minimalism-phase0-spikes § S0.3`](../evidence/investigations/solution-minimalism-phase0-spikes.md).
 
-- [ ] **Repo:** one public OSS repo pinned at a SHA. <!-- blocked-by: benchmark-spend-authorization --> A second repo on this
+- [ ] **Repo:** one public OSS repo pinned at a SHA. <!-- blocked-by: phase3-harness-deltas-9-10 --> A second repo on this
       package's home stack is optional and cost-gated.
       *Verify:* the SHA is recorded in the pinned report.
-- [ ] **Tasks:** deliberately mixed <!-- blocked-by: benchmark-spend-authorization --> — over-build-trap tickets **and** irreducible
+- [ ] **Tasks:** deliberately mixed <!-- blocked-by: phase3-harness-deltas-9-10 --> — over-build-trap tickets **and** irreducible
       CRUD **and** this package's own discipline family — so the report can show
       where the effect lives and where it is honestly zero.
       *Verify:* the per-task table shows both.
@@ -557,15 +575,21 @@ blocker as standing overstates its own gating.
       cannot change its numbers. The suite pins the 50×-apart mix case, the
       errored-run exclusion, the unpriceable direction, and the age arithmetic.
       **Not delivered:** the safety-tier and search-adherence *scorers* (both are
-      rubric-judged, so both need model calls and their own oracles), and the
-      complexity endpoint (delta #11). Flipping this step because its Verify passes
+      rubric-judged, so both need model calls and their own oracles), ~~and the
+      complexity endpoint (delta #11)~~. Flipping this step because its Verify passes
       would repeat the mistake refused one step down for Reproducibility — a step's
       Verify is a check on the step, not a substitute for it.
-- [ ] **Hygiene:** escalation ladder self-test → 10-task smoke → k=3 → full, <!-- blocked-by: benchmark-spend-authorization -->
+      **2026-08-16: the complexity endpoint is delivered** (delta #11), and added
+      lines is now a first-class endpoint rather than a by-product of the
+      `max_lines_changed` oracle — `diff_line_counts` splits the existing tally so
+      T1 reads *added* while the oracle keeps its sum, from one implementation.
+      Six of seven endpoints are live. The step stays open on the two
+      rubric-judged scorers, which is the honest remainder.
+- [ ] **Hygiene:** escalation ladder self-test → 10-task smoke → k=3 → full, <!-- blocked-by: phase3-harness-deltas-9-10 -->
       **publishing nothing below full** (F4); paired non-parametric tests;
       errored pairs dropped from both arms.
       *Verify:* the report states which tier it is from.
-- [ ] **Reproducibility deliverables, first-class not afterthoughts:** a no-API <!-- blocked-by: benchmark-spend-authorization -->
+- [ ] **Reproducibility deliverables, first-class not afterthoughts:** a no-API <!-- blocked-by: phase3-harness-deltas-9-10 -->
       `--selftest` entry point, the pinned SHA, preserved per-run workspaces for
       offline re-scoring, and a one-page reproduce doc. The record shows the
       harshest critic becomes the most-cited validator once handed the
@@ -593,7 +617,7 @@ blocker as standing overstates its own gating.
       the difference matters to the archival gate.
       The reproduce doc states this residue in its own closing section instead of
       implying a full reproduction path exists.
-- [ ] **The size claim is a metric PAIR, not a single number (F9).** The ladder
+- [x] **The size claim is a metric PAIR, not a single number (F9).** The ladder
       arm must lower added lines **without raising median cognitive complexity
       per changed function**. Lines down **and** complexity up is golfing, and it
       **fails the size criterion** even at p<0.05 on lines alone. Cognitive
@@ -603,6 +627,35 @@ blocker as standing overstates its own gating.
       anti-golfing gate therefore costs almost nothing to add.
       *Verify:* the scorer refuses to report a size win when the complexity arm
       regressed; prove it by feeding it a deliberately golfed fixture.
+      <!-- verify: npx vitest run tests/scripts/_lib_bench_ab_complexity.test.ts tests/scripts/bench_ab_v2_stats.test.ts -->
+      **Delta #11 LANDED 2026-08-16 — the endpoint exists, and the refusal is
+      proven on a golfed fixture rather than asserted.**
+      `_lib/bench_ab_complexity.ts` computes Campbell cognitive complexity per
+      function over the ABI-pinned tree-sitter pair the repo already carries
+      (`code_graph/loader.ts`), covering the three languages the corpus actually
+      contains. It is a new implementation over an **existing** parser, not a new
+      dependency: the ladder was walked and recorded in the module header —
+      nothing in-repo computes complexity, `eslint`'s `complexity` rule is
+      *cyclomatic* (the metric F9 rejects, since it scores a flat `switch` above
+      a triply-nested `if`), and `eslint-plugin-sonarjs` is uninstalled and
+      JS/TS-only, which would leave the PHP fixtures unmeasured.
+      **It is calibrated, not merely written.** The suite scores Campbell's own
+      worked examples (`sumOfPrimes` = 7, `getWords` = 1) plus hand-derived cases
+      whose arithmetic is written out per case, so a future edit that shifts a
+      score by one has to argue with the derivation. Two deviations are named in
+      the module rather than buried: no recursion increment, and a nested closure
+      is its own observation instead of rolling into its parent.
+      **The refusal path is pinned by mutation, not by coverage.** Disabling the
+      anti-golfing branch reds 2 tests; disabling the safety disqualifier reds 3.
+      `size_claim_verdict` reaches `PASS` through exactly one path — all three
+      endpoints measured, neither disqualifier fired, T1 met — and an **absent**
+      endpoint returns `INCONCLUSIVE`, never a pass, which is what stops this
+      from degrading into the lines-only report F9 forbids.
+      **Retro-fit delivered too:** `bench_ab_v2_complexity.ts` re-scores a
+      finished report off its preserved workspaces (delta #7), so a sweep that
+      already cost money gains the endpoint without a re-run. It falls back to
+      the corpus by task id for reports written before the runner recorded the
+      fixture path — which is every report that exists today.
 - [x] **Pre-registered thresholds (F3-calibrated, weak-host arm):** ladder arm
       vs. package arm — median added lines ≤ **−10 %** at p<0.05, **and** no
       significant rise in median cognitive complexity per changed function,
@@ -627,12 +680,27 @@ blocker as standing overstates its own gating.
       A machine-readable companion was deliberately not shipped: no consumer exists
       to read it until the endpoints do, and a JSON nobody reads is the speculative
       form this roadmap argues against. Enforcement lands with the endpoints.
-- [ ] **Goodhart guard (hard, applies to any competitive setup, agent or human):**
+- [x] **Goodhart guard (hard, applies to any competitive setup, agent or human):**
       a size metric is a **measurement**, never a **scored target**. The safety
       tier is a disqualifier, not a side metric: an arm that saves a line and
       drops a guard has lost, not won (F6).
       *Verify:* the scoring code cannot rank an arm above another on size alone
       when its safety tier regressed.
+      <!-- verify: npx vitest run tests/scripts/bench_ab_v2_stats.test.ts -->
+      **Landed 2026-08-16, structurally rather than as a documented intention.**
+      Two separate properties, both asserted:
+      (a) `gate_verdict` — the L4 gate — reads capability, discipline and status
+      buckets and **nothing else**, so no arm can be ranked above another there
+      by producing a smaller diff. It declares `size_considered: false` and names
+      the one function that owns the size question; the test builds two arms tied
+      on capability and discipline and 500× apart on added lines, and asserts the
+      gate stays `FALSIFIED-OR-INCONCLUSIVE`.
+      (b) `size_claim_verdict` checks the safety tier **first**, before any
+      endpoint can produce a win. A golfed *and* unsafe arm reports the
+      disqualifier, not the golfing — the ordering is itself a test, because a
+      guard that fires only when nothing else does is not a disqualifier.
+      An unmeasured safety tier is `INCONCLUSIVE`, so the guard cannot be skipped
+      by simply not implementing T4's scorer.
 
 ## Untracked prerequisite work (landed 2026-08-05)
 
@@ -650,6 +718,14 @@ process debt this roadmap argues against.
 | 3 | Model-id read back from the CLI envelope's `modelUsage`; bare aliases refused before spend | `bench_ab_task_runner.ts` (`models_seen`), `bench_ab_v2_run.ts` |
 | 4 | Sweep-level `--max-usd` abort, priced per bucket from `internal/bench/pricing.yaml` | `SweepBudget`, `collect_records` guard |
 | 5 | Errored-pair attrition per arm-pair and per `status_bucket`, with the drop asymmetry | `bench_ab_v2_stats.compare` → report Table 4 |
+| 11 | Cognitive complexity per changed function (T2), added lines as a first-class endpoint (T1), the anti-golfing + safety-disqualifier verdict, and an offline re-scorer for finished sweeps | `_lib/bench_ab_complexity.ts`, `_lib/bench_ab_scoring_v2.diff_line_counts`, `bench_ab_v2_stats.size_claim_verdict`, `bench_ab_v2_complexity.ts` |
+
+**#11 is the exception to this section's own framing: it DOES close checkboxes.**
+The paragraph above says the deltas close none, which was true of #1–#5 — those
+made a run publishable without making one possible. #11 closes the metric-pair
+step, the Goodhart guard, and the golfed-fixture acceptance criterion outright,
+because those three ask for the endpoint itself rather than for a run that uses
+it. Landed 2026-08-16.
 
 **Why now, with the phase halted.** The harness has already produced one full
 set of invalid nulls from an undetected activation leak, and the only activation
@@ -806,19 +882,28 @@ it. None is a step in this roadmap.
       the scorer discriminates. Contract-level, deterministic, no model call —
       the find-the-plant half is stated as needing a scored eval run rather than
       claimed.
-- [ ] Phase 3 either reports from the full tier with every pre-registered <!-- blocked-by: benchmark-spend-authorization -->
+- [ ] Phase 3 either reports from the full tier with every pre-registered <!-- blocked-by: phase3-harness-deltas-9-10 -->
       endpoint — added lines **paired** with cognitive complexity, plus
       search-adherence and the safety tier — or publishes the null; no number
       appears anywhere except rendered from the pinned report.
       **Open — blocked, see the Phase 3 halt note.** Spend is the user's grant;
       the metric pair additionally needs a complexity endpoint that does not
       exist yet.
-- [ ] The scorer demonstrably refuses a size win that came with a complexity
+- [x] The scorer demonstrably refuses a size win that came with a complexity
       regression (proven on a golfed fixture, not asserted).
-      **Open — blocked with Phase 3.** The *lens* scorer already demonstrably
+      ~~**Open — blocked with Phase 3.** The *lens* scorer already demonstrably
       refuses a golfed finding (`shrink:` where `flatten:` was required, proven
       on the `flatten-longer` fixture); the *benchmark* scorer this criterion
-      names cannot exist before delta #11.
+      names cannot exist before delta #11.~~
+      **Closed 2026-08-16 — delta #11 landed, so the precondition this note named
+      is spent.** The struck text is left in place rather than rewritten: it was
+      an accurate reading at the time, and the pattern that keeps costing screens
+      is a stale claim silently replaced instead of visibly superseded.
+      The *benchmark* scorer now refuses on the same golfed pair the unit suite
+      scores — a flat three-branch `classify` against its one-line nested-ternary
+      twin, 1 added line and complexity 3 against the original's 1. Lines win
+      significantly and the verdict is still `REFUSED-GOLFING`, which is what
+      makes the refusal load-bearing rather than an artefact of a weak sample.
 - [ ] All quality gates pass — see `quality-tools`.
 
 ## Blockers
@@ -867,6 +952,46 @@ which is exactly the reader that must not be misled.
      grant unblocks the run; it does not unblock the harness.
 - **Resolved when:** the user states a spend ceiling for the Phase-3 sweep, or
   cancels Phase 3 against the cost sheet.
+
+  **Update 2026-08-16 — delta #11 landed, so the pre-authorisation now hangs on
+  #10 alone.** The cognitive-complexity endpoint and the anti-golfing refusal are
+  in the tree with a calibrated unit suite and mutation-verified guards, which
+  removes the reason this grant was left unspent: the metric-pair acceptance
+  criterion is no longer structurally unreachable. What remains is #9/#10 (a
+  pinned external repo and its ~30 hand-written oracles), tracked as its own
+  blocker below rather than smuggled back into this one.
+
+### blocker: phase3-harness-deltas-9-10
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** Phase 3 — the Repo, Tasks, Hygiene and Reproducibility steps, and
+  the "reports from the full tier" acceptance criterion.
+- **What to do:**
+  1. Land **delta #9** — external-repo support in the corpus (`repo` + `sha`
+     keys; `FIXTURES_ROOT` is in-repo today and every fixture is a self-contained
+     tree).
+  2. Land **delta #10** — ~30 hand-written capability / discipline oracles
+     against that repo. S0.3 sizes this **large** and calls it "the actual bulk";
+     a harness pointed at a real repo with no oracles runs nothing.
+  3. Only then fire the sweep. The spend decision is already made and needs no
+     re-asking — see the resolved entry above.
+- **If you do nothing:** nothing degrades and nothing is lost; the pre-registered
+  thresholds stay committed and unfittable-to-data, which is the strongest form
+  of that guarantee. The cost is that Phase 3 cannot report, so the roadmap
+  cannot close.
+- **Resolved when:** deltas #9 and #10 are in the tree and the corpus carries at
+  least one task pinned to an external repo at a SHA.
+
+**Why this entry exists at all — it is a repair, not a new gate.** Those five
+items carried `<!-- blocked-by: benchmark-spend-authorization -->` while that
+blocker read **Status: resolved**. Nothing was wrong with the *work*; the roadmap
+was **misreporting its own cause**, so the dashboard published `0 blockers`
+against five annotated open steps and every feasibility screen re-derived the
+same wrong conclusion. This entry names the cause the steps actually have. The
+pattern generalises and is worth stating once: a `blocked-by` annotation is a
+claim with a shelf life, and nothing re-checks it when the blocker it points at
+is resolved.
 
 Firing a paid external run without that grant is a Hard-Floor action
 ([`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md));
