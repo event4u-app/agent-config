@@ -49,6 +49,7 @@ import {
     _failed_checks_report,
     Commit,
     SystemExitError,
+    assert_scheduled_deprecations_clear,
     CONVENTIONAL_RE,
     SEMVER_RE,
     _RELEASE_BRANCH_RE,
@@ -876,5 +877,91 @@ describe('watch_pr_checks — failing-check summary (the scrolled-away-failure f
 
     it('an empty name list yields an empty report — raw watch output stands alone', () => {
         expect(_failed_checks_report([])).toBe('');
+    });
+});
+
+describe('assert_scheduled_deprecations_clear', () => {
+    /** A stub gate that records the argv it was handed. */
+    function stub(returncode: number, calls: string[][]) {
+        return (args: readonly string[]) => {
+            calls.push([...args]);
+            return { returncode, stdout: '', stderr: '' };
+        };
+    }
+
+    it('does not consult the gate on a minor or patch target', () => {
+        const calls: string[][] = [];
+        assert_scheduled_deprecations_clear('12.1.0', stub(1, calls));
+        assert_scheduled_deprecations_clear('12.0.1', stub(1, calls));
+        // A red gate that is never consulted is what proves the guard is bounded
+        // to major cuts — the asymmetry the whole check is built around.
+        expect(calls).toEqual([]);
+    });
+
+    it('a clear table lets the cut proceed, consulting the gate exactly once', () => {
+        const calls: string[][] = [];
+        expect(() => assert_scheduled_deprecations_clear('13.0.0', stub(0, calls))).not.toThrow();
+        expect(calls).toHaveLength(1);
+    });
+
+    it('passes the TARGET to the gate, not the shipped version', () => {
+        // The defect this pins: without --cutting the gate falls back to
+        // package.json, which at the cut to N still reads N-1, so a row due at
+        // N reads as one major early and the cut that creates the miss passes.
+        const calls: string[][] = [];
+        assert_scheduled_deprecations_clear('13.0.0', stub(0, calls));
+        expect(calls[0]).toContain('--cutting');
+        expect(calls[0]?.[calls[0].indexOf('--cutting') + 1]).toBe('13.0.0');
+    });
+
+    it('a due or overdue row refuses the cut', () => {
+        const calls: string[][] = [];
+        expect(() => assert_scheduled_deprecations_clear('13.0.0', stub(1, calls))).toThrow(
+            SystemExitError,
+        );
+        expect(calls).toHaveLength(1);
+    });
+
+    it('the guard cannot see the current version at all — which is what covers resume', () => {
+        // Resume is the path where target === current, and an earlier revision
+        // keyed on target > current returned silently there. It is not pinned
+        // by a separate case, because there is no input that distinguishes it:
+        // the guard takes ONE version and never reads the current one. That is
+        // the property, so assert the property rather than staging a duplicate
+        // of the refusal test that cannot fail independently of it.
+        const calls: string[][] = [];
+        assert_scheduled_deprecations_clear('13.0.0', stub(0, calls));
+        // Exactly one version reaches the gate, and it is the target. An earlier
+        // revision of this test also asserted `Function.length`, which counts
+        // parameters before the first default and therefore held for any
+        // refactor — including one that reintroduces a `current` parameter. The
+        // argv content is the only thing that actually establishes the property.
+        expect(calls[0]?.filter((a) => /^\d+\.\d+\.\d+$/.test(a))).toEqual(['13.0.0']);
+    });
+
+    it('previewOnly reports the refusal and does NOT throw — the dry-run contract', () => {
+        // The branch this function's own JSDoc names as a prior regression, and
+        // which no test reached: the integration dry-run tests spawn against the
+        // real repo, whose table is clean, so the guard returns on exit 0 long
+        // before the preview branch.
+        const calls: string[][] = [];
+        expect(() =>
+            assert_scheduled_deprecations_clear('13.0.0', stub(1, calls), { previewOnly: true }),
+        ).not.toThrow();
+        // It still consults the gate — a preview that skips the check shows nothing.
+        expect(calls).toHaveLength(1);
+        // And without previewOnly the identical input refuses, so the flag is
+        // what makes the difference rather than the fixture being toothless.
+        expect(() => assert_scheduled_deprecations_clear('13.0.0', stub(1, []))).toThrow(
+            SystemExitError,
+        );
+    });
+
+    it('a multi-major jump is still a major cut', () => {
+        const calls: string[][] = [];
+        expect(() => assert_scheduled_deprecations_clear('14.0.0', stub(1, calls))).toThrow(
+            SystemExitError,
+        );
+        expect(calls).toHaveLength(1);
     });
 });

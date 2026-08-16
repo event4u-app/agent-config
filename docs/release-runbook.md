@@ -51,7 +51,20 @@ the **workflow_dispatch** on `release.yml` (inputs: `bump`, `version`,
       and act on every row whose "deprecation notice due" or "removal due"
       lands on this major: ship the notice, or perform the removal, or record
       why the reversal condition fired. A row left unread is how a removal
-      commitment becomes folklore.
+      commitment becomes folklore — **and one already was**: the `code_graph`
+      removal reached one major past its 11.0 commitment with this checkbox in
+      place the whole time. So half of this line no longer depends on being
+      read: `src/scripts/lint_scheduled_deprecations` compares every resolved
+      **Removal due** version — against the shipped major on an ordinary
+      branch, against the TARGET major at a cut — and `release.ts` **refuses**
+      a major cut whose table carries a row due at or before it, or one it
+      cannot resolve.
+      **The "ship the notice" half stays yours.** The Deprecation-notice-due
+      column is parsed only as the anchor for a relative removal cell and is
+      compared against nothing, because a shipped notice is written as a date
+      and has no comparand. So read the notice column here; the removal column
+      is checked for you, and the judgement behind it — remove, or revise the
+      commitment — always was and remains yours.
 - [ ] The release satisfies [`release-sizing.md`](contracts/release-sizing.md) —
       one primary product goal, and a `Rollback:` line for every new /
       substantially reworked subsystem (gate: `src/scripts/lint_changelog_rollback.ts`).

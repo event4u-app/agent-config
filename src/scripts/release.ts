@@ -536,7 +536,7 @@ function die(msg: string, code = 2): never {
     throw new SystemExitError(code);
 }
 
-interface RunResult {
+export interface RunResult {
     returncode: number;
     stdout: string;
     stderr: string;
@@ -1623,6 +1623,93 @@ function set_template_pin(p: string, version: string): void {
     fs.writeFileSync(p, lines.join('\n'), 'utf-8');
 }
 
+/**
+ * Refuse a MAJOR cut that carries a scheduled deprecation due at or before it.
+ *
+ * **The trigger is the shape of the TARGET, not a comparison with the current
+ * version.** A major target is `X.0.0` — and that one predicate covers every
+ * path to a major: the `--as major` flag, an explicit `--version 13.0.0`,
+ * auto-detection from a `feat!:` commit, AND `--resume`, where
+ * `_detect_in_flight_target()` returns the already-bumped `package.json`
+ * version so `target === current` and any current-vs-target comparison
+ * silently returns. Resume was the fourth path an earlier version of this
+ * guard missed while its own comment claimed three paths converged.
+ *
+ * Refusing a resumed release can strand a partially-completed one, and that is
+ * the deliberate trade: a stranded release is recoverable by fixing the table
+ * and resuming again, whereas a major shipped over a missed commitment is the
+ * failure this whole surface exists to prevent.
+ *
+ * The target version is PASSED to the gate. Without it the gate falls back to
+ * `package.json`, which at the cut to N still reads N-1 — so a row committed
+ * to N reads as one major early and passes, and only rows already a major late
+ * could ever be refused. That is the lateness being prevented, so measuring
+ * against the shipped version would have made the refusal fire exactly one
+ * major too late, forever.
+ *
+ * Runs under `--dry-run` too, unlike the rest of preflight: this check is one
+ * subprocess reading two files, so the "keep a preview fast" rationale that
+ * excludes the ~15s test-trend collection does not apply — and a preview that
+ * reports green for the single condition that will refuse the real run is the
+ * case an operator runs a preview to discover. It REPORTS there rather than
+ * dying: `--dry-run` exiting 0 before `execute()` and before `preflight()` is a
+ * contract this file's own tests assert, and an earlier revision of this guard
+ * broke it by sitting above the dry-run branch with no preview mode.
+ *
+ * @param runner Seam for the gate invocation. Production passes nothing and
+ * gets the real `run`; tests inject a stub, because the alternative — reaching
+ * this branch only by mutating `docs/MIGRATION.md` — would make the refusal
+ * path testable exclusively through a tracked-file edit.
+ */
+export function assert_scheduled_deprecations_clear(
+    target: string,
+    runner: (args: readonly string[]) => RunResult = (args) => run(args, { check: false, capture: true }),
+    opts: { previewOnly?: boolean } = {},
+): void {
+    const [, minor, patch] = parse_version(target);
+    if (minor !== 0 || patch !== 0) {
+        return;
+    }
+    const res = runner([
+        './scripts-run',
+        'src/scripts/lint_scheduled_deprecations',
+        '--cutting',
+        target,
+    ]);
+    if (res.returncode === 0) {
+        return;
+    }
+    process.stderr.write(res.stdout);
+    process.stderr.write(res.stderr);
+    if (res.returncode !== 1) {
+        // The gate reserves 1 for a finding and 2 for a usage/environment
+        // failure. Diagnosing the latter as "the table has an overdue row"
+        // sends the releaser to edit a file that is not the problem.
+        die(
+            `refusing the ${target} cut: the scheduled-deprecations check could not run ` +
+                `(exit ${String(res.returncode)}). That is an environment or usage failure, not a ` +
+                'finding in docs/MIGRATION.md — fix the invocation or the checkout, then re-run.',
+        );
+    }
+    if (opts.previewOnly === true) {
+        // The preview's job is to SHOW what the real run will refuse. Dying
+        // here would break the `--dry-run exits 0` contract asserted elsewhere
+        // in this file's tests — trading a documented exit code for a message
+        // that has already been printed above.
+        process.stderr.write(
+            `\n(dry-run) the ${target} cut WOULD BE REFUSED for the reason above. ` +
+                'Previewing only; exit code unchanged.\n',
+        );
+        return;
+    }
+    die(
+        `refusing the ${target} cut: the scheduled-deprecations table in docs/MIGRATION.md ` +
+            'has a row due at or before this major, or one that cannot be resolved. Act on ' +
+            "it — perform the removal in its own change, or revise the row's commitment and " +
+            'record why the surface stays — then re-run.',
+    );
+}
+
 // ─── preflight ────────────────────────────────────────────────────────────────
 
 /**
@@ -2577,6 +2664,13 @@ function main(argv: readonly string[] | null = null): number {
         target = bump_version(current, bump);
     }
     parse_version(target);
+
+    // Runs in dry-run too — a preview that hides the one condition which will
+    // refuse the real run is the case previews are for — but REPORTS there
+    // instead of dying: `--dry-run returns 0` is a contract this file's tests
+    // assert, and breaking it to surface a warning would trade a documented
+    // exit code for a message.
+    assert_scheduled_deprecations_clear(target, undefined, { previewOnly: args.dry_run });
 
     if (!args.dry_run) {
         preflight(target, { resume: args.resume, ci: args.ci });

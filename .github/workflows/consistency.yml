@@ -448,6 +448,15 @@ jobs:
       - name: Design-antipattern catalog ↔ rule parity
         run: task lint-design-antipattern-parity
 
+      # Fourth instance, wired at birth rather than after the ratchet caught it.
+      # Reports on an ordinary branch and exits 0; the refusal lives behind
+      # `--release-major`, which the release flow passes at the cut. Remote reach
+      # matters here specifically: the row this gate found overdue was missed by
+      # a human pre-flight checkbox, so a local-only registration would repeat
+      # the failure mode with a different reader.
+      - name: Scheduled deprecations are checked by arithmetic, not by memory
+        run: task lint-scheduled-deprecations
+
       - name: Cloud bundle dry-run (source invariants)
         run: task ci-cloud-bundle
 
