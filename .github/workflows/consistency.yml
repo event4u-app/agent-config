@@ -148,6 +148,13 @@ jobs:
       - name: Verify the artefact index + catalog are regenerated
         run: task check-index
 
+      # The archive index is generated from 500 archived roadmaps, so it goes
+      # stale the moment a roadmap is archived — which happens inside the PR
+      # that closes it. Registered here and not only in `task ci`, because no
+      # workflow invokes `task ci`.
+      - name: Verify the archive index is regenerated
+        run: task check-archive-index
+
       - name: Verify dist == rewrite(src) byte-for-byte
         run: task check-condensation
 
