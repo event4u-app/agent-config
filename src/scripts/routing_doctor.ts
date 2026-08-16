@@ -640,6 +640,16 @@ function _render(report: DoctorReport): string {
     return `${t}=${cap}${cool}`;
   });
   lines.push(`  tier budgets (rolling-24h): ${tierBits.join(" · ")}`);
+  // Cool-down state has no producer in the tree: `tripCooldown` is the only
+  // writer of the cool-down file and has zero production callers, so the
+  // COOLING marker above can only ever be absent. Say so, rather than let a
+  // silent "" read as a measured "not cooling" — the same
+  // unavailable-vs-false distinction the capability-provenance line above
+  // makes two lines earlier.
+  lines.push(
+    `  cool-down state: unavailable (no producer — tripCooldown has no ` +
+      `production caller); absence of COOLING is not evidence of a live tier`,
+  );
   if (o.delivery.warning) {
     lines.push(`  ⚠️ ${o.delivery.warning}`);
   } else if (o.delivery.eligible_dispatches > 0) {
