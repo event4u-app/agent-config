@@ -87,9 +87,9 @@ explanation lives now that the file no longer carries it as comments.
 |---|---|---|---|---|---|
 | `cost.budgets.daily` | C | number | `0` |  | Daily USD ceiling across all model calls. The agent warns at 50% / 75% / 90% and either stops or warns at 100% depending on cost.enforcement. Set 0 to disable the daily budget entirely. |
 | `cost.budgets.monthly` | C | number | `0` |  | Calendar-month USD ceiling. Pairs with cost.enforcement = hard-stop for a hard cap on agent spend before the next billing cycle. Set 0 to disable. |
-| `cost.budgets.per_tier.cheap` | C | unknown | `null` |  | USD ceiling for the cheap model tier under budget-aware delegation (docs/contracts/budget-routing.md). null = no separate tier cap; global ceilings still apply. |
+| `cost.budgets.per_tier.cheap` | C | unknown | `null` |  | USD ceiling for the cheap model tier. Budget-aware delegation was ARCHIVED 2026-08-16 (docs/contracts/budget-routing.md), so no code routes on this today; the cap is still summed and reported by `budget.mjs tier`. null = no separate tier cap; global ceilings still apply. |
 | `cost.budgets.per_tier.medium` | C | unknown | `null` |  | USD ceiling for the medium model tier. null = no separate tier cap. |
-| `cost.budgets.per_tier.strong` | C | unknown | `null` |  | USD ceiling for the strong model tier. null = no separate tier cap — with cheap exhausted and strong funded, budget routing uses the strong tier rather than blocking work. |
+| `cost.budgets.per_tier.strong` | C | unknown | `null` |  | USD ceiling for the strong model tier. null = no separate tier cap. The never-block-to-save-money relation this used to describe went with the archived budget-routing layer (docs/contracts/budget-routing.md); nothing routes between tiers today. |
 | `cost.budgets.weekly` | C | number | `0` |  | Rolling 7-day USD ceiling. Same alert ladder as cost.budgets.daily but useful when work bursts unevenly across the week. Set 0 to disable. |
 | `cost.enforcement` | C | string | `"advisory"` | `advisory` · `hard-stop` | What happens when a budget hits 100%. advisory = show a banner, keep working (default — never blocks an active task). hard-stop = refuse further model calls until the budget resets or you raise the ceiling. |
 

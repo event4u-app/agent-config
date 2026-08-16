@@ -162,7 +162,7 @@ is not gated on the answer.
       monitoring rather than routing. Contract rewritten as a migration record
       retiring AC1–AC5; the CLAIMS entry moved `backed` → `resolved-null` with
       the claim text kept verbatim as what was asserted while the code existed.
-      <!-- verify: grep -c 'pickTier' src/scripts/_lib/tier_budget_routing.ts -->
+      <!-- verify: grep -c 'ARCHIVED 2026-08-16' src/scripts/_lib/tier_budget_routing.ts -->
       The original text of this step, for the record: "Wire or archive
       `pickTier`. **Blocked on `picktier-wire-or-archive`
       below — a maintainer call, not a withheld agent decision.**" The evidence

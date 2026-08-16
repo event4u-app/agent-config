@@ -10,7 +10,7 @@
 // Env: BUDGET_STORE, BUDGET_CONFIG, BUDGET_PERIOD={today|week|month|all}, BUDGET_QUIET=1
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 
 const STORE = process.env.BUDGET_STORE || 'agents/cost-tracking/sessions.jsonl';
 const CONFIG = process.env.BUDGET_CONFIG || 'agents/cost-tracking/budget.json';
