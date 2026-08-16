@@ -311,15 +311,19 @@ own verify, pre-window deletions are forbidden.
 - **Status:** open
 - **Owner:** maintainer
 - **Blocks:** branch-protection apply; utilization-driven MERGE/DEMOTE/HIDE/REMOVE of artefacts (needs loaded-vs-fired usage over the window); auto-tiering monitoring
-- **What to do:** the branch-protection `gh api` is a repo-settings UI action; utilization removal needs real usage data before anything is deleted.
+- **What to do:** the branch-protection `gh api` is a repo-settings UI action; utilization removal needs real usage data before anything is deleted. The two halves share nothing but this entry, so decide them separately: (a) apply branch protection now — it has no data dependency; (b) hold the utilization-driven MERGE/DEMOTE/HIDE/REMOVE list until a loaded-vs-fired window exists; (c) split this blocker in two so the second half stops holding the first.
+- **Recommendation:** (a) plus (b) — apply protection now and keep the removals waiting. Protection is a settings action whose cost is one visit to repo settings, while every removal is irreversible against artefacts nobody has usage data for, and this package's own discipline is that a deletion needs a data-backed list rather than a plausible one. (c) is worth doing at the same time, since one entry blocking two unrelated things is why the cheap half has waited on the expensive one.
+- **If you do nothing:** the required-check set stays advisory — a check can go red on the trunk without refusing the merge, which is exactly the state branch protection exists to end — and the artefact surface keeps growing with no removal ever justified, which is the condition this roadmap was opened to close.
 - **Resolved when:** branch protection is on and the utilization window has produced a data-backed removal list.
 
 ### blocker: benchmark-spend
 - **Status:** open
 - **Owner:** user
 - **Blocks:** lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
-- **What to do:** each is a spend-bearing (or corpus-gated) paid run; the verification-router only re-opens if utilization shows modes collapsing.
-- **Resolved when:** the maintainer authorizes the specific run with an estimate.
+- **What to do:** each is a spend-bearing (or corpus-gated) paid run, authorized per run and never as a bundle. The options: (a) authorize the lazy-catalog A/B — `task bench:ab:live -- --budget <N>`, which caps per-task spend and resumes rather than re-spends when restarted with the same flags; (b) authorize the team / adversarial-council benchmarks, which have no task wired today and need their runner named before an estimate exists; (c) authorize none and mark the Unified Verification Router decision cancelled rather than parked, since it is gated on verdicts (a) and (b) would produce.
+- **Recommendation:** (a) alone, if anything. It is the only one of the three with a runner and a spend cap already in the tree, so it is the only one that can be authorized against a real estimate rather than a guess; (b) needs a runner named first, and until either verdict exists (c) is a decision about a question nobody has asked recently.
+- **If you do nothing:** nothing degrades and nothing is at risk — which is precisely why this has not moved. The cost is that the Unified Verification Router decision stays parked indefinitely while reading as pending, so the roadmap cannot close and a reader cannot tell a deferred decision from a forgotten one.
+- **Resolved when:** the maintainer authorizes the specific run with an estimate, or records (c).
 
 ## Provenance
 

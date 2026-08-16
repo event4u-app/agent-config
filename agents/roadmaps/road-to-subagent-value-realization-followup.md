@@ -183,5 +183,22 @@ stands is exactly the shape that invites a wrong resume.
   shape as `background-continuation-probe`, not a code fix. Until that is
   answered, `≥ 20 usable dispatches` is unreachable regardless of how many
   lines accumulate, and raising the line count further will not move it.
-- **Resolved when:** `agents/runtime/state/audit/YYYY-MM.jsonl` carries
-  ≥ 20 orchestration lines for the current month.
+- **Recommendation:** stop treating this as a usage-volume blocker and run the
+  live-host semantics probe instead — does **any** hook slot receive the
+  task-completion notification payload, and does that payload carry the usage
+  fields a background dispatch withholds at `post_tool_use`? Same shape as
+  `background-continuation-probe`, not a code fix. It is the recommended option
+  because it is the only one that can move the exit criterion: the line count
+  is already met at 99, and the missing columns are documented behaviour of the
+  slot, so more usage produces more of the same nulls.
+- **If you do nothing:** the log keeps growing and Phase 1 stays open forever —
+  `≥ 20 **usable** dispatches` is unreachable at this slot regardless of volume,
+  so the roadmap's last acceptance criterion (re-evaluating the ADR-117
+  `auto: on` default on real telemetry) never gets the evidence it names, and
+  the default stands unexamined by default rather than by decision.
+- **Resolved when:** a probe result records whether any hook slot sees the
+  task-completion payload, and — if one does — `agents/runtime/state/audit/YYYY-MM.jsonl`
+  carries ≥ 20 orchestration lines whose quality columns are populated rather
+  than `null`. The bare line-count condition this field carried until
+  2026-08-16 was already satisfied at 99 lines while the blocker stayed open,
+  which made it unusable as a resolution test.
