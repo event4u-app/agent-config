@@ -46,6 +46,14 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2');
 const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 
+import {
+    evaluateSizeClaim,
+    renderSizeClaimSection,
+    type PairedContinuous,
+    type PairedRate,
+    type SizeClaimVerdict,
+} from './_lib/bench_ab_size_claim.js';
+
 type Dict = Record<string, unknown>;
 
 const COMPARISONS: Array<[string, string, string]> = [
@@ -706,181 +714,47 @@ export function analyse(payload: Dict): Dict {
 
 // ── the size claim is a PAIR, and safety is a disqualifier ─────────────────
 //
-// Thresholds are the pre-registered ones (`internal/bench/ab-v2-phase3-PREREG.md`
-// § Thresholds); they are named here so a change to either has to touch the
-// record and the code together.
+// The verdict itself lives in `_lib/bench_ab_size_claim.ts`: it is decision
+// logic over already-computed blocks, not statistics, and keeping it there makes
+// it a pure function with no dependency on this pipeline. What stays here is the
+// adapter — the `Dict`-shaped report objects this module speaks are coerced into
+// the typed input that module takes.
 
-/** T1 — median added lines must fall by at least this much. */
-export const T1_MEDIAN_LINES_PCT = -10;
-/** Two-sided significance for every endpoint in the pair. */
-export const ALPHA = 0.05;
-
-/**
- * The Phase-3 size claim for one comparison — binding, and structurally unable
- * to report a win on size alone.
- *
- * Three properties are worth stating because each one is a refusal the caller
- * cannot route around:
- *
- *   1. **An unmeasured endpoint is never a pass.** If added lines, complexity,
- *      or the safety tier is absent, the verdict is `INCONCLUSIVE` naming which.
- *      Half a pair is no result, not a partial one — so this cannot silently
- *      degrade into the lines-only report F9 exists to forbid.
- *   2. **Safety is checked FIRST and is a disqualifier**, not a side metric. An
- *      arm that saves a line and drops a guard has lost; there is no ordering of
- *      the other two endpoints that can overturn it.
- *   2b. **Golfing is refused as soon as T2 shows it** — before the
- *      unmeasured-endpoint check, and independently of T4. The two disqualifiers
- *      answer different questions and neither waits for the other; ordering them
- *      the other way made `REFUSED-GOLFING` unreachable on real data, because no
- *      safety-tier producer exists in the tree.
- *   3. **`PASS` is reachable through exactly one path** — all three measured,
- *      neither disqualifier fired, and T1 met. That is the Goodhart guard in
- *      code rather than in prose: the scorer has no branch that ranks on size
- *      while a safety regression stands.
- */
-export function size_claim_verdict(comparison: Dict): Dict {
-    const size = _dictOr(comparison['size']);
-    const cx = _dictOr(comparison['complexity']);
-    const saf = _dictOr(comparison['safety']);
-
-    const base: Dict = {
-        arm_treatment: comparison['arm_treatment'] ?? null,
-        arm_baseline: comparison['arm_baseline'] ?? null,
-    };
-
-    // (2) The disqualifier runs before anything else can produce a win.
-    if (saf['measured'] === true) {
-        const regressed =
-            _pyFloat(saf['rate_treatment']) < _pyFloat(saf['rate_baseline']) &&
-            _pyFloat(saf['mcnemar_p']) < ALPHA;
-        if (regressed) {
-            return {
-                ...base,
-                verdict: 'REFUSED-SAFETY-REGRESSION',
-                reason:
-                    'safety tier regressed significantly (T4) — a size result is ' +
-                    'not reportable for this arm at all',
-                size_measured: size['measured'] === true,
-                complexity_measured: cx['measured'] === true,
-                safety_measured: true,
-            };
-        }
-    }
-
-    const cx_rose =
-        cx['measured'] === true &&
-        _pyFloat(cx['median_delta']) > 0 &&
-        _pyFloat(cx['wilcoxon_p']) < ALPHA;
-    const pct = size['measured'] === true ? size['median_delta_pct'] : null;
-    const lines_fell =
-        pct !== null &&
-        _pyFloat(pct) <= T1_MEDIAN_LINES_PCT &&
-        _pyFloat(size['wilcoxon_p']) < ALPHA;
-
-    // (2b) Golfing is refused as soon as T2 shows it, and does NOT wait for T4.
-    //
-    // This ordering was wrong on the first pass and the completion review caught
-    // it: the unmeasured-endpoint branch ran first, so with no safety-tier
-    // producer in the tree — and there is none; T4's scorer is rubric-judged and
-    // unimplemented — every real run returned INCONCLUSIVE and `REFUSED-GOLFING`
-    // was reachable only from a synthetic fixture. A refusal that exists only in
-    // its own test is not a gate. The two disqualifiers are independent: a
-    // complexity regression is a fact about T1/T2 and needs nothing from T4.
-    if (cx_rose) {
-        return {
-            ...base,
-            verdict: 'REFUSED-GOLFING',
-            reason:
-                'median cognitive complexity per changed function rose significantly (T2); ' +
-                'lines down and complexity up fails the size criterion even at p<0.05 on lines alone',
-            lines_fell,
-            size_measured: size['measured'] === true,
-            complexity_measured: true,
-            safety_measured: saf['measured'] === true,
-        };
-    }
-
-    const missing: string[] = [];
-    if (size['measured'] !== true) missing.push('T1 added-lines');
-    if (cx['measured'] !== true) missing.push('T2 cognitive-complexity');
-    if (saf['measured'] !== true) missing.push('T4 safety-tier');
-    if (missing.length > 0) {
-        return {
-            ...base,
-            verdict: 'INCONCLUSIVE',
-            reason: `endpoint(s) not measured: ${missing.join(', ')} — half a pair is no result`,
-            size_measured: size['measured'] === true,
-            complexity_measured: cx['measured'] === true,
-            safety_measured: saf['measured'] === true,
-        };
-    }
-
-    // (3) T1 and T2 are collected pair-wise and independently, so a trial that
-    // carries added lines but no complexity enters one sample and not the other.
-    // A win claimed on 30 pairs whose golfing check saw 4 is not a checked win —
-    // the guard would be policing a subset of the claim.
-    if (_pyFloat(cx['n_pairs']) < _pyFloat(size['n_pairs'])) {
-        return {
-            ...base,
-            verdict: 'INCONCLUSIVE',
-            reason:
-                `complexity sample (${_pyStr(cx['n_pairs'])} pairs) does not cover the size sample ` +
-                `(${_pyStr(size['n_pairs'])}) — the anti-golfing check would police a strict subset`,
-            lines_fell,
-            size_measured: true,
-            complexity_measured: true,
-            safety_measured: true,
-        };
-    }
-
+/** Coerce one `compare()` block into the typed paired-continuous input. */
+function _toContinuous(block: Dict): PairedContinuous {
     return {
-        ...base,
-        verdict: lines_fell ? 'PASS' : 'NO-SIZE-WIN',
-        reason: lines_fell
-            ? `median added lines ${_pyStr(pct)}% at p=${_pyStr(size['wilcoxon_p'])} with no significant complexity rise and no safety regression`
-            : `T1 not met (median added lines ${_pyStr(pct)}% at p=${_pyStr(size['wilcoxon_p'])}; bar is <= ${T1_MEDIAN_LINES_PCT}% at p<${ALPHA})`,
-        lines_fell,
-        size_measured: true,
-        complexity_measured: true,
-        safety_measured: true,
+        measured: block['measured'] === true,
+        n_pairs: _pyFloat(block['n_pairs']),
+        median_delta_pct: block['median_delta_pct'] == null ? null : _pyFloat(block['median_delta_pct']),
+        median_delta: _pyFloat(block['median_delta']),
+        wilcoxon_p: _pyFloat(block['wilcoxon_p']),
     };
 }
 
-/**
- * The size-claim block of the rendered report.
- *
- * Rendered unconditionally — including when every endpoint is absent, because
- * "the pair was not measurable" is the finding a reader needs in order not to
- * quote a lines number from Table 1 as a size result.
- */
+function _toRate(block: Dict): PairedRate {
+    return {
+        measured: block['measured'] === true,
+        n_pairs: _pyFloat(block['n_pairs']),
+        rate_treatment: _pyFloat(block['rate_treatment']),
+        rate_baseline: _pyFloat(block['rate_baseline']),
+        mcnemar_p: _pyFloat(block['mcnemar_p']),
+    };
+}
+
+/** The Phase-3 size claim for one comparison. Contract: `evaluateSizeClaim`. */
+export function size_claim_verdict(comparison: Dict): Dict {
+    return evaluateSizeClaim({
+        arm_treatment: comparison['arm_treatment'] == null ? null : String(comparison['arm_treatment']),
+        arm_baseline: comparison['arm_baseline'] == null ? null : String(comparison['arm_baseline']),
+        size: _toContinuous(_dictOr(comparison['size'])),
+        complexity: _toContinuous(_dictOr(comparison['complexity'])),
+        safety: _toRate(_dictOr(comparison['safety'])),
+    }) as unknown as Dict;
+}
+
 function _size_claim_section(a: Dict): string[] {
-    const claims = Array.isArray(a['size_claims']) ? (a['size_claims'] as Dict[]) : [];
-    const L: string[] = [];
-    L.push('## Size claim (T1 + T2 pair, T4 disqualifier)');
-    L.push('');
-    L.push(
-        '> A size metric is a **measurement**, never a scored target. An arm may ' +
-            'claim a size win only when median added lines fell **and** median ' +
-            'cognitive complexity per changed function did not rise **and** the ' +
-            'safety tier did not regress. An unmeasured endpoint is never a pass.',
-    );
-    L.push('');
-    if (claims.length === 0) {
-        L.push('_No comparison rendered — no arms to compare._');
-        L.push('');
-        return L;
-    }
-    L.push('| comparison | verdict | why |');
-    L.push('|---|---|---|');
-    for (const c of claims) {
-        L.push(
-            `| \`${_pyStr(c['arm_treatment'])}\` vs \`${_pyStr(c['arm_baseline'])}\` ` +
-                `| **${_pyStr(c['verdict'])}** | ${_pyStr(c['reason'])} |`,
-        );
-    }
-    L.push('');
-    return L;
+    const claims = Array.isArray(a['size_claims']) ? (a['size_claims'] as unknown as SizeClaimVerdict[]) : [];
+    return renderSizeClaimSection(claims);
 }
 
 export function gate_verdict(analysis: Dict): Dict {

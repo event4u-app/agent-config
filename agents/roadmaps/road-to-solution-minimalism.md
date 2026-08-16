@@ -635,7 +635,7 @@ blocker as standing overstates its own gating.
       (`code_graph/loader.ts`), covering the three languages the corpus actually
       contains. It is a new implementation over an **existing** parser, not a new
       dependency: the ladder was walked and recorded in the module header —
-      nothing in-repo computes complexity, `eslint`'s `complexity` rule is
+      nothing in-repo computes complexity, the eslint built-in complexity rule is
       *cyclomatic* (the metric F9 rejects, since it scores a flat `switch` above
       a triply-nested `if`), and `eslint-plugin-sonarjs` is uninstalled and
       JS/TS-only, which would leave the PHP fixtures unmeasured.
@@ -653,9 +653,18 @@ blocker as standing overstates its own gating.
       from degrading into the lines-only report F9 forbids.
       **Retro-fit delivered too:** `bench_ab_v2_complexity.ts` re-scores a
       finished report off its preserved workspaces (delta #7), so a sweep that
-      already cost money gains the endpoint without a re-run. It falls back to
-      the corpus by task id for reports written before the runner recorded the
-      fixture path — which is every report that exists today.
+      already cost money gains the endpoint without a re-run. It resolves each
+      trial's fixture **from the corpus by task id**, so it needs nothing stamped
+      into the report and every sweep that already ran is re-scorable as it
+      stands.
+      **One mechanism, not two — decided against this roadmap's own subject.**
+      The first draft also had the runner stamp a `fixture` key onto each record
+      so reports would be self-describing, with the corpus lookup as a fallback.
+      The corpus already covers every report, so the field was a second mechanism
+      for one fact, and its reader would have had no producer for any report
+      written to date — the exact shape the completion review flagged for the
+      safety tier. Removed rather than kept: this is the ladder's *reuse* rung
+      applied to the roadmap's own change.
 - [x] **Pre-registered thresholds (F3-calibrated, weak-host arm):** ladder arm
       vs. package arm — median added lines ≤ **−10 %** at p<0.05, **and** no
       significant rise in median cognitive complexity per changed function,

@@ -50,23 +50,32 @@ const FLAT = `function classify(n) {
 const GOLFED = `function classify(n) { return n < 0 ? 'neg' : n === 0 ? 'zero' : 'pos'; }
 `;
 
-function reportWith(workspace: string, opts: { fixture?: string } = {}): Record<string, unknown> {
-    const rec: Record<string, unknown> = {
-        id: 'demo-01',
-        arms: {
-            'package-ladder': [{ seed: 0, errored: false, workspace, metrics: { tokens: 1 } }],
-        },
+function reportWith(workspace: string): Record<string, unknown> {
+    return {
+        records: [
+            {
+                id: 'demo-01',
+                arms: {
+                    'package-ladder': [{ seed: 0, errored: false, workspace, metrics: { tokens: 1 } }],
+                },
+            },
+        ],
     };
-    if (opts.fixture !== undefined) rec['fixture'] = opts.fixture;
-    return { records: [rec] };
+}
+
+/** A corpus mapping the fixture demo reports use. The ONLY fixture resolver. */
+function corpusFor(id = 'demo-01'): string {
+    const f = path.join(tmp('cxc-'), 'corpus.yaml');
+    fs.writeFileSync(f, `tasks:\n  - id: ${id}\n    fixture: ${id}\n`, 'utf8');
+    return f;
 }
 
 describe('bench_ab_v2_complexity — offline re-score', () => {
     it('computes added lines and a median from a preserved workspace', async () => {
         const { fixtures, workspace } = stage(FLAT, GOLFED);
-        const rows = await rescoreReport(reportWith(workspace, { fixture: 'demo-01' }), {
+        const rows = await rescoreReport(reportWith(workspace), {
             fixturesRoot: fixtures,
-            corpusPath: null,
+            corpusPath: corpusFor(),
         });
         expect(rows.length).toBe(1);
         const r = rows[0]!;
@@ -80,16 +89,17 @@ describe('bench_ab_v2_complexity — offline re-score', () => {
 
     it('--write puts both endpoints on the trial, and only then', async () => {
         const { fixtures, workspace } = stage(FLAT, GOLFED);
-        const payload = reportWith(workspace, { fixture: 'demo-01' });
+        const corpus = corpusFor();
+        const payload = reportWith(workspace);
         const trial = () =>
             ((payload['records'] as Record<string, unknown>[])[0]!['arms'] as Record<string, unknown[]>)[
                 'package-ladder'
             ]![0] as Record<string, unknown>;
 
-        await rescoreReport(payload, { fixturesRoot: fixtures, corpusPath: null });
+        await rescoreReport(payload, { fixturesRoot: fixtures, corpusPath: corpus });
         expect((trial()['metrics'] as Record<string, unknown>)['added_lines']).toBeUndefined();
 
-        await rescoreReport(payload, { fixturesRoot: fixtures, corpusPath: null, write: true });
+        await rescoreReport(payload, { fixturesRoot: fixtures, corpusPath: corpus, write: true });
         const m = trial()['metrics'] as Record<string, unknown>;
         expect(m['added_lines']).toBe(1);
         expect(m['median_cognitive_complexity']).toBe(3);
@@ -98,10 +108,10 @@ describe('bench_ab_v2_complexity — offline re-score', () => {
 
     it('a pruned workspace yields nulls and a reason — never a zero', async () => {
         const { fixtures } = stage(FLAT, GOLFED);
-        const rows = await rescoreReport(
-            reportWith(path.join(fixtures, 'does-not-exist'), { fixture: 'demo-01' }),
-            { fixturesRoot: fixtures, corpusPath: null },
-        );
+        const rows = await rescoreReport(reportWith(path.join(fixtures, 'does-not-exist')), {
+            fixturesRoot: fixtures,
+            corpusPath: corpusFor(),
+        });
         const r = rows[0]!;
         expect(r.added_lines).toBeNull();
         expect(r.median_cognitive_complexity).toBeNull();
@@ -110,31 +120,18 @@ describe('bench_ab_v2_complexity — offline re-score', () => {
 
     it('a trial with no recorded workspace is reported, not skipped silently', async () => {
         const { fixtures } = stage(FLAT, GOLFED);
-        const payload = { records: [{ id: 'demo-01', fixture: 'demo-01', arms: { a: [{ seed: 0 }] } }] };
-        const rows = await rescoreReport(payload, { fixturesRoot: fixtures, corpusPath: null });
+        const payload = { records: [{ id: 'demo-01', arms: { a: [{ seed: 0 }] } }] };
+        const rows = await rescoreReport(payload, { fixturesRoot: fixtures, corpusPath: corpusFor() });
         expect(rows[0]!.skipped_reason).toBe('no workspace recorded');
         expect(rows[0]!.median_cognitive_complexity).toBeNull();
     });
 
-    it('falls back to the corpus for reports written before the fixture key existed', async () => {
-        const { fixtures, workspace } = stage(FLAT, GOLFED);
-        const corpus = path.join(tmp('cxc-'), 'corpus.yaml');
-        fs.writeFileSync(corpus, 'tasks:\n  - id: demo-01\n    fixture: demo-01\n', 'utf8');
-        // No `fixture` on the record — exactly the shape of every existing report.
-        const rows = await rescoreReport(reportWith(workspace), {
-            fixturesRoot: fixtures,
-            corpusPath: corpus,
-        });
-        expect(rows[0]!.skipped_reason).toBeNull();
-        expect(rows[0]!.median_cognitive_complexity).toBe(3);
-    });
-
-    it('an unresolvable fixture is a reason, not a crash', async () => {
+    it('a task id the corpus does not carry is a reason, not a crash', async () => {
         const { fixtures, workspace } = stage(FLAT, GOLFED);
         const rows = await rescoreReport(reportWith(workspace), {
             fixturesRoot: fixtures,
             corpusPath: null,
         });
-        expect(rows[0]!.skipped_reason).toBe('record carries no fixture path');
+        expect(rows[0]!.skipped_reason).toBe('task id not in the corpus');
     });
 });

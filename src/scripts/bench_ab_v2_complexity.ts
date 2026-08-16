@@ -50,12 +50,18 @@ function _dictOr(v: unknown): Dict {
 }
 
 /**
- * task id → fixture path, for reports written before the runner recorded it.
+ * task id → fixture path. The corpus is the ONLY resolver, deliberately.
+ *
+ * An earlier draft also had the runner stamp a `fixture` key onto each record so
+ * reports would be self-describing, and this function read it first. That is two
+ * mechanisms for one fact: the corpus lookup already covers every report,
+ * including every one written before the key would have existed. The extra field
+ * was dropped rather than kept as a fallback — a reader with no producer is the
+ * shape this branch's own completion review flagged elsewhere.
  *
  * A missing or unreadable corpus is not an error: it degrades every affected
- * trial to `skipped_reason: 'record carries no fixture path'`, which is a
- * reportable state, rather than aborting a re-score that may still cover most of
- * the report.
+ * trial to `skipped_reason: 'task id not in the corpus'`, which is a reportable
+ * state, rather than aborting a re-score that may still cover most of the report.
  */
 function loadCorpusFixtures(corpusPath: string | null): Map<string, string> {
     const byId = new Map<string, string>();
@@ -88,7 +94,8 @@ export interface TrialRescore {
 
 /**
  * Re-score one report payload. Pure apart from the filesystem reads it needs;
- * mutates `payload` only when `write` is true.
+ * mutates `payload` only when `write` is true. The fixture each trial is diffed
+ * against is resolved from the corpus by task id — see `loadCorpusFixtures`.
  */
 export async function rescoreReport(
     payload: Dict,
@@ -102,8 +109,7 @@ export async function rescoreReport(
 
     for (const rec of records) {
         const taskId = String(rec['id'] ?? '<unknown>');
-        const fixtureRel =
-            rec['fixture'] !== undefined ? String(rec['fixture']) : (byId.get(taskId) ?? null);
+        const fixtureRel = byId.get(taskId) ?? null;
         const arms = _dictOr(rec['arms']);
         for (const [arm, runsRaw] of Object.entries(arms)) {
             const runs = Array.isArray(runsRaw) ? (runsRaw as Dict[]) : [];
@@ -129,7 +135,7 @@ export async function rescoreReport(
                     continue;
                 }
                 if (fixtureRel === null) {
-                    row.skipped_reason = 'record carries no fixture path';
+                    row.skipped_reason = 'task id not in the corpus';
                     out.push(row);
                     continue;
                 }

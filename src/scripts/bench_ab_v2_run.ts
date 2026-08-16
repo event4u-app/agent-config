@@ -1098,12 +1098,6 @@ export function collect_records(
             id: task['id'],
             archetype: task['archetype'],
             rule: task['rule'],
-            // Delta #11: the offline complexity re-scorer needs the pristine
-            // fixture to diff each preserved workspace against. Recording it here
-            // makes the report self-describing; the re-scorer still falls back to
-            // the corpus by task id, because every report written before this
-            // line lacks the key and retro-fitting those is the point.
-            fixture: task['fixture'],
             arms: per_arm,
         });
         if (aborted) {

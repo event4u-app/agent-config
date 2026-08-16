@@ -89,9 +89,11 @@ It writes `added_lines` and `median_cognitive_complexity` onto each trial's
   zero would read as "this run changed nothing"; `compare()` treats the null as
   *not measured on this pair*, and `size_claim_verdict` then refuses to report a
   size win at all rather than scoring a partial sample.
-- Reports written before the runner recorded each record's `fixture` path still
-  work — the re-scorer falls back to the corpus by task id, which is what makes
-  the retro-fit real for sweeps that already ran.
+- The fixture each trial is diffed against is resolved **from the corpus by task
+  id**, which is what makes the retro-fit real: it needs nothing stamped into the
+  report, so every sweep that already ran is re-scorable as it stands. A report
+  from a different corpus is re-scored by pointing the re-scorer at that corpus;
+  a task id it does not carry is reported as such, never silently skipped.
 
 ## Resume
 
