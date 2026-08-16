@@ -8,8 +8,8 @@
  * (`lint_load_context.cap_for`). Skills carry a token budget class
  * (`lint_token_budget_discipline`). The always-loaded set carries two budgets
  * (`check_always_budget`). The on-demand depth layer carries a per-file char
- * ceiling (`check_depth_budget`). The 1,080 `.ts` files this package actually
- * ships carry **none** — which is where the largest artefacts in the tree sit:
+ * ceiling (`check_depth_budget`). The 1,063 hand-written `.ts` files this
+ * package ships carry **none** — which is where the largest artefacts sit:
  * `install.ts` at 5,461 lines, `skill_linter.ts` at 4,742, `council_cli.ts` at
  * 4,058.
  *
@@ -104,6 +104,13 @@ function* walk(dir: string): Generator<string> {
             if (e.name === 'node_modules') continue;
             yield* walk(full);
         } else if (e.isFile() && e.name.endsWith('.ts')) {
+            // Same two exclusions this repository's own gate-population
+            // classifier makes (`_lib/gate_population.ts`), for the same stated
+            // reasons: a type declaration has no runtime behaviour, and a test
+            // file is not the reviewable code this ceiling is aimed at. Latent
+            // rather than cosmetic — a GENERATED `.d.ts` over the ceiling would
+            // otherwise red a ratchet that exists to bound hand-written code.
+            if (e.name.endsWith('.d.ts') || e.name.endsWith('.test.ts')) continue;
             yield full;
         }
     }
@@ -138,12 +145,15 @@ export function countLines(text: string): number {
 export function measure(repoRoot: string, files: readonly string[]): SourceFile[] {
     const out: SourceFile[] = [];
     for (const f of files) {
-        let text: string;
-        try {
-            text = fs.readFileSync(f, 'utf-8');
-        } catch {
-            continue;
-        }
+        // Deliberately NOT wrapped in a try/catch that `continue`s. A file this
+        // walker just enumerated and cannot read is a real problem, and a bare
+        // `continue` is the silent skip `_lib/gate_ledger` exists to catch: the
+        // target is already planned, so swallowing the error only defers the
+        // failure into an `UnaccountedTargetsError` naming a file whose read
+        // nobody can connect to it. Letting the read throw names the file and
+        // the reason. The ledger's skip vocabulary carries no code for
+        // "unreadable", and widening that shared union is not this change.
+        const text = fs.readFileSync(f, 'utf-8');
         out.push({ file: path.relative(repoRoot, f).split(path.sep).join('/'), lines: countLines(text) });
     }
     return out;
@@ -318,7 +328,27 @@ export function main(argv?: readonly string[]): number {
     const tally = ledger.finalize();
     const excess = totalExcess(measured);
 
+    // `--json` must emit JSON and nothing else, so a caller can pipe it to a
+    // JSON reader. Both of the calls below normally append prose to the same
+    // stdout, which would make the document unparseable — so under `--json` the
+    // scan report is routed to a no-op writer (the `assertScanned` dead-root
+    // check inside it still runs, it just does not print) and the ratchet
+    // verdict is carried as a FIELD rather than as a trailing paragraph.
     if (args.json) {
+        reportScanned(
+            {
+                gate: 'check_source_size_budget',
+                scanned: measured.length,
+                units: 'source file(s)',
+                roots: [...SOURCE_ROOTS],
+            },
+            () => true,
+        );
+        const verdict = checkRatchet({
+            gate: 'check_source_size_budget',
+            actual: excess,
+            repoRoot: root,
+        });
         process.stdout.write(
             `${JSON.stringify(
                 {
@@ -328,12 +358,21 @@ export function main(argv?: readonly string[]): number {
                     over: over.map((o) => ({ ...o, excess: excessOf(o) })),
                     scanned: measured.length,
                     ledger: tally,
+                    verdict: {
+                        status: verdict.status,
+                        ok: verdict.ok,
+                        baseline: verdict.baseline,
+                        message: verdict.message,
+                    },
                 },
                 null,
                 2,
             )}\n`,
         );
-    } else if (!args.quiet && over.length > 0) {
+        return verdict.ok ? 0 : 1;
+    }
+
+    if (!args.quiet && over.length > 0) {
         process.stdout.write(
             `\nOver the ${String(SOURCE_CEILING_LINES)}-line source ceiling ` +
                 '(a growth ratchet, NOT a measured quality threshold):\n',

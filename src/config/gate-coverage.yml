@@ -47,10 +47,12 @@
 # **37 of them emit the machine-readable `scanned: <N>` line under their
 # CI-identical argv, and all 37 are listed below.** The manifest is therefore
 # complete with respect to its own contract, and covers ~14 % of the population.
-# (The 2026-08-05 reading said "32 … and all 31 are listed"; the 2026-08-10
-# reading said "33 … and all 33" while 34 entries were listed; the 2026-08-13
-# reading said "257 … 35 of them"; the 2026-08-15 reading said "259 … 36 of
-# them" — each was correct at the time.
+# (The 2026-08-05 reading said "32 … and all 31 are listed" and the 2026-08-10
+# reading said "33 … and all 33" while 34 entries were listed — those two are
+# the MISCOUNTS this paragraph exists to warn about, and they are listed here
+# precisely because they were wrong, not correct-at-the-time. The 2026-08-13
+# reading ("257 … 35 of them") and the 2026-08-15 reading ("259 … 36 of them")
+# were both correct when written.
 # Both halves are RECOUNTED here on 2026-08-16: 260 is what
 # `count_gate_scripts()` returns on the tree that carries this change, and 37 is
 # `grep -c '^  - id:'` on this file. Neither number was derived by adding one to
@@ -804,7 +806,7 @@ gates:
   - id: check_source_size_budget
     argv: []
     min_scanned: 900
-    corpus: "TypeScript sources — every src/**/*.ts (1,081 at baseline)"
+    corpus: "TypeScript sources — src/**/*.ts excluding *.d.ts and *.test.ts, the same two kinds _lib/gate_population excludes (1,063 at baseline)"
     status: enforced
     # No `canary:` recipe, and the reason is the canary contract's own shape
     # rather than a gap. The violation this gate detects is a file OVER 1,500

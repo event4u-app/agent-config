@@ -148,8 +148,21 @@ describe('check_source_size_budget — the baseline is the live total', () => {
         ) as { gates: Record<string, { count: number }> };
         const entry = baselines.gates['check_source_size_budget'];
         expect(entry, 'check_source_size_budget has no baseline entry').toBeDefined();
-        // Equality, not `<=`: a baseline ABOVE the live total silently grants
-        // that many free lines of regression, and the gate still prints green.
+        // Equality, and BOTH directions are deliberate.
+        //
+        // Above the live total: the baseline silently grants that many free
+        // lines of regression while the gate still prints green. That half is
+        // the obvious one.
+        //
+        // BELOW the live total is the half worth stating, because gate and test
+        // then disagree on purpose. A commit that splits a god-file lowers the
+        // excess; the gate reads that as `improved` and exits 0 (advisory), so
+        // nothing would force the ratchet to follow the gain. This assertion is
+        // what makes the lowering commit carry its own baseline update — which
+        // is the whole point of ratchet-before-split, since a ratchet that lags
+        // its tree permits the gain to be given back unnoticed. So the test
+        // blocking where the gate only advises is the intended asymmetry, not a
+        // drift between them.
         expect(entry?.count).toBe(live);
     });
 
