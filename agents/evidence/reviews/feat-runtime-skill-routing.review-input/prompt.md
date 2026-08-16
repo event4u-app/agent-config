@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 13f0938f270994bbb227965710f60518d71161d4, review
-  artefacts excluded), scope hash `144719f540a8f4ef9c728800b713e63f2952221caa27a9ba3b862c2452417434`
+- diff: `diff.patch` — the review scope (branch head ec7b34b37649a238dca949c98bf4458c4ebca69e, review
+  artefacts excluded), scope hash `efe7f8d65eb86261a6c1c7a36d3358241601b91744ebf9fd9866246ec5c08fc5`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -40,6 +40,7 @@ Changed files:
 - dist/agent-src/skills/merge-conflicts/SKILL.md
 - dist/agent-src/skills/systematic-debugging/SKILL.md
 - dist/agent-src/skills/threat-modeling/SKILL.md
+- dist/install/install.mjs
 - dist/router.json
 - docs/CLAIMS.md
 - docs/architecture.md
@@ -69,6 +70,7 @@ Changed files:
 - src/skills/threat-modeling/SKILL.md
 - tests/hooks/skill_route_hook.test.ts
 - tests/scripts/mcp_server_tools.test.ts
+- tests/scripts/report_skill_activation.test.ts
 
 ## Output format (contract §2.2)
 
@@ -90,5 +92,5 @@ Fill the findings table in `feat-runtime-skill-routing.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 144719f540a8f4ef9c728800b713e63f2952221caa27a9ba3b862c2452417434, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope efe7f8d65eb86261a6c1c7a36d3358241601b91744ebf9fd9866246ec5c08fc5, reviewed <YYYY-MM-DD>
 ```

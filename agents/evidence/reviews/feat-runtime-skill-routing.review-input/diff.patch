@@ -1411,6 +1411,35 @@ index 6d9e72a5de633c23910cddd9eb9d65f4d1866198..59dccbcb554914d1540df920925d6430
  ---
  
  # threat-modeling
+diff --git a/dist/install/install.mjs b/dist/install/install.mjs
+index 2384250b8e3d65bc55009d3f170d1158c8586f9a..f46923b7236a24047274aad83c7cb48f3ee3be43 100755
+--- a/dist/install/install.mjs
++++ b/dist/install/install.mjs
+@@ -9448,14 +9448,22 @@ function measureCatalogueVolume(host, root) {
+     descriptionBytes: skills.reduce((sum, e) => sum + Buffer.byteLength(e.description), 0)
+   };
+ }
++function _supersedes(candidate, incumbent) {
++  if (candidate.observed_at !== incumbent.observed_at) {
++    return candidate.observed_at > incumbent.observed_at;
++  }
++  return (candidate.dropped_count ?? 0) > (incumbent.dropped_count ?? 0);
++}
+ function knownHostLimits(records) {
+   const out = /* @__PURE__ */ new Map();
++  const chosen = /* @__PURE__ */ new Map();
+   for (const record of records) {
+     if (truncationModeOf(record) !== "budget-strip-and-drop") continue;
+     if (typeof record.dropped_count !== "number") continue;
+     if (record.dropped_count <= 0) continue;
+-    const previous = out.get(record.host);
+-    if (previous !== void 0 && previous.observedAt > record.observed_at) continue;
++    const previous = chosen.get(record.host);
++    if (previous !== void 0 && !_supersedes(record, previous)) continue;
++    chosen.set(record.host, record);
+     out.set(record.host, {
+       host: record.host,
+       droppedEntries: record.dropped_count,
 diff --git a/dist/router.json b/dist/router.json
 index 7a3be8a15c51e977f72cdc0b402d2b2c1be820da..9ab58d23aed8d97d67ad75ca86bf01bf0e942967 100644
 --- a/dist/router.json
@@ -3303,3 +3332,34 @@ index 7970c95139a1a636667fd9d228bc3f0df886ad93..692d1834e27508fe2bc2d040bdfa820e
          for (const tool of Object.values(ALLOWLIST)) {
              expect(tool.description.trim()).toBeTruthy();
              expect(tool.input_schema.type).toBe('object');
+diff --git a/tests/scripts/report_skill_activation.test.ts b/tests/scripts/report_skill_activation.test.ts
+index e215c34c01e920996315ddc6a8e450354d31c48b..b288a259ae848d8f0e8809eafcb537eae403c1ed 100644
+--- a/tests/scripts/report_skill_activation.test.ts
++++ b/tests/scripts/report_skill_activation.test.ts
+@@ -60,10 +60,24 @@ describe("censusSkills", () => {
+     expect(c.total).toBe(0);
+   });
+ 
+-  it("the shipped corpus declares no machine-matchable trigger — the finding this script exists for", () => {
++  it("the shipped corpus now declares triggers, and only as a tranche", () => {
++    // This assertion used to read `toEqual([])` and recorded the finding the
++    // script was built for: zero of ~289 skills declared a machine-matchable
++    // trigger. `road-to-inbox-harvest-2026-08-d-runtime-skill-routing` Phase 3
++    // closed that finding on purpose — schema, then validator, then a first
++    // seeded tranche — so the empty expectation now measures history rather
++    // than the tree, and keeping it would fail the branch that fixed the thing.
++    //
++    // What replaces it is deliberately NOT the seeded name list: a hardcoded
++    // set turns every future tranche into a test edit while saying nothing
++    // about whether the tranche was sane. The two properties worth holding are
++    // that the capability is adopted at all, and that adoption stays a
++    // TRANCHE — a mass-seed across the catalogue is what the 3.3 precision
++    // gate exists to catch, and a name list would not have caught it either.
+     const c = censusSkills(path.join(REPO_ROOT, SKILLS_ROOT));
+     expect(c.total).toBeGreaterThan(200);
+-    expect(c.withTriggerKey).toEqual([]);
++    expect(c.withTriggerKey.length).toBeGreaterThan(0);
++    expect(c.withTriggerKey.length).toBeLessThan(c.total * 0.1);
+   });
+ });
+ 
