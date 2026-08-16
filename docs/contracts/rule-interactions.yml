@@ -61,6 +61,12 @@ rules:
   - active-remediation
   - cross-source-consistency
   - design-fidelity
+  - communication-through-line
+  - external-reference-deep-dive
+  - security-sensitive-stop
+  - source-discovery-gate
+  - think-before-action
+  - telegraph-speak
 
 pairs:
 
@@ -625,3 +631,157 @@ pairs:
     evidence:
       - src/rules/context-hygiene.md#tool-loop-detection
       - src/rules/token-efficiency.md#enumerated-file-sets-are-one-operation-not-n-repetitions
+
+  - id: direct-answers-x-communication-through-line
+    rules: [direct-answers, communication-through-line]
+    relation: overrides
+    conflict: >-
+      `communication-through-line` asks every mid-task reply to locate itself
+      in the plan and to close the loop, while `direct-answers` Iron Law 3
+      makes the shortest sufficient reply the right one. On a small
+      continuation both fire and pull opposite ways on reply length.
+    resolution: >-
+      Brevity wins, and the junior rule already says so in its own body — the
+      thread is orientation, never narration, and a one-shot answer needs no
+      plan-anchor and no end-summary at all. Where a reply does close with a
+      summary there is exactly ONE, the same one `direct-answers` requires;
+      the through-line never adds a competing second.
+    evidence:
+      - src/rules/communication-through-line.md#when-not-to-over-apply
+      - src/rules/direct-answers.md#iron-law-3--brevity-by-default
+
+  - id: role-mode-adherence-x-communication-through-line
+    rules: [role-mode-adherence, communication-through-line]
+    relation: overrides
+    conflict: >-
+      Both claim the reply's terminal position: `communication-through-line`
+      closes the loop with one end-summary, `role-mode-adherence` ends every
+      closing output with the structured mode marker. With a role mode active,
+      a work reply cannot satisfy both as written.
+    resolution: >-
+      Identical to `direct-answers-x-role-mode-adherence`, and recorded
+      separately because a reader may load this rule without loading the one
+      it restates: the mode marker goes last, the end-summary is the last
+      PROSE. The marker is an HTML comment and invisible in rendered output,
+      so the summary still reads as the closing content. Where no role mode is
+      active the marker is absent.
+    evidence:
+      - src/rules/communication-through-line.md#the-iron-law
+      - src/rules/role-mode-adherence.md
+
+  - id: role-mode-adherence-x-session-canary
+    rules: [role-mode-adherence, session-canary]
+    relation: overrides
+    conflict: >-
+      `session-canary`'s closing canary restates the literal-last-line
+      obligation for a PR URL; `role-mode-adherence` ends every closing output
+      with the mode marker. A turn that creates a PR under an active role mode
+      cannot satisfy both as written.
+    resolution: >-
+      Identical to `direct-answers-x-role-mode-adherence` and recorded on its
+      own key because the canary is the surface a reader actually loads when
+      the obligation fires: the mode marker goes last, the PR URL is the last
+      line of prose immediately above it. An invisible HTML comment below the
+      URL does not defeat the scannable-handle purpose the canary serves; a
+      visible line would.
+    evidence:
+      - src/rules/session-canary.md#the-two-canaries
+      - src/rules/role-mode-adherence.md
+
+  - id: context-hygiene-x-think-before-action
+    rules: [context-hygiene, think-before-action]
+    relation: gates
+    conflict: >-
+      `think-before-action` mandates a minimum read set — symbol, callers,
+      tests, abstractions, data — before any edit; on an unfamiliar codebase
+      that is five distinct read actions that can span more than five turns
+      with no edit, run, or question between them, which trips
+      `context-hygiene`'s read-loop abort the rule calls non-bypassable.
+    resolution: >-
+      The abort binds and is never lifted; what changes is the ceiling. A
+      minimum read set declared before the reading starts — goal, expected
+      read count, output shape — is a declared protocol and raises the abort
+      to eight read-only turns. Undeclared analysis keeps 3-warn / 5-abort, so
+      the cost of silence is the tighter cap rather than a suspended gate.
+      Exceeding the declared count by more than two is itself the violation.
+    evidence:
+      - src/rules/context-hygiene.md#declared-read-protocol--the-cap-goes-up-never-off
+      - src/rules/think-before-action.md#the-iron-law
+
+  - id: context-hygiene-x-source-discovery-gate
+    rules: [context-hygiene, source-discovery-gate]
+    relation: gates
+    conflict: >-
+      Producing the mandatory Evidence Report for an unfamiliar schema, API
+      surface, or vendor package requires several read-only probes before any
+      edit, which can exceed `context-hygiene`'s five-read-only-turn abort
+      before the evidence `source-discovery-gate` requires exists.
+    resolution: >-
+      Same shape as `context-hygiene-x-think-before-action`, and this pair is
+      the cleanest instance of it: the Evidence Report IS the declared
+      protocol's third field, so the declaration costs one line the gate was
+      going to demand anyway. Declare goal, expected probe count and the
+      report as the output shape; the abort moves to eight and still binds.
+    evidence:
+      - src/rules/context-hygiene.md#declared-read-protocol--the-cap-goes-up-never-off
+      - src/rules/source-discovery-gate.md#the-iron-law
+
+  - id: context-hygiene-x-security-sensitive-stop
+    rules: [context-hygiene, security-sensitive-stop]
+    relation: gates
+    conflict: >-
+      The pre-edit threat pass `security-sensitive-stop` requires "before the
+      first edit, never after" — consult memory, run the matching analysis
+      skill, read the auth or tenant code — is read-only and can exceed five
+      consecutive turns on a non-trivial surface.
+    resolution: >-
+      Declare the threat pass as a protocol before it starts and the ceiling
+      is eight; the abort itself is never suspended. If the pass genuinely
+      needs more, that is the surface-and-ask path both rules already name —
+      `security-sensitive-stop` says to ask rather than silently fall back to
+      editing, which is the same instruction the abort gives.
+    evidence:
+      - src/rules/context-hygiene.md#declared-read-protocol--the-cap-goes-up-never-off
+      - src/rules/security-sensitive-stop.md#the-iron-law
+
+  - id: context-hygiene-x-external-reference-deep-dive
+    rules: [context-hygiene, external-reference-deep-dive]
+    relation: gates
+    conflict: >-
+      The mandated deep dive — fetch listings, inspect directories, sample
+      frontmatter, cite verbatim — is read-only tool work with no edit and no
+      user-facing question, and on a large external repository it can exceed
+      the read-only abort before the dive the other rule calls mandatory is
+      complete.
+    resolution: >-
+      Declare the dive: the analysis goal is the axis being classified, the
+      expected read count is the fetch budget, and the output shape is the
+      adopt / adapt / reject table. That buys eight turns. Where the budget is
+      genuinely larger, `external-reference-deep-dive` already requires saying
+      which subtrees stay un-inspected and asking before concluding absence —
+      the abort and that instruction agree, so the stop is not a loss.
+    evidence:
+      - src/rules/context-hygiene.md#declared-read-protocol--the-cap-goes-up-never-off
+      - src/rules/external-reference-deep-dive.md#the-iron-law
+
+  - id: fast-path-marker-visibility-x-telegraph-speak
+    rules: [fast-path-marker-visibility, telegraph-speak]
+    relation: overrides
+    conflict: >-
+      The fast-path marker is normative to the byte — case, punctuation and
+      the leading blockquote prefix all matter — while `telegraph-speak`
+      condenses agent reply prose and its seven carve-outs cover none of it:
+      the marker is not a fence, not a numbered-options block, not a backtick
+      span, not a status glyph, not a mode marker, and not a deliverable.
+    resolution: >-
+      The marker survives condensation verbatim. It is the only audit signal
+      distinguishing a fast-path resolution from the agent's own reasoning, so
+      altering its wording destroys the thing it exists to prove — the same
+      ground the other six carve-outs stand on. Recorded here rather than as
+      an eighth carve-out because that is a rule-body edit, and this register
+      is the surface that declares the winner without one. Currently low
+      blast-radius: `telegraph-speak` is dormant by default and
+      workspace-scoped, which bounds the exposure without removing it.
+    evidence:
+      - src/rules/fast-path-marker-visibility.md#the-iron-law
+      - src/rules/telegraph-speak.md#carve-outs--byte-for-byte-preserved

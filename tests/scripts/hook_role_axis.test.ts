@@ -24,9 +24,16 @@ const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
  * worker neither talks to the user nor can clear its own session — the same
  * reason `end-review-nudge` sits here. Its recording half is orchestrator
  * business too: the fill level that matters is the main session's.
+ *
+ * `skill-route` joined in road-to-inbox-harvest-2026-08-d-runtime-skill-routing
+ * Phase 2, for the reason `delegation-nudge` is on the list rather than a new
+ * one: a worker was handed a bounded slice by an orchestrator that already
+ * chose the approach, so a routing pointer reaches nobody who can act on it
+ * while still costing the dispatch and a catalogue read.
  */
 const WORKER_DROP = [
     'delegation-nudge',
+    'skill-route',
     'end-review-nudge',
     'council-availability',
     'team-review-gate',

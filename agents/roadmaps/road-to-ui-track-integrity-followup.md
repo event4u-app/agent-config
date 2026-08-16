@@ -268,6 +268,19 @@ step list.
   `ui-component-architect` at high are **per-skill** tier facts. No session-level
   `--model` can express them, so they cannot be measured without exactly the
   per-skill control that is missing.
+- **Recommendation:** hold, and do **not** build the runner here. The owner line
+  already names the exit — "any roadmap that needs a UI-generation runner for
+  its own reason" — and building it inside this roadmap is what its own Non-goal
+  forbids. The alternative that keeps surfacing is weakening Measurement A to
+  something the current harness can run (a session-level `--model` instead of
+  per-skill tiers); that is rejected on the evidence above, because the two
+  outlier arms are per-skill tier facts no session flag can express, so the
+  weakened measurement would answer a different question under the same name.
+- **If you do nothing:** nothing degrades — the pre-registration is committed
+  and complete, and holding is the intended state. The cost is bounded and
+  specific: Measurement A and its two acceptance criteria stay open, so this
+  roadmap cannot archive, and every future sweep pays to re-read the same
+  blocker to reach the same conclusion.
 - **Resolved when:** a UI-generation runner with per-skill tier control exists —
   landed for its own reason, with its arm isolation validated (the port task
   demonstrably dispatches the builder skill, and the tier demonstrably reaches
@@ -299,6 +312,19 @@ step list.
   (anthropic/claude-sonnet-4-5 + openai/gpt-4o, convergent) rejected that path
   and chose the named blocker over a re-scope that changes a pre-registered
   input.
+- **Recommendation:** hold, and if either exit is taken, take the **supported
+  generic-lane override** rather than the React build/serve step. The override
+  is a bounded change to how `GENERIC_LANES` is derived; a build/serve step is a
+  new subsystem in the scorer's capture path, and the scorer captures `file://`
+  HTML today. Docker stays rejected on the council's reasoning above, not
+  re-opened: one arm containerised and one on the host makes the 0.40-weighted
+  `pixel` component a cross-epoch comparison, and containerising both voids the
+  calibration anchors.
+- **If you do nothing:** nothing degrades — as with Measurement A, holding is
+  the intended state and the pre-registration stays intact. The cost is that
+  Measurement B and its two acceptance criteria stay open, so the roadmap
+  cannot archive, and the pairing question gets re-derived from scratch by
+  whoever screens it next.
 - **Resolved when:** either a host-renderable framework lane exists (a
   build/serve step for the React lane, landed for its own reason) **or** a
   supported generic-lane override exists — at which point the re-scope is

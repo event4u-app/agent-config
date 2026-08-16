@@ -8,6 +8,10 @@ workspaces:
   - engineering
 packs:
   - engineering-base
+triggers:
+  - phrase: "root cause"
+  - phrase: "reproduce the bug"
+  - keyword: "flaky"
 ---
 
 # systematic-debugging

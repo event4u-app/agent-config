@@ -56,17 +56,17 @@ template guideline across all 33 active and 42 parked roadmaps returns nothing.
 
 ## Phase 1 — A de-inflation step in Diagnose
 
-- [ ] Add a de-inflation sub-step to `### 3. Inspect + Diagnose` in
+- [x] Add a de-inflation sub-step to `### 3. Inspect + Diagnose` in
       `src/skills/prompt-optimizer/SKILL.md`, naming the three patterns to strip
       and, for each, what it costs: a grandiose persona spends tokens without
       changing behaviour; a presupposed canon invites confabulation; scope
       stuffing produces an answer to a question nobody asked.
       *verify:* `grep -c "de-inflat" src/skills/prompt-optimizer/SKILL.md`
       returns non-zero and the skill linter reports the file clean.
-- [ ] Add the matching entries to the skill's `## Gotcha` section (`:115`), so
+- [x] Add the matching entries to the skill's `## Gotcha` section (`:115`), so
       the failure is visible to a reader who skips the procedure.
       *verify:* the Gotcha section names all three patterns.
-- [ ] Add a "viral-prompt anti-patterns" subsection to
+- [x] Add a "viral-prompt anti-patterns" subsection to
       `docs/guidelines/prompt-templates.md`, so the 12-template catalogue says
       what it deliberately does not contain.
       *verify:* the subsection exists and the guideline stays under its size
@@ -74,24 +74,48 @@ template guideline across all 33 active and 42 parked roadmaps returns nothing.
 
 ## Phase 2 — Provenance, recorded either way
 
-- [ ] Decide whether `prompt-optimizer` gets an entry in
+- [x] Decide whether `prompt-optimizer` gets an entry in
       `agents/settings/contexts/skills-provenance.yml`, which today carries one
       prompt-cluster entry (`:114`). Record the decision and its reason in the
       file or in this roadmap — an explicit no is a complete answer, since the
       de-inflation content is own analysis rather than adopted material.
       *verify:* the decision is written down somewhere a reader will find it.
-- [ ] Check the upstream attribution already present in the tracked skill body
+- [x] Check the upstream attribution already present in the tracked skill body
       against `source-confidentiality`'s recommending-versus-deriving split, and
       either leave it with a one-line reason or route it through the encrypted
       form.
       *verify:* `check_no_external_sources` passes and the disposition is stated.
+      **Disposition — name dropped, not encrypted, and the ratchet closed
+      behind it.** The attribution is a *rejection* of an upstream claim, which
+      the Iron Law names explicitly (`COMPARED-AGAINST`) and the denylist's own
+      README calls out as "comparison" — so leaving it was not available. The
+      encrypted form was also not available: it retains a *link*, and there is
+      none here, only an org name; `secrets.link_encryption_key` is absent from
+      every settings layer besides. So the rule's first-listed remedy applied —
+      drop the name, keep the substance. The rejected claim ("only 5 techniques
+      are safe", enumerated) survives in full in both surfaces; only *who said
+      it* is gone, which is exactly what the rule protects.
+      **Census, because one instance is a sample.** The literal construct is the
+      upstream org token in plaintext in a tracked artefact — the token itself
+      is not repeated here, because this file is tracked and the gate is right
+      to refuse it. **4 files** carried it:
+      `src/skills/prompt-optimizer/SKILL.md` and
+      `docs/guidelines/prompt-templates.md` plus their two generated
+      projections. All four now clear. Distinct and deliberately untouched: our
+      OWN council-response filename `prompt-master-mini.json` in 4 files, each
+      carrying `council-ref-allowed`. A denylist pattern on the *product* half
+      of the upstream name would have matched those too, so the new row keys on
+      the *org* half instead, matching the shape of the existing rows. The
+      2026-06-13 sweep had missed this source; the row means it cannot re-enter
+      unnoticed — which it promptly proved by catching this very paragraph in
+      its first draft.
 
 ## Acceptance criteria
 
-- [ ] Diagnose names the three inflation patterns and what each one costs.
-- [ ] The template guideline states what the catalogue deliberately omits.
-- [ ] The provenance question has a recorded answer, yes or no.
-- [ ] No new skill, no new template, no new command.
+- [x] Diagnose names the three inflation patterns and what each one costs.
+- [x] The template guideline states what the catalogue deliberately omits.
+- [x] The provenance question has a recorded answer, yes or no.
+- [x] No new skill, no new template, no new command.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude/host -->

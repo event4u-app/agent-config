@@ -575,6 +575,18 @@ inherit them.
   on this repository, and `security-sensitive-stop` § self-modification routes a
   self-config edit through the edit-permission gates rather than letting a
   session apply it to itself.
+- **Recommendation:** run the four steps. The capture facility is shipped and
+  verified, so this is a one-session errand, not a build — and step 4 bounds the
+  only real cost, since the standing egress surface exists solely while the
+  `env` entry is present. The alternative on the table is reading the field
+  lists out of the hook source instead of a captured payload, which is
+  precisely the build-against-documentation failure Phase 0 exists to stop.
+- **If you do nothing:** Phases 2 and 4 keep resting on payload fields
+  documented for a host version that is not the installed one — Risk 4 states
+  that dependency, and Phase 4 is cancelled outright if `agent_id` turns out to
+  be absent. So the cost of not deciding is not a delay; it is that the later
+  phases stay buildable-on-paper against a shape nobody has seen, and the
+  falsifier that would re-scope them cannot run.
 - **Resolved when:** a raw `SubagentStop` payload and a raw in-subagent
   `PreToolUse` payload exist as captured files, and their field lists are
   recorded in

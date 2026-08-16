@@ -10,9 +10,18 @@ parent_roadmap: road-to-rule-coherence
 > remains is the one class an agent may not decide — what a consumer install
 > receives by default — plus the measurement that should precede it.
 
-> **Blocked until** the maintainer rules on the default-flip gate. Every open
-> item below changes what ships to a consumer, or needs spend, or is owned by
-> another roadmap. None is agent-startable.
+> **Blocked until** the maintainer rules on the default-flip gate — for
+> Phases 1 and 2, which is what that gate covers.
+>
+> **Correction, 2026-08-16.** This line used to end "None is agent-startable",
+> and that was false when it was written. F4.1 changes nothing a consumer
+> receives, needs no spend, and is owned here rather than elsewhere; it was
+> executable the whole time and has now landed. The blanket claim survived
+> three screens as a reason not to look, which is the cost of writing a
+> roadmap-wide disposition from the phase that happens to be blocked. Phases
+> 1–2 remain maintainer-gated, F3.1 remains owned by
+> `road-to-thin-flip-under-anchor-scoring`, and F5.1 waits on its own stated
+> trigger — those three are the real gates, named individually.
 
 ## Context
 
@@ -114,13 +123,25 @@ preparing the evidence is in scope; an agent flipping the default is not.
 
 ## Phase 4 — Re-adjudicate what the audit left open
 
-- [ ] **F4.1 Re-adjudicate the 9 remaining `real-conflict` pairs** from
+- [x] **F4.1 Re-adjudicate the 9 remaining `real-conflict` pairs** from
   [`agents/evidence/analysis/rule-conflict-audit-2026-08-06.md`](../evidence/analysis/rule-conflict-audit-2026-08-06.md).
   Four of them are `context-hygiene`'s read-loop against a mandated multi-read
   protocol and were materially reduced by the parent's declared-protocol cap of
   8 — re-run them against the **new** rule text before writing any further
   rewrite. Two more share the reply-position root cause already declared for
   the other two.
+  - **Done 2026-08-16** —
+    [`rule-conflict-readjudication-2026-08-16.md`](../evidence/analysis/rule-conflict-readjudication-2026-08-16.md).
+    The step's own count was stale: two more pairs had been declared since it
+    was written, so the live number was **seven**, not nine. All twelve
+    original findings are now declared —
+    `docs/contracts/rule-interactions.yml` goes 23 rules / 30 pairs → 29 / 38,
+    linter clean. **No rule body was edited**, which is the step's own
+    instruction and also the correct shape: each of the seven had a resolution
+    derivable from text that already shipped, so the defect was a missing
+    declaration rather than a missing decision. The four read-loop pairs are
+    reduced but not closed by the cap of 8 — the ceiling exists and neither
+    side tells the agent how to unlock it, which is what the rows now say.
 
 ## Phase 5 — Retire the two provisional numbers
 
@@ -152,7 +173,7 @@ committed twice more itself.
   tool that watches diffs, built when there is intent to enforce that boundary.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-06 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-16 | reviewer: claude/host -->
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Flip lands without the soak | product | F1.1–F1.4 change what every consumer receives. Shipping them before the parent's transport and scoping fixes have soaked reproduces exactly the sequencing the council rejected — ship-then-patch | The blocked-until line gates the whole roadmap on the maintainer ruling, and the prerequisite step requires the parent merged AND soaked before Phase 1 opens | Phase 1 — The default flip (human release gate) |

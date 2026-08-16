@@ -11,6 +11,10 @@ workspaces:
   - engineering
 packs:
   - engineering-base
+triggers:
+  - phrase: "authorization check"
+  - phrase: "permission check"
+  - keyword: "authz"
 ---
 
 # authz-review

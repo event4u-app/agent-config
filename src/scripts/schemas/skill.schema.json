@@ -287,6 +287,23 @@
         }
       }
     },
+    "triggers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "keyword": {"type": "string", "minLength": 1},
+          "phrase": {"type": "string", "minLength": 1},
+          "file_pattern": {"type": "string", "minLength": 1},
+          "path_prefix": {"type": "string", "minLength": 1},
+          "command": {"type": "string", "minLength": 1},
+          "reason": {"type": "string"}
+        }
+      },
+      "description": "Activation triggers for the SKILL catalogue, shaped after the rule-side field so the two stay legible together — same five match keys (keyword, phrase, file_pattern, path_prefix, command), same additionalProperties:false, and deliberately no `intent` key, which was removed rule-side for giving authors false confidence that an activation path existed. OPTIONAL and empty of adopters on the day it ships: the capability becomes declarable before anything declares it, so a seeded tranche is measurable against the router corpus before it is written. Read by scripts/trigger_coverage.ts --scope skill through the same router_match.ts matcher the rule scope uses — not a fork. Schema: docs/contracts/rule-router.md."
+    },
     "workspaces": {
       "type": "array",
       "minItems": 1,

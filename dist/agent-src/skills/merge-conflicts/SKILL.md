@@ -7,6 +7,10 @@ workspaces:
   - engineering
 packs:
   - engineering-base
+triggers:
+  - phrase: "merge conflict"
+  - phrase: "rebase conflict"
+  - phrase: "resolve conflicts"
 ---
 
 # merge-conflicts

@@ -96,6 +96,10 @@ tasks:
       - task: check-ci-strict-superset
       - task: counts-check
       - task: check-index
+      # src/scripts/build_archive_index — the dedup index over the roadmap
+      # archive. A generated artefact nobody re-derives goes stale in one
+      # merge, so the drift check rides the same chain as check-index.
+      - task: check-archive-index
       - task: check-router
       - task: check-condensation
       - task: check-condensed-paths

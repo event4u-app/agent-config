@@ -60,10 +60,24 @@ describe("censusSkills", () => {
     expect(c.total).toBe(0);
   });
 
-  it("the shipped corpus declares no machine-matchable trigger — the finding this script exists for", () => {
+  it("the shipped corpus now declares triggers, and only as a tranche", () => {
+    // This assertion used to read `toEqual([])` and recorded the finding the
+    // script was built for: zero of ~289 skills declared a machine-matchable
+    // trigger. `road-to-inbox-harvest-2026-08-d-runtime-skill-routing` Phase 3
+    // closed that finding on purpose — schema, then validator, then a first
+    // seeded tranche — so the empty expectation now measures history rather
+    // than the tree, and keeping it would fail the branch that fixed the thing.
+    //
+    // What replaces it is deliberately NOT the seeded name list: a hardcoded
+    // set turns every future tranche into a test edit while saying nothing
+    // about whether the tranche was sane. The two properties worth holding are
+    // that the capability is adopted at all, and that adoption stays a
+    // TRANCHE — a mass-seed across the catalogue is what the 3.3 precision
+    // gate exists to catch, and a name list would not have caught it either.
     const c = censusSkills(path.join(REPO_ROOT, SKILLS_ROOT));
     expect(c.total).toBeGreaterThan(200);
-    expect(c.withTriggerKey).toEqual([]);
+    expect(c.withTriggerKey.length).toBeGreaterThan(0);
+    expect(c.withTriggerKey.length).toBeLessThan(c.total * 0.1);
   });
 });
 
