@@ -96,15 +96,19 @@ template guideline across all 33 active and 42 parked roadmaps returns nothing.
       are safe", enumerated) survives in full in both surfaces; only *who said
       it* is gone, which is exactly what the rule protects.
       **Census, because one instance is a sample.** The literal construct is the
-      plaintext org token `nidhinjs` in a tracked artefact: **4 files** carried
-      it — `src/skills/prompt-optimizer/SKILL.md` and
+      upstream org token in plaintext in a tracked artefact — the token itself
+      is not repeated here, because this file is tracked and the gate is right
+      to refuse it. **4 files** carried it:
+      `src/skills/prompt-optimizer/SKILL.md` and
       `docs/guidelines/prompt-templates.md` plus their two generated
       projections. All four now clear. Distinct and deliberately untouched: our
       OWN council-response filename `prompt-master-mini.json` in 4 files, each
-      carrying `council-ref-allowed`. A `prompt-master` denylist pattern would
-      have matched those too, so the entry is org-level (`nidhinjs`), matching
-      the shape of the existing rows. The 2026-06-13 sweep had missed this
-      source; the entry means it cannot re-enter unnoticed.
+      carrying `council-ref-allowed`. A denylist pattern on the *product* half
+      of the upstream name would have matched those too, so the new row keys on
+      the *org* half instead, matching the shape of the existing rows. The
+      2026-06-13 sweep had missed this source; the row means it cannot re-enter
+      unnoticed — which it promptly proved by catching this very paragraph in
+      its first draft.
 
 ## Acceptance criteria
 
