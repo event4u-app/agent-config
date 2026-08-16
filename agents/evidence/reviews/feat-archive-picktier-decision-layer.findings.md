@@ -1,10 +1,10 @@
 # Findings: feat-archive-picktier-decision-layer
-<!-- completion-review: v1 | reviewed: 2026-08-16 | scope: 2eec87fafa6ffee23ec8742e7fa2c7fcf15de58c7fce94220f8377766e8321bf | diff: e11b9e18c2ab37d400fd2ec7c799099b6928848d | reviewer: r2-fresh-subagent-feat-archive-picktier-decision-layer | prompt_hash: c50b322d627359bbac46b264bb4f63b5f1d7c16be6d6a2396ef485b20b756f44 -->
+<!-- completion-review: v1 | reviewed: 2026-08-16 | scope: f9d677b02796f217dad67a672f83b1477ed21e8cfc6d1c0d6d66063a18bc0477 | diff: 441c2d8edf4ed6836a483cb4c3ab15da75c0cfb1 | reviewer: r2-fresh-subagent-feat-archive-picktier-decision-layer | prompt_hash: c50b322d627359bbac46b264bb4f63b5f1d7c16be6d6a2396ef485b20b756f44 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: e11b9e18c2ab37d400fd2ec7c799099b6928848d
-  scope_hash: 2eec87fafa6ffee23ec8742e7fa2c7fcf15de58c7fce94220f8377766e8321bf
+  diff_sha: 441c2d8edf4ed6836a483cb4c3ab15da75c0cfb1
+  scope_hash: f9d677b02796f217dad67a672f83b1477ed21e8cfc6d1c0d6d66063a18bc0477
   roadmap: none
   roadmap_hash: none
   ac_hash: none
@@ -23,3 +23,11 @@ dispatched: 2026-08-16T20:35:19Z
 | 6 | low | src/scripts/cost/budget.mjs:13 | `join` is now an unused import — its only two call sites were the deleted `join(dirname(STORE), 'tier-reserves.jsonl')` and the deleted `loadReserveTtlMs` config path. Zero `join(` occurrences remain in the file. An own-orphan the diff created and did not clean up; ESLint does not catch it (no `no-unused-vars` resolves for this file, verified with `--print-config`), so nothing downstream will. | fixed | own-orphan `join` import removed from budget.mjs — e11b9e18c |
 | 7 | low | src/scripts/_lib/tier_budget_routing.ts:49 · src/scripts/routing_doctor.ts:648 | Latent correctness note on the surviving export: `tripCooldown` was both the only writer AND the only purger of expired entries, and `readCooldowns` returns raw stored values with no expiry filter. Its sole remaining consumer renders the marker on `s.cooldown_until_ms > 0`, not `> now_ms`, so any `tier-cooldowns.json` that ever appears makes `routing:doctor` report that tier as COOLING permanently, with nothing left in the tree able to clear or age it. The `cooldown_store_present` repair only covers the file-**absent** case. Not live today (no such file exists and nothing can create one), but the deletion is what removed the expiry-aware reader that previously masked it. | fixed | cool-down comparison moved from `> 0` to `> Date.now()` with the missing-purger reason inline — e11b9e18c |
 | 8 | low | agents/roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md:237-241 | A parked roadmap still cites the archived page as a binding live constraint — step 4.2 "No budget brake" rests on "`docs/contracts/budget-routing.md` and `contexts/execution/subagent-routing.md` state that work is never blocked to save money". Both cited sources were rewritten by this branch: the contract is a retired migration record and subagent-routing now says the fourth step does not exist. Two sibling roadmaps (`…-b-ledger-truth`, `…-d-top-band-model-economy`) were updated for exactly this reason; this one was not, so a future reader inherits a premise sourced from a retired contract. | fixed | parked roadmap now cites the principle rather than the retired contract page — e11b9e18c |
+
+**Re-bound a second time** after the install bundle was rebuilt without the
+worktree symlink (441c2d8ed). Re-bind rather than re-review: the reviewed source
+is unchanged, and the only moved content is 189 esbuild module banners in a
+generated artefact reverting to their correct in-repo form — the real delta of
+that file against the trunk is 2 lines, the settings description this branch
+edited.
+
