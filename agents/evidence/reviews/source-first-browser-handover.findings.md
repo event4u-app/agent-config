@@ -1,14 +1,24 @@
 # Completion review — source-first browser handover (road-to-source-first-frontend Phase 4 Steps 1–2)
 
-**Skipped:** no code surface for this completion — the branch changes 8 files and 0 of them is a code path: one new guideline, the mechanics guideline it was split out of, one rule's body-migration pointer, that rule's byte-identical `dist/` projection, the roadmap with two checkboxes flipped plus a correction note, the regenerated dashboard, and the README + architecture guideline counts, scope 407b11820953732f8ccdef6af1767271a803477c065ca78ca928b0735baccb08, declared 2026-08-16
+**Skipped:** no code surface for this completion — the branch changes 10 files and 0 of them is a code path: one new guideline, the mechanics guideline it was split out of, one rule's body-migration pointer, that rule's byte-identical `dist/` projection, the roadmap with two checkboxes flipped plus a correction note, and five regenerated artefacts (dashboard, `agents/index.md`, `docs/catalog.md`, README and architecture guideline counts), scope 9e2e00bb188cac9246dbdea8af7677777c2ee8661c4db9dd013d8eb05e58245d, declared 2026-08-16
 
-**Re-review, not a re-bind.** The first declaration covered scope
-`676f86b3…` at 5 files. The content then genuinely changed — the section was
-split into its own guideline after `check_depth_budget` reported it as a fifth
-over-ceiling file — so contract §2.1 forces a fresh review rather than an
-in-place re-bind. Nothing was carried across: there were no findings rows to
-carry, and the verdict is unchanged because the split moved prose between two
-docs and added no code path.
+**Two re-reviews, both real, neither a re-bind.** Scope `676f86b3…` (5 files)
+→ `407b1182…` (8) when the section was split into its own guideline after
+`check_depth_budget` reported it as a fifth over-ceiling file. Then
+`407b1182…` → `9e2e00bb…` (10) when `origin/main` moved 14 commits ahead
+mid-run: the branch was merged forward rather than pushed over, and the new
+guideline took the count to 106, which reds `check-index` until
+`agents/index.md` and `docs/catalog.md` carry it. Both rounds added reviewable
+content, so contract §2.1 forces a fresh review each time rather than an
+in-place re-bind. Nothing was carried across — there were no findings rows to
+carry — and the verdict is unchanged: prose moved between two docs, four
+artefacts were regenerated from it, and no code path appeared.
+
+**The merge itself was verified, not assumed.** `task sync` and
+`task generate-tools` were re-run after the merge and produced **zero** diff,
+so the 27 files main brought in did not leave a stale projection behind. A
+clean auto-merge of a generated file is not evidence that the generated file is
+still correct; regenerating is.
 
 ## Why there is no code to review
 
