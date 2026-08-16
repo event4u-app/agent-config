@@ -1,6 +1,14 @@
 # Completion review — source-first browser handover (road-to-source-first-frontend Phase 4 Steps 1–2)
 
-**Skipped:** no code surface for this completion — the branch changes 5 files and 0 of them is a code path: one guideline section, one rule's body-migration pointer, that rule's byte-identical `dist/` projection, the roadmap with two checkboxes flipped plus a correction note, and the regenerated dashboard, scope 676f86b31a392f0ef38f9d2e03a947b06b21a71185830cc375929f5a97affcd6, declared 2026-08-16
+**Skipped:** no code surface for this completion — the branch changes 8 files and 0 of them is a code path: one new guideline, the mechanics guideline it was split out of, one rule's body-migration pointer, that rule's byte-identical `dist/` projection, the roadmap with two checkboxes flipped plus a correction note, the regenerated dashboard, and the README + architecture guideline counts, scope 407b11820953732f8ccdef6af1767271a803477c065ca78ca928b0735baccb08, declared 2026-08-16
+
+**Re-review, not a re-bind.** The first declaration covered scope
+`676f86b3…` at 5 files. The content then genuinely changed — the section was
+split into its own guideline after `check_depth_budget` reported it as a fifth
+over-ceiling file — so contract §2.1 forces a fresh review rather than an
+in-place re-bind. Nothing was carried across: there were no findings rows to
+carry, and the verdict is unchanged because the split moved prose between two
+docs and added no code path.
 
 ## Why there is no code to review
 
@@ -54,6 +62,23 @@ the repo. The phase is therefore 2 of 3, and the roadmap stays open at 6 of 18.
 Phase 3 was not touched: its verifier exemption keys on a payload field that
 `road-to-subagent-lifecycle-integrity` still has open behind a host-env
 blocker, and its matcher would be built from a census that is still `[~]`.
+
+## The one repair that did land
+
+`check_depth_budget` went red on the first push: the new section took
+`design-fidelity-mechanics.md` from 14,202 to 17,949 chars against a 16,000
+per-file ceiling, making it the fifth over-ceiling file against a baseline of 4.
+All three CI failures — `Rule backstops` plus `Node Tests` shard 4/4 on both
+runners — were that one cause; the shard failure is the gate's own test
+asserting the baseline equals the live count.
+
+Repaired by splitting rather than compressing, which is the ceiling working as
+intended: with 1,798 chars of headroom, fitting the contract citation, the lock
+boundary, the retrieval order and the producer sentence into the remaining space
+would have cost the parts that make them actionable. Raising the baseline is
+what the gate's own message calls a defect, and was not done. Verified:
+`check_depth_budget` back to `4 violation(s) at baseline`, its test 9/9,
+`design_fidelity_routing` 23/23.
 
 ## Gates run on this change
 
