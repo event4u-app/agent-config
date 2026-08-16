@@ -383,6 +383,8 @@ _1 blocker resolved._
 **Blockers**
 
 - **picktier-wire-or-archive** (owner: user) — blocks Step 4.1 only. Phase 3 and Step 4.2 are closed and independent.
+  - **Recommendation:** fix the quorum, then take **(b)**. Two separate claims, and the order is the point. The quorum fix is unconditional — it costs one line, it is the only reason this entry has escalated twice, and every future contract-reversal question in this repository hits the same wall. On the disposition itself, (b) is where the evidence points: `decision-revisit-gate` says a lock is a decision under past conditions, and the condition that changed is not an opinion — the input `pickTier` requires has had no source since the settings key was deleted, so (a) does not mean "wire the contract", it means "invent a replacement for a category that was removed on purpose". (c) is the honest description of today and the weakest option to CHOOSE, because it leaves AC1–AC5 pre-registered against a mechanism that cannot run, which reads as coverage. **This is advice from the entry's own evidence, not a verdict** — a converged council reversal is still what (b) needs, which is why the quorum fix is first and not optional.
+  - **If you do nothing:** nothing breaks and no user sees anything wrong — the same honest no-cost answer four of the six entries rewritten on 2026-08-16 carry. What accrues is measurement debt in three places: 365 LOC of source and 355 LOC of tests keep asserting a lifecycle nothing runs; `budget.mjs tier` keeps summing a `reserved_usd` term whose store has no writer; and the v1 contract keeps five pre-registered acceptance criteria that can never fire, which a reader counts as coverage that exists. Step 4.1 and the acceptance criterion below it stay open indefinitely, so this roadmap cannot reach a terminal state.
   - **What to do:**
     pick exactly one —
     (a) **wire** it, naming where `routing_switch` now comes from;
@@ -392,7 +394,12 @@ _1 blocker resolved._
     (c) **carry it deliberately**, on the ground that the state is disclosed and
     monitored — which the step as written excludes, so choosing this amends the
     step rather than satisfying it.
-  - **Resolved when:** the user states which of (a), (b) or (c) holds.
+    **A fourth thing has to happen first, and it is not one of the three:** restore
+    the council quorum, by removing the `model: gpt-4o` pin from the `openai`
+    member in `~/.event4u/agent-config/settings/.ai-council.yml` (or moving that
+    member to the API transport). Until that lands, the mechanism this entry
+    defers to cannot produce the converged verdict it defers to it FOR.
+  - **Resolved when:** the council quorum is restored AND the user states which of (a), (b) or (c) holds — or the user decides without the council and says so, which is theirs to do but is the reversal-of-a-converged-decision this entry escalated to avoid.
 
 _1 blocker resolved._
 
