@@ -403,6 +403,38 @@ function _regen_dashboard(root: string, dry_run: boolean): void {
     }
 }
 
+/**
+ * Rebuild the archive index after a move, when the builder is present.
+ *
+ * The sweep is the one operation that changes what `agents/roadmaps/archive/`
+ * contains, so it is the one operation that can leave the generated index
+ * stale — and the drift gate on that index runs in the same PR the sweep runs
+ * in. Regenerating here keeps the two from disagreeing by construction rather
+ * than by remembering.
+ *
+ * `build_archive_index` is package-internal (`src/scripts/`), while this sweep
+ * is projected into consumer installs that carry no such script. Absent
+ * builder → nothing to regenerate, and that is a normal consumer state, not a
+ * failure. The spawn is best-effort for the same reason `_regen_dashboard` is:
+ * a sweep that archived correctly must not report failure because a
+ * regeneration could not run.
+ */
+function _regen_archive_index(root: string, dry_run: boolean): void {
+    if (dry_run) {
+        return;
+    }
+    const script = path.join(root, 'src', 'scripts', 'build_archive_index.ts');
+    if (!_isFile(script)) {
+        return;
+    }
+    _runTwin(root, script);
+    for (const rel of ['agents/roadmaps/archive/INDEX.md', 'agents/roadmaps/archive/index.json']) {
+        if (_isFile(path.join(root, rel))) {
+            _run(['git', 'add', '--', rel], root);
+        }
+    }
+}
+
 /** Spawn the dashboard generator twin (tsx) with cwd=root, mirroring `[sys.executable, script]`. */
 function _runTwin(root: string, script: string): void {
     // Python uses `sys.executable` — the interpreter already running this
@@ -491,6 +523,7 @@ function main(argv?: readonly string[]): number {
         return 0;
     }
     _regen_dashboard(root, ns.dry_run);
+    _regen_archive_index(root, ns.dry_run);
     const verb = ns.dry_run ? 'Would archive' : 'Archived';
     for (const rec of archived) {
         process.stdout.write(

@@ -8,6 +8,7 @@ tasks:
       - bash src/scripts/condense.sh --sync
       - ./scripts-run src/scripts/update_counts
       - ./scripts-run src/scripts/generate_pack_manifests
+      - task: build-archive-index
       - task: compile-corpus
       - task: sync-agent-settings
 
@@ -115,6 +116,16 @@ tasks:
     silent: true
     desc: Verify router.json matches a fresh compile (fails on drift)
     cmd: ./scripts-run src/scripts/compile_router --check
+
+  build-archive-index:
+    silent: true
+    desc: Regenerate agents/roadmaps/archive/{INDEX.md,index.json} — the dedup index over the roadmap archive
+    cmd: ./scripts-run src/scripts/build_archive_index {{.QUIET_FLAG}}
+
+  check-archive-index:
+    silent: true
+    desc: Verify the archive index matches a fresh build (fails on drift)
+    cmd: ./scripts-run src/scripts/build_archive_index --check {{.QUIET_FLAG}}
 
   compile-corpus:
     silent: true
