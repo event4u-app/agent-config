@@ -516,14 +516,14 @@ _1 blocker resolved._
 
 ### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
 
-**Follow-up to road-to-rule-coherence** — 1 / 9 done (11%)
+**Follow-up to road-to-rule-coherence** — 2 / 9 done (22%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | The default flip (human release gate) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 2 | Measure, with the comparison that is actually open | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 3 | Architecture, owned elsewhere | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 4 | Re-adjudicate what the audit left open | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 4 | Re-adjudicate what the audit left open | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 5 | Retire the two provisional numbers | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
 
 <a id="blockers-road-to-rule-coherence-followup"></a>
