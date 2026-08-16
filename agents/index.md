@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **710 artefacts** in this package.
+Maintainer-facing index of all **711 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -627,7 +627,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`worktree-status`](../src/domains/engineering-base/worktree/status/command.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../src/domains/engineering-base/worktree/verify/command.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (105)
+## Guidelines (106)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -700,6 +700,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`design-antipatterns`](../docs/guidelines/design-antipatterns.md) | (root) |  |
 | guideline | [`design-canon`](../docs/guidelines/design-canon.md) | (root) |  |
 | guideline | [`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) | (root) |  |
+| guideline | [`design-handover-extraction`](../docs/guidelines/design-handover-extraction.md) | (root) |  |
 | guideline | [`design-modes`](../docs/guidelines/design-modes.md) | (root) |  |
 | guideline | [`readme-size-and-splitting`](../docs/guidelines/docs/readme-size-and-splitting.md) | docs |  |
 | guideline | [`playwright`](../docs/guidelines/e2e/playwright.md) | e2e |  |

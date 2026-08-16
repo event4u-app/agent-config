@@ -45,6 +45,27 @@ Two consequences worth stating because they are the ones agents get backwards:
 
 Regression witness: `daf-source-over-screenshot`.
 
+## URL / live-page handover — extraction into files, before the first UI write
+
+```
+A HANDOVER THAT ARRIVES AS A URL IS STILL RUNG 2, NOT RUNG 4.
+EXTRACT THROUGH THE USER'S CONNECTED BROWSER TOOLS INTO FILES
+BEFORE ANY UI WRITE. A SCREENSHOT TAKEN DURING EXTRACTION
+CARRIES QA DUTY ONLY — IT IS NEVER THE THING YOU BUILD FROM.
+```
+
+A published artifact link, a builder's share link, a staging or `localhost`
+page: rung 2 above is reachable, so rung 4 is not the fallback it looks like.
+Extraction lands in the existing `design-system.json` contract under the
+`.claude/design-system/` prefix the rule already routes on — no new artifact
+shape — and the offline `/design-system:import` adapter consumes it. The package
+ships the contract, the adapter and the instructions; it ships no crawler,
+Playwright runtime or font-bundler.
+
+Where the extraction goes, what consumes it, the retrieval order that keeps the
+source alive across sessions, the producer sentence, and the honest coverage
+gap: [`design-handover-extraction`](design-handover-extraction.md).
+
 ## Adopt the code — re-derivation is a deviation
 
 Where the artifact's own markup, CSS, or JS is stack-compatible, **adapting that
