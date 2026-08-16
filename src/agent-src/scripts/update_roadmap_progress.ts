@@ -380,8 +380,23 @@ function _stripFencedCode(text: string): string {
     return text.replace(FENCED_CODE_RE, (m) => '\n'.repeat(_splitlines(m).length));
 }
 
-const BLOCKER_FIELD_RE =
-    /^-[ \t]*\*\*(Status|Owner|Blocks|Resolved when|What to do|Recommendation|If you do nothing|Question):\*\*/i;
+/**
+ * Terminator for a blocker field's continuation lines — ANY `- **Label:**`
+ * bullet, not a closed list of known labels.
+ *
+ * It used to enumerate eight names, which silently diverged from the contract
+ * the two call sites below already document ("up to the next `- **Field:**`
+ * marker"): a bullet whose label was not on the list did not terminate, so the
+ * PREVIOUS field kept absorbing it and the dashboard rendered the two as one
+ * run-on sentence. Measured when `- **Options:**` and `- **Side finding:**`
+ * first appeared in a blocker — a reader saw the side finding as part of
+ * `Resolved when`, i.e. the generator changed what a field meant.
+ *
+ * A closed list is the wrong shape for a terminator: every future field name
+ * would have to be added here to avoid corrupting the field above it, and the
+ * failure is silent in generated output nobody edits by hand.
+ */
+const BLOCKER_FIELD_RE = /^-[ \t]*\*\*[^*]+:\*\*/;
 
 /** Strip an inline `<!-- comment -->` and trim. */
 function _stripComment(s: string): string {

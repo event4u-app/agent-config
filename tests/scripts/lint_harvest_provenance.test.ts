@@ -321,9 +321,18 @@ describe('CLI smoke — the real repo ledger', () => {
         expect(res.status).toBe(2);
     });
 
-    it('--quiet suppresses the green line but keeps the exit code', () => {
+    it('--quiet suppresses the green line but keeps the exit code and the ledger count', () => {
         const res = run(['--quiet']);
         expect(res.status).toBe(0);
-        expect(res.stdout.trim()).toBe('');
+        // The GREEN line is what `--quiet` suppresses, and that is what this
+        // case has always been about — the assertion used to say "no stdout at
+        // all" only because there was nothing else on it.
+        expect(res.stdout).not.toMatch(/ledger row\(s\) OK/);
+        // The completeness breakdown deliberately survives `--quiet`:
+        // `_lib/gate_ledger` § report states the reason, and it is the same one
+        // `reportScanned` gives — CI passes `--quiet`, so a count only visible
+        // without it is not a count. Asserting its presence keeps a future
+        // "tidy up the quiet output" change from silently blinding the gate.
+        expect(res.stdout).toMatch(/^lint_harvest_provenance ledger: scanned=\d+ planned=\d+ skipped=\d+$/m);
     });
 });

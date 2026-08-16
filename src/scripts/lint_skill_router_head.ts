@@ -38,6 +38,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { GateLedger } from './_lib/gate_ledger.js';
 import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 const _FILE = fileURLToPath(import.meta.url);
@@ -203,6 +204,26 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
     const heads = collectSkillHeads(path.join(REPO, SKILLS_REL));
     const { findings, staleAllowlist } = evaluate(heads);
+
+    // Per-target completeness accounting. The interesting outcome here is the
+    // SKIP: a grandfathered head is over the cap and deliberately unchecked, so
+    // without a ledger it was indistinguishable from a head that passed. The
+    // allowlist size is already printed, but only the ledger ties each skipped
+    // name to the reason it went unchecked.
+    const ledger = new GateLedger('lint_skill_router_head');
+    ledger.plan(heads.map((h) => h.name));
+    const failed = new Set(findings.map((f) => f.skill));
+    const allow = new Set(GRANDFATHERED);
+    for (const h of heads) {
+        if (failed.has(h.name)) {
+            ledger.fail(h.name, `${String(h.lines)} lines over the ${String(MAX_HEAD_LINES)}-line cap with no mode bodies`);
+        } else if (h.lines > MAX_HEAD_LINES && allow.has(h.name)) {
+            ledger.skip(h.name, 'declared_exemption');
+        } else {
+            ledger.complete(h.name);
+        }
+    }
+    ledger.report();
 
     for (const s of staleAllowlist) {
         process.stderr.write(

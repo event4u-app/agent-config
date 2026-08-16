@@ -1533,6 +1533,14 @@ tasks:
       Shrink-only ratchet — a fifth over-ceiling file reds.
     cmd: ./scripts-run src/scripts/check_depth_budget
 
+  check-source-size-budget:
+    silent: true
+    desc: >-
+      Growth ratchet over oversized TypeScript sources (src/**/*.ts, ceiling
+      1,500 lines). The metric is TOTAL LINES ABOVE THE CEILING, not a file
+      count, so growth inside an already-oversized file reds too.
+    cmd: ./scripts-run src/scripts/check_source_size_budget
+
   check-augment-description-cap:
     silent: true
     desc: Auto-rule description-length gate (≤ 150 chars) — see road-to-augment-limit-fit P1.3
