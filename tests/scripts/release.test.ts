@@ -929,11 +929,32 @@ describe('assert_scheduled_deprecations_clear', () => {
         // the guard takes ONE version and never reads the current one. That is
         // the property, so assert the property rather than staging a duplicate
         // of the refusal test that cannot fail independently of it.
-        expect(assert_scheduled_deprecations_clear.length).toBeLessThanOrEqual(3);
         const calls: string[][] = [];
         assert_scheduled_deprecations_clear('13.0.0', stub(0, calls));
-        // Exactly one version reaches the gate, and it is the target.
+        // Exactly one version reaches the gate, and it is the target. An earlier
+        // revision of this test also asserted `Function.length`, which counts
+        // parameters before the first default and therefore held for any
+        // refactor — including one that reintroduces a `current` parameter. The
+        // argv content is the only thing that actually establishes the property.
         expect(calls[0]?.filter((a) => /^\d+\.\d+\.\d+$/.test(a))).toEqual(['13.0.0']);
+    });
+
+    it('previewOnly reports the refusal and does NOT throw — the dry-run contract', () => {
+        // The branch this function's own JSDoc names as a prior regression, and
+        // which no test reached: the integration dry-run tests spawn against the
+        // real repo, whose table is clean, so the guard returns on exit 0 long
+        // before the preview branch.
+        const calls: string[][] = [];
+        expect(() =>
+            assert_scheduled_deprecations_clear('13.0.0', stub(1, calls), { previewOnly: true }),
+        ).not.toThrow();
+        // It still consults the gate — a preview that skips the check shows nothing.
+        expect(calls).toHaveLength(1);
+        // And without previewOnly the identical input refuses, so the flag is
+        // what makes the difference rather than the fixture being toothless.
+        expect(() => assert_scheduled_deprecations_clear('13.0.0', stub(1, []))).toThrow(
+            SystemExitError,
+        );
     });
 
     it('a multi-major jump is still a major cut', () => {

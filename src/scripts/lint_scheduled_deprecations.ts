@@ -300,8 +300,14 @@ export function evaluate(
         const removal = resolveDueMajor(row.removalDueRaw, noticeMajor);
 
         if (removal.kind === 'unpinned' || removal.kind === 'keep' || removal.kind === 'withdrawn') {
-            // A tracked state, which is the outcome the table exists to record.
-            ledger?.complete(key);
+            // A tracked state carries no comparable version, so the arithmetic
+            // never runs on it. Recorded as SKIPPED rather than completed: a row
+            // that skipped the comparison must not read the same as one that
+            // passed it, which is the false-green shape this whole gate is about
+            // — and today all three shipped rows are tracked states, so a
+            // `complete()` here meant the gate printed green over zero
+            // comparisons.
+            ledger?.skip(key, 'not_applicable_kind');
             continue;
         }
         if (removal.kind === 'unresolved') {
@@ -613,7 +619,13 @@ export function main(argv: readonly string[]): number {
     // `allowEmpty`: an empty scheduled-deprecations table is not a success
     // state while `MIGRATION.md` itself instructs that a promise without a row
     // is untracked.
+    const compared = tally.completed + tally.failed;
     try {
+        // The SCOPE assertion is on rows parsed: zero means the heading moved or
+        // the table's format drifted, which is the dead-scan-root case. How many
+        // of those rows the arithmetic actually reached is a different number,
+        // published beside it below — conflating the two is what let this gate
+        // report green over zero comparisons.
         reportScanned({
             gate: 'lint_scheduled_deprecations',
             scanned: tally.planned,
@@ -637,7 +649,10 @@ export function main(argv: readonly string[]): number {
                 `removal-due cell not resolvable: "${f.row.removalDueRaw}"\n` +
                 '    The grammar is documented at the top of this gate. Either write a\n' +
                 '    concrete major, or record the row as not pinned, a permanent keep, or a\n' +
-                '    withdrawn commitment with its reason.\n',
+                '    withdrawn commitment with its reason.\n' +
+                '    NOTE: the relative form ("the major after that") resolves against the\n' +
+                '    NOTICE cell, and a notice is written as a date once it ships — so a row\n' +
+                '    using it must be rewritten to a concrete major on notice day.\n',
         );
     }
 
@@ -692,7 +707,13 @@ export function main(argv: readonly string[]): number {
     if (!quiet) {
         ledger.report();
         process.stdout.write(
-            `✅  lint_scheduled_deprecations: ${String(tally.planned)} row(s), none due against ${against}\n`,
+            `✅  lint_scheduled_deprecations: ${String(tally.planned)} row(s) parsed, ` +
+                `${String(compared)} compared against ${against}, none due` +
+                (compared === 0
+                    ? ' — every row is a tracked state (not pinned / permanent keep / withdrawn),\n' +
+                      '    so NO arithmetic ran this time. Green here means "nothing to compare",\n' +
+                      '    not "the comparison passed".\n'
+                    : '.\n'),
         );
     }
     return 0;

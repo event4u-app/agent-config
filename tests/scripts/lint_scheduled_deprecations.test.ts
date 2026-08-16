@@ -165,6 +165,33 @@ describe('lint_scheduled_deprecations', () => {
         expect(r.stdout).toContain('none due');
     });
 
+    it('a table of only tracked states says 0 compared — green is not "the comparison passed"', () => {
+        // The false-green shape this gate exists to prevent, applied to itself:
+        // a tracked-state row never reaches the arithmetic, so publishing rows
+        // PARSED as the whole story made a run that compared nothing read
+        // exactly like one that compared everything.
+        writeFixture(tmp, 12, [
+            '| `a` | 2026-01-01 | shipped 2026-01-02 | **not pinned here** | none |',
+            '| `b` | 2026-01-01 | 10.0 | documented permanent keep | none |',
+        ]);
+
+        const r = run(tmp);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toContain('scanned: 2');
+        expect(r.stdout).toContain('2 row(s) parsed, 0 compared');
+        expect(r.stdout).toContain('NO arithmetic ran');
+        // The ledger must agree — skipped, not completed.
+        expect(r.stdout).toContain('skipped=2');
+    });
+
+    it('a comparable row IS counted as compared', () => {
+        writeFixture(tmp, 12, ['| `real` | 2026-01-01 | 12.0 | 13.0 | none |']);
+        const r = run(tmp);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toContain('1 row(s) parsed, 1 compared');
+        expect(r.stdout).not.toContain('NO arithmetic ran');
+    });
+
     it('an unresolvable removal-due cell reds instead of being guessed at', () => {
         writeFixture(tmp, 12, ['| `vague_thing` | 2026-01-01 | soon | eventually | none |']);
 
