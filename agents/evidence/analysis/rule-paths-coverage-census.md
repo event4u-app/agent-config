@@ -155,11 +155,89 @@ them carries a keyword trigger.
 **The cost, stated plainly because it cuts against this roadmap's other half:**
 the 19 restored rules total **54,521 bytes ≈ 13,630 estimated tokens**, so
 Claude Code sessions now carry about **12 % more rule payload** than they did
-while the rules were silently narrowed. That is real, and it points the same
-way the payload schedule does: these 19 are exactly the rules that should
-either earn genuine `paths:` coverage or drop the keyword triggers they do not
-need. The repair did not create that work — it made it visible instead of
-paying for it with capability nobody chose to give up.
+while the rules were silently narrowed.
+
+## The follow-up pass — how much of that was actually recoverable
+
+The obvious next move was to give those 19 genuine `paths:` coverage, so the
+repair and the payload schedule would pull the same way. Each was read in full
+against its own "When it fires" section, asking one question: *could this rule
+drop its keyword triggers entirely and live on paths alone, without losing a
+case it exists to catch?*
+
+| Verdict | Rules | Bytes | ≈ Tokens |
+|---|---:|---:|---:|
+| Scoped in this pass | **0** | 0 | **0** |
+| Must stay unconditional | **19** | 54,521 | **13,630** |
+
+**The recovery is zero. The entire 12 % is the honest price** — not slack that
+better globs would remove.
+
+### The first answer was "four of nineteen", and CI refuted it
+
+That reading came from each rule's own body — its "When it fires" section, its
+scope statement — and it was defensible from the body alone and still false,
+because **the body is not the only authority on what a rule must catch.**
+
+`tests/eval/routing-matrix/<rule>.yaml` pins the prompts each rule must route
+on, and a fixture carrying **no `open_files`** is by construction a case that
+arrives with no matching file. All four candidates have one:
+
+| Rule | File-less positive that stopped routing |
+|---|---|
+| `framework-neutrality-in-generic-skills` | *"This generic skill mandates php artisan directly - neutralize it."* |
+| `augment-edit-discipline` | *"Rename this skill and update every cross-reference."* |
+| `php-coding` | *"Run phpstan on the changed files and fix the level 8 errors."* + 2 more |
+| `low-impact-corpus-privacy-floor` | *"Append this naming verdict to the low-impact corpus, please."* + 2 more |
+
+Dropping the keywords made every one of those prompts stop routing, and
+`routing_matrix.test.ts` failed on precisely that. The lesson is procedural and
+worth more than the pass was: **a rule's scopeability cannot be judged from its
+prose alone — the routing matrix is a second authority, and unlike the prose it
+is machine-checked.** Any future attempt reads the matrix first.
+
+The finding is therefore stronger than the original framing rather than weaker:
+nineteen for nineteen, the keyword reach is load-bearing, and it is *tested* to
+be so.
+
+Six recurring shapes, which is the reusable part of this finding:
+
+1. **Proposal-stage gates.** `domain-adoption-policy` fires on *opening* a
+   domain, `persona-governance` on *proposing* a persona — both before any file
+   exists. Scoping them to the file means the gate arrives after the decision.
+2. **Circular gates.** `provider-lifecycle-discipline` and `onboarding-gate`
+   exist to make the agent *go read* a file; scoping them to that same file
+   means they load only once the compliant behaviour already happened.
+3. **Session-state gates.** `settings-ask-protocol`'s worked example is a
+   first-turn question on a bare session with nothing open.
+4. **Reply-generation gates.** `markdown-safe-codeblocks` governs markdown the
+   agent writes *into the chat*, which touches no file at all.
+5. **Prompt-triggered gates.** `image-likeness-and-rights` and
+   `lethal-trifecta-guard` fire on what is *asked for* — "generate an image of
+   X", "fetch this and post it to that webhook" — not on an edit.
+6. **Unboundable surfaces.** `laravel-translations` targets every user-visible
+   string, authored anywhere in a Laravel app; `doc-screenshot-hygiene` names
+   README and "feature docs" as firing surfaces distinct from its one
+   `docs/media/` prefix. No finite glob narrows either.
+
+Two rules carry the sharpest self-evidence. `design-fidelity`'s own routing
+section is an extended argument *for* keeping its keywords, including a
+withdrawn attempt at a third trigger class that was unfixably over-broad. And
+`ui-audit-gate` states outright that the ground-truth UI-surface predicate is
+**wider than its own authored glob list** — "a measurement denominator and a
+routing trigger are not the same population".
+
+**One real fix survives the reverted pass**, and it is a correctness bug rather
+than a payload win:
+`low-impact-corpus-privacy-floor` names *two* locked target files in its body
+and its trigger reached only one, so a write to
+`data/low-impact-decisions-seed.md` never loaded the rule that governs it. The
+missing prefix is now declared — a correctness fix that happens to also make
+the rule scopable.
+
+The repair did not create this work. It made the cost visible instead of paying
+for it with capability nobody chose to give up, and this pass establishes that
+the remaining cost is structural rather than sloppy.
 
 ## Method note
 

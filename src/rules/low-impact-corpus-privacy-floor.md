@@ -4,6 +4,7 @@ tier: "1"
 description: "Writing/upstreaming low-impact-decisions corpus entries — non-bypassable privacy floor"
 triggers:
   - path_prefix: "agents/decisions/low-impact-decisions"
+  - path_prefix: "data/low-impact-decisions-seed"
   - keyword: "low-impact-decisions"
   - keyword: "low-impact corpus"
   - keyword: "learn-low-impact"
