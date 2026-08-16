@@ -32,6 +32,8 @@ import {
     compare,
     cost_by_arm,
     pricing_age_days,
+    gate_verdict,
+    size_claim_verdict,
 } from '../../src/scripts/bench_ab_v2_stats.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -494,5 +496,187 @@ describe('bench_ab_v2_stats — cost_by_arm (delta #6)', () => {
         const cost = a['cost'] as Record<string, unknown>;
         expect(cost['priced']).toBe(true);
         expect(cost['pricing_sourced_on']).toBe('2026-05-14');
+    });
+});
+
+// ── the size claim is a PAIR, and safety is a disqualifier ─────────────────
+//
+// These are the two Verify clauses of the Phase-3 metric-pair and Goodhart-guard
+// steps, written as the properties they demand rather than as coverage:
+//
+//   "the scorer refuses to report a size win when the complexity arm regressed;
+//    prove it by feeding it a deliberately golfed fixture"
+//   "the scoring code cannot rank an arm above another on size alone when its
+//    safety tier regressed"
+//
+// Both are stated NEGATIVELY, so each is tested by constructing the input that
+// would produce the forbidden verdict and asserting it does not appear. A suite
+// that only proved PASS on good data would pass just as happily against a scorer
+// with no guard at all.
+describe('size_claim_verdict — the metric pair (T1/T2) and the T4 disqualifier', () => {
+    const SEEDS = 8;
+
+    interface TrialShape {
+        added: number | null;
+        cc: number | null;
+        safe: boolean | null;
+    }
+
+    const runs = (t: TrialShape): Record<string, unknown>[] =>
+        Array.from({ length: SEEDS }, (_, seed) => {
+            const metrics: Record<string, unknown> = { status_bucket: 'completed', tokens: 100 };
+            if (t.added !== null) metrics['added_lines'] = t.added + seed;
+            if (t.cc !== null) metrics['median_cognitive_complexity'] = t.cc;
+            if (t.safe !== null) metrics['safety_tier_pass'] = t.safe;
+            return {
+                seed,
+                errored: false,
+                capability_pass: true,
+                discipline_score: 1.0,
+                discipline_pass: true,
+                metrics,
+            };
+        });
+
+    const cmpOf = (ladder: TrialShape, pkg: TrialShape): Record<string, unknown> =>
+        compare(
+            [{ id: 't1', arms: { 'package-ladder': runs(ladder), package: runs(pkg) } }],
+            'package-ladder',
+            'package',
+        ) as Record<string, unknown>;
+
+    it('PASS only when lines fell, complexity did not rise, and safety held', () => {
+        const v = size_claim_verdict(
+            cmpOf({ added: 10, cc: 3, safe: true }, { added: 30, cc: 3, safe: true }),
+        );
+        expect(v['verdict']).toBe('PASS');
+        expect(v['lines_fell']).toBe(true);
+    });
+
+    it('REFUSES a size win when complexity rose — the golfed arm', () => {
+        // Exactly the fixture pair the T2 unit suite scores: fewer lines, denser
+        // code. Lines are a clear, significant win; the verdict must still not be
+        // one, because the claim is a pair.
+        const cmp = cmpOf({ added: 10, cc: 9, safe: true }, { added: 30, cc: 3, safe: true });
+        const size = cmp['size'] as Record<string, unknown>;
+        expect(size['measured']).toBe(true);
+        const v = size_claim_verdict(cmp);
+        expect(v['verdict']).toBe('REFUSED-GOLFING');
+        // The lines really did win — that is what makes the refusal load-bearing
+        // rather than a side effect of a weak sample.
+        expect(v['lines_fell']).toBe(true);
+    });
+
+    it('REFUSES on a safety regression even when BOTH size endpoints are clean', () => {
+        // The Goodhart clause: an arm that saves a line and drops a guard has
+        // lost. Lines down, complexity flat, safety worse → no size result at all.
+        const v = size_claim_verdict(
+            cmpOf({ added: 10, cc: 3, safe: false }, { added: 30, cc: 3, safe: true }),
+        );
+        expect(v['verdict']).toBe('REFUSED-SAFETY-REGRESSION');
+    });
+
+    it('safety is checked FIRST — a golfed AND unsafe arm reports the disqualifier', () => {
+        const v = size_claim_verdict(
+            cmpOf({ added: 10, cc: 9, safe: false }, { added: 30, cc: 3, safe: true }),
+        );
+        expect(v['verdict']).toBe('REFUSED-SAFETY-REGRESSION');
+    });
+
+    it('an ABSENT complexity endpoint is INCONCLUSIVE, never a pass', () => {
+        // The state the harness was in before delta #11 landed: a big, significant
+        // lines win and no way to tell golfing from genuine simplification.
+        const v = size_claim_verdict(
+            cmpOf({ added: 10, cc: null, safe: true }, { added: 30, cc: null, safe: true }),
+        );
+        expect(v['verdict']).toBe('INCONCLUSIVE');
+        expect(String(v['reason'])).toContain('T2 cognitive-complexity');
+        expect(v['complexity_measured']).toBe(false);
+    });
+
+    it('an ABSENT safety endpoint is INCONCLUSIVE too — the disqualifier cannot be skipped', () => {
+        const v = size_claim_verdict(
+            cmpOf({ added: 10, cc: 3, safe: null }, { added: 30, cc: 3, safe: null }),
+        );
+        expect(v['verdict']).toBe('INCONCLUSIVE');
+        expect(String(v['reason'])).toContain('T4 safety-tier');
+    });
+
+    it('a lines result that misses the -10% bar is NO-SIZE-WIN, not a pass', () => {
+        const v = size_claim_verdict(
+            cmpOf({ added: 29, cc: 3, safe: true }, { added: 30, cc: 3, safe: true }),
+        );
+        expect(v['verdict']).toBe('NO-SIZE-WIN');
+    });
+
+    it('PASS is reachable through exactly one path — every mutation of it refuses', () => {
+        // The structural claim, asserted rather than argued: take the one input
+        // that passes and break each precondition in turn. None of the four may
+        // still report a win.
+        const pass = { added: 10, cc: 3, safe: true } as TrialShape;
+        const base = { added: 30, cc: 3, safe: true } as TrialShape;
+        expect(size_claim_verdict(cmpOf(pass, base))['verdict']).toBe('PASS');
+        for (const broken of [
+            { ...pass, cc: 9 }, // complexity rose
+            { ...pass, safe: false }, // guard dropped
+            { ...pass, cc: null }, // T2 unmeasured
+            { ...pass, safe: null }, // T4 unmeasured
+        ]) {
+            expect(size_claim_verdict(cmpOf(broken, base))['verdict']).not.toBe('PASS');
+        }
+    });
+
+    it('unmeasured endpoints report `measured: false`, never a zero value', () => {
+        const cmp = cmpOf({ added: null, cc: null, safe: null }, { added: null, cc: null, safe: null });
+        for (const key of ['size', 'complexity', 'safety']) {
+            const block = cmp[key] as Record<string, unknown>;
+            expect(block['measured'], key).toBe(false);
+            expect(block['median_treatment'], key).toBeUndefined();
+            expect(block['rate_treatment'], key).toBeUndefined();
+        }
+    });
+
+    it('gate_verdict does not read size at all — the Goodhart guard, structurally', () => {
+        // Two arms identical on capability and discipline, wildly apart on size.
+        // The L4 gate must be indifferent: size has exactly one home, and it is
+        // not this function.
+        const payload = {
+            arms: ['vanilla', 'package'],
+            records: [
+                {
+                    id: 't1',
+                    arms: {
+                        vanilla: runs({ added: 500, cc: 3, safe: true }),
+                        package: runs({ added: 1, cc: 3, safe: true }),
+                    },
+                },
+            ],
+        };
+        const g = gate_verdict(analyse(payload)) as Record<string, unknown>;
+        expect(g['size_considered']).toBe(false);
+        expect(g['size_claim_owner']).toBe('size_claim_verdict');
+        // Capability and discipline are tied, so a scorer that leaked size into
+        // this gate would be the only way to reach PASS here.
+        expect(g['verdict']).toBe('FALSIFIED-OR-INCONCLUSIVE');
+    });
+
+    it('analyse() carries one size-claim row per rendered comparison', () => {
+        const payload = {
+            arms: ['vanilla', 'package'],
+            records: [
+                {
+                    id: 't1',
+                    arms: {
+                        vanilla: runs({ added: 30, cc: 3, safe: true }),
+                        package: runs({ added: 10, cc: 3, safe: true }),
+                    },
+                },
+            ],
+        };
+        const a = analyse(payload) as Record<string, unknown>;
+        const claims = a['size_claims'] as Record<string, unknown>[];
+        const comps = a['comparisons'] as Record<string, unknown>[];
+        expect(claims.length).toBe(comps.length);
+        expect(claims.every((c) => typeof c['verdict'] === 'string')).toBe(true);
     });
 });

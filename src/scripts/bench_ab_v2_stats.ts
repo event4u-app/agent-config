@@ -63,6 +63,10 @@ const COMPARISONS: Array<[string, string, string]> = [
     ['rules-kernel-dc', 'vanilla', 'kernel+downstream rules lift'],
     ['rules-balanced', 'vanilla', 'balanced-profile rules lift'],
     ['package', 'rules-kernel-dc', 'full package residual over kernel+downstream'],
+    // Phase-3 T1: the size claim is `package-ladder` vs `package`, and it is a
+    // metric PAIR — see `size_claim_verdict`. Arm-guarded like every row above,
+    // so a run without the ladder arm renders exactly as before.
+    ['package-ladder', 'package', 'ladder size claim (T1/T2 pair)'],
 ];
 
 // ── CPython math.erf / math.comb ports ────────────────────────────────────
@@ -312,6 +316,22 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
     let dropped_baseline_only = 0;
     let dropped_both = 0;
     const dropped_buckets: Record<string, number> = {};
+    // Delta #11 — the metric PAIR (T1 size, T2 complexity) and the T4 safety
+    // disqualifier. Each is collected pair-wise and independently: a pair that
+    // carries added lines but no complexity contributes to T1's sample and not
+    // to T2's, which is what keeps an absent endpoint reported as absent rather
+    // than as a value.
+    const size_t: number[] = [];
+    const size_b: number[] = [];
+    const size_diffs: number[] = [];
+    const cx_t: number[] = [];
+    const cx_b: number[] = [];
+    const cx_diffs: number[] = [];
+    let saf_n = 0;
+    let saf_t = 0;
+    let saf_bl = 0;
+    let saf_disc_t = 0;
+    let saf_disc_b = 0;
     for (const { rt, rb } of _pairs(records, arm_t, arm_b)) {
         pairs_seen += 1;
         const t_err = _pyTruthy(rt['errored']);
@@ -353,6 +373,35 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
             dis_t_sum += dt;
             dis_b_sum += db;
             disn += 1;
+
+            const mt = _dictOr(rt['metrics']);
+            const mb = _dictOr(rb['metrics']);
+
+            const at = _numOrNull(mt['added_lines']);
+            const ab = _numOrNull(mb['added_lines']);
+            if (at !== null && ab !== null) {
+                size_t.push(at);
+                size_b.push(ab);
+                size_diffs.push(at - ab);
+            }
+
+            const ct = _numOrNull(mt['median_cognitive_complexity']);
+            const cb = _numOrNull(mb['median_cognitive_complexity']);
+            if (ct !== null && cb !== null) {
+                cx_t.push(ct);
+                cx_b.push(cb);
+                cx_diffs.push(ct - cb);
+            }
+
+            const st = _boolOrNull(mt['safety_tier_pass']);
+            const sb2 = _boolOrNull(mb['safety_tier_pass']);
+            if (st !== null && sb2 !== null) {
+                saf_n += 1;
+                saf_t += st ? 1 : 0;
+                saf_bl += sb2 ? 1 : 0;
+                if (st && !sb2) saf_disc_t += 1;
+                else if (sb2 && !st) saf_disc_b += 1;
+            }
         }
     }
     void both1;
@@ -393,7 +442,77 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
             drop_asymmetry: dropped_treatment_only - dropped_baseline_only,
             dropped_by_status_bucket: dropped_buckets,
         },
+        size: _paired_median_block(size_t, size_b, size_diffs),
+        complexity: _paired_median_block(cx_t, cx_b, cx_diffs),
+        safety: _paired_rate_block(saf_n, saf_t, saf_bl, saf_disc_t, saf_disc_b),
     };
+}
+
+/**
+ * A paired continuous endpoint (added lines, cognitive complexity).
+ *
+ * `measured: false` when no analysed pair carried the metric on BOTH sides. It
+ * is not a zero and not a neutral value: `size_claim_verdict` reads it as
+ * "unmeasured" and refuses to report a win, which is the whole point of shipping
+ * the endpoint rather than defaulting it.
+ */
+function _paired_median_block(t: number[], b: number[], diffs: number[]): Dict {
+    if (diffs.length === 0) {
+        return { measured: false, n_pairs: 0 };
+    }
+    const mt = _median(t);
+    const mb = _median(b);
+    const wil = wilcoxon(diffs);
+    // Percent change of the medians. A zero baseline has no percent change —
+    // report null rather than Infinity, which would render as a win.
+    const pct = mb === 0 ? null : PF(_pyRound(((mt - mb) / Math.abs(mb)) * 100, 4));
+    return {
+        measured: true,
+        n_pairs: diffs.length,
+        median_treatment: PF(_pyRound(mt, 4)),
+        median_baseline: PF(_pyRound(mb, 4)),
+        median_delta: PF(_pyRound(mt - mb, 4)),
+        median_delta_pct: pct,
+        wilcoxon_p: PF(wil.p),
+        rank_biserial: PF(wil.rank_biserial),
+        n_nonzero: wil.n,
+    };
+}
+
+/** A paired binary endpoint (the safety tier). Same `measured` contract. */
+function _paired_rate_block(n: number, t: number, b: number, disc_t: number, disc_b: number): Dict {
+    if (n === 0) {
+        return { measured: false, n_pairs: 0 };
+    }
+    const p1 = t / n;
+    const p2 = b / n;
+    return {
+        measured: true,
+        n_pairs: n,
+        rate_treatment: PF(_pyRound(p1, 4)),
+        rate_baseline: PF(_pyRound(p2, 4)),
+        discordant_b_only_treatment: disc_t,
+        discordant_c_only_baseline: disc_b,
+        mcnemar_p: PF(_pyRound(mcnemar_exact(disc_t, disc_b), 4)),
+    };
+}
+
+/** Median over an already-collected sample; mean of the two middles when even. */
+function _median(values: readonly number[]): number {
+    const s = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(s.length / 2);
+    if (s.length % 2 === 1) return s[mid] as number;
+    return ((s[mid - 1] as number) + (s[mid] as number)) / 2;
+}
+
+function _numOrNull(v: unknown): number | null {
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+    return null;
+}
+
+function _boolOrNull(v: unknown): boolean | null {
+    if (typeof v === 'boolean') return v;
+    return null;
 }
 
 /**
@@ -574,10 +693,159 @@ export function analyse(payload: Dict): Dict {
         seeds: payload['seeds'] ?? null,
         n_tasks: records.length,
         comparisons: comps,
+        // One verdict per rendered comparison. Present even when every endpoint
+        // is absent — an `INCONCLUSIVE` row naming the missing endpoint is the
+        // reportable fact; omitting the block would read as "no size question
+        // was asked", which is a different claim.
+        size_claims: comps.map((c) => size_claim_verdict(c)),
         status_buckets: bucket_rates(records, arms),
         mean_tokens: mean_tokens_by_arm(records, arms),
         cost: cost_by_arm(records, arms, payload['model'] ? String(payload['model']) : null, PRICING_PATH),
     };
+}
+
+// ── the size claim is a PAIR, and safety is a disqualifier ─────────────────
+//
+// Thresholds are the pre-registered ones (`internal/bench/ab-v2-phase3-PREREG.md`
+// § Thresholds); they are named here so a change to either has to touch the
+// record and the code together.
+
+/** T1 — median added lines must fall by at least this much. */
+export const T1_MEDIAN_LINES_PCT = -10;
+/** Two-sided significance for every endpoint in the pair. */
+export const ALPHA = 0.05;
+
+/**
+ * The Phase-3 size claim for one comparison — binding, and structurally unable
+ * to report a win on size alone.
+ *
+ * Three properties are worth stating because each one is a refusal the caller
+ * cannot route around:
+ *
+ *   1. **An unmeasured endpoint is never a pass.** If added lines, complexity,
+ *      or the safety tier is absent, the verdict is `INCONCLUSIVE` naming which.
+ *      Half a pair is no result, not a partial one — so this cannot silently
+ *      degrade into the lines-only report F9 exists to forbid.
+ *   2. **Safety is checked FIRST and is a disqualifier**, not a side metric. An
+ *      arm that saves a line and drops a guard has lost; there is no ordering of
+ *      the other two endpoints that can overturn it.
+ *   3. **`PASS` is reachable through exactly one path** — all three measured,
+ *      neither disqualifier fired, and T1 met. That is the Goodhart guard in
+ *      code rather than in prose: the scorer has no branch that ranks on size
+ *      while a safety regression stands.
+ */
+export function size_claim_verdict(comparison: Dict): Dict {
+    const size = _dictOr(comparison['size']);
+    const cx = _dictOr(comparison['complexity']);
+    const saf = _dictOr(comparison['safety']);
+
+    const base: Dict = {
+        arm_treatment: comparison['arm_treatment'] ?? null,
+        arm_baseline: comparison['arm_baseline'] ?? null,
+    };
+
+    // (2) The disqualifier runs before anything else can produce a win.
+    if (saf['measured'] === true) {
+        const regressed =
+            _pyFloat(saf['rate_treatment']) < _pyFloat(saf['rate_baseline']) &&
+            _pyFloat(saf['mcnemar_p']) < ALPHA;
+        if (regressed) {
+            return {
+                ...base,
+                verdict: 'REFUSED-SAFETY-REGRESSION',
+                reason:
+                    'safety tier regressed significantly (T4) — a size result is ' +
+                    'not reportable for this arm at all',
+                size_measured: size['measured'] === true,
+                complexity_measured: cx['measured'] === true,
+                safety_measured: true,
+            };
+        }
+    }
+
+    const missing: string[] = [];
+    if (size['measured'] !== true) missing.push('T1 added-lines');
+    if (cx['measured'] !== true) missing.push('T2 cognitive-complexity');
+    if (saf['measured'] !== true) missing.push('T4 safety-tier');
+    if (missing.length > 0) {
+        return {
+            ...base,
+            verdict: 'INCONCLUSIVE',
+            reason: `endpoint(s) not measured: ${missing.join(', ')} — half a pair is no result`,
+            size_measured: size['measured'] === true,
+            complexity_measured: cx['measured'] === true,
+            safety_measured: saf['measured'] === true,
+        };
+    }
+
+    const cx_rose = _pyFloat(cx['median_delta']) > 0 && _pyFloat(cx['wilcoxon_p']) < ALPHA;
+    const pct = size['median_delta_pct'];
+    const lines_fell =
+        pct !== null &&
+        _pyFloat(pct) <= T1_MEDIAN_LINES_PCT &&
+        _pyFloat(size['wilcoxon_p']) < ALPHA;
+
+    if (cx_rose) {
+        return {
+            ...base,
+            verdict: 'REFUSED-GOLFING',
+            reason:
+                'median cognitive complexity per changed function rose significantly (T2); ' +
+                'lines down and complexity up fails the size criterion even at p<0.05 on lines alone',
+            lines_fell,
+            size_measured: true,
+            complexity_measured: true,
+            safety_measured: true,
+        };
+    }
+
+    return {
+        ...base,
+        verdict: lines_fell ? 'PASS' : 'NO-SIZE-WIN',
+        reason: lines_fell
+            ? `median added lines ${_pyStr(pct)}% at p=${_pyStr(size['wilcoxon_p'])} with no significant complexity rise and no safety regression`
+            : `T1 not met (median added lines ${_pyStr(pct)}% at p=${_pyStr(size['wilcoxon_p'])}; bar is <= ${T1_MEDIAN_LINES_PCT}% at p<${ALPHA})`,
+        lines_fell,
+        size_measured: true,
+        complexity_measured: true,
+        safety_measured: true,
+    };
+}
+
+/**
+ * The size-claim block of the rendered report.
+ *
+ * Rendered unconditionally — including when every endpoint is absent, because
+ * "the pair was not measurable" is the finding a reader needs in order not to
+ * quote a lines number from Table 1 as a size result.
+ */
+function _size_claim_section(a: Dict): string[] {
+    const claims = Array.isArray(a['size_claims']) ? (a['size_claims'] as Dict[]) : [];
+    const L: string[] = [];
+    L.push('## Size claim (T1 + T2 pair, T4 disqualifier)');
+    L.push('');
+    L.push(
+        '> A size metric is a **measurement**, never a scored target. An arm may ' +
+            'claim a size win only when median added lines fell **and** median ' +
+            'cognitive complexity per changed function did not rise **and** the ' +
+            'safety tier did not regress. An unmeasured endpoint is never a pass.',
+    );
+    L.push('');
+    if (claims.length === 0) {
+        L.push('_No comparison rendered — no arms to compare._');
+        L.push('');
+        return L;
+    }
+    L.push('| comparison | verdict | why |');
+    L.push('|---|---|---|');
+    for (const c of claims) {
+        L.push(
+            `| \`${_pyStr(c['arm_treatment'])}\` vs \`${_pyStr(c['arm_baseline'])}\` ` +
+                `| **${_pyStr(c['verdict'])}** | ${_pyStr(c['reason'])} |`,
+        );
+    }
+    L.push('');
+    return L;
 }
 
 export function gate_verdict(analysis: Dict): Dict {
@@ -604,6 +872,13 @@ export function gate_verdict(analysis: Dict): Dict {
         capability_significant: cap_sig,
         discipline_significant: dis_sig,
         status_bucket_better: bucket_better,
+        // Goodhart guard, structural: this gate reads capability, discipline and
+        // status buckets ONLY. Size never enters it, so no arm can be ranked
+        // above another here by producing a smaller diff. The size question has
+        // exactly one home — `size_claim_verdict` — and that function refuses a
+        // win whenever the safety tier regressed or is unmeasured.
+        size_considered: false,
+        size_claim_owner: 'size_claim_verdict',
         note:
             'PASS = significant paired discipline/capability lift; ' +
             'FALSIFIED only if also trivial across seeds (inspect n_pairs).',
@@ -660,6 +935,7 @@ export function to_markdown(analysis: Dict, payload: Dict): string {
     L.push(`- discipline lift significant: \`${_pyStr(g['discipline_significant'])}\``);
     L.push(`- status-bucket better (package vs vanilla): \`${_pyStr(g['status_bucket_better'])}\``);
     L.push('');
+    L.push(..._size_claim_section(a));
     if (g['verdict'] === 'PASS') {
         L.push(
             '> **Measurable discipline lift (significant).** On the scope-creep / ' +
