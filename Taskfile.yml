@@ -123,6 +123,7 @@ tasks:
       - task: lint-rule-migration-ledger
       - task: lint-decision-impact
       - task: check-depth-budget
+      - task: check-source-size-budget
       - task: lint-spawn-payload
       - task: lint-pre-migration-refs
       - task: lint-consumer-internal-refs

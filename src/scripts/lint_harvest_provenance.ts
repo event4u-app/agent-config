@@ -49,6 +49,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { GateLedger } from './_lib/gate_ledger.js';
 import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 const _FILE = fileURLToPath(import.meta.url);
@@ -432,7 +433,40 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const text = fs.readFileSync(ledgerPath, 'utf-8');
     const { records, findings } = lintLedgerText(text, REPO);
     const citations = [...collectCitations(REPO), ...collectPersonaSources(REPO)];
-    const allFindings = [...findings, ...findOrphanCitations(citations, records)];
+    const orphans = findOrphanCitations(citations, records);
+    const allFindings = [...findings, ...orphans];
+
+    // Per-target completeness accounting over the two populations this gate
+    // reasons about: the ledger's own rows, and the citations that point at
+    // them. Both are legitimately EMPTY today, and that is exactly why the
+    // accounting is worth having — a green line over zero rows and a green line
+    // over a hundred checked rows read identically without it, which is the
+    // failure the success message above already tries to talk its way out of in
+    // prose. The ledger states it structurally instead.
+    const ledger = new GateLedger('lint_harvest_provenance');
+    const known = new Set(records.map((r) => r.harvest_id));
+    // The row population is every PARSED ledger line, not `records`: a row that
+    // fails validation or uniqueness is `continue`d and never reaches `records`,
+    // so planning `records` would plan exactly the rows that passed and account
+    // for none of the ones that did not — an accounting that can only ever read
+    // 100 %. Lines are the stable key; a Finding already carries one.
+    const { parsed } = parseLedgerText(text);
+    const badLines = new Set(findings.filter((f) => f.line > 0).map((f) => f.line));
+    ledger.plan([
+        ...parsed.map((r) => `row:${String(r.line)}`),
+        ...citations.map((c) => `citation:${c.id}@${c.file}`),
+    ]);
+    for (const r of parsed) {
+        const id = `row:${String(r.line)}`;
+        if (badLines.has(r.line)) ledger.fail(id, 'ledger-row finding');
+        else ledger.complete(id);
+    }
+    for (const c of citations) {
+        const id = `citation:${c.id}@${c.file}`;
+        if (known.has(c.id)) ledger.complete(id);
+        else ledger.fail(id, 'orphan citation — no ledger row carries this harvest id');
+    }
+    ledger.report();
 
     if (allFindings.length > 0) {
         for (const f of allFindings) {

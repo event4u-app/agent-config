@@ -29,7 +29,7 @@
 | 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
 | 12 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
 | 13 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 2 | 11 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy) | ████████░░ 85% |
-| 14 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
+| 14 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 2 | 2 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | █████░░░░░ 50% |
 | 15 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 16 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
 | 17 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
@@ -99,7 +99,7 @@
     when the experimental flag is on in a real environment,
     run the 5.1 spike, then bind the concerns with the same fail-open
     discipline as the #1223 set.
-  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts. - **Probed 2026-08-09:** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is unset on this host — condition unchanged, 5.4 stays open. - **Re-probed 2026-08-13:** still unset (`env | grep -i EXPERIMENTAL` returns nothing). Four days, no change. Recorded rather than left silent because the absence of a dated line is indistinguishable from nobody having looked — but the repetition is also the finding: this blocker does not clear by waiting on this host, so 5.4's realistic paths are an upstream flag flip or the "teams leave the experimental state" branch already named in the resolution clause.
+  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts.
 - **cross-vendor-worker-slices** (owner: maintainer) — blocks routing ordinary work slices to second-vendor CLI workers (huge-context analysis, independence-critical review — Source G shape)
   - **What to do:**
     the drafts cited a direction-policy artefact that does not
@@ -196,10 +196,6 @@ _1 blocker resolved._
     substantively-differing pairs; **R2** for Ü3 — is the `collective_blind_spot`
     field *decision-influencing* in ≥2 of 3 sampled runs (boilerplate such as
     "insufficient testing discussion" does not count).
-    - **Why no agent can close it:** the pre-registration names the *maintainer*
-    as the rater. Substituting an AI rater would break the pre-registration and
-    would itself be the self-preference bias this roadmap exists to measure — the
-    one substitution that invalidates the result it produces.
   - **Resolved when:** both readings exist, and each of Ü2 / Ü3 carries an adopt-or-honest-null verdict rather than a deferral.
 
 ### [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md)
@@ -362,7 +358,7 @@ _1 blocker resolved._
 <a id="blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle"></a>
 **Blockers**
 
-- **evidence-compaction-approval** (owner: maintainer) — blocks step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2 proceed either way. - **Evidence now available (Phase 3, 2026-08-15):** the list and the proof the blocker was waiting for exist. **30** directories totalling **3.24 MB**, 29 of them `archived`. **11** were re-derived byte-for-byte (**1.12 MB**); **19** were not (**2.12 MB**) and stay regardless. So option (b) reclaims at most **34.7 %** of the tree — and the tier boundary it would need to name is not a tier at all, since 29 of 30 sit in the same one. The only line that separates them is the per-directory re-derivation verdict in `agents/evidence/analysis/review-binding-drift.md`.
+- **evidence-compaction-approval** (owner: maintainer) — blocks step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2 proceed either way.
   - **What to do:**
     pick exactly one — (a) no compaction: the tiering and the
     reproducibility verdict are the whole deliverable, and step 3.3 is marked
@@ -402,16 +398,18 @@ _1 blocker resolved._
 
 ### [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md)
 
-**Road to the inbox-harvest residuals — four deferrals that outlived their parent** — 0 / 4 done (0%)
+**Road to the inbox-harvest residuals — four deferrals that outlived their parent** — 2 / 4 done (50%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | The four residuals | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | The four residuals | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
 
 <a id="blockers-road-to-inbox-harvest-residuals"></a>
 **Blockers**
 
 - **deferred-finding-decision-reopen** (owner: maintainer) — blocks R2 only
+  - **Recommendation:** **cancel R2 against the decline** — option (b) below. The decline names a falsifiable trigger (*a disposition that genuinely cannot be recorded in the round record itself*), and no such case is on record; the 2026-08-14 blanket grant released the permission to revisit but supplies none of the evidence the trigger asks for. Building the index anyway adds a second artefact to keep in sync — a new drift source guarding a failure mode that has not occurred. Cancelling is not a refusal: the decline reopens by itself the day a real case appears.
+  - **If you do nothing:** R2 stays open indefinitely and this roadmap can never reach a terminal state, so it sits on the dashboard as permanent open work that no run can close. Nothing else is blocked, and no correctness or safety property degrades — the cost is purely that the backlog carries an item nobody can act on. That is a low cost, which is exactly why this has already survived two migrations without being decided.
   - **What to do:**
     R2 needs a stable-finding-id index that was explicitly declined
     at `src/scripts/check_review_dispositions.ts:16-22` with a named revisit
@@ -430,6 +428,8 @@ _1 blocker resolved._
     fires.
   - **Resolved when:** the decision is reopened with the trigger cited (i.e. a real case exists), or R2 is cancelled against it.
 - **spent-inbox-artifacts-await-deletion** (owner: maintainer) — blocks nothing — pure housekeeping, carried so it is not lost
+  - **Recommendation:** **record a keep-reason and close it** — option (c) below. The deletion frees nothing anyone measures: the objects live under a gitignored, per-checkout directory, so they are already invisible to every diff, every clone and every consumer. Set against that, naming the two files costs a human read of a 12-match glob whose intended two are not recoverable from the text. Deleting the wrong ten is the only outcome with a real cost, and it is the one an unaided agent would produce.
+  - **If you do nothing:** four spent items keep sitting in a local, gitignored scratch directory in one checkout. **Blocks nothing** — the entry itself says so — and the housekeeping value does not decay. Concretely: no gate reds, no reviewer sees them, and the directory is not replicated to any worktree. This is the cheapest non-decision on the board.
   - **What to do:**
     four spent items under `agents/tmp.old/` should be removed:
     both `council-q-*.md` files (answered and shipped verbatim), `bench-local/`
@@ -452,7 +452,7 @@ _1 blocker resolved._
     appear in any diff a reviewer reads. Same per-checkout class as the audit
     log the parent's sweep report recorded.
     So the item needs the two filenames, not a broader authorization.
-  - **Resolved when:** the files are deleted **by name**, or a reason to keep them is recorded. - **Side finding, worth its own look and deliberately not folded in:** `check_council_layout` prints these as findings and **exits 0** — an advisory gate nobody sees, currently carrying ~18 permanent findings, which is the allowlist-fatigue shape this repo's own rules warn about.
+  - **Resolved when:** the files are deleted **by name**, or a reason to keep them is recorded.
 
 ### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
 
@@ -564,12 +564,6 @@ _1 blocker resolved._
     (`internal/bench/corpora/scale-history-PREREG.md:63-69`), and the rubric's
     own first line makes the anti-anchor ordering binding
     (`internal/bench/scale-history/rubric.md:4-5`).
-    - **Why no agent can close it:** an agent rating artifacts an agent produced
-    is the self-preference substitution that invalidates the result it is
-    meant to produce — the same refusal `road-to-council-blind-review` records
-    for its own blind ratings, and the reason `evaluator-independence` exists.
-    Substituting an AI rater here would not be a weaker result; it would be an
-    uncitable one.
   - **Resolved when:** a human rubric score exists per artifact, recorded before the secondary `lint_persistence` pass for that artifact. - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was never written down, which is why this roadmap read as spend-blocked-only.
 
 _2 blockers resolved._
@@ -752,11 +746,6 @@ _1 blocker resolved._
     `claude__PreToolUse__*.json` files written from inside it.
     4. Remove the `env` entry afterwards — the capture writes every payload
     verbatim, which is a standing egress surface, not a setting to leave on.
-    - **Why an agent must not do it:** the file is the agent's own tool
-    configuration, the change is user-global and reaches every other session live
-    on this repository, and `security-sensitive-stop` § self-modification routes a
-    self-config edit through the edit-permission gates rather than letting a
-    session apply it to itself.
   - **Resolved when:** a raw `SubagentStop` payload and a raw in-subagent `PreToolUse` payload exist as captured files, and their field lists are recorded in `agents/evidence/investigations/subagent-lifecycle-phase0-return-channel.md`.
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)

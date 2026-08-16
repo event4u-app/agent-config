@@ -263,6 +263,46 @@ describe('update_roadmap_progress — intent', () => {
         expect(dashboard).not.toContain('old-decision');
     });
 
+    it('regen: an UNLISTED `- **Label:**` bullet terminates the field above it', () => {
+        // Regression pin for the run-on defect. `BLOCKER_FIELD_RE` used to
+        // enumerate eight known labels, so a bullet whose label was not on the
+        // list did not terminate the previous field — the field above kept
+        // absorbing it and the dashboard rendered the two as one sentence,
+        // silently changing what the earlier field said. `Options` below stands
+        // for any future field name: the terminator must be structural, not a
+        // list somebody has to remember to extend.
+        mkRoadmap(
+            'road-to-unlisted-field.md',
+            [
+                '# Roadmap: Unlisted field',
+                '',
+                '## Phase 1 — Ship',
+                '- [ ] step one',
+                '',
+                '## Blockers',
+                '',
+                '### blocker: needs-a-decision',
+                '- **Status:** open',
+                '- **Owner:** maintainer',
+                '- **Blocks:** Phase 1 — Ship',
+                '- **What to do:** pick one.',
+                '- **Resolved when:** the owner states which option holds.',
+                '- **Options:** (a) do it now (b) defer it.',
+                '',
+            ].join('\n'),
+        );
+        const { result, dashboard } = regen();
+        expect(result.status, 'exit').toBe(0);
+        expect(dashboard).toContain('**Resolved when:** the owner states which option holds.');
+        // The load-bearing assertion: the unlisted bullet is NOT glued onto the
+        // field above it. Asserting the absence of the run-on rather than the
+        // presence of `Options` — the dashboard renders a fixed field set, and
+        // whether it grows to render this one is a separate decision. What must
+        // never happen is the earlier field silently acquiring text.
+        expect(dashboard).not.toContain('the owner states which option holds. - **Options:**');
+        expect(dashboard).not.toContain('(a) do it now (b) defer it.');
+    });
+
     it('regen: a wrapped multi-line field value is not truncated at the first line', () => {
         mkRoadmap(
             'road-to-wrapped-field.md',

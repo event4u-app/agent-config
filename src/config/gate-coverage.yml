@@ -40,21 +40,24 @@
 #                visible, or it repeats the sin it exists to catch.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-13)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-16)
 # ----------------------------------------------------------
-# 259 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 260 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
-# **36 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and all 36 are listed below.** The manifest is therefore
+# **37 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and all 37 are listed below.** The manifest is therefore
 # complete with respect to its own contract, and covers ~14 % of the population.
-# (The 2026-08-05 reading said "32 … and all 31 are listed"; the 2026-08-10
-# reading said "33 … and all 33" while 34 entries were listed; the 2026-08-13
-# reading said "257 … 35 of them" and both halves were correct at the time.
-# Both halves are RECOUNTED here on 2026-08-15: 259 is what
-# `count_gate_scripts()` returns on the tree that carries this change — the
-# reading was 258 with `lint_scheduled_deprecations` absent — and 36 is
+# (The 2026-08-05 reading said "32 … and all 31 are listed" and the 2026-08-10
+# reading said "33 … and all 33" while 34 entries were listed — those two are
+# the MISCOUNTS this paragraph exists to warn about, and they are listed here
+# precisely because they were wrong, not correct-at-the-time. The 2026-08-13
+# reading ("257 … 35 of them") and the 2026-08-15 reading ("259 … 36 of them")
+# were both correct when written.
+# Both halves are RECOUNTED here on 2026-08-16: 260 is what
+# `count_gate_scripts()` returns on the tree that carries this change, and 37 is
 # `grep -c '^  - id:'` on this file. Neither number was derived by adding one to
-# the previous prose, which is the move the note below forbids.)
+# the previous prose, which is the move the note below forbids — and the
+# temptation was live, because this change does add exactly one of each.)
 #
 # A 2026-08-13 revision of this paragraph first wrote 256, derived as "255 before
 # this change plus the one it adds" — inside the sentence claiming to have
@@ -799,3 +802,22 @@ gates:
       `tests/scripts/lint_scheduled_deprecations.test.ts`, verified by mutation:
       widening the overdue threshold fails the overdue-by-construction case, and
       granting `allowEmpty` fails the zero-row case.
+
+  - id: check_source_size_budget
+    argv: []
+    min_scanned: 900
+    corpus: "TypeScript sources — src/**/*.ts excluding *.d.ts and *.test.ts, the same two kinds _lib/gate_population excludes (1,063 at baseline)"
+    status: enforced
+    # No `canary:` recipe, and the reason is the canary contract's own shape
+    # rather than a gap. The violation this gate detects is a file OVER 1,500
+    # lines, so a create-only recipe would have to inline 1,501 lines of content
+    # into this manifest — a plant larger than the manifest it lives in. It
+    # reports UNPROVEN rather than green, which is the honest state.
+    #
+    # Discrimination is proven instead by the gate's own `--self-test`, and it is
+    # stronger here than a single plant would be: six cases, three rejecting,
+    # covering a file one line over the ceiling, one line under, exactly at it
+    # (inclusive), a dead scan root, AND — the case a canary could not express —
+    # an already-listed file that GREW while the file COUNT stayed at one. That
+    # last case is what pins the metric as excess lines rather than a file count;
+    # a count-based ratchet passes it, and this gate must not.

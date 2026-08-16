@@ -150,6 +150,13 @@ jobs:
       - name: depth budget (per-file ceiling on contexts + guidelines)
         run: ./scripts-run src/scripts/check_depth_budget
 
+      # The prose layers were capped; the TypeScript the package ships was not,
+      # which is where the largest artefacts in the tree sit (install.ts at
+      # 5,461 lines). Shrink-only ratchet on the TOTAL excess above 1,500 lines
+      # — a file count would not move when an already-listed god-file grows.
+      - name: source size budget (growth ratchet over src/**/*.ts)
+        run: ./scripts-run src/scripts/check_source_size_budget
+
       - name: pre-migration references (retired Python install hints)
         run: ./scripts-run src/scripts/lint_pre_migration_refs
 
