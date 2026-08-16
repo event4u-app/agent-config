@@ -1,6 +1,15 @@
 # Findings: feat-inbox-harvest-d-picktier-disposition
 
-**Skipped:** no code surface for this completion — the diff is one claims-ledger paragraph (`docs/CLAIMS.md`), one roadmap blocker section, one ratchet baseline entry and the regenerated dashboard, and `check_completion_review` itself reports 0 code paths of 4 changed files, scope 1097a5a19d8931d51ec38a3878369cb3e74fec47ab10617e72f06f3cfcdaa4fe, declared 2026-08-16
+**Skipped:** no code surface for this completion — the diff is one claims-ledger paragraph (`docs/CLAIMS.md`), one roadmap blocker section, one ratchet baseline entry and the regenerated dashboard, and `check_completion_review` itself reports 0 code paths of 4 changed files, scope 977cdaaa15827f1256af1b08d60e3a062db25e8afa0a6c97c02de25de308e907, declared 2026-08-16
+
+**Re-bound 2026-08-16** from scope
+`1097a5a19d8931d51ec38a3878369cb3e74fec47ab10617e72f06f3cfcdaa4fe` after merging
+current `main`. This is a re-bind, not a re-review, and it is checkable rather
+than asserted: the reviewed file set either side is identical — `docs/CLAIMS.md`,
+`docs/proof.md`, the roadmap, the ratchet baseline and the regenerated dashboard
+— and the only content that moved is `agents/roadmaps-progress.md`, a derived
+file whose delta is main's own newly-closed steps, brought in by the merge rather
+than authored here.
 
 The substantive change is a correction to three recorded claims and the
 decidability fields on one blocker. Every claim it makes was verified against the
