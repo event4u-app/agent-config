@@ -544,10 +544,33 @@
     },
     {
       "name": "suggest_skill_for_task",
-      "description": "[stub — implemented on demand] Match a free-form task description to the most relevant skills, ranked by their frontmatter triggers. Use to pick a skill for a described task before starting work. Read-only. Returns a ranked list of skills with name, description, and match reason.",
+      "description": "Match a free-form task description to the most relevant skills, ranked by a deterministic keyword scorer over SKILL.md frontmatter. Use when a skill you need is not in the catalogue the host delivered — a measured host dropped 402 of them — so asking by name is impossible while asking by task is not. Read-only: no shell, no writes, and no skill bodies are returned, only names, scores and declared personas.",
       "side_effect": "ro",
-      "implemented_on": [],
-      "input_schema": {}
+      "implemented_on": [
+        "stdio"
+      ],
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "task"
+        ],
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "Free-form description of the task to match skills against."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 5,
+            "description": "Maximum number of skills to return. Defaults to 5."
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true
+      }
     },
     {
       "name": "sync_agent_settings",
