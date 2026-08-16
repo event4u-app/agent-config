@@ -403,7 +403,12 @@ _1 blocker resolved._
     member in `~/.event4u/agent-config/settings/.ai-council.yml` (or moving that
     member to the API transport). Until that lands, the mechanism this entry
     defers to cannot produce the converged verdict it defers to it FOR.
-  - **Resolved when:** the council quorum is restored AND the user states which of (a), (b) or (c) holds — or the user decides without the council and says so, which is theirs to do but is the reversal-of-a-converged-decision this entry escalated to avoid.
+    **Half done, and the other half moved (2026-08-16):** the openai seat is
+    repaired — as `model: codex-default`, never by removing the line, see the
+    correction block above. The remaining half is the anthropic seat, and it is a
+    council-transport defect rather than a config value, so it is no longer
+    something this entry can name a one-line fix for.
+  - **Resolved when:** the council quorum is restored AND the user states which of (a), (b) or (c) holds — or the user decides without the council and says so, which is theirs to do but is the reversal-of-a-converged-decision this entry escalated to avoid. **Narrowed 2026-08-16 to the one question actually left.** The evidence half is done: both vendors answer (b) on an identical neutral prompt, with independent reasoning and compatible `revisit-if` conditions. The mechanism half is not and will not be until the council-transport defect is fixed elsewhere. So the maintainer decides ONE thing: whether two independent vendor opinions, one hand-run, substitute for a converged council run as the basis for reversing a council-locked v1 contract. **Yes** → (b) executes on the plan below. **No** → this entry waits on the transport fix, and nobody re-gathers the opinions, because they are recorded above.
 
 _1 blocker resolved._
 

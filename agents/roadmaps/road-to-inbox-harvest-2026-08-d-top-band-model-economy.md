@@ -238,6 +238,56 @@ reversal of a converged one.
 > entry already rejected, and re-running a member that just timed out is the
 > wasted attempt the hard-blocker class names.
 
+> **Superseded the same day — the retry DID happen, because the environment
+> changed, and it produced the substance the quorum could not.** The paragraph
+> above decided against a retry on the assumption that nothing had moved. Once
+> the openai seat was repaired that assumption was false, which is the condition
+> the hard-blocker class names as the one that licenses another attempt. Read the
+> block below, not the one above, for the current state.
+>
+> **The openai repair is NOT the one its own error message prescribes, and the
+> prescribed one breaks the whole council.** The detail field says *"remove the
+> `model:` line"*. Doing that fails config load with `members.openai: enabled
+> members require a non-empty model` and flips `council:status` from CONFIGURED
+> to NOT CONFIGURED for **every** provider, not just openai. The working form is
+> the parenthetical: `model: codex-default`, the `OPENAI_CLI_VENDOR_DEFAULT`
+> sentinel at `clients.ts:134`, which the loader accepts even though it is absent
+> from the member's `model_ladder`. After that edit the seat answered a 2-round
+> deep question with 1,752 characters.
+>
+> **The anthropic seat is NOT slow, so raising the timeout is not the fix
+> either.** The obvious reading of `timeout` at 968,101 ms is that 300 s is too
+> tight — the constant was already raised 120 → 300 on 2026-08-13 for this exact
+> symptom. Measured instead of assumed: the same question file, handed to the
+> same CLI from `/tmp`, returns a complete 1,766-character answer in **55 s**,
+> exit 0. `--output-format json` (72 s) and `--tools ''` (38 s) were each ruled
+> out separately. So the 968 s is roughly three capped calls (round 1, round 2,
+> and the `blind_chairman` pass the artefact records as `true`), and the cause
+> lies in what the orchestration adds — not in the model's thinking time. Raising
+> `DEFAULT_CLI_TIMEOUT_SECONDS` would have shipped a number that changes nothing.
+> **That is a separate defect in the council transport and does not belong to
+> this roadmap** — recorded here only because it is what stands between this
+> entry and a mechanically converged verdict.
+>
+> **Both vendors independently answer (b), and the label matters more than the
+> agreement.** openai answered through the council (recorded artefact, run of
+> 2026-08-16); anthropic answered a **hand-run** of the identical question file,
+> outside the orchestration, because its seat cannot complete one. Their
+> reasoning differs and converges: openai leads on unfireable acceptance criteria
+> creating the appearance of enforcement, anthropic on `decision-revisit-gate` —
+> *"a lock settles the mechanism it tested, and that mechanism (the routing
+> switch) no longer exists"*. Both attach a `revisit-if` about populated
+> `session_tier` telemetry, and anthropic quantifies it at >50 % of records with a
+> non-degenerate tier distribution.
+>
+> **This is NOT a converged council run and must never be cited as one.** The
+> recorded quorum is 1 of 2. What exists is two independent vendor opinions on one
+> neutral prompt, one of them obtained by hand — materially the evidence a council
+> supplies, and arguably better isolated than round 2 where members read each
+> other, but not the mechanism this entry defers to. Whether that substitutes for
+> the mechanism is the maintainer's call, and it is exactly the call this blocker
+> exists to route to a human.
+
 
 
 **Verified facts, so the decision needs no re-derivation:**
@@ -308,6 +358,11 @@ be absent was reporting absence as measurement.
   member in `~/.event4u/agent-config/settings/.ai-council.yml` (or moving that
   member to the API transport). Until that lands, the mechanism this entry
   defers to cannot produce the converged verdict it defers to it FOR.
+  **Half done, and the other half moved (2026-08-16):** the openai seat is
+  repaired — as `model: codex-default`, never by removing the line, see the
+  correction block above. The remaining half is the anthropic seat, and it is a
+  council-transport defect rather than a config value, so it is no longer
+  something this entry can name a one-line fix for.
 - **Recommendation:** fix the quorum, then take **(b)**. Two separate claims, and
   the order is the point. The quorum fix is unconditional — it costs one line,
   it is the only reason this entry has escalated twice, and every future
@@ -335,6 +390,30 @@ be absent was reporting absence as measurement.
   (a), (b) or (c) holds — or the user decides without the council and says so,
   which is theirs to do but is the reversal-of-a-converged-decision this entry
   escalated to avoid.
+  **Narrowed 2026-08-16 to the one question actually left.** The evidence half is
+  done: both vendors answer (b) on an identical neutral prompt, with independent
+  reasoning and compatible `revisit-if` conditions. The mechanism half is not and
+  will not be until the council-transport defect is fixed elsewhere. So the
+  maintainer decides ONE thing: whether two independent vendor opinions, one
+  hand-run, substitute for a converged council run as the basis for reversing a
+  council-locked v1 contract. **Yes** → (b) executes on the plan below. **No** →
+  this entry waits on the transport fix, and nobody re-gathers the opinions,
+  because they are recorded above.
+
+  The execution plan, from the two answers, so it needs no re-derivation:
+  1. Archive the smallest coherent boundary — confirm first whether
+     `reserveTtlMs`, `RESERVE_FILE` or `COOLDOWN_FILE` back the live cool-down
+     diagnostics indirectly, and keep whatever does alongside `TIER_ORDER` and
+     `readCooldowns`.
+  2. Remove the decision and permit APIs plus their exclusively-associated tests
+     and state.
+  3. Replace the v1 contract with an archival migration record that formally
+     retires AC1–AC5, carrying the 0/327 reading and the
+     complementary-not-replacement correction.
+  4. Update claims, proof, config and routing documentation so no
+     active-contract language remains.
+  5. Decide separately whether `budget.mjs tier` goes with it — its
+     `reserved_usd` term reads a store that would then have no writer at all.
 
 ### blocker: adr-035-reopen-question
 
