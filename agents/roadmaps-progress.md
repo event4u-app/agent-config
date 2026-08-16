@@ -6,10 +6,10 @@
 
 ## Overall
 
-**245 / 470 steps done · 52%**
+**259 / 470 steps done · 55%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   52%
+██████████████████████░░░░░░░░░░░░░░░░░░   55%
 ```
 
 ## ✅ Completed — pending archival
@@ -18,6 +18,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 
 | Roadmap | Done | Total |
 |---|---:|---:|
+| [road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md](roadmaps/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md) | 14 | 14 |
 | [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md) | 10 | 10 |
 
 ## Open roadmaps
@@ -38,7 +39,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 12 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
 | 13 | [road-to-inbox-harvest-2026-08-c-prompt-deinflation.md](roadmaps/road-to-inbox-harvest-2026-08-c-prompt-deinflation.md) | 2 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 14 | [road-to-inbox-harvest-2026-08-d-archive-index.md](roadmaps/road-to-inbox-harvest-2026-08-d-archive-index.md) | 2 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 15 | [road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md](roadmaps/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md) | 4 | 14 | 14 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 15 | [road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md](roadmaps/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md) | 4 | 14 | 0 | 14 | 0 | 0 | 0 | ██████████ 100% |
 | 16 | [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md) | 2 | 10 | 0 | 10 | 0 | 0 | 0 | ██████████ 100% |
 | 17 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 11 | 3 | 0 | 0 | 0 | ██░░░░░░░░ 21% |
 | 18 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
@@ -404,14 +405,14 @@ _1 blocker resolved._
 
 ### [road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md](roadmaps/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md)
 
-**Road to a ranker that actually routes** — 0 / 14 done (0%)
+**Road to a ranker that actually routes** — 14 / 14 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Measure what each host would actually receive | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | Bind the ranker | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Give skill triggers a schema before giving them content | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | Recover what the host dropped | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 1 | Measure what each host would actually receive | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 2 | Bind the ranker | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 3 | Give skill triggers a schema before giving them content | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 4 | Recover what the host dropped | ✅ done | 0 | 7 | 0 | 0 | 100% |
 
 ### [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md)
 
