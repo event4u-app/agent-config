@@ -15,21 +15,83 @@ Loaded by the `subagent-orchestration` skill and the `/do-and-judge`,
 ## Model tier ladder
 
 The "one tier up" fallback walks this ladder. Session model is the
-starting point; judge picks the tier above.
+starting point; judge picks the tier above. The ladder is written in
+**bands**, not vendor models — the package keeps exactly one tier→model
+mapping and it lives in
+[`model-recommendations`](model-recommendations.md) (ADR-035 § 3). A
+second per-vendor ladder here would be the two-clocks drift ADR-232 was
+careful not to create.
 
 ```
-haiku  →  sonnet  →  opus
+lite  →  medium  →  high
 ```
 
-If the session runs on **opus**, judge stays on opus (no higher tier
-available). If the session runs on **sonnet**, judge defaults to opus.
-If the session runs on **haiku**, judge defaults to sonnet.
+If the session runs at **`high`**, judge stays at `high`. If the session
+runs at **`medium`**, judge defaults to `high`. If the session runs at
+**`lite`**, judge defaults to `medium`.
+
+### The judge cap (binding)
+
+```
+THE ONE-TIER-UP ESCALATION STOPS AT `high` — IT NEVER CLIMBS INTO `frontier`.
+A JUDGE IS NEVER BELOW ITS OWN IMPLEMENTER: A DECLARED `frontier`
+IMPLEMENTER KEEPS A `frontier` JUDGE.
+A SATURATED LADDER ESCALATES CROSS-VENDOR VIA THE COUNCIL —
+NEVER INTO A SECOND SAME-VENDOR TOP-BAND AGENT.
+```
+
+Two clauses that are easy to collapse into one and must not be. The cap
+binds the **escalation**, not the floor:
+
+| Implementer band | Judge band | Why |
+|---|---|---|
+| `lite` | `medium` | one tier up |
+| `medium` | `high` | one tier up |
+| `high` | `high` | escalation capped — never climbs into `frontier` |
+| `frontier` | **`frontier`** | the floor wins: a judge is never below its author |
+
+`frontier` (ADR-232) sits above `high` in the vocabulary, so a naive
+"one tier up" would resolve a `high` implementer's judge to `frontier`
+and buy the most expensive band available for every verification pass.
+The cap forecloses that — `frontier` is opt-in by declaration only.
+
+**But the cap must not invert the ladder it protects.** Reading it as a
+flat ceiling would give a declared `frontier` implementer a `high`
+judge, i.e. a reviewer strictly *weaker* than the author — worse than
+the same-band case the one-tier-up rule exists to avoid, and a direct
+contradiction of "never downshifts its judge below what the verify
+contract requires" below. So `frontier` reaches the judge only where
+the implementer already declared it, never by escalation from `high`.
+
+**What to do when the ladder saturates.** At `high` and at `frontier`
+the judge is same-band — the reviewer is no stronger than the author,
+which is the condition the one-tier-up rule existed to avoid. The
+answer is *different vendor*, not *bigger model*:
+
+- Route the saturation case through
+  [`ai-council`](../skills/ai-council/SKILL.md), which polls models
+  outside the host session (Anthropic + OpenAI) and is therefore
+  genuinely independent of the implementer's framing.
+- This is the escalation **instead of** a second top-band context, not
+  in addition to one. Two same-vendor top-band agents on one task cost
+  twice and correlate their blind spots; a second vendor costs less and
+  disagrees for real reasons.
+- Cost boundary unchanged: the council is a network call and is
+  therefore never automatic. It is what the saturation case escalates
+  *to* when a second opinion is wanted, not a step every `high` task
+  takes ([`ai-council`](../skills/ai-council/SKILL.md) § Do NOT use).
+
+**Honest scope.** This is policy prose in a context file — it binds the
+agent that reads it and no gate re-derives a judge tier at dispatch
+time. `enforced_by: none`, stated rather than implied.
 
 **Downshift never touches the judge.** When cost-aware routing runs an
 implementer on a downshifted tier (per the category → tier defaults in
 [`model-recommendations § Subagent Category → Tier Defaults`](model-recommendations.md)),
-the judge still resolves one tier above the IMPLEMENTER's resolved tier —
-so a `lite` implementer gets at least a `medium` judge. Downshifting an
+the judge still resolves one tier above the IMPLEMENTER's resolved tier,
+**with the escalation capped at `high` per the judge cap above** — so a
+`lite` implementer gets at least a `medium` judge, and no *downshifted*
+implementer escalates its judge into `frontier`. Downshifting an
 implementer never downshifts its judge below what the verify contract
 requires, and a judge is never `lite`.
 
