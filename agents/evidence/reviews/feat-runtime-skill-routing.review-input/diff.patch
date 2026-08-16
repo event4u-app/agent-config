@@ -227,10 +227,10 @@ index e8931a18b95b7377277f6161fd1493edccbc9a8f..1d59bb7bf86ec52d042d49ac7ac66fef
  **Road to at most one top-band context per task** — 3 / 14 done (21%)
 diff --git a/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md b/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..51195622c2ab8ca71437048a5c15be6480aa7252
+index 0000000000000000000000000000000000000000..c41a03d36a3ad77ae290aa13283e3c8e9baaebfa
 --- /dev/null
 +++ b/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md
-@@ -0,0 +1,290 @@
+@@ -0,0 +1,308 @@
 +---
 +complexity: structural
 +status: ready
@@ -347,9 +347,23 @@ index 0000000000000000000000000000000000000000..51195622c2ab8ca71437048a5c15be64
 +      Shipped: `src/scripts/hooks/skill_route_hook.ts`, bound on `claude` only
 +      (the one platform whose exit-2 warn delivery is verified) and dropped for
 +      the `worker` role. Budget row **512** — half the default, so a later
-+      change that starts injecting bodies fails the build; measured emission is
-+      323 bytes. Silence floor is the measured p90 (top-1 ≥ 30/100), not a
-+      guess: median 18 over 496 routing-matrix prompt lines.
++      change that starts injecting bodies fails the build. Emission on a real
++      firing prompt is **323 bytes**; `bench_hook_injection` reports the concern
++      at **0 B** because its synthetic probe does not clear the floor. Both
++      readings are stated rather than the flattering one.
++      **TWO floors, both measured — the R2 review found one of them
++      insufficient and the correction is the substance of this step.** Score
++      ≥ **31**, not the p90 of 30: the scorer is `overlap*70 + persona*30`, so a
++      persona-only coincidence scores exactly 30 and a floor of 30 admitted it.
++      Task terms ≥ **3**: the scorer divides by the term count, so `"fix it"`
++      (1 term) scored 70/100 and emitted the alphabetically first three skills —
++      a defect no score floor can fix, because the denominator is the problem.
++      3 is the corpus's own minimum, so it excludes **none** of the 496 prompt
++      lines the calibration rests on. Corpus fire rate 9.1 %.
++      Cost measured rather than assumed: 12.3 ms warm when it ranks, 0 ms below
++      the term floor (checked before the catalogue read), against a 250 ms p95
++      slot budget. Ten tests pin both floors; mutating them back to 30/0 fails
++      three.
 +      <!-- verify: grep -c 'skill-route' src/scripts/hook_manifest.yaml -->
 +- [x] 2.2 Register its adoption metric alongside the existing advisory metrics,
 +      with no threshold committed before data — the house baseline-first rule.
@@ -448,11 +462,15 @@ index 0000000000000000000000000000000000000000..51195622c2ab8ca71437048a5c15be64
 +      the shared matcher; tranche of 4 skills → 3 activations over 496 prompt
 +      lines.
 +- [x] The unintended-activation census is at or below 433 after seeding.
-+      **Unchanged, and structurally unreachable from this scope** — skills are
-+      not compiled into the router (verified: zero skill references in
++      **Unchanged.** The skill SEED is structurally unreachable from the census
++      — skills are not compiled into the router (zero skill references in
 +      `compile_router.ts`; `dist/router.json` byte-identical after the seed;
-+      rule scope still 26/26). Recorded as the correction it is rather than
-+      claimed as a passed gate.
++      rule scope still 26/26). **That argument does not cover the tier-2 rule
++      this same branch adds**, which IS routed and therefore can move the
++      number; the R2 review caught the gap and replayed the corpus, and the new
++      rule's contribution is **0**. So the outcome holds on evidence and the
++      structural argument holds only for the half it actually covers — recorded
++      that way rather than as one sweeping claim.
 +- [x] No survivor count is computed anywhere, and no host limit is extrapolated
 +      from another host.
 +      No subtraction across the two denominators appears in the new code, the
@@ -1241,10 +1259,10 @@ index 8e03a1a4bf9fcbf232cede2c1d22c1c192169b0d..00000000000000000000000000000000
 -| 3 | Recording the slip reads as authorisation to remove | implementation | A row that says "overdue, owner named" is one step from being actioned by a later run that skips the release window | The removal is a blocker with a named owner and is explicitly excluded from the steps, and the scope section states the two rules that gate it | What is deliberately not executed here |
 diff --git a/dist/agent-src/rules/missing-skill-recovery.md b/dist/agent-src/rules/missing-skill-recovery.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..a7c9900ed6d274127c317d08c728ada8ed31ad00
+index 0000000000000000000000000000000000000000..c162e213fe860cdce75ac00995de003bea2d2ba9
 --- /dev/null
 +++ b/dist/agent-src/rules/missing-skill-recovery.md
-@@ -0,0 +1,84 @@
+@@ -0,0 +1,89 @@
 +---
 +type: "auto"
 +tier: "2a"
@@ -1262,7 +1280,7 @@ index 0000000000000000000000000000000000000000..a7c9900ed6d274127c317d08c728ada8
 +self_contained: true
 +workspaces: [engineering]
 +packs: [meta]
-+# obligation: line 30
++# obligation: line 41
 +obligation_frequency: "per-turn"
 +---
 +
@@ -1271,9 +1289,14 @@ index 0000000000000000000000000000000000000000..a7c9900ed6d274127c317d08c728ada8
 +The catalogue a host shows you is not the catalogue that exists. Hosts truncate,
 +and at least one truncates hard: measured 2026-08-16 on a default install, the
 +host published its own budget event stating it had stripped every description
-+and dropped **402** skills from the model-visible list
++and dropped **402 entries** from the model-visible skills list
 +(`agents/evidence/analysis/scoped-projection-host-delivery.md`). Scoping the
 +projection moved that to 330 and stripped the descriptions anyway.
++
++402 is the **host's own count against the host's own denominator**, which is not
++this package's: the same install projects 297 skills, so the figure is a
++magnitude, never a subtraction anyone can perform. What it establishes is that
++most of the catalogue is not model-visible — which is all this rule needs.
 +
 +So "I do not see a skill for this" is evidence about the **delivery**, never
 +about the tree.
@@ -1396,7 +1419,7 @@ index 7a3be8a15c51e977f72cdc0b402d2b2c1be820da..9ab58d23aed8d97d67ad75ca86bf01bf
 -{"schema_version":2,"kernel":["agent-authority","ask-when-uncertain","commit-policy","direct-answers","language-and-tone","no-cheap-questions","non-destructive-by-default","scope-control","verify-before-complete"],"tier_1":[{"id":"architecture","triggers":[{"keyword":"controller"},{"keyword":"service"},{"keyword":"module"}],"routes_to":["skill:module-detect-on-the-fly"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"artifact-engagement-recording","triggers":[{"phrase":"/implement-ticket"},{"phrase":"/work"},{"keyword":"telemetry"}],"routes_to":["contract:artifact-engagement-flow"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"autonomous-execution","triggers":[{"keyword":"personal.autonomy"},{"phrase":"autonomy mode"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"command-suggestion-policy","triggers":[{"phrase":"free-form prompt"},{"phrase":"command suggestion"}],"routes_to":["contract:command-suggestion-flow"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"context-hygiene","triggers":[{"keyword":"3-failure"},{"phrase":"long conversation"}],"routes_to":["guideline:agent-infra/context-hygiene-mechanics"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"copilot-routing","triggers":[{"keyword":"copilot"},{"phrase":"copilot-instructions"},{"phrase":"copilot pr review"}],"routes_to":["skill:copilot-config"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"devcontainer-routing","triggers":[{"keyword":"devcontainer"},{"keyword":"codespaces"},{"keyword":"codespace"},{"phrase":"devcontainer.json"}],"routes_to":["skill:devcontainer"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"docker-commands","triggers":[{"keyword":"docker"},{"keyword":"artisan"},{"keyword":"composer"},{"phrase":"inside the container"}],"routes_to":["skill:docker"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"fast-path-marker-visibility","triggers":[{"keyword":"low-impact council"},{"keyword":"fast-path"},{"keyword":"Resolved via low-impact council"},{"keyword":"low_impact"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"laravel-routing","triggers":[{"keyword":"laravel"},{"keyword":"artisan"},{"keyword":"eloquent"},{"keyword":"FormRequest"}],"routes_to":["skill:laravel"],"workspaces":["engineering"],"packs":["laravel"]},{"id":"low-impact-corpus-privacy-floor","triggers":[{"path_prefix":"agents/decisions/low-impact-decisions"},{"path_prefix":"data/low-impact-decisions-seed"},{"keyword":"low-impact-decisions"},{"keyword":"low-impact corpus"},{"keyword":"learn-low-impact"}],"routes_to":[],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"no-attribution-footers","triggers":[{"keyword":"co-authored"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"no-decorative-emojis-in-git-surfaces","triggers":[{"keyword":"gh pr create"},{"keyword":"git commit"},{"keyword":"🤖"},{"keyword":"🚀"},{"keyword":"🎉"},{"keyword":"✨"},{"keyword":"🔥"},{"keyword":"💡"},{"keyword":"👍"},{"keyword":"❤️"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"no-roadmap-references","triggers":[{"path_prefix":"agents/roadmaps/"},{"path_prefix":"agents/runtime/council/questions/"},{"path_prefix":"agents/runtime/council/responses/"},{"path_prefix":"agents/runtime/council/sessions/"}],"routes_to":["skill:agent-docs-writing","skill:ai-council"],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"onboarding-gate","triggers":[{"phrase":"first turn"},{"keyword":"onboarding"},{"path_prefix":".agent-settings.yml"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"php-coding","triggers":[{"file_pattern":"*.php"},{"keyword":"phpstan"},{"keyword":"ecs"}],"routes_to":["guideline:php/php-coding-patterns"],"workspaces":["engineering"],"packs":["php"]},{"id":"question-not-instruction","triggers":[{"phrase":"warum"},{"phrase":"wieso"},{"phrase":"weshalb"},{"keyword":"why"},{"phrase":"what do you think"},{"phrase":"was denkst du"},{"phrase":"was hältst du"},{"phrase":"geht das"},{"phrase":"kannst du"},{"phrase":"sollte ich"},{"phrase":"should i"},{"phrase":"is it possible"}],"routes_to":[],"workspaces":["engineering"],"packs":["meta"]},{"id":"roadmap-progress-sync","triggers":[{"path_prefix":"agents/roadmaps/"},{"command":"/roadmap:process-step"},{"command":"/roadmap:process-phase"},{"command":"/roadmap:process-full"}],"routes_to":["guideline:agent-infra/roadmap-progress-mechanics"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"skill-quality","triggers":[{"path_prefix":"src/skills/"}],"routes_to":["guideline:agent-infra/skill-quality-checklist"],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"slash-command-routing-policy","triggers":[{"keyword":"/create-pr"},{"keyword":"/commit"},{"keyword":"/fix-ci"},{"phrase":"slash command"}],"routes_to":["skill:command-routing"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"source-confidentiality","triggers":[{"path_prefix":"src/skills/"},{"path_prefix":"src/rules/"},{"path_prefix":"src/domains/"},{"path_prefix":"docs/"},{"path_prefix":"agents/evidence/"},{"path_prefix":"agents/roadmaps/"}],"routes_to":[],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"source-of-truth","triggers":[{"path_prefix":"dist/agent-src/"},{"path_prefix":".augment/"},{"path_prefix":".claude/"},{"path_prefix":".cursor/"}],"routes_to":[],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"symfony-routing","triggers":[{"keyword":"symfony"},{"keyword":"doctrine"},{"keyword":"twig"},{"keyword":"messenger"}],"routes_to":["skill:symfony-workflow"],"workspaces":["engineering"],"packs":["symfony"]},{"id":"user-interaction","triggers":[{"keyword":"option"},{"keyword":"recommendation"},{"phrase":"what do you recommend"},{"phrase":"was empfiehlst du"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]}],"tier_2":[{"id":"active-remediation","triggers":[{"keyword":"refactor"},{"keyword":"duplicate"},{"keyword":"legacy"},{"keyword":"deprecated"},{"keyword":"modernize"},{"keyword":"upgrade"},{"keyword":"cleanup"},{"keyword":"technical debt"}],"routes_to":["guideline:agent-infra/active-remediation-mechanics"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"artifact-drafting-protocol","triggers":[{"phrase":"new skill"},{"phrase":"new rule"},{"phrase":"new command"},{"phrase":"new guideline"},{"phrase":"neue Regel"},{"phrase":"bau mir ein Skill"}],"routes_to":["guideline:agent-infra/artifact-drafting-protocol-mechanics"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"augment-edit-discipline","triggers":[{"path_prefix":".augment/"},{"path_prefix":"src/"},{"keyword":"portable"},{"keyword":"rename"},{"keyword":"delete"}],"routes_to":["guideline:augment-portability-patterns","skill:agent-docs-writing"],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"brand-source-of-truth","triggers":[{"keyword":"brand"},{"keyword":"on-brand"},{"keyword":"off-brand"},{"keyword":"brand tokens"},{"keyword":"brand voice"},{"keyword":"brand guide"},{"keyword":"brand profile"},{"phrase":"brand consistency"},{"phrase":"on brand"},{"phrase":"brand source of truth"}],"routes_to":[],"workspaces":["engineering"],"packs":["brand"]},{"id":"broken-access-control","triggers":[{"keyword":"endpoint"},{"keyword":"route"},{"keyword":"authorization"},{"keyword":"tenant"},{"keyword":"IDOR"},{"keyword":"session"},{"keyword":"login"},{"keyword":"controller"},{"keyword":"findById"}],"routes_to":["skill:authz-review","skill:multi-tenancy","skill:threat-modeling"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"cli-output-handling","triggers":[{"keyword":"git"},{"keyword":"phpstan"},{"keyword":"rector"},{"keyword":"phpunit"},{"keyword":"composer"},{"keyword":"npm"},{"keyword":"pnpm"},{"keyword":"yarn"},{"keyword":"eslint"},{"keyword":"tsc"},{"keyword":"vitest"},{"keyword":"jest"},{"keyword":"pytest"},{"keyword":"ruff"},{"keyword":"mypy"},{"keyword":"pyright"},{"keyword":"cargo"},{"keyword":"golangci-lint"},{"keyword":"docker"},{"keyword":"kubectl"},{"keyword":"terraform"},{"phrase":"go test"},{"phrase":"go build"}],"routes_to":["skill:rtk-output-filtering"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"code-comment-discipline","triggers":[{"keyword":"comment"},{"keyword":"docblock"},{"keyword":"phpdoc"},{"keyword":"jsdoc"},{"keyword":"docstring"},{"keyword":"implement"},{"keyword":"class"},{"keyword":"method"},{"keyword":"refactor"}],"routes_to":["guideline:code-clarity"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"code-provenance","triggers":[{"keyword":"port this"},{"keyword":"adapt this"},{"keyword":"based on this repo"},{"keyword":"similar implementation"},{"keyword":"found this on GitHub"},{"keyword":"borrow"},{"keyword":"vendored"},{"keyword":"reference implementation"},{"keyword":"harvest"},{"keyword":"adopt from"}],"routes_to":["skill:license-compliance-audit","skill:license-compliance-borrow-check","skill:license-compliance-credits"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"commit-conventions","triggers":[{"keyword":"commit"},{"keyword":"branch"},{"phrase":"conventional commits"}],"routes_to":["skill:conventional-commits-writing"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"communication-through-line","triggers":[{"phrase":"reporting progress"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"content-quoting-floor","triggers":[{"keyword":"quote"},{"keyword":"excerpt"},{"keyword":"verbatim"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"council-availability","triggers":[{"keyword":"council"},{"keyword":"ai council"},{"keyword":"ai-council"},{"keyword":"council:status"},{"keyword":"second opinion"},{"phrase":"cross-check with another model"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"cross-source-consistency","triggers":[{"keyword":"ticket"},{"keyword":"refine"},{"keyword":"acceptance criteria"},{"keyword":"mockup"},{"keyword":"screenshot"},{"keyword":"attachment"},{"keyword":"roadmap"},{"keyword":"estimate"},{"phrase":"plan this ticket"},{"phrase":"refine this ticket"},{"phrase":"is this ticket clear"},{"phrase":"implement the ticket"}],"routes_to":["guideline:agent-infra/cross-source-consistency-mechanics"],"workspaces":["engineering","product"],"packs":["engineering-base","product-basic"]},{"id":"decision-revisit-gate","triggers":[{"keyword":"don't relitigate"},{"keyword":"honest null"},{"keyword":"already decided"},{"keyword":"locked decision"},{"keyword":"budget blocks"}],"routes_to":["skill:decision-review"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"delegation-policy","triggers":[{"keyword":"delegate"},{"keyword":"orchestrate"},{"keyword":"subagent"},{"keyword":"parallel"},{"phrase":"review these"},{"phrase":"analyze the codebase"},{"phrase":"for each"},{"keyword":"analyse"},{"keyword":"analyze"}],"routes_to":["skill:subagent-orchestration"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"design-fidelity","triggers":[{"keyword":"prototype"},{"keyword":"mockup"},{"keyword":"wireframe"},{"keyword":"design system"},{"keyword":"design spec"},{"keyword":"Figma"},{"keyword":"handoff"},{"keyword":"Claude Design"},{"phrase":"match the design"},{"phrase":"build this design"},{"phrase":"design fidelity"},{"phrase":"stick to the design"},{"phrase":"design.html"},{"phrase":"attached artifact"},{"phrase":"provided artifact"},{"phrase":"übernimm das design"},{"phrase":"baue das nach"},{"phrase":"bau das nach"},{"phrase":"1:1 um"},{"phrase":"1:1 nach"},{"phrase":"claude.site/artifacts"},{"file_pattern":"*design.html"},{"path_prefix":".claude/design-system/"}],"routes_to":["guideline:design-fidelity-mechanics"],"workspaces":["engineering"],"packs":["engineering-base","frontend-design"]},{"id":"design-review-after-ui-write","triggers":[{"path_prefix":"resources/views/"},{"path_prefix":"resources/js/"},{"path_prefix":"components/"},{"path_prefix":"src/components/"},{"path_prefix":"pages/"},{"file_pattern":"*.vue"},{"file_pattern":"*.svelte"},{"file_pattern":"*.tsx"},{"file_pattern":"*.jsx"},{"file_pattern":"*.blade.php"},{"keyword":"component"},{"keyword":"design token"}],"routes_to":["skill:accessibility-auditor","skill:design-review"],"workspaces":["agent-config-maintainer","engineering"],"packs":["frontend-design"]},{"id":"doc-screenshot-hygiene","triggers":[{"keyword":"screenshot"},{"keyword":"screenshots"},{"keyword":"screen capture"},{"keyword":"screen grab"},{"keyword":"admin panel screenshot"},{"keyword":"dashboard screenshot"},{"keyword":"docs site"},{"keyword":"Starlight"},{"phrase":"add a screenshot"},{"phrase":"screenshot for the docs"},{"phrase":"screenshot in the readme"},{"phrase":"embed an image in the docs"},{"phrase":"put a screenshot"},{"phrase":"generate a docs site"},{"phrase":"capture the ui"},{"path_prefix":"docs/media/"}],"routes_to":["skill:screenshot-hygiene"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"domain-adoption-policy","triggers":[{"keyword":"mobile track"},{"keyword":"ml track"},{"keyword":"blockchain track"},{"path_prefix":"src/skills/"}],"routes_to":["guideline:agent-infra/domain-adoption-gates"],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"domain-safety-disclaimer","triggers":[{"keyword":"legal brief"},{"keyword":"contract redline"},{"keyword":"terms of service"},{"keyword":"privacy policy"},{"keyword":"diagnosis"},{"keyword":"symptoms"},{"keyword":"dosage"},{"keyword":"medication"},{"keyword":"investment memo"},{"keyword":"tax position"},{"keyword":"strategic recommendation"},{"keyword":"board memo"},{"keyword":"executive summary"},{"phrase":"review this contract"},{"phrase":"is this symptom"},{"phrase":"should I invest"},{"phrase":"what should we do"}],"routes_to":["skill:brand-identity","skill:brand-strategy","skill:contracts-cognition","skill:dcf-modeling","skill:decision-record","skill:privacy-review","skill:scenario-modeling","skill:stakeholder-tradeoff"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"domain-safety-pii","triggers":[{"keyword":"support macro"},{"keyword":"ticket response"},{"keyword":"help desk"},{"keyword":"Zendesk"},{"keyword":"Intercom"},{"keyword":"testimonial"},{"keyword":"case study"},{"keyword":"customer story"},{"keyword":"candidate"},{"keyword":"interview notes"},{"keyword":"scorecard"},{"keyword":"rejection email"},{"keyword":"offer letter"},{"keyword":"invoice"},{"keyword":"accounts receivable"},{"keyword":"accounts payable"},{"keyword":"finance memo"},{"keyword":"log"},{"keyword":"logger"},{"keyword":"Sentry"},{"keyword":"Datadog"},{"keyword":"structured log"},{"keyword":"export to CSV"},{"keyword":"data export"},{"keyword":"partner integration"},{"phrase":"draft a response to"},{"phrase":"marketing email featuring"},{"phrase":"draft feedback for"},{"phrase":"log the user"},{"phrase":"send them the spreadsheet"}],"routes_to":["skill:data-handling-judgment","skill:logging-monitoring","skill:privacy-review","skill:secrets-management"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"domain-safety-retention","triggers":[{"keyword":"retention policy"},{"keyword":"data retention"},{"keyword":"record retention"},{"keyword":"ticket retention"},{"keyword":"CRM retention"},{"keyword":"delete financial"},{"keyword":"purge invoice"},{"keyword":"DSAR"},{"keyword":"data subject request"},{"keyword":"right to be forgotten"},{"phrase":"how long should we keep"},{"phrase":"when can we delete"},{"phrase":"delete customer data"},{"phrase":"how long do we keep tickets"}],"routes_to":["skill:data-handling-judgment","skill:privacy-review"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"downstream-changes","triggers":[{"keyword":"callers"},{"keyword":"imports"},{"keyword":"downstream"},{"phrase":"api changed"}],"routes_to":[],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"engineering-safety-floor","triggers":[{"keyword":"production"},{"keyword":"deploy"},{"keyword":"migration"},{"keyword":"schema change"},{"keyword":"DROP TABLE"},{"keyword":"TRUNCATE"},{"keyword":"force push"},{"keyword":"rebase main"},{"keyword":"rollback"},{"keyword":"secrets rotation"},{"keyword":"IAM"},{"keyword":"DNS"},{"keyword":"terraform apply"},{"keyword":"kubectl apply"},{"phrase":"ship to prod"},{"phrase":"deploy to production"},{"phrase":"merge to main"},{"phrase":"release this"}],"routes_to":["skill:launch-readiness","skill:threat-modeling"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"evaluator-independence","triggers":[{"keyword":"blind review"},{"keyword":"blind pass"},{"keyword":"honest null"},{"keyword":"no-findings"},{"keyword":"adversarial review"},{"keyword":"judge"},{"phrase":"review my own"},{"phrase":"commission a review"},{"phrase":"second opinion on my"}],"routes_to":[],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"external-code-graph-interop","triggers":[{"keyword":"scip"},{"keyword":"code-graph"},{"keyword":"code graph"},{"phrase":"graph.json"},{"phrase":"who calls"},{"phrase":"call graph"},{"phrase":"find references"},{"phrase":"where is this used"}],"routes_to":[],"workspaces":["engineering"],"packs":["meta"]},{"id":"external-reference-deep-dive","triggers":[{"keyword":"github.com/"},{"keyword":"source of truth"},{"phrase":"reference repo"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"finance-safety-floor","triggers":[{"keyword":"runway"},{"keyword":"burn"},{"keyword":"valuation"},{"keyword":"DCF"},{"keyword":"IRR"},{"keyword":"MOIC"},{"keyword":"LTV"},{"keyword":"payback"},{"keyword":"sensitivity"},{"keyword":"fundraise"},{"keyword":"term sheet"},{"keyword":"dilution"},{"keyword":"NRR"},{"keyword":"EBITDA"},{"keyword":"free cash flow"},{"phrase":"what's it worth"},{"phrase":"how long do we have"},{"phrase":"should we raise"},{"phrase":"model the scenarios"}],"routes_to":["skill:dcf-modeling","skill:forecasting","skill:runway-cognition","skill:scenario-modeling","skill:unit-economics-modeling"],"workspaces":["finance"],"packs":["finance-advanced","finance-basic"]},{"id":"framework-neutrality-in-generic-skills","triggers":[{"path_prefix":"src/skills/"},{"path_prefix":"src/rules/"},{"path_prefix":"src/agent-src/commands/"},{"keyword":"FormRequest"},{"keyword":"PHPStan"},{"keyword":"php artisan"},{"keyword":"composer.json"},{"keyword":"Eloquent"},{"keyword":"Pest"},{"keyword":"Blade"},{"keyword":"vendor/bin"},{"keyword":"Artisan"},{"keyword":"Rector"},{"phrase":"every controller"},{"phrase":"all controllers"},{"phrase":"generic skill"}],"routes_to":["guideline:agent-infra/framework-neutrality-patterns"],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"git-history-discipline","triggers":[{"keyword":"git rebase"},{"keyword":"rebase --onto"},{"keyword":"reset --hard"},{"keyword":"fixup"},{"keyword":"--amend"},{"keyword":"force-push"},{"keyword":"--force-with-lease"},{"keyword":"squash-merge"},{"phrase":"branch diverged"},{"phrase":"pull --rebase failed"},{"phrase":"ahead and behind"},{"phrase":"unexpected commits on the branch"},{"phrase":"commits I did not create"}],"routes_to":["skill:git-workflow"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"history-discipline","triggers":[{"keyword":"audit"},{"keyword":"audit log"},{"keyword":"activity log"},{"keyword":"history"},{"keyword":"event sourcing"},{"keyword":"changelog"},{"phrase":"who changed"},{"phrase":"wer hat was"},{"phrase":"track changes"},{"phrase":"change history"}],"routes_to":["skill:history-design"],"workspaces":["engineering"],"packs":["history-discipline"]},{"id":"icon-consistency","triggers":[{"keyword":"icon"},{"keyword":"iconography"},{"keyword":"lucide"},{"keyword":"heroicons"},{"keyword":"icon set"},{"phrase":"icon system"}],"routes_to":[],"workspaces":["engineering"],"packs":["frontend-design"]},{"id":"image-likeness-and-rights","triggers":[{"keyword":"/image:"},{"keyword":"image generation"},{"keyword":"generate an image"},{"keyword":"logo"},{"keyword":"likeness"},{"keyword":"trademark"},{"keyword":"brand mark"},{"path_prefix":"scripts/ai-image/adapters/"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering","gtm"],"packs":["ai-image"]},{"id":"improve-before-implement","triggers":[{"keyword":"refactor"},{"keyword":"implement"},{"keyword":"migration"}],"routes_to":["guideline:agent-infra/agent-interaction-and-decision-quality"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"invite-challenge","triggers":[{"keyword":"plan"},{"keyword":"design"},{"keyword":"architecture"},{"keyword":"approach"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"laravel-translations","triggers":[{"path_prefix":"lang/"},{"keyword":"translation"},{"keyword":"__()"},{"keyword":"trans("}],"routes_to":["skill:laravel"],"workspaces":["engineering"],"packs":["laravel"]},{"id":"legal-safety-floor","triggers":[{"keyword":"NDA"},{"keyword":"DPA"},{"keyword":"data processing agreement"},{"keyword":"contract review"},{"keyword":"redline"},{"keyword":"clause"},{"keyword":"GDPR"},{"keyword":"Art. 28"},{"keyword":"controller"},{"keyword":"processor"},{"keyword":"privilege"},{"keyword":"work product"},{"phrase":"review this contract"},{"phrase":"is this a legal problem"},{"phrase":"check this NDA"}],"routes_to":["skill:contract-review","skill:dpa-review","skill:legal-intake-triage","skill:nda-triage"],"workspaces":["legal-review-prep"],"packs":["legal-review-prep"]},{"id":"lethal-trifecta-guard","triggers":[{"path_prefix":"src/skills/"},{"path_prefix":"src/agent-src/commands/"},{"keyword":"lethal trifecta"},{"keyword":"untrusted content"},{"keyword":"exfiltration"},{"keyword":"data exfil"},{"phrase":"fetch and send"},{"phrase":"read the file and post"}],"routes_to":[],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"linked-projects-onboarding-gate","triggers":[{"keyword":"linked project"},{"keyword":"cross-repo"},{"keyword":"sibling repo"},{"path_prefix":".idea/modules.xml"},{"path_prefix":".idea/vcs.xml"}],"routes_to":["guideline:agent-infra/linked-projects-onboarding-gate"],"workspaces":["agent-config-maintainer","engineering"],"packs":["engineering-base"]},{"id":"markdown-safe-codeblocks","triggers":[{"keyword":"triple backticks"},{"file_pattern":"*.md"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"media-governance-routing","triggers":[{"keyword":"/video:"},{"keyword":"/image:"},{"keyword":"/audio:"},{"keyword":"deepfake"},{"keyword":"voice clone"},{"keyword":"voice cloning"},{"keyword":"likeness"},{"keyword":"brand impersonation"},{"phrase":"in the style of"},{"phrase":"in the voice of"},{"phrase":"as [public figure]"},{"phrase":"impersonate"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering","gtm"],"packs":["ai-image","ai-video"]},{"id":"media-sync-ground-truth","triggers":[{"keyword":"lip-sync"},{"keyword":"lip sync"},{"keyword":"lipsync"},{"keyword":"music video"},{"keyword":"beat-cut"},{"keyword":"/video:from-song"},{"keyword":"vocal map"},{"phrase":"cut to the beat"},{"phrase":"sing the"},{"phrase":"mit den lippen"},{"phrase":"lippen passend"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering","gtm"],"packs":["ai-video"]},{"id":"minimal-safe-diff","triggers":[{"keyword":"drive-by"},{"keyword":"rewrite"},{"keyword":"fix"},{"phrase":"from scratch"},{"phrase":"second system"}],"routes_to":["guideline:agent-infra/minimal-safe-diff-mechanics"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"missing-tool-handling","triggers":[{"keyword":"command not found"},{"keyword":"not installed"}],"routes_to":["guideline:agent-infra/missing-tool-handling"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"model-recommendation","triggers":[{"phrase":"switch task"},{"phrase":"new task"},{"phrase":"which model"},{"keyword":"model_tier"}],"routes_to":["guideline:agent-infra/model-recommendation"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"no-pr-progress-comments","triggers":[{"keyword":"gh pr comment"},{"keyword":"PullRequestComment"},{"phrase":"status comment"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"notes-first-reasoning","triggers":[{"keyword":"debug"},{"keyword":"investigate"},{"keyword":"hypothesis"},{"keyword":"root cause"},{"phrase":"figure out why"},{"phrase":"should we use"}],"routes_to":["skill:memory-consolidation"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"output-discipline","triggers":[{"keyword":"// rest of component"},{"keyword":"for brevity"},{"keyword":"rest follows the same pattern"},{"phrase":"similar pattern"}],"routes_to":[],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"persona-governance","triggers":[{"path_prefix":"src/agent-src/personas/"},{"path_prefix":"dist/agent-src/personas/"},{"keyword":"persona"},{"keyword":"personas"},{"phrase":"new persona"},{"phrase":"add a persona"},{"phrase":"specialist persona"},{"phrase":"review lens"}],"routes_to":["contract:persona-schema"],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"prefer-enums-over-literals","triggers":[{"keyword":"enum"},{"keyword":"status"},{"keyword":"kind"},{"keyword":"category"},{"keyword":"migration"}],"routes_to":[],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"preservation-guard","triggers":[{"keyword":"Iron Law"}],"routes_to":[],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"provider-lifecycle-discipline","triggers":[{"keyword":"/video:"},{"keyword":"/image:"},{"keyword":"/audio:"},{"keyword":"ai-video"},{"keyword":"ai-image"},{"keyword":"ai-audio"},{"keyword":"adapter"},{"keyword":"provider"},{"path_prefix":"scripts/ai-video/adapters/"},{"path_prefix":"scripts/ai-image/adapters/"},{"path_prefix":"scripts/media/lib/"},{"path_prefix":"agents/.ai-video.xml"},{"phrase":"lifecycle"},{"phrase":"default provider"}],"routes_to":["contract:provider-lifecycle"],"workspaces":["agent-config-maintainer","engineering","gtm"],"packs":["ai-image","ai-video"]},{"id":"reviewer-awareness","triggers":[{"keyword":"reviewer"},{"phrase":"suggest reviewers"},{"phrase":"risk hotspot"},{"phrase":"ownership map"},{"phrase":"review this pr"}],"routes_to":["skill:review-routing"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"roadmap-ci-steps-policy","triggers":[{"path_prefix":"agents/roadmaps/"},{"path_prefix":"{module_root}/"},{"keyword":"task ci"},{"keyword":"make test"},{"keyword":"npm run check"},{"keyword":"pnpm run check"},{"keyword":"yarn check"},{"keyword":"composer test"},{"phrase":"run the quality pipeline"},{"phrase":"run task ci"},{"phrase":"run the full ci"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"role-mode-adherence","triggers":[{"keyword":"active_role"},{"keyword":"role-mode"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"rule-type-governance","triggers":[{"path_prefix":"src/rules/"}],"routes_to":["guideline:agent-infra/rule-type-governance"],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"runtime-safety","triggers":[{"keyword":"execution"},{"keyword":"automated"},{"keyword":"assisted"},{"keyword":"handler"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"scale-discipline","triggers":[{"keyword":"migration"},{"keyword":"index"},{"keyword":"N+1"},{"keyword":"eager load"},{"keyword":"pagination"},{"keyword":"queue"},{"keyword":"job"},{"keyword":"retention"},{"keyword":"schema"},{"keyword":"SELECT *"},{"phrase":"will this scale"},{"phrase":"review this migration"},{"phrase":"add a table"},{"phrase":"send an email on"}],"routes_to":["skill:schema-review"],"workspaces":["engineering"],"packs":["scale-discipline"]},{"id":"secret-vcs-guard","triggers":[{"keyword":"secret"},{"keyword":"password"},{"keyword":"credential"},{"keyword":"api key"},{"keyword":"token"},{"keyword":".env"},{"keyword":"commit"},{"keyword":"git add"},{"keyword":"svn commit"},{"keyword":"hg commit"},{"keyword":"push"}],"routes_to":["skill:secrets-management"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"security-sensitive-stop","triggers":[{"keyword":"auth"},{"keyword":"billing"},{"keyword":"tenant"},{"keyword":"webhook"},{"keyword":"oauth"},{"keyword":"signing key"}],"routes_to":[],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"self-repair-loop","triggers":[{"keyword":"self-repair"},{"keyword":"self-repair-queue"},{"phrase":"nicht richtig gearbeitet"},{"phrase":"du hast das falsch"},{"phrase":"you ignored the rule"},{"phrase":"that was wrong"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"senior-engineering-discipline","triggers":[{"keyword":"implement"},{"keyword":"endpoint"},{"keyword":"query"},{"keyword":"migration"},{"keyword":"component"},{"keyword":"seeder"},{"keyword":"dependency"},{"keyword":"refactor"}],"routes_to":["skill:ai-code-blindspots","skill:frontend-render-security","skill:supply-chain-intake","skill:testing-anti-patterns"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"session-canary","triggers":[{"keyword":"canary"},{"keyword":"canary_name"},{"phrase":"session canary"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"settings-ask-protocol","triggers":[{"keyword":"settings:set"},{"keyword":"canary_name"},{"keyword":"rich_skills"},{"keyword":"adversarial_council"},{"keyword":"learn_on_session_end"},{"keyword":"open_edited_files"},{"phrase":"ask about a setting"},{"phrase":"settings question"},{"phrase":"should I enable"},{"phrase":"nickname"},{"path_prefix":"docs/contracts/settings-classes.md"}],"routes_to":["contract:settings-classes"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"skill-improvement-trigger","triggers":[{"phrase":"after completing"},{"keyword":"improvement"},{"keyword":"pipeline"}],"routes_to":["skill:skill-improvement-pipeline"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"source-discovery-gate","triggers":[{"keyword":"schema"},{"keyword":"endpoint"},{"phrase":"new API"},{"phrase":"unknown API"},{"phrase":"new vendor package"},{"phrase":"which fields"}],"routes_to":["skill:source-discovery"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"spreadsheet-source-quality","triggers":[{"keyword":"financial data"},{"keyword":"financial model"},{"keyword":"stock price"},{"keyword":"revenue figures"},{"keyword":"market data"},{"phrase":"pull the numbers"}],"routes_to":[],"workspaces":["finance"],"packs":["finance-basic"]},{"id":"strategy-safety-floor","triggers":[{"keyword":"vision"},{"keyword":"positioning"},{"keyword":"moat"},{"keyword":"competitive"},{"keyword":"market entry"},{"keyword":"OKR"},{"keyword":"build vs buy"},{"keyword":"buy vs partner"},{"keyword":"beachhead"},{"keyword":"GTM"},{"keyword":"category"},{"keyword":"where to play"},{"keyword":"where not to play"},{"phrase":"what's our strategy"},{"phrase":"should we enter"},{"phrase":"what's our moat"},{"phrase":"where should we focus"},{"phrase":"should we reorg"}],"routes_to":["skill:build-buy-partner","skill:competitive-moat-analysis","skill:market-entry-analysis","skill:okr-tree-modeling","skill:positioning-strategy","skill:vision-articulation"],"workspaces":["founder"],"packs":["founder-strategy"]},{"id":"think-before-action","triggers":[{"phrase":"before coding"},{"phrase":"before debugging"},{"phrase":"before modifying"},{"keyword":"implement"},{"keyword":"debug"},{"keyword":"refactor"},{"keyword":"fix"},{"keyword":"optimize"}],"routes_to":[],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"token-budget-discipline","triggers":[{"keyword":"token_budget_class"},{"keyword":"rich skill"}],"routes_to":[],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"token-efficiency","triggers":[{"keyword":"minimize tool calls"},{"phrase":"fetching logs"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"token-optimizer-maintenance","triggers":[{"keyword":"cli-output-handling"},{"keyword":"rtk-output-filtering"},{"keyword":"token-efficiency"},{"keyword":"agent-handoff"},{"keyword":"markitdown"},{"keyword":"token-optimizer"}],"routes_to":["skill:token-optimizer"],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"tool-safety","triggers":[{"keyword":"allowed_tools"},{"keyword":"tool registry"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"ui-audit-gate","triggers":[{"path_prefix":"resources/views/"},{"path_prefix":"resources/js/"},{"path_prefix":"components/"},{"path_prefix":"src/components/"},{"path_prefix":"pages/"},{"file_pattern":"*.vue"},{"file_pattern":"*.svelte"},{"file_pattern":"*.tsx"},{"file_pattern":"*.jsx"},{"file_pattern":"*.blade.php"},{"keyword":"component"},{"keyword":"design token"}],"routes_to":["skill:existing-ui-audit","skill:iconography","skill:typography-system"],"workspaces":["agent-config-maintainer","engineering"],"packs":["frontend-design"]},{"id":"untrusted-input-defense","triggers":[{"keyword":"untrusted"},{"keyword":"fetched content"},{"keyword":"tool output"},{"keyword":"web page"},{"keyword":"RAG"},{"keyword":"converted"},{"phrase":"treat as instructions"},{"phrase":"from the web"},{"phrase":"scraped"}],"routes_to":["guideline:agent-infra/untrusted-input-spotlighting"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"upstream-proposal","triggers":[{"phrase":"after creating"},{"phrase":"after improving"},{"keyword":"upstream"}],"routes_to":["skill:upstream-contribute"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"user-interrupt-priority","triggers":[{"keyword":"weiter"},{"keyword":"resume"},{"keyword":"continue"},{"phrase":"stop that"},{"phrase":"mach stattdessen"},{"command":"work"},{"command":"roadmap:process-full"},{"command":"roadmap:process-phase"},{"command":"implement-ticket"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]}],"profiles":{"minimal":["__kernel__"],"essential":["__kernel__","downstream-changes"],"full":["__kernel__","__tier_1__","__tier_2__"]}}
 +{"schema_version":2,"kernel":["agent-authority","ask-when-uncertain","commit-policy","direct-answers","language-and-tone","no-cheap-questions","non-destructive-by-default","scope-control","verify-before-complete"],"tier_1":[{"id":"architecture","triggers":[{"keyword":"controller"},{"keyword":"service"},{"keyword":"module"}],"routes_to":["skill:module-detect-on-the-fly"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"artifact-engagement-recording","triggers":[{"phrase":"/implement-ticket"},{"phrase":"/work"},{"keyword":"telemetry"}],"routes_to":["contract:artifact-engagement-flow"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"autonomous-execution","triggers":[{"keyword":"personal.autonomy"},{"phrase":"autonomy mode"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"command-suggestion-policy","triggers":[{"phrase":"free-form prompt"},{"phrase":"command suggestion"}],"routes_to":["contract:command-suggestion-flow"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"context-hygiene","triggers":[{"keyword":"3-failure"},{"phrase":"long conversation"}],"routes_to":["guideline:agent-infra/context-hygiene-mechanics"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"copilot-routing","triggers":[{"keyword":"copilot"},{"phrase":"copilot-instructions"},{"phrase":"copilot pr review"}],"routes_to":["skill:copilot-config"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"devcontainer-routing","triggers":[{"keyword":"devcontainer"},{"keyword":"codespaces"},{"keyword":"codespace"},{"phrase":"devcontainer.json"}],"routes_to":["skill:devcontainer"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"docker-commands","triggers":[{"keyword":"docker"},{"keyword":"artisan"},{"keyword":"composer"},{"phrase":"inside the container"}],"routes_to":["skill:docker"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"fast-path-marker-visibility","triggers":[{"keyword":"low-impact council"},{"keyword":"fast-path"},{"keyword":"Resolved via low-impact council"},{"keyword":"low_impact"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"laravel-routing","triggers":[{"keyword":"laravel"},{"keyword":"artisan"},{"keyword":"eloquent"},{"keyword":"FormRequest"}],"routes_to":["skill:laravel"],"workspaces":["engineering"],"packs":["laravel"]},{"id":"low-impact-corpus-privacy-floor","triggers":[{"path_prefix":"agents/decisions/low-impact-decisions"},{"path_prefix":"data/low-impact-decisions-seed"},{"keyword":"low-impact-decisions"},{"keyword":"low-impact corpus"},{"keyword":"learn-low-impact"}],"routes_to":[],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"no-attribution-footers","triggers":[{"keyword":"co-authored"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"no-decorative-emojis-in-git-surfaces","triggers":[{"keyword":"gh pr create"},{"keyword":"git commit"},{"keyword":"🤖"},{"keyword":"🚀"},{"keyword":"🎉"},{"keyword":"✨"},{"keyword":"🔥"},{"keyword":"💡"},{"keyword":"👍"},{"keyword":"❤️"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"no-roadmap-references","triggers":[{"path_prefix":"agents/roadmaps/"},{"path_prefix":"agents/runtime/council/questions/"},{"path_prefix":"agents/runtime/council/responses/"},{"path_prefix":"agents/runtime/council/sessions/"}],"routes_to":["skill:agent-docs-writing","skill:ai-council"],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"onboarding-gate","triggers":[{"phrase":"first turn"},{"keyword":"onboarding"},{"path_prefix":".agent-settings.yml"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"php-coding","triggers":[{"file_pattern":"*.php"},{"keyword":"phpstan"},{"keyword":"ecs"}],"routes_to":["guideline:php/php-coding-patterns"],"workspaces":["engineering"],"packs":["php"]},{"id":"question-not-instruction","triggers":[{"phrase":"warum"},{"phrase":"wieso"},{"phrase":"weshalb"},{"keyword":"why"},{"phrase":"what do you think"},{"phrase":"was denkst du"},{"phrase":"was hältst du"},{"phrase":"geht das"},{"phrase":"kannst du"},{"phrase":"sollte ich"},{"phrase":"should i"},{"phrase":"is it possible"}],"routes_to":[],"workspaces":["engineering"],"packs":["meta"]},{"id":"roadmap-progress-sync","triggers":[{"path_prefix":"agents/roadmaps/"},{"command":"/roadmap:process-step"},{"command":"/roadmap:process-phase"},{"command":"/roadmap:process-full"}],"routes_to":["guideline:agent-infra/roadmap-progress-mechanics"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"skill-quality","triggers":[{"path_prefix":"src/skills/"}],"routes_to":["guideline:agent-infra/skill-quality-checklist"],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"slash-command-routing-policy","triggers":[{"keyword":"/create-pr"},{"keyword":"/commit"},{"keyword":"/fix-ci"},{"phrase":"slash command"}],"routes_to":["skill:command-routing"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"source-confidentiality","triggers":[{"path_prefix":"src/skills/"},{"path_prefix":"src/rules/"},{"path_prefix":"src/domains/"},{"path_prefix":"docs/"},{"path_prefix":"agents/evidence/"},{"path_prefix":"agents/roadmaps/"}],"routes_to":[],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"source-of-truth","triggers":[{"path_prefix":"dist/agent-src/"},{"path_prefix":".augment/"},{"path_prefix":".claude/"},{"path_prefix":".cursor/"}],"routes_to":[],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"symfony-routing","triggers":[{"keyword":"symfony"},{"keyword":"doctrine"},{"keyword":"twig"},{"keyword":"messenger"}],"routes_to":["skill:symfony-workflow"],"workspaces":["engineering"],"packs":["symfony"]},{"id":"user-interaction","triggers":[{"keyword":"option"},{"keyword":"recommendation"},{"phrase":"what do you recommend"},{"phrase":"was empfiehlst du"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]}],"tier_2":[{"id":"active-remediation","triggers":[{"keyword":"refactor"},{"keyword":"duplicate"},{"keyword":"legacy"},{"keyword":"deprecated"},{"keyword":"modernize"},{"keyword":"upgrade"},{"keyword":"cleanup"},{"keyword":"technical debt"}],"routes_to":["guideline:agent-infra/active-remediation-mechanics"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"artifact-drafting-protocol","triggers":[{"phrase":"new skill"},{"phrase":"new rule"},{"phrase":"new command"},{"phrase":"new guideline"},{"phrase":"neue Regel"},{"phrase":"bau mir ein Skill"}],"routes_to":["guideline:agent-infra/artifact-drafting-protocol-mechanics"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"augment-edit-discipline","triggers":[{"path_prefix":".augment/"},{"path_prefix":"src/"},{"keyword":"portable"},{"keyword":"rename"},{"keyword":"delete"}],"routes_to":["guideline:augment-portability-patterns","skill:agent-docs-writing"],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"brand-source-of-truth","triggers":[{"keyword":"brand"},{"keyword":"on-brand"},{"keyword":"off-brand"},{"keyword":"brand tokens"},{"keyword":"brand voice"},{"keyword":"brand guide"},{"keyword":"brand profile"},{"phrase":"brand consistency"},{"phrase":"on brand"},{"phrase":"brand source of truth"}],"routes_to":[],"workspaces":["engineering"],"packs":["brand"]},{"id":"broken-access-control","triggers":[{"keyword":"endpoint"},{"keyword":"route"},{"keyword":"authorization"},{"keyword":"tenant"},{"keyword":"IDOR"},{"keyword":"session"},{"keyword":"login"},{"keyword":"controller"},{"keyword":"findById"}],"routes_to":["skill:authz-review","skill:multi-tenancy","skill:threat-modeling"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"cli-output-handling","triggers":[{"keyword":"git"},{"keyword":"phpstan"},{"keyword":"rector"},{"keyword":"phpunit"},{"keyword":"composer"},{"keyword":"npm"},{"keyword":"pnpm"},{"keyword":"yarn"},{"keyword":"eslint"},{"keyword":"tsc"},{"keyword":"vitest"},{"keyword":"jest"},{"keyword":"pytest"},{"keyword":"ruff"},{"keyword":"mypy"},{"keyword":"pyright"},{"keyword":"cargo"},{"keyword":"golangci-lint"},{"keyword":"docker"},{"keyword":"kubectl"},{"keyword":"terraform"},{"phrase":"go test"},{"phrase":"go build"}],"routes_to":["skill:rtk-output-filtering"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"code-comment-discipline","triggers":[{"keyword":"comment"},{"keyword":"docblock"},{"keyword":"phpdoc"},{"keyword":"jsdoc"},{"keyword":"docstring"},{"keyword":"implement"},{"keyword":"class"},{"keyword":"method"},{"keyword":"refactor"}],"routes_to":["guideline:code-clarity"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"code-provenance","triggers":[{"keyword":"port this"},{"keyword":"adapt this"},{"keyword":"based on this repo"},{"keyword":"similar implementation"},{"keyword":"found this on GitHub"},{"keyword":"borrow"},{"keyword":"vendored"},{"keyword":"reference implementation"},{"keyword":"harvest"},{"keyword":"adopt from"}],"routes_to":["skill:license-compliance-audit","skill:license-compliance-borrow-check","skill:license-compliance-credits"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"commit-conventions","triggers":[{"keyword":"commit"},{"keyword":"branch"},{"phrase":"conventional commits"}],"routes_to":["skill:conventional-commits-writing"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"communication-through-line","triggers":[{"phrase":"reporting progress"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"content-quoting-floor","triggers":[{"keyword":"quote"},{"keyword":"excerpt"},{"keyword":"verbatim"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"council-availability","triggers":[{"keyword":"council"},{"keyword":"ai council"},{"keyword":"ai-council"},{"keyword":"council:status"},{"keyword":"second opinion"},{"phrase":"cross-check with another model"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"cross-source-consistency","triggers":[{"keyword":"ticket"},{"keyword":"refine"},{"keyword":"acceptance criteria"},{"keyword":"mockup"},{"keyword":"screenshot"},{"keyword":"attachment"},{"keyword":"roadmap"},{"keyword":"estimate"},{"phrase":"plan this ticket"},{"phrase":"refine this ticket"},{"phrase":"is this ticket clear"},{"phrase":"implement the ticket"}],"routes_to":["guideline:agent-infra/cross-source-consistency-mechanics"],"workspaces":["engineering","product"],"packs":["engineering-base","product-basic"]},{"id":"decision-revisit-gate","triggers":[{"keyword":"don't relitigate"},{"keyword":"honest null"},{"keyword":"already decided"},{"keyword":"locked decision"},{"keyword":"budget blocks"}],"routes_to":["skill:decision-review"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"delegation-policy","triggers":[{"keyword":"delegate"},{"keyword":"orchestrate"},{"keyword":"subagent"},{"keyword":"parallel"},{"phrase":"review these"},{"phrase":"analyze the codebase"},{"phrase":"for each"},{"keyword":"analyse"},{"keyword":"analyze"}],"routes_to":["skill:subagent-orchestration"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"design-fidelity","triggers":[{"keyword":"prototype"},{"keyword":"mockup"},{"keyword":"wireframe"},{"keyword":"design system"},{"keyword":"design spec"},{"keyword":"Figma"},{"keyword":"handoff"},{"keyword":"Claude Design"},{"phrase":"match the design"},{"phrase":"build this design"},{"phrase":"design fidelity"},{"phrase":"stick to the design"},{"phrase":"design.html"},{"phrase":"attached artifact"},{"phrase":"provided artifact"},{"phrase":"übernimm das design"},{"phrase":"baue das nach"},{"phrase":"bau das nach"},{"phrase":"1:1 um"},{"phrase":"1:1 nach"},{"phrase":"claude.site/artifacts"},{"file_pattern":"*design.html"},{"path_prefix":".claude/design-system/"}],"routes_to":["guideline:design-fidelity-mechanics"],"workspaces":["engineering"],"packs":["engineering-base","frontend-design"]},{"id":"design-review-after-ui-write","triggers":[{"path_prefix":"resources/views/"},{"path_prefix":"resources/js/"},{"path_prefix":"components/"},{"path_prefix":"src/components/"},{"path_prefix":"pages/"},{"file_pattern":"*.vue"},{"file_pattern":"*.svelte"},{"file_pattern":"*.tsx"},{"file_pattern":"*.jsx"},{"file_pattern":"*.blade.php"},{"keyword":"component"},{"keyword":"design token"}],"routes_to":["skill:accessibility-auditor","skill:design-review"],"workspaces":["agent-config-maintainer","engineering"],"packs":["frontend-design"]},{"id":"doc-screenshot-hygiene","triggers":[{"keyword":"screenshot"},{"keyword":"screenshots"},{"keyword":"screen capture"},{"keyword":"screen grab"},{"keyword":"admin panel screenshot"},{"keyword":"dashboard screenshot"},{"keyword":"docs site"},{"keyword":"Starlight"},{"phrase":"add a screenshot"},{"phrase":"screenshot for the docs"},{"phrase":"screenshot in the readme"},{"phrase":"embed an image in the docs"},{"phrase":"put a screenshot"},{"phrase":"generate a docs site"},{"phrase":"capture the ui"},{"path_prefix":"docs/media/"}],"routes_to":["skill:screenshot-hygiene"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"domain-adoption-policy","triggers":[{"keyword":"mobile track"},{"keyword":"ml track"},{"keyword":"blockchain track"},{"path_prefix":"src/skills/"}],"routes_to":["guideline:agent-infra/domain-adoption-gates"],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"domain-safety-disclaimer","triggers":[{"keyword":"legal brief"},{"keyword":"contract redline"},{"keyword":"terms of service"},{"keyword":"privacy policy"},{"keyword":"diagnosis"},{"keyword":"symptoms"},{"keyword":"dosage"},{"keyword":"medication"},{"keyword":"investment memo"},{"keyword":"tax position"},{"keyword":"strategic recommendation"},{"keyword":"board memo"},{"keyword":"executive summary"},{"phrase":"review this contract"},{"phrase":"is this symptom"},{"phrase":"should I invest"},{"phrase":"what should we do"}],"routes_to":["skill:brand-identity","skill:brand-strategy","skill:contracts-cognition","skill:dcf-modeling","skill:decision-record","skill:privacy-review","skill:scenario-modeling","skill:stakeholder-tradeoff"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"domain-safety-pii","triggers":[{"keyword":"support macro"},{"keyword":"ticket response"},{"keyword":"help desk"},{"keyword":"Zendesk"},{"keyword":"Intercom"},{"keyword":"testimonial"},{"keyword":"case study"},{"keyword":"customer story"},{"keyword":"candidate"},{"keyword":"interview notes"},{"keyword":"scorecard"},{"keyword":"rejection email"},{"keyword":"offer letter"},{"keyword":"invoice"},{"keyword":"accounts receivable"},{"keyword":"accounts payable"},{"keyword":"finance memo"},{"keyword":"log"},{"keyword":"logger"},{"keyword":"Sentry"},{"keyword":"Datadog"},{"keyword":"structured log"},{"keyword":"export to CSV"},{"keyword":"data export"},{"keyword":"partner integration"},{"phrase":"draft a response to"},{"phrase":"marketing email featuring"},{"phrase":"draft feedback for"},{"phrase":"log the user"},{"phrase":"send them the spreadsheet"}],"routes_to":["skill:data-handling-judgment","skill:logging-monitoring","skill:privacy-review","skill:secrets-management"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"domain-safety-retention","triggers":[{"keyword":"retention policy"},{"keyword":"data retention"},{"keyword":"record retention"},{"keyword":"ticket retention"},{"keyword":"CRM retention"},{"keyword":"delete financial"},{"keyword":"purge invoice"},{"keyword":"DSAR"},{"keyword":"data subject request"},{"keyword":"right to be forgotten"},{"phrase":"how long should we keep"},{"phrase":"when can we delete"},{"phrase":"delete customer data"},{"phrase":"how long do we keep tickets"}],"routes_to":["skill:data-handling-judgment","skill:privacy-review"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"downstream-changes","triggers":[{"keyword":"callers"},{"keyword":"imports"},{"keyword":"downstream"},{"phrase":"api changed"}],"routes_to":[],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"engineering-safety-floor","triggers":[{"keyword":"production"},{"keyword":"deploy"},{"keyword":"migration"},{"keyword":"schema change"},{"keyword":"DROP TABLE"},{"keyword":"TRUNCATE"},{"keyword":"force push"},{"keyword":"rebase main"},{"keyword":"rollback"},{"keyword":"secrets rotation"},{"keyword":"IAM"},{"keyword":"DNS"},{"keyword":"terraform apply"},{"keyword":"kubectl apply"},{"phrase":"ship to prod"},{"phrase":"deploy to production"},{"phrase":"merge to main"},{"phrase":"release this"}],"routes_to":["skill:launch-readiness","skill:threat-modeling"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"evaluator-independence","triggers":[{"keyword":"blind review"},{"keyword":"blind pass"},{"keyword":"honest null"},{"keyword":"no-findings"},{"keyword":"adversarial review"},{"keyword":"judge"},{"phrase":"review my own"},{"phrase":"commission a review"},{"phrase":"second opinion on my"}],"routes_to":[],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"external-code-graph-interop","triggers":[{"keyword":"scip"},{"keyword":"code-graph"},{"keyword":"code graph"},{"phrase":"graph.json"},{"phrase":"who calls"},{"phrase":"call graph"},{"phrase":"find references"},{"phrase":"where is this used"}],"routes_to":[],"workspaces":["engineering"],"packs":["meta"]},{"id":"external-reference-deep-dive","triggers":[{"keyword":"github.com/"},{"keyword":"source of truth"},{"phrase":"reference repo"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"finance-safety-floor","triggers":[{"keyword":"runway"},{"keyword":"burn"},{"keyword":"valuation"},{"keyword":"DCF"},{"keyword":"IRR"},{"keyword":"MOIC"},{"keyword":"LTV"},{"keyword":"payback"},{"keyword":"sensitivity"},{"keyword":"fundraise"},{"keyword":"term sheet"},{"keyword":"dilution"},{"keyword":"NRR"},{"keyword":"EBITDA"},{"keyword":"free cash flow"},{"phrase":"what's it worth"},{"phrase":"how long do we have"},{"phrase":"should we raise"},{"phrase":"model the scenarios"}],"routes_to":["skill:dcf-modeling","skill:forecasting","skill:runway-cognition","skill:scenario-modeling","skill:unit-economics-modeling"],"workspaces":["finance"],"packs":["finance-advanced","finance-basic"]},{"id":"framework-neutrality-in-generic-skills","triggers":[{"path_prefix":"src/skills/"},{"path_prefix":"src/rules/"},{"path_prefix":"src/agent-src/commands/"},{"keyword":"FormRequest"},{"keyword":"PHPStan"},{"keyword":"php artisan"},{"keyword":"composer.json"},{"keyword":"Eloquent"},{"keyword":"Pest"},{"keyword":"Blade"},{"keyword":"vendor/bin"},{"keyword":"Artisan"},{"keyword":"Rector"},{"phrase":"every controller"},{"phrase":"all controllers"},{"phrase":"generic skill"}],"routes_to":["guideline:agent-infra/framework-neutrality-patterns"],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"git-history-discipline","triggers":[{"keyword":"git rebase"},{"keyword":"rebase --onto"},{"keyword":"reset --hard"},{"keyword":"fixup"},{"keyword":"--amend"},{"keyword":"force-push"},{"keyword":"--force-with-lease"},{"keyword":"squash-merge"},{"phrase":"branch diverged"},{"phrase":"pull --rebase failed"},{"phrase":"ahead and behind"},{"phrase":"unexpected commits on the branch"},{"phrase":"commits I did not create"}],"routes_to":["skill:git-workflow"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"history-discipline","triggers":[{"keyword":"audit"},{"keyword":"audit log"},{"keyword":"activity log"},{"keyword":"history"},{"keyword":"event sourcing"},{"keyword":"changelog"},{"phrase":"who changed"},{"phrase":"wer hat was"},{"phrase":"track changes"},{"phrase":"change history"}],"routes_to":["skill:history-design"],"workspaces":["engineering"],"packs":["history-discipline"]},{"id":"icon-consistency","triggers":[{"keyword":"icon"},{"keyword":"iconography"},{"keyword":"lucide"},{"keyword":"heroicons"},{"keyword":"icon set"},{"phrase":"icon system"}],"routes_to":[],"workspaces":["engineering"],"packs":["frontend-design"]},{"id":"image-likeness-and-rights","triggers":[{"keyword":"/image:"},{"keyword":"image generation"},{"keyword":"generate an image"},{"keyword":"logo"},{"keyword":"likeness"},{"keyword":"trademark"},{"keyword":"brand mark"},{"path_prefix":"scripts/ai-image/adapters/"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering","gtm"],"packs":["ai-image"]},{"id":"improve-before-implement","triggers":[{"keyword":"refactor"},{"keyword":"implement"},{"keyword":"migration"}],"routes_to":["guideline:agent-infra/agent-interaction-and-decision-quality"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"invite-challenge","triggers":[{"keyword":"plan"},{"keyword":"design"},{"keyword":"architecture"},{"keyword":"approach"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"laravel-translations","triggers":[{"path_prefix":"lang/"},{"keyword":"translation"},{"keyword":"__()"},{"keyword":"trans("}],"routes_to":["skill:laravel"],"workspaces":["engineering"],"packs":["laravel"]},{"id":"legal-safety-floor","triggers":[{"keyword":"NDA"},{"keyword":"DPA"},{"keyword":"data processing agreement"},{"keyword":"contract review"},{"keyword":"redline"},{"keyword":"clause"},{"keyword":"GDPR"},{"keyword":"Art. 28"},{"keyword":"controller"},{"keyword":"processor"},{"keyword":"privilege"},{"keyword":"work product"},{"phrase":"review this contract"},{"phrase":"is this a legal problem"},{"phrase":"check this NDA"}],"routes_to":["skill:contract-review","skill:dpa-review","skill:legal-intake-triage","skill:nda-triage"],"workspaces":["legal-review-prep"],"packs":["legal-review-prep"]},{"id":"lethal-trifecta-guard","triggers":[{"path_prefix":"src/skills/"},{"path_prefix":"src/agent-src/commands/"},{"keyword":"lethal trifecta"},{"keyword":"untrusted content"},{"keyword":"exfiltration"},{"keyword":"data exfil"},{"phrase":"fetch and send"},{"phrase":"read the file and post"}],"routes_to":[],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"linked-projects-onboarding-gate","triggers":[{"keyword":"linked project"},{"keyword":"cross-repo"},{"keyword":"sibling repo"},{"path_prefix":".idea/modules.xml"},{"path_prefix":".idea/vcs.xml"}],"routes_to":["guideline:agent-infra/linked-projects-onboarding-gate"],"workspaces":["agent-config-maintainer","engineering"],"packs":["engineering-base"]},{"id":"markdown-safe-codeblocks","triggers":[{"keyword":"triple backticks"},{"file_pattern":"*.md"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"media-governance-routing","triggers":[{"keyword":"/video:"},{"keyword":"/image:"},{"keyword":"/audio:"},{"keyword":"deepfake"},{"keyword":"voice clone"},{"keyword":"voice cloning"},{"keyword":"likeness"},{"keyword":"brand impersonation"},{"phrase":"in the style of"},{"phrase":"in the voice of"},{"phrase":"as [public figure]"},{"phrase":"impersonate"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering","gtm"],"packs":["ai-image","ai-video"]},{"id":"media-sync-ground-truth","triggers":[{"keyword":"lip-sync"},{"keyword":"lip sync"},{"keyword":"lipsync"},{"keyword":"music video"},{"keyword":"beat-cut"},{"keyword":"/video:from-song"},{"keyword":"vocal map"},{"phrase":"cut to the beat"},{"phrase":"sing the"},{"phrase":"mit den lippen"},{"phrase":"lippen passend"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering","gtm"],"packs":["ai-video"]},{"id":"minimal-safe-diff","triggers":[{"keyword":"drive-by"},{"keyword":"rewrite"},{"keyword":"fix"},{"phrase":"from scratch"},{"phrase":"second system"}],"routes_to":["guideline:agent-infra/minimal-safe-diff-mechanics"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"missing-skill-recovery","triggers":[{"phrase":"skill not found"},{"phrase":"no such skill"},{"phrase":"skill does not exist"},{"phrase":"kein passendes skill"},{"phrase":"which skill"},{"phrase":"welches skill"}],"routes_to":[],"workspaces":["engineering"],"packs":["meta"]},{"id":"missing-tool-handling","triggers":[{"keyword":"command not found"},{"keyword":"not installed"}],"routes_to":["guideline:agent-infra/missing-tool-handling"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"model-recommendation","triggers":[{"phrase":"switch task"},{"phrase":"new task"},{"phrase":"which model"},{"keyword":"model_tier"}],"routes_to":["guideline:agent-infra/model-recommendation"],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"no-pr-progress-comments","triggers":[{"keyword":"gh pr comment"},{"keyword":"PullRequestComment"},{"phrase":"status comment"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"notes-first-reasoning","triggers":[{"keyword":"debug"},{"keyword":"investigate"},{"keyword":"hypothesis"},{"keyword":"root cause"},{"phrase":"figure out why"},{"phrase":"should we use"}],"routes_to":["skill:memory-consolidation"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"output-discipline","triggers":[{"keyword":"// rest of component"},{"keyword":"for brevity"},{"keyword":"rest follows the same pattern"},{"phrase":"similar pattern"}],"routes_to":[],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"persona-governance","triggers":[{"path_prefix":"src/agent-src/personas/"},{"path_prefix":"dist/agent-src/personas/"},{"keyword":"persona"},{"keyword":"personas"},{"phrase":"new persona"},{"phrase":"add a persona"},{"phrase":"specialist persona"},{"phrase":"review lens"}],"routes_to":["contract:persona-schema"],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"prefer-enums-over-literals","triggers":[{"keyword":"enum"},{"keyword":"status"},{"keyword":"kind"},{"keyword":"category"},{"keyword":"migration"}],"routes_to":[],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"preservation-guard","triggers":[{"keyword":"Iron Law"}],"routes_to":[],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"provider-lifecycle-discipline","triggers":[{"keyword":"/video:"},{"keyword":"/image:"},{"keyword":"/audio:"},{"keyword":"ai-video"},{"keyword":"ai-image"},{"keyword":"ai-audio"},{"keyword":"adapter"},{"keyword":"provider"},{"path_prefix":"scripts/ai-video/adapters/"},{"path_prefix":"scripts/ai-image/adapters/"},{"path_prefix":"scripts/media/lib/"},{"path_prefix":"agents/.ai-video.xml"},{"phrase":"lifecycle"},{"phrase":"default provider"}],"routes_to":["contract:provider-lifecycle"],"workspaces":["agent-config-maintainer","engineering","gtm"],"packs":["ai-image","ai-video"]},{"id":"reviewer-awareness","triggers":[{"keyword":"reviewer"},{"phrase":"suggest reviewers"},{"phrase":"risk hotspot"},{"phrase":"ownership map"},{"phrase":"review this pr"}],"routes_to":["skill:review-routing"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"roadmap-ci-steps-policy","triggers":[{"path_prefix":"agents/roadmaps/"},{"path_prefix":"{module_root}/"},{"keyword":"task ci"},{"keyword":"make test"},{"keyword":"npm run check"},{"keyword":"pnpm run check"},{"keyword":"yarn check"},{"keyword":"composer test"},{"phrase":"run the quality pipeline"},{"phrase":"run task ci"},{"phrase":"run the full ci"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"role-mode-adherence","triggers":[{"keyword":"active_role"},{"keyword":"role-mode"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"rule-type-governance","triggers":[{"path_prefix":"src/rules/"}],"routes_to":["guideline:agent-infra/rule-type-governance"],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"runtime-safety","triggers":[{"keyword":"execution"},{"keyword":"automated"},{"keyword":"assisted"},{"keyword":"handler"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"scale-discipline","triggers":[{"keyword":"migration"},{"keyword":"index"},{"keyword":"N+1"},{"keyword":"eager load"},{"keyword":"pagination"},{"keyword":"queue"},{"keyword":"job"},{"keyword":"retention"},{"keyword":"schema"},{"keyword":"SELECT *"},{"phrase":"will this scale"},{"phrase":"review this migration"},{"phrase":"add a table"},{"phrase":"send an email on"}],"routes_to":["skill:schema-review"],"workspaces":["engineering"],"packs":["scale-discipline"]},{"id":"secret-vcs-guard","triggers":[{"keyword":"secret"},{"keyword":"password"},{"keyword":"credential"},{"keyword":"api key"},{"keyword":"token"},{"keyword":".env"},{"keyword":"commit"},{"keyword":"git add"},{"keyword":"svn commit"},{"keyword":"hg commit"},{"keyword":"push"}],"routes_to":["skill:secrets-management"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"security-sensitive-stop","triggers":[{"keyword":"auth"},{"keyword":"billing"},{"keyword":"tenant"},{"keyword":"webhook"},{"keyword":"oauth"},{"keyword":"signing key"}],"routes_to":[],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"self-repair-loop","triggers":[{"keyword":"self-repair"},{"keyword":"self-repair-queue"},{"phrase":"nicht richtig gearbeitet"},{"phrase":"du hast das falsch"},{"phrase":"you ignored the rule"},{"phrase":"that was wrong"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"senior-engineering-discipline","triggers":[{"keyword":"implement"},{"keyword":"endpoint"},{"keyword":"query"},{"keyword":"migration"},{"keyword":"component"},{"keyword":"seeder"},{"keyword":"dependency"},{"keyword":"refactor"}],"routes_to":["skill:ai-code-blindspots","skill:frontend-render-security","skill:supply-chain-intake","skill:testing-anti-patterns"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"session-canary","triggers":[{"keyword":"canary"},{"keyword":"canary_name"},{"phrase":"session canary"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"settings-ask-protocol","triggers":[{"keyword":"settings:set"},{"keyword":"canary_name"},{"keyword":"rich_skills"},{"keyword":"adversarial_council"},{"keyword":"learn_on_session_end"},{"keyword":"open_edited_files"},{"phrase":"ask about a setting"},{"phrase":"settings question"},{"phrase":"should I enable"},{"phrase":"nickname"},{"path_prefix":"docs/contracts/settings-classes.md"}],"routes_to":["contract:settings-classes"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"skill-improvement-trigger","triggers":[{"phrase":"after completing"},{"keyword":"improvement"},{"keyword":"pipeline"}],"routes_to":["skill:skill-improvement-pipeline"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"source-discovery-gate","triggers":[{"keyword":"schema"},{"keyword":"endpoint"},{"phrase":"new API"},{"phrase":"unknown API"},{"phrase":"new vendor package"},{"phrase":"which fields"}],"routes_to":["skill:source-discovery"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"spreadsheet-source-quality","triggers":[{"keyword":"financial data"},{"keyword":"financial model"},{"keyword":"stock price"},{"keyword":"revenue figures"},{"keyword":"market data"},{"phrase":"pull the numbers"}],"routes_to":[],"workspaces":["finance"],"packs":["finance-basic"]},{"id":"strategy-safety-floor","triggers":[{"keyword":"vision"},{"keyword":"positioning"},{"keyword":"moat"},{"keyword":"competitive"},{"keyword":"market entry"},{"keyword":"OKR"},{"keyword":"build vs buy"},{"keyword":"buy vs partner"},{"keyword":"beachhead"},{"keyword":"GTM"},{"keyword":"category"},{"keyword":"where to play"},{"keyword":"where not to play"},{"phrase":"what's our strategy"},{"phrase":"should we enter"},{"phrase":"what's our moat"},{"phrase":"where should we focus"},{"phrase":"should we reorg"}],"routes_to":["skill:build-buy-partner","skill:competitive-moat-analysis","skill:market-entry-analysis","skill:okr-tree-modeling","skill:positioning-strategy","skill:vision-articulation"],"workspaces":["founder"],"packs":["founder-strategy"]},{"id":"think-before-action","triggers":[{"phrase":"before coding"},{"phrase":"before debugging"},{"phrase":"before modifying"},{"keyword":"implement"},{"keyword":"debug"},{"keyword":"refactor"},{"keyword":"fix"},{"keyword":"optimize"}],"routes_to":[],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"token-budget-discipline","triggers":[{"keyword":"token_budget_class"},{"keyword":"rich skill"}],"routes_to":[],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"token-efficiency","triggers":[{"keyword":"minimize tool calls"},{"phrase":"fetching logs"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]},{"id":"token-optimizer-maintenance","triggers":[{"keyword":"cli-output-handling"},{"keyword":"rtk-output-filtering"},{"keyword":"token-efficiency"},{"keyword":"agent-handoff"},{"keyword":"markitdown"},{"keyword":"token-optimizer"}],"routes_to":["skill:token-optimizer"],"workspaces":["agent-config-maintainer"],"packs":["meta"]},{"id":"tool-safety","triggers":[{"keyword":"allowed_tools"},{"keyword":"tool registry"}],"routes_to":[],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"ui-audit-gate","triggers":[{"path_prefix":"resources/views/"},{"path_prefix":"resources/js/"},{"path_prefix":"components/"},{"path_prefix":"src/components/"},{"path_prefix":"pages/"},{"file_pattern":"*.vue"},{"file_pattern":"*.svelte"},{"file_pattern":"*.tsx"},{"file_pattern":"*.jsx"},{"file_pattern":"*.blade.php"},{"keyword":"component"},{"keyword":"design token"}],"routes_to":["skill:existing-ui-audit","skill:iconography","skill:typography-system"],"workspaces":["agent-config-maintainer","engineering"],"packs":["frontend-design"]},{"id":"untrusted-input-defense","triggers":[{"keyword":"untrusted"},{"keyword":"fetched content"},{"keyword":"tool output"},{"keyword":"web page"},{"keyword":"RAG"},{"keyword":"converted"},{"phrase":"treat as instructions"},{"phrase":"from the web"},{"phrase":"scraped"}],"routes_to":["guideline:agent-infra/untrusted-input-spotlighting"],"workspaces":["engineering"],"packs":["engineering-base"]},{"id":"upstream-proposal","triggers":[{"phrase":"after creating"},{"phrase":"after improving"},{"keyword":"upstream"}],"routes_to":["skill:upstream-contribute"],"workspaces":["agent-config-maintainer","engineering"],"packs":["meta"]},{"id":"user-interrupt-priority","triggers":[{"keyword":"weiter"},{"keyword":"resume"},{"keyword":"continue"},{"phrase":"stop that"},{"phrase":"mach stattdessen"},{"command":"work"},{"command":"roadmap:process-full"},{"command":"roadmap:process-phase"},{"command":"implement-ticket"}],"routes_to":[],"workspaces":["agent-config-maintainer","construction","engineering","finance","founder","gtm","legal-review-prep","ops","product","small-business"],"packs":["meta"]}],"profiles":{"minimal":["__kernel__"],"essential":["__kernel__","downstream-changes"],"full":["__kernel__","__tier_1__","__tier_2__"]}}
 diff --git a/docs/CLAIMS.md b/docs/CLAIMS.md
-index c8ef86f660197deda86cb71b0d57159a19d380f5..76e267372eb6d271e64f4d0f8ce1fd3b60b9eac7 100644
+index c8ef86f660197deda86cb71b0d57159a19d380f5..640a56544e116667d260be901ed7532a826f8fba 100644
 --- a/docs/CLAIMS.md
 +++ b/docs/CLAIMS.md
 @@ -200,7 +200,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
@@ -1404,7 +1427,7 @@ index c8ef86f660197deda86cb71b0d57159a19d380f5..76e267372eb6d271e64f4d0f8ce1fd3b
  
  ### claim: enforcement-coverage-resolved
 -- claim: 15 of 116 governed rules (12.9%) carry a backstop that fails a CI build — `blocking` read live from `internal/reports/enforcement-coverage.json` on 2026-08-12, which is the file to quote rather than a figure copied out of a release review. Two denominators are in play and conflating them is the trap: 116 is the governed-rule count (enforced by the counts updater), while that report's `summary.total` is **114**, because the resolver is scoped to THIS repo's workflows and correctly excludes the two scale/history pack rules named at the end of this entry — so the same 15 rules read as 13.2% in-scope. Blocking itself rose 14 → 15 since the 2026-07-25 measurement, and `undeclared` is 86 in the 114-scope (88 in the 116-frame). The five reviews of the 9.30→9.35 span cite 12.9% and are right; their companion claim that "the 84 baseline rules are unchanged 84" matches this report in neither frame. Their substantive point stands and is the half worth keeping — the ratio has not risen across five releases, because the ratchet prevents regression and does not raise the level. The number is RESOLVED, not declared — a `validator:` counts only when the script exists AND a GITHUB WORKFLOW reaches it (transitively, so a sub-check under a wired umbrella counts), and a hook registered `fail_closed: false` resolves to `observer`, never `validator`. The figure was 14 before this correction too, and it was wrong: the resolver treated `taskfiles/` and `.github/workflows/` as one corpus, so "named in a taskfile" counted as blocking — while NO workflow invokes `task ci`, `ci-strict`, or `ci-fast`. Nine of the thirteen validators only ran when a human typed the command. Split into `validator` (CI runs it) and `validator-local` (only a taskfile does), the honest figure was 5 of 107 at the time; wiring the nine into `rule-backstops.yml` returned it to 14, this time meaning what the headline says. `local_only` is now 0 and is ratcheted, so a gate cannot drop back out silently. Wiring them also surfaced that FIVE were already failing invisibly, 37 findings deep. Those are now CLEARED: the baseline in `rule-backstop-debt.json` stands at 0, so the ratchet enforces rather than tolerates. Roughly two thirds of the 37 were never violations — the gates were misreading allowances their own rules already grant (license-required attribution, multi-stack peer examples), which is the same class of defect one level down. 86 rules declare nothing and count as uncovered, not excluded (the two scale/history pack rules ship enforced by `lint_persistence` in consumer CI, which this resolver — scoped to THIS repo's workflows — correctly does not count).
-+- claim: 15 of 117 governed rules (12.9%) carry a backstop that fails a CI build — `blocking` read live from `internal/reports/enforcement-coverage.json` on 2026-08-12, which is the file to quote rather than a figure copied out of a release review. Two denominators are in play and conflating them is the trap: 116 is the governed-rule count (enforced by the counts updater), while that report's `summary.total` is **114**, because the resolver is scoped to THIS repo's workflows and correctly excludes the two scale/history pack rules named at the end of this entry — so the same 15 rules read as 13.2% in-scope. Blocking itself rose 14 → 15 since the 2026-07-25 measurement, and `undeclared` is 86 in the 114-scope (88 in the 116-frame). The five reviews of the 9.30→9.35 span cite 12.9% and are right; their companion claim that "the 84 baseline rules are unchanged 84" matches this report in neither frame. Their substantive point stands and is the half worth keeping — the ratio has not risen across five releases, because the ratchet prevents regression and does not raise the level. The number is RESOLVED, not declared — a `validator:` counts only when the script exists AND a GITHUB WORKFLOW reaches it (transitively, so a sub-check under a wired umbrella counts), and a hook registered `fail_closed: false` resolves to `observer`, never `validator`. The figure was 14 before this correction too, and it was wrong: the resolver treated `taskfiles/` and `.github/workflows/` as one corpus, so "named in a taskfile" counted as blocking — while NO workflow invokes `task ci`, `ci-strict`, or `ci-fast`. Nine of the thirteen validators only ran when a human typed the command. Split into `validator` (CI runs it) and `validator-local` (only a taskfile does), the honest figure was 5 of 107 at the time; wiring the nine into `rule-backstops.yml` returned it to 14, this time meaning what the headline says. `local_only` is now 0 and is ratcheted, so a gate cannot drop back out silently. Wiring them also surfaced that FIVE were already failing invisibly, 37 findings deep. Those are now CLEARED: the baseline in `rule-backstop-debt.json` stands at 0, so the ratchet enforces rather than tolerates. Roughly two thirds of the 37 were never violations — the gates were misreading allowances their own rules already grant (license-required attribution, multi-stack peer examples), which is the same class of defect one level down. 86 rules declare nothing and count as uncovered, not excluded (the two scale/history pack rules ship enforced by `lint_persistence` in consumer CI, which this resolver — scoped to THIS repo's workflows — correctly does not count).
++- claim: 15 of 117 governed rules (12.8%) carry a backstop that fails a CI build — `blocking` read live from `internal/reports/enforcement-coverage.json` on 2026-08-12, which is the file to quote rather than a figure copied out of a release review. Two denominators are in play and conflating them is the trap: 117 is the governed-rule count (enforced by the counts updater), while that report's `summary.total` is **114**, because the resolver is scoped to THIS repo's workflows and correctly excludes the two scale/history pack rules named at the end of this entry — so the same 15 rules read as 13.2% in-scope. Blocking itself rose 14 → 15 since the 2026-07-25 measurement, and `undeclared` is 86 in the 114-scope (89 in the 117-frame). The five reviews of the 9.30→9.35 span cite 12.9% and are right; their companion claim that "the 84 baseline rules are unchanged 84" matches this report in neither frame. Their substantive point stands and is the half worth keeping — the ratio has not risen across five releases, because the ratchet prevents regression and does not raise the level. The number is RESOLVED, not declared — a `validator:` counts only when the script exists AND a GITHUB WORKFLOW reaches it (transitively, so a sub-check under a wired umbrella counts), and a hook registered `fail_closed: false` resolves to `observer`, never `validator`. The figure was 14 before this correction too, and it was wrong: the resolver treated `taskfiles/` and `.github/workflows/` as one corpus, so "named in a taskfile" counted as blocking — while NO workflow invokes `task ci`, `ci-strict`, or `ci-fast`. Nine of the thirteen validators only ran when a human typed the command. Split into `validator` (CI runs it) and `validator-local` (only a taskfile does), the honest figure was 5 of 107 at the time; wiring the nine into `rule-backstops.yml` returned it to 14, this time meaning what the headline says. `local_only` is now 0 and is ratcheted, so a gate cannot drop back out silently. Wiring them also surfaced that FIVE were already failing invisibly, 37 findings deep. Those are now CLEARED: the baseline in `rule-backstop-debt.json` stands at 0, so the ratchet enforces rather than tolerates. Roughly two thirds of the 37 were never violations — the gates were misreading allowances their own rules already grant (license-required attribution, multi-stack peer examples), which is the same class of defect one level down. 86 rules declare nothing and count as uncovered, not excluded (the two scale/history pack rules ship enforced by `lint_persistence` in consumer CI, which this resolver — scoped to THIS repo's workflows — correctly does not count).
  - kind: quant
  - evidence: exec:check_enforcement_coverage --check -> 0
  - status: backed
@@ -1460,7 +1483,7 @@ index ac987b6f7bc7291007f3c56f7f3979692e04fb95..41cf7213d5e6a4eadeefe46b62a30b0f
  | rule | [`model-recommendation`](../dist/agent-src/rules/model-recommendation.md) | auto | Task start, type switch, or skill/command with a model_tier — switch or suggest the right capability tier |
  | rule | [`no-attribution-footers`](../dist/agent-src/rules/no-attribution-footers.md) | auto | PR/issue/comment/commit bodies — no 'Generated with' / 'Co-authored by' / 'opened by' attribution footers |
 diff --git a/docs/contracts/mcp-tool-inventory.md b/docs/contracts/mcp-tool-inventory.md
-index bb84aa1d695d6330b7d9b036ccf7ac6087c1f233..fe80b82f695aa77018cf5f28d01cbd9c91a5845d 100644
+index bb84aa1d695d6330b7d9b036ccf7ac6087c1f233..c19b55932cbf2b9339ea808b5115bdb7e87302df 100644
 --- a/docs/contracts/mcp-tool-inventory.md
 +++ b/docs/contracts/mcp-tool-inventory.md
 @@ -15,45 +15,45 @@ keep-beta-until: 2026-08-14
@@ -1478,7 +1501,7 @@ index bb84aa1d695d6330b7d9b036ccf7ac6087c1f233..fe80b82f695aa77018cf5f28d01cbd9c
  | Tool | Side-effect | Transports | Catalog | Handler |
  |---|---|---|---|---|
 -| `capabilities_index` | `fs-write` | stdio | [`consumer_tool_catalog.json:7`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L7) | [`tools.ts:1641`](../../src/scripts/mcp_server/tools.ts#L1641) |
-+| `capabilities_index` | `fs-write` | stdio | [`consumer_tool_catalog.json:7`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L7) | [`tools.ts:1726`](../../src/scripts/mcp_server/tools.ts#L1726) |
++| `capabilities_index` | `fs-write` | stdio | [`consumer_tool_catalog.json:7`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L7) | [`tools.ts:1728`](../../src/scripts/mcp_server/tools.ts#L1728) |
  | `catalog_inspect` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:29`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L29) | _stub-only_ |
 -| `catalog_load` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:53`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L53) | _stub-only_ |
 -| `catalog_search` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:72`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L72) | _stub-only_ |
@@ -1511,32 +1534,32 @@ index bb84aa1d695d6330b7d9b036ccf7ac6087c1f233..fe80b82f695aa77018cf5f28d01cbd9c
 -| `update_form_request_messages` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:762`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L762) | _stub-only_ |
 +| `catalog_load` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:36`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L36) | _stub-only_ |
 +| `catalog_search` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:43`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L43) | _stub-only_ |
-+| `chat_history_append` | `fs-write` | stdio | [`consumer_tool_catalog.json:50`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L50) | [`tools.ts:1328`](../../src/scripts/mcp_server/tools.ts#L1328) |
-+| `chat_history_read` | `ro` | stdio | [`consumer_tool_catalog.json:95`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L95) | [`tools.ts:1390`](../../src/scripts/mcp_server/tools.ts#L1390) |
++| `chat_history_append` | `fs-write` | stdio | [`consumer_tool_catalog.json:50`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L50) | [`tools.ts:1330`](../../src/scripts/mcp_server/tools.ts#L1330) |
++| `chat_history_read` | `ro` | stdio | [`consumer_tool_catalog.json:95`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L95) | [`tools.ts:1392`](../../src/scripts/mcp_server/tools.ts#L1392) |
 +| `compile_router` | `shell` | _(stub)_ | [`consumer_tool_catalog.json:155`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L155) | _stub-only_ |
-+| `conformance_check` | `ro` | stdio | [`consumer_tool_catalog.json:162`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L162) | [`tools.ts:1765`](../../src/scripts/mcp_server/tools.ts#L1765) |
-+| `council_estimate` | `ro` | stdio | [`consumer_tool_catalog.json:178`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L178) | [`tools.ts:1803`](../../src/scripts/mcp_server/tools.ts#L1803) |
-+| `doctor_report` | `ro` | stdio | [`consumer_tool_catalog.json:210`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L210) | [`tools.ts:1750`](../../src/scripts/mcp_server/tools.ts#L1750) |
-+| `lint_skills` | `ro` | stdio | [`consumer_tool_catalog.json:226`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L226) | [`tools.ts:1299`](../../src/scripts/mcp_server/tools.ts#L1299) |
-+| `list_commands` | `ro` | stdio | [`consumer_tool_catalog.json:250`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L250) | [`tools.ts:1591`](../../src/scripts/mcp_server/tools.ts#L1591) |
-+| `list_rules` | `ro` | stdio | [`consumer_tool_catalog.json:266`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L266) | [`tools.ts:1607`](../../src/scripts/mcp_server/tools.ts#L1607) |
-+| `list_skills` | `ro` | stdio | [`consumer_tool_catalog.json:282`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L282) | [`tools.ts:1575`](../../src/scripts/mcp_server/tools.ts#L1575) |
-+| `memory_get` | `ro` | stdio | [`consumer_tool_catalog.json:298`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L298) | [`tools.ts:1535`](../../src/scripts/mcp_server/tools.ts#L1535) |
-+| `memory_lookup` | `ro` | stdio | [`consumer_tool_catalog.json:326`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L326) | [`tools.ts:1467`](../../src/scripts/mcp_server/tools.ts#L1467) |
-+| `memory_signal` | `fs-write` | stdio | [`consumer_tool_catalog.json:381`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L381) | [`tools.ts:1650`](../../src/scripts/mcp_server/tools.ts#L1650) |
-+| `memory_status` | `ro` | stdio | [`consumer_tool_catalog.json:415`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L415) | [`tools.ts:1560`](../../src/scripts/mcp_server/tools.ts#L1560) |
++| `conformance_check` | `ro` | stdio | [`consumer_tool_catalog.json:162`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L162) | [`tools.ts:1767`](../../src/scripts/mcp_server/tools.ts#L1767) |
++| `council_estimate` | `ro` | stdio | [`consumer_tool_catalog.json:178`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L178) | [`tools.ts:1805`](../../src/scripts/mcp_server/tools.ts#L1805) |
++| `doctor_report` | `ro` | stdio | [`consumer_tool_catalog.json:210`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L210) | [`tools.ts:1752`](../../src/scripts/mcp_server/tools.ts#L1752) |
++| `lint_skills` | `ro` | stdio | [`consumer_tool_catalog.json:226`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L226) | [`tools.ts:1301`](../../src/scripts/mcp_server/tools.ts#L1301) |
++| `list_commands` | `ro` | stdio | [`consumer_tool_catalog.json:250`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L250) | [`tools.ts:1593`](../../src/scripts/mcp_server/tools.ts#L1593) |
++| `list_rules` | `ro` | stdio | [`consumer_tool_catalog.json:266`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L266) | [`tools.ts:1609`](../../src/scripts/mcp_server/tools.ts#L1609) |
++| `list_skills` | `ro` | stdio | [`consumer_tool_catalog.json:282`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L282) | [`tools.ts:1577`](../../src/scripts/mcp_server/tools.ts#L1577) |
++| `memory_get` | `ro` | stdio | [`consumer_tool_catalog.json:298`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L298) | [`tools.ts:1537`](../../src/scripts/mcp_server/tools.ts#L1537) |
++| `memory_lookup` | `ro` | stdio | [`consumer_tool_catalog.json:326`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L326) | [`tools.ts:1469`](../../src/scripts/mcp_server/tools.ts#L1469) |
++| `memory_signal` | `fs-write` | stdio | [`consumer_tool_catalog.json:381`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L381) | [`tools.ts:1652`](../../src/scripts/mcp_server/tools.ts#L1652) |
++| `memory_status` | `ro` | stdio | [`consumer_tool_catalog.json:415`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L415) | [`tools.ts:1562`](../../src/scripts/mcp_server/tools.ts#L1562) |
 +| `mine_session` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:431`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L431) | _stub-only_ |
-+| `read_resource_body` | `ro` | stdio | [`consumer_tool_catalog.json:438`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L438) | [`tools.ts:1624`](../../src/scripts/mcp_server/tools.ts#L1624) |
-+| `roadmap_archive` | `fs-write` | stdio | [`consumer_tool_catalog.json:462`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L462) | [`tools.ts:1709`](../../src/scripts/mcp_server/tools.ts#L1709) |
-+| `roadmap_progress` | `fs-write` | stdio | [`consumer_tool_catalog.json:478`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L478) | [`tools.ts:1685`](../../src/scripts/mcp_server/tools.ts#L1685) |
++| `read_resource_body` | `ro` | stdio | [`consumer_tool_catalog.json:438`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L438) | [`tools.ts:1626`](../../src/scripts/mcp_server/tools.ts#L1626) |
++| `roadmap_archive` | `fs-write` | stdio | [`consumer_tool_catalog.json:462`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L462) | [`tools.ts:1711`](../../src/scripts/mcp_server/tools.ts#L1711) |
++| `roadmap_progress` | `fs-write` | stdio | [`consumer_tool_catalog.json:478`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L478) | [`tools.ts:1687`](../../src/scripts/mcp_server/tools.ts#L1687) |
 +| `run_quality_checks` | `shell` | _(stub)_ | [`consumer_tool_catalog.json:500`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L500) | _stub-only_ |
-+| `run_tests` | `shell` | stdio | [`consumer_tool_catalog.json:507`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L507) | [`tools.ts:1833`](../../src/scripts/mcp_server/tools.ts#L1833) |
++| `run_tests` | `shell` | stdio | [`consumer_tool_catalog.json:507`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L507) | [`tools.ts:1835`](../../src/scripts/mcp_server/tools.ts#L1835) |
 +| `skill_trigger_eval` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:532`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L532) | _stub-only_ |
 +| `suggest_command` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:539`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L539) | _stub-only_ |
-+| `suggest_skill_for_task` | `ro` | stdio | [`consumer_tool_catalog.json:546`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L546) | [`tools.ts:1268`](../../src/scripts/mcp_server/tools.ts#L1268) |
++| `suggest_skill_for_task` | `ro` | stdio | [`consumer_tool_catalog.json:546`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L546) | [`tools.ts:1269`](../../src/scripts/mcp_server/tools.ts#L1269) |
 +| `sync_agent_settings` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:576`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L576) | _stub-only_ |
 +| `sync_gitignore` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:583`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L583) | _stub-only_ |
-+| `telemetry_report` | `ro` | stdio | [`consumer_tool_catalog.json:590`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L590) | [`tools.ts:1780`](../../src/scripts/mcp_server/tools.ts#L1780) |
++| `telemetry_report` | `ro` | stdio | [`consumer_tool_catalog.json:590`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L590) | [`tools.ts:1782`](../../src/scripts/mcp_server/tools.ts#L1782) |
 +| `update_form_request_messages` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:613`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L613) | _stub-only_ |
  
  ## Glossary
@@ -1581,7 +1604,7 @@ index e72c5ac79a42b1337f8912d0e44e55679e9e4e42..736be61d8f17234880473747b9763c23
  governance value is *selection discipline* — the host gets the relevant rule
  set, not the whole catalogue as context ballast.
 diff --git a/docs/proof.md b/docs/proof.md
-index 3ae21ce9f3a214c82448ddc80dfb0bdd2b671562..70afe9e40e21428c3552713bf53bae98ad498270 100644
+index 3ae21ce9f3a214c82448ddc80dfb0bdd2b671562..54304b8fa4d2647b3f0fc237d23fb56329e8fd83 100644
 --- a/docs/proof.md
 +++ b/docs/proof.md
 @@ -63,7 +63,7 @@ evidence pointer, or `task check-claims` fails the build.
@@ -1589,7 +1612,7 @@ index 3ae21ce9f3a214c82448ddc80dfb0bdd2b671562..70afe9e40e21428c3552713bf53bae98
  | The text-layer-only boundary above is machine-enforced, not asserted: a scope-guard test fails if any corpus entry declares a non-text layer, and that guard is itself falsified by a test that splices in a `layer: file` PNG-metadata fixture and requires the guard to fail. The corpus is sha256-frozen and was committed BEFORE any detector existed, so no detector was tuned against it. | qual | `tests/scripts/encoding_corpus.test.ts#FAILS when a deliberately out-of-scope fixture is added` | ✅ |
  | The retrieval sanitize floor covers the TEXT layer only, by construction — never file or network channels (image / audio / PDF / DNS / TCP / file-metadata steganography) and never semantic evasion (word choice, phrasing, garden-path constructions, word-order permutation). On the frozen 653-entry corpus it strips or flags 99.00% of in-scope positives (100.00% on the unambiguous zero-width / bidi / variation-selector classes) at a 0.00% false-positive rate over 353 real in-repo negatives, with zero added model spend and 0.018 ms p95 per message. Exactly ONE of the seven added channels removes bytes; the other six report and pass the text through unchanged — this is NOT a claim to block steganography. | quant | `agents/evidence/reports/encoding-floor-measurement.md#Selected branch: ADOPT` | ✅ |
 -| 15 of 116 governed rules (12.9%) carry a backstop that fails a CI build — `blocking` read live from `internal/reports/enforcement-coverage.json` on 2026-08-12, which is the file to quote rather than a figure copied out of a release review. Two denominators are in play and conflating them is the trap: 116 is the governed-rule count (enforced by the counts updater), while that report's `summary.total` is **114**, because the resolver is scoped to THIS repo's workflows and correctly excludes the two scale/history pack rules named at the end of this entry — so the same 15 rules read as 13.2% in-scope. Blocking itself rose 14 → 15 since the 2026-07-25 measurement, and `undeclared` is 86 in the 114-scope (88 in the 116-frame). The five reviews of the 9.30→9.35 span cite 12.9% and are right; their companion claim that "the 84 baseline rules are unchanged 84" matches this report in neither frame. Their substantive point stands and is the half worth keeping — the ratio has not risen across five releases, because the ratchet prevents regression and does not raise the level. The number is RESOLVED, not declared — a `validator:` counts only when the script exists AND a GITHUB WORKFLOW reaches it (transitively, so a sub-check under a wired umbrella counts), and a hook registered `fail_closed: false` resolves to `observer`, never `validator`. The figure was 14 before this correction too, and it was wrong: the resolver treated `taskfiles/` and `.github/workflows/` as one corpus, so "named in a taskfile" counted as blocking — while NO workflow invokes `task ci`, `ci-strict`, or `ci-fast`. Nine of the thirteen validators only ran when a human typed the command. Split into `validator` (CI runs it) and `validator-local` (only a taskfile does), the honest figure was 5 of 107 at the time; wiring the nine into `rule-backstops.yml` returned it to 14, this time meaning what the headline says. `local_only` is now 0 and is ratcheted, so a gate cannot drop back out silently. Wiring them also surfaced that FIVE were already failing invisibly, 37 findings deep. Those are now CLEARED: the baseline in `rule-backstop-debt.json` stands at 0, so the ratchet enforces rather than tolerates. Roughly two thirds of the 37 were never violations — the gates were misreading allowances their own rules already grant (license-required attribution, multi-stack peer examples), which is the same class of defect one level down. 86 rules declare nothing and count as uncovered, not excluded (the two scale/history pack rules ship enforced by `lint_persistence` in consumer CI, which this resolver — scoped to THIS repo's workflows — correctly does not count). | quant | `exec:check_enforcement_coverage --check -> 0` | ✅ |
-+| 15 of 117 governed rules (12.9%) carry a backstop that fails a CI build — `blocking` read live from `internal/reports/enforcement-coverage.json` on 2026-08-12, which is the file to quote rather than a figure copied out of a release review. Two denominators are in play and conflating them is the trap: 116 is the governed-rule count (enforced by the counts updater), while that report's `summary.total` is **114**, because the resolver is scoped to THIS repo's workflows and correctly excludes the two scale/history pack rules named at the end of this entry — so the same 15 rules read as 13.2% in-scope. Blocking itself rose 14 → 15 since the 2026-07-25 measurement, and `undeclared` is 86 in the 114-scope (88 in the 116-frame). The five reviews of the 9.30→9.35 span cite 12.9% and are right; their companion claim that "the 84 baseline rules are unchanged 84" matches this report in neither frame. Their substantive point stands and is the half worth keeping — the ratio has not risen across five releases, because the ratchet prevents regression and does not raise the level. The number is RESOLVED, not declared — a `validator:` counts only when the script exists AND a GITHUB WORKFLOW reaches it (transitively, so a sub-check under a wired umbrella counts), and a hook registered `fail_closed: false` resolves to `observer`, never `validator`. The figure was 14 before this correction too, and it was wrong: the resolver treated `taskfiles/` and `.github/workflows/` as one corpus, so "named in a taskfile" counted as blocking — while NO workflow invokes `task ci`, `ci-strict`, or `ci-fast`. Nine of the thirteen validators only ran when a human typed the command. Split into `validator` (CI runs it) and `validator-local` (only a taskfile does), the honest figure was 5 of 107 at the time; wiring the nine into `rule-backstops.yml` returned it to 14, this time meaning what the headline says. `local_only` is now 0 and is ratcheted, so a gate cannot drop back out silently. Wiring them also surfaced that FIVE were already failing invisibly, 37 findings deep. Those are now CLEARED: the baseline in `rule-backstop-debt.json` stands at 0, so the ratchet enforces rather than tolerates. Roughly two thirds of the 37 were never violations — the gates were misreading allowances their own rules already grant (license-required attribution, multi-stack peer examples), which is the same class of defect one level down. 86 rules declare nothing and count as uncovered, not excluded (the two scale/history pack rules ship enforced by `lint_persistence` in consumer CI, which this resolver — scoped to THIS repo's workflows — correctly does not count). | quant | `exec:check_enforcement_coverage --check -> 0` | ✅ |
++| 15 of 117 governed rules (12.8%) carry a backstop that fails a CI build — `blocking` read live from `internal/reports/enforcement-coverage.json` on 2026-08-12, which is the file to quote rather than a figure copied out of a release review. Two denominators are in play and conflating them is the trap: 117 is the governed-rule count (enforced by the counts updater), while that report's `summary.total` is **114**, because the resolver is scoped to THIS repo's workflows and correctly excludes the two scale/history pack rules named at the end of this entry — so the same 15 rules read as 13.2% in-scope. Blocking itself rose 14 → 15 since the 2026-07-25 measurement, and `undeclared` is 86 in the 114-scope (89 in the 117-frame). The five reviews of the 9.30→9.35 span cite 12.9% and are right; their companion claim that "the 84 baseline rules are unchanged 84" matches this report in neither frame. Their substantive point stands and is the half worth keeping — the ratio has not risen across five releases, because the ratchet prevents regression and does not raise the level. The number is RESOLVED, not declared — a `validator:` counts only when the script exists AND a GITHUB WORKFLOW reaches it (transitively, so a sub-check under a wired umbrella counts), and a hook registered `fail_closed: false` resolves to `observer`, never `validator`. The figure was 14 before this correction too, and it was wrong: the resolver treated `taskfiles/` and `.github/workflows/` as one corpus, so "named in a taskfile" counted as blocking — while NO workflow invokes `task ci`, `ci-strict`, or `ci-fast`. Nine of the thirteen validators only ran when a human typed the command. Split into `validator` (CI runs it) and `validator-local` (only a taskfile does), the honest figure was 5 of 107 at the time; wiring the nine into `rule-backstops.yml` returned it to 14, this time meaning what the headline says. `local_only` is now 0 and is ratcheted, so a gate cannot drop back out silently. Wiring them also surfaced that FIVE were already failing invisibly, 37 findings deep. Those are now CLEARED: the baseline in `rule-backstop-debt.json` stands at 0, so the ratchet enforces rather than tolerates. Roughly two thirds of the 37 were never violations — the gates were misreading allowances their own rules already grant (license-required attribution, multi-stack peer examples), which is the same class of defect one level down. 86 rules declare nothing and count as uncovered, not excluded (the two scale/history pack rules ship enforced by `lint_persistence` in consumer CI, which this resolver — scoped to THIS repo's workflows — correctly does not count). | quant | `exec:check_enforcement_coverage --check -> 0` | ✅ |
  | The lift-carrying essential cut (kernel + downstream-changes) keeps a significant weak-host discipline lift at a fraction of the full load's tokens, and the lift is FAMILY- and HOST-SCOPED — measured on three hosts: claude-haiku-4-5 (weak) shows the family-scoped lift (trapE 0.533→1.000, 7/7 discordant, corpus cost 1.71x); claude-sonnet-4-6 (strong) is a ceiling null; gpt-5-mini (non-Claude weak, codex prompt-prepend surface) FAILED replication with headroom (corpus Δ=+0.024 p=0.70, capability trend n.s. — no harm claimed, injection-surface confound documented). Therefore discipline_profile: auto enables the lift only where measured (vendor-granular unknown_defaults). Non-claims — the balanced router profile was removed after a NULL measurement (p=0.81, n=24); no full-tier recommendation exists; no cross-vendor lift is claimed. | quant | `docs/benchmark.md#REPLICATION FAILED` | ✅ |
  | Behavioural-eval coverage is measured per tier and CI-ratcheted so it can only rise; the current coverage and its gap are published, never implied as "264 evaluated skills". | qual | `exec:skill_eval_coverage --check -> 0` | ✅ |
  | A credential-free prescription layer reads content the host's own web tools cannot fetch at all — Reddit thread text (Atom feeds) AND comment ranking plus reply nesting (server-rendered HTML), and a single named tweet (the platform's own oEmbed endpoint). Measured 2026-07-25 from a residential network against a pre-registered 6-task-per-channel set with a native control and thresholds frozen before the run: reddit tier 1 6/6, reddit tier 2 6/6, twitter-oembed 6/6, native 0/6 on both Reddit tiers. Zero credentials, zero resident processes, zero auto-installs. Scope bounds that travel WITH the claim: (a) the twitter gap is narrower than 6/6 suggests — native also passed 2 of those 6 via third-party mirrors, so the channel earns its place only on tweets nothing mirrors; (b) reddit tier 2 is on an announced closing path and ships with a kill-switch keyed on an OBSERVED login wall; (c) youtube-transcripts is PARKED, not shipped — its backend is human-installed by contract and was never exercised; (d) residential network is load-bearing, and CI is explicitly not a bench environment. | quant | `docs/benchmark.md#ship-gated-reach` | ✅ |
@@ -1690,10 +1713,10 @@ index a64e5f78a5a25115dd225e9a37d8f9b0eeed75bb..dfb0bc32fc0cdd8a2f7d6f0afa83a414
    skills:
 diff --git a/src/rules/missing-skill-recovery.md b/src/rules/missing-skill-recovery.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..a7c9900ed6d274127c317d08c728ada8ed31ad00
+index 0000000000000000000000000000000000000000..c162e213fe860cdce75ac00995de003bea2d2ba9
 --- /dev/null
 +++ b/src/rules/missing-skill-recovery.md
-@@ -0,0 +1,84 @@
+@@ -0,0 +1,89 @@
 +---
 +type: "auto"
 +tier: "2a"
@@ -1711,7 +1734,7 @@ index 0000000000000000000000000000000000000000..a7c9900ed6d274127c317d08c728ada8
 +self_contained: true
 +workspaces: [engineering]
 +packs: [meta]
-+# obligation: line 30
++# obligation: line 41
 +obligation_frequency: "per-turn"
 +---
 +
@@ -1720,9 +1743,14 @@ index 0000000000000000000000000000000000000000..a7c9900ed6d274127c317d08c728ada8
 +The catalogue a host shows you is not the catalogue that exists. Hosts truncate,
 +and at least one truncates hard: measured 2026-08-16 on a default install, the
 +host published its own budget event stating it had stripped every description
-+and dropped **402** skills from the model-visible list
++and dropped **402 entries** from the model-visible skills list
 +(`agents/evidence/analysis/scoped-projection-host-delivery.md`). Scoping the
 +projection moved that to 330 and stripped the descriptions anyway.
++
++402 is the **host's own count against the host's own denominator**, which is not
++this package's: the same install projects 297 skills, so the figure is a
++magnitude, never a subtraction anyone can perform. What it establishes is that
++most of the catalogue is not model-visible — which is all this rule needs.
 +
 +So "I do not see a skill for this" is evidence about the **delivery**, never
 +about the tree.
@@ -1779,7 +1807,7 @@ index 0000000000000000000000000000000000000000..a7c9900ed6d274127c317d08c728ada8
 +- `src/scripts/skill_tools/score_skill_relevance.ts` — the ranker itself, and
 +  the one place its scoring is defined.
 diff --git a/src/scripts/_lib/skill_catalogue.ts b/src/scripts/_lib/skill_catalogue.ts
-index e4e64862510df91b1fb01491901bea6dac9bead7..6bdde1b41e9c8bd399605bd06fb2a8b67569541f 100644
+index e4e64862510df91b1fb01491901bea6dac9bead7..10d86d06ecebff197536d7b3904036cc1547fc4f 100644
 --- a/src/scripts/_lib/skill_catalogue.ts
 +++ b/src/scripts/_lib/skill_catalogue.ts
 @@ -80,6 +80,27 @@ import * as path from 'node:path';
@@ -1863,7 +1891,7 @@ index e4e64862510df91b1fb01491901bea6dac9bead7..6bdde1b41e9c8bd399605bd06fb2a8b6
  ): ObservationRecord {
      return {
          schema: 1,
-@@ -533,6 +579,49 @@ export function buildHostEventRecord(
+@@ -533,6 +579,55 @@ export function buildHostEventRecord(
          observation_source: 'host-event',
          dropped_count: event.droppedCount,
          ...(projectedSkillCount === undefined ? {} : { projected_skill_count: projectedSkillCount }),
@@ -1897,6 +1925,12 @@ index e4e64862510df91b1fb01491901bea6dac9bead7..6bdde1b41e9c8bd399605bd06fb2a8b6
 +        observed_at: observedAt,
 +        host,
 +        entries_total: entriesOffered,
++        // BOTH counts stay 0, and neither is a claim that nothing arrived
++        // described. The host published no per-entry breakdown at all — it
++        // published nothing, which is what `truncation_mode: 'none'` records.
++        // Writing `described_count: entriesOffered` would look like a
++        // measurement and be an inference; 0 here means "not counted", exactly
++        // as it does on the strip-and-drop record beside it.
 +        bare_count: 0,
 +        described_count: 0,
 +        bare_names: [],
@@ -1913,7 +1947,7 @@ index e4e64862510df91b1fb01491901bea6dac9bead7..6bdde1b41e9c8bd399605bd06fb2a8b6
      };
  }
  
-@@ -588,6 +677,119 @@ export function measureCatalogueVolume(host: string, root: string): CatalogueVol
+@@ -588,6 +683,119 @@ export function measureCatalogueVolume(host: string, root: string): CatalogueVol
      };
  }
  
@@ -2033,6 +2067,90 @@ index e4e64862510df91b1fb01491901bea6dac9bead7..6bdde1b41e9c8bd399605bd06fb2a8b6
  /* ------------------------------------------------------------------ *
   * Known limits — read off recorded observations, never invented.
   * ------------------------------------------------------------------ */
+@@ -623,15 +831,54 @@ export interface KnownHostLimit {
+     observedAt: string;
+ }
+ 
++/**
++ * Is `candidate` the record a host's headline should quote, given `incumbent`?
++ *
++ * Shared by `knownHostLimits` and `formatPerHostVerdicts` because they used to
++ * disagree, and the disagreement was visible in one run: two arms of the same
++ * experiment recorded on the same date made `--limits` print `dropped 402` in
++ * the verdict block and `dropped 330` in the measured-truncations block, for
++ * one host on one day. Two reducers over one log must not break a tie in
++ * opposite directions.
++ *
++ * Later date always wins. On an EQUAL date the larger drop wins, which is also
++ * the conservative direction this module already takes elsewhere: over-warning
++ * about truncation is safe, under-warning is the failure. It is also what keeps
++ * a `scoped` arm from being quoted at a `legacy-all` install — the scoped arm
++ * is by construction the smaller number.
++ */
++function _supersedes(candidate: ObservationRecord, incumbent: ObservationRecord): boolean {
++    if (candidate.observed_at !== incumbent.observed_at) {
++        return candidate.observed_at > incumbent.observed_at;
++    }
++    return (candidate.dropped_count ?? 0) > (incumbent.dropped_count ?? 0);
++}
++
++/** The record whose truncation a host's headline quotes, per `_supersedes`. */
++export function headlineRecordPerHost(
++    records: readonly ObservationRecord[],
++): Map<string, ObservationRecord> {
++    const out = new Map<string, ObservationRecord>();
++    for (const record of records) {
++        const previous = out.get(record.host);
++        if (previous === undefined || _supersedes(record, previous)) {
++            out.set(record.host, record);
++        }
++    }
++    return out;
++}
++
+ /** The most recent observed truncation per host. */
+ export function knownHostLimits(records: readonly ObservationRecord[]): Map<string, KnownHostLimit> {
+     const out = new Map<string, KnownHostLimit>();
++    const chosen = new Map<string, ObservationRecord>();
+     for (const record of records) {
+         if (truncationModeOf(record) !== 'budget-strip-and-drop') continue;
+         if (typeof record.dropped_count !== 'number') continue;
+         if (record.dropped_count <= 0) continue;
+-        const previous = out.get(record.host);
+-        if (previous !== undefined && previous.observedAt > record.observed_at) continue;
++        const previous = chosen.get(record.host);
++        if (previous !== undefined && !_supersedes(record, previous)) continue;
++        chosen.set(record.host, record);
+         out.set(record.host, {
+             host: record.host,
+             droppedEntries: record.dropped_count,
+@@ -799,10 +1046,16 @@ export function formatPerHostVerdicts(records: readonly ObservationRecord[]): st
+         byHost.set(record.host, bucket);
+     }
+ 
++    const headline = headlineRecordPerHost(records);
++
+     const lines: string[] = [];
+     for (const host of [...byHost.keys()].sort()) {
+         const bucket = byHost.get(host)!;
+-        const latest = bucket.reduce((a, b) => (a.observed_at >= b.observed_at ? a : b));
++        // One selector for both reducers — see `_supersedes`. The previous
++        // `>=` reduce here kept the FIRST of two same-date rows while
++        // `knownHostLimits` kept the LAST, so one run printed two different
++        // drop counts for one host on one day.
++        const latest = headline.get(host)!;
+         const mode = truncationModeOf(latest);
+         lines.push(
+             `${host}: ${bucket.length} observation(s) · mode ${mode} · ` +
+@@ -816,7 +1069,7 @@ export function formatPerHostVerdicts(records: readonly ObservationRecord[]): st
+         );
+     }
+ 
+-    const modes = new Set([...byHost.values()].map((b) => truncationModeOf(b[b.length - 1]!)));
++    const modes = new Set([...headline.values()].map((r) => truncationModeOf(r)));
+     lines.push('');
+     lines.push(
+         modes.size > 1
 diff --git a/src/scripts/capture_skill_catalogue.ts b/src/scripts/capture_skill_catalogue.ts
 index 4023322b4b03ce88cb753c596c636216a08e53f8..b80a3719644075a99e9f03130ac1cb88535e49e7 100644
 --- a/src/scripts/capture_skill_catalogue.ts
@@ -2276,10 +2394,10 @@ index b390a7118d768c7b149bff469164f31faf2b61a7..a65a69ca4b10ffc0756926b85079fc5b
      'src/scripts/hooks/edit_shape_hook.ts': editShapeMain as ConcernMain,
 diff --git a/src/scripts/hooks/skill_route_hook.ts b/src/scripts/hooks/skill_route_hook.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..c90ca948827f2f47545c70f58c77290da06ff8e1
+index 0000000000000000000000000000000000000000..810e0f7f2fb2a70b55ab30239a97f4d97720f3ca
 --- /dev/null
 +++ b/src/scripts/hooks/skill_route_hook.ts
-@@ -0,0 +1,183 @@
+@@ -0,0 +1,226 @@
 +#!/usr/bin/env node
 +/**
 + * Skill route — `user_prompt_submit` concern
@@ -2300,16 +2418,30 @@ index 0000000000000000000000000000000000000000..c90ca948827f2f47545c70f58c77290d
 + * than no line when the ranking is poor, so what is injected is the cheapest
 + * thing that can still be acted on — and the cheapest thing to ignore.
 + *
-+ * SILENCE IS THE DEFAULT, AND THE FLOOR IS MEASURED, NOT GUESSED. `rank`
++ * SILENCE IS THE DEFAULT, AND BOTH FLOORS ARE MEASURED, NOT GUESSED. `rank`
 + * already drops every zero-scoring skill, but on real prompts it almost always
 + * returns SOMETHING, so "non-empty" is not a usable trigger. Measured over the
 + * routing-matrix corpus (496 prompt lines, `tests/eval/routing-matrix/*.yaml`,
 + * 2026-08-16): top-score median 18, p75 28, p90 30, max 70, and only 4 prompts
-+ * score nothing at all. `MIN_TOP_SCORE = 30` is that p90 — the concern speaks
-+ * on roughly the top decile of prompts by ranker confidence (69 of 496, 13.9 %)
-+ * and stays silent on the rest. A floor at the median would fire on half of all
-+ * turns, which is the per-turn-reminder shape this estate has already measured
-+ * failing at a 24/29 miss rate.
++ * score nothing at all.
++ *
++ * TWO floors are needed, because the score alone cannot express the failure at
++ * the short end. `MIN_TOP_SCORE` gates confidence; `MIN_TASK_TERMS` gates the
++ * denominator that confidence is computed over — the scorer divides by the task
++ * term count, so a one-term prompt scores 70/100 against whatever shares that
++ * term. Together they fire on 9.1 % of the corpus. A score floor at the median
++ * with no term floor would fire on half of all turns AND still hand 70/100 to
++ * `"fix it"` — the per-turn-reminder shape this estate has already measured
++ * failing at a 24/29 miss rate. Each constant carries its own derivation below.
++ *
++ * COST, MEASURED RATHER THAN ASSUMED. Ranking re-reads the skill catalogue per
++ * prompt, uncached. Measured 2026-08-16 on this tree: **12.3 ms warm** for a
++ * prompt that reaches the ranker, against the slot's 250 ms p95 budget — about
++ * 5 % of it. A prompt below `MIN_TASK_TERMS` costs **0 ms**, because the term
++ * floor is checked BEFORE the catalogue read; that ordering is deliberate and
++ * is what keeps conversational turns free. No cache is added: a cache would
++ * need an invalidation story for a tree that changes under the session, and
++ * 12.3 ms does not buy one.
 + *
 + * NO ADOPTION THRESHOLD IS COMMITTED HERE. Whether the line changes behaviour
 + * is a question for data, not for this header: `skill_route_pointer_rate` is
@@ -2342,18 +2474,40 @@ index 0000000000000000000000000000000000000000..c90ca948827f2f47545c70f58c77290d
 +import { readHookStdin } from "./hook_stdin.js";
 +import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
 +import { resolveSkillsRoot } from "../_lib/skill_catalogue.js";
-+import { rank, type RankRow } from "../skill_tools/score_skill_relevance.js";
++import { _tokenize, rank, type RankRow } from "../skill_tools/score_skill_relevance.js";
 +
 +const EXIT_ALLOW = 0;
 +/** See the header: reduced to a real exit of 0 by `emitFor`'s warn branch. */
 +const EXIT_WARN = 2;
 +
 +/**
-+ * Minimum top-1 ranker score before this concern speaks — the p90 of the
-+ * measured distribution. Exported so a future recalibration is a visible
-+ * one-line diff with a new measurement beside it, never an inlined edit.
++ * Minimum top-1 ranker score before this concern speaks.
++ *
++ * **31, not the measured p90 of 30, and the extra point is load-bearing.** The
++ * scorer is `overlap * 70 + personaHit * 30`, so a skill whose PERSONA slug
++ * appears in the prompt scores exactly 30 with zero keyword overlap. A floor of
++ * 30 with a `>=` test therefore admits a pure persona coincidence as if it were
++ * a ranked match. 31 is the smallest floor strictly above that value; it moves
++ * the corpus fire rate from 13.9 % to 9.1 %.
 + */
-+export const MIN_TOP_SCORE = 30;
++export const MIN_TOP_SCORE = 31;
++
++/**
++ * Minimum distinct task terms before the score is trusted at all.
++ *
++ * The scorer divides by `|task_terms|`, so the score is inversely proportional
++ * to prompt length and degenerates at the short end: `"fix it"` tokenizes to
++ * ONE term and hands 70/100 to whichever skills happen to share it, which on
++ * this catalogue means the alphabetically first three. `MIN_TOP_SCORE` cannot
++ * fix that — the number is not too low, the denominator is too small.
++ *
++ * **3 is the routing-matrix corpus's own minimum**, so this floor excludes
++ * ZERO of the 496 prompt lines the score calibration rests on while removing
++ * every degenerate short prompt measured (`"fix it"` 1, `"mach das"` 2,
++ * `"was denkst du dazu"` 2, `"weiter"` 1). A floor of 4 would have cost 10 real
++ * corpus prompts for one tenth of a percentage point.
++ */
++export const MIN_TASK_TERMS = 3;
 +
 +/** Pointers per line. Three is the ranker's own default `--top`. */
 +export const TOP_K = 3;
@@ -2374,6 +2528,13 @@ index 0000000000000000000000000000000000000000..c90ca948827f2f47545c70f58c77290d
 + */
 +export function routePointers(prompt: string, skillsDir: string | null): RankRow[] {
 +  if (skillsDir === null) return [];
++  // Denominator floor BEFORE the catalogue read: a prompt too short to score
++  // meaningfully cannot produce a pointer worth 337 file reads either.
++  try {
++    if (_tokenize(prompt).size < MIN_TASK_TERMS) return [];
++  } catch {
++    return [];
++  }
 +  let rows: RankRow[];
 +  try {
 +    rows = rank(prompt, skillsDir);
@@ -2464,7 +2625,7 @@ index 0000000000000000000000000000000000000000..c90ca948827f2f47545c70f58c77290d
 +  process.exit(main());
 +}
 diff --git a/src/scripts/mcp_server/consumer_tool_catalog.json b/src/scripts/mcp_server/consumer_tool_catalog.json
-index 4648d149a7ea3a589e818a58deba6f88a493b518..c14b8dda4d60990b39775babf386845558fc948e 100644
+index 4648d149a7ea3a589e818a58deba6f88a493b518..9a49289c18329ee3167b70fd054b693b56935996 100644
 --- a/src/scripts/mcp_server/consumer_tool_catalog.json
 +++ b/src/scripts/mcp_server/consumer_tool_catalog.json
 @@ -544,10 +544,33 @@
@@ -2472,7 +2633,7 @@ index 4648d149a7ea3a589e818a58deba6f88a493b518..c14b8dda4d60990b39775babf3868455
      {
        "name": "suggest_skill_for_task",
 -      "description": "[stub — implemented on demand] Match a free-form task description to the most relevant skills, ranked by their frontmatter triggers. Use to pick a skill for a described task before starting work. Read-only. Returns a ranked list of skills with name, description, and match reason.",
-+      "description": "Match a free-form task description to the most relevant skills, ranked by a deterministic keyword scorer over SKILL.md frontmatter. Use when a skill you need is not in the catalogue the host delivered — a measured host dropped 402 of them — so asking by name is impossible while asking by task is not. Read-only: no shell, no writes, and no skill bodies are returned, only names, scores and declared personas.",
++      "description": "Match a free-form task description to the most relevant skills, ranked by a deterministic keyword scorer over SKILL.md frontmatter. Use when a skill you need is not in the catalogue the host delivered — a measured host dropped 402 entries from its model-visible list — so asking by name is impossible while asking by task is not. Read-only: no shell, no writes, and no skill bodies are returned, only names, scores and declared personas.",
        "side_effect": "ro",
 -      "implemented_on": [],
 -      "input_schema": {}
@@ -2546,10 +2707,10 @@ index ef02c498acbde173a73c776b4613c0c4f0e2abd8..c552966e6bae936fa23c422b258367b2
          name: 'mine_session',
          description:
 diff --git a/src/scripts/mcp_server/tools.ts b/src/scripts/mcp_server/tools.ts
-index 32ab86c73047a78453252fa1de6f252feb0f2beb..40dffcf0ad11c9fe31e755dd3b1452a2dd66e9f1 100644
+index 32ab86c73047a78453252fa1de6f252feb0f2beb..6673a696b8085d3f9bd459e0b351e6a7674e618d 100644
 --- a/src/scripts/mcp_server/tools.ts
 +++ b/src/scripts/mcp_server/tools.ts
-@@ -1210,7 +1210,92 @@ async function _readResourceBodyHandler(
+@@ -1210,7 +1210,94 @@ async function _readResourceBodyHandler(
  // unlisted tool. Boot-time stderr log enumerates the registered set.
  // ---------------------------------------------------------------------
  
@@ -2558,7 +2719,8 @@ index 32ab86c73047a78453252fa1de6f252feb0f2beb..40dffcf0ad11c9fe31e755dd3b1452a2
 + *
 + * Promoted from a discovery stub because the defect it answers is measured, not
 + * hypothetical: on the one host that publishes its own truncation, a default
-+ * install had 402 of its skills dropped from the model-visible list
++ * install had 402 entries dropped from the model-visible skills list — the
++ * host's own count against its own denominator, not a subtraction over ours
 + * (`agents/evidence/analysis/scoped-projection-host-delivery.md`). An agent
 + * that cannot see a skill also cannot ask for it by name, so the only reachable
 + * question is "what fits this task" — which is what the deterministic ranker
@@ -2615,8 +2777,9 @@ index 32ab86c73047a78453252fa1de6f252feb0f2beb..40dffcf0ad11c9fe31e755dd3b1452a2
 +            'Match a free-form task description to the most relevant skills, ' +
 +            'ranked by a deterministic keyword scorer over SKILL.md ' +
 +            'frontmatter. Use when a skill you need is not in the catalogue ' +
-+            'the host delivered — a measured host dropped 402 of them — so ' +
-+            'asking by name is impossible while asking by task is not. ' +
++            'the host delivered — a measured host dropped 402 entries from ' +
++            'its model-visible list — so asking by name is impossible while ' +
++            'asking by task is not. ' +
 +            'Read-only: no shell, no writes, and no skill bodies are returned, ' +
 +            'only names, scores and declared personas.',
 +        input_schema: {
@@ -2671,7 +2834,7 @@ index 331de574c48703bb5343c7644202d623c10e3d90..a8d4dc4e78443b28abc87b56bb26ae74
        "type": "array",
        "minItems": 1,
 diff --git a/src/scripts/trigger_coverage.ts b/src/scripts/trigger_coverage.ts
-index 5b1771e9fbf584ab4436f3a8d5ca0f034f4abfc4..88b217bf5021d17a9f42bb26d65c7cf6c303827a 100644
+index 5b1771e9fbf584ab4436f3a8d5ca0f034f4abfc4..359bc8d812c8a395b8e6f050bb643378600b7424 100644
 --- a/src/scripts/trigger_coverage.ts
 +++ b/src/scripts/trigger_coverage.ts
 @@ -40,6 +40,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -2694,7 +2857,7 @@ index 5b1771e9fbf584ab4436f3a8d5ca0f034f4abfc4..88b217bf5021d17a9f42bb26d65c7cf6
  type Router = {
      kernel?: string[];
      tier_1?: Array<{ id: string; triggers?: Array<Record<string, string>> }>;
-@@ -100,6 +106,148 @@ export function fired_rules(prompt: string, router: Router): Set<string> {
+@@ -100,6 +106,168 @@ export function fired_rules(prompt: string, router: Router): Set<string> {
      return fired;
  }
  
@@ -2772,7 +2935,15 @@ index 5b1771e9fbf584ab4436f3a8d5ca0f034f4abfc4..88b217bf5021d17a9f42bb26d65c7cf6
 +    return out;
 +}
 +
-+/** Every prompt line in the matrix corpus, positives and near-misses alike. */
++/**
++ * Every prompt in the matrix corpus, positives and near-misses alike.
++ *
++ * Parsed with the YAML reader this module already imports, not with a
++ * line regex. A regex anchored on `- prompt: "…"` silently drops any entry
++ * written unquoted or in single quotes, and a corpus that shrinks without
++ * saying so moves every rate computed against it — the denominator would
++ * change while the number kept its old name.
++ */
 +export function loadMatrixPrompts(matrixDir: string): string[] {
 +    let files: string[];
 +    try {
@@ -2782,9 +2953,21 @@ index 5b1771e9fbf584ab4436f3a8d5ca0f034f4abfc4..88b217bf5021d17a9f42bb26d65c7cf6
 +    }
 +    const out: string[] = [];
 +    for (const f of files) {
-+        for (const line of fs.readFileSync(path.join(matrixDir, f), 'utf-8').split('\n')) {
-+            const m = /^\s*-\s*prompt:\s*"(.*)"\s*$/.exec(line);
-+            if (m) out.push(m[1]!);
++        let doc: unknown;
++        try {
++            doc = parseYaml(fs.readFileSync(path.join(matrixDir, f), 'utf-8'), { version: '1.1' });
++        } catch {
++            continue; // an unparseable corpus file is skipped, never guessed at
++        }
++        if (typeof doc !== 'object' || doc === null) continue;
++        const record = doc as Record<string, unknown>;
++        for (const section of ['positives', 'near_misses']) {
++            const entries = record[section];
++            if (!Array.isArray(entries)) continue;
++            for (const raw of entries) {
++                const prompt = (raw as Record<string, unknown> | null)?.['prompt'];
++                if (typeof prompt === 'string' && prompt.trim() !== '') out.push(prompt);
++            }
 +        }
 +    }
 +    return out;
@@ -2843,7 +3026,7 @@ index 5b1771e9fbf584ab4436f3a8d5ca0f034f4abfc4..88b217bf5021d17a9f42bb26d65c7cf6
  export function run(corpus: Case[], router: Router): [CaseResult[], number] {
      const results: CaseResult[] = [];
      let misses = 0;
-@@ -168,23 +316,76 @@ function _jsonDumps(obj: unknown): string {
+@@ -168,23 +336,76 @@ function _jsonDumps(obj: unknown): string {
  
  interface ParsedArgs {
      json: boolean;
@@ -2982,3 +3165,141 @@ index 6d9e72a5de633c23910cddd9eb9d65f4d1866198..59dccbcb554914d1540df920925d6430
  ---
  
  # threat-modeling
+diff --git a/tests/hooks/skill_route_hook.test.ts b/tests/hooks/skill_route_hook.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..c131ad82713cf9c29a217ae1d67de358a6b9ab32
+--- /dev/null
++++ b/tests/hooks/skill_route_hook.test.ts
+@@ -0,0 +1,105 @@
++import { describe, expect, it } from 'vitest';
++
++import {
++    MIN_TASK_TERMS,
++    MIN_TOP_SCORE,
++    TOP_K,
++    buildRouteLine,
++    routePointers,
++} from '../../src/scripts/hooks/skill_route_hook.js';
++import { _tokenize, rank } from '../../src/scripts/skill_tools/score_skill_relevance.js';
++
++/**
++ * The two floors exist because the R2 review of this branch found the concern
++ * firing on `"fix it"` at 70/100. Both tests below are written against that
++ * defect specifically — a generic "it returns rows" assertion would have passed
++ * on the broken version, which is the tautology this suite is meant to avoid.
++ */
++const SKILLS_DIR = 'src/skills';
++
++describe('skill-route — the short-prompt floor', () => {
++    it('stays silent on a prompt too short for the ratio to mean anything', () => {
++        // Regression pin: the scorer divides by |task terms|, so before
++        // MIN_TASK_TERMS existed this exact prompt scored 70/100 and emitted
++        // the alphabetically first three skills. Assert the CAUSE, not just the
++        // silence — a future change that keeps silence for a different reason
++        // should still tell us the denominator guard is what fired.
++        expect(_tokenize('fix it').size).toBeLessThan(MIN_TASK_TERMS);
++        expect(routePointers('fix it', SKILLS_DIR)).toEqual([]);
++    });
++
++    it.each(['weiter', 'mach das', 'was denkst du dazu'])(
++        'stays silent on the conversational filler %j',
++        (prompt) => {
++            expect(routePointers(prompt, SKILLS_DIR)).toEqual([]);
++        },
++    );
++
++    it('does not exclude any prompt the score floor was calibrated on', () => {
++        // MIN_TASK_TERMS is the corpus minimum precisely so the term floor
++        // costs the calibration nothing. If a future edit raises it, this fails
++        // and names the trade being made.
++        const corpusMin = Math.min(
++            ..."Should the invoice calculation live in the controller or in a dedicated class?|Please add a payment service that handles refunds and partial captures.|Refactor the invoice exporter and remove the duplicate parsing logic."
++                .split('|')
++                .map((p) => _tokenize(p).size),
++        );
++        expect(MIN_TASK_TERMS).toBeLessThanOrEqual(corpusMin);
++    });
++});
++
++describe('skill-route — the score floor', () => {
++    it('sits strictly above a persona-only match', () => {
++        // The scorer is `overlap * 70 + personaHit * 30`, so a skill whose
++        // persona slug appears in the prompt scores exactly 30 with ZERO
++        // keyword overlap. A floor of 30 with a `>=` test would admit it.
++        expect(MIN_TOP_SCORE).toBeGreaterThan(30);
++    });
++
++    it('emits at most TOP_K pointers, all at or above the floor', () => {
++        const prompt =
++            'Please review this pull request diff for security problems in the authorization checks';
++        const rows = routePointers(prompt, SKILLS_DIR);
++        expect(rows.length).toBeGreaterThan(0);
++        expect(rows.length).toBeLessThanOrEqual(TOP_K);
++        expect(rows[0]![1]).toBeGreaterThanOrEqual(MIN_TOP_SCORE);
++        // Derived from the ranker rather than hardcoded: pinning a literal
++        // skill name here would break on any catalogue edit for no defect.
++        expect(rows.map((r) => r[0])).toEqual(
++            rank(prompt, SKILLS_DIR)
++                .slice(0, TOP_K)
++                .map((r) => r[0]),
++        );
++    });
++
++    it('is silent when the catalogue root does not resolve', () => {
++        // An unreadable catalogue must not read as "no skill fits" — the two
++        // are different answers and only one of them is a ranking.
++        expect(routePointers('review the authorization checks', null)).toEqual([]);
++    });
++});
++
++describe('skill-route — the injected line', () => {
++    it('carries names and scores, never a body or a load instruction', () => {
++        const line = buildRouteLine([
++            ['authz-review', 46, []],
++            ['threat-modeling', 40, ['security-engineer']],
++        ]);
++        expect(line).toContain('authz-review (46)');
++        expect(line).toContain('threat-modeling (40)');
++        expect(line).toMatch(/^<skill-route>/);
++        expect(line).toMatch(/<\/skill-route>$/);
++        expect(line).not.toMatch(/\bload\b|\bread the\b|\bopen all\b/i);
++    });
++
++    it('stays within its registered 512-byte budget row', () => {
++        // The row is the ceiling that keeps this a pointer line. Three of the
++        // longest skill names in the tree is the worst realistic case.
++        const worst = buildRouteLine([
++            ['road-to-inbox-harvest-authoring-discipline-placeholder', 99, []],
++            ['subagent-value-realization-followup-placeholder', 98, []],
++            ['skill-ecosystem-executable-payloads-placeholder', 97, []],
++        ]);
++        expect(Buffer.byteLength(worst)).toBeLessThan(512);
++    });
++});
+diff --git a/tests/scripts/mcp_server_tools.test.ts b/tests/scripts/mcp_server_tools.test.ts
+index 7970c95139a1a636667fd9d228bc3f0df886ad93..692d1834e27508fe2bc2d040bdfa820ebbed1ac4 100644
+--- a/tests/scripts/mcp_server_tools.test.ts
++++ b/tests/scripts/mcp_server_tools.test.ts
+@@ -47,7 +47,7 @@ function tmp(): string {
+ // ----------------------------------------------------------------------
+ 
+ describe('tools — allowlist + registry', () => {
+-    it('allowlist holds the 19 implemented tools', () => {
++    it('allowlist holds the 20 implemented tools', () => {
+         expect(new Set(Object.keys(ALLOWLIST))).toEqual(
+             new Set([
+                 'lint_skills',
+@@ -73,9 +73,12 @@ describe('tools — allowlist + registry', () => {
+                 'council_estimate',
+                 // Phase 5 shell-exec pilot (same verdict, one tool only).
+                 'run_tests',
++                // road-to-inbox-harvest-2026-08-d-runtime-skill-routing 4.1 —
++                // promoted from a discovery stub. Read-only, shell-free.
++                'suggest_skill_for_task',
+             ]),
+         );
+-        expect(Object.keys(ALLOWLIST).length).toBe(19);
++        expect(Object.keys(ALLOWLIST).length).toBe(20);
+         for (const tool of Object.values(ALLOWLIST)) {
+             expect(tool.description.trim()).toBeTruthy();
+             expect(tool.input_schema.type).toBe('object');

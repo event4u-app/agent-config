@@ -15,11 +15,15 @@
       the shared matcher; tranche of 4 skills → 3 activations over 496 prompt
       lines.
 - [x] The unintended-activation census is at or below 433 after seeding.
-      **Unchanged, and structurally unreachable from this scope** — skills are
-      not compiled into the router (verified: zero skill references in
+      **Unchanged.** The skill SEED is structurally unreachable from the census
+      — skills are not compiled into the router (zero skill references in
       `compile_router.ts`; `dist/router.json` byte-identical after the seed;
-      rule scope still 26/26). Recorded as the correction it is rather than
-      claimed as a passed gate.
+      rule scope still 26/26). **That argument does not cover the tier-2 rule
+      this same branch adds**, which IS routed and therefore can move the
+      number; the R2 review caught the gap and replayed the corpus, and the new
+      rule's contribution is **0**. So the outcome holds on evidence and the
+      structural argument holds only for the half it actually covers — recorded
+      that way rather than as one sweeping claim.
 - [x] No survivor count is computed anywhere, and no host limit is extrapolated
       from another host.
       No subtraction across the two denominators appears in the new code, the
