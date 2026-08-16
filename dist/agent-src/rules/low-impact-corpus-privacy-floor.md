@@ -5,6 +5,9 @@ description: "Writing/upstreaming low-impact-decisions corpus entries — non-by
 triggers:
   - path_prefix: "agents/decisions/low-impact-decisions"
   - path_prefix: "data/low-impact-decisions-seed"
+  - keyword: "low-impact-decisions"
+  - keyword: "low-impact corpus"
+  - keyword: "learn-low-impact"
 self_contained: true
 workspaces: [agent-config-maintainer]
 packs: [meta]

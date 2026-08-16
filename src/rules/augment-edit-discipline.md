@@ -5,6 +5,9 @@ description: "Editing .augment/ or src/ — keep files project-agnostic; sync co
 triggers:
   - path_prefix: ".augment/"
   - path_prefix: "src/"
+  - keyword: "portable"
+  - keyword: "rename"
+  - keyword: "delete"
 routes_to:
   - "guideline:augment-portability-patterns"
   - "skill:agent-docs-writing"

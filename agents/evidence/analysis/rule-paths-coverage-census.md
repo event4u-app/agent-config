@@ -167,13 +167,38 @@ case it exists to catch?*
 
 | Verdict | Rules | Bytes | ≈ Tokens |
 |---|---:|---:|---:|
-| Scoped in this pass | **4** | 5,937 | **1,484** |
-| Must stay unconditional | 15 | 48,584 | 12,146 |
+| Scoped in this pass | **0** | 0 | **0** |
+| Must stay unconditional | **19** | 54,521 | **13,630** |
 
-**The recovery is 10 %. The other 90 % is the honest price**, and it is not
-slack that better globs would remove — every one of the fifteen documents, in
-its own body rather than by inference, a real case that arrives with **no
-matching file**.
+**The recovery is zero. The entire 12 % is the honest price** — not slack that
+better globs would remove.
+
+### The first answer was "four of nineteen", and CI refuted it
+
+That reading came from each rule's own body — its "When it fires" section, its
+scope statement — and it was defensible from the body alone and still false,
+because **the body is not the only authority on what a rule must catch.**
+
+`tests/eval/routing-matrix/<rule>.yaml` pins the prompts each rule must route
+on, and a fixture carrying **no `open_files`** is by construction a case that
+arrives with no matching file. All four candidates have one:
+
+| Rule | File-less positive that stopped routing |
+|---|---|
+| `framework-neutrality-in-generic-skills` | *"This generic skill mandates php artisan directly - neutralize it."* |
+| `augment-edit-discipline` | *"Rename this skill and update every cross-reference."* |
+| `php-coding` | *"Run phpstan on the changed files and fix the level 8 errors."* + 2 more |
+| `low-impact-corpus-privacy-floor` | *"Append this naming verdict to the low-impact corpus, please."* + 2 more |
+
+Dropping the keywords made every one of those prompts stop routing, and
+`routing_matrix.test.ts` failed on precisely that. The lesson is procedural and
+worth more than the pass was: **a rule's scopeability cannot be judged from its
+prose alone — the routing matrix is a second authority, and unlike the prose it
+is machine-checked.** Any future attempt reads the matrix first.
+
+The finding is therefore stronger than the original framing rather than weaker:
+nineteen for nineteen, the keyword reach is load-bearing, and it is *tested* to
+be so.
 
 Six recurring shapes, which is the reusable part of this finding:
 
@@ -202,7 +227,8 @@ withdrawn attempt at a third trigger class that was unfixably over-broad. And
 **wider than its own authored glob list** — "a measurement denominator and a
 routing trigger are not the same population".
 
-**One defect surfaced on the way** and was fixed rather than noted:
+**One real fix survives the reverted pass**, and it is a correctness bug rather
+than a payload win:
 `low-impact-corpus-privacy-floor` names *two* locked target files in its body
 and its trigger reached only one, so a write to
 `data/low-impact-decisions-seed.md` never loaded the rule that governs it. The
