@@ -68,14 +68,26 @@ parent.
       the index — the blanket grant of 2026-08-14 released the *permission* to
       reopen, and no authorization creates the case the trigger names.
 
-- [ ] **R3 Level A/B/C snapshot preference order** into `design-system-capture`.
+- [x] **R3 Level A/B/C snapshot preference order** into `design-system-capture`.
       Carried from `claude-design.txt` as the one genuinely new idea in it, and
       independent of any bridge. Deferred with the plainest of the four reasons:
       **worth doing, not urgent.** No structural obstacle is recorded against it,
       which makes it the only one of the four that is simply unscheduled — and
       therefore the first candidate when capacity appears.
 
-- [ ] **R4 God-file LOC ratchet.** Carried from `crytical-analysis.txt`. Seven
+      **Shipped 2026-08-16** as `references/snapshot-preference-order.md` plus a
+      four-line pointer in the skill body. **It landed as a reference rather than
+      a skill section because the skill had 52 tokens of headroom**, and that is
+      the `rich`-class contract working rather than a workaround: requirement 2
+      of `token-budget-discipline` says richness that lives in a fetchable
+      document belongs in one. Measured: the body was at 3,448 of a 3,500
+      ceiling; the first draft of the pointer alone took it to 3,529 and had to
+      be cut three times. It now reads 3,495 — deliberately not the 3,500 an
+      earlier trim landed on exactly, because a file sitting on its own ceiling
+      reds for the next contributor who touches it for unrelated reasons.
+      <!-- verify: test -f src/skills/design-system-capture/references/snapshot-preference-order.md -->
+
+- [x] **R4 God-file LOC ratchet.** Carried from `crytical-analysis.txt`. Seven
       files confirmed oversized, plus `chat_history.ts` (2397) and
       `orchestrator.ts` (2106), with no ratchet and no roadmap.
       **Deliberately ratchet-before-split**, and that ordering is the decision,
@@ -83,6 +95,34 @@ parent.
       unreviewable. A ratchet freezes the numbers where they are and makes every
       later split a lowering commit; a split without one is a large diff with
       nothing asserting it improved anything.
+
+      **Shipped 2026-08-16** as `check_source_size_budget`, wired into `task ci`
+      and `rule-backstops.yml`, baselined in `gate-violation-baselines.json`.
+
+      **Two departures from the step text, both measured rather than assumed.**
+      First, its own defect count is understated: not "seven files plus two" but
+      **fifteen** files over 1,500 lines, and the worst is `install.ts` at
+      **5,461** — more than double the 2,397 the step names as its largest.
+      Second, and this is the design half: the ratchet counts **total lines above
+      the ceiling, not the number of oversized files.** A file count was the
+      obvious shape and it is theatre — `install.ts` could grow 5,461 → 9,000
+      with the count frozen at fifteen, so the gate would stay green while the
+      exact defect it exists for got worse. Summing the excess costs the same one
+      integer and fails on growth inside an already-listed file. A self-test case
+      pins exactly that: file count held at one, size moved, verdict flips.
+      The 56-day expiry in `_lib/gate_baseline` supplies the forcing function a
+      bare ceiling lacks, so "freeze it and forget it" is not a stable state —
+      which was the strongest argument against doing R4 at all.
+      <!-- verify: test -f src/scripts/check_source_size_budget.ts -->
+
+**Where R1 and R2 stand.** Both stay open, and neither is idle-by-oversight.
+R1's acceptance clause demands rewriting the committed review corpus, which
+§ 2.7 of the completion-review contract forbids in place — it reopens with a
+migration story, not with capacity. R2 needs a recorded decision reopened; its
+own blocker argues the honest branch is to cancel it, and that call belongs to
+the blocker's named owner, not to the run that happened to be passing. Both
+blockers were brought up to the decidability standard here so that call is one
+read rather than a re-derivation.
 
 **Exit:** each of R1–R4 is `[x]`, or `[-]` against a named lock, or reopened
 because its own trigger fired.
@@ -112,6 +152,24 @@ none edits existing behaviour.
   So the honest branch today is **cancel R2 against the decline** — which the
   Resolved-when already allows — and let it reopen by itself the day the trigger
   fires.
+- **Recommendation:** **cancel R2 against the decline** — option (b) below. The
+  decline names a falsifiable trigger (*a disposition that genuinely cannot be
+  recorded in the round record itself*), and no such case is on record; the
+  2026-08-14 blanket grant released the permission to revisit but supplies none
+  of the evidence the trigger asks for. Building the index anyway adds a second
+  artefact to keep in sync — a new drift source guarding a failure mode that has
+  not occurred. Cancelling is not a refusal: the decline reopens by itself the
+  day a real case appears.
+- **If you do nothing:** R2 stays open indefinitely and this roadmap can never
+  reach a terminal state, so it sits on the dashboard as permanent open work
+  that no run can close. Nothing else is blocked, and no correctness or safety
+  property degrades — the cost is purely that the backlog carries an item nobody
+  can act on. That is a low cost, which is exactly why this has already survived
+  two migrations without being decided.
+- **Options:** (a) reopen the decision, citing the real case that fired the
+  trigger, and build the stable-finding-id index · (b) cancel R2 against the
+  decline (`[-]`, recommended) · (c) leave it open and re-read at the next
+  harvest.
 - **Resolved when:** the decision is reopened with the trigger cited (i.e. a real
   case exists), or R2 is cancelled against it.
 
@@ -144,6 +202,21 @@ none edits existing behaviour.
      log the parent's sweep report recorded.
 
   So the item needs the two filenames, not a broader authorization.
+- **Recommendation:** **record a keep-reason and close it** — option (c) below.
+  The deletion frees nothing anyone measures: the objects live under a
+  gitignored, per-checkout directory, so they are already invisible to every
+  diff, every clone and every consumer. Set against that, naming the two files
+  costs a human read of a 12-match glob whose intended two are not recoverable
+  from the text. Deleting the wrong ten is the only outcome with a real cost, and
+  it is the one an unaided agent would produce.
+- **If you do nothing:** four spent items keep sitting in a local, gitignored
+  scratch directory in one checkout. **Blocks nothing** — the entry itself says
+  so — and the housekeeping value does not decay. Concretely: no gate reds, no
+  reviewer sees them, and the directory is not replicated to any worktree. This
+  is the cheapest non-decision on the board.
+- **Options:** (a) name the two `council-q-*.md` files explicitly and delete
+  those four objects by name · (b) delete nothing and drop the entry as
+  housekeeping noise · (c) record a keep-reason and close it (recommended).
 - **Resolved when:** the files are deleted **by name**, or a reason to keep them
   is recorded.
 - **Side finding, worth its own look and deliberately not folded in:**
