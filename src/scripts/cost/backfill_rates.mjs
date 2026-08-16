@@ -34,10 +34,12 @@
 // Rates file (JSON), either form per model id:
 //   { "claude-fable-5": "opus" }                       // reuse a known tier's rates
 //   { "claude-fable-5": { "input": 5, "output": 25,    // explicit USD per 1M
-//                         "cache_write_5m": 6.25, "cache_write_1h": 10,
-//                         "cache_read": 0.5 } }
+//                         "cache_write_5m": 6.25, "cache_read": 0.5 } }
+// Every rate must be a finite number >= 0, and an all-zero table is refused.
+// `cache_write_1h` is accepted but unused — see RATE_KEYS.
 //
-// Usage: node src/scripts/cost/backfill_rates.mjs --rates <file.json> [--apply]
+// Usage: node src/scripts/cost/backfill_rates.mjs --rates <file.json>
+//                                                 [--store <ledger.jsonl>] [--apply]
 // Env:
 //   BACKFILL_STORE=<path>   ledger to re-price (default: agents/cost-tracking/sessions.jsonl)
 //   BACKFILL_RATES=<path>   rates file (same as --rates)
@@ -58,13 +60,34 @@ const PRICING = {
   opus: { input: 15.00, output: 75.00, cache_write_5m: 18.75, cache_write_1h: 30.00, cache_read: 1.50 },
 };
 
-const RATE_KEYS = ['input', 'output', 'cache_write_5m', 'cache_write_1h', 'cache_read'];
+// The keys `costForModelEntry` actually reads. `cache_write_1h` is deliberately
+// NOT here: the row does not retain the TTL split (honest limit 1), so a 1h
+// rate cannot affect any output, and requiring a number that provably changes
+// nothing is a usability wart rather than a safeguard. It is accepted when
+// present — a tier alias carries one — and ignored. A future 1h-aware pass
+// would need the producer to keep the split first, at which point this list is
+// where the key goes back.
+const RATE_KEYS = ['input', 'output', 'cache_write_5m', 'cache_read'];
+
+/**
+ * A usable rate is finite and non-negative.
+ * `typeof x === 'number'` is NOT enough, and the gap is not theoretical: JSON
+ * parses `1e999` to `Infinity`, which prices to `null` in the written row;
+ * a negative rate writes a negative total. Both then clear `rate_missing`,
+ * which is worse than the silent zero 2.4 removed — the row now carries a
+ * confident wrong figure with its own warning switched off, and the token
+ * counts that made a re-price possible have already been overwritten.
+ */
+function isUsableRate(v) {
+  return typeof v === 'number' && Number.isFinite(v) && v >= 0;
+}
 
 /**
  * Resolve one rates-file entry to `{ tier, rates }`.
- * A string is a tier alias; an object is an explicit table. Anything else, or
- * a table missing a key, is rejected by name — a silently-defaulted rate would
- * reintroduce the understatement this pass exists to remove.
+ * A string is a tier alias; an object is an explicit table. Anything else, a
+ * table missing a key, an unusable value, or an all-zero table is rejected by
+ * name — a silently-defaulted rate would reintroduce the understatement this
+ * pass exists to remove.
  */
 function resolveRate(model, spec) {
   if (typeof spec === 'string') {
@@ -73,8 +96,14 @@ function resolveRate(model, spec) {
     return { tier: spec, rates };
   }
   if (spec && typeof spec === 'object') {
-    const missing = RATE_KEYS.filter((k) => typeof spec[k] !== 'number');
-    if (missing.length) throw new Error(`rates["${model}"]: missing numeric ${missing.join(', ')}`);
+    const missing = RATE_KEYS.filter((k) => spec[k] === undefined);
+    if (missing.length) throw new Error(`rates["${model}"]: missing ${missing.join(', ')}`);
+    const unusable = RATE_KEYS.filter((k) => !isUsableRate(spec[k]));
+    if (unusable.length) throw new Error(`rates["${model}"]: ${unusable.map((k) => `${k}=${JSON.stringify(spec[k])}`).join(', ')} — a rate must be a finite number >= 0`);
+    // An all-zero table is not a price, it is the absence of one, and no tier
+    // in PRICING is free. Accepting it would re-create the exact case the flag
+    // exists to distinguish: a $0 row that reads as cheap work.
+    if (RATE_KEYS.every((k) => spec[k] === 0)) throw new Error(`rates["${model}"]: an all-zero table is not a price — it re-creates the $0 row rate_missing exists to flag`);
     return { tier: 'backfilled', rates: spec };
   }
   throw new Error(`rates["${model}"]: expected a tier alias or a rate table, got ${typeof spec}`);
@@ -200,7 +229,8 @@ function main() {
     process.exit(2);
   }
 
-  const lines = readFileSync(args.store, 'utf-8').split('\n').filter((l) => l.trim().length > 0);
+  const before = readFileSync(args.store, 'utf-8');
+  const lines = before.split('\n').filter((l) => l.trim().length > 0);
   const rows = [];
   const repaired = [];
   let flaggedRows = 0;
@@ -222,6 +252,17 @@ function main() {
   }
 
   if (args.apply && repaired.length) {
+    // This is a read-modify-REWRITE against a store whose producer APPENDS
+    // (`track.mjs` uses appendFileSync). temp-then-rename makes the write
+    // atomic; it does not make the read-write pair safe — a `track.mjs` run
+    // landing in between would be silently discarded by the rename. There is
+    // no lock, so the honest move is to detect the collision and refuse rather
+    // than to overwrite: on an append-only cost ledger a lost row is silent
+    // data loss, and re-running the pass afterwards costs nothing.
+    if (readFileSync(args.store, 'utf-8') !== before) {
+      console.error('cost-backfill: the ledger changed while this pass was running — refusing to overwrite. Re-run it.');
+      process.exit(2);
+    }
     const tmp = `${args.store}.backfill.tmp`;
     writeFileSync(tmp, rows.join('\n') + '\n');
     renameSync(tmp, args.store);

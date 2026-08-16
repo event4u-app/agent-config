@@ -167,6 +167,15 @@ export function aggregate(rows: Row[]): Json {
     const by_model = new Map<string, ModelBucket>();
     const by_date = new Map<string, KvBucket>();
     const rate_missing_models = new Set<string>();
+    // Re-priced rows, counted at the totals layer only — deliberately NOT
+    // per grouping. `rate_missing_sessions` propagates into every grouping
+    // because a flagged row makes THAT grouping's total a floor. A backfilled
+    // row is the opposite: it no longer understates anything, so nothing about
+    // a slice changes. What changes is the provenance of the summary as a
+    // whole — part of it is priced at operator-supplied rates rather than
+    // measured — and that is a totals-level fact.
+    const rate_backfilled_models = new Set<string>();
+    let rate_backfilled_sessions = 0;
     const totals = _zero_kv();
 
     for (const row of rows) {
@@ -184,6 +193,16 @@ export function aggregate(rows: Row[]): Json {
         const rateMissing = _pyTruthy(row['rate_missing']) ? 1 : 0;
         for (const id of _strList(row['rate_missing_models'])) {
             rate_missing_models.add(id);
+        }
+        const backfill = row['rate_backfill'];
+        if (Array.isArray(backfill) && backfill.length > 0) {
+            rate_backfilled_sessions += 1;
+            for (const entry of backfill) {
+                if (entry && typeof entry === 'object') {
+                    const id = _str((entry as Record<string, unknown>)['model'] ?? '');
+                    if (id) rate_backfilled_models.add(id);
+                }
+            }
         }
 
         const sessBucket = _getOr(by_sess, sid, _zero_kv);
@@ -231,6 +250,12 @@ export function aggregate(rows: Row[]): Json {
             // aggregated past: a non-zero count means total_cost_usd is a floor.
             rate_missing_sessions: totals.rate_missing_sessions,
             rate_missing_models: [...rate_missing_models].sort(),
+            // The re-priced qualification. Without it, `rate_missing: false`
+            // on a repaired row and on a row that was never flagged aggregate
+            // identically, so a total carrying operator-supplied estimates
+            // reads as fully measured.
+            rate_backfilled_sessions,
+            rate_backfilled_models: [...rate_backfilled_models].sort(),
         },
         by_session: _sortedEntries(by_sess).map(([k, v]) => ({
             key: k,

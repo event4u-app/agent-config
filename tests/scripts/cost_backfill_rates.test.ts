@@ -247,12 +247,61 @@ describe('backfill_rates.mjs CLI', () => {
     it('rejects an explicit rate table missing a key, naming the key', () => {
         const d = tmpdir();
         const store = ledger(d, [flaggedRow()]);
-        const partial = { 'claude-fable-5': { input: 1, output: 2, cache_write_5m: 3, cache_read: 4 } };
+        const partial = { 'claude-fable-5': { input: 1, output: 2, cache_write_5m: 3 } };
 
         const r = run(['--rates', rates(d, partial), '--store', store]);
 
         expect(r.status).toBe(2);
-        expect(r.stderr).toContain('cache_write_1h');
+        expect(r.stderr).toContain('cache_read');
+    });
+
+    it('accepts a table without cache_write_1h — the pass cannot use it', () => {
+        // The row does not retain the 5m/1h split, so requiring a 1h rate would
+        // demand a number that provably changes nothing.
+        const d = tmpdir();
+        const store = ledger(d, [flaggedRow()]);
+        const noTtl = { 'claude-fable-5': { input: 1, output: 2, cache_write_5m: 3, cache_read: 4 } };
+
+        expect(run(['--rates', rates(d, noTtl), '--store', store]).status).toBe(0);
+    });
+
+    // JSON parses 1e999 to Infinity, which prices to `null` in the written row;
+    // a negative rate writes a negative total; an all-zero table writes 0. Each
+    // would then CLEAR rate_missing — the silent zero 2.4 removed, with the flag
+    // switched off and the token counts already overwritten.
+    it.each([
+        ['non-finite', { input: 1e999, output: 2, cache_write_5m: 3, cache_read: 4 }, 'finite'],
+        ['negative', { input: -15, output: 2, cache_write_5m: 3, cache_read: 4 }, 'finite'],
+        ['all-zero', { input: 0, output: 0, cache_write_5m: 0, cache_read: 0 }, 'all-zero'],
+    ])('refuses an unusable %s rate rather than persisting it', (_label, table, needle) => {
+        const d = tmpdir();
+        const store = ledger(d, [flaggedRow()]);
+        const before = fs.readFileSync(store, 'utf-8');
+
+        const r = run(['--rates', rates(d, { 'claude-fable-5': table }), '--store', store, '--apply']);
+
+        expect(r.status).toBe(2);
+        expect(r.stderr).toContain(needle);
+        expect(fs.readFileSync(store, 'utf-8')).toBe(before);
+    });
+
+    it('carries every ledger row through --apply, including ones it did not touch', () => {
+        // The pass rewrites the whole file, so the rows it does NOT repair are
+        // the ones a rewrite bug loses silently. The concurrent-append guard in
+        // main() is deliberately not unit-tested here: interleaving a real
+        // append between this process's read and its rename is not achievable
+        // deterministically from a test, and a test that cannot lose the race
+        // would assert nothing about the guard.
+        const d = tmpdir();
+        const untouched = { sessionId: 'other', total_cost_usd: 1, rate_missing: false, rate_missing_models: [], byModel: {}, byTier: {} };
+        const store = ledger(d, [untouched, flaggedRow()]);
+
+        const r = run(['--rates', rates(d, { 'claude-fable-5': 'opus' }), '--store', store, '--apply']);
+
+        expect(r.status).toBe(0);
+        const written = fs.readFileSync(store, 'utf-8').trim().split('\n').map((l) => JSON.parse(l));
+        expect(written).toHaveLength(2);
+        expect(written[0]).toEqual(untouched);
     });
 
     it('exits 2 when the ledger or the rates file is absent', () => {

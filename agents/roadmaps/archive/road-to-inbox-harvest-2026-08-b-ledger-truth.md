@@ -256,10 +256,20 @@ they are never cross-checked, and **they match model ids by different strategies
       the recovered cost cannot be attributed to main vs subagent — inventing a
       ratio would be the worse number). `cost-summary-schema` carries both as a
       v1 additive `rate_backfill` extension, next to its `by_date` precedent.
-      Pinned by 15 tests, unit **and** subprocess, and **mutation-proven, not
+      Pinned by 20 tests, unit **and** subprocess, and **mutation-proven, not
       coverage-proven**: dropping the idempotence guard, the zero-billable-token
-      guard, or the still-unpriced recomputation each reds exactly one test
-      (1 failed / 14 passed in all three), and all three revert to 15/15.
+      guard, the still-unpriced recomputation, the finite/non-negative rate
+      predicate, or the all-zero-table refusal each reds exactly one test
+      (1 failed / 19 passed in all five), and all five revert to 20/20.
+      **Five of the seven completion-review findings were repaired in this same
+      change, and the high one is why the rate predicate exists**: validating a
+      rate with `typeof x === 'number'` accepted `Infinity` (JSON parses `1e999`
+      to it), a negative, and an all-zero table — each priced, persisted under
+      `--apply`, and **clearing `rate_missing`**. That is the silent zero 2.4
+      removed, re-created with the warning switched off and the token counts
+      already overwritten. The comment beside the predicate described an
+      invariant the predicate did not enforce, which is the gate-shape defect
+      this repository keeps finding in its own tooling.
       Measured on the observed row: re-pricing recovered **$496.55** against a
       reported **$12.82** — one unrecognised id had made the session's cost
       figure wrong by roughly a factor of forty.
@@ -408,7 +418,7 @@ they are never cross-checked, and **they match model ids by different strategies
 - **Resolved 2026-08-16 — and the transferable half is why it sat open for three
   days.** A real flagged row exists (`claude-fable-5`, 468 messages, 236,695,963
   cache-read tokens, priced at $0) and its field set is written down in
-  [`rate-missing-observed-row`](../evidence/analysis/rate-missing-observed-row.md).
+  [`rate-missing-observed-row`](../../evidence/analysis/rate-missing-observed-row.md).
   The 2026-08-13 probe above was **correct on every fact and wrong in its verb**:
   it identified the missing precondition — the ledger has no rows because
   `track.mjs` had never run — and then filed it as something to *wait* for.

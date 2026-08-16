@@ -157,6 +157,15 @@ re-priced for one model while another still has no rate keeps the flag and
 keeps the unrepaired id in `rate_missing_models`, because such a row is still
 understated.
 
+The summary surfaces it as `totals.rate_backfilled_sessions` (how many source
+rows were re-priced) and `totals.rate_backfilled_models` (the sorted distinct
+union of the re-priced ids). **Totals only, deliberately** — unlike
+`rate_missing_sessions`, this does not propagate into `by_session` /
+`by_conversation` / `by_date` / `by_model`. A flagged row makes its grouping's
+total a *floor*, which is a property of the slice; a repaired row understates
+nothing, so no slice changes. What changes is the provenance of the figure as a
+whole — part of it is priced at operator-supplied rates rather than measured.
+
 Two **honest limits** ride on every backfilled figure, and both are properties
 of what the stored row retains rather than of the pass — the same stance
 `by_date` takes above:
