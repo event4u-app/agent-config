@@ -142,6 +142,38 @@ Additive per the rule below: absent on rows and summaries written before this
 extension, which read as `0` / `[]` — the same absent-reading as the cache
 fields. No version bump, no required field.
 
+## Re-priced rows — `rate_backfill`, a v1 additive extension
+
+A row that was flagged and has since been re-priced by
+[`cost/backfill_rates.mjs`](../../src/scripts/cost/backfill_rates.mjs) carries
+`rate_backfill`: an array with one entry per repaired model id
+(`model`, `tier`, `cost_usd`, `cache_ttl_assumed`, `bucket_split_repaired`,
+`at`). Its purpose is that a re-priced total is not mistaken for an originally
+priced one — without it, `rate_missing: false` on a repaired row and on a row
+that was never flagged are indistinguishable.
+
+`rate_missing` is cleared **only** when nothing unpriced remains. A row
+re-priced for one model while another still has no rate keeps the flag and
+keeps the unrepaired id in `rate_missing_models`, because such a row is still
+understated.
+
+Two **honest limits** ride on every backfilled figure, and both are properties
+of what the stored row retains rather than of the pass — the same stance
+`by_date` takes above:
+
+- `cache_ttl_assumed: "5m"` — the row aggregates 5m and 1h cache writes into
+  one `cache_creation_input_tokens` tally, so a backfill prices all of them at
+  the 5m rate. A session that really used 1h writes stays under-priced by the
+  difference.
+- `bucket_split_repaired: false` — the row carries per-bucket totals and
+  per-model totals but no per-bucket-per-model tokens, so the recovered cost
+  cannot be attributed across `main` / `subagent`. `byBucket[*].cost_usd` is
+  therefore left as captured; inventing a split would be a worse number, not a
+  better one.
+
+Additive per the rule below: absent on every row written before this extension,
+which reads as "never re-priced". No version bump, no required field.
+
 ## Stability guarantees
 
 - **Field additions** are **non-breaking**: consumers MUST ignore unknown fields.
