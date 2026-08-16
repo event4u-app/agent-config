@@ -729,6 +729,11 @@ export const ALPHA = 0.05;
  *   2. **Safety is checked FIRST and is a disqualifier**, not a side metric. An
  *      arm that saves a line and drops a guard has lost; there is no ordering of
  *      the other two endpoints that can overturn it.
+ *   2b. **Golfing is refused as soon as T2 shows it** — before the
+ *      unmeasured-endpoint check, and independently of T4. The two disqualifiers
+ *      answer different questions and neither waits for the other; ordering them
+ *      the other way made `REFUSED-GOLFING` unreachable on real data, because no
+ *      safety-tier producer exists in the tree.
  *   3. **`PASS` is reachable through exactly one path** — all three measured,
  *      neither disqualifier fired, and T1 met. That is the Goodhart guard in
  *      code rather than in prose: the scorer has no branch that ranks on size
@@ -763,6 +768,39 @@ export function size_claim_verdict(comparison: Dict): Dict {
         }
     }
 
+    const cx_rose =
+        cx['measured'] === true &&
+        _pyFloat(cx['median_delta']) > 0 &&
+        _pyFloat(cx['wilcoxon_p']) < ALPHA;
+    const pct = size['measured'] === true ? size['median_delta_pct'] : null;
+    const lines_fell =
+        pct !== null &&
+        _pyFloat(pct) <= T1_MEDIAN_LINES_PCT &&
+        _pyFloat(size['wilcoxon_p']) < ALPHA;
+
+    // (2b) Golfing is refused as soon as T2 shows it, and does NOT wait for T4.
+    //
+    // This ordering was wrong on the first pass and the completion review caught
+    // it: the unmeasured-endpoint branch ran first, so with no safety-tier
+    // producer in the tree — and there is none; T4's scorer is rubric-judged and
+    // unimplemented — every real run returned INCONCLUSIVE and `REFUSED-GOLFING`
+    // was reachable only from a synthetic fixture. A refusal that exists only in
+    // its own test is not a gate. The two disqualifiers are independent: a
+    // complexity regression is a fact about T1/T2 and needs nothing from T4.
+    if (cx_rose) {
+        return {
+            ...base,
+            verdict: 'REFUSED-GOLFING',
+            reason:
+                'median cognitive complexity per changed function rose significantly (T2); ' +
+                'lines down and complexity up fails the size criterion even at p<0.05 on lines alone',
+            lines_fell,
+            size_measured: size['measured'] === true,
+            complexity_measured: true,
+            safety_measured: saf['measured'] === true,
+        };
+    }
+
     const missing: string[] = [];
     if (size['measured'] !== true) missing.push('T1 added-lines');
     if (cx['measured'] !== true) missing.push('T2 cognitive-complexity');
@@ -778,20 +816,17 @@ export function size_claim_verdict(comparison: Dict): Dict {
         };
     }
 
-    const cx_rose = _pyFloat(cx['median_delta']) > 0 && _pyFloat(cx['wilcoxon_p']) < ALPHA;
-    const pct = size['median_delta_pct'];
-    const lines_fell =
-        pct !== null &&
-        _pyFloat(pct) <= T1_MEDIAN_LINES_PCT &&
-        _pyFloat(size['wilcoxon_p']) < ALPHA;
-
-    if (cx_rose) {
+    // (3) T1 and T2 are collected pair-wise and independently, so a trial that
+    // carries added lines but no complexity enters one sample and not the other.
+    // A win claimed on 30 pairs whose golfing check saw 4 is not a checked win —
+    // the guard would be policing a subset of the claim.
+    if (_pyFloat(cx['n_pairs']) < _pyFloat(size['n_pairs'])) {
         return {
             ...base,
-            verdict: 'REFUSED-GOLFING',
+            verdict: 'INCONCLUSIVE',
             reason:
-                'median cognitive complexity per changed function rose significantly (T2); ' +
-                'lines down and complexity up fails the size criterion even at p<0.05 on lines alone',
+                `complexity sample (${_pyStr(cx['n_pairs'])} pairs) does not cover the size sample ` +
+                `(${_pyStr(size['n_pairs'])}) — the anti-golfing check would police a strict subset`,
             lines_fell,
             size_measured: true,
             complexity_measured: true,

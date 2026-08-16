@@ -626,6 +626,41 @@ describe('size_claim_verdict — the metric pair (T1/T2) and the T4 disqualifier
         }
     });
 
+    it('refuses golfing even with T4 absent — the production shape, not just the fixture', () => {
+        // The completion review's second high finding: `safety_tier_pass` has no
+        // producer in src/, so on any real report T4 is unmeasured. With the
+        // missing-endpoint check running first, the golfing refusal existed only
+        // in its own synthetic test. It must fire on the endpoints that DO have
+        // producers.
+        const v = size_claim_verdict(
+            cmpOf({ added: 10, cc: 9, safe: null }, { added: 30, cc: 3, safe: null }),
+        );
+        expect(v['verdict']).toBe('REFUSED-GOLFING');
+        expect(v['safety_measured']).toBe(false);
+    });
+
+    it('a complexity sample that does not cover the size sample cannot certify a win', () => {
+        // T1 and T2 are collected pair-wise and independently. Half the trials
+        // carry a complexity observation here, so the anti-golfing check saw a
+        // strict subset of the pairs the lines win is claimed on.
+        const ladder = runs({ added: 10, cc: 3, safe: true });
+        const pkg = runs({ added: 30, cc: 3, safe: true });
+        for (const r of pkg.slice(0, 4)) {
+            delete (r['metrics'] as Record<string, unknown>)['median_cognitive_complexity'];
+        }
+        const cmp = compare(
+            [{ id: 't1', arms: { 'package-ladder': ladder, package: pkg } }],
+            'package-ladder',
+            'package',
+        ) as Record<string, unknown>;
+        const size = cmp['size'] as Record<string, unknown>;
+        const cx = cmp['complexity'] as Record<string, unknown>;
+        expect(cx['n_pairs']).toBeLessThan(size['n_pairs'] as number);
+        const v = size_claim_verdict(cmp);
+        expect(v['verdict']).toBe('INCONCLUSIVE');
+        expect(String(v['reason'])).toContain('does not cover');
+    });
+
     it('unmeasured endpoints report `measured: false`, never a zero value', () => {
         const cmp = cmpOf({ added: null, cc: null, safe: null }, { added: null, cc: null, safe: null });
         for (const key of ['size', 'complexity', 'safety']) {

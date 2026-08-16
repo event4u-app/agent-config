@@ -95,6 +95,7 @@ export async function rescoreReport(
     opts: { fixturesRoot?: string; write?: boolean; corpusPath?: string | null } = {},
 ): Promise<TrialRescore[]> {
     const fixturesRoot = opts.fixturesRoot ?? FIXTURES_ROOT;
+    let wrote = 0;
     const byId = loadCorpusFixtures(opts.corpusPath === undefined ? CORPUS_PATH : opts.corpusPath);
     const out: TrialRescore[] = [];
     const records = Array.isArray(payload['records']) ? (payload['records'] as Dict[]) : [];
@@ -149,19 +150,36 @@ export async function rescoreReport(
                 if (opts.write) {
                     const metrics = _dictOr(run['metrics']);
                     metrics['added_lines'] = row.added_lines;
-                    // Only set the complexity key when something was scored. An
-                    // explicit null is fine (compare() reads it as unmeasured),
-                    // but writing 0 for "no function in the diff" would claim the
-                    // run produced maximally simple code.
+                    // `median` is null when the diff contained no scorable
+                    // function, and null is written on purpose: `compare()` reads
+                    // a null as "not measured on this pair", while a 0 would claim
+                    // the run produced maximally simple code. The count sits
+                    // beside it so a reader can tell "nothing to score" from
+                    // "scored, and it was trivial".
                     metrics['median_cognitive_complexity'] = row.median_cognitive_complexity;
                     metrics['complexity_n_functions'] = row.n_functions;
                     run['metrics'] = metrics;
+                    wrote += 1;
                 }
                 out.push(row);
             }
         }
     }
+    if (opts.write) lastWriteCount = wrote;
     return out;
+}
+
+/**
+ * How many trials the last `rescoreReport({ write: true })` actually touched.
+ *
+ * The CLI uses it to skip rewriting the report when nothing was measured:
+ * re-serialising a pinned artefact for a zero-row pass changes its bytes (and
+ * its formatting) without changing a single number, which is exactly the kind of
+ * silent churn that makes a report stop matching the figures quoted from it.
+ */
+let lastWriteCount = 0;
+export function trialsWrittenByLastRescore(): number {
+    return lastWriteCount;
 }
 
 function renderTable(rows: TrialRescore[]): string {
@@ -207,8 +225,11 @@ async function main(argv: string[]): Promise<number> {
     }
     const payload = JSON.parse(fs.readFileSync(reportPath, 'utf8')) as Dict;
     const rows = await rescoreReport(payload, { write });
-    if (write) {
+    const written = trialsWrittenByLastRescore();
+    if (write && written > 0) {
         fs.writeFileSync(reportPath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+    } else if (write) {
+        process.stderr.write('no trial could be measured — report left untouched\n');
     }
     process.stdout.write(asJson ? `${JSON.stringify(rows, null, 2)}\n` : `${renderTable(rows)}\n`);
     return 0;

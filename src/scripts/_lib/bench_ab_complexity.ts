@@ -154,6 +154,12 @@ const NESTING_NODES: Record<Lang, ReadonlySet<string>> = {
         'while_statement',
         'do_statement',
         'switch_statement',
+        // PHP 8 `match` is `switch`'s expression twin and must score like it.
+        // It was missing at first review and scored 0 against its `switch`
+        // twin's 1 — a silent zero pointing in exactly the golfing direction
+        // this endpoint exists to catch, since rewriting a `switch` as a
+        // `match` is a textbook line-saving transform.
+        'match_expression',
         'catch_clause',
         'conditional_expression',
     ]),
@@ -191,26 +197,28 @@ function namedChildren(n: TsNode): TsNode[] {
 /**
  * The operator token of a binary expression.
  *
- * `childForFieldName('operator')` is the documented accessor, but the 0.24.x
- * WASM surface returns `null` for it on some grammars, so fall back to the first
- * unnamed child — which is the operator token by construction.
+ * `childForFieldName('operator')` is the accessor all three grammars answer, so
+ * it is the primary path. The fallback scans the children for a token whose type
+ * IS one of the operators we care about — an operator token's `type` is the
+ * literal (`&&`, `||`, `??`), which is what makes this decidable without asking
+ * whether a node is named.
+ *
+ * An earlier version fell back to "the first unnamed child", identified by
+ * comparing node objects with `===`. That was wrong twice over: the WASM binding
+ * re-creates a wrapper on every accessor call, so the identity test could never
+ * return true, and the branch would have reported the LEFT OPERAND's type as the
+ * operator. It was also unreachable, which is why the calibration suite stayed
+ * green over it — a dead branch and a wrong branch hide each other.
  */
-function binaryOperator(n: TsNode): string | null {
+function binaryOperator(n: TsNode, lang: Lang): string | null {
     const field = n.childForFieldName('operator');
     if (field) return field.type;
+    const ops = LOGICAL_OPERATORS[lang];
     for (let i = 0; i < n.childCount; i += 1) {
         const c = n.child(i);
-        if (c && c.namedChildCount === 0 && c.type !== c.text) continue;
-        if (c && !isNamed(n, c)) return c.type;
+        if (c && ops.has(c.type)) return c.type;
     }
     return null;
-}
-
-function isNamed(parent: TsNode, child: TsNode): boolean {
-    for (let i = 0; i < parent.namedChildCount; i += 1) {
-        if (parent.namedChild(i) === child) return true;
-    }
-    return false;
 }
 
 function functionName(n: TsNode): string {
@@ -261,7 +269,7 @@ function scoreUnit(body: TsNode | null, lang: Lang, header: TsNode[]): number {
         }
 
         if (BINARY_NODES.has(n.type)) {
-            const op = binaryOperator(n);
+            const op = binaryOperator(n, lang);
             if (op && LOGICAL_OPERATORS[lang].has(op)) {
                 // One increment per *sequence*: charge only when this operator
                 // opens a new run, i.e. the parent run used a different operator.
@@ -278,15 +286,21 @@ function scoreUnit(body: TsNode | null, lang: Lang, header: TsNode[]): number {
         for (const c of namedChildren(n)) walk(c, nesting);
     };
 
-    /** The condition + consequence/alternative of an `else if`, at flat depth. */
+    /**
+     * The interior of a JS/TS `else if` — everything inside it sits at the SAME
+     * nesting as the outer `if`'s body, because `else if` adds no indentation a
+     * reader has to track.
+     *
+     * `nesting` here is already the outer `if`'s *children* level (the
+     * `else_clause` was reached from `walk(child, nesting + 1)`), so the interior
+     * walks at `nesting` unchanged. Incrementing here was an off-by-one that made
+     * `if (a) {} else if (b) { if (c) {} }` score 7 where the behaviourally
+     * identical `else { if … }` and the PHP `elseif` twin both scored 6 — the JS
+     * shape was the only one that took the penalty, because it is the only one
+     * where the inner `if` is reached through a wrapper.
+     */
     const scoreIfInterior = (ifNode: TsNode, nesting: number): void => {
-        for (const c of namedChildren(ifNode)) {
-            if (c.type === 'else_clause' || c.type === 'else_if_clause') {
-                walk(c, nesting);
-            } else {
-                walk(c, nesting + 1);
-            }
-        }
+        for (const c of namedChildren(ifNode)) walk(c, nesting);
     };
 
     for (const h of header) walk(h, 0);
@@ -307,7 +321,7 @@ function countLogicalSequences(root: TsNode, lang: Lang): number {
     let sequences = 0;
     const visit = (n: TsNode, parentOp: string | null): void => {
         if (!BINARY_NODES.has(n.type)) return;
-        const op = binaryOperator(n);
+        const op = binaryOperator(n, lang);
         if (!op || !LOGICAL_OPERATORS[lang].has(op)) return;
         if (op !== parentOp) sequences += 1;
         for (const c of namedChildren(n)) visit(c, op);
@@ -321,7 +335,7 @@ function logicalOperands(root: TsNode, lang: Lang): TsNode[] {
     const out: TsNode[] = [];
     const visit = (n: TsNode): void => {
         for (const c of namedChildren(n)) {
-            const op = BINARY_NODES.has(c.type) ? binaryOperator(c) : null;
+            const op = BINARY_NODES.has(c.type) ? binaryOperator(c, lang) : null;
             if (op && LOGICAL_OPERATORS[lang].has(op)) {
                 visit(c);
             } else {

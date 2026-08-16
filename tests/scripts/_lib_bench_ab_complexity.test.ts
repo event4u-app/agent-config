@@ -15,6 +15,9 @@
 //     anti-golfing gate is watching a metric that cannot see the thing it is for.
 //
 // No fixture is written to the tracked tree; every source is inline.
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -121,6 +124,47 @@ function a($n) {
         expect(await scoreOne('g.ts', src)).toBe(4);
     });
 
+    it('an else-if body sits at the SAME depth as the if body — the wrapper off-by-one', async () => {
+        // Regression for the completion review's first high finding. In JS/TS the
+        // `else if` is reached through an `else_clause` wrapper, so its interior
+        // was walked one level deeper than the behaviourally identical shapes.
+        // if +1, else-if +1, inner if +2 (nesting 1) = 4 — for ALL THREE spellings.
+        const jsElseIf = await scoreOne('a.js', `function f(a,b,c){ if(a){} else if(b){ if(c){} } }`);
+        const jsElse = await scoreOne('b.js', `function f(a,b,c){ if(a){} else { if(c){} } }`);
+        const phpElseIf = await scoreOne(
+            'c.php',
+            `<?php function f($a,$b,$c){ if($a){} elseif($b){ if($c){} } }`,
+        );
+        expect(jsElseIf).toBe(4);
+        // The point is not the number but the agreement: a metric that scores the
+        // same control flow differently per spelling cannot compare two arms.
+        expect(jsElseIf).toBe(jsElse);
+        expect(jsElseIf).toBe(phpElseIf);
+    });
+
+    it('PHP match scores like its switch twin — not zero', async () => {
+        // `match` is the expression form of `switch`, and rewriting one as the
+        // other is a textbook line-saving transform. An unmodelled node would
+        // score 0 and make that transform look free.
+        const match = await scoreOne(
+            'm.php',
+            `<?php function f($n){ return match($n){ 1 => 'a', default => 'b' }; }`,
+        );
+        const sw = await scoreOne(
+            's.php',
+            `<?php function f($n){ switch($n){ case 1: return 'a'; default: return 'b'; } }`,
+        );
+        expect(match).toBe(1);
+        expect(match).toBe(sw);
+    });
+
+    it("PHP's word-form logical operators count like their symbol forms", async () => {
+        const symbols = await scoreOne('p1.php', `<?php function f($a,$b){ if($a && $b){} }`);
+        const words = await scoreOne('p2.php', `<?php function f($a,$b){ if($a and $b){} }`);
+        expect(symbols).toBe(2);
+        expect(words).toBe(symbols);
+    });
+
     it('a nested closure is its own unit — the documented deviation, pinned', async () => {
         const r = await complexityForSource(
             'h.js',
@@ -184,11 +228,30 @@ describe('honest coverage — unmeasured is never zero', () => {
         expect(median([5, 1, 3])).toBe(3);
     });
 
-    it('a workspace whose changed files are all unsupported yields median null', async () => {
+    it('a file missing on disk is reported as missing, not as unsupported', async () => {
         const rollup = await medianComplexityPerChangedFunction('/nonexistent-root', ['a.py']);
         expect(rollup.median).toBeNull();
         expect(rollup.n_functions).toBe(0);
-        // Missing on disk is reported as missing, not silently dropped.
         expect(rollup.missing_files).toEqual(['a.py']);
+        // The two buckets are distinct: this file was never read, so nothing is
+        // known about whether a grammar covers it.
+        expect(rollup.unsupported_files).toEqual([]);
+    });
+
+    it('a file that EXISTS but has no grammar lands in unsupported_files', async () => {
+        // The branch the previous test was named for and did not reach: the file
+        // has to be readable before its extension can be judged unsupported.
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cxu-'));
+        try {
+            fs.writeFileSync(path.join(dir, 'a.py'), 'def f():\n    if x:\n        pass\n', 'utf8');
+            const rollup = await medianComplexityPerChangedFunction(dir, ['a.py']);
+            expect(rollup.unsupported_files).toEqual(['a.py']);
+            expect(rollup.missing_files).toEqual([]);
+            // Unsupported contributes NO observation — never a zero.
+            expect(rollup.median).toBeNull();
+            expect(rollup.n_functions).toBe(0);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
     });
 });
