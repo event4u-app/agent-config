@@ -47,7 +47,7 @@ function tmp(): string {
 // ----------------------------------------------------------------------
 
 describe('tools — allowlist + registry', () => {
-    it('allowlist holds the 19 implemented tools', () => {
+    it('allowlist holds the 20 implemented tools', () => {
         expect(new Set(Object.keys(ALLOWLIST))).toEqual(
             new Set([
                 'lint_skills',
@@ -73,9 +73,12 @@ describe('tools — allowlist + registry', () => {
                 'council_estimate',
                 // Phase 5 shell-exec pilot (same verdict, one tool only).
                 'run_tests',
+                // road-to-inbox-harvest-2026-08-d-runtime-skill-routing 4.1 —
+                // promoted from a discovery stub. Read-only, shell-free.
+                'suggest_skill_for_task',
             ]),
         );
-        expect(Object.keys(ALLOWLIST).length).toBe(19);
+        expect(Object.keys(ALLOWLIST).length).toBe(20);
         for (const tool of Object.values(ALLOWLIST)) {
             expect(tool.description.trim()).toBeTruthy();
             expect(tool.input_schema.type).toBe('object');

@@ -434,6 +434,28 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+  # road-to-inbox-harvest-2026-08-d-runtime-skill-routing Phase 2 — binds the
+  # deterministic task→skill ranker, which had shipped with ZERO production
+  # callers: `score_skill_relevance.rank` and its `suggest_skill_for_task`
+  # wrapper were reachable only from their CLIs and from `routing:doctor`.
+  # Ranks the SUBMITTED prompt over the installed skill catalogue and injects
+  # at most one line naming the top-3 skill ids and their scores — POINTERS,
+  # never bodies, never a load instruction. Same delivery as `delegation-nudge`
+  # above: `{decision:"warn", reason, additional_context}` at exit 2, reduced
+  # to a real exit of 0 by `host_semantics.emitFor`'s warn branch, so it never
+  # blocks a turn.
+  #
+  # Silence is the default and its floor is MEASURED, not chosen: `rank`
+  # returns something on nearly every real prompt, so the trigger is a top-1
+  # score at or above 30/100 — the p90 of the routing-matrix corpus (496 prompt
+  # lines; median 18, p75 28, max 70), firing on 13.9% of them. A median floor
+  # would speak on half of all turns, which is the per-turn-reminder shape this
+  # estate has already measured failing. fail_closed: false.
+  skill-route:
+    script: src/scripts/hooks/skill_route_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
   # road-to-orchestrator-discipline-carriers Phase 5 (F4-lite) — end-review
   # nudge. Fires ONLY when the session mutated tracked+untracked, non-doc
   # files beyond MUTATION_LINE_THRESHOLD (50 lines; untracked files added
@@ -639,7 +661,11 @@ roles:
     # Orchestrator-only concerns (Phase 2.3): a worker never talks to the
     # user, never dispatches sub-workers, never runs the council, and its
     # complaints route via the orchestrator.
-    drop: [delegation-nudge, end-review-nudge, council-availability, team-review-gate, self-repair, session-eol]
+    # `skill-route` joins the drop list for the same reason `delegation-nudge`
+    # is on it: a worker was handed a bounded slice by an orchestrator that
+    # already chose the approach, so a routing pointer there advises nobody who
+    # can act on it and costs the dispatch anyway.
+    drop: [delegation-nudge, skill-route, end-review-nudge, council-availability, team-review-gate, self-repair, session-eol]
 
 platforms:
   augment:
@@ -653,7 +679,7 @@ platforms:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register]
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, git-authorization, session-canary, self-repair, session-register]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, reread-guard, spawn-guard-shadow]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape, language-mirror]
     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;

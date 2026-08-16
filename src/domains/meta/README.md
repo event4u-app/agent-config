@@ -7,7 +7,7 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 295
+- **artefacts**: 296
 
 ## Commands (153)
 
@@ -165,7 +165,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`worktree-status`** — List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence
 - **`worktree-verify`** — Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline
 
-## Rules (68)
+## Rules (69)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -199,6 +199,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`language-and-tone`** — Language and tone — informal German Du, English code comments, .md files always English
 - **`low-impact-corpus-privacy-floor`** — Writing/upstreaming low-impact-decisions corpus entries — non-bypassable privacy floor
 - **`markdown-safe-codeblocks`** — Generating markdown with code blocks — prevent broken nesting
+- **`missing-skill-recovery`** — A skill exists in the tree but not in the host's catalogue — ask for it by TASK via suggest_skill_for_task, never conclude it does not exist
 - **`missing-tool-handling`** — CLI tool needed for the task is not installed — ask before working around it; do NOT install silently
 - **`model-recommendation`** — Task start, type switch, or skill/command with a model_tier — switch or suggest the right capability tier
 - **`no-attribution-footers`** — PR/issue/comment/commit bodies — no 'Generated with' / 'Co-authored by' / 'opened by' attribution footers

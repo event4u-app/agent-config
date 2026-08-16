@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **709 artefacts** in this package.
+Maintainer-facing index of all **710 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -301,7 +301,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`wireframe`](../src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (115)
+## Rules (116)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -367,6 +367,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`media-governance-routing`](../src/rules/media-governance-routing.md) | auto | Generating AI video/image/voice — surface the project-local media policies (likeness, style, voice-cloning, disclosure) |
 | rule | [`media-sync-ground-truth`](../src/rules/media-sync-ground-truth.md) | auto | Audio-synced video — timing + singer come from the transcribed real audio; sign-off before paid renders |
 | rule | [`minimal-safe-diff`](../src/rules/minimal-safe-diff.md) | auto | Writing or reviewing a diff — smallest change that solves the problem; no drive-by edits or reformatting |
+| rule | [`missing-skill-recovery`](../src/rules/missing-skill-recovery.md) | auto | A skill exists in the tree but not in the host's catalogue — ask for it by TASK via suggest_skill_for_task, never conclude it does not exist |
 | rule | [`missing-tool-handling`](../src/rules/missing-tool-handling.md) | auto | CLI tool needed for the task is not installed — ask before working around it; do NOT install silently |
 | rule | [`model-recommendation`](../src/rules/model-recommendation.md) | auto | Task start, type switch, or skill/command with a model_tier — switch or suggest the right capability tier |
 | rule | [`no-attribution-footers`](../src/rules/no-attribution-footers.md) | auto | PR/issue/comment/commit bodies — no 'Generated with' / 'Co-authored by' / 'opened by' attribution footers |
