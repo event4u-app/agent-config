@@ -262,7 +262,14 @@ describe('lint_scheduled_deprecations', () => {
         ).toThrow(HeaderMismatchError);
     });
 
-    it('real repo: reproduces the reading this gate was built on', () => {
+    it('real repo: parses the shipped table and resolves every cell', () => {
+        // Renamed: it used to say "reproduces the reading this gate was built
+        // on", and that reading was `code_graph` one major overdue. The
+        // maintainer withdrew that commitment, so the shipped table now has
+        // nothing overdue — asserting the old outcome would pin a state the
+        // trunk deliberately left. What still matters, and is what this asserts,
+        // is that every shipped cell RESOLVES: an unresolvable one is a live
+        // defect regardless of which way the arithmetic then falls.
         const r = run(REPO_ROOT);
         // Three rows today; the floor is what matters, not the exact number.
         expect(r.stdout).toMatch(/scanned: [1-9]\d*/);

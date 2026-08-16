@@ -153,7 +153,10 @@ Three things this roadmap knowingly leaves open, none of them fixed here:
   stays worth stating for the next overdue row: the warning is backed by a hard
   refusal at the cut, which habituation does not survive.
 - **The dashboard's "pending archival" criterion ignores blockers; the sweep
-  does not.** So `agents/roadmaps-progress.md` prints an
+  does not — no longer obstructing here, kept because the shape recurs.** With
+  the blocker now `Status: resolved` on the trunk, this roadmap is genuinely
+  archivable and the printed instruction does succeed. The inconsistency itself
+  is unrepaired: So `agents/roadmaps-progress.md` prints an
   `archive_completed_roadmaps --all` instruction for this roadmap that cannot
   succeed while its blocker is open. That is a generator-side inconsistency
   older than this branch and is not repaired here.
@@ -165,8 +168,11 @@ Three things this roadmap knowingly leaves open, none of them fixed here:
   outright, and the merge brought that in, so the roadmap is absent from the
   dashboard entirely and the delta this note claimed to have verified is not in
   the shipped diff. What the diff now carries is one changed open-roadmaps row
-  — this roadmap's — and an Overall move of exactly its own 10 steps over an
-  unchanged denominator. The original reading was true when written and stopped
+  — this roadmap's — and an Overall move of **+9** over an unchanged
+  denominator — not the 10 an earlier draft of this bullet asserted, because
+  the base row already read 9 open / 1 done rather than 10 / 0. Corrected
+  because a paragraph whose subject is an outlived claim cannot carry an
+  unchecked number of its own. The original reading was true when written and stopped
   being true at the merge; a "verified" claim that outlives its evidence is
   worse than no claim, which is why it is rewritten instead of deleted.
 

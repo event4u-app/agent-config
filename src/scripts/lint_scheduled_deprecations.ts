@@ -23,7 +23,8 @@
  *   0  nothing due, or due surfaces reported on an ordinary branch
  *   1  a row could not be parsed / resolved, the table is missing or empty, or
  *      a due surface was found while `--cutting <version>` was passed
- *   2  usage error
+ *   2  usage error, or an environment failure that leaves the gate with no
+ *      comparand at all (missing / malformed `package.json`)
  *
  * `--cutting <X.Y.Z>` is the major-cut switch: an ordinary branch gets the
  * report, a release gets the refusal. That asymmetry is deliberate — an overdue
@@ -603,7 +604,7 @@ export function main(argv: readonly string[]): number {
         shipped = shippedMajor(root);
     } catch (exc) {
         process.stderr.write(
-            `❌  lint_scheduled_deprecations: cannot read the shipped major — ` +
+            `❌  lint_scheduled_deprecations: cannot read the shipped major (environment, not a finding) — ` +
                 `${exc instanceof Error ? exc.message : String(exc)}\n`,
         );
         return 2;

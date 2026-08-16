@@ -1681,6 +1681,16 @@ export function assert_scheduled_deprecations_clear(
     }
     process.stderr.write(res.stdout);
     process.stderr.write(res.stderr);
+    if (res.returncode !== 1) {
+        // The gate reserves 1 for a finding and 2 for a usage/environment
+        // failure. Diagnosing the latter as "the table has an overdue row"
+        // sends the releaser to edit a file that is not the problem.
+        die(
+            `refusing the ${target} cut: the scheduled-deprecations check could not run ` +
+                `(exit ${String(res.returncode)}). That is an environment or usage failure, not a ` +
+                'finding in docs/MIGRATION.md — fix the invocation or the checkout, then re-run.',
+        );
+    }
     if (opts.previewOnly === true) {
         // The preview's job is to SHOW what the real run will refuse. Dying
         // here would break the `--dry-run exits 0` contract asserted elsewhere

@@ -344,7 +344,7 @@ index 3f98cabfa8fc9858aa76c4969306725a2f8c1ec0..2285590364aff41db1c36180d5fc8adb
 +      widening the overdue threshold fails the overdue-by-construction case, and
 +      granting `allowEmpty` fails the zero-row case.
 diff --git a/src/config/gate-violation-baselines.json b/src/config/gate-violation-baselines.json
-index 76bbdcf0f9570c368a763d213629b4920d1a3bc3..f6147dceb5b078a234aedee8489a086fe13d69ec 100644
+index 76bbdcf0f9570c368a763d213629b4920d1a3bc3..57c0f4562601459a6b734c093e5014443d4b621b 100644
 --- a/src/config/gate-violation-baselines.json
 +++ b/src/config/gate-violation-baselines.json
 @@ -23,9 +23,9 @@
@@ -355,16 +355,16 @@ index 76bbdcf0f9570c368a763d213629b4920d1a3bc3..f6147dceb5b078a234aedee8489a086f
 +      "count": 34,
        "landed": "2026-08-15",
 -      "note": "Open blocker entries that are not yet DECIDABLE by the person who owns them — missing `Recommendation:` (which option and why), missing `If you do nothing:` (the cost of the non-decision), or a `What to do:` carrying no command, path or enumerated option set. Revealed by adding the decidability half to lint_roadmap_blockers, not created by it: the five original fields describe a situation and never made it actionable, so a blocker could pass the contract while handing the analysis back to the person least equipped to redo it. Measured at introduction: 36 open entries, ALL 36 undecidable, and 14 of the 46 total entries carry no command/path/option at all in `What to do`. Baselined rather than hard-failed because 36 findings nobody can clear in the change that reveals them is the gate-that-lands-as-N-instant-blockers failure this repository has refused before — the same reasoning as ci-parity:local-only above. First measured at 34 rather than 36 because the two blockers on the branch that introduced this (`ac3-false-positive-reading`, `publish-side-marker-invariant`) were rewritten to the new standard and then closed in the same change; a baseline above the truth silently permits new violations. Re-measured at 38 when the branch was re-pointed at current main, and the +4 is population growth rather than a loosening: main gained the four `road-to-inbox-harvest-2026-08-d-*` roadmaps (context-ledger, runtime-skill-routing, scheduled-deprecation, top-band-model-economy), each carrying one open blocker authored before this requirement existed. That is the honest number for the population this gate now scans — recording 34 against a 38-entry tree would have failed the gate on its own introducing commit and taught the next reader to distrust it. Lowering happens one blocker at a time, and every roadmap touched for other reasons is a chance to lower it. The 56-day expiry is the point, not a hazard: if this number has not moved in two months, the fields are not being written and the gate should fail until someone decides whether the requirement is real.",
-+      "note": "Open blocker entries that are not yet DECIDABLE by the person who owns them — missing `Recommendation:` (which option and why), missing `If you do nothing:` (the cost of the non-decision), or a `What to do:` carrying no command, path or enumerated option set. Revealed by adding the decidability half to lint_roadmap_blockers, not created by it: the five original fields describe a situation and never made it actionable, so a blocker could pass the contract while handing the analysis back to the person least equipped to redo it. Measured at introduction: 36 open entries, ALL 36 undecidable, and 14 of the 46 total entries carry no command/path/option at all in `What to do`. Baselined rather than hard-failed because 36 findings nobody can clear in the change that reveals them is the gate-that-lands-as-N-instant-blockers failure this repository has refused before — the same reasoning as ci-parity:local-only above. First measured at 34 rather than 36 because the two blockers on the branch that introduced this (`ac3-false-positive-reading`, `publish-side-marker-invariant`) were rewritten to the new standard and then closed in the same change; a baseline above the truth silently permits new violations. Re-measured at 38 when the branch was re-pointed at current main, and the +4 is population growth rather than a loosening: main gained the four `road-to-inbox-harvest-2026-08-d-*` roadmaps (context-ledger, runtime-skill-routing, scheduled-deprecation, top-band-model-economy), each carrying one open blocker authored before this requirement existed. That is the honest number for the population this gate now scans — recording 34 against a 38-entry tree would have failed the gate on its own introducing commit and taught the next reader to distrust it. Lowering happens one blocker at a time, and every roadmap touched for other reasons is a chance to lower it. Lowered 38→37 by the scheduled-deprecation PR, which is exactly that shape: code-graph-removal-authorisation was rewritten to the new standard because the roadmap was being touched anyway. Its `If you do nothing:` is one of the few that is not the common no-cost answer — the release gate that PR ships refuses the next major cut while the blocker is open, which is the field doing the work it was added for. The 56-day expiry is the point, not a hazard: if this number has not moved in two months, the fields are not being written and the gate should fail until someone decides whether the requirement is real. Lowered 37→34 when the scheduled-deprecation branch merged current main: three blockers were resolved or rewritten on the trunk in the meantime, so the drop is a genuine drain plus a merge, not a loosening. Re-tightened here rather than left loose because a ratchet that lags its own tree permits violations back in silently.",
++      "note": "Open blocker entries that are not yet DECIDABLE by the person who owns them — missing `Recommendation:` (which option and why), missing `If you do nothing:` (the cost of the non-decision), or a `What to do:` carrying no command, path or enumerated option set. Revealed by adding the decidability half to lint_roadmap_blockers, not created by it: the five original fields describe a situation and never made it actionable, so a blocker could pass the contract while handing the analysis back to the person least equipped to redo it. Measured at introduction: 36 open entries, ALL 36 undecidable, and 14 of the 46 total entries carry no command/path/option at all in `What to do`. Baselined rather than hard-failed because 36 findings nobody can clear in the change that reveals them is the gate-that-lands-as-N-instant-blockers failure this repository has refused before — the same reasoning as ci-parity:local-only above. First measured at 34 rather than 36 because the two blockers on the branch that introduced this (`ac3-false-positive-reading`, `publish-side-marker-invariant`) were rewritten to the new standard and then closed in the same change; a baseline above the truth silently permits new violations. Re-measured at 38 when the branch was re-pointed at current main, and the +4 is population growth rather than a loosening: main gained the four `road-to-inbox-harvest-2026-08-d-*` roadmaps (context-ledger, runtime-skill-routing, scheduled-deprecation, top-band-model-economy), each carrying one open blocker authored before this requirement existed. That is the honest number for the population this gate now scans — recording 34 against a 38-entry tree would have failed the gate on its own introducing commit and taught the next reader to distrust it. Lowering happens one blocker at a time, and every roadmap touched for other reasons is a chance to lower it. Lowered 38→37 by the scheduled-deprecation PR, which is exactly that shape: code-graph-removal-authorisation was rewritten to the new standard because the roadmap was being touched anyway. Its `If you do nothing:` was one of the few that was not the common no-cost answer — the release gate that PR ships would have refused the next major cut while the blocker stayed open. Recorded in the past tense because the maintainer then RESOLVED that blocker on the trunk by withdrawing the commitment, so nothing refuses a cut today. The lowering stands on the rewrite, not on the consequence, and the sentence is corrected rather than deleted because a baseline note arguing from a retracted state is how a ratchet's rationale rots. The 56-day expiry is the point, not a hazard: if this number has not moved in two months, the fields are not being written and the gate should fail until someone decides whether the requirement is real. Lowered 37→34 when the scheduled-deprecation branch merged current main: three blockers were resolved or rewritten on the trunk in the meantime, so the drop is a genuine drain plus a merge, not a loosening. Re-tightened here rather than left loose because a ratchet that lags its own tree permits violations back in silently.",
        "falsifier": "./scripts-run src/scripts/lint_roadmap_blockers --quiet"
      },
      "lint_pack_boundaries": {
 diff --git a/src/scripts/lint_scheduled_deprecations.ts b/src/scripts/lint_scheduled_deprecations.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..c660280932956f4f2284ca6d2174429945b4a811
+index 0000000000000000000000000000000000000000..260409572cfc6394a5b32bea63a4397d3f7a738e
 --- /dev/null
 +++ b/src/scripts/lint_scheduled_deprecations.ts
-@@ -0,0 +1,716 @@
+@@ -0,0 +1,737 @@
 +#!/usr/bin/env node
 +/**
 + * Gate: the scheduled-deprecations table in `docs/MIGRATION.md` is checked by
@@ -667,8 +667,14 @@ index 0000000000000000000000000000000000000000..c660280932956f4f2284ca6d21744299
 +        const removal = resolveDueMajor(row.removalDueRaw, noticeMajor);
 +
 +        if (removal.kind === 'unpinned' || removal.kind === 'keep' || removal.kind === 'withdrawn') {
-+            // A tracked state, which is the outcome the table exists to record.
-+            ledger?.complete(key);
++            // A tracked state carries no comparable version, so the arithmetic
++            // never runs on it. Recorded as SKIPPED rather than completed: a row
++            // that skipped the comparison must not read the same as one that
++            // passed it, which is the false-green shape this whole gate is about
++            // — and today all three shipped rows are tracked states, so a
++            // `complete()` here meant the gate printed green over zero
++            // comparisons.
++            ledger?.skip(key, 'not_applicable_kind');
 +            continue;
 +        }
 +        if (removal.kind === 'unresolved') {
@@ -980,7 +986,13 @@ index 0000000000000000000000000000000000000000..c660280932956f4f2284ca6d21744299
 +    // `allowEmpty`: an empty scheduled-deprecations table is not a success
 +    // state while `MIGRATION.md` itself instructs that a promise without a row
 +    // is untracked.
++    const compared = tally.completed + tally.failed;
 +    try {
++        // The SCOPE assertion is on rows parsed: zero means the heading moved or
++        // the table's format drifted, which is the dead-scan-root case. How many
++        // of those rows the arithmetic actually reached is a different number,
++        // published beside it below — conflating the two is what let this gate
++        // report green over zero comparisons.
 +        reportScanned({
 +            gate: 'lint_scheduled_deprecations',
 +            scanned: tally.planned,
@@ -1004,7 +1016,10 @@ index 0000000000000000000000000000000000000000..c660280932956f4f2284ca6d21744299
 +                `removal-due cell not resolvable: "${f.row.removalDueRaw}"\n` +
 +                '    The grammar is documented at the top of this gate. Either write a\n' +
 +                '    concrete major, or record the row as not pinned, a permanent keep, or a\n' +
-+                '    withdrawn commitment with its reason.\n',
++                '    withdrawn commitment with its reason.\n' +
++                '    NOTE: the relative form ("the major after that") resolves against the\n' +
++                '    NOTICE cell, and a notice is written as a date once it ships — so a row\n' +
++                '    using it must be rewritten to a concrete major on notice day.\n',
 +        );
 +    }
 +
@@ -1059,7 +1074,13 @@ index 0000000000000000000000000000000000000000..c660280932956f4f2284ca6d21744299
 +    if (!quiet) {
 +        ledger.report();
 +        process.stdout.write(
-+            `✅  lint_scheduled_deprecations: ${String(tally.planned)} row(s), none due against ${against}\n`,
++            `✅  lint_scheduled_deprecations: ${String(tally.planned)} row(s) parsed, ` +
++                `${String(compared)} compared against ${against}, none due` +
++                (compared === 0
++                    ? ' — every row is a tracked state (not pinned / permanent keep / withdrawn),\n' +
++                      '    so NO arithmetic ran this time. Green here means "nothing to compare",\n' +
++                      '    not "the comparison passed".\n'
++                    : '.\n'),
 +        );
 +    }
 +    return 0;
@@ -1233,10 +1254,10 @@ index eec12e3ff020ea32001c822a64f2746dfafac0b4..452d5f78efc9ee7b0a1790890cb31e25
      desc: |
 diff --git a/tests/scripts/lint_scheduled_deprecations.test.ts b/tests/scripts/lint_scheduled_deprecations.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..c32828027d615b882088eece976027e5942413d8
+index 0000000000000000000000000000000000000000..5312c1580e32926e91dde7436825ac9563c58a67
 --- /dev/null
 +++ b/tests/scripts/lint_scheduled_deprecations.test.ts
-@@ -0,0 +1,246 @@
+@@ -0,0 +1,273 @@
 +/**
 + * Tests for `src/scripts/lint_scheduled_deprecations.ts`.
 + *
@@ -1404,6 +1425,33 @@ index 0000000000000000000000000000000000000000..c32828027d615b882088eece976027e5
 +        expect(r.stdout).toContain('none due');
 +    });
 +
++    it('a table of only tracked states says 0 compared — green is not "the comparison passed"', () => {
++        // The false-green shape this gate exists to prevent, applied to itself:
++        // a tracked-state row never reaches the arithmetic, so publishing rows
++        // PARSED as the whole story made a run that compared nothing read
++        // exactly like one that compared everything.
++        writeFixture(tmp, 12, [
++            '| `a` | 2026-01-01 | shipped 2026-01-02 | **not pinned here** | none |',
++            '| `b` | 2026-01-01 | 10.0 | documented permanent keep | none |',
++        ]);
++
++        const r = run(tmp);
++        expect(r.status).toBe(0);
++        expect(r.stdout).toContain('scanned: 2');
++        expect(r.stdout).toContain('2 row(s) parsed, 0 compared');
++        expect(r.stdout).toContain('NO arithmetic ran');
++        // The ledger must agree — skipped, not completed.
++        expect(r.stdout).toContain('skipped=2');
++    });
++
++    it('a comparable row IS counted as compared', () => {
++        writeFixture(tmp, 12, ['| `real` | 2026-01-01 | 12.0 | 13.0 | none |']);
++        const r = run(tmp);
++        expect(r.status).toBe(0);
++        expect(r.stdout).toContain('1 row(s) parsed, 1 compared');
++        expect(r.stdout).not.toContain('NO arithmetic ran');
++    });
++
 +    it('an unresolvable removal-due cell reds instead of being guessed at', () => {
 +        writeFixture(tmp, 12, ['| `vague_thing` | 2026-01-01 | soon | eventually | none |']);
 +
@@ -1484,7 +1532,7 @@ index 0000000000000000000000000000000000000000..c32828027d615b882088eece976027e5
 +    });
 +});
 diff --git a/tests/scripts/release.test.ts b/tests/scripts/release.test.ts
-index 364cf8cb684ea1a4c9deaa9fcca1ec8595f90e4f..849211a633d21c96408ee0473c2f90abd2183eb7 100644
+index 364cf8cb684ea1a4c9deaa9fcca1ec8595f90e4f..1f7c77533b41d676507c64d7132fabde614c9853 100644
 --- a/tests/scripts/release.test.ts
 +++ b/tests/scripts/release.test.ts
 @@ -49,6 +49,7 @@ import {
@@ -1495,7 +1543,7 @@ index 364cf8cb684ea1a4c9deaa9fcca1ec8595f90e4f..849211a633d21c96408ee0473c2f90ab
      CONVENTIONAL_RE,
      SEMVER_RE,
      _RELEASE_BRANCH_RE,
-@@ -878,3 +879,68 @@ describe('watch_pr_checks — failing-check summary (the scrolled-away-failure f
+@@ -878,3 +879,89 @@ describe('watch_pr_checks — failing-check summary (the scrolled-away-failure f
          expect(_failed_checks_report([])).toBe('');
      });
  });
@@ -1549,11 +1597,32 @@ index 364cf8cb684ea1a4c9deaa9fcca1ec8595f90e4f..849211a633d21c96408ee0473c2f90ab
 +        // the guard takes ONE version and never reads the current one. That is
 +        // the property, so assert the property rather than staging a duplicate
 +        // of the refusal test that cannot fail independently of it.
-+        expect(assert_scheduled_deprecations_clear.length).toBeLessThanOrEqual(3);
 +        const calls: string[][] = [];
 +        assert_scheduled_deprecations_clear('13.0.0', stub(0, calls));
-+        // Exactly one version reaches the gate, and it is the target.
++        // Exactly one version reaches the gate, and it is the target. An earlier
++        // revision of this test also asserted `Function.length`, which counts
++        // parameters before the first default and therefore held for any
++        // refactor — including one that reintroduces a `current` parameter. The
++        // argv content is the only thing that actually establishes the property.
 +        expect(calls[0]?.filter((a) => /^\d+\.\d+\.\d+$/.test(a))).toEqual(['13.0.0']);
++    });
++
++    it('previewOnly reports the refusal and does NOT throw — the dry-run contract', () => {
++        // The branch this function's own JSDoc names as a prior regression, and
++        // which no test reached: the integration dry-run tests spawn against the
++        // real repo, whose table is clean, so the guard returns on exit 0 long
++        // before the preview branch.
++        const calls: string[][] = [];
++        expect(() =>
++            assert_scheduled_deprecations_clear('13.0.0', stub(1, calls), { previewOnly: true }),
++        ).not.toThrow();
++        // It still consults the gate — a preview that skips the check shows nothing.
++        expect(calls).toHaveLength(1);
++        // And without previewOnly the identical input refuses, so the flag is
++        // what makes the difference rather than the fixture being toothless.
++        expect(() => assert_scheduled_deprecations_clear('13.0.0', stub(1, []))).toThrow(
++            SystemExitError,
++        );
 +    });
 +
 +    it('a multi-major jump is still a major cut', () => {
