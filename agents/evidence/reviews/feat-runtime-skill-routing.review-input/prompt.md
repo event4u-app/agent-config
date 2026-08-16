@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 179fc09e9f8734b335aac5dc222ef243da76cef9, review
-  artefacts excluded), scope hash `9da643ff7fdebb6241196409a7abdd8c466cf2cc881ce30651787b8dcda38afd`
+- diff: `diff.patch` — the review scope (branch head 43054b8e663d771e29dd102a41bbc639dfe194a7, review
+  artefacts excluded), scope hash `1289b029558dead88b0287ccb811407e884c2bc45e318038b9e3dd858fead765`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -30,6 +30,8 @@ Changed files:
 - README.md
 - agents/evidence/analysis/scoped-projection-host-delivery.md
 - agents/index.md
+- agents/reports/originality.json
+- agents/reports/originality.md
 - agents/roadmaps-progress.md
 - agents/roadmaps/archive/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md
 - agents/roadmaps/archive/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md
@@ -93,5 +95,5 @@ Fill the findings table in `feat-runtime-skill-routing.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 9da643ff7fdebb6241196409a7abdd8c466cf2cc881ce30651787b8dcda38afd, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 1289b029558dead88b0287ccb811407e884c2bc45e318038b9e3dd858fead765, reviewed <YYYY-MM-DD>
 ```

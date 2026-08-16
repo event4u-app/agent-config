@@ -125,6 +125,46 @@ index 1a158de29301930ab0718139c713733a80b04627..e0c756f3aeff1868428e69193605d206
  | rule | [`missing-tool-handling`](../src/rules/missing-tool-handling.md) | auto | CLI tool needed for the task is not installed — ask before working around it; do NOT install silently |
  | rule | [`model-recommendation`](../src/rules/model-recommendation.md) | auto | Task start, type switch, or skill/command with a model_tier — switch or suggest the right capability tier |
  | rule | [`no-attribution-footers`](../src/rules/no-attribution-footers.md) | auto | PR/issue/comment/commit bodies — no 'Generated with' / 'Co-authored by' / 'opened by' attribution footers |
+diff --git a/agents/reports/originality.json b/agents/reports/originality.json
+index 306ac11972b2db09b064b99acc084b4b15897dd8..c377697731f4b0036a3fa856855f82bc2be0f55c 100644
+--- a/agents/reports/originality.json
++++ b/agents/reports/originality.json
+@@ -1,12 +1,12 @@
+ {
+   "fail_threshold": 60,
+   "warn_threshold": 40,
+-  "artifacts_scanned": 515,
++  "artifacts_scanned": 519,
+   "distribution": {
+     "worst": 40,
+     "p95": 0,
+     "median": 0,
+-    "comparisons": 61161
++    "comparisons": 61951
+   },
+   "pairs": [
+     {
+diff --git a/agents/reports/originality.md b/agents/reports/originality.md
+index af6d4976bc96bfd51ca9e8197437f766bd4f4ee5..78c197ffa5caa7284ed58da8bb0a057f265f8459 100644
+--- a/agents/reports/originality.md
++++ b/agents/reports/originality.md
+@@ -1,13 +1,13 @@
+ # Originality audit — entity-neutralized shingle overlap
+ 
+-> Anti-reskin gate over 515 authored artifacts (skills · personas · commands), 
++> Anti-reskin gate over 519 authored artifacts (skills · personas · commands), 
+ class-scoped, scaffold-subtracted, k=8. Thresholds: FAIL 60 / WARN 40. 
+ This report blocks NOTHING on its own — `lint_originality --changed` is the CI gate.
+ 
+ 
+-- Artifacts scanned: **515**
++- Artifacts scanned: **519**
+ 
+-- Pairwise comparisons: **61161**
++- Pairwise comparisons: **61951**
+ 
+ - Overlap distribution: worst **40%** · p95 **0%** · median **0%**
+ 
 diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
 index 81500505dc3e0da9203971e6a59bc126ff410135..553ae12071d04fb68df30d2d08b5973522339535 100644
 --- a/agents/roadmaps-progress.md
