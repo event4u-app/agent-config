@@ -1,5 +1,5 @@
 # Findings: feat-scheduled-deprecation
-<!-- completion-review: v1 | reviewed: 2026-08-16 | scope: 1f6931ad909f1f146c728b8aae3f9f02e8132e9e1640d9769822bc8e761e5efc | diff: f5873b283cd6beb59528f346a552a60846f9ae9d | reviewer: r2-fresh-subagent-feat-scheduled-deprecation | prompt_hash: 7ccf193f42f360d22bae806f9bab036885b0d60fa717b335a44851b86b9c4dbc -->
+<!-- completion-review: v1 | reviewed: 2026-08-16 | scope: 1f6931ad909f1f146c728b8aae3f9f02e8132e9e1640d9769822bc8e761e5efc | diff: f5873b283cd6beb59528f346a552a60846f9ae9d | reviewer: r2-fresh-subagent-feat-scheduled-deprecation | prompt_hash: c8a0df4d7b0a8a76b5009a0c355800afa17de04bedc81bc55e3734aeedc03ed8 -->
 
 <!-- context-manifest: v1
 inputs:
