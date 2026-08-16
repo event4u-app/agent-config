@@ -34,8 +34,8 @@
     },
     "model_tier": {
       "type": "string",
-      "enum": ["lite", "medium", "high", "inherit"],
-      "description": "Vendor-neutral capability band (ADR-034/035). high/medium/lite project to a native Claude `model:` (high→opus, medium→sonnet, lite→haiku) via model_tier.ts; `inherit` is a documented passthrough sentinel (→ CC `model: inherit`), not a new mapping."
+      "enum": ["lite", "medium", "high", "frontier", "inherit"],
+      "description": "Vendor-neutral capability band (ADR-034/035, amended by ADR-232). frontier/high/medium/lite project to a native Claude `model:` via model_tier.ts; `inherit` is a documented passthrough sentinel (→ CC `model: inherit`), not a new mapping. `frontier` is the band above the strongest generally-recommended one - opt-in, expected to stay rare, and never the resolution of `inherit`."
     },
     "effort": {
       "type": "string",

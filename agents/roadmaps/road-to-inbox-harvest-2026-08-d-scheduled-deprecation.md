@@ -73,7 +73,7 @@ actual defect-fix — is not held hostage to a release window.
 
 ## Phase 2 — Give the two loose surfaces a tracked state
 
-- [ ] 2.1 Add the code-graph row's current status to the table: overdue by one
+- [x] 2.1 Add the code-graph row's current status to the table: overdue by one
       major, with the removal owner named. The row already exists; what it lacks
       is the fact that it was missed.
       <!-- verify: git show HEAD:docs/MIGRATION.md | grep -c 'code_graph' -->
@@ -94,18 +94,49 @@ actual defect-fix — is not held hostage to a release window.
 
 ### blocker: code-graph-removal-authorisation
 
-- **Status:** open
+- **Status:** resolved
+
+- **Resolution:** 2026-08-15 — option (b), commitment revised. The
+  maintainer took the measured framing: the payload this deprecation existed
+  for (the ~51 MB parser pair) already shipped to `devDependencies`, so source
+  removal frees 0.4 % while costing a breaking change across four
+  consumer-visible surfaces plus a Rung-0 re-plumb. `docs/MIGRATION.md` now
+  carries the withdrawal **with its reason**, and the row stays in the table
+  rather than being deleted — a recorded withdrawal is not the folklore this
+  table exists to prevent; an unrecorded one would be. New commitment: removal
+  on a concrete reason, not on a date.
 - **Owner:** user
 - **Blocks:** nothing in this roadmap — recorded so the overdue surface has an
   owner rather than only a report
 - **Question:** the code-graph removal is one major overdue against a recorded
   honest null. Does it execute at the next major cut, or does the commitment
-  change?
+  change? **The blast radius is now measured, and it reframes the choice:**
+  - **The payload this deprecation was about has already shipped.** The ~51 MB
+    `web-tree-sitter` / `tree-sitter-wasms` pair moved to `devDependencies`
+    ahead of schedule, so no consumer install carries it today. What removal
+    would still free is 112 K of source against a 27 M tree — 0.4 %.
+  - **It is a breaking change.** Consumer-visible surfaces: the
+    `agent-config code-graph <verb>` CLI, the `code-intelligence` skill
+    (`official` in the catalogue), the `external-code-graph-interop` rule, and
+    the `hooks.code_graph.enabled` settings key.
+  - **One surface is not deletable, it is re-plumbing.** `auto_dispatch.ts`
+    routes the `definition` / `references` lookup classes to
+    `primitive: 'code-graph-query'`, and `judgment_ladder.ts` calls that live at
+    Rung 0. Removing the engine without touching it leaves Rung 0 pointing at a
+    primitive that resolves to nothing.
+  - **There is no cheap middle.** `detect.ts` handles the `consumer` / `scip` /
+    `native` source kinds in one type union, so stripping "just the native
+    engine" while keeping consumer-index interop is a redesign, not a deletion.
+  So the honest framing is **"keep a stated promise" versus "this particular
+  removal buys nothing measurable"** — not "ship a meaningful cleanup".
 - **What to do:** pick exactly one — (a) authorise the removal at the next major
-  cut, in its own change with the migration note and the manifest test updated
-  together, or (b) revise the table's commitment for this surface and record why
-  the engine stays despite the null.
-- **Resolved when:** the user states which of (a) or (b) holds.
+  cut, accepting the re-plumbing of Rung 0 and the four consumer surfaces as
+  part of it; (b) revise the table's commitment for this surface, recording that
+  the dependency-weight win already landed and the source removal is a rounding
+  error; or (c) split it — retire the consumer-visible surfaces (CLI verb,
+  skill, rule, settings key) at the next major and keep the internals until a
+  reason to delete them appears.
+- **Resolved when:** the user states which of (a), (b) or (c) holds.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-15 | reviewer: claude/host -->
