@@ -10,7 +10,7 @@
 // Env: BUDGET_STORE, BUDGET_CONFIG, BUDGET_PERIOD={today|week|month|all}, BUDGET_QUIET=1
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 
 const STORE = process.env.BUDGET_STORE || 'agents/cost-tracking/sessions.jsonl';
 const CONFIG = process.env.BUDGET_CONFIG || 'agents/cost-tracking/budget.json';
@@ -200,20 +200,16 @@ function cmdCheck() {
 
 // --- Per-tier budget state (docs/contracts/budget-routing.md) -------------
 // v1 window for per-tier ceilings: rolling 24h for SPEND (ledger entries
-// tagged `tier:`). Pending reserves from tier-reserves.jsonl count only
-// within the shared reserve TTL — reserves are race protection, not spend
-// accounting. The TTL comes from src/config/budget-routing.json, the SAME
-// source acquireBudgetPermit reads, so the two readers cannot diverge
-// (external review 2026-08-03, Finding 1b).
-
-function loadReserveTtlMs() {
-  try {
-    const cfgPath = join(dirname(new URL(import.meta.url).pathname), '..', '..', 'config', 'budget-routing.json');
-    const raw = JSON.parse(readFileSync(cfgPath, 'utf-8'));
-    if (Number.isFinite(raw.reserve_ttl_ms)) return raw.reserve_ttl_ms;
-  } catch { /* fall through to the safe default below */ }
-  return 600000;
-}
+// tagged `tier:`).
+//
+// The pending-RESERVE half was removed 2026-08-16 with the permit lifecycle it
+// belonged to (converged council verdict, anthropic + openai 2 of 2; migration
+// record in the contract above). This reader summed `tier-reserves.jsonl`, whose
+// only writer was `acquireBudgetPermit` — a function with no production caller —
+// so `reserved_usd` was provably always 0 here, and a reader could not tell that
+// zero from "nothing is currently reserved". The shared-TTL config it loaded
+// (src/config/budget-routing.json) existed solely to keep the two reserve
+// readers in step and went with them.
 
 function loadPerTierCeilings() {
   const out = { cheap: null, medium: null, strong: null };
@@ -245,29 +241,13 @@ function cmdTier(rest) {
   const spent = loadSessions()
     .filter((s) => s.tier === tier && inWindow(s.capturedAt || s.endedAt || s.ts))
     .reduce((acc, s) => acc + (Number(s.total_cost_usd ?? s.cost_usd ?? 0) || 0), 0);
-  let reserved = 0;
-  const reserveTtl = loadReserveTtlMs();
-  const reservePath = join(dirname(STORE), 'tier-reserves.jsonl');
-  if (existsSync(reservePath)) {
-    for (const line of readFileSync(reservePath, 'utf-8').split('\n')) {
-      if (!line.trim()) continue;
-      try {
-        const e = JSON.parse(line);
-        if (e.tier === tier && e.status === 'pending' && (now - e.ts_ms) < reserveTtl) {
-          reserved += Number(e.est_usd || 0) || 0;
-        }
-      } catch { /* skip malformed line */ }
-    }
-  }
   const ceiling = loadPerTierCeilings()[tier];
-  const available = ceiling === null ? true : spent + reserved < ceiling;
+  const available = ceiling === null ? true : spent < ceiling;
   console.log(JSON.stringify({
     tier,
     window: 'rolling-24h',
-    reserve_ttl_ms: reserveTtl,
     ceiling_usd: ceiling,
     spent_usd: spent,
-    reserved_usd: reserved,
     available,
   }));
 }

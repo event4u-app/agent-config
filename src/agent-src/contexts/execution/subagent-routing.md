@@ -38,26 +38,23 @@ THE SAME MINUS THE QUOTA WIN.
    the tier/model choice is unchanged. This is the only place the
    "Sonnet-has-its-own-allowance" idea lives, and it lives as a runtime-detected
    flag, never as portable prose.
-4. **Budget routing** (design:
-   [`budget-routing` contract](../../../../docs/contracts/budget-routing.md)) →
-   AFTER the tier resolves per 1–3, the budget relation via `pickTier`
-   (`src/scripts/_lib/tier_budget_routing.ts`) would apply: cheapest
-   classifier-adequate tier WITH available budget; that tier exhausted or
-   cooling → next tier up with budget; all unavailable → session model +
-   surfaced one-line notice. Work is never blocked to save money. Before
-   the dispatch is created, acquire the atomic reserve
-   (`acquireBudgetPermit`; check state via `node src/scripts/cost/budget.mjs
-   tier <t>`); a 429/quota error trips `tripCooldown` for that tier and
-   falls back per the relation — never a retry loop.
-   `subagents.budget_routing` was removed as a settings key (always-on
-   orchestration, road-to-always-on-orchestration Phase 1: no per-layer
-   on/off switch survives) — `pickTier` has NO production caller today, so
-   this point documents the DESIGNED relation, not a currently wired one;
-   wiring it is a later phase of that roadmap (council-side
-   `cli_call_budget`/`cost_budget` are the caps that replace the settings
-   gate). Every budget-routed dispatch, once wired, would emit one
-   `orchestration_record` line (tier + provenance-tagged token delta) so
-   realized savings are measured, not asserted.
+4. **Budget routing — ARCHIVED 2026-08-16, there is no fourth step.** This
+   position used to describe a budget relation applied after the tier resolves
+   per 1–3: cheapest classifier-adequate tier WITH available budget, an atomic
+   pre-dispatch reserve, a cool-down on quota errors. None of it exists any
+   more. A converged AI-council verdict (anthropic + openai, 2 of 2) archived
+   `pickTier` and the permit lifecycle, because the `routing_switch` they
+   required lost its only source when `subagents.budget_routing` was deliberately
+   deleted by always-on orchestration — so wiring meant inventing a replacement
+   for a removed category — and because `session_tier` sits non-null in 0 of 327
+   records, leaving the saving unmeasurable in principle. Migration record and
+   the union revisit-if:
+   [`budget-routing` contract](../../../../docs/contracts/budget-routing.md).
+   **Tier resolution therefore ends at step 3.** What survives of the module is
+   `TIER_ORDER` and `readCooldowns`, read by `routing:doctor` as a diagnostic —
+   monitoring, not routing, and note that nothing writes the cool-down file any
+   more, which is why the doctor reports that state as *unavailable, no
+   producer* rather than as a measured "not cooling".
 
 ### The top-band invariant (binding)
 
@@ -196,8 +193,10 @@ rule, or context asserts "model X is free".
 [`src/scripts/_lib/subagent_routing.ts`](../../../../src/scripts/_lib/subagent_routing.ts)
 (`resolveSubagentRouting`), covered by
 [`tests/scripts/_lib_subagent_routing.test.ts`](../../../../tests/scripts/_lib_subagent_routing.test.ts).
-Budget layer: [`src/scripts/_lib/tier_budget_routing.ts`](../../../../src/scripts/_lib/tier_budget_routing.ts)
-(`pickTier`, `acquireBudgetPermit`, cool-downs), covered by
+Tier vocabulary + cool-down state:
+[`src/scripts/_lib/tier_budget_routing.ts`](../../../../src/scripts/_lib/tier_budget_routing.ts)
+(`TIER_ORDER`, `readCooldowns` — the budget decision layer that used to live
+there is archived, see step 4), covered by
 [`tests/scripts/tier_budget_routing.test.ts`](../../../../tests/scripts/tier_budget_routing.test.ts);
 live state: `agent-config routing:doctor` (orchestration section).
 

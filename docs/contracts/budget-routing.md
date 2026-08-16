@@ -1,16 +1,67 @@
-# Budget Routing — cheapest adequate tier WITH available budget
+# Budget Routing — ARCHIVED, migration record
 
-Status: v1, accepted with road-to-tested-routing Phase 7 (design locked by
+**Status: RETIRED 2026-08-16. This page is a migration record, not a live
+contract. Nothing below is implemented.** AC1–AC5 are formally retired: they
+were pre-registered against a mechanism with no production caller and no
+possible measurement basis, so they could never fire — and an acceptance
+criterion that cannot fire reads as coverage that does not exist.
+
+Previously: v1, accepted with road-to-tested-routing Phase 7 (design locked by
 AI council, claude-sonnet-4-5 + gpt-4o, 2026-08-03).
 
-> **Amendment (road-to-always-on-orchestration Phase 1).** The
-> `subagents.budget_routing` settings key named throughout this contract was
-> DELETED — always-on orchestration carries no per-layer on/off setting.
-> `pickTier` (the decision layer this contract specifies) has no production
-> caller today, so every mention below documents the DESIGNED relation, not
-> a currently wired one; wiring it is a later phase of that roadmap, and the
-> council-side `cli_call_budget`/`cost_budget` caps are the ones that replace
-> the settings-gated ask/auto/off switch this page still describes.
+## Why it was retired
+
+Reversed by a converged AI-council verdict — anthropic (claude-sonnet-4-5) and
+openai, **2 of 2**, 2026-08-16, neither reporting a premise correction. The
+question, the six verified facts and both answers are recorded in
+`road-to-inbox-harvest-2026-08-d-top-band-model-economy.md` § blocker
+`picktier-wire-or-archive`.
+
+The reversal rests on a changed mechanism rather than a changed preference,
+which is the case `decision-revisit-gate` anticipates. `pickTier` required a
+`routing_switch` input whose sole source — the `subagents.budget_routing`
+settings key — was **deliberately deleted** by always-on orchestration. Wiring
+it would have meant inventing a replacement for a category removed on purpose,
+not completing an integration. Alongside that: zero production callers, and
+`session_tier` non-null in **0 of 327** orchestration records, so the saving the
+layer existed to produce could not be measured even in principle.
+
+One correction the council made to the amendment this page used to carry: the
+council-side `cli_call_budget` / `cost_budget` caps do **not** replace the
+deleted switch. They gate total council spend; the switch gated per-tier
+selection. Complementary mechanisms — the old wording was wrong.
+
+## What was removed, and what stayed
+
+Removed from `src/scripts/_lib/tier_budget_routing.ts`: `pickTier`, its input
+and decision types, `BudgetRoutingSwitch`, `TierBudgetState`,
+`acquireBudgetPermit`, `settlePermit`, `tripCooldown`, `reserveTtlMs`,
+`RESERVE_FILE`, `DEFAULT_COOLDOWN_MS` and the reserve/lock machinery. The
+pre-registered suites in `tests/scripts/tier_budget_routing.test.ts` went with
+them. `src/config/budget-routing.json` was deleted — it existed only to keep the
+two reserve readers on one TTL, and both are gone. `src/scripts/cost/budget.mjs`
+(`tier` subcommand) lost its `reserved_usd` term for the same reason: that store
+had exactly one writer, `acquireBudgetPermit`, so the figure was provably always
+zero and indistinguishable from "nothing is reserved".
+
+Kept: `TIER_ORDER` and `readCooldowns`, which have a live consumer in
+`routing_doctor.ts`. That is monitoring, not routing, and it never depended on
+the decision layer.
+
+## Revisit-if
+
+Both members attached a condition, and the union is the bar. Reopen when an
+authoritative per-request tier-selection signal exists **with a named production
+dispatch point**, AND orchestration telemetry carries both the chosen and the
+realized tier so a saving can actually be computed. anthropic additionally
+accepts a new selection source arriving organically from unrelated work, or
+`session_tier` populated in >10 % of records over 30+ consecutive sessions.
+
+Everything below is the retired v1 design, kept verbatim as the record of what
+was decided on 2026-08-03 and what any future implementation would be
+reversing.
+
+---
 
 ## The relation (binding)
 

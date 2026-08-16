@@ -257,7 +257,13 @@ describe("budget-routing delivery evidence (review Finding 2)", () => {
     );
   }
 
-  it("WARNs when dispatches are recorded but zero carry a tier decision (always-on: no gating setting)", () => {
+  // Repointed 2026-08-16 with the surface it covers. The counter is unchanged —
+  // the wording is not: budget routing is archived, so "no delivery evidence"
+  // asserted a defect that is now the designed state, and a warning that can
+  // never be acted on is the dead-advisory shape this repo removes elsewhere.
+  // The assertion deliberately pins the two things that still carry meaning: the
+  // count, and that the text routes the reader to the migration record.
+  it("reports zero tier-decision coverage and routes to the archival record", () => {
     const ws = tmpDir("routing-doctor-ws-");
     auditFixture(ws, [
       { id: "a", spawn_count: 3, task_class: "read-only-fanout" },
@@ -266,7 +272,9 @@ describe("budget-routing delivery evidence (review Finding 2)", () => {
     const report = collect_report({ platform: "claude", workspace_root: ws, no_freshness: true });
     expect(report.orchestration.delivery.eligible_dispatches).toBe(2);
     expect(report.orchestration.delivery.budget_evidence_lines).toBe(0);
-    expect(report.orchestration.delivery.warning).toContain("no delivery evidence");
+    expect(report.orchestration.delivery.warning).toContain("0 of 2");
+    expect(report.orchestration.delivery.warning).toContain("budget-routing.md");
+    expect(report.orchestration.delivery.warning).not.toContain("may not be running");
   });
 
   it("stays silent when tier-carrying lines exist", () => {
