@@ -1679,23 +1679,23 @@ export class AnthropicCliClient extends CliClient {
             // documented "disable all tools" value.
             //
             // It also repairs a live failure, which is how the grant was found
-            // rather than reasoned about. The spawn inherits the caller's cwd
-            // (`_runSubprocess` sets none, deliberately — the worker-role marker
-            // below depends on the vendor CLI loading this repo's hook chain),
-            // so invoking the council from inside a repository made the child
-            // load that project's own instructions AND every tool definition.
-            // In this package that overflowed the model's context window
-            // outright: `is_error: true`, `"the request is ~214331 tokens
+            // rather than reasoned about. AT THE TIME (2026-08-12) the spawn
+            // inherited the caller's cwd, so invoking the council from inside a
+            // repository made the child load that project's own instructions AND
+            // every tool definition. In this package that overflowed the context
+            // window outright: `is_error: true`, `"the request is ~214331 tokens
             // (limit 200000) … the rest is system prompt, tool definitions"`,
-            // exit 1, empty stderr — so the member reported as unavailable with
-            // no diagnosable cause. Measured 2026-08-12: identical call from
-            // `/tmp` exit 0, from the worktree exit 1, and adding this one flag
-            // returns the worktree call to exit 0.
+            // exit 1, empty stderr — the member reported unavailable with no
+            // diagnosable cause. Identical call from `/tmp` exit 0, from the
+            // worktree exit 1, and this one flag returns the worktree to exit 0.
             //
-            // Dropping the tools rather than neutralising the cwd is the
-            // narrower fix of the two: it leaves the worker-role hook chain
-            // intact and removes only the capability the role never had a use
-            // for. The context saving is a consequence, not the justification.
+            // TENSE CORRECTED 2026-08-16. This block read "`_runSubprocess` sets
+            // none, deliberately" and "dropping the tools RATHER THAN
+            // neutralising the cwd" — both false since `_runSubprocess` set
+            // `cwd: os.tmpdir()` for a DIFFERENT contamination (a member
+            // answering this repo's `end-review-nudge`). Two repairs, one
+            // symptom, neither aware of the other, so a reader here concluded
+            // the cwd is inherited. Both are live; this flag bounds what a member may DO.
             '--tools',
             '',
             '--append-system-prompt',
