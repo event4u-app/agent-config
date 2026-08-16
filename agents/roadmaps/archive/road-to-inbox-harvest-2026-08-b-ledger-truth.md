@@ -10,7 +10,14 @@ parent_roadmap: road-to-inbox-harvest-2026-08-b.md
 
 > Source (consumed inbox): `agents/tmp.old/ac-cost-ledger-mechanics` and
 > `agents/tmp.old/ac-cache-breakpoints` — part of the 2026-08-10 batch triaged by
-> [`road-to-inbox-harvest-2026-08-b.md`](road-to-inbox-harvest-2026-08-b.md).
+> [`road-to-inbox-harvest-2026-08-b.md`](road-to-inbox-harvest-2026-08-b.md)
+> — re-pointed 2026-08-16: the parent archived on 2026-08-14 and this link had
+> been dangling since, which is the inbound-reference migration the archival
+> sweep is supposed to do and did not do for a link inside a sibling roadmap.
+> It now resolves as a sibling because this file archived too; the pre-existing
+> `../../` links below are **not** re-depthed here, deliberately — the sweep
+> re-depths nothing, that is a tree-wide condition, and repairing it one file at
+> a time inside an unrelated PR is the drive-by `minimal-safe-diff` forbids.
 
 ## Context / What is verified
 
@@ -221,10 +228,41 @@ they are never cross-checked, and **they match model ids by different strategies
       importing it would scan the developer's real `~/.claude`), including a
       negative control on a priced model; mutation-proven — dropping the
       `tier === 'unknown'` guard reds the control and the mixed-session case.
-- [ ] **2.5 Backfill machinery for `rate_missing` rows.** Blocked behind
-      `unknown-model-row-never-observed` — see `## Blockers`. Writing a
+- [x] **2.5 Backfill machinery for `rate_missing` rows.** ~~Blocked behind
+      `unknown-model-row-never-observed` — see `## Blockers`.~~ Writing a
       re-pricing pass before a single real unknown-model row exists would be
       built against a shape nobody has seen.
+      <!-- verify: npx vitest run tests/scripts/cost_backfill_rates.test.ts -->
+      **Shipped 2026-08-16, against an observed row rather than a guessed one.**
+      The blocker's premise was true and had stopped being a reason to wait: the
+      producer it named as "a step upstream" is runnable offline in one command,
+      and the local corpus contains a model id `modelTier()` cannot match, so a
+      flagged row was guaranteed rather than hoped for. Field set, the run that
+      produced it, and the two limits below are recorded once in
+      [`rate-missing-observed-row`](../../evidence/analysis/rate-missing-observed-row.md).
+      `src/scripts/cost/backfill_rates.mjs` re-prices from the token counts 2.4
+      preserved — no transcript re-read — with an **operator-supplied** rate
+      table (tier alias or explicit per-1M rates); it never guesses a price for
+      an id the producer did not recognise, and it rejects an unknown alias or a
+      table missing a key **by name** rather than defaulting one.
+      **Dry run is the default**; `--apply` rewrites via temp-then-rename.
+      **The flag clears only when nothing unpriced remains** — a row re-priced
+      for one model while another still has no rate stays flagged, because it is
+      still understated. That is the same silent zero 2.4 removed, one layer up.
+      **Two limits are properties of the stored row, and both are recorded on
+      the row instead of papered over**: `cache_ttl_assumed: "5m"` (the row
+      aggregates the 5m/1h cache-write split away) and
+      `bucket_split_repaired: false` (no per-bucket-per-model tokens exist, so
+      the recovered cost cannot be attributed to main vs subagent — inventing a
+      ratio would be the worse number). `cost-summary-schema` carries both as a
+      v1 additive `rate_backfill` extension, next to its `by_date` precedent.
+      Pinned by 15 tests, unit **and** subprocess, and **mutation-proven, not
+      coverage-proven**: dropping the idempotence guard, the zero-billable-token
+      guard, or the still-unpriced recomputation each reds exactly one test
+      (1 failed / 14 passed in all three), and all three revert to 15/15.
+      Measured on the observed row: re-pricing recovered **$496.55** against a
+      reported **$12.82** — one unrecognised id had made the session's cost
+      figure wrong by roughly a factor of forty.
       **Glyph corrected `[~]` → `[ ]` when the rest of the roadmap closed, and
       stated rather than done quietly.** `[~]` means *deferred*; this step is
       *blocked*, which is what `[ ]` plus a recorded blocker already says — it
@@ -348,7 +386,7 @@ they are never cross-checked, and **they match model ids by different strategies
 ## Blockers
 
 ### blocker: unknown-model-row-never-observed
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 2.5 only. Steps 2.1-2.4 are unblocked — 2.4 is what makes an
   unknown-model row detectable in the first place, and Phases 1 and 3 do not
@@ -367,3 +405,16 @@ they are never cross-checked, and **they match model ids by different strategies
 - **Resolved when:** at least one real `rate_missing` row exists and its field set
   is written down, so a backfill pass can be built against an observed shape
   rather than a guessed one.
+- **Resolved 2026-08-16 — and the transferable half is why it sat open for three
+  days.** A real flagged row exists (`claude-fable-5`, 468 messages, 236,695,963
+  cache-read tokens, priced at $0) and its field set is written down in
+  [`rate-missing-observed-row`](../evidence/analysis/rate-missing-observed-row.md).
+  The 2026-08-13 probe above was **correct on every fact and wrong in its verb**:
+  it identified the missing precondition — the ledger has no rows because
+  `track.mjs` had never run — and then filed it as something to *wait* for.
+  Nothing was waiting on anyone. The producer takes a `TRACK_STORE` override,
+  touches no network, and the local corpus already contained a model id
+  `modelTier()` cannot match, so the flagged row was **guaranteed by the corpus**
+  before the command ran rather than hoped for. A blocker whose own diagnosis
+  names an offline, in-session precondition is not blocked; it is undone. The
+  cost of not re-reading it that way was three days and one re-screen per cycle.
