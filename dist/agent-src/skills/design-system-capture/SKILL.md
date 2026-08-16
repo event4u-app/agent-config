@@ -306,6 +306,10 @@ handoff shape emitted alongside `design-system.json`
   — when the artifact is a mock — an explicit "prototype, not production code"
   warning so a consumer never ships the reference verbatim.
 
+**What to capture FROM** a running project: sources first, SSR fetch second,
+rendered snapshot only with consumer tooling; record the git SHA. Rationale:
+[snapshot preference order](references/snapshot-preference-order.md).
+
 ## Gotcha
 
 - **Over-writing instead of diff-updating** — the most common failure.
