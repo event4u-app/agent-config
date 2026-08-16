@@ -3305,6 +3305,27 @@ index 0000000000000000000000000000000000000000..c131ad82713cf9c29a217ae1d67de358
 +        expect(Buffer.byteLength(worst)).toBeLessThan(512);
 +    });
 +});
+diff --git a/tests/scripts/hook_role_axis.test.ts b/tests/scripts/hook_role_axis.test.ts
+index bcff64dc274d327706b1a96a84b6137ff225a238..71e3d8e3876c7ee25010b415b340032275a6dacc 100644
+--- a/tests/scripts/hook_role_axis.test.ts
++++ b/tests/scripts/hook_role_axis.test.ts
+@@ -24,9 +24,16 @@ const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
+  * worker neither talks to the user nor can clear its own session — the same
+  * reason `end-review-nudge` sits here. Its recording half is orchestrator
+  * business too: the fill level that matters is the main session's.
++ *
++ * `skill-route` joined in road-to-inbox-harvest-2026-08-d-runtime-skill-routing
++ * Phase 2, for the reason `delegation-nudge` is on the list rather than a new
++ * one: a worker was handed a bounded slice by an orchestrator that already
++ * chose the approach, so a routing pointer reaches nobody who can act on it
++ * while still costing the dispatch and a catalogue read.
+  */
+ const WORKER_DROP = [
+     'delegation-nudge',
++    'skill-route',
+     'end-review-nudge',
+     'council-availability',
+     'team-review-gate',
 diff --git a/tests/scripts/mcp_server_tools.test.ts b/tests/scripts/mcp_server_tools.test.ts
 index 7970c95139a1a636667fd9d228bc3f0df886ad93..692d1834e27508fe2bc2d040bdfa820ebbed1ac4 100644
 --- a/tests/scripts/mcp_server_tools.test.ts

@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head ec7b34b37649a238dca949c98bf4458c4ebca69e, review
-  artefacts excluded), scope hash `efe7f8d65eb86261a6c1c7a36d3358241601b91744ebf9fd9866246ec5c08fc5`
+- diff: `diff.patch` — the review scope (branch head 179fc09e9f8734b335aac5dc222ef243da76cef9, review
+  artefacts excluded), scope hash `9da643ff7fdebb6241196409a7abdd8c466cf2cc881ce30651787b8dcda38afd`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -69,6 +69,7 @@ Changed files:
 - src/skills/systematic-debugging/SKILL.md
 - src/skills/threat-modeling/SKILL.md
 - tests/hooks/skill_route_hook.test.ts
+- tests/scripts/hook_role_axis.test.ts
 - tests/scripts/mcp_server_tools.test.ts
 - tests/scripts/report_skill_activation.test.ts
 
@@ -92,5 +93,5 @@ Fill the findings table in `feat-runtime-skill-routing.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope efe7f8d65eb86261a6c1c7a36d3358241601b91744ebf9fd9866246ec5c08fc5, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 9da643ff7fdebb6241196409a7abdd8c466cf2cc881ce30651787b8dcda38afd, reviewed <YYYY-MM-DD>
 ```
