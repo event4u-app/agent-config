@@ -126,24 +126,24 @@ index 1a158de29301930ab0718139c713733a80b04627..e0c756f3aeff1868428e69193605d206
  | rule | [`model-recommendation`](../src/rules/model-recommendation.md) | auto | Task start, type switch, or skill/command with a model_tier — switch or suggest the right capability tier |
  | rule | [`no-attribution-footers`](../src/rules/no-attribution-footers.md) | auto | PR/issue/comment/commit bodies — no 'Generated with' / 'Co-authored by' / 'opened by' attribution footers |
 diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
-index e8931a18b95b7377277f6161fd1493edccbc9a8f..1d59bb7bf86ec52d042d49ac7ac66fef6a189424 100644
+index 81500505dc3e0da9203971e6a59bc126ff410135..553ae12071d04fb68df30d2d08b5973522339535 100644
 --- a/agents/roadmaps-progress.md
 +++ b/agents/roadmaps-progress.md
 @@ -2,24 +2,16 @@
  
  > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
  >
--> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **34** open blockers, **9** need you → `agent-config gates`
-+> 30 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **34** open blockers, **9** need you → `agent-config gates`
+-> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **35** open blockers, **10** need you → `agent-config gates`
++> 30 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **35** open blockers, **10** need you → `agent-config gates`
  
  ## Overall
  
--**245 / 470 steps done · 52%**
-+**235 / 446 steps done · 53%**
+-**253 / 469 steps done · 54%**
++**243 / 445 steps done · 55%**
  
  ```text
--█████████████████████░░░░░░░░░░░░░░░░░░░   52%
-+█████████████████████░░░░░░░░░░░░░░░░░░░   53%
+-██████████████████████░░░░░░░░░░░░░░░░░░   54%
++██████████████████████░░░░░░░░░░░░░░░░░░   55%
  ```
  
 -## ✅ Completed — pending archival
@@ -163,7 +163,7 @@ index e8931a18b95b7377277f6161fd1493edccbc9a8f..1d59bb7bf86ec52d042d49ac7ac66fef
  | 14 | [road-to-inbox-harvest-2026-08-d-archive-index.md](roadmaps/road-to-inbox-harvest-2026-08-d-archive-index.md) | 2 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 -| 15 | [road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md](roadmaps/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md) | 4 | 14 | 14 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 -| 16 | [road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md](roadmaps/road-to-inbox-harvest-2026-08-d-scheduled-deprecation.md) | 2 | 10 | 0 | 10 | 0 | 0 | 0 | ██████████ 100% |
--| 17 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 11 | 3 | 0 | 0 | 0 | ██░░░░░░░░ 21% |
+-| 17 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 2 | 11 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy) | ████████░░ 85% |
 -| 18 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
 -| 19 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 -| 20 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
@@ -179,7 +179,7 @@ index e8931a18b95b7377277f6161fd1493edccbc9a8f..1d59bb7bf86ec52d042d49ac7ac66fef
 -| 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 -| 31 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 -| 32 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-+| 15 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 11 | 3 | 0 | 0 | 0 | ██░░░░░░░░ 21% |
++| 15 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 2 | 11 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy) | ████████░░ 85% |
 +| 16 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 4 | 0 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | ░░░░░░░░░░ 0% |
 +| 17 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 +| 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
@@ -224,7 +224,7 @@ index e8931a18b95b7377277f6161fd1493edccbc9a8f..1d59bb7bf86ec52d042d49ac7ac66fef
 -
  ### [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md)
  
- **Road to at most one top-band context per task** — 3 / 14 done (21%)
+ **Road to at most one top-band context per task** — 11 / 13 done (85%)
 diff --git a/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md b/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md
 new file mode 100644
 index 0000000000000000000000000000000000000000..c41a03d36a3ad77ae290aa13283e3c8e9baaebfa

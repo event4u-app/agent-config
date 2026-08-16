@@ -1,16 +1,16 @@
 # Findings: feat-runtime-skill-routing
-<!-- completion-review: v1 | reviewed: 2026-08-16 | scope: 23834df9ff6bf95f5b87db749a2ae0f99de6a9cc85a03917e2f535d895c4eb2f | diff: 35735256cbefccea79455a61c323cd37685920c3 | reviewer: r2-fresh-subagent-feat-runtime-skill-routing | prompt_hash: 467dad714b61ced2012598d2bf18fe93d287ddb3bc0c5f9731b84d9f0ed8e126 -->
+<!-- completion-review: v1 | reviewed: 2026-08-16 | scope: 144719f540a8f4ef9c728800b713e63f2952221caa27a9ba3b862c2452417434 | diff: 13f0938f270994bbb227965710f60518d71161d4 | reviewer: r2-fresh-subagent-feat-runtime-skill-routing | prompt_hash: 1467499e5df14a2c70296e487b4b46e0b3e5fdec5138821a437e9ee211c3a5ad -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 35735256cbefccea79455a61c323cd37685920c3
-  scope_hash: 23834df9ff6bf95f5b87db749a2ae0f99de6a9cc85a03917e2f535d895c4eb2f
+  diff_sha: 13f0938f270994bbb227965710f60518d71161d4
+  scope_hash: 144719f540a8f4ef9c728800b713e63f2952221caa27a9ba3b862c2452417434
   roadmap: agents/roadmaps/archive/road-to-inbox-harvest-2026-08-d-runtime-skill-routing.md
   roadmap_hash: b0c140f9189e5b56cde85411c494d5e8cd3405814093a0909b5b2e777ea7e2cc
   ac_hash: 40570cff383bec4918684bc965b86fd94477bd611de4363080845deecfc0fef0
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-08-16T10:41:04Z
+dispatched: 2026-08-16T10:56:20Z
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
