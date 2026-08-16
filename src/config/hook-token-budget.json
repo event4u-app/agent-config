@@ -27,7 +27,9 @@
         "reread-guard": 1024,
         "reread-guard_reason": "one advisory line naming the earlier read / ranged alternative (roadmap 6.1)",
         "session-eol": 1024,
-        "session-eol_reason": "one recycle-advisory line, once per session past the committed threshold (road-to-token-economy-recycling 3.2); recording itself emits nothing"
+        "session-eol_reason": "one recycle-advisory line, once per session past the committed threshold (road-to-token-economy-recycling 3.2); recording itself emits nothing",
+        "skill-route": 512,
+        "skill-route_reason": "road-to-inbox-harvest-2026-08-d-runtime-skill-routing 2.1: one line carrying at most three skill ids and their scores - pointers, never bodies. Registered BELOW the 1024 default deliberately: this row is the ceiling that keeps it a pointer line, so a later change that starts injecting descriptions fails the build instead of quietly doubling a per-turn slot that already carries nine other concerns under a 4096-byte sum cap"
     },
     "per_slot_sum_caps_bytes": {
         "_comment": "Cross-concern per-fire sum per slot (roadmap 3.1). session_start is one-time and may carry the restore payloads; per-turn slots stay tight.",
@@ -49,6 +51,11 @@
         "_comment": "Roadmap 5.3 + 6.4 registrations. These are BEHAVIOUR metrics (advisory adoption), not injection bytes - registered here because this file already carries the owner/review discipline for the same concerns.",
         "owner": "maintainer",
         "review_by": "2026-11-10",
+        "skill_route_pointer_rate": {
+            "definition": "road-to-inbox-harvest-2026-08-d-runtime-skill-routing 2.2: skill-route fires / user_prompt_submit events per session - the share of prompts where the deterministic ranker cleared its measured p90 floor and injected pointers. NO THRESHOLD IS COMMITTED, deliberately and by the house baseline-first rule: the TRIGGER is calibrated (top-1 >= 30/100, the p90 of 496 routing-matrix prompt lines, expected to fire on ~13.9%), the OUTCOME is not. Kill standard as for the sibling nudges: a nudge whose pointers are measurably ignored over the review window gets its floor raised or its line removed. Expected fire rate is the falsifier for the trigger half - a live rate far from 13.9% means the corpus is not representative of real prompts, which is a finding about the corpus and is published either way.",
+            "instrument": "rule-trips.json warn counters for the skill-route concern (fires) + conformance audits for whether the pointed-at skill was opened (adoption); HONEST GAP: no deterministic counter exists for 'the agent acted on the pointer' - the numerator is audit-carried and registered as such rather than implied to be automatic",
+            "threshold": "none committed before data - baseline first, threshold at review date (2026-11-10)"
+        },
         "full_rewrite_small_diff_rate": {
             "definition": "edit-shape fires / Write calls per session (the full-rewrite-with-small-diff rate). Kill criterion per the shipped nudge standard: a nudge whose verdicts are measurably ignored (adoption near zero over the review window, from conformance audits) gets its trigger tightened or the injected line removed.",
             "instrument": "rule-trips.json warn counters (the dispatcher already counts every warn per concern) + conformance audits for adoption"
