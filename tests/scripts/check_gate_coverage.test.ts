@@ -555,4 +555,18 @@ describe('ledgerOutcomeFor — inspected vs not inspected', () => {
         // be sent hunting for an unset token.
         expect(ledgerOutcomeFor('unavailable')).not.toBe('missing_credentials');
     });
+
+    it('does not blame a dead scan root for a gate that threw', () => {
+        // Same audit-sentence class as the credential case above: `crashed`
+        // means the check could not execute, and its root is usually fine.
+        expect(ledgerOutcomeFor('crashed')).toBe('check_did_not_run');
+        expect(ledgerOutcomeFor('estate_invalid')).toBe('dead_scan_root');
+    });
+
+    it('refuses an unclassified verdict instead of counting it as inspected', () => {
+        // The `default: return 'complete'` this replaced would have counted a
+        // newly added Verdict member as READ, with the switch and every test
+        // above still green. The throw is the point.
+        expect(() => ledgerOutcomeFor('timeout' as never)).toThrow(/unhandled verdict/);
+    });
 });

@@ -188,8 +188,6 @@ export function parse_scanned(output: string): number | null {
   return m === null ? null : Number(m[1]);
 }
 
-/** Classify one gate's run against its declared floor. Pure — testable without
- * spawning anything. */
 /**
  * Map a gate verdict onto its ledger outcome.
  *
@@ -217,19 +215,34 @@ export function ledgerOutcomeFor(
       // reader hunting an unset token instead of running the build.
       return 'no_applicable_files';
     case 'crashed':
+      // NOT `dead_scan_root` — a gate that threw has no dead root, and the skip
+      // sentence would send the reader to check a scan path that is fine. The
+      // vocabulary was extended rather than approximated, same reasoning as the
+      // `unavailable` case above.
+      return 'check_did_not_run';
     case 'estate_invalid':
-      // Nothing was read in either case. `crashed` still reds the build through
+      // Nothing was read here either. `crashed` still reds the build through
       // this gate's own filter and `estate_invalid` deliberately does not, but
       // neither belongs in the inspected count.
       return 'dead_scan_root';
     case 'silent':
     case 'below_floor':
       return 'fail';
-    default:
+    case 'ok':
       return 'complete';
+    default: {
+      // Exhaustiveness guard. A `Verdict` member added later must be classified
+      // deliberately: without this, a new member would silently count as
+      // INSPECTED and both the switch and its test would stay green —
+      // re-creating the over-report this function was extracted to pin.
+      const unhandled: never = verdict;
+      throw new Error(`ledgerOutcomeFor: unhandled verdict ${String(unhandled)}`);
+    }
   }
 }
 
+/** Classify one gate's run against its declared floor. Pure — testable without
+ * spawning anything. */
 export function classify(
   spec: GateSpec,
   scanned: number | null,

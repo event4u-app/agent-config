@@ -57,7 +57,9 @@ export type GateSkipReason =
     | 'generated_artifact'
     | 'dead_scan_root'
     | 'declared_exemption'
-    | 'not_applicable_kind';
+    | 'not_applicable_kind'
+    | 'precondition_unmet'
+    | 'check_did_not_run';
 
 /**
  * One sentence per skip code, printed verbatim in the ledger's own output.
@@ -79,6 +81,8 @@ export const SKIP_REASON_MESSAGE: Record<GateSkipReason, string> = {
     dead_scan_root: 'the root this target was enumerated from no longer exists',
     declared_exemption: 'the target carries an explicit, reviewable exemption from this check',
     not_applicable_kind: 'the target is a kind of artifact this check does not apply to',
+    precondition_unmet: 'a precondition of this run settled the verdict before the target could be inspected',
+    check_did_not_run: 'the check itself could not be executed, so the target was never read',
 };
 
 /** Terminal outcomes a planned target can reach. Exactly one, exactly once. */

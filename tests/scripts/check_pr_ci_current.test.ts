@@ -14,7 +14,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { decide, main, type Facts } from '../../src/scripts/check_pr_ci_current.js';
+import { decide, main, rowsWereEvaluated, type Facts } from '../../src/scripts/check_pr_ci_current.js';
 
 const SHA_A = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 const SHA_B = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
@@ -149,5 +149,32 @@ describe('CLI', () => {
 
     it('--help exits 0', () => {
         expect(main(['--help'])).toBe(0);
+    });
+});
+
+describe('rowsWereEvaluated — what the ledger is allowed to call inspected', () => {
+    // `decide` settles every one of these BEFORE it reads a single row state.
+    // Counting the rows as inspected there publishes `scanned=N` for a run that
+    // read none of them — the absence-of-scanning-reads-as-absence-of-findings
+    // inflation the ledger exists to count.
+    it('is false on every verdict that returns above the row logic', () => {
+        expect(rowsWereEvaluated(facts({ unobservable: 'gh unavailable' }))).toBe(false);
+        expect(rowsWereEvaluated(facts({ pr: null }))).toBe(false);
+        expect(rowsWereEvaluated(facts({ relation: 'behind' }))).toBe(false);
+        expect(rowsWereEvaluated(facts({ relation: 'diverged' }))).toBe(false);
+        expect(rowsWereEvaluated(facts({ relation: 'ahead' }))).toBe(false);
+    });
+
+    it('is false on the pre-push normal state, which is the common case', () => {
+        // Under --pre-push the local branch is ahead by construction; if this
+        // regressed, the gate would over-report on nearly every pre-push run.
+        const f = facts({ relation: 'ahead' });
+        expect(decide(f, { prePush: true }).exit).toBe(0);
+        expect(rowsWereEvaluated(f)).toBe(false);
+    });
+
+    it('is true only where the verdict actually reads row state', () => {
+        expect(rowsWereEvaluated(facts())).toBe(true);
+        expect(rowsWereEvaluated(facts({ relation: 'unknown' }))).toBe(true);
     });
 });

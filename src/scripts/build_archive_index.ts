@@ -218,10 +218,22 @@ export function archiveFiles(dir: string): string[] {
         .sort();
 }
 
-export function buildIndex(dir: string): ArchiveEntry[] {
-    return archiveFiles(dir).map((name) =>
+/**
+ * Build entries from an enumeration the CALLER already performed.
+ *
+ * Split out so the ledger's plan and the results can come from ONE walk. With
+ * two walks, a file created between them reports as a skip that never happened
+ * and a file deleted between them yields an entry that was never planned — the
+ * plan would describe a different directory state than the results.
+ */
+export function buildIndexFrom(dir: string, names: readonly string[]): ArchiveEntry[] {
+    return names.map((name) =>
         buildEntry(name.replace(/\.md$/, ''), fs.readFileSync(path.join(dir, name), 'utf8')),
     );
+}
+
+export function buildIndex(dir: string): ArchiveEntry[] {
+    return buildIndexFrom(dir, archiveFiles(dir));
 }
 
 /** Table-cell text: pipes escaped, newlines flattened, never empty. */
@@ -310,30 +322,42 @@ export function main(argv: readonly string[]): number {
     const quiet = argv.includes('--quiet');
     const dir = path.join(ROOT, ARCHIVE_REL);
 
-    const entries = buildIndex(dir);
-
-    // Planned from the ENUMERATION, never from the result set.
+    // ONE walk feeds both the plan and the results.
     //
-    // Planning `entries` and completing it in the next statement would make
+    // Planning the result set and completing it in the next statement would make
     // `planned === completed, skipped=0` true by construction — an accounting
-    // line that can never report anything. The value is precisely that a file
-    // which drops out between the walk and the result shows up as a gap: the
-    // natural future fix for an unreadable archive file is a `try/catch
-    // { continue }` inside `buildIndex`, and that file would vanish before the
-    // plan is reached unless the plan comes from upstream of it.
+    // line that can never report anything. Planning a SECOND walk is only
+    // marginally better: it describes a directory state the results did not come
+    // from. Enumerating once and passing that list into the builder makes the
+    // gap real — the natural future fix for an unreadable archive file is a
+    // `try/catch { continue }` in the builder, and that file then shows up here
+    // as a skip instead of vanishing.
     //
     // `not-extractable` is a real reading rather than a skip and therefore
     // completes — but a frontmatter PARSE failure is swallowed by `_frontmatter`
     // and zeroes title/verdict/status, which is a genuine per-target degrade the
     // disposition tally cannot show. Both are visible here as the difference
     // between the planned and completed sets.
-    const planned = archiveFiles(dir).map((f) => path.basename(f, '.md'));
+    const walked = archiveFiles(dir);
+    const entries = buildIndexFrom(dir, walked);
+    const planned = walked.map((f) => path.basename(f, '.md'));
     const produced = new Set(entries.map((e) => e.slug));
     const ledger = new GateLedger('build_archive_index');
     ledger.plan(planned);
     for (const slug of planned) {
+        // `check_did_not_run`, not `no_applicable_files`: the file IS one the
+        // check applies to — the entry build did not produce a reading for it.
         if (produced.has(slug)) ledger.complete(slug);
-        else ledger.skip(slug, 'no_applicable_files');
+        else ledger.skip(slug, 'check_did_not_run');
+    }
+    // A produced entry outside the plan means the two sets came apart despite
+    // the single walk; the ledger would under-state the denominator silently.
+    const unplanned = [...produced].filter((s) => !planned.includes(s));
+    if (unplanned.length > 0) {
+        throw new Error(
+            `build_archive_index: ${String(unplanned.length)} entry/entries were produced but never ` +
+                `planned (${unplanned.slice(0, 5).join(', ')}) — the ledger denominator is wrong.`,
+        );
     }
 
     try {

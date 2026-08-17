@@ -259,6 +259,51 @@ export function decide(f: Facts, opts: DecideOptions = {}): Verdict {
 }
 
 /**
+ * Whether {@link decide} reached the check rows at all.
+ *
+ * Every branch above the row logic — unobservable, no open PR, behind/diverged,
+ * ahead — settles the verdict WITHOUT reading a single row state. Recording
+ * those rows as `complete` would publish `scanned=N` for a run that inspected
+ * none of them: the absence-of-scanning-reads-as-absence-of-findings inflation
+ * the ledger exists to count, in the gate that adopted it. Under `--pre-push`,
+ * `ahead` is the NORMAL state, so this is the common path, not the exotic one.
+ */
+export function rowsWereEvaluated(f: Facts): boolean {
+    if (f.unobservable !== null) return false;
+    if (f.pr === null) return false;
+    return f.relation !== 'behind' && f.relation !== 'diverged' && f.relation !== 'ahead';
+}
+
+/**
+ * Publish the row-level accounting for one run.
+ *
+ * Three populations, three outcomes: rows the parse dropped are skips (a dropped
+ * row could be the failing one), rows a row-reading verdict covered are
+ * completions, and rows the verdict never reached are out of scope for THIS run.
+ *
+ * The line is emitted even under `--quiet` — {@link GateLedger.report} writes
+ * unconditionally by design, so a `--quiet` run of this gate is one line louder
+ * than before. Stated here because it is a change to this gate's own contract.
+ */
+function reportRowLedger(f: Facts): void {
+    const ledger = new GateLedger('check_pr_ci_current');
+    const dropped = new Set(f.droppedRows ?? []);
+    // Duplicate check names are a normal remote condition — a cancelled re-run
+    // beside a live one, two workflows sharing a job name, or a dropped row
+    // whose name equals a kept row's. `plan` throws on a repeat, and this gate
+    // promises to degrade rather than block, so the plan is deduplicated.
+    const planned = [...new Set([...f.rows.map((r) => r.name), ...dropped])];
+    ledger.plan(planned);
+    const evaluated = rowsWereEvaluated(f);
+    for (const name of planned) {
+        if (dropped.has(name)) ledger.skip(name, 'not_applicable_kind');
+        else if (evaluated) ledger.complete(name);
+        else ledger.outOfScope(name, 'precondition_unmet');
+    }
+    ledger.report();
+}
+
+/**
  * Ancestry between the local tip and the PR head.
  *
  * Equality is not enough: "local is ahead" and "local is behind" are opposite
@@ -409,18 +454,10 @@ export function main(argv?: readonly string[]): number {
     let verdict: Verdict;
     try {
         const facts = gather(repo);
-
-        // The population is the check rows. Every row the parse kept was read;
-        // every row it dropped is a skip with a reason, and the drop is the
-        // failure mode worth counting — a dropped row could be the failing one.
-        const ledger = new GateLedger('check_pr_ci_current');
-        const droppedNames = facts.droppedRows ?? [];
-        ledger.plan([...facts.rows.map((r) => r.name), ...droppedNames]);
-        for (const r of facts.rows) ledger.complete(r.name);
-        for (const name of droppedNames) ledger.skip(name, 'not_applicable_kind');
-        ledger.report();
-
+        // The verdict comes FIRST: whether the rows were inspected at all is a
+        // property of the verdict's path, not of the parse (see reportRowLedger).
         verdict = decide(facts, { prePush });
+        reportRowLedger(facts);
     } catch (exc) {
         scanReport(0, 'internal error — nothing was compared');
         process.stderr.write(
