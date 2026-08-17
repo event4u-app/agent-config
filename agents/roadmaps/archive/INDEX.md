@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**504 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 167 · completed 246 · completed-with-deferrals 25 · not-extractable 34
+**505 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 167 · completed 247 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -173,6 +173,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-cost-parity-3-handoff-envelope`](road-to-cost-parity-3-handoff-envelope.md) | Road to cost parity — 3: the handoff envelope carries what the successor actually needs | completed | 4 | 30/30 | _not extractable_ |
 | [`road-to-cost-profile-untangle`](road-to-cost-profile-untangle.md) | Roadmap: Untangle `cost_profile` | closed-with-cancellations | 8 | 41/45 | _not extractable_ |
 | [`road-to-council-modes`](road-to-council-modes.md) | Road to Council Modes | closed-with-cancellations | 3 | 14/24 | _not extractable_ |
+| [`road-to-council-quota-accounting-truth`](road-to-council-quota-accounting-truth.md) | Roadmap: Council quota accounting truth | completed | 4 | 26/26 | _not extractable_ |
 | [`road-to-council-solo-floor-implementation`](road-to-council-solo-floor-implementation.md) | Road to the gate-scoped solo-attendance floor | closed-with-cancellations | 3 | 15/16 | _not extractable_ |
 | [`road-to-cross-corpus-verification`](road-to-cross-corpus-verification.md) | Roadmap: A cross-corpus proposal is measured before it is adopted | completed | 4 | 19/19 | _not extractable_ |
 | [`road-to-cross-repo-differential-loop`](road-to-cross-repo-differential-loop.md) | Road to the cross-repo differential loop — the reference-analysis command stops contradicting its own doctrine | completed | 6 | 31/31 | _not extractable_ |

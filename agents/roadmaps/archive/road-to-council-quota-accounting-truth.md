@@ -38,7 +38,7 @@ fully-named set of defects. The counter is not primarily *overrun* — it is
 from**. Every phase below fixes a defect with a file:line, in ascending order of
 blast radius.
 
-Source: [`agents/tmp.old/council-quota`](../tmp.old/council-quota) (see § Provenance).
+Source: [`agents/tmp.old/council-quota`](../../tmp.old/council-quota) (see § Provenance).
 
 ### Verified evidence
 
@@ -371,7 +371,7 @@ requiring verification; this roadmap is the verification pass, and it refuted
 the originating diagnosis while keeping the defect-first framing.
 
 - Source thread: `ENC1:+v3SxQ0PArZASk9IAjlGZVtev5YNnMASJ62+w36OH1gIMNknroR2hv11DEIXn3YWCYA7+SFgmTQmXw4iV9G166it+X2p0UJVJ+pCFGdMv6dt6IfYFCjfpkaRvWWoz7U75M8T0zIOV05jQjf6r5IQE1otXTb8+TtiO2WY`
-- Consumed artifact: [`agents/tmp.old/council-quota`](../tmp.old/council-quota)
+- Consumed artifact: [`agents/tmp.old/council-quota`](../../tmp.old/council-quota)
 - Council convergence: none available. Both configured seats were
   quota-refused at authoring time (F4), so the design decisions above are the
   agent's own analysis with the unavailability named, per `council-availability`.
