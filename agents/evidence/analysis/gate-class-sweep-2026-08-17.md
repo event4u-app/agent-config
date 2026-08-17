@@ -49,10 +49,135 @@ Every **open** blocker in `agents/roadmaps/*.md`, as enumerated by
 `agent-config gates --json --all`. Resolved entries are history and are out of
 scope; `later/`, `archive/` and `skipped/` are not active estate.
 
+The tooling reported **50** when the sweep ran and reports **49** now. The
+difference is a parser defect the sweep itself surfaced and this branch fixed
+(§ 4b): one entry resolved two days earlier was being counted open. The table
+below keeps all 50 rows because that is what was classified; the shares in § 4
+are computed over the corrected 49, and the excluded row is marked.
+
 ## 3. Classification table
 
-<!-- filled by step 1.2; the pre-registration above predates it -->
+50 open blockers, every one classified. `run-or-decision` is the command an
+agent would run (classes 0 and 1) or the one-line decision (classes 2 and 3).
 
-## 4. Result
+| # | id | roadmap | class | run-or-decision | why that class |
+|---:|---|---|:-:|---|---|
+| 1 | skill-activation-window | cost-parity-1-rule-payload-diet | 1 | `skill_trigger_eval --skill <pilot>` (derived) | billable eval is the only missing input — spend consent, not judgement |
+| 2 | utilization-sweep-window | cost-parity-1-rule-payload-diet | 0 | a date check against the sibling sweep window | pure time-window probe; the output is the unblock |
+| 3 | autonomy-defaults-sheet | user-out-of-the-loop | 2 | confirm or override four preference defaults | reversible settings already carrying a rendered recommendation |
+| 4 | kernel-soak-window | user-out-of-the-loop | 3 | authorize the `ask-when-uncertain` kernel delta plus its soak | Hard Floor: a kernel edit and a soak the agent cannot self-authorize |
+| 5 | dpo-signoff | org-telemetry | 3 | data-protection review of the Class-A field list | an external authority's written signoff |
+| 6 | sink-choice | org-telemetry | 2 | pick the private repo or a named ingest endpoint | reversible infrastructure preference with a recommendation |
+| 7 | compaction-census-session | context-fidelity | 3 | run an instrumented session with a manual compaction | a human keystroke inside a live session |
+| 8 | memory-sweep-instrument | context-fidelity | 2 | scope the contradiction sweep in or out of Phase 2 | reversible scope preference |
+| 9 | prominence-gate-skills-corpus | context-fidelity | 2 | extend with a baseline, or leave the skills tree unscanned | risk call over 13 findings, recommendation-ready |
+| 10 | b-per-turn-composite-bar | per-turn-hook-economy | 2 | register observe-only, name a p50 ceiling, or decline | a pre-registration judgement; no number exists to compute it from |
+| 11 | phase-0-spikes-need-a-live-host-session | skill-ecosystem-executable-payloads | 3 | run S0.1/S0.2 in a live host session | the eval hard-aborts under automation; the session is what is missing |
+| 12 | legacy (blocked-until) | gated-reach-followup | 3 | install `yt-dlp` and a JS runtime by hand | a human install on a specific machine; auto-install is a contract violation |
+| 13 | measurement-a-no-per-arm-builder-tier | ui-track-integrity-followup | 2 | hold Measurement A rather than build a forbidden runner | scope call; the missing thing is a runner nobody committed to build |
+| 14 | measurement-b-no-renderable-lane-pair | ui-track-integrity-followup | 2 | hold Measurement B; prefer the generic-lane override if exited | bounded scope preference with a rejected alternative |
+| 15 | enforcement-evidence | frontend-skill-application | 2 | flip to enforcement, or record an explicit no-change | reversible enforcement risk call on published rates |
+| 16 | ui-corpus-has-no-ui | frontend-skill-application | 0 | re-run the consultation-rate report against a store with UI writes | deterministic local re-run; the report is the unblock |
+| 17 | ui-session-capture-window | frontend-skill-application | 0 | capture one more observation, then count the log | a per-session capture plus a count, both agent-runnable |
+| 18 | raw-capture-needs-host-env | subagent-lifecycle-integrity | 3 | a user-global self-config edit plus a fresh session | `security-sensitive-stop` forbids the agent making that edit |
+| 19 | b-rules-efficiency-signal | standing-context-40k | 0 | read the dispatch-economy report | a telemetry sample-size read; either it resolves the fork or it re-dates the window |
+| 20 | b-live-trigger-eval | catalogue-host-fit | 1 | `skill_trigger_eval --skill <skill>` (derived) | the entry itself names a terminal confirmation and token spend as the only human parts |
+| 21 | bench-spend-and-methodology | rule-coherence-followup | 3 | authorize the A/B with human judges at adequate N, or cancel | the council ruled an LLM judge has no power here — people, not spend |
+| 22 | default-flip-release-gate | rule-coherence-followup | 2 | ship the measured config as default, or keep opt-in | named consent-once; the merge itself stays a separate Hard Floor act |
+| 23 | real-orchestration-usage | orchestration-scope-decision | 3 | use the agent on real parallel work until the quality columns fill | only the user's own live work fills them; no command synthesizes usage |
+| 24 | phase3-harness-deltas-9-10 | solution-minimalism | 1 | the paid A/B sweep under the recorded $250 ceiling | spend consent already recorded; the remainder is harness build work |
+| 25 | b-detector-demotion-bars | stop-gate-honesty | 2 | per-detector bars, one shared bar, or no demotion | reversible pre-registration call with a stated recommendation |
+| 26 | telemetry-sample-size | subagent-value-realization-followup | 0 | count the orchestration audit log | a free deterministic count; the condition is already met at 368 lines |
+| 27 | b-consolidated-decision-sheet | estate-drawdown | 2 | answer the two largest-unblock items, defer the rest | reversible preference already rendered with a default |
+| 28 | b-delegate-gate-maintainer-profile | **gate-autonomy** | 2 | enable the team surface and `allow_delegate` in one profile | reversible one-profile setting, not a shipped default |
+| 29 | b-gate-budget-preauth | **gate-autonomy** | 2 | per-run and per-week caps with a receipt ledger | the missing thing is the shape of the spend bound, not a spend |
+| 30 | human-gated-live-trigger-eval | skill-description-measurement | 1 | `task test-triggers-live -- <skill>` (derived) | billable tokens plus a terminal confirmation — the class-1 exemplar |
+| 31 | kernel-cross-link-soak | skill-ecosystem-gate-integrity | 3 | two `verify-before-complete` edits in their own PR | a kernel edit behind a blocking PreToolUse guard |
+| 32 | b-convergence-machine | carrier-layer-convergence | 3 | a before/after reading on the maintainer install | the two-layer topology is a property of one machine |
+| 33 | maintainer-blind-ratings | council-blind-review | 3 | the maintainer rates the blind packet | an AI rater is the bias being measured |
+| 34 | first-contract-true-analysis-run | distillation-followups | 2 | authorize one run and confirm the evidence stays local-only | spend consent alone would not settle the confidentiality half |
+| 35 | router-head-retrofit-instrument | distillation-followups | 2 | accept the published cap as justification, or build an instrument | no load-observing instrument exists to run |
+| 36 | deferred-finding-decision-reopen | inbox-harvest-residuals | 2 | cancel against the recorded decline, reopening on the trigger | a `decision-revisit-gate` call with a written recommendation |
+| 37 | spent-inbox-artifacts-await-deletion | inbox-harvest-residuals | 2 | record a keep-reason and close | the deletion branch needs two filenames unrecoverable from the text |
+| 38 | b-behavioural-bench-spend | mixed-trigger-activation-cost | 1 | the paired A/B under a named per-run budget | the entry itself defers the consent to the class-1 ledger |
+| 39 | b-matrix-semantics-amendment | mixed-trigger-activation-cost | 2 | adopt the amendment narrowed to two rules | **already decided** — see § 4b; it is in this table only because the tooling still counts it open |
+| 40 | manual-rubric-rater | scale-history-bench-run | 3 | a human scores each artifact blind to arm | an agent rating agent output is what `evaluator-independence` forbids |
+| 41 | cross-vendor-worker-slices | always-on-orchestration | 2 | settle the cross-vendor direction policy | an egress/risk preference that must precede any code |
+| 42 | f4-full-stop-block | always-on-orchestration | 2 | block versus advisory for the end-review stop hook | changes every session's stop behaviour — a risk call |
+| 43 | gate-council-auto-dispatch | always-on-orchestration | 2 | auto-fire the council at the release gate, or stay recommend-only | reversible risk-and-cost call on an unaccumulated window |
+| 44 | point-of-action-carrier | always-on-orchestration | 2 | build or do not build the mid-session delegation carrier | the spike is runnable; the resolution is a build decision |
+| 45 | team-telemetry-behind-flag | always-on-orchestration | 0 | probe the experimental host flag | a liveness probe whose output is the unblock |
+| 46 | merge-queue-enablement | inbox-harvest-2026-08-b-ci-economy | 3 | enable Require merge queue on the ruleset | a repo-settings click, and it changes every future merge |
+| 47 | required-check-set-change | inbox-harvest-2026-08-b-ci-economy | 3 | write the required-check list on the ruleset | repo-admin write changing merge requirements estate-wide |
+| 48 | evidence-compaction-approval | inbox-harvest-2026-08-c-evidence-lifecycle | 3 | no compaction, or compact at a named tier boundary | a bulk deletion of committed evidence — class 3 by construction |
+| 49 | benchmark-spend | surface-consolidation | 1 | the lazy-catalog A/B under a named budget | a per-run cap and resume-not-re-spend already ship; a budget is the only gap |
+| 50 | repo-admin-and-usage | surface-consolidation | 3 | apply branch protection; hold every utilization removal | a settings UI action plus irreversible removal with no usage data |
 
-<!-- filled by step 1.2 -->
+## 4. Result — the pre-registration is FALSIFIED
+
+Over the corrected population of 49 (row 39 excluded — already decided):
+
+| class | count | share |
+|---|---:|---:|
+| 0 — auto-run | 6 | 12.2 % |
+| 1 — budget-preauthorized | 6 | 12.2 % |
+| **0 + 1 (the premise)** | **12** | **24.5 %** |
+| 2 — consent-once | 21 | 42.9 % |
+| 3 — human-only | 16 | 32.7 % |
+| total | 49 | 100 % |
+
+**24.5 % against a pre-registered bar of 40 %.** The roadmap's § 0 framing —
+"they are commands and agent runs waiting for a human to type them" — does not
+survive its own test. The estate is **decision-heavy, not courier-heavy**: 37
+of 49 blockers (75.5 %) need a judgement or a person, and the single largest
+class is `2 — consent-once` at 42.9 %.
+
+The verdict does not turn on the correction: over the uncorrected 50 the share
+is 24.0 %, and both are far enough below 40 % that no rounding, and no single
+reclassification, moves the outcome. Clearing the bar would take **eight** of
+the twenty-one class-2 entries turning out to be class 0 or 1 — a third of the
+largest class misread in the same direction.
+
+Two things follow, both pre-registered rather than reasoned out afterwards:
+
+1. **Phase 2 ships as a thin convenience.** `gates --execute` is worth having
+   for the six class-0 entries and for the render-instead-of-run path, and it
+   is not the lever that drains the estate. It is built to that size.
+2. **The consolidated decision sheet carries the weight instead.** 21 of the
+   49 blockers are one line and one yes away from resolved, and they are
+   already recommendation-ready. That is `road-to-estate-drawdown`'s Phase 0
+   and `road-to-user-out-of-the-loop`'s Phase 1 — neither is this roadmap.
+
+**What the number does NOT say.** It does not say the couriering framing was
+worthless: 12 gates really are commands waiting for a keystroke, and one of
+them (`telemetry-sample-size`) is a count whose condition is *already met*.
+It says the framing described a minority and was written as if it described
+the estate.
+
+### 4b. Two defects found while sweeping — one fixed, one recorded
+
+- **A resolved blocker was counted as open. FIXED on this branch.**
+  `b-matrix-semantics-amendment` carries
+  `**Status:** RESOLVED 2026-08-17 — **option (b)**, …`. `RoadmapStats` split
+  open from resolved with `b.status !== 'resolved'`, an **equality** test on a
+  field authors write prose into, so a status carrying its own date and
+  rationale matched neither branch and fell through to open. It inflated every
+  blocker count in the dashboard by one and rendered a two-day-old decision in
+  `agent-config gates` as one the reader still owed an answer to.
+  `lint_roadmap_blockers` had always read the same field as a **prefix**
+  (`/^…resolved/i`), so the two surfaces disagreed about what resolved means —
+  the lint exempted the entry from its ratchet while the dashboard counted it.
+  `blocker_is_resolved` is now the one prefix test both semantics come from.
+  **Sibling search:** the exact construct is an equality comparison against
+  `'resolved'` on a parsed prose field — 2 sites, both in
+  `update_roadmap_progress.ts`, both fixed. One lexical near-match remains
+  (`rule_backlinks.ts:194`) and is NOT the defect: its `status` is a
+  discriminated-union tag the code itself constructs, not parsed text.
+  What is **not** fixed: the entry's own `What to do:` / `Recommendation:`
+  fields still read in the future tense as though undecided. That is prose in
+  another roadmap's file, which this worktree's scope lock does not own.
+- **The decidability ratchet is red on a pristine tree. NOT fixed.** 28
+  violations against a baseline of 26. Measured before this branch touched any
+  roadmap, so it is not this work; every one of the 28 is in another roadmap's
+  blocker section. `lint_roadmap_blockers` is registered only under `task ci`
+  and in no workflow, so nothing on a PR reports it either way.

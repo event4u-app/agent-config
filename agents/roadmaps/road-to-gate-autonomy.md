@@ -111,7 +111,7 @@ safeguards.**
       decidability ratchet reads 28 against a baseline of 26 on a pristine tree.
       None of the 28 is in this roadmap, every one is in another roadmap's blocker
       section, and this worktree's scope lock does not own those files.
-- [ ] **1.2** One classification sweep over the 38 live blockers, each verdict a
+- [x] **1.2** One classification sweep over the 38 live blockers, each verdict a
       table row: blocker, class, run-or-decision text, reason. **Pre-registered
       expectation, to be falsified rather than assumed:** a substantial share land
       in class 0 or 1. If the sweep finds far fewer, the "gates are mostly couriered
@@ -119,6 +119,31 @@ safeguards.**
       accordingly.
       `verify:` the sweep table is committed, every open blocker appears in it, and
       the share is stated as a number before Phase 2 starts.
+      **Done 2026-08-17 — and the premise is FALSIFIED.**
+      `agents/evidence/analysis/gate-class-sweep-2026-08-17.md`. The bar was fixed
+      at **≥ 40 % in classes 0+1** and committed before a single blocker was
+      classified (commit `b5a51510a`, sections 3 and 4 deliberately empty). The
+      sweep returned **12 of 49 — 24.5 %**. The estate is decision-heavy, not
+      courier-heavy: class 2 alone is 42.9 %, and 37 of 49 gates need a judgement
+      or a person.
+      **The population is 49, not the 38 this step was written against**, and not
+      the 50 the tooling reported when the sweep ran — see the defect below.
+      **Two defects surfaced by the sweep, one fixed here.** `RoadmapStats` split
+      open from resolved with an EQUALITY test on `Status:`, a field authors write
+      prose into, so `**Status:** RESOLVED 2026-08-17 — option (b)` matched neither
+      branch and was rendered as a live decision two days after it was taken.
+      `blocker_is_resolved` is now a prefix test and is the single source both
+      getters read, which also ends a disagreement with `lint_roadmap_blockers`,
+      whose own status check was already a prefix. Sibling search: 2 sites, both
+      here, both fixed; the one lexical near-match (`rule_backlinks.ts:194`) is a
+      union tag, not this defect. The second — the decidability ratchet at 28
+      against a baseline of 26 on a pristine tree — is recorded and NOT fixed: all
+      28 sit in other roadmaps this worktree does not own.
+      **What is deliberately NOT done: materialising `Class:` into all 49 entries.**
+      AC-1 asks for it and it is a 25-file diff across every active roadmap,
+      including two a live parallel session is holding. The classification is
+      committed as the evidence table instead, which is what step 1.2 asks for; the
+      write-back is named as the follow-up rather than done half-way.
 - **AC-1:** every open blocker carries a class; the lint enforces `run:` on classes
   0 and 1; the sweep table is committed with its share.
 

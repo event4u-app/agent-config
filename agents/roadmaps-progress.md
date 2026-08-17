@@ -6,10 +6,10 @@
 
 ## Overall
 
-**272 / 574 steps done · 47%**
+**273 / 574 steps done · 48%**
 
 ```text
-███████████████████░░░░░░░░░░░░░░░░░░░░░   47%
+███████████████████░░░░░░░░░░░░░░░░░░░░░   48%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -34,7 +34,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 8 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 5 | 0 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
-| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 8 | 5 | 1 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | ██░░░░░░░░ 17% |
+| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 8 | 4 | 2 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | ███░░░░░░░ 33% |
 | 12 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 13 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
 | 14 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
@@ -380,11 +380,11 @@ _1 blocker resolved._
 
 ### [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md)
 
-**Road to gate autonomy — human gates only where a human is the point** — 1 / 6 done (17%)
+**Road to gate autonomy — human gates only where a human is the point** — 2 / 6 done (33%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Blocker schema: class and command become fields | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+| 1 | Blocker schema: class and command become fields | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 2 | `gates --execute` (the acting half) | ⬜ not started | 2 | 0 | 1 | 0 | 0% |
 | 3 | Agent runs via CLI: open the delegate gate for the maintainer profile | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
 | 4 | Liveness: gates that open must be seen | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
