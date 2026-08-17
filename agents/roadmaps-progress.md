@@ -6,7 +6,7 @@
 
 ## Overall
 
-**283 / 576 steps done · 49%**
+**284 / 576 steps done · 49%**
 
 ```text
 ████████████████████░░░░░░░░░░░░░░░░░░░░   49%
@@ -57,7 +57,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 31 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
 | 32 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 8 | 0 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ░░░░░░░░░░ 0% |
 | 33 | [road-to-stop-gate-honesty.md](roadmaps/road-to-stop-gate-honesty.md) | 3 | 7 | 1 | 6 | 0 | 0 | [1](#blockers-road-to-stop-gate-honesty) | █████████░ 86% |
-| 34 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 9 | 10 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | █████░░░░░ 53% |
+| 34 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 8 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 58% |
 | 35 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 36 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 37 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
@@ -1024,13 +1024,13 @@ _1 blocker resolved._
 
 ### [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md)
 
-**Road to subagent lifecycle integrity — turn three production symptoms into deterministic guards** — 10 / 19 done (53%)
+**Road to subagent lifecycle integrity — turn three production symptoms into deterministic guards** — 11 / 19 done (58%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Spikes — pin the host, reproduce the two upstream premises | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
 | 1 | Measure — lifecycle capture, no behaviour change | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
-| 2 | Return-channel integrity — validate, fall back to disk, retry once | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Return-channel integrity — validate, fall back to disk, retry once | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
 | 3 | Runaway containment — spawn guard, ledger-aware stop gate, shadow stop-loss | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | Role axis binds on payload, not env | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
 | 5 | Tier routing has a caller — measure whether it moved the distribution | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
