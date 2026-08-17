@@ -47,6 +47,12 @@
  *   ./agent-config gates --json     # machine-readable
  *   ./agent-config gates --reply    # reply-close form; empty when none
  *   ./agent-config gates --pending  # staged actions awaiting confirmation
+ *   ./agent-config gates --execute <id>   # resolve one class-0 gate by running it
+ *
+ * `--execute` is the only mode that writes anything, and it takes exactly one
+ * blocker id. Everything else here reads. See `gate_execute.ts` for what it
+ * refuses to do — no sweep, no resolve on a failed command, no invented budget
+ * ledger, and class 3 unchanged by construction.
  *
  * `--pending` reads a different source — the staged-confirmation store, not the
  * roadmap tree — and stays out of `--reply` on purpose. ADR-222 fixes the
@@ -65,6 +71,8 @@ import {
     blocker_needs_user as needsUser,
     type Blocker,
 } from './update_roadmap_progress.js';
+import { probeLater, type ResumeFinding } from './resume_probe.js';
+import { execute } from './gate_execute.js';
 import { listPending } from '../templates/scripts/work_engine/hooks/builtin/staged_confirmation_store.js';
 import type { StagedAction } from '../templates/scripts/work_engine/hooks/builtin/staged_confirmation.js';
 
@@ -227,7 +235,53 @@ function renderEntry(e: Entry, index: number): string[] {
     return out;
 }
 
-function render(entries: readonly Entry[], all: boolean): string {
+/**
+ * The FIRED section — parked roadmaps whose resume condition has come true.
+ *
+ * Rendered after the blockers because it is a different kind of item: a
+ * blocker is a gate nobody has opened, this is a gate that opened with nobody
+ * standing in front of it. Empty findings render nothing at all, so the
+ * section never costs a line on a tree where no condition has fired.
+ *
+ * The undecidable count is printed even when zero fired, and that is the
+ * point: "no resume condition has fired" and "the probe could read 12 of 44
+ * conditions" are different statements, and only the second one is honest
+ * about its own coverage.
+ */
+function renderResumed(findings: readonly ResumeFinding[]): string[] {
+    const fired = findings.filter((f) => f.verdict === 'fired');
+    const undecidable = findings.filter((f) => f.verdict === 'undecidable').length;
+    if (findings.length === 0) {
+        return [];
+    }
+    const out: string[] = [];
+    if (fired.length > 0) {
+        out.push('');
+        const head = `FIRED · ${fired.length} parked roadmap${fired.length !== 1 ? 's' : ''} can resume`;
+        out.push(`── ${head} ${'─'.repeat(Math.max(3, WIDTH - head.length - 4))}`);
+        for (const f of fired) {
+            out.push(...field('Roadmap:', f.file));
+            out.push(...field('Condition:', f.condition));
+            out.push(...field('Fired because:', f.why));
+        }
+        out.push('');
+        out.push('Resume one with: `git mv agents/roadmaps/later/<file> agents/roadmaps/`');
+        out.push('then `agent-config roadmap:progress`.');
+    }
+    out.push('');
+    out.push(
+        `Resume-probe coverage: ${findings.length - undecidable} of ${findings.length} ` +
+            `park note${findings.length !== 1 ? 's' : ''} carry a machine-decidable condition` +
+            (undecidable > 0 ? ` · ${undecidable} undecidable` : ''),
+    );
+    return out;
+}
+
+function render(
+    entries: readonly Entry[],
+    all: boolean,
+    resumed: readonly ResumeFinding[] = [],
+): string {
     const mine = entries.filter((e) => needsUser(e.blocker.owner));
     const others = entries.filter((e) => !needsUser(e.blocker.owner));
     const shown = all ? entries : mine;
@@ -267,6 +321,7 @@ function render(entries: readonly Entry[], all: boolean): string {
         lines.push('  "guide me through <id>"   — one decision, step by step');
         lines.push('');
     }
+    lines.push(...renderResumed(resumed));
     return lines.join('\n') + '\n';
 }
 
@@ -340,13 +395,20 @@ function renderReply(entries: readonly Entry[]): string {
     return lines.join('\n') + '\n';
 }
 
-function renderJson(entries: readonly Entry[], all: boolean): string {
+function renderJson(
+    entries: readonly Entry[],
+    all: boolean,
+    resumed: readonly ResumeFinding[] = [],
+): string {
     const pick = all ? entries : entries.filter((e) => needsUser(e.blocker.owner));
     return (
         JSON.stringify(
             {
                 needsYou: entries.filter((e) => needsUser(e.blocker.owner)).length,
                 other: entries.filter((e) => !needsUser(e.blocker.owner)).length,
+                resumeFired: resumed.filter((f) => f.verdict === 'fired').length,
+                resumeUndecidable: resumed.filter((f) => f.verdict === 'undecidable').length,
+                resumed: resumed.filter((f) => f.verdict === 'fired'),
                 blockers: pick.map((e) => ({
                     id: e.blocker.id,
                     roadmap: e.roadmapRel,
@@ -514,9 +576,35 @@ function main(argv?: readonly string[]): number {
         return 0;
     }
 
+    // `--execute <id>` acts; every other flag only reads. One blocker per
+    // invocation, named explicitly — a blanket sweep would run N authored
+    // commands on one keypress and make a misclassification cost the tree
+    // rather than one entry.
+    const execIdx = args.indexOf('--execute');
+    if (execIdx !== -1) {
+        const id = args[execIdx + 1];
+        if (id === undefined || id.startsWith('--')) {
+            process.stderr.write(
+                'gates --execute needs a blocker id: `agent-config gates --execute <id>`.\n',
+            );
+            return 1;
+        }
+        const r = execute(roadmapRoot, id, new Date());
+        process.stdout.write(r.report);
+        return r.code;
+    }
+
     const entries = collectEntries(roadmapRoot);
+    // `--reply` deliberately does not carry the probe: ADR-222 fixes that form
+    // at exactly ONE decision rendered in full, and a fired resume condition is
+    // not a decision the reader owes anybody — it is a file that can move.
+    const resumed = reply ? [] : probeLater(roadmapRoot);
     process.stdout.write(
-        reply ? renderReply(entries) : json ? renderJson(entries, all) : render(entries, all),
+        reply
+            ? renderReply(entries)
+            : json
+              ? renderJson(entries, all, resumed)
+              : render(entries, all, resumed),
     );
     return 0;
 }
@@ -553,6 +641,7 @@ export {
     render,
     renderJson,
     renderReply,
+    renderResumed,
     renderPending,
     renderPendingJson,
 };
