@@ -195,6 +195,22 @@ gates:
       rules from path-scoped to always-on with nothing watching, so a version of
       it that silently scanned zero would be the same failure twice.
 
+  - id: check_rule_stub_ceiling
+    argv: []
+    min_scanned: 100
+    corpus: "rule files under src/rules/ (117 at baseline; 44 carry a migration pointer)"
+    status: enforced
+    note: >
+      Scans the whole rule root and reports that count, not the 44 migrated rules
+      it ratchets — the denominator is what proves the root still exists, and a
+      floor on the migrated subset would fall as rules legitimately finish
+      migrating. Floor set below the live 117 so a rule retirement does not red
+      the gate. The gate's own assertScanned fires first if the root moves; this
+      row is the second net. It exists because the sibling census pins the corpus
+      total with a 2,000-token drift allowance, which is green while one rule
+      grows and another shrinks — measured at adoption, the corpus sat 411 tokens
+      above its pinned baseline with that gate green.
+
   - id: check_review_schema
     argv: []
     min_scanned: 1

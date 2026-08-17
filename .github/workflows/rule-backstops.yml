@@ -167,6 +167,12 @@ jobs:
       - name: rule activation census (ratchet over the scoped/mixed split)
         run: ./scripts-run src/scripts/check_rule_activation_census
 
+      # Sits next to the census on purpose: the census pins the CORPUS total with
+      # a drift allowance, so per-rule re-growth under an aggregate cap is a green
+      # run there. This gate is that gap, one level finer.
+      - name: rule stub ceilings (per-rule, migrated rules only)
+        run: ./scripts-run src/scripts/check_rule_stub_ceiling
+
       - name: pre-migration references (retired Python install hints)
         run: ./scripts-run src/scripts/lint_pre_migration_refs
 
