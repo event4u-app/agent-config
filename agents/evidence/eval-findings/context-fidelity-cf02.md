@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Spike cf02 — memory staleness census on the curated store
 
 **Date:** 2026-08-17

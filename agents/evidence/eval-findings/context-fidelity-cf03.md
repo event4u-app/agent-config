@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Spike cf03 — how often compaction actually happens, and at what fill
 
 **Date:** 2026-08-17
