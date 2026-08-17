@@ -41,13 +41,28 @@
  * from the current tree and is the only way the numbers change.
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
+import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { gpt_tokens, TIKTOKEN_AVAILABLE } from './_lib/token_count.js';
 import { census, summarize } from './rule_activation_census.js';
+
+const SCRIPT_REL = path.join('src', 'scripts', 'check_rule_activation_census.ts');
+
+/**
+ * Floors for the self-test suite, set below the shipped case count on purpose.
+ *
+ * Five cases ship and four of them reject. The floors sit at 4/3 so retiring one
+ * case that has genuinely stopped describing the gate does not red the suite,
+ * while deleting the suite down to a single happy path — the cheapest route to a
+ * green self-test — still fails.
+ */
+const SELF_TEST_MIN_CASES = 4;
+const SELF_TEST_MIN_REJECT = 3;
 
 const QUIET = process.argv.slice(2).includes('--quiet');
 const WRITE = process.argv.slice(2).includes('--write-baseline');
@@ -114,7 +129,159 @@ function _diff(pinned: string[], current: string[]): { added: string[]; removed:
     };
 }
 
+/** A path-only rule: the emitter gives it `paths:`, so it reads as `scoped`. */
+const FIXTURE_PATH_ONLY = [
+    '---',
+    'type: "auto"',
+    'triggers:',
+    '  - path_prefix: "components/"',
+    '---',
+    '',
+    '# Alpha',
+    '',
+    'A rule whose obligation binds at file contact.',
+    '',
+].join('\n');
+
+/** The same rule plus one keyword: the emitter drops `paths:` entirely. */
+const FIXTURE_MIXED = [
+    '---',
+    'type: "auto"',
+    'triggers:',
+    '  - path_prefix: "components/"',
+    '  - keyword: "widget"',
+    '---',
+    '',
+    '# Beta',
+    '',
+    'A rule carrying both a path and a prompt trigger.',
+    '',
+].join('\n');
+
+interface FixtureShape {
+    /** Write the two rule files. Off for the dead-scope case. */
+    rules: boolean;
+    /** Write a baseline at all. Off for the missing-baseline case. */
+    baseline: boolean;
+    /** Mutate the generated baseline before writing, to move one identity axis. */
+    tamper?: (b: Record<string, unknown>) => void;
+}
+
+/**
+ * Build a throwaway tree the gate can run against.
+ *
+ * The baseline is DERIVED from the fixture by the same `read_census` the gate
+ * uses, then optionally tampered with. Hand-writing the expected token total
+ * would make the accept case a test of my arithmetic rather than of the gate.
+ */
+function buildFixture(dir: string, shape: FixtureShape): string {
+    fs.mkdirSync(path.join(dir, RULES_REL), { recursive: true });
+    fs.mkdirSync(path.join(dir, 'src', 'config'), { recursive: true });
+    if (shape.rules) {
+        fs.writeFileSync(path.join(dir, RULES_REL, 'alpha-path-only.md'), FIXTURE_PATH_ONLY);
+        fs.writeFileSync(path.join(dir, RULES_REL, 'beta-mixed.md'), FIXTURE_MIXED);
+    }
+    if (shape.baseline) {
+        const reading = shape.rules
+            ? read_census(dir)
+            : {
+                  scoped_ids: [],
+                  mixed_ids: [],
+                  unconditional_tokens: 0,
+                  tokens_exact: TIKTOKEN_AVAILABLE,
+                  scanned: 0,
+              };
+        const base: Record<string, unknown> = {
+            _comment: 'self-test fixture',
+            measured_at_commit: 'fixture',
+            tokens_exact: reading.tokens_exact,
+            unconditional_tokens: reading.unconditional_tokens,
+            scoped_ids: reading.scoped_ids,
+            mixed_ids: reading.mixed_ids,
+            baseline_history: [],
+        };
+        shape.tamper?.(base);
+        fs.writeFileSync(
+            path.join(dir, BASELINE_REL),
+            `${JSON.stringify(base, null, 4)}\n`,
+        );
+    }
+    return dir;
+}
+
+/**
+ * Prove the gate discriminates rather than merely exits.
+ *
+ * The four rejecting cases are the four ways this gate is worth having: each
+ * identity axis separately, the missing baseline, and the dead scan root. The
+ * dead-root case is the one a future refactor is most likely to break silently —
+ * a gate that scans nothing and exits green is the exact failure
+ * `assertScanned` exists for, and it is the reason that case is here rather than
+ * only in the manifest.
+ */
+export function selfTest(repoRoot: string): number {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rac-selftest-'));
+    const run = (shape: FixtureShape): number => {
+        const work = buildFixture(fs.mkdtempSync(path.join(root, 'case-')), shape);
+        return runGateCli(repoRoot, SCRIPT_REL, ['--quiet'], work);
+    };
+    const cases: SelfTestCase[] = [
+        {
+            name: 'a tree matching its baseline on both axes passes',
+            expect: 'accept',
+            run: () => run({ rules: true, baseline: true }),
+        },
+        {
+            name: 'a rule that left the scoped set is REFUSED',
+            expect: 'reject',
+            run: () =>
+                run({
+                    rules: true,
+                    baseline: true,
+                    tamper: (b) => {
+                        b['scoped_ids'] = ['beta-mixed'];
+                    },
+                }),
+        },
+        {
+            name: 'a rule that left the mixed set is REFUSED',
+            expect: 'reject',
+            run: () =>
+                run({
+                    rules: true,
+                    baseline: true,
+                    tamper: (b) => {
+                        b['mixed_ids'] = [];
+                    },
+                }),
+        },
+        {
+            name: 'no committed baseline is REFUSED, not treated as nothing to compare',
+            expect: 'reject',
+            run: () => run({ rules: true, baseline: false }),
+        },
+        {
+            name: 'an empty rule root is REFUSED — a gate that scanned nothing has not passed',
+            expect: 'reject',
+            run: () => run({ rules: false, baseline: true }),
+        },
+    ];
+    try {
+        return runSelfTest({
+            gate: GATE,
+            cases,
+            minCases: SELF_TEST_MIN_CASES,
+            minRejectCases: SELF_TEST_MIN_REJECT,
+        });
+    } finally {
+        fs.rmSync(root, { recursive: true, force: true });
+    }
+}
+
 export function main(): number {
+    if (process.argv.slice(2).includes('--self-test')) {
+        return selfTest(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..'));
+    }
     const root = process.cwd();
     let reading: CensusReading;
     try {
