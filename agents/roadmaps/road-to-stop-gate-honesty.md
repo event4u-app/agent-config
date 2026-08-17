@@ -70,7 +70,7 @@ Verified 2026-08-17 against `origin/main` @ `097ab6549`.
 
 ### Phase 1 — Count before judging
 
-- [ ] **1.1** Aggregate refusals: a small reader over the per-session ordinal files
+- [x] **1.1** Aggregate refusals: a small reader over the per-session ordinal files
       plus a refusals counter in the session-register record, reported by the hooks
       doctor and rolled up per period — **per detector separately**, because A, B
       and C have different legitimacy profiles and a pooled rate would hide which
@@ -78,14 +78,76 @@ Verified 2026-08-17 against `origin/main` @ `097ab6549`.
       adds no spawn.
       `verify:` the doctor prints per-detector counts on this machine, and a fixture
       session with a known refusal is counted once.
-- [ ] **1.2** Add the TTL the header admits is missing: prune ordinal files past a
+      <!-- done 2026-08-17: `_lib/turn_end_refusals.ts` is the reader;
+      `hooks_doctor` prints it; `SessionRecord.turn_end_refusals` is the
+      per-session half, read from the record the gate already maintains, so the
+      heartbeat gains no spawn.
+
+      TWO PREMISE CORRECTIONS, both found by executing rather than by reading.
+
+      (a) **The gate has FOUR detectors, not three.** § 0 names A/B/C; detector D
+      (`completion`) landed under round 7 § Phase 1 and runs in the same
+      unconditional list. A counter built to the prose would have silently
+      dropped one detector's refusals, so `DETECTOR_IDS` is read off the gate's
+      own `DetectorId` union and a test pins all four.
+
+      (b) **The defect was in the WRITER too, not only in the missing reader.**
+      `markRefusedTurn` overwrote its record on every refusal and stored
+      `findings[0].detector` alone — so a session refused nine times looked
+      exactly like a session refused once, and a turn tripping B and C at once
+      counted as one B. D-2's "refusal frequency is invisible" was therefore true
+      of the state file as well as of the absent rollup, and a reader alone would
+      have aggregated a corpus that had already thrown the numbers away.
+      Mutation-verified: reverting the call site to `[findings[0]!.detector]`
+      fails the new end-to-end case, restoring it passes.
+
+      HONEST DENOMINATOR. A record exists only for a session that was refused, so
+      the reader reports refusals per *refused* session and says so in the output.
+      A per-session rate over all sessions would need a write on every session on
+      the hot Stop path, which this step's own "adds no spawn" forbids.
+
+      FIRST READING, against the 36 field records (2026-08-12 … 2026-08-17):
+      verification 22 (61%), language 9 (25%), promissory 5 (14%), completion 0.
+      A floor, not an exact count — every one of those records predates counting
+      and contributes one refusal each. Detector C dominating is D-1's own
+      prediction for quick-edit workflows, now measured. -->
+- [x] **1.2** Add the TTL the header admits is missing: prune ordinal files past a
       declared age at session start. Cheap and bounded.
       `verify:` a fixture directory with aged and fresh files keeps exactly the
       fresh ones.
-- [ ] **1.3** Split the counts before and after the local 12.1 install date per
+      <!-- done 2026-08-17: `pruneAgedRefusalState`, 90 days, run at
+      `session_start` by the `session-register` concern — the one slot that
+      already prunes, so the step costs one directory scan and no new spawn.
+      Ages on the record's OWN `refused_at`, never the filesystem mtime, which a
+      checkout or an rsync rewrites; an unparseable record is KEPT rather than
+      deleted. The gate header's "No TTL ships here" was corrected in place
+      rather than left as a stale admission. 90 is a stated default with a
+      revisit-if, not a measured optimum, and says so at the constant. -->
+- [x] **1.3** Split the counts before and after the local 12.1 install date per
       machine, to test claim 10's prediction rather than assume it.
       `verify:` the split appears in the rollup, with the install date recorded per
       machine.
+      <!-- done 2026-08-17, and the step's own mechanism was WEAKER than what
+      shipped, which is worth stating because it changes what the split proves.
+
+      `installed.lock` records the version that performed the MOST RECENT install
+      and when — not the date any particular version arrived. This machine reads
+      `13.0.0 at 2026-08-17`, so a before/after split on that date would say
+      nothing about 12.1 and would look like it did. So the refusal record now
+      carries `agent_config_version` AT REFUSAL TIME and the primary split is by
+      RECORDED version; the lockfile boundary is still printed, because it is the
+      only thing that dates the pre-stamping corpus.
+
+      Consequence, stated rather than buried: all 36 existing records are
+      `(unrecorded)` and the rollup labels them so. Claim 10 cannot be tested
+      until refusals accumulate under a stamped version — which is the honest
+      answer, and strictly better than attributing them to whatever is installed
+      today. -->
+
+**Interlock:** AC-1 asks for a rate over a window on at least two machines. The
+instrument now exists and the maintainer machine's window is open; a colleague
+machine contributes as soon as one runs a version that stamps its refusals.
+Nothing downstream of Phase 1 was built on the unstamped corpus.
 - **AC-1:** a per-detector refusal rate exists for the maintainer machine and at
   least one colleague machine, over a window long enough to be read as a rate
   rather than an anecdote.
@@ -99,7 +161,7 @@ Verified 2026-08-17 against `origin/main` @ `097ab6549`.
       the demotion is published with the distribution. The numbers are the
       maintainer's; the shape is the requirement. Blocked on
       `b-detector-demotion-bars`.
-- [ ] **2.2** Detector C's verify allowlist decides what counts as verification.
+- [x] **2.2** Detector C's verify allowlist decides what counts as verification.
       **Narrowed by claim 4:** the PHP toolchain the draft worried about is already
       matched, so this step is no longer "add phpunit and pest". What remains is a
       real audit with a smaller surface — enumerate the verify-shaped commands the
@@ -108,13 +170,53 @@ Verified 2026-08-17 against `origin/main` @ `097ab6549`.
       recognised, the same as every allowlist in this tree.
       `verify:` a fixture table of real commands with their recognition verdict;
       every addition has its own row.
+      <!-- done 2026-08-17: 56-row table in
+      `tests/scripts/turn_end_verify_allowlist.test.ts`, built from this
+      project's real surface — its `package.json` scripts, its `Taskfile`
+      targets, `./scripts-run`, `./agent-config`, and the PHP / Python / Go /
+      Rust toolchains.
+
+      CLAIM 4 RE-VERIFIED, not taken on trust: `vendor/bin/phpunit`, `pest`,
+      `composer test` and `php artisan test` all matched BEFORE this change. The
+      draft's expected work was genuinely already done.
+
+      TWO REAL MISSES, both added:
+        · `phpstan` — a static analyser of exactly the class already listed
+          (`mypy`, `pyright`, `clippy`).
+        · `lint` followed by a WORD character. `\blint\b` needs a boundary and
+          `_` is a word character, so EVERY `lint_*` script in `src/scripts/` was
+          unrecognised — `lint_persistence`, `lint_provenance`, and the rest.
+          `lint[-_:a-z]*` is the exact mirror of the `check[-_:a-z]*` this list
+          already carried, which is why it is the narrow fix and not a new idea.
+
+      FOUR MISSES DELIBERATELY NOT ADDED, because Risk 2 says every addition is a
+      way to satisfy the gate without verifying anything: `npm run prepack` (a
+      per-project lifecycle hook — a build step elsewhere), `task sync` /
+      `task generate-tools` / `agent-config roadmap:progress` (GENERATORS — they
+      rewrite the tree and check nothing, which is the rubber stamp in its purest
+      form), `agent-config gates --all` (enumerates, runs nothing), and
+      `vendor/bin/rector process --dry-run` (a refactorer; its dry run prints a
+      diff and asserts nothing). `psalm` is `phpstan`'s obvious sibling and is
+      also not added: nothing in the audited surface runs it, and "the team
+      actually runs" is this step's own standard.
+
+      The `false` rows are pinned as tests, not merely recorded — if a later
+      widening makes `task sync` or `ls -la` clear an unverified edit, the
+      fixture fails and the change has to be argued rather than slipped in. -->
+      <!-- open note for 2.1: this audit does NOT read Phase 1's distribution and
+      must not be read as doing so. The pre-registration in
+      `b-detector-demotion-bars` is untouched and still predates any read. -->
+
+**Phase status:** 2.2 is closed; **2.1 stays open on `b-detector-demotion-bars`**,
+so AC-2 ("no detector stays blocking without a number") is not yet satisfiable —
+the numbers now exist, the bar to judge them against is the maintainer's.
 - **AC-2:** each detector has either a green verdict — rate under its bar — or a
   demotion PR citing the distribution. **No detector stays blocking without a
   number.**
 
 ### Phase 3 — Make refusals cheap when they happen
 
-- [ ] **3.1** On a refusal retry, skip the non-gate Stop concerns: chat history has
+- [x] **3.1** On a refusal retry, skip the non-gate Stop concerns: chat history has
       already written, and re-running the context rebuild, the end-review scan and
       the self-repair detector on the retry is pure duplicate cost. Manifest-level,
       one opt-in flag per concern, default off, flipped only with a per-concern
@@ -122,13 +224,75 @@ Verified 2026-08-17 against `origin/main` @ `097ab6549`.
       is idempotent before flagging it.
       `verify:` a fixture retry runs only the refusal-capable concerns, and each
       skipped concern's artefact is identical to the non-retry run.
-- [ ] **3.2** Complementary lever, recorded here so the two files cannot drift:
+      <!-- done 2026-08-17: `skip_on_refusal_retry` in `hook_manifest.yaml`,
+      honoured by `_resolve_concerns` when `_is_refusal_retry` reads the host's
+      own `stop_hook_active` — the same field the gate uses as its layer-1 guard,
+      so the retry is the host's answer and not our inference. Anything
+      unparseable yields the FULL chain: running twice costs duplicate work,
+      skipping wrongly loses a write.
+
+      Measured end to end: the claude stop chain is 10 concerns, 8 on a retry.
+
+      THE STEP'S OWN PREMISE IS PARTLY REFUTED, and the audit it demanded is what
+      refuted it. "Chat history has already written, and re-running the context
+      rebuild, the end-review scan and the self-repair detector is pure duplicate
+      cost" holds for ONE of those four. Between the refusal and the retry the
+      model DOES more work — that is the point of refusing — so the transcript
+      has grown and every concern reading it has a changed input:
+        · `chat-history` — would LOSE the work done between the two Stops.
+        · `hot-context` — rebuilds from a tree the retry just edited.
+        · `self-repair` — a detector over a turn that changed.
+        · `session-eol` — reads only the bytes appended since the last scan, so
+          skipping the final Stop drops the tail.
+      Flagging those four would be Risk 3 exactly: "a concern skipped on the
+      retry might have been the one that needed the second pass, and the loss
+      would be silent."
+
+      TWO CONCERNS PASS, each on its OWN dedup rather than on our reading:
+        · `interruption-ledger` — dedupes on `(run_id, turn)`, and a refusal
+          retry is the same turn by construction. It already writes nothing. What
+          it does not already avoid is the COST: `main()` calls
+          `readTranscriptTail` (up to 8 MB, walking the whole file) BEFORE
+          reaching `alreadyRecorded`, so today every refused Stop pays a full
+          transcript walk and discards it. This is the flag with the real saving,
+          and D-3's "pure duplicate cost" located in the source.
+        · `end-review-nudge` — its F2 once-per-session marker returns "without
+          re-running the transcript scan", so the artefact is identical by the
+          concern's own construction. The saving is the module load, which is
+          smaller, and the manifest says so rather than overselling it.
+
+      `turn-end-gate` is asserted to survive the retry: skipping the
+      refusal-capable concern would leave the second attempt unguarded, which is
+      the inverse of the intent. A test pins it, and another pins that every
+      flagged concern carries a written ARGUMENT beside its flag — a flag with no
+      argument is the blanket skip wearing a per-concern shape. -->
+- [x] **3.2** Complementary lever, recorded here so the two files cannot drift:
       moving the non-gating Stop concerns to the host's async handler form is owned
       by `road-to-per-turn-hook-economy` step 5.3. This roadmap records only the
       split — gates synchronous, recorders async — and defers the mechanism and its
       acceptance criterion to that file.
       `verify:` this step needs no code; it is closed by that file's 5.3 landing, or
       by recording that it did not.
+      <!-- done 2026-08-17 by the second branch: 5.3 has NOT landed — read at
+      `86cdbf652`, `road-to-per-turn-hook-economy` step 5.3 is open. Recorded
+      here as that file's work, with the split stated: gates synchronous
+      (`turn-end-gate`, `team-review-gate`), recorders async.
+
+      One interlock the two files must not lose, because they now touch the same
+      concerns from opposite directions: 5.3 states that `end-review-nudge`
+      "needs its stdout to reach the model, so it stays synchronous until
+      measured otherwise". That is about the ASYNC axis and does not conflict
+      with 3.1's retry skip — on a retry its stdout was already delivered, or
+      already suppressed, on the first Stop. A future 5.3 may make it async or
+      leave it synchronous; either way the retry flag is orthogonal and neither
+      decision constrains the other. -->
+
+**AC-3 is NOT satisfied by this branch and is not claimed to be.** It asks that a
+refused-turn retry cost "materially less than a full Stop in the bench, measured
+rather than asserted". What shipped is the mechanism and its correctness proof —
+the chain is provably shorter and the skipped artefacts provably identical. The
+*measurement* belongs to `road-to-per-turn-hook-economy`'s bench, which owns the
+Stop-slot numbers, and is the honest reason this phase advances without closing.
 - **AC-3:** a refused-turn retry costs materially less than a full Stop in the
   bench, measured rather than asserted.
 
