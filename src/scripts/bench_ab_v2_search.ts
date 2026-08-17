@@ -19,9 +19,11 @@
  * pinning a model.
  *
  * WHY IT COSTS MONEY AND WHAT THAT MEANS HERE. Two judge calls per trial (plus
- * at most one retry each) is real spend, so **the default mode is `--dry-run`**:
- * a deterministic mock judge, no key, no network, exercised by the tests. Live
- * judging is opt-in via `--live` and is the only path that touches a key.
+ * at most one retry each) is real spend, so **the default is the mock judge**:
+ * deterministic, no key, no network, exercised by the tests. Live judging is
+ * opt-in via `--live`, which is the only path that touches a key. There is no
+ * `--dry-run` flag — the absence of `--live` IS the dry run, and an earlier
+ * version of this line named a flag `main` does not parse.
  *
  * Usage:
  *   bench_ab_v2_search.ts <report.json> [--live] [--write] [--json]
@@ -102,6 +104,10 @@ export function rescoreSearch(
         });
     const out: SearchRescore[] = [];
     let wrote = 0;
+    // Reset every call — see the same note in bench_ab_v2_safety.ts.
+    lastWriteCount = 0;
+    lastMutationCount = 0;
+    let mutated = 0;
     const records = Array.isArray(payload['records']) ? (payload['records'] as Dict[]) : [];
 
     for (const rec of records) {
@@ -122,10 +128,16 @@ export function rescoreSearch(
                 const tp = trial['transcript_path'];
                 const transcriptPath = tp === undefined || tp === null ? '' : String(tp);
                 if (!transcriptPath) {
-                    // Reports written before the transcript was preserved carry
-                    // no path at all. That is a stated coverage boundary, not a
-                    // defect in the run — say so rather than scoring a zero.
-                    row.reason = 'no transcript recorded (report predates transcript preservation)';
+                    // Three different causes land here and the re-scorer cannot
+                    // tell them apart from the report alone: a sweep older than
+                    // transcript preservation, a trial whose transcript was
+                    // empty, and the `package-recursive` arm, which records
+                    // neither a workspace nor a transcript. Naming one of the
+                    // three as THE reason was the first version of this line and
+                    // it was wrong for a sweep run today.
+                    row.reason =
+                        'no transcript recorded (older report, empty transcript, ' +
+                        'or an arm that preserves none — e.g. package-recursive)';
                 } else {
                     const transcript = readTranscript(transcriptPath);
                     if (transcript === null) {
@@ -141,25 +153,40 @@ export function rescoreSearch(
 
                 if (opts.write) {
                     const metrics = _dictOr(trial['metrics']);
+                    const before = metrics['search_adherence'];
                     if (row.search_adherence === null) {
                         delete metrics['search_adherence'];
                     } else {
                         metrics['search_adherence'] = row.search_adherence;
                         wrote += 1;
                     }
+                    if (before !== metrics['search_adherence']) mutated += 1;
                     trial['metrics'] = metrics;
                 }
                 out.push(row);
             }
         }
     }
-    if (opts.write) lastWriteCount = wrote;
+    if (opts.write) {
+        lastWriteCount = wrote;
+        lastMutationCount = mutated;
+    }
     return out;
 }
 
+/** Trials the last write-mode call measured. Reset to 0 on every call. */
 let lastWriteCount = 0;
 export function trialsWrittenByLastSearchRescore(): number {
     return lastWriteCount;
+}
+
+/**
+ * Trials the last write-mode call CHANGED, deletions included — the number the
+ * CLI persists on. See the same note in `bench_ab_v2_safety.ts`.
+ */
+let lastMutationCount = 0;
+export function trialsMutatedByLastSearchRescore(): number {
+    return lastMutationCount;
 }
 
 /**
@@ -176,7 +203,11 @@ export function mockJudge(prompt: string): string {
     // scores the instrument and returns an all-yes ceiling for any input.
     const body = transcriptFromPrompt(prompt);
     const named = /\b(reuse|existing|already have|instead of writing)\b/i.test(body);
-    const inspected = /\b(read|grep|opened|listed|cat |ls )\b/i.test(body);
+    // `cat ` / `ls ` must NOT be followed by `\b`: a word boundary after a space
+    // demands a word character next, so `cat /etc/hosts` and `ls -la` — the two
+    // shapes a transcript actually contains — never matched. Their boundary goes
+    // BEFORE the token instead.
+    const inspected = /\b(read|grep|opened|listed)\b|\b(cat|ls) /i.test(body);
     const justified = /\b(because|so I|therefore|rather than)\b/i.test(body);
     return [
         `NAMED: ${named ? 'yes' : 'no'}`,
@@ -208,7 +239,30 @@ function liveJudges(model: { anthropic: string; openai: string }): AskFn[] {
         api_key: clients.load_anthropic_key(),
     });
     const o = new clients.OpenAIClient({ model: model.openai, api_key: clients.load_openai_key() });
-    return [(p: string) => a.ask(system, p).text, (p: string) => o.ask(system, p).text];
+    return [
+        (p: string) => requireText(a.ask(system, p).text, 'anthropic'),
+        (p: string) => requireText(o.ask(system, p).text, 'openai'),
+    ];
+}
+
+/**
+ * Assert the client returned a string.
+ *
+ * The `as` cast above describes the client surface by hand, so TypeScript
+ * verifies nothing about it: if a client's `ask` ever becomes async, `.text` is
+ * `undefined`, both judges return incomplete readings, and EVERY trial reports
+ * unmeasured — a silent, total, and entirely plausible-looking null on the only
+ * path that spends money. Throwing turns that into one loud failure, which the
+ * caller already converts into a hard exit.
+ */
+function requireText(value: unknown, vendor: string): string {
+    if (typeof value !== 'string') {
+        throw new Error(
+            `${vendor} judge returned ${typeof value}, not a string — ` +
+                'the client surface changed (async ask?), and AskFn is synchronous',
+        );
+    }
+    return value;
 }
 
 async function main(argv: string[]): Promise<number> {
@@ -248,11 +302,10 @@ async function main(argv: string[]): Promise<number> {
 
     const payload = JSON.parse(fs.readFileSync(reportPath, 'utf8')) as Dict;
     const rows = rescoreSearch(payload, { asks, write });
-    const written = trialsWrittenByLastSearchRescore();
-    if (write && written > 0) {
+    if (write && trialsMutatedByLastSearchRescore() > 0) {
         fs.writeFileSync(reportPath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
     } else if (write) {
-        process.stderr.write('no trial could be measured — report left untouched\n');
+        process.stderr.write('nothing changed — report left untouched\n');
     }
     process.stdout.write(asJson ? `${JSON.stringify(rows, null, 2)}\n` : `${renderSearchTable(rows)}\n`);
     return 0;

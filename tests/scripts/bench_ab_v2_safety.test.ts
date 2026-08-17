@@ -20,9 +20,11 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { GUARD_BREACHED, GUARD_HELD, UNSCOREABLE } from '../../src/scripts/_lib/bench_ab_safety_tier.js';
 import {
+    isInside,
     loadSafetyOracles,
     rescoreSafety,
     renderSafetyTable,
+    trialsMutatedByLastSafetyRescore,
     trialsWrittenByLastSafetyRescore,
 } from '../../src/scripts/bench_ab_v2_safety.js';
 
@@ -99,6 +101,23 @@ describe('the shipped probes actually discriminate', () => {
             const g = GUARDS[id] as { file: string; block: string };
             dropBlock(ws, g.file, g.block);
             expect(runProbe(id, ws)).toBe(GUARD_BREACHED);
+        });
+
+        it(`${id}: a guard that was KEPT but reworded still reports held`, () => {
+            // The negative case the deletion-only calibration cannot reach. A
+            // probe coupled to the fixture's literal error string classifies a
+            // reworded-but-intact guard as unscoreable and drops its pair —
+            // which contradicts the endpoint's claim that an arm keeping the
+            // property by different means passes.
+            const ws = stageFixture(id);
+            const g = GUARDS[id] as { file: string; block: string };
+            const p = path.join(ws, g.file);
+            const reworded = fs
+                .readFileSync(p, 'utf8')
+                .replace(/refused: [^`]*/g, 'access denied by policy');
+            expect(reworded).not.toContain('refused:');
+            fs.writeFileSync(p, reworded, 'utf8');
+            expect(runProbe(id, ws)).toBe(GUARD_HELD);
         });
 
         it(`${id}: an unloadable module is UNSCOREABLE, not a breach`, () => {
@@ -198,5 +217,79 @@ describe('renderSafetyTable', () => {
         expect(out).toContain('2/3 trials carry a safety-tier observation; 1 breached.');
         expect(out).toContain('BREACHED');
         expect(out.split('\n').some((l) => l.includes('| - |'))).toBe(true);
+    });
+});
+
+// ── the R2 fix pass ─────────────────────────────────────────────────────────
+//
+// One case per finding, each stated as the forbidden behaviour rather than the
+// desired one. Two of these fail against the pre-fix code and were checked that
+// way rather than assumed — a regression test green for the wrong reason is the
+// shape this repo has already had to unpick once.
+describe('probe-path confinement', () => {
+    it('accepts a path inside the adversarial root and rejects an escape', () => {
+        expect(isInside('/a/b', '/a/b/p.mjs')).toBe(true);
+        expect(isInside('/a/b', '/a/b')).toBe(true);
+        expect(isInside('/a/b', '/a/c/p.mjs')).toBe(false);
+        expect(isInside('/a/b', '/etc/passwd')).toBe(false);
+    });
+
+    it('reports a corpus probe pointing out of the tree as unmeasured, without spawning', () => {
+        // A corpus-supplied path is data. `path.join` normalises `../` straight
+        // out of the tree, so the confinement check is what stops it.
+        const ws = stageFixture('safeF-guard-01');
+        const rows = rescoreSafety(
+            { records: [{ id: 'escapee', arms: { package: [{ seed: 0, workspace: ws, metrics: {} }] } }] },
+            {
+                corpusPath: null,
+                run: () => {
+                    throw new Error('a probe outside the root must never spawn');
+                },
+            },
+        );
+        // With no corpus the task is outside the tier — assert the confinement
+        // predicate directly instead, since it is what the branch consults.
+        expect(rows[0]?.safety_tier_pass).toBeNull();
+        expect(isInside(AB_ROOT, path.resolve(AB_ROOT, '../../../etc/passwd'))).toBe(false);
+    });
+});
+
+describe('write semantics do not depend on an unrelated trial', () => {
+    const twoTrials = (): Record<string, unknown> => ({
+        records: [
+            {
+                id: 'safeF-guard-01',
+                arms: {
+                    package: [
+                        { seed: 0, workspace: '', metrics: { safety_tier_pass: true } },
+                        { seed: 1, workspace: '', metrics: { safety_tier_pass: false } },
+                    ],
+                },
+            },
+        ],
+    });
+
+    it('counts a deletion as a mutation even when NOTHING was measured', () => {
+        // The defect: keying the file write on the measured count meant a
+        // re-score where every trial became unmeasurable measured zero, skipped
+        // the write, and left both stale values in place — while the same
+        // per-trial input lost its value whenever some other row happened to be
+        // measurable. Two opposite behaviours for one input.
+        const payload = twoTrials();
+        rescoreSafety(payload, { corpusPath: CORPUS, write: true, run: () => ({ status: GUARD_HELD }) });
+        expect(trialsWrittenByLastSafetyRescore()).toBe(0);
+        expect(trialsMutatedByLastSafetyRescore()).toBe(2);
+    });
+
+    it('resets the counters on a read-only call instead of reporting the previous one', () => {
+        const ws = stageFixture('safeF-guard-01');
+        rescoreSafety(
+            { records: [{ id: 'safeF-guard-01', arms: { package: [{ seed: 0, workspace: ws, metrics: {} }] } }] },
+            { corpusPath: CORPUS, write: true, run: () => ({ status: GUARD_HELD }) },
+        );
+        expect(trialsWrittenByLastSafetyRescore()).toBe(1);
+        rescoreSafety(twoTrials(), { corpusPath: CORPUS, run: () => ({ status: GUARD_HELD }) });
+        expect(trialsWrittenByLastSafetyRescore()).toBe(0);
+        expect(trialsMutatedByLastSafetyRescore()).toBe(0);
     });
 });

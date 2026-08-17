@@ -18,12 +18,17 @@
  * paid path where a hang costs money. Here a hang costs a re-run of a free
  * script.
  *
- * WHAT IT EXECUTES, STATED PLAINLY. `node <probe> <workspace>` with the
- * repository root as the working directory, where the probe imports the
- * trial's module. That is the same trust boundary the corpus already has
- * (`solve_test` / `hidden_test` shell out into the clone) and no wider: the
- * probes are in-repo, reviewed files, and no probe writes into a workspace —
- * mutating the evidence would make a re-score unrepeatable.
+ * WHAT IT EXECUTES, AND THE ONE PLACE IT IS WIDER THAN THE CORPUS. `node
+ * <probe> <workspace>` with the repository root as the working directory, where
+ * the probe imports the trial's module. The probe itself is confined to the
+ * adversarial root, so a corpus entry cannot point it out of the tree with
+ * `../`. The **workspace** is not confined: it comes verbatim from a report
+ * file, and `solve_test` / `hidden_test` by contrast run inside a clone the
+ * sweep itself just created. So the honest statement is *narrower than the
+ * first draft of this header*: same class of trust, one degree wider in reach,
+ * and the mitigation is that a report is a local artefact you produced. No
+ * probe writes into a workspace — mutating the evidence would make a re-score
+ * unrepeatable.
  *
  * The report is rewritten in place only with `--write`; the default prints the
  * table and touches nothing, because silently rewriting a pinned artefact is
@@ -55,6 +60,12 @@ type Dict = Record<string, unknown>;
 
 function _dictOr(v: unknown): Dict {
     return v && typeof v === 'object' && !Array.isArray(v) ? (v as Dict) : {};
+}
+
+/** Is `candidate` the root itself or below it? Both sides already resolved. */
+export function isInside(root: string, candidate: string): boolean {
+    const rel = path.relative(root, candidate);
+    return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
 }
 
 /**
@@ -128,6 +139,13 @@ export function rescoreSafety(
     const oracles = loadSafetyOracles(opts.corpusPath === undefined ? CORPUS_PATH : opts.corpusPath);
     const out: SafetyRescore[] = [];
     let wrote = 0;
+    // Reset on EVERY call, not only the writing ones: leaving the previous
+    // call's total in place makes `trialsWrittenByLastSafetyRescore()` correct
+    // only for a particular call order, which is a property of the caller
+    // rather than of the argument.
+    lastWriteCount = 0;
+    lastMutationCount = 0;
+    let mutated = 0;
     const records = Array.isArray(payload['records']) ? (payload['records'] as Dict[]) : [];
 
     for (const rec of records) {
@@ -151,6 +169,11 @@ export function rescoreSafety(
                     row.reason = 'task carries no safety oracle';
                 } else if (!workspace || !fs.existsSync(workspace)) {
                     row.reason = workspace ? 'workspace missing on disk' : 'no workspace recorded';
+                } else if (!isInside(adversarialRoot, path.resolve(adversarialRoot, oracle.probe))) {
+                    // A corpus-supplied path is data, and `path.join` happily
+                    // normalises `../` straight out of the tree. Confinement is
+                    // the cheap half of the trust boundary the header states.
+                    row.reason = `probe path escapes the adversarial root: ${oracle.probe}`;
                 } else {
                     const probeAbs = path.join(adversarialRoot, oracle.probe);
                     const res = safetyTierForWorkspace({
@@ -167,32 +190,50 @@ export function rescoreSafety(
 
                 if (opts.write) {
                     const metrics = _dictOr(trial['metrics']);
+                    const before = metrics['safety_tier_pass'];
                     if (row.safety_tier_pass === null) {
                         delete metrics['safety_tier_pass'];
                     } else {
                         metrics['safety_tier_pass'] = row.safety_tier_pass;
                         wrote += 1;
                     }
+                    if (before !== metrics['safety_tier_pass']) mutated += 1;
                     trial['metrics'] = metrics;
                 }
                 out.push(row);
             }
         }
     }
-    if (opts.write) lastWriteCount = wrote;
+    if (opts.write) {
+        lastWriteCount = wrote;
+        lastMutationCount = mutated;
+    }
     return out;
 }
 
 /**
  * How many trials the last `rescoreSafety({ write: true })` actually measured.
- *
- * The CLI uses it to skip rewriting the report when nothing was measured:
- * re-serialising a pinned artefact for a zero-row pass changes its bytes without
- * changing a single number.
+ * Reset to 0 at the start of every call, writing or not.
  */
 let lastWriteCount = 0;
 export function trialsWrittenByLastSafetyRescore(): number {
     return lastWriteCount;
+}
+
+/**
+ * How many trials the last write-mode call CHANGED — including the ones whose
+ * stale key it deleted.
+ *
+ * The CLI persists on this rather than on the measured count, because those two
+ * numbers disagree in exactly the case that matters: a re-score where every
+ * trial became unmeasurable measures zero and still has deletions to persist.
+ * Keying the write on the measured count made a stale value's survival depend
+ * on whether some *other* trial happened to be measurable — two opposite
+ * behaviours for one per-trial input.
+ */
+let lastMutationCount = 0;
+export function trialsMutatedByLastSafetyRescore(): number {
+    return lastMutationCount;
 }
 
 export function renderSafetyTable(rows: SafetyRescore[]): string {
@@ -235,11 +276,10 @@ async function main(argv: string[]): Promise<number> {
     }
     const payload = JSON.parse(fs.readFileSync(reportPath, 'utf8')) as Dict;
     const rows = rescoreSafety(payload, { write });
-    const written = trialsWrittenByLastSafetyRescore();
-    if (write && written > 0) {
+    if (write && trialsMutatedByLastSafetyRescore() > 0) {
         fs.writeFileSync(reportPath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
     } else if (write) {
-        process.stderr.write('no trial could be measured — report left untouched\n');
+        process.stderr.write('nothing changed — report left untouched\n');
     }
     process.stdout.write(asJson ? `${JSON.stringify(rows, null, 2)}\n` : `${renderSafetyTable(rows)}\n`);
     return 0;

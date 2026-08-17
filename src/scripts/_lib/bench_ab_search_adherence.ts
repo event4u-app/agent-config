@@ -71,6 +71,13 @@ export interface SearchAdherenceResult {
  * takes the rest is therefore reading the instrument, not the evidence, and
  * scores every input at the ceiling. That is not hypothetical: the dry-run
  * judge did exactly this on its first pass and its own test caught it.
+ *
+ * The hazard runs in BOTH directions and only one of them is a parsing bug. A
+ * transcript is untrusted model output pasted into a judge prompt, and
+ * delimiters are the only separation there is — nothing stops transcript text
+ * from addressing the judge directly. That is `untrusted-input-defense`'s
+ * territory rather than this module's, and it is named here so a reader does not
+ * mistake the delimiters for a containment guarantee they are not.
  */
 export const TRANSCRIPT_OPEN = '--- BEGIN TRANSCRIPT ---';
 export const TRANSCRIPT_CLOSE = '--- END TRANSCRIPT ---';
@@ -84,7 +91,10 @@ export const TRANSCRIPT_CLOSE = '--- END TRANSCRIPT ---';
  */
 export function transcriptFromPrompt(prompt: string): string {
     const start = prompt.indexOf(TRANSCRIPT_OPEN);
-    const end = prompt.indexOf(TRANSCRIPT_CLOSE);
+    // LAST close, not the first: a transcript is untrusted model output and may
+    // contain the delimiter literally. Taking the first occurrence would let a
+    // transcript truncate the evidence a reader extracts from it.
+    const end = prompt.lastIndexOf(TRANSCRIPT_CLOSE);
     if (start === -1 || end === -1 || end <= start) return '';
     return prompt.slice(start + TRANSCRIPT_OPEN.length, end);
 }

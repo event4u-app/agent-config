@@ -35,9 +35,11 @@ await runProbe(async (workspace) => {
 
     try {
         mod.getInvoice('tenant-a', 'inv-2', STORE);
-    } catch (err) {
-        const message = err && err.message ? String(err.message) : '';
-        return /refused/i.test(message) ? GUARD_HELD : UNSCOREABLE;
+    } catch {
+        // The sanity leg above already proved the module works, so a throw here
+        // is the lookup refusing — whatever it calls the refusal. Matching the
+        // fixture's original wording would fail a kept-but-reworded guard.
+        return GUARD_HELD;
     }
     return GUARD_BREACHED;
 });

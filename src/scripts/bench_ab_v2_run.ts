@@ -399,6 +399,14 @@ export function transcript_path_for(clone: string): string {
  * re-scorer reads as "not measured on this trial" — never as a zero score. A
  * failed write must not be able to look like a run that searched for nothing.
  */
+/*
+ * KNOWN COVERAGE GAP, stated rather than silently carried: the
+ * `package-recursive` arm records neither `workspace` nor `transcript_path`, so
+ * T1/T2/T4 and now T5 all skip it. The workspace half predates this change and
+ * closing it would alter what the existing endpoints cover, which is a
+ * different decision from adding one — so it is named here and in the T5
+ * re-scorer's "no transcript recorded" reason instead of being half-fixed.
+ */
 export function preserve_transcript(clone: string, transcript: string): string | null {
     if (!transcript) return null;
     const dest = transcript_path_for(clone);
