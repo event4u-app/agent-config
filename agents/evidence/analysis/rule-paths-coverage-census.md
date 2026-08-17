@@ -28,6 +28,28 @@
 > production.** The question is therefore not "may we start scoping" but
 > "is what is already scoped correct" — see the finding below.
 
+> **Second correction, 2026-08-17 — the "25 of 110" above went stale in the
+> commit that wrote it.** `33c7c20` added the mixed-triggers guard and its own
+> message records the result: *"Scoped rules 25 → 6."* That commit also edited
+> this page, so the sentence above was made wrong by the same change that
+> corrected the paragraph it lives in. Measured from source at `origin/main`
+> (`097ab6549`) with `src/scripts/rule_activation_census.ts`, which reads the
+> emitter's own exported `_claude_paths_plan` rather than re-implementing it:
+> **117 rule files · 25 declaring a path-shaped trigger · 19 of those mixed
+> (also keyword/phrase) · 6 path-only · emitter verdict 6 scoped, 102
+> unconditional, 9 `always`.** So 25 is the count of rules that *carry a path
+> trigger*, and 6 is the count the host actually receives as scoped — two
+> different quantities that the old sentence merged into one.
+>
+> **And a projection reading is not evidence for either.** A maintainer
+> `.claude/rules/` measured the same day holds **92 files with 0 declaring
+> `paths:`** — neither 25 nor 6 — because that directory is generated and
+> gitignored, so its scope and freshness are unknown at read time. The census
+> script reports source and projection side by side, labelled, and warns on
+> divergence instead of averaging them; a `grep -l '^paths:' .claude/rules/*.md`
+> is therefore refuted as a discriminator, which
+> `road-to-mixed-trigger-activation-cost` § 1 claim 10 records in full.
+
 The zero was checked two ways — a per-file extraction of the region between the
 first two `---` fences, and a concatenated-frontmatter sweep. Both return zero.
 The related keys `file_pattern:` and `path_prefix:`, which appear in some rule
