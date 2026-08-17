@@ -1,29 +1,81 @@
 # Findings: fix-gate-completeness-new-arrivals
-<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: a0f5a71d87aaf09009e1c0c54b61e1b472e23dc40040534c53e99ef0e3f359c9 | diff: 957a53e860a973b87b32bba07479b50f43b4f6f1 | reviewer: r2-fresh-subagent-fix-gate-completeness-new-arrivals | prompt_hash: bc44bd7d86b41fec1603ac24e32588bcaf00fc50809d210995e0a4dfb3afd003 -->
+<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: f90f591a10ff4c24b9dd4eca754f797daf5d87c3cc182a627ddadd8430c34f07 | diff: c9753b151dfd7a0aa95af08e59cff298c4220318 | reviewer: r2-fresh-subagent-fix-gate-completeness-new-arrivals | prompt_hash: db94f5eff687962dd4f01997695dd85561932b364bcb53fc1ee19e574da13fb0 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-17 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 957a53e860a973b87b32bba07479b50f43b4f6f1
-  scope_hash: a0f5a71d87aaf09009e1c0c54b61e1b472e23dc40040534c53e99ef0e3f359c9
+  diff_sha: c9753b151dfd7a0aa95af08e59cff298c4220318
+  scope_hash: f90f591a10ff4c24b9dd4eca754f797daf5d87c3cc182a627ddadd8430c34f07
   roadmap: none
   roadmap_hash: none
   ac_hash: none
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-08-17T20:52:52Z
+dispatched: 2026-08-17T22:58:24Z
 -->
 
-| # | Severity | File:Line | Finding | Status | Reason/Ref |
-|---|----------|-----------|---------|--------|------------|
-| 1 | high | src/scripts/check_pr_ci_current.ts:61 | The ledger-exempt reason claims "no target population", but the file enumerates one (`f.rows`) and silently drops members whose `state` is not a string — the exemption permanently closes the door on counting exactly that. | fixed | 8ec1dbb65 |
-| 2 | medium | src/scripts/check_gate_coverage.ts:351-357 | `estate_invalid` is recorded as `fail`, which counts into the ledger's `scanned=`, although the gate's own comment says such a target could not be MEASURED — the ledger then over-reports inspection. | fixed | 8ec1dbb65 |
-| 3 | medium | src/scripts/check_gate_coverage.ts:349 | `unavailable` is mapped to `missing_credentials`, whose printed sentence names a credential; the only such gate is unavailable for a stale build artefact, so the audit sentence sends the reader after a token that does not exist. | fixed | 8ec1dbb65 |
-| 4 | medium | src/scripts/build_archive_index.ts:322-324 | The ledger plans the RESULT set and completes it immediately, so `planned === completed, skipped=0` by construction; the enumeration to plan is `archiveFiles(dir)`, upstream of `buildIndex`. | fixed | 8ec1dbb65 |
-| 5 | low | src/scripts/check_gate_coverage.ts:353 | Same class as 2 for `crashed`: nothing was inspected, yet it counts into `scanned=`. | fixed | 8ec1dbb65 |
-| 6 | low | src/scripts/check_gate_coverage.ts:335 | `plan()` sits outside the manifest try/catch and ids are not uniqueness-checked, so a duplicated row throws `LedgerUsageError` as an uncaught stack trace with exit 1, which this file's contract reads as "a gate is blind". | fixed | aa48d845a — plan and recording loop both deduplicated; 8ec1dbb65 had left this one unfixed while the others landed |
-| 7 | low | src/scripts/build_archive_index.ts:341-344 | The added comment claims the ledger reports before either exit path branches; there are three, and the earliest (`DeadScopeError` → return 1) returns without reporting. | fixed | 8ec1dbb65 |
-| 8 | low | src/scripts/build_archive_index.ts:117-124 | The comment justifies unconditional `complete()` via `not-extractable` being a real reading, but `_frontmatter` swallows a parse failure, which is a genuine per-target degrade the reasoning does not cover. | fixed | 8ec1dbb65 |
-| 9 | low | src/scripts/check_gate_coverage.ts:327-333 | The justification overstates the gap — the gate already emits counted `pending`/`unavailable` warnings — and the run now prints two different numbers under the word `scanned`. | fixed | 8ec1dbb65 |
-| 10 | low | src/config/gate-violation-baselines.json:39 | The note cites "landed + 456 days"; the literal 456 appears nowhere in the test, which computes `STALE_AFTER_DAYS + 400`, so a reader verifying by grep finds nothing. | fixed | 8ec1dbb65 |
-| 11 | low | tests/scripts/check_gate_coverage.test.ts | No test exercises the new code; findings 2, 3 and 5 are exactly the class a verdict-to-outcome discrimination test would have caught. | fixed | 8ec1dbb65 |
+Round 1 of this review (11 findings, all fixed) is archived beside this file as
+`fix-gate-completeness-new-arrivals.round1-review.md` — it was blanked by a
+`--force` re-dispatch and restored from `git show`.
+
+## Reviewer verdict on the threshold change
+
+> The symptom is real; the stated justification is factually false, and the
+> change bypasses a pre-registered lock.
+
+Confirmed by the reviewer and re-verified by the implementer against
+`agents/roadmaps/archive/road-to-hook-latency-repair.md`: the 150 ms
+`pre_tool_use` cap was **not** left pointing at the bundle path by oversight. It
+was deliberately re-pointed at `--via-cli` — Goal ("now binding on the real
+invocation path"), pre-registered success criterion ("measured via `--via-cli`"),
+Locks ("no budget relaxation"), and commit `832480ac9` ("budget unchanged", red
+at 165 ms before the Phase-2 levers turned it green at cli p95 84 ms).
+
+## Findings
+
+| # | Sev | File:Line | Finding | Status | Reason/Ref |
+|---|-----|-----------|---------|--------|------------|
+| 1 | high | `src/config/hook-latency-budget.json:12-24`, `src/scripts/bench_hook_latency.ts:284-296` | The premise is false: 150 ms was pre-registered *against `--via-cli`*, under a Locks line reading "no budget relaxation". This is a relaxation documented as an oversight fix. | OPEN | |
+| 2 | high | `src/config/hook-latency-budget.json:29` vs `:16-24` | Self-contradiction in one file: `honest_null_consequence` prescribes default-off + published known cost for a miss; the new block answers a miss by raising the cap. | OPEN | |
+| 3 | high | `docs/CLAIMS.md:367` → `docs/proof.md:73`, `docs/evaluator.md:25` | Public claim `status: backed` still reads "Budgets unchanged (pre_tool_use p95 <= 150 ms)" while the gated path enforces 200. `check_claims` only resolves the pointer, so CI cannot catch the drift. | OPEN | |
+| 4 | high | `src/scripts/check_pr_ci_current.ts:416-421` | Ledger marks every row `complete` **before** `decide()` runs, but `decide` returns on `unobservable`/`behind`/`diverged`/`ahead`/stale-head before reading any row. On `--pre-push`, local-ahead is the normal state. | OPEN | |
+| 5 | medium | `src/scripts/bench_hook_latency.ts:295`, `src/config/hook-latency-budget.json:14` | Only `pre_tool_use` gets a cli cap; the other five keep the bundle-registered 250, though measured cli p95 reaches 164. The change's own argument is left unapplied to 5 of 6 events. | OPEN | |
+| 6 | medium | `src/config/hook-latency-budget.json:19-21` | The evidence shows the distribution straddles 150; it does not show 150 was wrong *for this path*. The competing hypothesis — the consumer path regressed since the repair closed at cli p95 84 ms — is untested and unmentioned; `revised_from`/`revision_evidence` not adopted; the 5 runs carry no IDs. | OPEN | |
+| 7 | medium | `src/scripts/bench_hook_latency.ts:303,317-321`; `docs/hook-latency.json` | The regression net has been inert on the gated path since 2026-08-03 — no top-level `invocation_path`, so `priorPath='bundle'` mismatches `cli` and CI prints "regression net skipped" every run. | OPEN | |
+| 8 | medium | `src/config/gate-violation-baselines.json:39` | The note says `check_pr_ci_current` "took a reasoned exemption" and "two adopted a real ledger" — but this diff *withdraws* that exemption and all three adopted ledgers. | OPEN | |
+| 9 | medium | `src/scripts/check_gate_coverage.ts:216-222` | `ledgerOutcomeFor`'s `default:` returns `'complete'` with no `never` exhaustiveness guard; the new test enumerates a hardcoded verdict list. | OPEN | |
+| 10 | medium | `src/scripts/check_gate_coverage.ts:209-212` | `crashed` maps to `dead_scan_root` ("the root … no longer exists"); a gate that threw has no dead root. Same mis-mapping class round 1 rejected for `unavailable`→`missing_credentials`. | OPEN | |
+| 11 | medium | `src/scripts/check_pr_ci_current.ts:418` | `plan()` throws `LedgerUsageError` on a duplicate target; duplicate check names occur (cancelled re-run beside a live one, two workflows sharing a job name). Throw → exit 2, in a gate promising "degrades rather than blocks". Its sibling in the same diff dedupes. | OPEN | |
+| 12 | medium | `src/scripts/build_archive_index.ts:337` | `no_applicable_files` ("resolved to zero files the check applies to") is the wrong audit sentence for "enumerated but produced no entry". | OPEN | |
+| 13 | medium | `tests/scripts/check_gate_coverage.test.ts` | Neither new ledger adoption is tested. The whole justification for withdrawing the exemption is the dropped-row path, and nothing pins `droppedRows`, the mapping, or finding 4. | OPEN | |
+| 14 | low | `src/scripts/build_archive_index.ts:336` | `archiveFiles(dir)` is walked a *second* time after `buildIndex` already walked it, so the plan comes from a later enumeration than the results; nothing checks `produced ⊄ planned`. | OPEN | |
+| 15 | low | `src/scripts/build_archive_index.ts:337-341` | The skip branch is unreachable — `buildIndex` maps 1:1 over `archiveFiles`, and a read error throws before the ledger. Verified `planned=506 skipped=0`. | OPEN | |
+| 16 | low | `src/scripts/bench_hook_latency.ts:33-41` | The Gate-semantics header still states the `p95_ci` rule, false under `--via-cli` once a path-aware cap exists; only the inline comment was updated. | OPEN | |
+| 17 | low | `src/scripts/check_gate_coverage.ts:191-192` | The `classify` docstring is orphaned above `ledgerOutcomeFor`; `classify` has lost its documentation. | OPEN | |
+| 18 | low | `src/config/hook-latency-budget.json:23` | Nested `review_by: 2026-11-18` is invisible to `lint_budget_ownership.ts:169`, which reads only top-level `review_by`. | OPEN | |
+| 19 | low | `src/config/hook-latency-budget.json:20` | "stays well below the 250 ms any_hook_event ceiling so a pathology is still caught" — `bench_hook_latency.ts:295` selects one budget object, so 250 is never applied to `pre_tool_use`. | OPEN | |
+| 20 | low | `src/scripts/build_archive_index.ts:352`, `src/scripts/check_pr_ci_current.ts:421` | `ledger.report()` writes unconditionally, so `--quiet` no longer means quiet in two gates. Intentional per `gate_ledger.ts:266-278`, but it changes two contracts unnoted. | OPEN | |
+
+## Ordering disclosure — one fix predates this artefact
+
+Finding 1's repair is the revert of `c9753b151`, landed as `3952d49bf` **before**
+this file was committed. That inverts the artefact-before-fix ordering, and it is
+recorded here rather than concealed: the reverted commit crossed a recorded lock
+on a live branch, and leaving a lock violation in place while prose was written
+was the worse of the two options. Every other row was OPEN when this file landed.
+
+## What would make the threshold change defensible
+
+The reviewer's own answer — not a different number, a different route, because
+the lock it crosses is recorded:
+
+- **(a)** treat the miss as the pre-committed honest-null: hooks default-off plus
+  a published known cost.
+- **(b)** re-open the target through the decision-revisit route, citing the
+  roadmap.
+- **(c)** establish that the consumer path did **not** regress (a bundle
+  measurement on the same runner; the CI bundle baseline is 81 ms) and re-arm the
+  regression net with a `--via-cli` CI baseline — which the five CI runs already
+  in hand could have supplied.
+
+Route selection is maintainer-owned and is not taken by the implementer.

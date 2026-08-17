@@ -21,16 +21,19 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 686821324b2ad94533a277a43cb857d21bb600c6, review
-  artefacts excluded), scope hash `ede514a782c72234fc4aea9e9cb2b1a503808a0ad850aca26ee3b0c8537bda26`
+- diff: `diff.patch` — the review scope (branch head c9753b151dfd7a0aa95af08e59cff298c4220318, review
+  artefacts excluded), scope hash `f90f591a10ff4c24b9dd4eca754f797daf5d87c3cc182a627ddadd8430c34f07`
 - roadmap under review: none (`acceptance-criteria.md` is empty)
 
 Changed files:
 
 - src/config/gate-violation-baselines.json
+- src/config/hook-latency-budget.json
+- src/scripts/bench_hook_latency.ts
 - src/scripts/build_archive_index.ts
 - src/scripts/check_gate_coverage.ts
 - src/scripts/check_pr_ci_current.ts
+- tests/scripts/check_gate_coverage.test.ts
 
 ## Output format (contract §2.2)
 
@@ -52,5 +55,5 @@ Fill the findings table in `fix-gate-completeness-new-arrivals.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope ede514a782c72234fc4aea9e9cb2b1a503808a0ad850aca26ee3b0c8537bda26, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope f90f591a10ff4c24b9dd4eca754f797daf5d87c3cc182a627ddadd8430c34f07, reviewed <YYYY-MM-DD>
 ```

@@ -1,5 +1,5 @@
 diff --git a/src/config/gate-violation-baselines.json b/src/config/gate-violation-baselines.json
-index 132bc0eda18f2e213f23b3cf46cc83e096a5f287..a8eea1095e68642c3fb33fb5e1345c31a1e84e37 100644
+index 132bc0eda18f2e213f23b3cf46cc83e096a5f287..44f9e72d1e09f9b3ae1ad30f46a18cc2d0885003 100644
 --- a/src/config/gate-violation-baselines.json
 +++ b/src/config/gate-violation-baselines.json
 @@ -34,9 +34,9 @@
@@ -11,12 +11,84 @@ index 132bc0eda18f2e213f23b3cf46cc83e096a5f287..a8eea1095e68642c3fb33fb5e1345c31
 -      "note": "Ledger adoption ratchet. 216 of 244 registered gates do not yet carry per-target completeness accounting (`_lib/gate_ledger.ts`) or a `// ledger-exempt:` marker. This is deliberately NOT a sweep: road-to-skill-ecosystem-gate-integrity Phase 1 adopts exactly three gates (lint_framework_leakage, check_references, lint_roadmap_complexity) plus the checker itself to prove the interface, and the remainder migrates as gates are touched. Shrink-only from here — the number may not grow, so a NEW gate must adopt or exempt.",
 +      "count": 215,
 +      "landed": "2026-08-17",
-+      "note": "Ledger adoption ratchet. Gates registered under the CI task roots that carry neither per-target completeness accounting (`_lib/gate_ledger.ts`) nor a `// ledger-exempt:` marker. This is deliberately NOT a sweep: road-to-skill-ecosystem-gate-integrity Phase 1 adopts exactly three gates (lint_framework_leakage, check_references, lint_roadmap_complexity) plus the checker itself to prove the interface, and the remainder migrates as gates are touched. Shrink-only from here — the number may not grow, so a NEW gate must adopt or exempt. Lowered 216 -> 215 on 2026-08-17 by discharging the obligation three NEW arrivals had incurred, which is the standing rule being enforced rather than a drain: the registered population grew 244 -> 258 and three of the fourteen arrivals adopted nothing — `build_archive_index`, `check_gate_coverage`, `check_pr_ci_current`. The reading was 218 against this baseline of 216, and the missing arithmetic is that one PRE-existing gate (`lint_rule_skill_pack_reach`) had adopted in the meantime: 216 + 3 - 1 = 218. Two adopted a real ledger; `check_pr_ci_current` took a reasoned exemption because it has no target population to account for and its degrade paths already self-report through `scanReport`. The denominator in this note was 14 stale (it said 244) and is now expressed without one, because a count pinned to a population that grows weekly rots faster than the count itself. Note what this lowering does NOT buy: headroom is zero either way, so the next un-adopted arrival reds this gate immediately — which is the intended behaviour and the reason the number is not padded. The refreshed `landed` is load-bearing rather than bookkeeping: `checkRatchet` returns `improved` BEFORE it evaluates staleness, so an entry left at 216 while the tree measures 215 would never expire at any age (pinned by tests/lib/gate_baseline.test.ts at landed + 456 days) — the greenest available state and the worst, since it switches off the anti-fossilization clause exactly when someone has done real work.",
++      "note": "Ledger adoption ratchet. Gates registered under the CI task roots that carry neither per-target completeness accounting (`_lib/gate_ledger.ts`) nor a `// ledger-exempt:` marker. This is deliberately NOT a sweep: road-to-skill-ecosystem-gate-integrity Phase 1 adopts exactly three gates (lint_framework_leakage, check_references, lint_roadmap_complexity) plus the checker itself to prove the interface, and the remainder migrates as gates are touched. Shrink-only from here — the number may not grow, so a NEW gate must adopt or exempt. Lowered 216 -> 215 on 2026-08-17 by discharging the obligation three NEW arrivals had incurred, which is the standing rule being enforced rather than a drain: the registered population grew 244 -> 258 and three of the fourteen arrivals adopted nothing — `build_archive_index`, `check_gate_coverage`, `check_pr_ci_current`. The reading was 218 against this baseline of 216, and the missing arithmetic is that one PRE-existing gate (`lint_rule_skill_pack_reach`) had adopted in the meantime: 216 + 3 - 1 = 218. Two adopted a real ledger; `check_pr_ci_current` took a reasoned exemption because it has no target population to account for and its degrade paths already self-report through `scanReport`. The denominator in this note was 14 stale (it said 244) and is now expressed without one, because a count pinned to a population that grows weekly rots faster than the count itself. Note what this lowering does NOT buy: headroom is zero either way, so the next un-adopted arrival reds this gate immediately — which is the intended behaviour and the reason the number is not padded. The refreshed `landed` is load-bearing rather than bookkeeping: `checkRatchet` returns `improved` BEFORE it evaluates staleness, so an entry left at 216 while the tree measures 215 would never expire at any age (pinned by tests/lib/gate_baseline.test.ts, which asserts `improved` at landed + STALE_AFTER_DAYS + 400 days) — the greenest available state and the worst, since it switches off the anti-fossilization clause exactly when someone has done real work.",
        "falsifier": "./scripts-run src/scripts/check_gate_completeness"
      },
      "check_depth_budget": {
+diff --git a/src/config/hook-latency-budget.json b/src/config/hook-latency-budget.json
+index 4475d8e765d87a380a6f8d5b8dabc5f1c850f6a5..8ac3fb83bdf1ad1f35d249cfc037ea4bd6910c44 100644
+--- a/src/config/hook-latency-budget.json
++++ b/src/config/hook-latency-budget.json
+@@ -9,9 +9,19 @@
+         "floor": "1 vCPU reference container (documented ceiling, not CI-enforced)"
+     },
+     "budgets_ms": {
+-        "pre_tool_use": { "p95_ci": 150, "p95_1vcpu": 400 },
++        "_comment": "TWO PATHS, TWO CAPS. `p95_ci` is the bundle path (`node dist/hooks/dispatch.js`), pre-registered 2026-07-27 and UNCHANGED. `p95_ci_cli` caps the consumer path `--via-cli` measures — the same dispatch plus a bash wrapper and a project-shim probe — and is strictly more work, so the bundle number never described it. Between 2026-08-03, when the CI gate switched to `--via-cli` (commit 'measure the real hook invocation path and gate CI on it'), and the day this key was added, the gate enforced the bundle cap against consumer-path measurements. The harness already treated the two as incomparable — it disables the regression net on a path mismatch and prints `regression net skipped — recorded baseline is via bundle, this run is via cli` — but the absolute cap was applied anyway.",
++        "pre_tool_use": { "p95_ci": 150, "p95_ci_cli": 200, "p95_1vcpu": 400 },
+         "any_hook_event": { "p95_ci": 250 }
+     },
++    "cli_path_budget_provenance": {
++        "_comment": "This number is NOT pre-registered, and saying so is the point: this file's premise is that its caps are an acceptance bar committed before the work, not a post-hoc fit, and a cap derived after the fact cannot claim that status. It is a MEASURED cap with its distribution recorded, and it should be replaced by a pre-registered one the next time the consumer path is deliberately optimized.",
++        "registered_at": "2026-08-18",
++        "basis": "5 CI runs of the `--via-cli` path on GitHub-hosted ubuntu-latest, pre_tool_use p95: 117, 147, 152, 155, 158 ms. Three are `main` (one of which FAILED the old 150 ms cap at 152 ms), two are a feature branch touching no hook path. The 150 ms cap cut through the middle of that distribution, so the verdict was closer to a coin flip than to a measurement.",
++        "headroom_rationale": "200 ms is ~27% above the observed maximum of 158 ms, and stays well below the 250 ms any_hook_event ceiling so a pre_tool_use-specific pathology is still caught. The original bundle cap used the same shape — 150 ms registered when identical code measured 77-103 ms.",
++        "known_limit": "n=5 is thin for a threshold. It is enough to establish that 150 ms was below the spread (the point at issue) and not enough to claim 200 ms is optimal. Widen the sample before treating this number as settled.",
++        "owner": "maintainer",
++        "review_by": "2026-11-18"
++    },
+     "regression_gate": {
+         "max_regression_pct": 200,
+         "_comment": "Pathology net only — the ABSOLUTE budgets above are the binding gate for wall-clock. The original 20% window was falsified by measured GitHub-runner variance: two CI runs of IDENTICAL code measured p95 77-89 ms and 92-103 ms (+23% run-to-run, 2026-07-27, runs 30303438480 / round-2 tests.yml). Same rationale as the regression_pct 200 override on the evaluator timing budgets: a tight creep rule on shared-runner wall-clock flaps; sizes/counts keep tight windows, timings get absolute caps."
+diff --git a/src/scripts/bench_hook_latency.ts b/src/scripts/bench_hook_latency.ts
+index 8f79b837e0038bd8d145c9e4ad684f8adca36a16..6042da0399ef0d77395379e90d5296a9137327c4 100644
+--- a/src/scripts/bench_hook_latency.ts
++++ b/src/scripts/bench_hook_latency.ts
+@@ -180,8 +180,14 @@ function loadJson<T>(p: string): T | null {
+ 
+ interface Budget {
+     budgets_ms: {
+-        pre_tool_use: { p95_ci: number };
+-        any_hook_event: { p95_ci: number };
++        /**
++         * `p95_ci` is the bundle-path cap, pre-registered 2026-07-27 against
++         * `node dist/hooks/dispatch.js`. `p95_ci_cli` caps the HEAVIER consumer
++         * path (bash wrapper + shim probe + CLI) and is a separate number for
++         * the reason the two are separate measurements — see the budget file.
++         */
++        pre_tool_use: { p95_ci: number; p95_ci_cli?: number };
++        any_hook_event: { p95_ci: number; p95_ci_cli?: number };
+     };
+     regression_gate: { max_regression_pct: number };
+ }
+@@ -275,11 +281,22 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+     const prior = loadJson<ResultsDoc>(RESULTS_PATH);
+     const priorPath: InvocationPath = prior?.invocation_path ?? 'bundle';
+     for (const r of results) {
+-        const anyCap = budget.budgets_ms.any_hook_event.p95_ci;
+-        const cap = r.event === 'pre_tool_use' ? budget.budgets_ms.pre_tool_use.p95_ci : anyCap;
++        // The cap is PATH-SPECIFIC, because the two paths measure different work.
++        //
++        // Enforcing the bundle cap against a `--via-cli` run is what this gate
++        // did between 2026-08-03 (when CI switched to the consumer path) and the
++        // day this was written: the bundle number was pre-registered on
++        // 2026-07-27 against `node dist/hooks/dispatch.js`, while `--via-cli`
++        // additionally pays a bash wrapper and a shim probe. The harness already
++        // knew the two are incomparable — it disables the regression net on a
++        // path mismatch, three lines below — but the ABSOLUTE cap was applied
++        // regardless, so the gate straddled the runner's own spread and failed
++        // on `main` as readily as on a branch.
++        const budgets = r.event === 'pre_tool_use' ? budget.budgets_ms.pre_tool_use : budget.budgets_ms.any_hook_event;
++        const cap = (via === 'cli' ? budgets.p95_ci_cli : undefined) ?? budgets.p95_ci;
+         if (gate && r.p95_ms > cap) {
+             process.stderr.write(
+-                `❌  ${r.event}: p95 ${r.p95_ms} ms exceeds the pre-registered budget (${cap} ms)\n`,
++                `❌  ${r.event}: p95 ${r.p95_ms} ms exceeds the ${via}-path budget (${cap} ms)\n`,
+             );
+             failed = true;
+         }
 diff --git a/src/scripts/build_archive_index.ts b/src/scripts/build_archive_index.ts
-index e06a340a6ef90a3daa429b7ed3b86b9415f6a42d..7d61bd4f43e320689311fdab79b43225c11213d9 100644
+index e06a340a6ef90a3daa429b7ed3b86b9415f6a42d..65c23f95ba3c586177aeac469f7ddf0b355d2100 100644
 --- a/src/scripts/build_archive_index.ts
 +++ b/src/scripts/build_archive_index.ts
 @@ -45,6 +45,7 @@ import * as path from 'node:path';
@@ -27,85 +99,160 @@ index e06a340a6ef90a3daa429b7ed3b86b9415f6a42d..7d61bd4f43e320689311fdab79b43225
  import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
  import { parse_frontmatter } from './validate_frontmatter.js';
  
-@@ -310,6 +311,18 @@ export function main(argv: readonly string[]): number {
+@@ -310,6 +311,31 @@ export function main(argv: readonly string[]): number {
      const dir = path.join(ROOT, ARCHIVE_REL);
  
      const entries = buildIndex(dir);
 +
-+    // Per-target accounting over the archive. `scanned:` proves the walk found
-+    // files; the ledger proves what each one YIELDED — and the distinction is
-+    // load-bearing here, because this builder's whole contract is that a verdict
-+    // the frontmatter does not carry is emitted as `not-extractable` rather than
-+    // invented. That outcome is a real reading, not a skip, so every entry
-+    // completes: the ledger's value is the count a reader can compare against
-+    // the disposition tally in INDEX.md.
++    // Planned from the ENUMERATION, never from the result set.
++    //
++    // Planning `entries` and completing it in the next statement would make
++    // `planned === completed, skipped=0` true by construction — an accounting
++    // line that can never report anything. The value is precisely that a file
++    // which drops out between the walk and the result shows up as a gap: the
++    // natural future fix for an unreadable archive file is a `try/catch
++    // { continue }` inside `buildIndex`, and that file would vanish before the
++    // plan is reached unless the plan comes from upstream of it.
++    //
++    // `not-extractable` is a real reading rather than a skip and therefore
++    // completes — but a frontmatter PARSE failure is swallowed by `_frontmatter`
++    // and zeroes title/verdict/status, which is a genuine per-target degrade the
++    // disposition tally cannot show. Both are visible here as the difference
++    // between the planned and completed sets.
++    const planned = archiveFiles(dir).map((f) => path.basename(f, '.md'));
++    const produced = new Set(entries.map((e) => e.slug));
 +    const ledger = new GateLedger('build_archive_index');
-+    ledger.plan(entries.map((e) => e.slug));
-+    for (const e of entries) ledger.complete(e.slug);
++    ledger.plan(planned);
++    for (const slug of planned) {
++        if (produced.has(slug)) ledger.complete(slug);
++        else ledger.skip(slug, 'no_applicable_files');
++    }
 +
      try {
          reportScanned({
              gate: 'build_archive_index',
-@@ -325,6 +338,11 @@ export function main(argv: readonly string[]): number {
+@@ -325,6 +351,15 @@ export function main(argv: readonly string[]): number {
          throw err;
      }
  
-+    // Reported before either exit path branches, so a `--check` red and a
-+    // successful write publish the same accounting. A ledger emitted on only one
-+    // path is the selective-reporting shape the library exists to remove.
++    // Reported before the `--check` and write paths branch, so both publish the
++    // same accounting. NOT on all three: the earliest exit — `reportScanned`
++    // throwing `DeadScopeError` on an empty walk — returns above this line and
++    // reports nothing, which is the one exit where the accounting would say the
++    // most. Left as-is rather than papered over: the ledger has no targets to
++    // report there either, and moving it above the scope assertion would publish
++    // a plan for a root the assertion is about to reject.
 +    ledger.report();
 +
      const mdPath = path.join(dir, INDEX_MD);
      const jsonPath = path.join(dir, INDEX_JSON);
      const md = renderMarkdown(entries);
 diff --git a/src/scripts/check_gate_coverage.ts b/src/scripts/check_gate_coverage.ts
-index 5c784aa3224f80f53fc51b54cf1eaf74a50c993c..a48766fd2fc1987d35e7022fbc1514b3fffd1ea9 100644
+index 5c784aa3224f80f53fc51b54cf1eaf74a50c993c..939de24a63787e1058557846cedac1198073792b 100644
 --- a/src/scripts/check_gate_coverage.ts
 +++ b/src/scripts/check_gate_coverage.ts
 @@ -50,6 +50,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
  
  import * as yaml from 'js-yaml';
  import { checkRatchet } from './_lib/gate_baseline.js';
-+import { GateLedger } from './_lib/gate_ledger.js';
++import { GateLedger, type GateSkipReason } from './_lib/gate_ledger.js';
  import { runCountedProbe } from './_lib/counted_probe.js';
  import { listGateScripts } from './_lib/gate_population.js';
  import { describeOutcome, namesEstateInvalidatingError } from './_lib/gate_result.js';
-@@ -323,6 +324,16 @@ export function main(argv: readonly string[]): number {
+@@ -189,6 +190,46 @@ export function parse_scanned(output: string): number | null {
+ 
+ /** Classify one gate's run against its declared floor. Pure — testable without
+  * spawning anything. */
++/**
++ * Map a gate verdict onto its ledger outcome.
++ *
++ * Extracted and exported so the mapping can be PINNED — it was inline, and the
++ * completion review's three sharpest findings were all mis-mappings that a
++ * discrimination test would have caught in one line each.
++ *
++ * The split is INSPECTED vs NOT INSPECTED, never pass vs fail. `fail` counts
++ * into the ledger's `scanned=` (`report()` sets `checked = completed + failed`),
++ * so a target that could not be READ must never land there — that inflates the
++ * exact number the library exists to make trustworthy. This file's own comment
++ * already says a gate that could not MEASURE "is not a gate that found
++ * violations, and it is not a gate that passed either"; this agrees with it.
++ */
++export function ledgerOutcomeFor(
++  verdict: GateResult['verdict'],
++): 'complete' | 'fail' | GateSkipReason {
++  switch (verdict) {
++    case 'pending':
++      return 'disabled_by_configuration';
++    case 'unavailable':
++      // NOT `missing_credentials`. The only manifest row carrying
++      // `unavailable_exit` is unavailable for an unbuilt `site/dist`, and the
++      // skip sentence IS the audit surface — naming a credential would send the
++      // reader hunting an unset token instead of running the build.
++      return 'no_applicable_files';
++    case 'crashed':
++    case 'estate_invalid':
++      // Nothing was read in either case. `crashed` still reds the build through
++      // this gate's own filter and `estate_invalid` deliberately does not, but
++      // neither belongs in the inspected count.
++      return 'dead_scan_root';
++    case 'silent':
++    case 'below_floor':
++      return 'fail';
++    default:
++      return 'complete';
++  }
++}
++
+ export function classify(
+   spec: GateSpec,
+   scanned: number | null,
+@@ -323,6 +364,31 @@ export function main(argv: readonly string[]): number {
      return 0;
    }
  
-+  // Per-target accounting over the manifest rows, and the reason it belongs
-+  // HERE specifically: this gate already carries a `pending` verdict that means
-+  // "listed but not enforced" and an `unavailable` one that means "could not be
-+  // measured". Both are, in the ledger's own vocabulary, SKIPS with a reason —
-+  // and until now they existed only as a status string in prose output, which is
-+  // exactly the invisible-skip shape the ledger exists to make countable. The
-+  // gate that audits gate coverage was itself unaudited.
++  // Per-target accounting over the manifest rows. The gate that audits gate
++  // coverage was itself unaudited.
++  //
++  // Stated precisely, because the obvious justification overstates it: this gate
++  // ALREADY prints counted `pending N · unavailable N` warnings, so those two
++  // classes were not invisible. What the ledger adds is that they are expressed
++  // in the estate-wide vocabulary every other adopter uses, so a reader
++  // comparing gates does not have to learn this one's private status names — and
++  // that `crashed` and `estate_invalid`, which had no counted line at all, stop
++  // being counted as inspected.
++  //
++  // Note the two numbers this produces in one run: the ledger's `scanned=` (what
++  // was inspected) and the contract line `scanned:` (manifest rows read). They
++  // differ by the skips and that is correct, but only the latter is what
++  // `SCANNED_RE` parses.
 +  const ledger = new GateLedger('check_gate_coverage');
-+  ledger.plan(specs.map((s) => s.id));
++  // Deduplicated on purpose. `load_manifest` does not check id uniqueness, and a
++  // copy-pasted row with a forgotten rename would otherwise make `plan()` throw
++  // an uncaught LedgerUsageError — surfacing a manifest mistake as a stack trace
++  // and Node's exit 1, which this file's own contract reads as "a gate is blind,
++  // collapsed, or silent" rather than as the exit 2 a malformed manifest earns.
++  // The duplicate still runs twice and still prints twice; only the accounting
++  // refuses to double-count it.
++  ledger.plan([...new Set(specs.map((s) => s.id))]);
 +
    const results = specs.map((s) => {
      if (spec_is_pending(s)) {
        const { scanned, crashed } = probe_pending(s);
-@@ -332,6 +343,24 @@ export function main(argv: readonly string[]): number {
+@@ -332,6 +398,20 @@ export function main(argv: readonly string[]): number {
      return classify(s, scanned, crashed, exit_code, output);
    });
  
++  // `recorded` pairs with the deduplicated plan above: a duplicated manifest id
++  // must be accounted once, and recording it twice would raise the same
++  // LedgerUsageError the dedupe exists to avoid.
++  const recorded = new Set<string>();
 +  for (const r of results) {
-+    if (r.verdict === 'pending') {
-+      ledger.skip(r.id, 'disabled_by_configuration');
-+    } else if (r.verdict === 'unavailable') {
-+      ledger.skip(r.id, 'missing_credentials');
-+    } else if (
-+      r.verdict === 'crashed' ||
-+      r.verdict === 'silent' ||
-+      r.verdict === 'below_floor' ||
-+      r.verdict === 'estate_invalid'
-+    ) {
-+      ledger.fail(r.id, r.message);
-+    } else {
-+      ledger.complete(r.id);
-+    }
++    if (recorded.has(r.id)) continue;
++    recorded.add(r.id);
++    const outcome = ledgerOutcomeFor(r.verdict);
++    if (outcome === 'complete') ledger.complete(r.id);
++    else if (outcome === 'fail') ledger.fail(r.id, r.message);
++    else ledger.skip(r.id, outcome);
 +  }
 +  ledger.report();
 +
@@ -113,38 +260,154 @@ index 5c784aa3224f80f53fc51b54cf1eaf74a50c993c..a48766fd2fc1987d35e7022fbc1514b3
      process.stdout.write(`${JSON.stringify({ generated_by: 'check_gate_coverage', results }, null, 2)}\n`);
    } else {
 diff --git a/src/scripts/check_pr_ci_current.ts b/src/scripts/check_pr_ci_current.ts
-index aa942f60c04212b07d8728b5c78864d4f0f6208a..73f64dd6f6cde6bf1545284c3beca05136f27249 100644
+index aa942f60c04212b07d8728b5c78864d4f0f6208a..3324744f7330ac5f8b020f2811c7f99e5edead10 100644
 --- a/src/scripts/check_pr_ci_current.ts
 +++ b/src/scripts/check_pr_ci_current.ts
-@@ -34,7 +34,31 @@
+@@ -34,12 +34,29 @@
   * Exit codes (contract §6): 0 = current, or unobservable-and-said-so ·
   * 1 = the remote answered and the verdict is not about the branch head ·
   * 2 = internal error. `scanned:` is emitted on EVERY exit path.
 + *
-+ * ## Why this gate carries no per-target ledger
++ * ## The per-target ledger, and the exemption that was withdrawn
 + *
-+ * `check_gate_completeness` requires every registered gate to adopt
-+ * `_lib/gate_ledger.ts` or to say why it does not. This one says why, and the
-+ * reason is the shape of the question rather than the cost of the change.
++ * This gate first shipped with a `// ledger-exempt:` marker arguing it had "no
++ * target population to account for — a short-circuiting chain of 0-3 remote
++ * facts". Its completion review refuted that from the file itself: the check
++ * rows ARE a population, and the parse below **drops** every row whose `state`
++ * is not a string. A dropped row could be the failing one, so the gate could
++ * print *"green on its own head"* over a check it never read — the precise
++ * "absence of scanning looks like absence of findings" shape the ledger exists
++ * to count.
 + *
-+ * The ledger's purpose is to make an INVISIBLE skip countable across a target
-+ * population — 500 files walked, 41 unreadable, and nothing saying so. This gate
-+ * has no such population: it compares a short, short-circuiting chain of remote
-+ * facts (0, 2, 3, or the number of check rows), and every one of its degrade
-+ * paths ALREADY reports itself, on every exit, through `scanReport` with an
-+ * explicit `allowEmpty` reason that stays loud under `--quiet`. "There was
-+ * nothing to check" and "I checked and it was fine" are already distinguishable
-+ * in its output — which is the property the ledger exists to create, reached
-+ * here by a mechanism that predates it.
-+ *
-+ * Planning 0-to-3 ad-hoc target ids would add an accounting line that no reader
-+ * could compare against anything, and the manifest's own note rejects exactly
-+ * that shape elsewhere ("padding the manifest to move this number"). The gate is
-+ * also declared `local_only` in `src/config/ci-local-parity.yml` because its
-+ * comparison is tautological in CI, so the estate-wide count a ledger feeds
-+ * would be taking a reading from a gate that deliberately does not run there.
++ * The exemption's secondary claim was accurate — every `main()` exit already
++ * self-reports through `scanReport` with an explicit `allowEmpty` reason — and
++ * that is exactly why the first argument was easy to believe. It was still
++ * resting on the false half.
   */
-+// ledger-exempt: no target population to account for — a short-circuiting chain of 0-3 remote facts, whose every degrade path already reports itself via scanReport with an explicit allowEmpty reason
  
  import * as path from 'node:path';
  import { spawnSync } from 'node:child_process';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
++import { GateLedger } from './_lib/gate_ledger.js';
+ import { reportScanned } from './_lib/scan_scope.js';
+ 
+ const NETWORK_TIMEOUT_MS = 8_000;
+@@ -117,6 +134,12 @@ export interface Facts {
+     /** The head SHA the reported checks ran against. */
+     checksHead: string | null;
+     rows: readonly CheckRow[];
++    /**
++     * Names of check rows the parse DROPPED because their `state` was not a
++     * string. Carried out rather than swallowed: a dropped row could be the
++     * failing one, so it is a skip the ledger must count, not a non-event.
++     */
++    droppedRows?: readonly string[];
+     /** Set when something could not be observed; forces the degrade path. */
+     unobservable: string | null;
+     /**
+@@ -261,7 +284,7 @@ export function relate(
+ /** Gather the facts `decide` consumes. Every failure becomes `unobservable`. */
+ export function gather(repo: string): Facts {
+     const empty: Facts = {
+-        pr: null, prHead: null, localHead: null, checksHead: null, rows: [], unobservable: null, relation: 'unknown',
++        pr: null, prHead: null, localHead: null, checksHead: null, rows: [], droppedRows: [], unobservable: null, relation: 'unknown',
+     };
+ 
+     const branch = run('git', ['rev-parse', '--abbrev-ref', 'HEAD'], repo);
+@@ -296,9 +319,19 @@ export function gather(repo: string): Facts {
+     // with parseable stdout is DATA, not an error. Treating it as unobservable
+     // would make the gate blind in exactly the red case it exists for.
+     let rows: CheckRow[] = [];
++    // A row whose `state` is not a string is DROPPED, and that drop is the one
++    // thing in this gate worth counting: a dropped row could be the failing one,
++    // and without accounting the gate prints "green on its own head" over a
++    // check it never read. `dropped` is surfaced by the caller through the
++    // ledger rather than swallowed here.
++    let dropped: string[] = [];
+     if (checks.stdout.trim() !== '') {
+         try {
+-            rows = (JSON.parse(checks.stdout) as CheckRow[]).filter((r) => typeof r.state === 'string');
++            const parsed = JSON.parse(checks.stdout) as CheckRow[];
++            rows = parsed.filter((r) => typeof r.state === 'string');
++            dropped = parsed
++                .filter((r) => typeof r.state !== 'string')
++                .map((r, i) => (typeof r.name === 'string' ? r.name : `row-${String(i)}`));
+         } catch {
+             rows = [];
+         }
+@@ -329,6 +362,7 @@ export function gather(repo: string): Facts {
+         localHead: localSha,
+         checksHead: runsHead.ok && runsHead.stdout.trim() !== '' ? runsHead.stdout.trim() : null,
+         rows,
++        droppedRows: dropped,
+         unobservable: null,
+         relation: relate(repo, localSha, prSha),
+     };
+@@ -374,7 +408,19 @@ export function main(argv?: readonly string[]): number {
+ 
+     let verdict: Verdict;
+     try {
+-        verdict = decide(gather(repo), { prePush });
++        const facts = gather(repo);
++
++        // The population is the check rows. Every row the parse kept was read;
++        // every row it dropped is a skip with a reason, and the drop is the
++        // failure mode worth counting — a dropped row could be the failing one.
++        const ledger = new GateLedger('check_pr_ci_current');
++        const droppedNames = facts.droppedRows ?? [];
++        ledger.plan([...facts.rows.map((r) => r.name), ...droppedNames]);
++        for (const r of facts.rows) ledger.complete(r.name);
++        for (const name of droppedNames) ledger.skip(name, 'not_applicable_kind');
++        ledger.report();
++
++        verdict = decide(facts, { prePush });
+     } catch (exc) {
+         scanReport(0, 'internal error — nothing was compared');
+         process.stderr.write(
+diff --git a/tests/scripts/check_gate_coverage.test.ts b/tests/scripts/check_gate_coverage.test.ts
+index b61b683e92877795277953a7db93e7be521c8526..6a470b82e65e08abaca10ae39a8dacb11af6a081 100644
+--- a/tests/scripts/check_gate_coverage.test.ts
++++ b/tests/scripts/check_gate_coverage.test.ts
+@@ -17,6 +17,7 @@ import {
+     type GateSpec,
+     classify,
+     count_gate_scripts,
++    ledgerOutcomeFor,
+     enforced_manifest_ids,
+     list_self_test_non_adopters,
+     list_unhardened_gates,
+@@ -525,3 +526,33 @@ describe('vulnerability ratchet — unhardened gate population', () => {
+         expect(raw.gates['gate-hardening:unhardened-scan-scope']).toBeUndefined();
+     });
+ });
++
++describe('ledgerOutcomeFor — inspected vs not inspected', () => {
++    // The three cases this pins were all mis-mappings in the first version:
++    // `estate_invalid` and `crashed` were recorded as `fail`, which counts into
++    // the ledger's inspected total and so over-reported coverage on a target
++    // that was never read; and `unavailable` was mapped to a credential reason
++    // when the only gate it applies to is unavailable for an unbuilt artefact.
++    it('never counts an unread target as inspected', () => {
++        for (const v of ['crashed', 'estate_invalid', 'pending', 'unavailable'] as const) {
++            const outcome = ledgerOutcomeFor(v);
++            expect(outcome, `${v} must be a skip`).not.toBe('complete');
++            expect(outcome, `${v} must be a skip`).not.toBe('fail');
++        }
++    });
++
++    it('counts a measured violation as failed, not skipped', () => {
++        expect(ledgerOutcomeFor('silent')).toBe('fail');
++        expect(ledgerOutcomeFor('below_floor')).toBe('fail');
++    });
++
++    it('counts a clean measured gate as completed', () => {
++        expect(ledgerOutcomeFor('ok')).toBe('complete');
++    });
++
++    it('does not blame a missing credential for an unbuilt artefact', () => {
++        // The skip sentence is the audit surface: a reader seeing this must not
++        // be sent hunting for an unset token.
++        expect(ledgerOutcomeFor('unavailable')).not.toBe('missing_credentials');
++    });
++});
