@@ -39,65 +39,57 @@ for … .ts.ts*. Both are recorded rather than silently worked around.
 
 ## Result
 
-| rule | tokens | frontmatter | floor | residue | pointer target | resolves |
-|---|---:|---:|---:|---:|---|---|
-| `context-hygiene` | 2601 | 155 | 199 | 2248 | `../docs/guidelines/agent-infra/context-hygiene-mechanics.md` | yes |
-| `design-fidelity` | 2591 | 347 | 564 | 1681 | `../docs/guidelines/design-fidelity-mechanics.md` | yes |
-| `autonomous-execution` | 1799 | 167 | 64 | 1569 | `contexts/execution/autonomy-mechanics.md` | yes |
-| `active-remediation` | 1808 | 208 | 274 | 1328 | `../docs/guidelines/agent-infra/active-remediation-mechanics.md` | yes |
-| `ui-audit-gate` | 1988 | 709 | 76 | 1203 | `../skills/existing-ui-audit/SKILL.md` | yes |
-| `architecture` | 1081 | 127 | 63 | 892 | `../skills/module-detect-on-the-fly/SKILL.md` | yes |
-| `roadmap-progress-sync` | 1608 | 185 | 566 | 858 | `guideline:agent-infra/roadmap-progress-mechanics` | yes |
-| `git-history-discipline` | 1434 | 230 | 350 | 855 | `skill:git-workflow` | yes |
-| `improve-before-implement` | 1055 | 211 | 103 | 742 | `../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#8-improve-before-implement--pre-implementation-validation` | yes |
-| `legal-safety-floor` | 1706 | 306 | 665 | 736 | `../skills/legal-practice-profile/SKILL.md` | yes |
-| `minimal-safe-diff` | 1061 | 169 | 168 | 725 | `../docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md` | yes |
-| `untrusted-input-defense` | 1025 | 181 | 225 | 620 | `../docs/guidelines/agent-infra/untrusted-input-spotlighting.md` | yes |
-| `broken-access-control` | 973 | 231 | 229 | 514 | `../skills/authz-review/SKILL.md` | yes |
-| `artifact-drafting-protocol` | 763 | 153 | 106 | 504 | `../docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md` | yes |
-| `code-comment-discipline` | 893 | 202 | 222 | 470 | `../docs/guidelines/code-clarity.md#comment-discipline--state-a-constraint-not-a-narration` | yes |
-| `framework-neutrality-in-generic-skills` | 1116 | 496 | 207 | 414 | `../docs/guidelines/agent-infra/framework-neutrality-patterns.md` | yes |
-| `no-roadmap-references` | 887 | 244 | 314 | 330 | `../skills/agent-docs-writing/SKILL.md` | yes |
-| `domain-adoption-policy` | 694 | 198 | 245 | 252 | `../docs/guidelines/agent-infra/domain-adoption-gates.md` | yes |
-| `decision-revisit-gate` | 744 | 200 | 335 | 210 | `../skills/decision-review/SKILL.md` | yes |
-| `provider-lifecycle-discipline` | 773 | 302 | 301 | 171 | `../../docs/contracts/provider-lifecycle.md#-4--agent-obligations` | yes |
-| `roadmap-ci-steps-policy` | 890 | 327 | 425 | 139 | `../contexts/execution/roadmap-ci-steps-mechanics.md` | yes |
-| `persona-governance` | 621 | 292 | 204 | 126 | `../../docs/contracts/persona-schema.md#-8--governance-discipline-the-four-checks` | yes |
-| `brand-consistency` | 243 | 111 | 19 | 113 | `brand-source-of-truth.md` | yes |
-| `commit-conventions` | 253 | 118 | 26 | 109 | `skill:conventional-commits-writing` | yes |
-| `reviewer-awareness` | 264 | 134 | 23 | 107 | `skill:review-routing` | yes |
-| `model-recommendation` | 314 | 159 | 55 | 100 | `guideline:agent-infra/model-recommendation` | yes |
-| `augment-edit-discipline` | 340 | 204 | 42 | 94 | `guideline:augment-portability-patterns` · `skill:agent-docs-writing` | yes |
-| `linked-projects-onboarding-gate` | 381 | 210 | 79 | 93 | `guideline:agent-infra/linked-projects-onboarding-gate` | yes |
-| `devcontainer-routing` | 246 | 119 | 52 | 76 | `skill:devcontainer` | yes |
-| `copilot-routing` | 241 | 114 | 53 | 75 | `skill:copilot-config` | yes |
-| `symfony-routing` | 259 | 131 | 55 | 74 | `skill:symfony-workflow` | yes |
-| `laravel-routing` | 312 | 187 | 53 | 73 | `skill:laravel` | yes |
-| `missing-tool-handling` | 231 | 129 | 32 | 70 | `guideline:agent-infra/missing-tool-handling` | yes |
-| `laravel-translations` | 210 | 129 | 23 | 58 | `skill:laravel` | yes |
-| `cli-output-handling` | 421 | 339 | 26 | 56 | `skill:rtk-output-filtering` | yes |
-| `docker-commands` | 235 | 157 | 22 | 56 | `skill:docker` | yes |
-| `rule-type-governance` | 206 | 120 | 31 | 55 | `guideline:agent-infra/rule-type-governance` | yes |
-| `skill-improvement-trigger` | 191 | 111 | 27 | 53 | `skill:skill-improvement-pipeline` | yes |
-| `slash-command-routing-policy` | 211 | 135 | 23 | 53 | `skill:command-routing` | yes |
-| `php-coding` | 232 | 153 | 28 | 51 | `guideline:php/php-coding-patterns` | yes |
-| `analysis-skill-routing` | 185 | 110 | 25 | 50 | `skill:analysis-skill-router` | yes |
-| `upstream-proposal` | 185 | 110 | 25 | 50 | `skill:upstream-contribute` | yes |
-| `package-ci-checks` | 184 | 111 | 24 | 49 | `skill:lint-skills` | yes |
-| `skill-quality` | 217 | 140 | 30 | 47 | `guideline:agent-infra/skill-quality-checklist` | yes |
-| **total (44 rules)** | **33672** | **8871** | **6678** | **18149** | | |
+| rule | tokens | frontmatter | body (ceiling) | floor | residue | pointer target | resolves |
+|---|---:|---:|---:|---:|---:|---|---|
+| `context-hygiene` | 2601 | 155 | 2447 | 218 | 2229 | `../docs/guidelines/agent-infra/context-hygiene-mechanics.md` | yes |
+| `design-fidelity` | 2591 | 347 | 2245 | 583 | 1662 | `../docs/guidelines/design-fidelity-mechanics.md` | yes |
+| `autonomous-execution` | 1799 | 167 | 1633 | 83 | 1550 | `contexts/execution/autonomy-mechanics.md` | yes |
+| `active-remediation` | 1808 | 208 | 1601 | 293 | 1309 | `../docs/guidelines/agent-infra/active-remediation-mechanics.md` | yes |
+| `ui-audit-gate` | 1988 | 709 | 1280 | 108 | 1171 | `../skills/existing-ui-audit/SKILL.md` | yes |
+| `architecture` | 1081 | 127 | 955 | 82 | 873 | `../skills/module-detect-on-the-fly/SKILL.md` | yes |
+| `roadmap-progress-sync` | 1608 | 185 | 1424 | 585 | 839 | `guideline:agent-infra/roadmap-progress-mechanics` | yes |
+| `git-history-discipline` | 1434 | 230 | 1205 | 369 | 836 | `skill:git-workflow` | yes |
+| `legal-safety-floor` | 1706 | 306 | 1401 | 665 | 736 | `../skills/legal-practice-profile/SKILL.md` | yes |
+| `improve-before-implement` | 1055 | 211 | 845 | 122 | 723 | `../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#8-improve-before-implement--pre-implementation-validation` | yes |
+| `minimal-safe-diff` | 1061 | 169 | 893 | 187 | 707 | `../docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md` | yes |
+| `untrusted-input-defense` | 1025 | 181 | 845 | 244 | 601 | `../docs/guidelines/agent-infra/untrusted-input-spotlighting.md` | yes |
+| `broken-access-control` | 973 | 231 | 743 | 248 | 495 | `../skills/authz-review/SKILL.md` | yes |
+| `artifact-drafting-protocol` | 763 | 153 | 611 | 126 | 485 | `../docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md` | yes |
+| `code-comment-discipline` | 893 | 202 | 692 | 241 | 451 | `../docs/guidelines/code-clarity.md#comment-discipline--state-a-constraint-not-a-narration` | yes |
+| `framework-neutrality-in-generic-skills` | 1116 | 496 | 621 | 226 | 395 | `../docs/guidelines/agent-infra/framework-neutrality-patterns.md` | yes |
+| `no-roadmap-references` | 887 | 244 | 644 | 314 | 330 | `../skills/agent-docs-writing/SKILL.md` | yes |
+| `domain-adoption-policy` | 694 | 198 | 497 | 245 | 252 | `../docs/guidelines/agent-infra/domain-adoption-gates.md` | yes |
+| `decision-revisit-gate` | 744 | 200 | 545 | 335 | 210 | `../skills/decision-review/SKILL.md` | yes |
+| `provider-lifecycle-discipline` | 773 | 302 | 472 | 301 | 171 | `../../docs/contracts/provider-lifecycle.md#-4--agent-obligations` | yes |
+| `roadmap-ci-steps-policy` | 890 | 327 | 564 | 425 | 139 | `../contexts/execution/roadmap-ci-steps-mechanics.md` | yes |
+| `persona-governance` | 621 | 292 | 330 | 204 | 126 | `../../docs/contracts/persona-schema.md#-8--governance-discipline-the-four-checks` | yes |
+| `commit-conventions` | 253 | 118 | 136 | 46 | 90 | `skill:conventional-commits-writing` | yes |
+| `reviewer-awareness` | 264 | 134 | 131 | 43 | 88 | `skill:review-routing` | yes |
+| `model-recommendation` | 314 | 159 | 156 | 75 | 81 | `guideline:agent-infra/model-recommendation` | yes |
+| `augment-edit-discipline` | 340 | 204 | 137 | 62 | 75 | `guideline:augment-portability-patterns` · `skill:agent-docs-writing` | yes |
+| `linked-projects-onboarding-gate` | 381 | 210 | 172 | 98 | 74 | `guideline:agent-infra/linked-projects-onboarding-gate` | yes |
+| `devcontainer-routing` | 246 | 119 | 128 | 71 | 57 | `skill:devcontainer` | yes |
+| `copilot-routing` | 241 | 114 | 128 | 72 | 56 | `skill:copilot-config` | yes |
+| `symfony-routing` | 259 | 131 | 129 | 74 | 55 | `skill:symfony-workflow` | yes |
+| `laravel-routing` | 312 | 187 | 126 | 72 | 54 | `skill:laravel` | yes |
+| `missing-tool-handling` | 231 | 129 | 103 | 52 | 51 | `guideline:agent-infra/missing-tool-handling` | yes |
+| `brand-consistency` | 243 | 111 | 133 | 90 | 43 | `brand-source-of-truth.md` | yes |
+| `laravel-translations` | 210 | 129 | 82 | 43 | 39 | `skill:laravel` | yes |
+| `cli-output-handling` | 421 | 339 | 83 | 46 | 37 | `skill:rtk-output-filtering` | yes |
+| `docker-commands` | 235 | 157 | 79 | 42 | 37 | `skill:docker` | yes |
+| `rule-type-governance` | 206 | 120 | 87 | 51 | 36 | `guideline:agent-infra/rule-type-governance` | yes |
+| `skill-improvement-trigger` | 191 | 111 | 81 | 47 | 34 | `skill:skill-improvement-pipeline` | yes |
+| `slash-command-routing-policy` | 211 | 135 | 77 | 43 | 34 | `skill:command-routing` | yes |
+| `php-coding` | 232 | 153 | 80 | 48 | 32 | `guideline:php/php-coding-patterns` | yes |
+| `analysis-skill-routing` | 185 | 110 | 76 | 45 | 31 | `skill:analysis-skill-router` | yes |
+| `upstream-proposal` | 185 | 110 | 76 | 45 | 31 | `skill:upstream-contribute` | yes |
+| `package-ci-checks` | 184 | 111 | 74 | 44 | 30 | `skill:lint-skills` | yes |
+| `skill-quality` | 217 | 140 | 78 | 50 | 28 | `guideline:agent-infra/skill-quality-checklist` | yes |
+| **total (44 rules)** | **33672** | **8871** | **24845** | **7463** | **17383** | | |
 
-> Rows above are the verbatim `--report` output. Four were hand-transcribed on
-> the first pass and three of the four carried an off-by-one in the frontmatter
-> column; the block was replaced with the generated text rather than corrected in
-> place. Hand-copying a generated table is how a regenerable artifact acquires a
-> number nothing produced.
+Column residual: `frontmatter + floor + residue` = 33717 against 33672 whole-file tokens (+45, 0.13 %), and `frontmatter + body` = 33716. BPE is not additive across segment boundaries — merges spanning a split are lost when the segments are encoded separately. **The ceilings are keyed on the `body (ceiling)` column**, not on the whole file: frontmatter is the routing surface, and a rule that gains a trigger must not trip a prose ceiling.
 
-Column residual: `frontmatter + floor + residue` = 33,698 against 33,672
-whole-file tokens (**+26, 0.08 %**). BPE is not additive across segment
-boundaries — merges spanning a split are lost when the segments are encoded
-separately. The whole-file column is the one the ceilings are keyed on. Stated
-because a reader who adds the columns will find the gap, and a table that
+Stated because a reader who adds the columns will find the gap, and a table that
 silently fails to reconcile is worse than one that says by how much.
 
 ## 0.1 — every pointer target resolves. Zero broken.
@@ -111,20 +103,21 @@ reported **12 of 44 broken** — a false red. Rule bodies are authored for the
 **projected** tree, where `../docs/` is the sibling docs directory; under
 `src/rules/` the same href points at `src/docs/`, which does not exist.
 `check_references.ts` already solved this by stripping leading `./` / `../` and
-trying `[root, dist/agent-src, src, src/agent-src]`. That strategy is adopted
+trying a prefix list. That strategy is adopted
 verbatim rather than a second one invented — a gate disagreeing with the
 reference checker consumers already trust would be worse than no gate.
 
 ## 0.2 — floor and residue, with the criterion
 
-**Floor 6,678 · residue 18,149 tokens.** The criterion, applied per line:
+**Floor 7,463 · residue 17,383 tokens**, out of 24,845 body tokens. The
+criterion, applied per line:
 
 | classified | when |
 |---|---|
 | floor | an Iron Law heading at any level, including numbered variants |
 | floor | every line of a fenced block opened inside an Iron Law section |
 | floor | any line carrying a capitalised negation clause (`NEVER` / `NO` / `NOT` / `DO NOT`) |
-| floor | the migration pointer sentence itself |
+| floor | the migration pointer **paragraph** — the sentence and its continuation lines, to the blank line that ends it |
 | residue | everything else in the body |
 
 The Iron-Law section boundary is the next heading at the same level or
@@ -147,18 +140,27 @@ Two known imprecisions, neither hidden:
   requires some of those to stay; 46 rules were adjudicated `keep` on exactly
   that ambiguity. The split does not attempt to resolve it.
 
+**Both figures moved between the first measurement and this one, and the reason
+is a defect the completion review found.** The pointer was classified per line,
+so for the soft-wrapped pointers the code already knew existed, the continuation
+landed in residue. The first pass therefore read floor 6,678 / residue 18,149 —
+a split biased in the direction this roadmap's premise favours, which is the one
+direction an author is least likely to question. Fixed to classify the pointer
+paragraph; ~766 tokens moved from residue to floor. Both published numbers are
+post-fix.
+
 ### The pre-registration is falsified
 
 Phase 0 pre-registered **residue ≥ 25 %** of the 103,265-token census baseline,
 with **< 10 %** as the honest-null threshold.
 
-**Measured: 18,149 / 103,265 = 17.6 %.**
+**Measured: 17,383 / 103,265 = 16.8 %.**
 
 So the band is missed and the honest null is *not* reached. The lever is real but
-smaller than pre-registered: roughly 18k tokens of the always-on corpus sit in
+smaller than pre-registered: roughly 17k tokens of the always-on corpus sit in
 bodies that already declare they should be elsewhere. Recorded as a miss rather
 than reframed — the pre-registration existed to be falsifiable, and stating a
-17.6 % result against a 25 % bar is the whole value of having written the bar
+16.8 % result against a 25 % bar is the whole value of having written the bar
 down first.
 
 ## 0.3 — reconciliation against the closed disposition record
@@ -196,7 +198,7 @@ consistent with a deliberate `keep`.
 ## The live defect this measures, restated with fresh numbers
 
 `src/rules/context-hygiene.md` is **2,601 tokens** and declares its body migrated
-to `context-hygiene-mechanics.md`. It carries **2,248 residue tokens** — the
+to `context-hygiene-mechanics.md`. It carries **2,229 residue tokens** — the
 largest residue in the corpus, in the rule with the smallest floor-to-residue
 ratio of the top four. The roadmap's byte framing (10,988 B rule against a
 3,491 B target) holds in tokens too.

@@ -210,6 +210,24 @@ gates:
       total with a 2,000-token drift allowance, which is green while one rule
       grows and another shrinks — measured at adoption, the corpus sat 411 tokens
       above its pinned baseline with that gate green.
+    canary:
+      class: contract-violation
+      path: src/rules/zz-canary-stub-probe.md
+      content: |
+        ---
+        type: "auto"
+        ---
+
+        # ZZ canary probe
+
+        Body migrated to `guideline:zz-canary-target-that-does-not-exist`.
+      # A created rule is the create-only shape this gate is built for: it carries
+      # a migration pointer whose target resolves nowhere AND has no ceiling in the
+      # baseline, so it trips two independent axes. Without a recipe the gate would
+      # ship permanently UNPROVEN — a green run over a real corpus is not evidence
+      # that the reading changes the verdict, which is the whole point of the
+      # canary. The gate also carries a `--self-test` with seven rejecting cases;
+      # the two prove different things and neither replaces the other.
 
   - id: check_review_schema
     argv: []

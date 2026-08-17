@@ -182,7 +182,8 @@ Siblings and their boundaries, so no step here duplicates an owner:
       clauses) plus the pointer itself. Residue = everything else. Report both
       totals; the split is the input Phase 3 hands on, and the reason no step
       here proposes a deletion.
-      **Done: floor 6,678 · residue 18,149 tokens**, criterion published per rule.
+      **Done: floor 7,463 · residue 17,383 tokens** of 24,845 body tokens,
+      criterion published per rule.
       Two imprecisions stated in the artifact, one of which biases residue
       *downward* — against this roadmap's own premise, the safe direction.
 - [x] **0.3** Reconcile the row set against the closed disposition record: for
@@ -202,11 +203,11 @@ Siblings and their boundaries, so no step here duplicates an owner:
   stub-ceiling lever is small, Phase 2 ships as pure regression protection, and
   § Honest-null consequence is the finding.
 - **RESULT — the pre-registration is FALSIFIED, and it is not an honest null
-  either.** Measured **18,149 / 103,265 = 17.6 %**, against a ≥ 25 % bar with a
+  either.** Measured **17,383 / 103,265 = 16.8 %**, against a ≥ 25 % bar with a
   < 10 % null threshold. The lever is real but smaller than pre-registered:
   ~18k tokens of always-on corpus sit in bodies that already declare they should
   be elsewhere. Recorded as a miss rather than reframed — writing the bar down
-  first is what makes a 17.6 % result mean anything.
+  first is what makes a 16.8 % result mean anything.
 - **Exit:** a committed table covering every migrated rule with both totals.
   **Met** — [`rule-stub-projection-phase0.md`](../../evidence/analysis/rule-stub-projection-phase0.md).
 - **Rollback:** the table is an evidence artifact; deleting it reverts the phase.
@@ -240,7 +241,7 @@ Siblings and their boundaries, so no step here duplicates an owner:
       `taskfiles/ci-fast.yml`, `Taskfile.yml`, and
       `.github/workflows/rule-backstops.yml` beside the census it complements.
       Green line: `44 migrated rule(s) under ceiling · 45 pointer(s) resolved ·
-      18149 residue tokens (exact BPE) · 117 rule file(s)`. The manifest floor is
+      24845 body tokens (exact BPE) · 117 rule file(s)`. The manifest floor is
       keyed to the **117-rule scan root**, not to the 44-rule subset — a floor on
       the subset would fall as rules legitimately finish migrating.
 - **Exit:** gate registered, red on the fixture, green on the tree. **Met.**
@@ -284,7 +285,7 @@ Siblings and their boundaries, so no step here duplicates an owner:
       size" and no measurement exists for it; this supplies one, in exact BPE,
       largest residue first.
       **Done:** top-eight table plus the regeneration command, under 2.1. The
-      top 8 carry **10,634 of the 18,149 residue tokens — 59 % in 18 % of the
+      top 8 carry **10,469 of the 17,383 residue tokens — 60 % in 18 % of the
       rules**, which is what makes a prioritisation worth having. Written with
       its generation command so a reader regenerates rather than trusts it
       (Risk 5).

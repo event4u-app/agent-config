@@ -144,19 +144,19 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
   > `./scripts-run src/scripts/check_rule_stub_ceiling --report`.
   >
   > Measured over the 44 rules that already declare their body migrated:
-  > **18,149 residue tokens** against **6,678 floor**. The top eight carry 10,634
-  > of that residue — 59 % of it in 18 % of the rules:
+  > **17,383 residue tokens** against **7,463 floor**, out of 24,845 body tokens.
+  > The top eight carry 10,469 of that residue — 60 % of it in 18 % of the rules:
   >
   > | rule | residue | floor |
   > |---|---:|---:|
-  > | `context-hygiene` | 2248 | 199 |
-  > | `design-fidelity` | 1681 | 564 |
-  > | `autonomous-execution` | 1569 | 64 |
-  > | `active-remediation` | 1328 | 274 |
-  > | `ui-audit-gate` | 1203 | 76 |
-  > | `architecture` | 892 | 63 |
-  > | `roadmap-progress-sync` | 858 | 566 |
-  > | `git-history-discipline` | 855 | 350 |
+  > | `context-hygiene` | 2229 | 218 |
+  > | `design-fidelity` | 1662 | 583 |
+  > | `autonomous-execution` | 1550 | 83 |
+  > | `active-remediation` | 1309 | 293 |
+  > | `ui-audit-gate` | 1171 | 108 |
+  > | `architecture` | 873 | 82 |
+  > | `roadmap-progress-sync` | 839 | 585 |
+  > | `git-history-discipline` | 836 | 369 |
   >
   > Two bounds on reading it. The split is a **judgment with a mechanical
   > criterion**, published per rule so a row can be disputed without discarding
