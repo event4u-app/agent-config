@@ -70,9 +70,28 @@
 - id: docker-exec
   prompt: "run composer install and artisan migrate inside docker"
   expect: [docker-commands]
+# 2026-08-17 — this case asserted that a FILE-LESS UI prompt reaches
+# `ui-audit-gate` before any file is open. That reach was retired deliberately:
+# road-to-mixed-trigger-activation-cost Phase 2 removed the rule's `component` and
+# `design token` keyword triggers as an authoring decision (amendment option (b)),
+# so the rule is path-scoped again and fires at UI file contact instead.
+#
+# This corpus CANNOT carry the replacement assertion: `fired_rules` in
+# `src/scripts/trigger_coverage.ts` matches only `keyword` and `phrase`, so a case
+# here has no way to declare an open file. Teaching it path matching would mean
+# reconciling two matcher semantics — anchored here, unanchored in the routing
+# matrix — and that single-source-of-truth work has its own owner
+# (road-to-tested-routing). Not this change's to make.
+#
+# So the UI-audit reach MOVED rather than vanished: it is asserted at contact in
+# `tests/eval/routing-matrix/ui-audit-gate.yaml`, whose first positive now carries
+# `resources/js/dashboard/StatsTile.vue`. What this case asserts instead is the
+# obligation that genuinely still fires on this prompt pre-contact — measured, not
+# assumed: `senior-engineering-discipline`, via its own `component` keyword, was
+# the only remaining match of all 111 router rules.
 - id: ui-component
   prompt: "add a new component to the settings dashboard"
-  expect: [ui-audit-gate]
+  expect: [senior-engineering-discipline]
 - id: downstream-edit
   prompt: "after this edit update all the callers and imports downstream"
   expect: [downstream-changes]

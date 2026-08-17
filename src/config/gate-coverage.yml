@@ -182,6 +182,19 @@ gates:
       the Taskfile parse degrades and the population silently collapses —
       cannot pass.
 
+  - id: check_rule_activation_census
+    argv: []
+    min_scanned: 100
+    corpus: "rule files under src/rules/ (117 at baseline)"
+    status: enforced
+    note: >
+      Floor set below the live count so a legitimate rule retirement does not red
+      the gate that watches activation. It is still far above a collapse: if the
+      rule root moved, this gate's own assertScanned fires first and the manifest
+      row is the second net. The gate exists because commit 33c7c20 moved nineteen
+      rules from path-scoped to always-on with nothing watching, so a version of
+      it that silently scanned zero would be the same failure twice.
+
   - id: check_review_schema
     argv: []
     min_scanned: 1

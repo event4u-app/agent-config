@@ -14,8 +14,13 @@ triggers:
   - file_pattern: "*.tsx"
   - file_pattern: "*.jsx"
   - file_pattern: "*.blade.php"
-  - keyword: "component"
-  - keyword: "design token"
+  # `keyword: "component"` and `keyword: "design token"` removed 2026-08-17 as an
+  # AUTHORING decision — road-to-mixed-trigger-activation-cost Phase 2, amendment
+  # option (b), narrowed to the two path-dominant per-edit rules. This is the
+  # escape the mixed-triggers guard's own comment names: with no non-path trigger
+  # left the emitter restores `paths:`, so the rule loads on UI file contact
+  # instead of in every session. The obligation is unchanged — an audit is owed
+  # before a component is written, and a component is written in a file.
 routes_to:
   - "skill:existing-ui-audit"
   - "skill:iconography"
@@ -25,8 +30,11 @@ packs: [frontend-design]
 enforced_by:
   - "none"
 collision_ok:
-  "component": "no new component without audit findings — its core subject"
-  "design token": "same surface, opposite side: this inventories tokens before the write, design-review-after-ui-write reviews what the write emitted"
+  # The "component" and "design token" entries were removed with their triggers
+  # (2026-08-17): a collision note for a trigger that no longer exists is an
+  # own-orphan, and `minimal-safe-diff` § Own-orphan cleanup requires the diff that
+  # stopped referencing them to remove them too. The path-keyed notes below are
+  # unchanged — both halves of the UI loop still fire on the same paths.
   "resources/views/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
   "resources/js/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
   "components/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
@@ -114,10 +122,19 @@ consultation latched this session.
 It is a **parallel** mechanism, not a consumer of the triggers above — the
 distinction matters and the earlier wording here got it wrong. The concern
 decides "is this a UI surface" from `src/scripts/_lib/ui_surface.ts`; nothing
-in the tree parses this frontmatter at session time, so the `keyword:` triggers
-still have no runtime consumer at all, and the two sets can drift. What holds
-them together is a test, not a dependency: `ui_rule_triggers.test.ts` asserts
-every `file_pattern` declared here is accepted by that predicate. The predicate
+in the tree parses this frontmatter at session time, and the two sets can drift.
+What holds them together is a test, not a dependency:
+`ui_rule_triggers.test.ts` asserts every `file_pattern` declared here is
+accepted by that predicate.
+
+**This rule carries no `keyword:` trigger any more (2026-08-17).** It used to,
+and the observation those keywords had no runtime consumer is what made removing
+them cheap: no host activation surface reads a keyword — Cursor and Windsurf
+activate on `globs` plus the description, Claude on `paths:`. What the keywords
+did do was expensive, and only on Claude: one non-path trigger makes the emitter
+write **no** `paths:` at all, which is why this rule loaded in every session from
+12.1.0 until the removal. It is path-scoped again, so the obligation now arrives
+on UI file contact — see `road-to-mixed-trigger-activation-cost` Phase 2. The predicate
 is deliberately wider (it also covers `.css`, `.scss`, `.astro`), because a
 measurement denominator and a routing trigger are not the same population.
 
