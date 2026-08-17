@@ -212,6 +212,20 @@ export interface SessionRecord {
     started_at: string;
     /** ISO-8601 UTC, rewritten every heartbeat. The liveness signal. */
     last_seen: string;
+    /**
+     * Per-detector turn-end refusals THIS session has taken, or absent when it
+     * has taken none.
+     *
+     * `road-to-stop-gate-honesty` § D-2: the gate refuses turn-ends with "no
+     * per-session visibility into how often it happens", and a refused turn-end
+     * costs the user at least one extra model turn. The counts ride this
+     * existing write — the reader is one small `readFileSync` of a record the
+     * gate already maintains, so the heartbeat gains no spawn.
+     *
+     * Optional on purpose: a record written before this field existed, or by a
+     * session that was never refused, is still a valid record.
+     */
+    turn_end_refusals?: Record<string, number>;
 }
 
 /**
