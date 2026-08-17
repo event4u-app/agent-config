@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**502 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 166 · completed 245 · completed-with-deferrals 25 · not-extractable 34
+**503 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 167 · completed 245 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -279,6 +279,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-inbox-harvest-2026-08-b-council-integrity`](road-to-inbox-harvest-2026-08-b-council-integrity.md) | Road to council-pass integrity | closed-with-cancellations | 3 | 8/16 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b-estate-lifecycle`](road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | Road to estate lifecycle reporting | closed-with-cancellations | 4 | 9/15 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b-install-lifecycle`](road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | Road to install lifecycle — every write recorded, org packs decided | closed-with-cancellations | 2 | 6/13 | _not extractable_ |
+| [`road-to-inbox-harvest-2026-08-b-ledger-truth`](road-to-inbox-harvest-2026-08-b-ledger-truth.md) | Road to cost-ledger truth | closed-with-cancellations | 3 | 13/19 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b-release-integrity`](road-to-inbox-harvest-2026-08-b-release-integrity.md) | Road to release-surface integrity | closed-with-cancellations | 5 | 12/25 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b`](road-to-inbox-harvest-2026-08-b.md) | Road to inbox harvest 2026-08-b | closed-with-cancellations | 3 | 3/6 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-c-prompt-deinflation`](road-to-inbox-harvest-2026-08-c-prompt-deinflation.md) | Road to a prompt optimizer that deflates before it polishes | completed | 2 | 9/9 | _not extractable_ |

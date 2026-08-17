@@ -1,0 +1,1671 @@
+diff --git a/agents/evidence/analysis/rate-missing-observed-row.md b/agents/evidence/analysis/rate-missing-observed-row.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..23e3590b934e9b956219cab7846ce53e7c56f308
+--- /dev/null
++++ b/agents/evidence/analysis/rate-missing-observed-row.md
+@@ -0,0 +1,112 @@
++# The observed `rate_missing` row — field set, and what it can and cannot repair
++
++Discharges the `unknown-model-row-never-observed` blocker of
++`road-to-inbox-harvest-2026-08-b-ledger-truth` (`Resolved when:` *"at least one
++real `rate_missing` row exists and its field set is written down, so a backfill
++pass can be built against an observed shape rather than a guessed one"*).
++
++Measured 2026-08-16 on this repo's own transcript store.
++
++## The blocker's premise was true and had stopped being a reason to wait
++
++The entry, dated 2026-08-13, records that `agents/cost-tracking/` does not
++exist, so the ledger has **no rows at all** — not zero *flagged* rows — and
++concludes that the precondition is "a step upstream of the one this blocker
++waits on". Both halves verify: the directory is still absent, and the
++precondition is indeed upstream.
++
++What had not been noticed is that the upstream step is **runnable offline in
++one command**. `track.mjs` reads `~/.claude/projects/**/*.jsonl`, takes a
++`TRACK_STORE` override so it need not touch the repo, and reaches the network
++never. The wait was passive for three days against a producer that only had to
++be invoked.
++
++It also did not have to be a hopeful invocation. `modelTier()` matches the three
++substrings `haiku` / `sonnet` / `opus` and returns `unknown` for everything
++else, and the local corpus contains a high-volume model id that matches none of
++them — so a flagged row was **guaranteed** by the corpus before the run, not
++hoped for.
++
++```bash
++# the run that produced the row; TRACK_STORE keeps it out of the repo
++TRACK_CWD=<the worktree the session ran in> \
++TRACK_SESSION=<that session's transcript> \
++TRACK_STORE=<a scratch path> \
++TRACK_QUIET=1 node src/scripts/cost/track.mjs
++# stderr: cost-track: rate_missing — no price tier for claude-fable-5; those
++#         messages priced at $0 and the session total is understated.
++```
++
++## The observed field set
++
++Top-level keys, in the order the producer writes them:
++
++`sessionId` · `cwd` · `startedAt` · `endedAt` · `messageCount` · `byModel` ·
++`byTier` · `byBucket` · `total_cost_usd` · **`rate_missing`** ·
++**`rate_missing_models`** · `totalRecordsSeen` · `dedupedRecordsCount` ·
++`dedup_ratio` · `capturedAt`
++
++On the observed row:
++
++| field | observed value |
++|---|---|
++| `rate_missing` | `true` |
++| `rate_missing_models` | `["claude-fable-5"]` |
++| `byModel["claude-fable-5"]` | `tier: "unknown"`, 2,720 in / 353,138 out / 6,132,102 cache-write / 236,695,963 cache-read, 468 messages, `cost_usd: 0` |
++| `byModel["<synthetic>"]` | `tier: "unknown"`, all token counts 0, 4 messages, `cost_usd: 0` |
++| `byModel["claude-opus-5"]` | `tier: "opus"`, 56 messages, `cost_usd: 12.82` |
++| `byTier` | `{haiku: 0, sonnet: 0, opus: 12.82, unknown: 0}` |
++| `total_cost_usd` | `12.822884` |
++
++Three properties of the shape, each of which the backfill design turns on:
++
++1. **The token counts survive, per model.** This is what makes re-pricing a
++   pure function of `byModel[m]` plus a rate table, with no transcript re-read.
++   It is the property 2.4 was built to preserve, and it holds on a real row.
++2. **A second `unknown`-tier model is present and correctly NOT flagged.**
++   `<synthetic>` carries zero billable tokens, so it costs zero at any rate;
++   flagging it would claim an understatement that is not there. The flag
++   condition is `!PRICING[tier] && billableTokens > 0`, and the observed row is
++   the case that distinguishes the two readings.
++3. **`byTier.unknown` is 0, not the missing amount.** The unpriced cost is
++   absent from every aggregate, not parked in a bucket — so a backfill adds to
++   the target tier rather than moving a balance.
++
++## What the row does NOT retain — two limits, measured not assumed
++
++- **The cache-write TTL split is gone.** `track.mjs` prices `ephemeral_5m` and
++  `ephemeral_1h` writes at 1.25x / 2x of input, but `byModel[m]` keeps one
++  aggregated `cache_creation_input_tokens`. A backfill can only price all cache
++  writes at the 5m rate — the same default the producer already applies to any
++  unaccounted remainder. Recorded per repair as `cache_ttl_assumed: "5m"`.
++- **The bucket split cannot be attributed.** `byBucket` carries per-bucket
++  totals and `byModel` carries per-model totals, but nothing carries
++  per-bucket-per-model tokens. On the observed row `byBucket.main.cost_usd` is
++  `0` across 350 messages while `subagent` holds the whole priced 12.82 — so
++  the recovered cost genuinely cannot be split. `byBucket` is therefore left as
++  captured and the pass says so, rather than inventing a plausible ratio. Same
++  honest-limit stance `cost-summary-schema` already takes for `by_date`.
++
++Neither limit is a defect of the pass. Both are consequences of what the row
++kept, and stating them is the difference between a repaired figure and a figure
++that merely looks repaired.
++
++## Scale of the understatement
++
++Re-pricing the observed row at opus rates — **illustrative, not a claim about
++what this model actually costs** — recovers **$496.55** against a row that
++reported **$12.82**. The flagged model accounted for roughly 97 % of the
++session's real spend and none of its reported spend.
++
++That ratio is the argument for the whole `rate_missing` mechanism: the silent
++zero 2.4 removed was not a rounding error, and a single unrecognised model id
++can make a session's cost figure wrong by a factor of forty.
++
++## What this unblocks
++
++The backfill pass (`src/scripts/cost/backfill_rates.mjs`) is built against the
++field set above: it reads `rate_missing_models`, re-prices from `byModel`,
++moves the delta into `byTier` and `total_cost_usd`, clears the flag **only**
++when nothing unpriced remains, and records `rate_backfill` provenance carrying
++both limits. Its rate table is operator-supplied — the pass never guesses a
++price for an id the producer did not recognise.
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 8b0a4857cb1bbba857a7ddda6ae18a3a5e276885..0467af955fb4c2e955c54a75034fd7e2d617be11 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 28 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **36** open blockers, **10** need you → `agent-config gates`
++> 27 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **35** open blockers, **10** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**251 / 426 steps done · 59%**
++**239 / 413 steps done · 58%**
+ 
+ ```text
+-████████████████████████░░░░░░░░░░░░░░░░   59%
++███████████████████████░░░░░░░░░░░░░░░░░   58%
+ ```
+ 
+ ## Open roadmaps
+@@ -26,24 +26,23 @@
+ | 8 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+ | 9 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
+ | 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
+-| 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
+-| 12 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
+-| 13 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 2 | 11 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy) | ████████░░ 85% |
+-| 14 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 2 | 2 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | █████░░░░░ 50% |
+-| 15 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 16 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
+-| 17 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+-| 18 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+-| 19 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+-| 20 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+-| 21 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
+-| 22 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+-| 23 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 7 | 28 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 80% |
+-| 24 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
+-| 25 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 9 | 10 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | █████░░░░░ 53% |
+-| 26 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+-| 27 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+-| 28 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 11 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
++| 12 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 2 | 11 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy) | ████████░░ 85% |
++| 13 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 2 | 2 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | █████░░░░░ 50% |
++| 14 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 15 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
++| 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
++| 17 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
++| 18 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
++| 19 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
++| 20 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
++| 21 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
++| 22 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 7 | 28 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 80% |
++| 23 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
++| 24 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 9 | 10 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | █████░░░░░ 53% |
++| 25 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
++| 26 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
++| 27 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+ 
+ ---
+ 
+@@ -317,34 +316,6 @@ _1 blocker resolved._
+ | 3 | Checkable handoff-envelope fields | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+ | 4 | Roles, lifecycles, and the two residues | ✅ done | 0 | 3 | 0 | 4 | 100% |
+ 
+-### [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md)
+-
+-**Road to cost-ledger truth** — 12 / 13 done (92%)
+-
+-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+-|---|---|---|---:|---:|---:|---:|---:|
+-| 1 | Served-model truth | ✅ done | 0 | 5 | 0 | 0 | 100% |
+-| 2 | The rate tables cannot disagree | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
+-| 3 | Two aggregation lines and a cache signature | ✅ done | 0 | 3 | 0 | 6 | 100% |
+-
+-<a id="blockers-road-to-inbox-harvest-2026-08-b-ledger-truth"></a>
+-**Blockers**
+-
+-- **unknown-model-row-never-observed** (owner: maintainer) — blocks step 2.5 only. Steps 2.1-2.4 are unblocked — 2.4 is what makes an unknown-model row detectable in the first place, and Phases 1 and 3 do not touch this path.
+-  - **What to do:**
+-    after 2.4 ships, wait for the first `rate_missing` row in
+-    `agents/cost-tracking/sessions.jsonl` and record its actual shape.
+-    **Probed 2026-08-13 — the wait is longer than "no flagged row yet", and the
+-    reason is worth recording so the next probe does not read a false near-miss.**
+-    `agents/cost-tracking/` does not exist, in this worktree or in the main
+-    checkout, so the ledger has **no rows at all** — not zero *flagged* rows. Every
+-    `rate_missing` occurrence in the tree is producer code (`src/scripts/cost/track.mjs:250-251`),
+-    its consumer (`src/scripts/cost_summary.ts`), the contract
+-    (`docs/contracts/cost-summary-schema.md:123-137`), or this roadmap's own prose.
+-    The precondition for observing a flagged row is therefore that `track.mjs` runs
+-    at all and creates the ledger — a step upstream of the one this blocker waits on.
+-  - **Resolved when:** at least one real `rate_missing` row exists and its field set is written down, so a backfill pass can be built against an observed shape rather than a guessed one.
+-
+ ### [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md)
+ 
+ **Road to a review binding that survives a checkbox** — 9 / 10 done (90%)
+diff --git a/agents/roadmaps/archive/INDEX.md b/agents/roadmaps/archive/INDEX.md
+index 652b369bb987e9f4e2d2a04e1709cefdd305cbe9..7a47ec073c150ce0c1700d94705a8f7552ce910e 100644
+--- a/agents/roadmaps/archive/INDEX.md
++++ b/agents/roadmaps/archive/INDEX.md
+@@ -5,7 +5,7 @@
+ > history, not in this file (a clock here would make every drift check a
+ > false red).
+ 
+-**502 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 166 · completed 245 · completed-with-deferrals 25 · not-extractable 34
++**503 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 167 · completed 245 · completed-with-deferrals 25 · not-extractable 34
+ 
+ Every column is extracted deterministically from the file itself. No
+ summary here is model-written: a verdict the frontmatter does not carry
+@@ -279,6 +279,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
+ | [`road-to-inbox-harvest-2026-08-b-council-integrity`](road-to-inbox-harvest-2026-08-b-council-integrity.md) | Road to council-pass integrity | closed-with-cancellations | 3 | 8/16 | _not extractable_ |
+ | [`road-to-inbox-harvest-2026-08-b-estate-lifecycle`](road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | Road to estate lifecycle reporting | closed-with-cancellations | 4 | 9/15 | _not extractable_ |
+ | [`road-to-inbox-harvest-2026-08-b-install-lifecycle`](road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | Road to install lifecycle — every write recorded, org packs decided | closed-with-cancellations | 2 | 6/13 | _not extractable_ |
++| [`road-to-inbox-harvest-2026-08-b-ledger-truth`](road-to-inbox-harvest-2026-08-b-ledger-truth.md) | Road to cost-ledger truth | closed-with-cancellations | 3 | 13/19 | _not extractable_ |
+ | [`road-to-inbox-harvest-2026-08-b-release-integrity`](road-to-inbox-harvest-2026-08-b-release-integrity.md) | Road to release-surface integrity | closed-with-cancellations | 5 | 12/25 | _not extractable_ |
+ | [`road-to-inbox-harvest-2026-08-b`](road-to-inbox-harvest-2026-08-b.md) | Road to inbox harvest 2026-08-b | closed-with-cancellations | 3 | 3/6 | _not extractable_ |
+ | [`road-to-inbox-harvest-2026-08-c-prompt-deinflation`](road-to-inbox-harvest-2026-08-c-prompt-deinflation.md) | Road to a prompt optimizer that deflates before it polishes | completed | 2 | 9/9 | _not extractable_ |
+diff --git a/agents/roadmaps/archive/index.json b/agents/roadmaps/archive/index.json
+index 17d11d3cdec648f08d8add249cab1287620aca2d..1194676c5abed9aaf6e626894c41ce13d7d77611 100644
+--- a/agents/roadmaps/archive/index.json
++++ b/agents/roadmaps/archive/index.json
+@@ -1,7 +1,7 @@
+ {
+   "generated_by": "src/scripts/build_archive_index.ts",
+   "source": "agents/roadmaps/archive",
+-  "count": 502,
++  "count": 503,
+   "entries": [
+     {
+       "slug": "00-overview-and-ordering",
+@@ -3573,6 +3573,20 @@
+       "verdict": null,
+       "status": null
+     },
++    {
++      "slug": "road-to-inbox-harvest-2026-08-b-ledger-truth",
++      "title": "Road to cost-ledger truth",
++      "disposition": "closed-with-cancellations",
++      "phases": 3,
++      "steps": {
++        "open": 0,
++        "done": 13,
++        "deferred": 0,
++        "cancelled": 6
++      },
++      "verdict": null,
++      "status": null
++    },
+     {
+       "slug": "road-to-inbox-harvest-2026-08-b-release-integrity",
+       "title": "Road to release-surface integrity",
+diff --git a/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-ledger-truth.md b/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-ledger-truth.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..6f74b1f48bd5f6d3362a1e68c3a2db6ca9215051
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-ledger-truth.md
+@@ -0,0 +1,420 @@
++---
++complexity: lightweight
++parent_roadmap: road-to-inbox-harvest-2026-08-b.md
++---
++
++# Road to cost-ledger truth
++
++> Make every recorded spend row attribute to the model the provider actually
++> served, and priced from a table that cannot silently disagree with its sibling.
++
++> Source (consumed inbox): `agents/tmp.old/ac-cost-ledger-mechanics` and
++> `agents/tmp.old/ac-cache-breakpoints` — part of the 2026-08-10 batch triaged by
++> [`road-to-inbox-harvest-2026-08-b.md`](road-to-inbox-harvest-2026-08-b.md)
++> — re-pointed 2026-08-16: the parent archived on 2026-08-14 and this link had
++> been dangling since, which is the inbound-reference migration the archival
++> sweep is supposed to do and did not do for a link inside a sibling roadmap.
++> It now resolves as a sibling because this file archived too; the pre-existing
++> `../../` links below are **not** re-depthed here, deliberately — the sweep
++> re-depths nothing, that is a tree-wide condition, and repairing it one file at
++> a time inside an unrelated PR is the drive-by `minimal-safe-diff` forbids.
++
++## Context / What is verified
++
++The ledger itself is not missing — it ships under other names
++(`agents/cost-tracking/sessions.jsonl`, `src/scripts/cost/track.mjs`,
++`src/scripts/cost_summary.ts`, [`cost-summary-schema`](../../docs/contracts/cost-summary-schema.md),
++`/cost:report`, `src/scripts/cost/budget.mjs`, `src/config/budget-routing.json`).
++What is missing is **truthfulness at two joints**: the model an entry claims, and
++the rate it was priced at. Both are live defects with in-tree citations, both are
++single-file fixes, and neither needs an ADR. Six proposals are cancelled against a
++named citation in `## Cancelled` — the cache half of the batch turned out to be
++already-shipped, which is why it contributes one signature step, not a phase.
++
++## Phase 1 — Served-model truth
++
++The single highest-value item in the batch. `grep -rn 'model_served\|model_requested' src/`
++returns **0 hits**: nothing anywhere distinguishes the model that was asked for
++from the model that answered.
++
++**An implementation of 1.1–1.2 exists and is not yet applied.** It arrived out of
++band as a patch (4 files, 7 tests, type-check and lint clean) and its premises were
++re-verified independently against this tree: the field at 0 hits, the four live-API
++success sites, and `_serialise_response` at `ai_council/session.ts:187`. It is
++deliberately **not** carried by the change that authored this roadmap — a
++documentation diff does not absorb a behavioural one, and a verified green patch is
++not held behind a planning decision either; it lands in its own change. Two things
++to settle when it does: it persists the field in the **session manifest** as well as
++the response row, which is beyond what 1.1–1.2 specify and adjacent to 1.3 rather
++than inside it (an AI-council pass split on whether that surplus is acceptable
++coherence or plan drift, so it is the maintainer's call in that change, not here);
++and its test run reported a count that is environment-conditional, where the
++defensible figure is the **delta of +7** over whatever the local baseline is.
++
++- [x] **1.1 Read the served model off the API response.**
++      `src/scripts/ai_council/clients.ts` has **22** `new CouncilResponse` sites
++      (`:584`, `:616`, `:702`, `:719`, `:785`, `:796`, …), and each writes the
++      **requested** id through a `model: this.model` assignment (`:545`, `:577`,
++      `:586`, `:618`, `:704`, `:721`, `:780`, `:787`, `:798`, … — those are the
++      assignment lines, not the constructor lines; an earlier draft of this step
++      conflated the two counts). The response object's own model field is read
++      nowhere. **Only four are live-API success sites** — `:616` Anthropic,
++      `:719` OpenAI, `:796` Gemini, `:878` xAI/Perplexity via the shared
++      OpenAI-compatible client; every other site is an error path and correctly
++      keeps the default. **The field name is not uniform across providers:**
++      Gemini reports it as `model_version`, not `model`, so a literal
++      single-field read leaves Gemini silently empty. Read it beside the existing
++      `_getattr(response, 'content')` (`:594`). CLI transports carry no
++      served-model field at all, so `''` is the honest value there rather than a
++      parsed guess.
++      **Shipped** via `_servedModel(response, field = 'model')` in
++      `clients.ts` — a `field` PARAMETER rather than a literal, because the
++      Gemini case is the one that fails silently: a single-field read returns
++      `''`, which is indistinguishable from an honest no-report. All four live
++      sites read it (`clients.ts:645` Anthropic, `:749` OpenAI, `:828` Gemini
++      via `model_version`, `:911` the OpenAI-compatible client); the seventeen
++      error paths keep the `''` default untouched. A non-string value collapses
++      to `''` rather than being coerced — a coerced `'42'` would read as a real
++      served id downstream and could flip `model_divergent` to a false `true`.
++      Pinned by 7 tests, and the Gemini field name proved falsifiable by
++      mutation (`'model_version'` → `'model'` reds exactly that one case).
++      <!-- verify: task test -- --filter=clients -->
++- [x] **1.2 Carry it as a distinct `CouncilResponse` field.** The class is
++      declared at `clients.ts:199-213` with `model: string` at :201 and an
++      optional-with-default constructor at :215-230 — the same additive shape
++      `cache_read_input_tokens` used. Add the served id as a new optional field;
++      do **not** overwrite `model`, because the requested id is what the tier
++      decision was made against and both are needed to detect a substitution.
++      **Shipped** as `model_served: string`, optional-with-default `''`
++      (`clients.ts:225`, `:242`, `:254`) — the same additive shape
++      `cache_read_input_tokens` used, so no existing caller changes. It reaches
++      the persisted **response row** through `_serialise_response`
++      (`session.ts`). It is deliberately NOT hoisted to the session manifest:
++      that was the surplus this roadmap left to the change carrying the code,
++      and the field describes one response, not a session. A test pins the
++      absence, so a later hoist has to be a decision rather than a drift.
++      <!-- verify: task test -- --filter=clients -->
++- [x] **1.3 Extend the cost-summary contract additively.**
++      [`cost-summary-schema`](../../docs/contracts/cost-summary-schema.md):60-62
++      states its own rule — new fields are "a **v1 additive extension**", rows
++      written before them read "like a row missing `input_tokens` — no version
++      bump". Follow that rule exactly; no version bump, no required field.
++      **Shipped — but NOT for `model_served`, and the correction is the
++      finding.** The first draft documented `model_served` here. The R2 review
++      caught it: this contract describes `agents/cost-tracking/sessions.jsonl`,
++      while the served id is written by `_serialise_response` into the **council
++      session manifest** — a different artefact with a different producer. So
++      the section documented a field no cost-summary producer writes: the exact
++      "defined but not wired" surface the step's own `by_model` reasoning
++      declined to create, reintroduced one section lower.
++      The field this contract actually gained a producer for in this change is
++      **`rate_missing`** (2.4 writes it into that JSONL), so that is what the
++      additive extension documents — plus the summary now aggregates it
++      (`rate_missing_sessions` on totals and every grouping,
++      `rate_missing_models` on totals), because a summary that silently
++      aggregates past an understated row reproduces the zero one layer up.
++      `model_served` is documented where it is recorded: the manifest row's own
++      comment, and `orchestration-telemetry.md` for the audit line.
++      **One deliberate non-extension, recorded rather than silently skipped:**
++      `by_model` does NOT aggregate the served id. That array is keyed by the
++      *requested* model and one bucket can legitimately span several served ids,
++      so any single per-bucket value would pick one and misreport the rest.
++- [x] **1.4 Assert it at the consumer that silently mis-attributes today.**
++      `src/scripts/_lib/orchestration_record.ts:48-71` reads the requested tier
++      for `tier_chosen`, `tier_source`, `session_tier` and the downshift
++      cost-percentage — so on any alias or provider substitution the recorded
++      downshift saving is attributed to a model that never ran. Add the
++      served-vs-requested divergence as a recorded field, not a thrown error —
++      `buildOrchestrationLine` collects into an `errors: string[]` (:183-184)
++      rather than throwing, and this stays inside that contract.
++      **Shipped** as three fields on the orchestration object:
++      `model_requested`, `model_served`, and a DERIVED `model_divergent`.
++      Divergence is three-valued on purpose — `null` when either id is absent,
++      never `false`. Every CLI transport reports no served id, so a `false`
++      there would read as "checked, and they matched", which is the same
++      confident mis-attribution the step exists to remove. A non-string id
++      collects into `errors` rather than throwing, per the stated contract.
++      **Wired, not merely defined:** `ask_transport` is the first producer that
++      holds both ids, so `AskResult` carries `model_served` and the ask route's
++      audit line records all three — asserted end-to-end (substitution → `true`,
++      unreported → `null`, honest-∅ → nulls). Documented in
++      `orchestration-telemetry.md` § Field semantics.
++      <!-- verify: task test -- --filter=_lib_orchestration_record -->
++- [x] **1.5 State in the change that no ADR is needed.**
++      [`ADR-035`](../../docs/decisions/ADR-035-model-capability-tiers.md) is not
++      amended — its tier mapping is unchanged; this phase makes the ADR's
++      attribution honest rather than re-deciding it. Say so, so a later reader does
++      not go looking for a missing record.
++      **Stated here and in the pull request:** no ADR accompanies Phase 1.
++      `ADR-035`'s tier mapping is untouched — nothing about which model serves
++      which tier is re-decided. What changes is that the record now says which
++      model actually answered, so the ADR's own attribution stops being a
++      claim. `cost-summary-schema` and `audit-log-v1` both absorb the fields
++      under their existing additive rules, so no contract version moves either.
++
++## Phase 2 — The rate tables cannot disagree
++
++A finding the inbox subjects did not contain. Two independent price tables exist,
++they are never cross-checked, and **they match model ids by different strategies**
++— so a dated model suffix can miss in one and match in the other:
++
++| Table | Rates | Matching |
++|---|---|---|
++| `src/scripts/ai_council/pricing.ts` | `CACHE_READ_MULTIPLIER = 0.1`, `_5M = 1.25`, `_1H = 2.0` (:111-113) — multipliers off a base rate | `lookup()` :52-54, **exact key only** |
++| `src/scripts/cost/track.mjs` | `PRICING` :42-46 — absolute per-tier USD | `modelTier()` :48-55, **substring** (`m.includes('sonnet')` :52) |
++
++- [x] **2.1 Add a deterministic parity gate over the two tables.** Assert every
++      tier `track.mjs` can name resolves in `pricing.ts`, and that the derived
++      cache rates agree with the absolute ones within a stated epsilon. **The
++      false-positive class is empty by construction** — both tables are committed
++      constants, so the gate reads fixed inputs with no sampling, no prose parsing
++      and no host dependency; a disagreement it reports is a real one. Register in
++      `src/config/gate-coverage.yml`; report its scan via `reportScanned`
++      (`src/scripts/_lib/scan_scope.ts:117`).
++      **Shipped as a TEST in the existing pricing suite, not as a registered
++      gate — a deliberate divergence.** This step's premise holds exactly: both
++      tables are committed constants, so the false-positive class is empty and a
++      reported disagreement is real. That is also why a gate is the expensive way
++      to buy it — the assertion is a pure comparison of two literals, the pricing
++      suite already runs on any change to either file, and a new gate costs six
++      registration surfaces (manifest entry + canary, the two header figures, the
++      ci-fast task, the `Taskfile` list, the workflow step, the ledger ratchet)
++      for the identical check. A gate earns those when nothing else watches the
++      corpus; here something already does.
++      **What the parity found:** sonnet and opus agree *exactly* on all three
++      multipliers; haiku does not — `write_5m` 1.20x against 1.25x, `cache_read`
++      0.12x against 0.10x. Those are Anthropic's published haiku rates ($0.30 /
++      $0.03 against a $0.25 input), so it is vendor rounding, not a defect.
++      Recorded as two **pinned** exceptions carrying their measured delta rather
++      than dissolved into an epsilon: pinning forces a re-read if the vendor
++      changes, and stops a *new* divergence hiding inside a blanket tolerance.
++      Proven able to fail by mutation (sonnet `cache_write_5m` → 4.00 reds
++      exactly one case), not by a green run. The constants are parsed from
++      `track.mjs`'s source rather than imported — that module has no export and
++      no entry guard, so importing it would run it.
++      <!-- verify: task test -- --filter=pricing -->
++- [x] **2.2 Respect the byte-frozen row format.** Held: 2.1 added no column and
++      no constant to `pricing.ts`. It reads the two existing tables and asserts a
++      relation between them; nothing in `.agent-prices.md` was touched.
++      <!-- verify: task test -- --filter=pricing -->
++- [x] **2.3 Make `lookup()` longest-prefix instead of exact-key.**
++      `pricing.ts:52-54` is a bare `table.prices.get(priceKey(provider, model))`,
++      so `claude-sonnet-4-5-20260101` misses a `claude-sonnet-4-5` row and prices
++      at nothing. Fall back to the longest matching key prefix, keeping exact
++      match as the first hit so no currently-priced call changes.
++      **Shipped**, with one guard the step did not name and that a plain
++      `startsWith` would have missed: a prefix must be followed by a separator
++      (`-`, `.`, `:`, `@`) or end the id, so a `claude-opus-4-1` row never
++      prices `claude-opus-4-15`. Mispricing one model at another's rate is
++      **worse** than the zero it replaces, because it looks correct. Longest
++      match wins, so a specific row is never shadowed by a shorter one that
++      also prefixes the id; provider is part of the composite key, so
++      cross-provider bleed is impossible by construction. Six tests, including
++      the exact-match-unchanged case and both near-misses.
++      <!-- verify: task test -- --filter=pricing -->
++- [x] **2.4 Flag the silent zero instead of returning it.** `track.mjs:64` is
++      `if (!p || !u) return 0;`, reached whenever `modelTier()` returns
++      `'unknown'` (:49, :54) — an unknown model is priced at **zero, with no
++      warning and no flag**; `grep -rn rate_missing src/` returns 0 hits. Emit a
++      `rate_missing` marker on the row and one stderr warning per run. Rows keep
++      their token counts, so a later backfill stays possible.
++      **Shipped** as `rate_missing: boolean` plus `rate_missing_models: string[]`
++      (sorted, distinct) on the session row, and ONE stderr warning per run —
++      emitted **before** the `TRACK_QUIET` return, because a suppressed report
++      is a display choice while an understated cost figure is a data-integrity
++      problem. Token counts are untouched, which is what makes 2.5's backfill
++      possible at all. Pinned by 4 subprocess tests over a temp-`HOME`
++      transcript fixture (track.mjs has no export and no entry guard, so
++      importing it would scan the developer's real `~/.claude`), including a
++      negative control on a priced model; mutation-proven — dropping the
++      `tier === 'unknown'` guard reds the control and the mixed-session case.
++- [x] **2.5 Backfill machinery for `rate_missing` rows.** ~~Blocked behind
++      `unknown-model-row-never-observed` — see `## Blockers`.~~ Writing a
++      re-pricing pass before a single real unknown-model row exists would be
++      built against a shape nobody has seen.
++      <!-- verify: npx vitest run tests/scripts/cost_backfill_rates.test.ts -->
++      **Shipped 2026-08-16, against an observed row rather than a guessed one.**
++      The blocker's premise was true and had stopped being a reason to wait: the
++      producer it named as "a step upstream" is runnable offline in one command,
++      and the local corpus contains a model id `modelTier()` cannot match, so a
++      flagged row was guaranteed rather than hoped for. Field set, the run that
++      produced it, and the two limits below are recorded once in
++      [`rate-missing-observed-row`](../../evidence/analysis/rate-missing-observed-row.md).
++      `src/scripts/cost/backfill_rates.mjs` re-prices from the token counts 2.4
++      preserved — no transcript re-read — with an **operator-supplied** rate
++      table (tier alias or explicit per-1M rates); it never guesses a price for
++      an id the producer did not recognise, and it rejects an unknown alias or a
++      table missing a key **by name** rather than defaulting one.
++      **Dry run is the default**; `--apply` rewrites via temp-then-rename.
++      **The flag clears only when nothing unpriced remains** — a row re-priced
++      for one model while another still has no rate stays flagged, because it is
++      still understated. That is the same silent zero 2.4 removed, one layer up.
++      **Two limits are properties of the stored row, and both are recorded on
++      the row instead of papered over**: `cache_ttl_assumed: "5m"` (the row
++      aggregates the 5m/1h cache-write split away) and
++      `bucket_split_repaired: false` (no per-bucket-per-model tokens exist, so
++      the recovered cost cannot be attributed to main vs subagent — inventing a
++      ratio would be the worse number). `cost-summary-schema` carries both as a
++      v1 additive `rate_backfill` extension, next to its `by_date` precedent.
++      Pinned by 15 tests, unit **and** subprocess, and **mutation-proven, not
++      coverage-proven**: dropping the idempotence guard, the zero-billable-token
++      guard, or the still-unpriced recomputation each reds exactly one test
++      (1 failed / 14 passed in all three), and all three revert to 15/15.
++      Measured on the observed row: re-pricing recovered **$496.55** against a
++      reported **$12.82** — one unrecognised id had made the session's cost
++      figure wrong by roughly a factor of forty.
++      **Glyph corrected `[~]` → `[ ]` when the rest of the roadmap closed, and
++      stated rather than done quietly.** `[~]` means *deferred*; this step is
++      *blocked*, which is what `[ ]` plus a recorded blocker already says — it
++      is not half-shipped, and nothing about it was started. The correction is
++      not cosmetic: with `count_open` at 0 and any `[~]` present, the
++      pre-commit dashboard gate refuses every **roadmap-touching** commit until
++      a human disposes of the deferral, so a mis-glyph here would have
++      deadlocked the branch that finished the work. Restoring a genuinely
++      blocked item to `[ ]` is the disposition the gate itself documents.
++      Reverse it to `[~]` if the intent really was "deferred by choice".
++      **Scope corrected 2026-08-14 — it was written as "every commit in the
++      repository", and that is not what the hook does.** The installed
++      `pre-commit` guards the check behind
++      `git diff --cached --name-only | grep -qE '^agents/roadmaps(-progress\.md|/)'`,
++      with the comment *"only fires when staged changes touch a roadmap file or
++      the dashboard itself, so unrelated commits stay fast."* A commit touching
++      no roadmap is unaffected. The correction matters in the direction that
++      bites: an overstated hazard makes the next session refuse a correct
++      closure out of fear of a deadlock that would not have happened — which is
++      the near-miss that produced this note. The real hazard is narrower and
++      still real: the closing commit **is** roadmap-touching by construction, so
++      it blocks itself, and that is why the deferrals must be disposed in the
++      same change rather than after it.
++
++## Phase 3 — Two aggregation lines and a cache signature
++
++- [x] **3.1 Add a cache-savings line to the cost summary.** `grep -rni saving`
++      over `src/scripts/cost*` returns 0 hits — the summary reports spend but never
++      what caching bought. Both inputs exist: the totals block carries
++      `cache_read_input_tokens` / `cache_creation_input_tokens`
++      ([`cost-summary-schema`](../../docs/contracts/cost-summary-schema.md):46-47,
++      :58) and `pricing.ts:111-113` holds the multipliers to price the
++      counterfactual. Additive per the schema's own rule (:60-62).
++      **Shipped** as `cache_savings_input_token_equivalents` on `totals` —
++      token-equivalents, explicitly **not USD**, because `totals` aggregates
++      across models with different input rates and carries no per-model split
++      to apply them to; a dollar figure would have to pick one rate and be
++      wrong for every other model in the row. A **negative** value is
++      meaningful: the run wrote cache it never read back. The write premium
++      uses the 5m multiplier — rows carry no TTL split, and 5m is the same
++      assumption `track.mjs` already makes for unaccounted writes, so the two
++      cost paths agree instead of diverging quietly. Stated as a limit in the
++      contract rather than left for a reader to discover.
++      <!-- verify: task test -- --filter=cost_summary -->
++- [x] **3.2 Add a day-by-day breakdown.** `grep -rn by_date src/ docs/` returns 0
++      hits, yet every row already carries `startedAt` / `endedAt`
++      (`track.mjs:214`, from the per-message timestamps at :175-177). One derived
++      grouping, no new capture. Additive, same rule.
++      **Shipped** as a `by_date` array keyed on the UTC calendar day of
++      `startedAt`, same row shape as `by_session`. A row with no or
++      unparseable timestamp lands under `unknown`, which sorts last under the
++      existing codepoint ordering, so a timestampless row never displaces a
++      real day. A test asserts the day buckets re-sum to `totals` — a grouping
++      that double-counts is the failure mode worth pinning.
++      <!-- verify: task test -- --filter=cost_summary -->
++- [x] **3.3 Add a write-share signature to the existing cache report.** Extend
++      `src/scripts/cache_realization_report.ts`, which already parses the
++      read/write split and computes `median_first_call_written_or_uncached` /
++      `mean_first_call_written_or_uncached` (:85-86) beside
++      `first_call_cache_read_share` and `cold_start_share_of_write_volume` (:88-90,
++      computed :130-140). Do **not** write a new script.
++      **Shipped** by extending `computeColdStarts` — no new script — with
++      `write_share_of_billable` / `read_share_of_billable` /
++      `uncached_share_of_billable` over ALL subagent records, plus one render
++      line. The three share one denominator and sum to 1, which is what makes
++      them a signature rather than three loose ratios: a write-heavy split is
++      paying the cache premium and collecting no discount, and
++      `cold_start_share_of_write_volume` cannot show that — it only says how
++      much of the writing happened on a first call. A test pins exactly that
++      gap (a never-read-back run reads `write_share = 1` while the pre-existing
++      metric reports a bland 0.5). All-zero is the **empty-corpus** reading,
++      never "a perfectly uncached workload"; read it beside `legs`.
++      <!-- verify: task test -- --filter=cache_realization_report -->
++
++## Cancelled — each against a named citation
++
++- [-] **Chokepoint doctrine (instrument the call site, stream the cost).** Never
++      true by architecture: this repo does not own the call sites it costs —
++      `src/scripts/cost/track.mjs:1-20` reconstructs spend from
++      `~/.claude/projects/**/*.jsonl` after the fact — and nothing streams
++      (`clients.ts` non-streaming `messages.create`; CLI clients use
++      `--print --output-format json`). Both halves have no call site.
++- [-] **Statusline "API" tag, 60s aggregation cache, month-over-month delta.** No
++      statusline surface exists here to tag: `src/scripts/hooks/session_eol_hook.ts:18-26`
++      writes `agents/runtime/state/context-fill.json` as "display substrate for an
++      **external** statusline".
++- [-] **Spend caps and an alert ladder.** Shipped, and a separate surface:
++      `src/scripts/cost/budget.mjs`, `src/config/budget-routing.json`,
++      [`budget-routing`](../../docs/contracts/budget-routing.md), 50/75/90/100%
++      ladder at [`/cost:report`](../../src/domains/meta/cost/report/command.md):67-71.
++      [`ADR-133`](../../docs/decisions/ADR-133-subsystem-freeze-unblock-list.md):26
++      rejected a standing WIP cap as "accounting theater for a solo maintainer".
++- [-] **Recycling x caching interaction test.**
++      [`ai-council-config`](../../docs/contracts/ai-council-config.md):1042-1044 —
++      "**Host subagents are unaffected.** This key governs ONLY the council's own
++      Anthropic API calls." Recycling lives in `cmd_session_recycle.ts`, **0**
++      case-insensitive `cache` hits: no shared path, so the flagged blow-up has no
++      call site to test.
++- [-] **Cache-TTL extension and pre-warming.**
++      [`archive/road-to-cache-economy.md`](archive/road-to-cache-economy.md):53
++      measured blanket 1h at **+8.6% (worse)**, head-1h/tail-5m at +1.3% (worse);
++      :57 records "98% of cache reuse happens within ~34 seconds". `'5m'` is a
++      permanent default with a published falsification condition.
++- [-] **Cache-breakpoint placement compiler.** Both breakpoints ship —
++      `clients.ts:541-570` puts `cache_control` on the system block and the stable
++      user prefix, volatile suffix after it ("The volatile suffix NEVER carries
++      cache_control"); :530 "Two breakpoints (≤ the 4 allowed)"; :528-530 records
++      the min-cacheable-prefix reasoning. The per-call opt-out is already stronger
++      than proposed: `enable_prompt_cache` defaults **false** (:459, rationale
++      :445-448).
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-08-10 | reviewer: claude/host -->
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | Prefix fallback re-prices a call that priced correctly before | implementation | Making `lookup()` longest-prefix can newly match a key the exact-match path deliberately missed, changing a live billed figure | Keep exact match as the first hit so no currently-resolving call changes path; pin the new fallback with a dated-suffix case in `pricing.test.ts` | Phase 2 — The rate tables cannot disagree |
++| 2 | Parity gate lands red on the tree as it stands | implementation | The two tables have never been cross-checked, so the gate may report a real pre-existing disagreement on its first run | Classify every first-run finding before wiring the gate into CI; a genuine disagreement is a Phase 2 fix, not a gate to loosen | Phase 2 — The rate tables cannot disagree |
++| 3 | Served-model field read as authoritative for tier decisions | product | A second model id in the record invites a consumer to route on the served id, when the requested id is what the tier decision was made against | Keep `model` as the requested id and document the served field as attribution-only in the schema extension | Phase 1 — Served-model truth |
++| 4 | Additive schema fields drift past the additive rule | implementation | Three separate additive extensions (1.3, 3.1, 3.2) touch one contract; one required field or version bump breaks older rows | Cite `cost-summary-schema`:60-62 in each change; all new fields optional with a documented absent-reading | Phase 3 — Two aggregation lines and a cache signature |
++
++## Blockers
++
++### blocker: unknown-model-row-never-observed
++- **Status:** resolved
++- **Owner:** maintainer
++- **Blocks:** step 2.5 only. Steps 2.1-2.4 are unblocked — 2.4 is what makes an
++  unknown-model row detectable in the first place, and Phases 1 and 3 do not
++  touch this path.
++- **What to do:** after 2.4 ships, wait for the first `rate_missing` row in
++  `agents/cost-tracking/sessions.jsonl` and record its actual shape.
++  **Probed 2026-08-13 — the wait is longer than "no flagged row yet", and the
++  reason is worth recording so the next probe does not read a false near-miss.**
++  `agents/cost-tracking/` does not exist, in this worktree or in the main
++  checkout, so the ledger has **no rows at all** — not zero *flagged* rows. Every
++  `rate_missing` occurrence in the tree is producer code (`src/scripts/cost/track.mjs:250-251`),
++  its consumer (`src/scripts/cost_summary.ts`), the contract
++  (`docs/contracts/cost-summary-schema.md:123-137`), or this roadmap's own prose.
++  The precondition for observing a flagged row is therefore that `track.mjs` runs
++  at all and creates the ledger — a step upstream of the one this blocker waits on.
++- **Resolved when:** at least one real `rate_missing` row exists and its field set
++  is written down, so a backfill pass can be built against an observed shape
++  rather than a guessed one.
++- **Resolved 2026-08-16 — and the transferable half is why it sat open for three
++  days.** A real flagged row exists (`claude-fable-5`, 468 messages, 236,695,963
++  cache-read tokens, priced at $0) and its field set is written down in
++  [`rate-missing-observed-row`](../evidence/analysis/rate-missing-observed-row.md).
++  The 2026-08-13 probe above was **correct on every fact and wrong in its verb**:
++  it identified the missing precondition — the ledger has no rows because
++  `track.mjs` had never run — and then filed it as something to *wait* for.
++  Nothing was waiting on anyone. The producer takes a `TRACK_STORE` override,
++  touches no network, and the local corpus already contained a model id
++  `modelTier()` cannot match, so the flagged row was **guaranteed by the corpus**
++  before the command ran rather than hoped for. A blocker whose own diagnosis
++  names an offline, in-session precondition is not blocked; it is undone. The
++  cost of not re-reading it that way was three days and one re-screen per cycle.
+diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md
+deleted file mode 100644
+index 126cbd2ca28daafff099ab935b9c6ed1b5f377bb..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md
++++ /dev/null
+@@ -1,369 +0,0 @@
+----
+-complexity: lightweight
+-parent_roadmap: road-to-inbox-harvest-2026-08-b.md
+----
+-
+-# Road to cost-ledger truth
+-
+-> Make every recorded spend row attribute to the model the provider actually
+-> served, and priced from a table that cannot silently disagree with its sibling.
+-
+-> Source (consumed inbox): `agents/tmp.old/ac-cost-ledger-mechanics` and
+-> `agents/tmp.old/ac-cache-breakpoints` — part of the 2026-08-10 batch triaged by
+-> [`road-to-inbox-harvest-2026-08-b.md`](road-to-inbox-harvest-2026-08-b.md).
+-
+-## Context / What is verified
+-
+-The ledger itself is not missing — it ships under other names
+-(`agents/cost-tracking/sessions.jsonl`, `src/scripts/cost/track.mjs`,
+-`src/scripts/cost_summary.ts`, [`cost-summary-schema`](../../docs/contracts/cost-summary-schema.md),
+-`/cost:report`, `src/scripts/cost/budget.mjs`, `src/config/budget-routing.json`).
+-What is missing is **truthfulness at two joints**: the model an entry claims, and
+-the rate it was priced at. Both are live defects with in-tree citations, both are
+-single-file fixes, and neither needs an ADR. Six proposals are cancelled against a
+-named citation in `## Cancelled` — the cache half of the batch turned out to be
+-already-shipped, which is why it contributes one signature step, not a phase.
+-
+-## Phase 1 — Served-model truth
+-
+-The single highest-value item in the batch. `grep -rn 'model_served\|model_requested' src/`
+-returns **0 hits**: nothing anywhere distinguishes the model that was asked for
+-from the model that answered.
+-
+-**An implementation of 1.1–1.2 exists and is not yet applied.** It arrived out of
+-band as a patch (4 files, 7 tests, type-check and lint clean) and its premises were
+-re-verified independently against this tree: the field at 0 hits, the four live-API
+-success sites, and `_serialise_response` at `ai_council/session.ts:187`. It is
+-deliberately **not** carried by the change that authored this roadmap — a
+-documentation diff does not absorb a behavioural one, and a verified green patch is
+-not held behind a planning decision either; it lands in its own change. Two things
+-to settle when it does: it persists the field in the **session manifest** as well as
+-the response row, which is beyond what 1.1–1.2 specify and adjacent to 1.3 rather
+-than inside it (an AI-council pass split on whether that surplus is acceptable
+-coherence or plan drift, so it is the maintainer's call in that change, not here);
+-and its test run reported a count that is environment-conditional, where the
+-defensible figure is the **delta of +7** over whatever the local baseline is.
+-
+-- [x] **1.1 Read the served model off the API response.**
+-      `src/scripts/ai_council/clients.ts` has **22** `new CouncilResponse` sites
+-      (`:584`, `:616`, `:702`, `:719`, `:785`, `:796`, …), and each writes the
+-      **requested** id through a `model: this.model` assignment (`:545`, `:577`,
+-      `:586`, `:618`, `:704`, `:721`, `:780`, `:787`, `:798`, … — those are the
+-      assignment lines, not the constructor lines; an earlier draft of this step
+-      conflated the two counts). The response object's own model field is read
+-      nowhere. **Only four are live-API success sites** — `:616` Anthropic,
+-      `:719` OpenAI, `:796` Gemini, `:878` xAI/Perplexity via the shared
+-      OpenAI-compatible client; every other site is an error path and correctly
+-      keeps the default. **The field name is not uniform across providers:**
+-      Gemini reports it as `model_version`, not `model`, so a literal
+-      single-field read leaves Gemini silently empty. Read it beside the existing
+-      `_getattr(response, 'content')` (`:594`). CLI transports carry no
+-      served-model field at all, so `''` is the honest value there rather than a
+-      parsed guess.
+-      **Shipped** via `_servedModel(response, field = 'model')` in
+-      `clients.ts` — a `field` PARAMETER rather than a literal, because the
+-      Gemini case is the one that fails silently: a single-field read returns
+-      `''`, which is indistinguishable from an honest no-report. All four live
+-      sites read it (`clients.ts:645` Anthropic, `:749` OpenAI, `:828` Gemini
+-      via `model_version`, `:911` the OpenAI-compatible client); the seventeen
+-      error paths keep the `''` default untouched. A non-string value collapses
+-      to `''` rather than being coerced — a coerced `'42'` would read as a real
+-      served id downstream and could flip `model_divergent` to a false `true`.
+-      Pinned by 7 tests, and the Gemini field name proved falsifiable by
+-      mutation (`'model_version'` → `'model'` reds exactly that one case).
+-      <!-- verify: task test -- --filter=clients -->
+-- [x] **1.2 Carry it as a distinct `CouncilResponse` field.** The class is
+-      declared at `clients.ts:199-213` with `model: string` at :201 and an
+-      optional-with-default constructor at :215-230 — the same additive shape
+-      `cache_read_input_tokens` used. Add the served id as a new optional field;
+-      do **not** overwrite `model`, because the requested id is what the tier
+-      decision was made against and both are needed to detect a substitution.
+-      **Shipped** as `model_served: string`, optional-with-default `''`
+-      (`clients.ts:225`, `:242`, `:254`) — the same additive shape
+-      `cache_read_input_tokens` used, so no existing caller changes. It reaches
+-      the persisted **response row** through `_serialise_response`
+-      (`session.ts`). It is deliberately NOT hoisted to the session manifest:
+-      that was the surplus this roadmap left to the change carrying the code,
+-      and the field describes one response, not a session. A test pins the
+-      absence, so a later hoist has to be a decision rather than a drift.
+-      <!-- verify: task test -- --filter=clients -->
+-- [x] **1.3 Extend the cost-summary contract additively.**
+-      [`cost-summary-schema`](../../docs/contracts/cost-summary-schema.md):60-62
+-      states its own rule — new fields are "a **v1 additive extension**", rows
+-      written before them read "like a row missing `input_tokens` — no version
+-      bump". Follow that rule exactly; no version bump, no required field.
+-      **Shipped — but NOT for `model_served`, and the correction is the
+-      finding.** The first draft documented `model_served` here. The R2 review
+-      caught it: this contract describes `agents/cost-tracking/sessions.jsonl`,
+-      while the served id is written by `_serialise_response` into the **council
+-      session manifest** — a different artefact with a different producer. So
+-      the section documented a field no cost-summary producer writes: the exact
+-      "defined but not wired" surface the step's own `by_model` reasoning
+-      declined to create, reintroduced one section lower.
+-      The field this contract actually gained a producer for in this change is
+-      **`rate_missing`** (2.4 writes it into that JSONL), so that is what the
+-      additive extension documents — plus the summary now aggregates it
+-      (`rate_missing_sessions` on totals and every grouping,
+-      `rate_missing_models` on totals), because a summary that silently
+-      aggregates past an understated row reproduces the zero one layer up.
+-      `model_served` is documented where it is recorded: the manifest row's own
+-      comment, and `orchestration-telemetry.md` for the audit line.
+-      **One deliberate non-extension, recorded rather than silently skipped:**
+-      `by_model` does NOT aggregate the served id. That array is keyed by the
+-      *requested* model and one bucket can legitimately span several served ids,
+-      so any single per-bucket value would pick one and misreport the rest.
+-- [x] **1.4 Assert it at the consumer that silently mis-attributes today.**
+-      `src/scripts/_lib/orchestration_record.ts:48-71` reads the requested tier
+-      for `tier_chosen`, `tier_source`, `session_tier` and the downshift
+-      cost-percentage — so on any alias or provider substitution the recorded
+-      downshift saving is attributed to a model that never ran. Add the
+-      served-vs-requested divergence as a recorded field, not a thrown error —
+-      `buildOrchestrationLine` collects into an `errors: string[]` (:183-184)
+-      rather than throwing, and this stays inside that contract.
+-      **Shipped** as three fields on the orchestration object:
+-      `model_requested`, `model_served`, and a DERIVED `model_divergent`.
+-      Divergence is three-valued on purpose — `null` when either id is absent,
+-      never `false`. Every CLI transport reports no served id, so a `false`
+-      there would read as "checked, and they matched", which is the same
+-      confident mis-attribution the step exists to remove. A non-string id
+-      collects into `errors` rather than throwing, per the stated contract.
+-      **Wired, not merely defined:** `ask_transport` is the first producer that
+-      holds both ids, so `AskResult` carries `model_served` and the ask route's
+-      audit line records all three — asserted end-to-end (substitution → `true`,
+-      unreported → `null`, honest-∅ → nulls). Documented in
+-      `orchestration-telemetry.md` § Field semantics.
+-      <!-- verify: task test -- --filter=_lib_orchestration_record -->
+-- [x] **1.5 State in the change that no ADR is needed.**
+-      [`ADR-035`](../../docs/decisions/ADR-035-model-capability-tiers.md) is not
+-      amended — its tier mapping is unchanged; this phase makes the ADR's
+-      attribution honest rather than re-deciding it. Say so, so a later reader does
+-      not go looking for a missing record.
+-      **Stated here and in the pull request:** no ADR accompanies Phase 1.
+-      `ADR-035`'s tier mapping is untouched — nothing about which model serves
+-      which tier is re-decided. What changes is that the record now says which
+-      model actually answered, so the ADR's own attribution stops being a
+-      claim. `cost-summary-schema` and `audit-log-v1` both absorb the fields
+-      under their existing additive rules, so no contract version moves either.
+-
+-## Phase 2 — The rate tables cannot disagree
+-
+-A finding the inbox subjects did not contain. Two independent price tables exist,
+-they are never cross-checked, and **they match model ids by different strategies**
+-— so a dated model suffix can miss in one and match in the other:
+-
+-| Table | Rates | Matching |
+-|---|---|---|
+-| `src/scripts/ai_council/pricing.ts` | `CACHE_READ_MULTIPLIER = 0.1`, `_5M = 1.25`, `_1H = 2.0` (:111-113) — multipliers off a base rate | `lookup()` :52-54, **exact key only** |
+-| `src/scripts/cost/track.mjs` | `PRICING` :42-46 — absolute per-tier USD | `modelTier()` :48-55, **substring** (`m.includes('sonnet')` :52) |
+-
+-- [x] **2.1 Add a deterministic parity gate over the two tables.** Assert every
+-      tier `track.mjs` can name resolves in `pricing.ts`, and that the derived
+-      cache rates agree with the absolute ones within a stated epsilon. **The
+-      false-positive class is empty by construction** — both tables are committed
+-      constants, so the gate reads fixed inputs with no sampling, no prose parsing
+-      and no host dependency; a disagreement it reports is a real one. Register in
+-      `src/config/gate-coverage.yml`; report its scan via `reportScanned`
+-      (`src/scripts/_lib/scan_scope.ts:117`).
+-      **Shipped as a TEST in the existing pricing suite, not as a registered
+-      gate — a deliberate divergence.** This step's premise holds exactly: both
+-      tables are committed constants, so the false-positive class is empty and a
+-      reported disagreement is real. That is also why a gate is the expensive way
+-      to buy it — the assertion is a pure comparison of two literals, the pricing
+-      suite already runs on any change to either file, and a new gate costs six
+-      registration surfaces (manifest entry + canary, the two header figures, the
+-      ci-fast task, the `Taskfile` list, the workflow step, the ledger ratchet)
+-      for the identical check. A gate earns those when nothing else watches the
+-      corpus; here something already does.
+-      **What the parity found:** sonnet and opus agree *exactly* on all three
+-      multipliers; haiku does not — `write_5m` 1.20x against 1.25x, `cache_read`
+-      0.12x against 0.10x. Those are Anthropic's published haiku rates ($0.30 /
+-      $0.03 against a $0.25 input), so it is vendor rounding, not a defect.
+-      Recorded as two **pinned** exceptions carrying their measured delta rather
+-      than dissolved into an epsilon: pinning forces a re-read if the vendor
+-      changes, and stops a *new* divergence hiding inside a blanket tolerance.
+-      Proven able to fail by mutation (sonnet `cache_write_5m` → 4.00 reds
+-      exactly one case), not by a green run. The constants are parsed from
+-      `track.mjs`'s source rather than imported — that module has no export and
+-      no entry guard, so importing it would run it.
+-      <!-- verify: task test -- --filter=pricing -->
+-- [x] **2.2 Respect the byte-frozen row format.** Held: 2.1 added no column and
+-      no constant to `pricing.ts`. It reads the two existing tables and asserts a
+-      relation between them; nothing in `.agent-prices.md` was touched.
+-      <!-- verify: task test -- --filter=pricing -->
+-- [x] **2.3 Make `lookup()` longest-prefix instead of exact-key.**
+-      `pricing.ts:52-54` is a bare `table.prices.get(priceKey(provider, model))`,
+-      so `claude-sonnet-4-5-20260101` misses a `claude-sonnet-4-5` row and prices
+-      at nothing. Fall back to the longest matching key prefix, keeping exact
+-      match as the first hit so no currently-priced call changes.
+-      **Shipped**, with one guard the step did not name and that a plain
+-      `startsWith` would have missed: a prefix must be followed by a separator
+-      (`-`, `.`, `:`, `@`) or end the id, so a `claude-opus-4-1` row never
+-      prices `claude-opus-4-15`. Mispricing one model at another's rate is
+-      **worse** than the zero it replaces, because it looks correct. Longest
+-      match wins, so a specific row is never shadowed by a shorter one that
+-      also prefixes the id; provider is part of the composite key, so
+-      cross-provider bleed is impossible by construction. Six tests, including
+-      the exact-match-unchanged case and both near-misses.
+-      <!-- verify: task test -- --filter=pricing -->
+-- [x] **2.4 Flag the silent zero instead of returning it.** `track.mjs:64` is
+-      `if (!p || !u) return 0;`, reached whenever `modelTier()` returns
+-      `'unknown'` (:49, :54) — an unknown model is priced at **zero, with no
+-      warning and no flag**; `grep -rn rate_missing src/` returns 0 hits. Emit a
+-      `rate_missing` marker on the row and one stderr warning per run. Rows keep
+-      their token counts, so a later backfill stays possible.
+-      **Shipped** as `rate_missing: boolean` plus `rate_missing_models: string[]`
+-      (sorted, distinct) on the session row, and ONE stderr warning per run —
+-      emitted **before** the `TRACK_QUIET` return, because a suppressed report
+-      is a display choice while an understated cost figure is a data-integrity
+-      problem. Token counts are untouched, which is what makes 2.5's backfill
+-      possible at all. Pinned by 4 subprocess tests over a temp-`HOME`
+-      transcript fixture (track.mjs has no export and no entry guard, so
+-      importing it would scan the developer's real `~/.claude`), including a
+-      negative control on a priced model; mutation-proven — dropping the
+-      `tier === 'unknown'` guard reds the control and the mixed-session case.
+-- [ ] **2.5 Backfill machinery for `rate_missing` rows.** Blocked behind
+-      `unknown-model-row-never-observed` — see `## Blockers`. Writing a
+-      re-pricing pass before a single real unknown-model row exists would be
+-      built against a shape nobody has seen.
+-      **Glyph corrected `[~]` → `[ ]` when the rest of the roadmap closed, and
+-      stated rather than done quietly.** `[~]` means *deferred*; this step is
+-      *blocked*, which is what `[ ]` plus a recorded blocker already says — it
+-      is not half-shipped, and nothing about it was started. The correction is
+-      not cosmetic: with `count_open` at 0 and any `[~]` present, the
+-      pre-commit dashboard gate refuses every **roadmap-touching** commit until
+-      a human disposes of the deferral, so a mis-glyph here would have
+-      deadlocked the branch that finished the work. Restoring a genuinely
+-      blocked item to `[ ]` is the disposition the gate itself documents.
+-      Reverse it to `[~]` if the intent really was "deferred by choice".
+-      **Scope corrected 2026-08-14 — it was written as "every commit in the
+-      repository", and that is not what the hook does.** The installed
+-      `pre-commit` guards the check behind
+-      `git diff --cached --name-only | grep -qE '^agents/roadmaps(-progress\.md|/)'`,
+-      with the comment *"only fires when staged changes touch a roadmap file or
+-      the dashboard itself, so unrelated commits stay fast."* A commit touching
+-      no roadmap is unaffected. The correction matters in the direction that
+-      bites: an overstated hazard makes the next session refuse a correct
+-      closure out of fear of a deadlock that would not have happened — which is
+-      the near-miss that produced this note. The real hazard is narrower and
+-      still real: the closing commit **is** roadmap-touching by construction, so
+-      it blocks itself, and that is why the deferrals must be disposed in the
+-      same change rather than after it.
+-
+-## Phase 3 — Two aggregation lines and a cache signature
+-
+-- [x] **3.1 Add a cache-savings line to the cost summary.** `grep -rni saving`
+-      over `src/scripts/cost*` returns 0 hits — the summary reports spend but never
+-      what caching bought. Both inputs exist: the totals block carries
+-      `cache_read_input_tokens` / `cache_creation_input_tokens`
+-      ([`cost-summary-schema`](../../docs/contracts/cost-summary-schema.md):46-47,
+-      :58) and `pricing.ts:111-113` holds the multipliers to price the
+-      counterfactual. Additive per the schema's own rule (:60-62).
+-      **Shipped** as `cache_savings_input_token_equivalents` on `totals` —
+-      token-equivalents, explicitly **not USD**, because `totals` aggregates
+-      across models with different input rates and carries no per-model split
+-      to apply them to; a dollar figure would have to pick one rate and be
+-      wrong for every other model in the row. A **negative** value is
+-      meaningful: the run wrote cache it never read back. The write premium
+-      uses the 5m multiplier — rows carry no TTL split, and 5m is the same
+-      assumption `track.mjs` already makes for unaccounted writes, so the two
+-      cost paths agree instead of diverging quietly. Stated as a limit in the
+-      contract rather than left for a reader to discover.
+-      <!-- verify: task test -- --filter=cost_summary -->
+-- [x] **3.2 Add a day-by-day breakdown.** `grep -rn by_date src/ docs/` returns 0
+-      hits, yet every row already carries `startedAt` / `endedAt`
+-      (`track.mjs:214`, from the per-message timestamps at :175-177). One derived
+-      grouping, no new capture. Additive, same rule.
+-      **Shipped** as a `by_date` array keyed on the UTC calendar day of
+-      `startedAt`, same row shape as `by_session`. A row with no or
+-      unparseable timestamp lands under `unknown`, which sorts last under the
+-      existing codepoint ordering, so a timestampless row never displaces a
+-      real day. A test asserts the day buckets re-sum to `totals` — a grouping
+-      that double-counts is the failure mode worth pinning.
+-      <!-- verify: task test -- --filter=cost_summary -->
+-- [x] **3.3 Add a write-share signature to the existing cache report.** Extend
+-      `src/scripts/cache_realization_report.ts`, which already parses the
+-      read/write split and computes `median_first_call_written_or_uncached` /
+-      `mean_first_call_written_or_uncached` (:85-86) beside
+-      `first_call_cache_read_share` and `cold_start_share_of_write_volume` (:88-90,
+-      computed :130-140). Do **not** write a new script.
+-      **Shipped** by extending `computeColdStarts` — no new script — with
+-      `write_share_of_billable` / `read_share_of_billable` /
+-      `uncached_share_of_billable` over ALL subagent records, plus one render
+-      line. The three share one denominator and sum to 1, which is what makes
+-      them a signature rather than three loose ratios: a write-heavy split is
+-      paying the cache premium and collecting no discount, and
+-      `cold_start_share_of_write_volume` cannot show that — it only says how
+-      much of the writing happened on a first call. A test pins exactly that
+-      gap (a never-read-back run reads `write_share = 1` while the pre-existing
+-      metric reports a bland 0.5). All-zero is the **empty-corpus** reading,
+-      never "a perfectly uncached workload"; read it beside `legs`.
+-      <!-- verify: task test -- --filter=cache_realization_report -->
+-
+-## Cancelled — each against a named citation
+-
+-- [-] **Chokepoint doctrine (instrument the call site, stream the cost).** Never
+-      true by architecture: this repo does not own the call sites it costs —
+-      `src/scripts/cost/track.mjs:1-20` reconstructs spend from
+-      `~/.claude/projects/**/*.jsonl` after the fact — and nothing streams
+-      (`clients.ts` non-streaming `messages.create`; CLI clients use
+-      `--print --output-format json`). Both halves have no call site.
+-- [-] **Statusline "API" tag, 60s aggregation cache, month-over-month delta.** No
+-      statusline surface exists here to tag: `src/scripts/hooks/session_eol_hook.ts:18-26`
+-      writes `agents/runtime/state/context-fill.json` as "display substrate for an
+-      **external** statusline".
+-- [-] **Spend caps and an alert ladder.** Shipped, and a separate surface:
+-      `src/scripts/cost/budget.mjs`, `src/config/budget-routing.json`,
+-      [`budget-routing`](../../docs/contracts/budget-routing.md), 50/75/90/100%
+-      ladder at [`/cost:report`](../../src/domains/meta/cost/report/command.md):67-71.
+-      [`ADR-133`](../../docs/decisions/ADR-133-subsystem-freeze-unblock-list.md):26
+-      rejected a standing WIP cap as "accounting theater for a solo maintainer".
+-- [-] **Recycling x caching interaction test.**
+-      [`ai-council-config`](../../docs/contracts/ai-council-config.md):1042-1044 —
+-      "**Host subagents are unaffected.** This key governs ONLY the council's own
+-      Anthropic API calls." Recycling lives in `cmd_session_recycle.ts`, **0**
+-      case-insensitive `cache` hits: no shared path, so the flagged blow-up has no
+-      call site to test.
+-- [-] **Cache-TTL extension and pre-warming.**
+-      [`archive/road-to-cache-economy.md`](archive/road-to-cache-economy.md):53
+-      measured blanket 1h at **+8.6% (worse)**, head-1h/tail-5m at +1.3% (worse);
+-      :57 records "98% of cache reuse happens within ~34 seconds". `'5m'` is a
+-      permanent default with a published falsification condition.
+-- [-] **Cache-breakpoint placement compiler.** Both breakpoints ship —
+-      `clients.ts:541-570` puts `cache_control` on the system block and the stable
+-      user prefix, volatile suffix after it ("The volatile suffix NEVER carries
+-      cache_control"); :530 "Two breakpoints (≤ the 4 allowed)"; :528-530 records
+-      the min-cacheable-prefix reasoning. The per-call opt-out is already stronger
+-      than proposed: `enable_prompt_cache` defaults **false** (:459, rationale
+-      :445-448).
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-08-10 | reviewer: claude/host -->
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | Prefix fallback re-prices a call that priced correctly before | implementation | Making `lookup()` longest-prefix can newly match a key the exact-match path deliberately missed, changing a live billed figure | Keep exact match as the first hit so no currently-resolving call changes path; pin the new fallback with a dated-suffix case in `pricing.test.ts` | Phase 2 — The rate tables cannot disagree |
+-| 2 | Parity gate lands red on the tree as it stands | implementation | The two tables have never been cross-checked, so the gate may report a real pre-existing disagreement on its first run | Classify every first-run finding before wiring the gate into CI; a genuine disagreement is a Phase 2 fix, not a gate to loosen | Phase 2 — The rate tables cannot disagree |
+-| 3 | Served-model field read as authoritative for tier decisions | product | A second model id in the record invites a consumer to route on the served id, when the requested id is what the tier decision was made against | Keep `model` as the requested id and document the served field as attribution-only in the schema extension | Phase 1 — Served-model truth |
+-| 4 | Additive schema fields drift past the additive rule | implementation | Three separate additive extensions (1.3, 3.1, 3.2) touch one contract; one required field or version bump breaks older rows | Cite `cost-summary-schema`:60-62 in each change; all new fields optional with a documented absent-reading | Phase 3 — Two aggregation lines and a cache signature |
+-
+-## Blockers
+-
+-### blocker: unknown-model-row-never-observed
+-- **Status:** open
+-- **Owner:** maintainer
+-- **Blocks:** step 2.5 only. Steps 2.1-2.4 are unblocked — 2.4 is what makes an
+-  unknown-model row detectable in the first place, and Phases 1 and 3 do not
+-  touch this path.
+-- **What to do:** after 2.4 ships, wait for the first `rate_missing` row in
+-  `agents/cost-tracking/sessions.jsonl` and record its actual shape.
+-  **Probed 2026-08-13 — the wait is longer than "no flagged row yet", and the
+-  reason is worth recording so the next probe does not read a false near-miss.**
+-  `agents/cost-tracking/` does not exist, in this worktree or in the main
+-  checkout, so the ledger has **no rows at all** — not zero *flagged* rows. Every
+-  `rate_missing` occurrence in the tree is producer code (`src/scripts/cost/track.mjs:250-251`),
+-  its consumer (`src/scripts/cost_summary.ts`), the contract
+-  (`docs/contracts/cost-summary-schema.md:123-137`), or this roadmap's own prose.
+-  The precondition for observing a flagged row is therefore that `track.mjs` runs
+-  at all and creates the ledger — a step upstream of the one this blocker waits on.
+-- **Resolved when:** at least one real `rate_missing` row exists and its field set
+-  is written down, so a backfill pass can be built against an observed shape
+-  rather than a guessed one.
+diff --git a/docs/contracts/cost-summary-schema.md b/docs/contracts/cost-summary-schema.md
+index 15da01d0bc6d76f058714d292f057a44449cc305..165a41b19d51e1d7bc51f7c8c7a4098083ec0163 100644
+--- a/docs/contracts/cost-summary-schema.md
++++ b/docs/contracts/cost-summary-schema.md
+@@ -142,6 +142,38 @@ Additive per the rule below: absent on rows and summaries written before this
+ extension, which read as `0` / `[]` — the same absent-reading as the cache
+ fields. No version bump, no required field.
+ 
++## Re-priced rows — `rate_backfill`, a v1 additive extension
++
++A row that was flagged and has since been re-priced by
++[`cost/backfill_rates.mjs`](../../src/scripts/cost/backfill_rates.mjs) carries
++`rate_backfill`: an array with one entry per repaired model id
++(`model`, `tier`, `cost_usd`, `cache_ttl_assumed`, `bucket_split_repaired`,
++`at`). Its purpose is that a re-priced total is not mistaken for an originally
++priced one — without it, `rate_missing: false` on a repaired row and on a row
++that was never flagged are indistinguishable.
++
++`rate_missing` is cleared **only** when nothing unpriced remains. A row
++re-priced for one model while another still has no rate keeps the flag and
++keeps the unrepaired id in `rate_missing_models`, because such a row is still
++understated.
++
++Two **honest limits** ride on every backfilled figure, and both are properties
++of what the stored row retains rather than of the pass — the same stance
++`by_date` takes above:
++
++- `cache_ttl_assumed: "5m"` — the row aggregates 5m and 1h cache writes into
++  one `cache_creation_input_tokens` tally, so a backfill prices all of them at
++  the 5m rate. A session that really used 1h writes stays under-priced by the
++  difference.
++- `bucket_split_repaired: false` — the row carries per-bucket totals and
++  per-model totals but no per-bucket-per-model tokens, so the recovered cost
++  cannot be attributed across `main` / `subagent`. `byBucket[*].cost_usd` is
++  therefore left as captured; inventing a split would be a worse number, not a
++  better one.
++
++Additive per the rule below: absent on every row written before this extension,
++which reads as "never re-priced". No version bump, no required field.
++
+ ## Stability guarantees
+ 
+ - **Field additions** are **non-breaking**: consumers MUST ignore unknown fields.
+diff --git a/src/scripts/cost/backfill_rates.mjs b/src/scripts/cost/backfill_rates.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..3bf944b5a77534d8c86c61cd7027d12fdc35f981
+--- /dev/null
++++ b/src/scripts/cost/backfill_rates.mjs
+@@ -0,0 +1,257 @@
++#!/usr/bin/env node
++// cost-backfill — re-price ledger rows that `track.mjs` flagged `rate_missing`,
++// using a rate table supplied for the model ids that had none at capture time.
++//
++// Why this exists: `track.mjs` prices an unrecognised model at $0 rather than
++// throwing, because losing a whole session of real token counts over one
++// unknown id is worse than an understated total. It keeps the token counts and
++// sets `rate_missing` precisely so the cost can be repaired later. This is that
++// repair pass.
++//
++// BUILT AGAINST AN OBSERVED ROW, NOT A GUESSED ONE. The shape below was read
++// off a real flagged row produced from this repo's own transcripts on
++// 2026-08-16 (`claude-fable-5`, 468 messages, 236,695,963 cache-read tokens,
++// cost 0). Two limits are properties of that observed shape, and both are
++// stated rather than papered over — a re-priced row that looks exact while
++// resting on an invented split would be worse than the zero it replaces:
++//
++//   1. THE CACHE-WRITE TTL SPLIT IS NOT RETAINED ON THE ROW. `track.mjs`
++//      prices `ephemeral_5m` and `ephemeral_1h` cache writes at different
++//      rates (1.25x / 2x of input), but `byModel[m]` aggregates both into one
++//      `cache_creation_input_tokens` tally. A backfill therefore prices every
++//      cache write at the 5m rate — Anthropic's default TTL, and the same
++//      fallback `costForUsage` already applies to any unaccounted remainder.
++//      A session that really used 1h writes is under-priced by the difference.
++//      Recorded per row as `cache_ttl_assumed: "5m"`.
++//
++//   2. `byBucket[*].cost_usd` IS NOT REPAIRED. The row records per-bucket
++//      totals and per-model totals, but not per-bucket-per-model tokens, so
++//      the recovered cost cannot be attributed across main vs subagent. The
++//      alternative is not a better number but an invented one — the same
++//      honest-limit stance `cost-summary-schema` takes for `by_date`. The
++//      bucket figures stay as captured and the report says so.
++//
++// Rates file (JSON), either form per model id:
++//   { "claude-fable-5": "opus" }                       // reuse a known tier's rates
++//   { "claude-fable-5": { "input": 5, "output": 25,    // explicit USD per 1M
++//                         "cache_write_5m": 6.25, "cache_write_1h": 10,
++//                         "cache_read": 0.5 } }
++//
++// Usage: node src/scripts/cost/backfill_rates.mjs --rates <file.json> [--apply]
++// Env:
++//   BACKFILL_STORE=<path>   ledger to re-price (default: agents/cost-tracking/sessions.jsonl)
++//   BACKFILL_RATES=<path>   rates file (same as --rates)
++//   BACKFILL_APPLY=1        write the result (same as --apply); default is a dry run
++//   BACKFILL_QUIET=1        suppress the report; exit code and writes are unchanged
++
++import { readFileSync, writeFileSync, renameSync, existsSync } from 'node:fs';
++
++const DEFAULT_STORE = 'agents/cost-tracking/sessions.jsonl';
++
++// Mirrored from track.mjs PRICING. It is a copy rather than an import for the
++// reason that file's own header gives: track.mjs exports nothing and calls
++// main() at module scope, so importing it would scan the developer's real
++// ~/.claude as a side effect. Keep the two in step.
++const PRICING = {
++  haiku: { input: 0.25, output: 1.25, cache_write_5m: 0.30, cache_write_1h: 0.50, cache_read: 0.03 },
++  sonnet: { input: 3.00, output: 15.00, cache_write_5m: 3.75, cache_write_1h: 6.00, cache_read: 0.30 },
++  opus: { input: 15.00, output: 75.00, cache_write_5m: 18.75, cache_write_1h: 30.00, cache_read: 1.50 },
++};
++
++const RATE_KEYS = ['input', 'output', 'cache_write_5m', 'cache_write_1h', 'cache_read'];
++
++/**
++ * Resolve one rates-file entry to `{ tier, rates }`.
++ * A string is a tier alias; an object is an explicit table. Anything else, or
++ * a table missing a key, is rejected by name — a silently-defaulted rate would
++ * reintroduce the understatement this pass exists to remove.
++ */
++function resolveRate(model, spec) {
++  if (typeof spec === 'string') {
++    const rates = PRICING[spec];
++    if (!rates) throw new Error(`rates["${model}"]: unknown tier alias "${spec}" (known: ${Object.keys(PRICING).join(', ')})`);
++    return { tier: spec, rates };
++  }
++  if (spec && typeof spec === 'object') {
++    const missing = RATE_KEYS.filter((k) => typeof spec[k] !== 'number');
++    if (missing.length) throw new Error(`rates["${model}"]: missing numeric ${missing.join(', ')}`);
++    return { tier: 'backfilled', rates: spec };
++  }
++  throw new Error(`rates["${model}"]: expected a tier alias or a rate table, got ${typeof spec}`);
++}
++
++/**
++ * Cost for one `byModel` entry at the supplied rates.
++ * Cache writes price at the 5m rate — see honest limit 1 in the header.
++ */
++function costForModelEntry(entry, rates) {
++  return (entry.input_tokens || 0) / 1e6 * rates.input
++    + (entry.output_tokens || 0) / 1e6 * rates.output
++    + (entry.cache_creation_input_tokens || 0) / 1e6 * rates.cache_write_5m
++    + (entry.cache_read_input_tokens || 0) / 1e6 * rates.cache_read;
++}
++
++/** Mirrors track.mjs's flag condition: a row with no billable tokens costs 0 at any rate. */
++function billableTokens(entry) {
++  if (!entry) return 0;
++  return (entry.input_tokens || 0) + (entry.output_tokens || 0)
++    + (entry.cache_creation_input_tokens || 0) + (entry.cache_read_input_tokens || 0);
++}
++
++/**
++ * Re-price one row in place. Returns the per-model repairs made, or [] when
++ * the row is not flagged, carries no supplied rate, or was already backfilled
++ * for that model — which is what makes a second run a no-op rather than a
++ * double count.
++ */
++export function backfillRow(row, rateTable) {
++  if (!row || row.rate_missing !== true) return [];
++  const already = new Set((row.rate_backfill || []).map((b) => b.model));
++  const repairs = [];
++
++  for (const model of row.rate_missing_models || []) {
++    if (already.has(model)) continue;
++    const spec = rateTable[model];
++    if (!spec) continue;
++    const entry = (row.byModel || {})[model];
++    if (!entry || billableTokens(entry) <= 0) continue;
++
++    const { tier, rates } = spec;
++    const cost = costForModelEntry(entry, rates);
++    const previous = entry.cost_usd || 0;
++    const delta = cost - previous;
++
++    entry.cost_usd = cost;
++    entry.tier = tier;
++    row.byTier = row.byTier || {};
++    row.byTier[tier] = (row.byTier[tier] || 0) + delta;
++    row.total_cost_usd = (row.total_cost_usd || 0) + delta;
++
++    repairs.push({ model, tier, cost_usd: cost, delta_usd: delta });
++  }
++
++  if (!repairs.length) return [];
++
++  row.rate_backfill = [
++    ...(row.rate_backfill || []),
++    ...repairs.map((r) => ({
++      model: r.model,
++      tier: r.tier,
++      cost_usd: r.cost_usd,
++      cache_ttl_assumed: '5m',
++      bucket_split_repaired: false,
++      at: new Date().toISOString(),
++    })),
++  ];
++
++  // Whatever is still unpriced keeps the flag. A row re-priced for one model
++  // and not another is still understated, and saying otherwise is the exact
++  // silent zero 2.4 removed.
++  const remaining = (row.rate_missing_models || []).filter(
++    (m) => !row.rate_backfill.some((b) => b.model === m),
++  );
++  row.rate_missing_models = remaining;
++  row.rate_missing = remaining.length > 0;
++
++  return repairs;
++}
++
++function parseArgs(argv) {
++  const out = { rates: process.env.BACKFILL_RATES || null, store: process.env.BACKFILL_STORE || DEFAULT_STORE, apply: process.env.BACKFILL_APPLY === '1' };
++  for (let i = 0; i < argv.length; i++) {
++    const a = argv[i];
++    if (a === '--apply') out.apply = true;
++    else if (a === '--rates') out.rates = argv[++i];
++    else if (a === '--store') out.store = argv[++i];
++    else if (a.startsWith('--rates=')) out.rates = a.slice('--rates='.length);
++    else if (a.startsWith('--store=')) out.store = a.slice('--store='.length);
++    else throw new Error(`unknown argument: ${a}`);
++  }
++  return out;
++}
++
++function main() {
++  let args;
++  try {
++    args = parseArgs(process.argv.slice(2));
++  } catch (e) {
++    console.error(`cost-backfill: ${e.message}`);
++    process.exit(2);
++  }
++  if (!args.rates) {
++    console.error('cost-backfill: --rates <file.json> is required (or BACKFILL_RATES)');
++    process.exit(2);
++  }
++  if (!existsSync(args.rates)) {
++    console.error(`cost-backfill: rates file not found: ${args.rates}`);
++    process.exit(2);
++  }
++  if (!existsSync(args.store)) {
++    console.error(`cost-backfill: ledger not found: ${args.store}`);
++    process.exit(2);
++  }
++
++  let rateTable;
++  try {
++    const raw = JSON.parse(readFileSync(args.rates, 'utf-8'));
++    rateTable = Object.fromEntries(Object.entries(raw).map(([m, spec]) => [m, resolveRate(m, spec)]));
++  } catch (e) {
++    console.error(`cost-backfill: ${e.message}`);
++    process.exit(2);
++  }
++
++  const lines = readFileSync(args.store, 'utf-8').split('\n').filter((l) => l.trim().length > 0);
++  const rows = [];
++  const repaired = [];
++  let flaggedRows = 0;
++
++  for (const line of lines) {
++    let row;
++    try {
++      row = JSON.parse(line);
++    } catch {
++      // A malformed line is preserved verbatim rather than dropped: this pass
++      // repairs prices, it does not curate the ledger.
++      rows.push(line);
++      continue;
++    }
++    if (row.rate_missing === true) flaggedRows++;
++    const repairs = backfillRow(row, rateTable);
++    if (repairs.length) repaired.push({ sessionId: row.sessionId, repairs, stillMissing: row.rate_missing_models });
++    rows.push(JSON.stringify(row));
++  }
++
++  if (args.apply && repaired.length) {
++    const tmp = `${args.store}.backfill.tmp`;
++    writeFileSync(tmp, rows.join('\n') + '\n');
++    renameSync(tmp, args.store);
++  }
++
++  if (process.env.BACKFILL_QUIET === '1') return;
++
++  const total = repaired.reduce((s, r) => s + r.repairs.reduce((t, x) => t + x.delta_usd, 0), 0);
++  console.log(`# cost-backfill — ${args.apply ? 'APPLIED' : 'DRY RUN (pass --apply to write)'}`);
++  console.log('');
++  console.log(`Ledger: \`${args.store}\` · rows ${lines.length} · flagged ${flaggedRows} · re-priced ${repaired.length}`);
++  console.log('');
++  if (!repaired.length) {
++    console.log('No row was re-priced — either nothing is flagged, or no rate was supplied for the flagged ids.');
++  } else {
++    console.log('| Session | Model | Tier | Recovered | Still missing |');
++    console.log('|---|---|---|---:|---|');
++    for (const r of repaired) {
++      for (const x of r.repairs) {
++        console.log(`| \`${(r.sessionId || '').slice(0, 8)}\` | \`${x.model}\` | ${x.tier} | $${x.delta_usd.toFixed(6)} | ${r.stillMissing.length ? r.stillMissing.join(', ') : '—'} |`);
++      }
++    }
++    console.log('');
++    console.log(`**Recovered total: $${total.toFixed(6)}** — previously reported as $0.`);
++  }
++  console.log('');
++  console.log('Two limits of the recovered figure, both properties of the stored row:');
++  console.log('- Cache writes price at the **5m** rate; the row does not retain the 5m/1h TTL split, so a session that used 1h writes stays under-priced by the difference.');
++  console.log('- `byBucket[*].cost_usd` is **not** repaired — the row carries no per-bucket-per-model tokens, so the recovered cost cannot be attributed to main vs subagent.');
++}
++
++// Importable for tests; runs only when invoked directly, unlike track.mjs.
++if (process.argv[1] && process.argv[1].endsWith('backfill_rates.mjs')) main();
+diff --git a/tests/scripts/cost_backfill_rates.test.ts b/tests/scripts/cost_backfill_rates.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..faa81fb6237897c6cf407001d73ce140a5a1cf4d
+--- /dev/null
++++ b/tests/scripts/cost_backfill_rates.test.ts
+@@ -0,0 +1,286 @@
++// Tests for src/scripts/cost/backfill_rates.mjs — the re-pricing pass for rows
++// `track.mjs` flagged `rate_missing` (inbox-harvest-2026-08-b-ledger-truth 2.5).
++//
++// 2.4 keeps the token counts of an unpriced model precisely so the cost can be
++// repaired later; this is that repair. The fixtures below are the shape of a
++// REAL flagged row, read off this repo's own transcripts on 2026-08-16 — the
++// per-model tally with `tier: "unknown"` and `cost_usd: 0`, a second unpriced
++// id carrying zero billable tokens (`<synthetic>`, which the producer
++// deliberately does not flag), and a priced model alongside it.
++//
++// Unlike track.mjs this module exports its core and guards its own entry, so
++// the unit half imports directly; the CLI half still runs as a subprocess,
++// because the dry-run-vs-`--apply` contract is only observable there.
++
++import { spawnSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterEach, describe, expect, it } from 'vitest';
++
++// @ts-expect-error — plain .mjs module, no type declarations by design.
++import { backfillRow } from '../../src/scripts/cost/backfill_rates.mjs';
++
++const SCRIPT = path.resolve(__dirname, '../../src/scripts/cost/backfill_rates.mjs');
++const tmps: string[] = [];
++
++afterEach(() => {
++    for (const d of tmps.splice(0)) fs.rmSync(d, { recursive: true, force: true });
++});
++
++function tmpdir(): string {
++    const d = fs.mkdtempSync(path.join(os.tmpdir(), 'cost-backfill-'));
++    tmps.push(d);
++    return d;
++}
++
++interface ModelEntry {
++    tier: string;
++    input_tokens: number;
++    output_tokens: number;
++    cache_creation_input_tokens: number;
++    cache_read_input_tokens: number;
++    messages: number;
++    cost_usd: number;
++}
++
++interface LedgerRow {
++    sessionId: string;
++    byModel: Record<string, ModelEntry>;
++    byTier: Record<string, number>;
++    byBucket: Record<string, Record<string, number>>;
++    total_cost_usd: number;
++    rate_missing: boolean;
++    rate_missing_models: string[];
++    rate_backfill?: Record<string, unknown>[];
++}
++
++/** The observed flagged-row shape, reduced to round numbers. */
++function flaggedRow(overrides: Partial<LedgerRow> = {}): LedgerRow {
++    return {
++        sessionId: 'sess-fixture',
++        byModel: {
++            'claude-fable-5': {
++                tier: 'unknown',
++                input_tokens: 1_000_000,
++                output_tokens: 1_000_000,
++                cache_creation_input_tokens: 1_000_000,
++                cache_read_input_tokens: 1_000_000,
++                messages: 10,
++                cost_usd: 0,
++            },
++            '<synthetic>': {
++                tier: 'unknown',
++                input_tokens: 0,
++                output_tokens: 0,
++                cache_creation_input_tokens: 0,
++                cache_read_input_tokens: 0,
++                messages: 4,
++                cost_usd: 0,
++            },
++            'claude-opus-5': {
++                tier: 'opus',
++                input_tokens: 0,
++                output_tokens: 100_000,
++                cache_creation_input_tokens: 0,
++                cache_read_input_tokens: 0,
++                messages: 5,
++                cost_usd: 7.5,
++            },
++        },
++        byTier: { haiku: 0, sonnet: 0, opus: 7.5, unknown: 0 },
++        byBucket: {
++            main: { messages: 10, input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, cost_usd: 0 },
++            subagent: { messages: 9, input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, cost_usd: 7.5 },
++        },
++        total_cost_usd: 7.5,
++        rate_missing: true,
++        rate_missing_models: ['claude-fable-5'],
++        ...overrides,
++    };
++}
++
++/** opus rates: input 15, output 75, cache_write_5m 18.75, cache_read 1.5 — 1M each. */
++const OPUS_ALIAS = { 'claude-fable-5': { tier: 'opus', rates: { input: 15, output: 75, cache_write_5m: 18.75, cache_write_1h: 30, cache_read: 1.5 } } };
++
++describe('backfillRow', () => {
++    it('re-prices a flagged model from the token counts the row kept', () => {
++        const row = flaggedRow();
++        const repairs = backfillRow(row, OPUS_ALIAS);
++
++        // Derived from the fixture, not hardcoded from a previous run:
++        // 1M each at 15 + 75 + 18.75 + 1.5.
++        const expected = 15 + 75 + 18.75 + 1.5;
++        expect(repairs).toHaveLength(1);
++        expect(row.byModel['claude-fable-5']!.cost_usd).toBeCloseTo(expected, 6);
++        expect(row.total_cost_usd).toBeCloseTo(7.5 + expected, 6);
++        expect(row.byTier.opus).toBeCloseTo(7.5 + expected, 6);
++        expect(row.byModel['claude-fable-5']!.tier).toBe('opus');
++    });
++
++    it('clears the flag only when nothing unpriced remains', () => {
++        const row = flaggedRow();
++        backfillRow(row, OPUS_ALIAS);
++        expect(row.rate_missing).toBe(false);
++        expect(row.rate_missing_models).toEqual([]);
++    });
++
++    it('keeps the flag for a second unpriced id no rate was supplied for', () => {
++        const row = flaggedRow({ rate_missing_models: ['claude-fable-5', 'some-other-model'] });
++        row.byModel['some-other-model'] = { tier: 'unknown', input_tokens: 500, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, messages: 1, cost_usd: 0 };
++
++        backfillRow(row, OPUS_ALIAS);
++
++        // A row re-priced for one model and not another is still understated.
++        expect(row.rate_missing).toBe(true);
++        expect(row.rate_missing_models).toEqual(['some-other-model']);
++    });
++
++    it('leaves an unflagged row untouched', () => {
++        const row = flaggedRow({ rate_missing: false, rate_missing_models: [] });
++        const before = JSON.stringify(row);
++        expect(backfillRow(row, OPUS_ALIAS)).toEqual([]);
++        expect(JSON.stringify(row)).toBe(before);
++    });
++
++    it('does not re-price a flagged id with zero billable tokens', () => {
++        // `<synthetic>` is the observed shape: tier unknown, no tokens. The
++        // producer does not flag it; if it ever appeared in the list, pricing
++        // it would claim an understatement that is not there.
++        const row = flaggedRow({ rate_missing_models: ['<synthetic>'] });
++        const rates = { '<synthetic>': OPUS_ALIAS['claude-fable-5'] };
++
++        expect(backfillRow(row, rates)).toEqual([]);
++        expect(row.byModel['<synthetic>']!.cost_usd).toBe(0);
++        expect(row.total_cost_usd).toBe(7.5);
++    });
++
++    it('is idempotent — a second pass over an already-backfilled row adds nothing', () => {
++        const row = flaggedRow();
++        backfillRow(row, OPUS_ALIAS);
++        const afterFirst = { total: row.total_cost_usd, tier: row.byTier.opus };
++
++        // Force the flag back on with the same model still listed: without the
++        // rate_backfill guard this double-counts.
++        row.rate_missing = true;
++        row.rate_missing_models = ['claude-fable-5'];
++        expect(backfillRow(row, OPUS_ALIAS)).toEqual([]);
++
++        expect(row.total_cost_usd).toBe(afterFirst.total);
++        expect(row.byTier.opus).toBe(afterFirst.tier);
++        expect(row.rate_backfill).toHaveLength(1);
++    });
++
++    it('records the two honest limits as provenance on the row', () => {
++        const row = flaggedRow();
++        backfillRow(row, OPUS_ALIAS);
++        const entry = row.rate_backfill![0]!;
++
++        expect(entry.model).toBe('claude-fable-5');
++        expect(entry.cache_ttl_assumed).toBe('5m');
++        expect(entry.bucket_split_repaired).toBe(false);
++        expect(typeof entry.at).toBe('string');
++    });
++
++    it('does not touch byBucket — the row carries no per-bucket-per-model tokens', () => {
++        const row = flaggedRow();
++        const before = JSON.stringify(row.byBucket);
++        backfillRow(row, OPUS_ALIAS);
++        expect(JSON.stringify(row.byBucket)).toBe(before);
++    });
++});
++
++describe('backfill_rates.mjs CLI', () => {
++    function run(args: string[], env: Record<string, string> = {}) {
++        return spawnSync('node', [SCRIPT, ...args], { encoding: 'utf-8', env: { ...process.env, ...env } });
++    }
++
++    function ledger(dir: string, rows: unknown[]): string {
++        const p = path.join(dir, 'sessions.jsonl');
++        fs.writeFileSync(p, rows.map((r) => JSON.stringify(r)).join('\n') + '\n');
++        return p;
++    }
++
++    function rates(dir: string, table: unknown): string {
++        const p = path.join(dir, 'rates.json');
++        fs.writeFileSync(p, JSON.stringify(table));
++        return p;
++    }
++
++    it('dry-runs by default and does not write the ledger', () => {
++        const d = tmpdir();
++        const store = ledger(d, [flaggedRow()]);
++        const before = fs.readFileSync(store, 'utf-8');
++
++        const r = run(['--rates', rates(d, { 'claude-fable-5': 'opus' }), '--store', store]);
++
++        expect(r.status).toBe(0);
++        expect(r.stdout).toContain('DRY RUN');
++        expect(fs.readFileSync(store, 'utf-8')).toBe(before);
++    });
++
++    it('writes the re-priced ledger under --apply', () => {
++        const d = tmpdir();
++        const store = ledger(d, [flaggedRow()]);
++
++        const r = run(['--rates', rates(d, { 'claude-fable-5': 'opus' }), '--store', store, '--apply']);
++
++        expect(r.status).toBe(0);
++        expect(r.stdout).toContain('APPLIED');
++        const written = JSON.parse(fs.readFileSync(store, 'utf-8').trim());
++        expect(written.rate_missing).toBe(false);
++        expect(written.total_cost_usd).toBeGreaterThan(7.5);
++    });
++
++    it('rejects an unknown tier alias by name instead of defaulting a rate', () => {
++        const d = tmpdir();
++        const store = ledger(d, [flaggedRow()]);
++
++        const r = run(['--rates', rates(d, { 'claude-fable-5': 'platinum' }), '--store', store]);
++
++        expect(r.status).toBe(2);
++        expect(r.stderr).toContain('unknown tier alias');
++        expect(r.stderr).toContain('platinum');
++    });
++
++    it('rejects an explicit rate table missing a key, naming the key', () => {
++        const d = tmpdir();
++        const store = ledger(d, [flaggedRow()]);
++        const partial = { 'claude-fable-5': { input: 1, output: 2, cache_write_5m: 3, cache_read: 4 } };
++
++        const r = run(['--rates', rates(d, partial), '--store', store]);
++
++        expect(r.status).toBe(2);
++        expect(r.stderr).toContain('cache_write_1h');
++    });
++
++    it('exits 2 when the ledger or the rates file is absent', () => {
++        const d = tmpdir();
++        const store = ledger(d, [flaggedRow()]);
++
++        expect(run(['--rates', path.join(d, 'nope.json'), '--store', store]).status).toBe(2);
++        expect(run(['--rates', rates(d, { x: 'opus' }), '--store', path.join(d, 'nope.jsonl')]).status).toBe(2);
++    });
++
++    it('preserves a malformed ledger line verbatim rather than dropping it', () => {
++        const d = tmpdir();
++        const store = path.join(d, 'sessions.jsonl');
++        fs.writeFileSync(store, `not json\n${JSON.stringify(flaggedRow())}\n`);
++
++        const r = run(['--rates', rates(d, { 'claude-fable-5': 'opus' }), '--store', store, '--apply']);
++
++        expect(r.status).toBe(0);
++        expect(fs.readFileSync(store, 'utf-8').split('\n')[0]).toBe('not json');
++    });
++
++    it('reports both honest limits in every run', () => {
++        const d = tmpdir();
++        const store = ledger(d, [flaggedRow()]);
++
++        const r = run(['--rates', rates(d, { 'claude-fable-5': 'opus' }), '--store', store]);
++
++        expect(r.stdout).toContain('5m');
++        expect(r.stdout).toContain('byBucket');
++    });
++});

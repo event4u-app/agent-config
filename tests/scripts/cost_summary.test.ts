@@ -301,6 +301,48 @@ describe('cost_summary — rate_missing qualification', () => {
         expect(totals['rate_missing_models']).toEqual([]);
     });
 
+    // Without this, `rate_missing: false` on a row re-priced by
+    // `cost/backfill_rates.mjs` and on a row that was never flagged aggregate
+    // identically — so a total carrying operator-supplied estimates reads as
+    // fully measured. Totals only, on purpose: a repaired row understates
+    // nothing, so no slice changes; what changes is the figure's provenance.
+    it('counts re-priced rows on totals, and only on totals', () => {
+        const rows = [
+            {
+                sessionId: 's1',
+                conversation_id: 'c1',
+                model: 'mystery-model',
+                total_cost_usd: 12,
+                startedAt: '2026-08-10T10:00:00.000Z',
+                rate_missing: false,
+                rate_missing_models: [],
+                rate_backfill: [{ model: 'mystery-model', tier: 'opus', cost_usd: 12 }],
+            },
+            { sessionId: 's2', model: 'claude-sonnet-4-5', total_cost_usd: 3 },
+        ];
+        const out = aggregate(rows) as Record<string, unknown>;
+        const totals = (out as Record<string, Record<string, unknown>>)['totals']!;
+
+        expect(totals['rate_backfilled_sessions']).toBe(1);
+        expect(totals['rate_backfilled_models']).toEqual(['mystery-model']);
+        // The repaired row is not flagged — the two qualifications are distinct.
+        expect(totals['rate_missing_sessions']).toBe(0);
+        // Deliberately absent from the groupings.
+        const bySession = (out['by_session'] as Array<Record<string, unknown>>)[0]!;
+        expect(bySession['rate_backfilled_sessions']).toBeUndefined();
+    });
+
+    it('an empty or absent rate_backfill reads as never-re-priced', () => {
+        const totals = (
+            aggregate([
+                { sessionId: 's1', model: 'm', total_cost_usd: 1, rate_backfill: [] },
+                { sessionId: 's2', model: 'm', total_cost_usd: 1 },
+            ]) as Record<string, Record<string, unknown>>
+        )['totals']!;
+        expect(totals['rate_backfilled_sessions']).toBe(0);
+        expect(totals['rate_backfilled_models']).toEqual([]);
+    });
+
     it('a malformed rate_missing_models field is skipped, never coerced or thrown on', () => {
         const rows = [
             { sessionId: 's', model: 'm', total_cost_usd: 0, rate_missing: true, rate_missing_models: 'not-a-list' },

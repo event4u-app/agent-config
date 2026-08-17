@@ -46,6 +46,28 @@ treated as pre-dedup.
 If `track.mjs` exits 2 with `no Claude Code project dir`, the user is not in
 a Claude Code session — surface that and stop.
 
+If the run warns `rate_missing`, the session contained a model with no price
+tier: those messages were costed at **$0** and the total is understated, not
+cheap. Token counts are kept, so the row can be re-priced later — see step 1b.
+
+### 1b. Re-price an unpriced row (only when `rate_missing` fired)
+
+```bash
+node scripts/cost/backfill_rates.mjs --rates rates.json          # dry run
+node scripts/cost/backfill_rates.mjs --rates rates.json --apply  # write
+```
+
+`rates.json` maps each unpriced model id to a **tier alias** (`"opus"`) or an
+explicit per-1M table (`input`, `output`, `cache_write_5m`, `cache_write_1h`,
+`cache_read`). The rate is the operator's to supply: the pass never guesses a
+price for an id the tracker did not recognise, and rejects an unknown alias or
+a missing key by name rather than defaulting one.
+
+Dry run is the default. Ask the user for the rate — **never invent one** — and
+surface both limits the pass reports: cache writes price at the 5m rate (the
+row does not retain the 5m/1h split), and `byBucket` costs are not repaired
+(the row carries no per-bucket-per-model tokens).
+
 ### 2. Check the budget
 
 ```bash
@@ -186,6 +208,7 @@ and there is no `agents/runtime/state/audit/` directory.
   (different scope: in-flight estimate, not historical actuals).
 - [`scripts/cost/track.mjs`](../../../scripts/cost/track.mjs) — tracker source.
 - [`scripts/cost/budget.mjs`](../../../scripts/cost/budget.mjs) — budget source.
+- [`scripts/cost/backfill_rates.mjs`](../../../scripts/cost/backfill_rates.mjs) — re-pricing pass for `rate_missing` rows.
 
 ## Attribution
 
