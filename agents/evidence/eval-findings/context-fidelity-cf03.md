@@ -46,14 +46,29 @@ count below needed no instrumented session at all.
 
 ## Three findings, in descending order of consequence for this roadmap
 
-**1. Compaction is rare and it is exclusively automatic.** 29 events across 473
-sessions, every one of them `auto`. **Zero manual compactions were ever
-recorded.** cf01 as written asks for "a manual compaction" in an instrumented
-session — a shape the store shows has never once occurred here. That does not
-invalidate cf01, but it does mean cf01 measures a path no observed session has
-taken, and its result cannot be assumed to transfer to the automatic path
-without saying so. This is a finding *for* cf01's method, produced before cf01
-runs, which is the cheapest moment to have it.
+**1. Compaction is rare, and every RECORDED event is automatic — which is not
+the same as saying no manual one happened.** 29 events across 473 sessions, all
+29 tagged `auto`, zero tagged manual.
+
+**Corrected on R2 finding 6, and the correction matters more than the count.**
+The first version of this finding read "exclusively automatic … a shape the store
+shows has never once occurred here", which reports an unobservable as an
+observation. The detector is pinned to ONE observed auto event
+(`src/scripts/_lib/session_eol.ts:11-19`: "pinned to OBSERVED reality … a real
+auto-compaction recorded 2026-08-06"), and **nothing in this tree establishes
+that a manual compaction writes a `compact_boundary` record at all**, let alone
+one carrying `trigger: "manual"`. So the honest reading of "0 manual" is
+**absence of a record**, not absence of an event, and an instrument that could
+not have seen the thing is not evidence that the thing did not happen.
+
+What survives, and it is still useful for cf01: the automatic path is
+**demonstrably observable** and the manual path is **not known to be**. cf01 as
+written asks for a manual compaction, so before running it someone has to
+establish that the instrument can see one — otherwise a null result from cf01 is
+uninterpretable, indistinguishable from a compaction that happened and left no
+trace. That is a finding *for* cf01's method, produced before cf01 runs, which is
+the cheapest moment to have it. It is **not** a reason to conclude the manual path
+is unused.
 
 **2. The trigger sits near a hard ceiling, not at a fill fraction.** Every
 observed compaction fired between 964k and 1,031k pre-tokens — a 7 % spread
@@ -87,4 +102,8 @@ alongside the count.
 - Whether any obligation survived a compaction — that is cf01, still open.
 - Whether the suite re-injected anything at those 29 boundaries — the capture
   side is unobserved.
+- **Whether a manual compaction is detectable at all.** The zero is a property of
+  the record set, and the detector's own header says it was pinned to an observed
+  auto event. Establishing manual detectability is a precondition for cf01, not a
+  result of this census.
 - Anything about hosts other than Claude Code; the store is single-host.

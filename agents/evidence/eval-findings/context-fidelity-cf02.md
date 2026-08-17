@@ -56,8 +56,19 @@ rather than by age:
   "true" would inflate the pass rate and folding them into "stale" would
   manufacture defects.
 
-Three independent walkers were used, one per store, each blind to the others'
-results and to this verdict.
+Three walkers were used, one per store. **They were not independent in any sense
+that buys confidence, and the earlier wording here claimed otherwise.** The sets
+are disjoint, so every one of the 107 entries has exactly one classifier and
+mutual blindness is vacuous — there is nothing to agree or disagree about.
+Inter-rater agreement is therefore not merely unmeasured, it is undefined for
+this design. Corrected on R2 finding 8.
+
+The per-entry verdicts are recorded **in this file**, below, and that too is a
+correction: they were first pointed at "this run's session transcript", i.e. under
+`agents/runtime/`, which this same change documents as gitignored state absent
+from any worktree. A ratio whose substrate lives in an unavailable store is not
+auditable, and the number that keeps Phase 2's kill criterion from firing is
+exactly the number that has to be.
 
 ## Result
 
@@ -123,17 +134,132 @@ grep -h review_after_days agents/memory/*.yml | sort | uniq -c # 107 × 365
 ```
 
 Tree axis: **not reproducible by a command** — that is the point of the missing
-sweep. It was a per-entry read, and re-running it means re-reading. The per-entry
-verdict tables live in this run's session transcript; the counts above are the
-census.
+sweep. It was a per-entry read, and re-running it means re-reading. What IS
+available is the substrate: every one of the 107 verdicts is listed below with the
+pointer it was decided on, so a reader can re-check any single row cheaply and
+disagree with it specifically rather than with the total.
+
+## Per-entry verdicts — the substrate
+
+Every row was decided on a targeted grep or read against the tree at `9beeb0662`.
+`stale` rows carry what the tree says instead, because those are the rows the
+verdict rests on and the ones most worth disagreeing with.
+
+### `incident-learnings.yml` — 17 entries: 9 still-true · 3 stale · 5 unverifiable
+
+| id | verdict | evidence |
+|---|---|---|
+| `adr-number-collision-on-parallel-prs` | still-true | `docs/decisions/INDEX.md`; per-file `adr:` frontmatter; `src/scripts/adr/regenerate_index.ts` |
+| `agent-config-hooks-need-global-binary` | **stale** | `hooks/hooks.json` now binds **9** events, not 5; each command resolves a project-local `dist/hooks/dispatch.js` FIRST, so no global install is required; the final fallback exits 0, not 127 |
+| `auto-commit-empties-roadmaps` | unverifiable | external git identity acting outside the repo; the tree only shows the backstop `src/scripts/lint_empty_roadmaps.ts` |
+| `commit-relocates-into-per-branch-worktree` | unverifiable | host-side automation; no relocation pipeline anywhere in `src/scripts`, `hooks/`, or the installed hooks |
+| `council-curl-timeout-fix` | still-true | `src/scripts/ai_council/clients.ts:475` (`--connect-timeout 30`, `--max-time 290`), `:481` |
+| `council-install-path-convergence` | still-true | archived roadmap records the Q1 SPLIT + bootstrap shim; `.claude-plugin/marketplace.json` |
+| `council-removal-depth-principle` | still-true | zero hits for the three named symbols across `src/` and `tests/`; `retrieval-v1` survives in `memory_status.ts` as stated |
+| `discovery-strict-frontmatterless-template` | **stale** | the named script is `.ts`, not `.py`; the Python CI job is gone (`.github/workflows/no-python-in-src.yml` forbids it); `test_projection_scoped` exists nowhere. The frontmatter-less template survives, but the failure mechanism is obsolete |
+| `enforcement-projection-honest-null` | still-true | `bench_ab_v2_run.ts:167`, `:206-219` (exactly the 3 safety-floor rules); `condense.ts` has zero `hardened` hits, so still unwired |
+| `feedback-locks-never-permanent` | still-true | encoded as the named `decision-revisit-gate` rule |
+| `fresh-worktree-gate-quirks` | **stale** | quirk 1 is gone: the pre-commit template states the runtime is Node/tsx and warns-then-exits-0 when the CLI is absent, with no `python3` call anywhere. Quirk 2's flag survives, but the headline mechanism is contradicted |
+| `git-stash-probe-conflict-hazard` | unverifiable | a past working-tree behaviour; nothing in the tree encodes or contradicts it |
+| `github-pr-head-sync-glitch` | unverifiable | external platform lag; the tree shows only a mitigation reading the same field |
+| `glama-sync-break-src-move` | still-true | `internal/glama/`, task `mcp:glama-test`, `src/scripts/mcp_server/` all present; the root cause itself is external |
+| `py2ts-bundle-macos-symlink-and-tmpdir-traps` | still-true | `dist/install/install.mjs` tracked; the realpath fix documented at `src/scripts/install.ts:5341-5352` |
+| `py2ts-parallel-snapshot-clobber` | still-true | shared golden tree at `tests/_lib/parity_oracle.ts:136`, capture gate `:139`, refusal text `:373-376` |
+| `roadmap-archival-vs-inbound-refs` | still-true | gate intact at `src/agent-src/scripts/update_roadmap_progress.ts:1080`, `:1108`; script is now `.ts` |
+
+### `historical-patterns.yml` — 24 entries: 12 still-true · 11 stale · 1 unverifiable
+
+| id | verdict | evidence |
+|---|---|---|
+| `a1-crosshost-subagent-degradation` | still-true | `condense.ts:2126`, `:2231`, `:2292-2308`, wired `:2592-2593`; ADR-109 present |
+| `adding-a-plain-skill-downstream-surface` | **stale** | the hand-maintained step is gone — `.md` is copied verbatim by `--sync` per ADR-201; no manual dist write remains |
+| `adding-a-standalone-command-downstream-surface` | **stale** | two load-bearing parts false: `task sync` DOES write dist commands now, and the plugin is a bootstrap shim with no content commands |
+| `ai-council-cli-repo-local-only` | still-true | `ai_council/config.ts:736-738` (ADR-104 supersedes ADR-093), `:692`, `:756` |
+| `bench-ab-cost-and-activation-mechanics` | still-true | `taskfiles/bench-ab.yml:104`, `:127`, `:120-122`; runner `bench_ab_task_runner.ts:245-260`. Path drift only (`.py` → `.ts`) |
+| `claude-plugin-local-install-via-worktree` | **stale** | the ADR it rests on is `status: superseded` and states "every quantity in this record's rationale is now false" |
+| `command-cluster-ci-surface` | still-true | hardcoded pack-id enum in the manifest schema; ADR-013 packs table; gate `lint_discovery_manifest.ts:258` |
+| `deleting-a-command-downstream-surface` | **stale** | core claim inverted — ADR-201 removed the condensation step; the plugin-symlink step is dead |
+| `gh-pr-diff-patch-per-commit-series` | **stale** | `consistency.yml:257-259` now states the OPPOSITE and the invocation carries no `--patch`; workflow and checker are both renamed |
+| `live-trigger-eval-human-gate` | still-true | `skill_trigger_eval.ts:497-502` opens `/dev/tty` and refuses automation; task `test-triggers-live` |
+| `local-task-ci-tools-empty-tension` | **stale** | `agents/.agent-tools.yml` lists 8 tools, not `tools: []`, so `generate-tools` is not a local no-op |
+| `media-substrate-extraction-a1` | **stale** | the roadmap it calls open is archived; the substrate half holds |
+| `node-modules-symlink-committed` | still-true | the single-line add is in history; `.gitignore:9-16` carries the no-trailing-slash rationale verbatim; `git ls-files node_modules` empty |
+| `pr-gate-roadmap-archival` | still-true | `archive_completed_roadmaps.ts:3`, `:19-28`; rule `roadmap-progress-sync.md:66,75`. Path drift (`.py` → `.ts`) |
+| `project-single-install-source-of-truth` | **stale** | the roadmap it calls active is archived; the mechanism landed and is TS, not Python |
+| `py2ts-mcp-serving-and-teardown-pr` | still-true | zero tracked `.py` under `src/`; no `pyproject.toml`/`requirements*`; MCP server is TS |
+| `roadmap-dashboard-phase-heading-gotcha` | still-true | `update_roadmap_progress.ts:586-587`, `PHASE_RE` `:71-72`, draft exclusion `:279`,`:684` |
+| `roadmap-dashboard-regen-script-mismatch` | still-true | canonical wrappers at `src/cli/registry.ts:72-73` |
+| `roadmap-progress-regen-side-effects` | **stale** | `roadmap:progress` does NOT auto-archive — no `git mv` in the script; archival is the separate `/create-pr` sweep |
+| `settings-schema-downstream-install-bundle` | still-true | bundle tracked; entry imports the settings schema; CI gate rebuilds and diffs `dist/install/` |
+| `source-confidentiality-sweep` | still-true | no `compare-*.md` under `agents/evidence/analysis/`; `_lib/link_crypto.ts:1-20` states the policy verbatim |
+| `typecheck-use-task-not-bare-tsc` | **stale** | the stated REASON is false: `tsconfig.json` excludes `tests`, and `npm run typecheck` never runs `tsconfig.test.json`. The advice survives; its rationale does not |
+| `video-strategy-2026-06` | **stale** | the cited council artifact is absent, all six video roadmaps are archived, and the adapter count is 10, not 5 |
+| `zed-agents-skills-dir` | unverifiable | the load-bearing half is external host behaviour; the tree-side anchor checks out |
+
+### `product-rules.yml` — 66 entries: 52 still-true · 9 stale · 5 unverifiable
+
+The nine stale rows, with what the tree says instead:
+
+| id | verdict | evidence |
+|---|---|---|
+| `council-ecc-parity-positioning` | **stale** | its verified counts (258 skills / 93 rules / 162 commands / 26 personas) are now 290 / 117 / 200 / 32 |
+| `council-judge-harness-2026-06-26` | **stale** | the adopted option is not what shipped — `check_quality_regression.ts:7` states there is no such dependency, and the hand-rolled stats layer is the live path |
+| `council-memory-knowledge-validation-tests` | **stale** | the claimed shared phase embedded in two roadmaps does not exist; the only tree hit is the memory entry itself |
+| `council-memory-tripwire-engine` | **stale** | ADR-116:12-19 records the pre-decided engine was **never built**; re-resolved to hand-rolled BM25 + trigram prefilter |
+| `council-orchestration-flip-honest-null` | **stale** | the `subagents.auto` knob it keeps at `ask` no longer exists — the template says it was REMOVED and a lint rejects it |
+| `council-subagent-auto-cost-downshift` | **stale** | same removal; what shipped is `subagents.downshift: true`, so "default stays ask" is no longer true of the tree |
+| `council-subagent-default-flip-revisit` | **stale** | same removal; the ask→on question was superseded by always-on orchestration |
+| `council-team-shared-memory` | **stale** | the gitignore-intake verdict is not implemented — `agents/memory/intake/` is not ignored and its README is tracked |
+| `evidence-v2-accumulation-killed` | still-true | both evals present; ground-truth linter is now `skill_linter.ts` (was `.py`) |
+
+The five unverifiable rows: `council-decisions-workspace-phases` (a past deferral),
+`gstack-adoption-disposition` (an external repo assessment),
+`local-ci-hygiene-shipped` (a past CI state),
+`route-design-decisions-to-ai-council` (a recorded user preference),
+`source-a-deep-dive-subagent-reframe` (an external codebase's internals).
+
+The remaining 52 verified still-true against named `file:line` pointers spanning
+`src/rules/`, `src/skills/`, `src/scripts/`, `docs/decisions/`,
+`src/config/agent-settings.template.yml`, `taskfiles/`, and the roadmap archive.
+Five are worth naming because they anchor rules this run relied on:
+`feedback-end-of-reply-summary-and-pr-link` (`src/rules/direct-answers.md:46`),
+`feedback-no-proactive-quality-tools`
+(`src/rules/senior-engineering-discipline.md:67`), `never-drop-inherited-commits`
+(`src/rules/git-history-discipline.md:32`), `no-cheap-sequencing-questions`
+(`src/rules/no-cheap-questions.md:34`), and `roadmap-later-disposition`
+(`agents/roadmaps/later/`, enforced by `lint_roadmap_later_disposition.ts`).
+
+## The batch mechanism, in the substrate
+
+The clustering claimed above is visible in the tables. Two upstream removals
+account for **11 of the 23**:
+
+- **ADR-201 removed markdown condensation** →
+  `adding-a-plain-skill-downstream-surface`,
+  `adding-a-standalone-command-downstream-surface`,
+  `deleting-a-command-downstream-surface`,
+  `discovery-strict-frontmatterless-template`,
+  `claude-plugin-local-install-via-worktree`,
+  `project-single-install-source-of-truth` — six rows, one change.
+- **`subagents.auto` was deleted** → `council-orchestration-flip-honest-null`,
+  `council-subagent-auto-cost-downshift`,
+  `council-subagent-default-flip-revisit` — three rows, one change.
+
+Plus two independent decays (`gh-pr-diff-patch-per-commit-series` reversing,
+`typecheck-use-task-not-bare-tsc` losing its rationale while keeping its advice).
 
 ## What this does not show
 
-- **It is one observer's classification.** Three walkers each read their own
-  store; no entry was double-classified, so the inter-rater agreement is
-  unmeasured. A borderline `still-true` / `unverifiable` call could move a few
-  rows. It cannot plausibly move 23 rows to below 11, which is what the verdict
-  would need to flip.
+- **Every row has exactly one classifier**, so a borderline
+  `still-true` / `unverifiable` call could move a few rows and nothing in this
+  design would catch it. It cannot plausibly move 23 rows to below 11, which is
+  what the verdict would need to flip — but the right response to doubt is to
+  re-check a named row above, not to re-argue the total.
+- **`still-true` is the weakest verdict in the set.** It means the load-bearing
+  assertion held against one targeted probe, not that the whole body is accurate.
+  Several rows carry a note that a path or a count inside them has drifted while
+  the claim survived; those are counted true and are the most likely to be
+  reclassified by a stricter reading.
 - Nothing here says a stale entry ever misled a session. The harm is inferred
   from the content, not observed in behaviour — the same boundary cf03 states.
 - The intake store (`agents/memory/intake/`) is out of scope: `learning_sidecar`

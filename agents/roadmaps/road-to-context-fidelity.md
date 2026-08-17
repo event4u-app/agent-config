@@ -17,7 +17,7 @@ Raise the measured post-compaction obligation-compliance rate for trigger-loaded
 - [x] Read `src/rules/context-hygiene.md` and `src/scripts/hot_context_hook.ts`
 - [x] Read `src/scripts/hook_manifest.yaml` § `session_start` and § `pre_compact`
 - [x] Read `src/scripts/learning_sidecar.ts` — the decay mechanics that already exist for intake
-- [x] Re-verify the Context table against branch HEAD before executing a phase
+- [ ] Re-verify the Context table against branch HEAD before executing a phase — **RECURRING, one flip per phase, deliberately left open.** Done for this run at `9beeb0662` (see the Context table). It was briefly marked `[x]`; R2 finding 7 caught that, because this is a per-phase obligation and it is Acceptance Criterion 5's only tracked trigger. Spending the checkbox once would have let Phases 1, 2 and 4 run against a table this roadmap has already watched go stale twice — 373 commits, then 110, with one row wrong on half its claim the second time.
 
 ## Context
 
@@ -97,29 +97,38 @@ baseline yet and Phase 1 stays correctly unstarted.
 
 ## Phase 3 — Skill-top position lint
 
-- [x] Add a check in the existing lint family asserting that load-bearing obligation blocks sit near the start of each skill file, because post-compaction skill re-injection truncates by keeping the file start. Re-verify the truncation cap against current host documentation at build time — it is a host fact, not a tree fact. Warn level first; escalation to blocking only after one release of data. **Landed as `lint_skill_top_position`, warn level, exit 0 on findings, registered in `taskfiles/ci-fast.yml` + `Taskfile.yml` and run in `skill-lint.yml` under identical argv. First reading: 290 heads scanned, 22 carry an obligation block, 3 sit below the window, offset median 39 / p90 64.** <!-- verify: ./scripts-run src/scripts/lint_skill_top_position -->
-
-**Deviation from the step, stated rather than silently absorbed.** The step asks
-for the truncation cap to be "re-verified against current host documentation at
-build time". The gate does **not** do that, and the reason is a real conflict
-rather than an omission: a tree-side script cannot read a vendor document, and
-fetching one at build time would make a CI gate network-dependent and
-non-deterministic — the opposite of what every other gate here is built to be.
-So the 60-line window ships as a **repo-side proxy and a stated default**,
-labelled as one in the gate's header, its taskfile description, its workflow
-step, and every line it prints. The alternative — hardcoding a number and calling
-it the host cap — is the unbacked-number failure this repository gates against.
-What the gate publishes instead is the offset **distribution**, which is the
-input an eventual real cap (or a data-derived window) would be set from, and
-which is also the "one release of data" the escalation clause already waits on.
+- [-] Add a check in the existing lint family asserting that load-bearing obligation blocks sit near the start of each skill file, because post-compaction skill re-injection truncates by keeping the file start. Re-verify the truncation cap against current host documentation at build time — it is a host fact, not a tree fact. Warn level first; escalation to blocking only after one release of data. **SKIPPED 2026-08-17 — the check already exists. `check_iron_law_prominence` is registered, has a coverage floor, is BLOCKING, and pointed at `src/skills` finds 13 violations with actionable diagnoses. What is missing is not a mechanism but a corpus: it runs with `argv: ["--quiet"]` and no path, so its corpus is `src/rules/*.md` and the skills tree is unscanned. Recorded as the `prominence-gate-skills-corpus` blocker, because extending an enforced blocking gate by 13 findings at once is a maintainer decision.** <!-- verify: grep -q check_iron_law_prominence src/config/gate-coverage.yml -->
 
 **Exit criteria:** the check runs across the skill set and reports a count without failing the build.
 
-**Status 2026-08-17 — CLOSED.** The gate scans 290 heads, reports 3 below the
-proxy window plus the offset distribution, and exits 0. Escalation to blocking
-stays gated on one release of that data, per the step.
+**Status 2026-08-17 — the step is withdrawn, and the withdrawal is the finding.**
+A `lint_skill_top_position` gate WAS built, registered, tested (35 tests) and
+closed as passing, and then reverted on the R2 review. Three reasons, in
+descending order:
 
-**Rollback:** remove the check registration.
+1. **The obligation already ships.** The gate's own docblock asserted "nothing
+   checked it", which was false.
+2. **Two gates would have defined one construct incompatibly.** The new one
+   accepted any heading level including numbered `Iron Law N` and measured a line
+   offset; the existing one accepts H2 only, treats H3 as the violation itself,
+   and measures position among the first two H2 headings. The new gate's test
+   explicitly pinned `### Iron Law 1` as VALID — the shape `preservation-guard`
+   forbids. Two of its three findings were H3-only Iron Laws, so the two gates
+   disagreed on the same text.
+3. **Its premise was unverified and asserted as fact in five tracked surfaces.**
+   "Truncation keeps the file start" — the tree's one measured truncation fact is
+   ENTRY-level, a granularity intra-file ordering cannot help, and this
+   roadmap's own Context paragraph argues the opposite for attention.
+
+Worth recording plainly: this is the same defect the roadmap exists to fix,
+committed by its own executor ninety minutes after closing Phase 2 step 4 as
+already-shipped. The Prerequisite-4 re-verification checked the Context table and
+not the step's own premise, and the solution-size ladder's reuse-in-repo rung was
+skipped. The exit criterion is therefore **not** met by this branch — it is met
+for `src/rules/` by the existing gate, and unmet for `src/skills/` pending the
+corpus decision.
+
+**Rollback:** none needed — nothing shipped.
 
 ## Phase 4 — Context management for spawned workers
 
@@ -146,12 +155,13 @@ what changed is that the gate is now countable.
 - **Owner:** user
 - **Blocks:** Phase 0 (cf01 compaction-survival census), and transitively all of Phase 1, whose build-or-close decision reads cf01's number
 - **Question:** cf01 needs an instrumented live session with a manual compaction, repeated across five sessions — and cf03 has since shown that no manual compaction has ever been recorded here. Do you run the five manual sessions anyway, or should cf01 be re-specified against the automatic path that actually occurs?
-- **Recommendation:** Re-specify cf01 against the automatic path. cf03 measured 29 compaction events across 473 sessions, **all automatic and none manual**, with the trigger landing between 964k and 1,031k pre-tokens. A manual-compaction census measures a path production never takes, and its result would need that caveat attached forever. The automatic path is observable without any special session — it needs the probes placed in a session that is *going* to cross 1M tokens, which about half of the recorded sessions do (239 of 473 end above 400k).
-- **If you do nothing:** Phase 1 stays unstarted, which is the correct state rather than a stall — it is exactly what a pre-registered honest-null threshold is for. Phases 2 and 3 are unaffected: Phase 3 is closed, and Phase 2's own gate now reads cf02, which is done. The plan degrades to its memory half, and the memory half is the one with a measured defect behind it.
+- **Recommendation:** Establish manual detectability first, then decide. **Corrected on R2 finding 6** — the earlier recommendation here said "re-specify cf01 against the automatic path" because "a manual-compaction census measures a path production never takes", and that overstated what cf03 can support. cf03 recorded 29 events across 473 sessions, all 29 tagged `auto` and none manual — but the detector is pinned to one OBSERVED auto event (`src/scripts/_lib/session_eol.ts:11-19`) and nothing establishes that a manual compaction writes a `compact_boundary` record at all. Zero manual is absence of a RECORD. So the cheap first move is a single manual compaction in one instrumented session to see whether it leaves a trace: if it does, cf01 runs as written; if it does not, cf01's null would be uninterpretable and the automatic path is the only measurable one. The automatic path needs no special session — probes placed in a session that is going to cross 1M tokens, which about half the recorded sessions do (239 of 473 end above 400k).
+- **If you do nothing:** Phase 1 stays unstarted, which is the correct state rather than a stall — it is exactly what a pre-registered honest-null threshold is for. Phase 2 is unaffected: its own gate now reads cf02, which is done. Phase 3 is withdrawn on its own grounds and does not wait on this. The plan degrades to its memory half, and the memory half is the one with a measured defect behind it.
 - **What to do:**
-  1. Decide manual-vs-automatic for cf01. If automatic, the step text and its five-session repetition need rewording first — the repetition was there to average manual variance.
-  2. If manual: run the five sessions with the three probes placed before each compaction, and stamp the host version per observation. Compaction survival is a host fact that changes without notice.
-  3. Either way, note that the capture side is currently UNOBSERVED (`session_eol_report` reports no session-eol state directory), so a Phase 1 delta cannot be computed until that directory exists.
+  1. Run ONE manual compaction in an instrumented session and check whether `session_eol_report` counts it. This is the precondition and it is cheap — it decides whether cf01 is measurable at all, and without it a cf01 null is uninterpretable.
+  2. If a manual compaction IS detectable: run the five sessions with the three probes placed before each compaction, and stamp the host version per observation. Compaction survival is a host fact that changes without notice.
+  3. If it is NOT detectable: re-specify cf01 against the automatic path, and reword the five-session repetition — it was there to average manual variance.
+  4. Either way, note that the capture side is currently UNOBSERVED (`session_eol_report` reports no session-eol state directory), so a Phase 1 delta cannot be computed until that directory exists.
 - **Resolved when:** a `context-fidelity-cf01.md` finding exists under `agents/evidence/eval-findings/` carrying a per-probe-class number and a host stamp, or the user records that the compaction-survival question is closed unmeasured and Phase 1 is cancelled. (The filename is deliberately not written as a full path here: `check_references` resolves a path in prose and the file does not exist yet, so a link would be a broken reference by construction. The step's own `verify:` probe holds the full path, which is where it belongs.)
 
 ### blocker: memory-sweep-instrument
@@ -167,6 +177,20 @@ what changed is that the gate is now countable.
   2. If in scope, note that `check_memory_contradiction` is a per-proposal checker (`--type --key --body`) and is the wrong shape to extend — the sweep needs to iterate the store, which is a different entry point.
   3. Record whether inter-rater agreement on the hand walk needs measuring before the ladder ships, or whether the 2:1 margin over the threshold makes that unnecessary.
 - **Resolved when:** the maintainer records the sweep as in-scope for a named step, or records that the ladder ships on cf02's hand reading with the reproducibility limitation accepted.
+
+### blocker: prominence-gate-skills-corpus
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** Phase 3 (the withdrawn skill-top position step; this is the residual gap that survived the withdrawal)
+- **Question:** `check_iron_law_prominence` is enforced and blocking but scans `src/rules/*.md` only — its CI argv is `["--quiet"]` with no path. Pointed at `src/skills` it reports 13 violations nobody currently sees. Extend its corpus, or leave the skills tree unscanned?
+- **Recommendation:** Extend it, but not by simply adding the path to the existing invocation — that lands 13 blocking findings in one change, which is the gate-that-arrives-as-N-instant-blockers shape this repository has refused before. The two-step version is cheap: first add a skills run whose findings are reported and baselined (the ratchet pattern this tree already uses for `ci-parity:local-only` and `lint_roadmap_blockers:decidability`), then drain. Note that 10 of the 13 are one repeated shape — an Iron Law H2 sitting behind `When to use` and `Goal` — so a single ordering convention clears most of them.
+- **If you do nothing:** the skills tree stays unscanned for obligation prominence, which is the status quo and costs nothing new. What it does cost is the next executor of this phase: the step reads as unbuilt, so the next attempt is likely to rebuild what this branch already reverted. That is why the blocker exists rather than a re-opened step.
+- **What to do:**
+  1. Decide extend-with-baseline versus leave-unscanned. If extending, the change is `./scripts-run src/scripts/check_iron_law_prominence --quiet src/skills` plus a baseline entry in `src/config/gate-violation-baselines.json` and a `min_scanned` floor in `src/config/gate-coverage.yml`.
+  2. If extending, decide whether skills are warn-level or blocking-with-baseline. The gate has no warn flag today (`--format`, `--quiet`, positional paths only), so warn-level means adding one.
+  3. Reconcile the two definitions before either lands: `preservation-guard` forbids Iron Law heading downgrades, and the gate already encodes that as `deep_iron_law`. Any new positional check must not contradict it — that contradiction is what got the first attempt reverted.
+- **Resolved when:** the maintainer records extend-with-baseline (with the baseline landed) or leave-unscanned, and Phase 3's step text is updated to match so the next executor does not rebuild the reverted gate.
 
 ## Risk Register
 
