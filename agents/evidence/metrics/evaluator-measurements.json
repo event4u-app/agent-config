@@ -1,12 +1,12 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-08-15T06:12:54.760Z",
-    "git_sha": "371e891274116dd249d6179848f1559d5f1e9d47",
+    "recorded_at": "2026-08-17T03:00:33.151Z",
+    "git_sha": "ade8e71b0246774ff167d3e1a3cea66a1a2c1449",
     "run_url": null,
-    "conditions": "Refresh for the 97 -> 98 cli_help_command_count move: the workspace:doctor verb (road-to-inbox-harvest-2026-08-c-workspace-identity Phase 3) registers in the same PR that adds the surface. Re-measured twice via the pinned registry-enumeration method on THIS branch's tree: 98/98. The git_sha is this branch's HEAD, not origin/main: an earlier stamp named origin/main while asserting 98, and the registry carries 97 at that SHA - a provenance claim the gate does not check and that was therefore false. mcp_public_tool_count carried at 19 - this branch adds no MCP server tool.",
+    "conditions": "Refresh for the 19 -> 20 mcp_public_tool_count move at the 13.0.0 release gate. The +1 is 866bd9861, which promoted `suggest_skill_for_task` from a discovery STUB to a real ALLOWLIST entry; that commit is on main and did not move the budget, so the breach surfaced here, where the posture is blocking. Measured by hand on THIS branch's HEAD rather than by a nightly umbrella run, and the difference is worth stating rather than hiding: only the two deterministic metrics below were re-measured. mcp_public_tool_count via the pinned method - `npm run build:mcp-bundle`, then initialize + notifications/initialized + tools/list piped to `node dist/mcp/server.mjs`, tools array length - run twice on the freshly built bundle: 20/20. cli_help_command_count via the pinned registry-enumeration method on the same tree: 98, unchanged, this branch registers no CLI verb. The five packed-tarball metrics (node_modules_mb, runtime_dep_count, cli_version_cold_ms, mcp_boot_to_initialize_ms, unpacked_size_mb) were NOT re-measured and are not carried here - they need the container harness evaluator_umbrella.sh runs in CI, and inventing them would be worse than their absence, which the drift check tolerates by design. The 20 recorded here agrees with the 20 the failing CI run measured in that container at this same tree.",
     "measurements": {
         "cli_help_command_count": 98,
-        "mcp_public_tool_count": 19
+        "mcp_public_tool_count": 20
     }
 }
