@@ -21,24 +21,18 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head fb49e4c767cf99b6736f34b7308b247fcff7dbff, review
-  artefacts excluded), scope hash `cf7f987ace49a3748914cba75ebe2c5da69c1a5dadbd637d996dd4e5b40c895d`
+- diff: `diff.patch` — the review scope (branch head c19e0df8e45d04ec7f574858ab7361578345043d, review
+  artefacts excluded), scope hash `966abf7cfb049c835aeb3f4e3b88f21052fa1ee5356c7d468858acda14404378`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
 
-- .github/workflows/skill-lint.yml
-- Taskfile.yml
 - agents/evidence/eval-findings/context-fidelity-cf02.md
 - agents/evidence/eval-findings/context-fidelity-cf03.md
 - agents/roadmaps-progress.md
 - agents/roadmaps/road-to-context-fidelity.md
 - docs/CLAIMS.md
 - docs/proof.md
-- src/config/gate-coverage.yml
-- src/scripts/lint_skill_top_position.ts
-- taskfiles/ci-fast.yml
-- tests/scripts/lint_skill_top_position.test.ts
 
 ## Output format (contract §2.2)
 
@@ -60,5 +54,5 @@ Fill the findings table in `context-fidelity.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope cf7f987ace49a3748914cba75ebe2c5da69c1a5dadbd637d996dd4e5b40c895d, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 966abf7cfb049c835aeb3f4e3b88f21052fa1ee5356c7d468858acda14404378, reviewed <YYYY-MM-DD>
 ```
