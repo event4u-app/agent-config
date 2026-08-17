@@ -70,7 +70,8 @@ to re-derive:
   only of the change set (pre-push, where a base ref always resolves); agreement
   is checked over the whole corpus (`--all`, the CI-registered argv). `--all` is
   what CI runs because the changed-files mode's ordinary pass is `scanned: 0` —
-  the exact shape `check_gate_coverage` rule 3 rejects, so registering it would
+  the exact shape rule 3 of `src/scripts/check_gate_coverage.ts` rejects, so it
+  would
   make a legitimate verified-empty look blind on every PR touching no evidence.
 - **No baseline file.** A `src/config/*-baseline.json` listing the 328
   pre-existing untyped artifacts would be a suppression surface whose entire
