@@ -333,3 +333,91 @@ export function renderSearchAdherenceSection(verdicts: readonly SearchClaimVerdi
     );
     return L;
 }
+
+/**
+ * Adapters for the report pipeline — the `Dict`-shaped objects
+ * `bench_ab_v2_stats` speaks, coerced into the typed input above.
+ *
+ * They live here rather than in the stats module for the same reason the
+ * verdict does: the dependency runs one way (stats imports this; this imports
+ * nothing from stats), and the size ratchet over `src/**` counts every line
+ * added to an already-large file. Extraction is the shrink-only ratchet's
+ * intended move; trimming the prose out of a comment is not.
+ */
+type Dict = Record<string, unknown>;
+
+/**
+ * Coerce a report value to a number, unwrapping the stats module's float box.
+ *
+ * `_paired_median_block` wraps every figure in a `PyFloat` so integers render
+ * with a trailing `.0`, and `Number(thatObject)` is `NaN`. Reading it as `0`
+ * turned a −1 median delta into no delta at all, so T5 reported PASS on a
+ * corpus where adherence had collapsed — the adapter test caught it, which is
+ * what that test exists for. The check is structural rather than an
+ * `instanceof`: the class is private to the stats module, and importing it here
+ * would reverse the dependency direction this file is careful to keep one-way.
+ */
+function _num(v: unknown): number {
+    const raw =
+        v !== null && typeof v === 'object' && 'value' in (v as Record<string, unknown>)
+            ? (v as { value: unknown }).value
+            : v;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : 0;
+}
+
+function _dict(v: unknown): Dict {
+    return v && typeof v === 'object' && !Array.isArray(v) ? (v as Dict) : {};
+}
+
+/** The Phase-3 T5 verdict for one `compare()` block. */
+export function searchClaimVerdict(comparison: Dict): Dict {
+    const block = _dict(comparison['search']);
+    return evaluateSearchAdherence({
+        arm_treatment: comparison['arm_treatment'] == null ? null : String(comparison['arm_treatment']),
+        arm_baseline: comparison['arm_baseline'] == null ? null : String(comparison['arm_baseline']),
+        search: {
+            measured: block['measured'] === true,
+            n_pairs: _num(block['n_pairs']),
+            median_delta_pct: block['median_delta_pct'] == null ? null : _num(block['median_delta_pct']),
+            median_delta: _num(block['median_delta']),
+            wilcoxon_p: _num(block['wilcoxon_p']),
+        },
+    }) as unknown as Dict;
+}
+
+/** The T5 section for one `analyse()` payload. */
+export function searchClaimSection(analysis: Dict): string[] {
+    const claims = Array.isArray(analysis['search_claims'])
+        ? (analysis['search_claims'] as unknown as SearchClaimVerdict[])
+        : [];
+    return renderSearchAdherenceSection(claims);
+}
+
+/**
+ * A paired-sample accumulator for T5's continuous endpoint.
+ *
+ * `compare()` collects three parallel arrays per endpoint; T5 needs the same
+ * three and nothing more, so they live behind one object rather than as three
+ * more locals in a module the size ratchet already flags. `addPair` keeps the
+ * both-sides-or-neither rule in one place: a metric present on only one side of
+ * a pair contributes nothing, because half a pair is no observation.
+ */
+export interface PairedSample {
+    t: number[];
+    b: number[];
+    diffs: number[];
+}
+
+export function newPairedSample(): PairedSample {
+    return { t: [], b: [], diffs: [] };
+}
+
+export function addPair(sample: PairedSample, treatment: unknown, baseline: unknown): void {
+    const a = typeof treatment === 'number' && Number.isFinite(treatment) ? treatment : null;
+    const b = typeof baseline === 'number' && Number.isFinite(baseline) ? baseline : null;
+    if (a === null || b === null) return;
+    sample.t.push(a);
+    sample.b.push(b);
+    sample.diffs.push(a - b);
+}

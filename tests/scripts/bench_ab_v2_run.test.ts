@@ -30,7 +30,6 @@ import {
     bare_principle_text,
     ladder_rule_text,
     lift_audit_arms,
-    workspace_dir,
     selftest_run,
     selftest_usage,
     ARMS,
@@ -46,6 +45,7 @@ import {
     PyFloat,
     type CheckpointIO,
 } from '../../src/scripts/bench_ab_v2_run.js';
+import { workspace_dir } from '../../src/scripts/_lib/bench_ab_workspace.js';
 import type { ScoreResultV2 } from '../../src/scripts/_lib/bench_ab_scoring_v2.js';
 import { activation_verdict, audit_activation, expected_injection } from '../../src/scripts/_lib/bench_ab_activation.js';
 

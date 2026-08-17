@@ -33,9 +33,9 @@ import {
     cost_by_arm,
     pricing_age_days,
     gate_verdict,
-    search_claim_verdict,
     size_claim_verdict,
 } from '../../src/scripts/bench_ab_v2_stats.js';
+import { searchClaimVerdict as search_claim_verdict } from '../../src/scripts/_lib/bench_ab_search_adherence.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SCRIPTS = path.join(REPO_ROOT, 'src', 'scripts');
