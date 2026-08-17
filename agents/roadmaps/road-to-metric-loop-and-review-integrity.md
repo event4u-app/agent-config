@@ -112,8 +112,8 @@ Source: an external capability-harvest session over this repository and ten publ
 
 ## Phase 5 — Measurement
 
-- [ ] Pre-register the two capability claims with their honest-null thresholds before either is adopted. <!-- verify: ./scripts-run src/scripts/check_claims -->
-- [ ] Record the outcome of each: the loop's iteration count against its floor, and the independence field's effect on how review artifacts are consumed. <!-- verify: ./scripts-run src/scripts/check_claims -->
+- [x] Pre-register the two capability claims with their honest-null thresholds before either is adopted. <!-- verify: ./scripts-run src/scripts/check_claims -->
+- [x] Record the outcome of each: the loop's iteration count against its floor, and the independence field's effect on how review artifacts are consumed. <!-- verify: ./scripts-run src/scripts/check_claims -->
 
 **Exit criteria:** both claims carry a recorded outcome, including nulls.
 
@@ -133,11 +133,11 @@ Source: an external capability-harvest session over this repository and ten publ
 
 ## Acceptance Criteria
 
-- [ ] Every adopted item traces to a KEEP row in the gap-table, and no CUT row appears anywhere in the phases.
-- [ ] The evaluator schema ships with its error-semantics document and its enforcing check in the same change.
-- [ ] A same-family council run produces an artifact that declares itself provisional.
-- [ ] Either the loop meets its pre-registered iteration floor, or the null is published and the skill is absent.
-- [ ] The diff gate's thresholds are derived from this repository's history, with the derivation recorded.
+- [x] Every adopted item traces to a KEEP row in the gap-table, and no CUT row appears anywhere in the phases.
+- [x] The evaluator schema ships with its error-semantics document and its enforcing check in the same change.
+- [x] A same-family council run produces an artifact that declares itself provisional.
+- [x] Either the loop meets its pre-registered iteration floor, or the null is published and the skill is absent.
+- [x] The diff gate's thresholds are derived from this repository's history, with the derivation recorded.
 
 ## Provenance
 
