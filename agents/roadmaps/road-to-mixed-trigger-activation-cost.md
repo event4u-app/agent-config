@@ -106,6 +106,9 @@ this tree can settle it).
 | 13 | `trigger-coverage.yaml` independently pins the same pre-contact reach the amendment retires | **still-true, found during execution** | its `ui-component` case expected `ui-audit-gate` from a file-less prompt. `fired_rules` in `src/scripts/trigger_coverage.ts` matches only `keyword` / `phrase`, so that corpus cannot express a path-backed positive at all — the reach was moved to the routing matrix and the case re-pointed to the only rule still firing on that prompt. A second pin the roadmap did not know about when it was written |
 | 14 | `ui_rule_triggers.test.ts` asserted the keyword triggers MUST exist ("host-independent fallback") | **overtaken, and measured before retiring** | its stated reason was that the rules once had only two Laravel path prefixes, leaving keywords as the whole routing surface — a gap closed by the `components/` · `src/components/` · `pages/` prefixes the same file pins. Measured: no host activation surface reads a keyword (Cursor `.mdc` → `description` + `globs`; Windsurf → `trigger: glob` + `globs`; Claude → `paths:`), so "host-independent" did not hold. Retired as a `decision-revisit-gate` mechanism-match miss and replaced by the inverse assertion |
 | 12 | The three PRs the delta doc analysed as open (#1391, #1393, #1395) | **overtaken** | all three merged into `main` (`097ab6549`, `01ec331ab`, `f0675de95`); #1393's twelfth `pre_tool_use` concern is live, not pending |
+| 15 | **Pre-guard emitter arm:** running `_claude_paths_plan` at `12.0.0` yields **25** scoped · **85** unconditional · **340,028** bytes, against **6** · 105 · 421,719 at the guard-active tree | **draft-reported, not re-verified here** | the source draft's own census, method = importing the emitter's plan function at each tag. Recorded because step 3.1 requires exactly this arm ("one projection generated with the pre-guard plan") and nothing else in this file states what that arm should produce. **Method caveat, also from the draft:** `12.0.0` predates the export split, so confirm the symbol is exported at both tags before trusting the import. Re-derive before use; a number quoted from a draft is not a measurement |
+| 16 | The only other change in the 12.0→12.1 window is the frontier tier added to `model-recommendations` — agent-visible, opt-in, not a loop-maker | **draft-reported alternative-cause elimination** | `git diff 12.0.0..12.1.0 -- src/agent-src/contexts/model-recommendations.md`. Recorded because § 0's causal story is exclusive ("the mechanism that *does* reproduce is rule activation") and an exclusive claim needs its co-change closed, not omitted |
+| 17 | **17 of 19** flipped rules have routing-matrix positives that fire with no file in context; 2 have no matrix at all | **negative half verified (claim 6), positive half OPEN** | claim 6 confirms the two matrix-less rules. Nobody has confirmed a surviving file-less positive for each of the other 17, and **AC-2 lets a rule close on exactly that** — so 15 of the 17 dispositions currently rest on an unverified premise. Phase 2's disposition table gains a column for it |
 
 ## Phases
 
@@ -311,7 +314,9 @@ the obligation does not need.
       into `matcher` / `if` groups is `road-to-per-turn-hook-economy` Phase 5.1,
       whose own text sequences it FIRST because it changes the denominator every
       later benchmark divides by. Verified in this tree: `hooks/hooks.json` uses no
-      `matcher` and no `if` today (§ 1 claim 9), so this is a new mechanism rather
+      `matcher` and no `if` today (`road-to-per-turn-hook-economy` § 1 claim 9 —
+      NOT this file's claim 9, which is about rule-content churn in the window),
+      so this is a new mechanism rather
       than an extension of one — and building it here is exactly the
       spawn-a-sibling-for-owned-scope that
       `agents/evidence/analysis/mixed-trigger-cleanup-ownership-map.md` forbids.
@@ -323,7 +328,10 @@ the obligation does not need.
 - **AC-2:** every one of the 17 has a terminal disposition citing the amendment, a
   surviving pre-contact positive, **or** an `if`-gated carrier with its condensed
   payload committed; the scoped count and the unconditional-token census are
-  re-measured and recorded.
+  re-measured and recorded. **The middle branch is not free** (claim 17): a
+  "surviving pre-contact positive" is verified per rule, in a column of the
+  disposition table, naming the matrix case — never assumed from the fact that a
+  matrix exists.
 - **Interlock — do not duplicate an existing owner.** The 5 maintainer-only rules
   in the set (`augment-edit-discipline`, `framework-neutrality-in-generic-skills`,
   `persona-governance`, `domain-adoption-policy`,
@@ -373,7 +381,9 @@ latency claim would get: pre-registered, paired, refutable.
       forbid, and the same shape as the unverified-host-capability claims this
       package has had to correct before.
 
-      This does NOT refute the roadmap's § 1 claim 12 — that claim is marked
+      This does NOT refute `road-to-per-turn-hook-economy` § 1 claim 12 (the
+      `async`/`asyncRewake` row — NOT this file's claim 12, which is the three
+      merged PRs) — that claim is marked
       "still-true, external", sourced from host documentation read at one version,
       and external docs and the extracted binary token set can legitimately
       disagree if the event is newer than 2.1.229 or is not hook-bindable at all.
@@ -571,7 +581,14 @@ owner, and the colleague's report returns to Phase 0 of
 - **`road-to-standing-context-40k`** gains the window pin: the 6-scoped state is
   not "structural since forever" — nineteen of the unconditional rules became
   unconditional *at 12.1.0*, and its condensation priority list starts with those
-  nineteen, largest body first.
+  nineteen, largest body first. Measured at `86cdbf652` so step 2.1 does not have
+  to re-derive the head of the list: `design-review-after-ui-write` 10,569 B ·
+  `design-fidelity` 10,544 B · `settings-ask-protocol` 9,374 B · `ui-audit-gate`
+  8,209 B. Bytes, deliberately — the exact-BPE ordering is Phase 4's tokenizer
+  path, and a byte figure quoted as a token figure is the claim-11 error. Two of
+  these four grew since the source draft measured them, so re-measure rather than
+  cite. `road-to-rule-stub-projection` Phase 0 produces the exact-BPE table for
+  the whole migrated corpus and hands it to step 2.1.
 - **`road-to-stop-gate-honesty`** Phase 2 gains a causal link: detector-C refusal
   rates are predicted to correlate with the flip date on affected machines, so its
   Phase-1 counter should be split before and after the local 12.1 install date.
