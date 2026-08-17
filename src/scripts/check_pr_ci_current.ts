@@ -34,7 +34,31 @@
  * Exit codes (contract §6): 0 = current, or unobservable-and-said-so ·
  * 1 = the remote answered and the verdict is not about the branch head ·
  * 2 = internal error. `scanned:` is emitted on EVERY exit path.
+ *
+ * ## Why this gate carries no per-target ledger
+ *
+ * `check_gate_completeness` requires every registered gate to adopt
+ * `_lib/gate_ledger.ts` or to say why it does not. This one says why, and the
+ * reason is the shape of the question rather than the cost of the change.
+ *
+ * The ledger's purpose is to make an INVISIBLE skip countable across a target
+ * population — 500 files walked, 41 unreadable, and nothing saying so. This gate
+ * has no such population: it compares a short, short-circuiting chain of remote
+ * facts (0, 2, 3, or the number of check rows), and every one of its degrade
+ * paths ALREADY reports itself, on every exit, through `scanReport` with an
+ * explicit `allowEmpty` reason that stays loud under `--quiet`. "There was
+ * nothing to check" and "I checked and it was fine" are already distinguishable
+ * in its output — which is the property the ledger exists to create, reached
+ * here by a mechanism that predates it.
+ *
+ * Planning 0-to-3 ad-hoc target ids would add an accounting line that no reader
+ * could compare against anything, and the manifest's own note rejects exactly
+ * that shape elsewhere ("padding the manifest to move this number"). The gate is
+ * also declared `local_only` in `src/config/ci-local-parity.yml` because its
+ * comparison is tautological in CI, so the estate-wide count a ledger feeds
+ * would be taking a reading from a gate that deliberately does not run there.
  */
+// ledger-exempt: no target population to account for — a short-circuiting chain of 0-3 remote facts, whose every degrade path already reports itself via scanReport with an explicit allowEmpty reason
 
 import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
