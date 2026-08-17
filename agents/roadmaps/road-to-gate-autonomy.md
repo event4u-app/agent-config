@@ -187,13 +187,38 @@ safeguards.**
 
 ### Phase 4 — Liveness: gates that open must be seen
 
-- [ ] **4.1** A resume-condition probe as a standing class-0 check: for every park
+- [x] **4.1** A resume-condition probe as a standing class-0 check: for every park
       note in `later/`, parse the named condition — an artifact, step or roadmap
       reference — test its status, and list the FIRED ones in the gate output under
       a dedicated section. The `request-scoped-rule-load` case is the regression
       fixture, because it is a known-fired condition with a known-unresumed file.
       `verify:` the probe detects that fixture case, and a park note whose condition
       is genuinely unmet is not listed.
+      **Done 2026-08-17.** `src/agent-src/scripts/resume_probe.ts`, rendered by
+      `agent-config gates` as a `FIRED` section and carried in `--json` as
+      `resumeFired` / `resumeUndecidable` / `resumed`. `--reply` deliberately does
+      not carry it: ADR-222 fixes that form at exactly one decision, and a fired
+      resume condition is a file that can move, not a decision anyone owes.
+      Live result: **1 fired** — the `request-scoped-rule-load` fixture — 1 unmet,
+      42 undecidable of 44 park notes.
+      **The first live run reported 8 fired, and 7 of those were wrong.** That is
+      recorded rather than quietly fixed, because the false-positive shapes are the
+      finding. Two causes, each now a regression fixture: (a) `**Trigger:**` is a
+      *provenance* idiom in this tree — "spun out of `road-to-x`" — so accepting it
+      as a dependency marker resumed notes on evidence that said nothing; the probe
+      narrows to `blocked until` / `resume when`, deliberately narrower than
+      `lint_roadmap_later_disposition`, which answers the different question of
+      whether a condition is *recorded*. (b) the condition ran on past the next
+      bolded field into `**Origin:**`, turning every roadmap a note *credits* into
+      a claimed dependency — fixed with the same terminate-at-the-next-field rule
+      `_blockerField` already uses.
+      A compound condition (`BOTH`, `AND`, an enumerated list, or two tracks joined
+      by `+`) now reads **undecidable**, never fired: the probe can read the
+      roadmap-reference conjunct and not the rest, and claiming the whole condition
+      on one third of the evidence is the over-report this step exists to avoid.
+      **42 of 44 undecidable is published, not hidden.** The coverage line prints
+      on every run, so "no condition has fired" can never be confused with "the
+      probe could read 2 of 44 conditions" — the gate-that-scans-nothing shape.
 - **AC-4:** the probe runs in the recurring pass owned by
   `road-to-estate-drawdown` Phase 4, and the fixture case is detected.
 
