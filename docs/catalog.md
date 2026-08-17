@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **710 public artefacts** shipped by
+Consumer-facing catalog of all **711 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
-## Skills (289)
+## Skills (290)
 
 > **Behavioural-eval coverage is measured, not implied.** A skill is
 > behaviourally evaluated only if it ships `evals/evals.json`; most do
@@ -114,6 +114,7 @@ are excluded.
 | skill | [`evaluate-llm-feature`](../dist/agent-src/skills/evaluate-llm-feature/SKILL.md) | official | Black-box evaluation of a shipped LLM feature — adversarial probes for hallucination, prompt-injection, and cost-runaway vs stated expectations. Not RAG/embedding. Triggers 'review my chatbot'. |
 | skill | [`existing-ui-audit`](../dist/agent-src/skills/existing-ui-audit/SKILL.md) | official | Use BEFORE writing or editing any non-trivial UI — inventories components, design tokens, shadcn primitives, and reusable patterns into state.ui_audit. Hard gate for the ui directive set. |
 | skill | [`expansion-playbook`](../dist/agent-src/skills/expansion-playbook/SKILL.md) | official | Use when designing account-expansion mechanics — upsell vs cross-sell, expansion-trigger signals, NRR cognition. Triggers on 'lift NRR', 'when do we upsell vs cross-sell'. |
+| skill | [`experiment-loop`](../dist/agent-src/skills/experiment-loop/SKILL.md) | official | Use to drive a scalar metric down or up across bounded iterations — keep on strict improvement, revert otherwise, state on disk. Triggers 'minimize X', 'optimize until it stops improving'. |
 | skill | [`fe-design`](../dist/agent-src/skills/fe-design/SKILL.md) | official | Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, inventory, build, review. Use when building or changing any UI, not only when planning one. |
 | skill | [`feature-planning`](../dist/agent-src/skills/feature-planning/SKILL.md) | official | Use when the user says \"plan a feature\", \"brainstorm\", \"explore this idea\", or wants to go from idea to structured plan and roadmap. |
 | skill | [`file-editor`](../dist/agent-src/skills/file-editor/SKILL.md) | official | Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled. |
