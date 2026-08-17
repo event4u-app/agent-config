@@ -10,6 +10,10 @@
  *   - the test count appears in exactly one generated fragment that every
  *     surface includes (P1.3 verify)
  */
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -73,6 +77,93 @@ describe('extract_changelog_section', () => {
     it('does not match 9.99.10 when asked for 9.99.1 (word boundary)', () => {
         const text = changelog(BODY).replace(`## ${V} `, '## 9.99.10 ');
         expect(extract_changelog_section(text, '9.99.1')).toBeNull();
+    });
+
+    // Measured 2026-08-17 on the 14.0.0 release. The run's own era split
+    // (`chore(changelog): split era 12.0.x → pre-14.0.0`) collapsed every
+    // prior era into `# Era: pre-X — archived` banners appended BELOW the new
+    // era, leaving `## [14.0.0]` as the last `##` heading in the file. The
+    // bound was "next version heading or end of file", so the section ran to
+    // EOF and swallowed 24 banners: the PR body went out at 22,289 chars
+    // instead of ~11,500, and the same ~10k of archive pointers reached the
+    // GitHub release notes and the annotated tag. The equality gate stayed
+    // green throughout — all four surfaces derive from this one function, so
+    // they were identically wrong. It fires on every release that splits an
+    // era, which is why the bound is now the era banner too.
+    //
+    // Era banners are level 1 and release entries level 2+ — the same
+    // invariant `changelog_release_section_gate.test.ts` pins from the other
+    // side, where the gate anchored on the banner instead of the entry.
+    it('stops at an era banner when the entry is the last version in the file', () => {
+        const text = [
+            '# Changelog',
+            '',
+            '# Era: 9.99.x — current',
+            '',
+            `## ${V} (2026-08-03)`,
+            '',
+            BODY,
+            '',
+            '# Era: pre-9.99.0 — archived',
+            '',
+            '> All entries before `9.99.0` live in',
+            '> [`docs/archive/CHANGELOG-pre-9.99.0.md`](docs/archive/CHANGELOG-pre-9.99.0.md).',
+            '',
+        ].join('\n');
+        const section = extract_changelog_section(text, V)!;
+        expect(section.body).toBe(BODY);
+        expect(section.body).not.toContain('archived');
+        expect(section.body).not.toContain('docs/archive/');
+    });
+
+    // The near-miss probes the direction the era arm opened — an earlier stop.
+    // `# Era:` is anchored at column 0 and level 1, so a deeper heading and a
+    // quoted one both stay inside the body. Without these, tightening the
+    // pattern to any `#`-prefixed line would pass unnoticed and truncate a
+    // legitimate entry that merely discusses eras.
+    // The era bug shipped in TWO places, and only one was found by reading the
+    // symptom. `release.ts:_previous_test_count_from_changelog` carried its own
+    // `const next_re = /^##\s+\[?\d+\.\d+\.\d+/m` and bounded the previous
+    // entry with it — same construct, same blind spot, discovered only by
+    // grepping the tree for the literal after fixing the first one. It now
+    // imports `NEXT_SECTION_RE`, and that function is not fixture-testable
+    // (it reads the module-level CHANGELOG constant), so what is pinned here
+    // is the property that made the second instance possible: the boundary is
+    // defined once. A re-introduced local copy fails this.
+    it('is the only definition of the section boundary in the release sources', () => {
+        const root = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
+        const copies = ['src/scripts/release.ts', 'src/scripts/_lib/release_material.ts'].flatMap(
+            (rel) =>
+                fs
+                    .readFileSync(path.join(root, rel), 'utf-8')
+                    .split('\n')
+                    // Matches the shared core of both spellings as source
+                    // text — the `(?:…)` form and a bare `/^##\s+\[?\d+…`
+                    // copy alike. An earlier version of this filter anchored
+                    // on `(?:` and therefore matched only the definition it
+                    // was supposed to be counting AGAINST: re-introducing the
+                    // copy left it green, which is the one outcome that makes
+                    // a pin worse than no pin.
+                    .filter((line) => /##\\s\+\\\[\?\\d\+/.test(line))
+                    .map((line) => `${rel}: ${line.trim()}`),
+        );
+        expect(copies).toHaveLength(1);
+        expect(copies[0]).toContain('NEXT_SECTION_RE');
+    });
+
+    it('does not stop at a deeper or quoted era-shaped line inside the body', () => {
+        const bodyWithEraProse = [
+            BODY,
+            '',
+            '#### Era: naming rules',
+            '',
+            '> # Era: quoted in an example',
+            '',
+            '* trailing item after the era prose',
+        ].join('\n');
+        const section = extract_changelog_section(changelog(bodyWithEraProse), V)!;
+        expect(section.body).toBe(bodyWithEraProse);
+        expect(section.body).toContain('trailing item after the era prose');
     });
 });
 

@@ -125,6 +125,7 @@ import {
     render_derived_head_values,
 } from './_lib/release_highlights.js';
 import {
+    NEXT_SECTION_RE,
     extract_changelog_section,
     pr_body_from_section,
     release_notes_from_section,
@@ -1476,8 +1477,7 @@ function _previous_test_count_from_changelog(prev_tag: string | null): number | 
     }
     const headEnd = m.index + m[0].length;
     const rest = text.slice(headEnd);
-    const next_re = /^##\s+\[?\d+\.\d+\.\d+/m;
-    const next_heading = next_re.exec(rest);
+    const next_heading = NEXT_SECTION_RE.exec(rest);
     const sectionEnd = headEnd + (next_heading ? next_heading.index : rest.length);
     const section = text.slice(headEnd, sectionEnd);
     const count_match = _TEST_COUNT_LINE_RE.exec(section);
