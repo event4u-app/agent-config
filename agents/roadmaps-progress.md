@@ -6,10 +6,10 @@
 
 ## Overall
 
-**271 / 591 steps done · 46%**
+**288 / 591 steps done · 49%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   46%
+████████████████████░░░░░░░░░░░░░░░░░░░░   49%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -19,6 +19,14 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | Roadmap | Done | Deferred | Cancelled |
 |---|---:|---:|---:|
 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 13 | 1 | 0 |
+
+## ✅ Completed — pending archival
+
+These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but still sit in the active tree. They should be in `agents/roadmaps/archive/`. Run the archival sweep `archive_completed_roadmaps --all` (untracked-safe), or follow the manual fallback documented in the `roadmap-management` skill, then regenerate this dashboard.
+
+| Roadmap | Done | Total |
+|---|---:|---:|
+| [road-to-rule-stub-projection.md](roadmaps/road-to-rule-stub-projection.md) | 17 | 17 |
 
 ## Open roadmaps
 
@@ -49,7 +57,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 16 | 15 | 0 | 1 | 0 | [1](#blockers-road-to-per-turn-hook-economy) | ░░░░░░░░░░ 0% |
 | 24 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
 | 25 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
-| 26 | [road-to-rule-stub-projection.md](roadmaps/road-to-rule-stub-projection.md) | 4 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 26 | [road-to-rule-stub-projection.md](roadmaps/road-to-rule-stub-projection.md) | 4 | 17 | 0 | 17 | 0 | 0 | 0 | ██████████ 100% |
 | 27 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 28 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 29 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
@@ -788,14 +796,14 @@ _1 blocker resolved._
 
 ### [road-to-rule-stub-projection.md](roadmaps/road-to-rule-stub-projection.md)
 
-**Road to rule-stub projection — hold a migrated rule at the size its pointer claims** — 0 / 17 done (0%)
+**Road to rule-stub projection — hold a migrated rule at the size its pointer claims** — 17 / 17 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Size the migrated corpus, do not reclassify it | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 1 | Make the pointer machine-checked | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | Per-rule shrink-only ceilings | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Hand the sized residue to its owner | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
+| 0 | Size the migrated corpus, do not reclassify it | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 1 | Make the pointer machine-checked | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 2 | Per-rule shrink-only ceilings | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | Hand the sized residue to its owner | ✅ done | 0 | 9 | 0 | 0 | 100% |
 
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
 
