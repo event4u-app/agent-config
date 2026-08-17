@@ -64,7 +64,6 @@ import { format_install_hints } from './ai_council/cli_hints.js';
 import {
     type AdvisorConfig,
     type CouncilConfig,
-    type QuorumSetting,
     COUNCIL_CONFIG_ENV,
     COUNCIL_CONFIG_USER_GLOBAL_REL,
     CouncilConfigError,
@@ -75,8 +74,15 @@ import {
 import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
 import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
 import { resolveMemberTransport } from './ai_council/transport_resolver.js';
-import { absentReasonFromCliFailure, classifyCliFailure, type AbsentReason } from './ai_council/transport_resolver.js';
-import { evaluateQuorum, SOLO_FLOOR_MIN_PRESENT, type QuorumResult } from './ai_council/quorum.js';
+import { classifyCliFailure, type AbsentReason } from './ai_council/transport_resolver.js';
+import { evaluateQuorum, type QuorumResult } from './ai_council/quorum.js';
+import {
+    _emitQuorumEvent,
+    _format_quorum_line,
+    _postRunQuorum,
+    _quorum_min_present_from,
+    _quorum_setting_from,
+} from './ai_council/quorum_wiring.js';
 import { formatQualificationLine, type MemberQualification } from './ai_council/qualification.js';
 import {
     absenceReasonFor,
@@ -88,14 +94,7 @@ import {
     recordRoundObservations,
 } from './ai_council/qualification_wiring.js';
 import { PROBE_STORE_RELPATH, readProbeStore, type ProbeStore } from './ai_council/probe_store.js';
-import {
-    appendEvent,
-    appendQuorumEvent,
-    type QuorumAbsence,
-    type QuorumCommand,
-    type QuorumDispatch,
-    type QuorumEventPhase,
-} from './ai_council/events_log.js';
+import { appendEvent, type QuorumCommand, type QuorumDispatch } from './ai_council/events_log.js';
 import {
     type ClassificationResult,
     type SizeFitVerdict,
@@ -655,172 +654,6 @@ function _member_api_key_present(cfg: Dict): boolean | undefined {
     }
 }
 
-/**
- * `ai['quorum']` as forwarded by `_synthesize_ai_council_block` (already
- * validated by `config.ts::_build_quorum` on that path) — or, for a caller
- * that hands `build_members` a hand-built dict bypassing the loader
- * entirely, a defensive re-check that fails soft to `'majority'` rather
- * than throwing. `build_members` is not the config-validation layer;
- * `evaluateQuorum` degrades an unrecognisable setting toward
- * `inconclusive`, never toward a false `concluded`, so failing soft here
- * costs nothing on the safety side.
- */
-function _quorum_setting_from(ai: Dict): QuorumSetting {
-    const raw = ai['quorum'];
-    if (raw === 'majority') {
-        return 'majority';
-    }
-    if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 1) {
-        return raw;
-    }
-    return 'majority';
-}
-
-/**
- * `ai['quorum_min_present']` with the same fail-soft posture as
- * `_quorum_setting_from`: the loader has already validated it on the normal
- * path, and a hand-built dict that bypasses the loader falls back to the
- * ADR-224 default rather than throwing.
- *
- * Failing soft costs nothing on the safety side here, and less than it does
- * for `quorum`: this value feeds a counterfactual boolean that no gate reads,
- * so the worst outcome of a wrong fallback is one mis-recorded telemetry line,
- * never a pass that concluded when it should not have.
- */
-function _quorum_min_present_from(ai: Dict): number {
-    const raw = ai['quorum_min_present'];
-    if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 1) {
-        return raw;
-    }
-    return SOLO_FLOOR_MIN_PRESENT;
-}
-
-/**
- * Emit one `quorum_result` line for a resolved quorum.
- *
- * Both `evaluateQuorum` call sites route through here, tagged by `phase`, so
- * a solo-concluded pass is distinguishable from a full-attendance one in the
- * event log — the gap `road-to-always-on-orchestration`'s Risk 6 asserted was
- * already closed and was not.
- *
- * The emit sits at the call sites rather than inside `_postRunQuorum` on
- * purpose: that function is exported and unit-tested as a pure derivation,
- * and a write buried in it would make every test of it a log writer.
- *
- * `absent` entries arrive as the CLI's own `{member, reason, detail}` dicts;
- * `detail` is dropped by `appendQuorumEvent`'s input type, which cannot carry
- * free-form text at all.
- */
-function _emitQuorumEvent(
-    phase: QuorumEventPhase,
-    quorum: QuorumResult,
-    absent: readonly Dict[],
-    ctx: {
-        command: QuorumCommand;
-        dispatch?: QuorumDispatch;
-        /** Enabled members before `--single` filtering; defaults to the roster that ran. */
-        configuredTotal?: number;
-        lens?: string;
-        invocation?: string;
-        /**
-         * The ADR-224 shadow floor for this pass. `gateClass` is deliberately
-         * NOT in this context object: no CLI path declares itself gate-class,
-         * so a parameter here would be one no caller ever sets, and its
-         * absence is what the `false` on every line honestly records.
-         */
-        minPresent?: number;
-    },
-): void {
-    appendQuorumEvent({
-        lens: ctx.lens ?? '',
-        invocation: ctx.invocation ?? '',
-        phase,
-        command: ctx.command,
-        dispatch: ctx.dispatch ?? 'full',
-        configuredTotal: ctx.configuredTotal ?? quorum.total,
-        result: quorum,
-        ...(ctx.minPresent !== undefined ? { minPresent: ctx.minPresent } : {}),
-        absent: absent.map(
-            (a): QuorumAbsence => ({
-                member: String(a['member'] ?? ''),
-                reason: (a['reason'] as QuorumAbsence['reason']) ?? 'unavailable',
-            }),
-        ),
-    });
-}
-
-/**
- * Re-derive quorum AFTER the provider calls, over what was actually USABLE —
- * never what merely CONSTRUCTED (M3, independent-review finding). `members`
- * and `responses` must be index-aligned (`consult()`'s own contract: one
- * `CouncilResponse` per member, from the final round); `members.length` is
- * the `n` — deliberately the roster that actually ran (post `--single` /
- * `--siblings` filtering), never the full config roster a filtered run
- * never attempted. A response carrying `.error` (or a missing response
- * entry altogether) counts as absent, classified through the same
- * `AbsentReason` vocabulary a static (pre-call) resolution failure uses, so
- * one artefact buckets every absence — construction-time and mid-flight —
- * under one taxonomy.
- */
-function _postRunQuorum(
-    members: ExternalAIClient[],
-    responses: CouncilResponse[],
-    ai_cfg: Dict,
-): { quorum: QuorumResult; absent: Dict[] } {
-    const absent: Dict[] = [];
-    let present = 0;
-    for (let i = 0; i < members.length; i++) {
-        const m = members[i] as ExternalAIClient;
-        const r = responses[i];
-        // Round 7 § 5.2 — attendance is a NON-EMPTY answer, not the absence of an
-        // error. `!r.error` alone counted a member that returned zero bytes, and
-        // that is not hypothetical: a 290 s curl timeout returned an empty body
-        // with no error set in two sessions (`9fc9ba3e`, `4ac2f7ac`) and the
-        // banner printed `2/2 present` — a single-voice verdict presented as
-        // convergence, on a paid run. An empty answer contributes nothing to a
-        // quorum by definition, whatever the transport thought of it.
-        if (r !== undefined && !r.error && r.text.trim() !== '') {
-            present += 1;
-            continue;
-        }
-        const raw = r?.error ?? (r !== undefined && r.text.trim() === '' ? 'empty response body' : 'no response');
-        const failure = classifyCliFailure(raw);
-        absent.push({
-            member: m.name,
-            reason: absentReasonFromCliFailure(failure) ?? 'unavailable',
-            detail: raw,
-        });
-    }
-    return { quorum: evaluateQuorum(members.length, present, _quorum_setting_from(ai_cfg)), absent };
-}
-
-/**
- * One-line k-of-n banner, mirrored from `orchestrator.ts::_render_quorum_line`
- * but for the CLI's own stdout stream rather than the rendered report —
- * "attendance is telemetry, never a silent drop" applies to the estimate
- * preview too, not only to a completed pass.
- */
-function _format_quorum_line(q: QuorumResult, phase?: QuorumEventPhase): string {
-    // The phase tag is not decoration. A degraded run prints attendance TWICE —
-    // the pre-run reading before the estimate table, the post-run reading after
-    // the consult — and the two disagree by construction: `2/2 present …
-    // concluded` then `0/2 present … INCONCLUSIVE`. Same prefix, opposite
-    // content, and until 2026-08-12 neither line said which was which, so an
-    // operator skimming (or anything grepping `council:quorum ·`) could take the
-    // stale one. The event log had solved this from the start with an explicit
-    // `phase` field; stdout had not. Optional, because the estimate path prints
-    // exactly one line and a tag there would claim a distinction it does not make.
-    const tag = phase === undefined ? '' : `${phase === 'pre_run' ? 'before the run' : 'after the run'} · `;
-    const verdict = q.status === 'concluded' ? 'concluded' : 'INCONCLUSIVE — release gate holds';
-    // Round 7 § 5.3 — a degraded pass says so. `1/2 present, needed 1 —
-    // concluded` is literally true and reads as agreement; with a threshold of 1
-    // a solo answer concludes, and nothing in the line distinguishes "both
-    // members agreed" from "one member answered". The counts were always there;
-    // what was missing is the word that stops a reader inferring convergence.
-    const degraded =
-        q.present < q.total ? `  ⚠️  DEGRADED — ${String(q.total - q.present)} member(s) did not answer; this is not convergence.` : '';
-    return `council:quorum · ${tag}${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.${degraded}`;
-}
 
 function build_members(settings: Dict, opts: BuildMembersOptions = {}): ExternalAIClient[] {
     const invocation_mode = opts.invocation_mode ?? null;
