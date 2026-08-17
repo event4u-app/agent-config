@@ -86,7 +86,7 @@ safeguards.**
 
 ### Phase 1 — Blocker schema: class and command become fields
 
-- [ ] **1.1** Extend the blocker contract the existing blockers lint already probes
+- [x] **1.1** Extend the blocker contract the existing blockers lint already probes
       with three optional fields: a class, a `run:` command for classes 0 and 1, and
       a budget estimate for class 1. The decidability ratchet gains a second
       dimension: **a class-0 or class-1 blocker without a `run:` field is the new
@@ -95,6 +95,22 @@ safeguards.**
       rather than a runtime judgment.
       `verify:` the lint is red on a fixture blocker claiming class 0 with no `run:`,
       and green on the committed tree.
+      **Done 2026-08-17.** `Class:` / `Run:` / `Budget:` parse in
+      `update_roadmap_progress.parse_blockers` (+ `blocker_class`, which applies the
+      absent-field default at every consumer rather than at each call site);
+      `lint_roadmap_blockers` gains two HARD checks — an unknown class, and a class
+      0/1 entry with no `Run:`. Contract text in `templates/roadmaps.md` rule 20,
+      with the four-class table. Eight new tests in
+      `tests/scripts/lint_roadmap_blockers.test.ts` cover both directions including
+      the class-2/3 and absent-class negatives; 25/25 green.
+      **The check is HARD, not ratcheted, and the reason is worth recording:** the
+      field is opt-in, so on the day it ships no entry declares a class and the rule
+      fires on nothing. There is no backlog to grandfather, so the "strict gate reds
+      ~283 files" failure the decidability half had to design around does not arise.
+      **Pre-existing red, NOT caused here and not fixed here:** the sibling
+      decidability ratchet reads 28 against a baseline of 26 on a pristine tree.
+      None of the 28 is in this roadmap, every one is in another roadmap's blocker
+      section, and this worktree's scope lock does not own those files.
 - [ ] **1.2** One classification sweep over the 38 live blockers, each verdict a
       table row: blocker, class, run-or-decision text, reason. **Pre-registered
       expectation, to be falsified rather than assumed:** a substantial share land

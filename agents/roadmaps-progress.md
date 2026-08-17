@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **47** open blockers, **21** need you → `agent-config gates`
+> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **50** open blockers, **22** need you → `agent-config gates`
 
 ## Overall
 
-**267 / 575 steps done · 46%**
+**272 / 574 steps done · 47%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   46%
+███████████████████░░░░░░░░░░░░░░░░░░░░░   47%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -28,13 +28,13 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 2 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
 | 3 | [road-to-catalogue-host-fit.md](roadmaps/road-to-catalogue-host-fit.md) | 4 | 8 | 7 | 0 | 1 | 0 | [1](#blockers-road-to-catalogue-host-fit) | ░░░░░░░░░░ 0% |
 | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 24 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 5 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 19 | 4 | 0 | 1 | [3](#blockers-road-to-context-fidelity) | ██░░░░░░░░ 17% |
 | 6 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
 | 8 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 5 | 0 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
-| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 8 | 6 | 0 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | ░░░░░░░░░░ 0% |
+| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 8 | 5 | 1 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | ██░░░░░░░░ 17% |
 | 12 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 13 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
 | 14 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
@@ -380,11 +380,11 @@ _1 blocker resolved._
 
 ### [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md)
 
-**Road to gate autonomy — human gates only where a human is the point** — 0 / 6 done (0%)
+**Road to gate autonomy — human gates only where a human is the point** — 1 / 6 done (17%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Blocker schema: class and command become fields | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 1 | Blocker schema: class and command become fields | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
 | 2 | `gates --execute` (the acting half) | ⬜ not started | 2 | 0 | 1 | 0 | 0% |
 | 3 | Agent runs via CLI: open the delegate gate for the maintainer profile | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
 | 4 | Liveness: gates that open must be seen | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
