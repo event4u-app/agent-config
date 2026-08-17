@@ -15,9 +15,9 @@ Close the three unowned P0 findings from the release review with a measured trig
 ## Prerequisites
 
 - [ ] Read `src/scripts/hook_manifest.yaml` and the skill-projection path
-- [ ] Read `agents/evidence/` layout and the review-binding manifest format
-- [ ] Read the council dispatch path and its member-resolution step
-- [ ] Re-verify the Context table against branch HEAD before executing a phase
+- [x] Read `agents/evidence/` layout and the review-binding manifest format
+- [x] Read the council dispatch path and its member-resolution step
+- [x] Re-verify the Context table against branch HEAD before executing a phase
 
 ## Context
 
@@ -38,6 +38,27 @@ Source: an external release review of this package, 2026-08-15, pinned at `e3bd9
 
 ## Phase 1 — Host-aware skill projection
 
+> **Not started 2026-08-17, on the data's own verdict — not on effort.** Step 3
+> requires that "only hosts with an adequate measurement base project a reduced
+> set". Read at `6a679cc19`, `agents/evidence/metrics/skill-catalogue.jsonl`
+> holds five observations across two hosts, and **every one of the four `codex`
+> rows carries `verdict: "insufficient-observation"`** while the single `claude`
+> row carries `no-selector` (no truncation pressure — which is exactly the
+> premise step 4 relies on).
+>
+> So the only host with measured truncation pressure declares its own
+> measurement base inadequate, in the field built to say so. Implementing the
+> sufficiency gate today means one of two things: inventing an adequacy bar the
+> data fails, or shipping a gate that can never fire — and a gate that cannot
+> fire is the shape `src/config/gate-coverage.yml` was written to reject.
+>
+> **Resolved when:** at least one host accumulates observations whose `verdict`
+> is something other than `insufficient-observation`, at which point the
+> adequacy bar is read off that distribution instead of guessed. The
+> measurement half is already built (`_lib/skill_catalogue.ts` —
+> `ObservationRecord`, `truncationModeOf`, `measureCatalogueVolume`); what is
+> missing is the evidence, not the instrument.
+
 - [ ] Add a host capability profile that records measured catalogue behaviour per host — how many skills survive the host's own catalogue handling — rather than deriving the limit from the package's model of the host. <!-- verify: ./scripts-run src/scripts/routing_doctor --help -->
 - [ ] Compose the projected skill set from three inputs: the host capability profile, the measured catalogue behaviour, and the workspace profile. <!-- verify: ./scripts-run src/scripts/lint_featured_skills -->
 - [ ] Gate the aggressive path on measurement sufficiency: only hosts with an adequate measurement base project a reduced set. An unknown host receives no aggressive scoping — the safe direction is the full catalogue, because under-projecting a skill is a worse failure than paying for one that is never used. <!-- verify: ./scripts-run src/scripts/check_enforcement_coverage -->
@@ -51,10 +72,10 @@ Source: an external release review of this package, 2026-08-15, pinned at `e3bd9
 
 ## Phase 2 — Evidence artifact typing
 
-- [ ] Add an explicit type to every evidence artifact at write time, distinguishing an original review, a current binding, a declared skip, an honest null, and a re-bind event. The failure this closes is that a historical input currently reads the same as a live binding, so a reader cannot tell whether an artifact still asserts anything. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
-- [ ] Set the type at creation rather than inferring it later from filename or location; an inferred type reproduces the ambiguity it was meant to remove. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
-- [ ] Explicitly do not loosen the binding itself. The review's own measurement found that segment-aware currency would save roughly a tenth of re-binds while introducing integrity risk — so the decision is to clarify what stored evidence means, not to weaken when it must be re-bound. <!-- verify: grep -q "binding" docs/contracts/evidence-artifact-types.md -->
-- [ ] Record the type set as a contract document so consumers read one definition rather than inferring five. <!-- verify: test -f docs/contracts/evidence-artifact-types.md -->
+- [x] Add an explicit type to every evidence artifact at write time, distinguishing an original review, a current binding, a declared skip, an honest null, and a re-bind event. The failure this closes is that a historical input currently reads the same as a live binding, so a reader cannot tell whether an artifact still asserts anything. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
+- [x] Set the type at creation rather than inferring it later from filename or location; an inferred type reproduces the ambiguity it was meant to remove. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
+- [x] Explicitly do not loosen the binding itself. The review's own measurement found that segment-aware currency would save roughly a tenth of re-binds while introducing integrity risk — so the decision is to clarify what stored evidence means, not to weaken when it must be re-bound. <!-- verify: grep -q "binding" docs/contracts/evidence-artifact-types.md -->
+- [x] Record the type set as a contract document so consumers read one definition rather than inferring five. <!-- verify: test -f docs/contracts/evidence-artifact-types.md -->
 
 **Exit criteria:** every newly written evidence artifact carries a type, and the check fails a typeless one.
 
@@ -62,10 +83,10 @@ Source: an external release review of this package, 2026-08-15, pinned at `e3bd9
 
 ## Phase 3 — Provider qualification
 
-- [ ] Add a qualification pass that verifies, in order: the provider is installed, authentication is valid, the CLI or API semantics match what the caller assumes, the system-prompt path is valid, the model identifier is accepted, tools are isolated, and a minimal request succeeds. <!-- verify: ./scripts-run src/scripts/council_cli status -->
-- [ ] Produce one of four verdicts — available, degraded, unavailable, unknown — rather than a boolean, because the failure that motivated this was a seat reporting as configured while being entirely dead, which a boolean cannot express. <!-- verify: ./scripts-run src/scripts/council_cli status -->
-- [ ] Make the council consume the verdict before dispatch, so a degraded or unavailable seat is visible at the point of use rather than discovered by an empty result after the spend. <!-- verify: ./scripts-run src/scripts/test_council_qualification -->
-- [ ] Report a quorum against qualified seats only. A run that prints a quorum it never reached is worse than one that reports being short, because the first is silently trusted. <!-- verify: ./scripts-run src/scripts/test_council_qualification -->
+- [x] Add a qualification pass that verifies, in order: the provider is installed, authentication is valid, the CLI or API semantics match what the caller assumes, the system-prompt path is valid, the model identifier is accepted, tools are isolated, and a minimal request succeeds. <!-- verify: ./scripts-run src/scripts/council_cli status -->
+- [x] Produce one of four verdicts — available, degraded, unavailable, unknown — rather than a boolean, because the failure that motivated this was a seat reporting as configured while being entirely dead, which a boolean cannot express. <!-- verify: ./scripts-run src/scripts/council_cli status -->
+- [x] Make the council consume the verdict before dispatch, so a degraded or unavailable seat is visible at the point of use rather than discovered by an empty result after the spend. <!-- verify: ./scripts-run src/scripts/test_council_qualification -->
+- [x] Report a quorum against qualified seats only. A run that prints a quorum it never reached is worse than one that reports being short, because the first is silently trusted. <!-- verify: ./scripts-run src/scripts/test_council_qualification -->
 
 **Exit criteria:** a deliberately broken seat yields unavailable rather than configured, and a council run against it reports short instead of printing a quorum.
 
@@ -86,8 +107,8 @@ Source: an external release review of this package, 2026-08-15, pinned at `e3bd9
 ## Acceptance Criteria
 
 - [ ] A host with measured truncation pressure projects a reduced set and a host without one does not, with both traceable to a recorded measurement.
-- [ ] A typeless evidence artifact fails its check.
-- [ ] A deliberately broken council seat reports unavailable, and a run against it reports short rather than printing a quorum.
+- [x] A typeless evidence artifact fails its check.
+- [x] A deliberately broken council seat reports unavailable, and a run against it reports short rather than printing a quorum.
 - [ ] No step in this roadmap duplicates a step in the estate-diet roadmap.
 - [ ] The two folded findings are traceable to the roadmap that absorbed them.
 
