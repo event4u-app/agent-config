@@ -1561,6 +1561,16 @@ tasks:
     desc: Fail if any _one_off_*.py script lands outside scripts/ai_council/one_off_archive/<YYYY-MM>/
     cmd: ./scripts-run src/scripts/check_one_off_location {{.QUIET_FLAG}} --quiet
 
+  check-review-schema:
+    silent: true
+    desc: "Every committed review-findings ledger conforms to its schema and declares its independence consistently — a same-family reviewer set may not claim cross-model acceptance"
+    cmd: ./scripts-run src/scripts/check_review_schema {{.QUIET_FLAG}}
+
+  check-evaluator-schema:
+    silent: true
+    desc: "Every registered evaluator emits output conforming to evaluator-output.schema.json, over recorded verifier fixtures (green, red, and degraded — a green-only corpus cannot tell a working adapter from one that hardcodes success)"
+    cmd: ./scripts-run src/scripts/check_evaluator_schema {{.QUIET_FLAG}}
+
   validate-schema:
     silent: true
     desc: Validate artefact frontmatter against JSON-Schema (scripts/schemas/)

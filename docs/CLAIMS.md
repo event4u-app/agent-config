@@ -207,7 +207,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-08-12
 
 ### claim: skill-count
-- claim: 289 skills.
+- claim: 290 skills.
 - kind: quant
 - evidence: exec:check_artefact_count_messaging -> 0
 - status: backed
@@ -371,7 +371,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-08-03
 
 ### claim: default-install-context-cost
-- claim: The scoped-projection default for new installs ships 218 of 289 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree.
+- claim: The scoped-projection default for new installs ships 219 of 290 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree.
 - kind: quant
 - evidence: exec:update_counts --check -> 0
 - status: backed
@@ -595,3 +595,17 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
   more rules that did not fire here, not six rules shown to be precise. The one
   thing the epoch does establish is that the instrument is capable of a non-zero
   reading, because it produced one on its first use.
+
+### claim: experiment-loop-iteration-floor
+- claim: A session-bound keep-or-revert loop against a scalar metric sustains at least five clean iterations — each recording a correct keep-or-revert decision — before its own machinery degrades.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-08-17 (road-to-metric-loop-and-review-integrity Phase 0/5 — the floor was fixed before the spike ran, and the spike's kill criterion was its complement: "fewer than five clean iterations" would have left Phase 3 unbuilt). Measured on a toy metric in a scratch repository, `agents/evidence/eval-findings/metric-loop-s01.md`: 6 clean iterations, metric 24 → 3, with iteration 5 reverting a change that improved the metric 67 % and broke behaviour. That result answers the PHASE GATE and is why the skill shipped. It does NOT back this claim, and the distinction is the whole reason the entry stays unbacked: the run was one agent, one session, one toy metric whose evaluator was written alongside the loop, so it measured whether the PROTOCOL holds, not whether the shipped skill drives a real metric. BACKING REQUIRES: ≥ 3 runs of the shipped `experiment-loop` skill against metrics that existed before the run, each with its register committed, each reaching ≥ 5 clean iterations. DROP: any run below the floor publishes the null and the skill is withdrawn rather than the floor lowered — lowering a pre-registered floor after seeing the data is the tuning this roadmap's own s04 finding forbids.
+- status: unbacked
+- last_verified:
+
+### claim: review-independence-changes-consumption
+- claim: Recording `review_independence` / `acceptance_status` on a review artifact changes how a consumer treats it — a same-family verdict stops being read as cross-model acceptance.
+- kind: qual
+- evidence: PRE-REGISTERED 2026-08-17 (road-to-metric-loop-and-review-integrity Phase 2/5 — registered BEFORE any consumption claim is made anywhere). The MECHANISM shipped and is machine-checked: `check_review_schema` refuses an artifact whose `acceptance_status` contradicts its `review_independence`, and its `--self-test` plants the exact defect (a same-family set claiming `accepted`) and confirms the rejection fires. The EFFECT is a different question and is not measured: nothing yet observes a consumer reading the field and behaving differently, and the only committed ledger (`9.14.0`) was backfilled by this same change rather than consumed by anyone. BACKING REQUIRES: ≥ 2 recorded instances where a reader or a downstream gate declined to treat a `provisional` artifact as acceptance, with the artifact and the decision both citeable. DROP: if the fields ship for one release and every consumer still reads the verdict line alone, the honest null is that the metadata is inert — the Risk-Register rank-2 outcome — and it is published as such rather than defended.
+- status: unbacked
+- last_verified:

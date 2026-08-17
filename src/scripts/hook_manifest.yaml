@@ -74,6 +74,21 @@ concerns:
   # Phase 5 — Tier-1 hook for the minimal-safe-diff rule. Counts unique
   # files touched per turn into agents/runtime/state/minimal-safe-diff.json and
   # flips warning=true past hooks.minimal_safe_diff.threshold.
+  # road-to-metric-loop-and-review-integrity Phase 4 — shipping-intent gate on
+  # diff VOLUME, complementary to `minimal-safe-diff` rather than a duplicate:
+  # that concern counts unique files touched PER TURN, this one counts changed
+  # lines on the branch AT A SHIP VERB. Threshold 1695 is the corrected p90 of
+  # this repository's own last 40 merged PRs, and the exclusion set (review-input
+  # snapshots, generated indexes, projection trees) is part of the metric's
+  # definition, not a tuning knob — the replay measured the naive metric
+  # double-counting the diff it was measuring. Warn-level first; escalation waits
+  # for one release of recorded firings. Evidence:
+  # agents/evidence/eval-findings/metric-loop-s04.md
+  ship-diff-volume:
+    script: src/scripts/hooks/ship_diff_volume_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
   minimal-safe-diff:
     script: src/scripts/minimal_safe_diff_hook.ts
     args: []
@@ -672,7 +687,7 @@ platforms:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register]
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register]
-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, reread-guard]
+    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
 
   claude:
@@ -680,7 +695,7 @@ platforms:
     session_end:      [chat-history, memory-learn, session-register]
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register]
-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, reread-guard, spawn-guard-shadow]
+    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape, language-mirror]
     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;
     # the `post_tool_use` entry above re-emits the pin exactly once while that
@@ -734,7 +749,7 @@ platforms:
     # still costs the dispatch, and its entire output is thrown away.
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, reread-guard, spawn-guard-shadow]
+    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
     # subagent-ledger IS bound here, unlike the two nudges above, and the
     # difference is the delivery channel rather than the platform: the nudges

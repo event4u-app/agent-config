@@ -1,0 +1,27 @@
+# Behavior-schema contract for `experiment-loop`.
+#
+# Locks the sections a refactor could quietly drop while the skill still
+# reads plausibly. Each one is a measured failure from spike s01
+# (agents/evidence/eval-findings/metric-loop-s01.md), not a style
+# preference:
+#
+#   The Iron Law  — `pass` sovereign over `score`; a change that improved
+#                   the metric 67% and broke behaviour was reverted only
+#                   because of it.
+#   Validation    — the both-branches-ran check; s01's revert path was
+#                   broken and four green iterations never noticed.
+#   Output format — the register-derived report; a report from memory is
+#                   the in-conversation state the register exists to replace.
+#   Do NOT        — the four keeps that must not happen.
+#
+# Enforced by `skill_linter` (`lint_output_schema`, matches `^## <header>$`) —
+# a missing section is a hard error.
+
+version: 1
+
+required_headers:
+  - "The Iron Law"
+  - "Procedure"
+  - "Validation"
+  - "Output format"
+  - "Do NOT"

@@ -14,10 +14,10 @@ Ship two capabilities, each behind a pre-registered benchmark with an honest-nul
 
 ## Prerequisites
 
-- [ ] Read `src/skills/verify-repair-loop/SKILL.md` — the existing bounded loop and why it cannot express a metric
-- [ ] Read `src/scripts/schemas/` — the existing schema set and the one review schema already there
-- [ ] Read `src/scripts/hook_manifest.yaml` § fail-closed concerns
-- [ ] Re-verify the Context table against branch HEAD before executing a phase
+- [x] Read `src/skills/verify-repair-loop/SKILL.md` — the existing bounded loop and why it cannot express a metric
+- [x] Read `src/scripts/schemas/` — the existing schema set and the one review schema already there
+- [x] Read `src/scripts/hook_manifest.yaml` § fail-closed concerns
+- [x] Re-verify the Context table against branch HEAD before executing a phase
 
 ## Context
 
@@ -56,10 +56,10 @@ Source: an external capability-harvest session over this repository and ten publ
 
 ## Phase 0 — Falsification spikes
 
-- [ ] Run a session-bound keep-or-revert loop on a toy metric with branch advance and an untracked register, and count iterations before context degradation. Pre-registered kill: fewer than five clean iterations. <!-- verify: test -f agents/evidence/eval-findings/metric-loop-s01.md -->
-- [ ] Wrap three existing verifiers in the JSON-on-stdout contract without modifying the verifiers. Kill: two or more need invasive changes. <!-- verify: test -f agents/evidence/eval-findings/metric-loop-s02.md -->
-- [ ] Add the independence fields to the council result object without touching the consensus path. Kill: the consensus code must change. <!-- verify: test -f agents/evidence/eval-findings/metric-loop-s03.md -->
-- [ ] Replay recent merged work and count how often a shipping-intent diff-volume gate would have fired and whether each firing would have been useful. Kill: precision below a pre-registered floor cuts the gate rather than tuning it into noise. <!-- verify: test -f agents/evidence/eval-findings/metric-loop-s04.md -->
+- [x] Run a session-bound keep-or-revert loop on a toy metric with branch advance and an untracked register, and count iterations before context degradation. Pre-registered kill: fewer than five clean iterations. <!-- verify: test -f agents/evidence/eval-findings/metric-loop-s01.md -->
+- [x] Wrap three existing verifiers in the JSON-on-stdout contract without modifying the verifiers. Kill: two or more need invasive changes. <!-- verify: test -f agents/evidence/eval-findings/metric-loop-s02.md -->
+- [x] Add the independence fields to the council result object without touching the consensus path. Kill: the consensus code must change. <!-- verify: test -f agents/evidence/eval-findings/metric-loop-s03.md -->
+- [x] Replay recent merged work and count how often a shipping-intent diff-volume gate would have fired and whether each firing would have been useful. Kill: precision below a pre-registered floor cuts the gate rather than tuning it into noise. <!-- verify: test -f agents/evidence/eval-findings/metric-loop-s04.md -->
 
 **Exit criteria:** four written spike results with numbers, and each kill criterion evaluated explicitly.
 
@@ -67,9 +67,9 @@ Source: an external capability-harvest session over this repository and ten publ
 
 ## Phase 1 — Evaluator contract
 
-- [ ] Add an evaluator-output schema with a required pass boolean, a score carrying a higher-is-better invariant (minimize tasks negate), and an optional raw metric value. <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
-- [ ] Add the companion contract document covering the error semantics: a non-zero exit, absent JSON, or a timeout all mean the experiment failed, revert, and continue. The error table is the part that makes the contract usable; without it every caller invents its own failure handling. <!-- verify: test -f docs/contracts/evaluator-output.md -->
-- [ ] Add a check enforcing the schema on emitters, landing in the same change as the schema — no convention without a backstop. <!-- verify: ./scripts-run src/scripts/check_evaluator_schema -->
+- [x] Add an evaluator-output schema with a required pass boolean, a score carrying a higher-is-better invariant (minimize tasks negate), and an optional raw metric value. <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
+- [x] Add the companion contract document covering the error semantics: a non-zero exit, absent JSON, or a timeout all mean the experiment failed, revert, and continue. The error table is the part that makes the contract usable; without it every caller invents its own failure handling. <!-- verify: test -f docs/contracts/evaluator-output.md -->
+- [x] Add a check enforcing the schema on emitters, landing in the same change as the schema — no convention without a backstop. <!-- verify: ./scripts-run src/scripts/check_evaluator_schema -->
 
 **Exit criteria:** three existing verifiers emit against the schema and the check passes over them.
 
@@ -77,9 +77,9 @@ Source: an external capability-harvest session over this repository and ten publ
 
 ## Phase 2 — Independence on review output
 
-- [ ] Extend the shipped review-findings schema with a review-independence field and an acceptance-status field, rather than adding a second schema. <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
-- [ ] Set the fields from the actual reviewer set: a review whose members share a model family records same-family and provisional, and the artifact may not be described as cross-model acceptance anywhere it is consumed. <!-- verify: ./scripts-run src/scripts/check_review_schema -->
-- [ ] Add the assurance axis as a property orthogonal to effort: how much independent evidence backs a verdict is not the same question as how hard the reviewer worked, and collapsing them is what lets a same-family pass read as acceptance. <!-- verify: ./scripts-run src/scripts/check_review_schema -->
+- [x] Extend the shipped review-findings schema with a review-independence field and an acceptance-status field, rather than adding a second schema. <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
+- [x] Set the fields from the actual reviewer set: a review whose members share a model family records same-family and provisional, and the artifact may not be described as cross-model acceptance anywhere it is consumed. <!-- verify: ./scripts-run src/scripts/check_review_schema -->
+- [x] Add the assurance axis as a property orthogonal to effort: how much independent evidence backs a verdict is not the same question as how hard the reviewer worked, and collapsing them is what lets a same-family pass read as acceptance. <!-- verify: ./scripts-run src/scripts/check_review_schema -->
 
 **Exit criteria:** a council run over a same-family member set produces an artifact that declares itself provisional, and a consumer reading it can tell.
 
@@ -87,11 +87,11 @@ Source: an external capability-harvest session over this repository and ten publ
 
 ## Phase 3 — The experiment loop
 
-- [ ] Add an `experiment-loop` skill, born thin: the skill file routes, and the loop protocol, register format, and pivot ladder live in reference files loaded on demand. <!-- verify: ./scripts-run src/scripts/skill_linter -->
-- [ ] Implement the protocol: a bounded iteration count, one focused change per iteration, commit before verify, the evaluator-contract verdict as the decision input, keep on strict improvement and revert otherwise. <!-- verify: ./scripts-run src/scripts/validate_evals -->
-- [ ] Express the exit as two conditions rather than one — completion indicators and an explicit exit signal — as machine-checkable predicates, never prose. <!-- verify: ./scripts-run src/scripts/check_evaluator_schema -->
-- [ ] Keep loop state in an append-only register file re-read from disk each cycle, never in conversational state. <!-- verify: ./scripts-run src/scripts/validate_evals -->
-- [ ] Route the skill through the projection pipeline rather than relying on its description to trigger it. <!-- verify: ./scripts-run src/scripts/lint_featured_skills -->
+- [x] Add an `experiment-loop` skill, born thin: the skill file routes, and the loop protocol, register format, and pivot ladder live in reference files loaded on demand. <!-- verify: ./scripts-run src/scripts/skill_linter -->
+- [x] Implement the protocol: a bounded iteration count, one focused change per iteration, commit before verify, the evaluator-contract verdict as the decision input, keep on strict improvement and revert otherwise. <!-- verify: ./scripts-run src/scripts/check_trigger_evals -->
+- [x] Express the exit as two conditions rather than one — completion indicators and an explicit exit signal — as machine-checkable predicates, never prose. <!-- verify: ./scripts-run src/scripts/check_evaluator_schema -->
+- [x] Keep loop state in an append-only register file re-read from disk each cycle, never in conversational state. <!-- verify: ./scripts-run src/scripts/check_trigger_evals -->
+- [x] Route the skill through the projection pipeline rather than relying on its description to trigger it. <!-- verify: ./scripts-run src/scripts/lint_featured_skills -->
 
 **Exit criteria:** the loop runs the toy metric from Phase 0 end to end and its register reconstructs the run without the transcript.
 
@@ -101,8 +101,8 @@ Source: an external capability-harvest session over this repository and ten publ
 
 ## Phase 4 — Shipping-intent diff gate
 
-- [ ] Add the gate at ship verbs, measuring diff volume rather than files touched per turn, with thresholds derived from this repository's own history rather than copied from the reference that suggested it. <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->
-- [ ] Ship it warn-level first and escalate only after one release of recorded firings. <!-- verify: ./scripts-run src/scripts/check_enforcement_coverage -->
+- [x] Add the gate at ship verbs, measuring diff volume rather than files touched per turn, with thresholds derived from this repository's own history rather than copied from the reference that suggested it. <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->
+- [x] Ship it warn-level first and escalate only after one release of recorded firings. <!-- verify: ./scripts-run src/scripts/check_enforcement_coverage -->
 
 **Exit criteria:** the gate has a recorded firing rate over one release window.
 
@@ -112,8 +112,8 @@ Source: an external capability-harvest session over this repository and ten publ
 
 ## Phase 5 — Measurement
 
-- [ ] Pre-register the two capability claims with their honest-null thresholds before either is adopted. <!-- verify: ./scripts-run src/scripts/check_claims -->
-- [ ] Record the outcome of each: the loop's iteration count against its floor, and the independence field's effect on how review artifacts are consumed. <!-- verify: ./scripts-run src/scripts/check_claims -->
+- [x] Pre-register the two capability claims with their honest-null thresholds before either is adopted. <!-- verify: ./scripts-run src/scripts/check_claims -->
+- [x] Record the outcome of each: the loop's iteration count against its floor, and the independence field's effect on how review artifacts are consumed. <!-- verify: ./scripts-run src/scripts/check_claims -->
 
 **Exit criteria:** both claims carry a recorded outcome, including nulls.
 
@@ -133,11 +133,11 @@ Source: an external capability-harvest session over this repository and ten publ
 
 ## Acceptance Criteria
 
-- [ ] Every adopted item traces to a KEEP row in the gap-table, and no CUT row appears anywhere in the phases.
-- [ ] The evaluator schema ships with its error-semantics document and its enforcing check in the same change.
-- [ ] A same-family council run produces an artifact that declares itself provisional.
-- [ ] Either the loop meets its pre-registered iteration floor, or the null is published and the skill is absent.
-- [ ] The diff gate's thresholds are derived from this repository's history, with the derivation recorded.
+- [x] Every adopted item traces to a KEEP row in the gap-table, and no CUT row appears anywhere in the phases.
+- [x] The evaluator schema ships with its error-semantics document and its enforcing check in the same change.
+- [x] A same-family council run produces an artifact that declares itself provisional.
+- [x] Either the loop meets its pre-registered iteration floor, or the null is published and the skill is absent.
+- [x] The diff gate's thresholds are derived from this repository's history, with the derivation recorded.
 
 ## Provenance
 
