@@ -22,6 +22,10 @@ import {
     renderReply,
     type Entry,
 } from '../../src/agent-src/scripts/roadmap_gates.js';
+import {
+    parse_blockers,
+    blocker_class,
+} from '../../src/agent-src/scripts/update_roadmap_progress.js';
 import { stageAction } from '../../src/agent-src/templates/scripts/work_engine/hooks/builtin/staged_confirmation.js';
 import { putPending } from '../../src/agent-src/templates/scripts/work_engine/hooks/builtin/staged_confirmation_store.js';
 
@@ -35,6 +39,8 @@ function entry(
         recommendation?: string;
         ifNothing?: string;
         question?: string;
+        blockerClass?: string;
+        run?: string;
     } = {},
 ): Entry {
     return {
@@ -54,8 +60,8 @@ function entry(
             // Same reasoning as the two fields above: the gate taxonomy is
             // opt-in, so the shape the renderer meets in the tree is the one
             // that declares none of it.
-            blockerClass: '',
-            run: '',
+            blockerClass: opts.blockerClass ?? '',
+            run: opts.run ?? '',
             budget: '',
         },
         roadmapRel: opts.roadmap ?? 'road-to-x.md',
@@ -236,6 +242,69 @@ describe('renderJson', () => {
             blockers: unknown[];
         };
         expect(parsed.blockers).toHaveLength(2);
+    });
+
+    // The gate taxonomy on the machine-readable surface. Before this landed,
+    // `--json` emitted no class at all, so `gates --execute` shipped against a
+    // projection that could not say which entries it was able to act on — the
+    // acting half was reachable on nothing and the JSON could not show it.
+    // The annotation names only `class` on purpose: a sibling test below asserts
+    // the projection carries no `run`, and a cast that documented one would tell
+    // the next reader the opposite while still type-checking.
+    const classOf = (e: Entry): string =>
+        (
+            JSON.parse(renderJson([e], true)) as {
+                blockers: Array<{ class: string }>;
+            }
+        ).blockers[0]?.class ?? '';
+
+    it('an entry declaring no class reads as 3, not as a hole', () => {
+        // The renderer half of the absent-field default. The *parser* half —
+        // that a synthesised legacy `> Blocked until …` note really does reach
+        // this path with an empty class — is a separate claim and is pinned by
+        // its own test below; R2 finding 6 caught this comment asserting the
+        // coverage that test provides.
+        expect(classOf(entry('user'))).toBe('3');
+    });
+
+    it('carries an authored class and reads only its leading token', () => {
+        expect(classOf(entry('user', { blockerClass: '1 — budget-preauthorized' }))).toBe('1');
+        expect(classOf(entry('user', { blockerClass: '0 — auto-run' }))).toBe('0');
+    });
+
+    it('falls back to 3 on a class the taxonomy does not know', () => {
+        // The safe direction: an authoring typo must never make a gate look
+        // executable. `lint_roadmap_blockers` fails the entry separately.
+        expect(classOf(entry('user', { blockerClass: '7 — invented' }))).toBe('3');
+    });
+
+    it('the parser really does hand the legacy note an empty class', () => {
+        // The parser half of the pair above, and the reason the renderer's
+        // default is load-bearing rather than decorative: a `> Blocked until …`
+        // note is synthesised into a blocker that can never carry an authored
+        // field, so class 3 has to come from somewhere. If the synthesis ever
+        // starts emitting a class, this fails and the pairing is re-examined.
+        const parsed = parse_blockers(
+            ['# A roadmap', '', '> Blocked until a human installs the thing.', ''].join('\n'),
+        );
+        const note = parsed.find((b) => b.id === 'legacy');
+        expect(note).toBeDefined();
+        expect(note?.blockerClass).toBe('');
+        expect(blocker_class(note!)).toBe('3');
+    });
+
+    it('does not emit run — no consumer reads it and no record carries one', () => {
+        // R2 findings 2 and 7. Pinned as an absence so a future re-add has to
+        // answer the question the first one skipped: which representation, the
+        // authored backticked value or `commandOf()`'s stripped one.
+        const parsed = JSON.parse(
+            renderJson(
+                [entry('user', { blockerClass: '0 — auto-run', run: '`task probe-thing`' })],
+                true,
+            ),
+        ) as { blockers: Array<Record<string, unknown>> };
+        expect(parsed.blockers[0]?.class).toBe('0');
+        expect(parsed.blockers[0]).not.toHaveProperty('run');
     });
 });
 

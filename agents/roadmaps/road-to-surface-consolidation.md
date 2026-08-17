@@ -322,6 +322,7 @@ own verify, pre-window deletions are forbidden.
 ### blocker: repo-admin-and-usage
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 3 — human-only
 - **Blocks:** branch-protection apply; utilization-driven MERGE/DEMOTE/HIDE/REMOVE of artefacts (needs loaded-vs-fired usage over the window); auto-tiering monitoring
 - **What to do:** the branch-protection `gh api` is a repo-settings UI action; utilization removal needs real usage data before anything is deleted. The two halves share nothing but this entry, so decide them separately: (a) apply branch protection now — it has no data dependency; (b) hold the utilization-driven MERGE/DEMOTE/HIDE/REMOVE list until a loaded-vs-fired window exists; (c) split this blocker in two so the second half stops holding the first.
 - **Recommendation:** (a) plus (b) — apply protection now and keep the removals waiting. Protection is a settings action whose cost is one visit to repo settings, while every removal is irreversible against artefacts nobody has usage data for, and this package's own discipline is that a deletion needs a data-backed list rather than a plausible one. (c) is worth doing at the same time, since one entry blocking two unrelated things is why the cheap half has waited on the expensive one.
@@ -331,6 +332,21 @@ own verify, pre-window deletions are forbidden.
 ### blocker: benchmark-spend
 - **Status:** open
 - **Owner:** user
+- **Class:** 2 — consent-once (authorise the A/B with an estimate)
+- **History note, 2026-08-17 — the cap works now; it did not when the two
+  statements below were written.** They claim that
+  `task bench:ab:live -- --budget <N>` "caps per-task spend" and that this option
+  has "a spend cap already in the tree". Both were **false when authored**:
+  `taskfiles/bench-ab.yml` invoked the runner without `{{.CLI_ARGS}}`, so the
+  trailing flag never reached it and the run took the parser default of `2.0`
+  instead of `<N>`. **Fixed and merged the same day (PR #1406), so the statements
+  below are now accurate and (a) may be authorised on their strength.** Kept as a
+  note rather than deleted because this entry was promoted from the absent-field
+  default to `Class: 2` on that same day, which made it renderable as a consent
+  gate for the first time — for a few hours it presented a wrong money claim more
+  prominently than before, which is worth a reader knowing (R2 finding 2). The
+  prose below is left as authored: correcting another roadmap's recommendation is
+  its owner's call, not this pass's.
 - **Blocks:** lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
 - **What to do:** each is a spend-bearing (or corpus-gated) paid run, authorized per run and never as a bundle. The options: (a) authorize the lazy-catalog A/B — `task bench:ab:live -- --budget <N>`, which caps per-task spend and resumes rather than re-spends when restarted with the same flags; (b) authorize the team / adversarial-council benchmarks, which have no task wired today and need their runner named before an estimate exists; (c) authorize none and mark the Unified Verification Router decision cancelled rather than parked, since it is gated on verdicts (a) and (b) would produce.
 - **Recommendation:** (a) alone, if anything. It is the only one of the three with a runner and a spend cap already in the tree, so it is the only one that can be authorized against a real estimate rather than a guess; (b) needs a runner named first, and until either verdict exists (c) is a decision about a question nobody has asked recently.

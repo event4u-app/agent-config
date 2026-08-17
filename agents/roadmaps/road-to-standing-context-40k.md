@@ -236,6 +236,7 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
 ### blocker: b-rules-efficiency-signal
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 2 — consent-once (wait for the observer, or record the window unfilled and re-date)
 - **Blocks:** Phase 3 step 3.1 only. Step 3.0's observer is repo work and proceeds
   without it.
 - **What to do:** the fork needs the registered `rules_efficiency` metric in

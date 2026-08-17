@@ -239,6 +239,7 @@ step list.
 - **Status:** open
 - **Owner:** maintainer (scope decision) / any roadmap that needs a UI-generation
   runner for its own reason
+- **Class:** 2 — consent-once
 - **Blocks:** Measurement A (both steps) and the two A acceptance criteria. It
   does **not** block the pre-registration, which is committed and complete.
 - **What to do:**
@@ -292,6 +293,7 @@ step list.
 - **Status:** open
 - **Owner:** maintainer (host capability) / any roadmap that lands a
   host-renderable framework lane or a generic-lane override for its own reason
+- **Class:** 2 — consent-once
 - **Blocks:** Measurement B (both steps) and the two B acceptance criteria.
   Measurement A is **not** blocked by it — a null on one is not a null on the
   other, which is why they were authored as separate sub-sections.

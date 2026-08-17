@@ -210,6 +210,7 @@ proof surface.
 ### blocker: real-orchestration-usage
 - **Status:** open
 - **Owner:** user
+- **Class:** 3 — human-only
 - **Blocks:** Phase 2 (and thereby Phase 3's decision)
 - **What to do:** the build work is done; only real delegable work produces the
   telemetry. Use the agent on genuinely parallel/ordered multi-file tasks under

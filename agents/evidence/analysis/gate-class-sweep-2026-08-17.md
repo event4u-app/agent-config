@@ -181,3 +181,212 @@ the estate.
   roadmap, so it is not this work; every one of the 28 is in another roadmap's
   blocker section. `lint_roadmap_blockers` is registered only under `task ci`
   and in no workflow, so nothing on a PR reports it either way.
+
+### 4c. Materialisation — added 2026-08-17 by step 1.3, and it falsifies § 4 again
+
+Writing § 3's verdicts back into the entries themselves is what step 1.3 does,
+and doing it surfaced a **second falsification, of this document's own
+conclusion 1**. It is recorded here rather than in the roadmap because it is a
+result about this measurement, not about that plan.
+
+**What landed.** Step 1.3 wrote **34** entries; the tree now carries **36**
+authored `Class:` fields, because `road-to-gate-autonomy`'s own two already
+had one. So of the 49 open blockers, 36 declare a class and **13** resolve
+through the absent-field default — the 12 below plus the synthesised `legacy`
+note. (The first version of this paragraph said 34 and 15, conflating what the
+step wrote with what the tree holds; corrected by R2 finding 3, and the 12/13
+split is load-bearing for the conclusion two paragraphs down.)
+
+Every value comes from the § 3 row for that id — the id sets matched exactly
+(49 live against 50 rows, the difference being row 39, resolved since, and row
+12's `legacy (blocked-until)` normalising to the parser's `legacy`), so no
+class was inferred and none was invented. The population was joined
+mechanically: ids from `agent-config gates --json --all`, classes from the
+table above.
+
+**What did not, and why it matters more than what did.** The **12 class-0 and
+class-1 entries were left unwritten**, because `Class: 0` or `Class: 1` without
+a `Run:` field is a HARD `lint_roadmap_blockers` failure by design — a gate
+that claims to be runnable must name the command. Every one of the twelve was
+read in full to find that command. **None of them can carry an honest one:**
+
+| what was found | count | entries |
+|---|---:|---|
+| names no command at all | 8 | `utilization-sweep-window`, `b-rules-efficiency-signal`, `skill-activation-window`, `b-live-trigger-eval`, `phase3-harness-deltas-9-10`, `human-gated-live-trigger-eval`, `b-behavioural-bench-spend`, plus `ui-corpus-has-no-ui`'s primary command, which carries an unfilled `<placeholder>` |
+| names a progress *read* that cannot clear the gate | 2 | `ui-session-capture-window`, `telemetry-sample-size` — both `wc -l`; a green result would read as progress the gate does not make |
+| names a probe that exits non-zero in its expected state | 1 | `team-telemetry-behind-flag` — `env \| grep -i EXPERIMENTAL`, which `--execute` would record as a command failure |
+| names a real runner whose documented cap does not apply | 1 | `benchmark-spend` — see the defect below |
+
+**So the honest auto-runnable share of the estate is 0 of 49, not 12.** § 3
+assigned the class from *what would clear the gate in principle*; the field
+requires *what the entry can actually run*. Those are different questions, and
+the first one flatters the second. Conclusion 1 above — "`gates --execute` is
+worth having for the six class-0 entries" — does not survive: **none of the six
+is executable as authored.** The class-0 path shipped in Phase 2 has zero live
+targets today, and this table is why.
+
+This is not a reason to rewrite § 3. The classification is a legitimate reading
+of clearability and it is what step 1.2 asked for; what it is not is a
+materialisable field, and that only became visible when someone tried to write
+it. The twelve therefore resolve to the absent-field default — class 3 — which
+is the safe direction and is what every consumer already applies.
+
+**Reclassifying them in the tree is NOT done here.** Twelve verdicts across
+eight roadmaps this branch does not own is a judgement on other people's plans,
+not a field write-back; it is surfaced as a decision instead.
+
+**And conclusion 2 needs the same qualification, measured the same way.** With
+the classes live, `gates --execute` was run against each of the 19 class-2
+entries this step made reachable. All 19 render a consent block — the path
+works. But **11 of the 19 trip the renderer's own overflow notice**: their
+`Recommendation:` exceeds `PARAGRAPH_CHARS = 156`
+(`src/agent-src/scripts/gate_execute.ts:157,174`), and that notice says what to
+do about it — *"a class-2 gate that cannot state a one-line question and a
+default is reclassified to 3, not verbosified."*
+
+**The first version of this passage then drew the wrong conclusion from that
+count, and the correction is the more useful result.** It said the entries that
+*pass* the bar are "exactly what § 4 claimed" — one line and one yes from
+resolved. They are not. Passing `rec.length > PARAGRAPH_CHARS` is trivially true
+at length **zero**, and measured over the live tree that is what every passer is:
+of the 26 class-2 entries at HEAD, **16 exceed the bar and the other 10 carry no
+`Recommendation:` at all — not one has a usable 1–156-char recommendation.**
+Those ten render `Recommendation: (none recorded — ask for one before deciding)`
+(`gate_execute.ts:143`), and `lint_roadmap_blockers` independently flags all ten
+for the missing field.
+
+So the honest reading is stronger than the one it replaces: **no class-2 gate in
+the estate is one line and one yes away from resolved.** § 4's "21 of the 49
+blockers are one line and one yes away" is not off by a few — it describes zero
+entries. Sixteen are paragraphs a reader still has to weigh and ten have nothing
+to weigh at all, which is the same reading-load defect § 0 set out to remove,
+surviving inside the class that was supposed to absorb it. Caught by R2 finding 3.
+
+Two honest bounds. The notice is **advisory** — it renders alongside a working
+consent block, so nothing is broken today, and the 156 is the renderer's
+threshold rather than an independently derived one. And neither the sixteen nor
+the ten are a defect this branch introduced: the prose, and its absence, predate
+it. What the write-back changed is that both are now *observable*, because before
+it no class-2 entry was reachable at all.
+
+- **A documented spend cap is silently dropped. FOUND, NOT fixed.**
+  `benchmark-spend` authorises `task bench:ab:live -- --budget <N>` and states
+  the command "caps per-task spend". It does not: `taskfiles/bench-ab.yml:98-101`
+  invokes `bench_ab_task_runner --variant both --mode live` with **no
+  `{{.CLI_ARGS}}`**, unlike its sibling at `:28`, so the trailing `--budget <N>`
+  never reaches the runner and the run falls back to the parser default of
+  `2.0` (`src/scripts/bench_ab_task_runner.ts:911`). An operator who names a cap
+  gets a different one, silently, on a cost-bearing path. The fix is one
+  interpolation; it is outside this branch's module and changes what a paid
+  runner does, so it is surfaced as a decision rather than taken.
+  **Decided 2026-08-17 and fixed — see § 4d.**
+
+### 4d. The three findings, decided — added 2026-08-17
+
+§ 4c surfaced three things as decisions rather than taking them. All three were
+put to the maintainer and answered on the same day; recorded here because a
+decision that lives only in a chat turn is the shape § 4c itself complained
+about.
+
+**(a) The dropped spend cap — FIXED, in its own change, and in this tree since
+`ad23aab7e`.** This paragraph has been wrong in both directions on the same day,
+and both corrections are kept because the pair is the lesson.
+
+*First* it read "FIXED, in its own change" while the fix sat on a sibling branch
+outside this ancestry — asserting tree state that was false, with the blocker
+closed partly on that basis. R2 finding 1 (critical) caught it, and the severity
+was right.
+
+*Then* the correction outlived its own accuracy: PR #1406 merged to `main`, `main`
+merged into this branch, and the sentence "the money-safety defect is live in the
+reviewed tree" became false the other way round. Verified at HEAD:
+`taskfiles/bench-ab.yml` and `taskfiles/value.yml` both forward `{{.CLI_ARGS}}`,
+and `tests/scripts/bench_ab_taskfile.test.ts` is present.
+
+**The transferable point is not "check before claiming" but that a claim about
+tree state has a shelf life.** Written once, it was wrong immediately; corrected
+once, it was wrong again within the hour, because the tree moved underneath it.
+Prefer naming the commit that makes a statement true — as the heading now does —
+over a relative phrase like "until that PR merges", which silently expires.
+
+The sibling search on the exact construct — a cost-bearing
+`bench_ab_task_runner` invocation with no `{{.CLI_ARGS}}` — found **3** sites, of
+which only `bench:ab:live` carried the false claim; `bench:ab:value` and
+`value:behaviour` claimed nothing but could not be bounded by an operator either.
+All three forward, which is inert when no trailing args are given, with both
+directions proven per target by `task --dry -v`, and a guard that reads the real
+taskfiles and was verified red before the fix. The widening past the one target
+that lied was deliberate: the passthrough changes nothing without trailing args,
+and repairing one of three sites of a construct is the fixed-one-instance failure.
+
+**(b) The twelve class-0/1 entries — RECLASSIFIED to what their text supports.**
+Not a blanket downgrade: five of the twelve are genuine consent calls and only
+seven are human-only. The split matters, because a blanket 3 would have buried
+five gates the maintainer can answer in one line.
+
+| id | roadmap | was | now | why the new class |
+|---|---|:-:|:-:|---|
+| `ui-corpus-has-no-ui` | frontend-skill-application | 0 | **2** | a human names the consumer store, then the report re-runs |
+| `b-rules-efficiency-signal` | standing-context-40k | 0 | **2** | wait for the observer, or record the window unfilled and re-date |
+| `phase3-harness-deltas-9-10` | solution-minimalism | 1 | **2** | spend consent, once deltas 9 and 10 land as code |
+| `b-behavioural-bench-spend` | mixed-trigger-activation-cost | 1 | **2** | name a budget at the entry, or re-date the step |
+| `benchmark-spend` | surface-consolidation | 1 | **2** | authorise the A/B with an estimate |
+| `utilization-sweep-window` | cost-parity-1-rule-payload-diet | 0 | **3** | time- and dependency-gated; no command and no decision |
+| `skill-activation-window` | cost-parity-1-rule-payload-diet | 1 | **3** | a pointer to a class-3 entry under another name |
+| `ui-session-capture-window` | frontend-skill-application | 0 | **3** | needs human-authored observation files that do not exist |
+| `telemetry-sample-size` | subagent-value-realization-followup | 0 | **3** | only real parallel work fills the columns |
+| `team-telemetry-behind-flag` | always-on-orchestration | 0 | **3** | a host flag that does not clear by waiting on this host |
+| `b-live-trigger-eval` | catalogue-host-fit | 1 | **3** | a controlling-terminal confirmation; cannot run non-interactively |
+| `human-gated-live-trigger-eval` | skill-description-measurement | 1 | **3** | hard-aborts under automation by design |
+
+Measured effect, at three points so no reading is mistaken for another:
+`gates --json --all` was `{2: 22, 3: 28}` before, `{2: 27, 3: 23}` immediately
+after the reclassification over 50 records, and `{2: 26, 3: 23}` at HEAD over 49
+— the difference being `b-estate-prose-pass-from-1-3` resolving itself out of the
+population once all three decisions landed. **Five gates that rendered "nothing to
+execute" now render an answerable consent block** — verified per entry, not
+inferred. Of the 49 open records, **48 carry an authored field and exactly 1
+resolves through the absent-field default**: the parser's synthesised `legacy`
+note, which by construction can never carry one.
+
+**The class-0 count stays 0, and that is the honest headline.** Nothing here
+makes a gate auto-runnable, because nothing here invents a command. What changed
+is that the tree no longer declares a class its own entries cannot support.
+
+**One taxonomy gap, recorded rather than forced.** `utilization-sweep-window`
+clears when a date passes and a sibling blocker clears — it is neither a command,
+nor a spend, nor a preference, nor human content. None of the four classes fits;
+it takes 3 because that is the safe default, and the label overstates the human's
+role. A fifth class for time- and dependency-gated waits would describe it
+properly. Not proposed here — one entry is not a population.
+
+**(c) The class-2 recommendation prose — ACCEPTED as advisory.**
+The notice renders alongside a working consent block, the prose predates this
+work, and rewriting other roadmaps' recommendations is the most expensive of the
+three for the least behavioural gain. It stays visible every time one of those
+gates is executed, which is the right place for it.
+
+**Re-measured after (b), not carried over**, because promoting five entries adds
+their recommendations to the population the bar applies to. Over the **26** live
+class-2 entries at HEAD: **16 exceed the 156-char bar, 10 carry no
+`Recommendation:` at all, and 0 carry a usable 1–156-char one.** Measured by
+reading the field out of each entry, not by reading the renderer's pass/fail —
+which is the distinction the first version of this section missed, since the
+renderer's check passes trivially at length zero.
+
+Three earlier figures in this document are superseded and named so nobody reads a
+change of denominator as a change over time: *8 of 19* covered only the entries
+step 1.3 had made reachable and excluded `road-to-gate-autonomy`'s own three;
+*10 of 27* counted `b-estate-prose-pass-from-1-3` before it resolved itself out
+of the population; and a *13* in § 4c was arithmetic (`21 − 8`) over § 4's
+differently-scoped claim rather than a measurement, so two of those thirteen had
+never been measured against the bar at all. The live reading is the 26/16/10/0
+above. R2 findings 3, 4 and 5.
+
+**Including this branch's own new entry, which is over the bar.** Worth recording
+rather than quietly excluding: `b-estate-prose-pass-from-1-3` was authored *by*
+the work that measures this, *after* reading the notice, and still exceeded it.
+The bar is easy to trip while knowing about it, which is a better argument for
+the notice staying visible than any of the eleven older cases. It becomes moot on
+resolution — a resolved blocker no longer renders — so the count above is the
+live reading at the moment of measurement, not a durable 17.

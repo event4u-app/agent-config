@@ -72,6 +72,7 @@ import { spawnSync } from 'node:child_process';
 import {
     collect,
     blocker_needs_user as needsUser,
+    blocker_class as blockerClass,
     type Blocker,
 } from './update_roadmap_progress.js';
 import { probeLater, type ResumeFinding } from './resume_probe.js';
@@ -418,6 +419,17 @@ function renderJson(
                     roadmap: e.roadmapRel,
                     owner: e.blocker.owner,
                     needsYou: needsUser(e.blocker.owner),
+                    // Resolved through the same absent-field default every
+                    // other consumer applies, so a synthesised `legacy` note
+                    // reads as class 3 rather than as a hole. `class` ships and
+                    // the sibling `run` does not, and the asymmetry is the
+                    // roadmap's, not a preference: `road-to-gate-autonomy` step
+                    // 1.3 names this field as its acceptance condition, while
+                    // nothing asks for the command here — `--execute` reads it
+                    // off the entry via `locate()`. Emitting `run` would also
+                    // need a call on the authored-vs-`commandOf()`-stripped
+                    // form, which no consumer exists to settle.
+                    class: blockerClass(e.blocker),
                     blocks: e.blocker.blocks,
                     unblocksSteps: e.openSteps,
                     todo: regroupTodo(e.blocker.todo),

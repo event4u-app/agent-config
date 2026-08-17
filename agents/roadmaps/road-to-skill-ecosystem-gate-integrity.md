@@ -179,6 +179,7 @@ rather than silently absorbed.
 
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 3 — human-only
 - **Blocks:** Phase 3 Step 6 and Step 7, and the acceptance criterion that both
   new guidelines are cross-linked from `verify-before-complete`.
 - **What to do:** apply the two edits below to

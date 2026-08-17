@@ -114,6 +114,7 @@ The zero is therefore an instrumentation artifact, not an adoption measurement. 
 
 - **Status:** open
 - **Owner:** user
+- **Class:** 2 — consent-once
 - **Blocks:** Phase 2 (sink stand-up)
 - **Question:** Should the sink be a minimal ingest endpoint, or a private repository used as an append-only store?
 - **Recommendation:** the private repository. The volume is small, the write path is an existing authenticated primitive rather than new infrastructure to operate, and the Phase 6 clustering runs offline over the file set. An ingest endpoint is the better answer only if the volume outgrows a repository, which the current zero makes unlikely in the measurement window this roadmap needs.
@@ -128,6 +129,7 @@ The zero is therefore an instrumentation artifact, not an adoption measurement. 
 
 - **Status:** open
 - **Owner:** user
+- **Class:** 3 — human-only
 - **Blocks:** Phase 3 (org-wide enablement onward)
 - **Question:** Does the company data-protection process approve the Class-A field list and the disclosure text?
 - **Recommendation:** run it as a written review of exactly two artefacts — the Class-A field list from Phase 1 and the one-line disclosure from Phase 3 — rather than of the roadmap. The design was built to make this review short: no content fields exist to argue about, and the pseudonymous hash is salted outside the public repository.

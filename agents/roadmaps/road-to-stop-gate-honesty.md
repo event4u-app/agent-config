@@ -323,6 +323,7 @@ Stop-slot numbers, and is the honest reason this phase advances without closing.
 ### blocker: b-detector-demotion-bars
 - **Status:** open
 - **Owner:** user
+- **Class:** 2 — consent-once
 - **Blocks:** Phase 2 step 2.1, and therefore any demotion. Steps 1.x, 2.2 and 3.x
   are repo work and proceed without it.
 - **What to do:** pre-register the demotion bar per detector, before reading Phase

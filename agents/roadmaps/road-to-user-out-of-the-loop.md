@@ -245,6 +245,7 @@ The resolution order for an open question becomes: decision sheet at contract ti
 
 - **Status:** open
 - **Owner:** user
+- **Class:** 3 — human-only
 - **Blocks:** Phase 1 (batch elicitation carve-out — the only true kernel delta), Phase 2 (set-scoped autonomy form), Phase 4 (late-artifact policy), Phase 5 (deferred-policy delta)
 - **Question:** Is the ONE kernel delta (`ask-when-uncertain`) authorized to proceed as its own PR with the required soak window — and do you want the other three deltas, which are NOT kernel, done as ordinary rule edits or held with it?
 - **Recommendation:** Authorize `ask-when-uncertain` on its own with the soak, and let the other three proceed as ordinary rule edits in the order 5-2, 4-4, 2-3 — the deferred-policy delta first because it is the smallest. Holding three non-kernel edits behind a soak window they do not need is the cost this blocker was accidentally imposing.
@@ -259,6 +260,7 @@ The resolution order for an open question becomes: decision sheet at contract ti
 
 - **Status:** open
 - **Owner:** user
+- **Class:** 2 — consent-once
 - **Blocks:** Phase 1 (preselection), Phase 2 (lane cap), Phase 4 (late-artifact default), Phase 5 (policy breadth)
 - **Question:** Four preference settings that determine how aggressive the first iteration is; each has a conservative and a consequent option.
 - **Recommendation:** Preselect `autonomous` at the contract screen, cap lanes at two, default late artifacts to `auto-research`, and keep the deferred policy limited to the follow-up-draft option. Rationale: each is reversible, each carries its own kill criterion in the phase text, and the conservative variant of all four together produces a plan that measures nothing because nothing changes.

@@ -283,6 +283,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
 ### blocker: b-per-turn-composite-bar
 - **Status:** open
 - **Owner:** user
+- **Class:** 2 — consent-once
 - **Blocks:** Phase 4 step 4.2 only. Step 4.1 registers the composite as a measured
   row and 4.3 refreshes the census; both proceed without the bar.
 - **What to do:** pre-register the per-turn composite bar. The composite itself is

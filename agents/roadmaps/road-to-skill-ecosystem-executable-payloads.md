@@ -404,6 +404,7 @@ prevented rather than merely bounded.
 
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 3 — human-only
 - **Blocks:** all of Phase 0, Phase 1 step 3, Phase 2 in full, Phase 4 in full.
 - **What to do:** S0.1 needs 20 scripted invocations against a live host and
   S0.2 needs a token measurement — both are spend-bearing and a live

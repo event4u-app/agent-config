@@ -314,6 +314,7 @@ before any behaviour data exists.
 
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 2 — consent-once
 - **Blocks:** auto-firing the council at the release-gate escalation
 - **What to do:** after Phase 3 has soaked (transport reconciliation
   verified in real passes) and the F6/F4 + council-attendance telemetry has
@@ -328,6 +329,7 @@ before any behaviour data exists.
 
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 2 — consent-once
 - **Blocks:** any pre-tool-use mid-session delegation carrier + escalation
   ladder (Sources E/H harvest)
 - **What to do:** run the main-vs-subagent discrimination spike (upstream
@@ -343,6 +345,7 @@ before any behaviour data exists.
 
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 2 — consent-once
 - **Blocks:** single-shot stop-block continuation for the end-review
   obligation
 - **What to do:** carried from the carriers roadmap, upgraded by two
@@ -359,6 +362,7 @@ before any behaviour data exists.
 
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 3 — human-only (a host flag that does not clear by waiting on this host)
 - **Blocks:** Phase 5.4 (team telemetry concerns, TaskCompleted
   artifact-check)
 - **What to do:** when the experimental flag is on in a real environment,
@@ -379,6 +383,7 @@ before any behaviour data exists.
 
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 2 — consent-once
 - **Blocks:** routing ordinary work slices to second-vendor CLI workers
   (huge-context analysis, independence-critical review — Source G shape)
 - **What to do:** the drafts cited a direction-policy artefact that does not

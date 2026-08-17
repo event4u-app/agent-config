@@ -487,6 +487,7 @@ worse than none — it reads as a live control.
 ### blocker: required-check-set-change
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 3 — human-only
 - **Blocks:** step 4.2 only. Phases 0-3 and step 4.1 are not blocked — they change
   no required check, and ADR-223 is a proposal, not an enforcement change.
 
@@ -569,6 +570,7 @@ worse than none — it reads as a live control.
 ### blocker: merge-queue-enablement
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 3 — human-only
 - **Blocks:** step 4.3 only. Nothing else here depends on a merge queue.
 - **What to do:** decide whether to enable a GitHub merge queue for `main` — a
   repo-admin setting that cannot be turned on from the tree.

@@ -96,6 +96,7 @@ renegotiated by the outcome.
 
 - **Status:** open
 - **Owner:** user
+- **Class:** 3 — human-only (hard-aborts under automation by design; simulating it breaks the prereg)
 - **Blocks:** all of Phase 1 — 1.1 and 1.2 both need a live model run
 - **What to do:** run the live trigger-eval to produce the predictions JSON for
   both tree states. It hard-aborts under automation on purpose, so an agent

@@ -178,6 +178,7 @@ Phase 3.
 ### blocker: b-live-trigger-eval
 - **Status:** open
 - **Owner:** user
+- **Class:** 3 — human-only (a controlling-terminal confirmation; it cannot run non-interactively)
 - **Blocks:** Phase 0 only. Phases 1, 1b, 2 and 3 are repo work and proceed without
   it — Phase 0 sits first because of its cross-roadmap leverage, not because it
   gates this file.

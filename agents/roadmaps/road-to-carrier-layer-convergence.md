@@ -188,6 +188,7 @@ suppressed layer restores the prior state.
 ### blocker: b-convergence-machine
 - **Status:** open
 - **Owner:** user
+- **Class:** 3 — human-only
 - **Blocks:** Phase 3 only (Phases 1-2 are repo work)
 - **What to do:** Phase 3's before/after pair needs the maintainer machine,
   since the two-layer topology is a property of the install rather than of the

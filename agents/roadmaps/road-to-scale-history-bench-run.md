@@ -130,6 +130,7 @@ POST-bench copy, never pre-bench).
 
 - **Status:** open
 - **Owner:** user
+- **Class:** 3 — human-only
 - **Blocks:** Phase 1 step 1's scoring half, and thereby step 2's verdict
 - **What to do:** score each produced artifact against
   `internal/bench/scale-history/rubric.md`, blind to arm, **before** any

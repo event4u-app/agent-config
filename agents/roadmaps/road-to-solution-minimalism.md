@@ -1021,6 +1021,7 @@ which is exactly the reader that must not be misled.
 
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 2 — consent-once (spend consent, once deltas 9 and 10 land as code)
 - **Blocks:** Phase 3 — the Repo, Tasks, Hygiene and Reproducibility steps, and
   the "reports from the full tier" acceptance criterion.
 - **What to do:**
