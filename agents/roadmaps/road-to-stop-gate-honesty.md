@@ -154,13 +154,35 @@ Nothing downstream of Phase 1 was built on the unstamped corpus.
 
 ### Phase 2 — Judge each detector on its measured rate against its measured benefit
 
-- [~] **2.1** Pre-register the bar per detector **before looking at Phase 1 data**:
+- [ ] **2.1** Pre-register the bar per detector **before looking at Phase 1 data**:
       a detector whose refusals are re-refused on the retry above some share — the
       model could not satisfy it — or whose median per-session count exceeds some
       threshold is demoted from blocking to advisory **for that detector only**, and
       the demotion is published with the distribution. The numbers are the
       maintainer's; the shape is the requirement. Blocked on
       `b-detector-demotion-bars`.
+      <!-- glyph corrected 2026-08-17 `[~]` → `[ ]`, maintainer decision, under
+      the Iron-Law-3 resolution menu (`roadmap-management § 4b`, outcome
+      "restore"). The two glyphs are not synonyms: `[~]` is DEFERRED — work
+      consciously moved out of this plan — and `[ ]` is OPEN. This step is
+      neither postponed nor cancelled; it is waiting on `b-detector-demotion-bars`
+      exactly as every other blocker-gated step in the estate waits, and its own
+      blocker entry says so ("Blocks: Phase 2 step 2.1").
+
+      It shipped as `[~]` from the inbox adoption and nothing re-examined the
+      choice. Closing Phase 1 moved the file to `count_open == 0` with one
+      deferred item, which is the state Iron Law 3 refuses to let archive
+      silently — so the glyph had to be decided rather than inherited, and the
+      accurate reading is the one that also clears the gate. The gate was NOT the
+      reason: a step is marked by what is true of it, and this correction would
+      be right with no gate at all.
+
+      What this does NOT do: it does not touch the blocker, does not pre-register
+      any bar, and does not read Phase 1's distribution into a decision. The
+      pre-registration must predate the first read and remains the maintainer's,
+      untouched. -->
+      <!-- verify: the roadmap reports one open step and zero deferred, and
+      `roadmap:progress-check` no longer lists this file under Iron Law 3. -->
 - [x] **2.2** Detector C's verify allowlist decides what counts as verification.
       **Narrowed by claim 4:** the PHP toolchain the draft worried about is already
       matched, so this step is no longer "add phpunit and pest". What remains is a
