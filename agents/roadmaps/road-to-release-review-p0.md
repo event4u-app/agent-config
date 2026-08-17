@@ -51,14 +51,44 @@ Source: an external release review of this package, 2026-08-15, pinned at `e3bd9
 
 ## Phase 2 — Evidence artifact typing
 
-- [ ] Add an explicit type to every evidence artifact at write time, distinguishing an original review, a current binding, a declared skip, an honest null, and a re-bind event. The failure this closes is that a historical input currently reads the same as a live binding, so a reader cannot tell whether an artifact still asserts anything. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
-- [ ] Set the type at creation rather than inferring it later from filename or location; an inferred type reproduces the ambiguity it was meant to remove. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
-- [ ] Explicitly do not loosen the binding itself. The review's own measurement found that segment-aware currency would save roughly a tenth of re-binds while introducing integrity risk — so the decision is to clarify what stored evidence means, not to weaken when it must be re-bound. <!-- verify: grep -q "binding" docs/contracts/evidence-artifact-types.md -->
-- [ ] Record the type set as a contract document so consumers read one definition rather than inferring five. <!-- verify: test -f docs/contracts/evidence-artifact-types.md -->
+- [x] Add an explicit type to every evidence artifact at write time, distinguishing an original review, a current binding, a declared skip, an honest null, and a re-bind event. The failure this closes is that a historical input currently reads the same as a live binding, so a reader cannot tell whether an artifact still asserts anything. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
+- [x] Set the type at creation rather than inferring it later from filename or location; an inferred type reproduces the ambiguity it was meant to remove. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
+- [x] Explicitly do not loosen the binding itself. The review's own measurement found that segment-aware currency would save roughly a tenth of re-binds while introducing integrity risk — so the decision is to clarify what stored evidence means, not to weaken when it must be re-bound. <!-- verify: grep -q "binding" docs/contracts/evidence-artifact-types.md -->
+- [x] Record the type set as a contract document so consumers read one definition rather than inferring five. <!-- verify: test -f docs/contracts/evidence-artifact-types.md -->
 
 **Exit criteria:** every newly written evidence artifact carries a type, and the check fails a typeless one.
 
 **Rollback:** the type is an additive field; the check can be unregistered without migrating existing artifacts.
+
+**Landed 2026-08-17.** `docs/contracts/evidence-artifact-types.md` defines the
+five types plus the agreement rules; `src/scripts/lint_evidence_artifacts.ts`
+enforces them; `dispatch_r2_reviewer.ts` sets `current-binding` in the skeleton
+so the type is written at creation. Three things a later reader should not have
+to re-derive:
+
+- **The two halves have different scopes, deliberately.** Presence is demanded
+  only of the change set (pre-push, where a base ref always resolves); agreement
+  is checked over the whole corpus (`--all`, the CI-registered argv). `--all` is
+  what CI runs because the changed-files mode's ordinary pass is `scanned: 0` —
+  the exact shape `check_gate_coverage` rule 3 rejects, so registering it would
+  make a legitimate verified-empty look blind on every PR touching no evidence.
+- **No baseline file.** A `src/config/*-baseline.json` listing the 328
+  pre-existing untyped artifacts would be a suppression surface whose entire
+  content is "everything that already exists" — a ratchet measuring nothing, at
+  the cost of an inventory row and a bootstrap flag. `--all` publishes the
+  untyped remainder on every run instead, so the shrink is observable.
+- **`rebind-event` is not disjoint from `current-binding`.** This roadmap listed
+  all five as if they were. In this tree a re-bind happens **in place** on the
+  findings artifact, so a separate re-bind artifact does not exist; inventing one
+  would add a second file to keep in sync. The type is kept as a
+  specialisation, stated in the contract § 3 rather than left to inference.
+
+**Phase 1 and Phase 3 stay open, and not for want of trying.** Phase 1 needs
+measured per-host catalogue behaviour, which is an observation about other hosts
+this session cannot make. Phase 3's exit criterion requires a real council run
+against a deliberately broken seat, and the org spend limit was reached during
+this run — so the verification, not the code, is what blocks it. Both are
+recorded here rather than deferred: nothing about them is decided.
 
 ## Phase 3 — Provider qualification
 
@@ -86,7 +116,7 @@ Source: an external release review of this package, 2026-08-15, pinned at `e3bd9
 ## Acceptance Criteria
 
 - [ ] A host with measured truncation pressure projects a reduced set and a host without one does not, with both traceable to a recorded measurement.
-- [ ] A typeless evidence artifact fails its check.
+- [x] A typeless evidence artifact fails its check.
 - [ ] A deliberately broken council seat reports unavailable, and a run against it reports short rather than printing a quorum.
 - [ ] No step in this roadmap duplicates a step in the estate-diet roadmap.
 - [ ] The two folded findings are traceable to the roadmap that absorbed them.
