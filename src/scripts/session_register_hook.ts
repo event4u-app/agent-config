@@ -67,6 +67,7 @@ import {
     ttl_seconds_for,
     write_record,
 } from './_lib/session_register.js';
+import { pruneAgedRefusalState, readSessionCounts } from './_lib/turn_end_refusals.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 
 /** Replay-fixture runs must never mutate state (same contract as chat_history). */
@@ -323,7 +324,7 @@ export function build_record(
     started_at: string,
     now: Date = new Date(),
 ): SessionRecord {
-    return {
+    const rec: SessionRecord = {
         session_id,
         platform,
         worktree: workspace_root,
@@ -332,6 +333,20 @@ export function build_record(
         started_at,
         last_seen: iso_now(now),
     };
+    // road-to-stop-gate-honesty step 1.1 — the per-session half of the refusal
+    // counter. Only ever ADDS a field: a session with no refusals leaves the
+    // record byte-identical to what it was before this existed, so a reader that
+    // does not know the field is unaffected and a diff of two records still
+    // shows only what changed.
+    const counts = readSessionCounts(workspace_root, session_id);
+    if (counts !== null) {
+        const nonZero: Record<string, number> = {};
+        for (const [id, n] of Object.entries(counts)) {
+            if (n > 0) nonZero[id] = n;
+        }
+        if (Object.keys(nonZero).length > 0) rec.turn_end_refusals = nonZero;
+    }
+    return rec;
 }
 
 /**
@@ -588,6 +603,20 @@ export function main(): number {
                         `session-register: platform "${platform}" has no reliably firing per-turn slot; ` +
                             `this session will expire from the register after its TTL even while active.\n`,
                     );
+                }
+            }
+            if (event === 'session_start') {
+                // road-to-stop-gate-honesty step 1.2 — the TTL the gate's own
+                // header admitted was missing. This concern is the carrier
+                // because it is already the session_start pruner: adding a
+                // second prune here costs one directory scan on a slot that
+                // fires once per session, where a new concern would cost a
+                // spawn. Never throws — evidence retention is not a reason to
+                // fail a session start.
+                try {
+                    pruneAgedRefusalState(root, { now: new Date() });
+                } catch {
+                    /* an unprunable directory keeps its files; it is not an error */
                 }
             }
             if (event === 'session_start') {

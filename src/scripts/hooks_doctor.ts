@@ -34,6 +34,13 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { read_dispatch_issues } from "./hooks/dispatch_issues.js";
 import { type JsonObject, type JsonValue, _load_yaml } from "./hooks/dispatch_hook.js";
 import * as hooks_status from "./hooks_status.js";
+import {
+  DETECTOR_IDS,
+  collectRefusalStats,
+  readInstallBoundary,
+  type InstallBoundary,
+  type RefusalStats,
+} from "./_lib/turn_end_refusals.js";
 
 // src/scripts/hooks_doctor.ts → parents[2] (../../..) is the repo root,
 // mirroring the Python `Path(__file__).resolve().parents[2]`.
@@ -171,6 +178,17 @@ export interface DoctorPayload {
   concerns: ConcernRow[];
   trampolines: TrampolineRow[];
   dispatch_issues: JsonObject[];
+  /**
+   * Turn-end refusals, per detector, from this workspace's own records.
+   *
+   * `road-to-stop-gate-honesty` § D-2: every advisory concern in this estate
+   * carries a registered kill standard and the one BLOCKING concern carries
+   * none, because nobody could see how often it fires. The doctor is where a
+   * concern's health is already read, so this is where the number belongs.
+   */
+  turn_end_refusals: RefusalStats;
+  /** The machine's install stamp, for reading the version split below it. */
+  install_boundary: InstallBoundary;
 }
 
 /** Build the doctor payload — JSON-serialisable. */
@@ -229,17 +247,109 @@ export function collect(
     issues = [];
   }
 
+  let turn_end_refusals: RefusalStats;
+  try {
+    turn_end_refusals = collectRefusalStats(project_root);
+  } catch {
+    turn_end_refusals = {
+      sessionsWithRefusals: 0,
+      total: 0,
+      byDetector: { promissory: 0, language: 0, verification: 0, completion: 0 },
+      byPeriod: [],
+      legacyRecords: 0,
+      unversionedRecords: 0,
+      byVersion: [],
+      earliest: null,
+      latest: null,
+    };
+  }
+
   return {
     schema_version: 1,
     platforms: matrix.platforms,
     concerns,
     trampolines,
     dispatch_issues: issues,
+    turn_end_refusals,
+    install_boundary: readInstallBoundary(),
   };
 }
 
 function _strVal(v: JsonValue | undefined): string {
   return v === undefined || v === null ? "undefined" : String(v);
+}
+
+/**
+ * The turn-end-gate's own number.
+ *
+ * Reports what the records can support and refuses the number they cannot: the
+ * denominator is *sessions that had at least one refusal*, never all sessions,
+ * because a session that was never refused writes no record. Labelling a
+ * per-refused-session figure as a per-session rate would be the same
+ * denominator inflation this estate's measurement discipline exists to stop.
+ */
+export function _render_refusals(payload: DoctorPayload): string[] {
+  const s = payload.turn_end_refusals;
+  const lines: string[] = [];
+  lines.push("Turn-end refusals");
+  lines.push("-".repeat(60));
+  if (s.sessionsWithRefusals === 0) {
+    lines.push("·  no refusal records under agents/runtime/state/turn-end-gate/");
+    return lines;
+  }
+  const perSession = (s.total / s.sessionsWithRefusals).toFixed(2);
+  lines.push(
+    `   ${s.total} refusal(s) across ${s.sessionsWithRefusals} session(s) ` +
+      `that were refused at least once — ${perSession} per such session.`,
+  );
+  lines.push(
+    "   NOT a per-session rate: sessions with no refusal write no record, so " +
+      "the wider denominator is unavailable here by construction.",
+  );
+  if (s.earliest && s.latest) {
+    lines.push(`   window: ${s.earliest.slice(0, 10)} … ${s.latest.slice(0, 10)}`);
+  }
+  for (const id of DETECTOR_IDS) {
+    const n = s.byDetector[id];
+    const share = s.total > 0 ? Math.round((n / s.total) * 100) : 0;
+    lines.push(`   ${id.padEnd(14)} ${String(n).padStart(4)}  ${share}%`);
+  }
+  if (s.legacyRecords > 0) {
+    lines.push(
+      `   ${s.legacyRecords} record(s) predate per-detector counting and ` +
+        "contribute one refusal each — the total is a FLOOR, not an exact count.",
+    );
+  }
+  const boundary = payload.install_boundary;
+  if (boundary.version || boundary.installed_at) {
+    lines.push(
+      `   installed: ${boundary.version ?? "(unknown version)"} at ` +
+        `${boundary.installed_at ?? "(unknown date)"}`,
+    );
+  }
+  if (s.byVersion.length > 0) {
+    lines.push("   by recorded version:");
+    for (const v of s.byVersion) {
+      lines.push(`     ${v.version.padEnd(16)} ${String(v.total).padStart(4)}`);
+    }
+    if (s.unversionedRecords > 0) {
+      lines.push(
+        "     (unrecorded) rows predate version stamping — they cannot test " +
+          "the install-date prediction in either direction.",
+      );
+    }
+  }
+  const recent = s.byPeriod.slice(0, 7);
+  if (recent.length > 0) {
+    lines.push("   most recent days:");
+    for (const p of recent) {
+      lines.push(
+        `     ${p.period}  ${String(p.total).padStart(3)} refusal(s) / ` +
+          `${p.sessions} session(s)`,
+      );
+    }
+  }
+  return lines;
 }
 
 export function _render_table(payload: DoctorPayload): string {
@@ -286,6 +396,8 @@ export function _render_table(payload: DoctorPayload): string {
     const suffix = t.required ? "" : "  (not required)";
     lines.push(`${marker}${t.platform.padEnd(9)} ${t.expected}${suffix}`);
   }
+  lines.push("");
+  lines.push(..._render_refusals(payload));
   // Dispatch-issues detail — last 20 grouped by concern.
   if (payload.dispatch_issues.length > 0) {
     lines.push("");

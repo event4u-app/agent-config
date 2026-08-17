@@ -6,10 +6,10 @@
 
 ## Overall
 
-**277 / 592 steps done · 47%**
+**283 / 593 steps done · 48%**
 
 ```text
-███████████████████░░░░░░░░░░░░░░░░░░░░░   47%
+███████████████████░░░░░░░░░░░░░░░░░░░░░   48%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -57,7 +57,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 31 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
 | 32 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
 | 33 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 8 | 0 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ░░░░░░░░░░ 0% |
-| 34 | [road-to-stop-gate-honesty.md](roadmaps/road-to-stop-gate-honesty.md) | 3 | 7 | 6 | 0 | 1 | 0 | [1](#blockers-road-to-stop-gate-honesty) | ░░░░░░░░░░ 0% |
+| 34 | [road-to-stop-gate-honesty.md](roadmaps/road-to-stop-gate-honesty.md) | 3 | 7 | 1 | 6 | 0 | 0 | [1](#blockers-road-to-stop-gate-honesty) | █████████░ 86% |
 | 35 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 9 | 10 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | █████░░░░░ 53% |
 | 36 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 37 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
@@ -1024,13 +1024,13 @@ _1 blocker resolved._
 
 ### [road-to-stop-gate-honesty.md](roadmaps/road-to-stop-gate-honesty.md)
 
-**Road to stop-gate honesty — a blocking gate earns a number** — 0 / 6 done (0%)
+**Road to stop-gate honesty — a blocking gate earns a number** — 6 / 7 done (86%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Count before judging | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | Judge each detector on its measured rate against its measured benefit | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
-| 3 | Make refusals cheap when they happen | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 1 | Count before judging | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | Judge each detector on its measured rate against its measured benefit | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+| 3 | Make refusals cheap when they happen | ✅ done | 0 | 2 | 0 | 0 | 100% |
 
 <a id="blockers-road-to-stop-gate-honesty"></a>
 **Blockers**
