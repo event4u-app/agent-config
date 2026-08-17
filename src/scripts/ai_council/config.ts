@@ -1932,8 +1932,61 @@ function _build_member(
  * GUARD against silent quota exhaustion on an always-on pass, not a brake on
  * normal use (see the template's own worked-example sizing for the
  * reasoning behind a TIGHTER per-provider number).
+ *
+ * Exported because it is the ONLY legitimate fallback for an unlisted
+ * provider, and two consumers outside this module need it: `build_members`
+ * (which may receive a RAW `.ai-council.yml` dict whose `cli_call_budget`
+ * block is absent, and must not fall back to "uncapped") and `cmd_quota`
+ * (which must report the cap the gate actually enforces). Re-deriving the
+ * number at either site is how the reported cap and the enforced cap drift
+ * apart — see `road-to-council-quota-accounting-truth`.
  */
-const _DEFAULT_CLI_CALLS_PER_DAY = 50;
+export const DEFAULT_CLI_CALLS_PER_DAY = 50;
+
+/** Internal alias kept so the existing call sites below read unchanged. */
+const _DEFAULT_CLI_CALLS_PER_DAY = DEFAULT_CLI_CALLS_PER_DAY;
+
+/**
+ * Resolve the per-provider daily cap map the gate enforces — the SINGLE
+ * authority for that question.
+ *
+ * Seeds every known provider with `DEFAULT_CLI_CALLS_PER_DAY`, then applies
+ * whatever the caller's `max_calls_per_day` mapping overrides. An absent,
+ * empty, or commented-out block therefore yields the DEFAULTS, never
+ * "uncapped" — omission is not a way to switch the guard off.
+ *
+ * Deliberately LENIENT where `_build_cli_call_budget` is strict: it skips an
+ * unknown provider or a malformed value instead of throwing, because two of
+ * its consumers are reporting paths that must still print something useful for
+ * the providers that ARE valid. Validation is the strict builder's job and it
+ * runs first on every real config load, so a bad entry still fails loudly —
+ * it just does not take the quota report down with it.
+ *
+ * Consumers: `_build_cli_call_budget` (below), `build_members` (the gate), and
+ * `cmd_quota` (the report). Before this existed the gate read a raw
+ * `.ai-council.yml` dict while the report read the settings cascade, so the
+ * number printed was not the number enforced — see
+ * `road-to-council-quota-accounting-truth`.
+ */
+export function resolve_cli_call_caps(raw: unknown): Record<string, number> {
+    const out: Record<string, number> = {};
+    for (const provider of _VALID_PROVIDERS) {
+        out[provider] = _DEFAULT_CLI_CALLS_PER_DAY;
+    }
+    if (!_isDict(raw)) {
+        return out;
+    }
+    for (const [provider, value] of Object.entries(raw as Dict)) {
+        if (!_VALID_PROVIDERS.has(provider)) {
+            continue;
+        }
+        if (!_isInt(value) || _isBool(value) || (value as number) < 0) {
+            continue;
+        }
+        out[provider] = value as number;
+    }
+    return out;
+}
 
 function _build_cli_call_budget(d: Dict): CliCallBudgetConfig {
     if (!_isDict(d)) {
@@ -1945,10 +1998,11 @@ function _build_cli_call_budget(d: Dict): CliCallBudgetConfig {
             '`cli_call_budget.max_calls_per_day` must be a mapping.',
         );
     }
-    const caps = new Map<string, number>();
-    for (const provider of _VALID_PROVIDERS) {
-        caps.set(provider, _DEFAULT_CLI_CALLS_PER_DAY);
-    }
+    // Validate FIRST, then resolve. Splitting the two is what lets the strict
+    // builder and the lenient `resolve_cli_call_caps` share one seeding
+    // implementation without either weakening the other: every rejection below
+    // still throws, and what survives is handed to the shared resolver rather
+    // than seeded a second time here.
     for (const [provider, value] of Object.entries(raw_caps)) {
         if (!_VALID_PROVIDERS.has(provider)) {
             throw new CouncilConfigError(
@@ -1962,8 +2016,10 @@ function _build_cli_call_budget(d: Dict): CliCallBudgetConfig {
                     `non-negative integer (got ${_pyRepr(value)}).`,
             );
         }
-        caps.set(provider, value);
     }
+    const caps = new Map<string, number>(
+        Object.entries(resolve_cli_call_caps(raw_caps)),
+    );
     const warn_at_raw = _get(d, 'warn_at', 0.8);
     if (_isBool(warn_at_raw) || !_isNumber(warn_at_raw)) {
         throw new CouncilConfigError(
