@@ -288,6 +288,37 @@ Validated by `scripts/lint_hook_manifest.py` (Phase 7.10): every
 concern script must exist on disk, every platform key must be a known
 platform, every event key must be in the agent-config event vocabulary.
 
+### Which hosts carry `pre_tool_use` — bound, unbound, absent
+
+The three blocking guards (`block-no-verify`, `block-kernel-rule-writes`,
+`block-config-weakening`) and the `evidence-independence` concern all sit on
+`pre_tool_use`, so "which hosts is this actually enforced on" is asked of this
+manifest repeatedly. It has **three** answers, not two, and collapsing them is
+how a rule ends up asserting a host limitation nobody established.
+
+| State | Hosts | What the manifest records |
+|---|---|---|
+| **Bound** | `augment`, `claude`, `cowork` | a `pre_tool_use:` key in the platform's `platforms:` row, listing the concerns that run |
+| **Aliased but unbound** | `cursor`, `cline`, `gemini` | a native pre-tool event in `native_event_aliases` — `preToolUse`, `PreToolUse`, `BeforeTool` respectively — mapped onto `pre_tool_use`, with **no** `pre_tool_use:` key in the platform row |
+| **No pre-tool surface** | `windsurf`, `copilot` | no pre-tool alias row at all; `copilot` is additionally `fallback_only` |
+
+The middle row is the one that matters. On `cursor`, `cline` and `gemini` a
+guard is **unbound, not unbindable** — the host sends a pre-tool event and the
+translation table already accepts it; this package has simply never written the
+binding.
+
+**What is NOT established, in either direction:** whether those three hosts'
+pre-tool events can *deny* a call. Nothing in this tree records it, and the
+manifest's `severity: blocking` is a property of the concern, never of the host.
+So "bind it and the guard enforces" is as unbacked as "there is nowhere to
+bind". The honest statement is the one the table makes: the binding was never
+written, and the deny capability was never measured.
+
+`check_enforcement_coverage.ts` computes its `gap_platforms` from the bound set
+only, so a rule quoting it is right about *coverage* and says nothing about
+*cause*. `agent-config hooks:status` answers the same question for the host the
+session is actually on.
+
 ### Optional per-concern `tools:` filter
 
 A concern may declare which tools it applies to. The **dispatcher** skips it
