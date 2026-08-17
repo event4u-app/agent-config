@@ -91,6 +91,36 @@ inline with the same stop conditions:
    summary (goal + in/out + constraints + AC) is stable for two turns.
 4. **Then author** via the surface's normal flow.
 
+#### 3c-batch — the batch branch, when a contract is being derived
+
+Serial is correct when the gate runs on its own. It is the wrong shape when the
+gate runs **inside** a contract derivation
+([`roadmap-execution-contract`](roadmap-execution-contract.md)), because the
+contract's whole premise is that the user is asked once. N serial turns inside a
+one-confirmation flow is the flow contradicting itself.
+
+So when the gate runs under a contract derivation, replace steps 2–3 with:
+
+1. **One sheet at seed time.** Every load-bearing branch known after step 1
+   becomes a row of the
+   [`contract-decision-sheet`](contract-decision-sheet.md), each with a
+   conservative default. Not two blocks, not two turns.
+2. **At most two rounds, and round two is narrow.** Round two exists only for
+   branches *created by round-one answers* — never for branches that were
+   knowable at seed time and were missed. A branch that could have been on
+   round one and appears on round two is a defect in the step-1 resolve, and
+   is recorded as one rather than silently re-asked.
+3. **Remaining ambiguity resolves to its conservative default plus a decision
+   memo** — never to a third round and never to a silent guess. The memo makes
+   the default reviewable after the fact, which is what allows the round cap to
+   be a cap rather than a loss.
+
+Unchanged, deliberately: the locked classes never enter a sheet
+(`high_impact` / `user_required` escalate when they fire), and **the C→R1 state
+file below is written exactly as before**. Batching changes how the questions
+are *collected*, never what is recorded — so R1 still never re-asks a resolved
+branch and no plan is interviewed twice.
+
 ### 4. C→R1 handoff — write the state file
 
 On completing the gate (either path that ran an interview), write

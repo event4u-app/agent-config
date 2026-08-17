@@ -226,8 +226,8 @@ unfamiliar codebases.
 
 ### Executing a roadmap
 
-0. Read `execution.mode` from the roadmap frontmatter
-   (`autonomous` | `phase-checkpoints` | `interactive`; absent =
+0. Resolve the mode per `roadmap-process-loop` § 3a: suffix, frontmatter
+   `execution.mode`, invocation form (absent = derived, not
    `interactive`). Under `/roadmap:process-*` the mode selects the
    interaction pattern via the run-start execution contract — see
    [`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md).

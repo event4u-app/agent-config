@@ -30,6 +30,12 @@ const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
  * one: a worker was handed a bounded slice by an orchestrator that already
  * chose the approach, so a routing pointer reaches nobody who can act on it
  * while still costing the dispatch and a catalogue read.
+ *
+ * `interruption-ledger` joined in road-to-user-out-of-the-loop Phase 0 Step 1,
+ * on the set's first clause verbatim — a worker never talks to the user. It
+ * counts synchronous user contacts, so a worker turn ending in a question to
+ * its orchestrator would be recorded as a contact that never reached a human
+ * and would inflate the baseline the phase pre-registers.
  */
 const WORKER_DROP = [
     'delegation-nudge',
@@ -39,6 +45,7 @@ const WORKER_DROP = [
     'team-review-gate',
     'self-repair',
     'session-eol',
+    'interruption-ledger',
 ];
 
 function manifest(): JsonObject {

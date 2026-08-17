@@ -294,8 +294,12 @@ const PROMISSORY = [
  * A legitimate hand-back is the opposite speech act: it gives the decision
  * to the user and ends the turn on purpose. `scope-control` requires
  * exactly this shape, so refusing it would put two rules in direct conflict.
+ *
+ * EXPORTED because `interruption_ledger_hook` classifies the same shape as a
+ * synchronous contact. Narrowing this list therefore changes a measurement as
+ * well as a refusal — check that hook before you touch it.
  */
-const HANDBACK = [
+export const HANDBACK = [
     /\bdas entscheidest (du|Du)\b/i,
     /\bdeine Entscheidung\b/i,
     /\bich fasse .{0,40}nicht ungefragt an\b/i,

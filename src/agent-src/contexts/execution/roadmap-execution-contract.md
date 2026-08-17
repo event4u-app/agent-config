@@ -1,9 +1,14 @@
 # Roadmap Execution Contract
 
-Loaded by [`roadmap-process-loop § 3`](roadmap-process-loop.md) when the
-resolved roadmap declares `execution.mode` in frontmatter
-(`autonomous` | `phase-checkpoints`; absent / `interactive` = legacy
-behavior, this context stays unloaded). Defines the run-start pre-scan,
+Loaded by [`roadmap-process-loop § 3`](roadmap-process-loop.md) when the run's
+**derived** mode is `autonomous` or `phase-checkpoints`. The mode comes from the
+§ 3a ladder — explicit invocation suffix, then frontmatter `execution.mode`,
+then the invocation form — so an ABSENT frontmatter field no longer keeps this
+context unloaded: under `process-full` / `/roadmap:next` it derives
+`autonomous`, under `process-phase` it derives `phase-checkpoints`. Only a
+*derived* `interactive` (asked for explicitly, declared in frontmatter, or
+`process-step`) leaves this context unloaded and falls back to the legacy
+commit-step scan. Defines the run-start pre-scan,
 the contract summary the user confirms ONCE, the grants that
 confirmation activates, and the per-mode gate table.
 
@@ -37,7 +42,13 @@ Scan every open step (text + inline notes) for:
 4. **Open questions / ambiguity** — explicit `?` markers, "decide
    whether", options left unresolved, or steps matching the
    [`ask-when-uncertain`](../../rules/ask-when-uncertain.md)
-   vague-trigger patterns.
+   vague-trigger patterns. These become the rows of the
+   [`contract-decision-sheet`](contract-decision-sheet.md), rendered inside the
+   summary below — one numbered block, a default per row, and an
+   accept-all-defaults path. Loading is part of this derivation, not of any
+   command, so every consumer of the contract inherits the sheet. The locked
+   classes (`high_impact`, `user_required`) never become rows: they escalate
+   during the run, at the moment they fire.
 
 ## 2. Contract summary — shown once, confirmed once
 
@@ -49,9 +60,11 @@ Git: branch <feat/<roadmap-slug>> · commits: chunked (N commit steps
      · PR: open against <default branch> (description only — no merge)
 Artifacts: <N> planned (skills/rules/commands/guidelines) —
      batched overlap check: <result — run NOW, against current state>
-Open questions: <N> → resolved via AI council (<members | "none
-     configured — will halt on ambiguity">)
+Open questions: <N> → decision sheet below (<M> rows); the rest via AI
+     council (<members | "none configured — will halt on ambiguity">)
 Quality: <cadence> · Dashboard: <cadence>
+
+<decision sheet, per contract-decision-sheet — omitted entirely when M = 0>
 
 Always active regardless of this contract (never lifted):
   • Hard Floor per-commit diff gate (bulk deletions / infra)
@@ -90,7 +103,7 @@ These grants satisfy [`scope-control`](../../rules/scope-control.md)'s
 |---|---|---|
 | `autonomous` | All steps `[x]` · quality green per cadence · work committed in chunks on `feat/<roadmap-slug>` · pushed · PR open · archival sweep run. **Merge out of scope, always.** | Safety floors only (+ quality-red, + step reveals out-of-roadmap work) |
 | `phase-checkpoints` | Same end state | Safety floors + a compact status + "continue?" prompt at each phase boundary |
-| `interactive` (absent field) | Legacy: work lands, no git delivery without per-op permission | All gates as authored by their owning rules |
+| `interactive` (derived, never from an absent field) | Legacy: work lands, no git delivery without per-op permission | All gates as authored by their owning rules |
 
 If the roadmap contains **no** delivery need and no commit steps, the
 git grants are omitted from the contract (nothing to authorize —
