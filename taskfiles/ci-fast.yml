@@ -64,6 +64,14 @@ tasks:
       # already been repaired in-place and the check is a fixpoint. 0.7s measured.
       - ./scripts-run src/scripts/check_rule_projection_integrity --quiet
       - ./scripts-run src/scripts/check_bridge_derivation
+      # Evidence artifacts added on this branch declare what KIND of evidence
+      # they are (road-to-release-review-p0 Phase 2). Diff-scoped against the
+      # resolved base ref, so it scans 0 and exits 0 on a branch that adds
+      # none — which is why it is deliberately absent from gate-coverage.yml
+      # (no honest `min_scanned` floor exists for it; same reason and same
+      # shape as check_rule_projection_integrity above). Its ledger half IS
+      # discharged, so check_gate_completeness counts it as an adopter.
+      - ./scripts-run src/scripts/lint_evidence_artifacts --quiet
       # Detector corpus: every self-repair detector carries all three fixture
       # classes AND every fixture behaves as its class says. Cheap (pure
       # functions over a 22-entry YAML corpus, no I/O beyond the one read).

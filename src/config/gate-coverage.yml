@@ -42,7 +42,7 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-16)
 # ----------------------------------------------------------
-# 260 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 261 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
 # **37 of them emit the machine-readable `scanned: <N>` line under their
 # CI-identical argv, and all 37 are listed below.** The manifest is therefore
