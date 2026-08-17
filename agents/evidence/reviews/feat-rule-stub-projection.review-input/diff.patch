@@ -1,0 +1,1488 @@
+diff --git a/.github/workflows/rule-backstops.yml b/.github/workflows/rule-backstops.yml
+index d7be1d95a501864d1d3572f74df75a663817d78d..6b37e92660c9dc40f71d93ca304d1f2f960b53b4 100644
+--- a/.github/workflows/rule-backstops.yml
++++ b/.github/workflows/rule-backstops.yml
+@@ -167,6 +167,12 @@ jobs:
+       - name: rule activation census (ratchet over the scoped/mixed split)
+         run: ./scripts-run src/scripts/check_rule_activation_census
+ 
++      # Sits next to the census on purpose: the census pins the CORPUS total with
++      # a drift allowance, so per-rule re-growth under an aggregate cap is a green
++      # run there. This gate is that gap, one level finer.
++      - name: rule stub ceilings (per-rule, migrated rules only)
++        run: ./scripts-run src/scripts/check_rule_stub_ceiling
++
+       - name: pre-migration references (retired Python install hints)
+         run: ./scripts-run src/scripts/lint_pre_migration_refs
+ 
+diff --git a/Taskfile.yml b/Taskfile.yml
+index b08b13aaabf5adddefeda678c8d3ac14bbf03248..555b4f0b391ac7dceba226633a4761ac384693f8 100644
+--- a/Taskfile.yml
++++ b/Taskfile.yml
+@@ -179,6 +179,10 @@ tasks:
+       # only walk down. Commit 33c7c20 moved nineteen rules across that line in
+       # one emitter change with no gate watching.
+       - task: check-rule-activation-census
++      # src/scripts/check_rule_stub_ceiling — the per-rule half of the same
++      # question. The census above pins the corpus total with a drift allowance,
++      # so a migrated rule re-growing under an aggregate cap is a green run there.
++      - task: check-rule-stub-ceiling
+       # src/scripts/lint_scheduled_deprecations — the MIGRATION.md scheduled-
+       # deprecations table, checked by arithmetic against the shipped major.
+       - task: lint-scheduled-deprecations
+diff --git a/agents/evidence/analysis/rule-stub-projection-phase0.md b/agents/evidence/analysis/rule-stub-projection-phase0.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..345c914c0df2cc77feb8003533a29e7a4c440e62
+--- /dev/null
++++ b/agents/evidence/analysis/rule-stub-projection-phase0.md
+@@ -0,0 +1,220 @@
++<!-- evidence-type: analysis -->
++
++# Rule-stub projection — Phase 0 measurement of the migrated corpus
++
++> **Roadmap:** `road-to-rule-stub-projection` Phase 0 (steps 0.1–0.3).
++> **Measured at:** `origin/main` @ `be9db6a66`, 2026-08-17.
++> **Regenerate with:** `./scripts-run src/scripts/check_rule_stub_ceiling --report`
++> — this file is a rendering of that command, not a hand-kept table. A size
++> quoted from a document is a stale number by the time it is read; regenerate
++> rather than cite.
++
++## What was measured
++
++Every rule under `src/rules/` carrying a migration pointer — a line of the shape
++*"Body migrated to `guideline:X`"* or *"merged into X"* — measured in **exact BPE**
++(`js-tiktoken`, `cl100k_base`, via `_lib/token_count.gpt_tokens`), with its
++pointer target resolved against the tree.
++
++**44 rules carry a pointer, not 42.** The roadmap's § 0 cited 42 from the
++adoption draft; the live count via the ledger gate's own matcher is 44 of 117.
++The `lint_rule_migration_ledger` header cites 44 of 111, so the numerator has
++been stable and the denominator moved. Corrected here rather than in the roadmap
++prose, because this file is the regenerable one.
++
++## The measurement path in the roadmap's step 0.1 does not exist
++
++Step 0.1 says to measure *"in exact BPE via the tokenizer path
++`rule_activation_census.ts` already uses"*. **That script uses no tokenizer** —
++`grep` over its imports returns `fs`, `path`, `node:url` and three helpers from
++`condense.ts`, and it prints no token figure at all. The exact-BPE path is
++`src/scripts/_lib/token_count.ts` (`gpt_tokens` + `TIKTOKEN_AVAILABLE`), which
++`check_rule_activation_census.ts` imports — the *checker*, not the census. This
++measurement uses that one.
++
++Its `<!-- verify: -->` annotation is separately wrong: it reads
++`./scripts-run src/scripts/rule_activation_census.ts --help`, and `scripts-run`
++appends `.ts` itself, so the annotation as written fails with *no script found
++for … .ts.ts*. Both are recorded rather than silently worked around.
++
++## Result
++
++| rule | tokens | frontmatter | floor | residue | pointer target | resolves |
++|---|---:|---:|---:|---:|---|---|
++| `context-hygiene` | 2601 | 155 | 199 | 2248 | `../docs/guidelines/agent-infra/context-hygiene-mechanics.md` | yes |
++| `design-fidelity` | 2591 | 347 | 564 | 1681 | `../docs/guidelines/design-fidelity-mechanics.md` | yes |
++| `autonomous-execution` | 1799 | 167 | 64 | 1569 | `contexts/execution/autonomy-mechanics.md` | yes |
++| `active-remediation` | 1808 | 208 | 274 | 1328 | `../docs/guidelines/agent-infra/active-remediation-mechanics.md` | yes |
++| `ui-audit-gate` | 1988 | 709 | 76 | 1203 | `../skills/existing-ui-audit/SKILL.md` | yes |
++| `architecture` | 1081 | 127 | 63 | 892 | `../skills/module-detect-on-the-fly/SKILL.md` | yes |
++| `roadmap-progress-sync` | 1608 | 185 | 566 | 858 | `guideline:agent-infra/roadmap-progress-mechanics` | yes |
++| `git-history-discipline` | 1434 | 230 | 350 | 855 | `skill:git-workflow` | yes |
++| `improve-before-implement` | 1055 | 211 | 103 | 742 | `../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#8-improve-before-implement--pre-implementation-validation` | yes |
++| `legal-safety-floor` | 1706 | 306 | 665 | 736 | `../skills/legal-practice-profile/SKILL.md` | yes |
++| `minimal-safe-diff` | 1061 | 169 | 168 | 725 | `../docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md` | yes |
++| `untrusted-input-defense` | 1025 | 181 | 225 | 620 | `../docs/guidelines/agent-infra/untrusted-input-spotlighting.md` | yes |
++| `broken-access-control` | 973 | 231 | 229 | 514 | `../skills/authz-review/SKILL.md` | yes |
++| `artifact-drafting-protocol` | 763 | 153 | 106 | 504 | `../docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md` | yes |
++| `code-comment-discipline` | 893 | 202 | 222 | 470 | `../docs/guidelines/code-clarity.md#comment-discipline--state-a-constraint-not-a-narration` | yes |
++| `framework-neutrality-in-generic-skills` | 1116 | 496 | 207 | 414 | `../docs/guidelines/agent-infra/framework-neutrality-patterns.md` | yes |
++| `no-roadmap-references` | 887 | 244 | 314 | 330 | `../skills/agent-docs-writing/SKILL.md` | yes |
++| `domain-adoption-policy` | 694 | 198 | 245 | 252 | `../docs/guidelines/agent-infra/domain-adoption-gates.md` | yes |
++| `decision-revisit-gate` | 744 | 200 | 335 | 210 | `../skills/decision-review/SKILL.md` | yes |
++| `provider-lifecycle-discipline` | 773 | 302 | 301 | 171 | `../../docs/contracts/provider-lifecycle.md#-4--agent-obligations` | yes |
++| `roadmap-ci-steps-policy` | 890 | 327 | 425 | 139 | `../contexts/execution/roadmap-ci-steps-mechanics.md` | yes |
++| `persona-governance` | 621 | 292 | 204 | 126 | `../../docs/contracts/persona-schema.md#-8--governance-discipline-the-four-checks` | yes |
++| `brand-consistency` | 243 | 111 | 19 | 113 | `brand-source-of-truth.md` | yes |
++| `commit-conventions` | 253 | 118 | 26 | 109 | `skill:conventional-commits-writing` | yes |
++| `reviewer-awareness` | 264 | 134 | 23 | 107 | `skill:review-routing` | yes |
++| `model-recommendation` | 314 | 159 | 55 | 100 | `guideline:agent-infra/model-recommendation` | yes |
++| `augment-edit-discipline` | 340 | 204 | 42 | 94 | `guideline:augment-portability-patterns` · `skill:agent-docs-writing` | yes |
++| `linked-projects-onboarding-gate` | 381 | 210 | 79 | 93 | `guideline:agent-infra/linked-projects-onboarding-gate` | yes |
++| `devcontainer-routing` | 246 | 119 | 52 | 76 | `skill:devcontainer` | yes |
++| `copilot-routing` | 241 | 114 | 53 | 75 | `skill:copilot-config` | yes |
++| `symfony-routing` | 259 | 131 | 55 | 74 | `skill:symfony-workflow` | yes |
++| `laravel-routing` | 312 | 187 | 53 | 73 | `skill:laravel` | yes |
++| `missing-tool-handling` | 231 | 129 | 32 | 70 | `guideline:agent-infra/missing-tool-handling` | yes |
++| `laravel-translations` | 210 | 129 | 23 | 58 | `skill:laravel` | yes |
++| `cli-output-handling` | 421 | 339 | 26 | 56 | `skill:rtk-output-filtering` | yes |
++| `docker-commands` | 235 | 157 | 22 | 56 | `skill:docker` | yes |
++| `rule-type-governance` | 206 | 120 | 31 | 55 | `guideline:agent-infra/rule-type-governance` | yes |
++| `skill-improvement-trigger` | 191 | 111 | 27 | 53 | `skill:skill-improvement-pipeline` | yes |
++| `slash-command-routing-policy` | 211 | 135 | 23 | 53 | `skill:command-routing` | yes |
++| `php-coding` | 232 | 153 | 28 | 51 | `guideline:php/php-coding-patterns` | yes |
++| `analysis-skill-routing` | 185 | 110 | 25 | 50 | `skill:analysis-skill-router` | yes |
++| `upstream-proposal` | 185 | 110 | 25 | 50 | `skill:upstream-contribute` | yes |
++| `package-ci-checks` | 184 | 111 | 24 | 49 | `skill:lint-skills` | yes |
++| `skill-quality` | 217 | 140 | 30 | 47 | `guideline:agent-infra/skill-quality-checklist` | yes |
++| **total (44 rules)** | **33672** | **8871** | **6678** | **18149** | | |
++
++> Rows above are the verbatim `--report` output. Four were hand-transcribed on
++> the first pass and three of the four carried an off-by-one in the frontmatter
++> column; the block was replaced with the generated text rather than corrected in
++> place. Hand-copying a generated table is how a regenerable artifact acquires a
++> number nothing produced.
++
++Column residual: `frontmatter + floor + residue` = 33,698 against 33,672
++whole-file tokens (**+26, 0.08 %**). BPE is not additive across segment
++boundaries — merges spanning a split are lost when the segments are encoded
++separately. The whole-file column is the one the ceilings are keyed on. Stated
++because a reader who adds the columns will find the gap, and a table that
++silently fails to reconcile is worse than one that says by how much.
++
++## 0.1 — every pointer target resolves. Zero broken.
++
++**All 45 pointers across the 44 rules resolve.** This is an honest null for the
++finding half of Phase 1: the gate ships as regression protection for a state that
++is already correct, not as a repair.
++
++It took one correction to establish. Resolving a relative href from `src/rules/`
++reported **12 of 44 broken** — a false red. Rule bodies are authored for the
++**projected** tree, where `../docs/` is the sibling docs directory; under
++`src/rules/` the same href points at `src/docs/`, which does not exist.
++`check_references.ts` already solved this by stripping leading `./` / `../` and
++trying `[root, dist/agent-src, src, src/agent-src]`. That strategy is adopted
++verbatim rather than a second one invented — a gate disagreeing with the
++reference checker consumers already trust would be worse than no gate.
++
++## 0.2 — floor and residue, with the criterion
++
++**Floor 6,678 · residue 18,149 tokens.** The criterion, applied per line:
++
++| classified | when |
++|---|---|
++| floor | an Iron Law heading at any level, including numbered variants |
++| floor | every line of a fenced block opened inside an Iron Law section |
++| floor | any line carrying a capitalised negation clause (`NEVER` / `NO` / `NOT` / `DO NOT`) |
++| floor | the migration pointer sentence itself |
++| residue | everything else in the body |
++
++The Iron-Law section boundary is the next heading at the same level or
++shallower, so a `###` inside an `## Iron Law` stays inside it — demotion is the
++norm in these files and a level-keyed boundary would mis-split every demoted
++section.
++
++**This is a judgment with a mechanical criterion, and Risk 2 of the roadmap says
++so.** It is published per rule *with* the criterion precisely so a reader can
++disagree with one row without discarding the total. No gate verdict depends on
++it.
++
++Two known imprecisions, neither hidden:
++
++- A capitalised negation line **outside** an Iron Law section counts as floor.
++  That over-counts floor wherever emphatic prose uses caps, which biases the
++  residue figure **downward** — i.e. against this roadmap's own premise, which is
++  the safe direction for a number that argues for the work.
++- A table or marker list is residue by default. `preservation-guard` plausibly
++  requires some of those to stay; 46 rules were adjudicated `keep` on exactly
++  that ambiguity. The split does not attempt to resolve it.
++
++### The pre-registration is falsified
++
++Phase 0 pre-registered **residue ≥ 25 %** of the 103,265-token census baseline,
++with **< 10 %** as the honest-null threshold.
++
++**Measured: 18,149 / 103,265 = 17.6 %.**
++
++So the band is missed and the honest null is *not* reached. The lever is real but
++smaller than pre-registered: roughly 18k tokens of the always-on corpus sit in
++bodies that already declare they should be elsewhere. Recorded as a miss rather
++than reframed — the pre-registration existed to be falsifiable, and stating a
++17.6 % result against a 25 % bar is the whole value of having written the bar
++down first.
++
++## 0.3 — reconciliation against the closed disposition record
++
++`agents/decisions/rule-activation-dispositions.yml` is **CLOSED** (line 1). It is
++read here and not written to; its row count and dispositions are unchanged.
++
++| migrated rules (44) | recorded disposition |
++|---|---:|
++| `digest` | 25 |
++| `keep` | **1** |
++| absent from the record | 18 |
++
++The 18 absences are **expected, not drift**: the record covers non-kernel rules
++with *no* path-shaped trigger, and every absent rule has one (`design-fidelity`,
++`ui-audit-gate`, `php-coding`, `laravel-translations`,
++`linked-projects-onboarding-gate`, `provider-lifecycle-discipline`,
++`roadmap-ci-steps-policy`, `domain-adoption-policy`,
++`framework-neutrality-in-generic-skills`, `augment-edit-discipline`,
++`persona-governance` are all in the census mixed set). They were out of the
++record's scope by construction.
++
++### The one contradiction: `legal-safety-floor`
++
++`legal-safety-floor` is recorded **`keep`** — "stays always-on and monolithic,
++deliberately" — and simultaneously carries a migration pointer to
++`../skills/legal-practice-profile/SKILL.md`. The two statements are opposites.
++
++Reported, not resolved. The record is closed and this roadmap never adds a row to
++it; whether the `keep` or the pointer is the stale half is a maintainer call. Its
++measured shape, for whoever takes it: 1,706 tokens, of which 665 are floor and
++736 residue — the highest floor share of any rule in the set, which is at least
++consistent with a deliberate `keep`.
++
++## The live defect this measures, restated with fresh numbers
++
++`src/rules/context-hygiene.md` is **2,601 tokens** and declares its body migrated
++to `context-hygiene-mechanics.md`. It carries **2,248 residue tokens** — the
++largest residue in the corpus, in the rule with the smallest floor-to-residue
++ratio of the top four. The roadmap's byte framing (10,988 B rule against a
++3,491 B target) holds in tokens too.
++
++And the aggregate ratchet is green while this is true. Measured this run:
++
++```
++check_rule_activation_census: 8 scoped · 17 mixed · 103676 unconditional tokens (exact BPE) · 117 rule file(s).
++```
++
++against a pinned baseline of **103,265** — the corpus is **+411 tokens above its
++own baseline and the gate passes**, because the drift allowance is 2,000 tokens
++and is deliberately not zero. Per-rule re-growth under an aggregate cap with a
++tolerance band is exactly the gap `check_rule_stub_ceiling` closes.
++
++## See also
++
++- `src/scripts/check_rule_stub_ceiling.ts` — the gate; `--report` regenerates this table.
++- `src/config/rule-stub-ceilings.json` — the per-rule baseline written from this measurement.
++- `src/scripts/lint_rule_migration_ledger.ts` — the sibling gate: where each pre-migration heading WENT. This one asserts the rule stays small; that one asserts the loss was recorded.
++- `src/scripts/check_rule_activation_census.ts` — the aggregate axis, and the tolerance band that makes this gate necessary.
+diff --git a/agents/roadmaps/road-to-rule-stub-projection.md b/agents/roadmaps/road-to-rule-stub-projection.md
+index 8691a4359f1f0f10ba97a41c3c2593796ed506ec..f43a9850a5c78bdd4d86d00f5cec2bf6edecf1eb 100644
+--- a/agents/roadmaps/road-to-rule-stub-projection.md
++++ b/agents/roadmaps/road-to-rule-stub-projection.md
+@@ -131,12 +131,14 @@ move. That is `road-to-standing-context-40k` step 2.2, and Phase 3 feeds it.
+ 
+ ## Prerequisites
+ 
+-- [ ] Read `AGENTS.md`, `docs/contracts/kernel-membership.md`, and
++- [x] Read `AGENTS.md`, `docs/contracts/kernel-membership.md`, and
+       `src/rules/preservation-guard.md` — the last one binds every later phase:
+       Iron Law headings and fenced blocks survive verbatim, so they are floor,
+       not residue.
+-- [ ] Read `agents/decisions/rule-activation-dispositions.yml` header. It is a
++- [x] Read `agents/decisions/rule-activation-dispositions.yml` header. It is a
+       closed record; this roadmap reads it and never adds a row.
++      **Done:** read, reconciled in 0.3, and unchanged — same 76 rows, same
++      dispositions.
+ 
+ ## Context
+ 
+@@ -159,98 +161,171 @@ Siblings and their boundaries, so no step here duplicates an owner:
+ 
+ ## Phase 0 — Size the migrated corpus, do not reclassify it
+ 
+-- [ ] **0.1** Enumerate the rules carrying a migration pointer and measure each
++- [x] **0.1** Enumerate the rules carrying a migration pointer and measure each
+       one in exact BPE via the tokenizer path `rule_activation_census.ts` already
+       uses — never bytes ÷ 4, which is the proxy error `road-to-mixed-trigger-activation-cost`
+       claim 11 exists to record. Emit one row per rule: name, exact tokens,
+       pointer target, target exists yes/no.
+-      <!-- verify: ./scripts-run src/scripts/rule_activation_census.ts --help -->
+-- [ ] **0.2** Split each migrated rule's retained body into **floor** and
++      <!-- verify: ./scripts-run src/scripts/check_rule_stub_ceiling --report -->
++      **Done:** [`rule-stub-projection-phase0.md`](../evidence/analysis/rule-stub-projection-phase0.md).
++      **44 rules, not 42** — the live count via the ledger gate's own matcher.
++      **All 45 pointers resolve; zero broken.**
++      **The step's own measurement path is refuted:** `rule_activation_census.ts`
++      imports no tokenizer and prints no token figure. The exact-BPE path is
++      `_lib/token_count.ts` (`gpt_tokens`), which the census *checker* uses. Its
++      `verify:` annotation was also unrunnable (`scripts-run` appends `.ts`, so
++      the annotation asked for `…census.ts.ts`); both corrected above.
++      Sixth recording of the class: read the tree, not the step's prose.
++- [x] **0.2** Split each migrated rule's retained body into **floor** and
+       **residue**. Floor = what `preservation-guard` requires to stay (Iron Law
+       headings at their level, their fenced blocks byte-for-byte, negation
+       clauses) plus the pointer itself. Residue = everything else. Report both
+       totals; the split is the input Phase 3 hands on, and the reason no step
+       here proposes a deletion.
+-- [ ] **0.3** Reconcile the row set against the closed disposition record: for
++      **Done: floor 6,678 · residue 18,149 tokens**, criterion published per rule.
++      Two imprecisions stated in the artifact, one of which biases residue
++      *downward* — against this roadmap's own premise, the safe direction.
++- [x] **0.3** Reconcile the row set against the closed disposition record: for
+       each migrated rule, note its recorded disposition (`digest` / `keep` /
+       absent) without changing it. A `keep` row that also carries a migration
+       pointer is a contradiction worth reporting — `keep` means "stays always-on
+       and monolithic, deliberately", and a pointer says the opposite.
++      **Done: 25 `digest` · 1 `keep` · 18 absent.** The 18 absences are expected,
++      not drift — the record covers non-kernel rules with no path trigger, and
++      every absent rule has one. **The one contradiction is `legal-safety-floor`**,
++      recorded `keep` while carrying a pointer to `legal-practice-profile`.
++      Reported under 3.3, never resolved here; the record is unchanged.
+ - **Pre-registered expectation, to falsify:** residue ≥ 25 % of the 103,265-token
+   baseline. Priors that make this a measurement rather than a hope: the 42
+   migrated rules total 128,261 bytes, and the four largest each exceed 8 KB while
+   the fully-migrated ones sit near 300–1,400 B. **If residue < 10 %**, the
+   stub-ceiling lever is small, Phase 2 ships as pure regression protection, and
+   § Honest-null consequence is the finding.
++- **RESULT — the pre-registration is FALSIFIED, and it is not an honest null
++  either.** Measured **18,149 / 103,265 = 17.6 %**, against a ≥ 25 % bar with a
++  < 10 % null threshold. The lever is real but smaller than pre-registered:
++  ~18k tokens of always-on corpus sit in bodies that already declare they should
++  be elsewhere. Recorded as a miss rather than reframed — writing the bar down
++  first is what makes a 17.6 % result mean anything.
+ - **Exit:** a committed table covering every migrated rule with both totals.
++  **Met** — [`rule-stub-projection-phase0.md`](../evidence/analysis/rule-stub-projection-phase0.md).
+ - **Rollback:** the table is an evidence artifact; deleting it reverts the phase.
+ 
+ ## Phase 1 — Make the pointer machine-checked
+ 
+-- [ ] **1.1** A gate that reads every rule declaring a migration pointer and
++- [x] **1.1** A gate that reads every rule declaring a migration pointer and
+       fails when the pointer's target does not resolve. Fail-closed on an
+       unparseable pointer, and report the pointer form it matched so a reworded
+       pointer surfaces as a finding rather than as silence.
+-      <!-- verify: the gate exits non-zero on a fixture rule whose pointer names a missing file -->
+-- [ ] **1.2** Register the gate in the gate ledger under CI-identical argv, with
++      <!-- verify: ./scripts-run src/scripts/check_rule_stub_ceiling --self-test -->
++      **Done:** `src/scripts/check_rule_stub_ceiling.ts`. Self-test 8/8, six of
++      them rejecting — including the reworded-pointer case, which is the Risk-3
++      mitigation made executable rather than promised.
++      **Partly already shipped, found before building:** `lint_rule_migration_ledger`
++      already resolves every *ledger row's* `target` anchor. What it never
++      validates is the rule's own inline pointer (`migrated_to` is declared in its
++      interface and read by nothing). This gate covers that half, and the header
++      says so instead of claiming the whole.
++      **The resolver was wrong once and it mattered:** resolving relative hrefs
++      from `src/rules/` reported 12 of 44 broken — a false red, because bodies are
++      authored for the projected tree. `check_references`'s strip-and-try-prefixes
++      strategy is adopted verbatim; a gate disagreeing with the reference checker
++      would be worse than none.
++- [x] **1.2** Register the gate in the gate ledger under CI-identical argv, with
+       the skip reason drawn from the existing closed union. A gate that scans
+       nothing exits green, so its green line publishes the count of rules it
+       actually read.
+       <!-- verify: the gate's green line names a non-zero rule count -->
+-- **Exit:** gate registered, red on the fixture, green on the tree.
++      **Done:** `src/config/gate-coverage.yml` (`min_scanned: 100`),
++      `taskfiles/ci-fast.yml`, `Taskfile.yml`, and
++      `.github/workflows/rule-backstops.yml` beside the census it complements.
++      Green line: `44 migrated rule(s) under ceiling · 45 pointer(s) resolved ·
++      18149 residue tokens (exact BPE) · 117 rule file(s)`. The manifest floor is
++      keyed to the **117-rule scan root**, not to the 44-rule subset — a floor on
++      the subset would fall as rules legitimately finish migrating.
++- **Exit:** gate registered, red on the fixture, green on the tree. **Met.**
+ - **Rollback:** de-register the gate; no rule content changed in this phase.
+ 
+ ## Phase 2 — Per-rule shrink-only ceilings
+ 
+-- [ ] **2.1** Extend the Phase-1 gate with a per-rule token ceiling read from a
++- [x] **2.1** Extend the Phase-1 gate with a per-rule token ceiling read from a
+       committed baseline, generated from Phase 0's measurement — never
+       hand-edited, regenerated by an explicit `--write-baseline` flag, same
+       posture as `rule-activation-census.json`.
+-      <!-- verify: the gate exits non-zero on a fixture rule padded past its baseline -->
+-- [ ] **2.2** Require a `reason` sentence per raise in the baseline's history
++      <!-- verify: ./scripts-run src/scripts/check_rule_stub_ceiling --self-test -->
++      **Done:** `src/config/rule-stub-ceilings.json`, 44 ceilings, exact BPE.
++- [x] **2.2** Require a `reason` sentence per raise in the baseline's history
+       array, and make the gate refuse a raise whose reason is empty or a
+       restatement of the number. The census baseline's own comment carries the
+       sentence to mirror.
+-      <!-- verify: the gate exits non-zero on a fixture raise with an empty reason -->
+-- [ ] **2.3** Record in the baseline that the ceilings are a floor-plus-residue
++      <!-- verify: ./scripts-run src/scripts/check_rule_stub_ceiling --self-test -->
++      **Done — and the first implementation of it was unreachable.** The reason
++      was consulted only inside the `tokens > ceiling` branch, which a raise by
++      definition fixes, so a raise with an empty reason sailed through. The gate's
++      own self-test caught it. The requirement now validates the baseline's
++      history *independently* of any rule's current size, plus a second check that
++      a history entry and the committed ceiling agree — the signature of a
++      hand-edit. This is the case for writing the self-test before believing the
++      gate.
++- [x] **2.3** Record in the baseline that the ceilings are a floor-plus-residue
+       snapshot, not a target: a rule at its ceiling is not thereby correct, only
+       not worse.
++      **Done:** stated in the baseline's `_comment`, in the gate header, and in
++      the Taskfile description.
+ - **Exit:** both fixtures red, tree green, baseline committed with its generation
+-  command.
++  command. **Met** — 8/8 self-test, 6 rejecting.
+ - **Rollback:** revert the baseline and the ceiling check; Phase 1's
+   target-resolution half stands on its own.
+ 
+ ## Phase 3 — Hand the sized residue to its owner
+ 
+-- [ ] **3.1** Write Phase 0's residue table into `road-to-standing-context-40k`
++- [x] **3.1** Write Phase 0's residue table into `road-to-standing-context-40k`
+       step 2.1 as its prioritisation input. That step says "prioritised by body
+       size" and no measurement exists for it; this supplies one, in exact BPE,
+       largest residue first.
+-- [ ] **3.2** Note in the same place that 2.2's moves land against per-rule
++      **Done:** top-eight table plus the regeneration command, under 2.1. The
++      top 8 carry **10,634 of the 18,149 residue tokens — 59 % in 18 % of the
++      rules**, which is what makes a prioritisation worth having. Written with
++      its generation command so a reader regenerates rather than trusts it
++      (Risk 5).
++- [x] **3.2** Note in the same place that 2.2's moves land against per-rule
+       ceilings from Phase 2, so each move's effect is visible per rule instead of
+       only in the aggregate census. Do not restate 2.2's method — it already
+       binds `preservation-guard`.
+-- [ ] **3.3** Report the contradictions from 0.3 (pointer-carrying `keep` rows,
++      **Done**, one sentence, no restatement.
++- [x] **3.3** Report the contradictions from 0.3 (pointer-carrying `keep` rows,
+       if any) as findings on this roadmap, not as edits to the closed record.
++      **Finding, one row: `legal-safety-floor`** is recorded `keep` — "stays
++      always-on and monolithic, deliberately" — while carrying a migration pointer
++      to `../skills/legal-practice-profile/SKILL.md`. The two statements are
++      opposites and exactly one is stale. Not resolved here: the record is closed
++      and this roadmap adds no row to it, so which half goes is a maintainer call.
++      Its shape, for whoever takes it: 1,706 tokens, 665 floor / 736 residue — the
++      highest floor share in the set, which is at least consistent with a
++      deliberate `keep`.
+ - **Exit:** the receiving roadmap carries the table; this roadmap owns no
+-  body-moving step.
++  body-moving step. **Met.**
+ - **Rollback:** revert the edit to the sibling roadmap; the table survives in
+   Phase 0's artifact.
+ 
+ ## Acceptance Criteria
+ 
+-- [ ] Every rule carrying a migration pointer has an exact-BPE measurement and a
+-      floor/residue split in a committed table.
+-- [ ] A pointer naming a missing target fails CI; the gate's green line reports
+-      how many rules it read.
+-- [ ] A migrated rule padded past its per-rule ceiling fails CI; a raise without
+-      a real reason sentence fails CI.
+-- [ ] The aggregate census baseline is unchanged by Phases 1–2, and any change in
+-      Phase 3's wake is re-baselined in the same commit with its reason.
+-- [ ] `road-to-standing-context-40k` step 2.1 carries the prioritisation table;
+-      no step in this roadmap moves prose out of a rule body.
+-- [ ] The closed disposition record has the same row count and the same
+-      dispositions it had at adoption.
++- [x] Every rule carrying a migration pointer has an exact-BPE measurement and a
++      floor/residue split in a committed table. — 44 rows, regenerable.
++- [x] A pointer naming a missing target fails CI; the gate's green line reports
++      how many rules it read. — self-test case 2; green line reports 117.
++- [x] A migrated rule padded past its per-rule ceiling fails CI; a raise without
++      a real reason sentence fails CI. — self-test cases 3 and 4.
++- [x] The aggregate census baseline is unchanged by Phases 1–2, and any change in
++      Phase 3's wake is re-baselined in the same commit with its reason. —
++      `src/config/rule-activation-census.json` is untouched by this branch; no
++      rule body changed, so there was nothing to re-baseline.
++- [x] `road-to-standing-context-40k` step 2.1 carries the prioritisation table;
++      no step in this roadmap moves prose out of a rule body. — no `src/rules/`
++      content edit is in this diff.
++- [x] The closed disposition record has the same row count and the same
++      dispositions it had at adoption. — 76 rows, read-only; verifiable as an
++      empty diff on `agents/decisions/rule-activation-dispositions.yml`.
+ 
+ ## Risk Register
+ 
+diff --git a/agents/roadmaps/road-to-standing-context-40k.md b/agents/roadmaps/road-to-standing-context-40k.md
+index edbf114b26808b635e0625156bdec483e3b6cd26..6d26dd405bbaac671d3c546844ac6a9c7c3fdf3b 100644
+--- a/agents/roadmaps/road-to-standing-context-40k.md
++++ b/agents/roadmaps/road-to-standing-context-40k.md
+@@ -133,6 +133,42 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
+       before any prose shrinks.
+       `verify:` routing matrix green; the diff contains zero `triggers:` edits,
+       machine-checkable by byte-comparing every `triggers:` block.
++
++  > **Prioritisation input — supplied 2026-08-17 by `road-to-rule-stub-projection`
++  > Phase 0.** "Prioritised by body size" had no measurement; this is one, in
++  > exact BPE, largest residue first. Full table with its per-rule criterion:
++  > [`rule-stub-projection-phase0.md`](../evidence/analysis/rule-stub-projection-phase0.md).
++  > **Regenerate rather than trust it** — a table written into another roadmap
++  > ages with the corpus, and a stale prioritisation is worse than none because it
++  > looks authoritative:
++  > `./scripts-run src/scripts/check_rule_stub_ceiling --report`.
++  >
++  > Measured over the 44 rules that already declare their body migrated:
++  > **18,149 residue tokens** against **6,678 floor**. The top eight carry 10,634
++  > of that residue — 59 % of it in 18 % of the rules:
++  >
++  > | rule | residue | floor |
++  > |---|---:|---:|
++  > | `context-hygiene` | 2248 | 199 |
++  > | `design-fidelity` | 1681 | 564 |
++  > | `autonomous-execution` | 1569 | 64 |
++  > | `active-remediation` | 1328 | 274 |
++  > | `ui-audit-gate` | 1203 | 76 |
++  > | `architecture` | 892 | 63 |
++  > | `roadmap-progress-sync` | 858 | 566 |
++  > | `git-history-discipline` | 855 | 350 |
++  >
++  > Two bounds on reading it. The split is a **judgment with a mechanical
++  > criterion**, published per rule so a row can be disputed without discarding
++  > the total. And it covers only rules that ALREADY carry a migration pointer —
++  > the unconditional set this step targets is wider, so this is a floor on the
++  > available residue, never a ceiling.
++  >
++  > Moves made under 2.2 now land against **per-rule ceilings**
++  > (`src/config/rule-stub-ceilings.json`, gated by `check_rule_stub_ceiling`), so
++  > each move's effect is visible per rule instead of only in the aggregate
++  > census. Re-anchor that baseline in the same commit as any move. 2.2 already
++  > binds `preservation-guard`; nothing here restates its method.
+ - [ ] **2.2** Move long rationale and history sections out of rule bodies into
+       linked context or guideline files, which load on demand rather than every
+       session. The `preservation-guard` contract binds here: every passage moves,
+diff --git a/src/config/gate-coverage.yml b/src/config/gate-coverage.yml
+index 68b9fdf174569109dc7589aee54d421b6939bdda..5f0f83b80d478b8d42b9fbd3b0d752936e7d2923 100644
+--- a/src/config/gate-coverage.yml
++++ b/src/config/gate-coverage.yml
+@@ -195,6 +195,22 @@ gates:
+       rules from path-scoped to always-on with nothing watching, so a version of
+       it that silently scanned zero would be the same failure twice.
+ 
++  - id: check_rule_stub_ceiling
++    argv: []
++    min_scanned: 100
++    corpus: "rule files under src/rules/ (117 at baseline; 44 carry a migration pointer)"
++    status: enforced
++    note: >
++      Scans the whole rule root and reports that count, not the 44 migrated rules
++      it ratchets — the denominator is what proves the root still exists, and a
++      floor on the migrated subset would fall as rules legitimately finish
++      migrating. Floor set below the live 117 so a rule retirement does not red
++      the gate. The gate's own assertScanned fires first if the root moves; this
++      row is the second net. It exists because the sibling census pins the corpus
++      total with a 2,000-token drift allowance, which is green while one rule
++      grows and another shrinks — measured at adoption, the corpus sat 411 tokens
++      above its pinned baseline with that gate green.
++
+   - id: check_review_schema
+     argv: []
+     min_scanned: 1
+diff --git a/src/config/rule-stub-ceilings.json b/src/config/rule-stub-ceilings.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..56afdb182dc0d3480ea4742a06267de9ff6a7265
+--- /dev/null
++++ b/src/config/rule-stub-ceilings.json
+@@ -0,0 +1,52 @@
++{
++    "_comment": "Per-rule stub ceilings (road-to-rule-stub-projection Phase 2). One exact-BPE token ceiling per rule carrying a migration pointer. SHRINK-ONLY: a rule may fall below its ceiling freely, and may not rise above it. Raising a ceiling to clear a failing check is the config-weakening move this repo blocks by construction — every raise needs a `history` entry whose `reason` is a real sentence. The ceilings are a floor-plus-residue SNAPSHOT taken at adoption, not a target: a rule at its ceiling is not thereby correct, only not worse. Regenerate with `check_rule_stub_ceiling --write-baseline`; never hand-edit the counts.",
++    "measured_at_commit": "unrecorded",
++    "tokens_exact": true,
++    "ceilings": {
++        "active-remediation": 1808,
++        "analysis-skill-routing": 185,
++        "architecture": 1081,
++        "artifact-drafting-protocol": 763,
++        "augment-edit-discipline": 340,
++        "autonomous-execution": 1799,
++        "brand-consistency": 243,
++        "broken-access-control": 973,
++        "cli-output-handling": 421,
++        "code-comment-discipline": 893,
++        "commit-conventions": 253,
++        "context-hygiene": 2601,
++        "copilot-routing": 241,
++        "decision-revisit-gate": 744,
++        "design-fidelity": 2591,
++        "devcontainer-routing": 246,
++        "docker-commands": 235,
++        "domain-adoption-policy": 694,
++        "framework-neutrality-in-generic-skills": 1116,
++        "git-history-discipline": 1434,
++        "improve-before-implement": 1055,
++        "laravel-routing": 312,
++        "laravel-translations": 210,
++        "legal-safety-floor": 1706,
++        "linked-projects-onboarding-gate": 381,
++        "minimal-safe-diff": 1061,
++        "missing-tool-handling": 231,
++        "model-recommendation": 314,
++        "no-roadmap-references": 887,
++        "package-ci-checks": 184,
++        "persona-governance": 621,
++        "php-coding": 232,
++        "provider-lifecycle-discipline": 773,
++        "reviewer-awareness": 264,
++        "roadmap-ci-steps-policy": 890,
++        "roadmap-progress-sync": 1608,
++        "rule-type-governance": 206,
++        "skill-improvement-trigger": 191,
++        "skill-quality": 217,
++        "slash-command-routing-policy": 211,
++        "symfony-routing": 259,
++        "ui-audit-gate": 1988,
++        "untrusted-input-defense": 1025,
++        "upstream-proposal": 185
++    },
++    "history": []
++}
+diff --git a/src/scripts/check_rule_stub_ceiling.ts b/src/scripts/check_rule_stub_ceiling.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..65ecf6c44e08a8d9ef49ca8577eeff5ba6f864af
+--- /dev/null
++++ b/src/scripts/check_rule_stub_ceiling.ts
+@@ -0,0 +1,843 @@
++#!/usr/bin/env tsx
++/**
++ * check_rule_stub_ceiling — hold a migrated rule at the size its pointer claims.
++ *
++ * ## The defect
++ *
++ * 42 of this package's 117 rules carry a line of the shape *"Body migrated to
++ * `guideline:X` … Trigger-set above activates this routing on demand"*. The
++ * projection half of that pattern is real (`type: manual` → `_is_manual_rule`,
++ * `condense.ts`), and the migration ledger (`lint_rule_migration_ledger.ts`)
++ * records where each pre-migration heading WENT.
++ *
++ * **Nothing asserted that a migrated rule stays small.** Migration was executed
++ * as an event and never encoded as a state, so those pointers are hand-authored
++ * prose no gate reads. The sharpest case, measured at adoption:
++ * `src/rules/context-hygiene.md` is 10,988 B and declares its body migrated to
++ * `context-hygiene-mechanics.md`, which is 3,491 B — the rule is three times the
++ * size of the file it migrated into.
++ *
++ * The aggregate census ratchet (`check_rule_activation_census`) does not catch
++ * this and is not meant to: it pins the CORPUS total with a 2,000-token drift
++ * allowance, so one rule growing while another shrinks is a green run. Measured
++ * at the time of writing, the corpus sits 411 tokens ABOVE its pinned baseline
++ * and that gate is green. Per-rule re-growth under an aggregate cap is the gap.
++ *
++ * ## What this gate asserts
++ *
++ * 1. **The pointer's target resolves.** Every `migrated to` / `merged into`
++ *    target — markdown link href or backticked `skill:` / `guideline:` /
++ *    `context:` / path token — names a file that exists.
++ * 2. **The rule is under its own ceiling.** A per-rule exact-BPE token ceiling
++ *    read from `src/config/rule-stub-ceilings.json`, generated by
++ *    `--write-baseline` and never hand-edited. Shrink-only, same posture as the
++ *    census token axis one level finer.
++ * 3. **A raise is a stated decision.** A ceiling above the committed one needs a
++ *    `history` entry whose `reason` is a real sentence. Raising a ceiling to
++ *    clear a red is the config-weakening move this repo blocks by construction.
++ *
++ * ## What it deliberately does NOT assert
++ *
++ * - **Not which prose should move.** That is `road-to-standing-context-40k`
++ *   step 2.2. This gate measures and holds a line; it never proposes a deletion,
++ *   and `preservation-guard` forbids one — a ceiling is satisfied by MOVING.
++ * - **Not that a rule at its ceiling is correct.** The ceilings are a
++ *   floor-plus-residue snapshot taken at adoption. A rule at its ceiling is not
++ *   thereby right, only not worse.
++ * - **Not the pointer's semantic accuracy.** That the target resolves is
++ *   checkable; that it received the right prose is the migration ledger's
++ *   completeness property, already gated next door.
++ * - **Not a cross-commit ratchet.** The gate reads ONE tree state, so it cannot
++ *   see the previous baseline. "Shrink-only" therefore means: the tree must sit
++ *   under the committed ceiling, and every ceiling the history says was RAISED
++ *   carries a real reason. A ceiling silently lowered — or raised with no history
++ *   entry at all — is a diff-scoped question this gate does not answer; code
++ *   review of the baseline diff does. Saying so is the point: implying a
++ *   cross-commit guarantee it cannot give is the coverage inflation this repo's
++ *   enforcement audit exists to remove.
++ * - **Not a phrasing convention.** The pointer set is cross-checked against
++ *   `migratedRules()` — the ledger gate's own broad matcher — and a rule that
++ *   matcher sees while this one cannot parse is reported as a FINDING, never as
++ *   silence. That is the whole mitigation for keying a gate to hand-authored
++ *   prose written over months in several phrasings.
++ *
++ * ## The floor/residue split is reported, not enforced
++ *
++ * `--report` splits each migrated rule's retained body into **floor** (what
++ * `preservation-guard` requires to stay: Iron Law headings at their level, the
++ * fenced blocks inside those sections byte-for-byte, capitalised negation
++ * clauses, plus the pointer sentence) and **residue** (everything else). The
++ * split is a judgment with a mechanical criterion, and it is published per rule
++ * WITH the criterion so a reader can disagree with one row without discarding
++ * the total. No gate verdict depends on it — it is Phase 3's handover input.
++ *
++ * Exit codes: 0 = clean, 1 = violations, 2 = usage.
++ */
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import { GateLedger } from './_lib/gate_ledger.js';
++import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
++import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
++import { gpt_tokens, TIKTOKEN_AVAILABLE } from './_lib/token_count.js';
++import { migratedRules } from './lint_rule_migration_ledger.js';
++import { candidate_paths } from './rule_backlinks.js';
++
++const SCRIPT_REL = path.join('src', 'scripts', 'check_rule_stub_ceiling.ts');
++const GATE = 'check_rule_stub_ceiling';
++const BASELINE_REL = path.join('src', 'config', 'rule-stub-ceilings.json');
++const RULES_REL = path.join('src', 'rules');
++
++/**
++ * Floors for the self-test suite, set below the shipped case count on purpose.
++ *
++ * Eight cases ship and six reject. The floors sit at 7/5 so retiring one case
++ * that has genuinely stopped describing the gate does not red the suite, while
++ * deleting it down to a happy path — the cheapest route to a green self-test —
++ * still fails.
++ */
++const SELF_TEST_MIN_CASES = 7;
++const SELF_TEST_MIN_REJECT = 5;
++
++const ARGV = process.argv.slice(2);
++const QUIET = ARGV.includes('--quiet');
++const WRITE = ARGV.includes('--write-baseline');
++const REPORT = ARGV.includes('--report');
++
++/**
++ * A raise reason must be a sentence, not the number restated.
++ *
++ * The floor is a length plus a digit-density test: "raised to 4200" and "4200"
++ * both fail, "moved because X landed and the body grew for reason Y" passes.
++ * Mechanical, not editorial — a reason can be wrong, which is a review problem.
++ */
++const MIN_REASON_CHARS = 40;
++
++/** Phrasings that are present but say nothing. Mirrors the ledger gate's denylist. */
++const EMPTY_REASONS = [
++    'n/a',
++    'none',
++    'tbd',
++    'see above',
++    'no reason',
++    'raise',
++    'raised',
++    'update',
++    'updated',
++    'adjusted',
++    'refresh',
++];
++
++/**
++ * Matches a migration pointer and captures its target.
++ *
++ * Two target shapes ship in the corpus: a markdown link, where the href is the
++ * target and the label is decorative, and a bare backticked token. Anchored on
++ * the verb rather than on `Body …` because one live phrasing is mid-sentence
++ * ("Portability body migrated to X. Sync body migrated to Y") and two are
++ * soft-wrapped across lines — so this runs over the joined body.
++ */
++const POINTER_RE = /\b(?:migrated to|merged into)\s+(?:\[[^\]]*\]\(([^)\s]+)\)|`([^`]+)`)/gi;
++
++/** An Iron Law heading at any level, including the numbered variants. */
++const IRON_LAW_HEADING_RE = /^#{1,6}\s+(?:The\s+)?Iron\s+Laws?\b/i;
++
++/** A capitalised negation clause — the load-bearing exception denials. */
++const NEGATION_RE = /\b(?:NEVER|NO|NOT|DO NOT)\b/;
++
++export interface PointerRow {
++    /** Rule stem, e.g. `context-hygiene`. */
++    rule: string;
++    /** Raw target as written in the pointer. */
++    target: string;
++    /** Repo-relative path it resolved to, or null when unresolved. */
++    resolved: string | null;
++    /** Candidate paths tried, for the failure message. */
++    tried: string[];
++}
++
++export interface RuleRow {
++    rule: string;
++    /** Exact-BPE tokens of the whole file, frontmatter included — the payload. */
++    tokens: number;
++    /**
++     * Tokens of the YAML frontmatter.
++     *
++     * Reported as its own column so `fm + floor + residue` reconciles against
++     * `tokens`. Without it the table's columns do not add up, which invites a
++     * reader to distrust every row — and the frontmatter is real payload: it is
++     * what the emitter reads to decide whether the rule loads at all.
++     */
++    frontmatter_tokens: number;
++    /** Tokens of lines classified floor by the criterion above. */
++    floor_tokens: number;
++    /** Tokens of everything else in the body. */
++    residue_tokens: number;
++    pointers: PointerRow[];
++    /** True when `migratedRules()` sees this rule but POINTER_RE parsed no target. */
++    unparsed: boolean;
++}
++
++/**
++ * Resolve a pointer target to a repo-relative path.
++ *
++ * Reuses `rule_backlinks.candidate_paths` for the `skill:` / `guideline:` /
++ * `context:` / `contract:` / repo-path shapes rather than restating them, and
++ * `check_references`'s prefix strategy for relative hrefs rather than inventing
++ * a second one. A bare word with no shape falls back to a sibling rule, the one
++ * form `brand-consistency` uses ("merged into `brand-source-of-truth`").
++ *
++ * **Why a relative href is not resolved relative to `src/rules/`.** That was the
++ * first implementation and it reported 12 of 44 pointers broken — a false red.
++ * Rule bodies are authored for the PROJECTED tree, where `../docs/` is the
++ * sibling docs directory; under `src/rules/` the same href points at
++ * `src/docs/`, which does not exist. `check_references` already solved this by
++ * stripping leading `./` / `../` and trying `[root, dist/agent-src, src,
++ * src/agent-src]`, and a second convention here would disagree with the gate
++ * consumers already trust. Adopted verbatim.
++ */
++export function resolvePointer(root: string, raw: string): { resolved: string | null; tried: string[] } {
++    // Anchors are part of the link, never part of the file identity.
++    const bare = raw.split('#')[0]!.trim();
++    if (bare === '') return { resolved: null, tried: [] };
++
++    const tried: string[] = [];
++
++    if (bare.startsWith('.') || bare.includes('/')) {
++        const stripped = bare.replace(/^[./]+/, '');
++        for (const prefix of ['', 'dist/agent-src', 'src', 'src/agent-src']) {
++            const rel = path.normalize(path.join(prefix, stripped));
++            tried.push(rel);
++            if (fs.existsSync(path.join(root, rel))) return { resolved: rel, tried };
++        }
++        // Also as written from the rule's own directory, which is how a
++        // same-directory sibling link (`brand-source-of-truth.md`) resolves.
++        const sibling = path.normalize(path.join(RULES_REL, bare));
++        tried.push(sibling);
++        if (fs.existsSync(path.join(root, sibling))) return { resolved: sibling, tried };
++    }
++
++    const shaped = candidate_paths(bare);
++    if (shaped !== null) {
++        for (const rel of shaped) {
++            tried.push(rel);
++            if (fs.existsSync(path.join(root, rel))) return { resolved: rel, tried };
++        }
++    }
++
++    // Bare stem → a sibling rule.
++    if (/^[a-z0-9][a-z0-9_.-]*$/i.test(bare)) {
++        const rel = path.join(RULES_REL, `${bare.replace(/\.md$/, '')}.md`);
++        tried.push(rel);
++        if (fs.existsSync(path.join(root, rel))) return { resolved: rel, tried };
++    }
++
++    return { resolved: null, tried };
++}
++
++/** Split a rule file into its YAML frontmatter and its body. */
++function splitFrontmatter(text: string): { frontmatter: string; body: string } {
++    if (!text.startsWith('---')) return { frontmatter: '', body: text };
++    const end = text.indexOf('\n---', 3);
++    if (end === -1) return { frontmatter: '', body: text };
++    const nl = text.indexOf('\n', end + 1);
++    if (nl === -1) return { frontmatter: text, body: '' };
++    return { frontmatter: text.slice(0, nl + 1), body: text.slice(nl + 1) };
++}
++
++/**
++ * Split a body into floor and residue lines by the stated criterion.
++ *
++ * Floor: an Iron Law heading; every line of a fenced block opened while inside
++ * an Iron Law section; any line carrying a capitalised negation clause; the
++ * pointer sentence itself. Everything else is residue.
++ *
++ * The Iron-Law-section boundary is the next heading at the same level or
++ * shallower — a `###` inside an `## Iron Law` stays inside it, which matters
++ * because demotion is the norm in these files.
++ */
++export function splitFloorResidue(body: string): { floor: string[]; residue: string[] } {
++    const floor: string[] = [];
++    const residue: string[] = [];
++    let ironLevel: number | null = null;
++    let inFence = false;
++
++    for (const line of body.split('\n')) {
++        const fence = /^\s*(?:```|~~~)/.test(line);
++        const heading = /^(#{1,6})\s/.exec(line);
++
++        if (inFence) {
++            (ironLevel !== null ? floor : residue).push(line);
++            if (fence) inFence = false;
++            continue;
++        }
++
++        if (IRON_LAW_HEADING_RE.test(line)) {
++            ironLevel = heading?.[1]!.length ?? 2;
++            floor.push(line);
++            continue;
++        }
++
++        if (heading !== null && ironLevel !== null && heading[1]!.length <= ironLevel) {
++            ironLevel = null;
++        }
++
++        if (fence) {
++            inFence = true;
++            (ironLevel !== null ? floor : residue).push(line);
++            continue;
++        }
++
++        if (ironLevel !== null || NEGATION_RE.test(line) || POINTER_RE.test(line)) {
++            POINTER_RE.lastIndex = 0;
++            floor.push(line);
++            continue;
++        }
++        POINTER_RE.lastIndex = 0;
++        residue.push(line);
++    }
++
++    return { floor, residue };
++}
++
++/** Measure every rule carrying a migration pointer. */
++export function readRules(root: string): { rows: RuleRow[]; scanned: number } {
++    const dir = path.join(root, RULES_REL);
++    let names: string[];
++    try {
++        names = fs.readdirSync(dir).filter((n) => n.endsWith('.md')).sort();
++    } catch {
++        return { rows: [], scanned: 0 };
++    }
++
++    // The ledger gate's broad matcher is the denominator: a rule it sees and this
++    // gate cannot parse is a phrasing drift, reported rather than skipped.
++    const broad = new Set(migratedRules(root));
++    const rows: RuleRow[] = [];
++
++    for (const n of names) {
++        const stem = n.slice(0, -3);
++        const text = fs.readFileSync(path.join(dir, n), 'utf8');
++        const joined = text.replace(/\s*\n\s*/g, ' ');
++
++        const pointers: PointerRow[] = [];
++        POINTER_RE.lastIndex = 0;
++        for (const m of joined.matchAll(POINTER_RE)) {
++            const raw = (m[1] ?? m[2] ?? '').trim();
++            const { resolved, tried } = resolvePointer(root, raw);
++            pointers.push({ rule: stem, target: raw, resolved, tried });
++        }
++
++        if (pointers.length === 0 && !broad.has(stem)) continue;
++
++        const { frontmatter, body } = splitFrontmatter(text);
++        const { floor, residue } = splitFloorResidue(body);
++        rows.push({
++            rule: stem,
++            tokens: gpt_tokens(text).tokens,
++            frontmatter_tokens: gpt_tokens(frontmatter).tokens,
++            floor_tokens: gpt_tokens(floor.join('\n')).tokens,
++            residue_tokens: gpt_tokens(residue.join('\n')).tokens,
++            pointers,
++            unparsed: pointers.length === 0,
++        });
++    }
++
++    return { rows, scanned: names.length };
++}
++
++interface Ceilings {
++    _comment: string;
++    measured_at_commit: string;
++    tokens_exact: boolean;
++    /** rule stem → exact-BPE token ceiling. */
++    ceilings: Record<string, number>;
++    history: { date: string; rule: string; from: number; to: number; reason: string }[];
++}
++
++function ceilingComment(): string {
++    return (
++        'Per-rule stub ceilings (road-to-rule-stub-projection Phase 2). One exact-BPE token ' +
++        'ceiling per rule carrying a migration pointer. SHRINK-ONLY: a rule may fall below its ' +
++        'ceiling freely, and may not rise above it. Raising a ceiling to clear a failing check ' +
++        'is the config-weakening move this repo blocks by construction — every raise needs a ' +
++        '`history` entry whose `reason` is a real sentence. The ceilings are a floor-plus-residue ' +
++        'SNAPSHOT taken at adoption, not a target: a rule at its ceiling is not thereby correct, ' +
++        'only not worse. Regenerate with `check_rule_stub_ceiling --write-baseline`; never ' +
++        'hand-edit the counts.'
++    );
++}
++
++/**
++ * A raise reason must be a sentence, not the number restated.
++ *
++ * Mechanical, not editorial: a length floor, a denylist of known-empty
++ * phrasings, and a letters-remain test so "raised to 4200" and "4200" both fail
++ * while a real explanation passes. A reason can still be WRONG — that is a
++ * review problem, and no lint can be its judge.
++ */
++export function isRealReason(reason: unknown): boolean {
++    if (typeof reason !== 'string') return false;
++    const trimmed = reason.trim();
++    if (trimmed.length < MIN_REASON_CHARS) return false;
++    if (EMPTY_REASONS.includes(trimmed.toLowerCase())) return false;
++    return /[a-z]{4}/i.test(trimmed.replace(/\d/g, ''));
++}
++
++/** Markdown table for the Phase-0 evidence artifact. */
++export function renderReport(rows: RuleRow[]): string {
++    const total = rows.reduce((a, r) => a + r.tokens, 0);
++    const fm = rows.reduce((a, r) => a + r.frontmatter_tokens, 0);
++    const floor = rows.reduce((a, r) => a + r.floor_tokens, 0);
++    const residue = rows.reduce((a, r) => a + r.residue_tokens, 0);
++    const out: string[] = [];
++    out.push(`| rule | tokens | frontmatter | floor | residue | pointer target | resolves |`);
++    out.push(`|---|---:|---:|---:|---:|---|---|`);
++    for (const r of rows.slice().sort((a, b) => b.residue_tokens - a.residue_tokens)) {
++        const targets = r.pointers.length === 0 ? '(unparsed)' : r.pointers.map((p) => `\`${p.target}\``).join(' · ');
++        const ok = r.pointers.length === 0 ? '—' : r.pointers.every((p) => p.resolved !== null) ? 'yes' : 'NO';
++        out.push(
++            `| \`${r.rule}\` | ${r.tokens} | ${r.frontmatter_tokens} | ${r.floor_tokens} | ` +
++                `${r.residue_tokens} | ${targets} | ${ok} |`,
++        );
++    }
++    out.push(
++        `| **total (${rows.length} rules)** | **${total}** | **${fm}** | **${floor}** | ` +
++            `**${residue}** | | |`,
++    );
++    // BPE is not additive across a split: merges that span a segment boundary are
++    // lost when the segments are encoded separately. Stating the residual is the
++    // honest form — a reader who adds the columns WILL find it, and a table that
++    // silently does not reconcile is worse than one that says by how much.
++    const parts = fm + floor + residue;
++    out.push('');
++    out.push(
++        `Column residual: \`frontmatter + floor + residue\` = ${parts} against ` +
++            `${total} whole-file tokens (${parts - total >= 0 ? '+' : ''}${parts - total}, ` +
++            `${(Math.abs(parts - total) / Math.max(total, 1) * 100).toFixed(2)} %). ` +
++            'BPE is not additive across segment boundaries; the whole-file column is the ' +
++            'one the ceilings are keyed on.',
++    );
++    return out.join('\n');
++}
++
++export function main(): number {
++    if (ARGV.includes('--self-test')) {
++        return selfTest(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..'));
++    }
++    const root = process.cwd();
++
++    let reading: { rows: RuleRow[]; scanned: number };
++    try {
++        reading = readRules(root);
++        assertScanned({
++            gate: GATE,
++            scanned: reading.scanned,
++            units: 'rule file(s)',
++            roots: [RULES_REL],
++        });
++    } catch (err) {
++        if (err instanceof DeadScopeError) {
++            process.stderr.write(`❌  ${err.message}\n`);
++            return 1;
++        }
++        throw err;
++    }
++
++    const rows = reading.rows;
++
++    if (REPORT) {
++        process.stdout.write(`${renderReport(rows)}\n`);
++        return 0;
++    }
++
++    const baseline_path = path.join(root, BASELINE_REL);
++
++    if (WRITE) {
++        const prior: Ceilings | null = fs.existsSync(baseline_path)
++            ? (JSON.parse(fs.readFileSync(baseline_path, 'utf8')) as Ceilings)
++            : null;
++        const ceilings: Record<string, number> = {};
++        for (const r of rows.slice().sort((a, b) => a.rule.localeCompare(b.rule))) {
++            ceilings[r.rule] = r.tokens;
++        }
++        const next: Ceilings = {
++            _comment: ceilingComment(),
++            measured_at_commit: process.env['AGENT_CONFIG_BASELINE_COMMIT'] ?? 'unrecorded',
++            tokens_exact: TIKTOKEN_AVAILABLE,
++            ceilings,
++            history: prior?.history ?? [],
++        };
++        fs.writeFileSync(baseline_path, `${JSON.stringify(next, null, 4)}\n`);
++        process.stdout.write(
++            `✅  ${GATE}: baseline written — ${Object.keys(ceilings).length} migrated rule(s) ` +
++                `(${next.tokens_exact ? 'exact BPE' : 'character proxy'}).\n`,
++        );
++        return 0;
++    }
++
++    if (!fs.existsSync(baseline_path)) {
++        process.stderr.write(
++            `❌  ${GATE}: no baseline at ${BASELINE_REL}. Run with --write-baseline once, ` +
++                'commit the file, and the ceilings are live from then on.\n',
++        );
++        return 1;
++    }
++
++    const base = JSON.parse(fs.readFileSync(baseline_path, 'utf8')) as Ceilings;
++    const failures: string[] = [];
++    const ledger = new GateLedger(GATE);
++    ledger.plan(rows.map((r) => r.rule));
++
++    // A method change would report a measurement delta as a payload delta.
++    // Say so instead of ratcheting — same posture as the census weight axis.
++    if (base.tokens_exact !== TIKTOKEN_AVAILABLE) {
++        for (const r of rows) ledger.complete(r.rule);
++        ledger.report();
++        process.stderr.write(
++            `❌  ${GATE}: token measurement METHOD changed (baseline ` +
++                `${base.tokens_exact ? 'exact' : 'proxy'} → current ` +
++                `${TIKTOKEN_AVAILABLE ? 'exact' : 'proxy'}). The ceilings are UNRESOLVED, not ` +
++                'red: re-anchor in the same environment rather than reading a method delta as ' +
++                'a corpus delta.\n',
++        );
++        return 1;
++    }
++
++    // Every declared raise must carry a real reason, checked INDEPENDENTLY of
++    // whether any rule is currently over its ceiling.
++    //
++    // The first implementation consulted the reason only inside the
++    // `tokens > ceiling` branch, which made it unreachable in practice: a raise
++    // is precisely the act that puts the rule back UNDER its ceiling, so the
++    // branch that would have checked the reason never ran. The gate's own
++    // self-test caught it. The requirement belongs to the baseline's integrity,
++    // not to the rule's current size.
++    const raised = new Map<string, { from: number; to: number; reason: string }>();
++    for (const h of base.history ?? []) {
++        if (typeof h.rule !== 'string' || !(h.to > h.from)) continue;
++        raised.set(h.rule, h);
++        if (!isRealReason(h.reason)) {
++            failures.push(
++                `baseline history raises \`${h.rule}\` ${h.from} → ${h.to} with no real reason ` +
++                    `(got ${JSON.stringify(h.reason ?? null)}). A raise is a stated decision: ` +
++                    `write the sentence that says what landed and why the ceiling moves with it. ` +
++                    `Raising a ceiling to clear a red is the config-weakening move this repo ` +
++                    `blocks by construction.`,
++            );
++        }
++        if (base.ceilings[h.rule] !== undefined && base.ceilings[h.rule]! !== h.to) {
++            failures.push(
++                `baseline history says \`${h.rule}\` was raised to ${h.to}, but its committed ` +
++                    `ceiling is ${base.ceilings[h.rule]!}. The history and the ceilings disagree, ` +
++                    `which is the signature of a hand-edited count — regenerate with ` +
++                    `--write-baseline instead of editing the number.`,
++            );
++        }
++    }
++
++    for (const r of rows) {
++        const reasons: string[] = [];
++
++        if (r.unparsed) {
++            reasons.push(
++                'carries a migration line the ledger gate sees, but no target this gate can ' +
++                    'parse. A reworded pointer must surface as a finding, never as silence — ' +
++                    'either restore a parseable target or extend POINTER_RE with the new form',
++            );
++        }
++        for (const p of r.pointers) {
++            if (p.resolved === null) {
++                reasons.push(
++                    `migration pointer target \`${p.target}\` resolves to nothing (tried: ` +
++                        `${p.tried.length > 0 ? p.tried.join(', ') : 'no known shape'})`,
++                );
++            }
++        }
++
++        const ceiling = base.ceilings[r.rule];
++        if (ceiling === undefined) {
++            reasons.push(
++                `no ceiling in ${BASELINE_REL}. A newly migrated rule needs one: re-anchor with ` +
++                    '--write-baseline in the same commit that adds the pointer',
++            );
++        } else if (r.tokens > ceiling) {
++            const entry = raised.get(r.rule);
++            // A raise already validated above may cover this overflow, but only if
++            // it actually reaches the current size. An entry stopping short of it
++            // is a partial raise and the residual is still unstated.
++            const covered = entry !== undefined && entry.to >= r.tokens && isRealReason(entry.reason);
++            if (!covered) {
++                reasons.push(
++                    `grew past its ceiling (${ceiling} → ${r.tokens} tokens, +${r.tokens - ceiling}). ` +
++                        'A migrated rule is held at the size its pointer claims. Move the prose to ' +
++                        'the pointer target — never delete it, `preservation-guard` binds — or raise ' +
++                        'the ceiling with a `history` entry whose reason is a real sentence',
++                );
++            }
++        }
++
++        if (reasons.length > 0) {
++            ledger.fail(r.rule, reasons[0]!);
++            for (const reason of reasons) failures.push(`\`${r.rule}\`: ${reason}`);
++        } else {
++            ledger.complete(r.rule);
++        }
++    }
++
++    ledger.report();
++
++    if (failures.length > 0) {
++        process.stderr.write(`❌  ${GATE}: a migrated rule stopped matching its own pointer.\n\n`);
++        for (const f of failures) process.stderr.write(`    • ${f}\n`);
++        process.stderr.write(
++            '\n    The pointer is a claim the rule makes about itself. This gate holds it —\n' +
++                '    the point is that a change is stated, not that it is forbidden.\n',
++        );
++        return 1;
++    }
++
++    // Exactly one `scanned: <N>` line, on both paths and regardless of --quiet:
++    // a gate that goes blind must be detectable on the run where it says nothing
++    // else. Contract rule 1 of `src/config/gate-coverage.yml`.
++    process.stdout.write(`scanned: ${reading.scanned}\n`);
++
++    if (!QUIET) {
++        const residue = rows.reduce((a, r) => a + r.residue_tokens, 0);
++        process.stdout.write(
++            `✅  ${GATE}: ${rows.length} migrated rule(s) under ceiling · ` +
++                `${rows.reduce((a, r) => a + r.pointers.length, 0)} pointer(s) resolved · ` +
++                `${residue} residue tokens ` +
++                `(${TIKTOKEN_AVAILABLE ? 'exact BPE' : 'character proxy'}) · ` +
++                `${reading.scanned} rule file(s).\n`,
++        );
++    }
++    return 0;
++}
++
++/** A migrated rule whose pointer resolves, used as the accept fixture. */
++const FIXTURE_TARGET_REL = path.join('docs', 'guidelines', 'alpha-mechanics.md');
++const FIXTURE_OK = [
++    '---',
++    'type: "auto"',
++    '---',
++    '',
++    '# Alpha',
++    '',
++    '## The Iron Law',
++    '',
++    '```',
++    'NEVER DO THE WRONG THING.',
++    '```',
++    '',
++    'Body migrated to `guideline:alpha-mechanics` (per P4 of the router roadmap).',
++    '',
++].join('\n');
++
++interface FixtureShape {
++    /** Write the rule + its pointer target. Off for the dead-scope case. */
++    rules: boolean;
++    /** Write the pointer target file. Off for the unresolved-pointer case. */
++    target?: boolean;
++    /** Write a baseline at all. Off for the missing-baseline case. */
++    baseline: boolean;
++    /** Extra body appended to the rule AFTER the baseline is derived. */
++    pad?: string;
++    /** Replace the pointer line, to test the unparsed-phrasing path. */
++    rewordPointer?: string;
++    /** Mutate the derived baseline before writing. */
++    tamper?: (b: Ceilings) => void;
++}
++
++/**
++ * Build a throwaway tree the gate can run against.
++ *
++ * The baseline is DERIVED by the same `readRules` the gate uses, then the rule is
++ * optionally padded. Hand-writing an expected token total would make the accept
++ * case a test of my arithmetic rather than of the gate.
++ */
++function buildFixture(dir: string, shape: FixtureShape): string {
++    fs.mkdirSync(path.join(dir, RULES_REL), { recursive: true });
++    fs.mkdirSync(path.join(dir, 'src', 'config'), { recursive: true });
++    fs.mkdirSync(path.join(dir, path.dirname(FIXTURE_TARGET_REL)), { recursive: true });
++
++    const rulePath = path.join(dir, RULES_REL, 'alpha.md');
++    if (shape.rules) {
++        let body = FIXTURE_OK;
++        if (shape.rewordPointer !== undefined) {
++            body = body.replace(
++                'Body migrated to `guideline:alpha-mechanics` (per P4 of the router roadmap).',
++                shape.rewordPointer,
++            );
++        }
++        fs.writeFileSync(rulePath, body);
++    }
++    if (shape.target !== false) {
++        fs.writeFileSync(path.join(dir, FIXTURE_TARGET_REL), '# Alpha mechanics\n');
++    }
++
++    if (shape.baseline) {
++        const derived = shape.rules ? readRulesIn(dir) : [];
++        const ceilings: Record<string, number> = {};
++        for (const r of derived) ceilings[r.rule] = r.tokens;
++        const base: Ceilings = {
++            _comment: 'self-test fixture',
++            measured_at_commit: 'fixture',
++            tokens_exact: TIKTOKEN_AVAILABLE,
++            ceilings,
++            history: [],
++        };
++        shape.tamper?.(base);
++        fs.writeFileSync(path.join(dir, BASELINE_REL), `${JSON.stringify(base, null, 4)}\n`);
++    }
++
++    // Padding lands AFTER the baseline so the fixture grows against its own ceiling.
++    if (shape.rules && shape.pad !== undefined) {
++        fs.appendFileSync(rulePath, shape.pad);
++    }
++    return dir;
++}
++
++/** `readRules` against an arbitrary root — the fixture builder's measurement path. */
++function readRulesIn(dir: string): RuleRow[] {
++    return readRules(dir).rows;
++}
++
++/**
++ * Prove the gate discriminates rather than merely exits.
++ *
++ * The four rejecting cases are the four ways this gate is worth having: a broken
++ * pointer target, a rule grown past its ceiling, a raise with no real reason, and
++ * the dead scan root. The dead-root case is the one a refactor is most likely to
++ * break silently — a gate that scans nothing and exits green is exactly what
++ * `assertScanned` exists for.
++ */
++export function selfTest(repoRoot: string): number {
++    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rsc-selftest-'));
++    const run = (shape: FixtureShape): number => {
++        const work = buildFixture(fs.mkdtempSync(path.join(root, 'case-')), shape);
++        return runGateCli(repoRoot, SCRIPT_REL, ['--quiet'], work);
++    };
++    const padding = `\n${'Filler prose that is neither an Iron Law nor a negation clause. '.repeat(40)}\n`;
++
++    const cases: SelfTestCase[] = [
++        {
++            name: 'a migrated rule at its ceiling with a resolving pointer passes',
++            expect: 'accept',
++            run: () => run({ rules: true, baseline: true }),
++        },
++        {
++            name: 'a pointer whose target does not resolve is REFUSED',
++            expect: 'reject',
++            run: () => run({ rules: true, baseline: true, target: false }),
++        },
++        {
++            name: 'a migrated rule padded past its ceiling is REFUSED',
++            expect: 'reject',
++            run: () => run({ rules: true, baseline: true, pad: padding }),
++        },
++        // The next two isolate the REASON requirement from the size check: no
++        // padding, so the rule sits comfortably under its raised ceiling and the
++        // only thing separating accept from reject is the sentence. That framing
++        // is the whole point — the first implementation checked the reason only
++        // when the rule was over its ceiling, which a raise by definition fixes,
++        // so the check was unreachable and this suite is what surfaced it.
++        {
++            name: 'a raise whose reason is empty is REFUSED even when nothing is over its ceiling',
++            expect: 'reject',
++            run: () =>
++                run({
++                    rules: true,
++                    baseline: true,
++                    tamper: (b) => {
++                        const at = b.ceilings['alpha'] ?? 0;
++                        b.ceilings['alpha'] = at + 10_000;
++                        b.history = [
++                            { date: '2026-08-17', rule: 'alpha', from: at, to: at + 10_000, reason: 'raise' },
++                        ];
++                    },
++                }),
++        },
++        {
++            name: 'the same raise WITH a real reason sentence passes',
++            expect: 'accept',
++            run: () =>
++                run({
++                    rules: true,
++                    baseline: true,
++                    tamper: (b) => {
++                        const at = b.ceilings['alpha'] ?? 0;
++                        b.ceilings['alpha'] = at + 10_000;
++                        b.history = [
++                            {
++                                date: '2026-08-17',
++                                rule: 'alpha',
++                                from: at,
++                                to: at + 10_000,
++                                reason:
++                                    'A measured finding landed in this rule and its worked example ' +
++                                    'is load-bearing, so the ceiling moves with the authored change.',
++                            },
++                        ];
++                    },
++                }),
++        },
++        {
++            name: 'a history entry disagreeing with the committed ceiling is REFUSED',
++            expect: 'reject',
++            run: () =>
++                run({
++                    rules: true,
++                    baseline: true,
++                    tamper: (b) => {
++                        const at = b.ceilings['alpha'] ?? 0;
++                        b.history = [
++                            {
++                                date: '2026-08-17',
++                                rule: 'alpha',
++                                from: at,
++                                to: at + 5_000,
++                                reason:
++                                    'A real sentence, so the only thing wrong here is that the ' +
++                                    'committed ceiling was never regenerated to match the claim.',
++                            },
++                        ];
++                    },
++                }),
++        },
++        {
++            // Risk 3 of the roadmap: 44 pointers were hand-written over months in
++            // several phrasings, so a gate keyed to one phrasing silently stops
++            // seeing the others. This case pins the opposite behaviour — a rule the
++            // ledger's broad matcher sees and this gate cannot parse is a FINDING.
++            name: 'a reworded pointer this gate cannot parse is REFUSED, not silently skipped',
++            expect: 'reject',
++            run: () =>
++                run({
++                    rules: true,
++                    baseline: true,
++                    rewordPointer: 'The body was migrated to the guideline on alpha mechanics.',
++                }),
++        },
++        {
++            name: 'a dead scan root is REFUSED rather than reported clean',
++            expect: 'reject',
++            run: () => run({ rules: false, baseline: true }),
++        },
++    ];
++
++    return runSelfTest({
++        gate: GATE,
++        cases,
++        minCases: SELF_TEST_MIN_CASES,
++        minRejectCases: SELF_TEST_MIN_REJECT,
++    });
++}
++
++if (process.argv[1] && import.meta.url === pathToFileURL(fileURLToPath(import.meta.url)).href) {
++    const invoked = path.resolve(process.argv[1]);
++    const self = path.resolve(fileURLToPath(import.meta.url));
++    if (invoked === self) process.exit(main());
++}
+diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
+index ac4fa9af356dc1a767b939e63a589dc44d1a299b..b6da6680c60552f8a2899af56d9f939dd65fc4c8 100644
+--- a/taskfiles/ci-fast.yml
++++ b/taskfiles/ci-fast.yml
+@@ -932,6 +932,21 @@ tasks:
+       one rule in and one rule out; the id-set axis cannot.
+     cmd: ./scripts-run src/scripts/check_rule_activation_census {{.QUIET_FLAG}}
+ 
++  check-rule-stub-ceiling:
++    silent: true
++    desc: >
++      Hold a migrated rule at the size its pointer claims. 44 rules carry a line
++      saying their body moved to a guideline, skill or context; nothing asserted
++      they stay small, so migration was executed as an event and never encoded as
++      a state. Two axes: every pointer target must resolve, and every migrated
++      rule sits under a per-rule exact-BPE ceiling whose raises each carry a
++      reason sentence. The aggregate census ratchet next door cannot catch this
++      and is not meant to — it pins the CORPUS total with a drift allowance, so
++      one rule growing while another shrinks is a green run. Measured at
++      adoption, `context-hygiene` was 10,988 B against a 3,491 B migration
++      target: the rule was three times the size of the file it migrated into.
++    cmd: ./scripts-run src/scripts/check_rule_stub_ceiling {{.QUIET_FLAG}}
++
+   lint-scheduled-deprecations:
+     silent: true
+     desc: |
