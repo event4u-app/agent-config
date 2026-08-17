@@ -422,12 +422,20 @@ function renderJson(
                     // The gate taxonomy, resolved through the same
                     // absent-field default every other consumer applies, so a
                     // synthesised `legacy` note reads as class 3 rather than
-                    // as a hole. `run` rides along because a class-0 record
-                    // without its command reads as actionable and is not —
-                    // the exact half-truth `lint_roadmap_blockers` makes a
-                    // HARD failure on the authoring side.
+                    // as a hole.
+                    //
+                    // `run` is deliberately NOT emitted. It shipped here for
+                    // one commit on the argument that a class-0 record without
+                    // its command reads as actionable — and R2 finding 7
+                    // pointed out the consumer that argument describes does not
+                    // exist: `--execute` reads the entry through `locate()`,
+                    // not through this JSON, and every live record's `run` is
+                    // empty. Adding it also forced an undecidable question
+                    // (finding 2): `class` is normalised while the authored
+                    // `run` carries its markdown backticks, and `commandOf()`
+                    // already strips them for the sibling surface — with no
+                    // consumer there is nothing to say which form is right.
                     class: blockerClass(e.blocker),
-                    run: e.blocker.run,
                     blocks: e.blocker.blocks,
                     unblocksSteps: e.openSteps,
                     todo: regroupTodo(e.blocker.todo),

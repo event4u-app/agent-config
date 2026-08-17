@@ -22,6 +22,10 @@ import {
     renderReply,
     type Entry,
 } from '../../src/agent-src/scripts/roadmap_gates.js';
+import {
+    parse_blockers,
+    blocker_class,
+} from '../../src/agent-src/scripts/update_roadmap_progress.js';
 import { stageAction } from '../../src/agent-src/templates/scripts/work_engine/hooks/builtin/staged_confirmation.js';
 import { putPending } from '../../src/agent-src/templates/scripts/work_engine/hooks/builtin/staged_confirmation_store.js';
 
@@ -252,11 +256,11 @@ describe('renderJson', () => {
         ).blockers[0]?.class ?? '';
 
     it('an entry declaring no class reads as 3, not as a hole', () => {
-        // Load-bearing: the parser synthesises one blocker per legacy
-        // `> Blocked until …` note and that synthesised entry can never carry
-        // an authored field. Resolving the class through the absent-field
-        // default is what makes it read as human-only — its actual swept
-        // verdict — rather than as missing data.
+        // The renderer half of the absent-field default. The *parser* half —
+        // that a synthesised legacy `> Blocked until …` note really does reach
+        // this path with an empty class — is a separate claim and is pinned by
+        // its own test below; R2 finding 6 caught this comment asserting the
+        // coverage that test provides.
         expect(classOf(entry('user'))).toBe('3');
     });
 
@@ -271,15 +275,33 @@ describe('renderJson', () => {
         expect(classOf(entry('user', { blockerClass: '7 — invented' }))).toBe('3');
     });
 
-    it('carries the run command, so a class-0 record is not actionable-but-empty', () => {
+    it('the parser really does hand the legacy note an empty class', () => {
+        // The parser half of the pair above, and the reason the renderer's
+        // default is load-bearing rather than decorative: a `> Blocked until …`
+        // note is synthesised into a blocker that can never carry an authored
+        // field, so class 3 has to come from somewhere. If the synthesis ever
+        // starts emitting a class, this fails and the pairing is re-examined.
+        const parsed = parse_blockers(
+            ['# A roadmap', '', '> Blocked until a human installs the thing.', ''].join('\n'),
+        );
+        const note = parsed.find((b) => b.id === 'legacy');
+        expect(note).toBeDefined();
+        expect(note?.blockerClass).toBe('');
+        expect(blocker_class(note!)).toBe('3');
+    });
+
+    it('does not emit run — no consumer reads it and no record carries one', () => {
+        // R2 findings 2 and 7. Pinned as an absence so a future re-add has to
+        // answer the question the first one skipped: which representation, the
+        // authored backticked value or `commandOf()`'s stripped one.
         const parsed = JSON.parse(
             renderJson(
                 [entry('user', { blockerClass: '0 — auto-run', run: '`task probe-thing`' })],
                 true,
             ),
-        ) as { blockers: Array<{ class: string; run: string }> };
+        ) as { blockers: Array<Record<string, unknown>> };
         expect(parsed.blockers[0]?.class).toBe('0');
-        expect(parsed.blockers[0]?.run).toBe('`task probe-thing`');
+        expect(parsed.blockers[0]).not.toHaveProperty('run');
     });
 });
 
