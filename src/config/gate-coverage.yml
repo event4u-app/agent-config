@@ -40,12 +40,12 @@
 #                visible, or it repeats the sin it exists to catch.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-16)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-17)
 # ----------------------------------------------------------
-# 261 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 263 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
-# **38 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 37 of those 38 are listed below.** The manifest is
+# **40 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 39 of those 40 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
 # carry a floor, and covers ~14 % of the population.
 #
@@ -181,6 +181,52 @@ gates:
       that a broken closure walk — the dead-scan-root shape one level up, where
       the Taskfile parse degrades and the population silently collapses —
       cannot pass.
+
+  - id: check_review_schema
+    argv: []
+    min_scanned: 1
+    corpus: "committed review-findings ledgers under agents/evidence/release-findings/ (1 at baseline)"
+    status: enforced
+    canary:
+      class: contract-violation
+      path: agents/evidence/release-findings/zz-canary-probe.json
+      content: |
+        {
+          "schema_version": 1,
+          "release": "0.0.0-canary",
+          "review_independence": "same-family",
+          "acceptance_status": "accepted",
+          "assurance": "independent",
+          "reviewers": ["anthropic", "anthropic"],
+          "findings": []
+        }
+    note: >
+      Floor is 1 because the corpus genuinely holds one ledger today, and a
+      floor of 0 would let the directory empty out silently — the shape this
+      manifest exists to refuse. The canary plants the exact defect the gate was
+      built for: a same-family reviewer set claiming `accepted`. It must red.
+
+  - id: check_evaluator_schema
+    argv: []
+    min_scanned: 5
+    corpus: "registered evaluator x recorded verifier fixture pairs (6 at baseline)"
+    status: enforced
+    canary:
+      class: contract-violation
+      path: tests/fixtures/evaluator-output/lint_output_slop.degraded.stdout
+      content: |
+        planted canary: output with no clean sentinel and no file:line rows
+    note: >
+      The corpus is (evaluator x fixture) pairs, not evaluators, because the
+      mapping is what can be wrong and each flavour exercises a different branch
+      of it. The floor sits below the live count so retiring one fixture flavour
+      does not red the change that retires it, but above 3 so a corpus that
+      silently collapsed to green-only cannot pass — a green-only corpus cannot
+      distinguish a working adapter from one that hardcodes success, which is
+      the whole reason red and degraded fixtures are committed alongside.
+      The canary plants a `degraded` stdout with no matching `.exit`, so the
+      adapter reads exit 0 with an unparseable body: expected `unreadable`,
+      asserted `present` by the green expectation table -> the gate must fail.
 
   - id: check_suppression_hygiene
     argv: []

@@ -35,6 +35,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { AnthropicClient, load_anthropic_key } from './ai_council/clients.js';
+import { independenceFields } from './_lib/review_independence.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -458,11 +459,16 @@ export function main(argv: string[]): 0 | 2 {
         if (outIdx >= 0 && argv[outIdx + 1]) {
             // Durable ingestion input for the disposition ledger (release-truth
             // Phase 3): `check_finding_dispositions --ingest <this file>`.
+            // The independence fields are set HERE, at write time, from the
+            // actual reviewer set — which for this gate is one Anthropic client,
+            // so the artifact declares itself single-member and provisional. It
+            // previously said nothing, and silence read as acceptance.
             writeFileSync(
                 argv[outIdx + 1]!,
                 JSON.stringify(
                     {
                         schema_version: 1,
+                        ...independenceFields(['anthropic']),
                         findings: findings.map((f) => ({ finding_id: findingId(f), ...f })),
                     },
                     null,

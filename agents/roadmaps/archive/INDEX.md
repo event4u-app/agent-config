@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**503 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 167 · completed 245 · completed-with-deferrals 25 · not-extractable 34
+**504 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 167 · completed 246 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -325,6 +325,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-memory-retrieval-economy`](road-to-memory-retrieval-economy.md) | Road to memory-retrieval economy — index first, fetch by ID, price every row | closed-with-cancellations | 9 | 26/27 | _not extractable_ |
 | [`road-to-memory-self-consumption`](road-to-memory-self-consumption.md) | Road to Memory Self-Consumption | closed-with-cancellations | 3 | 5/8 | _not extractable_ |
 | [`road-to-metadata-and-command-surface-leanness`](road-to-metadata-and-command-surface-leanness.md) | Roadmap: Metadata & Command-Surface Leanness | closed-with-cancellations | 4 | 14/16 | _not extractable_ |
+| [`road-to-metric-loop-and-review-integrity`](road-to-metric-loop-and-review-integrity.md) | Road to metric loop and review integrity | completed | 6 | 28/28 | _not extractable_ |
 | [`road-to-mission-mode`](road-to-mission-mode.md) | Roadmap: Mission-Mode — named, framework-aware autonomous missions (gated) | completed | 3 | 17/17 | _not extractable_ |
 | [`road-to-mobile-adoption`](road-to-mobile-adoption.md) | Road to Mobile Adoption | closed-with-cancellations | 3 | 5/10 | _not extractable_ |
 | [`road-to-model-capability-tiers`](road-to-model-capability-tiers.md) | Road to Vendor-Neutral Model Capability Tiers | completed | 6 | 20/20 | _not extractable_ |

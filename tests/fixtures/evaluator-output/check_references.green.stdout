@@ -1,0 +1,4 @@
+check_references ledger: scanned=1293 planned=1917 skipped=624
+  declared_exemption ×22 — the target carries an explicit, reviewable exemption from this check
+  excluded_directory ×602 — the target sits under a directory this gate deliberately does not walk
+✅  No broken references found.
