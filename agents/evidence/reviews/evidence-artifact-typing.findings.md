@@ -1,13 +1,13 @@
 # Findings: evidence-artifact-typing
-<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: c34c180c56c644a4b303f213d76de42eb1ef55d3d5da554d1653b654d0c021ca | diff: 45a7dd73d35ca044fb79fed7887818a9b08adc80 | reviewer: r2-fresh-subagent-evidence-artifact-typing | prompt_hash: c5fa3a61fb9539b5148a9fdbcdbdbd28ddde38f34c5fc840421458cda59398be -->
+<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: beaed2083cfdb54a3af815d6b2eacee206d2994f83298e667df0f909c03c3fed | diff: 6004ff9e82cc17d3e748339a2a0ac457073f61e8 | reviewer: r2-fresh-subagent-evidence-artifact-typing | prompt_hash: c5fa3a61fb9539b5148a9fdbcdbdbd28ddde38f34c5fc840421458cda59398be -->
 <!-- evidence-type: v1 | type: rebind-event | declared: 2026-08-17 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 45a7dd73d35ca044fb79fed7887818a9b08adc80
-  scope_hash: c34c180c56c644a4b303f213d76de42eb1ef55d3d5da554d1653b654d0c021ca
+  diff_sha: 6004ff9e82cc17d3e748339a2a0ac457073f61e8
+  scope_hash: beaed2083cfdb54a3af815d6b2eacee206d2994f83298e667df0f909c03c3fed
   roadmap: agents/roadmaps/road-to-release-review-p0.md
-  roadmap_hash: 9b555b658f327b7e29ae45a0a6860253064e292526574374a9a7af473b109d2f
+  roadmap_hash: c937b1ef2884ddc72cf9ae3712ac9e89719cabf74c7ad3fc0d85b22cfc6b6482
   ac_hash: b66e28e3514bce21e33b699a6672658a9c3fa6ea38a0d569ad74e836c97798ea
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
@@ -78,3 +78,21 @@ the roadmap note this branch added — a backticked gate name followed by the wo
 `task preflight`. Fixing it added a commit and moved the scope again. Both re-binds
 after the fix pass share one lesson: the re-bind is the last edit on a branch, and
 every gate that runs *only* remotely can still force one more.
+
+**Fifth bind, at `6004ff9e8`, and this one exposed a second layer.** `origin/main`
+had moved 19 commits (release 13.0.0 plus a roadmap archival), so the PR went
+CONFLICTING; merging brought two conflicts — the generated dashboard, resolved by
+regenerating rather than by mixing hunks, and `gate-coverage.yml`, where both
+sides had re-anchored the same two header figures. Neither number was guessed:
+the population is computed by `count_gate_scripts` and the emitter count from the
+manifest, so the resolution is 263 / 40 rather than either side's reading.
+
+The re-bind itself is what carries the lesson. Updating the marker's `scope:` and
+`diff:` is NOT a re-bind — the context manifest carries `roadmap_hash`
+independently, the cross-reference fix had edited the roadmap, and the marker
+looked correct while the manifest was stale. Only `check_r2_manifest` catches
+that, and it runs in the consistency workflow, not in `task preflight`. So the
+same gap that forced bind four forced bind five one layer down: a re-bind means
+marker AND manifest, and the authoritative check for the second half is
+remote-only. `dispatch_r2_reviewer --verify-current` re-derives it and names the
+divergence, which is cheaper than deriving the hash by hand.
