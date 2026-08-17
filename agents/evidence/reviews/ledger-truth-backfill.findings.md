@@ -1,10 +1,10 @@
 # Findings: ledger-truth-backfill
-<!-- completion-review: v1 | reviewed: 2026-08-16 | scope: acbcaff206150b291ded5fb7c26bd95bfb3179553a59b3ad822d087155b389b3 | diff: f296b41e477fa7c3a34bde0e03ddb7b558422d42 | reviewer: r2-fresh-subagent-ledger-truth-backfill | prompt_hash: 04c9f442a9df5f94f8be4dc73280b2b70b90a8d122d0b9958ac922d7d044b2ad -->
+<!-- completion-review: v1 | reviewed: 2026-08-16 | scope: 4cd889306949c95fd792b60edb6b6238d5a765c9d24ef71418f95c6c6f08997f | diff: 620990d11f10256feb25bbc0f239a5f64c3ced21 | reviewer: r2-fresh-subagent-ledger-truth-backfill | prompt_hash: 04c9f442a9df5f94f8be4dc73280b2b70b90a8d122d0b9958ac922d7d044b2ad -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: f296b41e477fa7c3a34bde0e03ddb7b558422d42
-  scope_hash: acbcaff206150b291ded5fb7c26bd95bfb3179553a59b3ad822d087155b389b3
+  diff_sha: 620990d11f10256feb25bbc0f239a5f64c3ced21
+  scope_hash: 4cd889306949c95fd792b60edb6b6238d5a765c9d24ef71418f95c6c6f08997f
   roadmap: none
   roadmap_hash: none
   ac_hash: none
