@@ -66,6 +66,22 @@ complexity: structural
 > place with this correction above it rather than rewritten, so the stale claim
 > stays auditable.
 >
+> **Correction (2026-08-17) — the Phase 3 bullet's second dependency is also
+> gone.** It says Step 2 "cites the program X3 activation policy note, which
+> does not exist yet". It exists:
+> `docs/contracts/concern-activation-policy.md`, and that file names this exact
+> situation as its reason for being — three roadmaps cited a policy that was
+> only ever roadmap prose, so the contract was written to be the artefact they
+> cite. Phase 3 therefore has **one** open dependency (the SLI payload field),
+> not two. The dependency that remains is the blocking one, so the step's
+> takeability does not change — but the count in the bullet does, and a screen
+> reading "two open dependencies" over-states how far Phase 3 is from
+> executable. Worth knowing before citing it: the contract does not merely
+> supply the missing note, it **contradicts** Step 2's proposal — Step 2 asks
+> for default-ON warn-only, the contract's Iron Law reads *"a new concern that
+> would block starts in shadow, never in advisory"*. Step 2 needs re-arguing
+> against it, not a citation.
+>
 > - **Phase 3** (`source-first-gate`) — **two** open dependencies, not one. Its
 >   verifier exemption keys on a payload field that
 >   `road-to-subagent-lifecycle-integrity` Phase 0 Step 4 spikes and its Phase 4

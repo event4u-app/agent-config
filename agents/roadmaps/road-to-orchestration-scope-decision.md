@@ -236,4 +236,28 @@ proof surface.
   **(2)** The DROP branch below is premise-stale in its first clause and
   maintainer-owned in its second, so a DROP is not an agent-executable
   outcome either.
-- **Resolved when:** the current-month audit log holds ≥20 orchestration lines.
+
+  **Correction (2026-08-17) — two of the numbers above have moved, and one of
+  them falsifies the mechanism claim rather than just the count.** Re-measured
+  against `2026-08.jsonl` at 368 lines / **367 orchestration** (July still holds
+  1): `token_delta: 0` and provenance `estimated` remain **367/367**, and
+  `first_pass_success`, `escalated`, `task_class` and `dispatch_mode` remain
+  `null` **367/367** — so the "at held quality has no input" conclusion stands
+  unchanged and PROVE is still not evaluable. What does **not** hold is the
+  parenthetical reason: `dispatch_tokens` is **numeric on 40 of 367** (327 null),
+  i.e. the sync completions the clause said we have none of are now landing, and
+  `wall_clock_ms` is numeric on **367/367**. The absolute-cost side therefore
+  exists; what is still missing is the counterfactual and the quality columns,
+  which is a narrower gap than the prose above describes. `spawn_count ≥ 2` is
+  still **0 of 367**, so the corpus has never produced a fan-out.
+- **Resolved when:** a probe result records whether any hook slot sees the
+  task-completion payload, and — if one does — the current-month audit log
+  carries ≥ 20 orchestration lines whose **quality** columns are populated
+  rather than `null`. **Rewritten 2026-08-17.** The bare line-count condition
+  this field carried until today (*"the current-month audit log holds ≥20
+  orchestration lines"*) was satisfied at 99 lines when it was written and
+  stands at **367** now, while the blocker never stopped being open — a
+  resolution test that is already met cannot resolve anything, and every
+  feasibility screen that trusted it read this roadmap as resumable. The
+  sibling `road-to-subagent-value-realization-followup` had the identical
+  defect repaired on 2026-08-16; this one was missed in the same pass.

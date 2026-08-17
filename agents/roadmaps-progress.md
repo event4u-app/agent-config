@@ -253,6 +253,7 @@ _1 blocker resolved._
     2. Per observation: have a session write the entries it saw bare and the ones it saw described into `agents/evidence/metrics/skill-catalogue/<date>-<host>-{bare,described}.txt`, then run `./scripts-run src/scripts/capture_skill_catalogue --observed <bare> --described <described> --record --observed-at <ISO date> --host <host>`.
     3. Progress is `wc -l agents/evidence/metrics/skill-catalogue.jsonl` — one line per observation, currently 1.
     4. Vary the host and the session shape: a selector that only shows up on one host is exactly what the current `no-selector` verdict cannot distinguish from no selector at all.
+    5. **Correction (2026-08-17) — the progress figure in item 3 is stale and one half of the resolution condition is already met.** `skill-catalogue.jsonl` holds **5** observations, not 1, and they span **2 hosts** (`claude` ×1, `codex` ×4) — so the "across ≥ 2 hosts" half of *Resolved when* is satisfied and only the count half (5 of 20) is outstanding. Item 4's framing is stale too: the standing verdict is **not** a uniform `no-selector`. One observation reads `no-selector` (claude); the other four read **`insufficient-observation`** (codex), which is a different state and must not be aggregated with it. Those four also carry a field set this blocker predates — `observation_source: "host-event"` with `truncation_mode: "budget-strip-and-drop"` and `dropped_count` 330–402 — i.e. the host now publishes its own truncation, which is mechanism evidence the "selector is unknowable" framing above does not account for.
   - **Resolved when:** `skill-catalogue.jsonl` holds ≥ 20 observations across ≥ 2 hosts, and `capture_skill_catalogue` reports either a `selector-found` verdict or a `no-selector` that has stopped moving.
 - **ui-corpus-has-no-ui** (owner: maintainer) — blocks Phase 4 — Step 5 · Phase 5 — Reach and enforcement
   - **What to do:**
@@ -474,7 +475,20 @@ _1 blocker resolved._
     **(2)** The DROP branch below is premise-stale in its first clause and
     maintainer-owned in its second, so a DROP is not an agent-executable
     outcome either.
-  - **Resolved when:** the current-month audit log holds ≥20 orchestration lines.
+    **Correction (2026-08-17) — two of the numbers above have moved, and one of
+    them falsifies the mechanism claim rather than just the count.** Re-measured
+    against `2026-08.jsonl` at 368 lines / **367 orchestration** (July still holds
+    1): `token_delta: 0` and provenance `estimated` remain **367/367**, and
+    `first_pass_success`, `escalated`, `task_class` and `dispatch_mode` remain
+    `null` **367/367** — so the "at held quality has no input" conclusion stands
+    unchanged and PROVE is still not evaluable. What does **not** hold is the
+    parenthetical reason: `dispatch_tokens` is **numeric on 40 of 367** (327 null),
+    i.e. the sync completions the clause said we have none of are now landing, and
+    `wall_clock_ms` is numeric on **367/367**. The absolute-cost side therefore
+    exists; what is still missing is the counterfactual and the quality columns,
+    which is a narrower gap than the prose above describes. `spawn_count ≥ 2` is
+    still **0 of 367**, so the corpus has never produced a fan-out.
+  - **Resolved when:** a probe result records whether any hook slot sees the task-completion payload, and — if one does — the current-month audit log carries ≥ 20 orchestration lines whose **quality** columns are populated rather than `null`. **Rewritten 2026-08-17.** The bare line-count condition this field carried until today (*"the current-month audit log holds ≥20 orchestration lines"*) was satisfied at 99 lines when it was written and stands at **367** now, while the blocker never stopped being open — a resolution test that is already met cannot resolve anything, and every feasibility screen that trusted it read this roadmap as resumable. The sibling `road-to-subagent-value-realization-followup` had the identical defect repaired on 2026-08-16; this one was missed in the same pass.
 
 ### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
 
@@ -771,6 +785,21 @@ _1 blocker resolved._
     the host populates only on a **sync** completion. All 99 were background
     dispatches, i.e. spawn acks with no usage fields, so the null is correct
     rather than lossy.
+    **Correction (2026-08-17) — the count moved and two of the field claims are
+    now false, one of them load-bearing.** `2026-08.jsonl` holds **368 lines,
+    367 orchestration** (July still 1). Unchanged and still true: `token_delta`
+    `0` with provenance `estimated` in **367/367**, and `first_pass_success`,
+    `escalated`, `task_class`, `dispatch_mode` `null` in **367/367** — the
+    quality columns really are absent, so the exit criterion below is untouched.
+    Now false: `dispatch_tokens` is **numeric on 40 of 367** (327 null, values
+    from 315 to 194330), and `wall_clock_ms` is numeric on **367/367** (0 to
+    955883), not null. That matters beyond bookkeeping, because the sentence
+    above explains the nulls by "all were background dispatches, and the host
+    populates usage only on a sync completion" — 40 sync completions have since
+    landed, so the absolute-cost half of the argument no longer applies. It does
+    **not** unblock the roadmap: there is still no counterfactual and no quality
+    column, and n=40 carries no family labels. `spawn_count` is **1 in 366 of
+    367** (one `0`, none ≥ 2), so the fan-out finding is unchanged.
     Consequence for the exit criterion: a hook at `post_tool_use` cannot supply
     the quality columns for a background dispatch at all. The usage does surface
     later, on the task-completion notification, so the open question is whether
