@@ -1,10 +1,10 @@
 # Findings: solution-minimalism-t4-t5-scorers
-<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: eb5d8be2f218715f100e281391ce1bb23cc6f7b3ca8e934cab69b2de7275862e | diff: 532c29b722a6b80da06c338d033100ef9894b327 | reviewer: r2-fresh-subagent-solution-minimalism-t4-t5-scorers | prompt_hash: 1836107a61fc1c86e8634a2a9d92d9deedaad704a9014127cd5ad188a49d7776 -->
+<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: 5bf1491d0bbe280a76cb2a84a8a599b77e9408bacb0a8d2ff906e45002475513 | diff: e3ce6a5539c0e47fb439e5c43a14dca40b47b923 | reviewer: r2-fresh-subagent-solution-minimalism-t4-t5-scorers | prompt_hash: 1836107a61fc1c86e8634a2a9d92d9deedaad704a9014127cd5ad188a49d7776 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 532c29b722a6b80da06c338d033100ef9894b327
-  scope_hash: eb5d8be2f218715f100e281391ce1bb23cc6f7b3ca8e934cab69b2de7275862e
+  diff_sha: e3ce6a5539c0e47fb439e5c43a14dca40b47b923
+  scope_hash: 5bf1491d0bbe280a76cb2a84a8a599b77e9408bacb0a8d2ff906e45002475513
   roadmap: agents/roadmaps/road-to-solution-minimalism.md
   roadmap_hash: e768a94f3d84f5f9a4f076f2107a4b3ed8c85990fc0b5a93fb8f810d917ab6ed
   ac_hash: 7ab1582bca391a472290482dae0484665225010a1aac906e1db20649f059e4ef
@@ -13,7 +13,15 @@ tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-17T03:23:48Z
 -->
 
-**Re-bound 2026-08-17 after the fix pass.** The scope hash moved because the
+**Re-bound twice on 2026-08-17 — after the fix pass, then after the CI repair.**
+The second move is `e3ce6a553`, which paid back the source-size ratchet by
+extraction and, in doing so, surfaced one defect the extraction itself created
+(a `PyFloat`-boxed figure read as 0, caught by the T5 adapter test). That defect
+is NOT a review finding: it did not exist when the reviewer read the diff, and
+recording it as one would backdate an observation nobody made. It is in the
+commit message, where a defect a fix pass introduces belongs.
+
+**The original re-bind note, unchanged:** The scope hash moved because the
 fixes changed the reviewed content, which is a re-bind rather than a re-review:
 every row below was raised against the pre-fix diff and each names the commit
 that closed it. The reviewed CONTENT changed on purpose — that is what a fix
