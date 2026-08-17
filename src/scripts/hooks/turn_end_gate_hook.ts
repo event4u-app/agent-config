@@ -47,9 +47,11 @@
  *      non-sidechain user entries — is distinct for every real turn whatever
  *      the user typed, and stable across harness injections.
  *
- *      Still true and still worth stating: per-session files are bounded per
- *      session but not pruned, so a long-lived workspace accumulates one small
- *      file per session. No TTL ships here.
+ *      No longer true, and corrected here rather than left as a stale admission:
+ *      the files ARE pruned. `road-to-stop-gate-honesty` step 1.2 added a
+ *      90-day retention (`pruneAgedRefusalState`), run at `session_start` by the
+ *      session-register concern. The record also COUNTS now instead of
+ *      overwriting itself — see `markRefusedTurn`.
  *
  * The failure this ordering prevents is not a loop but a wedge: a turn that
  * can never end. Layer 2 also covers the host that does not send
@@ -111,7 +113,6 @@
  * not an advisory, so there is no advisory path here to put on the wrong code.
  * Probed, not assumed.
  */
-import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -130,6 +131,14 @@ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json, is_replay_mode } from './state_io.js';
 import { openRecordStats } from './subagent_ledger_hook.js';
+import {
+    deriveSessionKey,
+    foldRefusal,
+    parseRecord,
+    readInstallBoundary,
+    sessionRefusalFile,
+    type RefusalRecord,
+} from '../_lib/turn_end_refusals.js';
 
 /** Dispatcher-internal block code. Pinned to 1 by `concern_block_exit_parity`. */
 const EXIT_BLOCK = 1;
@@ -530,8 +539,7 @@ const _EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
  * ("relying on partial verification"). The cost of narrowness is a MISSED
  * detection when a project verifies by some command not listed here, and that is
  * the safe direction for a gate that can refuse a turn: a false negative costs
- * one unguarded turn, a false positive teaches the user to switch the gate off.
- */
+ * one unguarded turn, a false positive teaches the user to switch the gate off. */
 const _VERIFY_RE =
     /\b(test|tests|vitest|jest|pytest|phpunit|pest|tsc|eslint|ruff|mypy|pyright|clippy|typecheck|lint|build|ci|preflight|smoke[-_:a-z]*|check[-_:a-z]*|validate[-_:a-z]*)\b|\b(task|npm|pnpm|yarn|composer|cargo|go|make|php artisan|bun)\s+(run\s+)?\S*(test|check|lint|build|ci|typecheck)/i;
 
@@ -583,29 +591,30 @@ export function detectUnverifiedEdit(toolCalls: readonly ToolCall[]): Finding | 
 // Re-entrancy — the guard, keyed on the turn, not on the reply
 // ---------------------------------------------------------------------------
 
-function stateDir(workspaceRoot: string): string {
-    return path.join(workspaceRoot, 'agents', 'runtime', 'state', 'turn-end-gate');
-}
-
 /**
  * ONE file per session, not one per refused turn. R2 round 1, finding 17:
  * per-turn files accumulated without bound and without a TTL, because "re-arms
  * itself with no cleanup" described the key rotating, not the files being
  * removed.
  *
- * HALF of that is fixed and half is not, stated rather than implied (R2 round 2,
- * finding 12): the per-turn MULTIPLICITY is gone, so a session no longer leaves
- * one file per refused turn. There is still no TTL and no pruning, so a
- * long-lived workspace accumulates one small file per session that ever had a
- * turn refused. Adding expiry is new behaviour and belongs with its own test.
+ * Both halves are now closed. The per-turn MULTIPLICITY went first; the missing
+ * TTL was the other half and `road-to-stop-gate-honesty` step 1.2 shipped it as
+ * `pruneAgedRefusalState`, run at `session_start` by the session-register
+ * concern — the one slot that already prunes and therefore adds no spawn. The
+ * path and the retention constant live with the reader
+ * (`_lib/turn_end_refusals.ts`), because a pruner in one module and a writer in
+ * another must not each own their own idea of where the files are.
  */
 function sessionStateFile(workspaceRoot: string, sessionKey: string): string {
-    return path.join(stateDir(workspaceRoot), `${sessionKey}.json`);
+    return sessionRefusalFile(workspaceRoot, sessionKey);
 }
 
-export function deriveSessionKey(sessionId: string): string {
-    return crypto.createHash('sha256').update(sessionId).digest('hex').slice(0, 32);
-}
+/**
+ * Re-exported, not re-derived: the session register reads this session's own
+ * refusal record back for live per-session visibility, so the stem has two
+ * consumers and exactly one definition (`_lib/turn_end_refusals.ts`).
+ */
+export { deriveSessionKey };
 
 /**
  * A turn's identity is its ORDINAL — how many genuine user prompts the
@@ -645,19 +654,53 @@ export function alreadyRefusedTurn(
     return false;
 }
 
+/**
+ * Write the re-entrancy marker AND count the refusal.
+ *
+ * The marker half is unchanged: `refused_turn` is what `alreadyRefusedTurn`
+ * reads, and nothing about the counting can alter whether a turn is refused
+ * twice. The counting half is `road-to-stop-gate-honesty` step 1.1 — the old
+ * record overwrote itself, so a session refused nine times looked exactly like a
+ * session refused once, and D-2's "refusal frequency is invisible" was true of
+ * the state file as much as of the absent reader.
+ *
+ * EVERY finding's detector is counted, not just the first. The first still lands
+ * in `detector` for compatibility with the 36 field records written before this,
+ * but a turn that trips B and C at once is two observations, and pooling them
+ * into one is what step 1.1 forbids in the reader — doing it in the writer would
+ * put the same defect somewhere the reader cannot fix.
+ */
 function markRefusedTurn(
     workspaceRoot: string,
     sessionKey: string,
     turnOrdinal: number,
-    detector: DetectorId,
+    detectors: readonly DetectorId[],
 ): void {
     if (is_replay_mode()) return;
+    const file = sessionStateFile(workspaceRoot, sessionKey);
+    let prev: RefusalRecord | null = null;
     try {
-        atomic_write_json(sessionStateFile(workspaceRoot, sessionKey), {
-            refused_at: new Date().toISOString(),
-            refused_turn: turnOrdinal,
-            detector,
-        });
+        prev = parseRecord(fs.readFileSync(file, 'utf-8'));
+    } catch {
+        // Absent or unreadable prior state starts a fresh count. Never a reason
+        // to skip the marker — the marker is the wedge guard.
+    }
+    let version: string | undefined;
+    try {
+        version = readInstallBoundary().version ?? undefined;
+    } catch {
+        version = undefined;
+    }
+    try {
+        atomic_write_json(
+            file,
+            foldRefusal(prev, {
+                detectors,
+                turnOrdinal,
+                at: new Date().toISOString(),
+                version,
+            }) as unknown as Record<string, unknown>,
+        );
     } catch {
         // A state-write failure must never wedge the turn. Losing the marker
         // costs at most one extra refusal; failing closed here would cost the
@@ -938,7 +981,12 @@ export function main(): number {
     }
     if (findings.length === 0) return EXIT_ALLOW;
 
-    markRefusedTurn(workspaceRoot, sessionKey, turnOrdinal, findings[0]!.detector);
+    markRefusedTurn(
+        workspaceRoot,
+        sessionKey,
+        turnOrdinal,
+        findings.map((f) => f.detector),
+    );
 
     const lines = findings.map(
         (f) => `  · ${f.detector}: ${f.reason}\n    evidence: ${JSON.stringify(f.evidence)}`,

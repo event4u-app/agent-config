@@ -1242,3 +1242,55 @@ describe('readTranscriptTail — tool calls of the CURRENT turn', () => {
         expect(readTranscriptTail(t, { homeDir: home }).toolCalls).toEqual([]);
     });
 });
+
+/**
+ * `road-to-stop-gate-honesty` step 1.1, at the writer.
+ *
+ * The lib-level cases live in `turn_end_refusals.test.ts`; these two exist
+ * because the defect they pin was at the CALL SITE, not in the fold: the hook
+ * passed `findings[0].detector` and threw the rest away, so a fold that counts
+ * every detector would have been correct and dead.
+ */
+describe('the refusal record counts what actually fired', () => {
+    /** German pin + German promissory close would trip A only. Pin `en` to trip A AND B. */
+    function makeMismatchedWorkspace(): { dir: string; home: string } {
+        const { dir, home } = makeGateWorkspace();
+        fs.writeFileSync(
+            path.join(dir, 'agents', 'state', 'language-mirror.json'),
+            JSON.stringify({ language: 'en', source: 'prompt' }),
+        );
+        return { dir, home };
+    }
+
+    function readState(dir: string): Record<string, unknown> {
+        const stateDir = path.join(dir, 'agents', 'runtime', 'state', 'turn-end-gate');
+        const files = fs.readdirSync(stateDir).filter((f) => f.endsWith('.json'));
+        expect(files).toHaveLength(1);
+        return JSON.parse(fs.readFileSync(path.join(stateDir, files[0]!), 'utf-8')) as Record<
+            string,
+            unknown
+        >;
+    }
+
+    it('records BOTH detectors when one turn trips two', () => {
+        const { dir, home } = makeMismatchedWorkspace();
+        const r = runHook(dir, envelopeJson(dir, writeTranscript(home, ['go on'], PROMISE)), home);
+        expect(r.status, r.stderr).toBe(1);
+        const counts = readState(dir)['counts'] as Record<string, number>;
+        expect(counts['promissory']).toBe(1);
+        expect(counts['language']).toBe(1);
+    });
+
+    it('accumulates across refusals instead of overwriting itself', () => {
+        const { dir, home } = makeGateWorkspace();
+        for (const prompts of [['a'], ['a', 'b'], ['a', 'b', 'c']]) {
+            runHook(dir, envelopeJson(dir, writeTranscript(home, prompts, PROMISE)), home);
+        }
+        const state = readState(dir);
+        // Three refused turns in one session. The pre-change record reported the
+        // last one and nothing else, which is why D-2 was true of the file too.
+        expect((state['counts'] as Record<string, number>)['promissory']).toBe(3);
+        expect(state['refused_turn']).toBe(3);
+        expect(typeof state['first_refused_at']).toBe('string');
+    });
+});
