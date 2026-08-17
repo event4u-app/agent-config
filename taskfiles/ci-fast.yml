@@ -932,6 +932,21 @@ tasks:
       one rule in and one rule out; the id-set axis cannot.
     cmd: ./scripts-run src/scripts/check_rule_activation_census {{.QUIET_FLAG}}
 
+  check-rule-stub-ceiling:
+    silent: true
+    desc: >
+      Hold a migrated rule at the size its pointer claims. 44 rules carry a line
+      saying their body moved to a guideline, skill or context; nothing asserted
+      they stay small, so migration was executed as an event and never encoded as
+      a state. Two axes: every pointer target must resolve, and every migrated
+      rule sits under a per-rule exact-BPE ceiling whose raises each carry a
+      reason sentence. The aggregate census ratchet next door cannot catch this
+      and is not meant to — it pins the CORPUS total with a drift allowance, so
+      one rule growing while another shrinks is a green run. Measured at
+      adoption, `context-hygiene` was 10,988 B against a 3,491 B migration
+      target: the rule was three times the size of the file it migrated into.
+    cmd: ./scripts-run src/scripts/check_rule_stub_ceiling {{.QUIET_FLAG}}
+
   lint-scheduled-deprecations:
     silent: true
     desc: |

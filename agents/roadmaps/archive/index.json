@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 505,
+  "count": 506,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -5471,6 +5471,20 @@
       "steps": {
         "open": 2,
         "done": 0,
+        "deferred": 0,
+        "cancelled": 0
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
+      "slug": "road-to-rule-stub-projection",
+      "title": "Road to rule-stub projection — hold a migrated rule at the size its pointer claims",
+      "disposition": "completed",
+      "phases": 4,
+      "steps": {
+        "open": 0,
+        "done": 19,
         "deferred": 0,
         "cancelled": 0
       },
