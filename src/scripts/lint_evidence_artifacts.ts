@@ -8,8 +8,8 @@
  * does NOT do.
  *
  * **It is forward-looking, and there is no baseline file.** Measured by
- * `--all` at the time of writing: 328 tracked markdown artifacts under
- * `agents/evidence/`, 184 already resolving a type and 144 not.
+ * `--all` at the time of writing: 332 tracked markdown artifacts under
+ * `agents/evidence/`, 188 already resolving a type and 144 not.
  * `check_completion_review` already refused to make one marker field required
  * on the stated ground that it "would have been a migration event for the
  * whole evidence corpus", and that reasoning is adopted rather than
@@ -89,7 +89,13 @@ export interface TypeResolution {
  * The path rule is last and is the contract's one acknowledged exception.
  */
 export function resolveEvidenceType(relPath: string, contents: string): TypeResolution {
-    const lines = contents.split('\n');
+    // BOTH scans share one window. They did not: the grammar scan walked the
+    // whole file while the marker scan stopped at 40 lines, so a quoted
+    // `completion-review` line deep in a prose artifact silently overrode an
+    // explicit `evidence-type:` marker its author had written at the top
+    // (R2 finding 8). A declaration belongs near the top of the file either
+    // way, and one window makes the precedence readable instead of positional.
+    const lines = contents.split('\n').slice(0, MARKER_SCAN_LINES);
 
     for (const raw of lines) {
         const line = raw.trim();
@@ -107,7 +113,7 @@ export function resolveEvidenceType(relPath: string, contents: string): TypeReso
         }
     }
 
-    for (const raw of lines.slice(0, MARKER_SCAN_LINES)) {
+    for (const raw of lines) {
         const m = TYPE_MARKER_RE.exec(raw.trim());
         if (m === null) {
             continue;
@@ -125,7 +131,12 @@ export function resolveEvidenceType(relPath: string, contents: string): TypeReso
     // The contract's single filename-derived case. Safe because the directory
     // is written by `dispatch_r2_reviewer.ts` and by nothing else, so the path
     // IS the declaration rather than a heuristic about one.
-    if (relPath.split(path.sep).some((seg) => seg.endsWith('.review-input'))) {
+    // Split on `/`, never `path.sep`. Every caller feeds paths from
+    // `git diff --name-only` / `git ls-files`, and git emits `/`-separated
+    // paths on every platform — so on Windows `path.sep` (`\`) made the whole
+    // path one segment and this branch could never match (R2 finding 10).
+    // `\` is accepted too so a hand-built Windows path still resolves.
+    if (relPath.split(/[/\\]/).some((seg) => seg.endsWith('.review-input'))) {
         return { type: 'original-review', via: 'review-input-path', invalidMarker: null };
     }
 

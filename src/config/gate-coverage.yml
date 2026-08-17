@@ -44,9 +44,22 @@
 # ----------------------------------------------------------
 # 261 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
-# **37 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and all 37 are listed below.** The manifest is therefore
-# complete with respect to its own contract, and covers ~14 % of the population.
+# **38 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 37 of those 38 are listed below.** The manifest is
+# therefore complete with respect to its own contract for every gate that can
+# carry a floor, and covers ~14 % of the population.
+#
+# The one emitter deliberately NOT listed is `lint_evidence_artifacts`, for the
+# same reason `check_rule_projection_integrity` is not (see the paragraph
+# below): it is diff-scoped, so it legitimately emits `scanned: 0` on any
+# branch that adds no evidence artifact, and `min_scanned: 0` is the
+# false-count shape this file rejects. Its ledger half IS discharged — it
+# adopts `_lib/gate_ledger.ts` and `_lib/scan_scope.ts`, so
+# `check_gate_completeness` counts it as an adopter.
+#
+# Counting emitters rather than rows is the point of stating both numbers: the
+# 2026-08-05 and 2026-08-10 readings below were miscounts precisely because one
+# number was updated and the other was not.
 # (The 2026-08-05 reading said "32 … and all 31 are listed" and the 2026-08-10
 # reading said "33 … and all 33" while 34 entries were listed — those two are
 # the MISCOUNTS this paragraph exists to warn about, and they are listed here

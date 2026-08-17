@@ -85,6 +85,7 @@ import {
 } from './ai_council/qualification.js';
 import {
     probeFor,
+    PROBE_STORE_RELPATH,
     readProbeStore,
     recordProbes,
     type ProbeEntry,
@@ -778,6 +779,33 @@ function _emitQuorumEvent(
  * one artefact buckets every absence — construction-time and mid-flight —
  * under one taxonomy.
  */
+/**
+ * Per-member observations from one index-aligned round of responses.
+ *
+ * ONE definition, used by both `_postRunQuorum` (the run path) and the debate
+ * path. A second copy is how the two would drift on what counts as an answer —
+ * and "non-empty text, not merely the absence of an error" is a distinction
+ * this file already paid for once.
+ */
+export function _probesFromRound(
+    members: readonly ExternalAIClient[],
+    responses: readonly CouncilResponse[],
+    at: string = new Date().toISOString().slice(0, 10),
+): ProbeEntry[] {
+    const probes: ProbeEntry[] = [];
+    for (let i = 0; i < members.length; i++) {
+        const m = members[i] as ExternalAIClient;
+        const r = responses[i];
+        if (r !== undefined && !r.error && r.text.trim() !== '') {
+            probes.push({ name: m.name, outcome: 'ok', at });
+            continue;
+        }
+        const raw = r?.error ?? (r !== undefined && r.text.trim() === '' ? 'empty response body' : 'no response');
+        probes.push({ name: m.name, outcome: classifyCliFailure(raw), at });
+    }
+    return probes;
+}
+
 function _postRunQuorum(
     members: ExternalAIClient[],
     responses: CouncilResponse[],
@@ -789,8 +817,7 @@ function _postRunQuorum(
     // already happened, so recording its outcome costs nothing beyond the row,
     // and it is what lets a seat decay out of `unknown` through ordinary use
     // instead of through a maintenance ritual nobody would run.
-    const probes: ProbeEntry[] = [];
-    const observedAt = new Date().toISOString().slice(0, 10);
+    const probes: ProbeEntry[] = _probesFromRound(members, responses);
     let present = 0;
     for (let i = 0; i < members.length; i++) {
         const m = members[i] as ExternalAIClient;
@@ -804,12 +831,10 @@ function _postRunQuorum(
         // quorum by definition, whatever the transport thought of it.
         if (r !== undefined && !r.error && r.text.trim() !== '') {
             present += 1;
-            probes.push({ name: m.name, outcome: 'ok', at: observedAt });
             continue;
         }
         const raw = r?.error ?? (r !== undefined && r.text.trim() === '' ? 'empty response body' : 'no response');
         const failure = classifyCliFailure(raw);
-        probes.push({ name: m.name, outcome: failure, at: observedAt });
         absent.push({
             member: m.name,
             reason: absentReasonFromCliFailure(failure) ?? 'unavailable',
@@ -995,9 +1020,16 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                         reason: resolved.reason,
                         absentReason: resolved.absentReason,
                     },
+                    // `||`, matching the construction path below exactly. With
+                    // `??` an empty-string `--model` override reached the
+                    // ladder as a configured id and reported "no model
+                    // identifier configured" → `unavailable`, while
+                    // construction fell through to the member's real model and
+                    // built the client fine (R2 finding 11). Two coalescing
+                    // operators over one value is two answers to one question.
                     modelId:
-                        (overrides[name] as string | undefined) ??
-                        (cfg['model'] as string | undefined) ??
+                        (overrides[name] as string | undefined) ||
+                        (cfg['model'] as string | undefined) ||
                         null,
                     lastProbe: probeFor(probe_store, name),
                 }),
@@ -1136,18 +1168,57 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
     // intent; withholding it from `present` is what makes the pass report being
     // short. A seat already recorded absent is excluded here so it is not
     // subtracted twice.
+    //
+    // An unqualified seat is routed through `record_absent`, NOT subtracted
+    // separately. The separate subtraction was the first version and it broke
+    // the pre-run event's own invariant — `total - present == absent.length` —
+    // by lowering `present` while pushing nothing into `absent_entries`, so the
+    // attendance-budget instrument that reads that array saw a shortfall it
+    // could not attribute to any member (R2 finding 2). Going through the same
+    // recorder keeps one accounting path and one definition of absent.
+    //
+    // The seat is still CONSTRUCTED and still dispatched. That is deliberate:
+    // the pre-run reading is a prediction about attendance, and a seat nobody
+    // has observed may yet answer — which is exactly how it earns the `ok`
+    // probe that resolves its `unknown`. Predicting it absent and letting it
+    // prove otherwise is the self-healing direction.
     const absent_names = new Set(absent_entries.map((e) => String(e['member'])));
-    const unqualified = qualifications.filter(
-        (q) => !absent_names.has(q.name) && !isCountableForQuorum(q.verdict),
-    );
-    for (const q of unqualified) {
-        _stderr(`[council] UNQUALIFIED ${formatQualificationLine(q)} — not counted toward attendance\n`);
+    const unqualified_lines: string[] = [];
+    for (const q of qualifications) {
+        if (absent_names.has(q.name) || isCountableForQuorum(q.verdict)) {
+            continue;
+        }
+        unqualified_lines.push(formatQualificationLine(q));
+        // `unavailable` for BOTH `unavailable` and `unknown`, deliberately.
+        // `QuorumAbsentReason` is a closed set (`events_log.ts`) and does not
+        // carry an `unqualified` member; minting one here would be a contract
+        // change on an event other instruments already parse, to express a
+        // distinction `detail` carries losslessly on the same row. The entry
+        // is a loose `Dict`, so the type-checker would NOT have caught an
+        // invented value — which is why this is written out rather than left
+        // to the reader.
+        record_absent({
+            member: q.name,
+            reason: 'unavailable',
+            detail: formatQualificationLine(q),
+        });
+    }
+    // ONE line for the whole roster, not one per seat. A fresh machine has no
+    // probe store, so every seat reads `unknown` and the per-seat form printed
+    // the full roster on every `run`, `debate` AND `estimate` — a spend-free
+    // preview included (R2 finding 15). The information is the same; the
+    // volume was the defect.
+    if (unqualified_lines.length > 0) {
+        _stderr(
+            `[council] ${String(unqualified_lines.length)} seat(s) not counted toward attendance — ` +
+                `${unqualified_lines.join(' · ')}\n`,
+        );
     }
     if (qualification_out !== null) {
         qualification_out.push(...qualifications);
     }
     if (quorum_out !== null) {
-        const present = total_enabled - absent_count - unqualified.length;
+        const present = total_enabled - absent_count;
         quorum_out.result = evaluateQuorum(total_enabled, present, _quorum_setting_from(ai));
         // Construction-time attendance. `lens` / `invocation` stay empty
         // here on purpose: neither is known at member-construction time,
@@ -2554,7 +2625,17 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
                 ),
                 qualified_members: qualifications.filter((q) => isCountableForQuorum(q.verdict)).length,
                 parse_error,
+                // Scoped to CONFIG resolution, which is what ADR-104 governs
+                // and what a caller reading this field is asking about. It was
+                // an unqualified `false` until the probe store landed, and that
+                // became untrue in the literal reading the moment this command
+                // started reading `agents/runtime/state/` under the project
+                // root (R2 finding 3). Two fields rather than one hedged
+                // sentence: the ADR claim stays absolute, and the other read is
+                // named with its path so nobody has to infer it.
+                project_tree_consulted_for_config: false,
                 project_tree_consulted: false,
+                probe_store_path: PROBE_STORE_RELPATH,
             })}\n`,
         );
         return 0;
@@ -2591,12 +2672,25 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
         for (const q of qualifications) {
             _stdout(`  qualification    ${formatQualificationLine(q)}\n`);
         }
-        const qualifiedCount = qualifications.filter((q) => isCountableForQuorum(q.verdict)).length;
-        if (qualifiedCount < qualifications.length) {
+        // Two counts, not one: the advice differs and the earlier single
+        // warning gave the `unknown` advice to `unavailable` seats too — "run
+        // a pass and it resolves itself" is false for a seat with no binary,
+        // and sends the operator to re-run instead of to the actual fault
+        // (R2 finding 12).
+        const unknownCount = qualifications.filter((q) => q.verdict === 'unknown').length;
+        const unavailableCount = qualifications.filter((q) => q.verdict === 'unavailable').length;
+        if (unknownCount > 0) {
             _stdout(
-                `  ⚠️  ${String(qualifications.length - qualifiedCount)} of ${String(qualifications.length)} ` +
-                    'seat(s) cannot be counted toward a quorum. A seat with no recorded exchange reads\n' +
-                    '     `unknown` until one succeeds — run a council pass and it resolves itself.\n',
+                `  ⚠️  ${String(unknownCount)} of ${String(qualifications.length)} seat(s) have no recorded ` +
+                    'exchange and read `unknown`, so they are\n' +
+                    '     not counted toward a quorum. Run a council pass and this resolves itself.\n',
+            );
+        }
+        if (unavailableCount > 0) {
+            _stdout(
+                `  ❌  ${String(unavailableCount)} of ${String(qualifications.length)} seat(s) are ` +
+                    '`unavailable` — a pass will NOT fix these.\n' +
+                    '     Read the deciding check on each line above and repair that.\n',
             );
         }
         if (cfg.ignored_transport_keys.length > 0) {
@@ -2609,7 +2703,7 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
         }
     }
     _stdout('\n');
-    _stdout('  The project tree is NEVER consulted (ADR-104). No project file —\n');
+    _stdout('  The project tree is NEVER consulted FOR CONFIG (ADR-104). No project file —\n');
     _stdout('  `.agent-settings.yml` included — indicates council availability in\n');
     _stdout('  either direction. Do not infer it from one; run this instead.\n');
     if (!configured) {
@@ -3451,6 +3545,18 @@ function cmd_debate(
         }
         throw exc;
     }
+
+    // Debate CONSUMES qualification (it passes a probe store to
+    // `build_members`), so it has to produce observations too — otherwise a
+    // debate-only operator's seats stay `unknown` forever and the gate becomes
+    // a permanent tax with no path out (R2 finding 14). The final round is the
+    // observation: it is index-aligned with `members` by `run_debate`'s own
+    // contract, the same alignment `_postRunQuorum` relies on.
+    //
+    // This is deliberately NOT a post-run quorum for the debate path — that
+    // remains absent for the reason recorded at its own call site. Recording
+    // what was observed and re-deriving attendance are different jobs.
+    recordProbes(REPO_ROOT, _probesFromRound(members, all_rounds[all_rounds.length - 1] ?? []));
 
     let actual_total = 0.0;
     for (const rnd of [...all_rounds, restate_responses]) {

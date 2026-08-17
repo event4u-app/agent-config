@@ -34,6 +34,16 @@
  * `now` — for the same reason `quorum.ts` is. A qualification pass that could
  * spend money would be a qualification pass nobody dares run.
  *
+ * HONEST SCOPE — two of the seven rungs have no production caller yet.
+ * Neither `build_members` nor `cmd_status` supplies `systemPrompt` or
+ * `toolsIsolated`, so `system_prompt_path` and `tool_isolation` always report
+ * `skipped` in a real run and can move no verdict. They are specified,
+ * implemented and unit-tested; they are not yet WIRED, because nothing in the
+ * council config records either fact today. Said plainly (R2 finding 6)
+ * rather than left for a reader to discover: a ladder that prints seven rungs
+ * while five of them decide anything is a coverage claim, and an unstated one
+ * is the kind this repository treats as inflation.
+ *
  * HONEST SCOPE: this module decides nothing on its own. It classifies. Whether
  * an `unknown` seat is refused, warned about, or counted is the caller's
  * choice, and the callers that make it are named in the roadmap's Phase 3
@@ -171,6 +181,17 @@ const STATUS_TO_VERDICT: Record<Exclude<CheckStatus, 'skipped'>, QualificationVe
 /**
  * Failure classes that mean the seat is alive but impaired, rather than dead.
  *
+ * **`other` is deliberately NOT here, and putting it back re-opens the exact
+ * defect this module exists to close.** `other` is `classifyCliFailure`'s
+ * catch-all, and `_postRunQuorum` routes a member that produced nothing
+ * through it — `'empty response body'` and `'no response'` both classify as
+ * `other`. Listing it as impaired therefore recorded a seat that was
+ * dispatched and returned silence as `degraded`, i.e. countable, i.e. present
+ * again on the next pass. That is the over-claim one layer down, and it
+ * survived until the R2 review of this branch caught it (finding 1, high).
+ * An unclassifiable failure is `unavailable`: the weakest claim the evidence
+ * supports, which is this module's whole ordering rule.
+ *
  * `quota_exhausted` is the clearest case and the reason this set exists: the
  * cap is one the operator deliberately set, so the seat is working exactly as
  * configured. Treating it as `unavailable` would tell an operator to go fix a
@@ -182,7 +203,6 @@ const IMPAIRED_FAILURES: ReadonlySet<CliFailureClass> = new Set([
     'quota_exhausted',
     'timeout',
     'server_error',
-    'other',
 ]);
 
 function _daysBetween(from: Date, to: Date): number {
@@ -256,7 +276,14 @@ function _modelIdentifier(input: MemberQualificationInput): QualificationCheck {
     // The recorded codex failure: the transport rejected the model id itself.
     // A static config read can never see this, which is why the probe record
     // is consulted on this rung and not only on the last one.
-    if (input.lastProbe?.outcome === 'model_unservable' || input.lastProbe?.outcome === 'cli_unsupported') {
+    // `model_unservable` ONLY. `cli_unsupported` was here and was wrong:
+    // `classifyCliFailure` returns it for `parse_failed` — a response the CLI
+    // could not parse — which says nothing about the model identifier and
+    // would have this rung report "<id> was rejected by the transport" about
+    // an id the transport never objected to. That failure still reaches
+    // `unavailable`, via the `live_probe` rung where it belongs, so nothing is
+    // lost except a wrong reason. (R2 finding 13.)
+    if (input.lastProbe?.outcome === 'model_unservable') {
         return {
             id: 'model_identifier',
             status: 'fail',

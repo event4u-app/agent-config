@@ -69,6 +69,23 @@ export interface ProbeStore {
 
 const EMPTY: ProbeStore = { schema: 1, members: {} };
 
+/**
+ * The closed set a stored `outcome` may hold — `ok` plus every
+ * `CliFailureClass`. Duplicated as a runtime value because the type erases,
+ * and this is a trust boundary: the file is hand-editable.
+ */
+const VALID_OUTCOMES: ReadonlySet<string> = new Set<'ok' | CliFailureClass>([
+    'ok',
+    'binary_missing',
+    'auth_rejected',
+    'cli_unsupported',
+    'model_unservable',
+    'timeout',
+    'server_error',
+    'quota_exhausted',
+    'other',
+]);
+
 export function probeStorePath(root: string): string {
     return path.join(root, PROBE_STORE_RELPATH);
 }
@@ -114,7 +131,16 @@ export function readProbeStore(root: string): ProbeStore {
         const v = value as Record<string, unknown>;
         const at = v['at'];
         const outcome = v['outcome'];
-        if (typeof at !== 'string' || at === '' || typeof outcome !== 'string' || outcome === '') {
+        if (typeof at !== 'string' || at === '' || typeof outcome !== 'string') {
+            continue;
+        }
+        // Validated against the closed set, not cast into it. A bare
+        // non-empty-string check let a corrupt or hand-edited value through,
+        // where `_liveProbe` read it as `!== 'ok'` and not impaired — i.e. a
+        // typo silently downgraded a healthy seat to `unavailable`
+        // (R2 finding 9). Dropping the row instead yields `unknown`, which is
+        // the honest reading of "this record is unreadable".
+        if (!VALID_OUTCOMES.has(outcome)) {
             continue;
         }
         members[name] = { at, outcome: outcome as 'ok' | CliFailureClass };

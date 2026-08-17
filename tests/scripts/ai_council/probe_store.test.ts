@@ -53,6 +53,47 @@ describe('readProbeStore — the tolerant reader', () => {
     // The property that matters: one bad row must not blank the others, or a
     // single corrupt entry would silently downgrade every healthy seat to
     // `unknown` with no way to tell that cause from "never observed".
+    // R2 finding 9: `outcome` was checked only for being a non-empty string
+    // and then CAST into the union. A typo therefore reached `_liveProbe`,
+    // which read it as `!== 'ok'` and not impaired — silently downgrading a
+    // healthy seat to `unavailable`. Dropping the row yields `unknown`, the
+    // honest reading of an unreadable record.
+    it('an outcome outside the closed set is dropped, not cast', () => {
+        writeRaw(
+            JSON.stringify({
+                schema: 1,
+                members: {
+                    typo: { at: '2026-08-16', outcome: 'okay' },
+                    good: { at: '2026-08-16', outcome: 'quota_exhausted' },
+                },
+            }),
+        );
+        const store = readProbeStore(root);
+        expect(Object.keys(store.members)).toEqual(['good']);
+        expect(probeFor(store, 'typo')).toBeNull();
+    });
+
+    it('every value the writer can emit survives the reader', () => {
+        const outcomes = [
+            'ok',
+            'binary_missing',
+            'auth_rejected',
+            'cli_unsupported',
+            'model_unservable',
+            'timeout',
+            'server_error',
+            'quota_exhausted',
+            'other',
+        ];
+        writeRaw(
+            JSON.stringify({
+                schema: 1,
+                members: Object.fromEntries(outcomes.map((o) => [o, { at: '2026-08-16', outcome: o }])),
+            }),
+        );
+        expect(Object.keys(readProbeStore(root).members).sort()).toEqual([...outcomes].sort());
+    });
+
     it('one malformed member entry is dropped and the rest survive', () => {
         writeRaw(
             JSON.stringify({

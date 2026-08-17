@@ -1,9 +1,12 @@
 // Tests for src/scripts/lint_evidence_artifacts.ts
 // (road-to-release-review-p0 Phase 2).
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { GateLedger } from '../../src/scripts/_lib/gate_ledger.js';
 import {
     checkFiles,
     EVIDENCE_TYPES,
@@ -71,6 +74,27 @@ describe('resolveEvidenceType — the explicit marker', () => {
         const body = `${'filler\n'.repeat(60)}<!-- evidence-type: analysis -->\n`;
         expect(resolveEvidenceType('x.md', body).type).toBeNull();
     });
+
+    // R2 finding 8: the grammar scan used to walk the WHOLE file while the
+    // marker scan stopped at 40 lines, so a quoted completion-review line deep
+    // in a prose artifact silently overrode the author's own declaration.
+    // Reverting the grammar scan to the unbounded form fails this test.
+    it('a quoted grammar line deep in the file cannot override an explicit marker', () => {
+        const body =
+            '<!-- evidence-type: analysis -->\n' +
+            `${'prose\n'.repeat(60)}` +
+            `<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: ${SCOPE} | diff: abc1234 | reviewer: quoted -->\n`;
+        expect(resolveEvidenceType('agents/evidence/analysis/x.md', body)).toEqual({
+            type: 'analysis',
+            via: 'marker',
+            invalidMarker: null,
+        });
+    });
+
+    it('both scans share one window — a grammar line below it does not resolve either', () => {
+        const body = `${'prose\n'.repeat(60)}**Honest-null:** 0 findings, scope ${SCOPE}, reviewed 2026-08-17\n`;
+        expect(resolveEvidenceType('agents/evidence/analysis/x.md', body).type).toBeNull();
+    });
 });
 
 describe('resolveEvidenceType — the one path-derived case', () => {
@@ -93,6 +117,68 @@ describe('resolveEvidenceType — the one path-derived case', () => {
 
     it('plain prose with no marker anywhere is untyped', () => {
         expect(resolveEvidenceType('agents/evidence/analysis/x.md', '# A census\n\nSome prose.\n').type).toBeNull();
+    });
+});
+
+// R2 finding 5: the gate's FAILING path had no test at all — both prior
+// `checkFiles` cases asserted `[]`, so nothing executable proved a real
+// untyped file on disk produces a finding. That is the one behaviour the
+// roadmap's acceptance criterion names ("a typeless evidence artifact fails
+// its check"), and it was marked `[x]` on the strength of a manual run.
+describe('checkFiles — over real files on disk', () => {
+    let root: string;
+
+    beforeEach(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'evidence-lint-'));
+        fs.mkdirSync(path.join(root, 'agents', 'evidence', 'analysis'), { recursive: true });
+    });
+
+    afterEach(() => {
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    function write(rel: string, body: string): string {
+        const abs = path.join(root, rel);
+        fs.mkdirSync(path.dirname(abs), { recursive: true });
+        fs.writeFileSync(abs, body, 'utf8');
+        return rel;
+    }
+
+    it('an untyped artifact on disk produces exactly one finding', () => {
+        const rel = write('agents/evidence/analysis/untyped.md', '# A census\n\nSome prose.\n');
+        const findings = checkFiles(root, [rel]);
+        expect(findings).toHaveLength(1);
+        expect(findings[0]?.file).toBe(rel);
+        expect(findings[0]?.reason).toContain('no evidence type declared');
+    });
+
+    it('a typed artifact on disk produces none', () => {
+        const rel = write('agents/evidence/analysis/typed.md', '<!-- evidence-type: analysis -->\n# X\n');
+        expect(checkFiles(root, [rel])).toEqual([]);
+    });
+
+    it('a misspelled type is reported as invalid, with the offending value named', () => {
+        const rel = write('agents/evidence/analysis/bad.md', '<!-- evidence-type: analisys -->\n');
+        const findings = checkFiles(root, [rel]);
+        expect(findings).toHaveLength(1);
+        expect(findings[0]?.reason).toContain('analisys');
+    });
+
+    it('mixed input reports only the untyped members', () => {
+        const bad = write('agents/evidence/analysis/a.md', '# prose\n');
+        write('agents/evidence/analysis/b.md', '<!-- evidence-type: analysis -->\n');
+        expect(checkFiles(root, [bad, 'agents/evidence/analysis/b.md']).map((f) => f.file)).toEqual([bad]);
+    });
+
+    it('the ledger accounts for every planned target', () => {
+        const bad = write('agents/evidence/analysis/a.md', '# prose\n');
+        write('agents/evidence/analysis/b.md', '<!-- evidence-type: analysis -->\n');
+        const ledger = new GateLedger('lint_evidence_artifacts');
+        checkFiles(root, [bad, 'agents/evidence/analysis/b.md'], ledger);
+        const tally = ledger.finalize();
+        expect(tally.planned).toBe(2);
+        expect(tally.failed).toBe(1);
+        expect(tally.completed).toBe(1);
     });
 });
 

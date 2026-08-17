@@ -11,6 +11,7 @@ import {
     qualifyMember,
     type MemberQualificationInput,
 } from '../../../src/scripts/ai_council/qualification.js';
+import { classifyCliFailure } from '../../../src/scripts/ai_council/transport_resolver.js';
 
 const NOW = new Date('2026-08-17T00:00:00Z');
 
@@ -123,6 +124,43 @@ describe('qualifyMember — impaired but alive', () => {
         expect(qualifyMember(healthy({ lastProbe: { at: '2026-08-16', outcome: 'timeout' } })).verdict).toBe(
             'degraded',
         );
+    });
+
+    // R2 finding 1 (high), and the reason it was high: `other` is
+    // `classifyCliFailure`'s catch-all, and `_postRunQuorum` routes a member
+    // that produced NOTHING through it — `'empty response body'` and
+    // `'no response'` both classify as `other`. While `other` sat in
+    // IMPAIRED_FAILURES, a dispatched seat that returned silence recorded as
+    // `degraded`, stayed countable, and was counted present on the next pass:
+    // the over-claim this whole module exists to remove, one layer down.
+    //
+    // Re-adding `'other'` to IMPAIRED_FAILURES fails this test and the
+    // countability assertion below, and nothing else — verified by putting it
+    // back and re-running.
+    it('an UNCLASSIFIABLE failure is unavailable, never degraded', () => {
+        const q = qualifyMember(healthy({ lastProbe: { at: '2026-08-16', outcome: 'other' } }));
+        expect(q.verdict).toBe('unavailable');
+        expect(q.decidedBy).toBe('live_probe');
+    });
+
+    it('and a seat that returned silence therefore cannot be counted present', () => {
+        // The exact string `_postRunQuorum` classifies for an empty answer.
+        expect(classifyCliFailure('empty response body')).toBe('other');
+        expect(classifyCliFailure('no response')).toBe('other');
+        const q = qualifyMember(healthy({ lastProbe: { at: '2026-08-16', outcome: 'other' } }));
+        expect(isCountableForQuorum(q.verdict)).toBe(false);
+    });
+
+    // R2 finding 13: `cli_unsupported` is what `classifyCliFailure` returns
+    // for `parse_failed` — a response the CLI could not parse, which says
+    // nothing about the model identifier. It must still reach `unavailable`,
+    // but through the probe rung, so the REASON is not a fabricated claim that
+    // the transport rejected the id.
+    it('an unparseable CLI response fails on the probe rung, not on the model rung', () => {
+        const q = qualifyMember(healthy({ lastProbe: { at: '2026-08-16', outcome: 'cli_unsupported' } }));
+        expect(q.verdict).toBe('unavailable');
+        expect(q.decidedBy).toBe('live_probe');
+        expect(q.checks.find((c) => c.id === 'model_identifier')?.status).toBe('pass');
     });
 
     it('a manual transport is degraded — it performs no provider call', () => {

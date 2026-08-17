@@ -29,11 +29,15 @@ migration event for the whole evidence corpus"* (`:88-92`). That reasoning is
 adopted here rather than overturned.
 
 Measured by `lint_evidence_artifacts --all` at the time of writing — a count,
-not an estimate: **328** tracked markdown artifacts under `agents/evidence/`,
-of which **184 already resolve a type** through the grammars below and **144
+not an estimate: **332** tracked markdown artifacts under `agents/evidence/`,
+of which **188 already resolve a type** through the grammars below and **144
 do not**. The untyped remainder is prose in `analysis/`, `reports/`, `audits/`
 and `investigations/`. Retrofitting a marker onto those 144 would be a large,
 low-value diff whose main effect is to make the next `git blame` harder.
+
+The typed figure moves as artifacts land and the untyped one does not, which
+is the whole design: run `--all` for today's numbers rather than trusting this
+paragraph.
 
 So the obligation is forward-looking: a **newly written** evidence artifact
 declares its type. `lint_evidence_artifacts.ts` enforces exactly that and
