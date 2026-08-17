@@ -47,6 +47,12 @@
  *   ./agent-config gates --json     # machine-readable
  *   ./agent-config gates --reply    # reply-close form; empty when none
  *   ./agent-config gates --pending  # staged actions awaiting confirmation
+ *   ./agent-config gates --execute <id>   # resolve one class-0 gate by running it
+ *
+ * `--execute` is the only mode that writes anything, and it takes exactly one
+ * blocker id. Everything else here reads. See `gate_execute.ts` for what it
+ * refuses to do — no sweep, no resolve on a failed command, no invented budget
+ * ledger, and class 3 unchanged by construction.
  *
  * `--pending` reads a different source — the staged-confirmation store, not the
  * roadmap tree — and stays out of `--reply` on purpose. ADR-222 fixes the
@@ -66,6 +72,7 @@ import {
     type Blocker,
 } from './update_roadmap_progress.js';
 import { probeLater, type ResumeFinding } from './resume_probe.js';
+import { execute } from './gate_execute.js';
 import { listPending } from '../templates/scripts/work_engine/hooks/builtin/staged_confirmation_store.js';
 import type { StagedAction } from '../templates/scripts/work_engine/hooks/builtin/staged_confirmation.js';
 
@@ -567,6 +574,24 @@ function main(argv?: readonly string[]): number {
                   : 'No roadmaps directory — nothing to report.\n',
         );
         return 0;
+    }
+
+    // `--execute <id>` acts; every other flag only reads. One blocker per
+    // invocation, named explicitly — a blanket sweep would run N authored
+    // commands on one keypress and make a misclassification cost the tree
+    // rather than one entry.
+    const execIdx = args.indexOf('--execute');
+    if (execIdx !== -1) {
+        const id = args[execIdx + 1];
+        if (id === undefined || id.startsWith('--')) {
+            process.stderr.write(
+                'gates --execute needs a blocker id: `agent-config gates --execute <id>`.\n',
+            );
+            return 1;
+        }
+        const r = execute(roadmapRoot, id, new Date());
+        process.stdout.write(r.report);
+        return r.code;
     }
 
     const entries = collectEntries(roadmapRoot);

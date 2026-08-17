@@ -149,7 +149,7 @@ safeguards.**
 
 ### Phase 2 — `gates --execute` (the acting half)
 
-- [ ] **2.1** New mode on the existing command. Class 0: run the `run:` command,
+- [x] **2.1** New mode on the existing command. Class 0: run the `run:` command,
       capture output, append the unblock evidence into the roadmap file at the
       blocker — the same in-file done-note discipline every phase already uses — and
       mark it resolved. Class 1: check the budget ledger, run under it, write the
@@ -157,11 +157,45 @@ safeguards.**
       class-2 consent line **instead of running**.
       `verify:` an end-to-end fixture per class, including the over-budget path
       rendering rather than executing.
-- [ ] **2.2** Class 2 emits its one-line consent question with recommendation and
+      **Done 2026-08-17, and deliberately thin — on this roadmap's own number.**
+      `src/agent-src/scripts/gate_execute.ts`, reached as
+      `agent-config gates --execute <id>`. Step 1.2 measured 24.5 % against a
+      pre-registered 40 %, and the honest-null clause fixes the size: this ships
+      for the six class-0 entries and the render path, and is not the lever that
+      drains the estate. 12 fixtures in `tests/scripts/gate_execute.test.ts`, one
+      end-to-end per class.
+      Four refusals are built in, each one a thing the step could plausibly have
+      done and should not: **no sweep** — one id per invocation, because a blanket
+      execute runs N authored commands on one keypress and makes a
+      misclassification cost the tree instead of one entry; **no resolve on
+      failure** — a non-zero exit reports and the file is left byte-identical;
+      **no invented ledger** — the budget shape is `b-gate-budget-preauth` and
+      still the maintainer's, so class 1 takes the render path the blocker itself
+      prescribes for a missing ledger rather than a stub of the decision; **no
+      guessed command** — a class-0 entry with no `Run:` executes nothing, which
+      is reachable only through an unlinted tree but is the one case where
+      guessing must not happen.
+- [x] **2.2** Class 2 emits its one-line consent question with recommendation and
       default into the decision-sheet surface — `road-to-user-out-of-the-loop`
       Phase 1 owns that surface, and this roadmap only feeds it. Class 3 is
       render-only, exactly today's behaviour.
       `verify:` a class-3 blocker's output is byte-identical to today's.
+      **Done 2026-08-17.** `consentLine` emits question · recommendation ·
+      default, and nothing else. It is a **feed**, not a surface — the decision
+      sheet is `road-to-user-out-of-the-loop` Phase 1 and wraps its own lines, so
+      this side does not.
+      Class 3 is byte-identical **by construction, not by test alone**: the class-3
+      branch executes nothing and writes nothing, so the rendered output is the
+      pre-existing renderer's. Two fixtures pin it — the declared class 3, and an
+      unclassified entry, which takes the same branch through the absent-field
+      default.
+      **Risk 5 is implemented, not just recorded.** A class-2 recommendation over
+      two terminal lines emits a note naming the taxonomy's own remedy —
+      reclassify to 3, never verbosify. The first real entry it fires on is this
+      roadmap's own `b-gate-budget-preauth`, whose recommendation is a paragraph.
+      **The threshold (156 chars) is a stated default, not a measured optimum** —
+      two lines at the 78 columns this command already wraps to. *Revisit-if* a
+      real decision sheet lands with a different width.
 - [~] **2.3** The live-trigger-eval hard-abort gains a preauthorised-budget flag
       that refuses without a valid unspent ledger entry and spends it on run. The
       abort's threat model — unconsented billable automation — is **preserved**:
@@ -227,6 +261,7 @@ safeguards.**
 ### blocker: b-gate-budget-preauth
 - **Status:** open
 - **Owner:** user
+- **Class:** 2 — consent-once
 - **Blocks:** Phase 2 step 2.3, and therefore every class-1 execution. Steps 2.1
   and 2.2 ship the class-0 path and the render path without it.
 - **What to do:** decide the standing budget shape for class-1 gates. Options:
@@ -255,6 +290,7 @@ safeguards.**
 ### blocker: b-delegate-gate-maintainer-profile
 - **Status:** open
 - **Owner:** user
+- **Class:** 2 — consent-once
 - **Blocks:** Phase 3 step 3.1 and therefore 3.2.
 - **What to do:** decide whether to enable the team surface and `allow_delegate` in
   the maintainer profile only. Options: (a) enable both in the maintainer profile,
