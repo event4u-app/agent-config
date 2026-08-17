@@ -1,11 +1,11 @@
 # Findings: evidence-artifact-typing
-<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: fdf85bcf71b56b4bec6558083f0ffbc8c760734983d37ed9c685b340dca36cc7 | diff: 36f84656e1763a3e59166f429ffb64b068ffb3ec | reviewer: r2-fresh-subagent-evidence-artifact-typing | prompt_hash: c5fa3a61fb9539b5148a9fdbcdbdbd28ddde38f34c5fc840421458cda59398be -->
+<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: 14543bdbc272eac7993b47107f89a424836c0cccbb5e9b9537b5f1ff256df495 | diff: de3015c7a02e9f3f2e72948dbf6dd5d906c1c39f | reviewer: r2-fresh-subagent-evidence-artifact-typing | prompt_hash: c5fa3a61fb9539b5148a9fdbcdbdbd28ddde38f34c5fc840421458cda59398be -->
 <!-- evidence-type: v1 | type: rebind-event | declared: 2026-08-17 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 36f84656e1763a3e59166f429ffb64b068ffb3ec
-  scope_hash: fdf85bcf71b56b4bec6558083f0ffbc8c760734983d37ed9c685b340dca36cc7
+  diff_sha: de3015c7a02e9f3f2e72948dbf6dd5d906c1c39f
+  scope_hash: 14543bdbc272eac7993b47107f89a424836c0cccbb5e9b9537b5f1ff256df495
   roadmap: agents/roadmaps/road-to-release-review-p0.md
   roadmap_hash: 9b555b658f327b7e29ae45a0a6860253064e292526574374a9a7af473b109d2f
   ac_hash: b66e28e3514bce21e33b699a6672658a9c3fa6ea38a0d569ad74e836c97798ea
@@ -28,7 +28,7 @@ dispatched: 2026-08-17T05:57:54Z
 | 10 | low | src/scripts/lint_evidence_artifacts.ts:96 | `rebind-event` has no writer. The dispatcher only ever stamps `current-binding`, the §2.7 in-place re-bind is a manual edit (dispatch_r2_reviewer.ts:386-392), and `REBIND_TRACE_RE` demands a literal "re-bound at" string nothing generates. One of the five types is therefore reachable only by hand, and §4's "A type change is legitimate in exactly three transitions, each of which re-dates `declared`" is enforced by nothing — while the roadmap step requires the type be set at write time. | fixed | five types declared, four producible  21c9865c8 |
 | 11 | low | agents/roadmaps-progress.md:598 | The regenerated dashboard reports Phase 3 as "in progress, 8 open, 1 done, 11%" although no Phase 3 step is checked: the generator folds the five Acceptance-Criteria checkboxes into the last phase (4 real steps plus 5 AC is the 9 it counts), so flipping AC 2 credited Phase 3 with a done step. This contradicts the note added in the same diff at agents/roadmaps/road-to-release-review-p0.md:86, "Phase 1 and Phase 3 stay open". | accepted-risk | generator behaviour is pre-existing and out of this change; the contradiction is now named at agents/roadmaps/road-to-release-review-p0.md so a reader is not misled — 21c9865c8 |
 
-## Dispositions — round 1, re-bound at `36f84656e`
+## Dispositions — round 1, re-bound at `de3015c7a`
 
 **10 of 11 fixed, 1 accepted.** Both `high` findings were real and both were
 self-blocking, which is the whole argument for having run the review: the gate
@@ -64,3 +64,10 @@ the `21c9865c8` commit message rather than as a twelfth row: excluding the
 review-input package from the changed-files half left `--all` walking every `.md`,
 so the two modes disagreed about what an artifact is. Backdating an observation
 nobody made is the forgery this ordering exists to prevent.
+
+**Third bind, at `de3015c7a`.** The `21c9865c8` fix pass changed the dispatcher
+skeleton's placeholder, which broke a test that pinned it verbatim; following
+that downstream added a commit, which moved the scope again. Recorded rather than
+smoothed over, because the sequence is the point: the artefact is excluded from
+its own scope computation, so re-binding converges — but any OTHER commit after a
+re-bind invalidates it, and that is why the re-bind is always the last edit.
