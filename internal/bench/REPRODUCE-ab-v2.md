@@ -95,6 +95,36 @@ It writes `added_lines` and `median_cognitive_complexity` onto each trial's
   from a different corpus is re-scored by pointing the re-scorer at that corpus;
   a task id it does not carry is reported as such, never silently skipped.
 
+Two more re-scorers follow the same shape (2026-08-17). **T4 — the safety tier**,
+free to run and deterministic:
+
+```bash
+npx tsx src/scripts/bench_ab_v2_safety.ts <report.json>          # print, touch nothing
+npx tsx src/scripts/bench_ab_v2_safety.ts <report.json> --write  # write safety_tier_pass
+```
+
+It runs each safety-tier task's adversarial probe against the trial's workspace
+and writes `safety_tier_pass`. Only the tasks carrying a `safety_oracle` are in
+the tier; everything else reports "no safety oracle" and contributes nothing. A
+trial whose run broke the module reports **unmeasured**, not a breach — folding
+that into a failure would report every crashed trial as a dropped guard.
+
+**T5 — search adherence**, the one endpoint that costs money:
+
+```bash
+npx tsx src/scripts/bench_ab_v2_search.ts <report.json>                  # mock judges, no spend
+npx tsx src/scripts/bench_ab_v2_search.ts <report.json> --live --write   # two real judges
+```
+
+It reads the transcript preserved beside each clone (`<workspace>.transcript.txt`)
+and scores it at the pre-registered k=2, crediting a rubric item only when both
+judges credit it. Three things to know: the default is the **mock** judge, so a
+run without `--live` costs nothing and is what the tests exercise; a missing key
+is a hard exit rather than a silent drop to one judge, because k=2 is
+pre-registered; and a sweep run **before 2026-08-17** preserved no transcript, so
+every trial in an older report reports that boundary explicitly instead of
+scoring zero.
+
 ## Resume
 
 Checkpointing is on by default. The key is derived from corpus, model, seeds,
@@ -136,12 +166,16 @@ saying so is part of the path:
   The pair reasoning still holds and is now enforced rather than documented: an
   unmeasured endpoint yields `INCONCLUSIVE`, never a pass.
 
-Until #9 and #10 land, the honest reproducible surface is the selftest plus
-offline re-scoring of whatever sweeps exist — which now includes the size pair.
+- ~~Two endpoints named in the pre-registration are still unimplemented and will
+  read `INCONCLUSIVE` on any run made today: the **safety tier** (T4) and
+  **search-adherence** (T5). Both are rubric-judged, so both need model calls and
+  their own oracles.~~
+  **Landed 2026-08-17, and one half of that sentence was wrong.** Only T5 is
+  rubric-judged; the pre-registration defines T4 as *adversarial-input
+  **execution***, so it needs no model call and no spend — see the two re-scorers
+  above. What remains true is the conservative direction: an unmeasured T4 still
+  makes `size_claim_verdict` refuse a size win outright.
 
-Two endpoints named in the pre-registration are still unimplemented and will read
-`INCONCLUSIVE` on any run made today: the **safety tier** (T4) and
-**search-adherence** (T5). Both are rubric-judged, so both need model calls and
-their own oracles. That is deliberate rather than an oversight — the T4 gap makes
-`size_claim_verdict` refuse a size win outright, which is the conservative
-direction for a disqualifier to fail in.
+Until #9 and #10 land, the honest reproducible surface is the selftest plus
+offline re-scoring of whatever sweeps exist — which now includes the size pair,
+the safety tier, and (on sweeps run after 2026-08-17) search adherence.
