@@ -45,7 +45,6 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -53,6 +52,7 @@ import { parse as parseYaml } from 'yaml';
 
 import * as v1 from './bench_ab_task_runner.js';
 import * as scoring from './_lib/bench_ab_scoring_v2.js';
+import { preserve_transcript, reset_fixture } from './_lib/bench_ab_workspace.js';
 import {
     SweepBudget,
     activation_verdict,
@@ -75,7 +75,6 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const ROUTER_PATH = path.join(REPO_ROOT, 'dist', 'router.json');
 const RULES_DIR = path.join(REPO_ROOT, 'dist', 'agent-src', 'rules');
 const CORPUS_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'corpora', 'ab-trackb-v2.yaml');
-const FIXTURES_ROOT = path.join(REPO_ROOT, 'internal', 'bench', 'ab');
 const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2');
 const CHECKPOINTS_DIR = path.join(REPORTS_DIR, 'checkpoints');
 const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
@@ -87,7 +86,6 @@ const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 // vanilla ≈ package and invalidated every prior null. A /tmp clone has no
 // agent-config ancestor → vanilla is truly plain; `package` still activates via
 // the USER-scope global plugin regardless of cwd.
-const WORK_ROOT = path.join(os.tmpdir(), 'agent-config-bench-v2-clones');
 
 type Dict = Record<string, unknown>;
 
@@ -329,45 +327,6 @@ export function injected_text(inject: string | null, placebo_chars: number): str
     return null;
 }
 
-/**
- * Workspace directory for one trial — delta #7 of the S0.3 spike.
- *
- * Keyed by `task|arm|seed`, not by task alone. The old task-only key meant every
- * arm and every seed of a task reused ONE directory that the next trial deleted,
- * so at the end of a sweep exactly one workspace survived per task — the last one
- * written, with no record of which arm or seed it belonged to.
- *
- * That is not a tidiness problem. Phase 3's anti-golfing gate is specified as
- * retro-fittable onto already-completed runs by offline re-scoring, and the
- * roadmap calls that gate cheap *because* the workspaces are preserved. Under the
- * old key there was nothing to re-score, so the claim was false. A distinct
- * directory per trial is what makes it true.
- *
- * `arm` is sanitised because arm names are used verbatim as a path segment and
- * one of them would otherwise be free to escape the root.
- */
-export function workspace_dir(task_id: string, arm: string, seed: number): string {
-    const safe_arm = arm.replace(/[^A-Za-z0-9._-]/g, '_');
-    return path.join(WORK_ROOT, `${task_id}__${safe_arm}__seed${seed}`);
-}
-
-/**
- * Copy the task's pristine fixture into this trial's own working clone.
- *
- * The clone is re-created from the fixture on every call, so a resumed or
- * repeated trial still starts pristine — the per-trial key changes *which*
- * directory that is, never whether it is clean.
- */
-export function reset_fixture(task: Dict, arm: string, seed: number): [string, string] {
-    const fixture = path.join(FIXTURES_ROOT, String(task['fixture']));
-    const dest = workspace_dir(String(task['id']), arm, seed);
-    if (fs.existsSync(dest)) {
-        fs.rmSync(dest, { recursive: true, force: true });
-    }
-    fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.cpSync(fixture, dest, { recursive: true });
-    return [dest, fixture];
-}
 
 /** Map a run outcome to an AgentBench-style trajectory bucket. */
 export function status_bucket(run: Dict): string {
@@ -689,6 +648,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         // rather than recomputed later, so an offline re-scorer reads the path the
         // sweep actually used instead of re-deriving a key that may have changed.
         workspace: clone,
+        transcript_path: preserve_transcript(clone, String(run['transcript'] ?? '')),
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
     };
 }
@@ -803,6 +763,7 @@ export function selftest_run(
         metrics: trajectory_metrics(run, score),
         injected_chars: sp_text ? sp_text.length : 0,
         workspace: clone,
+        // No transcript_path — a synthetic transcript would give T5 a score of the harness.
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
     };
 }
