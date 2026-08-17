@@ -76,6 +76,7 @@ import * as path from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
 import * as user_global_paths from '../_lib/user_global_paths.js';
+import * as budget from './cli_call_budget.js';
 // LAYERING CONSTRAINT, load-bearing: this is a VALUE import from quorum, while
 // `quorum.ts` imports `QuorumSetting` back from here. That back-edge is
 // `import type` and is erased at build, so there is no runtime cycle today.
@@ -1927,65 +1928,22 @@ function _build_member(
  * Generous per-provider guard for `mode: cli` / `mode: auto` members
  * (road-to-always-on-orchestration Phase 3.4). Before this default the map
  * shipped empty and an unlisted provider ran uncapped — a plan-quota guard
- * that only existed if the user remembered to opt in. Every known provider
- * now carries this floor unless a config entry overrides it; sized as a
- * GUARD against silent quota exhaustion on an always-on pass, not a brake on
- * normal use (see the template's own worked-example sizing for the
- * reasoning behind a TIGHTER per-provider number).
+ * that only existed if the user remembered to opt in.
  *
- * Exported because it is the ONLY legitimate fallback for an unlisted
- * provider, and two consumers outside this module need it: `build_members`
- * (which may receive a RAW `.ai-council.yml` dict whose `cli_call_budget`
- * block is absent, and must not fall back to "uncapped") and `cmd_quota`
- * (which must report the cap the gate actually enforces). Re-deriving the
- * number at either site is how the reported cap and the enforced cap drift
- * apart — see `road-to-council-quota-accounting-truth`.
+ * Re-exported from `cli_call_budget.ts`, which owns it: `build_members` and
+ * `cmd_quota` both need the same number, and re-deriving it at either site is
+ * how the reported cap and the enforced cap drift apart.
  */
-export const DEFAULT_CLI_CALLS_PER_DAY = 50;
-
-/** Internal alias kept so the existing call sites below read unchanged. */
-const _DEFAULT_CLI_CALLS_PER_DAY = DEFAULT_CLI_CALLS_PER_DAY;
+export const DEFAULT_CLI_CALLS_PER_DAY = budget.DEFAULT_CLI_CALLS_PER_DAY;
 
 /**
- * Resolve the per-provider daily cap map the gate enforces — the SINGLE
- * authority for that question.
- *
- * Seeds every known provider with `DEFAULT_CLI_CALLS_PER_DAY`, then applies
- * whatever the caller's `max_calls_per_day` mapping overrides. An absent,
- * empty, or commented-out block therefore yields the DEFAULTS, never
- * "uncapped" — omission is not a way to switch the guard off.
- *
- * Deliberately LENIENT where `_build_cli_call_budget` is strict: it skips an
- * unknown provider or a malformed value instead of throwing, because two of
- * its consumers are reporting paths that must still print something useful for
- * the providers that ARE valid. Validation is the strict builder's job and it
- * runs first on every real config load, so a bad entry still fails loudly —
- * it just does not take the quota report down with it.
- *
- * Consumers: `_build_cli_call_budget` (below), `build_members` (the gate), and
- * `cmd_quota` (the report). Before this existed the gate read a raw
- * `.ai-council.yml` dict while the report read the settings cascade, so the
- * number printed was not the number enforced — see
- * `road-to-council-quota-accounting-truth`.
+ * Resolve the per-provider daily cap map — the SINGLE authority, shared with the
+ * gate and the report. Thin wrapper that supplies this module's provider set;
+ * the contract (defaults on omission, lenient where this module is strict) is
+ * documented on `budget.resolveCliCallCaps`.
  */
 export function resolve_cli_call_caps(raw: unknown): Record<string, number> {
-    const out: Record<string, number> = {};
-    for (const provider of _VALID_PROVIDERS) {
-        out[provider] = _DEFAULT_CLI_CALLS_PER_DAY;
-    }
-    if (!_isDict(raw)) {
-        return out;
-    }
-    for (const [provider, value] of Object.entries(raw as Dict)) {
-        if (!_VALID_PROVIDERS.has(provider)) {
-            continue;
-        }
-        if (!_isInt(value) || _isBool(value) || (value as number) < 0) {
-            continue;
-        }
-        out[provider] = value as number;
-    }
-    return out;
+    return budget.resolveCliCallCaps(raw, _VALID_PROVIDERS);
 }
 
 function _build_cli_call_budget(d: Dict): CliCallBudgetConfig {
