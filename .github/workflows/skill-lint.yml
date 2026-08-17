@@ -108,6 +108,17 @@ jobs:
         # slip through CI. Blocking findings fail the build; warnings do not.
         run: task lint-agent-security
 
+      - name: Report skill-top obligation position (warn level)
+        # road-to-context-fidelity Phase 3. Reports how far into each SKILL.md its
+        # first obligation block sits: a truncating post-compaction re-injection
+        # keeps the file START, so the tail is what a truncating reader loses
+        # first. WARN LEVEL by design — the gate exits 0 on findings, and its
+        # count is the data an escalation to blocking waits on, per the phase's
+        # own "one release of data" condition. Argv is identical to the
+        # `lint-skill-top-position` task so check_ci_local_parity sees one gate,
+        # not two invocations that could drift apart.
+        run: ./scripts-run src/scripts/lint_skill_top_position
+
       - name: Generate lint reports (full repo, informational)
         if: always()
         run: |

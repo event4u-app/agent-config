@@ -1221,6 +1221,21 @@ tasks:
       the gate asserts only that an existing published contract now holds.
     cmd: ./scripts-run src/scripts/lint_skill_router_head {{.QUIET_FLAG}}
 
+  lint-skill-top-position:
+    silent: true
+    desc: >-
+      Skill-top position gate (road-to-context-fidelity Phase 3) — reports how
+      far into each SKILL.md its first obligation block sits, because a
+      truncating post-compaction re-injection keeps the file START and therefore
+      loses the tail first. WARN LEVEL: it exits 0 on findings and the count is
+      the data an escalation to blocking waits on. Two things it does NOT claim:
+      the host truncation cap is UNVERIFIED here (a tree-side script cannot read
+      a vendor doc, and fetching one at build time would make the gate
+      network-dependent), so the 60-line window is a repo-side proxy and a
+      stated default rather than a measured optimum; and no compliance or
+      activation effect is asserted, per ADR-202.
+    cmd: ./scripts-run src/scripts/lint_skill_top_position {{.QUIET_FLAG}}
+
   reuse-lint:
     silent: true
     desc: >-

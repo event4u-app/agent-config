@@ -202,6 +202,7 @@ tasks:
       - task: lint-provenance
       - task: lint-harvest-provenance
       - task: lint-skill-router-head
+      - task: lint-skill-top-position
       - task: lint-provenance-vocabulary
       - task: validate-discovery-manifest
       - task: check-discovery-determinism
