@@ -14,10 +14,10 @@ Ship two capabilities, each behind a pre-registered benchmark with an honest-nul
 
 ## Prerequisites
 
-- [ ] Read `src/skills/verify-repair-loop/SKILL.md` — the existing bounded loop and why it cannot express a metric
-- [ ] Read `src/scripts/schemas/` — the existing schema set and the one review schema already there
-- [ ] Read `src/scripts/hook_manifest.yaml` § fail-closed concerns
-- [ ] Re-verify the Context table against branch HEAD before executing a phase
+- [x] Read `src/skills/verify-repair-loop/SKILL.md` — the existing bounded loop and why it cannot express a metric
+- [x] Read `src/scripts/schemas/` — the existing schema set and the one review schema already there
+- [x] Read `src/scripts/hook_manifest.yaml` § fail-closed concerns
+- [x] Re-verify the Context table against branch HEAD before executing a phase
 
 ## Context
 
@@ -56,10 +56,10 @@ Source: an external capability-harvest session over this repository and ten publ
 
 ## Phase 0 — Falsification spikes
 
-- [ ] Run a session-bound keep-or-revert loop on a toy metric with branch advance and an untracked register, and count iterations before context degradation. Pre-registered kill: fewer than five clean iterations. <!-- verify: test -f agents/evidence/eval-findings/metric-loop-s01.md -->
-- [ ] Wrap three existing verifiers in the JSON-on-stdout contract without modifying the verifiers. Kill: two or more need invasive changes. <!-- verify: test -f agents/evidence/eval-findings/metric-loop-s02.md -->
-- [ ] Add the independence fields to the council result object without touching the consensus path. Kill: the consensus code must change. <!-- verify: test -f agents/evidence/eval-findings/metric-loop-s03.md -->
-- [ ] Replay recent merged work and count how often a shipping-intent diff-volume gate would have fired and whether each firing would have been useful. Kill: precision below a pre-registered floor cuts the gate rather than tuning it into noise. <!-- verify: test -f agents/evidence/eval-findings/metric-loop-s04.md -->
+- [x] Run a session-bound keep-or-revert loop on a toy metric with branch advance and an untracked register, and count iterations before context degradation. Pre-registered kill: fewer than five clean iterations. <!-- verify: test -f agents/evidence/eval-findings/metric-loop-s01.md -->
+- [x] Wrap three existing verifiers in the JSON-on-stdout contract without modifying the verifiers. Kill: two or more need invasive changes. <!-- verify: test -f agents/evidence/eval-findings/metric-loop-s02.md -->
+- [x] Add the independence fields to the council result object without touching the consensus path. Kill: the consensus code must change. <!-- verify: test -f agents/evidence/eval-findings/metric-loop-s03.md -->
+- [x] Replay recent merged work and count how often a shipping-intent diff-volume gate would have fired and whether each firing would have been useful. Kill: precision below a pre-registered floor cuts the gate rather than tuning it into noise. <!-- verify: test -f agents/evidence/eval-findings/metric-loop-s04.md -->
 
 **Exit criteria:** four written spike results with numbers, and each kill criterion evaluated explicitly.
 
