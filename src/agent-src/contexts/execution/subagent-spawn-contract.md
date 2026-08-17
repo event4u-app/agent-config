@@ -170,6 +170,35 @@ contingency.
   subagent's output is never auto-persisted into memory — promotion is
   always the human-gated flow (ADR-098 floor). Auto-surface, never
   auto-write.
+- **(f) Return shape — text-only final message, disk copy written first.** Two
+  clauses, and they ride **here**, at spawn, rather than in a reusable agent
+  definition: a delivery duty stated in an agent definition measured 0/2 against
+  1/1 for the identical duty carried in the dispatch prompt (practitioner
+  report, n small), which is the same verbatim-at-spawn discipline as (a)–(e).
+  - **The final message is a single text-only envelope — never end on a tool
+    call.** Measured on host 2.1.229 with a matched control dispatched in the
+    same turn: the arm told to emit its report and then make one final
+    `echo done` call returned **`(no output)`** to its parent after 3 tool uses
+    and 18,242 tokens, while the control ending on assistant text returned the
+    complete report. The work was paid for in full and discarded in full
+    ([`subagent-lifecycle-phase0-return-channel.md`](../../../../agents/evidence/investigations/subagent-lifecycle-phase0-return-channel.md)
+    § F1).
+  - **Write the envelope to the runtime artifact dir before emitting it.** Disk
+    is the durable channel, the message the fast one — same envelope, so the
+    orchestrator still ingests exactly one shape
+    ([response contract § Durable copy](subagent-response-contract.md#durable-copy--the-envelope-on-disk-before-the-message)).
+
+  **No carve-out for verifier dispatches.** An async verifier — a subagent that
+  screenshots, grades, and reports back — rides this identical return channel,
+  and one that grades and never delivers is two operator symptoms in a single
+  run: work that looks endless from the orchestrator's side, and work that
+  finished without returning. Rule (f) binds it like any other worker.
+
+  **Honest scope.** Nothing enforces (f). It is prompt-carried text, so a worker
+  that ignores it fails exactly as before — the clause buys a stated duty and a
+  known-good path to look in, not a guarantee. The deterministic half needs a
+  `subagent_stop` concern that reads the disk copy, which is planned and not
+  shipped.
 
 ## Hand-off worked examples — step N output feeds step N+1
 
