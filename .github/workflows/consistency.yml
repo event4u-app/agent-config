@@ -370,6 +370,25 @@ jobs:
             fi
           }
 
+      - name: Evidence artifacts declare what kind of evidence they are
+        # A review this repo RECEIVED and a findings artifact binding a diff
+        # right now read identically today, so a reader cannot tell whether a
+        # stored artifact still asserts anything. This checks the half that is
+        # globally decidable: a declared type must agree with its body.
+        #
+        # Same exit-code contract § 6: 2 = internal error → warn-and-allow, so a
+        # broken gate never blocks its own fix. A dead scan scope is exit 1, not
+        # 2 — otherwise a moved evidence root would downgrade this to advisory.
+        run: |
+          ./scripts-run src/scripts/lint_evidence_artifacts --all || {
+            rc=$?
+            if [ "$rc" = "2" ]; then
+              echo "::warning::lint_evidence_artifacts internal error — degraded advisory mode, allowing"
+            else
+              exit "$rc"
+            fi
+          }
+
       - name: Check always-rule budget (warn 80% / fail 90%)
         run: task check-always-budget
 

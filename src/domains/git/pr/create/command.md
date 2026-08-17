@@ -149,6 +149,21 @@ than less: the gate can now read the PR's real `baseRefName` from the forge, so
 a stacked or release-line PR is measured against the branch it will actually
 merge into instead of against the repo default.
 
+**The resolution is executable now, not just described.**
+`./scripts-run src/scripts/sync_pr_branch` resolves the base from the open PR
+(so a stacked or release-line PR is measured against what it actually merges
+into), fetches, and merges it in when the branch is behind. On a conflict it
+STOPS and splits the conflicted paths into generated and authored — the first has
+one correct resolution (regenerate), the second has none a script may choose.
+Deliberately not in the pre-push hook: it mutates the tree, and a hook that
+rewrites the tree mid-push turns one rejected push into an unreviewed commit.
+Detection belongs in the hook and is already there; resolution is a step you run
+with the result in front of you.
+
+After it merges, REGENERATE — a clean auto-merge of a generated file is still
+wrong, and this is the step that produced the one stale-dashboard conflict on
+every merge of this branch.
+
 Where the project wires this gate into its pre-push chain, a push that goes out
 through the hook is covered without a separate step. Run it by hand when you push
 with the hook bypassed, or when you are about to open the PR some time after the
@@ -430,12 +445,58 @@ turns on `gh pr checks` every minute is the tool-loop
 4. **Bounded at N=3 per failing target** ([`autonomous-execution`](../rules/autonomous-execution.md)).
    Same failure signature twice → the hypothesis is wrong; change approach
    rather than spending the third attempt on a near-identical retry.
-5. **The push stays gated.** `git push` is a Hard Floor
+5. **The push stays gated — and a fix-the-CI instruction IS the gate being
+   cleared.** `git push` is a Hard Floor
    ([`non-destructive-by-default`](../rules/non-destructive-by-default.md)) and a
    one-off authorization is spent on the push it was given for
-   ([`commit-policy`](../rules/commit-policy.md)). Fix in the working tree and
-   push only under a fresh or still-standing instruction. A CI-fix loop that
-   re-pushes on its own authority is not on the table.
+   ([`commit-policy`](../rules/commit-policy.md)). What that forbids is a loop
+   that re-pushes on its **own** authority. It does not forbid delivering the
+   instruction the user actually gave.
+
+   ```
+   AN INSTRUCTION WHOSE DELIVERABLE IS A REMOTE STATE NAMES THE PUSH.
+   "FIX THE CI" · "RESOLVE THE CONFLICT WITH MAIN" · "UPDATE THE PR" ·
+   "MAKE THE CHECKS GREEN" → THE PUSH IS THAT INSTRUCTION, NOT A SECOND
+   OPERATION ON TOP OF IT. DO NOT RAISE A SEPARATE ASK FOR IT.
+   ```
+
+   The test is **where the deliverable lives**, and it is decidable: a red check,
+   a `CONFLICTING` merge state and a stale PR head are all facts about the
+   remote. An unpushed local fix leaves every one of them exactly as it was, so
+   treating the push as optional turns the instruction into a no-op and hands the
+   user back the state they asked to have changed. This is the same reading
+   [`no-cheap-questions`](../rules/no-cheap-questions.md) IL 5 gives prerequisite
+   work and IL 6 gives an already-named destination.
+
+   **What is still NOT covered**, so the floor keeps its teeth: an instruction
+   about the *code* only ("fix the type error", "use file X for the tests") — that
+   authorizes the edit, never the push. A push to a branch or base the user did
+   not name. A push after the named deliverable is already green. And a
+   force-push over a commit you did not author, which
+   [`git-history-discipline`](../rules/git-history-discipline.md) gates
+   separately and which this clause never reaches.
+
+6. **Re-verify remotely after the re-push — the fix is not done until the
+   REMOTE says so.**
+
+   ```
+   A GREEN LOCAL RUN IS NOT THE VERDICT. A GREEN CI RUN ON AN EARLIER
+   COMMIT IS NOT THE VERDICT EITHER. THE VERDICT IS A SETTLED CHECK SET
+   WHOSE HEAD SHA IS THE BRANCH HEAD YOU JUST PUSHED.
+   ```
+
+   Loop back to the top of § 4d — settle again, on the new head. Two traps make
+   this more than a restatement:
+
+   - **Stale green.** `gh pr checks` reports the last run it has, which may have
+     run against the pre-fix commit. Compare the SHA the checks ran against with
+     the PR head before reading a green as yours.
+   - **The re-push may not have landed.** A pre-push hook can refuse, and the
+     branch can be behind its OWN remote counterpart because someone pressed
+     *Update branch*. `git push` exiting non-zero means the PR still carries the
+     failure — never report the fix as delivered off a local verification.
+
+   `./scripts-run src/scripts/check_pr_ci_current` answers both in one call.
 
 **When the verdict cannot be reached** — network down, `gh` failing, the run
 never registering — say so plainly and name what is unverified. A background

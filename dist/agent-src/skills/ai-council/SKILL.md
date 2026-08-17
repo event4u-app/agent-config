@@ -17,6 +17,67 @@ packs:
 
 # ai-council
 
+## Council-first — try the council BEFORE the user, on these classes
+
+```
+A DESIGN DECISION THE AGENT CANNOT SETTLE FROM THE TREE GOES TO THE COUNCIL
+FIRST, NOT TO THE USER FIRST. THE USER IS THE ESCALATION, NOT THE DEFAULT.
+NEVER PRESENT A COUNCIL VERDICT THAT WAS NOT REACHED. AN INCONCLUSIVE RUN
+IS REPORTED AS INCONCLUSIVE, AND WHATEVER YOU DECIDE INSTEAD IS LABELLED
+OWN ANALYSIS.
+```
+
+Interrupting the user is the expensive path: it costs a round trip and their
+attention, and on a question two models could have settled it buys nothing they
+wanted to be asked. So the ordering is **tree → council → user**, and the
+council leg is the one that gets skipped.
+
+**Classes that go to the council first** — each is a judgement with a real
+trade-off and no answer in the tree:
+
+| Class | Example |
+|---|---|
+| Competing implementations of one feature | two sessions shipped the same phase; discard, overwrite, or merge |
+| Which of N designs, all defensible | four declared types with a derived fifth, or five declared |
+| Reopening a recorded decision | an ADR or honest-null blocks a change that now looks net-positive |
+| Scope re-cut inside an authorized task | this phase splits into two, or absorbs the next |
+| Is the evidence sufficient to conclude | n=1 measurement, a proxy metric, an unreplicated finding |
+
+**Classes that still go straight to the user, and the council never substitutes
+for them:** anything behind the Hard Floor
+([`non-destructive-by-default`](../../rules/non-destructive-by-default.md)) ·
+spend · a scope EXPANSION beyond what was authorized · a decision whose inputs
+only the user holds (a preference, a deadline, a business constraint) · the
+`high_impact` and `user_required` classes, which
+[`ask-when-uncertain`](../../rules/ask-when-uncertain.md) routes to the user by
+Iron Law. A council cannot consent on the user's behalf, and asking it to is not
+autonomy, it is laundering.
+
+### When the council cannot answer
+
+Measured 2026-08-17: a run returned **0 of 2 seats**, both `cli_quota_exhausted`,
+with the counters at 72/50 and 99/50. The CLI reported it correctly as
+`INCONCLUSIVE — DEGRADED` and did not print a quorum it had not reached. Three
+things follow, and the first is the one under pressure:
+
+1. **Never dress your own verdict as the council's.** A fan-out, a solo read, or
+   your own judgement is a legitimate substitute **only when named as such** —
+   the boundary [`council-availability`](../../rules/council-availability.md)
+   states.
+2. **Do not bounce to the user just because the council failed.** An
+   unreachable council does not upgrade a decidable question into a
+   user-required one. Decide it, label it own analysis, state the reason the
+   council was unavailable, and name what would change the answer.
+3. **Escalate only if it is genuinely undecidable without them** — the two
+   options are close AND the cost of being wrong is high AND nothing in the tree
+   separates them. Then say the council was attempted and why it failed, so the
+   user is not asked to arbitrate something they will assume was already tried.
+
+`agent-config council:status` is free and answers availability; `council_cli
+estimate <file>` is free and answers parse-and-cost. Run both before concluding
+the council is not an option — and note the question goes in a **file**, since
+prose passed as an argument overflows the argument limit.
+
 ## When to use
 
 * The host agent has drafted a roadmap, plan, or design and wants an

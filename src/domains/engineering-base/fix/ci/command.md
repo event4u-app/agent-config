@@ -80,8 +80,46 @@ reason to settle first.
 - Re-run the failing tool locally (inside the PHP container) to confirm the fix.
 - If multiple tools failed, fix and verify each one.
 
+### 5. Land it when the CI being fixed belongs to an open PR
+
+```
+"FIX THE CI" NAMES A REMOTE STATE. A LOCAL-ONLY FIX LEAVES THE RED CHECK
+EXACTLY AS RED, WHICH MAKES THE INSTRUCTION A NO-OP.
+COMMIT, PUSH, THEN RE-VERIFY ON THE PUSHED HEAD.
+A GREEN LOCAL RUN IS NOT THE VERDICT. A GREEN CI RUN ON AN EARLIER COMMIT
+IS NOT THE VERDICT EITHER.
+```
+
+Applies only when the failing run belongs to an **open PR for the current
+branch** — that is what makes the deliverable remote. Then:
+
+1. Commit the fix (chunked, the agent picks the split per
+   [`commit-policy`](../../../rules/commit-policy.md) — never ask how).
+2. Update the branch against its PR base first:
+   `./scripts-run src/scripts/sync_pr_branch`, then regenerate any derived files
+   the merge touched (`task sync && task generate-tools`). A PR left behind its
+   base accumulates conflicts for the moment someone wants to merge it, and a
+   push against a moved base is rejected — both cost a round trip that this one
+   call prevents.
+3. Push. The instruction named it; do not raise a separate ask
+   ([`/create-pr` § 4d item 5](../../../git/pr/create/command.md)).
+4. Re-verify remotely: `./scripts-run src/scripts/check_pr_ci_current`, then
+   settle the check set on the new head. Report the *remote* verdict, never the
+   local one.
+
+Bounded by N=3 per failing target ([`autonomous-execution`](../../../rules/autonomous-execution.md)).
+
 ### Rules
 
-- **Do NOT commit or push.** Only apply local fixes.
+- **No open PR for this branch → do NOT commit or push.** Apply local fixes only
+  and hand back. Without a PR there is no remote state the instruction could be
+  about, so the deliverable really is the working tree.
+- **A push is authorized for the named failure only.** Once the checks the user
+  pointed at are green, further pushes need their own instruction — a one-off
+  authorization is spent on the operation it was given for.
+- **Never force-push over a commit you did not author** — including a
+  GitHub *Update branch* merge on your own PR branch. Merge it in; the ask-first
+  floor is [`git-history-discipline`](../../../rules/git-history-discipline.md)
+  and nothing here reaches it.
 - **Do NOT skip or ignore errors** — fix the root cause.
 - If a fix is unclear, explain the error and ask the user for guidance.

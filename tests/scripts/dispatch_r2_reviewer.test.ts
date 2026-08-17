@@ -234,8 +234,15 @@ describe('dispatch_r2_reviewer — package + skeleton', () => {
 
         expect(body).toContain('| # | Severity | File:Line | Finding | Status | Reason/Ref |');
         expect(body).toContain(
-            '<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 -->',
+            '<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line ' +
+                'per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` ' +
+                'per docs/contracts/evidence-artifact-types.md §4 -->',
         );
+        // The evidence type is stamped at CREATION, not inferred later — and the
+        // placeholder above is load-bearing for it: `current-binding` on an empty
+        // table is legal only while the skeleton is unfilled, so a change that
+        // drops the placeholder makes every fresh skeleton fail its own gate.
+        expect(body).toContain('<!-- evidence-type: v1 | type: current-binding | declared: ');
     });
 
     it('refuses to overwrite an existing findings artifact without --force', () => {
