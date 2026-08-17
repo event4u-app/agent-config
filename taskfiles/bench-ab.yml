@@ -95,10 +95,15 @@ tasks:
       `claude --print` against the variant clone). Cost-bearing —
       use only when you want a real measurement. Set CLAUDE_CLI env
       var to override the binary path.
+
+      Trailing args reach the task runner, so `-- --budget <N>` caps
+      per-task spend. Without the passthrough the flag was accepted by
+      the shell and silently dropped, and the run fell back to the
+      runner's own default — see the note in bench_ab_task_runner.
     cmds:
       - task: bench:ab:track-a
       - ./scripts-run src/scripts/bench_ab_clone --variant both
-      - ./scripts-run src/scripts/bench_ab_task_runner --variant both --mode live
+      - ./scripts-run src/scripts/bench_ab_task_runner --variant both --mode live {{.CLI_ARGS}}
       - task: bench:ab:diff
 
   bench:ab:value:
@@ -121,7 +126,7 @@ tasks:
       # plugin; with-rdp = + injected RDP rules), not via clone files. The runner
       # resets a fixture working dir per task itself.
       - ./scripts-run src/scripts/bench_ab_clone --variant without --refresh
-      - ./scripts-run src/scripts/bench_ab_task_runner --variant all --mode live
+      - ./scripts-run src/scripts/bench_ab_task_runner --variant all --mode live {{.CLI_ARGS}}
       - task: bench:ab:diff
 
   bench:ab:value:quick:
