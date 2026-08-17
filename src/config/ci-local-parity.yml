@@ -184,6 +184,19 @@ ci_only:
 # worth remote enforcement, OR it should simply be added to a workflow. Prefer
 # adding it: a local-only gate is the direction that let real defects merge.
 local_only:
+  - id: check_pr_ci_current
+    class: pre-push-scoped
+    reason: >
+      Compares the local branch tip against the open PR head and against the SHA
+      the PR's checks actually ran on. In CI that comparison is tautological by
+      construction — a workflow runs ON the PR head, so local, PR head and checks
+      head are the same commit and the gate can only ever pass. Its whole subject
+      is the window BEFORE a push (unpushed work, a green that ran against the
+      pre-fix commit, a PR head the checkout cannot reach because Update branch
+      was pressed), and that window does not exist inside a run. Declared rather
+      than wired: there is no remote equivalent to write, which is the distinction
+      this list exists to record. Sibling `check_branch_freshness` is a no-op in
+      CI for the same reason — the forge owns mergeability there.
   - id: roadmap_progress_hook
     class: git-hook-scoped
     reason: >
