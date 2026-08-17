@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 31 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **38** open blockers, **13** need you → `agent-config gates`
+> 31 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **40** open blockers, **14** need you → `agent-config gates`
 
 ## Overall
 
-**261 / 520 steps done · 50%**
+**266 / 520 steps done · 51%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   50%
+████████████████████░░░░░░░░░░░░░░░░░░░░   51%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -27,7 +27,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
 | 2 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 24 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 19 | 5 | 0 | 0 | [2](#blockers-road-to-context-fidelity) | ██░░░░░░░░ 21% |
 | 5 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
 | 7 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
@@ -151,15 +151,35 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 
 ### [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md)
 
-**Road to context fidelity** — 0 / 24 done (0%)
+**Road to context fidelity** — 5 / 24 done (21%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Falsification spikes | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 0 | Falsification spikes | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
 | 1 | Compaction-boundary rule reinjection | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | Memory eviction on the curated store | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 3 | Skill-top position lint | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 2 | Memory eviction on the curated store | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
+| 3 | Skill-top position lint | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 4 | Context management for spawned workers | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-context-fidelity"></a>
+**Blockers**
+
+- **compaction-census-session** (owner: user) — blocks Phase 0 (cf01 compaction-survival census), and transitively all of Phase 1, whose build-or-close decision reads cf01's number
+  - **Recommendation:** Re-specify cf01 against the automatic path. cf03 measured 29 compaction events across 473 sessions, **all automatic and none manual**, with the trigger landing between 964k and 1,031k pre-tokens. A manual-compaction census measures a path production never takes, and its result would need that caveat attached forever. The automatic path is observable without any special session — it needs the probes placed in a session that is *going* to cross 1M tokens, which about half of the recorded sessions do (239 of 473 end above 400k).
+  - **If you do nothing:** Phase 1 stays unstarted, which is the correct state rather than a stall — it is exactly what a pre-registered honest-null threshold is for. Phases 2 and 3 are unaffected: Phase 3 is closed, and Phase 2's own gate now reads cf02, which is done. The plan degrades to its memory half, and the memory half is the one with a measured defect behind it.
+  - **What to do:**
+    1. Decide manual-vs-automatic for cf01. If automatic, the step text and its five-session repetition need rewording first — the repetition was there to average manual variance.
+    2. If manual: run the five sessions with the three probes placed before each compaction, and stamp the host version per observation. Compaction survival is a host fact that changes without notice.
+    3. Either way, note that the capture side is currently UNOBSERVED (`session_eol_report` reports no session-eol state directory), so a Phase 1 delta cannot be computed until that directory exists.
+  - **Resolved when:** a `context-fidelity-cf01.md` finding exists under `agents/evidence/eval-findings/` carrying a per-probe-class number and a host stamp, or the user records that the compaction-survival question is closed unmeasured and Phase 1 is cancelled. (The filename is deliberately not written as a full path here: `check_references` resolves a path in prose and the file does not exist yet, so a link would be a broken reference by construction. The step's own `verify:` probe holds the full path, which is where it belongs.)
+- **memory-sweep-instrument** (owner: maintainer) — blocks the backing of `context-fidelity-memory-staleness`, and Phase 2 step 3's thresholds
+  - **Recommendation:** Build the sweep as part of Phase 2 step 1, not as a separate phase. The commit anchor and the sweep are the same work seen from two sides: the anchor is what lets a sweep decide whether an entry was verified against *this* tree, and without it any automated reading repeats the 0.0 % artefact in a new form. Shipping the ladder on a hand reading would make the thresholds unre-derivable by the next maintainer, which is the property that made this census necessary in the first place.
+  - **If you do nothing:** the ladder can still be built — 21.5 % clears the 10 % threshold on both denominators, so the decision it gates is already made. What stays missing is the ability to re-measure, so the thresholds in Phase 2 step 3 would be set once from a number nobody can reproduce, and drift in either direction would be invisible.
+  - **What to do:**
+    1. Decide whether the sweep is Phase 2 step 1's scope or a new step.
+    2. If in scope, note that `check_memory_contradiction` is a per-proposal checker (`--type --key --body`) and is the wrong shape to extend — the sweep needs to iterate the store, which is a different entry point.
+    3. Record whether inter-rater agreement on the hand walk needs measuring before the ladder ships, or whether the 2:1 margin over the threshold makes that unnecessary.
+  - **Resolved when:** the maintainer records the sweep as in-scope for a named step, or records that the ladder ships on cf02's hand reading with the reproducibility limitation accepted.
 
 ### [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md)
 
