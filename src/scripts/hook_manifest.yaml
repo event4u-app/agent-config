@@ -489,6 +489,16 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    # road-to-stop-gate-honesty step 3.1 — skipped on a refusal RETRY.
+    # ARGUMENT, per concern as that step requires: the F2 fire gate is a
+    # once-per-session marker, and this concern's own header records that a
+    # second run "reads the marker and returns silently, without re-running the
+    # transcript scan". The retry therefore cannot change its artefact — the
+    # telemetry line was already written, or already suppressed, on the first
+    # Stop. Idempotence is the concern's own construction, not our assumption
+    # about it. The saving is the module load rather than a large read, which is
+    # the smaller of the two flags below it and is stated as such.
+    skip_on_refusal_retry: true
   # road-to-conformance-round5 Phase 3 — the FIRST concern that can refuse a
   # turn-END. Round 5 measured the reason: both blocking carriers reached zero
   # violations, neither advisory carrier did, and 19 language violations
@@ -597,6 +607,18 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    # road-to-stop-gate-honesty step 3.1 — skipped on a refusal RETRY, and this
+    # is the flag with the real saving.
+    # ARGUMENT, per concern: `alreadyRecorded(ledgerPath, run_id, turn)` dedupes
+    # on the TURN ORDINAL, and a refusal retry is the same turn by construction
+    # — the gate's layer-2 marker is keyed on that same ordinal. So the ledger
+    # already writes nothing on the retry and the artefact is provably identical.
+    # What it does NOT already avoid is the cost: `main()` calls
+    # `readTranscriptTail` (up to 8 MB, walking the whole file) BEFORE reaching
+    # `alreadyRecorded`, so today every refused Stop pays a full transcript walk
+    # and then discards the result. That is the "pure duplicate cost" § D-3
+    # names, measured in the source rather than assumed.
+    skip_on_refusal_retry: true
   # road-to-subagent-lifecycle-integrity Phase 1 (Steps 2+3) — the subagent
   # lifecycle ledger. Binds ONLY the two new events; on every other slot it is
   # not listed at all. Appends `subagent_start` / `subagent_stop` lines to
