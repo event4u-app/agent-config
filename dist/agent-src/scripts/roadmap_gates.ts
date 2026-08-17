@@ -72,6 +72,7 @@ import { spawnSync } from 'node:child_process';
 import {
     collect,
     blocker_needs_user as needsUser,
+    blocker_class as blockerClass,
     type Blocker,
 } from './update_roadmap_progress.js';
 import { probeLater, type ResumeFinding } from './resume_probe.js';
@@ -418,6 +419,15 @@ function renderJson(
                     roadmap: e.roadmapRel,
                     owner: e.blocker.owner,
                     needsYou: needsUser(e.blocker.owner),
+                    // The gate taxonomy, resolved through the same
+                    // absent-field default every other consumer applies, so a
+                    // synthesised `legacy` note reads as class 3 rather than
+                    // as a hole. `run` rides along because a class-0 record
+                    // without its command reads as actionable and is not —
+                    // the exact half-truth `lint_roadmap_blockers` makes a
+                    // HARD failure on the authoring side.
+                    class: blockerClass(e.blocker),
+                    run: e.blocker.run,
                     blocks: e.blocker.blocks,
                     unblocksSteps: e.openSteps,
                     todo: regroupTodo(e.blocker.todo),

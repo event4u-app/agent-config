@@ -35,6 +35,8 @@ function entry(
         recommendation?: string;
         ifNothing?: string;
         question?: string;
+        blockerClass?: string;
+        run?: string;
     } = {},
 ): Entry {
     return {
@@ -54,8 +56,8 @@ function entry(
             // Same reasoning as the two fields above: the gate taxonomy is
             // opt-in, so the shape the renderer meets in the tree is the one
             // that declares none of it.
-            blockerClass: '',
-            run: '',
+            blockerClass: opts.blockerClass ?? '',
+            run: opts.run ?? '',
             budget: '',
         },
         roadmapRel: opts.roadmap ?? 'road-to-x.md',
@@ -236,6 +238,48 @@ describe('renderJson', () => {
             blockers: unknown[];
         };
         expect(parsed.blockers).toHaveLength(2);
+    });
+
+    // The gate taxonomy on the machine-readable surface. Before this landed,
+    // `--json` emitted no class at all, so `gates --execute` shipped against a
+    // projection that could not say which entries it was able to act on — the
+    // acting half was reachable on nothing and the JSON could not show it.
+    const classOf = (e: Entry): string =>
+        (
+            JSON.parse(renderJson([e], true)) as {
+                blockers: Array<{ class: string; run: string }>;
+            }
+        ).blockers[0]?.class ?? '';
+
+    it('an entry declaring no class reads as 3, not as a hole', () => {
+        // Load-bearing: the parser synthesises one blocker per legacy
+        // `> Blocked until …` note and that synthesised entry can never carry
+        // an authored field. Resolving the class through the absent-field
+        // default is what makes it read as human-only — its actual swept
+        // verdict — rather than as missing data.
+        expect(classOf(entry('user'))).toBe('3');
+    });
+
+    it('carries an authored class and reads only its leading token', () => {
+        expect(classOf(entry('user', { blockerClass: '1 — budget-preauthorized' }))).toBe('1');
+        expect(classOf(entry('user', { blockerClass: '0 — auto-run' }))).toBe('0');
+    });
+
+    it('falls back to 3 on a class the taxonomy does not know', () => {
+        // The safe direction: an authoring typo must never make a gate look
+        // executable. `lint_roadmap_blockers` fails the entry separately.
+        expect(classOf(entry('user', { blockerClass: '7 — invented' }))).toBe('3');
+    });
+
+    it('carries the run command, so a class-0 record is not actionable-but-empty', () => {
+        const parsed = JSON.parse(
+            renderJson(
+                [entry('user', { blockerClass: '0 — auto-run', run: '`task probe-thing`' })],
+                true,
+            ),
+        ) as { blockers: Array<{ class: string; run: string }> };
+        expect(parsed.blockers[0]?.class).toBe('0');
+        expect(parsed.blockers[0]?.run).toBe('`task probe-thing`');
     });
 });
 
