@@ -59,14 +59,19 @@
     },
     "quota": {
       "type": "object",
-      "required": ["used", "ceiling"],
+      "required": ["provider", "used", "ceiling"],
       "additionalProperties": false,
-      "description": "Shared cli_call_budget openai-bucket visibility after this run.",
+      "description": "Shared cli_call_budget bucket visibility after this run. The bucket is named rather than assumed — `provider` says which one `used` counts.",
       "properties": {
+        "provider": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The shared-bucket key this run books into, read from the dispatching client rather than hardcoded. Was implicitly always `openai`; naming it keeps the report from drifting away from the bucket if the team transport moves."
+        },
         "used": {
           "type": "integer",
           "minimum": 0,
-          "description": "Today's openai-bucket call count (UTC-day, shared with the council)."
+          "description": "Today's call count in the `provider` bucket (UTC-day, shared with the council)."
         },
         "ceiling": {
           "type": "integer",

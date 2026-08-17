@@ -453,7 +453,10 @@ describe('run_team_review — envelope (happy parse)', () => {
         ]);
         expect(env?.reviewed_ref).toBe(FAKE_HEAD);
         expect(env?.model).toBe('auto');
-        expect(env?.quota).toEqual({ used: 1, ceiling: 50 }); // recorded via existing machinery
+        // `provider` is read from the dispatching client, not hardcoded — pinning it
+        // here is what catches a transport move that would otherwise report a bucket
+        // nobody is booking into.
+        expect(env?.quota).toEqual({ provider: 'openai', used: 1, ceiling: 50 }); // recorded via existing machinery
         expect(env?.raw).toBeUndefined();
         // Exactly one synchronous call; system prompt + bundle ride stdin as one
         // payload. `codex exec` has no `--system` flag and rejects it with exit 2,
@@ -662,7 +665,7 @@ describe('run_team_review — shared quota bucket', () => {
         expect(env?.status).toBe('BLOCKED');
         expect(env?.blocking_reason).toContain('quota exhausted');
         expect(env?.blocking_reason).toContain('2/2');
-        expect(env?.quota).toEqual({ used: 2, ceiling: 2 });
+        expect(env?.quota).toEqual({ provider: 'openai', used: 2, ceiling: 2 });
     });
 
     it('successful call increments the SAME counts.openai bucket the council uses', () => {

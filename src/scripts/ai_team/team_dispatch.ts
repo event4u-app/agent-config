@@ -43,9 +43,11 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
+    CLI_CONSUMER_TEAM,
     type CouncilResponse,
     load_cli_call_counts,
     OpenAICliClient,
+    QUOTA_SOURCE_PROVIDER,
 } from '../ai_council/clients.js';
 import {
     checkCodexAvailability,
@@ -361,7 +363,9 @@ export interface TeamReviewFinding {
 }
 
 export interface TeamReviewQuota {
-    /** Today's openai-bucket call count AFTER this run. */
+    /** The shared-bucket key this run books into — read from the client, not assumed. */
+    readonly provider: string;
+    /** Today's call count in that bucket AFTER this run. */
     readonly used: number;
     /** `ai_team.max_calls_per_day` — the team-side ceiling on the shared bucket. */
     readonly ceiling: number;
@@ -549,9 +553,23 @@ export interface RunTeamReviewOptions {
     halted?: boolean;
 }
 
-function _quota_snapshot(config: AiTeamConfig, cli_calls_path: string | null): TeamReviewQuota {
+/**
+ * Read the bucket this run actually books into.
+ *
+ * `provider` comes from the CLIENT (`client.name`), never from a literal. It was
+ * hardcoded to `'openai'`, which happened to be correct because
+ * `TeamReviewCliClient extends OpenAICliClient` — and would have gone silently
+ * wrong the moment the team transport moved, reporting a bucket nobody was
+ * booking while the real one filled up. A report that names its own subject
+ * cannot drift away from it.
+ */
+function _quota_snapshot(
+    config: AiTeamConfig,
+    cli_calls_path: string | null,
+    provider: string,
+): TeamReviewQuota {
     const counts = load_cli_call_counts(cli_calls_path);
-    return { used: counts['openai'] ?? 0, ceiling: config.max_calls_per_day };
+    return { provider, used: counts[provider] ?? 0, ceiling: config.max_calls_per_day };
 }
 
 function _envelope_from_response(
@@ -571,9 +589,19 @@ function _envelope_from_response(
                 'codex CLI auth failed (auth_expired) — run `codex login`, then retry. ' +
                 'No review was produced.';
         } else if (response.error === 'cli_quota_exhausted') {
+            // `cli_quota_exhausted` covers two events with opposite remedies, so
+            // the message must not assert one of them unconditionally. "Resets at
+            // UTC midnight" is true only of OUR counter; when the vendor refused
+            // us, their window governs and we do not know it.
             blocking_reason =
-                `daily cli-call quota exhausted for the shared openai bucket ` +
-                `(${quota.used}/${quota.ceiling}) — resets at UTC midnight. No review was produced.`;
+                response.metadata?.['quota_source'] === QUOTA_SOURCE_PROVIDER
+                    ? `the ${quota.provider} CLI refused the call as over its own quota ` +
+                      `(local bucket ${quota.used}/${quota.ceiling}) — the provider's window ` +
+                      'governs, not ours. No review was produced.'
+                    : `daily cli-call quota exhausted for the shared ${quota.provider} bucket ` +
+                      `(${quota.used}/${quota.ceiling}) — resets at UTC midnight, or clear it with ` +
+                      '`agent-config council:quota --reset <provider> --confirm`. ' +
+                      'No review was produced.';
         } else {
             blocking_reason = `codex CLI transport failed: ${response.error}. No review was produced.`;
         }
@@ -649,10 +677,16 @@ export function run_team_review(opts: RunTeamReviewOptions = {}): TeamReviewRunR
                   model: config.model,
                   max_calls_per_day: config.max_calls_per_day,
                   cli_calls_path,
+                  // The team half of the two enumerated consumers of the shared
+                  // counter. Declared here because the client cannot know its
+                  // caller — the bucket standing at 171 calls with zero recorded
+                  // council exchanges is precisely what an unattributed counter
+                  // cannot explain.
+                  consumer: CLI_CONSUMER_TEAM,
               });
 
     const response = client.ask(TEAM_REVIEW_SYSTEM_PROMPT, render_review_user_prompt(bundle));
-    const quota = _quota_snapshot(config, cli_calls_path);
+    const quota = _quota_snapshot(config, cli_calls_path, client.name);
     const envelope = _envelope_from_response(response, bundle, quota);
     out(JSON.stringify(envelope, null, 2));
     return { mode: 'call', header, bundle, envelope };
