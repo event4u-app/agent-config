@@ -180,11 +180,11 @@ class RoadmapStats {
     }
 
     get open_blockers(): Blocker[] {
-        return this.blockers.filter((b) => b.status !== 'resolved');
+        return this.blockers.filter((b) => !blocker_is_resolved(b));
     }
 
     get resolved_blockers(): Blocker[] {
-        return this.blockers.filter((b) => b.status === 'resolved');
+        return this.blockers.filter((b) => blocker_is_resolved(b));
     }
 
     get done(): number {
@@ -381,6 +381,27 @@ interface Blocker {
     run: string;
     /** Spend estimate for class 1 — recorded, never enforced by the lint. */
     budget: string;
+}
+
+/**
+ * Is this blocker settled?
+ *
+ * A PREFIX test, not equality, and the difference was measured: authors write
+ * the resolution into the status line — `**Status:** RESOLVED 2026-08-17 —
+ * **option (b)**, narrowed to two rules` — and an equality check matches
+ * neither `open` nor `resolved`, so the entry falls through to open. Found
+ * 2026-08-17 in `road-to-mixed-trigger-activation-cost`: a decision taken two
+ * days earlier was still being rendered by `agent-config gates` as a live one
+ * the reader owed an answer to, and it inflated every blocker count in the
+ * dashboard by one.
+ *
+ * `lint_roadmap_blockers` already read the same field as a prefix
+ * (`/^-\s*\*\*Status:\*\*\s*resolved/i`), so the two surfaces disagreed about
+ * what "resolved" means — the lint exempted the entry from its decidability
+ * ratchet while the dashboard counted it open.
+ */
+function blocker_is_resolved(b: Blocker): boolean {
+    return /^resolved\b/.test(_strip(b.status).toLowerCase());
 }
 
 /** Class of a blocker, with the absent-field default applied. */
@@ -1216,6 +1237,7 @@ export {
     count_checkboxes,
     parse_blockers,
     blocker_class,
+    blocker_is_resolved,
     blocker_needs_user,
     parse_roadmap,
     bar,
