@@ -76,7 +76,7 @@ options + wait):
 > Phase 2: `<name>` — 0/4
 > Next open step: `<description>`
 > Scope: **step | phase | full**
-> Execution mode: **autonomous | phase-checkpoints | interactive** (frontmatter `execution.mode`; absent = interactive)
+> Execution mode: **autonomous | phase-checkpoints | interactive** (derived per § 3a — name the rung: `invocation suffix` | `frontmatter` | `invocation form`)
 > AI council: **on | off** (`<member list or "no members configured">`)
 > Quality cadence: **end_of_roadmap | per_phase | per_step**
 > Commit steps in roadmap: **N** (see § 3)
@@ -91,11 +91,55 @@ does not fire.
 
 ## 3. Pre-scan — execution contract or commit-step ask
 
-Read `execution.mode` from the roadmap's frontmatter
-(`autonomous` | `phase-checkpoints` | `interactive`; absent =
-`interactive`).
+### 3a. Mode derivation ladder — first source wins
 
-**`mode: autonomous` or `phase-checkpoints`** → load
+```
+AN ABSENT `execution.mode` IS NOT A DECLARATION OF `interactive`.
+IT IS THE ABSENCE OF A DECLARATION, AND IS DERIVED — NEVER DEFAULTED SILENTLY.
+```
+
+Resolve the mode from the first source that answers, and **state which rung
+answered** in the pre-run summary so the derivation is auditable rather than
+implicit:
+
+| # | Source | Wins when |
+|---|---|---|
+| 1 | **Explicit invocation suffix** — `… autonomous` / `… phase-checkpoints` / `… interactive` in the invocation | the user typed it this turn |
+| 2 | **Frontmatter `execution.mode`** | the roadmap declares one |
+| 3 | **Invocation form** (table below) | neither of the above answered |
+
+Rung 3, by wrapper:
+
+| Wrapper | Derived mode | Contract |
+|---|---|---|
+| `/roadmap:process-full`, `/roadmap:next` | `autonomous`, **preselected** | offered |
+| `/roadmap:process-phase` | `phase-checkpoints` | offered |
+| `/roadmap:process-step` | — | none (one step needs no run contract) |
+
+Still **exactly one confirmation**, never two: rung 3 changes which option the
+contract screen arrives preselected on, never whether the screen is shown. The
+screen's `3. Run interactive instead` option
+([`roadmap-execution-contract § 2`](roadmap-execution-contract.md)) stays on it
+in every case, so a derived mode is always one keystroke from being refused.
+
+**Why the old fallback was a defect and not a conservative default.** Absent
+`execution.mode` used to mean the legacy commit-step scan, which derives no
+contract at all — no batched artifact drafting, no council auto-enable, no
+push/PR grant. Measured 2026-08-17: **27 of 37 active roadmaps carry no
+`execution.mode`**, so roughly three quarters of the corpus ran the degraded
+path *under the wrapper built for the opposite*, and silently — the user saw a
+`process-full` invocation behave like an interactive one with no line saying so.
+A default that contradicts the wrapper the user just typed is a wrong answer,
+not a safe one.
+
+**What this does NOT change.** A derived mode grants nothing on its own:
+authorization is still the single Accept on the contract screen, per
+[`roadmap-execution-contract § Principle`](roadmap-execution-contract.md). The
+Hard Floor, the locked decision classes, and the kernel-edit soak are untouched.
+
+### 3b. Contract or commit-step ask
+
+**Derived `autonomous` or `phase-checkpoints`** → load
 [`roadmap-execution-contract`](roadmap-execution-contract.md) and run
 its four-class pre-scan over every open step:
 
@@ -114,8 +158,11 @@ cached for the run, never re-asked. The contract never lifts a Hard
 Floor or any safety floor; boundaries + per-mode gate table live in the
 contract context.
 
-**`mode: interactive` (or field absent)** → legacy commit-step scan
-only: lines matching `commit:` / `git commit` / `Commit phase`.
+**Derived `interactive`** — i.e. the user asked for it explicitly (rung 1), the
+frontmatter declares it (rung 2), or the invocation was `process-step` (rung 3)
+→ legacy commit-step scan only: lines matching `commit:` / `git commit` /
+`Commit phase`. An ABSENT field no longer reaches this branch; that is the whole
+change in § 3a.
 
 - **No commit steps** → nothing to ask. Never commit, never re-ask
   per [`commit-policy`](../../rules/commit-policy.md).
