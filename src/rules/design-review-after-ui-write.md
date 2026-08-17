@@ -114,11 +114,16 @@ still have no runtime consumer. A test — not a code path — keeps the two fro
 drifting: `ui_rule_triggers.test.ts` asserts every `file_pattern` declared here
 is accepted by that predicate.
 
-Warn-only, capped at two nudges per session, default-OFF, bound only on hosts
-carrying a `pre_tool_use` slot. A nudge that can be ignored is not enforcement,
-so `enforced_by:` stays `none` — it moves the day a mechanism can refuse, not
-the day a reminder appears. `agent-config hooks:status` answers whether the
-concern is bound on the host you are actually on.
+Warn-only, capped at two nudges per session, default-OFF, and bound only in the
+three `platforms:` rows that carry a `pre_tool_use` key — augment, claude,
+cowork (**clarified 2026-08-17**: "hosts carrying a slot" read as a host
+property and is a manifest one; three further hosts alias a native pre-tool
+event with no binding, and only claude honours a deny — see
+[`hook-architecture-v1 § Which hosts carry pre_tool_use`](../../docs/contracts/hook-architecture-v1.md)).
+The verdict is unchanged either way: a nudge that can be ignored is not
+enforcement, so `enforced_by:` stays `none` — it moves the day a mechanism can
+refuse, not the day a reminder appears. `agent-config hooks:status` answers
+whether the concern is bound on the host you are actually on.
 
 What that leaves, and it is the useful part: the write side now has a named
 obligation and a route to the skill that discharges it, where before it had

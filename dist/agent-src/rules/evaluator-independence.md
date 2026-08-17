@@ -95,12 +95,34 @@ Three limits, stated because they were measured. The pre-loaded-verdict list is
 a **phrase list**, so a paraphrase evades it — it catches recurrences of known
 steering wording, not steering as such. The turn boundary is the
 authorization ledger's `detected_at` stamp, because the envelope carries no turn
-id; with no ledger yet, the counter falls back to session scope. And the slot
-itself is not universal: `pre_tool_use` exists on **three** hosts — augment,
-claude, cowork. On cursor, cline, windsurf, gemini and copilot this guard has
-nowhere to bind, so items 1 and 4 join 2 and 3 as model-carried there. The
-frequency join in `check_enforcement_coverage.ts` reports exactly that set, and
+id; with no ledger yet, the counter falls back to session scope. And the guard
+does not deny everywhere it exists: `pre_tool_use` is **bound** on three hosts —
+augment, claude, cowork — and only `claude` honours the deny. Everywhere else,
+augment and cowork included, items 1 and 4 join 2 and 3 as model-carried.
 `agent-config hooks:status` answers it for the host you are on right now.
+
+**Corrected 2026-08-17 — this paragraph was wrong on both sides of the line it
+drew.** It said `pre_tool_use` "exists on three hosts" and that the guard has
+"nowhere to bind" on the other five. Neither half survived a re-read of the
+tree. **Downward:** the manifest's own `native_event_aliases` table already maps
+`preToolUse` (cursor), `PreToolUse` (cline) and `BeforeTool` (gemini) onto
+`pre_tool_use`, so there the guard is **unbound, not unbindable**; only windsurf
+and copilot carry no pre-tool surface at all. **Upward, and worse:**
+`host_semantics.ts` certifies **claude alone**, and the augment and cowork
+trampolines discard dispatcher output and `exit 0` unconditionally — so on two
+of the three "enforcing" hosts this guard runs and is then ignored. Nor may the
+inverse be asserted downward: nothing records whether an unbound host's
+pre-tool event can *deny*, and `severity: blocking` is a property of the concern
+rather than of the host. The four states are tabulated once in
+[`hook-architecture-v1 § Which hosts carry pre_tool_use`](../docs/contracts/hook-architecture-v1.md).
+
+Stated at this length because this rule exists over a case where a process that
+*looked* followed produced fabricated evidence. An unbacked reason for a real
+gap and an unmeasured claim of enforcement are the same failure in a smaller
+font, and this paragraph had shipped one of each. Note also what the frequency
+join actually reports: `check_enforcement_coverage.ts` skips `fallback_only`
+platforms, so its gap set is **four** — cursor, cline, windsurf, gemini — never
+copilot, which is excluded by declaration rather than measured as a gap.
 
 Items 2 and 3 — an honestly chosen scope, and recording the prompt with the
 verdict — are **not** enforced by anything. A narrowed scope is not decidable

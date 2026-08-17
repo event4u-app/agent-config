@@ -1,0 +1,190 @@
+diff --git a/dist/agent-src/rules/autonomous-execution.md b/dist/agent-src/rules/autonomous-execution.md
+index 95c321fd0c8f1381981b3d14be10099b4d919e5d..d9815e8021b2800019cafdce23bfd016e5871709 100644
+--- a/dist/agent-src/rules/autonomous-execution.md
++++ b/dist/agent-src/rules/autonomous-execution.md
+@@ -67,7 +67,7 @@ ALLOWLIST > 20 ENTRIES IN ONE SESSION = THE LINTER IS WRONG.
+ STOP. PROPOSE LINTER REDESIGN OR REMOVAL. DO NOT EXPAND THE ALLOWLIST FURTHER.
+ ```
+ 
+-Crossing 20 entries counts as the 3rd validation-target failure — fix the tool shape, not the list. Enforced at tool-call time by the `block-config-weakening` PreToolUse guard (`src/scripts/hooks/block_config_weakening.ts`) **on the three hosts that have a `pre_tool_use` slot at all** — augment, claude, cowork: it counts allowlist entries added per session, warns from 5, and blocks past 20. On cursor, cline, windsurf, gemini and copilot the guard has nowhere to bind, so there the cap is model-carried and "enforced at tool-call time" is not a claim this rule can make. Run `agent-config hooks:status` to see which slots are bound on the host you are actually on — the sibling rules `git-history-discipline` and `evaluator-independence` qualify the identical slot, and an unqualified claim here would read as a guarantee the manifest does not give. Baselines and budget thresholds warn only — a rising count there may be a legitimate ratchet reset, which the edit alone cannot distinguish. Verify with the narrowest tool that proves the target green (a single `curl` / Playwright spec for HTTP/UI, the test runner with a `--filter`, an `xdebug` step-through) — never a meta-pipeline as per-iteration probe. Failed-attempt detail, suppression-sweep equivalents, probe-efficiency detail, and adaptive effort & stop (RDP): [`autonomy-mechanics § Validation-loop budget`](../contexts/execution/autonomy-mechanics.md).
++Crossing 20 entries counts as the 3rd validation-target failure — fix the tool shape, not the list. Enforced at tool-call time by the `block-config-weakening` PreToolUse guard (`src/scripts/hooks/block_config_weakening.ts`) **on the three hosts whose manifest row binds `pre_tool_use`** — augment, claude, cowork: it counts allowlist entries added per session, warns from 5, and blocks past 20. On cursor, cline, windsurf, gemini and copilot the cap is model-carried and "enforced at tool-call time" is not a claim this rule can make — **corrected 2026-08-17**, because the reason this sentence used to give ("the guard has nowhere to bind") is false for three of the five: the manifest's `native_event_aliases` table already maps `preToolUse` (cursor), `PreToolUse` (cline) and `BeforeTool` (gemini) onto `pre_tool_use`, so there the guard is **unbound, not unbindable**, while windsurf and copilot genuinely carry no pre-tool surface. Whether an unbound host's pre-tool event can *deny* is unrecorded, so neither direction may be asserted; the three states are tabulated once in [`hook-architecture-v1 § Which hosts carry pre_tool_use`](../docs/contracts/hook-architecture-v1.md). Run `agent-config hooks:status` to see which slots are bound on the host you are actually on — the sibling rules `git-history-discipline` and `evaluator-independence` qualify the identical slot, and an unqualified claim here would read as a guarantee the manifest does not give. Baselines and budget thresholds warn only — a rising count there may be a legitimate ratchet reset, which the edit alone cannot distinguish. Verify with the narrowest tool that proves the target green (a single `curl` / Playwright spec for HTTP/UI, the test runner with a `--filter`, an `xdebug` step-through) — never a meta-pipeline as per-iteration probe. Failed-attempt detail, suppression-sweep equivalents, probe-efficiency detail, and adaptive effort & stop (RDP): [`autonomy-mechanics § Validation-loop budget`](../contexts/execution/autonomy-mechanics.md).
+ 
+ Body migrated to `contexts/execution/autonomy-mechanics.md` (per P4 of `road-to-kernel-and-router.md`) — opt-in detection summary, task-scope shapes table, N=3 mechanics, allowlist-antipattern detail, probe efficiency, adaptive effort (RDP).
+ Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
+diff --git a/dist/agent-src/rules/evaluator-independence.md b/dist/agent-src/rules/evaluator-independence.md
+index b40a7cfbf5bf0d38c54e407a8df0979efe4394fd..1aa9a14b0e47f58fc20ac9ec921b8a6bfb9db8d5 100644
+--- a/dist/agent-src/rules/evaluator-independence.md
++++ b/dist/agent-src/rules/evaluator-independence.md
+@@ -95,13 +95,29 @@ Three limits, stated because they were measured. The pre-loaded-verdict list is
+ a **phrase list**, so a paraphrase evades it — it catches recurrences of known
+ steering wording, not steering as such. The turn boundary is the
+ authorization ledger's `detected_at` stamp, because the envelope carries no turn
+-id; with no ledger yet, the counter falls back to session scope. And the slot
+-itself is not universal: `pre_tool_use` exists on **three** hosts — augment,
+-claude, cowork. On cursor, cline, windsurf, gemini and copilot this guard has
+-nowhere to bind, so items 1 and 4 join 2 and 3 as model-carried there. The
+-frequency join in `check_enforcement_coverage.ts` reports exactly that set, and
++id; with no ledger yet, the counter falls back to session scope. And the binding
++itself is not universal: `pre_tool_use` is **bound** on three hosts — augment,
++claude, cowork. On cursor, cline, windsurf, gemini and copilot items 1 and 4
++join 2 and 3 as model-carried. The frequency join in
++`check_enforcement_coverage.ts` reports exactly that set, and
+ `agent-config hooks:status` answers it for the host you are on right now.
+ 
++**Corrected 2026-08-17 — that set is right and the reason it used to carry was
++not.** This paragraph said `pre_tool_use` "exists on three hosts" and that the
++guard has "nowhere to bind" on the other five. The manifest's own
++`native_event_aliases` table refutes it for three of them: `preToolUse`
++(cursor), `PreToolUse` (cline) and `BeforeTool` (gemini) are already mapped onto
++`pre_tool_use`. There the guard is **unbound, not unbindable** — the binding was
++never written. Only windsurf and copilot carry no pre-tool surface at all. Nor
++may the opposite be asserted: nothing in this tree records whether an unbound
++host's pre-tool event can *deny*, and `severity: blocking` is a property of the
++concern rather than of the host. The three states and what each rests on are
++tabulated once in
++[`hook-architecture-v1 § Which hosts carry pre_tool_use`](../docs/contracts/hook-architecture-v1.md).
++Stated here because this rule exists over a case where a process that *looked*
++followed produced fabricated evidence — an unbacked reason for a real gap is the
++same failure in a smaller font.
++
+ Items 2 and 3 — an honestly chosen scope, and recording the prompt with the
+ verdict — are **not** enforced by anything. A narrowed scope is not decidable
+ from the prompt alone, and no validator reads the artefacts a verdict lands in.
+diff --git a/dist/agent-src/rules/git-history-discipline.md b/dist/agent-src/rules/git-history-discipline.md
+index 55d9581e2141367663206150494dd78d75f06ee4..339992379987362e313a9cea6649b60c629788b5 100644
+--- a/dist/agent-src/rules/git-history-discipline.md
++++ b/dist/agent-src/rules/git-history-discipline.md
+@@ -84,4 +84,6 @@ Trigger-set above activates this routing on demand, independent of the disciplin
+ - [`commit-policy`](commit-policy.md) — commits are the user's call; rewriting them is a stronger version of the same restriction.
+ - [`token-efficiency`](token-efficiency.md) — Iron Law on burning the user's tokens for cosmetic gain.
+ - [`skill:git-workflow`](../skills/git-workflow/SKILL.md) — Safe Squash-After-Push protocol and Divergent-State Recovery decision tree.
+-- `git … --no-verify` / `core.hooksPath` overrides — deterministically blocked by the `block-no-verify` PreToolUse guard (`src/scripts/hooks/block_no_verify.ts`, registered in `hook_manifest.yaml`) **on the three hosts that have a `pre_tool_use` slot at all** — augment, claude, cowork. On cursor, cline, windsurf, gemini and copilot the guard has nowhere to bind, so on those hosts the Iron Laws above are model-carried and "deterministically blocked" is not a claim this rule can make. Surfaced by the frequency join in `check_enforcement_coverage.ts`, which reports the per-commit obligation as uncovered on exactly those platforms. To check the host you are on rather than trusting this sentence, run `agent-config hooks:status`.
++- `git … --no-verify` / `core.hooksPath` overrides — deterministically blocked by the `block-no-verify` PreToolUse guard (`src/scripts/hooks/block_no_verify.ts`, registered in `hook_manifest.yaml`) **on the three hosts whose manifest row binds `pre_tool_use`** — augment, claude, cowork. On cursor, cline, windsurf, gemini and copilot the Iron Laws above are model-carried and "deterministically blocked" is not a claim this rule can make. Surfaced by the frequency join in `check_enforcement_coverage.ts`, which reports the per-commit obligation as uncovered on exactly those platforms. To check the host you are on rather than trusting this sentence, run `agent-config hooks:status`.
++
++  **Corrected 2026-08-17 — still uncovered on those five, and the reason this rule gave was wrong for three of them.** The sentence read "the guard has nowhere to bind". The manifest's own `native_event_aliases` table refutes that for cursor, cline and gemini: it already maps `preToolUse`, `PreToolUse` and `BeforeTool` onto `pre_tool_use`. There the guard is **unbound, not unbindable** — nobody wrote the binding. Only windsurf and copilot carry no pre-tool surface at all. Whether those three hosts' pre-tool events can actually *deny* is recorded nowhere in this tree, so the opposite claim is unbacked too; the three states and what each rests on are tabulated once in [`hook-architecture-v1 § Which hosts carry pre_tool_use`](../docs/contracts/hook-architecture-v1.md). This corrects the cause, not the coverage count.
+diff --git a/docs/contracts/hook-architecture-v1.md b/docs/contracts/hook-architecture-v1.md
+index 4bbdf146fd4aed064a5e635fe3849e9c7e4ad97f..320bddbcc0225c39d102d2f1886bdad0b99be57a 100644
+--- a/docs/contracts/hook-architecture-v1.md
++++ b/docs/contracts/hook-architecture-v1.md
+@@ -288,6 +288,37 @@ Validated by `scripts/lint_hook_manifest.py` (Phase 7.10): every
+ concern script must exist on disk, every platform key must be a known
+ platform, every event key must be in the agent-config event vocabulary.
+ 
++### Which hosts carry `pre_tool_use` — bound, unbound, absent
++
++The three blocking guards (`block-no-verify`, `block-kernel-rule-writes`,
++`block-config-weakening`) and the `evidence-independence` concern all sit on
++`pre_tool_use`, so "which hosts is this actually enforced on" is asked of this
++manifest repeatedly. It has **three** answers, not two, and collapsing them is
++how a rule ends up asserting a host limitation nobody established.
++
++| State | Hosts | What the manifest records |
++|---|---|---|
++| **Bound** | `augment`, `claude`, `cowork` | a `pre_tool_use:` key in the platform's `platforms:` row, listing the concerns that run |
++| **Aliased but unbound** | `cursor`, `cline`, `gemini` | a native pre-tool event in `native_event_aliases` — `preToolUse`, `PreToolUse`, `BeforeTool` respectively — mapped onto `pre_tool_use`, with **no** `pre_tool_use:` key in the platform row |
++| **No pre-tool surface** | `windsurf`, `copilot` | no pre-tool alias row at all; `copilot` is additionally `fallback_only` |
++
++The middle row is the one that matters. On `cursor`, `cline` and `gemini` a
++guard is **unbound, not unbindable** — the host sends a pre-tool event and the
++translation table already accepts it; this package has simply never written the
++binding.
++
++**What is NOT established, in either direction:** whether those three hosts'
++pre-tool events can *deny* a call. Nothing in this tree records it, and the
++manifest's `severity: blocking` is a property of the concern, never of the host.
++So "bind it and the guard enforces" is as unbacked as "there is nowhere to
++bind". The honest statement is the one the table makes: the binding was never
++written, and the deny capability was never measured.
++
++`check_enforcement_coverage.ts` computes its `gap_platforms` from the bound set
++only, so a rule quoting it is right about *coverage* and says nothing about
++*cause*. `agent-config hooks:status` answers the same question for the host the
++session is actually on.
++
+ ### Optional per-concern `tools:` filter
+ 
+ A concern may declare which tools it applies to. The **dispatcher** skips it
+diff --git a/src/rules/autonomous-execution.md b/src/rules/autonomous-execution.md
+index ef0d5a47434f430d888daf6a20b9f3afac1a6e22..ab7eb94c99ed16b49b930839622b5aee9b86f3e5 100644
+--- a/src/rules/autonomous-execution.md
++++ b/src/rules/autonomous-execution.md
+@@ -67,7 +67,7 @@ ALLOWLIST > 20 ENTRIES IN ONE SESSION = THE LINTER IS WRONG.
+ STOP. PROPOSE LINTER REDESIGN OR REMOVAL. DO NOT EXPAND THE ALLOWLIST FURTHER.
+ ```
+ 
+-Crossing 20 entries counts as the 3rd validation-target failure — fix the tool shape, not the list. Enforced at tool-call time by the `block-config-weakening` PreToolUse guard (`src/scripts/hooks/block_config_weakening.ts`) **on the three hosts that have a `pre_tool_use` slot at all** — augment, claude, cowork: it counts allowlist entries added per session, warns from 5, and blocks past 20. On cursor, cline, windsurf, gemini and copilot the guard has nowhere to bind, so there the cap is model-carried and "enforced at tool-call time" is not a claim this rule can make. Run `agent-config hooks:status` to see which slots are bound on the host you are actually on — the sibling rules `git-history-discipline` and `evaluator-independence` qualify the identical slot, and an unqualified claim here would read as a guarantee the manifest does not give. Baselines and budget thresholds warn only — a rising count there may be a legitimate ratchet reset, which the edit alone cannot distinguish. Verify with the narrowest tool that proves the target green (a single `curl` / Playwright spec for HTTP/UI, the test runner with a `--filter`, an `xdebug` step-through) — never a meta-pipeline as per-iteration probe. Failed-attempt detail, suppression-sweep equivalents, probe-efficiency detail, and adaptive effort & stop (RDP): [`autonomy-mechanics § Validation-loop budget`](../contexts/execution/autonomy-mechanics.md).
++Crossing 20 entries counts as the 3rd validation-target failure — fix the tool shape, not the list. Enforced at tool-call time by the `block-config-weakening` PreToolUse guard (`src/scripts/hooks/block_config_weakening.ts`) **on the three hosts whose manifest row binds `pre_tool_use`** — augment, claude, cowork: it counts allowlist entries added per session, warns from 5, and blocks past 20. On cursor, cline, windsurf, gemini and copilot the cap is model-carried and "enforced at tool-call time" is not a claim this rule can make — **corrected 2026-08-17**, because the reason this sentence used to give ("the guard has nowhere to bind") is false for three of the five: the manifest's `native_event_aliases` table already maps `preToolUse` (cursor), `PreToolUse` (cline) and `BeforeTool` (gemini) onto `pre_tool_use`, so there the guard is **unbound, not unbindable**, while windsurf and copilot genuinely carry no pre-tool surface. Whether an unbound host's pre-tool event can *deny* is unrecorded, so neither direction may be asserted; the three states are tabulated once in [`hook-architecture-v1 § Which hosts carry pre_tool_use`](../../docs/contracts/hook-architecture-v1.md). Run `agent-config hooks:status` to see which slots are bound on the host you are actually on — the sibling rules `git-history-discipline` and `evaluator-independence` qualify the identical slot, and an unqualified claim here would read as a guarantee the manifest does not give. Baselines and budget thresholds warn only — a rising count there may be a legitimate ratchet reset, which the edit alone cannot distinguish. Verify with the narrowest tool that proves the target green (a single `curl` / Playwright spec for HTTP/UI, the test runner with a `--filter`, an `xdebug` step-through) — never a meta-pipeline as per-iteration probe. Failed-attempt detail, suppression-sweep equivalents, probe-efficiency detail, and adaptive effort & stop (RDP): [`autonomy-mechanics § Validation-loop budget`](../contexts/execution/autonomy-mechanics.md).
+ 
+ Body migrated to `contexts/execution/autonomy-mechanics.md` (per P4 of `road-to-kernel-and-router.md`) — opt-in detection summary, task-scope shapes table, N=3 mechanics, allowlist-antipattern detail, probe efficiency, adaptive effort (RDP).
+ Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
+diff --git a/src/rules/evaluator-independence.md b/src/rules/evaluator-independence.md
+index b40a7cfbf5bf0d38c54e407a8df0979efe4394fd..dbe64d9d69188c925ad902da81df401a9aa64a45 100644
+--- a/src/rules/evaluator-independence.md
++++ b/src/rules/evaluator-independence.md
+@@ -95,13 +95,29 @@ Three limits, stated because they were measured. The pre-loaded-verdict list is
+ a **phrase list**, so a paraphrase evades it — it catches recurrences of known
+ steering wording, not steering as such. The turn boundary is the
+ authorization ledger's `detected_at` stamp, because the envelope carries no turn
+-id; with no ledger yet, the counter falls back to session scope. And the slot
+-itself is not universal: `pre_tool_use` exists on **three** hosts — augment,
+-claude, cowork. On cursor, cline, windsurf, gemini and copilot this guard has
+-nowhere to bind, so items 1 and 4 join 2 and 3 as model-carried there. The
+-frequency join in `check_enforcement_coverage.ts` reports exactly that set, and
++id; with no ledger yet, the counter falls back to session scope. And the binding
++itself is not universal: `pre_tool_use` is **bound** on three hosts — augment,
++claude, cowork. On cursor, cline, windsurf, gemini and copilot items 1 and 4
++join 2 and 3 as model-carried. The frequency join in
++`check_enforcement_coverage.ts` reports exactly that set, and
+ `agent-config hooks:status` answers it for the host you are on right now.
+ 
++**Corrected 2026-08-17 — that set is right and the reason it used to carry was
++not.** This paragraph said `pre_tool_use` "exists on three hosts" and that the
++guard has "nowhere to bind" on the other five. The manifest's own
++`native_event_aliases` table refutes it for three of them: `preToolUse`
++(cursor), `PreToolUse` (cline) and `BeforeTool` (gemini) are already mapped onto
++`pre_tool_use`. There the guard is **unbound, not unbindable** — the binding was
++never written. Only windsurf and copilot carry no pre-tool surface at all. Nor
++may the opposite be asserted: nothing in this tree records whether an unbound
++host's pre-tool event can *deny*, and `severity: blocking` is a property of the
++concern rather than of the host. The three states and what each rests on are
++tabulated once in
++[`hook-architecture-v1 § Which hosts carry pre_tool_use`](../../docs/contracts/hook-architecture-v1.md).
++Stated here because this rule exists over a case where a process that *looked*
++followed produced fabricated evidence — an unbacked reason for a real gap is the
++same failure in a smaller font.
++
+ Items 2 and 3 — an honestly chosen scope, and recording the prompt with the
+ verdict — are **not** enforced by anything. A narrowed scope is not decidable
+ from the prompt alone, and no validator reads the artefacts a verdict lands in.
+diff --git a/src/rules/git-history-discipline.md b/src/rules/git-history-discipline.md
+index 55d9581e2141367663206150494dd78d75f06ee4..3efeea6da904e33689e37c89d5f66eabc14422c6 100644
+--- a/src/rules/git-history-discipline.md
++++ b/src/rules/git-history-discipline.md
+@@ -84,4 +84,6 @@ Trigger-set above activates this routing on demand, independent of the disciplin
+ - [`commit-policy`](commit-policy.md) — commits are the user's call; rewriting them is a stronger version of the same restriction.
+ - [`token-efficiency`](token-efficiency.md) — Iron Law on burning the user's tokens for cosmetic gain.
+ - [`skill:git-workflow`](../skills/git-workflow/SKILL.md) — Safe Squash-After-Push protocol and Divergent-State Recovery decision tree.
+-- `git … --no-verify` / `core.hooksPath` overrides — deterministically blocked by the `block-no-verify` PreToolUse guard (`src/scripts/hooks/block_no_verify.ts`, registered in `hook_manifest.yaml`) **on the three hosts that have a `pre_tool_use` slot at all** — augment, claude, cowork. On cursor, cline, windsurf, gemini and copilot the guard has nowhere to bind, so on those hosts the Iron Laws above are model-carried and "deterministically blocked" is not a claim this rule can make. Surfaced by the frequency join in `check_enforcement_coverage.ts`, which reports the per-commit obligation as uncovered on exactly those platforms. To check the host you are on rather than trusting this sentence, run `agent-config hooks:status`.
++- `git … --no-verify` / `core.hooksPath` overrides — deterministically blocked by the `block-no-verify` PreToolUse guard (`src/scripts/hooks/block_no_verify.ts`, registered in `hook_manifest.yaml`) **on the three hosts whose manifest row binds `pre_tool_use`** — augment, claude, cowork. On cursor, cline, windsurf, gemini and copilot the Iron Laws above are model-carried and "deterministically blocked" is not a claim this rule can make. Surfaced by the frequency join in `check_enforcement_coverage.ts`, which reports the per-commit obligation as uncovered on exactly those platforms. To check the host you are on rather than trusting this sentence, run `agent-config hooks:status`.
++
++  **Corrected 2026-08-17 — still uncovered on those five, and the reason this rule gave was wrong for three of them.** The sentence read "the guard has nowhere to bind". The manifest's own `native_event_aliases` table refutes that for cursor, cline and gemini: it already maps `preToolUse`, `PreToolUse` and `BeforeTool` onto `pre_tool_use`. There the guard is **unbound, not unbindable** — nobody wrote the binding. Only windsurf and copilot carry no pre-tool surface at all. Whether those three hosts' pre-tool events can actually *deny* is recorded nowhere in this tree, so the opposite claim is unbacked too; the three states and what each rests on are tabulated once in [`hook-architecture-v1 § Which hosts carry pre_tool_use`](../../docs/contracts/hook-architecture-v1.md). This corrects the cause, not the coverage count.
+diff --git a/src/scripts/hooks/ui_route_nudge_hook.ts b/src/scripts/hooks/ui_route_nudge_hook.ts
+index f183a86ee6e7ff96b9d5eb41ce65a503aafeb8f7..6c8623202cccbb08e4bef1ee2c0596e20bbc3de0 100644
+--- a/src/scripts/hooks/ui_route_nudge_hook.ts
++++ b/src/scripts/hooks/ui_route_nudge_hook.ts
+@@ -30,9 +30,12 @@
+  * degradation valve `design_slop_hook` carries, for the same reason: an agent
+  * that has decided to proceed must not be re-prompted into a loop.
+  *
+- * HOST BOUNDARY, STATED RATHER THAN IMPLIED. `pre_tool_use` exists on three
+- * hosts. Everywhere else this concern has nowhere to bind and the obligation
+- * stays model-carried, exactly as the two rules already declare. Run
++ * HOST BOUNDARY, STATED RATHER THAN IMPLIED. `pre_tool_use` is BOUND on three
++ * hosts. Everywhere else the obligation stays model-carried, exactly as the two
++ * rules already declare. Corrected 2026-08-17: this comment said the concern has
++ * "nowhere to bind" elsewhere, which the manifest's own `native_event_aliases`
++ * table refutes for cursor, cline and gemini — unbound, not unbindable. See
++ * `docs/contracts/hook-architecture-v1.md` § Which hosts carry pre_tool_use. Run
+  * `agent-config hooks:status` for the host you are actually on.
+  *
+  * Default-OFF: no-ops unless `hooks.ui_route_nudge.enabled: true`.
