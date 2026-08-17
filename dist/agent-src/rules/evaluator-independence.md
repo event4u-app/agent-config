@@ -95,12 +95,28 @@ Three limits, stated because they were measured. The pre-loaded-verdict list is
 a **phrase list**, so a paraphrase evades it — it catches recurrences of known
 steering wording, not steering as such. The turn boundary is the
 authorization ledger's `detected_at` stamp, because the envelope carries no turn
-id; with no ledger yet, the counter falls back to session scope. And the slot
-itself is not universal: `pre_tool_use` exists on **three** hosts — augment,
-claude, cowork. On cursor, cline, windsurf, gemini and copilot this guard has
-nowhere to bind, so items 1 and 4 join 2 and 3 as model-carried there. The
-frequency join in `check_enforcement_coverage.ts` reports exactly that set, and
+id; with no ledger yet, the counter falls back to session scope. And the binding
+itself is not universal: `pre_tool_use` is **bound** on three hosts — augment,
+claude, cowork. On cursor, cline, windsurf, gemini and copilot items 1 and 4
+join 2 and 3 as model-carried. The frequency join in
+`check_enforcement_coverage.ts` reports exactly that set, and
 `agent-config hooks:status` answers it for the host you are on right now.
+
+**Corrected 2026-08-17 — that set is right and the reason it used to carry was
+not.** This paragraph said `pre_tool_use` "exists on three hosts" and that the
+guard has "nowhere to bind" on the other five. The manifest's own
+`native_event_aliases` table refutes it for three of them: `preToolUse`
+(cursor), `PreToolUse` (cline) and `BeforeTool` (gemini) are already mapped onto
+`pre_tool_use`. There the guard is **unbound, not unbindable** — the binding was
+never written. Only windsurf and copilot carry no pre-tool surface at all. Nor
+may the opposite be asserted: nothing in this tree records whether an unbound
+host's pre-tool event can *deny*, and `severity: blocking` is a property of the
+concern rather than of the host. The three states and what each rests on are
+tabulated once in
+[`hook-architecture-v1 § Which hosts carry pre_tool_use`](../docs/contracts/hook-architecture-v1.md).
+Stated here because this rule exists over a case where a process that *looked*
+followed produced fabricated evidence — an unbacked reason for a real gap is the
+same failure in a smaller font.
 
 Items 2 and 3 — an honestly chosen scope, and recording the prompt with the
 verdict — are **not** enforced by anything. A narrowed scope is not decidable
