@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "evaluator-output.schema.json",
+  "title": "Evaluator output",
+  "description": "ONE shape for a mechanical verifier's machine-readable verdict, so a loop that optimizes against a metric is decoupled from the verifier producing it. Measured before drafting (spike s02, agents/evidence/eval-findings/metric-loop-s02.md): three existing verifiers — validate_frontmatter, lint_output_slop, check_references — were wrapped in this shape with ZERO invasive changes to the verifiers, so the contract is transplantable onto the surface that exists rather than one that would have to be built. The error semantics live in docs/contracts/evaluator-output.md; without them every caller invents its own failure handling, which is the half that makes a contract usable.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "name",
+    "pass",
+    "score"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "enum": [
+        1
+      ],
+      "description": "Pinned. Spelled as a one-member `enum` rather than `const` for the same measured reason review-findings.schema.json records: this repo's Draft-07 subset validator enforces `enum` and silently ignores `const`, so a `const` here would be a pin nothing checks."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "description": "Stable identifier of the evaluator, not of the run. The loop register keys decisions on it, so renaming an evaluator starts a new metric series rather than continuing the old one — which is the honest behaviour, since the numbers are not comparable across a definition change."
+    },
+    "pass": {
+      "type": "boolean",
+      "description": "Did the underlying verifier accept the tree? This is the SOVEREIGN field: a keep-or-revert loop gates on `pass && score > baseline`, never on `score` alone. Measured in spike s01 — a change that improved the metric by 67 % and broke behaviour was reverted only because `pass` was false. A loop reading `score` alone keeps it."
+    },
+    "score": {
+      "type": "number",
+      "description": "HIGHER IS BETTER, always. A verifier whose natural metric is a violation count negates it (`score = -violations`), so every consumer compares with one operator and no caller has to know the direction. `direction` records which way the raw metric ran, for humans reading the register; it is never the comparison input."
+    },
+    "metric": {
+      "type": "number",
+      "description": "The raw, un-negated measurement. ABSENT — not null — when there is no number to report; `metric_state` then says why. Spelled as an optional `number` rather than `[\"number\", \"null\"]` for a measured reason, the same class as the `const`-vs-`enum` note above: this repo's Draft-07 subset validator rejects an array-typed `type` outright (`Unsupported schema type 'number,null'`), so a union here would have failed every conformant emitter. Spike s02 produced the distinction the field encodes: check_references writes its count to stderr, and a stdout-only reader reported no metric beside `pass: true` — a degraded reading indistinguishable from an evaluator that legitimately has no number."
+    },
+    "metric_state": {
+      "enum": [
+        "present",
+        "absent",
+        "unreadable"
+      ],
+      "description": "Why `metric` holds what it holds. `present` — a number was read. `absent` — this evaluator has no scalar metric by design. `unreadable` — a metric was expected and could not be parsed; the run is DEGRADED and a loop must treat it as a failed experiment rather than as a zero. Defaulting `unreadable` to `absent` is the exact silent degradation this field exists to make impossible."
+    },
+    "direction": {
+      "enum": [
+        "maximize",
+        "minimize"
+      ],
+      "description": "Which way the RAW metric runs. Documentation for a human reading the register, never a comparison input — `score` has already absorbed the direction. Recorded because a register row showing `metric: 3` is uninterpretable without it."
+    },
+    "error": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Present only when the evaluator itself failed to produce a verdict (as opposed to the verifier reporting a red tree, which is `pass: false` with no error). The two are different events for a loop: a red tree is a result to act on, an evaluator failure is a measurement that did not happen."
+    }
+  }
+}

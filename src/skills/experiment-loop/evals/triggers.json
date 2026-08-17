@@ -1,0 +1,17 @@
+{
+  "skill": "experiment-loop",
+  "last_eval": "2026-08-17",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers the bounded keep-or-revert loop against a SCALAR metric (direction, no destination). Should-not-trigger covers the near-miss neighbours the roadmap's gap-table names: iterate-to-a-known-end-state (verify-repair-loop), subjective craft with no scalar, a one-shot measurement, a one-shot review, and asking what a metric currently is.",
+  "queries": [
+    {"q": "minimize the bundle size, keep changes that help and revert the rest", "trigger": true},
+    {"q": "optimize this until it stops improving, bounded to ten tries", "trigger": true},
+    {"q": "drive the query count down across iterations and record what you kept", "trigger": true},
+    {"q": "run a keep-or-revert loop against the lint violation count", "trigger": true},
+    {"q": "reduce this metric as far as it goes without breaking the tests", "trigger": true},
+    {"q": "keep fixing until the tests pass", "trigger": false, "note": "a known end state, not a direction → verify-repair-loop"},
+    {"q": "iterate this change to green, run the suite each time", "trigger": false, "note": "converges toward a destination → verify-repair-loop"},
+    {"q": "is this diff clean — naming, structure, conventions?", "trigger": false, "note": "subjective craft, no scalar to optimize"},
+    {"q": "how big is the bundle right now?", "trigger": false, "note": "a single measurement, no loop"},
+    {"q": "review my changes before I open the PR", "trigger": false, "note": "one-shot review → /review-changes"}
+  ]
+}

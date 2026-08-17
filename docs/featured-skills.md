@@ -1,6 +1,6 @@
 # Featured Skills
 
-A curated subset of the 289 skills. Three tiers, one per primary audience. Full catalog lives in [`dist/agent-src/skills/`](../dist/agent-src/skills/); see also [`docs/catalog.md`](catalog.md) for the complete index and [`docs/featured-commands.md`](featured-commands.md) for command-level highlights.
+A curated subset of the 290 skills. Three tiers, one per primary audience. Full catalog lives in [`dist/agent-src/skills/`](../dist/agent-src/skills/); see also [`docs/catalog.md`](catalog.md) for the complete index and [`docs/featured-commands.md`](featured-commands.md) for command-level highlights.
 
 > **Eval-gated messaging note.** Until `task bench --corpus non-dev` reports `selection_accuracy >= 0.60` (see `road-to-product-adoption.md` Phase 1), this page is documentation, not marketing. The entries below are the candidates the corpus tests against; their description quality is what the eval validates.
 
@@ -75,6 +75,7 @@ Each row links to the canonical artefact under `dist/agent-src/`. Substitutions 
 | [`judge-test-coverage`](../dist/agent-src/skills/judge-test-coverage/SKILL.md) | Test review — missing assertions, uncovered branches, over-mocking, regression coverage |
 | [`playwright-architect`](../dist/agent-src/skills/playwright-architect/SKILL.md) | Shape a Playwright suite — locator strategy, Page Object boundaries, fixture composition, flake prevention |
 | [`threat-modeling`](../dist/agent-src/skills/threat-modeling/SKILL.md) | Pre-implementation threat model — trust boundaries + abuse cases mapped to files, BEFORE the first line of code |
+| [`experiment-loop`](../dist/agent-src/skills/experiment-loop/SKILL.md) | Bounded keep-or-revert iteration against a scalar metric — `pass` sovereign over the number, state in an on-disk register |
 
 → Pack details: [`packages/engineering-base/`](../packages/engineering-base/) · Role guide: [`docs/getting-started-by-role.md#developer`](getting-started-by-role.md#developer-the-original-audience)
 
@@ -92,4 +93,4 @@ task lint-featured-skills
 
 CI runs this in `taskfiles/ci-fast.yml`. Stale entries (renamed / removed skill or command) fail the build. See [`scripts/lint_featured_skills.py`](../src/scripts/lint_featured_skills.py) for the matcher.
 
-→ Browse all 289 skills: [`dist/agent-src/skills/`](../dist/agent-src/skills/) · all 200 commands: [`dist/agent-src/commands/`](../dist/agent-src/commands/)
+→ Browse all 290 skills: [`dist/agent-src/skills/`](../dist/agent-src/skills/) · all 200 commands: [`dist/agent-src/commands/`](../dist/agent-src/commands/)

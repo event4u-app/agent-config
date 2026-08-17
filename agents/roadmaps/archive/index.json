@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 503,
+  "count": 504,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -4216,6 +4216,20 @@
       },
       "verdict": null,
       "status": "ready"
+    },
+    {
+      "slug": "road-to-metric-loop-and-review-integrity",
+      "title": "Road to metric loop and review integrity",
+      "disposition": "completed",
+      "phases": 6,
+      "steps": {
+        "open": 0,
+        "done": 28,
+        "deferred": 0,
+        "cancelled": 0
+      },
+      "verdict": null,
+      "status": null
     },
     {
       "slug": "road-to-mission-mode",

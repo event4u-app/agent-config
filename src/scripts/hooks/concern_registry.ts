@@ -32,6 +32,7 @@ import { main as onboardingGateMain } from '../onboarding_gate_hook.js';
 import { main as contextHygieneMain } from '../context_hygiene_hook.js';
 import { main as verifyBeforeCompleteMain } from '../before_complete_hook.js';
 import { main as minimalSafeDiffMain } from '../minimal_safe_diff_hook.js';
+import { main as shipDiffVolumeMain } from './ship_diff_volume_hook.js';
 import { main as injectionScanMain } from '../injection_scan_hook.js';
 import { main as memoryLearnMain } from '../memory_learn_hook.js';
 import { main as firstRunGateMain } from '../first_run_gate_hook.js';
@@ -80,6 +81,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/context_hygiene_hook.ts': contextHygieneMain as ConcernMain,
     'src/scripts/before_complete_hook.ts': verifyBeforeCompleteMain as ConcernMain,
     'src/scripts/minimal_safe_diff_hook.ts': minimalSafeDiffMain as ConcernMain,
+    'src/scripts/hooks/ship_diff_volume_hook.ts': shipDiffVolumeMain as ConcernMain,
     'src/scripts/injection_scan_hook.ts': injectionScanMain as ConcernMain,
     'src/scripts/memory_learn_hook.ts': memoryLearnMain as ConcernMain,
     'src/scripts/first_run_gate_hook.ts': firstRunGateMain as ConcernMain,
