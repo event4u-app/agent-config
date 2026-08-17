@@ -1,0 +1,1469 @@
+diff --git a/.github/workflows/consistency.yml b/.github/workflows/consistency.yml
+index 7f867db839b100ff5ebce770e63f9356a94e2ec4..aa60f9a8832a743d439bfed99028b823f3988963 100644
+--- a/.github/workflows/consistency.yml
++++ b/.github/workflows/consistency.yml
+@@ -348,6 +348,25 @@ jobs:
+             fi
+           }
+ 
++      - name: Evidence artifacts declare what kind of evidence they are
++        # A review this repo RECEIVED and a findings artifact binding a diff
++        # right now read identically today, so a reader cannot tell whether a
++        # stored artifact still asserts anything. This checks the half that is
++        # globally decidable: a declared type must agree with its body.
++        #
++        # Same exit-code contract § 6: 2 = internal error → warn-and-allow, so a
++        # broken gate never blocks its own fix. A dead scan scope is exit 1, not
++        # 2 — otherwise a moved evidence root would downgrade this to advisory.
++        run: |
++          ./scripts-run src/scripts/lint_evidence_artifacts --all || {
++            rc=$?
++            if [ "$rc" = "2" ]; then
++              echo "::warning::lint_evidence_artifacts internal error — degraded advisory mode, allowing"
++            else
++              exit "$rc"
++            fi
++          }
++
+       - name: Check always-rule budget (warn 80% / fail 90%)
+         run: task check-always-budget
+ 
+diff --git a/Taskfile.yml b/Taskfile.yml
+index 235a274e120b9cb2f8753d4ab0aaecea2cb22200..8b4cd28e5831b0d32ff28423d9478c684e9fec8b 100644
+--- a/Taskfile.yml
++++ b/Taskfile.yml
+@@ -179,6 +179,7 @@ tasks:
+       - task: check-gate-completeness
+       - task: check-suppression-hygiene
+       - task: check-review-dispositions
++      - task: lint-evidence-artifacts
+       - task: lint-plan-risk-register
+       - task: check-completion-review
+       - task: check-review-prompt-binding
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 5e7ce29a585f1031c2de4be33580e21560875426..d7228a7bd8bd6ddc301c8a83168482ab84341862 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **38** open blockers, **13** need you → `agent-config gates`
++> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **39** open blockers, **14** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**242 / 413 steps done · 59%**
++**247 / 544 steps done · 45%**
+ 
+ ```text
+-████████████████████████░░░░░░░░░░░░░░░░   59%
++██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
+ ```
+ 
+ ## ⚠️ Iron Law 3 — unresolved deferred items
+@@ -27,30 +27,35 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
+ | 2 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
+ | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 4 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
+-| 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
+-| 6 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
+-| 7 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
+-| 8 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+-| 9 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
+-| 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
+-| 11 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
+-| 12 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 0 | 13 | 1 | 0 | 0 | ██████████ 100% |
+-| 13 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 2 | 2 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | █████░░░░░ 50% |
+-| 14 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 15 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
+-| 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+-| 17 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+-| 18 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+-| 19 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+-| 20 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
+-| 21 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+-| 22 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
+-| 23 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
+-| 24 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 9 | 10 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | █████░░░░░ 53% |
+-| 25 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+-| 26 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+-| 27 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 4 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 24 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 5 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
++| 6 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
++| 7 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
++| 8 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
++| 9 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
++| 10 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
++| 11 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
++| 12 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
++| 13 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 0 | 13 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy) | ██████████ 100% |
++| 14 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 2 | 2 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | █████░░░░░ 50% |
++| 15 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 16 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
++| 17 | [road-to-metric-loop-and-review-integrity.md](roadmaps/road-to-metric-loop-and-review-integrity.md) | 6 | 24 | 24 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 18 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
++| 19 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ░░░░░░░░░░ 0% |
++| 20 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 12 | 5 | 0 | 0 | 0 | ███░░░░░░░ 29% |
++| 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
++| 22 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
++| 23 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
++| 24 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
++| 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
++| 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
++| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
++| 28 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 9 | 10 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | █████░░░░░ 53% |
++| 29 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
++| 30 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
++| 31 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 32 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 40 | 0 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ░░░░░░░░░░ 0% |
+ 
+ ---
+ 
+@@ -106,7 +111,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+     when the experimental flag is on in a real environment,
+     run the 5.1 spike, then bind the concerns with the same fail-open
+     discipline as the #1223 set.
+-  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts.
++  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts. - **Probed 2026-08-09:** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is unset on this host — condition unchanged, 5.4 stays open. - **Re-probed 2026-08-13:** still unset (`env | grep -i EXPERIMENTAL` returns nothing). Four days, no change. Recorded rather than left silent because the absence of a dated line is indistinguishable from nobody having looked — but the repetition is also the finding: this blocker does not clear by waiting on this host, so 5.4's realistic paths are an upstream flag flip or the "teams leave the experimental state" branch already named in the resolution clause.
+ - **cross-vendor-worker-slices** (owner: maintainer) — blocks routing ordinary work slices to second-vendor CLI workers (huge-context analysis, independence-critical review — Source G shape)
+   - **What to do:**
+     the drafts cited a direction-policy artefact that does not
+@@ -215,6 +220,10 @@ _1 blocker resolved._
+     substantively-differing pairs; **R2** for Ü3 — is the `collective_blind_spot`
+     field *decision-influencing* in ≥2 of 3 sampled runs (boilerplate such as
+     "insufficient testing discussion" does not count).
++    - **Why no agent can close it:** the pre-registration names the *maintainer*
++    as the rater. Substituting an AI rater would break the pre-registration and
++    would itself be the self-preference bias this roadmap exists to measure — the
++    one substitution that invalidates the result it produces.
+   - **Resolved when:** both readings exist, and each of Ü2 / Ü3 carries an adopt-or-honest-null verdict rather than a deferral.
+ 
+ ### [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md)
+@@ -350,7 +359,7 @@ _1 blocker resolved._
+ <a id="blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle"></a>
+ **Blockers**
+ 
+-- **evidence-compaction-approval** (owner: maintainer) — blocks step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2 proceed either way.
++- **evidence-compaction-approval** (owner: maintainer) — blocks step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2 proceed either way. - **Evidence now available (Phase 3, 2026-08-15):** the list and the proof the blocker was waiting for exist. **30** directories totalling **3.24 MB**, 29 of them `archived`. **11** were re-derived byte-for-byte (**1.12 MB**); **19** were not (**2.12 MB**) and stay regardless. So option (b) reclaims at most **34.7 %** of the tree — and the tier boundary it would need to name is not a tier at all, since 29 of 30 sit in the same one. The only line that separates them is the per-directory re-derivation verdict in `agents/evidence/analysis/review-binding-drift.md`. - **Correction (2026-08-17) — the list above is no longer decision-ready, and that is the part a maintainer needs before answering.** The tree now holds **38** directories, so the 30 Phase 3 classified cover **79 %** of it; eight are unclassified and carry no reproducibility verdict. Choosing option (b) against this list today would either skip those eight or act on them unverified — neither is what the option says. The percentage it quotes moves too: at most 34.7 % of *the 30*, and an unknown share of the eight. Re-run the Phase 3 probe before the decision is taken, not after; the decision itself is unchanged and still the maintainer's.
+   - **What to do:**
+     pick exactly one — (a) no compaction: the tiering and the
+     reproducibility verdict are the whole deliverable, and step 3.3 is marked
+@@ -371,6 +380,35 @@ _1 blocker resolved._
+ | 3 | One top-band context per task | ✅ done | 0 | 3 | 0 | 0 | 100% |
+ | 4 | Close the documented-but-unwired exposure | ✅ done | 0 | 7 | 1 | 0 | 100% |
+ 
++<a id="blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy"></a>
++**Blockers**
++
++- **picktier-wire-or-archive** (owner: user) — blocks Step 4.1 only. Phase 3 and Step 4.2 are closed and independent.
++  - **Recommendation:** fix the quorum, then take **(b)**. Two separate claims, and the order is the point. The quorum fix is unconditional — it costs one line, it is the only reason this entry has escalated twice, and every future contract-reversal question in this repository hits the same wall. On the disposition itself, (b) is where the evidence points: `decision-revisit-gate` says a lock is a decision under past conditions, and the condition that changed is not an opinion — the input `pickTier` requires has had no source since the settings key was deleted, so (a) does not mean "wire the contract", it means "invent a replacement for a category that was removed on purpose". (c) is the honest description of today and the weakest option to CHOOSE, because it leaves AC1–AC5 pre-registered against a mechanism that cannot run, which reads as coverage. **This is advice from the entry's own evidence, not a verdict** — a converged council reversal is still what (b) needs, which is why the quorum fix is first and not optional. **Superseded in part, 2026-08-16 — the (b) half stands, the ordering half does not.** "It costs one line" was true of the openai seat and is not true of what is left: the anthropic seat is a council-transport defect with no established cause, so "fix the quorum, THEN decide" now reads as "wait indefinitely". The two bullets below were corrected and this one was not, which is how a maintainer reading the field named for the decision got the pre-correction instruction. What replaces it: (b) is still where the evidence points, both vendors now say so independently, and `Resolved when:` states the one question that remains — whether that substitutes for the mechanism.
++  - **If you do nothing:** nothing breaks and no user sees anything wrong — the same honest no-cost answer four of the six entries rewritten on 2026-08-16 carry. What accrues is measurement debt in three places: 365 LOC of source and 355 LOC of tests keep asserting a lifecycle nothing runs; `budget.mjs tier` keeps summing a `reserved_usd` term whose store has no writer; and the v1 contract keeps five pre-registered acceptance criteria that can never fire, which a reader counts as coverage that exists. Step 4.1 and the acceptance criterion below it stay open indefinitely, so this roadmap cannot reach a terminal state.
++  - **What to do:**
++    pick exactly one —
++    (a) **wire** it, naming where `routing_switch` now comes from;
++    (b) **archive** the decision layer and permit lifecycle with a migration note
++    carrying the 0/327 reading and the complementary-not-replacement correction,
++    keeping `TIER_ORDER` / `readCooldowns`;
++    (c) **carry it deliberately**, on the ground that the state is disclosed and
++    monitored — which the step as written excludes, so choosing this amends the
++    step rather than satisfying it.
++    **A fourth thing has to happen first, and it is not one of the three:** restore
++    the council quorum, by removing the `model: gpt-4o` pin from the `openai`
++    member in `~/.event4u/agent-config/settings/.ai-council.yml` (or moving that
++    member to the API transport). Until that lands, the mechanism this entry
++    defers to cannot produce the converged verdict it defers to it FOR.
++    **Half done, and the other half moved (2026-08-16):** the openai seat is
++    repaired — as `model: codex-default`, never by removing the line, see the
++    correction block above. The remaining half is the anthropic seat, and it is a
++    council-transport defect rather than a config value, so it is no longer
++    something this entry can name a one-line fix for.
++  - **Resolved when:** the council quorum is restored AND the user states which of (a), (b) or (c) holds — or the user decides without the council and says so, which is theirs to do but is the reversal-of-a-converged-decision this entry escalated to avoid. **Narrowed 2026-08-16 to the one question actually left.** The evidence half is done: both vendors answer (b) on an identical neutral prompt, with independent reasoning and compatible `revisit-if` conditions. The mechanism half is not and will not be until the council-transport defect is fixed elsewhere. So the maintainer decides ONE thing: whether two independent vendor opinions, one hand-run, substitute for a converged council run as the basis for reversing a council-locked v1 contract. **Yes** → (b) executes on the plan below. **No** → this entry waits on the transport fix, and nobody re-gathers the opinions, because they are recorded above. The execution plan, from the two answers, so it needs no re-derivation (kept blank-line-free on purpose: `_blockerField` terminates a field at the first blank line, so a plan separated by one never reaches the generated dashboard or `agent-config gates` — the two surfaces this entry routes the maintainer to): 1. Archive the smallest coherent boundary — confirm first whether `reserveTtlMs`, `RESERVE_FILE` or `COOLDOWN_FILE` back the live cool-down diagnostics indirectly, and keep whatever does alongside `TIER_ORDER` and `readCooldowns`. 2. Remove the decision and permit APIs plus their exclusively-associated tests and state. 3. Replace the v1 contract with an archival migration record that formally retires AC1–AC5, carrying the 0/327 reading and the complementary-not-replacement correction. 4. Update claims, proof, config and routing documentation so no active-contract language remains. 5. Decide separately whether `budget.mjs tier` goes with it — its `reserved_usd` term reads a store that would then have no writer at all.
++
++_1 blocker resolved._
++
+ ### [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md)
+ 
+ **Road to the inbox-harvest residuals — four deferrals that outlived their parent** — 2 / 4 done (50%)
+@@ -384,7 +422,7 @@ _1 blocker resolved._
+ 
+ - **deferred-finding-decision-reopen** (owner: maintainer) — blocks R2 only
+   - **Recommendation:** **cancel R2 against the decline** — option (b) below. The decline names a falsifiable trigger (*a disposition that genuinely cannot be recorded in the round record itself*), and no such case is on record; the 2026-08-14 blanket grant released the permission to revisit but supplies none of the evidence the trigger asks for. Building the index anyway adds a second artefact to keep in sync — a new drift source guarding a failure mode that has not occurred. Cancelling is not a refusal: the decline reopens by itself the day a real case appears.
+-  - **If you do nothing:** R2 stays open indefinitely and this roadmap can never reach a terminal state, so it sits on the dashboard as permanent open work that no run can close. Nothing else is blocked, and no correctness or safety property degrades — the cost is purely that the backlog carries an item nobody can act on. That is a low cost, which is exactly why this has already survived two migrations without being decided.
++  - **If you do nothing:** R2 stays open indefinitely and this roadmap can never reach a terminal state, so it sits on the dashboard as permanent open work that no run can close. Nothing else is blocked, and no correctness or safety property degrades — the cost is purely that the backlog carries an item nobody can act on. That is a low cost, which is exactly why this has already survived two migrations without being decided. - **Options:** (a) reopen the decision, citing the real case that fired the trigger, and build the stable-finding-id index · (b) cancel R2 against the decline (`[-]`, recommended) · (c) leave it open and re-read at the next harvest.
+   - **What to do:**
+     R2 needs a stable-finding-id index that was explicitly declined
+     at `src/scripts/check_review_dispositions.ts:16-22` with a named revisit
+@@ -404,7 +442,7 @@ _1 blocker resolved._
+   - **Resolved when:** the decision is reopened with the trigger cited (i.e. a real case exists), or R2 is cancelled against it.
+ - **spent-inbox-artifacts-await-deletion** (owner: maintainer) — blocks nothing — pure housekeeping, carried so it is not lost
+   - **Recommendation:** **record a keep-reason and close it** — option (c) below. The deletion frees nothing anyone measures: the objects live under a gitignored, per-checkout directory, so they are already invisible to every diff, every clone and every consumer. Set against that, naming the two files costs a human read of a 12-match glob whose intended two are not recoverable from the text. Deleting the wrong ten is the only outcome with a real cost, and it is the one an unaided agent would produce.
+-  - **If you do nothing:** four spent items keep sitting in a local, gitignored scratch directory in one checkout. **Blocks nothing** — the entry itself says so — and the housekeeping value does not decay. Concretely: no gate reds, no reviewer sees them, and the directory is not replicated to any worktree. This is the cheapest non-decision on the board.
++  - **If you do nothing:** four spent items keep sitting in a local, gitignored scratch directory in one checkout. **Blocks nothing** — the entry itself says so — and the housekeeping value does not decay. Concretely: no gate reds, no reviewer sees them, and the directory is not replicated to any worktree. This is the cheapest non-decision on the board. - **Options:** (a) name the two `council-q-*.md` files explicitly and delete those four objects by name · (b) delete nothing and drop the entry as housekeeping noise · (c) record a keep-reason and close it (recommended).
+   - **What to do:**
+     four spent items under `agents/tmp.old/` should be removed:
+     both `council-q-*.md` files (answered and shipped verbatim), `bench-local/`
+@@ -427,7 +465,7 @@ _1 blocker resolved._
+     appear in any diff a reviewer reads. Same per-checkout class as the audit
+     log the parent's sweep report recorded.
+     So the item needs the two filenames, not a broader authorization.
+-  - **Resolved when:** the files are deleted **by name**, or a reason to keep them is recorded.
++  - **Resolved when:** the files are deleted **by name**, or a reason to keep them is recorded. - **Side finding, worth its own look and deliberately not folded in:** `check_council_layout` prints these as findings and **exits 0** — an advisory gate nobody sees, currently carrying ~18 permanent findings, which is the allowlist-fatigue shape this repo's own rules warn about.
+ 
+ ### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
+ 
+@@ -551,13 +589,13 @@ _1 blocker resolved._
+ 
+ ### [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md)
+ 
+-**Road to release-review P0** — 0 / 17 done (0%)
++**Road to release-review P0** — 5 / 17 done (29%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+ | 1 | Host-aware skill projection | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+-| 2 | Evidence artifact typing | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+-| 3 | Provider qualification | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
++| 2 | Evidence artifact typing | ✅ done | 0 | 4 | 0 | 0 | 100% |
++| 3 | Provider qualification | 🟡 in progress | 8 | 1 | 0 | 0 | 11% |
+ 
+ ### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
+ 
+@@ -609,6 +647,12 @@ _1 blocker resolved._
+     (`internal/bench/corpora/scale-history-PREREG.md:63-69`), and the rubric's
+     own first line makes the anti-anchor ordering binding
+     (`internal/bench/scale-history/rubric.md:4-5`).
++    - **Why no agent can close it:** an agent rating artifacts an agent produced
++    is the self-preference substitution that invalidates the result it is
++    meant to produce — the same refusal `road-to-council-blind-review` records
++    for its own blind ratings, and the reason `evaluator-independence` exists.
++    Substituting an AI rater here would not be a weaker result; it would be an
++    uncitable one.
+   - **Resolved when:** a human rubric score exists per artifact, recorded before the secondary `lint_persistence` pass for that artifact. - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was never written down, which is why this roadmap read as spend-blocked-only.
+ 
+ _2 blockers resolved._
+@@ -809,6 +853,11 @@ _1 blocker resolved._
+     `claude__PreToolUse__*.json` files written from inside it.
+     4. Remove the `env` entry afterwards — the capture writes every payload
+     verbatim, which is a standing egress surface, not a setting to leave on.
++    - **Why an agent must not do it:** the file is the agent's own tool
++    configuration, the change is user-global and reaches every other session live
++    on this repository, and `security-sensitive-stop` § self-modification routes a
++    self-config edit through the edit-permission gates rather than letting a
++    session apply it to itself.
+   - **Resolved when:** a raw `SubagentStop` payload and a raw in-subagent `PreToolUse` payload exist as captured files, and their field lists are recorded in `agents/evidence/investigations/subagent-lifecycle-phase0-return-channel.md`.
+ 
+ ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
+diff --git a/agents/roadmaps/road-to-release-review-p0.md b/agents/roadmaps/road-to-release-review-p0.md
+index aa6a02134b890b2648651e98df09764490d1c5d7..e18019df312cda07b7f66f048b8942c03364d1f9 100644
+--- a/agents/roadmaps/road-to-release-review-p0.md
++++ b/agents/roadmaps/road-to-release-review-p0.md
+@@ -51,15 +51,45 @@ Source: an external release review of this package, 2026-08-15, pinned at `e3bd9
+ 
+ ## Phase 2 — Evidence artifact typing
+ 
+-- [ ] Add an explicit type to every evidence artifact at write time, distinguishing an original review, a current binding, a declared skip, an honest null, and a re-bind event. The failure this closes is that a historical input currently reads the same as a live binding, so a reader cannot tell whether an artifact still asserts anything. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
+-- [ ] Set the type at creation rather than inferring it later from filename or location; an inferred type reproduces the ambiguity it was meant to remove. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
+-- [ ] Explicitly do not loosen the binding itself. The review's own measurement found that segment-aware currency would save roughly a tenth of re-binds while introducing integrity risk — so the decision is to clarify what stored evidence means, not to weaken when it must be re-bound. <!-- verify: grep -q "binding" docs/contracts/evidence-artifact-types.md -->
+-- [ ] Record the type set as a contract document so consumers read one definition rather than inferring five. <!-- verify: test -f docs/contracts/evidence-artifact-types.md -->
++- [x] Add an explicit type to every evidence artifact at write time, distinguishing an original review, a current binding, a declared skip, an honest null, and a re-bind event. The failure this closes is that a historical input currently reads the same as a live binding, so a reader cannot tell whether an artifact still asserts anything. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
++- [x] Set the type at creation rather than inferring it later from filename or location; an inferred type reproduces the ambiguity it was meant to remove. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
++- [x] Explicitly do not loosen the binding itself. The review's own measurement found that segment-aware currency would save roughly a tenth of re-binds while introducing integrity risk — so the decision is to clarify what stored evidence means, not to weaken when it must be re-bound. <!-- verify: grep -q "binding" docs/contracts/evidence-artifact-types.md -->
++- [x] Record the type set as a contract document so consumers read one definition rather than inferring five. <!-- verify: test -f docs/contracts/evidence-artifact-types.md -->
+ 
+ **Exit criteria:** every newly written evidence artifact carries a type, and the check fails a typeless one.
+ 
+ **Rollback:** the type is an additive field; the check can be unregistered without migrating existing artifacts.
+ 
++**Landed 2026-08-17.** `docs/contracts/evidence-artifact-types.md` defines the
++five types plus the agreement rules; `src/scripts/lint_evidence_artifacts.ts`
++enforces them; `dispatch_r2_reviewer.ts` sets `current-binding` in the skeleton
++so the type is written at creation. Three things a later reader should not have
++to re-derive:
++
++- **The two halves have different scopes, deliberately.** Presence is demanded
++  only of the change set (pre-push, where a base ref always resolves); agreement
++  is checked over the whole corpus (`--all`, the CI-registered argv). `--all` is
++  what CI runs because the changed-files mode's ordinary pass is `scanned: 0` —
++  the exact shape `check_gate_coverage` rule 3 rejects, so registering it would
++  make a legitimate verified-empty look blind on every PR touching no evidence.
++- **No baseline file.** A `src/config/*-baseline.json` listing the 328
++  pre-existing untyped artifacts would be a suppression surface whose entire
++  content is "everything that already exists" — a ratchet measuring nothing, at
++  the cost of an inventory row and a bootstrap flag. `--all` publishes the
++  untyped remainder on every run instead, so the shrink is observable.
++- **`rebind-event` is not disjoint from `current-binding`.** This roadmap listed
++  all five as if they were. In this tree a re-bind happens **in place** on the
++  findings artifact, so a separate re-bind artifact does not exist; inventing one
++  would add a second file to keep in sync. The type is kept as a
++  specialisation, stated in the contract § 3 rather than left to inference.
++
++**Phase 1 and Phase 3 stay open, and not for want of trying.** Phase 1 needs
++measured per-host catalogue behaviour, which is an observation about other hosts
++this session cannot make. Phase 3's exit criterion requires a real council run
++against a deliberately broken seat, and the org spend limit was reached during
++this run — so the verification, not the code, is what blocks it. Both are
++recorded here rather than deferred: nothing about them is decided.
++
+ ## Phase 3 — Provider qualification
+ 
+ - [ ] Add a qualification pass that verifies, in order: the provider is installed, authentication is valid, the CLI or API semantics match what the caller assumes, the system-prompt path is valid, the model identifier is accepted, tools are isolated, and a minimal request succeeds. <!-- verify: ./scripts-run src/scripts/council_cli status -->
+@@ -86,7 +116,7 @@ Source: an external release review of this package, 2026-08-15, pinned at `e3bd9
+ ## Acceptance Criteria
+ 
+ - [ ] A host with measured truncation pressure projects a reduced set and a host without one does not, with both traceable to a recorded measurement.
+-- [ ] A typeless evidence artifact fails its check.
++- [x] A typeless evidence artifact fails its check.
+ - [ ] A deliberately broken council seat reports unavailable, and a run against it reports short rather than printing a quorum.
+ - [ ] No step in this roadmap duplicates a step in the estate-diet roadmap.
+ - [ ] The two folded findings are traceable to the roadmap that absorbed them.
+diff --git a/docs/contracts/evidence-artifact-types.md b/docs/contracts/evidence-artifact-types.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..913ae73fbdd6a86edb64d976cd6a50ac54c85802
+--- /dev/null
++++ b/docs/contracts/evidence-artifact-types.md
+@@ -0,0 +1,188 @@
++---
++stability: beta
++keep-beta-until: 2026-09-17
++---
++
++# Evidence artifact types (v1)
++
++**Purpose.** One definition of what a stored evidence artifact *is*, so a reader
++can tell whether it still asserts anything. Today it cannot: a review this repo
++received in July and a findings artifact binding a diff at this minute are both
++markdown under `agents/evidence/`, carry no declared kind, and read the same.
++
++**Scope.** The `evidence-type:` marker grammar, the five type values, the
++agreement rules that tie a declared type to the body it sits above, and what
++this contract deliberately does **not** change. The validator
++([`lint_evidence_artifacts.ts`](../../src/scripts/lint_evidence_artifacts.ts))
++implements exactly what this file defines; a divergence is a validator bug,
++never a contract reinterpretation.
++
++## 1 · The failure this closes
++
++An evidence artifact is read at two very different moments, and the reader's
++question is different each time:
++
++- *Does this still hold?* — asked of a **binding**, and answerable only against
++  the scope the binding names.
++- *What did somebody observe once?* — asked of an **input**, and answerable
++  without reference to the current tree at all.
++
++Nothing in the stored form distinguishes the two. The observable consequences,
++all of them recorded in this repo's own corpus: a superseded round read as
++current; a declared skip indistinguishable from a review that ran and found
++nothing; an artifact whose binding had been moved read at its pre-move verdict.
++Each is a reader mistaking an input for an assertion, or a stale assertion for a
++live one.
++
++## 2 · Marker grammar (exact)
++
++One HTML comment, on its own line, anywhere in the artifact — conventionally the
++line below the title:
++
++```markdown
++<!-- evidence-type: v1 | type: <type> | declared: YYYY-MM-DD -->
++```
++
++- `v1` is the grammar version. An unknown version is a violation, never a
++  silent skip — a marker the validator cannot read is worse than none, because
++  it looks satisfied.
++- `type` is exactly one value from § 3. An unknown value is a violation.
++- `declared` is the ISO date the type was **set**, which is the date the
++  artifact was created or the date its type legitimately changed (§ 4). It is
++  not a freshness stamp and never re-dated to look current.
++- Exactly one marker per artifact. Two markers is a violation: a reader has no
++  rule for which one wins, and neither does the validator.
++
++## 3 · The five types
++
++| Type | Asserts | Binds a scope |
++|---|---|---|
++| `original-review` | what its author observed at its own pin | no |
++| `current-binding` | a verdict about one named review scope | yes |
++| `honest-null` | that a review ran over one named scope and found nothing | yes |
++| `declared-skip` | that the review gate was declared skipped for one scope | yes |
++| `rebind-event` | a verdict, plus that this artifact's binding has moved | yes |
++
++**`original-review`** — a non-binding record. Either a review this repo
++*received* (an external review, an inbox artifact, a third-party audit) or an
++analysis this repo *produced* (a measurement report, a census, an
++investigation). Both are historical: they say what was true at their own pin and
++bind nothing, so no later change can make them stale — only irrelevant. This is
++the type most existing artifacts under `analysis/`, `reports/`, `audits/` and
++`investigations/` carry.
++
++**`current-binding`** — a findings artifact bound to a review scope via the
++`completion-review:` marker of
++[`plan-review-gates`](plan-review-gates.md) § 2.1. It asserts a verdict about
++that scope and **stops asserting the moment the scope moves**. That is the
++property § 5 refuses to weaken.
++
++**`honest-null`** — a review that ran and found nothing, carrying the § 2.3
++honest-null line in place of a findings table. Separated from `current-binding`
++because the two are read differently: a null is evidence that looking happened,
++and collapsing it into "no findings recorded" loses exactly that.
++
++**`declared-skip`** — the gate was declared skipped for this completion,
++carrying the § 2.4 skip declaration. Separated from `honest-null` because a skip
++means *nobody looked, and here is why that was legitimate*, which is not the
++same claim as *somebody looked and saw nothing*. Conflating them is the single
++most consequential ambiguity in the current corpus.
++
++**`rebind-event`** — an artifact whose binding was moved to a new scope after
++it was first committed, and which records the move. It is a *specialisation* of
++`current-binding`, not a disjoint class: the artifact still binds, and the type
++additionally tells a reader that an earlier reading of this same file may have
++been taken at a different scope.
++
++> **Recorded deviation.** The originating roadmap lists `rebind-event`
++> alongside the other four as if all five were disjoint. In this tree a re-bind
++> is performed **in place** on the findings artifact, so a disjoint re-bind
++> artifact does not exist and inventing one would create a second file to keep
++> in sync — a new drift source guarding a failure that has not occurred. The
++> type is therefore kept, with its relationship to `current-binding` stated
++> rather than left for a reader to infer.
++
++## 4 · Agreement rules — why the type is not decorative
++
++A declared type that nothing cross-checks is a field authors fill in and readers
++learn to distrust. Each type therefore has to agree with the body it sits above,
++and the validator reuses the parsers `check_completion_review.ts` already
++exports rather than re-deriving the grammars:
++
++| Type | Required in the body | Forbidden in the body |
++|---|---|---|
++| `original-review` | — | a `completion-review:` marker (an input does not bind) |
++| `current-binding` | a `completion-review:` marker, ≥ 1 findings row | an honest-null line, a skip declaration |
++| `honest-null` | a `completion-review:` marker, the § 2.3 honest-null line | any findings row, a skip declaration |
++| `declared-skip` | the § 2.4 skip declaration | any findings row, an honest-null line |
++| `rebind-event` | a `completion-review:` marker, a `re-bound at` trace | a skip declaration |
++
++**Set the type at creation, never infer it later.** An inferred type reproduces
++the ambiguity it was meant to remove: inference reads filename and location,
++which are exactly the signals that already fail to distinguish the five. The
++scaffolding writer sets `current-binding` when it creates a findings artifact,
++because that is what the artifact is from its first byte — whether its table
++ends up empty is a *result*, and a reviewer that returns zero findings changes
++the type to `honest-null` in the same edit that replaces the table.
++
++A type change is legitimate in exactly three transitions, each of which
++re-dates `declared`:
++
++- `current-binding` → `honest-null` — the review ran and found nothing.
++- `current-binding` → `rebind-event` — the binding moved.
++- `rebind-event` → `rebind-event` — it moved again.
++
++No transition ever leaves a binding type for `original-review`: an artifact that
++bound something does not become an input by being old. It becomes a *stale
++binding*, which is the state the reader has to be able to see.
++
++## 5 · What this does NOT change
++
++```
++TYPING CLARIFIES WHAT STORED EVIDENCE MEANS. IT NEVER WEAKENS WHEN A
++BINDING MUST BE RE-BOUND. A TYPE IS NOT A CURRENCY EXEMPTION.
++```
++
++The binding rule of [`plan-review-gates`](plan-review-gates.md) § 2.6 is
++untouched: a findings artifact is relevant only to the review scope its marker
++names, and a change to the reviewed content forces a re-bind. Nothing in this
++contract lets a `rebind-event` marker, a recent `declared` date, or any type
++value stand in for a scope hash that matches.
++
++This is a deliberate refusal, not an oversight. The originating release review
++measured that segment-aware currency — re-binding only the segments a diff
++actually touched — would save roughly a tenth of re-binds while introducing
++integrity risk, because a segment boundary is a judgement and a scope hash is
++not. A tenth of a cheap operation is not worth a judgement call in the one place
++the corpus needs to be mechanical. So the decision is to make stored evidence
++*legible*, and to leave *when it must be re-bound* exactly as strict as it was.
++
++## 6 · Enforcement scope — honest
++
++[`lint_evidence_artifacts.ts`](../../src/scripts/lint_evidence_artifacts.ts) is
++**changed-files scoped**: it requires a marker on every evidence artifact this
++change adds or modifies, and it does not require one on the ~330 artifacts that
++predate it. Two reasons, and the second is the load-bearing one.
++
++Retro-typing the existing corpus would mean classifying several hundred files
++from filename and location — the inference § 4 forbids, applied at scale, and
++the result would be a corpus of guesses that looks authoritative. And a
++baseline file listing the untyped set would add a suppression surface whose only
++content is "everything that already exists", which is a ratchet that measures
++nothing.
++
++The consequence, stated rather than hidden: an existing artifact stays untyped
++until something touches it, and a reader of an untyped artifact is exactly as
++badly served as before. The population shrinks as files are touched, and
++`--all` reports the remaining count on every run so the shrink is observable
++instead of assumed.
++
++## See also
++
++- [`plan-review-gates`](plan-review-gates.md) — the `completion-review:` marker,
++  honest-null (§ 2.3) and skip (§ 2.4) grammars this contract cross-checks, and
++  the § 2.6 binding rule § 5 refuses to weaken.
++- [`adversarial-review-protocol`](adversarial-review-protocol.md) — the review
++  dispatch that produces `current-binding` artifacts.
++- [`evidence-based-pruning`](evidence-based-pruning.md) — sibling contract on
++  what stored evidence licenses a deletion.
+diff --git a/src/config/gate-coverage.yml b/src/config/gate-coverage.yml
+index 1175af48c98c04dd578e6568bd2ca8bd798bd9a1..ed4f9d47c6c6d8390c49ae66e6f7e1d9ed9d9f4d 100644
+--- a/src/config/gate-coverage.yml
++++ b/src/config/gate-coverage.yml
+@@ -42,11 +42,11 @@
+ #
+ # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-16)
+ # ----------------------------------------------------------
+-# 260 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
++# 261 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+ # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
+-# **37 of them emit the machine-readable `scanned: <N>` line under their
+-# CI-identical argv, and all 37 are listed below.** The manifest is therefore
+-# complete with respect to its own contract, and covers ~14 % of the population.
++# **38 of them emit the machine-readable `scanned: <N>` line under their
++# CI-identical argv, and all 38 are listed below.** The manifest is therefore
++# complete with respect to its own contract, and covers ~15 % of the population.
+ # (The 2026-08-05 reading said "32 … and all 31 are listed" and the 2026-08-10
+ # reading said "33 … and all 33" while 34 entries were listed — those two are
+ # the MISCOUNTS this paragraph exists to warn about, and they are listed here
+@@ -501,6 +501,25 @@ gates:
+       findings sat recorded as `open` in this repo's own corpus for a day
+       through exactly that gap.
+ 
++  - id: lint_evidence_artifacts
++    argv: ["--all"]
++    min_scanned: 300
++    corpus: "every `*.md` under agents/evidence/ — 328 at baseline"
++    status: enforced
++    note: >
++      `docs/contracts/evidence-artifact-types.md`. The registered argv is
++      `--all`, and that is a deliberate choice rather than the obvious one: the
++      gate's DEFAULT mode is changed-files scoped, so its ordinary pass is
++      `scanned: 0` — the exact shape rule 3 rejects, and registering it would
++      make a legitimate verified-empty look blind on every PR that touches no
++      evidence. `--all` reads the whole corpus, so the floor is genuinely
++      trippable: 328 artifacts, and evidence artifacts are not deleted, so a drop
++      to 300 means the evidence root moved or the `.md` convention drifted. The
++      presence half — a newly written artifact must declare its type — runs in
++      the pre-push path, where a base ref always resolves. Note the two halves
++      have different scopes on purpose: presence is demanded only of the change
++      set, agreement of everything that declares a type.
++
+   # ---------------------------------------------------------------------------
+   # The five below close the gap this header named: they already called
+   # `_lib/scan_scope.assertScanned` with a real count and only had to PRINT it.
+diff --git a/src/scripts/dispatch_r2_reviewer.ts b/src/scripts/dispatch_r2_reviewer.ts
+index 3ed6e76c2cb8afe5bc1a14445bcfeda4d03cf84a..c72f599425048a3120bcd16a46abde6e373c076c 100644
+--- a/src/scripts/dispatch_r2_reviewer.ts
++++ b/src/scripts/dispatch_r2_reviewer.ts
+@@ -685,12 +685,19 @@ function findingsSkeleton(args: {
+     return [
+         `# Findings: ${args.slug}`,
+         `<!-- completion-review: v1 | reviewed: ${args.reviewedDate} | scope: ${args.scopeHash} | diff: ${args.headSha} | reviewer: r2-fresh-subagent-${args.slug} | prompt_hash: ${args.promptHash} -->`,
++        // Set at CREATION, never inferred later: an inferred type reads filename
++        // and location, which are exactly the signals that already fail to
++        // distinguish an input from a binding. This artifact binds a scope from
++        // its first byte, so `current-binding` is what it IS — an empty table is
++        // a RESULT, and a reviewer returning zero findings flips the type to
++        // `honest-null` in the same edit that replaces the table.
++        `<!-- evidence-type: v1 | type: current-binding | declared: ${args.reviewedDate} -->`,
+         '',
+         args.manifest,
+         '',
+         '| # | Severity | File:Line | Finding | Status | Reason/Ref |',
+         '|---|----------|-----------|---------|--------|------------|',
+-        '<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 -->',
++        '<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->',
+         '',
+     ].join('\n');
+ }
+diff --git a/src/scripts/lint_evidence_artifacts.ts b/src/scripts/lint_evidence_artifacts.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..85702544d8dd0fdf833143c768a0f3caf3987dd5
+--- /dev/null
++++ b/src/scripts/lint_evidence_artifacts.ts
+@@ -0,0 +1,571 @@
++#!/usr/bin/env tsx
++/**
++ * Evidence-artifact type check (`docs/contracts/evidence-artifact-types.md`).
++ *
++ * The failure this closes: a review this repo RECEIVED and a findings artifact
++ * binding a diff right now are both markdown under `agents/evidence/`, carry no
++ * declared kind, and read identically. A reader cannot tell whether a stored
++ * artifact still asserts anything — and this repo's own corpus has produced all
++ * three observable consequences: a superseded round read as current, a declared
++ * skip indistinguishable from a review that found nothing, and an artifact read
++ * at a verdict its binding had already moved away from.
++ *
++ * Two things are checked, and they have different scopes on purpose:
++ *
++ * 1. **Presence** — changed-files scoped. Every evidence artifact this change
++ *    ADDS or MODIFIES must carry the `evidence-type:` marker. The ~330 that
++ *    predate the gate are not required to: retro-typing them means classifying
++ *    from filename and location, which is the inference § 4 of the contract
++ *    forbids, applied at scale. `--all` reports the untyped remainder so the
++ *    shrink is observable rather than assumed.
++ *
++ * 2. **Agreement** — global. A declared type must agree with the body it sits
++ *    above, wherever the artifact lives and whenever it was written. A type
++ *    nothing cross-checks is a field authors fill in and readers distrust, so
++ *    the grammars are reused from `check_completion_review.ts` rather than
++ *    re-derived here.
++ *
++ * Deliberately NOT a baseline file. A `src/config/*-baseline.json` listing the
++ * untyped set would be a suppression surface whose entire content is
++ * "everything that already exists" — a ratchet that measures nothing, at the
++ * cost of an inventory row and a bootstrap flag. The change set is the honest
++ * boundary, and it is the one the contract's exit criterion names.
++ *
++ * An EMPTY change set is a normal pass here (most changes touch no evidence),
++ * which is exactly why an UNRESOLVABLE base must not look like one: a base diff
++ * that could not run exits 1 rather than reporting a clean zero.
++ *
++ * Exit codes (contract §6): 0 = pass, 1 = policy violation (including an
++ * unresolvable change set), 2 = internal error. `scanned:` is emitted on EVERY
++ * exit path, exit 2 included.
++ */
++
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import { GateLedger } from './_lib/gate_ledger.js';
++import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
++import { runCountedProbe } from './_lib/counted_probe.js';
++import { resolveContentLintScope } from './_lib/release_scope.js';
++import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
++import { parseArtifact } from './check_completion_review.js';
++
++const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
++const EVIDENCE_ROOT = 'agents/evidence';
++const CONTRACT = 'docs/contracts/evidence-artifact-types.md';
++
++/** The closed set of § 3 type values. */
++export const EVIDENCE_TYPES = [
++    'original-review',
++    'current-binding',
++    'honest-null',
++    'declared-skip',
++    'rebind-event',
++] as const;
++
++export type EvidenceType = (typeof EVIDENCE_TYPES)[number];
++
++export interface TypeMarker {
++    type: EvidenceType;
++    declared: string;
++    line: number;
++}
++
++export interface Violation {
++    kind: string;
++    file: string;
++    detail: string;
++}
++
++/**
++ * The type is captured as `[a-z0-9_-]+`, deliberately WIDER than the five legal
++ * values. A value the closed set does not contain must reach the "unknown type"
++ * message that names the set — narrowing the class here would send the most
++ * plausible typo (`current_binding`, underscore for hyphen) to the generic
++ * grammar complaint instead, which does not tell the author what to write.
++ */
++const MARKER_RE =
++    /^<!--\s*evidence-type:\s*v1\s*\|\s*type:\s*([a-z0-9_-]+)\s*\|\s*declared:\s*(\d{4}-\d{2}-\d{2})\s*-->$/;
++
++/** Any line that means to be the marker, so a malformed one fails loudly. */
++const MARKER_ATTEMPT_RE = /^<!--.*\bevidence-type\s*:/;
++
++/** § 3 `rebind-event` requires the move to be traceable in the body. */
++const REBIND_TRACE_RE = /re-bound\s+at/i;
++
++export interface ScanResult {
++    marker: TypeMarker | null;
++    /** Lines that look like the marker but do not match the exact grammar. */
++    malformed: string[];
++    /** More than one well-formed marker — no rule says which wins. */
++    duplicateLines: number[];
++}
++
++/**
++ * Find the `evidence-type:` marker.
++ *
++ * Fenced regions are NOT skipped, and that is deliberate: this grammar is
++ * quoted in the contract and in tests, so a fence-aware reader would have to
++ * decide whether a quoted example counts. The marker is an HTML comment on its
++ * own line at column 0; a documentation example is indented or inside a fence
++ * with surrounding prose, and the callers that matter (real artifacts) put it
++ * below the title. A quoted marker in an artifact is a real ambiguity for a
++ * human reader too, so failing on it is the correct direction.
++ */
++export function scanTypeMarker(text: string): ScanResult {
++    const out: ScanResult = { marker: null, malformed: [], duplicateLines: [] };
++    const lines = text.split(/\r?\n/);
++    for (let i = 0; i < lines.length; i++) {
++        const raw = (lines[i] as string).trim();
++        if (!MARKER_ATTEMPT_RE.test(raw)) {
++            continue;
++        }
++        const m = MARKER_RE.exec(raw);
++        if (m === null) {
++            out.malformed.push(
++                `line ${String(i + 1)}: does not match the exact §2 grammar ` +
++                    '(`<!-- evidence-type: v1 | type: <type> | declared: YYYY-MM-DD -->`)',
++            );
++            continue;
++        }
++        const value = m[1] as string;
++        if (!(EVIDENCE_TYPES as readonly string[]).includes(value)) {
++            out.malformed.push(
++                `line ${String(i + 1)}: unknown type \`${value}\` — expected one of ${EVIDENCE_TYPES.join(', ')}`,
++            );
++            continue;
++        }
++        if (out.marker !== null) {
++            out.duplicateLines.push(i + 1);
++            continue;
++        }
++        out.marker = { type: value as EvidenceType, declared: m[2] as string, line: i + 1 };
++    }
++    return out;
++}
++
++/**
++ * § 4 agreement: does the declared type match the body it sits above?
++ *
++ * Reuses the exported parsers of `check_completion_review.ts` so the
++ * `completion-review:` marker, the §2.3 honest-null line and the §2.4 skip
++ * declaration are recognised by exactly one implementation.
++ */
++export function checkAgreement(rel: string, text: string, marker: TypeMarker): Violation[] {
++    const out: Violation[] = [];
++    const art = parseArtifact(text);
++    const has = {
++        binding: art.marker !== null,
++        rows: art.rows.length > 0,
++        null: art.honestNull !== null,
++        skip: art.skip !== null,
++        rebind: REBIND_TRACE_RE.test(text),
++    };
++    const push = (detail: string): void => {
++        out.push({ kind: `agreement:${marker.type}`, file: rel, detail });
++    };
++
++    switch (marker.type) {
++        case 'original-review':
++            if (has.binding) {
++                push(
++                    'declared `original-review` but carries a `completion-review:` marker. An input does ' +
++                        'not bind a scope — either the type is wrong, or this artifact is a binding and ' +
++                        'must say so.',
++                );
++            }
++            break;
++        case 'current-binding':
++            if (!has.binding) {
++                push('declared `current-binding` but carries no `completion-review:` marker to bind a scope.');
++            }
++            if (!has.rows) {
++                push(
++                    'declared `current-binding` but carries no findings row. A review that found nothing ' +
++                        'is `honest-null`; the distinction is the evidence that looking happened.',
++                );
++            }
++            if (has.null) {
++                push('declared `current-binding` but carries an honest-null line — declare `honest-null`.');
++            }
++            if (has.skip) {
++                push('declared `current-binding` but carries a skip declaration — declare `declared-skip`.');
++            }
++            break;
++        case 'honest-null':
++            if (!has.binding) {
++                push('declared `honest-null` but carries no `completion-review:` marker — a null still binds a scope.');
++            }
++            if (!has.null) {
++                push('declared `honest-null` but carries no §2.3 honest-null line.');
++            }
++            if (has.rows) {
++                push('declared `honest-null` but carries findings rows — a null asserts there were none.');
++            }
++            if (has.skip) {
++                push('declared `honest-null` but carries a skip declaration. A skip means nobody looked; a ' +
++                    'null means somebody looked and saw nothing. Conflating them is the ambiguity this ' +
++                    'contract exists to remove.');
++            }
++            break;
++        case 'declared-skip':
++            if (!has.skip) {
++                push('declared `declared-skip` but carries no §2.4 skip declaration.');
++            }
++            if (has.rows) {
++                push('declared `declared-skip` but carries findings rows — a skip asserts nobody looked.');
++            }
++            if (has.null) {
++                push('declared `declared-skip` but carries an honest-null line — declare one or the other.');
++            }
++            break;
++        case 'rebind-event':
++            if (!has.binding) {
++                push('declared `rebind-event` but carries no `completion-review:` marker — a re-bind still binds.');
++            }
++            if (!has.rebind) {
++                push(
++                    'declared `rebind-event` but the move is not traceable in the body. §3 requires a ' +
++                        '`re-bound at` trace, so a reader can see WHERE the binding moved to.',
++                );
++            }
++            if (has.skip) {
++                push('declared `rebind-event` but carries a skip declaration.');
++            }
++            break;
++    }
++    return out;
++}
++
++/** Is this path an evidence artifact this gate governs? */
++export function isEvidenceArtifact(rel: string): boolean {
++    const norm = rel.replace(/\\/g, '/');
++    return norm.startsWith(`${EVIDENCE_ROOT}/`) && norm.endsWith('.md');
++}
++
++export interface ChangedScope {
++    files: string[];
++    reason: string;
++    /** False when the base-span diff itself could not run — never a clean zero. */
++    baseDiffOk: boolean;
++}
++
++/**
++ * Evidence artifacts added or modified against the resolved base.
++ *
++ * Union of the base span and the worktree, not a first-hit chain: a branch can
++ * carry a committed artifact AND an uncommitted edit to another, and taking only
++ * the first non-empty diff would silently drop one of them.
++ */
++export function gatherChangedArtifacts(repo: string, since?: string | null): ChangedScope {
++    const scope = resolveContentLintScope({ cwd: repo, since: since ?? null });
++    const commands: string[][] = [
++        ['git', 'diff', '--name-only', `${scope.base}...HEAD`],
++        ['git', 'diff', '--name-only', '--cached', 'HEAD'],
++        ['git', 'diff', '--name-only', 'HEAD'],
++        ['git', 'ls-files', '--others', '--exclude-standard'],
++    ];
++    const seen = new Set<string>();
++    let baseDiffOk = false;
++    for (let i = 0; i < commands.length; i++) {
++        const cmd = commands[i] as string[];
++        const result = runCountedProbe(cmd[0] as string, cmd.slice(1), { cwd: repo });
++        if (i === 0) {
++            baseDiffOk = result.ok;
++        }
++        if (!result.ok) {
++            continue;
++        }
++        for (const raw of result.stdout.split(/\r?\n/)) {
++            const rel = raw.trim().replace(/\\/g, '/');
++            if (rel === '' || !isEvidenceArtifact(rel)) {
++                continue;
++            }
++            // A deleted artifact has nothing to type.
++            if (!fs.existsSync(path.resolve(repo, rel))) {
++                continue;
++            }
++            seen.add(rel);
++        }
++    }
++    return { files: [...seen].sort(), reason: scope.reason, baseDiffOk };
++}
++
++/** Every evidence artifact in the tree, for `--all`. */
++export function gatherAllArtifacts(repo: string): string[] {
++    const out: string[] = [];
++    const walk = (dir: string): void => {
++        let entries: fs.Dirent[];
++        try {
++            entries = fs.readdirSync(dir, { withFileTypes: true });
++        } catch {
++            return;
++        }
++        for (const e of entries) {
++            const abs = path.join(dir, e.name);
++            if (e.isSymbolicLink()) continue;
++            if (e.isDirectory()) walk(abs);
++            else if (e.isFile() && e.name.endsWith('.md')) {
++                out.push(path.relative(repo, abs).replace(/\\/g, '/'));
++            }
++        }
++    };
++    walk(path.resolve(repo, EVIDENCE_ROOT));
++    return out.sort();
++}
++
++export interface Report {
++    violations: Violation[];
++    scanned: number;
++    typed: number;
++    untyped: number;
++}
++
++/**
++ * `requireMarker` separates the two scopes: presence is demanded only of the
++ * change set, agreement of everything that declares a type.
++ */
++export function checkFiles(repo: string, files: readonly string[], requireMarker: boolean): Report {
++    const violations: Violation[] = [];
++    let typed = 0;
++    let untyped = 0;
++    for (const rel of files) {
++        const text = fs.readFileSync(path.resolve(repo, rel), 'utf-8');
++        const scan = scanTypeMarker(text);
++        for (const m of scan.malformed) {
++            violations.push({ kind: 'malformed-marker', file: rel, detail: m });
++        }
++        for (const line of scan.duplicateLines) {
++            violations.push({
++                kind: 'duplicate-marker',
++                file: rel,
++                detail:
++                    `line ${String(line)}: a second well-formed marker. §2 allows exactly one — a reader ` +
++                    'has no rule for which wins, and neither does this gate.',
++            });
++        }
++        if (scan.marker === null) {
++            untyped += 1;
++            if (requireMarker && scan.malformed.length === 0) {
++                violations.push({
++                    kind: 'missing-marker',
++                    file: rel,
++                    detail:
++                        'no `evidence-type:` marker. This artifact is added or modified by this change, so ' +
++                        `it must declare what it is — see ${CONTRACT} §2. Set the type at creation; do not ` +
++                        'leave it for a later reader to infer from the filename.',
++                });
++            }
++            continue;
++        }
++        typed += 1;
++        violations.push(...checkAgreement(rel, text, scan.marker));
++    }
++    return { violations, scanned: files.length, typed, untyped };
++}
++
++/**
++ * `--self-test`: prove the CLI still discriminates, not just that the functions do.
++ *
++ * The fixtures are the three ambiguities the contract exists to remove — an
++ * input that binds, a skip conflated with a null, and a re-bind whose move is
++ * untraceable — plus a corpus that agrees with itself, so a suite that only ever
++ * rejects would be visible as one that discriminates nothing.
++ */
++function selfTest(): number {
++    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'evidence-type-selftest-'));
++    const marker = (t: string): string => `<!-- evidence-type: v1 | type: ${t} | declared: 2026-08-17 -->`;
++    const scope = 'a'.repeat(64);
++    const binding =
++        `<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: ${scope} | diff: abc1234 | reviewer: r2 -->`;
++
++    const build = (name: string, artifact: string): string => {
++        const dir = fs.mkdtempSync(path.join(root, 'corpus-'));
++        const reports = path.join(dir, EVIDENCE_ROOT, 'reports');
++        fs.mkdirSync(reports, { recursive: true });
++        fs.writeFileSync(path.join(reports, `${name}.md`), artifact, 'utf-8');
++        return dir;
++    };
++    const invoke = (corpus: string): number =>
++        runGateCli(REPO_ROOT, 'src/scripts/lint_evidence_artifacts.ts', ['--repo', corpus, '--all', '--quiet'], corpus);
++
++    const cases: SelfTestCase[] = [
++        {
++            name: 'an input that declares itself an input is accepted',
++            expect: 'accept',
++            run: () => invoke(build('ok', `# r\n${marker('original-review')}\n\nprose\n`)),
++        },
++        {
++            name: 'an input that binds a scope is rejected — that IS the ambiguity',
++            expect: 'reject',
++            run: () => invoke(build('binds', `# r\n${binding}\n${marker('original-review')}\n\nprose\n`)),
++        },
++        {
++            name: 'a null carrying a skip declaration is rejected — nobody-looked is not saw-nothing',
++            expect: 'reject',
++            run: () =>
++                invoke(
++                    build(
++                        'conflated',
++                        `# r\n${binding}\n${marker('honest-null')}\n\n` +
++                            `**Honest-null:** 0 findings, scope ${scope}, reviewed 2026-08-17\n` +
++                            '**Skipped:** no code surface for this completion — docs, scope none, declared 2026-08-17\n',
++                    ),
++                ),
++        },
++        {
++            name: 'a re-bind whose move is untraceable is rejected',
++            expect: 'reject',
++            run: () =>
++                invoke(
++                    build(
++                        'untraceable',
++                        `# r\n${binding}\n${marker('rebind-event')}\n\n` +
++                            '| # | Severity | File:Line | Finding | Status | Reason/Ref |\n' +
++                            '|---|---|---|---|---|---|\n' +
++                            '| 1 | low | src/x.ts:1 | nit | open |  |\n',
++                    ),
++                ),
++        },
++    ];
++
++    try {
++        return runSelfTest({ gate: 'lint_evidence_artifacts', cases, minCases: 4, minRejectCases: 3 });
++    } finally {
++        fs.rmSync(root, { recursive: true, force: true });
++    }
++}
++
++function usage(): void {
++    process.stdout.write(
++        'usage: lint_evidence_artifacts [--repo PATH] [--all] [--since REF] [--quiet]\n' +
++            '  default: changed-files scoped — every evidence artifact this change adds or\n' +
++            '           modifies must declare its type.\n' +
++            '  --all:   scan the whole evidence root; reports the untyped remainder and still\n' +
++            '           fails a typed artifact that disagrees with its body.\n',
++    );
++}
++
++export function main(argv?: readonly string[]): number {
++    const args = argv ?? process.argv.slice(2);
++    if (args.includes('--self-test')) {
++        return selfTest();
++    }
++    let repo = process.cwd();
++    let all = false;
++    let quiet = false;
++    let since: string | null = null;
++    for (let i = 0; i < args.length; i++) {
++        const a = args[i] as string;
++        if (a === '--repo') repo = args[++i] as string;
++        else if (a === '--all') all = true;
++        else if (a === '--since') since = args[++i] as string;
++        else if (a === '--quiet') quiet = true;
++        else if (a === '-h' || a === '--help') {
++            usage();
++            process.stdout.write('scanned: 0\n');
++            return 0;
++        } else {
++            process.stderr.write(`❌  lint_evidence_artifacts: unknown argument \`${a}\`\n`);
++            usage();
++            process.stdout.write('scanned: 0\n');
++            return 1;
++        }
++    }
++
++    const ledger = new GateLedger('lint_evidence_artifacts');
++    let report: Report;
++    let files: string[];
++    let scopeLine: string;
++
++    try {
++        if (all) {
++            files = gatherAllArtifacts(repo);
++            try {
++                assertScanned({
++                    gate: 'lint_evidence_artifacts',
++                    scanned: files.length,
++                    units: 'evidence artifact(s)',
++                    roots: [EVIDENCE_ROOT],
++                });
++            } catch (exc) {
++                // A dead scan scope is a POLICY violation, never an internal
++                // error: exit 2 is warn-and-allow at every call site, so a moved
++                // evidence root would degrade this gate to advisory.
++                process.stdout.write('scanned: 0\n');
++                process.stderr.write(`❌  ${exc instanceof DeadScopeError ? exc.message : String(exc)}\n`);
++                return 1;
++            }
++            scopeLine = `scope: whole evidence root (${EVIDENCE_ROOT})`;
++        } else {
++            const scope = gatherChangedArtifacts(repo, since);
++            if (!scope.baseDiffOk) {
++                // An unresolvable base is indistinguishable from "nothing
++                // changed" once it degrades to zero, and this gate's normal pass
++                // IS zero — so it must refuse instead of reporting green.
++                process.stdout.write('scanned: 0\n');
++                process.stderr.write(
++                    '❌  lint_evidence_artifacts: the base-span diff did not run, so an empty change set ' +
++                        'cannot be distinguished from an unresolvable one. ' +
++                        `Resolved ${scope.reason}. Pin a base with --since <ref>.\n`,
++                );
++                return 1;
++            }
++            files = scope.files;
++            scopeLine = `scope: changed files (${scope.reason})`;
++        }
++        ledger.plan(files);
++        report = checkFiles(repo, files, !all);
++        for (const rel of files) {
++            const bad = report.violations.filter((v) => v.file === rel);
++            if (bad.length > 0) ledger.fail(rel, `${String(bad.length)} type violation(s)`);
++            else ledger.complete(rel);
++        }
++    } catch (exc) {
++        process.stdout.write('scanned: 0\n');
++        process.stderr.write(
++            `❌  lint_evidence_artifacts: internal error: ${exc instanceof Error ? exc.message : String(exc)}\n`,
++        );
++        return 2;
++    }
++
++    if (report.violations.length > 0) {
++        process.stdout.write(`❌  ${String(report.violations.length)} evidence-type violation(s):\n\n`);
++        for (const v of report.violations) {
++            process.stdout.write(`  ${v.kind} — ${v.file}\n    │ ${v.detail}\n`);
++        }
++        process.stdout.write(`\n  contract: ${CONTRACT}\n`);
++    } else if (!quiet) {
++        if (report.scanned === 0) {
++            process.stdout.write('✅  No evidence artifact added or modified by this change (verified empty).\n');
++        } else {
++            process.stdout.write(
++                `✅  ${String(report.typed)} typed evidence artifact(s) agree with their bodies ` +
++                    `(${String(report.scanned)} scanned).\n`,
++            );
++        }
++    }
++    if (all) {
++        // Published on every --all run so the untyped remainder shrinks
++        // observably instead of being assumed to.
++        process.stdout.write(
++            `  untyped remainder: ${String(report.untyped)} of ${String(report.scanned)} ` +
++                'pre-existing artifact(s) carry no type marker (not required; see §6).\n',
++        );
++    }
++    process.stdout.write(`${scopeLine}\n`);
++    ledger.report();
++    process.stdout.write(`scanned: ${String(report.scanned)}\n`);
++    return report.violations.length > 0 ? 1 : 0;
++}
++
++const _HERE = fileURLToPath(import.meta.url);
++function _isCliEntry(): boolean {
++    if (process.argv[1] === undefined) return false;
++    return import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href || process.argv[1] === _HERE;
++}
++if (_isCliEntry()) {
++    process.exit(main());
++}
+diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
+index 1c79324418f3566f02a31dcb85e131584c28d97a..43c18a8a43afdfa80074327bf678d11934781b79 100644
+--- a/taskfiles/ci-fast.yml
++++ b/taskfiles/ci-fast.yml
+@@ -116,6 +116,14 @@ tasks:
+       # Exit 2 = degraded advisory (a broken gate never blocks its own fix).
+       - task: lint-plan-risk-register
+       - task: check-completion-review
++      # The PRESENCE half of the evidence-type contract, and it belongs here
++      # rather than in CI: an evidence artifact this change adds or modifies must
++      # declare what kind of evidence it is, which is a question about the change
++      # set. CI runs the same script with `--all` for the globally decidable half
++      # (a declared type must agree with its body). Splitting them is not
++      # duplication — the two halves have different scopes on purpose, and the
++      # changed-files mode has no trippable `scanned:` floor to register.
++      - ./scripts-run src/scripts/lint_evidence_artifacts --quiet
+ 
+   check-ci-local-parity:
+     silent: true
+@@ -945,6 +953,21 @@ tasks:
+       a contributor sees it before pushing.
+     cmd: ./scripts-run src/scripts/check_review_dispositions {{.QUIET_FLAG}}
+ 
++  lint-evidence-artifacts:
++    silent: true
++    desc: |
++      Every evidence artifact that declares a type must agree with the body it
++      sits above (docs/contracts/evidence-artifact-types.md § 4), and the
++      untyped remainder is published on every run so it shrinks observably.
++
++      `--all` is the CI-identical argv on purpose. The gate's DEFAULT mode is
++      changed-files scoped and its ordinary pass is `scanned: 0`, which is
++      exactly the shape check_gate_coverage exists to reject — so the mode with
++      a real, trippable floor is the one registered. The presence half (a
++      newly written artifact must declare its type) runs in the pre-push path,
++      where a base ref always resolves.
++    cmd: ./scripts-run src/scripts/lint_evidence_artifacts --all {{.QUIET_FLAG}}
++
+   lint-plan-risk-register:
+     silent: true
+     desc: |
+diff --git a/tests/scripts/lint_evidence_artifacts.test.ts b/tests/scripts/lint_evidence_artifacts.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..1cb0c5fe9a5838114fdc002551daf89f9089db60
+--- /dev/null
++++ b/tests/scripts/lint_evidence_artifacts.test.ts
+@@ -0,0 +1,259 @@
++/**
++ * Evidence-artifact type check (`docs/contracts/evidence-artifact-types.md`).
++ *
++ * Every case below is anchored to a failure this repo's own corpus produced: a
++ * superseded round read as current, a declared skip indistinguishable from a
++ * review that found nothing, and an artifact read at a verdict its binding had
++ * already moved away from. The agreement cases are the load-bearing half — a
++ * declared type that nothing cross-checks is a field authors fill in and readers
++ * learn to distrust, which would leave the ambiguity in place behind a marker
++ * that looks like it was closed.
++ */
++
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { describe, expect, it } from 'vitest';
++
++import {
++    EVIDENCE_TYPES,
++    checkAgreement,
++    checkFiles,
++    isEvidenceArtifact,
++    main,
++    scanTypeMarker,
++    type EvidenceType,
++} from '../../src/scripts/lint_evidence_artifacts.js';
++
++const SCOPE = 'a'.repeat(64);
++const DATE = '2026-08-17';
++
++function typeMarker(type: string, declared = DATE): string {
++    return `<!-- evidence-type: v1 | type: ${type} | declared: ${declared} -->`;
++}
++
++const BINDING = `<!-- completion-review: v1 | reviewed: ${DATE} | scope: ${SCOPE} | diff: abc1234 | reviewer: r2 -->`;
++const NULL_LINE = `**Honest-null:** 0 findings, scope ${SCOPE}, reviewed ${DATE}`;
++const SKIP_LINE = `**Skipped:** no code surface for this completion — docs only, scope none, declared ${DATE}`;
++const TABLE_HEAD = [
++    '| # | Severity | File:Line | Finding | Status | Reason/Ref |',
++    '|---|----------|-----------|---------|--------|------------|',
++];
++const ROW = '| 1 | low | src/x.ts:1 | a nit | open |  |';
++
++function body(type: string, ...rest: string[]): string {
++    return ['# Findings: fixture', BINDING, typeMarker(type), '', ...rest, ''].join('\n');
++}
++
++/** A temp repo with the evidence root populated. No tracked file is written. */
++function withEvidence(files: Record<string, string>, run: (repo: string) => void): void {
++    const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'evtype-'));
++    try {
++        for (const [rel, text] of Object.entries(files)) {
++            const abs = path.join(repo, rel);
++            fs.mkdirSync(path.dirname(abs), { recursive: true });
++            fs.writeFileSync(abs, text);
++        }
++        run(repo);
++    } finally {
++        fs.rmSync(repo, { recursive: true, force: true });
++    }
++}
++
++function agree(type: EvidenceType, text: string): string[] {
++    const scan = scanTypeMarker(text);
++    expect(scan.marker).not.toBeNull();
++    return checkAgreement('f.md', text, scan.marker as NonNullable<typeof scan.marker>).map((v) => v.detail);
++}
++
++describe('marker grammar (§2)', () => {
++    it('parses a well-formed marker', () => {
++        const scan = scanTypeMarker(`# t\n${typeMarker('current-binding')}\n`);
++        expect(scan.marker?.type).toBe('current-binding');
++        expect(scan.marker?.declared).toBe(DATE);
++        expect(scan.marker?.line).toBe(2);
++        expect(scan.malformed).toEqual([]);
++    });
++
++    it('rejects an unknown type value instead of ignoring it', () => {
++        const scan = scanTypeMarker(typeMarker('current_binding'));
++        expect(scan.marker).toBeNull();
++        expect(scan.malformed.join()).toMatch(/unknown type/);
++    });
++
++    it('rejects an unknown grammar version — a marker it cannot read is worse than none', () => {
++        const scan = scanTypeMarker('<!-- evidence-type: v2 | type: current-binding | declared: 2026-08-17 -->');
++        expect(scan.marker).toBeNull();
++        expect(scan.malformed.join()).toMatch(/exact §2 grammar/);
++    });
++
++    it('rejects a missing declared date', () => {
++        const scan = scanTypeMarker('<!-- evidence-type: v1 | type: current-binding -->');
++        expect(scan.marker).toBeNull();
++        expect(scan.malformed).toHaveLength(1);
++    });
++
++    it('reports a second well-formed marker rather than picking one', () => {
++        const scan = scanTypeMarker(`${typeMarker('current-binding')}\n${typeMarker('honest-null')}\n`);
++        expect(scan.marker?.type).toBe('current-binding');
++        expect(scan.duplicateLines).toEqual([2]);
++    });
++
++    it('ignores lines that are not marker attempts', () => {
++        expect(scanTypeMarker('# t\nsome prose about evidence types\n').malformed).toEqual([]);
++    });
++
++    it('accepts every value in the closed set', () => {
++        for (const t of EVIDENCE_TYPES) {
++            expect(scanTypeMarker(typeMarker(t)).marker?.type).toBe(t);
++        }
++    });
++});
++
++describe('agreement (§4) — the type must match the body', () => {
++    it('original-review: clean without a binding marker', () => {
++        expect(agree('original-review', `# input\n${typeMarker('original-review')}\n\nprose\n`)).toEqual([]);
++    });
++
++    it('original-review: an input that binds a scope is the ambiguity, not a valid input', () => {
++        expect(agree('original-review', body('original-review', 'prose')).join()).toMatch(/does ?\n?not bind|not bind/);
++    });
++
++    it('current-binding: clean with a marker and a row', () => {
++        expect(agree('current-binding', body('current-binding', ...TABLE_HEAD, ROW))).toEqual([]);
++    });
++
++    it('current-binding: an empty table is an honest-null, not a binding with no findings', () => {
++        expect(agree('current-binding', body('current-binding', ...TABLE_HEAD)).join()).toMatch(/honest-null/);
++    });
++
++    it('current-binding: without a completion-review marker there is no scope to bind', () => {
++        const text = ['# t', typeMarker('current-binding'), '', ...TABLE_HEAD, ROW, ''].join('\n');
++        expect(agree('current-binding', text).join()).toMatch(/no `completion-review:` marker/);
++    });
++
++    it('honest-null: clean with the §2.3 line', () => {
++        expect(agree('honest-null', body('honest-null', NULL_LINE))).toEqual([]);
++    });
++
++    it('honest-null: findings rows contradict the null', () => {
++        expect(agree('honest-null', body('honest-null', NULL_LINE, ...TABLE_HEAD, ROW)).join()).toMatch(
++            /carries findings rows/,
++        );
++    });
++
++    it('honest-null: a skip line is the conflation the contract exists to remove', () => {
++        expect(agree('honest-null', body('honest-null', NULL_LINE, SKIP_LINE)).join()).toMatch(/nobody looked/);
++    });
++
++    it('declared-skip: clean with the §2.4 line and no binding marker', () => {
++        const text = ['# t', typeMarker('declared-skip'), '', SKIP_LINE, ''].join('\n');
++        expect(agree('declared-skip', text)).toEqual([]);
++    });
++
++    it('declared-skip: missing the declaration is a skip nobody declared', () => {
++        const text = ['# t', typeMarker('declared-skip'), '', 'we skipped it', ''].join('\n');
++        expect(agree('declared-skip', text).join()).toMatch(/no §2.4 skip declaration/);
++    });
++
++    it('rebind-event: clean when the move is traceable', () => {
++        expect(
++            agree('rebind-event', body('rebind-event', '## Dispositions — re-bound at `abc1234`', ...TABLE_HEAD, ROW)),
++        ).toEqual([]);
++    });
++
++    it('rebind-event: an untraceable move tells the reader nothing', () => {
++        expect(agree('rebind-event', body('rebind-event', ...TABLE_HEAD, ROW)).join()).toMatch(/not traceable/);
++    });
++});
++
++describe('scope selection', () => {
++    it('governs markdown under the evidence root only', () => {
++        expect(isEvidenceArtifact('agents/evidence/reviews/x.findings.md')).toBe(true);
++        expect(isEvidenceArtifact('agents/evidence/x.md')).toBe(true);
++        expect(isEvidenceArtifact('agents/evidence/sweep.json')).toBe(false);
++        expect(isEvidenceArtifact('agents/roadmaps/x.md')).toBe(false);
++        expect(isEvidenceArtifact('docs/evidence/x.md')).toBe(false);
++    });
++
++    it('demands a marker only when presence is in scope', () => {
++        withEvidence({ 'agents/evidence/reports/r.md': '# r\n\nprose\n' }, (repo) => {
++            const rel = ['agents/evidence/reports/r.md'];
++            expect(checkFiles(repo, rel, false).violations).toEqual([]);
++            expect(checkFiles(repo, rel, true).violations.map((v) => v.kind)).toEqual(['missing-marker']);
++        });
++    });
++
++    it('checks agreement on a pre-existing artifact even though presence is not demanded', () => {
++        withEvidence({ 'agents/evidence/reports/r.md': body('original-review', 'prose') }, (repo) => {
++            const out = checkFiles(repo, ['agents/evidence/reports/r.md'], false);
++            expect(out.typed).toBe(1);
++            expect(out.violations.map((v) => v.kind)).toEqual(['agreement:original-review']);
++        });
++    });
++
++    it('does not stack a missing-marker violation on top of a malformed one', () => {
++        withEvidence({ 'agents/evidence/reports/r.md': `# r\n${typeMarker('nope')}\n` }, (repo) => {
++            const kinds = checkFiles(repo, ['agents/evidence/reports/r.md'], true).violations.map((v) => v.kind);
++            expect(kinds).toEqual(['malformed-marker']);
++        });
++    });
++
++    it('counts the untyped remainder so the shrink is observable', () => {
++        withEvidence(
++            {
++                'agents/evidence/a.md': '# a\n',
++                'agents/evidence/b.md': `# b\n${typeMarker('original-review')}\n`,
++            },
++            (repo) => {
++                const out = checkFiles(repo, ['agents/evidence/a.md', 'agents/evidence/b.md'], false);
++                expect(out).toMatchObject({ scanned: 2, typed: 1, untyped: 1 });
++            },
++        );
++    });
++});
++
++describe('CLI', () => {
++    it('--all over an absent evidence root is a POLICY failure, never a clean pass', () => {
++        withEvidence({ 'README.md': '# x\n' }, (repo) => {
++            expect(main(['--repo', repo, '--all', '--quiet'])).toBe(1);
++        });
++    });
++
++    it('--all passes on a typed corpus that agrees with itself', () => {
++        withEvidence({ 'agents/evidence/reports/r.md': `# r\n${typeMarker('original-review')}\n\nprose\n` }, (repo) => {
++            expect(main(['--repo', repo, '--all', '--quiet'])).toBe(0);
++        });
++    });
++
++    it('--all fails a typed corpus whose type disagrees with its body', () => {
++        withEvidence({ 'agents/evidence/reports/r.md': body('original-review', 'prose') }, (repo) => {
++            expect(main(['--repo', repo, '--all', '--quiet'])).toBe(1);
++        });
++    });
++
++    it('an unresolvable change set exits 1 — this gate’s normal pass IS zero', () => {
++        // A non-git temp dir cannot resolve `origin/main...HEAD`. Since an empty
++        // change set is this gate's ordinary green, an unresolvable one must not
++        // degrade into the same output.
++        withEvidence({ 'agents/evidence/reports/r.md': '# r\n' }, (repo) => {
++            expect(main(['--repo', repo, '--quiet'])).toBe(1);
++        });
++    });
++
++    it('rejects an unknown argument instead of silently scanning the default scope', () => {
++        expect(main(['--all', '--nope'])).toBe(1);
++    });
++
++    it('--help exits 0 and emits the scanned line', () => {
++        expect(main(['--help'])).toBe(0);
++    });
++});
++
++describe('the repo’s own corpus', () => {
++    it('every typed artifact on this branch agrees with its body', () => {
++        const repo = path.resolve(__dirname, '../..');
++        expect(main(['--repo', repo, '--all', '--quiet'])).toBe(0);
++    });
++});
