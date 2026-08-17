@@ -180,8 +180,14 @@ function loadJson<T>(p: string): T | null {
 
 interface Budget {
     budgets_ms: {
-        pre_tool_use: { p95_ci: number };
-        any_hook_event: { p95_ci: number };
+        /**
+         * `p95_ci` is the bundle-path cap, pre-registered 2026-07-27 against
+         * `node dist/hooks/dispatch.js`. `p95_ci_cli` caps the HEAVIER consumer
+         * path (bash wrapper + shim probe + CLI) and is a separate number for
+         * the reason the two are separate measurements — see the budget file.
+         */
+        pre_tool_use: { p95_ci: number; p95_ci_cli?: number };
+        any_hook_event: { p95_ci: number; p95_ci_cli?: number };
     };
     regression_gate: { max_regression_pct: number };
 }
@@ -275,11 +281,22 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const prior = loadJson<ResultsDoc>(RESULTS_PATH);
     const priorPath: InvocationPath = prior?.invocation_path ?? 'bundle';
     for (const r of results) {
-        const anyCap = budget.budgets_ms.any_hook_event.p95_ci;
-        const cap = r.event === 'pre_tool_use' ? budget.budgets_ms.pre_tool_use.p95_ci : anyCap;
+        // The cap is PATH-SPECIFIC, because the two paths measure different work.
+        //
+        // Enforcing the bundle cap against a `--via-cli` run is what this gate
+        // did between 2026-08-03 (when CI switched to the consumer path) and the
+        // day this was written: the bundle number was pre-registered on
+        // 2026-07-27 against `node dist/hooks/dispatch.js`, while `--via-cli`
+        // additionally pays a bash wrapper and a shim probe. The harness already
+        // knew the two are incomparable — it disables the regression net on a
+        // path mismatch, three lines below — but the ABSOLUTE cap was applied
+        // regardless, so the gate straddled the runner's own spread and failed
+        // on `main` as readily as on a branch.
+        const budgets = r.event === 'pre_tool_use' ? budget.budgets_ms.pre_tool_use : budget.budgets_ms.any_hook_event;
+        const cap = (via === 'cli' ? budgets.p95_ci_cli : undefined) ?? budgets.p95_ci;
         if (gate && r.p95_ms > cap) {
             process.stderr.write(
-                `❌  ${r.event}: p95 ${r.p95_ms} ms exceeds the pre-registered budget (${cap} ms)\n`,
+                `❌  ${r.event}: p95 ${r.p95_ms} ms exceeds the ${via}-path budget (${cap} ms)\n`,
             );
             failed = true;
         }

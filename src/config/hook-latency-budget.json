@@ -9,8 +9,18 @@
         "floor": "1 vCPU reference container (documented ceiling, not CI-enforced)"
     },
     "budgets_ms": {
-        "pre_tool_use": { "p95_ci": 150, "p95_1vcpu": 400 },
+        "_comment": "TWO PATHS, TWO CAPS. `p95_ci` is the bundle path (`node dist/hooks/dispatch.js`), pre-registered 2026-07-27 and UNCHANGED. `p95_ci_cli` caps the consumer path `--via-cli` measures — the same dispatch plus a bash wrapper and a project-shim probe — and is strictly more work, so the bundle number never described it. Between 2026-08-03, when the CI gate switched to `--via-cli` (commit 'measure the real hook invocation path and gate CI on it'), and the day this key was added, the gate enforced the bundle cap against consumer-path measurements. The harness already treated the two as incomparable — it disables the regression net on a path mismatch and prints `regression net skipped — recorded baseline is via bundle, this run is via cli` — but the absolute cap was applied anyway.",
+        "pre_tool_use": { "p95_ci": 150, "p95_ci_cli": 200, "p95_1vcpu": 400 },
         "any_hook_event": { "p95_ci": 250 }
+    },
+    "cli_path_budget_provenance": {
+        "_comment": "This number is NOT pre-registered, and saying so is the point: this file's premise is that its caps are an acceptance bar committed before the work, not a post-hoc fit, and a cap derived after the fact cannot claim that status. It is a MEASURED cap with its distribution recorded, and it should be replaced by a pre-registered one the next time the consumer path is deliberately optimized.",
+        "registered_at": "2026-08-18",
+        "basis": "5 CI runs of the `--via-cli` path on GitHub-hosted ubuntu-latest, pre_tool_use p95: 117, 147, 152, 155, 158 ms. Three are `main` (one of which FAILED the old 150 ms cap at 152 ms), two are a feature branch touching no hook path. The 150 ms cap cut through the middle of that distribution, so the verdict was closer to a coin flip than to a measurement.",
+        "headroom_rationale": "200 ms is ~27% above the observed maximum of 158 ms, and stays well below the 250 ms any_hook_event ceiling so a pre_tool_use-specific pathology is still caught. The original bundle cap used the same shape — 150 ms registered when identical code measured 77-103 ms.",
+        "known_limit": "n=5 is thin for a threshold. It is enough to establish that 150 ms was below the spread (the point at issue) and not enough to claim 200 ms is optimal. Widen the sample before treating this number as settled.",
+        "owner": "maintainer",
+        "review_by": "2026-11-18"
     },
     "regression_gate": {
         "max_regression_pct": 200,
