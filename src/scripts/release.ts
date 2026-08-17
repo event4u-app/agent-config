@@ -879,36 +879,14 @@ function watch_pr_checks(branch: string): void {
  *
  * git's wording for this is stable across versions: the hint is `fetch first`
  * / `Updates were rejected`, and the ref line carries `[rejected]` with
- * `non-fast-forward` or `fetch first`.
- *
- * It has a SECOND wording, measured 2026-08-17 on the 13.0.0 release. Two
- * resume runs overlapped: run A pushed the era-split + main-merge head, run B
- * had snapshotted the remote before that and pushed after, and the server
- * refused the ref transaction with the client's stale expectation quoted back:
- *
- *      ! [remote rejected]  release/13.0.0 -> release/13.0.0
- *        (cannot lock ref 'refs/heads/release/13.0.0': is at dbd2efb9e
- *         but expected 11ab66bba)
- *
- * Neither half matched. `[remote rejected]` does not contain the literal
- * `[rejected]`, and the reason phrase was in no list — so the classifier said
- * false and the caller asserted "the remote ref did not move" one line after
- * printing an error stating that it had. The operator was pointed at pre-push
- * gates, credentials and branch protection, none of which were involved, while
- * the repair was the fetch + merge + retry sitting directly below.
- *
- * Widening the marker to `[remote rejected]` also admits server-side hook
- * declines, which print the same marker — so the reason list stays the
- * discriminator, and `pre-receive hook declined` is pinned false in the tests.
+ * `non-fast-forward` or `fetch first`. A stale lease is a SECOND wording —
+ * `[remote rejected]` + `cannot lock ref … but expected`; pinned in the tests.
  */
 export function _is_non_fast_forward(stderr: string, stdout: string): boolean {
     const text = `${stderr}\n${stdout}`;
-    return (
-        /\[(?:remote )?rejected\]/i.test(text) &&
-        /(non-fast-forward|fetch first|behind its remote counterpart|cannot lock ref[^\n]*but expected)/i.test(
-            text,
-        )
-    );
+    if (!/\[(?:remote )?rejected\]/i.test(text)) return false;
+    if (/cannot lock ref[^\n]*but expected/i.test(text)) return true;
+    return /(non-fast-forward|fetch first|behind its remote counterpart)/i.test(text);
 }
 
 function push_release_branch(branch: string): void {
