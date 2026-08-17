@@ -143,6 +143,13 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
     - **Owner:** user             <!-- user | maintainer | external -->
     - **Blocks:** Phase N — {phase name}
     - **Question:** {optional — the one line saying what is being decided.}
+    <!-- Class is optional and absent means 3. Add Run: ONLY with Class 0 or 1,
+         where it is required — a class-3 entry advertising a command reads as
+         actionable and is not. Budget: is class 1 only.
+           - **Class:** 0
+           - **Run:** `{command}`
+           - **Budget:** {estimate}   (class 1 only)
+    -->
     - **Recommendation:** {which option, and the one sentence why.}
     - **If you do nothing:** {what the non-decision costs, concretely.}
     - **What to do:**
@@ -186,11 +193,39 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
       offers to walk them through it step by step in the same reply. The
       owner deciding does not mean the owner executing.
 
+    **`Class:` — is a human the point of this gate, or its courier?**
+    Most gates are not decisions; they are commands waiting for someone
+    to type them. The four classes name the difference, and only the
+    last one genuinely needs a person:
+
+    | Class | Meaning | What clears it |
+    |---|---|---|
+    | `0` | auto-run — deterministic, free, reversible | the agent runs `Run:`; the output IS the unblock |
+    | `1` | budget-preauthorized — billable but reversible | the agent runs `Run:` under a standing budget and logs a receipt |
+    | `2` | consent-once — a real preference call, reversible | one line with the recommendation and a default |
+    | `3` | human-only — irreversible, legal, or Hard Floor | unchanged: the human IS the content |
+
+    Three properties are load-bearing. **`Class:` is optional and its
+    absence means 3**, so nothing becomes executable because an author
+    forgot a field. **A class-0 or class-1 entry MUST carry `Run:`** —
+    `lint_roadmap_blockers` fails otherwise, because a gate that claims
+    to be runnable without naming the command reads as actionable and is
+    not. And **class is authored, never inferred**: promoting a gate is
+    a reviewed edit, which is what keeps a Hard-Floor gate
+    (`non-destructive-by-default`) out of reach of a runtime judgment.
+
+    Only the leading token of `Class:` is read, so
+    `- **Class:** 1 — budget-preauthorized` is valid; the taxonomy name
+    is there for the reader.
+
     `lint_roadmap_blockers` enforces the field set and probes `What to
     do` for executable substance. The 14-entry backlog is recorded as a
     ratchet baseline (`gate-violation-baselines.json`), so existing
     entries stay legal while any **new** one that skips a field or ships
-    a command-free `What to do` fails.
+    a command-free `What to do` fails. The `Class:` / `Run:` pair is a
+    HARD check rather than a ratcheted one — it is opt-in, so it fires
+    on nothing until an author declares a class and there is no backlog
+    to grandfather.
 
     **Legacy fallback.** A body-level `> Blocked until <condition>`
     note (the follow-up-roadmap convention from rule 17) is parsed by
