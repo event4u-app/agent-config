@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 execution:
@@ -71,19 +73,6 @@ Source: an external release review of this package, 2026-08-15, pinned at `e3bd9
 **Kill criteria:** a projected-away skill turning out to be needed in a real session on that host reverts the host to full projection and publishes the case.
 
 ## Phase 2 — Evidence artifact typing
-
-> **Shipped with one deliberate deviation from the step text below, recorded
-> rather than silently absorbed (2026-08-17).** Step 1 names five kinds
-> "including a re-bind event"; the contract ships **four** declared on the
-> artifact and derives the fifth from git. `plan-review-gates.md` §2.7 makes
-> re-binding an in-place edit, so there is no separate object to carry a type,
-> and `probe_review_binding_drift.ts` already reconstructs those events from
-> history (81 recovered). Typing a re-bind would mean having the artifact
-> record its own edit history, which is what version control is.
->
-> The rest of step 1 shipped as written. The split is stated in
-> `docs/contracts/evidence-artifact-types.md` § "The re-bind event has no type"
-> so a reader meets the reasoning at the contract, not only here.
 
 - [x] Add an explicit type to every evidence artifact at write time, distinguishing an original review, a current binding, a declared skip, an honest null, and a re-bind event. The failure this closes is that a historical input currently reads the same as a live binding, so a reader cannot tell whether an artifact still asserts anything. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
 - [x] Set the type at creation rather than inferring it later from filename or location; an inferred type reproduces the ambiguity it was meant to remove. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->

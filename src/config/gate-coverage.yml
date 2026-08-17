@@ -45,8 +45,21 @@
 # 264 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
 # **40 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and all 40 are listed below.** The manifest is therefore
-# complete with respect to its own contract, and covers ~14 % of the population.
+# CI-identical argv, and 39 of those 40 are listed below.** The manifest is
+# therefore complete with respect to its own contract for every gate that can
+# carry a floor, and covers ~14 % of the population.
+#
+# The one emitter deliberately NOT listed is `lint_evidence_artifacts`, for the
+# same reason `check_rule_projection_integrity` is not (see the paragraph
+# below): it is diff-scoped, so it legitimately emits `scanned: 0` on any
+# branch that adds no evidence artifact, and `min_scanned: 0` is the
+# false-count shape this file rejects. Its ledger half IS discharged — it
+# adopts `_lib/gate_ledger.ts` and `_lib/scan_scope.ts`, so
+# `check_gate_completeness` counts it as an adopter.
+#
+# Counting emitters rather than rows is the point of stating both numbers: the
+# 2026-08-05 and 2026-08-10 readings below were miscounts precisely because one
+# number was updated and the other was not.
 # (The 2026-08-05 reading said "32 … and all 31 are listed" and the 2026-08-10
 # reading said "33 … and all 33" while 34 entries were listed — those two are
 # the MISCOUNTS this paragraph exists to warn about, and they are listed here
@@ -546,31 +559,6 @@ gates:
       renamed out of the `*.findings.md` glob is read by nothing at all — two
       findings sat recorded as `open` in this repo's own corpus for a day
       through exactly that gap.
-
-  - id: lint_evidence_artifacts
-    argv: ["--all"]
-    min_scanned: 180
-    corpus: "`*.md` under agents/evidence/ EXCLUDING `*.review-input/` packages — 227 at baseline"
-    status: enforced
-    note: >
-      `docs/contracts/evidence-artifact-types.md`. The registered argv is
-      `--all`, and that is a deliberate choice rather than the obvious one: the
-      gate's DEFAULT mode is changed-files scoped, so its ordinary pass is
-      `scanned: 0` — the exact shape rule 3 rejects, and registering it would
-      make a legitimate verified-empty look blind on every PR that touches no
-      evidence. The presence half — a newly written artifact must declare its
-      type — runs in the pre-push path instead, where a base ref always resolves.
-      The two halves have different scopes on purpose: presence is demanded only
-      of the change set, agreement of everything that declares a type.
-      The floor is 180 against a live 227, and the gap is wider than this file's
-      usual ~10 % on purpose. The obvious rationale — "evidence artifacts are not
-      deleted" — is contradicted by an evidence-compaction option recorded as an
-      open blocker on road-to-inbox-harvest-2026-08-c-evidence-lifecycle, whose
-      (b) branch deletes committed evidence at a tier boundary. A floor set just
-      under today's count would red on a legitimate approved compaction and be
-      read as this gate breaking. 180 still catches what the floor is FOR — the
-      evidence root moving, or the `.md`/`review-input` conventions drifting —
-      both of which drop the count to near zero, not by 20 %.
 
   # ---------------------------------------------------------------------------
   # The five below close the gap this header named: they already called

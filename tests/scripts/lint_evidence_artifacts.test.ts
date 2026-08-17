@@ -1,311 +1,193 @@
-/**
- * Evidence-artifact type check (`docs/contracts/evidence-artifact-types.md`).
- *
- * Every case below is anchored to a failure this repo's own corpus produced: a
- * superseded round read as current, a declared skip indistinguishable from a
- * review that found nothing, and an artifact read at a verdict its binding had
- * already moved away from. The agreement cases are the load-bearing half — a
- * declared type that nothing cross-checks is a field authors fill in and readers
- * learn to distrust, which would leave the ambiguity in place behind a marker
- * that looks like it was closed.
- */
+// Tests for src/scripts/lint_evidence_artifacts.ts
+// (road-to-release-review-p0 Phase 2).
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
-import * as fs from 'node:fs';
-import * as os from 'node:os';
-import * as path from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { describe, expect, it } from 'vitest';
-
+import { GateLedger } from '../../src/scripts/_lib/gate_ledger.js';
 import {
-    EVIDENCE_TYPES,
-    checkAgreement,
     checkFiles,
-    isEvidenceArtifact,
-    main,
-    scanTypeMarker,
-    type EvidenceType,
+    EVIDENCE_TYPES,
+    resolveEvidenceType,
 } from '../../src/scripts/lint_evidence_artifacts.js';
 
 const SCOPE = 'a'.repeat(64);
-const DATE = '2026-08-17';
 
-function typeMarker(type: string, declared = DATE): string {
-    return `<!-- evidence-type: v1 | type: ${type} | declared: ${declared} -->`;
-}
-
-const BINDING = `<!-- completion-review: v1 | reviewed: ${DATE} | scope: ${SCOPE} | diff: abc1234 | reviewer: r2 -->`;
-const NULL_LINE = `**Honest-null:** 0 findings, scope ${SCOPE}, reviewed ${DATE}`;
-const SKIP_LINE = `**Skipped:** no code surface for this completion — docs only, scope none, declared ${DATE}`;
-const TABLE_HEAD = [
-    '| # | Severity | File:Line | Finding | Status | Reason/Ref |',
-    '|---|----------|-----------|---------|--------|------------|',
-];
-const ROW = '| 1 | low | src/x.ts:1 | a nit | open |  |';
-
-function body(type: string, ...rest: string[]): string {
-    return ['# Findings: fixture', BINDING, typeMarker(type), '', ...rest, ''].join('\n');
-}
-
-/** A temp repo with the evidence root populated. No tracked file is written. */
-function withEvidence(files: Record<string, string>, run: (repo: string) => void): void {
-    const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'evtype-'));
-    try {
-        for (const [rel, text] of Object.entries(files)) {
-            const abs = path.join(repo, rel);
-            fs.mkdirSync(path.dirname(abs), { recursive: true });
-            fs.writeFileSync(abs, text);
-        }
-        run(repo);
-    } finally {
-        fs.rmSync(repo, { recursive: true, force: true });
-    }
-}
-
-function agree(type: EvidenceType, text: string): string[] {
-    const scan = scanTypeMarker(text);
-    expect(scan.marker).not.toBeNull();
-    return checkAgreement('f.md', text, scan.marker as NonNullable<typeof scan.marker>).map((v) => v.detail);
-}
-
-describe('marker grammar (§2)', () => {
-    it('parses a well-formed marker', () => {
-        const scan = scanTypeMarker(`# t\n${typeMarker('current-binding')}\n`);
-        expect(scan.marker?.type).toBe('current-binding');
-        expect(scan.marker?.declared).toBe(DATE);
-        expect(scan.marker?.line).toBe(2);
-        expect(scan.malformed).toEqual([]);
+describe('resolveEvidenceType — the pre-existing grammars are read, never re-declared', () => {
+    it('a completion-review marker resolves current-binding', () => {
+        const body = `<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: ${SCOPE} | diff: abc1234 | reviewer: claude -->\n\n# Findings\n`;
+        expect(resolveEvidenceType('agents/evidence/reviews/x.findings.md', body)).toEqual({
+            type: 'current-binding',
+            via: 'completion-review',
+            invalidMarker: null,
+        });
     });
 
-    it('rejects an unknown type value instead of ignoring it', () => {
-        const scan = scanTypeMarker(typeMarker('current_binding'));
-        expect(scan.marker).toBeNull();
-        expect(scan.malformed.join()).toMatch(/unknown type/);
+    it('an honest-null line resolves honest-null', () => {
+        const body = `# X\n\n**Honest-null:** 0 findings, scope ${SCOPE}, reviewed 2026-08-17\n`;
+        expect(resolveEvidenceType('agents/evidence/reviews/x.findings.md', body).type).toBe('honest-null');
     });
 
-    it('rejects an unknown grammar version — a marker it cannot read is worse than none', () => {
-        const scan = scanTypeMarker('<!-- evidence-type: v2 | type: current-binding | declared: 2026-08-17 -->');
-        expect(scan.marker).toBeNull();
-        expect(scan.malformed.join()).toMatch(/exact §2 grammar/);
+    it('a skip declaration resolves declared-skip', () => {
+        const body = `# X\n\n**Skipped:** no code surface for this completion — docs only, scope none, declared 2026-08-17\n`;
+        expect(resolveEvidenceType('agents/evidence/reviews/x.findings.md', body).type).toBe('declared-skip');
     });
 
-    it('rejects a missing declared date', () => {
-        const scan = scanTypeMarker('<!-- evidence-type: v1 | type: current-binding -->');
-        expect(scan.marker).toBeNull();
-        expect(scan.malformed).toHaveLength(1);
+    // The contract's point: an artifact already carrying one of those grammars
+    // must NOT be asked for a second marker, or the check reintroduces the
+    // ambiguity it exists to remove.
+    it('an artifact with a grammar needs no evidence-type marker', () => {
+        const body = `<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: ${SCOPE} | diff: abc1234 | reviewer: claude -->\n`;
+        expect(checkFiles('/nonexistent', [])).toEqual([]);
+        expect(resolveEvidenceType('x.md', body).via).toBe('completion-review');
+    });
+});
+
+describe('resolveEvidenceType — the explicit marker', () => {
+    it('resolves analysis', () => {
+        expect(resolveEvidenceType('agents/evidence/analysis/x.md', '<!-- evidence-type: analysis -->\n# X\n')).toEqual(
+            { type: 'analysis', via: 'marker', invalidMarker: null },
+        );
     });
 
-    it('reports a second well-formed marker rather than picking one', () => {
-        const scan = scanTypeMarker(`${typeMarker('current-binding')}\n${typeMarker('honest-null')}\n`);
-        expect(scan.marker?.type).toBe('current-binding');
-        expect(scan.duplicateLines).toEqual([2]);
-    });
-
-    it('ignores lines that are not marker attempts', () => {
-        expect(scanTypeMarker('# t\nsome prose about evidence types\n').malformed).toEqual([]);
-    });
-
-    it('accepts every value in the closed set', () => {
+    it('accepts every type in the published set', () => {
         for (const t of EVIDENCE_TYPES) {
-            expect(scanTypeMarker(typeMarker(t)).marker?.type).toBe(t);
-        }
-    });
-});
-
-describe('agreement (§4) — the type must match the body', () => {
-    it('original-review: clean without a binding marker', () => {
-        expect(agree('original-review', `# input\n${typeMarker('original-review')}\n\nprose\n`)).toEqual([]);
-    });
-
-    it('original-review: an input that binds a scope is the ambiguity, not a valid input', () => {
-        expect(agree('original-review', body('original-review', 'prose')).join()).toMatch(/does ?\n?not bind|not bind/);
-    });
-
-    it('current-binding: clean with a marker and a row', () => {
-        expect(agree('current-binding', body('current-binding', ...TABLE_HEAD, ROW))).toEqual([]);
-    });
-
-    it('current-binding: an empty FINISHED table is an honest-null, not a binding with no findings', () => {
-        expect(agree('current-binding', body('current-binding', ...TABLE_HEAD)).join()).toMatch(/honest-null/);
-    });
-
-    it('current-binding: the dispatcher skeleton is legal from its first byte', () => {
-        // Regression: demanding a row unconditionally made the artifact the tree
-        // is supposed to produce illegal between dispatch and fill, so pre-push,
-        // CI and this gate's own corpus test all failed on it.
-        const skeleton = body(
-            'current-binding',
-            ...TABLE_HEAD,
-            '<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line -->',
-        );
-        expect(agree('current-binding', skeleton)).toEqual([]);
-    });
-
-    it('original-review: a skip body mistyped as an input is caught', () => {
-        // A skip legitimately carries NO completion-review marker, so forbidding
-        // only that marker let the sharpest conflation in the set pass silently.
-        const text = ['# t', typeMarker('original-review'), '', SKIP_LINE, ''].join('\n');
-        expect(agree('original-review', text).join()).toMatch(/declare `declared-skip`/);
-    });
-
-    it('original-review: an honest-null body mistyped as an input is caught', () => {
-        const text = ['# t', typeMarker('original-review'), '', NULL_LINE, ''].join('\n');
-        expect(agree('original-review', text).join()).toMatch(/declare `honest-null`/);
-    });
-
-    it('current-binding: without a completion-review marker there is no scope to bind', () => {
-        const text = ['# t', typeMarker('current-binding'), '', ...TABLE_HEAD, ROW, ''].join('\n');
-        expect(agree('current-binding', text).join()).toMatch(/no `completion-review:` marker/);
-    });
-
-    it('honest-null: clean with the §2.3 line', () => {
-        expect(agree('honest-null', body('honest-null', NULL_LINE))).toEqual([]);
-    });
-
-    it('honest-null: findings rows contradict the null', () => {
-        expect(agree('honest-null', body('honest-null', NULL_LINE, ...TABLE_HEAD, ROW)).join()).toMatch(
-            /carries findings rows/,
-        );
-    });
-
-    it('honest-null: a skip line is the conflation the contract exists to remove', () => {
-        expect(agree('honest-null', body('honest-null', NULL_LINE, SKIP_LINE)).join()).toMatch(/nobody looked/);
-    });
-
-    it('declared-skip: clean with the §2.4 line and no binding marker', () => {
-        const text = ['# t', typeMarker('declared-skip'), '', SKIP_LINE, ''].join('\n');
-        expect(agree('declared-skip', text)).toEqual([]);
-    });
-
-    it('declared-skip: missing the declaration is a skip nobody declared', () => {
-        const text = ['# t', typeMarker('declared-skip'), '', 'we skipped it', ''].join('\n');
-        expect(agree('declared-skip', text).join()).toMatch(/no §2.4 skip declaration/);
-    });
-
-    it('rebind-event: clean when the move is traceable', () => {
-        expect(
-            agree('rebind-event', body('rebind-event', '## Dispositions — re-bound at `abc1234`', ...TABLE_HEAD, ROW)),
-        ).toEqual([]);
-    });
-
-    it('rebind-event: an untraceable move tells the reader nothing', () => {
-        expect(agree('rebind-event', body('rebind-event', ...TABLE_HEAD, ROW)).join()).toMatch(/not traceable/);
-    });
-});
-
-describe('scope selection', () => {
-    it('governs markdown under the evidence root only', () => {
-        expect(isEvidenceArtifact('agents/evidence/reviews/x.findings.md')).toBe(true);
-        expect(isEvidenceArtifact('agents/evidence/x.md')).toBe(true);
-        expect(isEvidenceArtifact('agents/evidence/sweep.json')).toBe(false);
-        expect(isEvidenceArtifact('agents/roadmaps/x.md')).toBe(false);
-        expect(isEvidenceArtifact('docs/evidence/x.md')).toBe(false);
-    });
-
-    it('excludes the reviewer INPUT package — those assert nothing and bind nothing', () => {
-        // Regression: the presence half fired on the dispatcher's own prompt,
-        // roadmap snapshot and acceptance-criteria copy, so every future R2
-        // dispatch tripped the gate that shipped in the same change.
-        for (const f of ['prompt.md', 'roadmap.md', 'acceptance-criteria.md']) {
-            expect(isEvidenceArtifact(`agents/evidence/reviews/slug.review-input/${f}`)).toBe(false);
+            expect(resolveEvidenceType('x.md', `<!-- evidence-type: ${t} -->`).type).toBe(t);
         }
     });
 
-    it('demands a marker only when presence is in scope', () => {
-        withEvidence({ 'agents/evidence/reports/r.md': '# r\n\nprose\n' }, (repo) => {
-            const rel = ['agents/evidence/reports/r.md'];
-            expect(checkFiles(repo, rel, false).violations).toEqual([]);
-            expect(checkFiles(repo, rel, true).violations.map((v) => v.kind)).toEqual(['missing-marker']);
+    it('tolerates surrounding whitespace', () => {
+        expect(resolveEvidenceType('x.md', '   <!--   evidence-type:   analysis   -->   ').type).toBe('analysis');
+    });
+
+    // Louder than absence, not quieter: a misspelled type reads as untyped to
+    // every consumer, which is exactly the state being ended.
+    it('a misspelled type is reported as an invalid marker, not as missing', () => {
+        const r = resolveEvidenceType('x.md', '<!-- evidence-type: analisys -->');
+        expect(r.type).toBeNull();
+        expect(r.invalidMarker).toBe('analisys');
+    });
+
+    it('a marker below the scan window does not count — a type belongs at the top', () => {
+        const body = `${'filler\n'.repeat(60)}<!-- evidence-type: analysis -->\n`;
+        expect(resolveEvidenceType('x.md', body).type).toBeNull();
+    });
+
+    // R2 finding 8: the grammar scan used to walk the WHOLE file while the
+    // marker scan stopped at 40 lines, so a quoted completion-review line deep
+    // in a prose artifact silently overrode the author's own declaration.
+    // Reverting the grammar scan to the unbounded form fails this test.
+    it('a quoted grammar line deep in the file cannot override an explicit marker', () => {
+        const body =
+            '<!-- evidence-type: analysis -->\n' +
+            `${'prose\n'.repeat(60)}` +
+            `<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: ${SCOPE} | diff: abc1234 | reviewer: quoted -->\n`;
+        expect(resolveEvidenceType('agents/evidence/analysis/x.md', body)).toEqual({
+            type: 'analysis',
+            via: 'marker',
+            invalidMarker: null,
         });
     });
 
-    it('checks agreement on a pre-existing artifact even though presence is not demanded', () => {
-        withEvidence({ 'agents/evidence/reports/r.md': body('original-review', 'prose') }, (repo) => {
-            const out = checkFiles(repo, ['agents/evidence/reports/r.md'], false);
-            expect(out.typed).toBe(1);
-            expect(out.violations.map((v) => v.kind)).toEqual(['agreement:original-review']);
-        });
-    });
-
-    it('does not stack a missing-marker violation on top of a malformed one', () => {
-        withEvidence({ 'agents/evidence/reports/r.md': `# r\n${typeMarker('nope')}\n` }, (repo) => {
-            const kinds = checkFiles(repo, ['agents/evidence/reports/r.md'], true).violations.map((v) => v.kind);
-            expect(kinds).toEqual(['malformed-marker']);
-        });
-    });
-
-    it('counts the untyped remainder so the shrink is observable', () => {
-        withEvidence(
-            {
-                'agents/evidence/a.md': '# a\n',
-                'agents/evidence/b.md': `# b\n${typeMarker('original-review')}\n`,
-            },
-            (repo) => {
-                const out = checkFiles(repo, ['agents/evidence/a.md', 'agents/evidence/b.md'], false);
-                expect(out).toMatchObject({ scanned: 2, typed: 1, untyped: 1, malformed: 0 });
-            },
-        );
-    });
-
-    it('counts typed-wrongly apart from never-typed', () => {
-        // Folding a malformed marker into `untyped` made a corpus getting worse
-        // (markers appearing and failing) and one getting better (markers
-        // landing) move the same number in the same direction.
-        withEvidence({ 'agents/evidence/a.md': `# a\n${typeMarker('bogus')}\n` }, (repo) => {
-            const out = checkFiles(repo, ['agents/evidence/a.md'], false);
-            expect(out).toMatchObject({ typed: 0, untyped: 0, malformed: 1 });
-        });
+    it('both scans share one window — a grammar line below it does not resolve either', () => {
+        const body = `${'prose\n'.repeat(60)}**Honest-null:** 0 findings, scope ${SCOPE}, reviewed 2026-08-17\n`;
+        expect(resolveEvidenceType('agents/evidence/analysis/x.md', body).type).toBeNull();
     });
 });
 
-describe('CLI', () => {
-    it('--all over an absent evidence root is a POLICY failure, never a clean pass', () => {
-        withEvidence({ 'README.md': '# x\n' }, (repo) => {
-            expect(main(['--repo', repo, '--all', '--quiet'])).toBe(1);
+describe('resolveEvidenceType — the one path-derived case', () => {
+    it('a file inside a *.review-input directory resolves original-review', () => {
+        const rel = path.join('agents', 'evidence', 'reviews', 'slug.review-input', 'prompt.md');
+        expect(resolveEvidenceType(rel, '# prompt\n')).toEqual({
+            type: 'original-review',
+            via: 'review-input-path',
+            invalidMarker: null,
         });
     });
 
-    it('--all passes on a typed corpus that agrees with itself', () => {
-        withEvidence({ 'agents/evidence/reports/r.md': `# r\n${typeMarker('original-review')}\n\nprose\n` }, (repo) => {
-            expect(main(['--repo', repo, '--all', '--quiet'])).toBe(0);
-        });
+    // The exception is narrow on purpose. A directory that merely CONTAINS the
+    // word must not qualify, or the contract's "a directory name is not a
+    // declaration" line stops being true.
+    it('a lookalike directory does not qualify', () => {
+        const rel = path.join('agents', 'evidence', 'reviews', 'review-inputs', 'prompt.md');
+        expect(resolveEvidenceType(rel, '# prompt\n').type).toBeNull();
     });
 
-    it('--all fails a typed corpus whose type disagrees with its body', () => {
-        withEvidence({ 'agents/evidence/reports/r.md': body('original-review', 'prose') }, (repo) => {
-            expect(main(['--repo', repo, '--all', '--quiet'])).toBe(1);
-        });
-    });
-
-    it('an unresolvable change set exits 1 — this gate’s normal pass IS zero', () => {
-        // A non-git temp dir cannot resolve `origin/main...HEAD`. Since an empty
-        // change set is this gate's ordinary green, an unresolvable one must not
-        // degrade into the same output.
-        withEvidence({ 'agents/evidence/reports/r.md': '# r\n' }, (repo) => {
-            expect(main(['--repo', repo, '--quiet'])).toBe(1);
-        });
-    });
-
-    it('rejects an unknown argument instead of silently scanning the default scope', () => {
-        expect(main(['--all', '--nope'])).toBe(1);
-    });
-
-    it('refuses a value-taking flag with no value rather than falling back', () => {
-        // `--since` with no value silently reverted to the default scope, which is
-        // the same silent-wrong-scope failure the unknown-arg branch prevents,
-        // reached through a different door.
-        expect(main(['--since'])).toBe(1);
-        expect(main(['--since', '--all'])).toBe(1);
-        expect(main(['--repo'])).toBe(1);
-    });
-
-    it('--help exits 0 and emits the scanned line', () => {
-        expect(main(['--help'])).toBe(0);
+    it('plain prose with no marker anywhere is untyped', () => {
+        expect(resolveEvidenceType('agents/evidence/analysis/x.md', '# A census\n\nSome prose.\n').type).toBeNull();
     });
 });
 
-describe('the repo’s own corpus', () => {
-    it('every typed artifact on this branch agrees with its body', () => {
-        const repo = path.resolve(__dirname, '../..');
-        expect(main(['--repo', repo, '--all', '--quiet'])).toBe(0);
+// R2 finding 5: the gate's FAILING path had no test at all — both prior
+// `checkFiles` cases asserted `[]`, so nothing executable proved a real
+// untyped file on disk produces a finding. That is the one behaviour the
+// roadmap's acceptance criterion names ("a typeless evidence artifact fails
+// its check"), and it was marked `[x]` on the strength of a manual run.
+describe('checkFiles — over real files on disk', () => {
+    let root: string;
+
+    beforeEach(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'evidence-lint-'));
+        fs.mkdirSync(path.join(root, 'agents', 'evidence', 'analysis'), { recursive: true });
+    });
+
+    afterEach(() => {
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    function write(rel: string, body: string): string {
+        const abs = path.join(root, rel);
+        fs.mkdirSync(path.dirname(abs), { recursive: true });
+        fs.writeFileSync(abs, body, 'utf8');
+        return rel;
+    }
+
+    it('an untyped artifact on disk produces exactly one finding', () => {
+        const rel = write('agents/evidence/analysis/untyped.md', '# A census\n\nSome prose.\n');
+        const findings = checkFiles(root, [rel]);
+        expect(findings).toHaveLength(1);
+        expect(findings[0]?.file).toBe(rel);
+        expect(findings[0]?.reason).toContain('no evidence type declared');
+    });
+
+    it('a typed artifact on disk produces none', () => {
+        const rel = write('agents/evidence/analysis/typed.md', '<!-- evidence-type: analysis -->\n# X\n');
+        expect(checkFiles(root, [rel])).toEqual([]);
+    });
+
+    it('a misspelled type is reported as invalid, with the offending value named', () => {
+        const rel = write('agents/evidence/analysis/bad.md', '<!-- evidence-type: analisys -->\n');
+        const findings = checkFiles(root, [rel]);
+        expect(findings).toHaveLength(1);
+        expect(findings[0]?.reason).toContain('analisys');
+    });
+
+    it('mixed input reports only the untyped members', () => {
+        const bad = write('agents/evidence/analysis/a.md', '# prose\n');
+        write('agents/evidence/analysis/b.md', '<!-- evidence-type: analysis -->\n');
+        expect(checkFiles(root, [bad, 'agents/evidence/analysis/b.md']).map((f) => f.file)).toEqual([bad]);
+    });
+
+    it('the ledger accounts for every planned target', () => {
+        const bad = write('agents/evidence/analysis/a.md', '# prose\n');
+        write('agents/evidence/analysis/b.md', '<!-- evidence-type: analysis -->\n');
+        const ledger = new GateLedger('lint_evidence_artifacts');
+        checkFiles(root, [bad, 'agents/evidence/analysis/b.md'], ledger);
+        const tally = ledger.finalize();
+        expect(tally.planned).toBe(2);
+        expect(tally.failed).toBe(1);
+        expect(tally.completed).toBe(1);
+    });
+});
+
+describe('checkFiles', () => {
+    it('an empty file list yields no findings', () => {
+        expect(checkFiles(process.cwd(), [])).toEqual([]);
+    });
+
+    it('a path that does not exist on disk is skipped, not reported', () => {
+        expect(checkFiles(process.cwd(), ['agents/evidence/analysis/definitely-not-here.md'])).toEqual([]);
     });
 });

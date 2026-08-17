@@ -176,6 +176,14 @@ jobs:
         # which runs it before anything regenerates.
         run: ./scripts-run src/scripts/check_rule_projection_integrity
 
+      - name: Evidence artifacts — a newly added one declares its type
+        # road-to-release-review-p0 Phase 2. Diff-scoped: it checks only files
+        # ADDED under agents/evidence/ relative to the resolved base ref, so a
+        # branch that adds none scans nothing and says so rather than exiting
+        # silently green. The pre-existing untyped corpus is a deliberate scope
+        # exclusion — see docs/contracts/evidence-artifact-types.md.
+        run: ./scripts-run src/scripts/lint_evidence_artifacts
+
       - name: Bridge derivation — generated trees are a fixpoint of src/
         # skill-quality-gates Phase 4: symlink targets stay inside the
         # derivation sources; a second regeneration changes nothing.

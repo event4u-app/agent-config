@@ -64,7 +64,6 @@ import { format_install_hints } from './ai_council/cli_hints.js';
 import {
     type AdvisorConfig,
     type CouncilConfig,
-    type QuorumSetting,
     COUNCIL_CONFIG_ENV,
     COUNCIL_CONFIG_USER_GLOBAL_REL,
     CouncilConfigError,
@@ -75,16 +74,27 @@ import {
 import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
 import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
 import { resolveMemberTransport } from './ai_council/transport_resolver.js';
-import { absentReasonFromCliFailure, classifyCliFailure, type AbsentReason } from './ai_council/transport_resolver.js';
-import { evaluateQuorum, SOLO_FLOOR_MIN_PRESENT, type QuorumResult } from './ai_council/quorum.js';
+import { classifyCliFailure, type AbsentReason } from './ai_council/transport_resolver.js';
+import { evaluateQuorum, type QuorumResult } from './ai_council/quorum.js';
 import {
-    appendEvent,
-    appendQuorumEvent,
-    type QuorumAbsence,
-    type QuorumCommand,
-    type QuorumDispatch,
-    type QuorumEventPhase,
-} from './ai_council/events_log.js';
+    _emitQuorumEvent,
+    _format_quorum_line,
+    _postRunQuorum,
+    _quorum_min_present_from,
+    _quorum_setting_from,
+} from './ai_council/quorum_wiring.js';
+import { formatQualificationLine, type MemberQualification } from './ai_council/qualification.js';
+import {
+    absenceReasonFor,
+    attendanceGate,
+    countableSeats,
+    qualificationJson,
+    qualificationStatusLines,
+    qualifySeat,
+    recordRoundObservations,
+} from './ai_council/qualification_wiring.js';
+import { PROBE_STORE_RELPATH, readProbeStore, type ProbeStore } from './ai_council/probe_store.js';
+import { appendEvent, type QuorumCommand, type QuorumDispatch } from './ai_council/events_log.js';
 import {
     type ClassificationResult,
     type SizeFitVerdict,
@@ -609,6 +619,18 @@ interface BuildMembersOptions {
      * state that differs per machine and per CI run.
      */
     environment_report?: EnvironmentReport | null;
+    /**
+     * Recorded provider observations. Supplied ⇒ presence is gated on the
+     * qualification ladder; omitted ⇒ not evaluated at all, and presence keeps
+     * its constructibility-only meaning. Why omission is the safe default:
+     * `qualification_wiring.ts` § The injection contract.
+     */
+    probe_store?: ProbeStore | null;
+    /**
+     * Out-param: the verdict per enabled member, in roster order. Empty from a
+     * caller that passed no store means "not evaluated" — NOT "all qualified".
+     */
+    qualification_out?: MemberQualification[] | null;
 }
 
 /**
@@ -632,172 +654,6 @@ function _member_api_key_present(cfg: Dict): boolean | undefined {
     }
 }
 
-/**
- * `ai['quorum']` as forwarded by `_synthesize_ai_council_block` (already
- * validated by `config.ts::_build_quorum` on that path) — or, for a caller
- * that hands `build_members` a hand-built dict bypassing the loader
- * entirely, a defensive re-check that fails soft to `'majority'` rather
- * than throwing. `build_members` is not the config-validation layer;
- * `evaluateQuorum` degrades an unrecognisable setting toward
- * `inconclusive`, never toward a false `concluded`, so failing soft here
- * costs nothing on the safety side.
- */
-function _quorum_setting_from(ai: Dict): QuorumSetting {
-    const raw = ai['quorum'];
-    if (raw === 'majority') {
-        return 'majority';
-    }
-    if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 1) {
-        return raw;
-    }
-    return 'majority';
-}
-
-/**
- * `ai['quorum_min_present']` with the same fail-soft posture as
- * `_quorum_setting_from`: the loader has already validated it on the normal
- * path, and a hand-built dict that bypasses the loader falls back to the
- * ADR-224 default rather than throwing.
- *
- * Failing soft costs nothing on the safety side here, and less than it does
- * for `quorum`: this value feeds a counterfactual boolean that no gate reads,
- * so the worst outcome of a wrong fallback is one mis-recorded telemetry line,
- * never a pass that concluded when it should not have.
- */
-function _quorum_min_present_from(ai: Dict): number {
-    const raw = ai['quorum_min_present'];
-    if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 1) {
-        return raw;
-    }
-    return SOLO_FLOOR_MIN_PRESENT;
-}
-
-/**
- * Emit one `quorum_result` line for a resolved quorum.
- *
- * Both `evaluateQuorum` call sites route through here, tagged by `phase`, so
- * a solo-concluded pass is distinguishable from a full-attendance one in the
- * event log — the gap `road-to-always-on-orchestration`'s Risk 6 asserted was
- * already closed and was not.
- *
- * The emit sits at the call sites rather than inside `_postRunQuorum` on
- * purpose: that function is exported and unit-tested as a pure derivation,
- * and a write buried in it would make every test of it a log writer.
- *
- * `absent` entries arrive as the CLI's own `{member, reason, detail}` dicts;
- * `detail` is dropped by `appendQuorumEvent`'s input type, which cannot carry
- * free-form text at all.
- */
-function _emitQuorumEvent(
-    phase: QuorumEventPhase,
-    quorum: QuorumResult,
-    absent: readonly Dict[],
-    ctx: {
-        command: QuorumCommand;
-        dispatch?: QuorumDispatch;
-        /** Enabled members before `--single` filtering; defaults to the roster that ran. */
-        configuredTotal?: number;
-        lens?: string;
-        invocation?: string;
-        /**
-         * The ADR-224 shadow floor for this pass. `gateClass` is deliberately
-         * NOT in this context object: no CLI path declares itself gate-class,
-         * so a parameter here would be one no caller ever sets, and its
-         * absence is what the `false` on every line honestly records.
-         */
-        minPresent?: number;
-    },
-): void {
-    appendQuorumEvent({
-        lens: ctx.lens ?? '',
-        invocation: ctx.invocation ?? '',
-        phase,
-        command: ctx.command,
-        dispatch: ctx.dispatch ?? 'full',
-        configuredTotal: ctx.configuredTotal ?? quorum.total,
-        result: quorum,
-        ...(ctx.minPresent !== undefined ? { minPresent: ctx.minPresent } : {}),
-        absent: absent.map(
-            (a): QuorumAbsence => ({
-                member: String(a['member'] ?? ''),
-                reason: (a['reason'] as QuorumAbsence['reason']) ?? 'unavailable',
-            }),
-        ),
-    });
-}
-
-/**
- * Re-derive quorum AFTER the provider calls, over what was actually USABLE —
- * never what merely CONSTRUCTED (M3, independent-review finding). `members`
- * and `responses` must be index-aligned (`consult()`'s own contract: one
- * `CouncilResponse` per member, from the final round); `members.length` is
- * the `n` — deliberately the roster that actually ran (post `--single` /
- * `--siblings` filtering), never the full config roster a filtered run
- * never attempted. A response carrying `.error` (or a missing response
- * entry altogether) counts as absent, classified through the same
- * `AbsentReason` vocabulary a static (pre-call) resolution failure uses, so
- * one artefact buckets every absence — construction-time and mid-flight —
- * under one taxonomy.
- */
-function _postRunQuorum(
-    members: ExternalAIClient[],
-    responses: CouncilResponse[],
-    ai_cfg: Dict,
-): { quorum: QuorumResult; absent: Dict[] } {
-    const absent: Dict[] = [];
-    let present = 0;
-    for (let i = 0; i < members.length; i++) {
-        const m = members[i] as ExternalAIClient;
-        const r = responses[i];
-        // Round 7 § 5.2 — attendance is a NON-EMPTY answer, not the absence of an
-        // error. `!r.error` alone counted a member that returned zero bytes, and
-        // that is not hypothetical: a 290 s curl timeout returned an empty body
-        // with no error set in two sessions (`9fc9ba3e`, `4ac2f7ac`) and the
-        // banner printed `2/2 present` — a single-voice verdict presented as
-        // convergence, on a paid run. An empty answer contributes nothing to a
-        // quorum by definition, whatever the transport thought of it.
-        if (r !== undefined && !r.error && r.text.trim() !== '') {
-            present += 1;
-            continue;
-        }
-        const raw = r?.error ?? (r !== undefined && r.text.trim() === '' ? 'empty response body' : 'no response');
-        const failure = classifyCliFailure(raw);
-        absent.push({
-            member: m.name,
-            reason: absentReasonFromCliFailure(failure) ?? 'unavailable',
-            detail: raw,
-        });
-    }
-    return { quorum: evaluateQuorum(members.length, present, _quorum_setting_from(ai_cfg)), absent };
-}
-
-/**
- * One-line k-of-n banner, mirrored from `orchestrator.ts::_render_quorum_line`
- * but for the CLI's own stdout stream rather than the rendered report —
- * "attendance is telemetry, never a silent drop" applies to the estimate
- * preview too, not only to a completed pass.
- */
-function _format_quorum_line(q: QuorumResult, phase?: QuorumEventPhase): string {
-    // The phase tag is not decoration. A degraded run prints attendance TWICE —
-    // the pre-run reading before the estimate table, the post-run reading after
-    // the consult — and the two disagree by construction: `2/2 present …
-    // concluded` then `0/2 present … INCONCLUSIVE`. Same prefix, opposite
-    // content, and until 2026-08-12 neither line said which was which, so an
-    // operator skimming (or anything grepping `council:quorum ·`) could take the
-    // stale one. The event log had solved this from the start with an explicit
-    // `phase` field; stdout had not. Optional, because the estimate path prints
-    // exactly one line and a tag there would claim a distinction it does not make.
-    const tag = phase === undefined ? '' : `${phase === 'pre_run' ? 'before the run' : 'after the run'} · `;
-    const verdict = q.status === 'concluded' ? 'concluded' : 'INCONCLUSIVE — release gate holds';
-    // Round 7 § 5.3 — a degraded pass says so. `1/2 present, needed 1 —
-    // concluded` is literally true and reads as agreement; with a threshold of 1
-    // a solo answer concludes, and nothing in the line distinguishes "both
-    // members agreed" from "one member answered". The counts were always there;
-    // what was missing is the word that stops a reader inferring convergence.
-    const degraded =
-        q.present < q.total ? `  ⚠️  DEGRADED — ${String(q.total - q.present)} member(s) did not answer; this is not convergence.` : '';
-    return `council:quorum · ${tag}${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.${degraded}`;
-}
 
 function build_members(settings: Dict, opts: BuildMembersOptions = {}): ExternalAIClient[] {
     const invocation_mode = opts.invocation_mode ?? null;
@@ -805,6 +661,9 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
     const siblings_overrides = opts.siblings_overrides ?? null;
     const skipped = opts.skipped ?? null;
     const quorum_out = opts.quorum_out ?? null;
+    const probe_store = opts.probe_store ?? null;
+    const qualification_out = opts.qualification_out ?? null;
+    const qualifications: MemberQualification[] = [];
     // Read-only, per-process-memoised (`detectEnvironment` caches the
     // no-argument call) — cheap to call once per `build_members` invocation.
     // A caller may inject a fixed report (tests only); production leaves
@@ -928,6 +787,20 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             // same pattern.
             ...(api_key_present !== undefined ? { apiKeyPresent: api_key_present } : {}),
         });
+        // Qualification runs on the resolved transport, before any branch
+        // decides whether this seat constructs — ONE call site, because the
+        // branches differ in how a member is built, not in what would qualify
+        // it. `||` matches the construction path below (R2 finding 11).
+        if (probe_store !== null) {
+            qualifications.push(
+                qualifySeat(
+                    name,
+                    resolved,
+                    (overrides[name] as string | undefined) || (cfg['model'] as string | undefined) || null,
+                    probe_store,
+                ),
+            );
+        }
         if (name in siblings) {
             if (resolved.transport !== 'api') {
                 throw new CouncilDisabledError(
@@ -1054,6 +927,26 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                     `${_pyReprStrList(_pySortedStr(_API_PROVIDERS))}.`,
             );
         }
+    }
+    // Phase 3 step 4 — presence is gated on qualification, and the roster is
+    // NOT. Dropping an unqualified seat from `total` would lower the threshold
+    // (`ceil(n/2)`) and make a short pass EASIER to conclude, which inverts the
+    // intent; withholding it from `present` is what makes the pass report being
+    // short. A seat already recorded absent is excluded here so it is not
+    // subtracted twice.
+    //
+    // Routed through `record_absent`, never subtracted separately — that keeps
+    // the event's `total - present == absent.length` invariant. The seat is
+    // still dispatched: see `qualification_wiring.ts::attendanceGate`.
+    const gate = attendanceGate(qualifications, new Set(absent_entries.map((e) => String(e['member']))));
+    for (const q of gate.toRecordAbsent) {
+        record_absent({ member: q.name, reason: absenceReasonFor(q), detail: formatQualificationLine(q) });
+    }
+    if (gate.noticeLine !== null) {
+        _stderr(`${gate.noticeLine}\n`);
+    }
+    if (qualification_out !== null) {
+        qualification_out.push(...qualifications);
     }
     if (quorum_out !== null) {
         const present = total_enabled - absent_count;
@@ -1836,6 +1729,7 @@ function cmd_estimate(
             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
             skipped,
             quorum_out,
+            probe_store: readProbeStore(REPO_ROOT),
             // A cost preview spends nothing and runs no pass. The line is
             // still written — tagged, so a consumer excludes it deliberately
             // instead of never learning it was there.
@@ -2401,6 +2295,14 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
     // because only one of the two is fixed by writing a config.
     const configured = cfg !== null && cfg.enabled && enabledMembers.length > 0;
 
+    // `configured` above is a boolean off the config file — exactly what let a
+    // dead seat report as healthy. It stays (it answers a real question) but is
+    // no longer the only thing this command says.
+    const probeStore = readProbeStore(REPO_ROOT);
+    const qualifications = enabledMembers.map(([name, m]) =>
+        qualifySeat(name, _resolvedTransportFor(name, m), m.model, probeStore),
+    );
+
     if (_getattr(args, 'json', false)) {
         _stdout(
             `${JSON.stringify({
@@ -2427,8 +2329,14 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
                     }),
                 ),
                 ignored_transport_keys: cfg?.ignored_transport_keys ?? [],
+                qualification: qualificationJson(qualifications),
+                qualified_members: countableSeats(qualifications),
                 parse_error,
+                // Scoped to CONFIG (ADR-104); the probe read is named beside
+                // it — `qualification_wiring.ts` § What the status surface consulted.
+                project_tree_consulted_for_config: false,
                 project_tree_consulted: false,
+                probe_store_path: PROBE_STORE_RELPATH,
             })}\n`,
         );
         return 0;
@@ -2458,6 +2366,11 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
             const detail = t.available ? t.transport : `unavailable — ${t.reason ?? 'no usable transport'}`;
             _stdout(`  transport        ${name}: ${detail}${billing}\n`);
         }
+        // The four-value verdict per seat, then the advice — TWO warnings, so
+        // an `unavailable` seat is not told to re-run (R2 finding 12).
+        for (const line of qualificationStatusLines(qualifications)) {
+            _stdout(`${line}\n`);
+        }
         if (cfg.ignored_transport_keys.length > 0) {
             _stdout('\n');
             _stdout('  Ignored transport keys — transport is resolved, not configured:\n');
@@ -2468,7 +2381,7 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
         }
     }
     _stdout('\n');
-    _stdout('  The project tree is NEVER consulted (ADR-104). No project file —\n');
+    _stdout('  The project tree is NEVER consulted FOR CONFIG (ADR-104). No project file —\n');
     _stdout('  `.agent-settings.yml` included — indicates council availability in\n');
     _stdout('  either direction. Do not infer it from one; run this instead.\n');
     if (!configured) {
@@ -2559,6 +2472,7 @@ function cmd_run(
             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
             skipped,
             quorum_out,
+            probe_store: readProbeStore(REPO_ROOT),
         });
     }
     // Measured, never assumed: `_apply_solo_dispatch` escalates back to the
@@ -2773,6 +2687,7 @@ function cmd_run(
     const post_run = _postRunQuorum(members, responses, ai_cfg);
     quorum_out.result = post_run.quorum;
     skipped.push(...post_run.absent);
+    recordRoundObservations(REPO_ROOT, members, responses, classifyCliFailure);
     // Attendance telemetry for the reading that actually decided the pass.
     // `post_run.absent` is the mid-flight set only; the construction-time
     // skips already went out under `phase: 'pre_run'` from `build_members`,
@@ -3092,6 +3007,7 @@ function cmd_debate(
             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
             skipped,
             quorum_out,
+            probe_store: readProbeStore(REPO_ROOT),
             command: 'debate',
         });
     }
@@ -3304,6 +3220,12 @@ function cmd_debate(
         }
         throw exc;
     }
+
+    // Debate consumes qualification, so it produces observations too —
+    // otherwise a debate-only operator's seats stay `unknown` forever
+    // (R2 finding 14). Not a post-run quorum: recording and re-deriving are
+    // different jobs, and the debate path deliberately has no quorum.
+    recordRoundObservations(REPO_ROOT, members, all_rounds[all_rounds.length - 1] ?? [], classifyCliFailure);
 
     let actual_total = 0.0;
     for (const rnd of [...all_rounds, restate_responses]) {
