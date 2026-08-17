@@ -266,3 +266,84 @@ no class-2 entry was reachable at all.
   gets a different one, silently, on a cost-bearing path. The fix is one
   interpolation; it is outside this branch's module and changes what a paid
   runner does, so it is surfaced as a decision rather than taken.
+  **Decided 2026-08-17 and fixed — see § 4d.**
+
+### 4d. The three findings, decided — added 2026-08-17
+
+§ 4c surfaced three things as decisions rather than taking them. All three were
+put to the maintainer and answered on the same day; recorded here because a
+decision that lives only in a chat turn is the shape § 4c itself complained
+about.
+
+**(a) The dropped spend cap — FIXED, in its own change.** Separately, so that a
+one-line money-safety fix is not skimmed inside a documentation diff. The
+sibling search on the exact construct — a cost-bearing `bench_ab_task_runner`
+invocation with no `{{.CLI_ARGS}}` — found **3** sites, of which only
+`bench:ab:live` carried the false claim; `bench:ab:value` and `value:behaviour`
+claimed nothing but could not be bounded by an operator either. All three now
+forward, which is inert when no trailing args are given, and both directions are
+proven per target with `task --dry -v` rather than argued. A guard reads the real
+taskfiles and was verified red first.
+
+**(b) The twelve class-0/1 entries — RECLASSIFIED to what their text supports.**
+Not a blanket downgrade: five of the twelve are genuine consent calls and only
+seven are human-only. The split matters, because a blanket 3 would have buried
+five gates the maintainer can answer in one line.
+
+| id | roadmap | was | now | why the new class |
+|---|---|:-:|:-:|---|
+| `ui-corpus-has-no-ui` | frontend-skill-application | 0 | **2** | a human names the consumer store, then the report re-runs |
+| `b-rules-efficiency-signal` | standing-context-40k | 0 | **2** | wait for the observer, or record the window unfilled and re-date |
+| `phase3-harness-deltas-9-10` | solution-minimalism | 1 | **2** | spend consent, once deltas 9 and 10 land as code |
+| `b-behavioural-bench-spend` | mixed-trigger-activation-cost | 1 | **2** | name a budget at the entry, or re-date the step |
+| `benchmark-spend` | surface-consolidation | 1 | **2** | authorise the A/B with an estimate |
+| `utilization-sweep-window` | cost-parity-1-rule-payload-diet | 0 | **3** | time- and dependency-gated; no command and no decision |
+| `skill-activation-window` | cost-parity-1-rule-payload-diet | 1 | **3** | a pointer to a class-3 entry under another name |
+| `ui-session-capture-window` | frontend-skill-application | 0 | **3** | needs human-authored observation files that do not exist |
+| `telemetry-sample-size` | subagent-value-realization-followup | 0 | **3** | only real parallel work fills the columns |
+| `team-telemetry-behind-flag` | always-on-orchestration | 0 | **3** | a host flag that does not clear by waiting on this host |
+| `b-live-trigger-eval` | catalogue-host-fit | 1 | **3** | a controlling-terminal confirmation; cannot run non-interactively |
+| `human-gated-live-trigger-eval` | skill-description-measurement | 1 | **3** | hard-aborts under automation by design |
+
+Measured effect, at three points so no reading is mistaken for another:
+`gates --json --all` was `{2: 22, 3: 28}` before, `{2: 27, 3: 23}` immediately
+after the reclassification over 50 records, and `{2: 26, 3: 23}` at HEAD over 49
+— the difference being `b-estate-prose-pass-from-1-3` resolving itself out of the
+population once all three decisions landed. **Five gates that rendered "nothing to
+execute" now render an answerable consent block** — verified per entry, not
+inferred. Of the 49 open records, **48 carry an authored field and exactly 1
+resolves through the absent-field default**: the parser's synthesised `legacy`
+note, which by construction can never carry one.
+
+**The class-0 count stays 0, and that is the honest headline.** Nothing here
+makes a gate auto-runnable, because nothing here invents a command. What changed
+is that the tree no longer declares a class its own entries cannot support.
+
+**One taxonomy gap, recorded rather than forced.** `utilization-sweep-window`
+clears when a date passes and a sibling blocker clears — it is neither a command,
+nor a spend, nor a preference, nor human content. None of the four classes fits;
+it takes 3 because that is the safe default, and the label overstates the human's
+role. A fifth class for time- and dependency-gated waits would describe it
+properly. Not proposed here — one entry is not a population.
+
+**(c) The over-length class-2 recommendations — ACCEPTED as advisory.**
+The notice renders alongside a working consent block, the prose predates this
+work, and rewriting other roadmaps' recommendations is the most expensive of the
+three for the least behavioural gain. It stays visible every time one of those
+gates is executed, which is the right place for it.
+
+**Re-measured after (b), not carried over**, because promoting five entries adds
+their recommendations to the population the bar applies to. Over all **27** live
+class-2 entries: **10 within the 156-char bar, 17 over** — probed per entry with
+`gates --execute`. The earlier figure (8 of 19) covered only the entries step 1.3
+had made reachable and excluded `road-to-gate-autonomy`'s own three; both numbers
+are stated so neither reads as a change over time when it is a change of
+denominator.
+
+**Including this branch's own new entry, which is over the bar.** Worth recording
+rather than quietly excluding: `b-estate-prose-pass-from-1-3` was authored *by*
+the work that measures this, *after* reading the notice, and still exceeded it.
+The bar is easy to trip while knowing about it, which is a better argument for
+the notice staying visible than any of the eleven older cases. It becomes moot on
+resolution — a resolved blocker no longer renders — so the count above is the
+live reading at the moment of measurement, not a durable 17.

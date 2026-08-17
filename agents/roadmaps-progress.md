@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 39 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **50** open blockers, **22** need you → `agent-config gates`
+> 39 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **49** open blockers, **21** need you → `agent-config gates`
 
 ## Overall
 
@@ -34,7 +34,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 8 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 5 | 0 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
-| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [3](#blockers-road-to-gate-autonomy) | █████████░ 86% |
+| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
 | 12 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 13 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
 | 14 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
@@ -420,26 +420,8 @@ _1 blocker resolved._
     in scope for any option — the settings schema's own describe text states the
     two-gate contract, and this decision moves one profile, not a default.
   - **Resolved when:** one option is recorded at this blocker, and for (a) or (b) the profile carries the setting with the cap named.
-- **b-estate-prose-pass-from-1-3** (owner: user) — blocks nothing in this roadmap — every step here is closed or spend-gated. It exists because step 1.3 surfaced three estate-level findings that this branch deliberately did not act on, and R2 finding 4 is right that a paragraph in an evidence file is a note rather than a discharge: without an entry here, nothing renders them in `agent-config gates` and nothing counts them.
-  - **Recommendation:** **(a) as its own change, (b) reclassify, (c) accept for now.** (a) is a one-line spend-safety fix on a cost-bearing path and should not ride in a documentation PR where a reviewer would skim it. (b) because a field that contradicts its own evidence table is the exact half-truth this roadmap exists to remove — and reclassifying *down* to 3 is the safe direction, never up. (c) last, because it is prose in eleven other roadmaps, the notice is advisory, and the overflow predates this work; it is a real reading-load defect but the cheapest of the three to defer.
-  - **If you do nothing:** the spend cap stays silently wrong, so an operator who names a budget gets a different one on a paid path. Twelve entries keep declaring a class their text cannot support, which is the shape `gates --execute` was built to stop. And the class-2 half keeps rendering paragraphs where the taxonomy promises one line, so the reading-load defect § 0 set out to remove survives inside the class meant to absorb it.
-  - **What to do:**
-    decide each of the three independently. (a) **The dropped spend
-    cap** — `taskfiles/bench-ab.yml` runs `bench_ab_task_runner` for `bench:ab:live`
-    with no `{{.CLI_ARGS}}`, unlike its sibling one target up, so the
-    `task bench:ab:live -- --budget <N>` that `road-to-surface-consolidation`'s
-    `benchmark-spend` entry authorises silently falls back to the parser default of
-    `2.0` (`src/scripts/bench_ab_task_runner.ts:911`). Fix is one interpolation;
-    the decision is whether it lands here, on `road-to-surface-consolidation`, or as
-    its own change. (b) **The twelve class-0/1 entries** — their swept verdict is not
-    materialisable (sweep § 4c), so they sit at the absent-field default of 3 while
-    the table says 0 or 1. Either reclassify them in the tree to match what their
-    entries can actually run, or leave the default standing and let § 4c carry the
-    discrepancy. (c) **The eleven over-length class-2 recommendations** — each
-    exceeds the renderer's own 156-char consent bar, whose remedy is reclassification
-    to 3 rather than a longer line. Either rewrite the eleven to one line, reclassify
-    them, or accept the overflow as advisory.
-  - **Resolved when:** each of (a), (b) and (c) carries a recorded decision at this blocker — a fix, a deferral with a reason, or an explicit accept.
+
+_1 blocker resolved._
 
 ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
 
