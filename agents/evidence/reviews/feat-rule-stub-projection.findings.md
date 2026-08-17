@@ -1,13 +1,13 @@
 # Findings: feat-rule-stub-projection
-<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: 2ab219dd1ea1dba772fa64b5e1e93c08b236b6851ec8e7d15fb52dd0f1507c0c | diff: 4a6ec0db0dceb1da526482e4683795b379842df6 | reviewer: r2-fresh-subagent-feat-rule-stub-projection | prompt_hash: e48fa04fe7c0e47bad6b6ba35570d2ebaba9c37aa8f4d733e545a9e43495f490 -->
+<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: 0fc57d913bde37504ef6d79504f3daa9fa9a5f18563f362f88f1b3d0c2029ad1 | diff: 0cfba5a9025e0b0ce7ae29e98c7816205b1e27cf | reviewer: r2-fresh-subagent-feat-rule-stub-projection | prompt_hash: e48fa04fe7c0e47bad6b6ba35570d2ebaba9c37aa8f4d733e545a9e43495f490 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-17 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 4a6ec0db0dceb1da526482e4683795b379842df6
-  scope_hash: 2ab219dd1ea1dba772fa64b5e1e93c08b236b6851ec8e7d15fb52dd0f1507c0c
+  diff_sha: 0cfba5a9025e0b0ce7ae29e98c7816205b1e27cf
+  scope_hash: 0fc57d913bde37504ef6d79504f3daa9fa9a5f18563f362f88f1b3d0c2029ad1
   roadmap: agents/roadmaps/archive/road-to-rule-stub-projection.md
-  roadmap_hash: a42fa1a2d4e60efe67969a3134c6985685015d631a115735fd868c6547652257
+  roadmap_hash: 9d3c17e04122c358e69196eb23903cc10685006150c51f7ad445e5c4f05a05c6
   ac_hash: 743a55103bf09fceecf918eb1560aa1d9add6eada3fa747fba9925916e1ee94a
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
