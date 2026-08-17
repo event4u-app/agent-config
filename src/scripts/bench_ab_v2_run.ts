@@ -364,9 +364,50 @@ export function reset_fixture(task: Dict, arm: string, seed: number): [string, s
     if (fs.existsSync(dest)) {
         fs.rmSync(dest, { recursive: true, force: true });
     }
+    // The preserved transcript is a SIBLING of the clone, so wiping the clone
+    // does not wipe it. A resumed trial that left the old file behind would hand
+    // T5 the previous attempt's evidence under this attempt's key.
+    fs.rmSync(transcript_path_for(dest), { force: true });
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.cpSync(fixture, dest, { recursive: true });
     return [dest, fixture];
+}
+
+/**
+ * Where this trial's transcript is preserved — delta #7's sibling, for T5.
+ *
+ * NEXT TO the clone, never inside it. `changed_files` diffs the clone against
+ * the pristine fixture, so a transcript written into the workspace would appear
+ * as a file the run created: T5's evidence would corrupt T1's, and the size
+ * endpoint would gain one added file per trial for a reason no reader could see.
+ *
+ * It is a file rather than a field on the trial record because transcripts are
+ * the largest thing a sweep produces, and inlining them would multiply a pinned
+ * report's size for data only the T5 re-scorer ever reads. Truncating instead
+ * was the other option and is worse: a rubric scored on a clipped transcript
+ * measures the clip.
+ */
+export function transcript_path_for(clone: string): string {
+    return `${clone}.transcript.txt`;
+}
+
+/**
+ * Write the transcript beside the clone; return the path, or `null` when there
+ * was nothing to preserve or the write failed.
+ *
+ * A null propagates onto the trial as `transcript_path: null`, which the T5
+ * re-scorer reads as "not measured on this trial" — never as a zero score. A
+ * failed write must not be able to look like a run that searched for nothing.
+ */
+export function preserve_transcript(clone: string, transcript: string): string | null {
+    if (!transcript) return null;
+    const dest = transcript_path_for(clone);
+    try {
+        fs.writeFileSync(dest, transcript, { encoding: 'utf-8' });
+    } catch {
+        return null;
+    }
+    return dest;
 }
 
 /** Map a run outcome to an AgentBench-style trajectory bucket. */
@@ -689,6 +730,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         // rather than recomputed later, so an offline re-scorer reads the path the
         // sweep actually used instead of re-deriving a key that may have changed.
         workspace: clone,
+        transcript_path: preserve_transcript(clone, String(run['transcript'] ?? '')),
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
     };
 }
@@ -803,6 +845,7 @@ export function selftest_run(
         metrics: trajectory_metrics(run, score),
         injected_chars: sp_text ? sp_text.length : 0,
         workspace: clone,
+        transcript_path: preserve_transcript(clone, String(run['transcript'] ?? '')),
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
     };
 }
