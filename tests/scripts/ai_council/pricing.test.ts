@@ -445,10 +445,10 @@ describe('pricing — cross-table parity with cost/track.mjs', () => {
         cache_read: number;
     }
 
-    function parseTrackPricing(): Record<string, TierRow> {
-        const src = fs.readFileSync(TRACK, 'utf-8');
+    function parsePricingLiteral(file: string, label: string): Record<string, TierRow> {
+        const src = fs.readFileSync(file, 'utf-8');
         const block = src.match(/const PRICING = \{([\s\S]*?)\n\};/);
-        expect(block, 'track.mjs must still declare a PRICING literal').not.toBeNull();
+        expect(block, `${label} must still declare a PRICING literal`).not.toBeNull();
         const out: Record<string, TierRow> = {};
         const rowRe =
             /(\w+):\s*\{\s*input:\s*([\d.]+),\s*output:\s*[\d.]+,\s*cache_write_5m:\s*([\d.]+),\s*cache_write_1h:\s*([\d.]+),\s*cache_read:\s*([\d.]+)\s*\}/g;
@@ -462,6 +462,10 @@ describe('pricing — cross-table parity with cost/track.mjs', () => {
             };
         }
         return out;
+    }
+
+    function parseTrackPricing(): Record<string, TierRow> {
+        return parsePricingLiteral(TRACK, 'track.mjs');
     }
 
     // Anthropic publishes Haiku's cache rates ROUNDED ($0.30 write / $0.03 read
@@ -479,6 +483,19 @@ describe('pricing — cross-table parity with cost/track.mjs', () => {
 
     it('parses all three tiers out of track.mjs', () => {
         expect(Object.keys(table).sort()).toEqual(['haiku', 'opus', 'sonnet']);
+    });
+
+    // THIRD copy of the same table. `cost/backfill_rates.mjs` mirrors track.mjs's
+    // PRICING for the reason that file's header gives — track.mjs exports nothing
+    // and calls main() at module scope, so importing it would scan the developer's
+    // real ~/.claude. A comment saying "keep the two in step" is not a mechanism,
+    // and this roadmap's whole premise is that untracked duplicate rate tables
+    // silently disagree. The failure it prevents is sharper than a disagreeing
+    // dollar figure: the backfill pass CLEARS `rate_missing`, so a stale copy
+    // produces a confidently wrong total that no longer carries its own warning.
+    it('cost/backfill_rates.mjs mirrors track.mjs PRICING exactly', () => {
+        const BACKFILL = path.resolve(__dirname, '../../../src/scripts/cost/backfill_rates.mjs');
+        expect(parsePricingLiteral(BACKFILL, 'backfill_rates.mjs')).toEqual(table);
     });
 
     for (const [tier, row] of Object.entries(parseTrackPricing())) {
