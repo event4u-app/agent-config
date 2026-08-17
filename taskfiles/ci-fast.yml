@@ -116,6 +116,14 @@ tasks:
       # Exit 2 = degraded advisory (a broken gate never blocks its own fix).
       - task: lint-plan-risk-register
       - task: check-completion-review
+      # The PRESENCE half of the evidence-type contract, and it belongs here
+      # rather than in CI: an evidence artifact this change adds or modifies must
+      # declare what kind of evidence it is, which is a question about the change
+      # set. CI runs the same script with `--all` for the globally decidable half
+      # (a declared type must agree with its body). Splitting them is not
+      # duplication — the two halves have different scopes on purpose, and the
+      # changed-files mode has no trippable `scanned:` floor to register.
+      - ./scripts-run src/scripts/lint_evidence_artifacts --quiet
 
   check-ci-local-parity:
     silent: true
@@ -944,6 +952,21 @@ tasks:
       the "local-only by neglect" direction inverted. Reachable locally now, so
       a contributor sees it before pushing.
     cmd: ./scripts-run src/scripts/check_review_dispositions {{.QUIET_FLAG}}
+
+  lint-evidence-artifacts:
+    silent: true
+    desc: |
+      Every evidence artifact that declares a type must agree with the body it
+      sits above (docs/contracts/evidence-artifact-types.md § 4), and the
+      untyped remainder is published on every run so it shrinks observably.
+
+      `--all` is the CI-identical argv on purpose. The gate's DEFAULT mode is
+      changed-files scoped and its ordinary pass is `scanned: 0`, which is
+      exactly the shape check_gate_coverage exists to reject — so the mode with
+      a real, trippable floor is the one registered. The presence half (a
+      newly written artifact must declare its type) runs in the pre-push path,
+      where a base ref always resolves.
+    cmd: ./scripts-run src/scripts/lint_evidence_artifacts --all {{.QUIET_FLAG}}
 
   lint-plan-risk-register:
     silent: true
