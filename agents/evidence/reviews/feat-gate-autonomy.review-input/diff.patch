@@ -188,7 +188,7 @@ index 0000000000000000000000000000000000000000..9f1a92869de04c6660b94116a22ff765
 +  blocker section. `lint_roadmap_blockers` is registered only under `task ci`
 +  and in no workflow, so nothing on a PR reports it either way.
 diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
-index 3a5ae04589bc646431afc8cad3e7cfab7a238966..c21a809a76f98f13049b0bf9d20b9474ce03aab1 100644
+index 3a5ae04589bc646431afc8cad3e7cfab7a238966..791a59969552bcadac3f61f6d1a3d40b0f12a374 100644
 --- a/agents/roadmaps-progress.md
 +++ b/agents/roadmaps-progress.md
 @@ -2,14 +2,14 @@
@@ -196,12 +196,12 @@ index 3a5ae04589bc646431afc8cad3e7cfab7a238966..c21a809a76f98f13049b0bf9d20b9474
  > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
  >
 -> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **47** open blockers, **21** need you → `agent-config gates`
-+> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **50** open blockers, **22** need you → `agent-config gates`
++> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **49** open blockers, **21** need you → `agent-config gates`
  
  ## Overall
  
 -**267 / 575 steps done · 46%**
-+**276 / 574 steps done · 48%**
++**276 / 575 steps done · 48%**
  
  ```text
 -██████████████████░░░░░░░░░░░░░░░░░░░░░░   46%
@@ -221,22 +221,31 @@ index 3a5ae04589bc646431afc8cad3e7cfab7a238966..c21a809a76f98f13049b0bf9d20b9474
  | 9 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 5 | 0 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ░░░░░░░░░░ 0% |
  | 10 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
 -| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 8 | 6 | 0 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | ░░░░░░░░░░ 0% |
-+| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 8 | 1 | 5 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | ████████░░ 83% |
++| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 2 | 5 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | ███████░░░ 71% |
  | 12 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
  | 13 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
  | 14 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
-@@ -380,14 +380,14 @@ _1 blocker resolved._
+@@ -43,7 +43,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ | 17 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 2 | 2 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | █████░░░░░ 50% |
+ | 18 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+ | 19 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
+-| 20 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [2](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
++| 20 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [1](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
+ | 21 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+ | 22 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ░░░░░░░░░░ 0% |
+ | 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 16 | 15 | 0 | 1 | 0 | [1](#blockers-road-to-per-turn-hook-economy) | ░░░░░░░░░░ 0% |
+@@ -380,19 +380,19 @@ _1 blocker resolved._
  
  ### [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md)
  
 -**Road to gate autonomy — human gates only where a human is the point** — 0 / 6 done (0%)
-+**Road to gate autonomy — human gates only where a human is the point** — 5 / 6 done (83%)
++**Road to gate autonomy — human gates only where a human is the point** — 5 / 7 done (71%)
  
  | # | Phase | State | Open | Done | Deferred | Cancelled | % |
  |---|---|---|---:|---:|---:|---:|---:|
 -| 1 | Blocker schema: class and command become fields | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 -| 2 | `gates --execute` (the acting half) | ⬜ not started | 2 | 0 | 1 | 0 | 0% |
-+| 1 | Blocker schema: class and command become fields | ✅ done | 0 | 2 | 0 | 0 | 100% |
++| 1 | Blocker schema: class and command become fields | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 +| 2 | `gates --execute` (the acting half) | ✅ done | 0 | 2 | 1 | 0 | 100% |
  | 3 | Agent runs via CLI: open the delegate gate for the maintainer profile | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
 -| 4 | Liveness: gates that open must be seen | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
@@ -244,8 +253,42 @@ index 3a5ae04589bc646431afc8cad3e7cfab7a238966..c21a809a76f98f13049b0bf9d20b9474
  
  <a id="blockers-road-to-gate-autonomy"></a>
  **Blockers**
+ 
+-- **b-gate-budget-preauth** (owner: user) — blocks Phase 2 step 2.3, and therefore every class-1 execution. Steps 2.1 and 2.2 ship the class-0 path and the render path without it.
++- **b-gate-budget-preauth** (owner: user) — blocks Phase 2 step 2.3, and therefore every class-1 execution. Steps 2.1 and 2.2 ship the class-0 path and the render path without it. Also blocks the over-budget half of 2.1's `verify:` clause and AC-2's class-1 half: both need a budget to compare against, and this entry is where that budget is decided.
+   - **Recommendation:** **option (a) — per-run and per-week caps with the receipt ledger.** It is the only option that actually removes the couriering while keeping a real spend bound: a per-run cap alone bounds one mistake, not a week of them. Option (b) preserves today's friction for every billable gate, which leaves the defect in place while adding a ledger. Option (c) collapses class 1 into class 2 and makes the four-class taxonomy a three-class one — defensible, but it gives up the class where the mechanism has the most to offer.
+   - **If you do nothing:** every billable gate keeps needing a keystroke, the live trigger eval keeps blocking three roadmaps, and class 1 exists on paper with no mechanism behind it. Phase 2 still ships the class-0 path, so the estate gets the free half of the acting layer and none of the paid half.
+   - **What to do:**
+@@ -601,18 +601,6 @@ _1 blocker resolved._
+ <a id="blockers-road-to-mixed-trigger-activation-cost"></a>
+ **Blockers**
+ 
+-- **b-matrix-semantics-amendment** (owner: user) — blocks Phase 2 (step 2.1 and everything downstream of it). Phases 1 and 4 are repo work and proceed without it.
+-  - **Recommendation:** **option (b) — adopt it narrowed to the enumerated per-edit subset.** Option (a) is the cleaner rule but it grants the amendment to rules nobody has examined, which is how the original silent narrowing happened: a general emitter decision applied to a set with mixed obligations. Option (c) keeps the current state, whose cost is measured and whose benefit — pre-contact routing for obligations that bind at contact — is the thing no evidence supports. (b) buys the same relief as (a) for the eleven rules where the argument is concrete, and leaves the rest to a second pass with their matrices in hand.
+-  - **If you do nothing:** the seventeen stay unconditional, the standing-token cost stays on every session for every consumer, and Phase 2 cannot start — which also strands Phase 3's bench, because there is no second arm to compare against. Phases 1 and 4 still land, so the estate keeps the two new matrices and the census ratchet but none of the payload relief.
+-  - **What to do:**
+-    decide whether a routing-matrix positive may be satisfied
+-    `by-first-file-contact` for rules whose obligation binds at file contact.
+-    Three options: (a) adopt the amendment as written, with gates and per-turn rules
+-    excluded by construction; (b) adopt it narrowed to an enumerated subset of the
+-    11 per-edit rules, naming which; (c) reject it, in which case the 17 keep their
+-    current pre-contact positives and Phase 2 closes as a null with that reason.
+-    The amendment text and the excluded set are in Phase 2's preamble.
+-  - **Resolved when:** one of the three options is recorded at this blocker, and — for (a) or (b) — the matrix-semantics documentation carries the amendment.
+ - **b-behavioural-bench-spend** (owner: user) — blocks Phase 3 steps 3.1 and 3.2. Step 3.3's observer is repo work and proceeds without it.
+   - **Recommendation:** **defer it to the class-1 budget ledger** rather than naming a one-off budget now. The bench is the most expensive step in this roadmap and the least urgent: Phase 2's dispositions are justified by the token census on their own, and the bench decides only whether they are *mandatory* or merely *available*. Paying for it before the ledger exists spends the consent twice — once here, once again for the next bench — which is the exact couriering `road-to-gate-autonomy` was opened to end.
+   - **If you do nothing:** the behavioural-regression claim stays an argument rather than a number. Phase 2 can still ship on the token census, but the roadmap loses its falsifiability spine — nothing would refute the premise if it were wrong, and the honest-null consequence below becomes unreachable.
+@@ -624,6 +612,8 @@ _1 blocker resolved._
+     be recorded before the first run, not after.
+   - **Resolved when:** a budget is named at this blocker, or the step is re-dated against the ledger mechanism with that dependency stated.
+ 
++_1 blocker resolved._
++
+ ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
+ 
+ **Road to orchestration scope decision — one falsifiable minimal claim, or an honest exit from the front** — 4 / 10 done (40%)
 diff --git a/agents/roadmaps/road-to-gate-autonomy.md b/agents/roadmaps/road-to-gate-autonomy.md
-index 61c512fd7148b4214db0a9a475ec189c483d0cbf..eb4575d3351b04fadfddf25ec959fd1884d6b069 100644
+index 61c512fd7148b4214db0a9a475ec189c483d0cbf..9f956eefc3ac14784d87e61194606c7f7cca2291 100644
 --- a/agents/roadmaps/road-to-gate-autonomy.md
 +++ b/agents/roadmaps/road-to-gate-autonomy.md
 @@ -86,7 +86,7 @@ safeguards.**
@@ -257,7 +300,7 @@ index 61c512fd7148b4214db0a9a475ec189c483d0cbf..eb4575d3351b04fadfddf25ec959fd18
        with three optional fields: a class, a `run:` command for classes 0 and 1, and
        a budget estimate for class 1. The decidability ratchet gains a second
        dimension: **a class-0 or class-1 blocker without a `run:` field is the new
-@@ -95,7 +95,23 @@ safeguards.**
+@@ -95,7 +95,25 @@ safeguards.**
        rather than a runtime judgment.
        `verify:` the lint is red on a fixture blocker claiming class 0 with no `run:`,
        and green on the committed tree.
@@ -267,9 +310,11 @@ index 61c512fd7148b4214db0a9a475ec189c483d0cbf..eb4575d3351b04fadfddf25ec959fd18
 +      absent-field default at every consumer rather than at each call site);
 +      `lint_roadmap_blockers` gains two HARD checks — an unknown class, and a class
 +      0/1 entry with no `Run:`. Contract text in `templates/roadmaps.md` rule 20,
-+      with the four-class table. Eight new tests in
++      with the four-class table. Nine new `it(` blocks in
 +      `tests/scripts/lint_roadmap_blockers.test.ts` cover both directions including
-+      the class-2/3 and absent-class negatives; 25/25 green.
++      the class-2/3 and absent-class negatives. (Recorded as eight in the first
++      pass; corrected by R2 finding 17 — a checkable count in a done-note is
++      exactly the kind of claim that has to be right.)
 +      **The check is HARD, not ratcheted, and the reason is worth recording:** the
 +      field is opt-in, so on the day it ships no entry declares a class and the rule
 +      fires on nothing. There is no backlog to grandfather, so the "strict gate reds
@@ -282,7 +327,7 @@ index 61c512fd7148b4214db0a9a475ec189c483d0cbf..eb4575d3351b04fadfddf25ec959fd18
        table row: blocker, class, run-or-decision text, reason. **Pre-registered
        expectation, to be falsified rather than assumed:** a substantial share land
        in class 0 or 1. If the sweep finds far fewer, the "gates are mostly couriered
-@@ -103,12 +119,37 @@ safeguards.**
+@@ -103,12 +121,51 @@ safeguards.**
        accordingly.
        `verify:` the sweep table is committed, every open blocker appears in it, and
        the share is stated as a number before Phase 2 starts.
@@ -311,8 +356,23 @@ index 61c512fd7148b4214db0a9a475ec189c483d0cbf..eb4575d3351b04fadfddf25ec959fd18
 +      including two a live parallel session is holding. The classification is
 +      committed as the evidence table instead, which is what step 1.2 asks for; the
 +      write-back is named as the follow-up rather than done half-way.
++- [ ] **1.3** Write the swept classes back into the blocker entries themselves, so
++      `Class:` is a field in the tree and not only a row in the evidence table.
++      **Added 2026-08-17 by R2 finding 7**, which is the reason it exists as a step:
++      1.2 deferred this in prose, and prose in a done-note is not tracked — it
++      disappears when the roadmap archives, which is the lost-information shape
++      Iron Law 3 exists to prevent. Deferred rather than done because it is a
++      25-file diff across every active roadmap, two of them held by a live
++      parallel session at the time; only this roadmap's own two entries carry the
++      field today.
++      `verify:` every open blocker in `agent-config gates --json --all` carries a
++      class, and `lint_roadmap_blockers` is green.
  - **AC-1:** every open blocker carries a class; the lint enforces `run:` on classes
-   0 and 1; the sweep table is committed with its share.
+-  0 and 1; the sweep table is committed with its share.
++  0 and 1; the sweep table is committed with its share. **Not met — step 1.3
++  carries the remainder.** The lint half and the sweep half are done; the
++  write-back is not, and the phase is marked complete only in the sense that
++  every step authored in it at the time is closed.
  
  ### Phase 2 — `gates --execute` (the acting half)
  
@@ -321,7 +381,7 @@ index 61c512fd7148b4214db0a9a475ec189c483d0cbf..eb4575d3351b04fadfddf25ec959fd18
        capture output, append the unblock evidence into the roadmap file at the
        blocker — the same in-file done-note discipline every phase already uses — and
        mark it resolved. Class 1: check the budget ledger, run under it, write the
-@@ -116,11 +157,45 @@ safeguards.**
+@@ -116,11 +173,61 @@ safeguards.**
        class-2 consent line **instead of running**.
        `verify:` an end-to-end fixture per class, including the over-budget path
        rendering rather than executing.
@@ -344,6 +404,22 @@ index 61c512fd7148b4214db0a9a475ec189c483d0cbf..eb4575d3351b04fadfddf25ec959fd18
 +      guessed command** — a class-0 entry with no `Run:` executes nothing, which
 +      is reachable only through an unlinted tree but is the one case where
 +      guessing must not happen.
++      **Two more refusals added by the R2 review, both on the security surface it
++      found (finding 1).** `Run:` is arbitrary shell read out of a markdown field,
++      and the first cut ran it on one keypress: **`--confirm` is now required** —
++      without it the command is echoed and nothing runs, which is the this-turn,
++      names-the-exact-object confirmation `non-destructive-by-default` asks for.
++      And a command carrying a Hard-Floor action (`git push`, `terraform apply`,
++      `rm -rf`, `DROP TABLE`, …) is **refused even with `--confirm`**: class 0 is
++      defined as reversible, so such an entry is misclassified, and waving it
++      through would move a Hard Floor onto a keypress. The denylist is a
++      classification check, not a security boundary — the boundary is `--confirm`.
++      **The over-budget half of this step's `verify:` is NOT satisfied**, recorded
++      rather than papered over (R2 finding 8). It asks for an over-budget path that
++      renders rather than executes; today class 1 always renders, because the
++      budget model it would compare against is `b-gate-budget-preauth` and still
++      the maintainer's. Building one here to make a checkbox green would be exactly
++      the invented ledger this step refuses two paragraphs up.
 +- [x] **2.2** Class 2 emits its one-line consent question with recommendation and
        default into the decision-sheet surface — `road-to-user-out-of-the-loop`
        Phase 1 owns that surface, and this roadmap only feeds it. Class 3 is
@@ -368,7 +444,20 @@ index 61c512fd7148b4214db0a9a475ec189c483d0cbf..eb4575d3351b04fadfddf25ec959fd18
  - [~] **2.3** The live-trigger-eval hard-abort gains a preauthorised-budget flag
        that refuses without a valid unspent ledger entry and spends it on run. The
        abort's threat model — unconsented billable automation — is **preserved**:
-@@ -146,13 +221,38 @@ safeguards.**
+@@ -128,7 +235,11 @@ safeguards.**
+       Blocked on `b-gate-budget-preauth`.
+ - **AC-2:** `gates --execute` resolves at least one real class-0 and one real
+   class-1 blocker end to end, with evidence appended and, for class 1, a receipt in
+-  the ledger.
++  the ledger. **Not met, and not meetable yet** (recorded by R2 finding 7): no live
++  blocker carries `Class: 0` until step 1.3 lands, and the class-1 half needs the
++  ledger `b-gate-budget-preauth` still owns. The fixtures discharge each step's own
++  `verify:` clause; this criterion is a phase-level claim about the live estate and
++  stays open.
+ 
+ ### Phase 3 — Agent runs via CLI: open the delegate gate for the maintainer profile
+ 
+@@ -146,13 +257,52 @@ safeguards.**
  
  ### Phase 4 — Liveness: gates that open must be seen
  
@@ -405,18 +494,37 @@ index 61c512fd7148b4214db0a9a475ec189c483d0cbf..eb4575d3351b04fadfddf25ec959fd18
 +      **42 of 44 undecidable is published, not hidden.** The coverage line prints
 +      on every run, so "no condition has fired" can never be confused with "the
 +      probe could read 2 of 44 conditions" — the gate-that-scans-nothing shape.
++      **The R2 review then found a third and fourth over-read and a false
++      negative the fix for one of them created** (findings 5, 6, 14). The step id
++      matched anywhere on a checkbox line, so `- [x] **1.4** raise the cap from
++      2.0 to 2.1` decided the verdict for step 2.1; it is now anchored to the
++      label position. The marker was searched over the whole file, so body prose
++      could become the condition; it is now restricted to the blockquote, with
++      fenced examples blanked. And `COMPOUND_RE` shipped without the `i` every
++      sibling regex carries — **fixing that alone immediately broke the probe in
++      the other direction**, because an ordinary "and" in the prose *after* the
++      condition read as a second conjunct and the one genuinely fired note
++      dropped out. The discriminator that makes the case-insensitive test safe is
++      `conditionClause`: park notes bold the condition and explain it afterwards,
++      so the analysis reads the bolded span and treats the paragraph after it as
++      commentary. Both directions are now fixtures.
  - **AC-4:** the probe runs in the recurring pass owned by
    `road-to-estate-drawdown` Phase 4, and the fixture case is detected.
  
-@@ -161,6 +261,7 @@ safeguards.**
+@@ -161,8 +311,11 @@ safeguards.**
  ### blocker: b-gate-budget-preauth
  - **Status:** open
  - **Owner:** user
 +- **Class:** 2 — consent-once
  - **Blocks:** Phase 2 step 2.3, and therefore every class-1 execution. Steps 2.1
-   and 2.2 ship the class-0 path and the render path without it.
+-  and 2.2 ship the class-0 path and the render path without it.
++  and 2.2 ship the class-0 path and the render path without it. Also blocks the
++  over-budget half of 2.1's `verify:` clause and AC-2's class-1 half: both need a
++  budget to compare against, and this entry is where that budget is decided.
  - **What to do:** decide the standing budget shape for class-1 gates. Options:
-@@ -189,6 +290,7 @@ safeguards.**
+   (a) register a per-run and a per-week cap as settings keys, with the append-only
+   receipt ledger as the audit surface — the recommended shape, because a per-run cap
+@@ -189,6 +342,7 @@ safeguards.**
  ### blocker: b-delegate-gate-maintainer-profile
  - **Status:** open
  - **Owner:** user
@@ -426,10 +534,10 @@ index 61c512fd7148b4214db0a9a475ec189c483d0cbf..eb4575d3351b04fadfddf25ec959fd18
    the maintainer profile only. Options: (a) enable both in the maintainer profile,
 diff --git a/dist/agent-src/scripts/gate_execute.ts b/dist/agent-src/scripts/gate_execute.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f12123367
+index 0000000000000000000000000000000000000000..e7251f92f926132279515b606f402fb5c323e854
 --- /dev/null
 +++ b/dist/agent-src/scripts/gate_execute.ts
-@@ -0,0 +1,263 @@
+@@ -0,0 +1,395 @@
 +/**
 + * `agent-config gates --execute <id>` — the acting half of the gate layer.
 + *
@@ -459,8 +567,16 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 + *     Until it is taken there is no ledger, so class 1 takes the
 + *     render-instead-of-run path — which is the behaviour the blocker itself
 + *     prescribes for a missing ledger, not a stub of the decision.
-+ *   - **No class-3 change.** Byte-identical to the render path, by construction:
-+ *     it calls the same renderer.
++ *   - **No class-3 change.** The class-3 branch executes nothing and writes
++ *     nothing, so `agent-config gates` renders a class-3 entry exactly as it did
++ *     before this module existed. `--execute` on one returns a one-line notice
++ *     and points back at that renderer; it does not call it.
++ *   - **No run without `--confirm`.** `Run:` is arbitrary shell read out of a
++ *     markdown field. Without the flag the command is echoed and refused, so
++ *     the operator sees the exact string first — the this-turn, names-the-object
++ *     confirmation `non-destructive-by-default` requires. A command carrying a
++ *     Hard-Floor action is refused even WITH the flag: class 0 means reversible,
++ *     so such an entry is misclassified rather than merely dangerous.
 + */
 +
 +import * as fs from 'node:fs';
@@ -499,11 +615,39 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 +    for (const r of collect(roadmapRoot)) {
 +        for (const b of r.open_blockers) {
 +            if (b.id === id) {
-+                return { blocker: b, file: path.join(roadmapRoot, path.basename(r.rel)), rel: r.rel };
++                // `r.path` is the absolute path the collector already resolved.
++                // Rebuilding it from `basename(r.rel)` discarded the directory,
++                // so a roadmap in any subdirectory the collector does not
++                // exclude was either written to a same-named top-level file or
++                // threw — and either way AFTER the authored command had run.
++                return { blocker: b, file: r.path, rel: r.rel };
 +            }
 +        }
 +    }
 +    return null;
++}
++
++/**
++ * Commands a class-0 gate may never carry, whatever the entry claims.
++ *
++ * Class 0 is defined as deterministic, free and **reversible**. A command that
++ * pushes, merges, deploys, or deletes is none of those, so its presence is a
++ * misclassification — and the right answer to a misclassification is refusal,
++ * not a confirmation prompt that makes the operator the last line of defence.
++ * These are Hard-Floor actions under `non-destructive-by-default`, which no
++ * setting, roadmap or flag lifts.
++ *
++ * A denylist is the wrong shape for a *security boundary* and the right shape
++ * for a *classification check*, which is what this is: the tree's roadmap files
++ * are reviewed content, so this catches the authoring mistake rather than an
++ * attacker. The blast-radius control is `--confirm` below, not this list.
++ */
++const HARD_FLOOR_RE =
++    /(^|[;&|]\s*)(git\s+(?:push|merge|reset\s+--hard|rebase)\b|gh\s+(?:pr\s+merge|release)\b|terraform\s+apply\b|kubectl\s+apply\b|npm\s+publish\b|rm\s+-[rRf]+|DROP\s+TABLE\b|TRUNCATE\b)/i;
++
++function hardFloorReason(command: string): string | null {
++    const m = HARD_FLOOR_RE.exec(command);
++    return m ? (m[2] as string).trim() : null;
 +}
 +
 +/** Strip the backticks an authored `Run:` field carries. */
@@ -524,11 +668,27 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 +function consentLine(b: Blocker, why?: string): string {
 +    const head = why ? `${b.id} — ${why}` : b.id;
 +    const rec = b.recommendation.trim();
-+    const lines = [`CONSENT · ${head}`, `  Question:       ${b.question.trim() || b.blocks.trim()}`];
++    const q = b.question.trim();
++    const lines = [`CONSENT · ${head}`];
++    // An entry with no `Question:` has no question, and borrowing `Blocks:`
++    // silently put a "what this holds up" sentence in the "what is being
++    // decided" slot — two different facts. Say which one is on screen.
++    lines.push(
++        q !== ''
++            ? `  Question:       ${q}`
++            : `  Question:       (none authored — this is the Blocks line) ${b.blocks.trim()}`,
++    );
 +    lines.push(
 +        `  Recommendation: ${rec || '(none recorded — ask for one before deciding)'}`,
 +    );
-+    lines.push(`  Default if you say nothing: no change; the gate stays open.`);
++    // The default is derived, not constant: an entry carrying a recommendation
++    // has one, an entry without one has nothing to default TO, and printing
++    // the same sentence for both told the reader nothing either way.
++    lines.push(
++        rec !== ''
++            ? '  Default if you say nothing: the recommendation above is NOT applied; the gate stays open.'
++            : '  Default if you say nothing: the gate stays open, and no recommendation exists to fall back on.',
++    );
 +    // Risk 5 of the roadmap, made observable rather than merely written down:
 +    // the defect being fixed is reading load, and a mechanism that emits
 +    // paragraphs recreates it under a new name. The remedy the taxonomy names
@@ -562,14 +722,26 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 + */
 +function appendEvidence(file: string, id: string, command: string, output: string, when: string): boolean {
 +    const text = fs.readFileSync(file, 'utf-8');
-+    const head = new RegExp(`^###[ \\t]+blocker:[ \\t]*${id}[ \\t]*$`, 'im');
++    // The id is regex-escaped: ids are parsed with `(.+?)`, so a metacharacter
++    // is legal in the tree and an unescaped interpolation threw an uncaught
++    // SyntaxError — after the authored command had already run.
++    const head = new RegExp(`^###[ \\t]+blocker:[ \\t]*${escapeRe(id)}[ \\t]*$`, 'im');
 +    const m = head.exec(text);
 +    if (!m) {
 +        return false;
 +    }
 +    const bodyStart = m.index + m[0].length;
-+    const nextHead = /^###[ \t]+blocker:/im.exec(text.slice(bodyStart));
-+    const bodyEnd = nextHead ? bodyStart + nextHead.index : text.length;
++    // The body ends at the next blocker OR the next `##` section. Bounding it
++    // only at the next `### blocker:` made the LAST blocker's body run to the
++    // end of the file — the common shape, since `## Blockers` is followed by
++    // `## Risk Register` — so the evidence bullet landed after the risk table
++    // instead of under the blocker, which is the opposite of what this
++    // function's whole point is.
++    const rest = text.slice(bodyStart);
++    const nextHead = /^###[ \t]+blocker:/im.exec(rest);
++    const nextSection = /^##[ \t]+\S/m.exec(rest);
++    const ends = [nextHead?.index, nextSection?.index].filter((i): i is number => i !== undefined);
++    const bodyEnd = ends.length ? bodyStart + Math.min(...ends) : text.length;
 +    const body = text.slice(bodyStart, bodyEnd);
 +
 +    const statusRe = /^-[ \t]*\*\*Status:\*\*[ \t]*.*$/im;
@@ -594,7 +766,30 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 +    return now.toISOString().slice(0, 10);
 +}
 +
-+function execute(roadmapRoot: string, id: string, now: Date): ExecuteResult {
++function escapeRe(s: string): string {
++    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
++}
++
++interface ExecuteOptions {
++    /**
++     * Actually run the class-0 command.
++     *
++     * Default false, and that default is the control. `Run:` is an arbitrary
++     * shell string read out of a markdown file; without this flag the command
++     * is ECHOED and refused, so the operator sees exactly what would run before
++     * anything runs. `non-destructive-by-default` requires the confirmation to
++     * be this-turn and to name the exact object, and the echoed command is that
++     * object.
++     */
++    confirm?: boolean;
++}
++
++function execute(
++    roadmapRoot: string,
++    id: string,
++    now: Date,
++    opts: ExecuteOptions = {},
++): ExecuteResult {
 +    const found = locate(roadmapRoot, id);
 +    if (!found) {
 +        return {
@@ -654,6 +849,38 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 +        };
 +    }
 +
++    const floor = hardFloorReason(command);
++    if (floor !== null) {
++        // Refused outright, not offered for confirmation. Class 0 is defined
++        // as reversible; a push, merge, deploy or delete is not, so this is a
++        // misclassified entry and the fix is to re-author the class — making
++        // the operator wave it through would move a Hard Floor onto a keypress.
++        return {
++            outcome: 'failed',
++            report:
++                `${id} is class 0 but its **Run:** command contains \`${floor}\`, which is a ` +
++                'Hard-Floor action under non-destructive-by-default. Class 0 means ' +
++                'deterministic, free and REVERSIBLE, so this entry is misclassified. ' +
++                'Nothing was executed; re-author the class.\n',
++            code: 1,
++        };
++    }
++
++    if (opts.confirm !== true) {
++        // Echo-before-run. The command is arbitrary shell read out of a
++        // markdown field, so the operator sees the exact string before it runs
++        // and the confirmation is this-turn rather than implied by the id.
++        return {
++            outcome: 'rendered',
++            report:
++                `${id} is class 0 and would run, from the repo root:\n\n` +
++                `    ${command}\n\n` +
++                'Nothing has been executed. Re-run with `--confirm` to execute it and ' +
++                'record the evidence at the blocker.\n',
++            code: 0,
++        };
++    }
++
 +    const r = spawnSync(command, {
 +        shell: true,
 +        encoding: 'utf-8',
@@ -661,11 +888,19 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 +        timeout: 120_000,
 +    });
 +    const output = `${r.stdout ?? ''}${r.stderr ?? ''}`;
-+    if (r.status !== 0) {
++    if (r.error !== undefined || r.status !== 0) {
++        // `r.error` is read, not just the status: a spawn failure or a
++        // maxBuffer overflow leaves status null with empty output, and
++        // "exited null" with no diagnostic is illegible on the one path in
++        // this command that writes.
++        const why =
++            r.error !== undefined
++                ? `could not run (${r.error.message})`
++                : `exited ${r.status ?? 'null'}`;
 +        return {
 +            outcome: 'failed',
 +            report:
-+                `${id}: \`${command}\` exited ${r.status ?? 'null'}. The gate is unchanged — ` +
++                `${id}: \`${command}\` ${why}. The gate is unchanged — ` +
 +                'a blocker resolved by a failed command is worse than an open one.\n' +
 +                output.split(/\r?\n/).slice(0, 10).join('\n') +
 +                '\n',
@@ -686,7 +921,12 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 +        outcome: 'resolved',
 +        report:
 +            `${id} resolved. Ran \`${command}\` (exit 0); evidence appended in ${rel} ` +
-+            `and the status flipped to resolved ${when}.\n`,
++            `and the status flipped to resolved ${when}.\n` +
++            // The dashboard is derived from the file this just rewrote, so it
++            // is now stale. Saying so is the same follow-up `renderResumed`
++            // already prints for its own file-move suggestion.
++            'Run `agent-config roadmap:progress` — the dashboard is derived from the ' +
++            'file this rewrote and is now stale.\n',
 +        code: 0,
 +    };
 +}
@@ -695,10 +935,10 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 +export type { ExecuteResult, Outcome };
 diff --git a/dist/agent-src/scripts/resume_probe.ts b/dist/agent-src/scripts/resume_probe.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71ffd32158e
+index 0000000000000000000000000000000000000000..72e3ef4c8d4b9f5f9a4c516168c65da1ce859ed9
 --- /dev/null
 +++ b/dist/agent-src/scripts/resume_probe.ts
-@@ -0,0 +1,347 @@
+@@ -0,0 +1,422 @@
 +/**
 + * Resume-condition probe — a gate that opened with nobody standing in front
 + * of it is the third failure shape `road-to-gate-autonomy` § 0 names.
@@ -760,8 +1000,13 @@ index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71f
 + * the whole condition on a third of the evidence. Measured on the first live
 + * run: `later/road-to-deferred-rule-retriever.md` waits on three archived
 + * roadmaps AND three demand signals no filesystem check can see.
++ *
++ * Case-INSENSITIVE, and it was not for one revision: every sibling regex here
++ * carries `i` and this one did not, so a lowercase "and" walked through the
++ * guard and its note would have fired on the single conjunct the probe can
++ * resolve — the exact over-report the guard exists to stop.
 + */
-+const COMPOUND_RE = /\bBOTH\b|\bAND\b|\([1-9]\)|\([a-e]\)|`[ \t]*\+|\+[ \t]*`/;
++const COMPOUND_RE = /\bboth\b|\band\b|\([1-9]\)|\([a-e]\)|`[ \t]*\+|\+[ \t]*`/i;
 +
 +/**
 + * A bolded field label that ENDS the condition.
@@ -849,8 +1094,13 @@ index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71f
 + * lines until the quote block breaks.
 + */
 +function extractCondition(text: string): string {
-+    const lines = text.split(/\r?\n/);
-+    const start = lines.findIndex((l) => RESUME_LINE_RE.test(l));
++    const lines = _blankFencedCode(text).split(/\r?\n/);
++    // The marker must be inside the park note's blockquote. Searching the whole
++    // file let ordinary body prose containing "blocked until" become "the
++    // condition", and the continuation loop then read from the wrong anchor.
++    const start = lines.findIndex(
++        (l) => _strip(l).startsWith('>') && RESUME_LINE_RE.test(l),
++    );
 +    if (start === -1) {
 +        return '';
 +    }
@@ -909,6 +1159,55 @@ index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71f
 +    return s.replace(/^[ \t\f\v]+|[ \t\f\v\r]+$/g, '');
 +}
 +
++/**
++ * Blank fenced code, preserving line count.
++ *
++ * A park note that SHOWS the resume-condition syntax in a fenced example is
++ * documenting it, not stating one — the same reason `parse_blockers` and
++ * `lint_roadmap_blockers` both strip fences before they look for blockers.
++ */
++function _blankFencedCode(text: string): string {
++    return text.replace(/^[ \t]*```[^\n]*\n[\s\S]*?^[ \t]*```[ \t]*$/gm, (m) =>
++        '\n'.repeat((m.match(/\n/g) ?? []).length),
++    );
++}
++
++/**
++ * The condition CLAUSE inside the condition text.
++ *
++ * Park notes bold the condition and then explain it in prose:
++ * `**Resume when P2.1 of \`road-to-x\` closes** — the catalogue-logging
++ * falsifier that measures whether … and the report itself declines to …`.
++ * The clause is the bolded span; everything after it is commentary.
++ *
++ * The distinction is load-bearing and was measured the hard way. Making
++ * `COMPOUND_RE` case-insensitive (correct in itself — the flag was missing)
++ * immediately produced the opposite false result: an ordinary "and" in the
++ * *explanation* read as a conjunction of conditions, and the one genuinely
++ * fired note in the tree dropped out. Analysing the clause rather than the
++ * paragraph is what makes a case-insensitive conjunction test safe.
++ *
++ * Falls back to the whole string when no bolded span carries the marker — a
++ * note that writes its condition unbolded gets the blunt reading, which is the
++ * conservative direction.
++ */
++function conditionClause(condition: string): string {
++    const re = /\*\*([^*]+)\*\*/g;
++    let m: RegExpExecArray | null;
++    while ((m = re.exec(condition)) !== null) {
++        const span = m[1] as string;
++        if (RESUME_LINE_RE.test(span)) {
++            // The bolded span sometimes stops before the payload
++            // (`**Resume when** that pruning lands`), so take the span plus the
++            // remainder of its sentence — up to an em dash or a full stop.
++            const after = condition.slice(m.index + m[0].length);
++            const tail = /^[^—–.]*/.exec(after)?.[0] ?? '';
++            return `${span}${tail}`;
++        }
++    }
++    return condition;
++}
++
 +/** Roadmap slugs named by the condition, minus the parked file's own slug. */
 +function referencedRoadmaps(condition: string, ownSlug: string): string[] {
 +    const out = new Set<string>();
@@ -923,10 +1222,21 @@ index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71f
 +    return [...out].sort();
 +}
 +
-+/** Is `stepId` (e.g. `2.1`) ticked in `text`? `null` when it is not found. */
++/**
++ * Is `stepId` (e.g. `2.1`) ticked in `text`? `null` when it is not found.
++ *
++ * The id must sit in the step's LABEL position — immediately after the
++ * checkbox, optionally bolded — not anywhere on the line. Matching it anywhere
++ * meant a line like `- [x] **1.4** raise the cap from 2.0 to 2.1` decided the
++ * verdict for step 2.1, and because `exec` returns the first match in the file
++ * the wrong line won whenever it came first.
++ */
 +function stepIsDone(text: string, stepId: string): boolean | null {
-+    const escaped = stepId.replace('.', '\\.');
-+    const re = new RegExp(`^[ \\t]*-[ \\t]*\\[([ xX~-])\\][^\\n]*\\b(?:P|Phase[ \\t]+)?${escaped}\\b`, 'm');
++    const escaped = stepId.replace(/\./g, '\\.');
++    const re = new RegExp(
++        `^[ \\t]*-[ \\t]*\\[([ xX~-])\\][ \\t]*\\*{0,2}(?:P|Phase[ \\t]+)?${escaped}\\b`,
++        'm',
++    );
 +    const m = re.exec(text);
 +    if (!m) {
 +        return null;
@@ -969,17 +1279,21 @@ index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71f
 +            });
 +            continue;
 +        }
-+        if (COMPOUND_RE.test(condition)) {
++        // Both tests read the CLAUSE, never the surrounding explanation: an
++        // "and" or a roadmap name in the prose after the condition is
++        // commentary, not a second conjunct and not a dependency.
++        const clause = conditionClause(condition);
++        if (COMPOUND_RE.test(clause)) {
 +            findings.push({
 +                file: `later/${name}`,
 +                condition,
-+                refs: referencedRoadmaps(condition, ownSlug),
++                refs: referencedRoadmaps(clause, ownSlug),
 +                verdict: 'undecidable',
 +                why: 'compound condition — the probe reads the roadmap references and not the rest',
 +            });
 +            continue;
 +        }
-+        const refs = referencedRoadmaps(condition, ownSlug);
++        const refs = referencedRoadmaps(clause, ownSlug);
 +        if (refs.length === 0) {
 +            findings.push({
 +                file: `later/${name}`,
@@ -991,7 +1305,7 @@ index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71f
 +            continue;
 +        }
 +
-+        const stepMatch = STEP_REF_RE.exec(condition);
++        const stepMatch = STEP_REF_RE.exec(clause);
 +        const stepId = stepMatch ? (stepMatch[1] as string) : null;
 +
 +        const reasons: string[] = [];
@@ -1038,6 +1352,7 @@ index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71f
 +}
 +
 +export {
++    conditionClause,
 +    extractCondition,
 +    probeLater,
 +    referencedRoadmaps,
@@ -1047,23 +1362,26 @@ index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71f
 +};
 +export type { Disposition, ResumeFinding, Verdict };
 diff --git a/dist/agent-src/scripts/roadmap_gates.ts b/dist/agent-src/scripts/roadmap_gates.ts
-index d76023294dfd19ee692bec693cb046acb7259081..dfc1bb96b1c08bdc3b028dd09068b7fe001a8134 100644
+index d76023294dfd19ee692bec693cb046acb7259081..3b222533841f1440edffe92b7d626f31b4cdf3fd 100644
 --- a/dist/agent-src/scripts/roadmap_gates.ts
 +++ b/dist/agent-src/scripts/roadmap_gates.ts
-@@ -47,6 +47,12 @@
+@@ -47,6 +47,15 @@
   *   ./agent-config gates --json     # machine-readable
   *   ./agent-config gates --reply    # reply-close form; empty when none
   *   ./agent-config gates --pending  # staged actions awaiting confirmation
-+ *   ./agent-config gates --execute <id>   # resolve one class-0 gate by running it
++ *   ./agent-config gates --execute <id>             # echo what would run
++ *   ./agent-config gates --execute <id> --confirm   # run it and record the evidence
 + *
 + * `--execute` is the only mode that writes anything, and it takes exactly one
-+ * blocker id. Everything else here reads. See `gate_execute.ts` for what it
-+ * refuses to do — no sweep, no resolve on a failed command, no invented budget
-+ * ledger, and class 3 unchanged by construction.
++ * blocker id. **Without `--confirm` it runs nothing** — it prints the command
++ * the entry authored so the operator sees the exact string first. Everything
++ * else here reads. See `gate_execute.ts` for what it refuses to do — no sweep,
++ * no resolve on a failed command, no invented budget ledger, no Hard-Floor
++ * command even with `--confirm`, and class 3 unchanged.
   *
   * `--pending` reads a different source — the staged-confirmation store, not the
   * roadmap tree — and stays out of `--reply` on purpose. ADR-222 fixes the
-@@ -65,6 +71,8 @@ import {
+@@ -65,6 +74,8 @@ import {
      blocker_needs_user as needsUser,
      type Blocker,
  } from './update_roadmap_progress.js';
@@ -1072,7 +1390,7 @@ index d76023294dfd19ee692bec693cb046acb7259081..dfc1bb96b1c08bdc3b028dd09068b7fe
  import { listPending } from '../templates/scripts/work_engine/hooks/builtin/staged_confirmation_store.js';
  import type { StagedAction } from '../templates/scripts/work_engine/hooks/builtin/staged_confirmation.js';
  
-@@ -227,7 +235,53 @@ function renderEntry(e: Entry, index: number): string[] {
+@@ -227,7 +238,54 @@ function renderEntry(e: Entry, index: number): string[] {
      return out;
  }
  
@@ -1082,8 +1400,9 @@ index d76023294dfd19ee692bec693cb046acb7259081..dfc1bb96b1c08bdc3b028dd09068b7fe
 + *
 + * Rendered after the blockers because it is a different kind of item: a
 + * blocker is a gate nobody has opened, this is a gate that opened with nobody
-+ * standing in front of it. Empty findings render nothing at all, so the
-+ * section never costs a line on a tree where no condition has fired.
++ * standing in front of it. A tree with no `later/` notes at all renders
++ * nothing; a tree that has them but none fired still prints the coverage line
++ * below, deliberately — see the next paragraph.
 + *
 + * The undecidable count is printed even when zero fired, and that is the
 + * point: "no resume condition has fired" and "the probe could read 12 of 44
@@ -1127,7 +1446,7 @@ index d76023294dfd19ee692bec693cb046acb7259081..dfc1bb96b1c08bdc3b028dd09068b7fe
      const mine = entries.filter((e) => needsUser(e.blocker.owner));
      const others = entries.filter((e) => !needsUser(e.blocker.owner));
      const shown = all ? entries : mine;
-@@ -267,6 +321,7 @@ function render(entries: readonly Entry[], all: boolean): string {
+@@ -267,6 +325,7 @@ function render(entries: readonly Entry[], all: boolean): string {
          lines.push('  "guide me through <id>"   — one decision, step by step');
          lines.push('');
      }
@@ -1135,7 +1454,7 @@ index d76023294dfd19ee692bec693cb046acb7259081..dfc1bb96b1c08bdc3b028dd09068b7fe
      return lines.join('\n') + '\n';
  }
  
-@@ -340,13 +395,20 @@ function renderReply(entries: readonly Entry[]): string {
+@@ -340,13 +399,20 @@ function renderReply(entries: readonly Entry[]): string {
      return lines.join('\n') + '\n';
  }
  
@@ -1157,28 +1476,71 @@ index d76023294dfd19ee692bec693cb046acb7259081..dfc1bb96b1c08bdc3b028dd09068b7fe
                  blockers: pick.map((e) => ({
                      id: e.blocker.id,
                      roadmap: e.roadmapRel,
-@@ -514,9 +576,35 @@ function main(argv?: readonly string[]): number {
-         return 0;
-     }
+@@ -487,6 +553,39 @@ function main(argv?: readonly string[]): number {
+     const reply = args.includes('--reply');
+     const pending = args.includes('--pending');
  
-+    // `--execute <id>` acts; every other flag only reads. One blocker per
-+    // invocation, named explicitly — a blanket sweep would run N authored
-+    // commands on one keypress and make a misclassification cost the tree
-+    // rather than one entry.
++    // `--execute <id>` is answered FIRST, and it is the only mode that writes.
++    // It used to sit after the `--pending` early return, so `--pending
++    // --execute <id>` silently did nothing; and it ignored `--json`, so a
++    // JSON-requesting caller got prose. Both combinations now refuse loudly.
 +    const execIdx = args.indexOf('--execute');
 +    if (execIdx !== -1) {
 +        const id = args[execIdx + 1];
 +        if (id === undefined || id.startsWith('--')) {
 +            process.stderr.write(
-+                'gates --execute needs a blocker id: `agent-config gates --execute <id>`.\n',
++                'usage: gates --execute <blocker-id> [--confirm]\n' +
++                    '  Without --confirm the command is echoed and nothing runs.\n',
 +            );
 +            return 1;
 +        }
-+        const r = execute(roadmapRoot, id, new Date());
++        if (pending) {
++            process.stderr.write('gates: --execute and --pending are different sources; pick one.\n');
++            return 1;
++        }
++        if (json) {
++            process.stderr.write('gates --execute has no JSON form; its output is a report.\n');
++            return 1;
++        }
++        const root = _resolveRepoRoot(process.cwd());
++        const dir = path.join(root, 'agents', 'roadmaps');
++        if (!_isDir(dir)) {
++            process.stderr.write('No roadmaps directory — nothing to execute.\n');
++            return 1;
++        }
++        const r = execute(dir, id, new Date(), { confirm: args.includes('--confirm') });
 +        process.stdout.write(r.report);
 +        return r.code;
 +    }
 +
+     // `--pending` resolves against `agents/runtime/`, not `agents/roadmaps/`,
+     // and is answered BEFORE the roadmaps-directory exit below: a staged action
+     // is independent of whether this project plans in roadmaps at all, so
+@@ -508,15 +607,37 @@ function main(argv?: readonly string[]): number {
+             reply
+                 ? ''
+                 : json
+-                  ? '{"needsYou":0,"other":0,"blockers":[]}\n'
++                  ? // Every key `renderJson` emits, so a consumer reading the
++                    // resume fields gets 0 rather than `undefined` on the
++                    // branch where there is no roadmap tree to probe.
++                    JSON.stringify(
++                          {
++                              needsYou: 0,
++                              other: 0,
++                              resumeFired: 0,
++                              resumeUndecidable: 0,
++                              resumed: [],
++                              blockers: [],
++                          },
++                          null,
++                          2,
++                      ) + '\n'
+                   : 'No roadmaps directory — nothing to report.\n',
+         );
+         return 0;
+     }
+ 
      const entries = collectEntries(roadmapRoot);
 +    // `--reply` deliberately does not carry the probe: ADR-222 fixes that form
 +    // at exactly ONE decision rendered in full, and a fired resume condition is
@@ -1194,7 +1556,7 @@ index d76023294dfd19ee692bec693cb046acb7259081..dfc1bb96b1c08bdc3b028dd09068b7fe
      );
      return 0;
  }
-@@ -553,6 +641,7 @@ export {
+@@ -553,6 +674,7 @@ export {
      render,
      renderJson,
      renderReply,
@@ -1300,20 +1662,24 @@ index 11cd97e542b2b57f20d0cfcfca37d8f70e9bdfa7..c86cf086fa9f90ca4cf2c936d9aa0498
      parse_roadmap,
      bar,
 diff --git a/dist/agent-src/templates/roadmaps.md b/dist/agent-src/templates/roadmaps.md
-index 2dbe70a1f6efb01f5724f6adb3b6b65d7e50ff09..b91035f003bfaf294fb2b7c2deead085b41f43ba 100644
+index 2dbe70a1f6efb01f5724f6adb3b6b65d7e50ff09..a6226a671c58c5f08b258a15796712c39f96b07f 100644
 --- a/dist/agent-src/templates/roadmaps.md
 +++ b/dist/agent-src/templates/roadmaps.md
-@@ -143,6 +143,9 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
+@@ -143,6 +143,13 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
      - **Owner:** user             <!-- user | maintainer | external -->
      - **Blocks:** Phase N — {phase name}
      - **Question:** {optional — the one line saying what is being decided.}
-+    - **Class:** 3                <!-- optional — 0 | 1 | 2 | 3; absent = 3 -->
-+    - **Run:** `{command}`        <!-- required when Class is 0 or 1 -->
-+    - **Budget:** {estimate}      <!-- optional — class 1 only -->
++    <!-- Class is optional and absent means 3. Add Run: ONLY with Class 0 or 1,
++         where it is required — a class-3 entry advertising a command reads as
++         actionable and is not. Budget: is class 1 only.
++           - **Class:** 0
++           - **Run:** `{command}`
++           - **Budget:** {estimate}   (class 1 only)
++    -->
      - **Recommendation:** {which option, and the one sentence why.}
      - **If you do nothing:** {what the non-decision costs, concretely.}
      - **What to do:**
-@@ -186,11 +189,39 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
+@@ -186,11 +193,39 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
        offers to walk them through it step by step in the same reply. The
        owner deciding does not mean the owner executing.
  
@@ -1356,10 +1722,10 @@ index 2dbe70a1f6efb01f5724f6adb3b6b65d7e50ff09..b91035f003bfaf294fb2b7c2deead085
      note (the follow-up-roadmap convention from rule 17) is parsed by
 diff --git a/src/agent-src/scripts/gate_execute.ts b/src/agent-src/scripts/gate_execute.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f12123367
+index 0000000000000000000000000000000000000000..e7251f92f926132279515b606f402fb5c323e854
 --- /dev/null
 +++ b/src/agent-src/scripts/gate_execute.ts
-@@ -0,0 +1,263 @@
+@@ -0,0 +1,395 @@
 +/**
 + * `agent-config gates --execute <id>` — the acting half of the gate layer.
 + *
@@ -1389,8 +1755,16 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 + *     Until it is taken there is no ledger, so class 1 takes the
 + *     render-instead-of-run path — which is the behaviour the blocker itself
 + *     prescribes for a missing ledger, not a stub of the decision.
-+ *   - **No class-3 change.** Byte-identical to the render path, by construction:
-+ *     it calls the same renderer.
++ *   - **No class-3 change.** The class-3 branch executes nothing and writes
++ *     nothing, so `agent-config gates` renders a class-3 entry exactly as it did
++ *     before this module existed. `--execute` on one returns a one-line notice
++ *     and points back at that renderer; it does not call it.
++ *   - **No run without `--confirm`.** `Run:` is arbitrary shell read out of a
++ *     markdown field. Without the flag the command is echoed and refused, so
++ *     the operator sees the exact string first — the this-turn, names-the-object
++ *     confirmation `non-destructive-by-default` requires. A command carrying a
++ *     Hard-Floor action is refused even WITH the flag: class 0 means reversible,
++ *     so such an entry is misclassified rather than merely dangerous.
 + */
 +
 +import * as fs from 'node:fs';
@@ -1429,11 +1803,39 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 +    for (const r of collect(roadmapRoot)) {
 +        for (const b of r.open_blockers) {
 +            if (b.id === id) {
-+                return { blocker: b, file: path.join(roadmapRoot, path.basename(r.rel)), rel: r.rel };
++                // `r.path` is the absolute path the collector already resolved.
++                // Rebuilding it from `basename(r.rel)` discarded the directory,
++                // so a roadmap in any subdirectory the collector does not
++                // exclude was either written to a same-named top-level file or
++                // threw — and either way AFTER the authored command had run.
++                return { blocker: b, file: r.path, rel: r.rel };
 +            }
 +        }
 +    }
 +    return null;
++}
++
++/**
++ * Commands a class-0 gate may never carry, whatever the entry claims.
++ *
++ * Class 0 is defined as deterministic, free and **reversible**. A command that
++ * pushes, merges, deploys, or deletes is none of those, so its presence is a
++ * misclassification — and the right answer to a misclassification is refusal,
++ * not a confirmation prompt that makes the operator the last line of defence.
++ * These are Hard-Floor actions under `non-destructive-by-default`, which no
++ * setting, roadmap or flag lifts.
++ *
++ * A denylist is the wrong shape for a *security boundary* and the right shape
++ * for a *classification check*, which is what this is: the tree's roadmap files
++ * are reviewed content, so this catches the authoring mistake rather than an
++ * attacker. The blast-radius control is `--confirm` below, not this list.
++ */
++const HARD_FLOOR_RE =
++    /(^|[;&|]\s*)(git\s+(?:push|merge|reset\s+--hard|rebase)\b|gh\s+(?:pr\s+merge|release)\b|terraform\s+apply\b|kubectl\s+apply\b|npm\s+publish\b|rm\s+-[rRf]+|DROP\s+TABLE\b|TRUNCATE\b)/i;
++
++function hardFloorReason(command: string): string | null {
++    const m = HARD_FLOOR_RE.exec(command);
++    return m ? (m[2] as string).trim() : null;
 +}
 +
 +/** Strip the backticks an authored `Run:` field carries. */
@@ -1454,11 +1856,27 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 +function consentLine(b: Blocker, why?: string): string {
 +    const head = why ? `${b.id} — ${why}` : b.id;
 +    const rec = b.recommendation.trim();
-+    const lines = [`CONSENT · ${head}`, `  Question:       ${b.question.trim() || b.blocks.trim()}`];
++    const q = b.question.trim();
++    const lines = [`CONSENT · ${head}`];
++    // An entry with no `Question:` has no question, and borrowing `Blocks:`
++    // silently put a "what this holds up" sentence in the "what is being
++    // decided" slot — two different facts. Say which one is on screen.
++    lines.push(
++        q !== ''
++            ? `  Question:       ${q}`
++            : `  Question:       (none authored — this is the Blocks line) ${b.blocks.trim()}`,
++    );
 +    lines.push(
 +        `  Recommendation: ${rec || '(none recorded — ask for one before deciding)'}`,
 +    );
-+    lines.push(`  Default if you say nothing: no change; the gate stays open.`);
++    // The default is derived, not constant: an entry carrying a recommendation
++    // has one, an entry without one has nothing to default TO, and printing
++    // the same sentence for both told the reader nothing either way.
++    lines.push(
++        rec !== ''
++            ? '  Default if you say nothing: the recommendation above is NOT applied; the gate stays open.'
++            : '  Default if you say nothing: the gate stays open, and no recommendation exists to fall back on.',
++    );
 +    // Risk 5 of the roadmap, made observable rather than merely written down:
 +    // the defect being fixed is reading load, and a mechanism that emits
 +    // paragraphs recreates it under a new name. The remedy the taxonomy names
@@ -1492,14 +1910,26 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 + */
 +function appendEvidence(file: string, id: string, command: string, output: string, when: string): boolean {
 +    const text = fs.readFileSync(file, 'utf-8');
-+    const head = new RegExp(`^###[ \\t]+blocker:[ \\t]*${id}[ \\t]*$`, 'im');
++    // The id is regex-escaped: ids are parsed with `(.+?)`, so a metacharacter
++    // is legal in the tree and an unescaped interpolation threw an uncaught
++    // SyntaxError — after the authored command had already run.
++    const head = new RegExp(`^###[ \\t]+blocker:[ \\t]*${escapeRe(id)}[ \\t]*$`, 'im');
 +    const m = head.exec(text);
 +    if (!m) {
 +        return false;
 +    }
 +    const bodyStart = m.index + m[0].length;
-+    const nextHead = /^###[ \t]+blocker:/im.exec(text.slice(bodyStart));
-+    const bodyEnd = nextHead ? bodyStart + nextHead.index : text.length;
++    // The body ends at the next blocker OR the next `##` section. Bounding it
++    // only at the next `### blocker:` made the LAST blocker's body run to the
++    // end of the file — the common shape, since `## Blockers` is followed by
++    // `## Risk Register` — so the evidence bullet landed after the risk table
++    // instead of under the blocker, which is the opposite of what this
++    // function's whole point is.
++    const rest = text.slice(bodyStart);
++    const nextHead = /^###[ \t]+blocker:/im.exec(rest);
++    const nextSection = /^##[ \t]+\S/m.exec(rest);
++    const ends = [nextHead?.index, nextSection?.index].filter((i): i is number => i !== undefined);
++    const bodyEnd = ends.length ? bodyStart + Math.min(...ends) : text.length;
 +    const body = text.slice(bodyStart, bodyEnd);
 +
 +    const statusRe = /^-[ \t]*\*\*Status:\*\*[ \t]*.*$/im;
@@ -1524,7 +1954,30 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 +    return now.toISOString().slice(0, 10);
 +}
 +
-+function execute(roadmapRoot: string, id: string, now: Date): ExecuteResult {
++function escapeRe(s: string): string {
++    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
++}
++
++interface ExecuteOptions {
++    /**
++     * Actually run the class-0 command.
++     *
++     * Default false, and that default is the control. `Run:` is an arbitrary
++     * shell string read out of a markdown file; without this flag the command
++     * is ECHOED and refused, so the operator sees exactly what would run before
++     * anything runs. `non-destructive-by-default` requires the confirmation to
++     * be this-turn and to name the exact object, and the echoed command is that
++     * object.
++     */
++    confirm?: boolean;
++}
++
++function execute(
++    roadmapRoot: string,
++    id: string,
++    now: Date,
++    opts: ExecuteOptions = {},
++): ExecuteResult {
 +    const found = locate(roadmapRoot, id);
 +    if (!found) {
 +        return {
@@ -1584,6 +2037,38 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 +        };
 +    }
 +
++    const floor = hardFloorReason(command);
++    if (floor !== null) {
++        // Refused outright, not offered for confirmation. Class 0 is defined
++        // as reversible; a push, merge, deploy or delete is not, so this is a
++        // misclassified entry and the fix is to re-author the class — making
++        // the operator wave it through would move a Hard Floor onto a keypress.
++        return {
++            outcome: 'failed',
++            report:
++                `${id} is class 0 but its **Run:** command contains \`${floor}\`, which is a ` +
++                'Hard-Floor action under non-destructive-by-default. Class 0 means ' +
++                'deterministic, free and REVERSIBLE, so this entry is misclassified. ' +
++                'Nothing was executed; re-author the class.\n',
++            code: 1,
++        };
++    }
++
++    if (opts.confirm !== true) {
++        // Echo-before-run. The command is arbitrary shell read out of a
++        // markdown field, so the operator sees the exact string before it runs
++        // and the confirmation is this-turn rather than implied by the id.
++        return {
++            outcome: 'rendered',
++            report:
++                `${id} is class 0 and would run, from the repo root:\n\n` +
++                `    ${command}\n\n` +
++                'Nothing has been executed. Re-run with `--confirm` to execute it and ' +
++                'record the evidence at the blocker.\n',
++            code: 0,
++        };
++    }
++
 +    const r = spawnSync(command, {
 +        shell: true,
 +        encoding: 'utf-8',
@@ -1591,11 +2076,19 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 +        timeout: 120_000,
 +    });
 +    const output = `${r.stdout ?? ''}${r.stderr ?? ''}`;
-+    if (r.status !== 0) {
++    if (r.error !== undefined || r.status !== 0) {
++        // `r.error` is read, not just the status: a spawn failure or a
++        // maxBuffer overflow leaves status null with empty output, and
++        // "exited null" with no diagnostic is illegible on the one path in
++        // this command that writes.
++        const why =
++            r.error !== undefined
++                ? `could not run (${r.error.message})`
++                : `exited ${r.status ?? 'null'}`;
 +        return {
 +            outcome: 'failed',
 +            report:
-+                `${id}: \`${command}\` exited ${r.status ?? 'null'}. The gate is unchanged — ` +
++                `${id}: \`${command}\` ${why}. The gate is unchanged — ` +
 +                'a blocker resolved by a failed command is worse than an open one.\n' +
 +                output.split(/\r?\n/).slice(0, 10).join('\n') +
 +                '\n',
@@ -1616,7 +2109,12 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 +        outcome: 'resolved',
 +        report:
 +            `${id} resolved. Ran \`${command}\` (exit 0); evidence appended in ${rel} ` +
-+            `and the status flipped to resolved ${when}.\n`,
++            `and the status flipped to resolved ${when}.\n` +
++            // The dashboard is derived from the file this just rewrote, so it
++            // is now stale. Saying so is the same follow-up `renderResumed`
++            // already prints for its own file-move suggestion.
++            'Run `agent-config roadmap:progress` — the dashboard is derived from the ' +
++            'file this rewrote and is now stale.\n',
 +        code: 0,
 +    };
 +}
@@ -1625,10 +2123,10 @@ index 0000000000000000000000000000000000000000..5e97898afb44d0cfff60614696147f2f
 +export type { ExecuteResult, Outcome };
 diff --git a/src/agent-src/scripts/resume_probe.ts b/src/agent-src/scripts/resume_probe.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71ffd32158e
+index 0000000000000000000000000000000000000000..72e3ef4c8d4b9f5f9a4c516168c65da1ce859ed9
 --- /dev/null
 +++ b/src/agent-src/scripts/resume_probe.ts
-@@ -0,0 +1,347 @@
+@@ -0,0 +1,422 @@
 +/**
 + * Resume-condition probe — a gate that opened with nobody standing in front
 + * of it is the third failure shape `road-to-gate-autonomy` § 0 names.
@@ -1690,8 +2188,13 @@ index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71f
 + * the whole condition on a third of the evidence. Measured on the first live
 + * run: `later/road-to-deferred-rule-retriever.md` waits on three archived
 + * roadmaps AND three demand signals no filesystem check can see.
++ *
++ * Case-INSENSITIVE, and it was not for one revision: every sibling regex here
++ * carries `i` and this one did not, so a lowercase "and" walked through the
++ * guard and its note would have fired on the single conjunct the probe can
++ * resolve — the exact over-report the guard exists to stop.
 + */
-+const COMPOUND_RE = /\bBOTH\b|\bAND\b|\([1-9]\)|\([a-e]\)|`[ \t]*\+|\+[ \t]*`/;
++const COMPOUND_RE = /\bboth\b|\band\b|\([1-9]\)|\([a-e]\)|`[ \t]*\+|\+[ \t]*`/i;
 +
 +/**
 + * A bolded field label that ENDS the condition.
@@ -1779,8 +2282,13 @@ index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71f
 + * lines until the quote block breaks.
 + */
 +function extractCondition(text: string): string {
-+    const lines = text.split(/\r?\n/);
-+    const start = lines.findIndex((l) => RESUME_LINE_RE.test(l));
++    const lines = _blankFencedCode(text).split(/\r?\n/);
++    // The marker must be inside the park note's blockquote. Searching the whole
++    // file let ordinary body prose containing "blocked until" become "the
++    // condition", and the continuation loop then read from the wrong anchor.
++    const start = lines.findIndex(
++        (l) => _strip(l).startsWith('>') && RESUME_LINE_RE.test(l),
++    );
 +    if (start === -1) {
 +        return '';
 +    }
@@ -1839,6 +2347,55 @@ index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71f
 +    return s.replace(/^[ \t\f\v]+|[ \t\f\v\r]+$/g, '');
 +}
 +
++/**
++ * Blank fenced code, preserving line count.
++ *
++ * A park note that SHOWS the resume-condition syntax in a fenced example is
++ * documenting it, not stating one — the same reason `parse_blockers` and
++ * `lint_roadmap_blockers` both strip fences before they look for blockers.
++ */
++function _blankFencedCode(text: string): string {
++    return text.replace(/^[ \t]*```[^\n]*\n[\s\S]*?^[ \t]*```[ \t]*$/gm, (m) =>
++        '\n'.repeat((m.match(/\n/g) ?? []).length),
++    );
++}
++
++/**
++ * The condition CLAUSE inside the condition text.
++ *
++ * Park notes bold the condition and then explain it in prose:
++ * `**Resume when P2.1 of \`road-to-x\` closes** — the catalogue-logging
++ * falsifier that measures whether … and the report itself declines to …`.
++ * The clause is the bolded span; everything after it is commentary.
++ *
++ * The distinction is load-bearing and was measured the hard way. Making
++ * `COMPOUND_RE` case-insensitive (correct in itself — the flag was missing)
++ * immediately produced the opposite false result: an ordinary "and" in the
++ * *explanation* read as a conjunction of conditions, and the one genuinely
++ * fired note in the tree dropped out. Analysing the clause rather than the
++ * paragraph is what makes a case-insensitive conjunction test safe.
++ *
++ * Falls back to the whole string when no bolded span carries the marker — a
++ * note that writes its condition unbolded gets the blunt reading, which is the
++ * conservative direction.
++ */
++function conditionClause(condition: string): string {
++    const re = /\*\*([^*]+)\*\*/g;
++    let m: RegExpExecArray | null;
++    while ((m = re.exec(condition)) !== null) {
++        const span = m[1] as string;
++        if (RESUME_LINE_RE.test(span)) {
++            // The bolded span sometimes stops before the payload
++            // (`**Resume when** that pruning lands`), so take the span plus the
++            // remainder of its sentence — up to an em dash or a full stop.
++            const after = condition.slice(m.index + m[0].length);
++            const tail = /^[^—–.]*/.exec(after)?.[0] ?? '';
++            return `${span}${tail}`;
++        }
++    }
++    return condition;
++}
++
 +/** Roadmap slugs named by the condition, minus the parked file's own slug. */
 +function referencedRoadmaps(condition: string, ownSlug: string): string[] {
 +    const out = new Set<string>();
@@ -1853,10 +2410,21 @@ index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71f
 +    return [...out].sort();
 +}
 +
-+/** Is `stepId` (e.g. `2.1`) ticked in `text`? `null` when it is not found. */
++/**
++ * Is `stepId` (e.g. `2.1`) ticked in `text`? `null` when it is not found.
++ *
++ * The id must sit in the step's LABEL position — immediately after the
++ * checkbox, optionally bolded — not anywhere on the line. Matching it anywhere
++ * meant a line like `- [x] **1.4** raise the cap from 2.0 to 2.1` decided the
++ * verdict for step 2.1, and because `exec` returns the first match in the file
++ * the wrong line won whenever it came first.
++ */
 +function stepIsDone(text: string, stepId: string): boolean | null {
-+    const escaped = stepId.replace('.', '\\.');
-+    const re = new RegExp(`^[ \\t]*-[ \\t]*\\[([ xX~-])\\][^\\n]*\\b(?:P|Phase[ \\t]+)?${escaped}\\b`, 'm');
++    const escaped = stepId.replace(/\./g, '\\.');
++    const re = new RegExp(
++        `^[ \\t]*-[ \\t]*\\[([ xX~-])\\][ \\t]*\\*{0,2}(?:P|Phase[ \\t]+)?${escaped}\\b`,
++        'm',
++    );
 +    const m = re.exec(text);
 +    if (!m) {
 +        return null;
@@ -1899,17 +2467,21 @@ index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71f
 +            });
 +            continue;
 +        }
-+        if (COMPOUND_RE.test(condition)) {
++        // Both tests read the CLAUSE, never the surrounding explanation: an
++        // "and" or a roadmap name in the prose after the condition is
++        // commentary, not a second conjunct and not a dependency.
++        const clause = conditionClause(condition);
++        if (COMPOUND_RE.test(clause)) {
 +            findings.push({
 +                file: `later/${name}`,
 +                condition,
-+                refs: referencedRoadmaps(condition, ownSlug),
++                refs: referencedRoadmaps(clause, ownSlug),
 +                verdict: 'undecidable',
 +                why: 'compound condition — the probe reads the roadmap references and not the rest',
 +            });
 +            continue;
 +        }
-+        const refs = referencedRoadmaps(condition, ownSlug);
++        const refs = referencedRoadmaps(clause, ownSlug);
 +        if (refs.length === 0) {
 +            findings.push({
 +                file: `later/${name}`,
@@ -1921,7 +2493,7 @@ index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71f
 +            continue;
 +        }
 +
-+        const stepMatch = STEP_REF_RE.exec(condition);
++        const stepMatch = STEP_REF_RE.exec(clause);
 +        const stepId = stepMatch ? (stepMatch[1] as string) : null;
 +
 +        const reasons: string[] = [];
@@ -1968,6 +2540,7 @@ index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71f
 +}
 +
 +export {
++    conditionClause,
 +    extractCondition,
 +    probeLater,
 +    referencedRoadmaps,
@@ -1977,23 +2550,26 @@ index 0000000000000000000000000000000000000000..05696e45326f899d04005eaae55ad71f
 +};
 +export type { Disposition, ResumeFinding, Verdict };
 diff --git a/src/agent-src/scripts/roadmap_gates.ts b/src/agent-src/scripts/roadmap_gates.ts
-index d76023294dfd19ee692bec693cb046acb7259081..dfc1bb96b1c08bdc3b028dd09068b7fe001a8134 100644
+index d76023294dfd19ee692bec693cb046acb7259081..3b222533841f1440edffe92b7d626f31b4cdf3fd 100644
 --- a/src/agent-src/scripts/roadmap_gates.ts
 +++ b/src/agent-src/scripts/roadmap_gates.ts
-@@ -47,6 +47,12 @@
+@@ -47,6 +47,15 @@
   *   ./agent-config gates --json     # machine-readable
   *   ./agent-config gates --reply    # reply-close form; empty when none
   *   ./agent-config gates --pending  # staged actions awaiting confirmation
-+ *   ./agent-config gates --execute <id>   # resolve one class-0 gate by running it
++ *   ./agent-config gates --execute <id>             # echo what would run
++ *   ./agent-config gates --execute <id> --confirm   # run it and record the evidence
 + *
 + * `--execute` is the only mode that writes anything, and it takes exactly one
-+ * blocker id. Everything else here reads. See `gate_execute.ts` for what it
-+ * refuses to do — no sweep, no resolve on a failed command, no invented budget
-+ * ledger, and class 3 unchanged by construction.
++ * blocker id. **Without `--confirm` it runs nothing** — it prints the command
++ * the entry authored so the operator sees the exact string first. Everything
++ * else here reads. See `gate_execute.ts` for what it refuses to do — no sweep,
++ * no resolve on a failed command, no invented budget ledger, no Hard-Floor
++ * command even with `--confirm`, and class 3 unchanged.
   *
   * `--pending` reads a different source — the staged-confirmation store, not the
   * roadmap tree — and stays out of `--reply` on purpose. ADR-222 fixes the
-@@ -65,6 +71,8 @@ import {
+@@ -65,6 +74,8 @@ import {
      blocker_needs_user as needsUser,
      type Blocker,
  } from './update_roadmap_progress.js';
@@ -2002,7 +2578,7 @@ index d76023294dfd19ee692bec693cb046acb7259081..dfc1bb96b1c08bdc3b028dd09068b7fe
  import { listPending } from '../templates/scripts/work_engine/hooks/builtin/staged_confirmation_store.js';
  import type { StagedAction } from '../templates/scripts/work_engine/hooks/builtin/staged_confirmation.js';
  
-@@ -227,7 +235,53 @@ function renderEntry(e: Entry, index: number): string[] {
+@@ -227,7 +238,54 @@ function renderEntry(e: Entry, index: number): string[] {
      return out;
  }
  
@@ -2012,8 +2588,9 @@ index d76023294dfd19ee692bec693cb046acb7259081..dfc1bb96b1c08bdc3b028dd09068b7fe
 + *
 + * Rendered after the blockers because it is a different kind of item: a
 + * blocker is a gate nobody has opened, this is a gate that opened with nobody
-+ * standing in front of it. Empty findings render nothing at all, so the
-+ * section never costs a line on a tree where no condition has fired.
++ * standing in front of it. A tree with no `later/` notes at all renders
++ * nothing; a tree that has them but none fired still prints the coverage line
++ * below, deliberately — see the next paragraph.
 + *
 + * The undecidable count is printed even when zero fired, and that is the
 + * point: "no resume condition has fired" and "the probe could read 12 of 44
@@ -2057,7 +2634,7 @@ index d76023294dfd19ee692bec693cb046acb7259081..dfc1bb96b1c08bdc3b028dd09068b7fe
      const mine = entries.filter((e) => needsUser(e.blocker.owner));
      const others = entries.filter((e) => !needsUser(e.blocker.owner));
      const shown = all ? entries : mine;
-@@ -267,6 +321,7 @@ function render(entries: readonly Entry[], all: boolean): string {
+@@ -267,6 +325,7 @@ function render(entries: readonly Entry[], all: boolean): string {
          lines.push('  "guide me through <id>"   — one decision, step by step');
          lines.push('');
      }
@@ -2065,7 +2642,7 @@ index d76023294dfd19ee692bec693cb046acb7259081..dfc1bb96b1c08bdc3b028dd09068b7fe
      return lines.join('\n') + '\n';
  }
  
-@@ -340,13 +395,20 @@ function renderReply(entries: readonly Entry[]): string {
+@@ -340,13 +399,20 @@ function renderReply(entries: readonly Entry[]): string {
      return lines.join('\n') + '\n';
  }
  
@@ -2087,28 +2664,71 @@ index d76023294dfd19ee692bec693cb046acb7259081..dfc1bb96b1c08bdc3b028dd09068b7fe
                  blockers: pick.map((e) => ({
                      id: e.blocker.id,
                      roadmap: e.roadmapRel,
-@@ -514,9 +576,35 @@ function main(argv?: readonly string[]): number {
-         return 0;
-     }
+@@ -487,6 +553,39 @@ function main(argv?: readonly string[]): number {
+     const reply = args.includes('--reply');
+     const pending = args.includes('--pending');
  
-+    // `--execute <id>` acts; every other flag only reads. One blocker per
-+    // invocation, named explicitly — a blanket sweep would run N authored
-+    // commands on one keypress and make a misclassification cost the tree
-+    // rather than one entry.
++    // `--execute <id>` is answered FIRST, and it is the only mode that writes.
++    // It used to sit after the `--pending` early return, so `--pending
++    // --execute <id>` silently did nothing; and it ignored `--json`, so a
++    // JSON-requesting caller got prose. Both combinations now refuse loudly.
 +    const execIdx = args.indexOf('--execute');
 +    if (execIdx !== -1) {
 +        const id = args[execIdx + 1];
 +        if (id === undefined || id.startsWith('--')) {
 +            process.stderr.write(
-+                'gates --execute needs a blocker id: `agent-config gates --execute <id>`.\n',
++                'usage: gates --execute <blocker-id> [--confirm]\n' +
++                    '  Without --confirm the command is echoed and nothing runs.\n',
 +            );
 +            return 1;
 +        }
-+        const r = execute(roadmapRoot, id, new Date());
++        if (pending) {
++            process.stderr.write('gates: --execute and --pending are different sources; pick one.\n');
++            return 1;
++        }
++        if (json) {
++            process.stderr.write('gates --execute has no JSON form; its output is a report.\n');
++            return 1;
++        }
++        const root = _resolveRepoRoot(process.cwd());
++        const dir = path.join(root, 'agents', 'roadmaps');
++        if (!_isDir(dir)) {
++            process.stderr.write('No roadmaps directory — nothing to execute.\n');
++            return 1;
++        }
++        const r = execute(dir, id, new Date(), { confirm: args.includes('--confirm') });
 +        process.stdout.write(r.report);
 +        return r.code;
 +    }
 +
+     // `--pending` resolves against `agents/runtime/`, not `agents/roadmaps/`,
+     // and is answered BEFORE the roadmaps-directory exit below: a staged action
+     // is independent of whether this project plans in roadmaps at all, so
+@@ -508,15 +607,37 @@ function main(argv?: readonly string[]): number {
+             reply
+                 ? ''
+                 : json
+-                  ? '{"needsYou":0,"other":0,"blockers":[]}\n'
++                  ? // Every key `renderJson` emits, so a consumer reading the
++                    // resume fields gets 0 rather than `undefined` on the
++                    // branch where there is no roadmap tree to probe.
++                    JSON.stringify(
++                          {
++                              needsYou: 0,
++                              other: 0,
++                              resumeFired: 0,
++                              resumeUndecidable: 0,
++                              resumed: [],
++                              blockers: [],
++                          },
++                          null,
++                          2,
++                      ) + '\n'
+                   : 'No roadmaps directory — nothing to report.\n',
+         );
+         return 0;
+     }
+ 
      const entries = collectEntries(roadmapRoot);
 +    // `--reply` deliberately does not carry the probe: ADR-222 fixes that form
 +    // at exactly ONE decision rendered in full, and a fired resume condition is
@@ -2124,7 +2744,7 @@ index d76023294dfd19ee692bec693cb046acb7259081..dfc1bb96b1c08bdc3b028dd09068b7fe
      );
      return 0;
  }
-@@ -553,6 +641,7 @@ export {
+@@ -553,6 +674,7 @@ export {
      render,
      renderJson,
      renderReply,
@@ -2230,20 +2850,24 @@ index 11cd97e542b2b57f20d0cfcfca37d8f70e9bdfa7..c86cf086fa9f90ca4cf2c936d9aa0498
      parse_roadmap,
      bar,
 diff --git a/src/agent-src/templates/roadmaps.md b/src/agent-src/templates/roadmaps.md
-index e5fb2368b7444d65ff494c75a7160ab4a48cbee5..326e5f4c1d8721d9363b386f5d1fb93993b798ed 100644
+index e5fb2368b7444d65ff494c75a7160ab4a48cbee5..09fccea47f1d4cf30737363f45d55a09cdfef985 100644
 --- a/src/agent-src/templates/roadmaps.md
 +++ b/src/agent-src/templates/roadmaps.md
-@@ -143,6 +143,9 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
+@@ -143,6 +143,13 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
      - **Owner:** user             <!-- user | maintainer | external -->
      - **Blocks:** Phase N — {phase name}
      - **Question:** {optional — the one line saying what is being decided.}
-+    - **Class:** 3                <!-- optional — 0 | 1 | 2 | 3; absent = 3 -->
-+    - **Run:** `{command}`        <!-- required when Class is 0 or 1 -->
-+    - **Budget:** {estimate}      <!-- optional — class 1 only -->
++    <!-- Class is optional and absent means 3. Add Run: ONLY with Class 0 or 1,
++         where it is required — a class-3 entry advertising a command reads as
++         actionable and is not. Budget: is class 1 only.
++           - **Class:** 0
++           - **Run:** `{command}`
++           - **Budget:** {estimate}   (class 1 only)
++    -->
      - **Recommendation:** {which option, and the one sentence why.}
      - **If you do nothing:** {what the non-decision costs, concretely.}
      - **What to do:**
-@@ -186,11 +189,39 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
+@@ -186,11 +193,39 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
        offers to walk them through it step by step in the same reply. The
        owner deciding does not mean the owner executing.
  
@@ -2383,10 +3007,10 @@ index 76325e3e00cf510d837d0c2831875d0e242d6754..a893bd86d64a8f17ffed43c0d4cf3916
      _scanBoth,
 diff --git a/tests/scripts/gate_execute.test.ts b/tests/scripts/gate_execute.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..5a9a16ad3d48a46e08d0d2e9c4643e503a51eb64
+index 0000000000000000000000000000000000000000..3fa65ada563209b2c4c28f224bc661a57208da22
 --- /dev/null
 +++ b/tests/scripts/gate_execute.test.ts
-@@ -0,0 +1,206 @@
+@@ -0,0 +1,281 @@
 +// Tests for src/agent-src/scripts/gate_execute.ts — `gates --execute <id>`,
 +// the acting half behind `road-to-gate-autonomy` Phase 2.
 +//
@@ -2456,7 +3080,7 @@ index 0000000000000000000000000000000000000000..5a9a16ad3d48a46e08d0d2e9c4643e50
 +            roadmap('time-window', ['- **Class:** 0', '- **Run:** `echo window-is-past`']),
 +        );
 +
-+        const r = execute(roadmapRoot, 'time-window', WHEN);
++        const r = execute(roadmapRoot, 'time-window', WHEN, { confirm: true });
 +        expect(r.outcome).toBe('resolved');
 +        expect(r.code).toBe(0);
 +
@@ -2476,7 +3100,7 @@ index 0000000000000000000000000000000000000000..5a9a16ad3d48a46e08d0d2e9c4643e50
 +        );
 +        const before = fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8');
 +
-+        const r = execute(roadmapRoot, 'flaky', WHEN);
++        const r = execute(roadmapRoot, 'flaky', WHEN, { confirm: true });
 +        expect(r.outcome).toBe('failed');
 +        expect(r.code).toBe(1);
 +        expect(r.report).toContain('exited 3');
@@ -2490,6 +3114,81 @@ index 0000000000000000000000000000000000000000..5a9a16ad3d48a46e08d0d2e9c4643e50
 +        const r = execute(roadmapRoot, 'bare', WHEN);
 +        expect(r.outcome).toBe('failed');
 +        expect(r.report).toContain('no **Run:** command');
++    });
++});
++
++describe('gates --execute — nothing runs without --confirm', () => {
++    // Regression for R2 finding 1: `Run:` is arbitrary shell read out of a
++    // markdown field, and the first cut executed it on one keypress.
++
++    it('echoes the command and executes nothing by default', () => {
++        writeRoadmap(
++            'road-to-x.md',
++            roadmap('probe', ['- **Class:** 0', '- **Run:** `echo MUST-NOT-RUN`']),
++        );
++        const before = fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8');
++
++        const r = execute(roadmapRoot, 'probe', WHEN);
++        expect(r.outcome).toBe('rendered');
++        expect(r.code).toBe(0);
++        expect(r.report).toContain('echo MUST-NOT-RUN');
++        expect(r.report).toContain('--confirm');
++        // Echoed, not run: the file is untouched and no evidence was appended.
++        expect(fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8')).toBe(before);
++        expect(r.report).not.toContain('resolved.');
++    });
++
++    it('refuses a Hard-Floor command even WITH --confirm', () => {
++        // Class 0 means reversible. A push is not, so the entry is
++        // misclassified and the answer is refusal, not a confirmation prompt.
++        for (const cmd of ['git push origin main', 'terraform apply', 'rm -rf dist', 'gh pr merge 12']) {
++            writeRoadmap('road-to-x.md', roadmap('oops', ['- **Class:** 0', `- **Run:** \`${cmd}\``]));
++            const r = execute(roadmapRoot, 'oops', WHEN, { confirm: true });
++            expect(r.outcome, cmd).toBe('failed');
++            expect(r.report, cmd).toContain('Hard-Floor');
++            expect(r.report, cmd).toContain('misclassified');
++        }
++    });
++
++    it('a near-miss is not mistaken for a Hard-Floor command', () => {
++        // The words appear, but not as the command: the pattern anchors at a
++        // command position, so mentioning a push in output is not pushing.
++        writeRoadmap(
++            'road-to-x.md',
++            roadmap('fine', ['- **Class:** 0', '- **Run:** `echo nothing to push here`']),
++        );
++        expect(execute(roadmapRoot, 'fine', WHEN, { confirm: true }).outcome).toBe('resolved');
++    });
++});
++
++describe('gates --execute — the evidence lands under the blocker', () => {
++    it('a blocker followed by another ## section keeps its evidence in place', () => {
++        // Regression for R2 finding 3: the body ran to the end of the file for
++        // the LAST blocker, which is the common shape, so the bullet landed
++        // after the risk table instead of under the entry.
++        writeRoadmap(
++            'road-to-x.md',
++            roadmap('last-one', ['- **Class:** 0', '- **Run:** `echo ok`']) +
++                ['## Risk Register', '', '| Rank | Item |', '|---|---|', '| 1 | something |', ''].join('\n'),
++        );
++        execute(roadmapRoot, 'last-one', WHEN, { confirm: true });
++
++        const after = fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8');
++        const evidenceAt = after.indexOf('**Unblock evidence');
++        const riskAt = after.indexOf('## Risk Register');
++        expect(evidenceAt).toBeGreaterThan(-1);
++        expect(evidenceAt).toBeLessThan(riskAt);
++    });
++
++    it('a blocker id carrying a regex metacharacter does not throw', () => {
++        // Regression for R2 finding 13: ids are parsed with `(.+?)`, so a
++        // metacharacter is legal in the tree and threw AFTER the command ran.
++        writeRoadmap(
++            'road-to-x.md',
++            roadmap('b-foo(1)', ['- **Class:** 0', '- **Run:** `echo ok`']),
++        );
++        const r = execute(roadmapRoot, 'b-foo(1)', WHEN, { confirm: true });
++        expect(r.outcome).toBe('resolved');
 +    });
 +});
 +
@@ -2694,10 +3393,10 @@ index 8bb9e7d03303bdd839a2b96454cf5ae023ab58be..27ef417fb29422c392c66b28aa5e8454
          '## Blockers',
 diff --git a/tests/scripts/resume_probe.test.ts b/tests/scripts/resume_probe.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..3788c69b8f192a6149768f219ca00e22742b424a
+index 0000000000000000000000000000000000000000..8e9dab5cb45fc7b37003c6e9de9ad1b3bd02521e
 --- /dev/null
 +++ b/tests/scripts/resume_probe.test.ts
-@@ -0,0 +1,230 @@
+@@ -0,0 +1,333 @@
 +// Tests for src/agent-src/scripts/resume_probe.ts — the class-0 liveness
 +// check behind `road-to-gate-autonomy` step 4.1.
 +//
@@ -2790,13 +3489,116 @@ index 0000000000000000000000000000000000000000..3788c69b8f192a6149768f219ca00e22
 +        expect(f!.why).toContain('still open');
 +    });
 +
-+    it('a compound condition needs EVERY named roadmap closed', () => {
++    it('a multi-roadmap condition needs EVERY named roadmap closed', () => {
++        // Comma-separated on purpose: an "and"/"both" phrasing is caught one
++        // step earlier by the compound guard, so this is the shape that
++        // actually reaches the per-ref loop.
 +        write(
 +            'later/road-to-parked.md',
-+            '> **Resume when `road-to-a` and `road-to-b` both close.**\n',
++            '> **Resume when `road-to-a`, `road-to-b` close.**\n',
 +        );
 +        write('archive/road-to-a.md', '# closed\n');
 +        write('road-to-b.md', '- [ ] still going\n');
++
++        const [f] = probeLater(root);
++        expect(f!.verdict).toBe('unmet');
++    });
++
++    it('a lowercase conjunction is compound too — the guard is case-insensitive', () => {
++        // Regression for R2 finding 6: COMPOUND_RE shipped without `i` while
++        // every sibling regex had it, so this exact note would have fired on
++        // its single resolvable conjunct.
++        write(
++            'later/road-to-parked.md',
++            '> **Resume when `road-to-a` closes and telemetry shows demand.**\n',
++        );
++        write('archive/road-to-a.md', '# closed\n');
++
++        const [f] = probeLater(root);
++        expect(f!.verdict).toBe('undecidable');
++        expect(f!.why).toContain('compound');
++    });
++
++    it('an "and" in the EXPLANATION is not a conjunction of conditions', () => {
++        // Measured while fixing finding 6: making COMPOUND_RE case-insensitive
++        // is right, and on its own it produced the opposite false result —
++        // ordinary prose after the em dash read as a second conjunct and the
++        // one genuinely fired note in the tree dropped out. The clause is the
++        // bolded span; the paragraph after it is commentary.
++        write(
++            'later/road-to-parked.md',
++            [
++                '> **Resume when P2.1 of `road-to-a` closes** — the falsifier that measures',
++                '> whether a description reaches the model at all, and the report itself',
++                '> declines to produce a rate.',
++                '',
++            ].join('\n'),
++        );
++        write('archive/road-to-a.md', '# closed\n');
++
++        const [f] = probeLater(root);
++        expect(f!.verdict).toBe('fired');
++    });
++
++    it('a roadmap named only in the explanation is not a dependency', () => {
++        write(
++            'later/road-to-parked.md',
++            [
++                '> **Resume when `road-to-a` closes** — context: this was spun out of',
++                '> `road-to-b`, which is unrelated to the condition.',
++                '',
++            ].join('\n'),
++        );
++        write('archive/road-to-a.md', '# closed\n');
++        write('road-to-b.md', '- [ ] still going\n');
++
++        const [f] = probeLater(root);
++        expect(f!.verdict).toBe('fired');
++        expect(f!.refs).toEqual(['road-to-a']);
++    });
++
++    it('a resume marker in body prose is not the condition', () => {
++        // Regression for R2 finding 14: the marker search covered the whole
++        // file, so ordinary prose could become "the condition".
++        write(
++            'later/road-to-parked.md',
++            [
++                '> **Parked.** No machine-readable condition here.',
++                '',
++                'Historical note: this was blocked until `road-to-a` closed, back in June.',
++                '',
++            ].join('\n'),
++        );
++        write('archive/road-to-a.md', '# closed\n');
++
++        const [f] = probeLater(root);
++        expect(f!.verdict).toBe('undecidable');
++        expect(f!.condition).toBe('');
++    });
++
++    it('a fenced example of the syntax is documentation, not a condition', () => {
++        write(
++            'later/road-to-parked.md',
++            ['> **Parked.**', '', '```markdown', '> **Resume when `road-to-a` closes.**', '```', ''].join(
++                '\n',
++            ),
++        );
++        write('archive/road-to-a.md', '# closed\n');
++
++        const [f] = probeLater(root);
++        expect(f!.verdict).toBe('undecidable');
++    });
++
++    it('the step id must sit in the label position, not anywhere on the line', () => {
++        // Regression for R2 finding 5: an earlier unrelated line mentioning
++        // the number decided the verdict, and exec returns the first match.
++        write('later/road-to-parked.md', '> **Resume when 2.1 of `road-to-live` closes.**\n');
++        write(
++            'road-to-live.md',
++            ['- [x] **1.4** raise the cap from 2.0 to 2.1', '- [ ] **2.1** the real step', ''].join(
++                '\n',
++            ),
++        );
 +
 +        const [f] = probeLater(root);
 +        expect(f!.verdict).toBe('unmet');
