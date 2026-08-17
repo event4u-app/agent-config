@@ -167,7 +167,7 @@ Siblings and their boundaries, so no step here duplicates an owner:
       claim 11 exists to record. Emit one row per rule: name, exact tokens,
       pointer target, target exists yes/no.
       <!-- verify: ./scripts-run src/scripts/check_rule_stub_ceiling --report -->
-      **Done:** [`rule-stub-projection-phase0.md`](../evidence/analysis/rule-stub-projection-phase0.md).
+      **Done:** [`rule-stub-projection-phase0.md`](../../evidence/analysis/rule-stub-projection-phase0.md).
       **44 rules, not 42** — the live count via the ledger gate's own matcher.
       **All 45 pointers resolve; zero broken.**
       **The step's own measurement path is refuted:** `rule_activation_census.ts`
@@ -208,7 +208,7 @@ Siblings and their boundaries, so no step here duplicates an owner:
   be elsewhere. Recorded as a miss rather than reframed — writing the bar down
   first is what makes a 17.6 % result mean anything.
 - **Exit:** a committed table covering every migrated rule with both totals.
-  **Met** — [`rule-stub-projection-phase0.md`](../evidence/analysis/rule-stub-projection-phase0.md).
+  **Met** — [`rule-stub-projection-phase0.md`](../../evidence/analysis/rule-stub-projection-phase0.md).
 - **Rollback:** the table is an evidence artifact; deleting it reverts the phase.
 
 ## Phase 1 — Make the pointer machine-checked
