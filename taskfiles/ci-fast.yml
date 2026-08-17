@@ -919,6 +919,19 @@ tasks:
       archive/ later/ skipped/ stubs/ are not concurrently open.
     cmd: ./scripts-run src/scripts/lint_roadmap_family_cap {{.QUIET_FLAG}}
 
+  check-rule-activation-census:
+    silent: true
+    desc: >
+      Ratchet on the rule-activation split — which rules the Claude host loads on
+      a path match and which load in every session. Two axes: the scoped/mixed ID
+      SETS are pinned by identity, and the unconditional corpus's exact-BPE token
+      total may only walk down. Exists because commit 33c7c20 moved nineteen
+      rules from path-scoped to always-on in one emitter change and nothing in
+      the repo would have caught it — the only witnesses were a commit body and,
+      months later, an external analysis. A count-only check can be satisfied by
+      one rule in and one rule out; the id-set axis cannot.
+    cmd: ./scripts-run src/scripts/check_rule_activation_census {{.QUIET_FLAG}}
+
   lint-scheduled-deprecations:
     silent: true
     desc: |

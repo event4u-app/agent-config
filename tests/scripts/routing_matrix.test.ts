@@ -40,8 +40,18 @@ interface MatrixFile {
  * 2026-08-03: full tier-2 coverage landed (73/73).
  * 2026-08-04: 73 → 72 — brand-consistency merged into brand-source-of-truth
  * (rule hygiene); its matrix positives were absorbed, coverage stays full.
+ * 2026-08-17: 72 → 74 — `design-review-after-ui-write` and
+ * `settings-ask-protocol` gained matrices (road-to-mixed-trigger-activation-cost
+ * step 1.1). Both belong to the nineteen rules that flipped from path-scoped to
+ * always-on at 12.1.0, and they were the only two of those nineteen with no
+ * matrix at all — the two whose keyword reach nothing pinned, which is the
+ * evidence the Phase-2 scoping decision is taken against. Coverage is NOT full:
+ * four tier-2 rules still have none (council-availability,
+ * evaluator-independence, missing-skill-recovery, self-repair-loop). None of the
+ * four is in the flipped nineteen, so they sit outside that roadmap's scope and
+ * are named here rather than left as an unexplained gap between 74 and 78.
  */
-const TIER2_MATRIX_FLOOR = 72;
+const TIER2_MATRIX_FLOOR = 74;
 
 const files = fs
   .readdirSync(MATRIX_DIR)

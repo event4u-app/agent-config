@@ -157,6 +157,16 @@ jobs:
       - name: source size budget (growth ratchet over src/**/*.ts)
         run: ./scripts-run src/scripts/check_source_size_budget
 
+      # Ratchet on which rules the Claude host loads on a path match versus in
+      # every session. Two axes: the scoped and mixed ID SETS pinned by identity
+      # — a count alone is satisfiable by one rule in and one rule out — plus an
+      # exact-BPE weight axis that may only walk down. Commit 33c7c20 moved
+      # nineteen rules across that line in one emitter change with nothing
+      # watching, and the only witnesses were a commit body and, months later, an
+      # external analysis.
+      - name: rule activation census (ratchet over the scoped/mixed split)
+        run: ./scripts-run src/scripts/check_rule_activation_census
+
       - name: pre-migration references (retired Python install hints)
         run: ./scripts-run src/scripts/lint_pre_migration_refs
 
