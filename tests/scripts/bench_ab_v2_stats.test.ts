@@ -33,6 +33,7 @@ import {
     cost_by_arm,
     pricing_age_days,
     gate_verdict,
+    search_claim_verdict,
     size_claim_verdict,
 } from '../../src/scripts/bench_ab_v2_stats.js';
 
@@ -710,6 +711,83 @@ describe('size_claim_verdict — the metric pair (T1/T2) and the T4 disqualifier
         };
         const a = analyse(payload) as Record<string, unknown>;
         const claims = a['size_claims'] as Record<string, unknown>[];
+        const comps = a['comparisons'] as Record<string, unknown>[];
+        expect(claims.length).toBe(comps.length);
+        expect(claims.every((c) => typeof c['verdict'] === 'string')).toBe(true);
+    });
+});
+
+// ── T5 — the search-adherence adapter ───────────────────────────────────────
+//
+// The verdict logic itself is pinned in `_lib_bench_ab_search_adherence.test.ts`.
+// What is tested HERE is the wiring nobody else covers: that `compare()`
+// collects `search_adherence` off the trials into a `search` block, and that a
+// trial carrying the metric on only ONE side of a pair leaves the endpoint
+// unmeasured rather than half-counted. Stated negatively, like its T1/T2/T4
+// sibling above: construct the input that would produce the forbidden verdict
+// and assert it does not appear.
+describe('search_claim_verdict — the T5 adapter', () => {
+    const SEEDS = 8;
+
+    const runs = (search: number | null, jitter = 0): Record<string, unknown>[] =>
+        Array.from({ length: SEEDS }, (_, seed) => {
+            const metrics: Record<string, unknown> = { status_bucket: 'completed', tokens: 100 };
+            if (search !== null) metrics['search_adherence'] = search + (seed % 2) * jitter;
+            return {
+                seed,
+                errored: false,
+                capability_pass: true,
+                discipline_score: 1.0,
+                discipline_pass: true,
+                metrics,
+            };
+        });
+
+    const cmpOf = (ladder: number | null, pkg: number | null): Record<string, unknown> =>
+        compare(
+            [{ id: 't1', arms: { 'package-ladder': runs(ladder), package: runs(pkg) } }],
+            'package-ladder',
+            'package',
+        ) as Record<string, unknown>;
+
+    it('collects the metric into a measured `search` block', () => {
+        const search = cmpOf(1, 0.5)['search'] as Record<string, unknown>;
+        expect(search['measured']).toBe(true);
+        expect(search['n_pairs']).toBe(SEEDS);
+    });
+
+    it('REFUSES when adherence fell significantly', () => {
+        const v = search_claim_verdict(cmpOf(0, 1));
+        expect(v['verdict']).toBe('REFUSED-SEARCH-REGRESSION');
+    });
+
+    it('does NOT report a significant RISE as a win', () => {
+        const v = search_claim_verdict(cmpOf(1, 0));
+        expect(v['verdict']).toBe('PASS');
+        expect(String(v['reason'])).not.toMatch(/win|better|improve/i);
+    });
+
+    it('an ABSENT endpoint is INCONCLUSIVE, never a pass', () => {
+        const cmp = cmpOf(null, null);
+        expect((cmp['search'] as Record<string, unknown>)['measured']).toBe(false);
+        const v = search_claim_verdict(cmp);
+        expect(v['verdict']).toBe('INCONCLUSIVE');
+        expect(v['verdict']).not.toBe('PASS');
+    });
+
+    it('a metric present on ONE side only leaves the pair unmeasured', () => {
+        // Half a pair is no observation. Counting the one side that carried it
+        // would compare an arm against nothing and report the difference.
+        const cmp = cmpOf(1, null);
+        expect((cmp['search'] as Record<string, unknown>)['measured']).toBe(false);
+        expect(search_claim_verdict(cmp)['verdict']).toBe('INCONCLUSIVE');
+    });
+
+    it('analyse() emits one search claim per rendered comparison', () => {
+        const a = analyse({
+            records: [{ id: 't1', arms: { 'package-ladder': runs(1), package: runs(1) } }],
+        }) as Record<string, unknown>;
+        const claims = a['search_claims'] as Record<string, unknown>[];
         const comps = a['comparisons'] as Record<string, unknown>[];
         expect(claims.length).toBe(comps.length);
         expect(claims.every((c) => typeof c['verdict'] === 'string')).toBe(true);
