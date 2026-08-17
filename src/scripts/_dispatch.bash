@@ -162,6 +162,9 @@ Tier 1 — power-user (release shape, audit, migration):
                              Usage: council:render <responses.json>
   council:status             Report whether an AI council is configured, and from where
                              (no API call, no spend)
+  council:quota              Show today's per-provider CLI-call usage against the
+                             enforced cap; --reset <provider> --confirm clears one
+                             (no API call, no spend)
   self-repair:status         List queued agent-config defect records (read-only)
   self-repair:release        Publish one defect record — a PR when the fix can be
                              pushed, else an issue. Running it is your Hard-Floor
@@ -1443,6 +1446,7 @@ main() {
     council:run)             cmd_council run "$@" ;;
     council:render)          cmd_council render "$@" ;;
     council:status)         cmd_council status "$@" ;;
+    council:quota)           cmd_council quota "$@" ;;
     self-repair:status)      cmd_self_repair status "$@" ;;
     self-repair:release)     cmd_self_repair release "$@" ;;
     update)                  cmd_update "$@" ;;

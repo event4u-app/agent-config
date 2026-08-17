@@ -33,6 +33,10 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { runTsScript } from './ai_council/_harness.js';
+// Imported rather than hardcoded: the point of the quota test below is that the
+// report prints the cap the gate enforces, so re-typing the number here would
+// let the two drift apart in exactly the way the test exists to catch.
+import { DEFAULT_CLI_CALLS_PER_DAY } from '../../src/scripts/ai_council/config.js';
 
 // tests/scripts/council_cli.test.ts → two levels up is the repo root.
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -420,18 +424,28 @@ describe('council_cli quota + shadow-report — intent', () => {
         expect(ts.stdout).toMatch(/^council:quota · /);
     });
 
-    // The case above proves the verb runs anywhere; this one proves the branch
-    // it can no longer reach on a configured machine still prints the right
-    // line. Two assertions, two purposes: loosening the spawned case fixed the
-    // host dependency but left the empty-caps output covered by nothing, and
-    // `cmd_quota` already accepts injected settings, so the branch is reachable
-    // without a production change — the same injection the estimate cases above
-    // established.
-    it('quota with no configured caps → exit 0 + the empty-caps line', () => {
+    // The case above proves the verb runs anywhere; this one pins WHICH cap it
+    // reports when the settings cascade configures none.
+    //
+    // It used to assert an "empty-caps" line. That line was the reported half of
+    // a divergence: the gate in `build_members` seeds
+    // `DEFAULT_CLI_CALLS_PER_DAY` for every known provider, so a machine with no
+    // configured block is capped — and the report told the operator it was not,
+    // while the shared counter had already been booked past that cap. Both
+    // sides now resolve through `resolve_cli_call_caps`, so an absent block
+    // reports the enforced default instead of claiming there is none.
+    it('quota with no configured caps → exit 0 + the ENFORCED defaults', () => {
         // Injected empty settings, NOT the host's — see `quotaHarness`.
         const ts = runQuotaHarnessTs();
         expect(ts.status, ts.stderr).toBe(0);
-        expect(ts.stdout).toContain('council:quota · no providers have a configured cli_call_budget.max_calls_per_day cap.');
+        expect(ts.stdout).not.toContain('no providers have a configured');
+        // Every known provider is seeded, and the default is the number the
+        // gate applies — not a number this test re-derives.
+        for (const provider of ['anthropic', 'gemini', 'openai', 'perplexity', 'xai']) {
+            expect(ts.stdout, `provider ${provider}`).toMatch(
+                new RegExp(`council:quota · ${provider} · \\d+/${DEFAULT_CLI_CALLS_PER_DAY}\\b`),
+            );
+        }
     });
 
     it('quota --reset openai without --confirm → exit 2', () => {
