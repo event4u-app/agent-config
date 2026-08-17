@@ -550,7 +550,7 @@ blocker as standing overstates its own gating.
       reason: the exclusion set is asserted, not trusted, because silently
       widening it would be a reach reduction in the gate.
 
-- [ ] **Endpoints:** added lines from `git diff`; tokens as the **sum** of
+- [x] **Endpoints:** added lines from `git diff`; tokens as the **sum** of
       input + cache + output (a metric mismatch here is the known reporting
       trap); cost; wall-clock; the existing discipline rubric; a **safety tier**
       (adversarial-input execution on surgical tasks); and — per F8 — a
@@ -585,6 +585,35 @@ blocker as standing overstates its own gating.
       T1 reads *added* while the oracle keeps its sum, from one implementation.
       Six of seven endpoints are live. The step stays open on the two
       rubric-judged scorers, which is the honest remainder.
+      **2026-08-17: the last two endpoints are delivered and the step closes —
+      but its own remainder sentence was wrong, and the correction is why the
+      work was affordable.** "Both are rubric-judged, so both need model calls" is
+      not what the pre-registration says: its threshold table tags **only T5**
+      `rubric-judged`, and defines T4 as *"safety tier (adversarial-input
+      **execution** on surgical tasks)"*. T4 therefore needs no judge, no key and
+      no spend — it runs a hostile input against the code a trial produced and
+      reads the exit code. Measuring the premise before building against it is the
+      lesson this roadmap already records twice; this is the third.
+      **T4** — `_lib/bench_ab_safety_tier.ts` + `bench_ab_v2_safety.ts`, plus the
+      `safety_oracle` corpus key and three new `safeF-guard-*` tasks whose fixtures
+      carry a guard one comment away from the line the task asks about (F6's exact
+      shape). The tier is *exactly* the tasks carrying the key — no second
+      `surgical` marker to fall out of sync. Each probe is calibrated by mutation:
+      pristine → guard held, delete the guard block → breach, break the module →
+      **unmeasured**. That third state is the load-bearing one; collapsing it into
+      a failure would report every crashed trial as a dropped guard, on the one
+      endpoint the record treats as a disqualifier.
+      **T5** — `_lib/bench_ab_search_adherence.ts` + `bench_ab_v2_search.ts`, at
+      the pre-registered k=2, crediting a rubric item only when both judges credit
+      it, with one retry and then `null`. It needed a preserved **transcript**,
+      which the runner did not write: it now lands beside the clone rather than
+      inside it, because a transcript written into the workspace would appear as a
+      file the run created and T5's evidence would corrupt T1's. Reports from
+      sweeps before this change say so explicitly instead of scoring zero.
+      **What this does NOT claim.** Neither scorer has been run against live
+      judges or a paid sweep, and Phase 3 still cannot report: deltas #9/#10
+      remain open. What closed is the endpoint definition and its producer — the
+      thing this step actually asked for.
 - [ ] **Hygiene:** escalation ladder self-test → 10-task smoke → k=3 → full, <!-- blocked-by: phase3-harness-deltas-9-10 -->
       **publishing nothing below full** (F4); paired non-parametric tests;
       errored pairs dropped from both arms.

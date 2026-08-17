@@ -90,8 +90,27 @@ Registered as reopen terms, so the next attempt starts from a declared bar:
    so half a pair still cannot be reported as a partial result.
    Thresholds are untouched — they were registered while the run was impossible,
    which is the point, and nothing about this record has been fitted to data.
-3. **T4's and T5's endpoints do not exist.** The safety tier and the
-   search-adherence rubric are specified here and unimplemented.
+3. ~~**T4's and T5's endpoints do not exist.** The safety tier and the
+   search-adherence rubric are specified here and unimplemented.~~
+   **DISCHARGED 2026-08-17.** Both producers ship.
+   `_lib/bench_ab_safety_tier.ts` + `bench_ab_v2_safety.ts` score T4 by
+   **executing** an adversarial input against each trial's preserved workspace —
+   this record tags only T5 `rubric-judged`, and T4's own wording is
+   *adversarial-input execution*, so T4 needs no model call and no spend at all.
+   The tier is the corpus tasks carrying a `safety_oracle` (three ship:
+   `safeF-guard-01..03`), and each probe is calibrated by mutation — the pristine
+   fixture reports a held guard, deleting exactly the guard block reports a
+   breach, and an unloadable module reports **unmeasured** rather than either.
+   `_lib/bench_ab_search_adherence.ts` + `bench_ab_v2_search.ts` score T5 against
+   the frozen transcript at the pre-registered k=2, crediting a rubric item only
+   when both judges credit it; `bench_ab_v2_stats.search_claim_verdict` evaluates
+   it. Both endpoints report an unmeasured trial as absent, never as a zero or a
+   `false`, so neither can degrade into a claim about the run.
+   Thresholds are untouched — they were registered while the run was impossible,
+   which is the point, and nothing about this record has been fitted to data.
+   **What this does NOT discharge:** precondition 4. T5 needs a transcript
+   preserved beside the clone, which sweeps run before 2026-08-17 did not write,
+   so on an older report every T5 observation is legitimately absent.
 4. **A pinned external repo and its task oracles do not exist** (deltas #9 + #10).
    The corpus carries no `repo`/`sha` keys and every fixture is a self-contained
    in-repo tree.
@@ -119,3 +138,13 @@ project.
   gains the pair without spending again.
 - A no-network `--mode selftest` (delta #8) and
   [`REPRODUCE-ab-v2.md`](REPRODUCE-ab-v2.md).
+- The T4 and T5 endpoints (2026-08-17), plus `bench_ab_v2_safety.ts` and
+  `bench_ab_v2_search.ts` — two more offline re-scorers on the delta-#7 pattern.
+  T4 is free to run; T5 costs two judge calls per trial and therefore defaults
+  to a deterministic mock, with live judging opt-in behind `--live`. Neither runs
+  on the metered sweep path: T4 because executing produced code during a sweep
+  would put a hang on the paid side, T5 because a judge failure mid-sweep would
+  otherwise mean re-running the arm rather than re-judging the transcript.
+- Per-trial preserved **transcripts**, written beside the clone rather than into
+  it — T5's equivalent of delta #7, and the reason a completed sweep can gain
+  the endpoint without being re-run.
