@@ -189,7 +189,14 @@ and doing it surfaced a **second falsification, of this document's own
 conclusion 1**. It is recorded here rather than in the roadmap because it is a
 result about this measurement, not about that plan.
 
-**What landed.** 34 of the 49 open blockers now carry `Class:` as a field.
+**What landed.** Step 1.3 wrote **34** entries; the tree now carries **36**
+authored `Class:` fields, because `road-to-gate-autonomy`'s own two already
+had one. So of the 49 open blockers, 36 declare a class and **13** resolve
+through the absent-field default — the 12 below plus the synthesised `legacy`
+note. (The first version of this paragraph said 34 and 15, conflating what the
+step wrote with what the tree holds; corrected by R2 finding 3, and the 12/13
+split is load-bearing for the conclusion two paragraphs down.)
+
 Every value comes from the § 3 row for that id — the id sets matched exactly
 (49 live against 50 rows, the difference being row 39, resolved since, and row
 12's `legacy (blocked-until)` normalising to the parser's `legacy`), so no
@@ -227,6 +234,27 @@ is the safe direction and is what every consumer already applies.
 **Reclassifying them in the tree is NOT done here.** Twelve verdicts across
 eight roadmaps this branch does not own is a judgement on other people's plans,
 not a field write-back; it is surfaced as a decision instead.
+
+**And conclusion 2 needs the same qualification, measured the same way.** With
+the classes live, `gates --execute` was run against each of the 19 class-2
+entries this step made reachable. All 19 render a consent block — the path
+works. But **11 of the 19 trip the renderer's own overflow notice**: their
+`Recommendation:` exceeds `PARAGRAPH_CHARS = 156`
+(`src/agent-src/scripts/gate_execute.ts:157,174`), and that notice says what to
+do about it — *"a class-2 gate that cannot state a one-line question and a
+default is reclassified to 3, not verbosified."* Over the eight that fit, the
+class-2 half is exactly what § 4 claimed. Over the other eleven it is not: "21
+of the 49 blockers are one line and one yes away from resolved" is true of **8**
+by the tool's own bar, and the remaining thirteen are paragraphs a reader still
+has to weigh. Which is the reading-load defect § 0 set out to remove, surviving
+inside the class that was supposed to absorb it.
+
+Two honest bounds on that number. The notice is **advisory** — it renders
+alongside a working consent block, so nothing is broken today, and the 156 is
+the renderer's threshold rather than an independently derived one. And the
+eleven are not a defect this branch introduced: the prose predates it. What the
+write-back changed is that the overflow is now *observable*, because before it
+no class-2 entry was reachable at all.
 
 - **A documented spend cap is silently dropped. FOUND, NOT fixed.**
   `benchmark-spend` authorises `task bench:ab:live -- --budget <N>` and states

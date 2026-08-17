@@ -159,14 +159,23 @@ safeguards.**
       class, and `lint_roadmap_blockers` reports **no new** violation — see the
       clause correction below; "green" was never reachable.
       **Done 2026-08-17, and the step's own result falsifies the sweep a second
-      time.** 34 of the 49 open blockers now carry `Class:` as a field, every
-      value joined mechanically from the committed § 3 table (ids from
-      `gates --json --all`, classes from the row) — the two id sets matched
-      exactly, so nothing was inferred. `renderJson` gained `class` and `run`
-      (`roadmap_gates.ts`), resolving the class through the same absent-field
-      default every other consumer applies; four new tests pin the surface,
-      including the case that makes the parser's synthesised `legacy` note read
-      as class 3 rather than as a hole.
+      time.** This step wrote **34** entries; the tree now carries **36**
+      authored `Class:` fields, because this roadmap's own two already had one.
+      Of the sweep's 49-blocker population, 36 declare a class and **13** resolve
+      through the absent-field default — the 12 below plus the parser's
+      synthesised `legacy` note. (First written as 34 and 15, which conflated
+      what the step wrote with what the tree holds; corrected by R2 finding 3.
+      The live count is now 50, not 49: `b-estate-prose-pass-from-1-3` is added
+      by this step and is not part of the swept population.) Every value is
+      joined mechanically from the committed § 3 table — ids from
+      `gates --json --all`, classes from the row — and the two id sets matched
+      exactly, so nothing was inferred. `renderJson` gained `class`
+      (`roadmap_gates.ts`), resolving it through the same absent-field default
+      every other consumer applies; five tests pin the surface, including one
+      that drives the parser's legacy branch rather than asserting it in a
+      comment (R2 finding 6). `run` was emitted for one commit and then
+      withdrawn: R2 findings 2 and 7 showed it has no consumer, no live data,
+      and no way to settle which representation is correct without one.
       **The 12 class-0/1 entries were deliberately NOT written, and that is the
       finding.** `Class: 0` without `Run:` is a HARD lint failure by design, so
       all twelve were read in full to find the command — and none can carry an
@@ -196,7 +205,7 @@ safeguards.**
 - **AC-1:** every open blocker carries a class; the lint enforces `run:` on classes
   0 and 1; the sweep table is committed with its share. **Met in the field sense,
   refuted in the meaning sense — and the split is the point.** Every record in
-  `gates --json --all` now carries a class, 34 of them authored and 15 resolving
+  `gates --json --all` now carries a class, 36 of them authored and 13 resolving
   through the absent-field default. But 12 of those defaults contradict their own
   swept verdict, because the swept verdict is not materialisable (step 1.3, sweep
   § 4c). Ticking this criterion without that sentence would report the taxonomy as
@@ -404,6 +413,47 @@ safeguards.**
   delegate path to run on and cannot exist.
 - **Resolved when:** one option is recorded at this blocker, and for (a) or (b) the
   profile carries the setting with the cap named.
+
+### blocker: b-estate-prose-pass-from-1-3
+- **Status:** open
+- **Owner:** user
+- **Class:** 2 — consent-once
+- **Blocks:** nothing in this roadmap — every step here is closed or spend-gated.
+  It exists because step 1.3 surfaced three estate-level findings that this branch
+  deliberately did not act on, and R2 finding 4 is right that a paragraph in an
+  evidence file is a note rather than a discharge: without an entry here, nothing
+  renders them in `agent-config gates` and nothing counts them.
+- **What to do:** decide each of the three independently. (a) **The dropped spend
+  cap** — `taskfiles/bench-ab.yml` runs `bench_ab_task_runner` for `bench:ab:live`
+  with no `{{.CLI_ARGS}}`, unlike its sibling one target up, so the
+  `task bench:ab:live -- --budget <N>` that `road-to-surface-consolidation`'s
+  `benchmark-spend` entry authorises silently falls back to the parser default of
+  `2.0` (`src/scripts/bench_ab_task_runner.ts:911`). Fix is one interpolation;
+  the decision is whether it lands here, on `road-to-surface-consolidation`, or as
+  its own change. (b) **The twelve class-0/1 entries** — their swept verdict is not
+  materialisable (sweep § 4c), so they sit at the absent-field default of 3 while
+  the table says 0 or 1. Either reclassify them in the tree to match what their
+  entries can actually run, or leave the default standing and let § 4c carry the
+  discrepancy. (c) **The eleven over-length class-2 recommendations** — each
+  exceeds the renderer's own 156-char consent bar, whose remedy is reclassification
+  to 3 rather than a longer line. Either rewrite the eleven to one line, reclassify
+  them, or accept the overflow as advisory.
+- **Recommendation:** **(a) as its own change, (b) reclassify, (c) accept for now.**
+  (a) is a one-line spend-safety fix on a cost-bearing path and should not ride in a
+  documentation PR where a reviewer would skim it. (b) because a field that
+  contradicts its own evidence table is the exact half-truth this roadmap exists to
+  remove — and reclassifying *down* to 3 is the safe direction, never up. (c) last,
+  because it is prose in eleven other roadmaps, the notice is advisory, and the
+  overflow predates this work; it is a real reading-load defect but the cheapest of
+  the three to defer.
+- **If you do nothing:** the spend cap stays silently wrong, so an operator who
+  names a budget gets a different one on a paid path. Twelve entries keep declaring
+  a class their text cannot support, which is the shape `gates --execute` was built
+  to stop. And the class-2 half keeps rendering paragraphs where the taxonomy
+  promises one line, so the reading-load defect § 0 set out to remove survives
+  inside the class meant to absorb it.
+- **Resolved when:** each of (a), (b) and (c) carries a recorded decision at this
+  blocker — a fix, a deferral with a reason, or an explicit accept.
 
 ## Risk Register
 
