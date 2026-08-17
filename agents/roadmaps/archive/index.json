@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 504,
+  "count": 505,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -2088,6 +2088,20 @@
       },
       "verdict": null,
       "status": null
+    },
+    {
+      "slug": "road-to-council-quota-accounting-truth",
+      "title": "Roadmap: Council quota accounting truth",
+      "disposition": "completed",
+      "phases": 4,
+      "steps": {
+        "open": 0,
+        "done": 26,
+        "deferred": 0,
+        "cancelled": 0
+      },
+      "verdict": null,
+      "status": "ready"
     },
     {
       "slug": "road-to-council-solo-floor-implementation",

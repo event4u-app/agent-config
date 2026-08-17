@@ -76,6 +76,7 @@ import * as path from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
 import * as user_global_paths from '../_lib/user_global_paths.js';
+import * as budget from './cli_call_budget.js';
 // LAYERING CONSTRAINT, load-bearing: this is a VALUE import from quorum, while
 // `quorum.ts` imports `QuorumSetting` back from here. That back-edge is
 // `import type` and is erased at build, so there is no runtime cycle today.
@@ -1927,13 +1928,23 @@ function _build_member(
  * Generous per-provider guard for `mode: cli` / `mode: auto` members
  * (road-to-always-on-orchestration Phase 3.4). Before this default the map
  * shipped empty and an unlisted provider ran uncapped — a plan-quota guard
- * that only existed if the user remembered to opt in. Every known provider
- * now carries this floor unless a config entry overrides it; sized as a
- * GUARD against silent quota exhaustion on an always-on pass, not a brake on
- * normal use (see the template's own worked-example sizing for the
- * reasoning behind a TIGHTER per-provider number).
+ * that only existed if the user remembered to opt in.
+ *
+ * Re-exported from `cli_call_budget.ts`, which owns it: `build_members` and
+ * `cmd_quota` both need the same number, and re-deriving it at either site is
+ * how the reported cap and the enforced cap drift apart.
  */
-const _DEFAULT_CLI_CALLS_PER_DAY = 50;
+export const DEFAULT_CLI_CALLS_PER_DAY = budget.DEFAULT_CLI_CALLS_PER_DAY;
+
+/**
+ * Resolve the per-provider daily cap map — the SINGLE authority, shared with the
+ * gate and the report. Thin wrapper that supplies this module's provider set;
+ * the contract (defaults on omission, lenient where this module is strict) is
+ * documented on `budget.resolveCliCallCaps`.
+ */
+export function resolve_cli_call_caps(raw: unknown): Record<string, number> {
+    return budget.resolveCliCallCaps(raw, _VALID_PROVIDERS);
+}
 
 function _build_cli_call_budget(d: Dict): CliCallBudgetConfig {
     if (!_isDict(d)) {
@@ -1945,10 +1956,11 @@ function _build_cli_call_budget(d: Dict): CliCallBudgetConfig {
             '`cli_call_budget.max_calls_per_day` must be a mapping.',
         );
     }
-    const caps = new Map<string, number>();
-    for (const provider of _VALID_PROVIDERS) {
-        caps.set(provider, _DEFAULT_CLI_CALLS_PER_DAY);
-    }
+    // Validate FIRST, then resolve. Splitting the two is what lets the strict
+    // builder and the lenient `resolve_cli_call_caps` share one seeding
+    // implementation without either weakening the other: every rejection below
+    // still throws, and what survives is handed to the shared resolver rather
+    // than seeded a second time here.
     for (const [provider, value] of Object.entries(raw_caps)) {
         if (!_VALID_PROVIDERS.has(provider)) {
             throw new CouncilConfigError(
@@ -1962,8 +1974,10 @@ function _build_cli_call_budget(d: Dict): CliCallBudgetConfig {
                     `non-negative integer (got ${_pyRepr(value)}).`,
             );
         }
-        caps.set(provider, value);
     }
+    const caps = new Map<string, number>(
+        Object.entries(resolve_cli_call_caps(raw_caps)),
+    );
     const warn_at_raw = _get(d, 'warn_at', 0.8);
     if (_isBool(warn_at_raw) || !_isNumber(warn_at_raw)) {
         throw new CouncilConfigError(

@@ -48,7 +48,9 @@ import {
     PerplexityCliClient,
     XAIClient,
     XAICliClient,
+    CLI_CONSUMER_COUNCIL,
     load_anthropic_key,
+    load_cli_call_attribution,
     load_cli_call_counts,
     load_openai_key,
     quota_summary_line,
@@ -69,6 +71,7 @@ import {
     CouncilConfigError,
     load_council_config,
     resolve_api_key,
+    resolve_cli_call_caps,
     resolve_config_path,
 } from './ai_council/config.js';
 import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
@@ -696,10 +699,16 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
     // dropped the configured default for every caller that hands this
     // exported function a raw `.ai-council.yml` dict.
     const global_mode = resolve_global_mode(ai);
+    // ENFORCED cap source. This function accepts BOTH config shapes (see the
+    // `resolve_global_mode` note above), and for a RAW `.ai-council.yml` dict a
+    // commented-out `cli_call_budget:` leaves the map empty — the lookup below
+    // used to fall back to `null`, which `ask()` reads as uncapped while still
+    // booking. Resolution runs through `resolve_cli_call_caps`, the same
+    // authority `cmd_quota` uses, so uncapped is unreachable by omission.
     const cli_budget_cfg = _isDict(ai) ? ((ai['cli_call_budget'] as Dict) || {}) : {};
-    const cli_caps = _isDict(cli_budget_cfg)
-        ? ((cli_budget_cfg['max_calls_per_day'] as Dict) || {})
-        : {};
+    const cli_caps = resolve_cli_call_caps(
+        _isDict(cli_budget_cfg) ? cli_budget_cfg['max_calls_per_day'] : undefined,
+    );
     const cli_warn_at = _isDict(cli_budget_cfg)
         ? _pyFloat(cli_budget_cfg['warn_at'] ?? 0.8, 0.8)
         : 0.8;
@@ -888,7 +897,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                 members.push(
                     _construct_cli_member(name, model, {
                         binary: (cfg['binary'] as string | null) ?? null,
-                        max_calls_per_day: (cli_caps[name] as number | undefined) ?? null,
+                        max_calls_per_day: cli_caps[name] as number,
                         warn_at: cli_warn_at,
                     }),
                 );
@@ -1132,7 +1141,13 @@ function _construct_cli_member(
     const warn_at = opts.warn_at ?? 0.8;
     if (name in _CLI_FACTORY) {
         const [cls, default_model] = _CLI_FACTORY[name] as [
-            new (opts: { model: string; binary?: string | null; max_calls_per_day?: number | null; warn_at?: number }) => CliClient,
+            new (opts: {
+                model: string;
+                binary?: string | null;
+                max_calls_per_day?: number | null;
+                warn_at?: number;
+                consumer?: string;
+            }) => CliClient,
             string,
             string,
         ];
@@ -1141,6 +1156,9 @@ function _construct_cli_member(
             binary,
             max_calls_per_day,
             warn_at,
+            // Declared at the construction site — the client cannot know its
+            // caller. The council half of the two enumerated consumers.
+            consumer: CLI_CONSUMER_COUNCIL,
         });
     }
     throw new CouncilDisabledError(
@@ -3372,7 +3390,13 @@ function cmd_quota(args: Args, opts: { settings?: Dict | null } = {}): number {
     const s = opts.settings !== undefined && opts.settings !== null ? opts.settings : load_settings();
     const ai_cfg = _isDict(s) ? ((s['ai_council'] as Dict) || {}) : {};
     const cli_budget_cfg = _isDict(ai_cfg) ? ((ai_cfg['cli_call_budget'] as Dict) || {}) : {};
-    const caps = _isDict(cli_budget_cfg) ? ((cli_budget_cfg['max_calls_per_day'] as Dict) || {}) : {};
+    // REPORTED cap source — the same authority the gate uses. It used to read
+    // the settings mapping directly and print "no providers have a configured
+    // cap", which was misleading: the gate seeds a default for every provider,
+    // so an operator reading "no cap" was capped and already booked past it.
+    const caps = resolve_cli_call_caps(
+        _isDict(cli_budget_cfg) ? cli_budget_cfg['max_calls_per_day'] : undefined,
+    );
     const warn_at = _isDict(cli_budget_cfg) ? _pyFloat(cli_budget_cfg['warn_at'] ?? 0.8, 0.8) : 0.8;
 
     if (_getattr<string | null>(args, 'reset', null)) {
@@ -3387,13 +3411,9 @@ function cmd_quota(args: Args, opts: { settings?: Dict | null } = {}): number {
     }
 
     const counts = load_cli_call_counts();
-    if (Object.keys(caps).length === 0) {
-        _stdout(
-            'council:quota · no providers have a configured ' +
-                'cli_call_budget.max_calls_per_day cap.\n',
-        );
-        return 0;
-    }
+    const attribution = load_cli_call_attribution();
+    // No empty-caps branch: the resolver seeds every provider, so there is no
+    // configuration in which this command has nothing to report.
     for (const provider of _pySortedStr(Object.keys(caps))) {
         const limit = _pyInt(caps[provider]);
         const used = _pyInt(counts[provider] ?? 0, 0);
@@ -3404,7 +3424,15 @@ function cmd_quota(args: Args, opts: { settings?: Dict | null } = {}): number {
         } else if (ratio >= warn_at) {
             status = 'warn';
         }
-        _stdout(`council:quota · ${provider} · ${used}/${limit} · ${status}\n`);
+        // Named when the sidecar knows them. An empty suffix is the honest
+        // reading for a bucket booked before attribution existed — not a claim
+        // that nobody spent it.
+        const perConsumer = attribution[provider] ?? {};
+        const consumers = _pySortedStr(Object.keys(perConsumer));
+        const by = consumers.length > 0
+            ? ` · by ${consumers.map((c) => `${c} ${_pyInt(perConsumer[c] ?? 0, 0)}`).join(' + ')}`
+            : '';
+        _stdout(`council:quota · ${provider} · ${used}/${limit} · ${status}${by}\n`);
     }
     return 0;
 }

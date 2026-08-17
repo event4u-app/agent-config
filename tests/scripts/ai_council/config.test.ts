@@ -896,6 +896,95 @@ describe('cli_call_budget.max_calls_per_day — generous per-provider defaults (
     });
 });
 
+// === road-to-council-quota-accounting-truth Phase 1 — one cap source ===
+//
+// The gate (`build_members`) and the report (`cmd_quota`) used to resolve the
+// per-provider daily cap from two different files. `build_members` additionally
+// accepts BOTH the synthesized config block and a RAW `.ai-council.yml` dict, and
+// in the raw case a commented-out `cli_call_budget:` left it with an empty map
+// whose per-member lookup fell back to `null` — which `CliClient.ask()` reads as
+// "uncapped" and skips the gate for, while `_recordCallQuietly()` keeps booking
+// into the shared counter. Live consequence, measured before the fix: the shared
+// bucket stood at anthropic 72, gemini 63, openai 99 against a REPORTED cap of
+// 50 that nothing was applying.
+//
+// `resolve_cli_call_caps` is the single authority both sides now call. These
+// tests pin the property that makes the divergence unreachable rather than
+// merely absent.
+describe('resolve_cli_call_caps — the single cap authority', () => {
+    const PROVIDERS = ['anthropic', 'openai', 'gemini', 'xai', 'perplexity'] as const;
+
+    it('an absent block yields the DEFAULTS, never uncapped', () => {
+        // The raw-dict case that produced the live overrun. `undefined`, `{}`,
+        // and a non-dict must all land on the same guarded state — omission is
+        // not a way to switch the cap off.
+        for (const raw of [undefined, null, {}, 'nonsense', 42]) {
+            const caps = cfg.resolve_cli_call_caps(raw);
+            for (const p of PROVIDERS) {
+                expect(caps[p], `${p} for raw=${JSON.stringify(raw)}`).toBe(
+                    cfg.DEFAULT_CLI_CALLS_PER_DAY,
+                );
+            }
+        }
+    });
+
+    it('an explicit entry overrides just that provider', () => {
+        const caps = cfg.resolve_cli_call_caps({ anthropic: 5 });
+        expect(caps['anthropic']).toBe(5);
+        expect(caps['openai']).toBe(cfg.DEFAULT_CLI_CALLS_PER_DAY);
+    });
+
+    it('an explicit 0 is honoured, not read as "use the default"', () => {
+        expect(cfg.resolve_cli_call_caps({ anthropic: 0 })['anthropic']).toBe(0);
+    });
+
+    it('is lenient where the strict builder throws — a bad entry never blanks the report', () => {
+        // Validation belongs to `_build_cli_call_budget`, which runs first on
+        // every real config load. This resolver must still return a usable map
+        // for the providers that ARE valid, so a malformed neighbour cannot take
+        // the quota report down with it.
+        const caps = cfg.resolve_cli_call_caps({
+            bogus: 5,
+            anthropic: -1,
+            openai: 1.5,
+            gemini: true,
+            xai: 7,
+        });
+        expect(caps['xai']).toBe(7);
+        expect(caps['anthropic']).toBe(cfg.DEFAULT_CLI_CALLS_PER_DAY);
+        expect(caps['openai']).toBe(cfg.DEFAULT_CLI_CALLS_PER_DAY);
+        expect(caps['gemini']).toBe(cfg.DEFAULT_CLI_CALLS_PER_DAY);
+        expect(caps).not.toHaveProperty('bogus');
+    });
+
+    it('agrees with the synthesized config for the same YAML — gate and report cannot diverge', () => {
+        // The regression this whole phase exists for: resolve the RAW mapping the
+        // way `build_members` sees it, and the SYNTHESIZED map the strict builder
+        // produces, then assert they describe the same caps. A future edit that
+        // reintroduces a second resolution path fails here.
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}cli_call_budget:\n  max_calls_per_day:\n    anthropic: 5\n    openai: 0\n`;
+        const synthesized = cfg.load_council_config(write_yaml(tmp, payload))
+            .cli_call_budget.max_calls_per_day;
+        const raw = cfg.resolve_cli_call_caps({ anthropic: 5, openai: 0 });
+
+        for (const p of PROVIDERS) {
+            expect(raw[p], `provider ${p}`).toBe(synthesized.get(p));
+        }
+    });
+
+    it('agrees with the synthesized config when the block is absent entirely', () => {
+        const tmp = make_tmp();
+        const synthesized = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID))
+            .cli_call_budget.max_calls_per_day;
+        const raw = cfg.resolve_cli_call_caps(undefined);
+
+        for (const p of PROVIDERS) {
+            expect(raw[p], `provider ${p}`).toBe(synthesized.get(p));
+        }
+    });
+});
+
 // === the SHIPPED template must survive the real loader ======================
 //
 // Nothing asserted this before 2026-08-15: the template was referenced by an
