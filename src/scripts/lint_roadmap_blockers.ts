@@ -9,6 +9,11 @@
  *      (Status, Owner, Blocks, What to do, Resolved when).
  *   2. Every inline `<!-- blocked-by: <id> -->` annotation resolves to a
  *      `### blocker: <id>` entry declared in the SAME file.
+ *   3. An entry that declares `- **Class:**` declares a class the taxonomy
+ *      knows (0-3), and a class-0 or class-1 entry says HOW it runs
+ *      (`- **Run:**`). A gate that claims to be executable without naming the
+ *      command is the same defect as a decision with no option set: it reads
+ *      as actionable and is not.
  *
  * Fenced code blocks are stripped before scanning so a roadmap that shows
  * the `## Blockers` shape as a documentation example is not flagged.
@@ -62,6 +67,36 @@ const DECIDABILITY_FIELDS: ReadonlyArray<readonly [string, RegExp]> = [
     ['Recommendation', /^-[ \t]*\*\*Recommendation:\*\*[ \t]*\S/im],
     ['If you do nothing', /^-[ \t]*\*\*If you do nothing:\*\*[ \t]*\S/im],
 ];
+
+/**
+ * The gate taxonomy's four classes, as authored in the blocker entry.
+ *
+ * `Class` is deliberately OPTIONAL and its absence means class 3 — human-only.
+ * Making the safe class the default is what keeps a misclassification a
+ * reviewed edit rather than a runtime judgment: nothing an author forgets to
+ * write can become executable by omission.
+ */
+const CLASS_FIELD_RE = /^-[ \t]*\*\*Class:\*\*[ \t]*(.*)$/im;
+const RUN_FIELD_RE = /^-[ \t]*\*\*Run:\*\*[ \t]*(\S.*)$/im;
+const KNOWN_CLASSES: ReadonlySet<string> = new Set(['0', '1', '2', '3']);
+/** The classes whose whole claim is that an agent can execute them. */
+const RUNNABLE_CLASSES: ReadonlySet<string> = new Set(['0', '1']);
+
+/**
+ * The authored class, or `''` when the entry declares none.
+ *
+ * Only the leading token is read, so `- **Class:** 1 — budget-preauthorized`
+ * parses as `1`: the taxonomy name is documentation for the reader and must
+ * not have to be spelled identically in every entry to stay valid.
+ */
+function _blockerClass(body: string): string {
+    const m = CLASS_FIELD_RE.exec(body);
+    if (!m) {
+        return '';
+    }
+    const raw = ((m[1] as string) ?? '').trim();
+    return raw === '' ? '' : (raw.split(/[\s—–-]/)[0] as string);
+}
 
 /** `What to do:` body — everything up to the next field marker. */
 const WHAT_TO_DO_SLICE_RE =
@@ -157,6 +192,33 @@ function _scanBoth(rawText: string): ScanResult {
             // made would be churn, and the ratchet would never reach zero.
             const isResolved = /^-[ \t]*\*\*Status:\*\*[ \t]*resolved/im.test(body);
             if (!isResolved) {
+                // The class/run contract is HARD rather than ratcheted, and it
+                // can be: `Class:` is a new opt-in field, so on the day it
+                // ships no entry in the tree declares one and the rule fires on
+                // nothing. There is no backlog to grandfather — the "strict
+                // gate reds ~283 files" failure the decidability half had to
+                // avoid simply does not arise here.
+                const cls = _blockerClass(body);
+                if (cls !== '') {
+                    const at = _lineAt(text, sectionStart + cur.start);
+                    if (!KNOWN_CLASSES.has(cls)) {
+                        violations.push({
+                            line: at,
+                            message:
+                                `blocker '${cur.id}' declares unknown class '${cls}' ` +
+                                '(expected 0 auto-run, 1 budget-preauthorized, ' +
+                                '2 consent-once, or 3 human-only)',
+                        });
+                    } else if (RUNNABLE_CLASSES.has(cls) && !RUN_FIELD_RE.test(body)) {
+                        violations.push({
+                            line: at,
+                            message:
+                                `blocker '${cur.id}' is class ${cls} but declares no ` +
+                                '**Run:** command — a gate that claims to be runnable ' +
+                                'must say how',
+                        });
+                    }
+                }
                 const gaps = DECIDABILITY_FIELDS.filter(([, re]) => !re.test(body)).map(
                     ([name]) => name,
                 );
@@ -358,6 +420,9 @@ export {
     ROADMAP_GLOB,
     REQUIRED_FIELDS,
     DECIDABILITY_FIELDS,
+    KNOWN_CLASSES,
+    RUNNABLE_CLASSES,
+    _blockerClass,
     _hasExecutableSubstance,
     _scan,
     _scanBoth,

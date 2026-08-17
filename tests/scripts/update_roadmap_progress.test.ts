@@ -25,7 +25,11 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { parse_blockers } from '../../src/agent-src/scripts/update_roadmap_progress.js';
+import {
+    blocker_class,
+    blocker_is_resolved,
+    parse_blockers,
+} from '../../src/agent-src/scripts/update_roadmap_progress.js';
 
 // tests/scripts/update_roadmap_progress.test.ts → two levels up is the repo root.
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -551,5 +555,107 @@ describe('parse_blockers — instruction text is never truncated', () => {
         ].join('\n');
         const [b] = parse_blockers(text);
         expect(b?.todo[0]).toBe('the thing clears.');
+    });
+});
+
+describe('blocker status — a settled gate stops being counted as open', () => {
+    const entry = (status: string): string =>
+        [
+            '## Blockers',
+            '',
+            '### blocker: settled',
+            `- **Status:** ${status}`,
+            '- **Owner:** user',
+            '- **Blocks:** Phase 2',
+            '- **What to do:**',
+            '  1. Nothing — it is done.',
+            '- **Resolved when:** already',
+            '',
+        ].join('\n');
+
+    it('reads the status as a PREFIX, so a dated resolution still resolves', () => {
+        // Measured 2026-08-17: an author wrote the decision into the status
+        // line, an equality check matched neither open nor resolved, and the
+        // entry was rendered by `agent-config gates` as a live decision two
+        // days after it had been taken.
+        const [b] = parse_blockers(
+            entry('RESOLVED 2026-08-17 — **option (b)**, narrowed to two rules'),
+        );
+        expect(blocker_is_resolved(b!)).toBe(true);
+    });
+
+    it('still resolves the plain form, and still leaves an open one open', () => {
+        expect(blocker_is_resolved(parse_blockers(entry('resolved'))[0]!)).toBe(true);
+        expect(blocker_is_resolved(parse_blockers(entry('open'))[0]!)).toBe(false);
+        expect(
+            blocker_is_resolved(parse_blockers(entry('open — sequenced as the next gate'))[0]!),
+        ).toBe(false);
+    });
+
+    it('does not resolve a status that merely mentions the word', () => {
+        // The pattern anchors at the START of the field, so a status that
+        // describes what resolution would require is not itself a resolution.
+        expect(
+            blocker_is_resolved(
+                parse_blockers(entry('open — resolved once the maintainer answers'))[0]!,
+            ),
+        ).toBe(false);
+    });
+});
+
+describe('blocker class — the absent-field default is the safe end', () => {
+    const withClass = (line: string): string =>
+        [
+            '## Blockers',
+            '',
+            '### blocker: classified',
+            '- **Status:** open',
+            '- **Owner:** user',
+            '- **Blocks:** Phase 1',
+            line,
+            '- **What to do:**',
+            '  1. Run `x`.',
+            '- **Resolved when:** it exits 0',
+            '',
+        ].join('\n');
+
+    it('an absent Class reads as 3 — nothing becomes runnable by omission', () => {
+        const [b] = parse_blockers(withClass('- **Owner note:** none'));
+        expect(b!.blockerClass).toBe('');
+        expect(blocker_class(b!)).toBe('3');
+    });
+
+    it('reads 0, 1 and 2, and tolerates a trailing taxonomy name', () => {
+        expect(blocker_class(parse_blockers(withClass('- **Class:** 0'))[0]!)).toBe('0');
+        expect(
+            blocker_class(parse_blockers(withClass('- **Class:** 1 — budget-preauthorized'))[0]!),
+        ).toBe('1');
+        expect(blocker_class(parse_blockers(withClass('- **Class:** 2'))[0]!)).toBe('2');
+    });
+
+    it('an unrecognised value falls back to 3, never to a runnable class', () => {
+        expect(blocker_class(parse_blockers(withClass('- **Class:** auto'))[0]!)).toBe('3');
+    });
+
+    it('Run and Budget survive the parse', () => {
+        const [b] = parse_blockers(
+            [
+                '## Blockers',
+                '',
+                '### blocker: paid',
+                '- **Status:** open',
+                '- **Owner:** user',
+                '- **Blocks:** Phase 1',
+                '- **Class:** 1',
+                '- **Run:** `task bench:ab:live -- --budget 50`',
+                '- **Budget:** ~50 USD per run',
+                '- **What to do:**',
+                '  1. Authorize it.',
+                '- **Resolved when:** the receipt lands',
+                '',
+            ].join('\n'),
+        );
+        expect(b!.run).toBe('`task bench:ab:live -- --budget 50`');
+        expect(b!.budget).toBe('~50 USD per run');
     });
 });

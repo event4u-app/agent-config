@@ -51,6 +51,12 @@ function entry(
             recommendation: opts.recommendation ?? '',
             ifNothing: opts.ifNothing ?? '',
             question: opts.question ?? '',
+            // Same reasoning as the two fields above: the gate taxonomy is
+            // opt-in, so the shape the renderer meets in the tree is the one
+            // that declares none of it.
+            blockerClass: '',
+            run: '',
+            budget: '',
         },
         roadmapRel: opts.roadmap ?? 'road-to-x.md',
         openSteps: opts.openSteps ?? 3,
