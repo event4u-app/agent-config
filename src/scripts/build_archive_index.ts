@@ -312,16 +312,29 @@ export function main(argv: readonly string[]): number {
 
     const entries = buildIndex(dir);
 
-    // Per-target accounting over the archive. `scanned:` proves the walk found
-    // files; the ledger proves what each one YIELDED — and the distinction is
-    // load-bearing here, because this builder's whole contract is that a verdict
-    // the frontmatter does not carry is emitted as `not-extractable` rather than
-    // invented. That outcome is a real reading, not a skip, so every entry
-    // completes: the ledger's value is the count a reader can compare against
-    // the disposition tally in INDEX.md.
+    // Planned from the ENUMERATION, never from the result set.
+    //
+    // Planning `entries` and completing it in the next statement would make
+    // `planned === completed, skipped=0` true by construction — an accounting
+    // line that can never report anything. The value is precisely that a file
+    // which drops out between the walk and the result shows up as a gap: the
+    // natural future fix for an unreadable archive file is a `try/catch
+    // { continue }` inside `buildIndex`, and that file would vanish before the
+    // plan is reached unless the plan comes from upstream of it.
+    //
+    // `not-extractable` is a real reading rather than a skip and therefore
+    // completes — but a frontmatter PARSE failure is swallowed by `_frontmatter`
+    // and zeroes title/verdict/status, which is a genuine per-target degrade the
+    // disposition tally cannot show. Both are visible here as the difference
+    // between the planned and completed sets.
+    const planned = archiveFiles(dir).map((f) => path.basename(f, '.md'));
+    const produced = new Set(entries.map((e) => e.slug));
     const ledger = new GateLedger('build_archive_index');
-    ledger.plan(entries.map((e) => e.slug));
-    for (const e of entries) ledger.complete(e.slug);
+    ledger.plan(planned);
+    for (const slug of planned) {
+        if (produced.has(slug)) ledger.complete(slug);
+        else ledger.skip(slug, 'no_applicable_files');
+    }
 
     try {
         reportScanned({
@@ -338,9 +351,13 @@ export function main(argv: readonly string[]): number {
         throw err;
     }
 
-    // Reported before either exit path branches, so a `--check` red and a
-    // successful write publish the same accounting. A ledger emitted on only one
-    // path is the selective-reporting shape the library exists to remove.
+    // Reported before the `--check` and write paths branch, so both publish the
+    // same accounting. NOT on all three: the earliest exit — `reportScanned`
+    // throwing `DeadScopeError` on an empty walk — returns above this line and
+    // reports nothing, which is the one exit where the accounting would say the
+    // most. Left as-is rather than papered over: the ledger has no targets to
+    // report there either, and moving it above the scope assertion would publish
+    // a plan for a root the assertion is about to reject.
     ledger.report();
 
     const mdPath = path.join(dir, INDEX_MD);

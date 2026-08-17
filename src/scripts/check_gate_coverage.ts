@@ -50,7 +50,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as yaml from 'js-yaml';
 import { checkRatchet } from './_lib/gate_baseline.js';
-import { GateLedger } from './_lib/gate_ledger.js';
+import { GateLedger, type GateSkipReason } from './_lib/gate_ledger.js';
 import { runCountedProbe } from './_lib/counted_probe.js';
 import { listGateScripts } from './_lib/gate_population.js';
 import { describeOutcome, namesEstateInvalidatingError } from './_lib/gate_result.js';
@@ -190,6 +190,46 @@ export function parse_scanned(output: string): number | null {
 
 /** Classify one gate's run against its declared floor. Pure — testable without
  * spawning anything. */
+/**
+ * Map a gate verdict onto its ledger outcome.
+ *
+ * Extracted and exported so the mapping can be PINNED — it was inline, and the
+ * completion review's three sharpest findings were all mis-mappings that a
+ * discrimination test would have caught in one line each.
+ *
+ * The split is INSPECTED vs NOT INSPECTED, never pass vs fail. `fail` counts
+ * into the ledger's `scanned=` (`report()` sets `checked = completed + failed`),
+ * so a target that could not be READ must never land there — that inflates the
+ * exact number the library exists to make trustworthy. This file's own comment
+ * already says a gate that could not MEASURE "is not a gate that found
+ * violations, and it is not a gate that passed either"; this agrees with it.
+ */
+export function ledgerOutcomeFor(
+  verdict: GateResult['verdict'],
+): 'complete' | 'fail' | GateSkipReason {
+  switch (verdict) {
+    case 'pending':
+      return 'disabled_by_configuration';
+    case 'unavailable':
+      // NOT `missing_credentials`. The only manifest row carrying
+      // `unavailable_exit` is unavailable for an unbuilt `site/dist`, and the
+      // skip sentence IS the audit surface — naming a credential would send the
+      // reader hunting an unset token instead of running the build.
+      return 'no_applicable_files';
+    case 'crashed':
+    case 'estate_invalid':
+      // Nothing was read in either case. `crashed` still reds the build through
+      // this gate's own filter and `estate_invalid` deliberately does not, but
+      // neither belongs in the inspected count.
+      return 'dead_scan_root';
+    case 'silent':
+    case 'below_floor':
+      return 'fail';
+    default:
+      return 'complete';
+  }
+}
+
 export function classify(
   spec: GateSpec,
   scanned: number | null,
@@ -324,13 +364,21 @@ export function main(argv: readonly string[]): number {
     return 0;
   }
 
-  // Per-target accounting over the manifest rows, and the reason it belongs
-  // HERE specifically: this gate already carries a `pending` verdict that means
-  // "listed but not enforced" and an `unavailable` one that means "could not be
-  // measured". Both are, in the ledger's own vocabulary, SKIPS with a reason —
-  // and until now they existed only as a status string in prose output, which is
-  // exactly the invisible-skip shape the ledger exists to make countable. The
-  // gate that audits gate coverage was itself unaudited.
+  // Per-target accounting over the manifest rows. The gate that audits gate
+  // coverage was itself unaudited.
+  //
+  // Stated precisely, because the obvious justification overstates it: this gate
+  // ALREADY prints counted `pending N · unavailable N` warnings, so those two
+  // classes were not invisible. What the ledger adds is that they are expressed
+  // in the estate-wide vocabulary every other adopter uses, so a reader
+  // comparing gates does not have to learn this one's private status names — and
+  // that `crashed` and `estate_invalid`, which had no counted line at all, stop
+  // being counted as inspected.
+  //
+  // Note the two numbers this produces in one run: the ledger's `scanned=` (what
+  // was inspected) and the contract line `scanned:` (manifest rows read). They
+  // differ by the skips and that is correct, but only the latter is what
+  // `SCANNED_RE` parses.
   const ledger = new GateLedger('check_gate_coverage');
   ledger.plan(specs.map((s) => s.id));
 
@@ -344,20 +392,10 @@ export function main(argv: readonly string[]): number {
   });
 
   for (const r of results) {
-    if (r.verdict === 'pending') {
-      ledger.skip(r.id, 'disabled_by_configuration');
-    } else if (r.verdict === 'unavailable') {
-      ledger.skip(r.id, 'missing_credentials');
-    } else if (
-      r.verdict === 'crashed' ||
-      r.verdict === 'silent' ||
-      r.verdict === 'below_floor' ||
-      r.verdict === 'estate_invalid'
-    ) {
-      ledger.fail(r.id, r.message);
-    } else {
-      ledger.complete(r.id);
-    }
+    const outcome = ledgerOutcomeFor(r.verdict);
+    if (outcome === 'complete') ledger.complete(r.id);
+    else if (outcome === 'fail') ledger.fail(r.id, r.message);
+    else ledger.skip(r.id, outcome);
   }
   ledger.report();
 

@@ -35,35 +35,28 @@
  * 1 = the remote answered and the verdict is not about the branch head ·
  * 2 = internal error. `scanned:` is emitted on EVERY exit path.
  *
- * ## Why this gate carries no per-target ledger
+ * ## The per-target ledger, and the exemption that was withdrawn
  *
- * `check_gate_completeness` requires every registered gate to adopt
- * `_lib/gate_ledger.ts` or to say why it does not. This one says why, and the
- * reason is the shape of the question rather than the cost of the change.
+ * This gate first shipped with a `// ledger-exempt:` marker arguing it had "no
+ * target population to account for — a short-circuiting chain of 0-3 remote
+ * facts". Its completion review refuted that from the file itself: the check
+ * rows ARE a population, and the parse below **drops** every row whose `state`
+ * is not a string. A dropped row could be the failing one, so the gate could
+ * print *"green on its own head"* over a check it never read — the precise
+ * "absence of scanning looks like absence of findings" shape the ledger exists
+ * to count.
  *
- * The ledger's purpose is to make an INVISIBLE skip countable across a target
- * population — 500 files walked, 41 unreadable, and nothing saying so. This gate
- * has no such population: it compares a short, short-circuiting chain of remote
- * facts (0, 2, 3, or the number of check rows), and every one of its degrade
- * paths ALREADY reports itself, on every exit, through `scanReport` with an
- * explicit `allowEmpty` reason that stays loud under `--quiet`. "There was
- * nothing to check" and "I checked and it was fine" are already distinguishable
- * in its output — which is the property the ledger exists to create, reached
- * here by a mechanism that predates it.
- *
- * Planning 0-to-3 ad-hoc target ids would add an accounting line that no reader
- * could compare against anything, and the manifest's own note rejects exactly
- * that shape elsewhere ("padding the manifest to move this number"). The gate is
- * also declared `local_only` in `src/config/ci-local-parity.yml` because its
- * comparison is tautological in CI, so the estate-wide count a ledger feeds
- * would be taking a reading from a gate that deliberately does not run there.
+ * The exemption's secondary claim was accurate — every `main()` exit already
+ * self-reports through `scanReport` with an explicit `allowEmpty` reason — and
+ * that is exactly why the first argument was easy to believe. It was still
+ * resting on the false half.
  */
-// ledger-exempt: no target population to account for — a short-circuiting chain of 0-3 remote facts, whose every degrade path already reports itself via scanReport with an explicit allowEmpty reason
 
 import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { GateLedger } from './_lib/gate_ledger.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
 const NETWORK_TIMEOUT_MS = 8_000;
@@ -141,6 +134,12 @@ export interface Facts {
     /** The head SHA the reported checks ran against. */
     checksHead: string | null;
     rows: readonly CheckRow[];
+    /**
+     * Names of check rows the parse DROPPED because their `state` was not a
+     * string. Carried out rather than swallowed: a dropped row could be the
+     * failing one, so it is a skip the ledger must count, not a non-event.
+     */
+    droppedRows?: readonly string[];
     /** Set when something could not be observed; forces the degrade path. */
     unobservable: string | null;
     /**
@@ -285,7 +284,7 @@ export function relate(
 /** Gather the facts `decide` consumes. Every failure becomes `unobservable`. */
 export function gather(repo: string): Facts {
     const empty: Facts = {
-        pr: null, prHead: null, localHead: null, checksHead: null, rows: [], unobservable: null, relation: 'unknown',
+        pr: null, prHead: null, localHead: null, checksHead: null, rows: [], droppedRows: [], unobservable: null, relation: 'unknown',
     };
 
     const branch = run('git', ['rev-parse', '--abbrev-ref', 'HEAD'], repo);
@@ -320,9 +319,19 @@ export function gather(repo: string): Facts {
     // with parseable stdout is DATA, not an error. Treating it as unobservable
     // would make the gate blind in exactly the red case it exists for.
     let rows: CheckRow[] = [];
+    // A row whose `state` is not a string is DROPPED, and that drop is the one
+    // thing in this gate worth counting: a dropped row could be the failing one,
+    // and without accounting the gate prints "green on its own head" over a
+    // check it never read. `dropped` is surfaced by the caller through the
+    // ledger rather than swallowed here.
+    let dropped: string[] = [];
     if (checks.stdout.trim() !== '') {
         try {
-            rows = (JSON.parse(checks.stdout) as CheckRow[]).filter((r) => typeof r.state === 'string');
+            const parsed = JSON.parse(checks.stdout) as CheckRow[];
+            rows = parsed.filter((r) => typeof r.state === 'string');
+            dropped = parsed
+                .filter((r) => typeof r.state !== 'string')
+                .map((r, i) => (typeof r.name === 'string' ? r.name : `row-${String(i)}`));
         } catch {
             rows = [];
         }
@@ -353,6 +362,7 @@ export function gather(repo: string): Facts {
         localHead: localSha,
         checksHead: runsHead.ok && runsHead.stdout.trim() !== '' ? runsHead.stdout.trim() : null,
         rows,
+        droppedRows: dropped,
         unobservable: null,
         relation: relate(repo, localSha, prSha),
     };
@@ -398,7 +408,19 @@ export function main(argv?: readonly string[]): number {
 
     let verdict: Verdict;
     try {
-        verdict = decide(gather(repo), { prePush });
+        const facts = gather(repo);
+
+        // The population is the check rows. Every row the parse kept was read;
+        // every row it dropped is a skip with a reason, and the drop is the
+        // failure mode worth counting — a dropped row could be the failing one.
+        const ledger = new GateLedger('check_pr_ci_current');
+        const droppedNames = facts.droppedRows ?? [];
+        ledger.plan([...facts.rows.map((r) => r.name), ...droppedNames]);
+        for (const r of facts.rows) ledger.complete(r.name);
+        for (const name of droppedNames) ledger.skip(name, 'not_applicable_kind');
+        ledger.report();
+
+        verdict = decide(facts, { prePush });
     } catch (exc) {
         scanReport(0, 'internal error — nothing was compared');
         process.stderr.write(
