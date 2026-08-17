@@ -419,22 +419,16 @@ function renderJson(
                     roadmap: e.roadmapRel,
                     owner: e.blocker.owner,
                     needsYou: needsUser(e.blocker.owner),
-                    // The gate taxonomy, resolved through the same
-                    // absent-field default every other consumer applies, so a
-                    // synthesised `legacy` note reads as class 3 rather than
-                    // as a hole.
-                    //
-                    // `run` is deliberately NOT emitted. It shipped here for
-                    // one commit on the argument that a class-0 record without
-                    // its command reads as actionable — and R2 finding 7
-                    // pointed out the consumer that argument describes does not
-                    // exist: `--execute` reads the entry through `locate()`,
-                    // not through this JSON, and every live record's `run` is
-                    // empty. Adding it also forced an undecidable question
-                    // (finding 2): `class` is normalised while the authored
-                    // `run` carries its markdown backticks, and `commandOf()`
-                    // already strips them for the sibling surface — with no
-                    // consumer there is nothing to say which form is right.
+                    // Resolved through the same absent-field default every
+                    // other consumer applies, so a synthesised `legacy` note
+                    // reads as class 3 rather than as a hole. `class` ships and
+                    // the sibling `run` does not, and the asymmetry is the
+                    // roadmap's, not a preference: `road-to-gate-autonomy` step
+                    // 1.3 names this field as its acceptance condition, while
+                    // nothing asks for the command here — `--execute` reads it
+                    // off the entry via `locate()`. Emitting `run` would also
+                    // need a call on the authored-vs-`commandOf()`-stripped
+                    // form, which no consumer exists to settle.
                     class: blockerClass(e.blocker),
                     blocks: e.blocker.blocks,
                     unblocksSteps: e.openSteps,

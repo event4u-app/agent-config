@@ -242,19 +242,32 @@ works. But **11 of the 19 trip the renderer's own overflow notice**: their
 `Recommendation:` exceeds `PARAGRAPH_CHARS = 156`
 (`src/agent-src/scripts/gate_execute.ts:157,174`), and that notice says what to
 do about it — *"a class-2 gate that cannot state a one-line question and a
-default is reclassified to 3, not verbosified."* Over the eight that fit, the
-class-2 half is exactly what § 4 claimed. Over the other eleven it is not: "21
-of the 49 blockers are one line and one yes away from resolved" is true of **8**
-by the tool's own bar, and the remaining thirteen are paragraphs a reader still
-has to weigh. Which is the reading-load defect § 0 set out to remove, surviving
-inside the class that was supposed to absorb it.
+default is reclassified to 3, not verbosified."*
 
-Two honest bounds on that number. The notice is **advisory** — it renders
-alongside a working consent block, so nothing is broken today, and the 156 is
-the renderer's threshold rather than an independently derived one. And the
-eleven are not a defect this branch introduced: the prose predates it. What the
-write-back changed is that the overflow is now *observable*, because before it
-no class-2 entry was reachable at all.
+**The first version of this passage then drew the wrong conclusion from that
+count, and the correction is the more useful result.** It said the entries that
+*pass* the bar are "exactly what § 4 claimed" — one line and one yes from
+resolved. They are not. Passing `rec.length > PARAGRAPH_CHARS` is trivially true
+at length **zero**, and measured over the live tree that is what every passer is:
+of the 26 class-2 entries at HEAD, **16 exceed the bar and the other 10 carry no
+`Recommendation:` at all — not one has a usable 1–156-char recommendation.**
+Those ten render `Recommendation: (none recorded — ask for one before deciding)`
+(`gate_execute.ts:143`), and `lint_roadmap_blockers` independently flags all ten
+for the missing field.
+
+So the honest reading is stronger than the one it replaces: **no class-2 gate in
+the estate is one line and one yes away from resolved.** § 4's "21 of the 49
+blockers are one line and one yes away" is not off by a few — it describes zero
+entries. Sixteen are paragraphs a reader still has to weigh and ten have nothing
+to weigh at all, which is the same reading-load defect § 0 set out to remove,
+surviving inside the class that was supposed to absorb it. Caught by R2 finding 3.
+
+Two honest bounds. The notice is **advisory** — it renders alongside a working
+consent block, so nothing is broken today, and the 156 is the renderer's
+threshold rather than an independently derived one. And neither the sixteen nor
+the ten are a defect this branch introduced: the prose, and its absence, predate
+it. What the write-back changed is that both are now *observable*, because before
+it no class-2 entry was reachable at all.
 
 - **A documented spend cap is silently dropped. FOUND, NOT fixed.**
   `benchmark-spend` authorises `task bench:ab:live -- --budget <N>` and states
@@ -275,15 +288,26 @@ put to the maintainer and answered on the same day; recorded here because a
 decision that lives only in a chat turn is the shape § 4c itself complained
 about.
 
-**(a) The dropped spend cap — FIXED, in its own change.** Separately, so that a
-one-line money-safety fix is not skimmed inside a documentation diff. The
-sibling search on the exact construct — a cost-bearing `bench_ab_task_runner`
-invocation with no `{{.CLI_ARGS}}` — found **3** sites, of which only
-`bench:ab:live` carried the false claim; `bench:ab:value` and `value:behaviour`
-claimed nothing but could not be bounded by an operator either. All three now
-forward, which is inert when no trailing args are given, and both directions are
-proven per target with `task --dry -v` rather than argued. A guard reads the real
-taskfiles and was verified red first.
+**(a) The dropped spend cap — DECIDED, and fixed on a SIBLING branch that is not
+in this tree.** The distinction is load-bearing and the first version of this
+paragraph got it wrong: it read "FIXED, in its own change", which asserts tree
+state. **At this branch's HEAD none of the three targets forwards
+`{{.CLI_ARGS}}` and the guard test does not exist** — the fix lives on
+`fix/bench-ab-budget-passthrough` (PR #1406), a sibling of this branch's parent,
+so it is not in this branch's ancestry. **The money-safety defect is live in the
+reviewed tree until that PR merges.** Caught by R2 finding 1 (critical), which
+is the correct severity: a defect declared fixed, with its blocker closed partly
+on that basis, while the defect is still there.
+
+What is true: the decision is recorded, and the change is written, verified and
+open for review. The sibling search on the exact construct — a cost-bearing
+`bench_ab_task_runner` invocation with no `{{.CLI_ARGS}}` — found **3** sites, of
+which only `bench:ab:live` carried the false claim; `bench:ab:value` and
+`value:behaviour` claimed nothing but could not be bounded by an operator either.
+All three forward *on that branch*, which is inert when no trailing args are
+given, with both directions proven per target by `task --dry -v`, and a guard
+that reads the real taskfiles and was verified red first. None of that is in
+scope here.
 
 **(b) The twelve class-0/1 entries — RECLASSIFIED to what their text supports.**
 Not a blanket downgrade: five of the twelve are genuine consent calls and only
@@ -326,19 +350,28 @@ it takes 3 because that is the safe default, and the label overstates the human'
 role. A fifth class for time- and dependency-gated waits would describe it
 properly. Not proposed here — one entry is not a population.
 
-**(c) The over-length class-2 recommendations — ACCEPTED as advisory.**
+**(c) The class-2 recommendation prose — ACCEPTED as advisory.**
 The notice renders alongside a working consent block, the prose predates this
 work, and rewriting other roadmaps' recommendations is the most expensive of the
 three for the least behavioural gain. It stays visible every time one of those
 gates is executed, which is the right place for it.
 
 **Re-measured after (b), not carried over**, because promoting five entries adds
-their recommendations to the population the bar applies to. Over all **27** live
-class-2 entries: **10 within the 156-char bar, 17 over** — probed per entry with
-`gates --execute`. The earlier figure (8 of 19) covered only the entries step 1.3
-had made reachable and excluded `road-to-gate-autonomy`'s own three; both numbers
-are stated so neither reads as a change over time when it is a change of
-denominator.
+their recommendations to the population the bar applies to. Over the **26** live
+class-2 entries at HEAD: **16 exceed the 156-char bar, 10 carry no
+`Recommendation:` at all, and 0 carry a usable 1–156-char one.** Measured by
+reading the field out of each entry, not by reading the renderer's pass/fail —
+which is the distinction the first version of this section missed, since the
+renderer's check passes trivially at length zero.
+
+Three earlier figures in this document are superseded and named so nobody reads a
+change of denominator as a change over time: *8 of 19* covered only the entries
+step 1.3 had made reachable and excluded `road-to-gate-autonomy`'s own three;
+*10 of 27* counted `b-estate-prose-pass-from-1-3` before it resolved itself out
+of the population; and a *13* in § 4c was arithmetic (`21 − 8`) over § 4's
+differently-scoped claim rather than a measurement, so two of those thirteen had
+never been measured against the bar at all. The live reading is the 26/16/10/0
+above. R2 findings 3, 4 and 5.
 
 **Including this branch's own new entry, which is over the bar.** Worth recording
 rather than quietly excluding: `b-estate-prose-pass-from-1-3` was authored *by*

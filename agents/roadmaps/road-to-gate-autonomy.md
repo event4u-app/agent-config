@@ -423,8 +423,12 @@ safeguards.**
   profile carries the setting with the cap named.
 
 ### blocker: b-estate-prose-pass-from-1-3
-- **Status:** RESOLVED 2026-08-17 — all three decided, as recommended. **(a)** the
-  dropped spend cap is fixed in its own change, and the sibling search widened it
+- **Status:** RESOLVED 2026-08-17 — all three carry a recorded decision, which is
+  the bar this entry set. **(a)** the dropped spend cap is decided and the fix is
+  written, verified and open for review as PR #1406 — **on a sibling branch, so it
+  is NOT in this tree**; the defect stays live here until that merges, and the
+  first version of this line said "fixed in its own change", which asserted tree
+  state and was wrong (R2 finding 1, critical). The sibling search widened the fix
   from the one target that lied to all **3** sites of the construct, since the
   passthrough is inert without trailing args and fixing one of three would be the
   fixed-one-instance failure. **(b)** the twelve are reclassified to what their
@@ -433,12 +437,14 @@ safeguards.**
   render an answerable consent block. Measured: `{2: 22, 3: 28}` before, `{2: 27,
   3: 23}` immediately after, and `{2: 26, 3: 23}` at HEAD once this entry itself
   resolves out of the population — 49 open records, 48 with an authored field and
-  only the synthesised `legacy` note left on the default. **(c)** the over-length
-  recommendations are accepted as advisory and re-measured against the new
-  denominator: 10 of 27 within the bar, 17 over — including this entry itself,
-  authored after reading the notice. Per-entry
-  table, the taxonomy gap `utilization-sweep-window` exposes, and the measured
-  effects: `agents/evidence/analysis/gate-class-sweep-2026-08-17.md` § 4d.
+  only the synthesised `legacy` note left on the default. **(c)** the class-2
+  recommendation prose is accepted as advisory, and re-measuring it corrected the
+  reading rather than the number: over the 26 live class-2 entries, **16 exceed
+  the 156-char bar, 10 carry no `Recommendation:` at all, and 0 carry a usable
+  one** — so § 4's "one line and one yes away from resolved" describes zero
+  entries, not 21 (R2 findings 3–5). Per-entry table, the taxonomy gap
+  `utilization-sweep-window` exposes, and the measured effects:
+  `agents/evidence/analysis/gate-class-sweep-2026-08-17.md` § 4d.
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** nothing in this roadmap — every step here is closed or spend-gated.
