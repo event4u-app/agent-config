@@ -1,0 +1,1027 @@
+diff --git a/agents/evidence/analysis/gate-class-sweep-2026-08-17.md b/agents/evidence/analysis/gate-class-sweep-2026-08-17.md
+index 9f1a92869de04c6660b94116a22ff765c66bcf6b..08e72912793a40a78cb115f6a452b2aeda4ac3bb 100644
+--- a/agents/evidence/analysis/gate-class-sweep-2026-08-17.md
++++ b/agents/evidence/analysis/gate-class-sweep-2026-08-17.md
+@@ -181,3 +181,169 @@ the estate.
+   roadmap, so it is not this work; every one of the 28 is in another roadmap's
+   blocker section. `lint_roadmap_blockers` is registered only under `task ci`
+   and in no workflow, so nothing on a PR reports it either way.
++
++### 4c. Materialisation — added 2026-08-17 by step 1.3, and it falsifies § 4 again
++
++Writing § 3's verdicts back into the entries themselves is what step 1.3 does,
++and doing it surfaced a **second falsification, of this document's own
++conclusion 1**. It is recorded here rather than in the roadmap because it is a
++result about this measurement, not about that plan.
++
++**What landed.** Step 1.3 wrote **34** entries; the tree now carries **36**
++authored `Class:` fields, because `road-to-gate-autonomy`'s own two already
++had one. So of the 49 open blockers, 36 declare a class and **13** resolve
++through the absent-field default — the 12 below plus the synthesised `legacy`
++note. (The first version of this paragraph said 34 and 15, conflating what the
++step wrote with what the tree holds; corrected by R2 finding 3, and the 12/13
++split is load-bearing for the conclusion two paragraphs down.)
++
++Every value comes from the § 3 row for that id — the id sets matched exactly
++(49 live against 50 rows, the difference being row 39, resolved since, and row
++12's `legacy (blocked-until)` normalising to the parser's `legacy`), so no
++class was inferred and none was invented. The population was joined
++mechanically: ids from `agent-config gates --json --all`, classes from the
++table above.
++
++**What did not, and why it matters more than what did.** The **12 class-0 and
++class-1 entries were left unwritten**, because `Class: 0` or `Class: 1` without
++a `Run:` field is a HARD `lint_roadmap_blockers` failure by design — a gate
++that claims to be runnable must name the command. Every one of the twelve was
++read in full to find that command. **None of them can carry an honest one:**
++
++| what was found | count | entries |
++|---|---:|---|
++| names no command at all | 8 | `utilization-sweep-window`, `b-rules-efficiency-signal`, `skill-activation-window`, `b-live-trigger-eval`, `phase3-harness-deltas-9-10`, `human-gated-live-trigger-eval`, `b-behavioural-bench-spend`, plus `ui-corpus-has-no-ui`'s primary command, which carries an unfilled `<placeholder>` |
++| names a progress *read* that cannot clear the gate | 2 | `ui-session-capture-window`, `telemetry-sample-size` — both `wc -l`; a green result would read as progress the gate does not make |
++| names a probe that exits non-zero in its expected state | 1 | `team-telemetry-behind-flag` — `env \| grep -i EXPERIMENTAL`, which `--execute` would record as a command failure |
++| names a real runner whose documented cap does not apply | 1 | `benchmark-spend` — see the defect below |
++
++**So the honest auto-runnable share of the estate is 0 of 49, not 12.** § 3
++assigned the class from *what would clear the gate in principle*; the field
++requires *what the entry can actually run*. Those are different questions, and
++the first one flatters the second. Conclusion 1 above — "`gates --execute` is
++worth having for the six class-0 entries" — does not survive: **none of the six
++is executable as authored.** The class-0 path shipped in Phase 2 has zero live
++targets today, and this table is why.
++
++This is not a reason to rewrite § 3. The classification is a legitimate reading
++of clearability and it is what step 1.2 asked for; what it is not is a
++materialisable field, and that only became visible when someone tried to write
++it. The twelve therefore resolve to the absent-field default — class 3 — which
++is the safe direction and is what every consumer already applies.
++
++**Reclassifying them in the tree is NOT done here.** Twelve verdicts across
++eight roadmaps this branch does not own is a judgement on other people's plans,
++not a field write-back; it is surfaced as a decision instead.
++
++**And conclusion 2 needs the same qualification, measured the same way.** With
++the classes live, `gates --execute` was run against each of the 19 class-2
++entries this step made reachable. All 19 render a consent block — the path
++works. But **11 of the 19 trip the renderer's own overflow notice**: their
++`Recommendation:` exceeds `PARAGRAPH_CHARS = 156`
++(`src/agent-src/scripts/gate_execute.ts:157,174`), and that notice says what to
++do about it — *"a class-2 gate that cannot state a one-line question and a
++default is reclassified to 3, not verbosified."* Over the eight that fit, the
++class-2 half is exactly what § 4 claimed. Over the other eleven it is not: "21
++of the 49 blockers are one line and one yes away from resolved" is true of **8**
++by the tool's own bar, and the remaining thirteen are paragraphs a reader still
++has to weigh. Which is the reading-load defect § 0 set out to remove, surviving
++inside the class that was supposed to absorb it.
++
++Two honest bounds on that number. The notice is **advisory** — it renders
++alongside a working consent block, so nothing is broken today, and the 156 is
++the renderer's threshold rather than an independently derived one. And the
++eleven are not a defect this branch introduced: the prose predates it. What the
++write-back changed is that the overflow is now *observable*, because before it
++no class-2 entry was reachable at all.
++
++- **A documented spend cap is silently dropped. FOUND, NOT fixed.**
++  `benchmark-spend` authorises `task bench:ab:live -- --budget <N>` and states
++  the command "caps per-task spend". It does not: `taskfiles/bench-ab.yml:98-101`
++  invokes `bench_ab_task_runner --variant both --mode live` with **no
++  `{{.CLI_ARGS}}`**, unlike its sibling at `:28`, so the trailing `--budget <N>`
++  never reaches the runner and the run falls back to the parser default of
++  `2.0` (`src/scripts/bench_ab_task_runner.ts:911`). An operator who names a cap
++  gets a different one, silently, on a cost-bearing path. The fix is one
++  interpolation; it is outside this branch's module and changes what a paid
++  runner does, so it is surfaced as a decision rather than taken.
++  **Decided 2026-08-17 and fixed — see § 4d.**
++
++### 4d. The three findings, decided — added 2026-08-17
++
++§ 4c surfaced three things as decisions rather than taking them. All three were
++put to the maintainer and answered on the same day; recorded here because a
++decision that lives only in a chat turn is the shape § 4c itself complained
++about.
++
++**(a) The dropped spend cap — FIXED, in its own change.** Separately, so that a
++one-line money-safety fix is not skimmed inside a documentation diff. The
++sibling search on the exact construct — a cost-bearing `bench_ab_task_runner`
++invocation with no `{{.CLI_ARGS}}` — found **3** sites, of which only
++`bench:ab:live` carried the false claim; `bench:ab:value` and `value:behaviour`
++claimed nothing but could not be bounded by an operator either. All three now
++forward, which is inert when no trailing args are given, and both directions are
++proven per target with `task --dry -v` rather than argued. A guard reads the real
++taskfiles and was verified red first.
++
++**(b) The twelve class-0/1 entries — RECLASSIFIED to what their text supports.**
++Not a blanket downgrade: five of the twelve are genuine consent calls and only
++seven are human-only. The split matters, because a blanket 3 would have buried
++five gates the maintainer can answer in one line.
++
++| id | roadmap | was | now | why the new class |
++|---|---|:-:|:-:|---|
++| `ui-corpus-has-no-ui` | frontend-skill-application | 0 | **2** | a human names the consumer store, then the report re-runs |
++| `b-rules-efficiency-signal` | standing-context-40k | 0 | **2** | wait for the observer, or record the window unfilled and re-date |
++| `phase3-harness-deltas-9-10` | solution-minimalism | 1 | **2** | spend consent, once deltas 9 and 10 land as code |
++| `b-behavioural-bench-spend` | mixed-trigger-activation-cost | 1 | **2** | name a budget at the entry, or re-date the step |
++| `benchmark-spend` | surface-consolidation | 1 | **2** | authorise the A/B with an estimate |
++| `utilization-sweep-window` | cost-parity-1-rule-payload-diet | 0 | **3** | time- and dependency-gated; no command and no decision |
++| `skill-activation-window` | cost-parity-1-rule-payload-diet | 1 | **3** | a pointer to a class-3 entry under another name |
++| `ui-session-capture-window` | frontend-skill-application | 0 | **3** | needs human-authored observation files that do not exist |
++| `telemetry-sample-size` | subagent-value-realization-followup | 0 | **3** | only real parallel work fills the columns |
++| `team-telemetry-behind-flag` | always-on-orchestration | 0 | **3** | a host flag that does not clear by waiting on this host |
++| `b-live-trigger-eval` | catalogue-host-fit | 1 | **3** | a controlling-terminal confirmation; cannot run non-interactively |
++| `human-gated-live-trigger-eval` | skill-description-measurement | 1 | **3** | hard-aborts under automation by design |
++
++Measured effect, at three points so no reading is mistaken for another:
++`gates --json --all` was `{2: 22, 3: 28}` before, `{2: 27, 3: 23}` immediately
++after the reclassification over 50 records, and `{2: 26, 3: 23}` at HEAD over 49
++— the difference being `b-estate-prose-pass-from-1-3` resolving itself out of the
++population once all three decisions landed. **Five gates that rendered "nothing to
++execute" now render an answerable consent block** — verified per entry, not
++inferred. Of the 49 open records, **48 carry an authored field and exactly 1
++resolves through the absent-field default**: the parser's synthesised `legacy`
++note, which by construction can never carry one.
++
++**The class-0 count stays 0, and that is the honest headline.** Nothing here
++makes a gate auto-runnable, because nothing here invents a command. What changed
++is that the tree no longer declares a class its own entries cannot support.
++
++**One taxonomy gap, recorded rather than forced.** `utilization-sweep-window`
++clears when a date passes and a sibling blocker clears — it is neither a command,
++nor a spend, nor a preference, nor human content. None of the four classes fits;
++it takes 3 because that is the safe default, and the label overstates the human's
++role. A fifth class for time- and dependency-gated waits would describe it
++properly. Not proposed here — one entry is not a population.
++
++**(c) The over-length class-2 recommendations — ACCEPTED as advisory.**
++The notice renders alongside a working consent block, the prose predates this
++work, and rewriting other roadmaps' recommendations is the most expensive of the
++three for the least behavioural gain. It stays visible every time one of those
++gates is executed, which is the right place for it.
++
++**Re-measured after (b), not carried over**, because promoting five entries adds
++their recommendations to the population the bar applies to. Over all **27** live
++class-2 entries: **10 within the 156-char bar, 17 over** — probed per entry with
++`gates --execute`. The earlier figure (8 of 19) covered only the entries step 1.3
++had made reachable and excluded `road-to-gate-autonomy`'s own three; both numbers
++are stated so neither reads as a change over time when it is a change of
++denominator.
++
++**Including this branch's own new entry, which is over the bar.** Worth recording
++rather than quietly excluding: `b-estate-prose-pass-from-1-3` was authored *by*
++the work that measures this, *after* reading the notice, and still exceeded it.
++The bar is easy to trip while knowing about it, which is a better argument for
++the notice staying visible than any of the eleven older cases. It becomes moot on
++resolution — a resolved blocker no longer renders — so the count above is the
++live reading at the moment of measurement, not a durable 17.
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 7ef9f841f5ebcd547de91cf5ec2a2555fe6e2f87..835b615dd97f122a858999797846658e0150503f 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -6,7 +6,7 @@
+ 
+ ## Overall
+ 
+-**282 / 576 steps done · 49%**
++**283 / 576 steps done · 49%**
+ 
+ ```text
+ ████████████████████░░░░░░░░░░░░░░░░░░░░   49%
+@@ -34,7 +34,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ | 8 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
+ | 9 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 5 | 0 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ░░░░░░░░░░ 0% |
+ | 10 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
+-| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 2 | 5 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | ███████░░░ 71% |
++| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
+ | 12 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+ | 13 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
+ | 14 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
+@@ -380,11 +380,11 @@ _1 blocker resolved._
+ 
+ ### [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md)
+ 
+-**Road to gate autonomy — human gates only where a human is the point** — 5 / 7 done (71%)
++**Road to gate autonomy — human gates only where a human is the point** — 6 / 7 done (86%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+-| 1 | Blocker schema: class and command become fields | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
++| 1 | Blocker schema: class and command become fields | ✅ done | 0 | 3 | 0 | 0 | 100% |
+ | 2 | `gates --execute` (the acting half) | ✅ done | 0 | 2 | 1 | 0 | 100% |
+ | 3 | Agent runs via CLI: open the delegate gate for the maintainer profile | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
+ | 4 | Liveness: gates that open must be seen | ✅ done | 0 | 1 | 0 | 0 | 100% |
+@@ -420,6 +420,8 @@ _1 blocker resolved._
+     two-gate contract, and this decision moves one profile, not a default.
+   - **Resolved when:** one option is recorded at this blocker, and for (a) or (b) the profile carries the setting with the cap named.
+ 
++_1 blocker resolved._
++
+ ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
+ 
+ **Follow-up to Road to gated reach — exercise the YouTube channel** — 0 / 12 done (0%)
+diff --git a/agents/roadmaps/road-to-always-on-orchestration.md b/agents/roadmaps/road-to-always-on-orchestration.md
+index 43ee078b0e375dd72deb8389001258916c0a3fb6..ba5ac19ab168963dc0e97af3a72b3af6f85fed19 100644
+--- a/agents/roadmaps/road-to-always-on-orchestration.md
++++ b/agents/roadmaps/road-to-always-on-orchestration.md
+@@ -314,6 +314,7 @@ before any behaviour data exists.
+ 
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 2 — consent-once
+ - **Blocks:** auto-firing the council at the release-gate escalation
+ - **What to do:** after Phase 3 has soaked (transport reconciliation
+   verified in real passes) and the F6/F4 + council-attendance telemetry has
+@@ -328,6 +329,7 @@ before any behaviour data exists.
+ 
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 2 — consent-once
+ - **Blocks:** any pre-tool-use mid-session delegation carrier + escalation
+   ladder (Sources E/H harvest)
+ - **What to do:** run the main-vs-subagent discrimination spike (upstream
+@@ -343,6 +345,7 @@ before any behaviour data exists.
+ 
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 2 — consent-once
+ - **Blocks:** single-shot stop-block continuation for the end-review
+   obligation
+ - **What to do:** carried from the carriers roadmap, upgraded by two
+@@ -359,6 +362,7 @@ before any behaviour data exists.
+ 
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 3 — human-only (a host flag that does not clear by waiting on this host)
+ - **Blocks:** Phase 5.4 (team telemetry concerns, TaskCompleted
+   artifact-check)
+ - **What to do:** when the experimental flag is on in a real environment,
+@@ -379,6 +383,7 @@ before any behaviour data exists.
+ 
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 2 — consent-once
+ - **Blocks:** routing ordinary work slices to second-vendor CLI workers
+   (huge-context analysis, independence-critical review — Source G shape)
+ - **What to do:** the drafts cited a direction-policy artefact that does not
+diff --git a/agents/roadmaps/road-to-carrier-layer-convergence.md b/agents/roadmaps/road-to-carrier-layer-convergence.md
+index c7bf84892191fcf127994b4c6f6ad387c1cf4e8d..eea2ba7cc89f75c05e5ae8f84e052b39aa4217ab 100644
+--- a/agents/roadmaps/road-to-carrier-layer-convergence.md
++++ b/agents/roadmaps/road-to-carrier-layer-convergence.md
+@@ -188,6 +188,7 @@ suppressed layer restores the prior state.
+ ### blocker: b-convergence-machine
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 3 — human-only
+ - **Blocks:** Phase 3 only (Phases 1-2 are repo work)
+ - **What to do:** Phase 3's before/after pair needs the maintainer machine,
+   since the two-layer topology is a property of the install rather than of the
+diff --git a/agents/roadmaps/road-to-catalogue-host-fit.md b/agents/roadmaps/road-to-catalogue-host-fit.md
+index f67d85d9541018719faf94cccae4647e9e25ca02..f9c6000253b9013861bef5c3f1dd52f65eb5d625 100644
+--- a/agents/roadmaps/road-to-catalogue-host-fit.md
++++ b/agents/roadmaps/road-to-catalogue-host-fit.md
+@@ -178,6 +178,7 @@ Phase 3.
+ ### blocker: b-live-trigger-eval
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 3 — human-only (a controlling-terminal confirmation; it cannot run non-interactively)
+ - **Blocks:** Phase 0 only. Phases 1, 1b, 2 and 3 are repo work and proceed without
+   it — Phase 0 sits first because of its cross-roadmap leverage, not because it
+   gates this file.
+diff --git a/agents/roadmaps/road-to-context-fidelity.md b/agents/roadmaps/road-to-context-fidelity.md
+index 85e3f2b4667f4dc37f431eeb89086a1c4b58ad96..b3d25be0205df9bf6c97dd81a37a235527dd9d66 100644
+--- a/agents/roadmaps/road-to-context-fidelity.md
++++ b/agents/roadmaps/road-to-context-fidelity.md
+@@ -153,6 +153,7 @@ what changed is that the gate is now countable.
+ 
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 3 — human-only
+ - **Blocks:** Phase 0 (cf01 compaction-survival census), and transitively all of Phase 1, whose build-or-close decision reads cf01's number
+ - **Question:** cf01 needs an instrumented live session with a manual compaction, repeated across five sessions — and cf03 has since shown that no manual compaction has ever been recorded here. Do you run the five manual sessions anyway, or should cf01 be re-specified against the automatic path that actually occurs?
+ - **Recommendation:** Establish manual detectability first, then decide. **Corrected on R2 finding 6** — the earlier recommendation here said "re-specify cf01 against the automatic path" because "a manual-compaction census measures a path production never takes", and that overstated what cf03 can support. cf03 recorded 29 events across 473 sessions, all 29 tagged `auto` and none manual — but the detector is pinned to one OBSERVED auto event (`src/scripts/_lib/session_eol.ts:11-19`) and nothing establishes that a manual compaction writes a `compact_boundary` record at all. Zero manual is absence of a RECORD. So the cheap first move is a single manual compaction in one instrumented session to see whether it leaves a trace: if it does, cf01 runs as written; if it does not, cf01's null would be uninterpretable and the automatic path is the only measurable one. The automatic path needs no special session — probes placed in a session that is going to cross 1M tokens, which about half the recorded sessions do (239 of 473 end above 400k).
+@@ -168,6 +169,7 @@ what changed is that the gate is now countable.
+ 
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 2 — consent-once
+ - **Blocks:** the backing of `context-fidelity-memory-staleness`, and Phase 2 step 3's thresholds
+ - **Question:** cf02's 21.5 % came from a hand walk of 107 entries by three observers, because no store-wide contradiction sweep exists. Is building that sweep in scope for Phase 2, or does the ladder ship on the hand reading?
+ - **Recommendation:** Build the sweep as part of Phase 2 step 1, not as a separate phase. The commit anchor and the sweep are the same work seen from two sides: the anchor is what lets a sweep decide whether an entry was verified against *this* tree, and without it any automated reading repeats the 0.0 % artefact in a new form. Shipping the ladder on a hand reading would make the thresholds unre-derivable by the next maintainer, which is the property that made this census necessary in the first place.
+@@ -182,6 +184,7 @@ what changed is that the gate is now countable.
+ 
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 2 — consent-once
+ - **Blocks:** Phase 3 (the withdrawn skill-top position step; this is the residual gap that survived the withdrawal)
+ - **Question:** `check_iron_law_prominence` is enforced and blocking but scans `src/rules/*.md` only — its CI argv is `["--quiet"]` with no path. Pointed at `src/skills` it reports 13 violations nobody currently sees. Extend its corpus, or leave the skills tree unscanned?
+ - **Recommendation:** Extend it, but not by simply adding the path to the existing invocation — that lands 13 blocking findings in one change, which is the gate-that-arrives-as-N-instant-blockers shape this repository has refused before. The two-step version is cheap: first add a skills run whose findings are reported and baselined (the ratchet pattern this tree already uses for `ci-parity:local-only` and `lint_roadmap_blockers:decidability`), then drain. Note that 10 of the 13 are one repeated shape — an Iron Law H2 sitting behind `When to use` and `Goal` — so a single ordering convention clears most of them.
+diff --git a/agents/roadmaps/road-to-cost-parity-1-rule-payload-diet.md b/agents/roadmaps/road-to-cost-parity-1-rule-payload-diet.md
+index 91e99c3c3de06f14be6976660b4ca01b7a7b7515..0cf5c17e110e9987e089c4883813751a7a226f4c 100644
+--- a/agents/roadmaps/road-to-cost-parity-1-rule-payload-diet.md
++++ b/agents/roadmaps/road-to-cost-parity-1-rule-payload-diet.md
+@@ -360,6 +360,7 @@ part 0's table.
+ 
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 3 — human-only (a pointer to a class-3 entry under another name)
+ - **Blocks:** Phase 1.3's skill-usage evidence column; Phase 2's
+   trigger-accuracy bars
+ - **What to do:** `road-to-skill-description-measurement.md` is blocked on
+@@ -422,6 +423,7 @@ part 0's table.
+ 
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 3 — human-only (time- and dependency-gated; no command and no decision)
+ - **Blocks:** Phase 1 census starting with real utilization data
+ - **What to do:** `road-to-surface-consolidation.md` Phase 3's sweep is
+   time-gated to ~2026-08-26 and carries its own `repo-admin-and-usage`
+diff --git a/agents/roadmaps/road-to-council-blind-review.md b/agents/roadmaps/road-to-council-blind-review.md
+index 9bfb9a2932caa10460dd388eeca455c90de0e729..fda7ce8565500209aa9878bce3f8a6499645944c 100644
+--- a/agents/roadmaps/road-to-council-blind-review.md
++++ b/agents/roadmaps/road-to-council-blind-review.md
+@@ -212,6 +212,7 @@ production host mode; method in `internal/bench/council-blind-review/`.
+ 
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 3 — human-only
+ - **Blocks:** Ü2 and Ü3 adoption (Phase 2 pre-registered decision rules) and
+   the Ü2/Ü3 half of Phase 3's merge-or-null. **Ü1 is NOT blocked** — it is
+   decided, adopted and merged (`blind_chairman` default true, opt-out flag,
+diff --git a/agents/roadmaps/road-to-distillation-followups.md b/agents/roadmaps/road-to-distillation-followups.md
+index 325dff8dcbeb34dd37103b6b0e0202dc5a0529a7..e703ee8a37e41eb2a71eb168f6e0bafd7f0d15f4 100644
+--- a/agents/roadmaps/road-to-distillation-followups.md
++++ b/agents/roadmaps/road-to-distillation-followups.md
+@@ -86,6 +86,7 @@ command instead of an evidence gap.
+ ### blocker: router-head-retrofit-instrument
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 2 — consent-once
+ - **Blocks:** Phase 1 Step 1 only.
+ - **What to do:** either supply an instrument that observes what the host
+   actually loads on skill trigger (no such observation exists in this tree
+@@ -98,6 +99,7 @@ command instead of an evidence gap.
+ ### blocker: first-contract-true-analysis-run
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 2 — consent-once
+ - **Blocks:** Phase 2 Step 1 only.
+ - **What to do:** run the command against a small reference and land the
+   evidence artefact. Two things make this a maintainer call rather than an
+diff --git a/agents/roadmaps/road-to-estate-drawdown.md b/agents/roadmaps/road-to-estate-drawdown.md
+index ddc35bff83afd32069816dcce67d6acbc1024567..11916302b2efea6db75ae2ef86f276b95e3cc6c8 100644
+--- a/agents/roadmaps/road-to-estate-drawdown.md
++++ b/agents/roadmaps/road-to-estate-drawdown.md
+@@ -170,6 +170,7 @@ sibling roadmap — it is runnable with today's tooling.**
+ ### blocker: b-consolidated-decision-sheet
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 2 — consent-once
+ - **Blocks:** Phase 0 step 0.2, and through it the class-1 tranche in 1.2. Step 0.1
+   generates the sheet without it, and Phase 2's triage sweep proceeds independently.
+ - **What to do:** answer the consolidated decision sheet that step 0.1 produces —
+diff --git a/agents/roadmaps/road-to-frontend-skill-application.md b/agents/roadmaps/road-to-frontend-skill-application.md
+index d3cb87b22b67ae217b6f8235ca4e090541c17bea..0222760236fc6ea65d288ad8ac2de0830d4dfcdc 100644
+--- a/agents/roadmaps/road-to-frontend-skill-application.md
++++ b/agents/roadmaps/road-to-frontend-skill-application.md
+@@ -145,6 +145,7 @@ Enforcement moves only where the tree can verify it; `enforced_by:` changes beca
+ ### blocker: ui-session-capture-window
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 3 — human-only (needs human-authored observation files that do not exist)
+ - **Blocks:** Phase 1 — Measure · Phase 2 — Deliver
+ - **What to do:**
+   1. **Rewritten after implementation, because the original text described a mechanism that does not exist.** It said "let the capture concern run … no human decision is required, only elapsed sessions". There is no concern: a `session_start` hook cannot see the injected catalogue (envelope carries `session_id`/`source`/`cwd`/`transcript_path`, and `preamble_byte_census` verified no local artifact holds the system payload). Capture is a script plus a labelled self-report, so the corpus does NOT fill by itself.
+@@ -166,6 +167,7 @@ Enforcement moves only where the tree can verify it; `enforced_by:` changes beca
+ ### blocker: ui-corpus-has-no-ui
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 2 — consent-once (a human names the consumer store, then the report re-runs)
+ - **Blocks:** Phase 4 — Step 5 · Phase 5 — Reach and enforcement
+ - **What to do:**
+   1. The first measurement found **3 UI-write turns across 107 sessions** in this repo. That is not a low rate, it is an absent population: a skill/rule suite is not a frontend, so the question cannot be answered from this store no matter how long it runs.
+@@ -176,6 +178,7 @@ Enforcement moves only where the tree can verify it; `enforced_by:` changes beca
+ ### blocker: enforcement-evidence
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 2 — consent-once
+ - **Blocks:** Phase 5 — Reach and enforcement
+ - **What to do:**
+   1. Read the published consultation and discharge rates from Phase 1 and the nudge A/B from Phase 4.
+diff --git a/agents/roadmaps/road-to-gate-autonomy.md b/agents/roadmaps/road-to-gate-autonomy.md
+index 9f956eefc3ac14784d87e61194606c7f7cca2291..ef2acb5adf3d297a607318f8706a2d22c61b0ec4 100644
+--- a/agents/roadmaps/road-to-gate-autonomy.md
++++ b/agents/roadmaps/road-to-gate-autonomy.md
+@@ -146,7 +146,7 @@ safeguards.**
+       including two a live parallel session is holding. The classification is
+       committed as the evidence table instead, which is what step 1.2 asks for; the
+       write-back is named as the follow-up rather than done half-way.
+-- [ ] **1.3** Write the swept classes back into the blocker entries themselves, so
++- [x] **1.3** Write the swept classes back into the blocker entries themselves, so
+       `Class:` is a field in the tree and not only a row in the evidence table.
+       **Added 2026-08-17 by R2 finding 7**, which is the reason it exists as a step:
+       1.2 deferred this in prose, and prose in a done-note is not tracked — it
+@@ -156,12 +156,68 @@ safeguards.**
+       parallel session at the time; only this roadmap's own two entries carry the
+       field today.
+       `verify:` every open blocker in `agent-config gates --json --all` carries a
+-      class, and `lint_roadmap_blockers` is green.
++      class, and `lint_roadmap_blockers` reports **no new** violation — see the
++      clause correction below; "green" was never reachable.
++      **Done 2026-08-17, and the step's own result falsifies the sweep a second
++      time.** This step wrote **34** entries; the tree now carries **36**
++      authored `Class:` fields, because this roadmap's own two already had one.
++      Of the sweep's 49-blocker population, 36 declare a class and **13** resolve
++      through the absent-field default — the 12 below plus the parser's
++      synthesised `legacy` note. (First written as 34 and 15, which conflated
++      what the step wrote with what the tree holds; corrected by R2 finding 3.
++      The live count is now 50, not 49: `b-estate-prose-pass-from-1-3` is added
++      by this step and is not part of the swept population.) Every value is
++      joined mechanically from the committed § 3 table — ids from
++      `gates --json --all`, classes from the row — and the two id sets matched
++      exactly, so nothing was inferred. `renderJson` gained `class`
++      (`roadmap_gates.ts`), resolving it through the same absent-field default
++      every other consumer applies; five tests pin the surface, including one
++      that drives the parser's legacy branch rather than asserting it in a
++      comment (R2 finding 6). `run` was emitted for one commit and then
++      withdrawn: R2 findings 2 and 7 showed it has no consumer, no live data,
++      and no way to settle which representation is correct without one.
++      **The 12 class-0/1 entries were deliberately NOT written, and that is the
++      finding.** `Class: 0` without `Run:` is a HARD lint failure by design, so
++      all twelve were read in full to find the command — and none can carry an
++      honest one: 8 name no command at all, 2 name a `wc -l` progress read that
++      cannot clear the gate, 1 names a probe that exits non-zero in its expected
++      state, and 1 names a runner whose documented `--budget` cap is silently
++      dropped. **The auto-runnable share of the estate is therefore 0 of 49, not
++      12**: § 3 classified by what would clear a gate in principle, the field
++      requires what the entry can actually run. The sweep's own conclusion —
++      "`gates --execute` is worth having for the six class-0 entries" — does not
++      survive it; the class-0 path Phase 2 shipped has zero live targets. Full
++      table and the reasoning: the sweep artefact § 4c.
++      **Two things this step refused to do.** It did not fabricate a `Run:` to
++      satisfy the lint, and it did not reclassify the twelve in the tree —
++      twelve verdicts across eight roadmaps this branch does not own is a
++      judgement on other plans, not a field write-back. Both are surfaced as
++      decisions instead.
++      **Clause correction, recorded rather than quietly met.** The `verify:`
++      above asked for `lint_roadmap_blockers` to be *green*. It cannot be, and
++      step 1.1's own done-note already said so two steps earlier: the
++      decidability ratchet reads 28 against a baseline of 26 on a **pristine**
++      tree, and all 28 sit in other roadmaps. The checkable claim is the one now
++      written: **28 before this branch, 28 after** — measured both times — plus
++      zero findings from the class/`Run:` HARD checks. A clause that can only be
++      satisfied by fixing two unrelated entries in other people's files was
++      mis-authored, not failed.
+ - **AC-1:** every open blocker carries a class; the lint enforces `run:` on classes
+-  0 and 1; the sweep table is committed with its share. **Not met — step 1.3
+-  carries the remainder.** The lint half and the sweep half are done; the
+-  write-back is not, and the phase is marked complete only in the sense that
+-  every step authored in it at the time is closed.
++  0 and 1; the sweep table is committed with its share. **Met in the field sense,
++  refuted in the meaning sense — and the split is the point.** Every record in
++  `gates --json --all` now carries a class: of the 49 open records, **48 carry an
++  authored field and exactly 1 resolves through the absent-field default** — the
++  parser's synthesised `legacy` note, which can never carry one. Measured, not
++  derived.
++  **Amended 2026-08-17 by the follow-up decision, and the amendment is the good
++  news.** Step 1.3 left this at 36 authored / 13 default, with the twelve
++  class-0/1 defaults contradicting their own swept verdict — a field the tree
++  could not support. Those twelve are now reclassified to what their text
++  actually supports (sweep § 4d): five are consent calls, seven are human-only,
++  so the contradiction is gone rather than documented. What has **not** changed is
++  the headline: class 0 is still empty, because nothing invented a command.
++  Ticking this criterion without that last sentence would report the taxonomy as
++  live on an estate where nothing is auto-runnable.
+ 
+ ### Phase 2 — `gates --execute` (the acting half)
+ 
+@@ -366,6 +422,62 @@ safeguards.**
+ - **Resolved when:** one option is recorded at this blocker, and for (a) or (b) the
+   profile carries the setting with the cap named.
+ 
++### blocker: b-estate-prose-pass-from-1-3
++- **Status:** RESOLVED 2026-08-17 — all three decided, as recommended. **(a)** the
++  dropped spend cap is fixed in its own change, and the sibling search widened it
++  from the one target that lied to all **3** sites of the construct, since the
++  passthrough is inert without trailing args and fixing one of three would be the
++  fixed-one-instance failure. **(b)** the twelve are reclassified to what their
++  text supports — **not** a blanket downgrade: five are genuine consent calls and
++  seven are human-only, so five gates that rendered "nothing to execute" now
++  render an answerable consent block. Measured: `{2: 22, 3: 28}` before, `{2: 27,
++  3: 23}` immediately after, and `{2: 26, 3: 23}` at HEAD once this entry itself
++  resolves out of the population — 49 open records, 48 with an authored field and
++  only the synthesised `legacy` note left on the default. **(c)** the over-length
++  recommendations are accepted as advisory and re-measured against the new
++  denominator: 10 of 27 within the bar, 17 over — including this entry itself,
++  authored after reading the notice. Per-entry
++  table, the taxonomy gap `utilization-sweep-window` exposes, and the measured
++  effects: `agents/evidence/analysis/gate-class-sweep-2026-08-17.md` § 4d.
++- **Owner:** user
++- **Class:** 2 — consent-once
++- **Blocks:** nothing in this roadmap — every step here is closed or spend-gated.
++  It exists because step 1.3 surfaced three estate-level findings that this branch
++  deliberately did not act on, and R2 finding 4 is right that a paragraph in an
++  evidence file is a note rather than a discharge: without an entry here, nothing
++  renders them in `agent-config gates` and nothing counts them.
++- **What to do:** decide each of the three independently. (a) **The dropped spend
++  cap** — `taskfiles/bench-ab.yml` runs `bench_ab_task_runner` for `bench:ab:live`
++  with no `{{.CLI_ARGS}}`, unlike its sibling one target up, so the
++  `task bench:ab:live -- --budget <N>` that `road-to-surface-consolidation`'s
++  `benchmark-spend` entry authorises silently falls back to the parser default of
++  `2.0` (`src/scripts/bench_ab_task_runner.ts:911`). Fix is one interpolation;
++  the decision is whether it lands here, on `road-to-surface-consolidation`, or as
++  its own change. (b) **The twelve class-0/1 entries** — their swept verdict is not
++  materialisable (sweep § 4c), so they sit at the absent-field default of 3 while
++  the table says 0 or 1. Either reclassify them in the tree to match what their
++  entries can actually run, or leave the default standing and let § 4c carry the
++  discrepancy. (c) **The eleven over-length class-2 recommendations** — each
++  exceeds the renderer's own 156-char consent bar, whose remedy is reclassification
++  to 3 rather than a longer line. Either rewrite the eleven to one line, reclassify
++  them, or accept the overflow as advisory.
++- **Recommendation:** **(a) as its own change, (b) reclassify, (c) accept for now.**
++  (a) is a one-line spend-safety fix on a cost-bearing path and should not ride in a
++  documentation PR where a reviewer would skim it. (b) because a field that
++  contradicts its own evidence table is the exact half-truth this roadmap exists to
++  remove — and reclassifying *down* to 3 is the safe direction, never up. (c) last,
++  because it is prose in eleven other roadmaps, the notice is advisory, and the
++  overflow predates this work; it is a real reading-load defect but the cheapest of
++  the three to defer.
++- **If you do nothing:** the spend cap stays silently wrong, so an operator who
++  names a budget gets a different one on a paid path. Twelve entries keep declaring
++  a class their text cannot support, which is the shape `gates --execute` was built
++  to stop. And the class-2 half keeps rendering paragraphs where the taxonomy
++  promises one line, so the reading-load defect § 0 set out to remove survives
++  inside the class meant to absorb it.
++- **Resolved when:** each of (a), (b) and (c) carries a recorded decision at this
++  blocker — a fix, a deferral with a reason, or an explicit accept.
++
+ ## Risk Register
+ 
+ <!-- risk-review: v1 | reviewed: 2026-08-17 | reviewer: claude/host -->
+diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md
+index f180416fadd8351a86254c38b2ebd453f0fe614a..0d4410615d95bfd5b3515e853aeb24b7ccf75c03 100644
+--- a/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md
++++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md
+@@ -487,6 +487,7 @@ worse than none — it reads as a live control.
+ ### blocker: required-check-set-change
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 3 — human-only
+ - **Blocks:** step 4.2 only. Phases 0-3 and step 4.1 are not blocked — they change
+   no required check, and ADR-223 is a proposal, not an enforcement change.
+ 
+@@ -569,6 +570,7 @@ worse than none — it reads as a live control.
+ ### blocker: merge-queue-enablement
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 3 — human-only
+ - **Blocks:** step 4.3 only. Nothing else here depends on a merge queue.
+ - **What to do:** decide whether to enable a GitHub merge queue for `main` — a
+   repo-admin setting that cannot be turned on from the tree.
+diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md
+index 54b35f2552cf817fbf9632f6181c109c334be835..fb6b2477588f8741ff72f416a73391cf9ed43717 100644
+--- a/agents/roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md
++++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md
+@@ -148,6 +148,7 @@ tree ~36 % larger than the one they describe.
+ ### blocker: evidence-compaction-approval
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 3 — human-only
+ - **Question:** may provably-reproducible `diff.patch` bodies be dropped in
+   favour of their recorded base/head revisions? Phase 3 produces the list and
+   the proof of reproducibility; the removal itself is a bulk deletion of
+diff --git a/agents/roadmaps/road-to-inbox-harvest-residuals.md b/agents/roadmaps/road-to-inbox-harvest-residuals.md
+index a7370c4c93b333430edea77e3c412698b3fe3f14..0f443880d9dab6989f87132874b62b623a5f8734 100644
+--- a/agents/roadmaps/road-to-inbox-harvest-residuals.md
++++ b/agents/roadmaps/road-to-inbox-harvest-residuals.md
+@@ -135,6 +135,7 @@ none edits existing behaviour.
+ 
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 2 — consent-once
+ - **Blocks:** R2 only
+ - **What to do:** R2 needs a stable-finding-id index that was explicitly declined
+   at `src/scripts/check_review_dispositions.ts:16-22` with a named revisit
+@@ -177,6 +178,7 @@ none edits existing behaviour.
+ 
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 2 — consent-once
+ - **Blocks:** nothing — pure housekeeping, carried so it is not lost
+ - **What to do:** four spent items under `agents/tmp.old/` should be removed:
+   both `council-q-*.md` files (answered and shipped verbatim), `bench-local/`
+diff --git a/agents/roadmaps/road-to-mixed-trigger-activation-cost.md b/agents/roadmaps/road-to-mixed-trigger-activation-cost.md
+index 78f01a7b821de1650a2474c3b3947df963b7bf10..97ad61da7101e453874dff7e299ad9e79cb4e4cc 100644
+--- a/agents/roadmaps/road-to-mixed-trigger-activation-cost.md
++++ b/agents/roadmaps/road-to-mixed-trigger-activation-cost.md
+@@ -511,6 +511,7 @@ and a census gap. That is the surface this phase closes.
+   about a smaller delta than when they were written — re-register them against the
+   post-amendment corpus before the first run, not after.
+ - **Owner:** user
++- **Class:** 2 — consent-once (name a budget at this entry, or re-date the step)
+ - **Blocks:** Phase 3 steps 3.1 and 3.2. Step 3.3's observer is repo work and
+   proceeds without it.
+ - **What to do:** authorise the paired A/B run, which bills model tokens across
+diff --git a/agents/roadmaps/road-to-orchestration-scope-decision.md b/agents/roadmaps/road-to-orchestration-scope-decision.md
+index 2292d0750960bd3a10b3f78e43b24bade61d6eb0..01f9c995cd9fdf7a556907d5df8f9e6d7bea9aaf 100644
+--- a/agents/roadmaps/road-to-orchestration-scope-decision.md
++++ b/agents/roadmaps/road-to-orchestration-scope-decision.md
+@@ -210,6 +210,7 @@ proof surface.
+ ### blocker: real-orchestration-usage
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 3 — human-only
+ - **Blocks:** Phase 2 (and thereby Phase 3's decision)
+ - **What to do:** the build work is done; only real delegable work produces the
+   telemetry. Use the agent on genuinely parallel/ordered multi-file tasks under
+diff --git a/agents/roadmaps/road-to-org-telemetry.md b/agents/roadmaps/road-to-org-telemetry.md
+index c284aa919da9f66fc9de1b1125ec366b7b302bde..099c451955e89db84e4a39757808083716fb8db0 100644
+--- a/agents/roadmaps/road-to-org-telemetry.md
++++ b/agents/roadmaps/road-to-org-telemetry.md
+@@ -114,6 +114,7 @@ The zero is therefore an instrumentation artifact, not an adoption measurement.
+ 
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 2 — consent-once
+ - **Blocks:** Phase 2 (sink stand-up)
+ - **Question:** Should the sink be a minimal ingest endpoint, or a private repository used as an append-only store?
+ - **Recommendation:** the private repository. The volume is small, the write path is an existing authenticated primitive rather than new infrastructure to operate, and the Phase 6 clustering runs offline over the file set. An ingest endpoint is the better answer only if the volume outgrows a repository, which the current zero makes unlikely in the measurement window this roadmap needs.
+@@ -128,6 +129,7 @@ The zero is therefore an instrumentation artifact, not an adoption measurement.
+ 
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 3 — human-only
+ - **Blocks:** Phase 3 (org-wide enablement onward)
+ - **Question:** Does the company data-protection process approve the Class-A field list and the disclosure text?
+ - **Recommendation:** run it as a written review of exactly two artefacts — the Class-A field list from Phase 1 and the one-line disclosure from Phase 3 — rather than of the roadmap. The design was built to make this review short: no content fields exist to argue about, and the pseudonymous hash is salted outside the public repository.
+diff --git a/agents/roadmaps/road-to-per-turn-hook-economy.md b/agents/roadmaps/road-to-per-turn-hook-economy.md
+index 844041c0ff7c3fc5205a107ac80ffa0aaf6849cb..c789f738c053efea1dbd7bb0a9ad33b79cef8b1c 100644
+--- a/agents/roadmaps/road-to-per-turn-hook-economy.md
++++ b/agents/roadmaps/road-to-per-turn-hook-economy.md
+@@ -283,6 +283,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+ ### blocker: b-per-turn-composite-bar
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 2 — consent-once
+ - **Blocks:** Phase 4 step 4.2 only. Step 4.1 registers the composite as a measured
+   row and 4.3 refreshes the census; both proceed without the bar.
+ - **What to do:** pre-register the per-turn composite bar. The composite itself is
+diff --git a/agents/roadmaps/road-to-rule-coherence-followup.md b/agents/roadmaps/road-to-rule-coherence-followup.md
+index fab2dcd71c57aa48beb8ce1a2ef0ab75cd8eff84..aee44b7f960e7ec8c9f1df22afcd7d65bd902f41 100644
+--- a/agents/roadmaps/road-to-rule-coherence-followup.md
++++ b/agents/roadmaps/road-to-rule-coherence-followup.md
+@@ -186,6 +186,7 @@ committed twice more itself.
+ ### blocker: default-flip-release-gate
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 2 — consent-once
+ - **Blocks:** Phase 1
+ - **What to do:** rule on whether the measured configuration becomes the shipped
+   default. The evidence is prepared and cited in F1.1–F1.4; the settings
+@@ -197,6 +198,7 @@ committed twice more itself.
+ ### blocker: bench-spend-and-methodology
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 3 — human-only
+ - **Blocks:** Phase 2
+ - **What to do:** authorize the A/B run and confirm the methodology. The council
+   was explicit that an LLM-judged probe has no power against the original
+diff --git a/agents/roadmaps/road-to-scale-history-bench-run.md b/agents/roadmaps/road-to-scale-history-bench-run.md
+index 663756103cf4fd0ad337c7ec91cdcb5c0e479ee2..3c9e2e714a6d4b59b7275750625835c7144b5965 100644
+--- a/agents/roadmaps/road-to-scale-history-bench-run.md
++++ b/agents/roadmaps/road-to-scale-history-bench-run.md
+@@ -130,6 +130,7 @@ POST-bench copy, never pre-bench).
+ 
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 3 — human-only
+ - **Blocks:** Phase 1 step 1's scoring half, and thereby step 2's verdict
+ - **What to do:** score each produced artifact against
+   `internal/bench/scale-history/rubric.md`, blind to arm, **before** any
+diff --git a/agents/roadmaps/road-to-skill-description-measurement.md b/agents/roadmaps/road-to-skill-description-measurement.md
+index 10571ec4c2a15a52f4b6aa766011021c58a96916..b88e6830ce51bf4fcdb1f716e71c478fe9b91eca 100644
+--- a/agents/roadmaps/road-to-skill-description-measurement.md
++++ b/agents/roadmaps/road-to-skill-description-measurement.md
+@@ -96,6 +96,7 @@ renegotiated by the outcome.
+ 
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 3 — human-only (hard-aborts under automation by design; simulating it breaks the prereg)
+ - **Blocks:** all of Phase 1 — 1.1 and 1.2 both need a live model run
+ - **What to do:** run the live trigger-eval to produce the predictions JSON for
+   both tree states. It hard-aborts under automation on purpose, so an agent
+diff --git a/agents/roadmaps/road-to-skill-ecosystem-executable-payloads.md b/agents/roadmaps/road-to-skill-ecosystem-executable-payloads.md
+index abaa4c2526d459484e3754e09537b96560e1a506..6f59cbfee4eba9a84fbdfa312ca66f8702b143dd 100644
+--- a/agents/roadmaps/road-to-skill-ecosystem-executable-payloads.md
++++ b/agents/roadmaps/road-to-skill-ecosystem-executable-payloads.md
+@@ -404,6 +404,7 @@ prevented rather than merely bounded.
+ 
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 3 — human-only
+ - **Blocks:** all of Phase 0, Phase 1 step 3, Phase 2 in full, Phase 4 in full.
+ - **What to do:** S0.1 needs 20 scripted invocations against a live host and
+   S0.2 needs a token measurement — both are spend-bearing and a live
+diff --git a/agents/roadmaps/road-to-skill-ecosystem-gate-integrity.md b/agents/roadmaps/road-to-skill-ecosystem-gate-integrity.md
+index a031fb55000de3c3239828ad1b506fac08d71c4f..3048aa9570b7fef60719580c20522e97ea1d5ffc 100644
+--- a/agents/roadmaps/road-to-skill-ecosystem-gate-integrity.md
++++ b/agents/roadmaps/road-to-skill-ecosystem-gate-integrity.md
+@@ -179,6 +179,7 @@ rather than silently absorbed.
+ 
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 3 — human-only
+ - **Blocks:** Phase 3 Step 6 and Step 7, and the acceptance criterion that both
+   new guidelines are cross-linked from `verify-before-complete`.
+ - **What to do:** apply the two edits below to
+diff --git a/agents/roadmaps/road-to-solution-minimalism.md b/agents/roadmaps/road-to-solution-minimalism.md
+index b0573cacdfe4510b675a06172844e09db6ed42e9..828f4b331b74240784ca72de526e762f810957c1 100644
+--- a/agents/roadmaps/road-to-solution-minimalism.md
++++ b/agents/roadmaps/road-to-solution-minimalism.md
+@@ -1021,6 +1021,7 @@ which is exactly the reader that must not be misled.
+ 
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 2 — consent-once (spend consent, once deltas 9 and 10 land as code)
+ - **Blocks:** Phase 3 — the Repo, Tasks, Hygiene and Reproducibility steps, and
+   the "reports from the full tier" acceptance criterion.
+ - **What to do:**
+diff --git a/agents/roadmaps/road-to-standing-context-40k.md b/agents/roadmaps/road-to-standing-context-40k.md
+index 5ab630fdfc9a2a0c0a3bb2cb97b5ed2e2a11dbfe..3c07decc74a25e779b0e613b3f741c0ea1437216 100644
+--- a/agents/roadmaps/road-to-standing-context-40k.md
++++ b/agents/roadmaps/road-to-standing-context-40k.md
+@@ -236,6 +236,7 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
+ ### blocker: b-rules-efficiency-signal
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 2 — consent-once (wait for the observer, or record the window unfilled and re-date)
+ - **Blocks:** Phase 3 step 3.1 only. Step 3.0's observer is repo work and proceeds
+   without it.
+ - **What to do:** the fork needs the registered `rules_efficiency` metric in
+diff --git a/agents/roadmaps/road-to-stop-gate-honesty.md b/agents/roadmaps/road-to-stop-gate-honesty.md
+index 8baa24f0ff539ae6ccf6de04767aade595581ea1..ec4315a80b60525650994472cbea16cbd3b9c417 100644
+--- a/agents/roadmaps/road-to-stop-gate-honesty.md
++++ b/agents/roadmaps/road-to-stop-gate-honesty.md
+@@ -323,6 +323,7 @@ Stop-slot numbers, and is the honest reason this phase advances without closing.
+ ### blocker: b-detector-demotion-bars
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 2 — consent-once
+ - **Blocks:** Phase 2 step 2.1, and therefore any demotion. Steps 1.x, 2.2 and 3.x
+   are repo work and proceed without it.
+ - **What to do:** pre-register the demotion bar per detector, before reading Phase
+diff --git a/agents/roadmaps/road-to-subagent-lifecycle-integrity.md b/agents/roadmaps/road-to-subagent-lifecycle-integrity.md
+index 821c26bf8869feedfc3c76b88b0616974801dce3..ce4f145043b82025523129ea4fb135d86f8a2602 100644
+--- a/agents/roadmaps/road-to-subagent-lifecycle-integrity.md
++++ b/agents/roadmaps/road-to-subagent-lifecycle-integrity.md
+@@ -556,6 +556,7 @@ inherit them.
+ 
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 3 — human-only
+ - **Blocks:** Phase 0 Steps 2 and 4 — and only their raw-payload half. Step 3 is
+   closed; Step 2's `agent_type` assertion is answered without it.
+ - **What to do:** the capture facility is shipped and verified
+diff --git a/agents/roadmaps/road-to-subagent-value-realization-followup.md b/agents/roadmaps/road-to-subagent-value-realization-followup.md
+index e27c157e6eb68e1fa04311732c400862ad4284b4..8142e29d8eeb7c07c846881a6f88590bec252de9 100644
+--- a/agents/roadmaps/road-to-subagent-value-realization-followup.md
++++ b/agents/roadmaps/road-to-subagent-value-realization-followup.md
+@@ -145,6 +145,7 @@ stands is exactly the shape that invites a wrong resume.
+ ### blocker: telemetry-sample-size
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 3 — human-only (only real parallel work fills the columns; no command synthesises usage)
+ - **Blocks:** Phase 1 — Seed real telemetry
+ - **What to do:**
+   1. Use the agent with `subagents.enabled: true` under the post-ADR-117
+diff --git a/agents/roadmaps/road-to-surface-consolidation.md b/agents/roadmaps/road-to-surface-consolidation.md
+index d801d27ef0578bdcb3b8ded308456b1186c18b70..a0fea85cc8ee95f48db8cc616c6e5f95b8bbfa04 100644
+--- a/agents/roadmaps/road-to-surface-consolidation.md
++++ b/agents/roadmaps/road-to-surface-consolidation.md
+@@ -322,6 +322,7 @@ own verify, pre-window deletions are forbidden.
+ ### blocker: repo-admin-and-usage
+ - **Status:** open
+ - **Owner:** maintainer
++- **Class:** 3 — human-only
+ - **Blocks:** branch-protection apply; utilization-driven MERGE/DEMOTE/HIDE/REMOVE of artefacts (needs loaded-vs-fired usage over the window); auto-tiering monitoring
+ - **What to do:** the branch-protection `gh api` is a repo-settings UI action; utilization removal needs real usage data before anything is deleted. The two halves share nothing but this entry, so decide them separately: (a) apply branch protection now — it has no data dependency; (b) hold the utilization-driven MERGE/DEMOTE/HIDE/REMOVE list until a loaded-vs-fired window exists; (c) split this blocker in two so the second half stops holding the first.
+ - **Recommendation:** (a) plus (b) — apply protection now and keep the removals waiting. Protection is a settings action whose cost is one visit to repo settings, while every removal is irreversible against artefacts nobody has usage data for, and this package's own discipline is that a deletion needs a data-backed list rather than a plausible one. (c) is worth doing at the same time, since one entry blocking two unrelated things is why the cheap half has waited on the expensive one.
+@@ -331,6 +332,7 @@ own verify, pre-window deletions are forbidden.
+ ### blocker: benchmark-spend
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 2 — consent-once (authorise the A/B with an estimate)
+ - **Blocks:** lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
+ - **What to do:** each is a spend-bearing (or corpus-gated) paid run, authorized per run and never as a bundle. The options: (a) authorize the lazy-catalog A/B — `task bench:ab:live -- --budget <N>`, which caps per-task spend and resumes rather than re-spends when restarted with the same flags; (b) authorize the team / adversarial-council benchmarks, which have no task wired today and need their runner named before an estimate exists; (c) authorize none and mark the Unified Verification Router decision cancelled rather than parked, since it is gated on verdicts (a) and (b) would produce.
+ - **Recommendation:** (a) alone, if anything. It is the only one of the three with a runner and a spend cap already in the tree, so it is the only one that can be authorized against a real estimate rather than a guess; (b) needs a runner named first, and until either verdict exists (c) is a decision about a question nobody has asked recently.
+diff --git a/agents/roadmaps/road-to-ui-track-integrity-followup.md b/agents/roadmaps/road-to-ui-track-integrity-followup.md
+index 9db98c54c71090fb6d93a72e831b117e6852671a..d2df35e6504c80ab609b1bd63a73cf23b25214da 100644
+--- a/agents/roadmaps/road-to-ui-track-integrity-followup.md
++++ b/agents/roadmaps/road-to-ui-track-integrity-followup.md
+@@ -239,6 +239,7 @@ step list.
+ - **Status:** open
+ - **Owner:** maintainer (scope decision) / any roadmap that needs a UI-generation
+   runner for its own reason
++- **Class:** 2 — consent-once
+ - **Blocks:** Measurement A (both steps) and the two A acceptance criteria. It
+   does **not** block the pre-registration, which is committed and complete.
+ - **What to do:**
+@@ -292,6 +293,7 @@ step list.
+ - **Status:** open
+ - **Owner:** maintainer (host capability) / any roadmap that lands a
+   host-renderable framework lane or a generic-lane override for its own reason
++- **Class:** 2 — consent-once
+ - **Blocks:** Measurement B (both steps) and the two B acceptance criteria.
+   Measurement A is **not** blocked by it — a null on one is not a null on the
+   other, which is why they were authored as separate sub-sections.
+diff --git a/agents/roadmaps/road-to-user-out-of-the-loop.md b/agents/roadmaps/road-to-user-out-of-the-loop.md
+index e76a6fdfb3ed7eb7e91d8f19892598ea988c1d73..859061d8f6bdeb41705243db332518a2c328eb69 100644
+--- a/agents/roadmaps/road-to-user-out-of-the-loop.md
++++ b/agents/roadmaps/road-to-user-out-of-the-loop.md
+@@ -245,6 +245,7 @@ The resolution order for an open question becomes: decision sheet at contract ti
+ 
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 3 — human-only
+ - **Blocks:** Phase 1 (batch elicitation carve-out — the only true kernel delta), Phase 2 (set-scoped autonomy form), Phase 4 (late-artifact policy), Phase 5 (deferred-policy delta)
+ - **Question:** Is the ONE kernel delta (`ask-when-uncertain`) authorized to proceed as its own PR with the required soak window — and do you want the other three deltas, which are NOT kernel, done as ordinary rule edits or held with it?
+ - **Recommendation:** Authorize `ask-when-uncertain` on its own with the soak, and let the other three proceed as ordinary rule edits in the order 5-2, 4-4, 2-3 — the deferred-policy delta first because it is the smallest. Holding three non-kernel edits behind a soak window they do not need is the cost this blocker was accidentally imposing.
+@@ -259,6 +260,7 @@ The resolution order for an open question becomes: decision sheet at contract ti
+ 
+ - **Status:** open
+ - **Owner:** user
++- **Class:** 2 — consent-once
+ - **Blocks:** Phase 1 (preselection), Phase 2 (lane cap), Phase 4 (late-artifact default), Phase 5 (policy breadth)
+ - **Question:** Four preference settings that determine how aggressive the first iteration is; each has a conservative and a consequent option.
+ - **Recommendation:** Preselect `autonomous` at the contract screen, cap lanes at two, default late artifacts to `auto-research`, and keep the deferred policy limited to the follow-up-draft option. Rationale: each is reversible, each carries its own kill criterion in the phase text, and the conservative variant of all four together produces a plan that measures nothing because nothing changes.
+diff --git a/dist/agent-src/scripts/roadmap_gates.ts b/dist/agent-src/scripts/roadmap_gates.ts
+index 3b222533841f1440edffe92b7d626f31b4cdf3fd..83a42eaf111e9c59d2f0cbc2dd79a9e3d374be95 100644
+--- a/dist/agent-src/scripts/roadmap_gates.ts
++++ b/dist/agent-src/scripts/roadmap_gates.ts
+@@ -72,6 +72,7 @@ import { spawnSync } from 'node:child_process';
+ import {
+     collect,
+     blocker_needs_user as needsUser,
++    blocker_class as blockerClass,
+     type Blocker,
+ } from './update_roadmap_progress.js';
+ import { probeLater, type ResumeFinding } from './resume_probe.js';
+@@ -418,6 +419,23 @@ function renderJson(
+                     roadmap: e.roadmapRel,
+                     owner: e.blocker.owner,
+                     needsYou: needsUser(e.blocker.owner),
++                    // The gate taxonomy, resolved through the same
++                    // absent-field default every other consumer applies, so a
++                    // synthesised `legacy` note reads as class 3 rather than
++                    // as a hole.
++                    //
++                    // `run` is deliberately NOT emitted. It shipped here for
++                    // one commit on the argument that a class-0 record without
++                    // its command reads as actionable — and R2 finding 7
++                    // pointed out the consumer that argument describes does not
++                    // exist: `--execute` reads the entry through `locate()`,
++                    // not through this JSON, and every live record's `run` is
++                    // empty. Adding it also forced an undecidable question
++                    // (finding 2): `class` is normalised while the authored
++                    // `run` carries its markdown backticks, and `commandOf()`
++                    // already strips them for the sibling surface — with no
++                    // consumer there is nothing to say which form is right.
++                    class: blockerClass(e.blocker),
+                     blocks: e.blocker.blocks,
+                     unblocksSteps: e.openSteps,
+                     todo: regroupTodo(e.blocker.todo),
+diff --git a/src/agent-src/scripts/roadmap_gates.ts b/src/agent-src/scripts/roadmap_gates.ts
+index 3b222533841f1440edffe92b7d626f31b4cdf3fd..83a42eaf111e9c59d2f0cbc2dd79a9e3d374be95 100644
+--- a/src/agent-src/scripts/roadmap_gates.ts
++++ b/src/agent-src/scripts/roadmap_gates.ts
+@@ -72,6 +72,7 @@ import { spawnSync } from 'node:child_process';
+ import {
+     collect,
+     blocker_needs_user as needsUser,
++    blocker_class as blockerClass,
+     type Blocker,
+ } from './update_roadmap_progress.js';
+ import { probeLater, type ResumeFinding } from './resume_probe.js';
+@@ -418,6 +419,23 @@ function renderJson(
+                     roadmap: e.roadmapRel,
+                     owner: e.blocker.owner,
+                     needsYou: needsUser(e.blocker.owner),
++                    // The gate taxonomy, resolved through the same
++                    // absent-field default every other consumer applies, so a
++                    // synthesised `legacy` note reads as class 3 rather than
++                    // as a hole.
++                    //
++                    // `run` is deliberately NOT emitted. It shipped here for
++                    // one commit on the argument that a class-0 record without
++                    // its command reads as actionable — and R2 finding 7
++                    // pointed out the consumer that argument describes does not
++                    // exist: `--execute` reads the entry through `locate()`,
++                    // not through this JSON, and every live record's `run` is
++                    // empty. Adding it also forced an undecidable question
++                    // (finding 2): `class` is normalised while the authored
++                    // `run` carries its markdown backticks, and `commandOf()`
++                    // already strips them for the sibling surface — with no
++                    // consumer there is nothing to say which form is right.
++                    class: blockerClass(e.blocker),
+                     blocks: e.blocker.blocks,
+                     unblocksSteps: e.openSteps,
+                     todo: regroupTodo(e.blocker.todo),
+diff --git a/tests/scripts/roadmap_gates.test.ts b/tests/scripts/roadmap_gates.test.ts
+index 8b72290e05cc8a8c0a72495d015f57a6e198f1ef..1f1fc3a1a7e2507195035df25f89a856bff8e35c 100644
+--- a/tests/scripts/roadmap_gates.test.ts
++++ b/tests/scripts/roadmap_gates.test.ts
+@@ -22,6 +22,10 @@ import {
+     renderReply,
+     type Entry,
+ } from '../../src/agent-src/scripts/roadmap_gates.js';
++import {
++    parse_blockers,
++    blocker_class,
++} from '../../src/agent-src/scripts/update_roadmap_progress.js';
+ import { stageAction } from '../../src/agent-src/templates/scripts/work_engine/hooks/builtin/staged_confirmation.js';
+ import { putPending } from '../../src/agent-src/templates/scripts/work_engine/hooks/builtin/staged_confirmation_store.js';
+ 
+@@ -35,6 +39,8 @@ function entry(
+         recommendation?: string;
+         ifNothing?: string;
+         question?: string;
++        blockerClass?: string;
++        run?: string;
+     } = {},
+ ): Entry {
+     return {
+@@ -54,8 +60,8 @@ function entry(
+             // Same reasoning as the two fields above: the gate taxonomy is
+             // opt-in, so the shape the renderer meets in the tree is the one
+             // that declares none of it.
+-            blockerClass: '',
+-            run: '',
++            blockerClass: opts.blockerClass ?? '',
++            run: opts.run ?? '',
+             budget: '',
+         },
+         roadmapRel: opts.roadmap ?? 'road-to-x.md',
+@@ -237,6 +243,66 @@ describe('renderJson', () => {
+         };
+         expect(parsed.blockers).toHaveLength(2);
+     });
++
++    // The gate taxonomy on the machine-readable surface. Before this landed,
++    // `--json` emitted no class at all, so `gates --execute` shipped against a
++    // projection that could not say which entries it was able to act on — the
++    // acting half was reachable on nothing and the JSON could not show it.
++    const classOf = (e: Entry): string =>
++        (
++            JSON.parse(renderJson([e], true)) as {
++                blockers: Array<{ class: string; run: string }>;
++            }
++        ).blockers[0]?.class ?? '';
++
++    it('an entry declaring no class reads as 3, not as a hole', () => {
++        // The renderer half of the absent-field default. The *parser* half —
++        // that a synthesised legacy `> Blocked until …` note really does reach
++        // this path with an empty class — is a separate claim and is pinned by
++        // its own test below; R2 finding 6 caught this comment asserting the
++        // coverage that test provides.
++        expect(classOf(entry('user'))).toBe('3');
++    });
++
++    it('carries an authored class and reads only its leading token', () => {
++        expect(classOf(entry('user', { blockerClass: '1 — budget-preauthorized' }))).toBe('1');
++        expect(classOf(entry('user', { blockerClass: '0 — auto-run' }))).toBe('0');
++    });
++
++    it('falls back to 3 on a class the taxonomy does not know', () => {
++        // The safe direction: an authoring typo must never make a gate look
++        // executable. `lint_roadmap_blockers` fails the entry separately.
++        expect(classOf(entry('user', { blockerClass: '7 — invented' }))).toBe('3');
++    });
++
++    it('the parser really does hand the legacy note an empty class', () => {
++        // The parser half of the pair above, and the reason the renderer's
++        // default is load-bearing rather than decorative: a `> Blocked until …`
++        // note is synthesised into a blocker that can never carry an authored
++        // field, so class 3 has to come from somewhere. If the synthesis ever
++        // starts emitting a class, this fails and the pairing is re-examined.
++        const parsed = parse_blockers(
++            ['# A roadmap', '', '> Blocked until a human installs the thing.', ''].join('\n'),
++        );
++        const note = parsed.find((b) => b.id === 'legacy');
++        expect(note).toBeDefined();
++        expect(note?.blockerClass).toBe('');
++        expect(blocker_class(note!)).toBe('3');
++    });
++
++    it('does not emit run — no consumer reads it and no record carries one', () => {
++        // R2 findings 2 and 7. Pinned as an absence so a future re-add has to
++        // answer the question the first one skipped: which representation, the
++        // authored backticked value or `commandOf()`'s stripped one.
++        const parsed = JSON.parse(
++            renderJson(
++                [entry('user', { blockerClass: '0 — auto-run', run: '`task probe-thing`' })],
++                true,
++            ),
++        ) as { blockers: Array<Record<string, unknown>> };
++        expect(parsed.blockers[0]?.class).toBe('0');
++        expect(parsed.blockers[0]).not.toHaveProperty('run');
++    });
+ });
+ 
+ // The reply-close projection (ADR-222). These assert the properties the
