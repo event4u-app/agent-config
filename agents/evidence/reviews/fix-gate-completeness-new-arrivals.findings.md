@@ -1,11 +1,11 @@
 # Findings: fix-gate-completeness-new-arrivals
-<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: ede514a782c72234fc4aea9e9cb2b1a503808a0ad850aca26ee3b0c8537bda26 | diff: 686821324b2ad94533a277a43cb857d21bb600c6 | reviewer: r2-fresh-subagent-fix-gate-completeness-new-arrivals | prompt_hash: bc44bd7d86b41fec1603ac24e32588bcaf00fc50809d210995e0a4dfb3afd003 -->
+<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: a0f5a71d87aaf09009e1c0c54b61e1b472e23dc40040534c53e99ef0e3f359c9 | diff: 957a53e860a973b87b32bba07479b50f43b4f6f1 | reviewer: r2-fresh-subagent-fix-gate-completeness-new-arrivals | prompt_hash: bc44bd7d86b41fec1603ac24e32588bcaf00fc50809d210995e0a4dfb3afd003 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-17 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 686821324b2ad94533a277a43cb857d21bb600c6
-  scope_hash: ede514a782c72234fc4aea9e9cb2b1a503808a0ad850aca26ee3b0c8537bda26
+  diff_sha: 957a53e860a973b87b32bba07479b50f43b4f6f1
+  scope_hash: a0f5a71d87aaf09009e1c0c54b61e1b472e23dc40040534c53e99ef0e3f359c9
   roadmap: none
   roadmap_hash: none
   ac_hash: none
