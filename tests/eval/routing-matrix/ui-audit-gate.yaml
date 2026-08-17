@@ -1,6 +1,15 @@
 rule: ui-audit-gate
+# 2026-08-17: this rule's `keyword: "component"` and `keyword: "design token"`
+# triggers were removed as an authoring decision — road-to-mixed-trigger-activation-cost
+# Phase 2, amendment option (b), narrowed to the two path-dominant per-edit rules.
+# The rule is path-scoped again, so it loads on UI file contact instead of in every
+# session. The first positive below was file-less and reached the rule through
+# "component"; it keeps its prompt and gains the file it always implied, so the
+# assertion moves from "reaches before contact" to "reaches at contact" rather
+# than being deleted.
 positives:
   - prompt: "Add a stats tile component to the dashboard."
+    open_files: ["resources/js/dashboard/StatsTile.vue"]
   - prompt: "Restyle this header partial to match the new branding."
     open_files: ["resources/views/partials/header.blade.php"]
   - prompt: "Bitte überarbeite dieses Blade-Partial für die mobile Ansicht."

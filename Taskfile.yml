@@ -173,6 +173,12 @@ tasks:
       - task: lint-roadmap-blockers
       - task: lint-roadmap-later-disposition
       - task: lint-roadmap-family-cap
+      # src/scripts/check_rule_activation_census — ratchet on which rules the
+      # Claude host loads on a path match vs. in every session. Identity axis
+      # (the scoped and mixed ID sets) plus an exact-BPE weight axis that may
+      # only walk down. Commit 33c7c20 moved nineteen rules across that line in
+      # one emitter change with no gate watching.
+      - task: check-rule-activation-census
       # src/scripts/lint_scheduled_deprecations — the MIGRATION.md scheduled-
       # deprecations table, checked by arithmetic against the shipped major.
       - task: lint-scheduled-deprecations

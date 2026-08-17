@@ -1297,7 +1297,7 @@ function _CLAUDE_COMMANDS_DIR(): string {
     return path.join(MODULE_STATE.PROJECT_ROOT, '.claude', 'commands');
 }
 
-function _parse_frontmatter(content: string): [Record<string, unknown>, string] {
+export function _parse_frontmatter(content: string): [Record<string, unknown>, string] {
     if (!content.startsWith('---')) {
         return [{}, content];
     }
