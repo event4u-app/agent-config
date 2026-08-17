@@ -1,0 +1,2489 @@
+diff --git a/.github/workflows/consistency.yml b/.github/workflows/consistency.yml
+index 7f867db839b100ff5ebce770e63f9356a94e2ec4..d8e848e8818eea9e2b33eeef92defb81ce51f35e 100644
+--- a/.github/workflows/consistency.yml
++++ b/.github/workflows/consistency.yml
+@@ -172,6 +172,14 @@ jobs:
+         # which runs it before anything regenerates.
+         run: ./scripts-run src/scripts/check_rule_projection_integrity
+ 
++      - name: Evidence artifacts — a newly added one declares its type
++        # road-to-release-review-p0 Phase 2. Diff-scoped: it checks only files
++        # ADDED under agents/evidence/ relative to the resolved base ref, so a
++        # branch that adds none scans nothing and says so rather than exiting
++        # silently green. The pre-existing untyped corpus is a deliberate scope
++        # exclusion — see docs/contracts/evidence-artifact-types.md.
++        run: ./scripts-run src/scripts/lint_evidence_artifacts
++
+       - name: Bridge derivation — generated trees are a fixpoint of src/
+         # skill-quality-gates Phase 4: symlink targets stay inside the
+         # derivation sources; a second regeneration changes nothing.
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 8139d819c29b7efdc0373055e34c47dc4d2e69c2..e93a2f7f5296240f460999412a3b5ed22be92787 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -6,10 +6,10 @@
+ 
+ ## Overall
+ 
+-**242 / 544 steps done · 44%**
++**252 / 544 steps done · 46%**
+ 
+ ```text
+-██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
++██████████████████░░░░░░░░░░░░░░░░░░░░░░   46%
+ ```
+ 
+ ## ⚠️ Iron Law 3 — unresolved deferred items
+@@ -43,7 +43,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ | 17 | [road-to-metric-loop-and-review-integrity.md](roadmaps/road-to-metric-loop-and-review-integrity.md) | 6 | 24 | 24 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+ | 18 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+ | 19 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ░░░░░░░░░░ 0% |
+-| 20 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 20 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
+ | 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+ | 22 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+ | 23 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+@@ -556,13 +556,13 @@ _1 blocker resolved._
+ 
+ ### [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md)
+ 
+-**Road to release-review P0** — 0 / 17 done (0%)
++**Road to release-review P0** — 10 / 17 done (59%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+ | 1 | Host-aware skill projection | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+-| 2 | Evidence artifact typing | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+-| 3 | Provider qualification | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
++| 2 | Evidence artifact typing | ✅ done | 0 | 4 | 0 | 0 | 100% |
++| 3 | Provider qualification | 🟡 in progress | 3 | 6 | 0 | 0 | 67% |
+ 
+ ### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
+ 
+diff --git a/agents/roadmaps/road-to-release-review-p0.md b/agents/roadmaps/road-to-release-review-p0.md
+index aa6a02134b890b2648651e98df09764490d1c5d7..20f6160760317418fc9d71af8428835cd69f45d5 100644
+--- a/agents/roadmaps/road-to-release-review-p0.md
++++ b/agents/roadmaps/road-to-release-review-p0.md
+@@ -15,9 +15,9 @@ Close the three unowned P0 findings from the release review with a measured trig
+ ## Prerequisites
+ 
+ - [ ] Read `src/scripts/hook_manifest.yaml` and the skill-projection path
+-- [ ] Read `agents/evidence/` layout and the review-binding manifest format
+-- [ ] Read the council dispatch path and its member-resolution step
+-- [ ] Re-verify the Context table against branch HEAD before executing a phase
++- [x] Read `agents/evidence/` layout and the review-binding manifest format
++- [x] Read the council dispatch path and its member-resolution step
++- [x] Re-verify the Context table against branch HEAD before executing a phase
+ 
+ ## Context
+ 
+@@ -38,6 +38,27 @@ Source: an external release review of this package, 2026-08-15, pinned at `e3bd9
+ 
+ ## Phase 1 — Host-aware skill projection
+ 
++> **Not started 2026-08-17, on the data's own verdict — not on effort.** Step 3
++> requires that "only hosts with an adequate measurement base project a reduced
++> set". Read at `6a679cc19`, `agents/evidence/metrics/skill-catalogue.jsonl`
++> holds five observations across two hosts, and **every one of the four `codex`
++> rows carries `verdict: "insufficient-observation"`** while the single `claude`
++> row carries `no-selector` (no truncation pressure — which is exactly the
++> premise step 4 relies on).
++>
++> So the only host with measured truncation pressure declares its own
++> measurement base inadequate, in the field built to say so. Implementing the
++> sufficiency gate today means one of two things: inventing an adequacy bar the
++> data fails, or shipping a gate that can never fire — and a gate that cannot
++> fire is the shape `src/config/gate-coverage.yml` was written to reject.
++>
++> **Resolved when:** at least one host accumulates observations whose `verdict`
++> is something other than `insufficient-observation`, at which point the
++> adequacy bar is read off that distribution instead of guessed. The
++> measurement half is already built (`_lib/skill_catalogue.ts` —
++> `ObservationRecord`, `truncationModeOf`, `measureCatalogueVolume`); what is
++> missing is the evidence, not the instrument.
++
+ - [ ] Add a host capability profile that records measured catalogue behaviour per host — how many skills survive the host's own catalogue handling — rather than deriving the limit from the package's model of the host. <!-- verify: ./scripts-run src/scripts/routing_doctor --help -->
+ - [ ] Compose the projected skill set from three inputs: the host capability profile, the measured catalogue behaviour, and the workspace profile. <!-- verify: ./scripts-run src/scripts/lint_featured_skills -->
+ - [ ] Gate the aggressive path on measurement sufficiency: only hosts with an adequate measurement base project a reduced set. An unknown host receives no aggressive scoping — the safe direction is the full catalogue, because under-projecting a skill is a worse failure than paying for one that is never used. <!-- verify: ./scripts-run src/scripts/check_enforcement_coverage -->
+@@ -51,10 +72,10 @@ Source: an external release review of this package, 2026-08-15, pinned at `e3bd9
+ 
+ ## Phase 2 — Evidence artifact typing
+ 
+-- [ ] Add an explicit type to every evidence artifact at write time, distinguishing an original review, a current binding, a declared skip, an honest null, and a re-bind event. The failure this closes is that a historical input currently reads the same as a live binding, so a reader cannot tell whether an artifact still asserts anything. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
+-- [ ] Set the type at creation rather than inferring it later from filename or location; an inferred type reproduces the ambiguity it was meant to remove. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
+-- [ ] Explicitly do not loosen the binding itself. The review's own measurement found that segment-aware currency would save roughly a tenth of re-binds while introducing integrity risk — so the decision is to clarify what stored evidence means, not to weaken when it must be re-bound. <!-- verify: grep -q "binding" docs/contracts/evidence-artifact-types.md -->
+-- [ ] Record the type set as a contract document so consumers read one definition rather than inferring five. <!-- verify: test -f docs/contracts/evidence-artifact-types.md -->
++- [x] Add an explicit type to every evidence artifact at write time, distinguishing an original review, a current binding, a declared skip, an honest null, and a re-bind event. The failure this closes is that a historical input currently reads the same as a live binding, so a reader cannot tell whether an artifact still asserts anything. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
++- [x] Set the type at creation rather than inferring it later from filename or location; an inferred type reproduces the ambiguity it was meant to remove. <!-- verify: ./scripts-run src/scripts/lint_evidence_artifacts -->
++- [x] Explicitly do not loosen the binding itself. The review's own measurement found that segment-aware currency would save roughly a tenth of re-binds while introducing integrity risk — so the decision is to clarify what stored evidence means, not to weaken when it must be re-bound. <!-- verify: grep -q "binding" docs/contracts/evidence-artifact-types.md -->
++- [x] Record the type set as a contract document so consumers read one definition rather than inferring five. <!-- verify: test -f docs/contracts/evidence-artifact-types.md -->
+ 
+ **Exit criteria:** every newly written evidence artifact carries a type, and the check fails a typeless one.
+ 
+@@ -62,10 +83,10 @@ Source: an external release review of this package, 2026-08-15, pinned at `e3bd9
+ 
+ ## Phase 3 — Provider qualification
+ 
+-- [ ] Add a qualification pass that verifies, in order: the provider is installed, authentication is valid, the CLI or API semantics match what the caller assumes, the system-prompt path is valid, the model identifier is accepted, tools are isolated, and a minimal request succeeds. <!-- verify: ./scripts-run src/scripts/council_cli status -->
+-- [ ] Produce one of four verdicts — available, degraded, unavailable, unknown — rather than a boolean, because the failure that motivated this was a seat reporting as configured while being entirely dead, which a boolean cannot express. <!-- verify: ./scripts-run src/scripts/council_cli status -->
+-- [ ] Make the council consume the verdict before dispatch, so a degraded or unavailable seat is visible at the point of use rather than discovered by an empty result after the spend. <!-- verify: ./scripts-run src/scripts/test_council_qualification -->
+-- [ ] Report a quorum against qualified seats only. A run that prints a quorum it never reached is worse than one that reports being short, because the first is silently trusted. <!-- verify: ./scripts-run src/scripts/test_council_qualification -->
++- [x] Add a qualification pass that verifies, in order: the provider is installed, authentication is valid, the CLI or API semantics match what the caller assumes, the system-prompt path is valid, the model identifier is accepted, tools are isolated, and a minimal request succeeds. <!-- verify: ./scripts-run src/scripts/council_cli status -->
++- [x] Produce one of four verdicts — available, degraded, unavailable, unknown — rather than a boolean, because the failure that motivated this was a seat reporting as configured while being entirely dead, which a boolean cannot express. <!-- verify: ./scripts-run src/scripts/council_cli status -->
++- [x] Make the council consume the verdict before dispatch, so a degraded or unavailable seat is visible at the point of use rather than discovered by an empty result after the spend. <!-- verify: ./scripts-run src/scripts/test_council_qualification -->
++- [x] Report a quorum against qualified seats only. A run that prints a quorum it never reached is worse than one that reports being short, because the first is silently trusted. <!-- verify: ./scripts-run src/scripts/test_council_qualification -->
+ 
+ **Exit criteria:** a deliberately broken seat yields unavailable rather than configured, and a council run against it reports short instead of printing a quorum.
+ 
+@@ -86,8 +107,8 @@ Source: an external release review of this package, 2026-08-15, pinned at `e3bd9
+ ## Acceptance Criteria
+ 
+ - [ ] A host with measured truncation pressure projects a reduced set and a host without one does not, with both traceable to a recorded measurement.
+-- [ ] A typeless evidence artifact fails its check.
+-- [ ] A deliberately broken council seat reports unavailable, and a run against it reports short rather than printing a quorum.
++- [x] A typeless evidence artifact fails its check.
++- [x] A deliberately broken council seat reports unavailable, and a run against it reports short rather than printing a quorum.
+ - [ ] No step in this roadmap duplicates a step in the estate-diet roadmap.
+ - [ ] The two folded findings are traceable to the roadmap that absorbed them.
+ 
+diff --git a/docs/contracts/evidence-artifact-types.md b/docs/contracts/evidence-artifact-types.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..b16f8b585c9db60a76e20f34f7be0b87fc40ae03
+--- /dev/null
++++ b/docs/contracts/evidence-artifact-types.md
+@@ -0,0 +1,144 @@
++# Evidence artifact types
++
++> One definition of what a file under `agents/evidence/` **is**, so a reader
++> never has to infer it from a filename, a directory, or the shape of the prose
++> inside it.
++
++Status: active · Owner: maintainer · Introduced by `road-to-release-review-p0`
++Phase 2.
++
++## The failure this closes
++
++A release review found that a **historical input reads the same as a live
++binding**. Both are markdown under `agents/evidence/`, both describe findings,
++and nothing on the artifact says which one still asserts something. A reader
++who opens `agents/evidence/reviews/<slug>.review-input/` sees a review; what
++they cannot see is that its stored diff no longer reproduces the scope hash its
++sibling artefact binds — measured at **20 of 28** directories in
++`agents/evidence/analysis/review-binding-drift.md`. The record was always
++honest; the artifact never said what kind of record it was.
++
++## Scope, stated before the type set
++
++This contract defines a **vocabulary and where it is declared**. It is
++deliberately not a migration.
++
++`check_completion_review.ts` already refused to make even one optional marker
++field required, on the stated ground that *"a REQUIRED field would have been a
++migration event for the whole evidence corpus"* (`:88-92`). That reasoning is
++adopted here rather than overturned.
++
++Measured by `lint_evidence_artifacts --all` at the time of writing — a count,
++not an estimate: **328** tracked markdown artifacts under `agents/evidence/`,
++of which **184 already resolve a type** through the grammars below and **144
++do not**. The untyped remainder is prose in `analysis/`, `reports/`, `audits/`
++and `investigations/`. Retrofitting a marker onto those 144 would be a large,
++low-value diff whose main effect is to make the next `git blame` harder.
++
++So the obligation is forward-looking: a **newly written** evidence artifact
++declares its type. `lint_evidence_artifacts.ts` enforces exactly that and
++nothing wider.
++
++## The five types
++
++| Type | What it asserts | How it is declared |
++|---|---|---|
++| `original-review` | A review as it was produced, bound to the scope that existed then. Historical by nature — it does **not** assert anything about the current tree. | `<!-- evidence-type: original-review -->`, or membership in a `*.review-input/` directory |
++| `current-binding` | This artifact asserts something about the tree **right now**, at a named scope hash. | The existing `<!-- completion-review: v1 \| … \| scope: <64-hex> \| … -->` marker |
++| `declared-skip` | A completion deliberately not reviewed, with the reason recorded. | The existing `**Skipped:** no code surface for this completion — <reason>, scope <hash\|none>, declared <date>` line |
++| `honest-null` | A review that ran and found nothing. Distinct from a skip: the work happened. | The existing `**Honest-null:** 0 findings, scope <64-hex>, reviewed <date>` line |
++| `analysis` | A measurement, census, investigation, or report. Asserts what was true when it was written and is never re-bound. | `<!-- evidence-type: analysis -->` |
++
++### Three of these were already enforced grammars
++
++`current-binding`, `declared-skip` and `honest-null` are not new. Each is an
++exact line grammar parsed and gated by `check_completion_review.ts`
++(`MARKER_RE`, `SKIP_RE`, `HONEST_NULL_RE`), with a typed result in its
++`ParsedArtifact` union. Measured over the 66 `*.findings.md`: **51** carry the
++marker plus a `context-manifest: v1` block, **15** carry a skip declaration.
++
++This contract does not re-declare them under a second syntax. An artifact
++carrying one of those grammars **already has a type**, and the linter reads it
++from there. Introducing a parallel `evidence-type:` marker for the same three
++would be the ambiguity this document exists to remove, wearing a new hat.
++
++**Reading a declaration is not inferring a type.** The roadmap step that
++motivated this says the type must be set at creation "rather than inferring it
++later from filename or location". A grammar the author wrote deliberately is a
++declaration; a directory name is not. The one filename-derived case below is
++called out as exactly that.
++
++### The re-bind event has no type, deliberately
++
++The roadmap's proposed set named a fifth kind — a **re-bind event**. It is not
++in the table above, and the reason is a contract, not an oversight:
++`plan-review-gates.md` §2.7 makes re-binding an **in-place edit** of the
++existing artifact. There is no separate object to type. Re-bind events are
++reconstructed after the fact from git history by
++`probe_review_binding_drift.ts` (`type RebindCause = 'code' | 'non-code' |
++'base-moved' | 'unattributable'`), which has recovered **81** of them.
++
++Typing a re-bind would require the artifact to record its own edit history,
++which is what git already does. The honest statement is therefore: four types
++are declared on the artifact, the fifth is derived from version control, and
++that split is intentional.
++
++### `original-review` and the one filename-derived case
++
++`*.review-input/` directories (**39** of them) predate this contract and carry
++no marker. Their type is read from the path, and that is the single exception
++the linter makes. It is safe because the directory name is not a heuristic — it
++is written by `dispatch_r2_reviewer.ts` and by nothing else, so the path IS the
++declaration in the only sense that matters. A new artifact of this kind still
++gets the explicit marker.
++
++## The binding is not loosened
++
++The review measured that segment-aware currency would save roughly a tenth of
++re-binds while introducing integrity risk. This contract therefore clarifies
++**what stored evidence means** and changes **nothing** about when an artifact
++must be re-bound. `check_completion_review`'s scope-hash rules,
++`dispatch_r2_reviewer --verify-current`, and §2.7's in-place re-bind discipline
++are untouched.
++
++Said plainly because the opposite is the attractive misreading: knowing that an
++artifact is an `original-review` does not make a stale binding acceptable. It
++makes the staleness legible. Those are different things.
++
++## Where the type is written
++
++For the two types with no existing grammar, one HTML comment anywhere in the
++first 40 lines:
++
++```markdown
++<!-- evidence-type: analysis -->
++```
++
++Accepted values are exactly the five in the table. Anything else is a lint
++error rather than a warning: a misspelled type reads as untyped to every
++consumer, which is the state this contract exists to end.
++
++## Enforcement, and its honest limits
++
++`src/scripts/lint_evidence_artifacts.ts`:
++
++- `--new-only <base-ref>` (the CI mode) — fails when a markdown file **added**
++  under `agents/evidence/` relative to the base ref carries no resolvable type.
++- `--all` — prints a census of the whole corpus and exits 0. A report, not a
++  gate: it exists so the untyped-prose count is a number somebody can watch,
++  not a thing they have to re-derive.
++
++What it does **not** do: retrofit, warn about, or block on the pre-existing
++untyped corpus. That is the scope decision above, and it is why this check can
++ship without a baseline file.
++
++## See also
++
++- [`plan-review-gates.md`](plan-review-gates.md) — §2.1 the marker, §2.3 the
++  honest null, §2.4/2.5 the skip, §2.7 archive-vs-rebind, §5 the manifest.
++- `src/scripts/check_completion_review.ts` — the three existing grammars and
++  the `ParsedArtifact` union.
++- `src/scripts/probe_review_binding_drift.ts` — reconstructs re-bind events
++  from git.
++- `agents/evidence/analysis/review-binding-drift.md` — the 20-of-28 measurement
++  that motivated the finding.
+diff --git a/src/config/gate-coverage.yml b/src/config/gate-coverage.yml
+index 1175af48c98c04dd578e6568bd2ca8bd798bd9a1..9d9687924f55b0e910441a6bbd94839586671315 100644
+--- a/src/config/gate-coverage.yml
++++ b/src/config/gate-coverage.yml
+@@ -42,7 +42,7 @@
+ #
+ # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-16)
+ # ----------------------------------------------------------
+-# 260 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
++# 261 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+ # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
+ # **37 of them emit the machine-readable `scanned: <N>` line under their
+ # CI-identical argv, and all 37 are listed below.** The manifest is therefore
+diff --git a/src/scripts/ai_council/probe_store.ts b/src/scripts/ai_council/probe_store.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..63ffe9f1a2f47e4d402c9791958c14449569c742
+--- /dev/null
++++ b/src/scripts/ai_council/probe_store.ts
+@@ -0,0 +1,170 @@
++/**
++ * The observation half of provider qualification (road-to-release-review-p0
++ * Phase 3).
++ *
++ * `qualification.ts` is pure and answers "given what has been observed, what
++ * may this seat claim". This module is the only thing that observes. It exists
++ * because the qualification ladder's strongest rung — has a real exchange with
++ * this provider ever succeeded — cannot be answered from configuration, and
++ * answering it with a fresh probe would mean spending money every time anyone
++ * asked whether the council was healthy.
++ *
++ * So nothing here probes. A council run that receives a non-empty answer from a
++ * seat has already performed the exchange; this records that it happened. The
++ * cost of the observation is zero because the observation is a by-product of
++ * work the operator asked for anyway, and a seat therefore decays out of
++ * `unknown` through normal use rather than through a maintenance ritual.
++ *
++ * **The store is deliberately runtime-local and gitignored.** `agents/runtime/`
++ * is not tracked, which has a consequence worth stating rather than
++ * discovering: a fresh worktree starts with no observations, so every seat
++ * reads `unknown` there until a run happens in it. That is the honest reading —
++ * a checkout that has never talked to a provider genuinely has no evidence that
++ * it can — and it is strictly better than the alternative of committing a
++ * machine-specific health claim into a shared tree, where it would be stale for
++ * everyone but the machine that wrote it.
++ *
++ * Corrupt or unreadable state is treated as "no observations", never as an
++ * error: the same tolerant-reader doctrine the settings surface follows. A
++ * status command that crashes because a JSON file has a stray byte is worse
++ * than one that reports `unknown`, which is what the absence of evidence
++ * actually means.
++ */
++
++import fs from 'node:fs';
++import path from 'node:path';
++
++import { isEnvKillSwitchActive } from '../_lib/env_kill_switch.js';
++import type { CliFailureClass } from './transport_resolver.js';
++import type { ProbeRecord } from './qualification.js';
++
++/**
++ * The same kill-switch the council event log honours.
++ *
++ * Sharing it rather than minting a second name is deliberate: both write
++ * council observational state into the worktree, and the suite that needs one
++ * suppressed needs the other suppressed for the identical reason. The
++ * read-only witness in `tests/scripts/witness/` fails on ANY worktree path
++ * appearing while it runs — including a gitignored one — so a test that
++ * exercises `cmd_run` and silently dropped a probe row here would break that
++ * witness whenever sharding put the two files together. Measured on this
++ * branch: the first version of this module had no switch and wrote
++ * `agents/runtime/state/council-probes.json` during the council suite.
++ *
++ * The coupling has a real cost worth stating: an operator who suppresses the
++ * event log also stops accumulating observations, so seats stay `unknown`.
++ * That is the correct direction — a run whose telemetry is switched off did
++ * not record evidence, and pretending otherwise is the over-claim this whole
++ * module exists to remove.
++ */
++const _KILL_SWITCH_ENV = 'AGENT_CONFIG_NO_EVENTS_LOG';
++
++/** Repo-relative location. Runtime state, gitignored, never committed. */
++export const PROBE_STORE_RELPATH = path.join('agents', 'runtime', 'state', 'council-probes.json');
++
++export interface ProbeStore {
++    readonly schema: 1;
++    readonly members: Readonly<Record<string, ProbeRecord>>;
++}
++
++const EMPTY: ProbeStore = { schema: 1, members: {} };
++
++export function probeStorePath(root: string): string {
++    return path.join(root, PROBE_STORE_RELPATH);
++}
++
++/**
++ * Read the store. Any failure — missing, unreadable, malformed, wrong schema —
++ * yields the empty store.
++ *
++ * Individual member entries are validated one by one rather than trusting the
++ * object wholesale: a single corrupt row must not discard the other seats'
++ * evidence, because that would silently downgrade healthy seats to `unknown`
++ * and the operator would have no way to tell the two causes apart.
++ */
++export function readProbeStore(root: string): ProbeStore {
++    let raw: string;
++    try {
++        raw = fs.readFileSync(probeStorePath(root), 'utf8');
++    } catch {
++        return EMPTY;
++    }
++    let parsed: unknown;
++    try {
++        parsed = JSON.parse(raw);
++    } catch {
++        return EMPTY;
++    }
++    if (typeof parsed !== 'object' || parsed === null) {
++        return EMPTY;
++    }
++    const obj = parsed as Record<string, unknown>;
++    if (obj['schema'] !== 1) {
++        return EMPTY;
++    }
++    const membersRaw = obj['members'];
++    if (typeof membersRaw !== 'object' || membersRaw === null) {
++        return EMPTY;
++    }
++    const members: Record<string, ProbeRecord> = {};
++    for (const [name, value] of Object.entries(membersRaw as Record<string, unknown>)) {
++        if (typeof value !== 'object' || value === null) {
++            continue;
++        }
++        const v = value as Record<string, unknown>;
++        const at = v['at'];
++        const outcome = v['outcome'];
++        if (typeof at !== 'string' || at === '' || typeof outcome !== 'string' || outcome === '') {
++            continue;
++        }
++        members[name] = { at, outcome: outcome as 'ok' | CliFailureClass };
++    }
++    return { schema: 1, members };
++}
++
++/**
++ * Record one member's outcome, merging into whatever is already stored.
++ *
++ * Best-effort by construction: a write failure is swallowed. Telemetry that can
++ * break a council run is worse than telemetry that occasionally misses a row —
++ * the miss costs one `unknown`, the throw costs the run.
++ */
++export function recordProbe(
++    root: string,
++    name: string,
++    outcome: 'ok' | CliFailureClass,
++    at: string,
++): void {
++    recordProbes(root, [{ name, outcome, at }]);
++}
++
++/** One observation, as a caller collects them during a pass. */
++export interface ProbeEntry {
++    readonly name: string;
++    readonly outcome: 'ok' | CliFailureClass;
++    readonly at: string;
++}
++
++/** Batch form — one read/write for a whole pass rather than one per member. */
++export function recordProbes(root: string, entries: readonly ProbeEntry[]): void {
++    if (entries.length === 0 || isEnvKillSwitchActive(_KILL_SWITCH_ENV)) {
++        return;
++    }
++    try {
++        const current = readProbeStore(root);
++        const members: Record<string, ProbeRecord> = { ...current.members };
++        for (const e of entries) {
++            members[e.name] = { at: e.at, outcome: e.outcome };
++        }
++        const target = probeStorePath(root);
++        fs.mkdirSync(path.dirname(target), { recursive: true });
++        fs.writeFileSync(target, `${JSON.stringify({ schema: 1, members }, null, 2)}\n`, 'utf8');
++    } catch {
++        // Intentionally silent — see the docstring.
++    }
++}
++
++/** The record for one member, or null when nothing was ever observed. */
++export function probeFor(store: ProbeStore, name: string): ProbeRecord | null {
++    return store.members[name] ?? null;
++}
+diff --git a/src/scripts/ai_council/qualification.ts b/src/scripts/ai_council/qualification.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..151ab640461e21e422e1bff60d3aa52638063c0e
+--- /dev/null
++++ b/src/scripts/ai_council/qualification.ts
+@@ -0,0 +1,398 @@
++/**
++ * Provider qualification for a council seat (road-to-release-review-p0 Phase 3).
++ *
++ * The failure this module exists to stop is recorded, not hypothetical: a seat
++ * reported as `CONFIGURED` while being entirely dead, and the pass printed a
++ * quorum it never reached. `cmd_status` answered from `member.enabled`, which
++ * is a boolean in a YAML file — it says the operator wrote the seat down, not
++ * that anything on the other end can answer. A boolean cannot express the
++ * middle, so this module produces FOUR verdicts and an ordered ladder of the
++ * checks that produced them.
++ *
++ * The four verdicts, and what each one licenses:
++ *
++ *  - `available`   — every applicable check passed AND a live exchange with the
++ *                    provider has been observed within the freshness window.
++ *  - `degraded`    — the seat is reachable but impaired (a capped quota, a
++ *                    transport that performs no provider call, a transient
++ *                    fault). It may answer; its answer may be worth less.
++ *  - `unavailable` — a check hard-failed. Nothing will answer.
++ *  - `unknown`     — a check could not be evaluated. Most often: nothing has
++ *                    ever been observed to work on this seat.
++ *
++ * **`unknown` is the load-bearing one.** Before this module the tree had no way
++ * to say "configured, plausible, and never once demonstrated" — that state read
++ * as available, which is precisely how a dead seat passed for a live one. A
++ * never-probed seat therefore qualifies as `unknown`, and `unknown` is not
++ * countable toward presence.
++ *
++ * That is deliberately not a permanent tax on the operator. A council run that
++ * gets a non-empty answer from a seat IS the observation, so a probe record
++ * costs nothing extra and normal use decays `unknown` to `available` on its
++ * own. No check in this module performs a provider call, and none may: the
++ * module is pure — no filesystem, no environment, no clock beyond an injected
++ * `now` — for the same reason `quorum.ts` is. A qualification pass that could
++ * spend money would be a qualification pass nobody dares run.
++ *
++ * HONEST SCOPE: this module decides nothing on its own. It classifies. Whether
++ * an `unknown` seat is refused, warned about, or counted is the caller's
++ * choice, and the callers that make it are named in the roadmap's Phase 3
++ * steps 3 and 4 — `cmd_status` for visibility and the quorum sites for
++ * presence.
++ */
++
++import type { AbsentReason, CliFailureClass, Transport } from './transport_resolver.js';
++
++/** The four-value verdict. A boolean is what this replaces; do not narrow it back. */
++export type QualificationVerdict = 'available' | 'degraded' | 'unavailable' | 'unknown';
++
++/**
++ * Per-check outcome.
++ *
++ * `skipped` and `unknown` are different findings and must not be merged.
++ * `skipped` means the check does not apply to this seat (there is no system
++ * prompt to validate, so nothing is being left unverified). `unknown` means the
++ * check applies and could not be answered — which is the state that must not
++ * read as success.
++ */
++export type CheckStatus = 'pass' | 'degraded' | 'fail' | 'unknown' | 'skipped';
++
++/**
++ * The ladder, in the order the roadmap names it. Order is part of the contract:
++ * a seat with no binary has nothing to authenticate against, so reporting an
++ * auth finding underneath a missing binary would be noise dressed as detail.
++ */
++export type QualificationCheckId =
++    | 'installed'
++    | 'authenticated'
++    | 'transport_semantics'
++    | 'system_prompt_path'
++    | 'model_identifier'
++    | 'tool_isolation'
++    | 'live_probe';
++
++export const QUALIFICATION_LADDER: readonly QualificationCheckId[] = [
++    'installed',
++    'authenticated',
++    'transport_semantics',
++    'system_prompt_path',
++    'model_identifier',
++    'tool_isolation',
++    'live_probe',
++];
++
++export interface QualificationCheck {
++    readonly id: QualificationCheckId;
++    readonly status: CheckStatus;
++    /** One line, always present — a `pass` explains what was observed, not only what failed. */
++    readonly detail: string;
++}
++
++/** A recorded observation of a real exchange with the provider. */
++export interface ProbeRecord {
++    /** ISO-8601 date (`YYYY-MM-DD`) or timestamp. Compared by date only. */
++    readonly at: string;
++    /** `ok` for a non-empty answer; otherwise the classified failure. */
++    readonly outcome: 'ok' | CliFailureClass;
++}
++
++/**
++ * Everything the ladder needs, gathered by the caller.
++ *
++ * The transport slice is exactly the shape `resolveMemberTransport` already
++ * returns, so a caller passes its result straight through rather than
++ * re-deriving anything. Optional fields are genuinely optional: an absent
++ * `systemPrompt` means the seat declares none, which is `skipped`, not a gap.
++ */
++export interface MemberQualificationInput {
++    readonly name: string;
++    readonly transport: {
++        readonly available: boolean;
++        readonly transport: Transport | null;
++        readonly reason: string | null;
++        readonly absentReason: AbsentReason | null;
++    };
++    /** The model identifier the seat would send. Empty or null is a hard fail. */
++    readonly modelId?: string | null;
++    /**
++     * A declared system-prompt path and whether it resolves. `exists: null`
++     * means the caller declined to stat it — that is `unknown`, not `pass`.
++     */
++    readonly systemPrompt?: { readonly declared: string | null; readonly exists: boolean | null } | null;
++    /**
++     * Whether the seat runs with the host's tools withheld. `false` is
++     * `degraded`, never `fail`: the seat still answers, but a second opinion
++     * that can read the same tree is not the independent voice a council is
++     * convened for. Absent means the seat makes no tool claim either way.
++     */
++    readonly toolsIsolated?: boolean | null;
++    /** The most recent recorded exchange, or null when nothing was ever observed. */
++    readonly lastProbe?: ProbeRecord | null;
++    /** How long an `ok` observation stays fresh. Default 30 days. */
++    readonly probeMaxAgeDays?: number;
++    /** Injected for determinism — never read a clock inside a classifier. */
++    readonly now?: Date;
++}
++
++export interface MemberQualification {
++    readonly name: string;
++    readonly verdict: QualificationVerdict;
++    readonly checks: readonly QualificationCheck[];
++    /** The check that set the verdict, or null when everything passed. */
++    readonly decidedBy: QualificationCheckId | null;
++}
++
++export const DEFAULT_PROBE_MAX_AGE_DAYS = 30;
++
++/**
++ * Verdict severity, worst first.
++ *
++ * The rule this encodes: **the verdict is the weakest claim the evidence
++ * supports.** A seat with one impaired check and one unevaluated check reads
++ * `unknown`, not `degraded` — `degraded` asserts reachability, and an
++ * unevaluated check means reachability was not established. Ordering `unknown`
++ * above `degraded` is the whole anti-over-claim property of this module, so it
++ * is not an arbitrary tie-break and must not be reordered for tidiness.
++ */
++const VERDICT_SEVERITY: Record<QualificationVerdict, number> = {
++    unavailable: 3,
++    unknown: 2,
++    degraded: 1,
++    available: 0,
++};
++
++const STATUS_TO_VERDICT: Record<Exclude<CheckStatus, 'skipped'>, QualificationVerdict> = {
++    fail: 'unavailable',
++    unknown: 'unknown',
++    degraded: 'degraded',
++    pass: 'available',
++};
++
++/**
++ * Failure classes that mean the seat is alive but impaired, rather than dead.
++ *
++ * `quota_exhausted` is the clearest case and the reason this set exists: the
++ * cap is one the operator deliberately set, so the seat is working exactly as
++ * configured. Treating it as `unavailable` would tell an operator to go fix a
++ * provider that has nothing wrong with it. `timeout` and `server_error` are
++ * transient by nature — a seat that timed out once yesterday is not a seat
++ * that will never answer.
++ */
++const IMPAIRED_FAILURES: ReadonlySet<CliFailureClass> = new Set([
++    'quota_exhausted',
++    'timeout',
++    'server_error',
++    'other',
++]);
++
++function _daysBetween(from: Date, to: Date): number {
++    const ms = to.getTime() - from.getTime();
++    return ms / 86_400_000;
++}
++
++function _installed(input: MemberQualificationInput): QualificationCheck {
++    if (input.transport.absentReason === 'no_binary') {
++        return { id: 'installed', status: 'fail', detail: input.transport.reason ?? 'no provider binary on PATH' };
++    }
++    if (input.transport.available) {
++        return { id: 'installed', status: 'pass', detail: `transport ${String(input.transport.transport)} resolved` };
++    }
++    // Unavailable for some reason the resolver could not classify. That is not
++    // proof of a missing binary, so it is not a fail on THIS rung — the
++    // transport-semantics rung below will catch a null transport.
++    return { id: 'installed', status: 'unknown', detail: input.transport.reason ?? 'transport unresolved' };
++}
++
++function _authenticated(input: MemberQualificationInput): QualificationCheck {
++    if (input.transport.absentReason === 'no_auth') {
++        return { id: 'authenticated', status: 'fail', detail: input.transport.reason ?? 'no credential resolved' };
++    }
++    if (input.transport.available) {
++        return { id: 'authenticated', status: 'pass', detail: 'credential resolved by the transport resolver' };
++    }
++    return { id: 'authenticated', status: 'unknown', detail: 'not evaluated — transport unresolved' };
++}
++
++function _transportSemantics(input: MemberQualificationInput): QualificationCheck {
++    if (input.transport.transport === null) {
++        return {
++            id: 'transport_semantics',
++            status: 'fail',
++            detail: input.transport.reason ?? 'no usable transport',
++        };
++    }
++    if (input.transport.transport === 'manual') {
++        // `manual` performs no provider call at all. It is a legitimate
++        // configuration and a legitimate seat, but it cannot contribute a
++        // model's answer, so counting it as a full voice is the same
++        // over-claim in a different costume.
++        return {
++            id: 'transport_semantics',
++            status: 'degraded',
++            detail: 'manual transport performs no provider call',
++        };
++    }
++    return { id: 'transport_semantics', status: 'pass', detail: `${input.transport.transport} transport` };
++}
++
++function _systemPromptPath(input: MemberQualificationInput): QualificationCheck {
++    const sp = input.systemPrompt ?? null;
++    if (sp === null || sp.declared === null || sp.declared === '') {
++        return { id: 'system_prompt_path', status: 'skipped', detail: 'no system-prompt path declared' };
++    }
++    if (sp.exists === null) {
++        return { id: 'system_prompt_path', status: 'unknown', detail: `declared ${sp.declared}, not checked` };
++    }
++    return sp.exists
++        ? { id: 'system_prompt_path', status: 'pass', detail: `${sp.declared} resolves` }
++        : { id: 'system_prompt_path', status: 'fail', detail: `${sp.declared} does not exist` };
++}
++
++function _modelIdentifier(input: MemberQualificationInput): QualificationCheck {
++    const id = (input.modelId ?? '').trim();
++    if (id === '') {
++        return { id: 'model_identifier', status: 'fail', detail: 'no model identifier configured' };
++    }
++    // The recorded codex failure: the transport rejected the model id itself.
++    // A static config read can never see this, which is why the probe record
++    // is consulted on this rung and not only on the last one.
++    if (input.lastProbe?.outcome === 'model_unservable' || input.lastProbe?.outcome === 'cli_unsupported') {
++        return {
++            id: 'model_identifier',
++            status: 'fail',
++            detail: `${id} was rejected by the transport on ${input.lastProbe.at}`,
++        };
++    }
++    return { id: 'model_identifier', status: 'pass', detail: id };
++}
++
++function _toolIsolation(input: MemberQualificationInput): QualificationCheck {
++    if (input.toolsIsolated === undefined || input.toolsIsolated === null) {
++        return { id: 'tool_isolation', status: 'skipped', detail: 'no tool-isolation claim' };
++    }
++    return input.toolsIsolated
++        ? { id: 'tool_isolation', status: 'pass', detail: 'host tools withheld' }
++        : { id: 'tool_isolation', status: 'degraded', detail: 'seat runs with host tools available' };
++}
++
++function _liveProbe(input: MemberQualificationInput): QualificationCheck {
++    const probe = input.lastProbe ?? null;
++    if (probe === null) {
++        return {
++            id: 'live_probe',
++            status: 'unknown',
++            detail: 'no exchange with this provider has ever been recorded',
++        };
++    }
++    if (probe.outcome !== 'ok') {
++        const impaired = IMPAIRED_FAILURES.has(probe.outcome);
++        return {
++            id: 'live_probe',
++            status: impaired ? 'degraded' : 'fail',
++            detail: `last exchange ${probe.at} — ${probe.outcome}`,
++        };
++    }
++    const maxAge = input.probeMaxAgeDays ?? DEFAULT_PROBE_MAX_AGE_DAYS;
++    const at = new Date(probe.at);
++    if (Number.isNaN(at.getTime())) {
++        return { id: 'live_probe', status: 'unknown', detail: `unparseable probe date ${probe.at}` };
++    }
++    const age = _daysBetween(at, input.now ?? new Date());
++    if (age > maxAge) {
++        return {
++            id: 'live_probe',
++            status: 'unknown',
++            detail: `last successful exchange ${probe.at} is older than ${String(maxAge)} days`,
++        };
++    }
++    return { id: 'live_probe', status: 'pass', detail: `successful exchange ${probe.at}` };
++}
++
++const CHECK_FNS: Record<QualificationCheckId, (i: MemberQualificationInput) => QualificationCheck> = {
++    installed: _installed,
++    authenticated: _authenticated,
++    transport_semantics: _transportSemantics,
++    system_prompt_path: _systemPromptPath,
++    model_identifier: _modelIdentifier,
++    tool_isolation: _toolIsolation,
++    live_probe: _liveProbe,
++};
++
++/**
++ * Run the ladder and reduce it to one verdict.
++ *
++ * A `fail` short-circuits: every later rung is reported `skipped` rather than
++ * evaluated, because `unavailable` is terminal and a list of consequential
++ * findings under a dead seat reads as five problems where there is one. The
++ * `skipped` entries are still emitted so the ladder always has the same shape
++ * and a reader can see where evaluation stopped.
++ */
++export function qualifyMember(input: MemberQualificationInput): MemberQualification {
++    const checks: QualificationCheck[] = [];
++    let verdict: QualificationVerdict = 'available';
++    let decidedBy: QualificationCheckId | null = null;
++    let halted = false;
++
++    for (const id of QUALIFICATION_LADDER) {
++        if (halted) {
++            checks.push({ id, status: 'skipped', detail: 'not evaluated — an earlier check failed' });
++            continue;
++        }
++        const check = (CHECK_FNS[id] as (i: MemberQualificationInput) => QualificationCheck)(input);
++        checks.push(check);
++        if (check.status === 'skipped') {
++            continue;
++        }
++        const candidate = STATUS_TO_VERDICT[check.status];
++        if (VERDICT_SEVERITY[candidate] > VERDICT_SEVERITY[verdict]) {
++            verdict = candidate;
++            decidedBy = id;
++        }
++        if (check.status === 'fail') {
++            halted = true;
++        }
++    }
++
++    return { name: input.name, verdict, checks, decidedBy };
++}
++
++/**
++ * May this seat be counted toward presence in a quorum?
++ *
++ * `available` and `degraded` yes; `unavailable` and `unknown` no. The second
++ * half is the repair: a seat nobody has ever seen answer contributes nothing to
++ * a k-of-n reading, however confidently the config declares it.
++ *
++ * Note what this deliberately does NOT do — it does not shrink `n`. Dropping an
++ * unqualified seat from the total would LOWER the threshold (`ceil(n/2)`) and
++ * make a short pass easier to conclude, which is the opposite of the intent.
++ * The roster stays the roster; only attendance is gated.
++ */
++export function isCountableForQuorum(verdict: QualificationVerdict): boolean {
++    return verdict === 'available' || verdict === 'degraded';
++}
++
++/**
++ * Attendance a set of seats may claim before anything is dispatched.
++ *
++ * `total` is the configured roster, unchanged, so a shortfall stays visible in
++ * the `k/n` line. `countable` is what may be reported present.
++ */
++export function qualifiedAttendance(quals: readonly MemberQualification[]): {
++    readonly total: number;
++    readonly countable: number;
++    readonly blocked: readonly MemberQualification[];
++} {
++    const blocked = quals.filter((q) => !isCountableForQuorum(q.verdict));
++    return { total: quals.length, countable: quals.length - blocked.length, blocked };
++}
++
++/** One line per seat, for a status surface. Stable and greppable in both directions. */
++export function formatQualificationLine(q: MemberQualification): string {
++    const because = q.decidedBy === null ? '' : ` (${q.decidedBy}: ${_detailFor(q, q.decidedBy)})`;
++    return `${q.name}: ${q.verdict}${because}`;
++}
++
++function _detailFor(q: MemberQualification, id: QualificationCheckId): string {
++    return q.checks.find((c) => c.id === id)?.detail ?? '';
++}
+diff --git a/src/scripts/council_cli.ts b/src/scripts/council_cli.ts
+index 19c6103594c93e98725b6d113ac433b8b32ccff1..63f38d5afaa49410def5cf61613437fcbf443c71 100644
+--- a/src/scripts/council_cli.ts
++++ b/src/scripts/council_cli.ts
+@@ -77,6 +77,19 @@ import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
+ import { resolveMemberTransport } from './ai_council/transport_resolver.js';
+ import { absentReasonFromCliFailure, classifyCliFailure, type AbsentReason } from './ai_council/transport_resolver.js';
+ import { evaluateQuorum, SOLO_FLOOR_MIN_PRESENT, type QuorumResult } from './ai_council/quorum.js';
++import {
++    formatQualificationLine,
++    isCountableForQuorum,
++    qualifyMember,
++    type MemberQualification,
++} from './ai_council/qualification.js';
++import {
++    probeFor,
++    readProbeStore,
++    recordProbes,
++    type ProbeEntry,
++    type ProbeStore,
++} from './ai_council/probe_store.js';
+ import {
+     appendEvent,
+     appendQuorumEvent,
+@@ -609,6 +622,32 @@ interface BuildMembersOptions {
+      * state that differs per machine and per CI run.
+      */
+     environment_report?: EnvironmentReport | null;
++    /**
++     * Recorded provider observations (road-to-release-review-p0 Phase 3).
++     *
++     * When supplied, every constructed member is run through the
++     * qualification ladder and a seat that is not `available`/`degraded` does
++     * NOT count toward pre-run presence. When omitted, qualification is not
++     * evaluated at all and presence keeps its constructibility-only meaning.
++     *
++     * Omission is the safe default here rather than the unsafe one, and the
++     * reason is determinism, not timidity: the store lives under
++     * `agents/runtime/`, which is gitignored, so a `build_members` that read
++     * it implicitly would give a different answer on a machine that had run a
++     * council pass than on one that had not — the exact per-machine
++     * flakiness `environment_report` above exists to keep out of this
++     * function. Every production entry point supplies it; a unit test
++     * supplies a fixture or nothing.
++     */
++    probe_store?: ProbeStore | null;
++    /**
++     * Out-param: the qualification verdict per enabled member, in roster
++     * order. Populated only when `probe_store` is supplied — an empty array
++     * from a caller that passed no store means "not evaluated", which is a
++     * different statement from "every seat qualified" and must not be read
++     * as the latter.
++     */
++    qualification_out?: MemberQualification[] | null;
+ }
+ 
+ /**
+@@ -743,8 +782,15 @@ function _postRunQuorum(
+     members: ExternalAIClient[],
+     responses: CouncilResponse[],
+     ai_cfg: Dict,
+-): { quorum: QuorumResult; absent: Dict[] } {
++): { quorum: QuorumResult; absent: Dict[]; probes: ProbeEntry[] } {
+     const absent: Dict[] = [];
++    // Phase 3 (road-to-release-review-p0) — the observation the qualification
++    // ladder's strongest rung needs. It is free precisely here: the exchange
++    // already happened, so recording its outcome costs nothing beyond the row,
++    // and it is what lets a seat decay out of `unknown` through ordinary use
++    // instead of through a maintenance ritual nobody would run.
++    const probes: ProbeEntry[] = [];
++    const observedAt = new Date().toISOString().slice(0, 10);
+     let present = 0;
+     for (let i = 0; i < members.length; i++) {
+         const m = members[i] as ExternalAIClient;
+@@ -758,17 +804,19 @@ function _postRunQuorum(
+         // quorum by definition, whatever the transport thought of it.
+         if (r !== undefined && !r.error && r.text.trim() !== '') {
+             present += 1;
++            probes.push({ name: m.name, outcome: 'ok', at: observedAt });
+             continue;
+         }
+         const raw = r?.error ?? (r !== undefined && r.text.trim() === '' ? 'empty response body' : 'no response');
+         const failure = classifyCliFailure(raw);
++        probes.push({ name: m.name, outcome: failure, at: observedAt });
+         absent.push({
+             member: m.name,
+             reason: absentReasonFromCliFailure(failure) ?? 'unavailable',
+             detail: raw,
+         });
+     }
+-    return { quorum: evaluateQuorum(members.length, present, _quorum_setting_from(ai_cfg)), absent };
++    return { quorum: evaluateQuorum(members.length, present, _quorum_setting_from(ai_cfg)), absent, probes };
+ }
+ 
+ /**
+@@ -805,6 +853,9 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
+     const siblings_overrides = opts.siblings_overrides ?? null;
+     const skipped = opts.skipped ?? null;
+     const quorum_out = opts.quorum_out ?? null;
++    const probe_store = opts.probe_store ?? null;
++    const qualification_out = opts.qualification_out ?? null;
++    const qualifications: MemberQualification[] = [];
+     // Read-only, per-process-memoised (`detectEnvironment` caches the
+     // no-argument call) — cheap to call once per `build_members` invocation.
+     // A caller may inject a fixed report (tests only); production leaves
+@@ -928,6 +979,30 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
+             // same pattern.
+             ...(api_key_present !== undefined ? { apiKeyPresent: api_key_present } : {}),
+         });
++        // Phase 3 (road-to-release-review-p0) — qualification runs on the
++        // resolved transport, before any branch decides whether this seat
++        // constructs. Doing it here rather than per-branch keeps ONE call
++        // site: the branches below differ in how a member is built, not in
++        // what would qualify it, and duplicating the call into each of them
++        // is how the `manual` path would silently stop being qualified.
++        if (probe_store !== null) {
++            qualifications.push(
++                qualifyMember({
++                    name,
++                    transport: {
++                        available: resolved.available,
++                        transport: resolved.transport,
++                        reason: resolved.reason,
++                        absentReason: resolved.absentReason,
++                    },
++                    modelId:
++                        (overrides[name] as string | undefined) ??
++                        (cfg['model'] as string | undefined) ??
++                        null,
++                    lastProbe: probeFor(probe_store, name),
++                }),
++            );
++        }
+         if (name in siblings) {
+             if (resolved.transport !== 'api') {
+                 throw new CouncilDisabledError(
+@@ -1055,8 +1130,24 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
+             );
+         }
+     }
++    // Phase 3 step 4 — presence is gated on qualification, and the roster is
++    // NOT. Dropping an unqualified seat from `total` would lower the threshold
++    // (`ceil(n/2)`) and make a short pass EASIER to conclude, which inverts the
++    // intent; withholding it from `present` is what makes the pass report being
++    // short. A seat already recorded absent is excluded here so it is not
++    // subtracted twice.
++    const absent_names = new Set(absent_entries.map((e) => String(e['member'])));
++    const unqualified = qualifications.filter(
++        (q) => !absent_names.has(q.name) && !isCountableForQuorum(q.verdict),
++    );
++    for (const q of unqualified) {
++        _stderr(`[council] UNQUALIFIED ${formatQualificationLine(q)} — not counted toward attendance\n`);
++    }
++    if (qualification_out !== null) {
++        qualification_out.push(...qualifications);
++    }
+     if (quorum_out !== null) {
+-        const present = total_enabled - absent_count;
++        const present = total_enabled - absent_count - unqualified.length;
+         quorum_out.result = evaluateQuorum(total_enabled, present, _quorum_setting_from(ai));
+         // Construction-time attendance. `lens` / `invocation` stay empty
+         // here on purpose: neither is known at member-construction time,
+@@ -1836,6 +1927,7 @@ function cmd_estimate(
+             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
+             skipped,
+             quorum_out,
++            probe_store: readProbeStore(REPO_ROOT),
+             // A cost preview spends nothing and runs no pass. The line is
+             // still written — tagged, so a consumer excludes it deliberately
+             // instead of never learning it was there.
+@@ -2401,6 +2493,28 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
+     // because only one of the two is fixed by writing a config.
+     const configured = cfg !== null && cfg.enabled && enabledMembers.length > 0;
+ 
++    // Phase 3 (road-to-release-review-p0) — `configured` above is a boolean
++    // read off the config file, and a boolean is exactly what let a dead seat
++    // report as healthy. It stays, because "did the operator write this seat
++    // down" is a real question with a real answer; what changes is that it is
++    // no longer the ONLY thing this command says. The qualification verdict
++    // answers the different question an operator was actually asking.
++    const probeStore = readProbeStore(REPO_ROOT);
++    const qualifications = enabledMembers.map(([name, m]) => {
++        const t = _resolvedTransportFor(name, m);
++        return qualifyMember({
++            name,
++            transport: {
++                available: t.available,
++                transport: t.transport,
++                reason: t.reason,
++                absentReason: t.absentReason,
++            },
++            modelId: m.model,
++            lastProbe: probeFor(probeStore, name),
++        });
++    });
++
+     if (_getattr(args, 'json', false)) {
+         _stdout(
+             `${JSON.stringify({
+@@ -2427,6 +2541,18 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
+                     }),
+                 ),
+                 ignored_transport_keys: cfg?.ignored_transport_keys ?? [],
++                qualification: Object.fromEntries(
++                    qualifications.map((q) => [
++                        q.name,
++                        {
++                            verdict: q.verdict,
++                            decided_by: q.decidedBy,
++                            countable_for_quorum: isCountableForQuorum(q.verdict),
++                            checks: q.checks.map((c) => ({ id: c.id, status: c.status, detail: c.detail })),
++                        },
++                    ]),
++                ),
++                qualified_members: qualifications.filter((q) => isCountableForQuorum(q.verdict)).length,
+                 parse_error,
+                 project_tree_consulted: false,
+             })}\n`,
+@@ -2458,6 +2584,21 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
+             const detail = t.available ? t.transport : `unavailable — ${t.reason ?? 'no usable transport'}`;
+             _stdout(`  transport        ${name}: ${detail}${billing}\n`);
+         }
++        // The four-value verdict, one line per seat. A boolean could not say
++        // "configured, plausible, and never once demonstrated"; that state is
++        // `unknown`, and it is the one an operator most needs to see before
++        // trusting a quorum.
++        for (const q of qualifications) {
++            _stdout(`  qualification    ${formatQualificationLine(q)}\n`);
++        }
++        const qualifiedCount = qualifications.filter((q) => isCountableForQuorum(q.verdict)).length;
++        if (qualifiedCount < qualifications.length) {
++            _stdout(
++                `  ⚠️  ${String(qualifications.length - qualifiedCount)} of ${String(qualifications.length)} ` +
++                    'seat(s) cannot be counted toward a quorum. A seat with no recorded exchange reads\n' +
++                    '     `unknown` until one succeeds — run a council pass and it resolves itself.\n',
++            );
++        }
+         if (cfg.ignored_transport_keys.length > 0) {
+             _stdout('\n');
+             _stdout('  Ignored transport keys — transport is resolved, not configured:\n');
+@@ -2559,6 +2700,7 @@ function cmd_run(
+             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
+             skipped,
+             quorum_out,
++            probe_store: readProbeStore(REPO_ROOT),
+         });
+     }
+     // Measured, never assumed: `_apply_solo_dispatch` escalates back to the
+@@ -2773,6 +2915,10 @@ function cmd_run(
+     const post_run = _postRunQuorum(members, responses, ai_cfg);
+     quorum_out.result = post_run.quorum;
+     skipped.push(...post_run.absent);
++    // Best-effort and deliberately unguarded by any success check: this is the
++    // only thing in the tree that ever observes a provider, so a pass that
++    // errored is exactly as informative as one that answered.
++    recordProbes(REPO_ROOT, post_run.probes);
+     // Attendance telemetry for the reading that actually decided the pass.
+     // `post_run.absent` is the mid-flight set only; the construction-time
+     // skips already went out under `phase: 'pre_run'` from `build_members`,
+@@ -3092,6 +3238,7 @@ function cmd_debate(
+             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
+             skipped,
+             quorum_out,
++            probe_store: readProbeStore(REPO_ROOT),
+             command: 'debate',
+         });
+     }
+diff --git a/src/scripts/lint_evidence_artifacts.ts b/src/scripts/lint_evidence_artifacts.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..3a3809f20fb7d3543eef3e127af293e03f2041ee
+--- /dev/null
++++ b/src/scripts/lint_evidence_artifacts.ts
+@@ -0,0 +1,348 @@
++/**
++ * Evidence artifacts declare what kind of evidence they are
++ * (road-to-release-review-p0 Phase 2).
++ *
++ * The contract is `docs/contracts/evidence-artifact-types.md`; this is its
++ * check. Read that document first — in particular its scope section, because
++ * the single most important property of this linter is what it deliberately
++ * does NOT do.
++ *
++ * **It is forward-looking, and there is no baseline file.** Measured by
++ * `--all` at the time of writing: 328 tracked markdown artifacts under
++ * `agents/evidence/`, 184 already resolving a type and 144 not.
++ * `check_completion_review` already refused to make one marker field required
++ * on the stated ground that it "would have been a migration event for the
++ * whole evidence corpus", and that reasoning is adopted rather than
++ * overturned. So the gate fires only on files ADDED relative to a base ref. A
++ * ratchet baseline was the obvious alternative and was rejected: it would mean
++ * committing a 144-entry suppression list, and a new baseline file in this
++ * repo trips two suppression gates of its own — paying a governance cost to
++ * enforce a rule the scope decision says should not be enforced retroactively.
++ *
++ * **Not registered in `gate-coverage.yml`, and the reason is the manifest's
++ * own.** A diff-scoped gate legitimately scans 0 on most runs, so it can carry
++ * no honest `min_scanned` floor, and `min_scanned: 0` is precisely the
++ * false-count shape that file rejects. `check_rule_projection_integrity` is
++ * the worked precedent: NOT registered, with the reason, ledger half
++ * discharged. This gate follows it — it adopts `_lib/gate_ledger.ts` below, so
++ * `check_gate_completeness` counts it as an adopter rather than a gap.
++ *
++ * **A declaration is read wherever the author already wrote one.** Three of
++ * the five types are pre-existing line grammars owned by
++ * `check_completion_review.ts`, and this linter imports those parsers rather
++ * than re-implementing them. Re-declaring an artifact that already carries
++ * `<!-- completion-review: v1 … -->` under a second `evidence-type:` marker
++ * would be the ambiguity the contract exists to remove.
++ *
++ * Modes:
++ *   --new-only <base-ref>   gate: fail on an ADDED artifact with no type
++ *   --all                   report: corpus census, always exit 0
++ *   --quiet                 verdict line only
++ *
++ * Exit 0 = clean (or report mode). Exit 1 = an added artifact carries no
++ * resolvable type. Exit 2 = the linter could not run (bad ref, no git).
++ */
++
++import { execFileSync } from 'node:child_process';
++import fs from 'node:fs';
++import path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import { GateLedger } from './_lib/gate_ledger.js';
++import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
++import { reportScanned } from './_lib/scan_scope.js';
++import { parseHonestNull, parseMarkerLine, parseSkipDeclaration } from './check_completion_review.js';
++
++export const EVIDENCE_ROOT = path.join('agents', 'evidence');
++
++/** The five types the contract defines. Anything else is an error, not a warning. */
++export const EVIDENCE_TYPES = [
++    'original-review',
++    'current-binding',
++    'declared-skip',
++    'honest-null',
++    'analysis',
++] as const;
++
++export type EvidenceType = (typeof EVIDENCE_TYPES)[number];
++
++/** The explicit marker, for the two types with no pre-existing grammar. */
++const TYPE_MARKER_RE = /^<!--\s*evidence-type:\s*([a-z-]+)\s*-->$/;
++
++/** How many leading lines are scanned for the marker. A type belongs at the top. */
++const MARKER_SCAN_LINES = 40;
++
++export interface TypeResolution {
++    readonly type: EvidenceType | null;
++    /** Which declaration produced it — named so a reader can check the claim. */
++    readonly via: 'marker' | 'completion-review' | 'honest-null' | 'skip' | 'review-input-path' | null;
++    /** Set when a marker was present but named something outside the set. */
++    readonly invalidMarker: string | null;
++}
++
++/**
++ * Resolve one artifact's declared type.
++ *
++ * Order matters and encodes the contract: the pre-existing grammars are
++ * checked FIRST, so an artifact that already declares itself through
++ * `check_completion_review`'s vocabulary is never asked for a second marker.
++ * The path rule is last and is the contract's one acknowledged exception.
++ */
++export function resolveEvidenceType(relPath: string, contents: string): TypeResolution {
++    const lines = contents.split('\n');
++
++    for (const raw of lines) {
++        const line = raw.trim();
++        if (line === '') {
++            continue;
++        }
++        if (parseMarkerLine(line) !== null) {
++            return { type: 'current-binding', via: 'completion-review', invalidMarker: null };
++        }
++        if (parseHonestNull(line) !== null) {
++            return { type: 'honest-null', via: 'honest-null', invalidMarker: null };
++        }
++        if (parseSkipDeclaration(line) !== null) {
++            return { type: 'declared-skip', via: 'skip', invalidMarker: null };
++        }
++    }
++
++    for (const raw of lines.slice(0, MARKER_SCAN_LINES)) {
++        const m = TYPE_MARKER_RE.exec(raw.trim());
++        if (m === null) {
++            continue;
++        }
++        const value = m[1] as string;
++        if ((EVIDENCE_TYPES as readonly string[]).includes(value)) {
++            return { type: value as EvidenceType, via: 'marker', invalidMarker: null };
++        }
++        // A misspelled type reads as untyped to every consumer, which is the
++        // state the contract exists to end — so it is louder than absence,
++        // not quieter.
++        return { type: null, via: null, invalidMarker: value };
++    }
++
++    // The contract's single filename-derived case. Safe because the directory
++    // is written by `dispatch_r2_reviewer.ts` and by nothing else, so the path
++    // IS the declaration rather than a heuristic about one.
++    if (relPath.split(path.sep).some((seg) => seg.endsWith('.review-input'))) {
++        return { type: 'original-review', via: 'review-input-path', invalidMarker: null };
++    }
++
++    return { type: null, via: null, invalidMarker: null };
++}
++
++function _git(root: string, args: readonly string[]): string {
++    return execFileSync('git', [...args], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
++}
++
++/** Markdown files ADDED under `agents/evidence/` relative to `baseRef`. */
++export function addedEvidenceFiles(root: string, baseRef: string): string[] {
++    const out = _git(root, [
++        'diff',
++        '--name-only',
++        '--diff-filter=A',
++        `${baseRef}...HEAD`,
++        '--',
++        `${EVIDENCE_ROOT}/`,
++    ]);
++    return out
++        .split('\n')
++        .map((s) => s.trim())
++        .filter((s) => s !== '' && s.endsWith('.md'));
++}
++
++/** Every markdown artifact in the corpus, for the census mode. */
++export function allEvidenceFiles(root: string): string[] {
++    const out = _git(root, ['ls-files', '--', `${EVIDENCE_ROOT}/`]);
++    return out
++        .split('\n')
++        .map((s) => s.trim())
++        .filter((s) => s !== '' && s.endsWith('.md'));
++}
++
++export interface Finding {
++    readonly file: string;
++    readonly reason: string;
++}
++
++export function checkFiles(root: string, files: readonly string[], ledger?: GateLedger): Finding[] {
++    const findings: Finding[] = [];
++    ledger?.plan([...files]);
++    for (const rel of files) {
++        let contents: string;
++        try {
++            contents = fs.readFileSync(path.join(root, rel), 'utf8');
++        } catch {
++            // A file listed by git but unreadable on disk is not this
++            // linter's finding to report — a deleted-then-re-added path in a
++            // dirty tree hits this and is somebody else's gate.
++            ledger?.outOfScope(rel, 'no_applicable_files');
++            continue;
++        }
++        const res = resolveEvidenceType(rel, contents);
++        if (res.invalidMarker !== null) {
++            ledger?.fail(rel, `invalid evidence-type: ${res.invalidMarker}`);
++            findings.push({
++                file: rel,
++                reason:
++                    `evidence-type: ${res.invalidMarker} is not one of ` +
++                    `${EVIDENCE_TYPES.join(' | ')}`,
++            });
++            continue;
++        }
++        if (res.type === null) {
++            ledger?.fail(rel, 'no evidence type declared');
++            findings.push({
++                file: rel,
++                reason:
++                    'no evidence type declared — add `<!-- evidence-type: analysis -->` ' +
++                    '(or the type that fits) per docs/contracts/evidence-artifact-types.md',
++            });
++            continue;
++        }
++        ledger?.complete(rel);
++    }
++    return findings;
++}
++
++function _argValue(flag: string): string | null {
++    const i = process.argv.indexOf(flag);
++    if (i === -1) {
++        return null;
++    }
++    const v = process.argv[i + 1];
++    return v === undefined || v.startsWith('--') ? null : v;
++}
++
++export function main(): number {
++    const quiet = process.argv.includes('--quiet');
++    const root = process.cwd();
++    const out = (s: string): void => {
++        if (!quiet) {
++            process.stdout.write(`${s}\n`);
++        }
++    };
++
++    if (process.argv.includes('--all')) {
++        let files: string[];
++        try {
++            files = allEvidenceFiles(root);
++        } catch (exc) {
++            process.stdout.write(`lint_evidence_artifacts: cannot list ${EVIDENCE_ROOT} — ${String(exc)}\n`);
++            return 2;
++        }
++        const ledger = new GateLedger('lint_evidence_artifacts');
++        const findings = checkFiles(root, files, ledger);
++        ledger.report();
++        // Census mode reads the whole corpus, so a zero here IS blindness —
++        // no `allowEmpty`, deliberately. The gate mode below is the opposite
++        // case and says so on its own line.
++        reportScanned({
++            gate: 'lint_evidence_artifacts --all',
++            scanned: files.length,
++            units: 'evidence artifacts',
++            roots: [EVIDENCE_ROOT],
++        });
++        const typed = files.length - findings.length;
++        out(`lint_evidence_artifacts — census over ${String(files.length)} artifact(s)`);
++        out(`  typed    ${String(typed)}`);
++        out(`  untyped  ${String(findings.length)}`);
++        // Report mode, never a gate: the pre-existing untyped corpus is a
++        // deliberate scope exclusion, so publishing the number is the point
++        // and failing on it would contradict the contract.
++        process.stdout.write(
++            `lint_evidence_artifacts: census — ${String(typed)} typed, ${String(findings.length)} untyped (report only)\n`,
++        );
++        return 0;
++    }
++
++    // A bare invocation IS the gate, resolving its own base. Requiring an
++    // explicit ref would have made the roadmap's own `verify:` annotation exit
++    // 2 on a usage error, and a check whose default invocation is a usage
++    // error is a check nobody runs. `--new-only <ref>` stays as the override.
++    //
++    // `resolveBaseRef` rather than a hardcoded `origin/main`: `actions/checkout`
++    // performs a shallow PR-merge fetch, so a PR build frequently has no
++    // `origin/main` remote-tracking ref at all. That ladder already handles it
++    // and is the repo's one answer to this question.
++    const baseRef = _argValue('--new-only') ?? resolveBaseRef(root);
++    if (baseRef === null) {
++        // Fail rather than compare against an assumed-empty base — the same
++        // default `resolveBaseRef`'s own docstring names. An unresolvable base
++        // would otherwise make every artifact look un-added and the gate would
++        // pass by scanning nothing.
++        process.stdout.write(
++            'lint_evidence_artifacts: no base ref resolved — pass --new-only <ref>, ' +
++                'set RATCHET_BASE_REF, or run --all for the census\n',
++        );
++        return 2;
++    }
++
++    let files: string[];
++    try {
++        files = addedEvidenceFiles(root, baseRef);
++    } catch (exc) {
++        process.stdout.write(`lint_evidence_artifacts: cannot diff against ${baseRef} — ${String(exc)}\n`);
++        return 2;
++    }
++
++    const ledger = new GateLedger('lint_evidence_artifacts');
++    const findings = checkFiles(root, files, ledger);
++    ledger.report();
++    // A run that scans nothing exits green, and SAYS SO — silent green over an
++    // empty set is how a gate stops measuring anything without anyone
++    // noticing. The `allowEmpty` reason is `EMPTY_VALID` rather than
++    // `OPTIONAL_INPUT`: this gate measures a DIFF, not a corpus, so "no
++    // evidence artifact was added on this branch" genuinely is the success
++    // state and stays true even if `agents/evidence/` were deleted entirely.
++    reportScanned({
++        gate: 'lint_evidence_artifacts',
++        scanned: files.length,
++        units: 'added evidence artifacts',
++        roots: [EVIDENCE_ROOT],
++        allowEmpty:
++            'EMPTY_VALID: the scope is the set of artifacts ADDED since the base ref; ' +
++            'a branch that adds none has nothing to type, and zero is the pass.',
++    });
++    if (files.length === 0) {
++        process.stdout.write(
++            `lint_evidence_artifacts: ✅ no evidence artifact added since ${baseRef} — nothing to check\n`,
++        );
++        return 0;
++    }
++    out(`lint_evidence_artifacts — ${String(files.length)} added artifact(s) since ${baseRef}`);
++    if (findings.length === 0) {
++        process.stdout.write(
++            `lint_evidence_artifacts: ✅ all ${String(files.length)} added artifact(s) declare a type\n`,
++        );
++        return 0;
++    }
++    process.stdout.write(`lint_evidence_artifacts: ❌ ${String(findings.length)} untyped artifact(s)\n`);
++    for (const f of findings) {
++        process.stdout.write(`  ${f.file}\n    ${f.reason}\n`);
++    }
++    return 1;
++}
++
++const _HERE = fileURLToPath(import.meta.url);
++function _isCliEntry(): boolean {
++    if (process.argv[1] === undefined) {
++        return false;
++    }
++    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
++    if (import.meta.url === argvUrl) {
++        return true;
++    }
++    try {
++        const here = fs.realpathSync(fileURLToPath(import.meta.url));
++        const argv = fs.realpathSync(path.resolve(process.argv[1]));
++        return here === argv;
++    } catch {
++        return false;
++    }
++}
++
++if (_isCliEntry() || process.argv[1] === _HERE) {
++    process.exit(main());
++}
+diff --git a/src/scripts/test_council_qualification.ts b/src/scripts/test_council_qualification.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..7081cce806a6d0b34b7750346c476f6466b6f2cd
+--- /dev/null
++++ b/src/scripts/test_council_qualification.ts
+@@ -0,0 +1,213 @@
++/**
++ * Executable probe for the provider-qualification exit criterion
++ * (road-to-release-review-p0 Phase 3).
++ *
++ * The roadmap states the criterion as behaviour, not as coverage: *"a
++ * deliberately broken seat yields unavailable rather than configured, and a
++ * council run against it reports short instead of printing a quorum."* This
++ * script asserts exactly that, against the real `build_members` path, with a
++ * synthetic roster and an injected environment report — no config file, no
++ * network, no provider call, no spend.
++ *
++ * It exists in addition to the vitest suites rather than instead of them. The
++ * unit tests can be green while the wiring is gone: `build_members` evaluates
++ * qualification only when a `probe_store` is supplied, so a future refactor
++ * that drops the argument at the three production call sites would leave every
++ * test passing and the repair silently inert. This probe re-asserts the
++ * end-to-end shape the roadmap names, and is the `verify:` annotation its
++ * Phase 3 steps point at.
++ *
++ * Exit 0 = the criterion holds. Exit 1 = it does not, with the failing
++ * assertion named. `--quiet` suppresses the per-assertion lines and keeps the
++ * verdict, matching the house convention for a script CI may call.
++ */
++
++import fs from 'node:fs';
++import path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import type { EnvironmentReport } from './_lib/environment_detector.js';
++import type { ProbeStore } from './ai_council/probe_store.js';
++import type { QuorumResult } from './ai_council/quorum.js';
++import { isCountableForQuorum, qualifyMember, type MemberQualification } from './ai_council/qualification.js';
++import { build_members } from './council_cli.js';
++
++const QUIET = process.argv.includes('--quiet');
++
++const KEY_VAR = 'COUNCIL_QUALIFICATION_PROBE_KEY';
++const TODAY = new Date().toISOString().slice(0, 10);
++
++function _out(line: string): void {
++    if (!QUIET) {
++        process.stdout.write(`${line}\n`);
++    }
++}
++
++const failures: string[] = [];
++
++function check(name: string, condition: boolean, detail: string): void {
++    if (condition) {
++        _out(`  ok    ${name}`);
++        return;
++    }
++    failures.push(`${name} — ${detail}`);
++    _out(`  FAIL  ${name} — ${detail}`);
++}
++
++/** No hosts, no auth records, no keys — every rung is decided by the roster. */
++function emptyReport(): EnvironmentReport {
++    return { hosts: [], auth: [], keys: [] };
++}
++
++function rosterSettings(): Record<string, unknown> {
++    return {
++        ai_council: {
++            enabled: true,
++            mode: 'auto',
++            members: {
++                // Healthy: resolves through the key rung and has been observed.
++                anthropic: { enabled: true, model: 'model-a', api_key_ref: `env:${KEY_VAR}` },
++                // Broken: constructs identically, and its last exchange was
++                // rejected by the transport. This is the recorded codex shape —
++                // a seat that looks configured from every angle a config read
++                // can see.
++                openai: { enabled: true, model: 'model-b', api_key_ref: `env:${KEY_VAR}` },
++            },
++        },
++    };
++}
++
++function storeWith(members: ProbeStore['members']): ProbeStore {
++    return { schema: 1, members };
++}
++
++export function main(): number {
++    _out('council qualification — exit-criterion probe');
++
++    // The roster is only constructible while the key var is set; restore
++    // whatever was there so the probe leaves no environment residue.
++    const prior = process.env[KEY_VAR];
++    process.env[KEY_VAR] = 'sk-probe-key';
++    try {
++        // ── Criterion 1: a deliberately broken seat yields `unavailable`. ──
++        const broken = qualifyMember({
++            name: 'broken',
++            transport: { available: true, transport: 'api', reason: null, absentReason: null },
++            modelId: 'model-b',
++            lastProbe: { at: TODAY, outcome: 'model_unservable' },
++        });
++        check(
++            'a seat whose model the transport rejected reports unavailable',
++            broken.verdict === 'unavailable',
++            `got ${broken.verdict}`,
++        );
++        check(
++            'and it is not countable toward a quorum',
++            !isCountableForQuorum(broken.verdict),
++            'a seat nothing will answer from was counted present',
++        );
++
++        // ── Criterion 1b: "configured" alone never reads as available. ──
++        const neverObserved = qualifyMember({
++            name: 'never-observed',
++            transport: { available: true, transport: 'api', reason: null, absentReason: null },
++            modelId: 'model-a',
++            lastProbe: null,
++        });
++        check(
++            'a configured, plausible, never-observed seat reports unknown',
++            neverObserved.verdict === 'unknown',
++            `got ${neverObserved.verdict} — configuration must never read as demonstrated`,
++        );
++
++        // ── Criterion 2: the run reports SHORT rather than printing a quorum. ──
++        const quorum_out: { result: QuorumResult | null } = { result: null };
++        const qualification_out: MemberQualification[] = [];
++        build_members(rosterSettings(), {
++            environment_report: emptyReport(),
++            quorum_out,
++            qualification_out,
++            probe_store: storeWith({
++                anthropic: { at: TODAY, outcome: 'ok' },
++                openai: { at: TODAY, outcome: 'model_unservable' },
++            }),
++        });
++        const q = quorum_out.result;
++        check('the pre-run quorum was evaluated', q !== null, 'quorum_out.result stayed null');
++        if (q !== null) {
++            check(
++                'the broken seat is withheld from present',
++                q.present === 1,
++                `present=${String(q.present)}, expected 1 of a 2-seat roster`,
++            );
++            // The direction check. Shrinking `n` would lower ceil(n/2) and make
++            // a short pass EASIER to conclude — the same over-claim in the
++            // opposite arithmetic.
++            check(
++                'the roster is NOT shrunk — total stays 2',
++                q.total === 2,
++                `total=${String(q.total)}; dropping the seat from n would lower the threshold`,
++            );
++        }
++        check(
++            'qualification reached the caller',
++            qualification_out.length === 2,
++            `qualification_out has ${String(qualification_out.length)} entries — the wiring is inert`,
++        );
++        const wiredBroken = qualification_out.find((x) => x.name === 'openai');
++        check(
++            'the broken seat is reported unavailable end-to-end',
++            wiredBroken?.verdict === 'unavailable',
++            `got ${String(wiredBroken?.verdict)}`,
++        );
++
++        // ── Criterion 3: the store is consulted, not assumed. ──
++        const ungated: { result: QuorumResult | null } = { result: null };
++        build_members(rosterSettings(), { environment_report: emptyReport(), quorum_out: ungated });
++        check(
++            'omitting the store leaves presence at constructibility only',
++            ungated.result?.present === 2,
++            `present=${String(ungated.result?.present)} — the default must stay deterministic`,
++        );
++    } finally {
++        if (prior === undefined) {
++            delete process.env[KEY_VAR];
++        } else {
++            process.env[KEY_VAR] = prior;
++        }
++    }
++
++    if (failures.length > 0) {
++        process.stdout.write(
++            `council qualification: ❌ ${String(failures.length)} assertion(s) failed\n`,
++        );
++        for (const f of failures) {
++            process.stdout.write(`  - ${f}\n`);
++        }
++        return 1;
++    }
++    process.stdout.write('council qualification: ✅ exit criterion holds\n');
++    return 0;
++}
++
++const _HERE = fileURLToPath(import.meta.url);
++function _isCliEntry(): boolean {
++    if (process.argv[1] === undefined) {
++        return false;
++    }
++    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
++    if (import.meta.url === argvUrl) {
++        return true;
++    }
++    try {
++        const here = fs.realpathSync(fileURLToPath(import.meta.url));
++        const argv = fs.realpathSync(path.resolve(process.argv[1]));
++        return here === argv;
++    } catch {
++        return false;
++    }
++}
++
++if (_isCliEntry() || process.argv[1] === _HERE) {
++    process.exit(main());
++}
+diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
+index 1c79324418f3566f02a31dcb85e131584c28d97a..3f3d25d2877c1453391ed6724825d65937708481 100644
+--- a/taskfiles/ci-fast.yml
++++ b/taskfiles/ci-fast.yml
+@@ -64,6 +64,14 @@ tasks:
+       # already been repaired in-place and the check is a fixpoint. 0.7s measured.
+       - ./scripts-run src/scripts/check_rule_projection_integrity --quiet
+       - ./scripts-run src/scripts/check_bridge_derivation
++      # Evidence artifacts added on this branch declare what KIND of evidence
++      # they are (road-to-release-review-p0 Phase 2). Diff-scoped against the
++      # resolved base ref, so it scans 0 and exits 0 on a branch that adds
++      # none — which is why it is deliberately absent from gate-coverage.yml
++      # (no honest `min_scanned` floor exists for it; same reason and same
++      # shape as check_rule_projection_integrity above). Its ledger half IS
++      # discharged, so check_gate_completeness counts it as an adopter.
++      - ./scripts-run src/scripts/lint_evidence_artifacts --quiet
+       # Detector corpus: every self-repair detector carries all three fixture
+       # classes AND every fixture behaves as its class says. Cheap (pure
+       # functions over a 22-entry YAML corpus, no I/O beyond the one read).
+diff --git a/tests/scripts/ai_council/council_qualification_wiring.test.ts b/tests/scripts/ai_council/council_qualification_wiring.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..f94bc92ba82523daf2d4a72a1e1a33b243700832
+--- /dev/null
++++ b/tests/scripts/ai_council/council_qualification_wiring.test.ts
+@@ -0,0 +1,211 @@
++// Wiring tests for provider qualification inside `build_members`
++// (road-to-release-review-p0 Phase 3, steps 3 and 4).
++//
++// `qualification.test.ts` covers the ladder in isolation. This file covers the
++// one thing the ladder cannot check about itself: that the pre-run quorum
++// actually consumes it, and that it consumes it in the direction that reports
++// being SHORT rather than the direction that shrinks the roster.
++import { afterEach, describe, expect, it } from 'vitest';
++
++import type { EnvironmentReport } from '../../../src/scripts/_lib/environment_detector.js';
++import type { QuorumResult } from '../../../src/scripts/ai_council/quorum.js';
++import type { ProbeStore } from '../../../src/scripts/ai_council/probe_store.js';
++import type { MemberQualification } from '../../../src/scripts/ai_council/qualification.js';
++import { build_members } from '../../../src/scripts/council_cli.js';
++
++const KEY_VAR = 'COUNCIL_QUALIFICATION_TEST_KEY';
++
++function emptyReport(): EnvironmentReport {
++    return { hosts: [], auth: [], keys: [] };
++}
++
++/** Two enabled seats, both resolving through the api-key rung. */
++function twoSeatSettings(): Record<string, unknown> {
++    return {
++        ai_council: {
++            enabled: true,
++            mode: 'auto',
++            members: {
++                anthropic: { enabled: true, model: 'claude-sonnet-4-5', api_key_ref: `env:${KEY_VAR}` },
++                openai: { enabled: true, model: 'gpt-4o', api_key_ref: `env:${KEY_VAR}` },
++            },
++        },
++    };
++}
++
++function storeWith(members: ProbeStore['members']): ProbeStore {
++    return { schema: 1, members };
++}
++
++const FRESH = new Date().toISOString().slice(0, 10);
++
++afterEach(() => {
++    delete process.env[KEY_VAR];
++});
++
++describe('build_members — qualification is not evaluated without a store', () => {
++    // The determinism guarantee `probe_store`'s docstring makes: a caller that
++    // supplies nothing gets today's constructibility-only presence, so no test
++    // and no consumer silently depends on gitignored runtime state.
++    it('omitting probe_store leaves presence at constructibility only', () => {
++        process.env[KEY_VAR] = 'sk-test-key';
++        const quorum_out: { result: QuorumResult | null } = { result: null };
++        build_members(twoSeatSettings(), { environment_report: emptyReport(), quorum_out });
++        expect(quorum_out.result).toEqual({ status: 'concluded', threshold: 1, total: 2, present: 2 });
++    });
++
++    it('and qualification_out stays empty, which means "not evaluated" — not "all qualified"', () => {
++        process.env[KEY_VAR] = 'sk-test-key';
++        const qualification_out: MemberQualification[] = [];
++        build_members(twoSeatSettings(), { environment_report: emptyReport(), qualification_out });
++        expect(qualification_out).toEqual([]);
++    });
++});
++
++describe('build_members — the pre-run over-claim this repairs', () => {
++    // The recorded incident: the pre-run banner printed `2/2 present …
++    // concluded` and the post-run reading was `0/2`. Both seats constructed;
++    // neither had ever been observed to answer.
++    it('two constructible but never-observed seats report 0/2 present, not 2/2', () => {
++        process.env[KEY_VAR] = 'sk-test-key';
++        const quorum_out: { result: QuorumResult | null } = { result: null };
++        build_members(twoSeatSettings(), {
++            environment_report: emptyReport(),
++            quorum_out,
++            probe_store: storeWith({}),
++        });
++        expect(quorum_out.result).toEqual({
++            status: 'inconclusive',
++            threshold: 1,
++            total: 2,
++            present: 0,
++        });
++    });
++
++    it('one observed seat and one never-observed seat reports 1/2 — degraded, not convergence', () => {
++        process.env[KEY_VAR] = 'sk-test-key';
++        const quorum_out: { result: QuorumResult | null } = { result: null };
++        build_members(twoSeatSettings(), {
++            environment_report: emptyReport(),
++            quorum_out,
++            probe_store: storeWith({ anthropic: { at: FRESH, outcome: 'ok' } }),
++        });
++        expect(quorum_out.result).toEqual({ status: 'concluded', threshold: 1, total: 2, present: 1 });
++    });
++
++    it('both observed reports full attendance', () => {
++        process.env[KEY_VAR] = 'sk-test-key';
++        const quorum_out: { result: QuorumResult | null } = { result: null };
++        build_members(twoSeatSettings(), {
++            environment_report: emptyReport(),
++            quorum_out,
++            probe_store: storeWith({
++                anthropic: { at: FRESH, outcome: 'ok' },
++                openai: { at: FRESH, outcome: 'ok' },
++            }),
++        });
++        expect(quorum_out.result).toEqual({ status: 'concluded', threshold: 1, total: 2, present: 2 });
++    });
++
++    // The direction check, and it is the whole point of step 4. If the
++    // unqualified seat were dropped from `total` instead of from `present`,
++    // this would read `{total: 1, present: 1, threshold: 1, concluded}` — a
++    // full-attendance verdict on half a roster, i.e. the same over-claim
++    // wearing the opposite arithmetic.
++    it('an unqualified seat is withheld from present and KEPT in total', () => {
++        process.env[KEY_VAR] = 'sk-test-key';
++        const quorum_out: { result: QuorumResult | null } = { result: null };
++        build_members(twoSeatSettings(), {
++            environment_report: emptyReport(),
++            quorum_out,
++            probe_store: storeWith({ anthropic: { at: FRESH, outcome: 'ok' } }),
++        });
++        expect(quorum_out.result?.total).toBe(2);
++        expect(quorum_out.result?.threshold).toBe(1);
++    });
++});
++
++describe('build_members — no double subtraction', () => {
++    // A seat that never constructs is already counted absent. Counting it a
++    // second time because it also fails to qualify would drive `present`
++    // negative-ward and understate attendance — the mirror of the defect.
++    it('a seat absent at construction is not subtracted twice', () => {
++        process.env[KEY_VAR] = 'sk-test-key';
++        // anthropic resolves through the key rung and is observed; openai
++        // carries no key ref at all, so it never constructs and is recorded
++        // absent. Its qualification is ALSO `unavailable` — the case where a
++        // naive implementation subtracts it once as absent and once as
++        // unqualified, reporting 0/2 for a pass with one healthy seat.
++        const settings = {
++            ai_council: {
++                enabled: true,
++                mode: 'auto',
++                members: {
++                    anthropic: { enabled: true, model: 'claude-sonnet-4-5', api_key_ref: `env:${KEY_VAR}` },
++                    openai: { enabled: true, model: 'gpt-4o' },
++                },
++            },
++        };
++        const skipped: Record<string, unknown>[] = [];
++        const quorum_out: { result: QuorumResult | null } = { result: null };
++        build_members(settings, {
++            environment_report: emptyReport(),
++            skipped,
++            quorum_out,
++            probe_store: storeWith({ anthropic: { at: FRESH, outcome: 'ok' } }),
++        });
++        expect(skipped.map((s) => s['member'])).toEqual(['openai']);
++        expect(quorum_out.result).toEqual({
++            status: 'concluded',
++            threshold: 1,
++            total: 2,
++            present: 1,
++        });
++    });
++});
++
++describe('build_members — qualification_out', () => {
++    it('reports a verdict per enabled seat when a store is supplied', () => {
++        process.env[KEY_VAR] = 'sk-test-key';
++        const qualification_out: MemberQualification[] = [];
++        build_members(twoSeatSettings(), {
++            environment_report: emptyReport(),
++            qualification_out,
++            probe_store: storeWith({ anthropic: { at: FRESH, outcome: 'ok' } }),
++        });
++        expect(qualification_out.map((q) => [q.name, q.verdict])).toEqual([
++            ['anthropic', 'available'],
++            ['openai', 'unknown'],
++        ]);
++    });
++
++    it('a seat whose last exchange rejected the model id reads unavailable', () => {
++        process.env[KEY_VAR] = 'sk-test-key';
++        const qualification_out: MemberQualification[] = [];
++        build_members(twoSeatSettings(), {
++            environment_report: emptyReport(),
++            qualification_out,
++            probe_store: storeWith({
++                anthropic: { at: FRESH, outcome: 'ok' },
++                openai: { at: FRESH, outcome: 'model_unservable' },
++            }),
++        });
++        const openai = qualification_out.find((q) => q.name === 'openai');
++        expect(openai?.verdict).toBe('unavailable');
++        expect(openai?.decidedBy).toBe('model_identifier');
++    });
++
++    it('an exhausted quota still counts toward attendance — the seat is alive', () => {
++        process.env[KEY_VAR] = 'sk-test-key';
++        const quorum_out: { result: QuorumResult | null } = { result: null };
++        build_members(twoSeatSettings(), {
++            environment_report: emptyReport(),
++            quorum_out,
++            probe_store: storeWith({
++                anthropic: { at: FRESH, outcome: 'ok' },
++                openai: { at: FRESH, outcome: 'quota_exhausted' },
++            }),
++        });
++        expect(quorum_out.result?.present).toBe(2);
++    });
++});
+diff --git a/tests/scripts/ai_council/probe_store.test.ts b/tests/scripts/ai_council/probe_store.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..16083da7ab287b0ae044ce30d7ba42062591582a
+--- /dev/null
++++ b/tests/scripts/ai_council/probe_store.test.ts
+@@ -0,0 +1,161 @@
++// Tests for src/scripts/ai_council/probe_store.ts
++// (road-to-release-review-p0 Phase 3).
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import {
++    probeFor,
++    probeStorePath,
++    readProbeStore,
++    recordProbe,
++    recordProbes,
++} from '../../../src/scripts/ai_council/probe_store.js';
++
++let root: string;
++
++beforeEach(() => {
++    root = fs.mkdtempSync(path.join(os.tmpdir(), 'probe-store-'));
++});
++
++afterEach(() => {
++    fs.rmSync(root, { recursive: true, force: true });
++});
++
++function writeRaw(contents: string): void {
++    const target = probeStorePath(root);
++    fs.mkdirSync(path.dirname(target), { recursive: true });
++    fs.writeFileSync(target, contents, 'utf8');
++}
++
++describe('readProbeStore — the tolerant reader', () => {
++    it('a missing store is empty, not an error', () => {
++        expect(readProbeStore(root)).toEqual({ schema: 1, members: {} });
++    });
++
++    it('unparseable JSON is empty, not a throw', () => {
++        writeRaw('{ this is not json');
++        expect(readProbeStore(root).members).toEqual({});
++    });
++
++    it('a wrong schema version is empty', () => {
++        writeRaw(JSON.stringify({ schema: 99, members: { a: { at: '2026-08-16', outcome: 'ok' } } }));
++        expect(readProbeStore(root).members).toEqual({});
++    });
++
++    it('a non-object payload is empty', () => {
++        writeRaw('[]');
++        expect(readProbeStore(root).members).toEqual({});
++    });
++
++    // The property that matters: one bad row must not blank the others, or a
++    // single corrupt entry would silently downgrade every healthy seat to
++    // `unknown` with no way to tell that cause from "never observed".
++    it('one malformed member entry is dropped and the rest survive', () => {
++        writeRaw(
++            JSON.stringify({
++                schema: 1,
++                members: {
++                    good: { at: '2026-08-16', outcome: 'ok' },
++                    missingAt: { outcome: 'ok' },
++                    emptyOutcome: { at: '2026-08-16', outcome: '' },
++                    notAnObject: 7,
++                },
++            }),
++        );
++        const store = readProbeStore(root);
++        expect(Object.keys(store.members)).toEqual(['good']);
++        expect(probeFor(store, 'good')).toEqual({ at: '2026-08-16', outcome: 'ok' });
++    });
++});
++
++describe('recordProbe / recordProbes', () => {
++    it('round-trips a single record', () => {
++        recordProbe(root, 'anthropic', 'ok', '2026-08-17');
++        expect(probeFor(readProbeStore(root), 'anthropic')).toEqual({ at: '2026-08-17', outcome: 'ok' });
++    });
++
++    it('creates the runtime directory when it does not exist', () => {
++        expect(fs.existsSync(path.dirname(probeStorePath(root)))).toBe(false);
++        recordProbe(root, 'openai', 'ok', '2026-08-17');
++        expect(fs.existsSync(probeStorePath(root))).toBe(true);
++    });
++
++    it('merges rather than replacing — an untouched seat keeps its record', () => {
++        recordProbe(root, 'anthropic', 'ok', '2026-08-16');
++        recordProbe(root, 'openai', 'quota_exhausted', '2026-08-17');
++        const store = readProbeStore(root);
++        expect(probeFor(store, 'anthropic')).toEqual({ at: '2026-08-16', outcome: 'ok' });
++        expect(probeFor(store, 'openai')).toEqual({ at: '2026-08-17', outcome: 'quota_exhausted' });
++    });
++
++    it('a later record for the same seat overwrites the earlier one', () => {
++        recordProbe(root, 'anthropic', 'timeout', '2026-08-16');
++        recordProbe(root, 'anthropic', 'ok', '2026-08-17');
++        expect(probeFor(readProbeStore(root), 'anthropic')).toEqual({ at: '2026-08-17', outcome: 'ok' });
++    });
++
++    it('a batch write is one operation over many seats', () => {
++        recordProbes(root, [
++            { name: 'a', outcome: 'ok', at: '2026-08-17' },
++            { name: 'b', outcome: 'auth_rejected', at: '2026-08-17' },
++        ]);
++        expect(Object.keys(readProbeStore(root).members).sort()).toEqual(['a', 'b']);
++    });
++
++    it('an empty batch writes nothing at all', () => {
++        recordProbes(root, []);
++        expect(fs.existsSync(probeStorePath(root))).toBe(false);
++    });
++
++    // Best-effort by construction: telemetry that can break a council run is
++    // worse than telemetry that misses a row.
++    it('a write into an unwritable location is swallowed, never thrown', () => {
++        const bogus = path.join(root, 'not-a-dir');
++        fs.writeFileSync(bogus, 'i am a file');
++        expect(() => {
++            recordProbe(path.join(bogus, 'nested'), 'anthropic', 'ok', '2026-08-17');
++        }).not.toThrow();
++    });
++
++    it('probeFor returns null for a seat nobody has observed', () => {
++        expect(probeFor(readProbeStore(root), 'never-seen')).toBeNull();
++    });
++});
++
++describe('recordProbes — the event-log kill switch', () => {
++    const ENV = 'AGENT_CONFIG_NO_EVENTS_LOG';
++    let saved: string | undefined;
++
++    beforeEach(() => {
++        saved = process.env[ENV];
++    });
++
++    afterEach(() => {
++        if (saved === undefined) delete process.env[ENV];
++        else process.env[ENV] = saved;
++    });
++
++    // Measured on this branch: without the switch, the council suite's
++    // `cmd_run` paths wrote a real store into the worktree, which is exactly
++    // what the read-only witness fails on when sharding co-locates them.
++    it('writes nothing when the switch is armed', () => {
++        process.env[ENV] = '1';
++        recordProbe(root, 'anthropic', 'ok', '2026-08-17');
++        expect(fs.existsSync(probeStorePath(root))).toBe(false);
++    });
++
++    it('the string "false" disarms it — a string is not a boolean', () => {
++        process.env[ENV] = 'false';
++        recordProbe(root, 'anthropic', 'ok', '2026-08-17');
++        expect(fs.existsSync(probeStorePath(root))).toBe(true);
++    });
++
++    it('reading is never suppressed — only writing is', () => {
++        recordProbe(root, 'anthropic', 'ok', '2026-08-17');
++        process.env[ENV] = '1';
++        expect(probeFor(readProbeStore(root), 'anthropic')).toEqual({ at: '2026-08-17', outcome: 'ok' });
++    });
++});
+diff --git a/tests/scripts/ai_council/qualification.test.ts b/tests/scripts/ai_council/qualification.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..8786dab4b1c8ad47cc229cf5ab2993277309f0bd
+--- /dev/null
++++ b/tests/scripts/ai_council/qualification.test.ts
+@@ -0,0 +1,236 @@
++// Tests for src/scripts/ai_council/qualification.ts
++// (road-to-release-review-p0 Phase 3).
++import { describe, expect, it } from 'vitest';
++
++import {
++    DEFAULT_PROBE_MAX_AGE_DAYS,
++    formatQualificationLine,
++    isCountableForQuorum,
++    QUALIFICATION_LADDER,
++    qualifiedAttendance,
++    qualifyMember,
++    type MemberQualificationInput,
++} from '../../../src/scripts/ai_council/qualification.js';
++
++const NOW = new Date('2026-08-17T00:00:00Z');
++
++/** A seat with everything resolved and a fresh successful exchange. */
++function healthy(over: Partial<MemberQualificationInput> = {}): MemberQualificationInput {
++    return {
++        name: 'anthropic',
++        transport: { available: true, transport: 'cli', reason: null, absentReason: null },
++        modelId: 'claude-opus-5',
++        lastProbe: { at: '2026-08-16', outcome: 'ok' },
++        now: NOW,
++        ...over,
++    };
++}
++
++describe('qualifyMember — the happy path', () => {
++    it('a fully resolved, freshly probed seat is available', () => {
++        const q = qualifyMember(healthy());
++        expect(q.verdict).toBe('available');
++        expect(q.decidedBy).toBeNull();
++    });
++
++    it('always emits the full ladder, in order', () => {
++        const q = qualifyMember(healthy());
++        expect(q.checks.map((c) => c.id)).toEqual([...QUALIFICATION_LADDER]);
++    });
++
++    it('every check carries a non-empty detail, including the passes', () => {
++        for (const c of qualifyMember(healthy()).checks) {
++            expect(c.detail.length).toBeGreaterThan(0);
++        }
++    });
++});
++
++describe('qualifyMember — the defect this module was built for', () => {
++    // The recorded incident: a seat reported CONFIGURED, was entirely dead, and
++    // the pass printed a quorum it never reached. Configuration alone must
++    // never read as available.
++    it('a configured, plausible, NEVER-PROBED seat is unknown — not available', () => {
++        const q = qualifyMember(healthy({ lastProbe: null }));
++        expect(q.verdict).toBe('unknown');
++        expect(q.decidedBy).toBe('live_probe');
++    });
++
++    it('and an unknown seat is not countable toward presence', () => {
++        expect(isCountableForQuorum(qualifyMember(healthy({ lastProbe: null })).verdict)).toBe(false);
++    });
++
++    it('a model id the transport rejected fails on the model rung, not silently', () => {
++        const q = qualifyMember(healthy({ lastProbe: { at: '2026-08-15', outcome: 'model_unservable' } }));
++        expect(q.verdict).toBe('unavailable');
++        expect(q.decidedBy).toBe('model_identifier');
++    });
++});
++
++describe('qualifyMember — hard failures', () => {
++    it('no binary fails on the first rung', () => {
++        const q = qualifyMember(
++            healthy({
++                transport: { available: false, transport: null, reason: 'no binary', absentReason: 'no_binary' },
++            }),
++        );
++        expect(q.verdict).toBe('unavailable');
++        expect(q.decidedBy).toBe('installed');
++    });
++
++    it('no credential fails on the auth rung', () => {
++        const q = qualifyMember(
++            healthy({
++                transport: { available: false, transport: null, reason: 'no key', absentReason: 'no_auth' },
++            }),
++        );
++        expect(q.verdict).toBe('unavailable');
++        expect(q.decidedBy).toBe('authenticated');
++    });
++
++    it('a failure short-circuits — every later rung reports skipped, not a consequential finding', () => {
++        const q = qualifyMember(
++            healthy({
++                transport: { available: false, transport: null, reason: 'no binary', absentReason: 'no_binary' },
++            }),
++        );
++        const after = q.checks.slice(1);
++        expect(after.every((c) => c.status === 'skipped')).toBe(true);
++        // The shape is still the full ladder so a reader can see where it stopped.
++        expect(q.checks).toHaveLength(QUALIFICATION_LADDER.length);
++    });
++
++    it('a declared system prompt that does not resolve fails', () => {
++        const q = qualifyMember(healthy({ systemPrompt: { declared: '/nope.md', exists: false } }));
++        expect(q.verdict).toBe('unavailable');
++        expect(q.decidedBy).toBe('system_prompt_path');
++    });
++
++    it('an empty model identifier fails', () => {
++        const q = qualifyMember(healthy({ modelId: '   ' }));
++        expect(q.verdict).toBe('unavailable');
++        expect(q.decidedBy).toBe('model_identifier');
++    });
++});
++
++describe('qualifyMember — impaired but alive', () => {
++    it('an exhausted quota is degraded, never unavailable — the cap is one the operator set', () => {
++        const q = qualifyMember(healthy({ lastProbe: { at: '2026-08-16', outcome: 'quota_exhausted' } }));
++        expect(q.verdict).toBe('degraded');
++        expect(isCountableForQuorum(q.verdict)).toBe(true);
++    });
++
++    it('a transient timeout is degraded', () => {
++        expect(qualifyMember(healthy({ lastProbe: { at: '2026-08-16', outcome: 'timeout' } })).verdict).toBe(
++            'degraded',
++        );
++    });
++
++    it('a manual transport is degraded — it performs no provider call', () => {
++        const q = qualifyMember(
++            healthy({ transport: { available: true, transport: 'manual', reason: null, absentReason: null } }),
++        );
++        expect(q.verdict).toBe('degraded');
++        expect(q.decidedBy).toBe('transport_semantics');
++    });
++
++    it('a seat running with host tools available is degraded, not failed', () => {
++        const q = qualifyMember(healthy({ toolsIsolated: false }));
++        expect(q.verdict).toBe('degraded');
++        expect(q.decidedBy).toBe('tool_isolation');
++    });
++
++    it('no tool-isolation claim is skipped, and skipped never moves the verdict', () => {
++        const q = qualifyMember(healthy({ toolsIsolated: null }));
++        expect(q.checks.find((c) => c.id === 'tool_isolation')?.status).toBe('skipped');
++        expect(q.verdict).toBe('available');
++    });
++});
++
++describe('qualifyMember — probe freshness', () => {
++    it(`a successful exchange older than ${String(DEFAULT_PROBE_MAX_AGE_DAYS)} days decays to unknown`, () => {
++        const q = qualifyMember(healthy({ lastProbe: { at: '2026-06-01', outcome: 'ok' } }));
++        expect(q.verdict).toBe('unknown');
++        expect(q.decidedBy).toBe('live_probe');
++    });
++
++    it('the window is configurable, and a shorter one bites', () => {
++        const q = qualifyMember(healthy({ lastProbe: { at: '2026-08-10', outcome: 'ok' }, probeMaxAgeDays: 3 }));
++        expect(q.verdict).toBe('unknown');
++    });
++
++    it('an unparseable probe date is unknown, never treated as fresh', () => {
++        const q = qualifyMember(healthy({ lastProbe: { at: 'letzte Woche', outcome: 'ok' } }));
++        expect(q.verdict).toBe('unknown');
++    });
++});
++
++describe('verdict precedence — the anti-over-claim property', () => {
++    // This is the ordering rule the module header calls load-bearing: the
++    // verdict is the WEAKEST claim the evidence supports. `degraded` asserts
++    // reachability; an unevaluated check means reachability was never
++    // established, so `unknown` must win over `degraded`.
++    //
++    // Mutating VERDICT_SEVERITY to rank degraded above unknown makes exactly
++    // this assertion fail and nothing else — verified by reverting it.
++    it('unknown outranks degraded when both are present', () => {
++        const q = qualifyMember(
++            healthy({
++                // degraded on the transport rung …
++                transport: { available: true, transport: 'manual', reason: null, absentReason: null },
++                // … and unknown on the probe rung.
++                lastProbe: null,
++            }),
++        );
++        expect(q.verdict).toBe('unknown');
++    });
++
++    it('unavailable outranks everything', () => {
++        const q = qualifyMember(
++            healthy({
++                toolsIsolated: false,
++                lastProbe: null,
++                systemPrompt: { declared: '/nope.md', exists: false },
++            }),
++        );
++        expect(q.verdict).toBe('unavailable');
++    });
++});
++
++describe('qualifiedAttendance', () => {
++    it('gates attendance without shrinking the roster', () => {
++        const quals = [
++            qualifyMember(healthy({ name: 'anthropic' })),
++            qualifyMember(healthy({ name: 'openai', lastProbe: null })),
++        ];
++        const a = qualifiedAttendance(quals);
++        // n stays 2. Shrinking it would LOWER ceil(n/2) and make a short pass
++        // easier to conclude — the opposite of the intent.
++        expect(a.total).toBe(2);
++        expect(a.countable).toBe(1);
++        expect(a.blocked.map((b) => b.name)).toEqual(['openai']);
++    });
++
++    it('an all-unknown roster reports zero countable rather than full attendance', () => {
++        const quals = [
++            qualifyMember(healthy({ name: 'anthropic', lastProbe: null })),
++            qualifyMember(healthy({ name: 'openai', lastProbe: null })),
++        ];
++        expect(qualifiedAttendance(quals).countable).toBe(0);
++    });
++
++    it('an empty roster is not an error', () => {
++        expect(qualifiedAttendance([])).toEqual({ total: 0, countable: 0, blocked: [] });
++    });
++});
++
++describe('formatQualificationLine', () => {
++    it('names the deciding check so a reader does not have to guess', () => {
++        const line = formatQualificationLine(qualifyMember(healthy({ lastProbe: null })));
++        expect(line).toContain('unknown');
++        expect(line).toContain('live_probe');
++    });
++
++    it('an available seat needs no because-clause', () => {
++        expect(formatQualificationLine(qualifyMember(healthy()))).toBe('anthropic: available');
++    });
++});
+diff --git a/tests/scripts/lint_evidence_artifacts.test.ts b/tests/scripts/lint_evidence_artifacts.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..01aa834f67b1aeb668625e8cb3747b5dc59341e9
+--- /dev/null
++++ b/tests/scripts/lint_evidence_artifacts.test.ts
+@@ -0,0 +1,107 @@
++// Tests for src/scripts/lint_evidence_artifacts.ts
++// (road-to-release-review-p0 Phase 2).
++import path from 'node:path';
++
++import { describe, expect, it } from 'vitest';
++
++import {
++    checkFiles,
++    EVIDENCE_TYPES,
++    resolveEvidenceType,
++} from '../../src/scripts/lint_evidence_artifacts.js';
++
++const SCOPE = 'a'.repeat(64);
++
++describe('resolveEvidenceType — the pre-existing grammars are read, never re-declared', () => {
++    it('a completion-review marker resolves current-binding', () => {
++        const body = `<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: ${SCOPE} | diff: abc1234 | reviewer: claude -->\n\n# Findings\n`;
++        expect(resolveEvidenceType('agents/evidence/reviews/x.findings.md', body)).toEqual({
++            type: 'current-binding',
++            via: 'completion-review',
++            invalidMarker: null,
++        });
++    });
++
++    it('an honest-null line resolves honest-null', () => {
++        const body = `# X\n\n**Honest-null:** 0 findings, scope ${SCOPE}, reviewed 2026-08-17\n`;
++        expect(resolveEvidenceType('agents/evidence/reviews/x.findings.md', body).type).toBe('honest-null');
++    });
++
++    it('a skip declaration resolves declared-skip', () => {
++        const body = `# X\n\n**Skipped:** no code surface for this completion — docs only, scope none, declared 2026-08-17\n`;
++        expect(resolveEvidenceType('agents/evidence/reviews/x.findings.md', body).type).toBe('declared-skip');
++    });
++
++    // The contract's point: an artifact already carrying one of those grammars
++    // must NOT be asked for a second marker, or the check reintroduces the
++    // ambiguity it exists to remove.
++    it('an artifact with a grammar needs no evidence-type marker', () => {
++        const body = `<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: ${SCOPE} | diff: abc1234 | reviewer: claude -->\n`;
++        expect(checkFiles('/nonexistent', [])).toEqual([]);
++        expect(resolveEvidenceType('x.md', body).via).toBe('completion-review');
++    });
++});
++
++describe('resolveEvidenceType — the explicit marker', () => {
++    it('resolves analysis', () => {
++        expect(resolveEvidenceType('agents/evidence/analysis/x.md', '<!-- evidence-type: analysis -->\n# X\n')).toEqual(
++            { type: 'analysis', via: 'marker', invalidMarker: null },
++        );
++    });
++
++    it('accepts every type in the published set', () => {
++        for (const t of EVIDENCE_TYPES) {
++            expect(resolveEvidenceType('x.md', `<!-- evidence-type: ${t} -->`).type).toBe(t);
++        }
++    });
++
++    it('tolerates surrounding whitespace', () => {
++        expect(resolveEvidenceType('x.md', '   <!--   evidence-type:   analysis   -->   ').type).toBe('analysis');
++    });
++
++    // Louder than absence, not quieter: a misspelled type reads as untyped to
++    // every consumer, which is exactly the state being ended.
++    it('a misspelled type is reported as an invalid marker, not as missing', () => {
++        const r = resolveEvidenceType('x.md', '<!-- evidence-type: analisys -->');
++        expect(r.type).toBeNull();
++        expect(r.invalidMarker).toBe('analisys');
++    });
++
++    it('a marker below the scan window does not count — a type belongs at the top', () => {
++        const body = `${'filler\n'.repeat(60)}<!-- evidence-type: analysis -->\n`;
++        expect(resolveEvidenceType('x.md', body).type).toBeNull();
++    });
++});
++
++describe('resolveEvidenceType — the one path-derived case', () => {
++    it('a file inside a *.review-input directory resolves original-review', () => {
++        const rel = path.join('agents', 'evidence', 'reviews', 'slug.review-input', 'prompt.md');
++        expect(resolveEvidenceType(rel, '# prompt\n')).toEqual({
++            type: 'original-review',
++            via: 'review-input-path',
++            invalidMarker: null,
++        });
++    });
++
++    // The exception is narrow on purpose. A directory that merely CONTAINS the
++    // word must not qualify, or the contract's "a directory name is not a
++    // declaration" line stops being true.
++    it('a lookalike directory does not qualify', () => {
++        const rel = path.join('agents', 'evidence', 'reviews', 'review-inputs', 'prompt.md');
++        expect(resolveEvidenceType(rel, '# prompt\n').type).toBeNull();
++    });
++
++    it('plain prose with no marker anywhere is untyped', () => {
++        expect(resolveEvidenceType('agents/evidence/analysis/x.md', '# A census\n\nSome prose.\n').type).toBeNull();
++    });
++});
++
++describe('checkFiles', () => {
++    it('an empty file list yields no findings', () => {
++        expect(checkFiles(process.cwd(), [])).toEqual([]);
++    });
++
++    it('a path that does not exist on disk is skipped, not reported', () => {
++        expect(checkFiles(process.cwd(), ['agents/evidence/analysis/definitely-not-here.md'])).toEqual([]);
++    });
++});

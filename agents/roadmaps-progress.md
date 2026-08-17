@@ -6,10 +6,10 @@
 
 ## Overall
 
-**242 / 520 steps done · 47%**
+**252 / 520 steps done · 48%**
 
 ```text
-███████████████████░░░░░░░░░░░░░░░░░░░░░   47%
+███████████████████░░░░░░░░░░░░░░░░░░░░░   48%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -42,7 +42,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 16 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
 | 17 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 18 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ░░░░░░░░░░ 0% |
-| 19 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 19 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
 | 20 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
 | 21 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 22 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
@@ -542,13 +542,13 @@ _1 blocker resolved._
 
 ### [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md)
 
-**Road to release-review P0** — 0 / 17 done (0%)
+**Road to release-review P0** — 10 / 17 done (59%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Host-aware skill projection | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Evidence artifact typing | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | Provider qualification | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
+| 2 | Evidence artifact typing | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 3 | Provider qualification | 🟡 in progress | 3 | 6 | 0 | 0 | 67% |
 
 ### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
 
