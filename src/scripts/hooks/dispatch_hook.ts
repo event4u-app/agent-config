@@ -343,15 +343,50 @@ export function _role_drop_set(
 }
 
 /**
+ * True when this `stop` is the RETRY of a turn a stop-hook already refused.
+ *
+ * The host sets `stop_hook_active` on exactly that Stop; `turn_end_gate_hook`
+ * reads the same field as its layer-1 re-entrancy guard, so this is the host's
+ * own answer rather than an inference of ours. Anything unparseable is `false`,
+ * which is the full chain — the safe direction, since the cost of running a
+ * concern twice is duplicate work and the cost of skipping one wrongly is a lost
+ * write.
+ */
+export function _is_refusal_retry(event: string, payload_text: string): boolean {
+  if (event !== "stop") return false;
+  try {
+    const parsed: unknown = JSON.parse(payload_text);
+    if (!_isObject(parsed)) return false;
+    const payload = parsed["payload"];
+    const source = _isObject(payload) ? payload : parsed;
+    return source["stop_hook_active"] === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Return the ordered concern definitions for (platform, event) under the
  * given session role (default `orchestrator` — byte-identical to the
  * pre-role-axis behaviour).
+ *
+ * `opts.refusal_retry` drops concerns that opted in with
+ * `skip_on_refusal_retry: true` — `road-to-stop-gate-honesty` step 3.1. Stop is
+ * the heaviest slot on claude and **every refused Stop runs the whole slot again
+ * on the retry** (§ D-3), so the concerns whose second run provably produces the
+ * identical artefact are pure duplicate cost.
+ *
+ * Opt-in per concern, default off, never a blanket skip: Risk 3 of that roadmap
+ * is that a concern skipped on the retry might have been the one that needed the
+ * second pass, and the loss would be silent. The manifest carries the per-concern
+ * argument beside each flag.
  */
 export function _resolve_concerns(
   manifest: JsonObject,
   platform: string,
   event: string,
   role: SessionRole = "orchestrator",
+  opts: { refusal_retry?: boolean } = {},
 ): ConcernDef[] {
   const platformsRaw = manifest["platforms"];
   const platforms = _isObject(platformsRaw) ? platformsRaw : {};
@@ -379,6 +414,9 @@ export function _resolve_concerns(
       process.stderr.write(
         `dispatch_hook: unknown concern '${String(name)}' in manifest\n`,
       );
+      continue;
+    }
+    if (opts.refusal_retry && spec["skip_on_refusal_retry"] === true) {
       continue;
     }
     out.push({ name: String(name), ...spec });
@@ -1081,13 +1119,17 @@ export function main(argv?: string[]): number {
   const payload_text = process.stdin.isTTY ? "" : _readStdin();
   _maybe_capture_payload(args, payload_text);
   const session_role = resolveSessionRole(process.env);
-  const concerns = _resolve_concerns(manifest, args.platform, args.event, session_role);
+  const refusal_retry = _is_refusal_retry(args.event, payload_text);
+  const concerns = _resolve_concerns(manifest, args.platform, args.event, session_role, {
+    refusal_retry,
+  });
 
   if (args.dry_run) {
     const plan = {
       platform: args.platform,
       event: args.event,
       role: session_role,
+      refusal_retry,
       concerns: concerns.map((c) => c["name"]),
     };
     process.stdout.write(_py_json_dumps(plan, 2) + "\n");
