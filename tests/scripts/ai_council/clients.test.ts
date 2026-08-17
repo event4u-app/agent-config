@@ -31,6 +31,7 @@
 // is built from a stubbed transport with the clock untouched, and assertions
 // never read latency_ms except to confirm it is an integer >= 0.
 
+import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -69,16 +70,33 @@ import {
     _read_until_marker,
     load_anthropic_key,
     load_openai_key,
+    CLI_CONSUMER_COUNCIL,
+    CLI_CONSUMER_TEAM,
+    QUOTA_SOURCE_LOCAL_BUDGET,
+    QUOTA_SOURCE_PROVIDER,
     quota_summary_line,
     record_cli_call,
     reset_cli_call_counts,
+    load_cli_call_attribution,
     load_cli_call_counts,
     SubprocessError,
     type SubprocessResult,
     type TextInputStream,
     type TextOutputStream,
 } from '../../../src/scripts/ai_council/clients.js';
-import { hasPython3, oracleFile, runPyCode } from './_harness.js';
+import { hasPython3, oracleFile, REPO_ROOT, runPyCode } from './_harness.js';
+
+// Same resolution the shared harness uses — the cross-process booking test below
+// needs to spawn real `tsx` processes, which is the only way to exercise a
+// cross-process lock from a single-threaded test runner.
+const TSX_BIN =
+    process.env.TSX_BIN ??
+    path.join(
+        REPO_ROOT,
+        'node_modules',
+        '.bin',
+        process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
+    );
 
 const py3 = hasPython3();
 
@@ -109,7 +127,30 @@ function stubCli<T extends CliClient>(
     opts: Record<string, unknown> = {},
 ): { client: T; calls: { cmd: string[]; stdin: string | null }[] } {
     const calls: { cmd: string[]; stdin: string | null }[] = [];
-    const client = new Ctor({ binary: '/bin/echo', ...opts });
+    // `cli_calls_path` defaults to a per-call temp file, and that default is
+    // load-bearing rather than tidiness.
+    //
+    // Stubbing `_runSubprocess` does NOT stop `ask()` from booking: step 3 of
+    // `ask()` calls `_recordCallQuietly()` unconditionally, which falls back to
+    // `_cliCallsStatePath()` — the developer's REAL user-global
+    // `~/.event4u/agent-config/cli-calls.json`. Every `stubCli(...).ask(...)` in
+    // this file was therefore spending the operator's live daily quota.
+    //
+    // Measured on this machine, 2026-08-17, before the fix: one run of this file
+    // booked +36 real calls (anthropic +8, openai +11, gemini +7, xai +5,
+    // perplexity +5). Against the shipped cap of 50/provider/day, TWO runs of
+    // one test file exhaust the council — which is exactly the symptom that
+    // opened `road-to-council-quota-accounting-truth`: counters at 72/63/99 with
+    // no council exchange ever recorded. The overrun was test pollution, not a
+    // race and not a late gate.
+    //
+    // Overridable: a test that wants the real resolution can pass
+    // `cli_calls_path` explicitly, including `null`.
+    const client = new Ctor({
+        cli_calls_path: path.join(mkTmp(), 'cli-calls.json'),
+        binary: '/bin/echo',
+        ...opts,
+    });
     (client as unknown as { _runSubprocess: (c: string[], s: string | null) => SubprocessResult })._runSubprocess = (
         cmd: string[],
         stdinPayload: string | null,
@@ -1019,6 +1060,44 @@ describe('clients — quota gate + cli-calls counter', () => {
         expect(spawned).toBe(false);
         expect(r.error).toBe('cli_quota_exhausted');
         expect(r.metadata).toMatchObject({ cli: true, cli_calls_used: 2, cli_calls_max: 2 });
+        // Nothing spawned, nothing billed — the remedy is on OUR side.
+        expect(r.metadata).toMatchObject({ quota_source: QUOTA_SOURCE_LOCAL_BUDGET });
+    });
+
+    // `road-to-council-quota-accounting-truth` Phase 2 — `cli_quota_exhausted`
+    // names two events with OPPOSITE remedies (raise/reset our cap versus wait
+    // out the vendor's window). The string alone cannot tell them apart, so the
+    // discriminator is explicit rather than inferable from absent metadata.
+    it('a provider-side quota refusal is distinguishable from the local-budget one', () => {
+        const p = path.join(mkTmp(), 'cli-calls.json');
+        const Sub = class extends AnthropicCliClient {
+            protected override _runSubprocess(): SubprocessResult {
+                return { returncode: 1, stdout: '', stderr: 'HTTP 429 too many requests' };
+            }
+        };
+        // Capped well above the single call this makes, so the LOCAL gate cannot
+        // fire — the refusal must come from the classified stderr.
+        const c = new Sub({ binary: '/bin/echo', max_calls_per_day: 99, cli_calls_path: p });
+        const r = c.ask('s', 'u', 1);
+
+        expect(r.error).toBe('cli_quota_exhausted');
+        expect(r.metadata).toMatchObject({ quota_source: QUOTA_SOURCE_PROVIDER });
+        // A process ran, so this call IS booked — the opposite of the local case.
+        expect(load_cli_call_counts(p)).toEqual({ anthropic: 1 });
+    });
+
+    it('a non-quota transport failure carries no quota_source at all', () => {
+        const p = path.join(mkTmp(), 'cli-calls.json');
+        const Sub = class extends AnthropicCliClient {
+            protected override _runSubprocess(): SubprocessResult {
+                return { returncode: 1, stdout: '', stderr: 'some unrelated explosion' };
+            }
+        };
+        const c = new Sub({ binary: '/bin/echo', max_calls_per_day: 99, cli_calls_path: p });
+        const r = c.ask('s', 'u', 1);
+
+        expect(r.error).not.toBe('cli_quota_exhausted');
+        expect(r.metadata).not.toHaveProperty('quota_source');
     });
 
     // The daily cap exists so "a broken CLI cannot burn the whole budget in a
@@ -1074,12 +1153,227 @@ describe('clients — quota gate + cli-calls counter', () => {
         const capped = new AnthropicCliClient({ binary: '/bin/echo', max_calls_per_day: 5, cli_calls_path: p });
         const uncapped = new OpenAICliClient({ binary: '/bin/echo', cli_calls_path: p });
         const [summary, warn] = quota_summary_line([capped, uncapped], { cli_calls_path: p });
-        expect(summary).toBe('⚠️  council:quota · anthropic 4/5');
+        // An uncapped member is NAMED, not omitted. Omitting it was
+        // indistinguishable from "this member is fine", and the shared counter
+        // reached 72/63/99 while nothing was printed for it.
+        expect(summary).toBe('⚠️  council:quota · anthropic 4/5 · openai 0/uncapped');
+        // …but it never enters `warn`: there is no threshold to cross.
         expect(warn).toEqual(['anthropic']);
 
-        const [empty, ew] = quota_summary_line([uncapped], { cli_calls_path: p });
+        const [uncappedOnly, uw] = quota_summary_line([uncapped], { cli_calls_path: p });
+        expect(uncappedOnly).toBe('council:quota · openai 0/uncapped');
+        expect(uw).toEqual([]);
+
+        // The one genuine silence: no CLI members at all.
+        const [empty, ew] = quota_summary_line([], { cli_calls_path: p });
         expect(empty).toBe('');
         expect(ew).toEqual([]);
+    });
+
+    // Regression guard for the defect the attribution sidecar surfaced within
+    // minutes of landing: `stubCli` stubs the subprocess but NOT the booking, so
+    // before the temp-path default every stubbed `ask()` spent one call from the
+    // developer's real user-global counter. +36 per run of this file, against a
+    // shipped cap of 50/provider/day.
+    //
+    // Asserted at the seam rather than by watching the real file: a filesystem
+    // observation would pass on a machine that happens to have no state file yet,
+    // which is precisely the machine where the next regression would hide.
+    it('stubCli books into its own temp state, never the user-global counter', () => {
+        const { client } = stubCli(AnthropicCliClient, {
+            returncode: 0,
+            stdout: '{"result":"ok"}',
+            stderr: '',
+        });
+        const statePath = (client as unknown as { _cli_calls_path: string | null })
+            ._cli_calls_path;
+
+        expect(statePath, 'stubCli must supply an explicit state path').not.toBeNull();
+        // The user-global fallback lives under the home directory; a temp path
+        // never does. This is the property that keeps the suite from spending a
+        // real budget.
+        expect(statePath as string).not.toContain('.event4u');
+        expect(statePath as string).toContain(os.tmpdir().replace(/^\/private/, ''));
+
+        client.ask('s', 'u', 1);
+        // The booking landed in the temp file — proof the call was counted
+        // somewhere, and that somewhere is not the operator's bucket.
+        expect(load_cli_call_counts(statePath as string)).toEqual({ anthropic: 1 });
+    });
+
+    // `road-to-council-quota-accounting-truth` Phase 4 — the bucket recorded
+    // `provider → count` and nothing else, which is why 171 booked calls against
+    // zero recorded council exchanges could not be explained. Attribution is the
+    // missing dimension; it lives in a SIDECAR so the file the gate reads stays
+    // minimal and a diagnostic write can never corrupt gating.
+    describe('attribution sidecar', () => {
+        it('records who booked each call, without touching the counter shape', () => {
+            const p = path.join(mkTmp(), 'cli-calls.json');
+            record_cli_call('openai', p, CLI_CONSUMER_COUNCIL);
+            record_cli_call('openai', p, CLI_CONSUMER_TEAM);
+            record_cli_call('openai', p, CLI_CONSUMER_TEAM);
+            record_cli_call('anthropic', p, CLI_CONSUMER_COUNCIL);
+
+            // The counter is unchanged in shape and total — the gate reads this.
+            expect(load_cli_call_counts(p)).toEqual({ openai: 3, anthropic: 1 });
+            // And the sidecar now answers the question the counter cannot.
+            expect(load_cli_call_attribution(p)).toEqual({
+                openai: { council: 1, team: 2 },
+                anthropic: { council: 1 },
+            });
+            // Per-provider attribution sums to that provider's count.
+            const attr = load_cli_call_attribution(p);
+            for (const [provider, total] of Object.entries(load_cli_call_counts(p))) {
+                const summed = Object.values(attr[provider] ?? {}).reduce((a, b) => a + b, 0);
+                expect(summed, `attribution for ${provider}`).toBe(total);
+            }
+        });
+
+        it('defaults to `unknown` — an undeclared booking path is a finding, not a guess', () => {
+            const p = path.join(mkTmp(), 'cli-calls.json');
+            record_cli_call('openai', p);
+            expect(load_cli_call_attribution(p)).toEqual({ openai: { unknown: 1 } });
+        });
+
+        it('reads a pre-attribution state file and still gates', () => {
+            // The backward-compatibility case: a counter written before the sidecar
+            // existed. No sidecar on disk at all.
+            const dir = mkTmp();
+            const p = path.join(dir, 'cli-calls.json');
+            fs.writeFileSync(
+                p,
+                JSON.stringify({ date: new Date().toISOString().slice(0, 10), counts: { openai: 7 } }),
+                { encoding: 'utf-8' },
+            );
+
+            // The gate's reader is untouched by the sidecar's absence.
+            expect(load_cli_call_counts(p)).toEqual({ openai: 7 });
+            // And attribution reads empty rather than throwing or inventing a consumer.
+            expect(load_cli_call_attribution(p)).toEqual({});
+
+            // A capped client still refuses on that legacy count — gating does not
+            // depend on attribution existing.
+            const Sub = class extends OpenAICliClient {
+                protected override _runSubprocess(): SubprocessResult {
+                    throw new Error('must not spawn');
+                }
+            };
+            const c = new Sub({ binary: '/bin/echo', max_calls_per_day: 7, cli_calls_path: p });
+            expect(c.ask('s', 'u', 1).error).toBe('cli_quota_exhausted');
+        });
+
+        it('a reset clears the sidecar alongside the counter', () => {
+            const p = path.join(mkTmp(), 'cli-calls.json');
+            record_cli_call('openai', p, CLI_CONSUMER_TEAM);
+            record_cli_call('anthropic', p, CLI_CONSUMER_COUNCIL);
+
+            // Targeted reset: only that provider's attribution goes, so the other
+            // provider's spend is not silently un-attributed.
+            reset_cli_call_counts('openai', p);
+            expect(load_cli_call_counts(p)).toEqual({ anthropic: 1 });
+            expect(load_cli_call_attribution(p)).toEqual({ anthropic: { council: 1 } });
+
+            // Full reset clears both.
+            reset_cli_call_counts(null, p);
+            expect(load_cli_call_counts(p)).toEqual({});
+            expect(load_cli_call_attribution(p)).toEqual({});
+        });
+
+        it('a malformed sidecar reads empty and never blocks a booking', () => {
+            const dir = mkTmp();
+            const p = path.join(dir, 'cli-calls.json');
+            record_cli_call('openai', p, CLI_CONSUMER_TEAM);
+            fs.writeFileSync(`${p}.attribution.json`, '{ not json', { encoding: 'utf-8' });
+
+            expect(load_cli_call_attribution(p)).toEqual({});
+            // The booking still lands: attribution is diagnostic, never a gate.
+            expect(record_cli_call('openai', p, CLI_CONSUMER_TEAM)).toBe(2);
+            expect(load_cli_call_counts(p)).toEqual({ openai: 2 });
+        });
+    });
+
+    // `road-to-council-quota-accounting-truth` Phase 3 — the booking counter was
+    // a read-modify-write with no lock and a direct `writeFileSync`.
+    //
+    // The usual description ("it loses increments") understates it. A reader that
+    // lands mid-write gets a `JSON.parse` failure, and `load_cli_call_counts`
+    // swallows that and returns `{}` — so the gate sees ZERO calls used and admits
+    // everything until the next successful write. One interleaved write could blank
+    // the budget rather than cost it one increment.
+    //
+    // In-process bookings are already serialised (`record_cli_call` is sync, Node
+    // is single-threaded), so a loop here would be tautological. The window is
+    // strictly cross-process: a council invocation and an `ai_team` invocation
+    // booking into one shared file. This spawns real processes.
+    it('concurrent cross-process bookings lose no increment', async () => {
+        const dir = mkTmp();
+        const statePath = path.join(dir, 'cli-calls.json');
+        const bookerPath = path.join(dir, 'booker.ts');
+        const clientsModule = path.join(
+            REPO_ROOT,
+            'src',
+            'scripts',
+            'ai_council',
+            'clients.ts',
+        );
+        fs.writeFileSync(
+            bookerPath,
+            `import { record_cli_call } from ${JSON.stringify(clientsModule)};\n` +
+                `record_cli_call('anthropic', ${JSON.stringify(statePath)});\n`,
+            { encoding: 'utf-8' },
+        );
+
+        const WRITERS = 6;
+        const runs = await Promise.all(
+            Array.from({ length: WRITERS }, () =>
+                new Promise<number>((resolve) => {
+                    const child = spawn(TSX_BIN, [bookerPath], {
+                        cwd: REPO_ROOT,
+                        stdio: 'ignore',
+                        env: { ...process.env },
+                    });
+                    child.on('close', (code) => resolve(code ?? -1));
+                }),
+            ),
+        );
+
+        expect(runs, 'every booker exited cleanly').toEqual(
+            Array.from({ length: WRITERS }, () => 0),
+        );
+        // The load-bearing assertion: every booking is present. Before the lock
+        // this could come back below WRITERS (lost update) or at 1 (a torn read
+        // that reset the map).
+        expect(load_cli_call_counts(statePath)).toEqual({ anthropic: WRITERS });
+        // No temp or lock file survives a clean run.
+        const leftovers = fs
+            .readdirSync(dir)
+            .filter((f) => f.endsWith('.tmp') || f.endsWith('.lock'));
+        expect(leftovers, 'no temp/lock leftovers').toEqual([]);
+    }, 60_000);
+
+    // `road-to-council-quota-accounting-truth` Phase 2 — a cap of 0 is the
+    // STRICTEST setting available and used to be dropped by a Python-truthy
+    // filter, so the provider that admits nothing reported nothing.
+    it('quota_summary_line reports a cap of 0 instead of dropping it', () => {
+        const p = path.join(mkTmp(), 'cli-calls.json');
+        const zero = new AnthropicCliClient({
+            binary: '/bin/echo',
+            max_calls_per_day: 0,
+            cli_calls_path: p,
+        });
+
+        // Nothing booked yet: 0/0 is visible and is not a warn — no call has
+        // exceeded anything.
+        const [clean, cw] = quota_summary_line([zero], { cli_calls_path: p });
+        expect(clean).toBe('council:quota · anthropic 0/0');
+        expect(cw).toEqual([]);
+
+        // One booked call against a cap that admits none is already past it.
+        // The ratio is undefined at limit 0, so this must not read as "0 % used".
+        record_cli_call('anthropic', p);
+        const [breached, bw] = quota_summary_line([zero], { cli_calls_path: p });
+        expect(breached).toBe('⚠️  council:quota · anthropic 1/0');
+        expect(bw).toEqual(['anthropic']);
     });
 
     if (py3) {
