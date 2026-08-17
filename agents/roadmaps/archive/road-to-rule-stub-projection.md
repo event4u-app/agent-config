@@ -131,12 +131,14 @@ move. That is `road-to-standing-context-40k` step 2.2, and Phase 3 feeds it.
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md`, `docs/contracts/kernel-membership.md`, and
+- [x] Read `AGENTS.md`, `docs/contracts/kernel-membership.md`, and
       `src/rules/preservation-guard.md` — the last one binds every later phase:
       Iron Law headings and fenced blocks survive verbatim, so they are floor,
       not residue.
-- [ ] Read `agents/decisions/rule-activation-dispositions.yml` header. It is a
+- [x] Read `agents/decisions/rule-activation-dispositions.yml` header. It is a
       closed record; this roadmap reads it and never adds a row.
+      **Done:** read, reconciled in 0.3, and unchanged — same 76 rows, same
+      dispositions.
 
 ## Context
 
@@ -159,98 +161,187 @@ Siblings and their boundaries, so no step here duplicates an owner:
 
 ## Phase 0 — Size the migrated corpus, do not reclassify it
 
-- [ ] **0.1** Enumerate the rules carrying a migration pointer and measure each
+- [x] **0.1** Enumerate the rules carrying a migration pointer and measure each
       one in exact BPE via the tokenizer path `rule_activation_census.ts` already
       uses — never bytes ÷ 4, which is the proxy error `road-to-mixed-trigger-activation-cost`
       claim 11 exists to record. Emit one row per rule: name, exact tokens,
       pointer target, target exists yes/no.
-      <!-- verify: ./scripts-run src/scripts/rule_activation_census.ts --help -->
-- [ ] **0.2** Split each migrated rule's retained body into **floor** and
+      <!-- verify: ./scripts-run src/scripts/check_rule_stub_ceiling --report -->
+      **Done:** [`rule-stub-projection-phase0.md`](../../evidence/analysis/rule-stub-projection-phase0.md).
+      **44 rules, not 42** — the live count via the ledger gate's own matcher.
+      **All 45 pointers resolve; zero broken.**
+      **The step's own measurement path is refuted:** `rule_activation_census.ts`
+      imports no tokenizer and prints no token figure. The exact-BPE path is
+      `_lib/token_count.ts` (`gpt_tokens`), which the census *checker* uses. Its
+      `verify:` annotation was also unrunnable (`scripts-run` appends `.ts`, so
+      the annotation asked for `…census.ts.ts`); both corrected above.
+      Sixth recording of the class: read the tree, not the step's prose.
+- [x] **0.2** Split each migrated rule's retained body into **floor** and
       **residue**. Floor = what `preservation-guard` requires to stay (Iron Law
       headings at their level, their fenced blocks byte-for-byte, negation
       clauses) plus the pointer itself. Residue = everything else. Report both
       totals; the split is the input Phase 3 hands on, and the reason no step
       here proposes a deletion.
-- [ ] **0.3** Reconcile the row set against the closed disposition record: for
+      **Done: floor 7,463 · residue 17,383 tokens** of 24,845 body tokens,
+      criterion published per rule.
+      Two imprecisions stated in the artifact, one of which biases residue
+      *downward* — against this roadmap's own premise, the safe direction.
+- [x] **0.3** Reconcile the row set against the closed disposition record: for
       each migrated rule, note its recorded disposition (`digest` / `keep` /
       absent) without changing it. A `keep` row that also carries a migration
       pointer is a contradiction worth reporting — `keep` means "stays always-on
       and monolithic, deliberately", and a pointer says the opposite.
+      **Done: 25 `digest` · 1 `keep` · 18 absent.** The 18 absences are expected,
+      not drift — the record covers non-kernel rules with no path trigger, and
+      every absent rule has one. The `keep` row is `legal-safety-floor`; this step
+      first called it a contradiction and **that was retracted** — see 3.3. The
+      record is unchanged either way.
 - **Pre-registered expectation, to falsify:** residue ≥ 25 % of the 103,265-token
   baseline. Priors that make this a measurement rather than a hope: the 42
   migrated rules total 128,261 bytes, and the four largest each exceed 8 KB while
   the fully-migrated ones sit near 300–1,400 B. **If residue < 10 %**, the
   stub-ceiling lever is small, Phase 2 ships as pure regression protection, and
   § Honest-null consequence is the finding.
+- **RESULT — the pre-registration is FALSIFIED, and it is not an honest null
+  either.** Measured **17,383 / 103,265 = 16.8 %**, against a ≥ 25 % bar with a
+  < 10 % null threshold. The lever is real but smaller than pre-registered:
+  ~18k tokens of always-on corpus sit in bodies that already declare they should
+  be elsewhere. Recorded as a miss rather than reframed — writing the bar down
+  first is what makes a 16.8 % result mean anything.
 - **Exit:** a committed table covering every migrated rule with both totals.
+  **Met** — [`rule-stub-projection-phase0.md`](../../evidence/analysis/rule-stub-projection-phase0.md).
 - **Rollback:** the table is an evidence artifact; deleting it reverts the phase.
 
 ## Phase 1 — Make the pointer machine-checked
 
-- [ ] **1.1** A gate that reads every rule declaring a migration pointer and
+- [x] **1.1** A gate that reads every rule declaring a migration pointer and
       fails when the pointer's target does not resolve. Fail-closed on an
       unparseable pointer, and report the pointer form it matched so a reworded
       pointer surfaces as a finding rather than as silence.
-      <!-- verify: the gate exits non-zero on a fixture rule whose pointer names a missing file -->
-- [ ] **1.2** Register the gate in the gate ledger under CI-identical argv, with
+      <!-- verify: ./scripts-run src/scripts/check_rule_stub_ceiling --self-test -->
+      **Done:** `src/scripts/check_rule_stub_ceiling.ts`. Self-test 8/8, six of
+      them rejecting — including the reworded-pointer case, which is the Risk-3
+      mitigation made executable rather than promised.
+      **Partly already shipped, found before building:** `lint_rule_migration_ledger`
+      already resolves every *ledger row's* `target` anchor. What it never
+      validates is the rule's own inline pointer (`migrated_to` is declared in its
+      interface and read by nothing). This gate covers that half, and the header
+      says so instead of claiming the whole.
+      **The resolver was wrong once and it mattered:** resolving relative hrefs
+      from `src/rules/` reported 12 of 44 broken — a false red, because bodies are
+      authored for the projected tree. `check_references`'s strip-and-try-prefixes
+      strategy is adopted verbatim; a gate disagreeing with the reference checker
+      would be worse than none.
+- [x] **1.2** Register the gate in the gate ledger under CI-identical argv, with
       the skip reason drawn from the existing closed union. A gate that scans
       nothing exits green, so its green line publishes the count of rules it
       actually read.
       <!-- verify: the gate's green line names a non-zero rule count -->
-- **Exit:** gate registered, red on the fixture, green on the tree.
+      **Done:** `src/config/gate-coverage.yml` (`min_scanned: 100`),
+      `taskfiles/ci-fast.yml`, `Taskfile.yml`, and
+      `.github/workflows/rule-backstops.yml` beside the census it complements.
+      Green line: `44 migrated rule(s) under ceiling · 45 pointer(s) resolved ·
+      24845 body tokens (exact BPE) · 117 rule file(s)`. The manifest floor is
+      keyed to the **117-rule scan root**, not to the 44-rule subset — a floor on
+      the subset would fall as rules legitimately finish migrating.
+- **Exit:** gate registered, red on the fixture, green on the tree. **Met.**
 - **Rollback:** de-register the gate; no rule content changed in this phase.
 
 ## Phase 2 — Per-rule shrink-only ceilings
 
-- [ ] **2.1** Extend the Phase-1 gate with a per-rule token ceiling read from a
+- [x] **2.1** Extend the Phase-1 gate with a per-rule token ceiling read from a
       committed baseline, generated from Phase 0's measurement — never
       hand-edited, regenerated by an explicit `--write-baseline` flag, same
       posture as `rule-activation-census.json`.
-      <!-- verify: the gate exits non-zero on a fixture rule padded past its baseline -->
-- [ ] **2.2** Require a `reason` sentence per raise in the baseline's history
+      <!-- verify: ./scripts-run src/scripts/check_rule_stub_ceiling --self-test -->
+      **Done:** `src/config/rule-stub-ceilings.json`, 44 ceilings, exact BPE.
+- [x] **2.2** Require a `reason` sentence per raise in the baseline's history
       array, and make the gate refuse a raise whose reason is empty or a
       restatement of the number. The census baseline's own comment carries the
       sentence to mirror.
-      <!-- verify: the gate exits non-zero on a fixture raise with an empty reason -->
-- [ ] **2.3** Record in the baseline that the ceilings are a floor-plus-residue
+      <!-- verify: ./scripts-run src/scripts/check_rule_stub_ceiling --self-test -->
+      **Done — and the first implementation of it was unreachable.** The reason
+      was consulted only inside the `tokens > ceiling` branch, which a raise by
+      definition fixes, so a raise with an empty reason sailed through. The gate's
+      own self-test caught it. The requirement now validates the baseline's
+      history *independently* of any rule's current size, plus a second check that
+      a history entry and the committed ceiling agree — the signature of a
+      hand-edit. This is the case for writing the self-test before believing the
+      gate.
+- [x] **2.3** Record in the baseline that the ceilings are a floor-plus-residue
       snapshot, not a target: a rule at its ceiling is not thereby correct, only
       not worse.
+      **Done:** stated in the baseline's `_comment`, in the gate header, and in
+      the Taskfile description.
 - **Exit:** both fixtures red, tree green, baseline committed with its generation
-  command.
+  command. **Met** — 8/8 self-test, 6 rejecting.
 - **Rollback:** revert the baseline and the ceiling check; Phase 1's
   target-resolution half stands on its own.
 
 ## Phase 3 — Hand the sized residue to its owner
 
-- [ ] **3.1** Write Phase 0's residue table into `road-to-standing-context-40k`
+- [x] **3.1** Write Phase 0's residue table into `road-to-standing-context-40k`
       step 2.1 as its prioritisation input. That step says "prioritised by body
       size" and no measurement exists for it; this supplies one, in exact BPE,
       largest residue first.
-- [ ] **3.2** Note in the same place that 2.2's moves land against per-rule
+      **Done:** top-eight table plus the regeneration command, under 2.1. The
+      top 8 carry **10,469 of the 17,383 residue tokens — 60 % in 18 % of the
+      rules**, which is what makes a prioritisation worth having. Written with
+      its generation command so a reader regenerates rather than trusts it
+      (Risk 5).
+- [x] **3.2** Note in the same place that 2.2's moves land against per-rule
       ceilings from Phase 2, so each move's effect is visible per rule instead of
       only in the aggregate census. Do not restate 2.2's method — it already
       binds `preservation-guard`.
-- [ ] **3.3** Report the contradictions from 0.3 (pointer-carrying `keep` rows,
+      **Done**, one sentence, no restatement.
+- [x] **3.3** Report the contradictions from 0.3 (pointer-carrying `keep` rows,
       if any) as findings on this roadmap, not as edits to the closed record.
+      **RETRACTED 2026-08-17 — there is no contradiction, and the retraction is
+      the finding.** This step reported `legal-safety-floor` as recorded `keep`
+      while carrying a migration pointer, called the two statements opposites, and
+      handed the choice to a maintainer. Checked against the record's own text, all
+      three parts were wrong:
+      (a) the register defines `keep` against `digest` — "stays always-on and
+      monolithic, deliberately" rules out demotion to a shared digest, not a
+      migration that already happened;
+      (b) the row records `body_lines: 139`, the rule's size TODAY — the migration
+      landed 2026-07-11 (`6ef4102d6`) and the disposition was measured 2026-08-09,
+      so the two never described the same body;
+      (c) `rule-body-migration-inventory.md` classes it `stay` *because* of the
+      migration, calling it "already the best existing exemplar of the P4 pattern
+      applied within a safety floor".
+      **The real finding:** that inventory names this rule as the template for six
+      sibling safety floors that have NOT had the treatment —
+      `finance-safety-floor`, `strategy-safety-floor`, `engineering-safety-floor`,
+      `domain-safety-disclaimer`, `domain-safety-pii`, `domain-safety-retention`.
+      None carries a pointer, so none is in this roadmap's population; they are a
+      named prospect for `road-to-standing-context-40k`, not a defect here.
+      **Mechanism, because it recurs:** the reconciliation compared two labels and
+      inferred a contradiction from their plain-English connotations without opening
+      the definition section 280 lines above the row. A label is not a definition.
 - **Exit:** the receiving roadmap carries the table; this roadmap owns no
-  body-moving step.
+  body-moving step. **Met.**
 - **Rollback:** revert the edit to the sibling roadmap; the table survives in
   Phase 0's artifact.
 
 ## Acceptance Criteria
 
-- [ ] Every rule carrying a migration pointer has an exact-BPE measurement and a
-      floor/residue split in a committed table.
-- [ ] A pointer naming a missing target fails CI; the gate's green line reports
-      how many rules it read.
-- [ ] A migrated rule padded past its per-rule ceiling fails CI; a raise without
-      a real reason sentence fails CI.
-- [ ] The aggregate census baseline is unchanged by Phases 1–2, and any change in
-      Phase 3's wake is re-baselined in the same commit with its reason.
-- [ ] `road-to-standing-context-40k` step 2.1 carries the prioritisation table;
-      no step in this roadmap moves prose out of a rule body.
-- [ ] The closed disposition record has the same row count and the same
-      dispositions it had at adoption.
+- [x] Every rule carrying a migration pointer has an exact-BPE measurement and a
+      floor/residue split in a committed table. — 44 rows, regenerable.
+- [x] A pointer naming a missing target fails CI; the gate's green line reports
+      how many rules it read. — self-test case 2; green line reports 117.
+- [x] A migrated rule padded past its per-rule ceiling fails CI; a raise without
+      a real reason sentence fails CI. — self-test cases 3 and 4.
+- [x] The aggregate census baseline is unchanged by Phases 1–2, and any change in
+      Phase 3's wake is re-baselined in the same commit with its reason. —
+      `src/config/rule-activation-census.json` is untouched by this branch; no
+      rule body changed, so there was nothing to re-baseline.
+- [x] `road-to-standing-context-40k` step 2.1 carries the prioritisation table;
+      no step in this roadmap moves prose out of a rule body. — no `src/rules/`
+      content edit is in this diff.
+- [x] The closed disposition record has the same row count and the same
+      dispositions it had at adoption. — 76 rows, read-only; verifiable as an
+      empty diff on `agents/decisions/rule-activation-dispositions.yml`.
 
 ## Risk Register
 

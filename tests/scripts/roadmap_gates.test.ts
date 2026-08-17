@@ -248,10 +248,13 @@ describe('renderJson', () => {
     // `--json` emitted no class at all, so `gates --execute` shipped against a
     // projection that could not say which entries it was able to act on — the
     // acting half was reachable on nothing and the JSON could not show it.
+    // The annotation names only `class` on purpose: a sibling test below asserts
+    // the projection carries no `run`, and a cast that documented one would tell
+    // the next reader the opposite while still type-checking.
     const classOf = (e: Entry): string =>
         (
             JSON.parse(renderJson([e], true)) as {
-                blockers: Array<{ class: string; run: string }>;
+                blockers: Array<{ class: string }>;
             }
         ).blockers[0]?.class ?? '';
 

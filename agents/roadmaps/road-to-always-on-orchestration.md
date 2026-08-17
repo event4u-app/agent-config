@@ -362,6 +362,7 @@ before any behaviour data exists.
 
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 3 — human-only (a host flag that does not clear by waiting on this host)
 - **Blocks:** Phase 5.4 (team telemetry concerns, TaskCompleted
   artifact-check)
 - **What to do:** when the experimental flag is on in a real environment,

@@ -133,6 +133,52 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
       before any prose shrinks.
       `verify:` routing matrix green; the diff contains zero `triggers:` edits,
       machine-checkable by byte-comparing every `triggers:` block.
+
+  > **Prioritisation input — supplied 2026-08-17 by `road-to-rule-stub-projection`
+  > Phase 0.** "Prioritised by body size" had no measurement; this is one, in
+  > exact BPE, largest residue first. Full table with its per-rule criterion:
+  > [`rule-stub-projection-phase0.md`](../evidence/analysis/rule-stub-projection-phase0.md).
+  > **Regenerate rather than trust it** — a table written into another roadmap
+  > ages with the corpus, and a stale prioritisation is worse than none because it
+  > looks authoritative:
+  > `./scripts-run src/scripts/check_rule_stub_ceiling --report`.
+  >
+  > Measured over the 44 rules that already declare their body migrated:
+  > **17,383 residue tokens** against **7,463 floor**, out of 24,845 body tokens.
+  > The top eight carry 10,469 of that residue — 60 % of it in 18 % of the rules:
+  >
+  > | rule | residue | floor |
+  > |---|---:|---:|
+  > | `context-hygiene` | 2229 | 218 |
+  > | `design-fidelity` | 1662 | 583 |
+  > | `autonomous-execution` | 1550 | 83 |
+  > | `active-remediation` | 1309 | 293 |
+  > | `ui-audit-gate` | 1171 | 108 |
+  > | `architecture` | 873 | 82 |
+  > | `roadmap-progress-sync` | 839 | 585 |
+  > | `git-history-discipline` | 836 | 369 |
+  >
+  > Two bounds on reading it. The split is a **judgment with a mechanical
+  > criterion**, published per rule so a row can be disputed without discarding
+  > the total. And it covers only rules that ALREADY carry a migration pointer —
+  > the unconditional set this step targets is wider, so this is a floor on the
+  > available residue, never a ceiling.
+  >
+  > **A named prospect this table does NOT cover.**
+  > `rule-body-migration-inventory.md` calls `legal-safety-floor` "already the
+  > best existing exemplar of the P4 pattern applied within a safety floor" and a
+  > template for six siblings that have not had it: `finance-safety-floor`,
+  > `strategy-safety-floor`, `engineering-safety-floor`,
+  > `domain-safety-disclaimer`, `domain-safety-pii`, `domain-safety-retention`.
+  > None carries a migration pointer, so none appears above — the table's
+  > population is rules that already declare a migration, which is a floor on the
+  > available residue and not a survey of it.
+  >
+  > Moves made under 2.2 now land against **per-rule ceilings**
+  > (`src/config/rule-stub-ceilings.json`, gated by `check_rule_stub_ceiling`), so
+  > each move's effect is visible per rule instead of only in the aggregate
+  > census. Re-anchor that baseline in the same commit as any move. 2.2 already
+  > binds `preservation-guard`; nothing here restates its method.
 - [ ] **2.2** Move long rationale and history sections out of rule bodies into
       linked context or guideline files, which load on demand rather than every
       session. The `preservation-guard` contract binds here: every passage moves,
@@ -190,6 +236,7 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
 ### blocker: b-rules-efficiency-signal
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 2 — consent-once (wait for the observer, or record the window unfilled and re-date)
 - **Blocks:** Phase 3 step 3.1 only. Step 3.0's observer is repo work and proceeds
   without it.
 - **What to do:** the fork needs the registered `rules_efficiency` metric in

@@ -205,10 +205,18 @@ safeguards.**
 - **AC-1:** every open blocker carries a class; the lint enforces `run:` on classes
   0 and 1; the sweep table is committed with its share. **Met in the field sense,
   refuted in the meaning sense — and the split is the point.** Every record in
-  `gates --json --all` now carries a class, 36 of them authored and 13 resolving
-  through the absent-field default. But 12 of those defaults contradict their own
-  swept verdict, because the swept verdict is not materialisable (step 1.3, sweep
-  § 4c). Ticking this criterion without that sentence would report the taxonomy as
+  `gates --json --all` now carries a class: of the 49 open records, **48 carry an
+  authored field and exactly 1 resolves through the absent-field default** — the
+  parser's synthesised `legacy` note, which can never carry one. Measured, not
+  derived.
+  **Amended 2026-08-17 by the follow-up decision, and the amendment is the good
+  news.** Step 1.3 left this at 36 authored / 13 default, with the twelve
+  class-0/1 defaults contradicting their own swept verdict — a field the tree
+  could not support. Those twelve are now reclassified to what their text
+  actually supports (sweep § 4d): five are consent calls, seven are human-only,
+  so the contradiction is gone rather than documented. What has **not** changed is
+  the headline: class 0 is still empty, because nothing invented a command.
+  Ticking this criterion without that last sentence would report the taxonomy as
   live on an estate where nothing is auto-runnable.
 
 ### Phase 2 — `gates --execute` (the acting half)
@@ -415,7 +423,28 @@ safeguards.**
   profile carries the setting with the cap named.
 
 ### blocker: b-estate-prose-pass-from-1-3
-- **Status:** open
+- **Status:** RESOLVED 2026-08-17 — all three carry a recorded decision, which is
+  the bar this entry set. **(a)** the dropped spend cap is decided and the fix is
+  written, verified and open for review as PR #1406 — **on a sibling branch, so it
+  is NOT in this tree**; the defect stays live here until that merges, and the
+  first version of this line said "fixed in its own change", which asserted tree
+  state and was wrong (R2 finding 1, critical). The sibling search widened the fix
+  from the one target that lied to all **3** sites of the construct, since the
+  passthrough is inert without trailing args and fixing one of three would be the
+  fixed-one-instance failure. **(b)** the twelve are reclassified to what their
+  text supports — **not** a blanket downgrade: five are genuine consent calls and
+  seven are human-only, so five gates that rendered "nothing to execute" now
+  render an answerable consent block. Measured: `{2: 22, 3: 28}` before, `{2: 27,
+  3: 23}` immediately after, and `{2: 26, 3: 23}` at HEAD once this entry itself
+  resolves out of the population — 49 open records, 48 with an authored field and
+  only the synthesised `legacy` note left on the default. **(c)** the class-2
+  recommendation prose is accepted as advisory, and re-measuring it corrected the
+  reading rather than the number: over the 26 live class-2 entries, **16 exceed
+  the 156-char bar, 10 carry no `Recommendation:` at all, and 0 carry a usable
+  one** — so § 4's "one line and one yes away from resolved" describes zero
+  entries, not 21 (R2 findings 3–5). Per-entry table, the taxonomy gap
+  `utilization-sweep-window` exposes, and the measured effects:
+  `agents/evidence/analysis/gate-class-sweep-2026-08-17.md` § 4d.
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** nothing in this roadmap — every step here is closed or spend-gated.

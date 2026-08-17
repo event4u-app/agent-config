@@ -179,6 +179,10 @@ tasks:
       # only walk down. Commit 33c7c20 moved nineteen rules across that line in
       # one emitter change with no gate watching.
       - task: check-rule-activation-census
+      # src/scripts/check_rule_stub_ceiling — the per-rule half of the same
+      # question. The census above pins the corpus total with a drift allowance,
+      # so a migrated rule re-growing under an aggregate cap is a green run there.
+      - task: check-rule-stub-ceiling
       # src/scripts/lint_scheduled_deprecations — the MIGRATION.md scheduled-
       # deprecations table, checked by arithmetic against the shipped major.
       - task: lint-scheduled-deprecations

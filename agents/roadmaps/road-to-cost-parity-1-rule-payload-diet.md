@@ -360,6 +360,7 @@ part 0's table.
 
 - **Status:** open
 - **Owner:** user
+- **Class:** 3 — human-only (a pointer to a class-3 entry under another name)
 - **Blocks:** Phase 1.3's skill-usage evidence column; Phase 2's
   trigger-accuracy bars
 - **What to do:** `road-to-skill-description-measurement.md` is blocked on
@@ -422,6 +423,7 @@ part 0's table.
 
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 3 — human-only (time- and dependency-gated; no command and no decision)
 - **Blocks:** Phase 1 census starting with real utilization data
 - **What to do:** `road-to-surface-consolidation.md` Phase 3's sweep is
   time-gated to ~2026-08-26 and carries its own `repo-admin-and-usage`
