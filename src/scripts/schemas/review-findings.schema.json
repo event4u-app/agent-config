@@ -20,6 +20,37 @@
       "type": "string",
       "description": "Version the ledger belongs to. Present on the release-findings ledger (agents/evidence/release-findings/<version>.json); absent on a bare --findings-out emission, which is why it is not required here."
     },
+    "review_independence": {
+      "enum": [
+        "cross-family",
+        "same-family",
+        "single-member",
+        "unknown"
+      ],
+      "description": "Whether the reviewer set spans more than one model family. Added because the artifact was previously silent on it: the self-review gate calls ONE Anthropic client, and the ledger it wrote was byte-indistinguishable from one backed by independent models — so a consumer read 'no findings' as acceptance either way. `unknown` is an honest value for a set that was not recorded, NOT a synonym for cross-family."
+    },
+    "acceptance_status": {
+      "enum": [
+        "accepted",
+        "provisional"
+      ],
+      "description": "What a consumer may claim this artifact establishes. DERIVED from `review_independence` (see _lib/review_independence.ts), never set independently: two fields a producer can set inconsistently reintroduce exactly the ambiguity the pair removes, and a same-family set carrying `accepted` would still read as acceptance to anyone scanning one field. Only `cross-family` yields `accepted`; `unknown` yields `provisional`, because an unrecorded member set is not evidence of independence."
+    },
+    "assurance": {
+      "enum": [
+        "unreviewed",
+        "single-pass",
+        "independent"
+      ],
+      "description": "How much INDEPENDENT evidence backs the verdict — deliberately orthogonal to how much effort the review spent. Collapsing the two is the mechanism by which a long, careful, single-model pass reads as acceptance: effort is visible in the artifact (finding count, detail, rationale) and independence is not, so a reader with only one axis substitutes the one they can see. A five-hour same-family review is `single-pass`; a terse two-family one is `independent`."
+    },
+    "reviewers": {
+      "type": "array",
+      "description": "The member names the independence verdict was derived from, recorded so the derivation is auditable rather than asserted. Provider names as `ai_council/config.ts::_VALID_PROVIDERS` spells them.",
+      "items": {
+        "type": "string"
+      }
+    },
     "findings": {
       "type": "array",
       "description": "May be empty. An empty array is an honest null, not a missing field — the distinction the Markdown track spells with its own §2.3 line. The item shape is INLINED rather than `$ref`-ed for the same measured reason: the subset validator does not resolve `$ref`, so a referenced definition would have validated nothing.",

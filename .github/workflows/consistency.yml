@@ -22,6 +22,7 @@ on:
       - "src/scripts/condense.sh"
       - "src/scripts/check_references.ts"
       - "src/scripts/check_evaluator_schema.ts"
+      - "src/scripts/check_review_schema.ts"
       - "src/scripts/check_no_new_legacy_path.ts"
       - "src/scripts/build_cloud_bundle.ts"
       - "src/scripts/build_linear_digest.ts"
@@ -60,6 +61,7 @@ on:
       - "src/scripts/condense.sh"
       - "src/scripts/check_references.ts"
       - "src/scripts/check_evaluator_schema.ts"
+      - "src/scripts/check_review_schema.ts"
       - "src/scripts/check_no_new_legacy_path.ts"
       - "src/scripts/build_cloud_bundle.ts"
       - "src/scripts/build_linear_digest.ts"
@@ -213,6 +215,9 @@ jobs:
         # so a red here actually blocks a merge. Cost is negligible — the gate
         # reads recorded fixtures and runs no verifier.
         run: ./scripts-run src/scripts/check_evaluator_schema
+
+      - name: Review-artifact independence declaration
+        run: ./scripts-run src/scripts/check_review_schema
 
       # Both gates below were registered `enforced` and ran in NO workflow, so
       # each was its own finding: check_ci_local_parity exists to report gates

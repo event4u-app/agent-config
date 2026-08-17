@@ -42,10 +42,10 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-17)
 # ----------------------------------------------------------
-# 261 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 262 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
-# **38 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and all 38 are listed below.** The manifest is therefore
+# **39 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and all 39 are listed below.** The manifest is therefore
 # complete with respect to its own contract, and covers ~14 % of the population.
 # (The 2026-08-05 reading said "32 … and all 31 are listed" and the 2026-08-10
 # reading said "33 … and all 33" while 34 entries were listed — those two are
@@ -168,6 +168,30 @@ gates:
       that a broken closure walk — the dead-scan-root shape one level up, where
       the Taskfile parse degrades and the population silently collapses —
       cannot pass.
+
+  - id: check_review_schema
+    argv: []
+    min_scanned: 1
+    corpus: "committed review-findings ledgers under agents/evidence/release-findings/ (1 at baseline)"
+    status: enforced
+    canary:
+      class: contract-violation
+      path: agents/evidence/release-findings/zz-canary-probe.json
+      content: |
+        {
+          "schema_version": 1,
+          "release": "0.0.0-canary",
+          "review_independence": "same-family",
+          "acceptance_status": "accepted",
+          "assurance": "independent",
+          "reviewers": ["anthropic", "anthropic"],
+          "findings": []
+        }
+    note: >
+      Floor is 1 because the corpus genuinely holds one ledger today, and a
+      floor of 0 would let the directory empty out silently — the shape this
+      manifest exists to refuse. The canary plants the exact defect the gate was
+      built for: a same-family reviewer set claiming `accepted`. It must red.
 
   - id: check_evaluator_schema
     argv: []

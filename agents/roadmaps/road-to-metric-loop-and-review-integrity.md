@@ -77,9 +77,9 @@ Source: an external capability-harvest session over this repository and ten publ
 
 ## Phase 2 — Independence on review output
 
-- [ ] Extend the shipped review-findings schema with a review-independence field and an acceptance-status field, rather than adding a second schema. <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
-- [ ] Set the fields from the actual reviewer set: a review whose members share a model family records same-family and provisional, and the artifact may not be described as cross-model acceptance anywhere it is consumed. <!-- verify: ./scripts-run src/scripts/check_review_schema -->
-- [ ] Add the assurance axis as a property orthogonal to effort: how much independent evidence backs a verdict is not the same question as how hard the reviewer worked, and collapsing them is what lets a same-family pass read as acceptance. <!-- verify: ./scripts-run src/scripts/check_review_schema -->
+- [x] Extend the shipped review-findings schema with a review-independence field and an acceptance-status field, rather than adding a second schema. <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
+- [x] Set the fields from the actual reviewer set: a review whose members share a model family records same-family and provisional, and the artifact may not be described as cross-model acceptance anywhere it is consumed. <!-- verify: ./scripts-run src/scripts/check_review_schema -->
+- [x] Add the assurance axis as a property orthogonal to effort: how much independent evidence backs a verdict is not the same question as how hard the reviewer worked, and collapsing them is what lets a same-family pass read as acceptance. <!-- verify: ./scripts-run src/scripts/check_review_schema -->
 
 **Exit criteria:** a council run over a same-family member set produces an artifact that declares itself provisional, and a consumer reading it can tell.
 
