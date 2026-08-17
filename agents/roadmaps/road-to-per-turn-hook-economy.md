@@ -82,7 +82,14 @@ transcript size, and the delta between the two tags is approximately zero.
 
 The reported "fast before 12.\*, slow since 12.1.\*" **does not reproduce at the
 dispatcher level** between 11.0.0 and 13.0.0 in that environment. The hot-slot
-binding deltas across the window are small and named. Every fix below is
+binding deltas across the window are small, and here they are actually named —
+the sentence used to assert "named" while listing none, which is the shape risk 6
+below gates against: `tool-result-bytes` added to `post_tool_use` and
+`hot-context` added to `pre_compact`, both in `bc20d3e6c` ("feat(context): meter
+tool results, and capture before compaction", verified present in this tree); and
+`skill-route` first binding on `user_prompt_submit` — the binding is live at
+`86cdbf652`, while "first appears at 13.0.0" is the source draft's tag-level
+claim and is not re-verified here. Every fix below is
 justified by the **structural** cost, not by a version regression. Phase 0 exists
 to find what the colleague actually hit — and the current best candidate is not in
 this file at all, it is the activation flip owned by
@@ -115,6 +122,15 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       investigation moves to turn shape (`road-to-stop-gate-honesty`) and context
       (`road-to-standing-context-40k`).
       `verify:` the matrix table, both versions, at least three runs per cell.
+      **Fixture sizes, so the run is reproducible rather than merely instructed**
+      (from the source draft's own container run): a `post_tool_use` event with a
+      2,000,000-character `tool_response`; a `stop` event against a 3.5 MB
+      synthetic JSONL transcript; a `user_prompt_submit` against a workspace
+      carrying the full projected skill set. The draft's absolute cell values are
+      deliberately **not** carried over — § 2's verdict already refuses to treat
+      one container's milliseconds as a repo fact — but a comparison needs the
+      same fixtures on both arms, and those are specifiable without claiming a
+      number.
 - [ ] **0.3** Read the turn-end-gate refusal state for the affected sessions and
       count refusals per session. A median above one refusal per session means the
       perceived slowness is extra model turns rather than hook wall clock.
@@ -136,6 +152,16 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       contract is unchanged — the same bundle runs, it just runs on fewer events.
       `verify:` the dispatcher receives no event for a non-matching payload, proven
       by an absent invocation record rather than by a fast one.
+      <!-- starting assignment, verified against hook_manifest.yaml at 86cdbf652
+      rather than carried from the source draft, which mis-slotted one of them.
+      `pre_tool_use` (12 concerns): `block-no-verify` and `block-unauthorized-git`
+      are git-command-shaped → `if: "Bash(git *)"`; `rtk-wrap` is Bash-only;
+      `design-slop` and `ui-route-nudge` are write-shaped → `matcher: Edit|Write`.
+      `post_tool_use` (11 concerns): `edit-shape` is write-shaped → `matcher:
+      Edit|Write`. The draft placed `edit-shape` on the pre slot; it binds post,
+      so its matcher is a post-slot matcher. Treat this as the input to 5.1, not
+      its output — each row still needs its own absent-invocation proof. -->
+
 - [ ] **5.2** Safety invariant, stated because claim 11 demands it: `if` is a
       **prefilter, never the enforcement**. It fails open on unparseable commands —
       which is exactly right for fail-closed guards, because unparseable means the
@@ -148,6 +174,20 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       synchronous until measured otherwise.
       `verify:` artifact diff against a synchronous run — every async concern still
       produces its disk artefact.
+      <!-- the set membership IS the risky decision here — mis-classifying a
+      gating concern as non-gating is the failure mode — so it is named, measured
+      at 86cdbf652, and the draft's version of it is corrected on both sides.
+      `stop` binds TEN concerns on claude, not the draft's six: chat-history,
+      hot-context, verify-before-complete, team-review-gate, end-review-nudge,
+      turn-end-gate, self-repair, session-register, session-eol,
+      interruption-ledger. Of those, exactly ONE carries `severity: blocking` —
+      `turn-end-gate`. The draft named `team-review-gate` as a second refuser; it
+      is `severity: advisory`. Async candidates the draft named and this tree
+      confirms as advisory and stop-bound: chat-history, hot-context,
+      session-register, self-repair. `session-eol` and `interruption-ledger`
+      postdate the draft and are unclassified — classify all ten here, from the
+      manifest, rather than inheriting a six-row list. -->
+
 - **AC-5:** on the § 2 matrix, a `PreToolUse` with a non-matching payload costs no
   dispatcher spawn at all, and the Stop cell drops materially on the large-transcript
   payload with every async concern still producing its artefacts.
@@ -176,7 +216,13 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       body; absent means the envelope arrives **without** the result and input
       bodies, with a name-and-sizes stub in their place. Audit every post concern
       against its source before flipping, and record the per-concern verdict in the
-      PR — this audit is a merge precondition, not a follow-up.
+      PR — this audit is a merge precondition, not a follow-up. **Start from the
+      source draft's first-pass read, which survives verification:** of the 11
+      concerns bound to `post_tool_use` at `86cdbf652`, only `tool-result-bytes`
+      (a byte count), `edit-shape`, `injection-scan` and `context-hygiene`
+      plausibly read result content. All four bind that slot in this tree. The
+      audit still covers all 11 — a shortlist orders the work, it does not bound
+      it — but four rows already have a hypothesis to confirm or refute.
       `verify:` a counter in the dispatcher records every stub served, so a concern
       that silently depended on the body shows up as a number rather than as a bug
       report.
@@ -216,7 +262,12 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       pre and post chains across a representative tool-call count plus the prompt
       and stop slots, benchmarked in CI. Register it **before** Phases 1–3 merge —
       the bar precedes the lever, which is this repo's own budget-ownership
-      discipline.
+      discipline. **"Representative tool-call count" is specified, not left open** —
+      the source draft's definition is `(pre + post) × 10 + ups + stop`, i.e. ten
+      tool calls per turn, and it is a *definition* rather than a bar, so it lands
+      here rather than in the blocker below. Without it the step is not
+      implementable: two people would compute two different composites and both
+      would call the row green.
       `verify:` the composite appears in the latency bench output and its CI gate.
 - [~] **4.2** The bar itself is the maintainer's to pre-register, not this
       document's. Blocked on `b-per-turn-composite-bar`.
@@ -234,9 +285,12 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
 - **Owner:** user
 - **Blocks:** Phase 4 step 4.2 only. Step 4.1 registers the composite as a measured
   row and 4.3 refreshes the census; both proceed without the bar.
-- **What to do:** pre-register the per-turn composite bar. Options: (a) adopt a
-  composite p50 ceiling at a representative tool-call count on CI hardware, naming
-  the number; (b) register the row as **observe-only** for one release and set the
+- **What to do:** pre-register the per-turn composite bar. The composite itself is
+  defined in step 4.1 — `(pre + post) × 10 + ups + stop` — so only the ceiling is
+  open. Options: (a) adopt a composite p50 ceiling on CI hardware, naming the
+  number; the source draft proposed **p50 ≤ 1.5 s at ten tool calls** and that is
+  a candidate to accept or reject, not a measurement — no run in this tree
+  produced it; (b) register the row as **observe-only** for one release and set the
   bar from the observed distribution, which is the honest choice if no prior exists;
   (c) decline the composite, in which case D-1 stays an unmeasured structural cost
   and this phase closes with that recorded. Note the latency file's existing
