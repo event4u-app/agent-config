@@ -685,12 +685,19 @@ function findingsSkeleton(args: {
     return [
         `# Findings: ${args.slug}`,
         `<!-- completion-review: v1 | reviewed: ${args.reviewedDate} | scope: ${args.scopeHash} | diff: ${args.headSha} | reviewer: r2-fresh-subagent-${args.slug} | prompt_hash: ${args.promptHash} -->`,
+        // Set at CREATION, never inferred later: an inferred type reads filename
+        // and location, which are exactly the signals that already fail to
+        // distinguish an input from a binding. This artifact binds a scope from
+        // its first byte, so `current-binding` is what it IS — an empty table is
+        // a RESULT, and a reviewer returning zero findings flips the type to
+        // `honest-null` in the same edit that replaces the table.
+        `<!-- evidence-type: v1 | type: current-binding | declared: ${args.reviewedDate} -->`,
         '',
         args.manifest,
         '',
         '| # | Severity | File:Line | Finding | Status | Reason/Ref |',
         '|---|----------|-----------|---------|--------|------------|',
-        '<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 -->',
+        '<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->',
         '',
     ].join('\n');
 }
