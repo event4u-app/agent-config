@@ -1,11 +1,11 @@
 # Findings: feat-rule-stub-projection
-<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: 7c9e1187171006644da4144efe30be495495b12a27ef4b015e79f718805472ae | diff: 3b85af7b164bf680c992eee3a69535fcab6c32b0 | reviewer: r2-fresh-subagent-feat-rule-stub-projection | prompt_hash: e48fa04fe7c0e47bad6b6ba35570d2ebaba9c37aa8f4d733e545a9e43495f490 -->
+<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: 41ba87a1d71797225fad37aa21c6eb590f6166da194372fd83c6339221218cce | diff: 1add1cd2a16fd8b6f2899da2ccea4b625fb3f333 | reviewer: r2-fresh-subagent-feat-rule-stub-projection | prompt_hash: e48fa04fe7c0e47bad6b6ba35570d2ebaba9c37aa8f4d733e545a9e43495f490 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-17 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 3b85af7b164bf680c992eee3a69535fcab6c32b0
-  scope_hash: 7c9e1187171006644da4144efe30be495495b12a27ef4b015e79f718805472ae
+  diff_sha: 1add1cd2a16fd8b6f2899da2ccea4b625fb3f333
+  scope_hash: 41ba87a1d71797225fad37aa21c6eb590f6166da194372fd83c6339221218cce
   roadmap: agents/roadmaps/archive/road-to-rule-stub-projection.md
   roadmap_hash: a42fa1a2d4e60efe67969a3134c6985685015d631a115735fd868c6547652257
   ac_hash: 743a55103bf09fceecf918eb1560aa1d9add6eada3fa747fba9925916e1ee94a
