@@ -67,9 +67,9 @@ Source: an external capability-harvest session over this repository and ten publ
 
 ## Phase 1 — Evaluator contract
 
-- [ ] Add an evaluator-output schema with a required pass boolean, a score carrying a higher-is-better invariant (minimize tasks negate), and an optional raw metric value. <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
-- [ ] Add the companion contract document covering the error semantics: a non-zero exit, absent JSON, or a timeout all mean the experiment failed, revert, and continue. The error table is the part that makes the contract usable; without it every caller invents its own failure handling. <!-- verify: test -f docs/contracts/evaluator-output.md -->
-- [ ] Add a check enforcing the schema on emitters, landing in the same change as the schema — no convention without a backstop. <!-- verify: ./scripts-run src/scripts/check_evaluator_schema -->
+- [x] Add an evaluator-output schema with a required pass boolean, a score carrying a higher-is-better invariant (minimize tasks negate), and an optional raw metric value. <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
+- [x] Add the companion contract document covering the error semantics: a non-zero exit, absent JSON, or a timeout all mean the experiment failed, revert, and continue. The error table is the part that makes the contract usable; without it every caller invents its own failure handling. <!-- verify: test -f docs/contracts/evaluator-output.md -->
+- [x] Add a check enforcing the schema on emitters, landing in the same change as the schema — no convention without a backstop. <!-- verify: ./scripts-run src/scripts/check_evaluator_schema -->
 
 **Exit criteria:** three existing verifiers emit against the schema and the check passes over them.
 
