@@ -50,7 +50,7 @@ Verified 2026-08-17 against `origin/main` @ `097ab6549`.
 
 | # | Claim | Verdict | Evidence |
 |---|---|---|---|
-| 1 | Claude binds a full concern chain on both `pre_tool_use` and `post_tool_use` | **still-true, count moved** | `src/config/hook_manifest.yaml` claude block. The draft's "11 and 11" is **overtaken**: the merge of the ship-diff-volume concern took `pre_tool_use` to twelve. The argument strengthens rather than weakens |
+| 1 | Claude binds a full concern chain on both `pre_tool_use` and `post_tool_use` | **still-true, count moved** | `src/scripts/hook_manifest.yaml` claude block. The draft's "11 and 11" is **overtaken**: the merge of the ship-diff-volume concern took `pre_tool_use` to twelve. The argument strengthens rather than weakens |
 | 2 | Slot budgets are per-event, not per-turn | **still-true** | `src/config/hook-latency-budget.json` `budgets_ms` |
 | 3 | The envelope is re-serialised once per concern | **still-true** | the `setHookStdinOverride` call inside the in-process concern runner in `src/scripts/hooks/dispatch_hook.ts` |
 | 4 | An in-process registry replaced the old spawn-per-concern path | **still-true** | `src/scripts/hooks/concern_registry.ts` header |

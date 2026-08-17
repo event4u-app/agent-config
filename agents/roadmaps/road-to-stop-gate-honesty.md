@@ -60,7 +60,7 @@ Verified 2026-08-17 against `origin/main` @ `097ab6549`.
 | 3 | Always armed; the settings switch was removed | **still-true** | header's always-armed section; the commit is contained in tags from 10.0.0 onward, i.e. before the window the report blames |
 | 4 | `_VERIFY_RE` may not recognise the team's PHP toolchain, producing false refusals | **OVERTAKEN — the named toolchain is already covered** | `_VERIFY_RE` matches bare `phpunit` and `pest` in its first alternation, and `composer` / `php artisan` followed by a verify-shaped subcommand in its second. So `vendor/bin/phpunit`, `pest`, `composer test` and `php artisan test` all register as verification today. Step 2.2 is narrowed accordingly: the audit is still worth running, but not on the examples the draft named |
 | 5 | Session state files accumulate with no TTL | **still-true** | stated explicitly in the hook header |
-| 6 | Stop binds the largest chain on claude | **still-true** | `src/config/hook_manifest.yaml` claude block |
+| 6 | Stop binds the largest chain on claude | **still-true** | `src/scripts/hook_manifest.yaml` claude block |
 | 7 | A large transcript read cap per Stop | **still-true** | the read cap in `turn_end_gate_hook.ts` |
 | 8 | Measured origin: language violations survived a fresh pin, and advisory carriers hit zero effect | **still-true** | the round-5 audit citation in the hook header. This is the strongest single result in the enforcement estate and is why this roadmap tunes rather than repeals |
 | 9 | The team operates German-language sessions, so detector-B exposure is real rather than hypothetical | **still-true** | `agents/roadmaps/road-to-conformance-round7-followup.md` corpus quotes |

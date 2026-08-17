@@ -25,6 +25,14 @@
  * answered by the code that actually decides it — the method the source
  * analysis used across two tags, applied to one tree.
  *
+ * `_parse_frontmatter` is exported from `condense.ts` for exactly this, and it is
+ * the reason the export carries only a one-line pointer there: `condense.ts` sits
+ * far above the 1,500-line source ceiling, so every line added to it counts
+ * against the `check_source_size_budget` ratchet. The rationale lives here, in a
+ * file the ratchet does not charge, rather than in the file it does.
+ * A reimplemented parse is the divergence class that made the shipped
+ * `.claude/rules/` count unreadable as evidence in the first place.
+ *
  * What it does NOT do, stated because the distinction is the whole point: it
  * does not tell you what a given machine's `.claude/rules/` currently holds.
  * That is a property of an install, not of the repo. `--projection` reads the
