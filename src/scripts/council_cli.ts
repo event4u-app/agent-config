@@ -78,6 +78,19 @@ import { resolveMemberTransport } from './ai_council/transport_resolver.js';
 import { absentReasonFromCliFailure, classifyCliFailure, type AbsentReason } from './ai_council/transport_resolver.js';
 import { evaluateQuorum, SOLO_FLOOR_MIN_PRESENT, type QuorumResult } from './ai_council/quorum.js';
 import {
+    formatQualificationLine,
+    isCountableForQuorum,
+    qualifyMember,
+    type MemberQualification,
+} from './ai_council/qualification.js';
+import {
+    probeFor,
+    readProbeStore,
+    recordProbes,
+    type ProbeEntry,
+    type ProbeStore,
+} from './ai_council/probe_store.js';
+import {
     appendEvent,
     appendQuorumEvent,
     type QuorumAbsence,
@@ -609,6 +622,32 @@ interface BuildMembersOptions {
      * state that differs per machine and per CI run.
      */
     environment_report?: EnvironmentReport | null;
+    /**
+     * Recorded provider observations (road-to-release-review-p0 Phase 3).
+     *
+     * When supplied, every constructed member is run through the
+     * qualification ladder and a seat that is not `available`/`degraded` does
+     * NOT count toward pre-run presence. When omitted, qualification is not
+     * evaluated at all and presence keeps its constructibility-only meaning.
+     *
+     * Omission is the safe default here rather than the unsafe one, and the
+     * reason is determinism, not timidity: the store lives under
+     * `agents/runtime/`, which is gitignored, so a `build_members` that read
+     * it implicitly would give a different answer on a machine that had run a
+     * council pass than on one that had not — the exact per-machine
+     * flakiness `environment_report` above exists to keep out of this
+     * function. Every production entry point supplies it; a unit test
+     * supplies a fixture or nothing.
+     */
+    probe_store?: ProbeStore | null;
+    /**
+     * Out-param: the qualification verdict per enabled member, in roster
+     * order. Populated only when `probe_store` is supplied — an empty array
+     * from a caller that passed no store means "not evaluated", which is a
+     * different statement from "every seat qualified" and must not be read
+     * as the latter.
+     */
+    qualification_out?: MemberQualification[] | null;
 }
 
 /**
@@ -743,8 +782,15 @@ function _postRunQuorum(
     members: ExternalAIClient[],
     responses: CouncilResponse[],
     ai_cfg: Dict,
-): { quorum: QuorumResult; absent: Dict[] } {
+): { quorum: QuorumResult; absent: Dict[]; probes: ProbeEntry[] } {
     const absent: Dict[] = [];
+    // Phase 3 (road-to-release-review-p0) — the observation the qualification
+    // ladder's strongest rung needs. It is free precisely here: the exchange
+    // already happened, so recording its outcome costs nothing beyond the row,
+    // and it is what lets a seat decay out of `unknown` through ordinary use
+    // instead of through a maintenance ritual nobody would run.
+    const probes: ProbeEntry[] = [];
+    const observedAt = new Date().toISOString().slice(0, 10);
     let present = 0;
     for (let i = 0; i < members.length; i++) {
         const m = members[i] as ExternalAIClient;
@@ -758,17 +804,19 @@ function _postRunQuorum(
         // quorum by definition, whatever the transport thought of it.
         if (r !== undefined && !r.error && r.text.trim() !== '') {
             present += 1;
+            probes.push({ name: m.name, outcome: 'ok', at: observedAt });
             continue;
         }
         const raw = r?.error ?? (r !== undefined && r.text.trim() === '' ? 'empty response body' : 'no response');
         const failure = classifyCliFailure(raw);
+        probes.push({ name: m.name, outcome: failure, at: observedAt });
         absent.push({
             member: m.name,
             reason: absentReasonFromCliFailure(failure) ?? 'unavailable',
             detail: raw,
         });
     }
-    return { quorum: evaluateQuorum(members.length, present, _quorum_setting_from(ai_cfg)), absent };
+    return { quorum: evaluateQuorum(members.length, present, _quorum_setting_from(ai_cfg)), absent, probes };
 }
 
 /**
@@ -805,6 +853,9 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
     const siblings_overrides = opts.siblings_overrides ?? null;
     const skipped = opts.skipped ?? null;
     const quorum_out = opts.quorum_out ?? null;
+    const probe_store = opts.probe_store ?? null;
+    const qualification_out = opts.qualification_out ?? null;
+    const qualifications: MemberQualification[] = [];
     // Read-only, per-process-memoised (`detectEnvironment` caches the
     // no-argument call) — cheap to call once per `build_members` invocation.
     // A caller may inject a fixed report (tests only); production leaves
@@ -928,6 +979,30 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             // same pattern.
             ...(api_key_present !== undefined ? { apiKeyPresent: api_key_present } : {}),
         });
+        // Phase 3 (road-to-release-review-p0) — qualification runs on the
+        // resolved transport, before any branch decides whether this seat
+        // constructs. Doing it here rather than per-branch keeps ONE call
+        // site: the branches below differ in how a member is built, not in
+        // what would qualify it, and duplicating the call into each of them
+        // is how the `manual` path would silently stop being qualified.
+        if (probe_store !== null) {
+            qualifications.push(
+                qualifyMember({
+                    name,
+                    transport: {
+                        available: resolved.available,
+                        transport: resolved.transport,
+                        reason: resolved.reason,
+                        absentReason: resolved.absentReason,
+                    },
+                    modelId:
+                        (overrides[name] as string | undefined) ??
+                        (cfg['model'] as string | undefined) ??
+                        null,
+                    lastProbe: probeFor(probe_store, name),
+                }),
+            );
+        }
         if (name in siblings) {
             if (resolved.transport !== 'api') {
                 throw new CouncilDisabledError(
@@ -1055,8 +1130,24 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             );
         }
     }
+    // Phase 3 step 4 — presence is gated on qualification, and the roster is
+    // NOT. Dropping an unqualified seat from `total` would lower the threshold
+    // (`ceil(n/2)`) and make a short pass EASIER to conclude, which inverts the
+    // intent; withholding it from `present` is what makes the pass report being
+    // short. A seat already recorded absent is excluded here so it is not
+    // subtracted twice.
+    const absent_names = new Set(absent_entries.map((e) => String(e['member'])));
+    const unqualified = qualifications.filter(
+        (q) => !absent_names.has(q.name) && !isCountableForQuorum(q.verdict),
+    );
+    for (const q of unqualified) {
+        _stderr(`[council] UNQUALIFIED ${formatQualificationLine(q)} — not counted toward attendance\n`);
+    }
+    if (qualification_out !== null) {
+        qualification_out.push(...qualifications);
+    }
     if (quorum_out !== null) {
-        const present = total_enabled - absent_count;
+        const present = total_enabled - absent_count - unqualified.length;
         quorum_out.result = evaluateQuorum(total_enabled, present, _quorum_setting_from(ai));
         // Construction-time attendance. `lens` / `invocation` stay empty
         // here on purpose: neither is known at member-construction time,
@@ -1836,6 +1927,7 @@ function cmd_estimate(
             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
             skipped,
             quorum_out,
+            probe_store: readProbeStore(REPO_ROOT),
             // A cost preview spends nothing and runs no pass. The line is
             // still written — tagged, so a consumer excludes it deliberately
             // instead of never learning it was there.
@@ -2401,6 +2493,28 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
     // because only one of the two is fixed by writing a config.
     const configured = cfg !== null && cfg.enabled && enabledMembers.length > 0;
 
+    // Phase 3 (road-to-release-review-p0) — `configured` above is a boolean
+    // read off the config file, and a boolean is exactly what let a dead seat
+    // report as healthy. It stays, because "did the operator write this seat
+    // down" is a real question with a real answer; what changes is that it is
+    // no longer the ONLY thing this command says. The qualification verdict
+    // answers the different question an operator was actually asking.
+    const probeStore = readProbeStore(REPO_ROOT);
+    const qualifications = enabledMembers.map(([name, m]) => {
+        const t = _resolvedTransportFor(name, m);
+        return qualifyMember({
+            name,
+            transport: {
+                available: t.available,
+                transport: t.transport,
+                reason: t.reason,
+                absentReason: t.absentReason,
+            },
+            modelId: m.model,
+            lastProbe: probeFor(probeStore, name),
+        });
+    });
+
     if (_getattr(args, 'json', false)) {
         _stdout(
             `${JSON.stringify({
@@ -2427,6 +2541,18 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
                     }),
                 ),
                 ignored_transport_keys: cfg?.ignored_transport_keys ?? [],
+                qualification: Object.fromEntries(
+                    qualifications.map((q) => [
+                        q.name,
+                        {
+                            verdict: q.verdict,
+                            decided_by: q.decidedBy,
+                            countable_for_quorum: isCountableForQuorum(q.verdict),
+                            checks: q.checks.map((c) => ({ id: c.id, status: c.status, detail: c.detail })),
+                        },
+                    ]),
+                ),
+                qualified_members: qualifications.filter((q) => isCountableForQuorum(q.verdict)).length,
                 parse_error,
                 project_tree_consulted: false,
             })}\n`,
@@ -2457,6 +2583,21 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
             const billing = t.available ? ` · ${t.billing}` : '';
             const detail = t.available ? t.transport : `unavailable — ${t.reason ?? 'no usable transport'}`;
             _stdout(`  transport        ${name}: ${detail}${billing}\n`);
+        }
+        // The four-value verdict, one line per seat. A boolean could not say
+        // "configured, plausible, and never once demonstrated"; that state is
+        // `unknown`, and it is the one an operator most needs to see before
+        // trusting a quorum.
+        for (const q of qualifications) {
+            _stdout(`  qualification    ${formatQualificationLine(q)}\n`);
+        }
+        const qualifiedCount = qualifications.filter((q) => isCountableForQuorum(q.verdict)).length;
+        if (qualifiedCount < qualifications.length) {
+            _stdout(
+                `  ⚠️  ${String(qualifications.length - qualifiedCount)} of ${String(qualifications.length)} ` +
+                    'seat(s) cannot be counted toward a quorum. A seat with no recorded exchange reads\n' +
+                    '     `unknown` until one succeeds — run a council pass and it resolves itself.\n',
+            );
         }
         if (cfg.ignored_transport_keys.length > 0) {
             _stdout('\n');
@@ -2559,6 +2700,7 @@ function cmd_run(
             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
             skipped,
             quorum_out,
+            probe_store: readProbeStore(REPO_ROOT),
         });
     }
     // Measured, never assumed: `_apply_solo_dispatch` escalates back to the
@@ -2773,6 +2915,10 @@ function cmd_run(
     const post_run = _postRunQuorum(members, responses, ai_cfg);
     quorum_out.result = post_run.quorum;
     skipped.push(...post_run.absent);
+    // Best-effort and deliberately unguarded by any success check: this is the
+    // only thing in the tree that ever observes a provider, so a pass that
+    // errored is exactly as informative as one that answered.
+    recordProbes(REPO_ROOT, post_run.probes);
     // Attendance telemetry for the reading that actually decided the pass.
     // `post_run.absent` is the mid-flight set only; the construction-time
     // skips already went out under `phase: 'pre_run'` from `build_members`,
@@ -3092,6 +3238,7 @@ function cmd_debate(
             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
             skipped,
             quorum_out,
+            probe_store: readProbeStore(REPO_ROOT),
             command: 'debate',
         });
     }
