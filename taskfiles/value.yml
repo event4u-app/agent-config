@@ -47,8 +47,13 @@ tasks:
       Run the cost-bearing live Track-B + behaviour run (uses the
       `claude --print` CLI per task — needs ANTHROPIC_API_KEY), then
       assemble + render. Cost-bearing.
+
+      Trailing args reach the task runner, so `-- --budget <N>` bounds the
+      spend. Before that passthrough existed this target could not be
+      bounded at all — it took the runner's own default and there was no
+      flag an operator could pass.
     cmds:
-      - ./scripts-run src/scripts/bench_ab_task_runner --variant both --mode live
+      - ./scripts-run src/scripts/bench_ab_task_runner --variant both --mode live {{.CLI_ARGS}}
       - task: value
 
   value:lint:
