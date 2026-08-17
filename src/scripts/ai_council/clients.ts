@@ -453,6 +453,13 @@ interface CliClientOptions {
     max_calls_per_day?: number | null | undefined;
     warn_at?: number | undefined;
     cli_calls_path?: string | null | undefined;
+    /**
+     * Who is booking these calls — one of the `CLI_CONSUMER_*` constants.
+     * Declared by the construction site, never inferred from the class: the
+     * client has no way to know its caller, and guessing is how attribution
+     * becomes decoration. Omitted → `CLI_CONSUMER_UNKNOWN`, which is a finding.
+     */
+    consumer?: string | undefined;
 }
 
 /**
@@ -987,6 +994,45 @@ export class PerplexityClient extends _OpenAICompatibleClient {
 
 export const CLI_CALLS_FILENAME = 'cli-calls.json';
 
+/**
+ * Attribution sidecar for the shared counter
+ * (`road-to-council-quota-accounting-truth` Phase 4).
+ *
+ * `cli-calls.json` records `provider → count` and nothing else, which is why a
+ * bucket standing at 171 calls across five providers — while both council seats
+ * reported qualification `unknown` because no exchange had ever been recorded —
+ * could not be explained. Nothing in the file says who spent it, so no
+ * reservation or partitioning scheme can be implemented, benchmarked, or
+ * falsified against it.
+ *
+ * **Deliberately a sidecar, not a new key in `cli-calls.json`.** Three reasons,
+ * in order of weight:
+ *
+ *  1. The gate reads `cli-calls.json`, and Phase 3 just made that file
+ *     trustworthy. Diagnostic data does not belong in the file a cap depends
+ *     on — a bug in attribution writing must not be able to corrupt gating.
+ *  2. Attribution is best-effort by design. A failed sidecar write is swallowed;
+ *     a failed counter write is not.
+ *  3. It keeps the counter's on-disk shape unchanged, so the existing frozen
+ *     byte-parity golden stays meaningful instead of being retired as a side
+ *     effect of an unrelated change.
+ *
+ * Recorded as own analysis — the council was quota-refused at authoring time.
+ */
+export const CLI_CALLS_ATTRIBUTION_SUFFIX = '.attribution.json';
+
+/**
+ * Who booked a call. Enumerated because the consumer set is closed: exactly two
+ * files in the tree construct a `CliClient`.
+ *
+ * `unknown` is the honest default for a client constructed without declaring
+ * itself, and it is a FINDING when it appears — it means a third booking path
+ * exists that this enumeration does not know about.
+ */
+export const CLI_CONSUMER_COUNCIL = 'council';
+export const CLI_CONSUMER_TEAM = 'team';
+export const CLI_CONSUMER_UNKNOWN = 'unknown';
+
 // Default subprocess timeout (seconds) for a single CLI call. Long enough for
 // the largest frontier models to think; short enough to surface a hung
 // subprocess without freezing the council run.
@@ -1010,6 +1056,21 @@ export const DEFAULT_CLI_TIMEOUT_SECONDS = 300.0;
 function _cliCallsStatePath(): string {
     return user_global_paths.write_target(CLI_CALLS_FILENAME);
 }
+
+/**
+ * `metadata.quota_source` values for a `cli_quota_exhausted` response.
+ *
+ * The error string is shared by two events with opposite remedies, so the
+ * discriminator is explicit (`road-to-council-quota-accounting-truth` Phase 2):
+ *
+ *  - `local_budget` — OUR counter refused before spawning anything. Nothing was
+ *    sent, nothing was billed, and the fix is on this side: raise the cap, reset
+ *    the counter, or wait for UTC midnight.
+ *  - `provider` — the vendor CLI refused us. A process ran and the call is
+ *    booked; the fix is on their side and their window governs.
+ */
+export const QUOTA_SOURCE_LOCAL_BUDGET = 'local_budget';
+export const QUOTA_SOURCE_PROVIDER = 'provider';
 
 export function _today_utc_iso(): string {
     // Python: datetime.now(timezone.utc).date().isoformat() → "YYYY-MM-DD".
@@ -1056,18 +1117,191 @@ export function load_cli_call_counts(p: string | null = null): Record<string, nu
     return out;
 }
 
-/** Increment today's call count for `provider`. Returns new total. */
-export function record_cli_call(provider: string, p: string | null = null): number {
-    const target = p !== null ? p : _cliCallsStatePath();
-    const counts = load_cli_call_counts(target);
-    counts[provider] = (counts[provider] ?? 0) + 1;
+/**
+ * Write the counter state so a concurrent reader can never observe a partial
+ * file (`road-to-council-quota-accounting-truth` Phase 3).
+ *
+ * The direct `writeFileSync` this replaces had a failure mode worse than the
+ * lost update it is usually described as: `load_cli_call_counts` swallows a
+ * `JSON.parse` error and returns `{}`, so a reader landing mid-write sees
+ * **zero calls used** and the gate admits everything until the next successful
+ * write. One interleaved write could therefore blank the whole budget rather
+ * than cost it one increment.
+ *
+ * Same-directory temp file plus `renameSync` — rename is atomic within one
+ * filesystem, and staying in the target's own directory is what keeps it there
+ * (a system temp dir may be a different mount, where rename degrades to
+ * copy-then-unlink and the atomicity is gone).
+ */
+function _writeCliCallsAtomically(target: string, payload: string): void {
     fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(
-        target,
-        _jsonDumpsIndent2({ date: _today_utc_iso(), counts }),
-        { encoding: 'utf-8' },
-    );
-    return counts[provider];
+    const tmp = `${target}.${process.pid}.${_nowMs()}.tmp`;
+    try {
+        fs.writeFileSync(tmp, payload, { encoding: 'utf-8' });
+        fs.renameSync(tmp, target);
+    } catch (exc) {
+        try {
+            fs.unlinkSync(tmp);
+        } catch {
+            // best-effort cleanup; the write error below is the real signal.
+        }
+        throw exc;
+    }
+}
+
+/**
+ * Hold a bounded, best-effort cross-process lock around a read-modify-write.
+ *
+ * `O_EXCL` file creation is atomic, which is the only mutual-exclusion
+ * primitive available here without a dependency. Three deliberate bounds:
+ *
+ *  - **Bounded wait.** A council seat must never block on a lock; after the
+ *    budget expires the update proceeds unlocked. Losing one increment is the
+ *    pre-existing behaviour and is strictly better than stalling a dispatch.
+ *  - **Stale-lock breaking.** A crashed holder must not wedge the counter
+ *    forever, so a lock older than the wait budget is removed.
+ *  - **In-process calls need none of this.** `record_cli_call` is synchronous
+ *    and Node is single-threaded, so same-process bookings are already
+ *    serialised. The window this closes is strictly cross-process — a council
+ *    invocation and an `ai_team` invocation booking into one shared file.
+ */
+function _withCliCallsLock<T>(target: string, fn: () => T): T {
+    const lockPath = `${target}.lock`;
+    const waitMs = 1000;
+    const stepMs = 20;
+    let held = false;
+    const started = _nowMs();
+    while (_nowMs() - started < waitMs) {
+        try {
+            fs.mkdirSync(path.dirname(lockPath), { recursive: true });
+            fs.closeSync(fs.openSync(lockPath, 'wx'));
+            held = true;
+            break;
+        } catch {
+            // Held by someone else, or stale from a crashed holder.
+            try {
+                const age = _nowMs() - fs.statSync(lockPath).mtimeMs;
+                if (age > waitMs) {
+                    fs.unlinkSync(lockPath);
+                    continue;
+                }
+            } catch {
+                // Vanished between the failed create and the stat — retry.
+            }
+            const spinUntil = _nowMs() + stepMs;
+            while (_nowMs() < spinUntil) {
+                // Synchronous by necessity: `record_cli_call` is sync and its
+                // callers are sync. A short spin is the cost of not making the
+                // whole booking path async for a sub-second contention window.
+            }
+        }
+    }
+    try {
+        return fn();
+    } finally {
+        if (held) {
+            try {
+                fs.unlinkSync(lockPath);
+            } catch {
+                // A removed lock is the desired end state either way.
+            }
+        }
+    }
+}
+
+/** Path of the attribution sidecar beside a given counter-state path. */
+function _attributionPath(target: string): string {
+    return `${target}${CLI_CALLS_ATTRIBUTION_SUFFIX}`;
+}
+
+/**
+ * Return today's `provider → consumer → count` attribution.
+ *
+ * Same UTC-day gating and same fail-soft posture as `load_cli_call_counts`: an
+ * absent, unreadable, stale, or malformed sidecar reads as `{}`. Attribution
+ * that cannot be read is a lost diagnostic, never a gating decision — no caller
+ * may branch on it to admit or refuse a call.
+ */
+export function load_cli_call_attribution(
+    p: string | null = null,
+): Record<string, Record<string, number>> {
+    const target = _attributionPath(p !== null ? p : _cliCallsStatePath());
+    if (!fs.existsSync(target)) {
+        return {};
+    }
+    let data: unknown;
+    try {
+        data = JSON.parse(fs.readFileSync(target, { encoding: 'utf-8' }));
+    } catch {
+        return {};
+    }
+    if (!_isPlainObject(data) || (data as Record<string, unknown>)['date'] !== _today_utc_iso()) {
+        return {};
+    }
+    const raw = (data as Record<string, unknown>)['by_consumer'];
+    if (!_isPlainObject(raw)) {
+        return {};
+    }
+    const out: Record<string, Record<string, number>> = {};
+    for (const [provider, perConsumer] of Object.entries(raw as Record<string, unknown>)) {
+        if (!_isPlainObject(perConsumer)) {
+            continue;
+        }
+        const bucket: Record<string, number> = {};
+        for (const [consumer, v] of Object.entries(perConsumer as Record<string, unknown>)) {
+            if (typeof v === 'number' && Number.isInteger(v)) {
+                bucket[String(consumer)] = _pyInt(v);
+            }
+        }
+        out[String(provider)] = bucket;
+    }
+    return out;
+}
+
+/**
+ * Record one booking in the attribution sidecar. Best-effort by contract — see
+ * `CLI_CALLS_ATTRIBUTION_SUFFIX`. Must be called INSIDE the counter lock so the
+ * two files cannot interleave against each other.
+ */
+function _recordAttribution(target: string, provider: string, consumer: string): void {
+    try {
+        const by_consumer = load_cli_call_attribution(target);
+        const bucket = by_consumer[provider] ?? {};
+        bucket[consumer] = (bucket[consumer] ?? 0) + 1;
+        by_consumer[provider] = bucket;
+        _writeCliCallsAtomically(
+            _attributionPath(target),
+            _jsonDumpsIndent2({ date: _today_utc_iso(), by_consumer }),
+        );
+    } catch {
+        // Diagnostic only. A booking that cannot be attributed still counts.
+    }
+}
+
+/**
+ * Increment today's call count for `provider`. Returns new total.
+ *
+ * `consumer` names who booked it and lands in the sidecar, never in the counter
+ * the gate reads. It defaults to `CLI_CONSUMER_UNKNOWN` so an undeclared call
+ * path is visible as a finding rather than silently attributed to whoever
+ * happens to be first in the enumeration.
+ */
+export function record_cli_call(
+    provider: string,
+    p: string | null = null,
+    consumer: string = CLI_CONSUMER_UNKNOWN,
+): number {
+    const target = p !== null ? p : _cliCallsStatePath();
+    return _withCliCallsLock(target, () => {
+        const counts = load_cli_call_counts(target);
+        counts[provider] = (counts[provider] ?? 0) + 1;
+        _writeCliCallsAtomically(
+            target,
+            _jsonDumpsIndent2({ date: _today_utc_iso(), counts }),
+        );
+        _recordAttribution(target, provider, consumer);
+        return counts[provider] as number;
+    });
 }
 
 /**
@@ -1082,39 +1316,81 @@ export function reset_cli_call_counts(
     p: string | null = null,
 ): Record<string, number> {
     const target = p !== null ? p : _cliCallsStatePath();
-    let counts = load_cli_call_counts(target);
-    if (provider === null) {
-        counts = {};
-    } else {
-        delete counts[provider];
-    }
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(
-        target,
-        _jsonDumpsIndent2({ date: _today_utc_iso(), counts }),
-        { encoding: 'utf-8' },
-    );
-    return counts;
+    // Same read-modify-write shape as `record_cli_call`, so it takes the same
+    // lock and the same atomic write. A reset racing a booking is exactly the
+    // moment an operator is acting on a full bucket, which is the worst moment
+    // for a torn read to blank the counter.
+    return _withCliCallsLock(target, () => {
+        let counts = load_cli_call_counts(target);
+        if (provider === null) {
+            counts = {};
+        } else {
+            delete counts[provider];
+        }
+        _writeCliCallsAtomically(
+            target,
+            _jsonDumpsIndent2({ date: _today_utc_iso(), counts }),
+        );
+        // The sidecar follows the counter. Leaving stale attribution behind after
+        // a reset would attribute spend to a bucket that no longer records it.
+        try {
+            const by_consumer = load_cli_call_attribution(target);
+            if (provider === null) {
+                _writeCliCallsAtomically(
+                    _attributionPath(target),
+                    _jsonDumpsIndent2({ date: _today_utc_iso(), by_consumer: {} }),
+                );
+            } else {
+                delete by_consumer[provider];
+                _writeCliCallsAtomically(
+                    _attributionPath(target),
+                    _jsonDumpsIndent2({ date: _today_utc_iso(), by_consumer }),
+                );
+            }
+        } catch {
+            // Diagnostic only — a reset that cannot clear the sidecar still resets
+            // the counter, which is the part the gate reads.
+        }
+        return counts;
+    });
 }
 
 /**
  * Build the pre-run quota summary line (step-8 P1, D1 + D4).
  *
- * Returns `[summary, warn_providers]` where `summary` is the formatted
- * one-liner (empty string when no CLI member has a configured cap) and
- * `warn_providers` is the subset whose `used / max_calls_per_day` ratio crossed
- * `warn_at`. Uncapped providers (`max_calls_per_day is None`) are omitted from
- * the summary entirely — they cannot exceed a threshold that does not exist.
+ * Returns `[summary, warn_providers]` where `warn_providers` is the subset whose
+ * `used / max_calls_per_day` ratio crossed `warn_at`.
+ *
+ * Two silences were removed here (`road-to-council-quota-accounting-truth`
+ * Phase 2), because both of them read to an operator as "you are within
+ * budget" while meaning something else entirely:
+ *
+ *  - **A cap of `0` was dropped.** The filter was a Python-truthy check, so a
+ *    provider deliberately capped at zero — the STRICTEST setting available —
+ *    was excluded from the summary and reported nothing at all. A cap is now
+ *    any number, including zero; only `null`/`undefined` means uncapped.
+ *  - **No caps at all returned the empty string.** That is precisely the
+ *    configuration where the shared counter runs unguarded, and it was the one
+ *    configuration that produced no line. Genuinely-uncapped members are now
+ *    NAMED as uncapped rather than omitted; an omission is indistinguishable
+ *    from a pass, and the counter reached 72/63/99 while nothing was printed.
  */
 export function quota_summary_line(
     clients: CliClient[],
     opts: { cli_calls_path?: string | null } = {},
 ): [string, string[]] {
     const cliCallsPath = opts.cli_calls_path ?? null;
-    // Python: [c for c in clients if getattr(c, "max_calls_per_day", None)]
-    // → truthy check (None or 0 both falsy).
-    const capped = clients.filter((c) => _pyTruthy(_getattr(c, 'max_calls_per_day', null)));
-    if (capped.length === 0) {
+    // A cap is any number, zero included. Only an absent cap is uncapped —
+    // deliberately NOT a truthy check, which conflated "0 calls allowed" with
+    // "no limit configured", the two opposite ends of the range.
+    const capOf = (c: CliClient): number | null => {
+        const raw = _getattr(c, 'max_calls_per_day', null);
+        return typeof raw === 'number' && Number.isFinite(raw) ? raw : null;
+    };
+    const capped = clients.filter((c) => capOf(c) !== null);
+    const uncapped = clients.filter((c) => capOf(c) === null);
+    if (capped.length === 0 && uncapped.length === 0) {
+        // No CLI members at all — there is genuinely nothing to say.
         return ['', []];
     }
     const counts = load_cli_call_counts(cliCallsPath);
@@ -1123,13 +1399,23 @@ export function quota_summary_line(
     for (const c of capped) {
         const name = _getattr(c, 'name', '?') as string;
         const used = _pyInt(counts[name] ?? 0);
-        const limit = _pyInt((c.max_calls_per_day as number));
+        const limit = _pyInt(capOf(c) as number);
         parts.push(`${name} ${used}/${limit}`);
         const ratio = limit > 0 ? used / limit : 0.0;
         const warnAt = Number(_getattr(c, 'warn_at', 0.8));
-        if (ratio >= warnAt) {
+        // A cap of 0 admits nothing, so any booked call is already past it. The
+        // ratio is undefined there; treat it as a warn rather than as 0.0, which
+        // would have read as "0 % of budget used".
+        if (limit === 0 ? used > 0 : ratio >= warnAt) {
             warn.push(name);
         }
+    }
+    for (const c of uncapped) {
+        const name = _getattr(c, 'name', '?') as string;
+        const used = _pyInt(counts[name] ?? 0);
+        // Named, not omitted. `used` still comes from the shared bucket, so the
+        // operator sees consumption they are not protected against.
+        parts.push(`${name} ${used}/uncapped`);
     }
     const prefix = warn.length > 0 ? '⚠️  ' : '';
     return [`${prefix}council:quota · ${parts.join(' · ')}`, warn];
@@ -1196,6 +1482,8 @@ export abstract class CliClient extends ExternalAIClient {
     warn_at: number;
     binary!: string;
     protected _cli_calls_path: string | null;
+    /** Attribution label for every booking this client makes. */
+    protected _consumer: string;
 
     static _AUTH_FAILURE_PATTERNS: readonly string[] = [
         'authentication',
@@ -1239,6 +1527,7 @@ export abstract class CliClient extends ExternalAIClient {
         this.max_calls_per_day = opts.max_calls_per_day ?? null;
         this.warn_at = opts.warn_at ?? 0.8;
         this._cli_calls_path = opts.cli_calls_path ?? null;
+        this._consumer = opts.consumer ?? CLI_CONSUMER_UNKNOWN;
         const binary = opts.binary ?? null;
         if (binary !== null) {
             this.binary = binary;
@@ -1287,7 +1576,7 @@ export abstract class CliClient extends ExternalAIClient {
      */
     protected _recordCallQuietly(): void {
         try {
-            record_cli_call(this.name, this._cli_calls_path);
+            record_cli_call(this.name, this._cli_calls_path, this._consumer);
         } catch {
             // state-file write failure is non-fatal here.
         }
@@ -1441,6 +1730,10 @@ export abstract class CliClient extends ExternalAIClient {
                         cli: true,
                         cli_calls_used: used,
                         cli_calls_max: this.max_calls_per_day,
+                        // Refused by OUR counter, before any spawn — see
+                        // `QUOTA_SOURCE_LOCAL_BUDGET`. Nothing was sent and
+                        // nothing is booked for this call.
+                        quota_source: QUOTA_SOURCE_LOCAL_BUDGET,
                     },
                 });
             }
@@ -1549,6 +1842,17 @@ export abstract class CliClient extends ExternalAIClient {
                     cli: true,
                     returncode: proc.returncode,
                     stderr_tail: (proc.stderr || '').slice(-500),
+                    // `cli_quota_exhausted` names TWO different events: this
+                    // one (the vendor refused us) and the local-budget refusal
+                    // above, which returns before spawning. They call for
+                    // opposite responses — wait for the vendor's window versus
+                    // raise or reset our own cap — and the string alone cannot
+                    // tell them apart. Discriminate explicitly rather than
+                    // leaving it inferable from which metadata keys happen to
+                    // be absent.
+                    ...(code === 'cli_quota_exhausted'
+                        ? { quota_source: QUOTA_SOURCE_PROVIDER }
+                        : {}),
                 },
             });
         }
