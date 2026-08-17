@@ -32,6 +32,39 @@ A suggestion block emits options. It does **not** start a command flow.
 The "run as-is" option is **always present**, **always last**, never
 removed.
 
+### The single HIGH-tier carve-out — a duplicate confirmation, never a skipped one
+
+```
+HIGH TIER REMOVES A SECOND CONFIRMATION. IT NEVER REMOVES THE FIRST.
+A COMMAND THAT WOULD BEGIN ACTING ON ARRIVAL IS NEVER HIGH TIER.
+TWO CANDIDATES ABOVE THE FLOOR IS MEDIUM. A SUBSTRING HIT IS MEDIUM.
+NO DETERMINISTIC UNIQUE SIGNAL → THE BLOCK, ALWAYS.
+```
+
+Added by road-to-user-out-of-the-loop Phase 1. It is narrow on purpose, and the
+narrowness is the argument: the law above exists so the user is never carried
+somewhere they did not choose, and a routed command whose **own** contract
+screen is the next thing they see has not carried them anywhere — it has
+replaced one options block with one basis line and left the real decision
+exactly where it was.
+
+All three conditions in
+[`command-suggestion-flow § Tier matrix`](../contexts/contracts/command-suggestion-flow.md)
+must hold: a deterministic unique signal, no second candidate above the floor,
+and a routed command that shows its own confirmation. Condition 3 is the
+load-bearing one — without it this clause would authorise auto-execution, which
+is the thing the Iron Law forbids and this carve-out does not touch.
+
+Everything else on this page is unchanged. MEDIUM and LOW still emit the block
+with "run as-is" always present and always last; the subordination list below
+still makes suggestion junior to every rule on it; and a Hard-Floor action stays
+gated by [`non-destructive-by-default`](non-destructive-by-default.md) however
+it was reached.
+
+**Honest status:** the kill criterion (>5 % mis-routes over 50 auto-routes
+reverts to block-always) has **no instrument yet**. The rate is unmeasured, not
+low. A mis-route is a reportable defect until it can be counted.
+
 ## Subordination — when to stay silent
 
 The suggestion rule is **junior** to:

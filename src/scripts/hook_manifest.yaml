@@ -572,6 +572,31 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+  # road-to-user-out-of-the-loop Phase 0 Step 1 — the interruption ledger.
+  # Every Stop, classifies whether the turn that just ended put a synchronous
+  # contact to the user and appends one `{run_id, turn, kind, class, roadmap}`
+  # line to gitignored runtime state (agents/runtime/state/interruptions.jsonl,
+  # file shape after gate-metrics.jsonl). Three classes, not two: a hand-back
+  # ("das entscheidest Du", "your call") ends the turn and waits for the user
+  # exactly as a question does, so counting only `?` would report this
+  # package's own preferred shape as zero contacts.
+  #
+  # CAPTURE ONLY, and that is the point rather than caution: Phase 0's two
+  # pre-registered claims are baselines, and a baseline can only be read off a
+  # window no mechanism reacted to. It emits nothing, never warns, and always
+  # returns 0 — so it carries no src/config/hook-token-budget.json row, the
+  # same as subagent-ledger and orchestration-record.
+  #
+  # Reply-shape detection is IMPORTED from turn-end-gate (readTranscriptTail,
+  # finalParagraph, HANDBACK) rather than copied — a second copy would drift
+  # from the measured corpus's detector and the drift would land silently in
+  # the baseline. Dedupe on the turn ordinal, the same identity that hook
+  # derives, because a host may fire Stop twice for one turn. fail_closed: false.
+  interruption-ledger:
+    script: src/scripts/hooks/interruption_ledger_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
   # road-to-subagent-lifecycle-integrity Phase 1 (Steps 2+3) — the subagent
   # lifecycle ledger. Binds ONLY the two new events; on every other slot it is
   # not listed at all. Appends `subagent_start` / `subagent_stop` lines to
@@ -680,7 +705,12 @@ roles:
     # is on it: a worker was handed a bounded slice by an orchestrator that
     # already chose the approach, so a routing pointer there advises nobody who
     # can act on it and costs the dispatch anyway.
-    drop: [delegation-nudge, skill-route, end-review-nudge, council-availability, team-review-gate, self-repair, session-eol]
+    # `interruption-ledger` joins it on the first clause verbatim — "a worker
+    # never talks to the user". Its whole measurement is synchronous user
+    # contacts, so a worker turn that ends in a question to its orchestrator
+    # would be recorded as a contact that never reached a human, inflating the
+    # exact baseline Phase 0 pre-registers.
+    drop: [delegation-nudge, skill-route, end-review-nudge, council-availability, team-review-gate, self-repair, session-eol, interruption-ledger]
 
 platforms:
   augment:
@@ -693,7 +723,7 @@ platforms:
   claude:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register]
-    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol]
+    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape, language-mirror]

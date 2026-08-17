@@ -1,12 +1,12 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-08-17T03:00:33.151Z",
-    "git_sha": "ade8e71b0246774ff167d3e1a3cea66a1a2c1449",
+    "recorded_at": "2026-08-17T10:12:23.634Z",
+    "git_sha": "097ab654986a1e1a9ad8347363be3271e9b018db",
     "run_url": null,
-    "conditions": "Refresh for the 19 -> 20 mcp_public_tool_count move at the 13.0.0 release gate. The +1 is 866bd9861, which promoted `suggest_skill_for_task` from a discovery STUB to a real ALLOWLIST entry; that commit is on main and did not move the budget, so the breach surfaced here, where the posture is blocking. Measured by hand on THIS branch's HEAD rather than by a nightly umbrella run, and the difference is worth stating rather than hiding: only the two deterministic metrics below were re-measured. mcp_public_tool_count via the pinned method - `npm run build:mcp-bundle`, then initialize + notifications/initialized + tools/list piped to `node dist/mcp/server.mjs`, tools array length - run twice on the freshly built bundle: 20/20. cli_help_command_count via the pinned registry-enumeration method on the same tree: 98, unchanged, this branch registers no CLI verb. The five packed-tarball metrics (node_modules_mb, runtime_dep_count, cli_version_cold_ms, mcp_boot_to_initialize_ms, unpacked_size_mb) were NOT re-measured and are not carried here - they need the container harness evaluator_umbrella.sh runs in CI, and inventing them would be worse than their absence, which the drift check tolerates by design. The 20 recorded here agrees with the 20 the failing CI run measured in that container at this same tree.",
+    "conditions": "Refresh for the 98 -> 99 cli_help_command_count move: road-to-council-quota-accounting-truth Phase 2 registers the council:quota verb in src/cli/registry.ts, in the PR that adds the surface. Measured by hand on THIS branch via the budget's pinned method (registry enumeration), twice on the unchanged tree: 99/99. mcp_public_tool_count re-stated unchanged at 20 - this branch touches no MCP allowlist.",
     "measurements": {
-        "cli_help_command_count": 98,
+        "cli_help_command_count": 99,
         "mcp_public_tool_count": 20
     }
 }

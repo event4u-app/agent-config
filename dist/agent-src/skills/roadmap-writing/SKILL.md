@@ -124,7 +124,7 @@ Every new roadmap declares how a later `/roadmap:process-*` run should
 interact, via `execution.mode:` in frontmatter — `autonomous` (one
 run-start execution-contract confirmation, then uninterrupted except
 safety floors), `phase-checkpoints` (halt + compact status per phase
-boundary), or `interactive` (absent-field default; omit the field).
+boundary), or `interactive` (declare it — an omitted field is derived).
 Semantics: [`templates/roadmaps.md` rule 18](../../templates/roadmaps.md);
 run mechanics:
 [`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md).

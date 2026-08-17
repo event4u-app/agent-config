@@ -445,7 +445,13 @@ function _check_external_population_gates(text: string, warnings: string[]): voi
 
 function _check_execution_mode(fm: string, problems: string[]): void {
     if (!fm || !/^execution:/m.test(fm)) {
-        return; // absent field = interactive default — valid
+        // Absent is VALID and stays valid — but it no longer means "interactive".
+        // Since road-to-user-out-of-the-loop Phase 1, an absent field is DERIVED
+        // by the `roadmap-process-loop § 3a` ladder from the invocation form, so
+        // the old comment here named a default that no longer exists. Nothing to
+        // check either way: this linter validates a declared value, and there is
+        // no declaration to validate.
+        return;
     }
     const m = EXEC_MODE_PAT.exec(fm);
     if (m === null) {

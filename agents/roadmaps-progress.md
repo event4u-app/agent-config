@@ -6,10 +6,10 @@
 
 ## Overall
 
-**258 / 575 steps done · 45%**
+**267 / 575 steps done · 46%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   46%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -61,7 +61,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 35 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 36 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 37 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 38 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 40 | 0 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ░░░░░░░░░░ 0% |
+| 38 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 
 ---
 
@@ -1194,12 +1194,12 @@ _1 blocker resolved._
 
 ### [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md)
 
-**Road to user-out-of-the-loop** — 0 / 40 done (0%)
+**Road to user-out-of-the-loop** — 9 / 40 done (22%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Measurement foundation | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 1 | One elicitation surface | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 0 | Measurement foundation | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 1 | One elicitation surface | 🟡 in progress | 1 | 6 | 0 | 0 | 86% |
 | 2 | Set scope, serial then parallel | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | Merge decoupling | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | Question-elimination ladder | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
@@ -1211,14 +1211,14 @@ _1 blocker resolved._
 <a id="blockers-road-to-user-out-of-the-loop"></a>
 **Blockers**
 
-- **kernel-soak-window** (owner: user) — blocks Phase 1 (batch elicitation carve-out), Phase 2 (set-scoped autonomy form), Phase 4 (late-artifact policy), Phase 5 (deferred-policy delta)
-  - **Recommendation:** Authorize them in the order 1-3, 5-2, 4-4, 2-3 — the batch-elicitation carve-out first because Phases 2 and 4 both assume the single elicitation surface exists, and the deferred-policy delta second because it is the smallest and exercises the soak process on low-risk material before the two larger ones.
-  - **If you do nothing:** Phases 1, 2, 4, and 5 each stop at their rule-delta step. Everything else in the plan still runs — the measurement foundation, the mode-derivation ladder, the decision sheet, the set command, stacking, the merge train, the memo channel, and the session work do not touch a kernel rule. The plan degrades to roughly two thirds of its scope rather than stalling.
+- **kernel-soak-window** (owner: user) — blocks Phase 1 (batch elicitation carve-out — the only true kernel delta), Phase 2 (set-scoped autonomy form), Phase 4 (late-artifact policy), Phase 5 (deferred-policy delta)
+  - **Recommendation:** Authorize `ask-when-uncertain` on its own with the soak, and let the other three proceed as ordinary rule edits in the order 5-2, 4-4, 2-3 — the deferred-policy delta first because it is the smallest. Holding three non-kernel edits behind a soak window they do not need is the cost this blocker was accidentally imposing.
+  - **If you do nothing:** Phases 1, 2, 4, and 5 each stop at their rule-delta step. Everything else in the plan still runs — the measurement foundation, the mode-derivation ladder, the decision sheet, the set command, stacking, the merge train, the memo channel, and the session work touch no kernel rule. The plan degrades to roughly two thirds of its scope rather than stalling.
   - **What to do:**
-    1. Confirm the four deltas are in scope at all: `ask-when-uncertain` (batch elicitation), `autonomy-mechanics` (set-scoped form), `artifact-drafting-protocol` (late artifacts), `roadmap-progress-sync` (deferred policy).
+    1. Confirm the deltas are in scope at all. **Corrected 2026-08-17, verified against the tree — this blocker overstated its own scope 4:1.** Only `ask-when-uncertain` (batch elicitation) is in the locked kernel set (`docs/contracts/kernel-membership.md § 4`, row 142) and needs the own-PR + soak guarantee. `autonomy-mechanics` (set-scoped form) is **not a rule at all** — it is a context at `src/agent-src/contexts/execution/autonomy-mechanics.md`, so the rules-tree path for it does not exist. `artifact-drafting-protocol` (late artifacts) and `roadmap-progress-sync` (deferred policy) ARE rules but are **absent from the locked nine**. Three of the four therefore need no soak window; the phase text calling them "kernel-adjacent" is what carried the error forward.
     2. Name the order, or accept the recommended one.
-    3. Confirm the soak interval per `src/agent-src/contexts/authority/kernel-rule-edits.md` — the agent will not shorten it and cannot self-authorize it.
-  - **Resolved when:** the user names the set and the order, or declines the kernel-adjacent scope entirely.
+    3. Confirm the soak interval per `src/agent-src/contexts/authority/kernel-rule-edits.md` — for `ask-when-uncertain` only. The agent will not shorten it and cannot self-authorize it.
+  - **Resolved when:** the user authorizes or declines the `ask-when-uncertain` delta, and says whether the three non-kernel deltas proceed independently.
 - **autonomy-defaults-sheet** (owner: user) — blocks Phase 1 (preselection), Phase 2 (lane cap), Phase 4 (late-artifact default), Phase 5 (policy breadth)
   - **Recommendation:** Preselect `autonomous` at the contract screen, cap lanes at two, default late artifacts to `auto-research`, and keep the deferred policy limited to the follow-up-draft option. Rationale: each is reversible, each carries its own kill criterion in the phase text, and the conservative variant of all four together produces a plan that measures nothing because nothing changes.
   - **If you do nothing:** the phases can still be built with the conservative variant of each; the measurement in Phase 0 then compares a smaller delta and takes proportionally longer to reach significance.

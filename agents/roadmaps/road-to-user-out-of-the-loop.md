@@ -16,14 +16,26 @@ Two target axes, deliberately not merged: a run can ask zero questions and still
 
 ## Prerequisites
 
-- [ ] Read `src/agent-src/contexts/execution/roadmap-execution-contract.md` and `roadmap-process-loop.md`
-- [ ] Read `docs/contracts/ai-council-config.md` § decision_resolution
-- [ ] Read `src/skills/worktree-lifecycle/SKILL.md` § scope lock and `src/scripts/hook_manifest.yaml` § session-register
-- [ ] Re-verify every `file:line` in Context against the branch HEAD before executing a phase
+- [x] Read `src/agent-src/contexts/execution/roadmap-execution-contract.md` and `roadmap-process-loop.md`
+- [x] Read `docs/contracts/ai-council-config.md` § decision_resolution
+- [x] Read `src/skills/worktree-lifecycle/SKILL.md` § scope lock and `src/scripts/hook_manifest.yaml` § session-register
+- [x] Re-verify every `file:line` in Context against the branch HEAD before executing a phase
 
 ## Context
 
 Source: an external planning session over this repository, 2026-08-16. The draft pinned `681cf2a`; every claim below was re-verified at `6d18f5bb2` for this file. The re-verification changed nothing material — the load-bearing line numbers still resolve exactly, which is why the plan is carried rather than re-derived.
+
+**Re-verified at `097ab6549`** (Prerequisite 4, 2026-08-17): all five lines below
+still resolve exactly, at the same line numbers. Two additions from executing
+Phase 0/1 against them:
+
+- The absent-mode fallback has a **second** site the table did not name —
+  `roadmap-execution-contract.md:5` ("absent / `interactive` = legacy behavior,
+  this context stays unloaded"). Phase 1 Step 1 has to change both or the ladder
+  is contradicted by the context it loads.
+- The contract summary at `roadmap-execution-contract.md:64` **already** carries
+  "3. Run interactive instead", so Step 1's requirement that the option stays is
+  satisfied by the existing shape rather than by a new one.
 
 **Verified at `6d18f5bb2`:**
 
@@ -43,11 +55,46 @@ Source: an external planning session over this repository, 2026-08-16. The draft
 
 ## Phase 0 — Measurement foundation
 
-- [ ] Add an advisory `interruption-ledger` hook concern on the `stop` slot that classifies per turn whether the reply ends in a user question, writing `{run_id, kind, class, roadmap}` records to `agents/runtime/state/interruptions.jsonl`. Reply-shape detection follows the existing turn-end gate pattern; the file shape follows `gate-metrics.jsonl`. <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->
-- [ ] Add `interruption_report.ts` reporting asks per run, halts per run, median user wait derived from chat-history timestamps, and the wall-clock axis (total elapsed per delivered roadmap versus agent working time). Window: 30 sessions, matching the conformance window. <!-- verify: ./scripts-run src/scripts/interruption_report --help -->
-- [ ] Pre-register two separate claims in `docs/CLAIMS.md`: `user-out-of-loop-baseline` (median synchronous contacts per delivered roadmap) and `roadmap-wall-clock-baseline` (median hours to open PR per roadmap). Quality anchor for both: the held defect rate. Each mechanism below carries its own honest-null path. <!-- verify: ./scripts-run src/scripts/check_claims -->
+- [x] Add an advisory `interruption-ledger` hook concern on the `stop` slot that classifies per turn whether the reply ends in a user question, writing `{run_id, kind, class, roadmap}` records to `agents/runtime/state/interruptions.jsonl`. Reply-shape detection follows the existing turn-end gate pattern; the file shape follows `gate-metrics.jsonl`. <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->
+- [x] Add `interruption_report.ts` reporting asks per run, halts per run, median user wait derived from chat-history timestamps, and the wall-clock axis (total elapsed per delivered roadmap versus agent working time). Window: 30 sessions, matching the conformance window. <!-- verify: ./scripts-run src/scripts/interruption_report --help -->
+- [x] Pre-register two separate claims in `docs/CLAIMS.md`: `user-out-of-loop-baseline` (median synchronous contacts per delivered roadmap) and `roadmap-wall-clock-baseline` (median hours to open PR per roadmap). Quality anchor for both: the held defect rate. Each mechanism below carries its own honest-null path. <!-- verify: ./scripts-run src/scripts/check_claims -->
 
 **Exit criteria:** both claims exist in `docs/CLAIMS.md` with a recorded baseline number; the report runs against a real session window and prints both axes.
+
+**Exit status (2026-08-17).** Both claims exist and the report runs against the
+real window, printing both axes. **The baseline NUMBER is deliberately not
+recorded yet, and that is the honest outcome rather than an unfinished step.**
+Two measured reasons, both now carried in the claims themselves:
+
+- The contact axis has **zero** observations by construction — the ledger
+  concern records on `stop`, so it cannot hold data from sessions that ran
+  before it existed. The report says so rather than printing `0`.
+- The wall-clock axis has observations but a **short window**: the rolling chat
+  history is a buffer, not an archive, and held **5 sessions, all from one day**
+  against the 30 this step asks for. Both claims therefore pre-register a
+  ≥ 20-run floor before any comparison, and the report flags `window_short`.
+
+Recording a median over 5 same-day sessions and labelling it a 30-session
+baseline is the measurement-artifact-as-decision-input failure this repository
+already has on record. Reworded: this step is done when the instrument is built,
+honest, and running — the number arrives with the sessions.
+
+Three findings worth carrying forward:
+
+- **The join was nearly unbuildable and looked fine.** The ledger first keyed
+  `run_id` on the turn-end gate's `deriveSessionKey` (sha256/32); the chat
+  history writes `derive_session_tag` (sha256/16, normalised). The two never
+  join, so the wall-clock claim would have been underivable while every unit
+  test passed. The ledger now uses `derive_session_tag`.
+- **Synthetic user turns had to be excluded by definition, not by filter.** The
+  harness writes task notifications and system reminders in the user role;
+  counting them as replies collapses every measured wait toward zero and makes
+  the axis read as already-solved. 15 of 26 user turns in the live sample were
+  synthetic.
+- **A contact is three classes, not two.** A hand-back ("das entscheidest Du",
+  "your call") ends the turn and waits for the user with no `?` anywhere.
+  Counting only questions would score this package's own preferred yield shape
+  as zero contacts — the Risk-6 failure, reached by arithmetic.
 
 **Rollback:** the concern is advisory and removable from the manifest; the report is additive.
 
@@ -55,15 +102,53 @@ Source: an external planning session over this repository, 2026-08-16. The draft
 
 The principle: exactly one place asks the user — the contract screen with its decision sheet. The plan-confidence interview, artifact understand-questions, and in-run clarifications all feed that surface instead of opening their own rounds.
 
-- [ ] Replace the silent interactive fallback with a mode-derivation ladder in `roadmap-process-loop` § 3. First source wins: explicit invocation suffix, then frontmatter `execution.mode`, then invocation-form default — `process-full` and `/roadmap:next` always offer the contract with `autonomous` preselected, `process-phase` derives `phase-checkpoints`, `process-step` runs without a contract. Still exactly one confirmation; the "run interactive instead" option stays. <!-- verify: ./scripts-run src/scripts/lint_command_cluster -->
-- [ ] Add `contexts/execution/contract-decision-sheet.md`, loaded by the contract derivation itself so every consumer inherits it: the pre-scan collects all open questions and renders them as one numbered block with a default per question and an "accept all defaults" path. <!-- verify: grep -q contract-decision-sheet src/agent-src/contexts/execution/roadmap-execution-contract.md -->
+- [x] Replace the silent interactive fallback with a mode-derivation ladder in `roadmap-process-loop` § 3. First source wins: explicit invocation suffix, then frontmatter `execution.mode`, then invocation-form default — `process-full` and `/roadmap:next` always offer the contract with `autonomous` preselected, `process-phase` derives `phase-checkpoints`, `process-step` runs without a contract. Still exactly one confirmation; the "run interactive instead" option stays. <!-- verify: ./scripts-run src/scripts/lint_roadmap_complexity -->
+- [x] Add `contexts/execution/contract-decision-sheet.md`, loaded by the contract derivation itself so every consumer inherits it: the pre-scan collects all open questions and renders them as one numbered block with a default per question and an "accept all defaults" path. <!-- verify: grep -q contract-decision-sheet src/agent-src/contexts/execution/roadmap-execution-contract.md -->
 - [ ] Draft the `ask-when-uncertain` carve-out "contract-time batch elicitation": one structured decision sheet per contract display counts as one question under the Iron Law; outside contract time the one-question-per-turn law holds verbatim. Kernel-adjacent — ships as its own PR with the required soak window. <!-- blocked-by: kernel-soak-window -->
-- [ ] Add a batch branch to the plan-confidence gate's inline degrade protocol: all load-bearing branches known at seed time as one sheet, at most two rounds, round two only for branches created by round-one answers. Remaining ambiguity resolves to a conservative default plus a decision memo. The C-to-R1 state file is unchanged, so no plan is ever interviewed twice. <!-- verify: ./scripts-run src/scripts/lint_rule_references -->
-- [ ] Make `/work` consume the same contract derivation rather than carrying a second mechanism. <!-- verify: grep -q roadmap-execution-contract src/agent-src/commands/work/command.md -->
-- [ ] Extend the non-interactive contract's tier matrix onto the suggestion layer: a HIGH-tier match (a deterministic signal names the command uniquely — the roadmap file exists, the phrase matches a trigger description exactly, no second candidate above the floor) routes directly with a one-line basis statement instead of an options block. MEDIUM and LOW keep the block. <!-- verify: ./scripts-run src/scripts/lint_command_cluster -->
-- [ ] Extend `commands/evals/roadmap.json`: frontmatter without a mode plus `process-full` yields a contract with `autonomous` preselected; the sheet contains every pre-scan question and no question appears later in the run; a `high_impact` question never appears in the sheet and escalates during the run; the batch gate opens round two only for newly created branches; a free-text prompt with two candidates above the floor yields a block rather than an auto-route. <!-- verify: ./scripts-run src/scripts/validate_evals -->
+- [x] Add a batch branch to the plan-confidence gate's inline degrade protocol: all load-bearing branches known at seed time as one sheet, at most two rounds, round two only for branches created by round-one answers. Remaining ambiguity resolves to a conservative default plus a decision memo. The C-to-R1 state file is unchanged, so no plan is ever interviewed twice. <!-- verify: ./scripts-run src/scripts/check_references -->
+- [x] Make `/work` consume the same contract derivation rather than carrying a second mechanism. <!-- verify: grep -q roadmap-execution-contract src/domains/engineering-base/work/command.md -->
+- [x] Extend the non-interactive contract's tier matrix onto the suggestion layer: a HIGH-tier match (a deterministic signal names the command uniquely — the roadmap file exists, the phrase matches a trigger description exactly, no second candidate above the floor) routes directly with a one-line basis statement instead of an options block. MEDIUM and LOW keep the block. <!-- verify: ./scripts-run src/scripts/lint_command_routing -->
+- [x] Extend `commands/evals/roadmap.json`: frontmatter without a mode plus `process-full` yields a contract with `autonomous` preselected; the sheet contains every pre-scan question and no question appears later in the run; a `high_impact` question never appears in the sheet and escalates during the run; the batch gate opens round two only for newly created branches; a free-text prompt with two candidates above the floor yields a block rather than an auto-route. <!-- verify: ./scripts-run src/scripts/lint_command_routing -->
 
 **Exit criteria:** the eval additions pass; a `process-full` run on a mode-less roadmap presents exactly one contract screen and asks nothing further before its first halt class fires.
+
+**Exit status (2026-08-17) — six of seven steps landed; Step 3 is the kernel halt.**
+
+Four verify probes in this phase named scripts that **do not exist**
+(`lint_command_cluster`, `lint_rule_references`, `validate_evals`) and one named
+a path that does not exist (`src/agent-src/commands/work/command.md` — commands <!-- ref-ignore -->
+moved to `src/domains/**` under ADR-115). All five are corrected above to gates
+that actually run; a step whose probe cannot execute is a step nobody can check.
+
+- **Step 1 was a seven-file defect, not a one-file edit.** The sibling search for
+  the exact construct found the absent-means-interactive claim in **10 places
+  across 7 files** — the loop (× 3), the contract context (× 2), the roadmap
+  authoring template, `roadmap-management/SKILL.md`, `roadmap-writing/SKILL.md`,
+  `docs/customization.md`, and a now-false comment in `lint_roadmap_complexity`.
+  The first grep pattern missed two of them because they wrote "absent-field
+  default" rather than "absent = interactive" — search for the construct, not
+  for a description of it. Remaining occurrences after the sweep: **0**.
+- **Step 2's option already existed.** `roadmap-execution-contract § 2` has
+  carried "3. Run interactive instead" all along, so "the option stays" needed
+  nothing built.
+- **Step 6 amends an Iron Law**, in `command-suggestion-policy` — which is NOT a
+  kernel rule (checked against the locked set in `kernel-membership § 4`), so it
+  needs no soak. Written as a narrow carve-out with all three HIGH conditions
+  required and every existing passage intact. Its third condition — the routed
+  command must show its own confirmation — is the one that keeps this a removed
+  *duplicate* confirmation rather than auto-execution. **Its kill criterion has
+  no instrument**: >5 % mis-routes over 50 auto-routes cannot be counted today,
+  so the rate is unmeasured rather than low, and that is stated at both sites.
+- **Step 7 is partially expressible, and the gap is the corpus, not the work.**
+  `src/agent-src/commands/evals/*.json` is a ROUTING corpus — `prompt` →
+  `expected command`, gated by `lint_command_routing.ts:130`. Two of the step's
+  five assertions are routing-shaped and landed. The other three (the sheet
+  contains every pre-scan question; a `high_impact` question never enters the
+  sheet; the batch gate opens round two only for new branches) are *behavioural*
+  and have **no executable home in this corpus shape**. They are model-carried
+  today. Closing that needs a behavioural corpus for commands — the skills side
+  already has one (`evals/evals.json` + `lint_behavioural_eval_freshness`) and
+  the commands side does not.
 
 **Rollback:** the ladder falls back to frontmatter-only by removing the invocation-form rung; the decision sheet is a context file that can be unlinked; the auto-route reverts to block-always.
 
@@ -160,15 +245,15 @@ The resolution order for an open question becomes: decision sheet at contract ti
 
 - **Status:** open
 - **Owner:** user
-- **Blocks:** Phase 1 (batch elicitation carve-out), Phase 2 (set-scoped autonomy form), Phase 4 (late-artifact policy), Phase 5 (deferred-policy delta)
-- **Question:** Are the four kernel-adjacent rule deltas authorized to proceed as four separate PRs with the required soak window between merges, and in which order?
-- **Recommendation:** Authorize them in the order 1-3, 5-2, 4-4, 2-3 — the batch-elicitation carve-out first because Phases 2 and 4 both assume the single elicitation surface exists, and the deferred-policy delta second because it is the smallest and exercises the soak process on low-risk material before the two larger ones.
-- **If you do nothing:** Phases 1, 2, 4, and 5 each stop at their rule-delta step. Everything else in the plan still runs — the measurement foundation, the mode-derivation ladder, the decision sheet, the set command, stacking, the merge train, the memo channel, and the session work do not touch a kernel rule. The plan degrades to roughly two thirds of its scope rather than stalling.
+- **Blocks:** Phase 1 (batch elicitation carve-out — the only true kernel delta), Phase 2 (set-scoped autonomy form), Phase 4 (late-artifact policy), Phase 5 (deferred-policy delta)
+- **Question:** Is the ONE kernel delta (`ask-when-uncertain`) authorized to proceed as its own PR with the required soak window — and do you want the other three deltas, which are NOT kernel, done as ordinary rule edits or held with it?
+- **Recommendation:** Authorize `ask-when-uncertain` on its own with the soak, and let the other three proceed as ordinary rule edits in the order 5-2, 4-4, 2-3 — the deferred-policy delta first because it is the smallest. Holding three non-kernel edits behind a soak window they do not need is the cost this blocker was accidentally imposing.
+- **If you do nothing:** Phases 1, 2, 4, and 5 each stop at their rule-delta step. Everything else in the plan still runs — the measurement foundation, the mode-derivation ladder, the decision sheet, the set command, stacking, the merge train, the memo channel, and the session work touch no kernel rule. The plan degrades to roughly two thirds of its scope rather than stalling.
 - **What to do:**
-  1. Confirm the four deltas are in scope at all: `ask-when-uncertain` (batch elicitation), `autonomy-mechanics` (set-scoped form), `artifact-drafting-protocol` (late artifacts), `roadmap-progress-sync` (deferred policy).
+  1. Confirm the deltas are in scope at all. **Corrected 2026-08-17, verified against the tree — this blocker overstated its own scope 4:1.** Only `ask-when-uncertain` (batch elicitation) is in the locked kernel set (`docs/contracts/kernel-membership.md § 4`, row 142) and needs the own-PR + soak guarantee. `autonomy-mechanics` (set-scoped form) is **not a rule at all** — it is a context at `src/agent-src/contexts/execution/autonomy-mechanics.md`, so the rules-tree path for it does not exist. `artifact-drafting-protocol` (late artifacts) and `roadmap-progress-sync` (deferred policy) ARE rules but are **absent from the locked nine**. Three of the four therefore need no soak window; the phase text calling them "kernel-adjacent" is what carried the error forward.
   2. Name the order, or accept the recommended one.
-  3. Confirm the soak interval per `src/agent-src/contexts/authority/kernel-rule-edits.md` — the agent will not shorten it and cannot self-authorize it.
-- **Resolved when:** the user names the set and the order, or declines the kernel-adjacent scope entirely.
+  3. Confirm the soak interval per `src/agent-src/contexts/authority/kernel-rule-edits.md` — for `ask-when-uncertain` only. The agent will not shorten it and cannot self-authorize it.
+- **Resolved when:** the user authorizes or declines the `ask-when-uncertain` delta, and says whether the three non-kernel deltas proceed independently.
 
 ### blocker: autonomy-defaults-sheet
 
