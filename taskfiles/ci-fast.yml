@@ -123,7 +123,15 @@ tasks:
       # (a declared type must agree with its body). Splitting them is not
       # duplication — the two halves have different scopes on purpose, and the
       # changed-files mode has no trippable `scanned:` floor to register.
-      - ./scripts-run src/scripts/lint_evidence_artifacts --quiet
+      # Exit-2 shim, same as check-completion-review above: an internal error is
+      # warn-and-allow per the exit-code contract § 6, so a broken gate never
+      # blocks its own fix. Without it this was stricter LOCALLY than in CI —
+      # the one direction that teaches a contributor to skip the pre-push run.
+      - cmd: |
+          ./scripts-run src/scripts/lint_evidence_artifacts --quiet || {
+            rc=$?;
+            if [ "$rc" = "2" ]; then echo "⚠️  lint_evidence_artifacts: internal error — degraded advisory mode, allowing (exit-code contract §6)"; else exit "$rc"; fi;
+          }
 
   check-ci-local-parity:
     silent: true
@@ -966,7 +974,11 @@ tasks:
       a real, trippable floor is the one registered. The presence half (a
       newly written artifact must declare its type) runs in the pre-push path,
       where a base ref always resolves.
-    cmd: ./scripts-run src/scripts/lint_evidence_artifacts --all {{.QUIET_FLAG}}
+    cmd: |
+      ./scripts-run src/scripts/lint_evidence_artifacts --all {{.QUIET_FLAG}} || {
+        rc=$?;
+        if [ "$rc" = "2" ]; then echo "⚠️  lint_evidence_artifacts: internal error — degraded advisory mode, allowing (exit-code contract §6)"; else exit "$rc"; fi;
+      }
 
   lint-plan-risk-register:
     silent: true

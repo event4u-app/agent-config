@@ -124,8 +124,32 @@ describe('agreement (§4) — the type must match the body', () => {
         expect(agree('current-binding', body('current-binding', ...TABLE_HEAD, ROW))).toEqual([]);
     });
 
-    it('current-binding: an empty table is an honest-null, not a binding with no findings', () => {
+    it('current-binding: an empty FINISHED table is an honest-null, not a binding with no findings', () => {
         expect(agree('current-binding', body('current-binding', ...TABLE_HEAD)).join()).toMatch(/honest-null/);
+    });
+
+    it('current-binding: the dispatcher skeleton is legal from its first byte', () => {
+        // Regression: demanding a row unconditionally made the artifact the tree
+        // is supposed to produce illegal between dispatch and fill, so pre-push,
+        // CI and this gate's own corpus test all failed on it.
+        const skeleton = body(
+            'current-binding',
+            ...TABLE_HEAD,
+            '<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line -->',
+        );
+        expect(agree('current-binding', skeleton)).toEqual([]);
+    });
+
+    it('original-review: a skip body mistyped as an input is caught', () => {
+        // A skip legitimately carries NO completion-review marker, so forbidding
+        // only that marker let the sharpest conflation in the set pass silently.
+        const text = ['# t', typeMarker('original-review'), '', SKIP_LINE, ''].join('\n');
+        expect(agree('original-review', text).join()).toMatch(/declare `declared-skip`/);
+    });
+
+    it('original-review: an honest-null body mistyped as an input is caught', () => {
+        const text = ['# t', typeMarker('original-review'), '', NULL_LINE, ''].join('\n');
+        expect(agree('original-review', text).join()).toMatch(/declare `honest-null`/);
     });
 
     it('current-binding: without a completion-review marker there is no scope to bind', () => {
@@ -177,6 +201,15 @@ describe('scope selection', () => {
         expect(isEvidenceArtifact('docs/evidence/x.md')).toBe(false);
     });
 
+    it('excludes the reviewer INPUT package — those assert nothing and bind nothing', () => {
+        // Regression: the presence half fired on the dispatcher's own prompt,
+        // roadmap snapshot and acceptance-criteria copy, so every future R2
+        // dispatch tripped the gate that shipped in the same change.
+        for (const f of ['prompt.md', 'roadmap.md', 'acceptance-criteria.md']) {
+            expect(isEvidenceArtifact(`agents/evidence/reviews/slug.review-input/${f}`)).toBe(false);
+        }
+    });
+
     it('demands a marker only when presence is in scope', () => {
         withEvidence({ 'agents/evidence/reports/r.md': '# r\n\nprose\n' }, (repo) => {
             const rel = ['agents/evidence/reports/r.md'];
@@ -208,9 +241,19 @@ describe('scope selection', () => {
             },
             (repo) => {
                 const out = checkFiles(repo, ['agents/evidence/a.md', 'agents/evidence/b.md'], false);
-                expect(out).toMatchObject({ scanned: 2, typed: 1, untyped: 1 });
+                expect(out).toMatchObject({ scanned: 2, typed: 1, untyped: 1, malformed: 0 });
             },
         );
+    });
+
+    it('counts typed-wrongly apart from never-typed', () => {
+        // Folding a malformed marker into `untyped` made a corpus getting worse
+        // (markers appearing and failing) and one getting better (markers
+        // landing) move the same number in the same direction.
+        withEvidence({ 'agents/evidence/a.md': `# a\n${typeMarker('bogus')}\n` }, (repo) => {
+            const out = checkFiles(repo, ['agents/evidence/a.md'], false);
+            expect(out).toMatchObject({ typed: 0, untyped: 0, malformed: 1 });
+        });
     });
 });
 
@@ -244,6 +287,15 @@ describe('CLI', () => {
 
     it('rejects an unknown argument instead of silently scanning the default scope', () => {
         expect(main(['--all', '--nope'])).toBe(1);
+    });
+
+    it('refuses a value-taking flag with no value rather than falling back', () => {
+        // `--since` with no value silently reverted to the default scope, which is
+        // the same silent-wrong-scope failure the unknown-arg branch prevents,
+        // reached through a different door.
+        expect(main(['--since'])).toBe(1);
+        expect(main(['--since', '--all'])).toBe(1);
+        expect(main(['--repo'])).toBe(1);
     });
 
     it('--help exits 0 and emits the scanned line', () => {

@@ -95,6 +95,23 @@ const MARKER_ATTEMPT_RE = /^<!--.*\bevidence-type\s*:/;
 /** § 3 `rebind-event` requires the move to be traceable in the body. */
 const REBIND_TRACE_RE = /re-bound\s+at/i;
 
+/**
+ * The dispatcher's pre-fill placeholder — the machine-readable "no reviewer has
+ * written here yet" state.
+ *
+ * Load-bearing for the window between dispatch and fill. `current-binding` is
+ * stamped at creation (contract § 4) onto a skeleton whose table is empty, and
+ * demanding a findings row unconditionally made that skeleton illegal from its
+ * first byte — so the pre-push run, CI, and this gate's own corpus test all
+ * failed on an artifact the tree is supposed to produce.
+ *
+ * A never-filled skeleton is NOT double-gated here: `check_completion_review`
+ * already refuses a scope whose artifact carries neither a row nor an honest-null
+ * line, so an artifact parked in this state fails that gate instead. Repeating
+ * the rule here would mean two gates owning one verdict.
+ */
+const UNFILLED_RE = /<!--\s*reviewer fills the table/i;
+
 export interface ScanResult {
     marker: TypeMarker | null;
     /** Lines that look like the marker but do not match the exact grammar. */
@@ -162,6 +179,7 @@ export function checkAgreement(rel: string, text: string, marker: TypeMarker): V
         null: art.honestNull !== null,
         skip: art.skip !== null,
         rebind: REBIND_TRACE_RE.test(text),
+        unfilled: UNFILLED_RE.test(text),
     };
     const push = (detail: string): void => {
         out.push({ kind: `agreement:${marker.type}`, file: rel, detail });
@@ -176,15 +194,27 @@ export function checkAgreement(rel: string, text: string, marker: TypeMarker): V
                         'must say so.',
                 );
             }
+            // Forbidding only the binding marker left the sharpest hole in the
+            // set: a skip body legitimately carries NO `completion-review:`
+            // marker, so a skip mistyped `original-review` passed silently —
+            // which is exactly the skip-vs-saw-nothing conflation § 3 calls the
+            // most consequential ambiguity in the corpus.
+            if (has.skip) {
+                push('declared `original-review` but carries a §2.4 skip declaration — declare `declared-skip`.');
+            }
+            if (has.null) {
+                push('declared `original-review` but carries a §2.3 honest-null line — declare `honest-null`.');
+            }
             break;
         case 'current-binding':
             if (!has.binding) {
                 push('declared `current-binding` but carries no `completion-review:` marker to bind a scope.');
             }
-            if (!has.rows) {
+            if (!has.rows && !has.unfilled) {
                 push(
-                    'declared `current-binding` but carries no findings row. A review that found nothing ' +
-                        'is `honest-null`; the distinction is the evidence that looking happened.',
+                    'declared `current-binding` but carries no findings row and no pre-fill placeholder. A ' +
+                        'review that RAN and found nothing is `honest-null`; the distinction is the evidence ' +
+                        'that looking happened.',
                 );
             }
             if (has.null) {
@@ -239,10 +269,24 @@ export function checkAgreement(rel: string, text: string, marker: TypeMarker): V
     return out;
 }
 
-/** Is this path an evidence artifact this gate governs? */
+/**
+ * Is this path an evidence artifact this gate governs?
+ *
+ * A `*.review-input/` directory is excluded, and the exclusion is structural
+ * rather than a convenience: `dispatch_r2_reviewer.ts` writes a reviewer prompt,
+ * a roadmap snapshot and an acceptance-criteria copy in there. Those are the
+ * reviewer's INPUTS — they assert nothing about the tree and bind no scope, so
+ * none of the five types describes them and demanding one would be a marker
+ * added to satisfy a gate. Without this the presence half fired on the
+ * dispatcher's own package, which made every future R2 dispatch trip the gate
+ * that shipped in the same change.
+ */
 export function isEvidenceArtifact(rel: string): boolean {
     const norm = rel.replace(/\\/g, '/');
-    return norm.startsWith(`${EVIDENCE_ROOT}/`) && norm.endsWith('.md');
+    if (!norm.startsWith(`${EVIDENCE_ROOT}/`) || !norm.endsWith('.md')) {
+        return false;
+    }
+    return !norm.split('/').some((seg) => seg.endsWith('.review-input'));
 }
 
 export interface ChangedScope {
@@ -300,15 +344,27 @@ export function gatherAllArtifacts(repo: string): string[] {
         let entries: fs.Dirent[];
         try {
             entries = fs.readdirSync(dir, { withFileTypes: true });
-        } catch {
-            return;
+        } catch (exc) {
+            // An unreadable subtree is silent UNDER-measurement: the population
+            // shrinks, `min_scanned` may still clear, and the published remainder
+            // understates. The absent-root case is handled by assertScanned in
+            // main(); anything else is a real error and must surface.
+            const code = (exc as NodeJS.ErrnoException).code;
+            if (code === 'ENOENT') return;
+            throw new Error(`cannot read ${dir}: ${exc instanceof Error ? exc.message : String(exc)}`);
         }
         for (const e of entries) {
             const abs = path.join(dir, e.name);
             if (e.isSymbolicLink()) continue;
             if (e.isDirectory()) walk(abs);
-            else if (e.isFile() && e.name.endsWith('.md')) {
-                out.push(path.relative(repo, abs).replace(/\\/g, '/'));
+            else if (e.isFile()) {
+                // The SAME predicate the changed-files half uses. Walking every
+                // `.md` instead let the review-input packages into the `--all`
+                // population, so the two modes disagreed about what an artifact
+                // is and the published remainder was inflated by files the other
+                // mode had just been taught to exclude.
+                const rel = path.relative(repo, abs).replace(/\\/g, '/');
+                if (isEvidenceArtifact(rel)) out.push(rel);
             }
         }
     };
@@ -316,11 +372,17 @@ export function gatherAllArtifacts(repo: string): string[] {
     return out.sort();
 }
 
+/** A value-taking flag given no value. Refuses rather than falling back. */
+class ArgError extends Error {}
+
 export interface Report {
     violations: Violation[];
     scanned: number;
     typed: number;
+    /** Carries NO marker at all. */
     untyped: number;
+    /** Carries a marker that does not parse — typed WRONGLY, not never typed. */
+    malformed: number;
 }
 
 /**
@@ -331,6 +393,7 @@ export function checkFiles(repo: string, files: readonly string[], requireMarker
     const violations: Violation[] = [];
     let typed = 0;
     let untyped = 0;
+    let malformed = 0;
     for (const rel of files) {
         const text = fs.readFileSync(path.resolve(repo, rel), 'utf-8');
         const scan = scanTypeMarker(text);
@@ -347,7 +410,13 @@ export function checkFiles(repo: string, files: readonly string[], requireMarker
             });
         }
         if (scan.marker === null) {
-            untyped += 1;
+            // A file carrying a marker that does not PARSE was typed wrongly, not
+            // never typed. Folding it into `untyped` made the published remainder
+            // conflate the two, so a corpus getting worse (markers appearing and
+            // failing) and one getting better (markers landing) moved the same
+            // number in the same direction.
+            if (scan.malformed.length > 0) malformed += 1;
+            else untyped += 1;
             if (requireMarker && scan.malformed.length === 0) {
                 violations.push({
                     kind: 'missing-marker',
@@ -363,7 +432,7 @@ export function checkFiles(repo: string, files: readonly string[], requireMarker
         typed += 1;
         violations.push(...checkAgreement(rel, text, scan.marker));
     }
-    return { violations, scanned: files.length, typed, untyped };
+    return { violations, scanned: files.length, typed, untyped, malformed };
 }
 
 /**
@@ -457,24 +526,40 @@ export function main(argv?: readonly string[]): number {
     let all = false;
     let quiet = false;
     let since: string | null = null;
+    // A value-taking flag with no value must REFUSE, not fall back. `--since`
+    // with a missing value silently reverted to the default scope — the exact
+    // silent-wrong-scope failure the unknown-argument branch below exists to
+    // prevent, reached through a different door.
+    const value = (flag: string, i: number): string => {
+        const v = args[i];
+        if (v === undefined || v.startsWith('--')) {
+            throw new ArgError(`${flag} requires a value`);
+        }
+        return v;
+    };
     for (let i = 0; i < args.length; i++) {
         const a = args[i] as string;
-        if (a === '--repo') repo = args[++i] as string;
-        else if (a === '--all') all = true;
-        else if (a === '--since') since = args[++i] as string;
-        else if (a === '--quiet') quiet = true;
-        else if (a === '-h' || a === '--help') {
-            usage();
-            process.stdout.write('scanned: 0\n');
-            return 0;
-        } else {
-            process.stderr.write(`❌  lint_evidence_artifacts: unknown argument \`${a}\`\n`);
+        try {
+            if (a === '--repo') repo = value(a, ++i);
+            else if (a === '--since') since = value(a, ++i);
+            else if (a === '--all') all = true;
+            else if (a === '--quiet') quiet = true;
+            else if (a === '-h' || a === '--help') {
+                usage();
+                process.stdout.write('scanned: 0\n');
+                return 0;
+            } else {
+                throw new ArgError(`unknown argument \`${a}\``);
+            }
+            continue;
+        } catch (exc) {
+            if (!(exc instanceof ArgError)) throw exc;
+            process.stderr.write(`❌  lint_evidence_artifacts: ${exc.message}\n`);
             usage();
             process.stdout.write('scanned: 0\n');
             return 1;
         }
     }
-
     const ledger = new GateLedger('lint_evidence_artifacts');
     let report: Report;
     let files: string[];
@@ -552,7 +637,8 @@ export function main(argv?: readonly string[]): number {
         // observably instead of being assumed to.
         process.stdout.write(
             `  untyped remainder: ${String(report.untyped)} of ${String(report.scanned)} ` +
-                'pre-existing artifact(s) carry no type marker (not required; see §6).\n',
+                'pre-existing artifact(s) carry no type marker (not required; see §6); ' +
+                `${String(report.malformed)} carry one that does not parse.\n`,
         );
     }
     process.stdout.write(`${scopeLine}\n`);

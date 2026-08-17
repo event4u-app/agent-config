@@ -83,6 +83,13 @@ to re-derive:
   would add a second file to keep in sync. The type is kept as a
   specialisation, stated in the contract § 3 rather than left to inference.
 
+**Read the dashboard's Phase 3 row as 0 done, not 1.** `agents/roadmaps-progress.md`
+credits Phase 3 with one completed step, and that is the `## Acceptance Criteria`
+checkbox this change ticked — the generator folds AC boxes into the last phase,
+the same deliberate behaviour that folds `## Prerequisites` boxes in. No Phase 3
+step was touched. Recorded here because the derived view contradicts the note
+below, and the generator is not this change's to alter.
+
 **Phase 1 and Phase 3 stay open, and not for want of trying.** Phase 1 needs
 measured per-host catalogue behaviour, which is an observation about other hosts
 this session cannot make. Phase 3's exit criterion requires a real council run

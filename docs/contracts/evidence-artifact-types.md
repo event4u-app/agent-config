@@ -159,10 +159,24 @@ the corpus needs to be mechanical. So the decision is to make stored evidence
 
 ## 6 · Enforcement scope — honest
 
-[`lint_evidence_artifacts.ts`](../../src/scripts/lint_evidence_artifacts.ts) is
-**changed-files scoped**: it requires a marker on every evidence artifact this
-change adds or modifies, and it does not require one on the ~330 artifacts that
-predate it. Two reasons, and the second is the load-bearing one.
+[`lint_evidence_artifacts.ts`](../../src/scripts/lint_evidence_artifacts.ts)
+checks two things at two different scopes, and calling the validator simply
+"changed-files scoped" would hide the half that is globally enforced:
+
+- **Presence is changed-files scoped.** A marker is required on every evidence
+  artifact this change adds or modifies, and on none of the 227 that predate it.
+- **Agreement is global.** § 4 is checked on every artifact that declares a
+  type, wherever it lives and whenever it was written. `--all` is the argv CI
+  runs, so a pre-existing artifact whose type contradicts its body fails today.
+
+A **`*.review-input/` package is not an artifact** and is excluded from both.
+`dispatch_r2_reviewer.ts` writes a reviewer prompt, a roadmap snapshot and an
+acceptance-criteria copy in there; those are the reviewer's inputs, they bind no
+scope and assert nothing about the tree, so none of the five types describes
+them and demanding one would be a marker added to satisfy a gate.
+
+The presence scope is deliberately narrow, and there are two reasons — the
+second is the load-bearing one.
 
 Retro-typing the existing corpus would mean classifying several hundred files
 from filename and location — the inference § 4 forbids, applied at scale, and
@@ -175,7 +189,17 @@ The consequence, stated rather than hidden: an existing artifact stays untyped
 until something touches it, and a reader of an untyped artifact is exactly as
 badly served as before. The population shrinks as files are touched, and
 `--all` reports the remaining count on every run so the shrink is observable
-instead of assumed.
+instead of assumed. Never-typed and typed-wrongly are reported as **separate**
+numbers: folding a malformed marker into the untyped remainder would make a
+corpus getting worse and one getting better move the same figure in the same
+direction.
+
+**One type has no writer yet.** `current-binding` is written by the dispatcher
+and the other three review types are reachable by the transitions in § 4, but
+nothing in the tree emits `rebind-event` — a re-bind is a hand edit, so the
+type is available and the § 4 re-date rule is model-carried rather than enforced.
+Said here because a reader counting five types would otherwise assume five
+producers.
 
 ## See also
 
