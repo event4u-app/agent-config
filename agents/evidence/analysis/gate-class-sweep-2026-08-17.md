@@ -288,26 +288,36 @@ put to the maintainer and answered on the same day; recorded here because a
 decision that lives only in a chat turn is the shape § 4c itself complained
 about.
 
-**(a) The dropped spend cap — DECIDED, and fixed on a SIBLING branch that is not
-in this tree.** The distinction is load-bearing and the first version of this
-paragraph got it wrong: it read "FIXED, in its own change", which asserts tree
-state. **At this branch's HEAD none of the three targets forwards
-`{{.CLI_ARGS}}` and the guard test does not exist** — the fix lives on
-`fix/bench-ab-budget-passthrough` (PR #1406), a sibling of this branch's parent,
-so it is not in this branch's ancestry. **The money-safety defect is live in the
-reviewed tree until that PR merges.** Caught by R2 finding 1 (critical), which
-is the correct severity: a defect declared fixed, with its blocker closed partly
-on that basis, while the defect is still there.
+**(a) The dropped spend cap — FIXED, in its own change, and in this tree since
+`ad23aab7e`.** This paragraph has been wrong in both directions on the same day,
+and both corrections are kept because the pair is the lesson.
 
-What is true: the decision is recorded, and the change is written, verified and
-open for review. The sibling search on the exact construct — a cost-bearing
+*First* it read "FIXED, in its own change" while the fix sat on a sibling branch
+outside this ancestry — asserting tree state that was false, with the blocker
+closed partly on that basis. R2 finding 1 (critical) caught it, and the severity
+was right.
+
+*Then* the correction outlived its own accuracy: PR #1406 merged to `main`, `main`
+merged into this branch, and the sentence "the money-safety defect is live in the
+reviewed tree" became false the other way round. Verified at HEAD:
+`taskfiles/bench-ab.yml` and `taskfiles/value.yml` both forward `{{.CLI_ARGS}}`,
+and `tests/scripts/bench_ab_taskfile.test.ts` is present.
+
+**The transferable point is not "check before claiming" but that a claim about
+tree state has a shelf life.** Written once, it was wrong immediately; corrected
+once, it was wrong again within the hour, because the tree moved underneath it.
+Prefer naming the commit that makes a statement true — as the heading now does —
+over a relative phrase like "until that PR merges", which silently expires.
+
+The sibling search on the exact construct — a cost-bearing
 `bench_ab_task_runner` invocation with no `{{.CLI_ARGS}}` — found **3** sites, of
 which only `bench:ab:live` carried the false claim; `bench:ab:value` and
 `value:behaviour` claimed nothing but could not be bounded by an operator either.
-All three forward *on that branch*, which is inert when no trailing args are
-given, with both directions proven per target by `task --dry -v`, and a guard
-that reads the real taskfiles and was verified red first. None of that is in
-scope here.
+All three forward, which is inert when no trailing args are given, with both
+directions proven per target by `task --dry -v`, and a guard that reads the real
+taskfiles and was verified red before the fix. The widening past the one target
+that lied was deliberate: the passthrough changes nothing without trailing args,
+and repairing one of three sites of a construct is the fixed-one-instance failure.
 
 **(b) The twelve class-0/1 entries — RECLASSIFIED to what their text supports.**
 Not a blanket downgrade: five of the twelve are genuine consent calls and only

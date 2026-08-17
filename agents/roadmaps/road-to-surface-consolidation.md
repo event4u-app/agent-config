@@ -333,18 +333,20 @@ own verify, pre-window deletions are forbidden.
 - **Status:** open
 - **Owner:** user
 - **Class:** 2 — consent-once (authorise the A/B with an estimate)
-- **Caveat added 2026-08-17, read before authorising (a):** the two statements
-  below that `task bench:ab:live -- --budget <N>` "caps per-task spend" and that
-  this option has "a spend cap already in the tree" were **false when written**.
+- **History note, 2026-08-17 — the cap works now; it did not when the two
+  statements below were written.** They claim that
+  `task bench:ab:live -- --budget <N>` "caps per-task spend" and that this option
+  has "a spend cap already in the tree". Both were **false when authored**:
   `taskfiles/bench-ab.yml` invoked the runner without `{{.CLI_ARGS}}`, so the
   trailing flag never reached it and the run took the parser default of `2.0`
-  instead of `<N>`. The one-line fix is open for review as PR #1406 and the claims
-  become true when it merges — **until then do not authorise (a) believing the cap
-  applies.** This entry was promoted from the absent-field default to `Class: 2`
-  on the same day, which made it renderable as a consent gate for the first time;
-  the caveat is here because that raised its reachability while the text was still
-  wrong (R2 finding 2). The prose below is left as authored — correcting another
-  roadmap's recommendation is its owner's call, not this pass's.
+  instead of `<N>`. **Fixed and merged the same day (PR #1406), so the statements
+  below are now accurate and (a) may be authorised on their strength.** Kept as a
+  note rather than deleted because this entry was promoted from the absent-field
+  default to `Class: 2` on that same day, which made it renderable as a consent
+  gate for the first time — for a few hours it presented a wrong money claim more
+  prominently than before, which is worth a reader knowing (R2 finding 2). The
+  prose below is left as authored: correcting another roadmap's recommendation is
+  its owner's call, not this pass's.
 - **Blocks:** lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
 - **What to do:** each is a spend-bearing (or corpus-gated) paid run, authorized per run and never as a bundle. The options: (a) authorize the lazy-catalog A/B — `task bench:ab:live -- --budget <N>`, which caps per-task spend and resumes rather than re-spends when restarted with the same flags; (b) authorize the team / adversarial-council benchmarks, which have no task wired today and need their runner named before an estimate exists; (c) authorize none and mark the Unified Verification Router decision cancelled rather than parked, since it is gated on verdicts (a) and (b) would produce.
 - **Recommendation:** (a) alone, if anything. It is the only one of the three with a runner and a spend cap already in the tree, so it is the only one that can be authorized against a real estimate rather than a guess; (b) needs a runner named first, and until either verdict exists (c) is a decision about a question nobody has asked recently.

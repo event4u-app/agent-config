@@ -424,10 +424,12 @@ safeguards.**
 
 ### blocker: b-estate-prose-pass-from-1-3
 - **Status:** RESOLVED 2026-08-17 — all three carry a recorded decision, which is
-  the bar this entry set. **(a)** the dropped spend cap is decided and the fix is
-  written, verified and open for review as PR #1406 — **on a sibling branch, so it
-  is NOT in this tree**; the defect stays live here until that merges, and the
-  first version of this line said "fixed in its own change", which asserted tree
+  the bar this entry set. **(a)** the dropped spend cap is decided, fixed, and
+  **merged — PR #1406, in this tree since `ad23aab7e`**; verified at HEAD, both
+  taskfiles forward `{{.CLI_ARGS}}` and the guard test is present. This line has
+  been wrong in both directions in one day, which is why it now names the commit
+  instead of a relative event: the first version said "fixed in its own change"
+  while the fix was on a sibling branch outside this ancestry, which asserted tree
   state and was wrong (R2 finding 1, critical). The sibling search widened the fix
   from the one target that lied to all **3** sites of the construct, since the
   passthrough is inert without trailing args and fixing one of three would be the
