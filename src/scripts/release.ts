@@ -879,14 +879,14 @@ function watch_pr_checks(branch: string): void {
  *
  * git's wording for this is stable across versions: the hint is `fetch first`
  * / `Updates were rejected`, and the ref line carries `[rejected]` with
- * `non-fast-forward` or `fetch first`.
+ * `non-fast-forward` or `fetch first`. A stale lease is a SECOND wording —
+ * `[remote rejected]` + `cannot lock ref … but expected`; pinned in the tests.
  */
 export function _is_non_fast_forward(stderr: string, stdout: string): boolean {
     const text = `${stderr}\n${stdout}`;
-    return (
-        /\[rejected\]/i.test(text) &&
-        /(non-fast-forward|fetch first|behind its remote counterpart)/i.test(text)
-    );
+    if (!/\[(?:remote )?rejected\]/i.test(text)) return false;
+    if (/cannot lock ref[^\n]*but expected/i.test(text)) return true;
+    return /(non-fast-forward|fetch first|behind its remote counterpart)/i.test(text);
 }
 
 function push_release_branch(branch: string): void {
