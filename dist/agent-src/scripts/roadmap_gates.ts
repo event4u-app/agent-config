@@ -47,12 +47,15 @@
  *   ./agent-config gates --json     # machine-readable
  *   ./agent-config gates --reply    # reply-close form; empty when none
  *   ./agent-config gates --pending  # staged actions awaiting confirmation
- *   ./agent-config gates --execute <id>   # resolve one class-0 gate by running it
+ *   ./agent-config gates --execute <id>             # echo what would run
+ *   ./agent-config gates --execute <id> --confirm   # run it and record the evidence
  *
  * `--execute` is the only mode that writes anything, and it takes exactly one
- * blocker id. Everything else here reads. See `gate_execute.ts` for what it
- * refuses to do — no sweep, no resolve on a failed command, no invented budget
- * ledger, and class 3 unchanged by construction.
+ * blocker id. **Without `--confirm` it runs nothing** — it prints the command
+ * the entry authored so the operator sees the exact string first. Everything
+ * else here reads. See `gate_execute.ts` for what it refuses to do — no sweep,
+ * no resolve on a failed command, no invented budget ledger, no Hard-Floor
+ * command even with `--confirm`, and class 3 unchanged.
  *
  * `--pending` reads a different source — the staged-confirmation store, not the
  * roadmap tree — and stays out of `--reply` on purpose. ADR-222 fixes the
@@ -240,8 +243,9 @@ function renderEntry(e: Entry, index: number): string[] {
  *
  * Rendered after the blockers because it is a different kind of item: a
  * blocker is a gate nobody has opened, this is a gate that opened with nobody
- * standing in front of it. Empty findings render nothing at all, so the
- * section never costs a line on a tree where no condition has fired.
+ * standing in front of it. A tree with no `later/` notes at all renders
+ * nothing; a tree that has them but none fired still prints the coverage line
+ * below, deliberately — see the next paragraph.
  *
  * The undecidable count is printed even when zero fired, and that is the
  * point: "no resume condition has fired" and "the probe could read 12 of 44
@@ -549,6 +553,39 @@ function main(argv?: readonly string[]): number {
     const reply = args.includes('--reply');
     const pending = args.includes('--pending');
 
+    // `--execute <id>` is answered FIRST, and it is the only mode that writes.
+    // It used to sit after the `--pending` early return, so `--pending
+    // --execute <id>` silently did nothing; and it ignored `--json`, so a
+    // JSON-requesting caller got prose. Both combinations now refuse loudly.
+    const execIdx = args.indexOf('--execute');
+    if (execIdx !== -1) {
+        const id = args[execIdx + 1];
+        if (id === undefined || id.startsWith('--')) {
+            process.stderr.write(
+                'usage: gates --execute <blocker-id> [--confirm]\n' +
+                    '  Without --confirm the command is echoed and nothing runs.\n',
+            );
+            return 1;
+        }
+        if (pending) {
+            process.stderr.write('gates: --execute and --pending are different sources; pick one.\n');
+            return 1;
+        }
+        if (json) {
+            process.stderr.write('gates --execute has no JSON form; its output is a report.\n');
+            return 1;
+        }
+        const root = _resolveRepoRoot(process.cwd());
+        const dir = path.join(root, 'agents', 'roadmaps');
+        if (!_isDir(dir)) {
+            process.stderr.write('No roadmaps directory — nothing to execute.\n');
+            return 1;
+        }
+        const r = execute(dir, id, new Date(), { confirm: args.includes('--confirm') });
+        process.stdout.write(r.report);
+        return r.code;
+    }
+
     // `--pending` resolves against `agents/runtime/`, not `agents/roadmaps/`,
     // and is answered BEFORE the roadmaps-directory exit below: a staged action
     // is independent of whether this project plans in roadmaps at all, so
@@ -570,28 +607,24 @@ function main(argv?: readonly string[]): number {
             reply
                 ? ''
                 : json
-                  ? '{"needsYou":0,"other":0,"blockers":[]}\n'
+                  ? // Every key `renderJson` emits, so a consumer reading the
+                    // resume fields gets 0 rather than `undefined` on the
+                    // branch where there is no roadmap tree to probe.
+                    JSON.stringify(
+                          {
+                              needsYou: 0,
+                              other: 0,
+                              resumeFired: 0,
+                              resumeUndecidable: 0,
+                              resumed: [],
+                              blockers: [],
+                          },
+                          null,
+                          2,
+                      ) + '\n'
                   : 'No roadmaps directory — nothing to report.\n',
         );
         return 0;
-    }
-
-    // `--execute <id>` acts; every other flag only reads. One blocker per
-    // invocation, named explicitly — a blanket sweep would run N authored
-    // commands on one keypress and make a misclassification cost the tree
-    // rather than one entry.
-    const execIdx = args.indexOf('--execute');
-    if (execIdx !== -1) {
-        const id = args[execIdx + 1];
-        if (id === undefined || id.startsWith('--')) {
-            process.stderr.write(
-                'gates --execute needs a blocker id: `agent-config gates --execute <id>`.\n',
-            );
-            return 1;
-        }
-        const r = execute(roadmapRoot, id, new Date());
-        process.stdout.write(r.report);
-        return r.code;
     }
 
     const entries = collectEntries(roadmapRoot);

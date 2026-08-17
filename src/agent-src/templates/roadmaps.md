@@ -143,9 +143,13 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
     - **Owner:** user             <!-- user | maintainer | external -->
     - **Blocks:** Phase N — {phase name}
     - **Question:** {optional — the one line saying what is being decided.}
-    - **Class:** 3                <!-- optional — 0 | 1 | 2 | 3; absent = 3 -->
-    - **Run:** `{command}`        <!-- required when Class is 0 or 1 -->
-    - **Budget:** {estimate}      <!-- optional — class 1 only -->
+    <!-- Class is optional and absent means 3. Add Run: ONLY with Class 0 or 1,
+         where it is required — a class-3 entry advertising a command reads as
+         actionable and is not. Budget: is class 1 only.
+           - **Class:** 0
+           - **Run:** `{command}`
+           - **Budget:** {estimate}   (class 1 only)
+    -->
     - **Recommendation:** {which option, and the one sentence why.}
     - **If you do nothing:** {what the non-decision costs, concretely.}
     - **What to do:**

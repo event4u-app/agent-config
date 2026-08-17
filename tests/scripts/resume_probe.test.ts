@@ -90,13 +90,116 @@ describe('resume_probe — the unmet case is NOT listed as fired', () => {
         expect(f!.why).toContain('still open');
     });
 
-    it('a compound condition needs EVERY named roadmap closed', () => {
+    it('a multi-roadmap condition needs EVERY named roadmap closed', () => {
+        // Comma-separated on purpose: an "and"/"both" phrasing is caught one
+        // step earlier by the compound guard, so this is the shape that
+        // actually reaches the per-ref loop.
         write(
             'later/road-to-parked.md',
-            '> **Resume when `road-to-a` and `road-to-b` both close.**\n',
+            '> **Resume when `road-to-a`, `road-to-b` close.**\n',
         );
         write('archive/road-to-a.md', '# closed\n');
         write('road-to-b.md', '- [ ] still going\n');
+
+        const [f] = probeLater(root);
+        expect(f!.verdict).toBe('unmet');
+    });
+
+    it('a lowercase conjunction is compound too — the guard is case-insensitive', () => {
+        // Regression for R2 finding 6: COMPOUND_RE shipped without `i` while
+        // every sibling regex had it, so this exact note would have fired on
+        // its single resolvable conjunct.
+        write(
+            'later/road-to-parked.md',
+            '> **Resume when `road-to-a` closes and telemetry shows demand.**\n',
+        );
+        write('archive/road-to-a.md', '# closed\n');
+
+        const [f] = probeLater(root);
+        expect(f!.verdict).toBe('undecidable');
+        expect(f!.why).toContain('compound');
+    });
+
+    it('an "and" in the EXPLANATION is not a conjunction of conditions', () => {
+        // Measured while fixing finding 6: making COMPOUND_RE case-insensitive
+        // is right, and on its own it produced the opposite false result —
+        // ordinary prose after the em dash read as a second conjunct and the
+        // one genuinely fired note in the tree dropped out. The clause is the
+        // bolded span; the paragraph after it is commentary.
+        write(
+            'later/road-to-parked.md',
+            [
+                '> **Resume when P2.1 of `road-to-a` closes** — the falsifier that measures',
+                '> whether a description reaches the model at all, and the report itself',
+                '> declines to produce a rate.',
+                '',
+            ].join('\n'),
+        );
+        write('archive/road-to-a.md', '# closed\n');
+
+        const [f] = probeLater(root);
+        expect(f!.verdict).toBe('fired');
+    });
+
+    it('a roadmap named only in the explanation is not a dependency', () => {
+        write(
+            'later/road-to-parked.md',
+            [
+                '> **Resume when `road-to-a` closes** — context: this was spun out of',
+                '> `road-to-b`, which is unrelated to the condition.',
+                '',
+            ].join('\n'),
+        );
+        write('archive/road-to-a.md', '# closed\n');
+        write('road-to-b.md', '- [ ] still going\n');
+
+        const [f] = probeLater(root);
+        expect(f!.verdict).toBe('fired');
+        expect(f!.refs).toEqual(['road-to-a']);
+    });
+
+    it('a resume marker in body prose is not the condition', () => {
+        // Regression for R2 finding 14: the marker search covered the whole
+        // file, so ordinary prose could become "the condition".
+        write(
+            'later/road-to-parked.md',
+            [
+                '> **Parked.** No machine-readable condition here.',
+                '',
+                'Historical note: this was blocked until `road-to-a` closed, back in June.',
+                '',
+            ].join('\n'),
+        );
+        write('archive/road-to-a.md', '# closed\n');
+
+        const [f] = probeLater(root);
+        expect(f!.verdict).toBe('undecidable');
+        expect(f!.condition).toBe('');
+    });
+
+    it('a fenced example of the syntax is documentation, not a condition', () => {
+        write(
+            'later/road-to-parked.md',
+            ['> **Parked.**', '', '```markdown', '> **Resume when `road-to-a` closes.**', '```', ''].join(
+                '\n',
+            ),
+        );
+        write('archive/road-to-a.md', '# closed\n');
+
+        const [f] = probeLater(root);
+        expect(f!.verdict).toBe('undecidable');
+    });
+
+    it('the step id must sit in the label position, not anywhere on the line', () => {
+        // Regression for R2 finding 5: an earlier unrelated line mentioning
+        // the number decided the verdict, and exec returns the first match.
+        write('later/road-to-parked.md', '> **Resume when 2.1 of `road-to-live` closes.**\n');
+        write(
+            'road-to-live.md',
+            ['- [x] **1.4** raise the cap from 2.0 to 2.1', '- [ ] **2.1** the real step', ''].join(
+                '\n',
+            ),
+        );
 
         const [f] = probeLater(root);
         expect(f!.verdict).toBe('unmet');

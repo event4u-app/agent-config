@@ -100,9 +100,11 @@ safeguards.**
       absent-field default at every consumer rather than at each call site);
       `lint_roadmap_blockers` gains two HARD checks — an unknown class, and a class
       0/1 entry with no `Run:`. Contract text in `templates/roadmaps.md` rule 20,
-      with the four-class table. Eight new tests in
+      with the four-class table. Nine new `it(` blocks in
       `tests/scripts/lint_roadmap_blockers.test.ts` cover both directions including
-      the class-2/3 and absent-class negatives; 25/25 green.
+      the class-2/3 and absent-class negatives. (Recorded as eight in the first
+      pass; corrected by R2 finding 17 — a checkable count in a done-note is
+      exactly the kind of claim that has to be right.)
       **The check is HARD, not ratcheted, and the reason is worth recording:** the
       field is opt-in, so on the day it ships no entry declares a class and the rule
       fires on nothing. There is no backlog to grandfather, so the "strict gate reds
@@ -144,8 +146,22 @@ safeguards.**
       including two a live parallel session is holding. The classification is
       committed as the evidence table instead, which is what step 1.2 asks for; the
       write-back is named as the follow-up rather than done half-way.
+- [ ] **1.3** Write the swept classes back into the blocker entries themselves, so
+      `Class:` is a field in the tree and not only a row in the evidence table.
+      **Added 2026-08-17 by R2 finding 7**, which is the reason it exists as a step:
+      1.2 deferred this in prose, and prose in a done-note is not tracked — it
+      disappears when the roadmap archives, which is the lost-information shape
+      Iron Law 3 exists to prevent. Deferred rather than done because it is a
+      25-file diff across every active roadmap, two of them held by a live
+      parallel session at the time; only this roadmap's own two entries carry the
+      field today.
+      `verify:` every open blocker in `agent-config gates --json --all` carries a
+      class, and `lint_roadmap_blockers` is green.
 - **AC-1:** every open blocker carries a class; the lint enforces `run:` on classes
-  0 and 1; the sweep table is committed with its share.
+  0 and 1; the sweep table is committed with its share. **Not met — step 1.3
+  carries the remainder.** The lint half and the sweep half are done; the
+  write-back is not, and the phase is marked complete only in the sense that
+  every step authored in it at the time is closed.
 
 ### Phase 2 — `gates --execute` (the acting half)
 
@@ -175,6 +191,22 @@ safeguards.**
       guessed command** — a class-0 entry with no `Run:` executes nothing, which
       is reachable only through an unlinted tree but is the one case where
       guessing must not happen.
+      **Two more refusals added by the R2 review, both on the security surface it
+      found (finding 1).** `Run:` is arbitrary shell read out of a markdown field,
+      and the first cut ran it on one keypress: **`--confirm` is now required** —
+      without it the command is echoed and nothing runs, which is the this-turn,
+      names-the-exact-object confirmation `non-destructive-by-default` asks for.
+      And a command carrying a Hard-Floor action (`git push`, `terraform apply`,
+      `rm -rf`, `DROP TABLE`, …) is **refused even with `--confirm`**: class 0 is
+      defined as reversible, so such an entry is misclassified, and waving it
+      through would move a Hard Floor onto a keypress. The denylist is a
+      classification check, not a security boundary — the boundary is `--confirm`.
+      **The over-budget half of this step's `verify:` is NOT satisfied**, recorded
+      rather than papered over (R2 finding 8). It asks for an over-budget path that
+      renders rather than executes; today class 1 always renders, because the
+      budget model it would compare against is `b-gate-budget-preauth` and still
+      the maintainer's. Building one here to make a checkbox green would be exactly
+      the invented ledger this step refuses two paragraphs up.
 - [x] **2.2** Class 2 emits its one-line consent question with recommendation and
       default into the decision-sheet surface — `road-to-user-out-of-the-loop`
       Phase 1 owns that surface, and this roadmap only feeds it. Class 3 is
@@ -203,7 +235,11 @@ safeguards.**
       Blocked on `b-gate-budget-preauth`.
 - **AC-2:** `gates --execute` resolves at least one real class-0 and one real
   class-1 blocker end to end, with evidence appended and, for class 1, a receipt in
-  the ledger.
+  the ledger. **Not met, and not meetable yet** (recorded by R2 finding 7): no live
+  blocker carries `Class: 0` until step 1.3 lands, and the class-1 half needs the
+  ledger `b-gate-budget-preauth` still owns. The fixtures discharge each step's own
+  `verify:` clause; this criterion is a phase-level claim about the live estate and
+  stays open.
 
 ### Phase 3 — Agent runs via CLI: open the delegate gate for the maintainer profile
 
@@ -253,6 +289,20 @@ safeguards.**
       **42 of 44 undecidable is published, not hidden.** The coverage line prints
       on every run, so "no condition has fired" can never be confused with "the
       probe could read 2 of 44 conditions" — the gate-that-scans-nothing shape.
+      **The R2 review then found a third and fourth over-read and a false
+      negative the fix for one of them created** (findings 5, 6, 14). The step id
+      matched anywhere on a checkbox line, so `- [x] **1.4** raise the cap from
+      2.0 to 2.1` decided the verdict for step 2.1; it is now anchored to the
+      label position. The marker was searched over the whole file, so body prose
+      could become the condition; it is now restricted to the blockquote, with
+      fenced examples blanked. And `COMPOUND_RE` shipped without the `i` every
+      sibling regex carries — **fixing that alone immediately broke the probe in
+      the other direction**, because an ordinary "and" in the prose *after* the
+      condition read as a second conjunct and the one genuinely fired note
+      dropped out. The discriminator that makes the case-insensitive test safe is
+      `conditionClause`: park notes bold the condition and explain it afterwards,
+      so the analysis reads the bolded span and treats the paragraph after it as
+      commentary. Both directions are now fixtures.
 - **AC-4:** the probe runs in the recurring pass owned by
   `road-to-estate-drawdown` Phase 4, and the fixture case is detected.
 
@@ -263,7 +313,9 @@ safeguards.**
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** Phase 2 step 2.3, and therefore every class-1 execution. Steps 2.1
-  and 2.2 ship the class-0 path and the render path without it.
+  and 2.2 ship the class-0 path and the render path without it. Also blocks the
+  over-budget half of 2.1's `verify:` clause and AC-2's class-1 half: both need a
+  budget to compare against, and this entry is where that budget is decided.
 - **What to do:** decide the standing budget shape for class-1 gates. Options:
   (a) register a per-run and a per-week cap as settings keys, with the append-only
   receipt ledger as the audit surface — the recommended shape, because a per-run cap

@@ -67,7 +67,7 @@ describe('gates --execute — class 0 is run, and its output is the unblock', ()
             roadmap('time-window', ['- **Class:** 0', '- **Run:** `echo window-is-past`']),
         );
 
-        const r = execute(roadmapRoot, 'time-window', WHEN);
+        const r = execute(roadmapRoot, 'time-window', WHEN, { confirm: true });
         expect(r.outcome).toBe('resolved');
         expect(r.code).toBe(0);
 
@@ -87,7 +87,7 @@ describe('gates --execute — class 0 is run, and its output is the unblock', ()
         );
         const before = fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8');
 
-        const r = execute(roadmapRoot, 'flaky', WHEN);
+        const r = execute(roadmapRoot, 'flaky', WHEN, { confirm: true });
         expect(r.outcome).toBe('failed');
         expect(r.code).toBe(1);
         expect(r.report).toContain('exited 3');
@@ -101,6 +101,81 @@ describe('gates --execute — class 0 is run, and its output is the unblock', ()
         const r = execute(roadmapRoot, 'bare', WHEN);
         expect(r.outcome).toBe('failed');
         expect(r.report).toContain('no **Run:** command');
+    });
+});
+
+describe('gates --execute — nothing runs without --confirm', () => {
+    // Regression for R2 finding 1: `Run:` is arbitrary shell read out of a
+    // markdown field, and the first cut executed it on one keypress.
+
+    it('echoes the command and executes nothing by default', () => {
+        writeRoadmap(
+            'road-to-x.md',
+            roadmap('probe', ['- **Class:** 0', '- **Run:** `echo MUST-NOT-RUN`']),
+        );
+        const before = fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8');
+
+        const r = execute(roadmapRoot, 'probe', WHEN);
+        expect(r.outcome).toBe('rendered');
+        expect(r.code).toBe(0);
+        expect(r.report).toContain('echo MUST-NOT-RUN');
+        expect(r.report).toContain('--confirm');
+        // Echoed, not run: the file is untouched and no evidence was appended.
+        expect(fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8')).toBe(before);
+        expect(r.report).not.toContain('resolved.');
+    });
+
+    it('refuses a Hard-Floor command even WITH --confirm', () => {
+        // Class 0 means reversible. A push is not, so the entry is
+        // misclassified and the answer is refusal, not a confirmation prompt.
+        for (const cmd of ['git push origin main', 'terraform apply', 'rm -rf dist', 'gh pr merge 12']) {
+            writeRoadmap('road-to-x.md', roadmap('oops', ['- **Class:** 0', `- **Run:** \`${cmd}\``]));
+            const r = execute(roadmapRoot, 'oops', WHEN, { confirm: true });
+            expect(r.outcome, cmd).toBe('failed');
+            expect(r.report, cmd).toContain('Hard-Floor');
+            expect(r.report, cmd).toContain('misclassified');
+        }
+    });
+
+    it('a near-miss is not mistaken for a Hard-Floor command', () => {
+        // The words appear, but not as the command: the pattern anchors at a
+        // command position, so mentioning a push in output is not pushing.
+        writeRoadmap(
+            'road-to-x.md',
+            roadmap('fine', ['- **Class:** 0', '- **Run:** `echo nothing to push here`']),
+        );
+        expect(execute(roadmapRoot, 'fine', WHEN, { confirm: true }).outcome).toBe('resolved');
+    });
+});
+
+describe('gates --execute — the evidence lands under the blocker', () => {
+    it('a blocker followed by another ## section keeps its evidence in place', () => {
+        // Regression for R2 finding 3: the body ran to the end of the file for
+        // the LAST blocker, which is the common shape, so the bullet landed
+        // after the risk table instead of under the entry.
+        writeRoadmap(
+            'road-to-x.md',
+            roadmap('last-one', ['- **Class:** 0', '- **Run:** `echo ok`']) +
+                ['## Risk Register', '', '| Rank | Item |', '|---|---|', '| 1 | something |', ''].join('\n'),
+        );
+        execute(roadmapRoot, 'last-one', WHEN, { confirm: true });
+
+        const after = fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8');
+        const evidenceAt = after.indexOf('**Unblock evidence');
+        const riskAt = after.indexOf('## Risk Register');
+        expect(evidenceAt).toBeGreaterThan(-1);
+        expect(evidenceAt).toBeLessThan(riskAt);
+    });
+
+    it('a blocker id carrying a regex metacharacter does not throw', () => {
+        // Regression for R2 finding 13: ids are parsed with `(.+?)`, so a
+        // metacharacter is legal in the tree and threw AFTER the command ran.
+        writeRoadmap(
+            'road-to-x.md',
+            roadmap('b-foo(1)', ['- **Class:** 0', '- **Run:** `echo ok`']),
+        );
+        const r = execute(roadmapRoot, 'b-foo(1)', WHEN, { confirm: true });
+        expect(r.outcome).toBe('resolved');
     });
 });
 

@@ -59,8 +59,13 @@ const RESUME_LINE_RE = /\b(blocked until|resume when|blocked-until|resume-when)\
  * the whole condition on a third of the evidence. Measured on the first live
  * run: `later/road-to-deferred-rule-retriever.md` waits on three archived
  * roadmaps AND three demand signals no filesystem check can see.
+ *
+ * Case-INSENSITIVE, and it was not for one revision: every sibling regex here
+ * carries `i` and this one did not, so a lowercase "and" walked through the
+ * guard and its note would have fired on the single conjunct the probe can
+ * resolve — the exact over-report the guard exists to stop.
  */
-const COMPOUND_RE = /\bBOTH\b|\bAND\b|\([1-9]\)|\([a-e]\)|`[ \t]*\+|\+[ \t]*`/;
+const COMPOUND_RE = /\bboth\b|\band\b|\([1-9]\)|\([a-e]\)|`[ \t]*\+|\+[ \t]*`/i;
 
 /**
  * A bolded field label that ENDS the condition.
@@ -148,8 +153,13 @@ function roadmapDisposition(roadmapRoot: string, slug: string): Disposition {
  * lines until the quote block breaks.
  */
 function extractCondition(text: string): string {
-    const lines = text.split(/\r?\n/);
-    const start = lines.findIndex((l) => RESUME_LINE_RE.test(l));
+    const lines = _blankFencedCode(text).split(/\r?\n/);
+    // The marker must be inside the park note's blockquote. Searching the whole
+    // file let ordinary body prose containing "blocked until" become "the
+    // condition", and the continuation loop then read from the wrong anchor.
+    const start = lines.findIndex(
+        (l) => _strip(l).startsWith('>') && RESUME_LINE_RE.test(l),
+    );
     if (start === -1) {
         return '';
     }
@@ -208,6 +218,55 @@ function _strip(s: string): string {
     return s.replace(/^[ \t\f\v]+|[ \t\f\v\r]+$/g, '');
 }
 
+/**
+ * Blank fenced code, preserving line count.
+ *
+ * A park note that SHOWS the resume-condition syntax in a fenced example is
+ * documenting it, not stating one — the same reason `parse_blockers` and
+ * `lint_roadmap_blockers` both strip fences before they look for blockers.
+ */
+function _blankFencedCode(text: string): string {
+    return text.replace(/^[ \t]*```[^\n]*\n[\s\S]*?^[ \t]*```[ \t]*$/gm, (m) =>
+        '\n'.repeat((m.match(/\n/g) ?? []).length),
+    );
+}
+
+/**
+ * The condition CLAUSE inside the condition text.
+ *
+ * Park notes bold the condition and then explain it in prose:
+ * `**Resume when P2.1 of \`road-to-x\` closes** — the catalogue-logging
+ * falsifier that measures whether … and the report itself declines to …`.
+ * The clause is the bolded span; everything after it is commentary.
+ *
+ * The distinction is load-bearing and was measured the hard way. Making
+ * `COMPOUND_RE` case-insensitive (correct in itself — the flag was missing)
+ * immediately produced the opposite false result: an ordinary "and" in the
+ * *explanation* read as a conjunction of conditions, and the one genuinely
+ * fired note in the tree dropped out. Analysing the clause rather than the
+ * paragraph is what makes a case-insensitive conjunction test safe.
+ *
+ * Falls back to the whole string when no bolded span carries the marker — a
+ * note that writes its condition unbolded gets the blunt reading, which is the
+ * conservative direction.
+ */
+function conditionClause(condition: string): string {
+    const re = /\*\*([^*]+)\*\*/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(condition)) !== null) {
+        const span = m[1] as string;
+        if (RESUME_LINE_RE.test(span)) {
+            // The bolded span sometimes stops before the payload
+            // (`**Resume when** that pruning lands`), so take the span plus the
+            // remainder of its sentence — up to an em dash or a full stop.
+            const after = condition.slice(m.index + m[0].length);
+            const tail = /^[^—–.]*/.exec(after)?.[0] ?? '';
+            return `${span}${tail}`;
+        }
+    }
+    return condition;
+}
+
 /** Roadmap slugs named by the condition, minus the parked file's own slug. */
 function referencedRoadmaps(condition: string, ownSlug: string): string[] {
     const out = new Set<string>();
@@ -222,10 +281,21 @@ function referencedRoadmaps(condition: string, ownSlug: string): string[] {
     return [...out].sort();
 }
 
-/** Is `stepId` (e.g. `2.1`) ticked in `text`? `null` when it is not found. */
+/**
+ * Is `stepId` (e.g. `2.1`) ticked in `text`? `null` when it is not found.
+ *
+ * The id must sit in the step's LABEL position — immediately after the
+ * checkbox, optionally bolded — not anywhere on the line. Matching it anywhere
+ * meant a line like `- [x] **1.4** raise the cap from 2.0 to 2.1` decided the
+ * verdict for step 2.1, and because `exec` returns the first match in the file
+ * the wrong line won whenever it came first.
+ */
 function stepIsDone(text: string, stepId: string): boolean | null {
-    const escaped = stepId.replace('.', '\\.');
-    const re = new RegExp(`^[ \\t]*-[ \\t]*\\[([ xX~-])\\][^\\n]*\\b(?:P|Phase[ \\t]+)?${escaped}\\b`, 'm');
+    const escaped = stepId.replace(/\./g, '\\.');
+    const re = new RegExp(
+        `^[ \\t]*-[ \\t]*\\[([ xX~-])\\][ \\t]*\\*{0,2}(?:P|Phase[ \\t]+)?${escaped}\\b`,
+        'm',
+    );
     const m = re.exec(text);
     if (!m) {
         return null;
@@ -268,17 +338,21 @@ function probeLater(roadmapRoot: string): ResumeFinding[] {
             });
             continue;
         }
-        if (COMPOUND_RE.test(condition)) {
+        // Both tests read the CLAUSE, never the surrounding explanation: an
+        // "and" or a roadmap name in the prose after the condition is
+        // commentary, not a second conjunct and not a dependency.
+        const clause = conditionClause(condition);
+        if (COMPOUND_RE.test(clause)) {
             findings.push({
                 file: `later/${name}`,
                 condition,
-                refs: referencedRoadmaps(condition, ownSlug),
+                refs: referencedRoadmaps(clause, ownSlug),
                 verdict: 'undecidable',
                 why: 'compound condition — the probe reads the roadmap references and not the rest',
             });
             continue;
         }
-        const refs = referencedRoadmaps(condition, ownSlug);
+        const refs = referencedRoadmaps(clause, ownSlug);
         if (refs.length === 0) {
             findings.push({
                 file: `later/${name}`,
@@ -290,7 +364,7 @@ function probeLater(roadmapRoot: string): ResumeFinding[] {
             continue;
         }
 
-        const stepMatch = STEP_REF_RE.exec(condition);
+        const stepMatch = STEP_REF_RE.exec(clause);
         const stepId = stepMatch ? (stepMatch[1] as string) : null;
 
         const reasons: string[] = [];
@@ -337,6 +411,7 @@ function probeLater(roadmapRoot: string): ResumeFinding[] {
 }
 
 export {
+    conditionClause,
     extractCondition,
     probeLater,
     referencedRoadmaps,
