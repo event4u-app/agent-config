@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**505 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 167 · completed 247 · completed-with-deferrals 25 · not-extractable 34
+**506 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 167 · completed 248 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -415,6 +415,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-rule-delivery-integrity`](road-to-rule-delivery-integrity.md) | Road to rule delivery integrity — rules that arrive once, scoped, and provably | closed-with-cancellations | 6 | 15/17 | _not extractable_ |
 | [`road-to-rule-hardening`](road-to-rule-hardening.md) | Road to Rule Hardening | closed-with-cancellations | 7 | 27/33 | _not extractable_ |
 | [`road-to-rule-quality-research`](road-to-rule-quality-research.md) | Roadmap: Rule & Guideline Quality Research | archived-with-open-steps | 0 | 0/2 | _not extractable_ |
+| [`road-to-rule-stub-projection`](road-to-rule-stub-projection.md) | Road to rule-stub projection — hold a migrated rule at the size its pointer claims | completed | 4 | 19/19 | _not extractable_ |
 | [`road-to-runtime-encoding-hardening`](road-to-runtime-encoding-hardening.md) | Road to runtime encoding hardening — prove the sanitize floor runs, then close the half it deliberately left open | completed | 5 | 24/24 | _not extractable_ |
 | [`road-to-runtime-security-hardening`](road-to-runtime-security-hardening.md) | Road to runtime-security hardening — fix the subprocess-env RCE, hold the scope line | completed | 3 | 11/11 | _not extractable_ |
 | [`road-to-scale-and-history-discipline`](road-to-scale-and-history-discipline.md) | Road to scale & history discipline — two packs, one deterministic linter substrate | completed | 6 | 23/23 | _not extractable_ |
