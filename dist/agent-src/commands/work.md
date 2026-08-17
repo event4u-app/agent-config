@@ -149,6 +149,22 @@ engine owns the verdict.
 | `medium` | PARTIAL halt | Engine emits the assumptions report; surface verbatim, wait for the user. On confirm, write `state.input.data.confidence_confirmed=true` and re-run. On refine, replace `state.input.data.raw` with the new prompt, clear `reconstructed_ac` + `assumptions`, and re-run |
 | `low` | BLOCKED halt | Engine emits exactly one clarifying question on the weakest dimension (per [`ask-when-uncertain`](../rules/ask-when-uncertain.md) Iron Law). Surface verbatim, wait for the user, append their answer to `state.input.data.raw`, clear `reconstructed_ac` + `assumptions`, and re-run |
 
+**Elicitation is the contract's, not this command's.** The bands above decide
+*whether* the run may proceed; they do not each own a question surface. When
+`/work` derives an execution contract, the `medium`-band assumptions report and
+the `low`-band clarifying question are rows of the
+[`contract-decision-sheet`](../contexts/execution/contract-decision-sheet.md)
+rendered inside that contract screen — the same derivation
+[`roadmap-execution-contract`](../contexts/execution/roadmap-execution-contract.md)
+runs for `/roadmap:process-*`, reused rather than reimplemented here. `/work`
+carrying a second elicitation mechanism is exactly the drift the single-surface
+principle exists to stop, and reusing the derivation means a fix to the sheet
+reaches both entry points at once.
+
+Unchanged by that reuse: the engine still owns the band verdict (never flip it
+yourself), a `low` band still blocks, and the locked decision classes still
+escalate individually rather than becoming sheet rows.
+
 Once the gate releases, the rest of the loop is identical to
 `/implement-ticket`: `create-plan`, `apply-plan`, `run-tests`,
 `review-changes` directives flow through the same dispatch table. The

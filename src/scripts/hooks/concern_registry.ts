@@ -67,6 +67,7 @@ import { main as sessionEolMain } from './session_eol_hook.js';
 import { main as subagentLedgerMain } from './subagent_ledger_hook.js';
 import { main as toolResultBytesMain } from './tool_result_bytes_hook.js';
 import { main as spawnGuardShadowMain } from './spawn_guard_shadow_hook.js';
+import { main as interruptionLedgerMain } from './interruption_ledger_hook.js';
 
 /** A concern `main` — argv-taking or not; both shapes exist. */
 export type ConcernMain = (argv?: string[]) => number | undefined | void;
@@ -116,4 +117,5 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/subagent_ledger_hook.ts': subagentLedgerMain as ConcernMain,
     'src/scripts/hooks/tool_result_bytes_hook.ts': toolResultBytesMain as ConcernMain,
     'src/scripts/hooks/spawn_guard_shadow_hook.ts': spawnGuardShadowMain as ConcernMain,
+    'src/scripts/hooks/interruption_ledger_hook.ts': interruptionLedgerMain as ConcernMain,
 };

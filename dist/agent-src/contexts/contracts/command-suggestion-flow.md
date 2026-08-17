@@ -42,11 +42,58 @@ rank()     →  apply floor, drop blocklisted, anti-noise heuristics,
 apply_cooldown()  →  drop (command, evidence) pairs shown in window
    │
    ▼
+tier()     →  HIGH | MEDIUM | LOW  (see § Tier matrix)
+   │
+   ├── HIGH  → route directly + one-line basis statement
+   │
+   └── MEDIUM / LOW
+        │
+        ▼
 render()   →  numbered-options block + Recommendation line
    │
    ▼
 agent emits the block as the first and ONLY thing this turn
 ```
+
+## Tier matrix — the one case that routes without a block
+
+Extends the non-interactive contract's tier matrix onto this layer
+(road-to-user-out-of-the-loop Phase 1). The principle it serves is
+single-elicitation: when the routed command **has its own contract screen**,
+showing an options block first makes the user confirm the same intent twice.
+
+**HIGH** requires ALL of the following. They are deterministic facts, not a
+confidence score, because a threshold on a fuzzy score is exactly what would
+turn "unique match" into "usually right":
+
+1. The signal names the command **uniquely** — the roadmap file named in the
+   prompt exists on disk, or the phrase matches a `trigger_description`
+   **exactly** (not a substring hit).
+2. **No second candidate above the floor.** Two candidates, even at very
+   different scores, is MEDIUM.
+3. The routed command **shows its own confirmation** (a contract screen, a
+   plan-confidence gate, or an explicit accept step). A command that would
+   begin acting on arrival is never HIGH, whatever the signal.
+
+HIGH routes directly and prints **one line** naming its basis:
+
+```
+Routing to /roadmap:process-full — the named roadmap file exists and no second
+candidate scored above the floor. Its contract screen is your confirmation.
+```
+
+MEDIUM and LOW keep the numbered-options block, unchanged.
+
+**What HIGH does not do.** It does not skip a confirmation; it removes a
+*duplicate* one. Condition 3 is what makes that true rather than rhetorical —
+strip it and this becomes auto-execution. It also never applies to a Hard-Floor
+action, which is gated by [`non-destructive-by-default`](../../rules/non-destructive-by-default.md)
+regardless of how it was reached.
+
+**Kill criterion** (from the originating roadmap's Risk 3): more than 5 %
+mis-routes across 50 auto-routes reverts this to block-always. The instrument
+for that count does not exist yet — until it does, a mis-route is a reportable
+defect, and the honest position is that the rate is unmeasured rather than low.
 
 ## Scoring breakdown
 

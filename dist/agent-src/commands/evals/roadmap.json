@@ -29,6 +29,14 @@
     {
       "prompt": "plan out this feature step by step",
       "expected": "feature"
+    },
+    {
+      "prompt": "process road-to-user-out-of-the-loop.md to completion",
+      "expected": "roadmap"
+    },
+    {
+      "prompt": "either roadmap it or turn it into a feature plan, your pick",
+      "expected": "roadmap"
     }
   ]
 }
