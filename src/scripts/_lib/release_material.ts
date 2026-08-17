@@ -21,7 +21,18 @@ export interface ChangelogSection {
     body: string;
 }
 
-const _NEXT_HEADING_RE = /^##\s+\[?\d+\.\d+\.\d+/m;
+/**
+ * Where a changelog section ends: the next release entry OR the next era
+ * banner. Era banners are level 1 and release entries level 2+ — the same
+ * invariant the release-validation `changelog-entry` gate relies on, and the
+ * one `lint_changelog_rollback` / `lint_breaking_changes_index` already encode
+ * as `/^##? /`. Without the era arm the newest entry runs to end-of-file after
+ * a split, which leaves it as the last `##` heading above archived banners.
+ *
+ * Exported because release.ts bounds the previous entry the same way, and two
+ * copies of a boundary is how one of them stays wrong.
+ */
+export const NEXT_SECTION_RE = /^(?:##\s+\[?\d+\.\d+\.\d+|# Era:)/m;
 
 function _reEscape(s: string): string {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -29,9 +40,9 @@ function _reEscape(s: string): string {
 
 /**
  * Extract the CHANGELOG section for `version` — heading plus body up to the
- * next version heading (or end of file). Returns null when no heading for
- * `version` exists. Matches both heading shapes the generator emits
- * (`## X.Y.Z (date)` and `## [X.Y.Z](compare-url) (date)`).
+ * next version heading or era banner (or end of file). Returns null when no
+ * heading for `version` exists. Matches both heading shapes the generator
+ * emits (`## X.Y.Z (date)` and `## [X.Y.Z](compare-url) (date)`).
  */
 export function extract_changelog_section(text: string, version: string): ChangelogSection | null {
     const headingRe = new RegExp(`^##\\s+\\[?${_reEscape(version)}\\b.*$`, 'm');
@@ -41,7 +52,7 @@ export function extract_changelog_section(text: string, version: string): Change
     }
     const bodyStart = m.index + m[0].length;
     const rest = text.slice(bodyStart);
-    const next = _NEXT_HEADING_RE.exec(rest);
+    const next = NEXT_SECTION_RE.exec(rest);
     const sectionEnd = bodyStart + (next ? next.index : rest.length);
     const body = text
         .slice(bodyStart, sectionEnd)

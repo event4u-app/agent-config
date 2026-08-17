@@ -124,7 +124,9 @@ import {
     derive_category_hits,
     render_derived_head_values,
 } from './_lib/release_highlights.js';
+import { gh_argv_label, gh_retry } from './_lib/gh_transient.js';
 import {
+    NEXT_SECTION_RE,
     extract_changelog_section,
     pr_body_from_section,
     release_notes_from_section,
@@ -616,6 +618,31 @@ function git(args: readonly string[], opts: { capture?: boolean } = {}): string 
     return capture ? r.stdout.trim() : '';
 }
 
+function _sleep_ms(ms: number): void {
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/**
+ * `gh` with transient-failure retry and a readable death. Always captures, so
+ * the classifier can see stderr; `check: false` keeps the caller's fallback.
+ */
+function gh(args: readonly string[], opts: { check?: boolean } = {}): RunResult {
+    const check = opts.check ?? true;
+    const r = gh_retry(args, (argv) => run(argv, { check: false, capture: true }), {
+        sleep: (ms) => (_exec_override ? undefined : _sleep_ms(ms)),
+        notify: (m) => process.stdout.write(`${m}\n`),
+    });
+    if (check && r.returncode !== 0) {
+        die(`${gh_argv_label(args)} failed (${r.returncode}):\n${(r.stderr || r.stdout).trim()}`);
+    }
+    // Mutating calls used to inherit stdio — echo, or the PR / release URL
+    // vanishes. Probes (`check: false`) stay quiet; their stdout is JSON.
+    if (check && r.stdout.trim()) {
+        process.stdout.write(`${r.stdout.trim()}\n`);
+    }
+    return r;
+}
+
 /**
  * One name per failing check, from `gh pr checks --json name,bucket` output.
  *
@@ -923,13 +950,9 @@ function push_release_branch(branch: string): void {
 
 /** mergeStateStatus of the branch's PR ('' when the probe fails). */
 function _pr_merge_state(branch: string): string {
-    const r = run(
-        ['gh', 'pr', 'view', branch, '--json', 'mergeStateStatus', '--jq', '.mergeStateStatus'],
-        {
-            check: false,
-            capture: true,
-        },
-    );
+    const r = gh(['pr', 'view', branch, '--json', 'mergeStateStatus', '--jq', '.mergeStateStatus'], {
+        check: false,
+    });
     return r.returncode === 0 ? r.stdout.trim() : '';
 }
 
@@ -973,14 +996,11 @@ function _refresh_pr_body_from_head(branch: string, target: string): void {
     }
     const capped = _cap_body(section!.body, GH_PR_BODY_LIMIT - 200, '`CHANGELOG.md` in this PR');
     const body = pr_body_from_section(capped, target);
-    const live = run(['gh', 'pr', 'view', branch, '--json', 'body', '-q', '.body'], {
-        check: false,
-        capture: true,
-    });
+    const live = gh(['pr', 'view', branch, '--json', 'body', '-q', '.body'], { check: false });
     if (live.returncode === 0 && live.stdout.replace(/\r\n/gu, '\n').trim() === body.trim()) {
         return;
     }
-    run(['gh', 'pr', 'edit', branch, '--body', body]);
+    gh(['pr', 'edit', branch, '--body', body]);
 }
 
 function merge_release_pr(branch: string, wait_for_checks: boolean): void {
@@ -1147,22 +1167,8 @@ function _push_tag(tag: string): void {
 
 /** Most recent PR (any state) with `release/X.Y.Z` as head, or null. */
 function _pr_for_branch(branch: string): Record<string, unknown> | null {
-    const r = run(
-        [
-            'gh',
-            'pr',
-            'list',
-            '--head',
-            branch,
-            '--state',
-            'all',
-            '--json',
-            'number,state,url',
-            '--limit',
-            '1',
-        ],
-        { check: false, capture: true },
-    );
+    const argv = ['pr', 'list', '--head', branch, '--state', 'all', '--json', 'number,state,url'];
+    const r = gh([...argv, '--limit', '1'], { check: false });
     if (r.returncode !== 0) {
         return null;
     }
@@ -1476,8 +1482,7 @@ function _previous_test_count_from_changelog(prev_tag: string | null): number | 
     }
     const headEnd = m.index + m[0].length;
     const rest = text.slice(headEnd);
-    const next_re = /^##\s+\[?\d+\.\d+\.\d+/m;
-    const next_heading = next_re.exec(rest);
+    const next_heading = NEXT_SECTION_RE.exec(rest);
     const sectionEnd = headEnd + (next_heading ? next_heading.index : rest.length);
     const section = text.slice(headEnd, sectionEnd);
     const count_match = _TEST_COUNT_LINE_RE.exec(section);
@@ -2141,19 +2146,8 @@ function execute(
             '`CHANGELOG.md` in this PR',
         );
         const pr_body = pr_body_from_section(pr_changelog, plan.target);
-        run([
-            'gh',
-            'pr',
-            'create',
-            '--base',
-            MAIN_BRANCH,
-            '--head',
-            branch,
-            '--title',
-            `release: ${plan.target}`,
-            '--body',
-            pr_body,
-        ]);
+        gh(['pr', 'create', '--base', MAIN_BRANCH, '--head', branch,
+            '--title', `release: ${plan.target}`, '--body', pr_body]);
     }
 
     // ─── 6. wait for checks ─────────────────────────────────────────────────
@@ -2236,16 +2230,7 @@ function execute(
             GH_RELEASE_NOTES_LIMIT,
             '`CHANGELOG.md`',
         );
-        run([
-            'gh',
-            'release',
-            'create',
-            plan.target,
-            '--title',
-            plan.target,
-            '--notes',
-            notes,
-        ]);
+        gh(['release', 'create', plan.target, '--title', plan.target, '--notes', notes]);
 
         // ─── 9b. dispatch-chain the tag-triggered workflows (--ci only) ──────
         // release-guard.yml, publish-npm.yml, and cloud-release.yml all
