@@ -1,10 +1,10 @@
 # Findings: solution-minimalism-t4-t5-scorers
-<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: 5bf1491d0bbe280a76cb2a84a8a599b77e9408bacb0a8d2ff906e45002475513 | diff: e3ce6a5539c0e47fb439e5c43a14dca40b47b923 | reviewer: r2-fresh-subagent-solution-minimalism-t4-t5-scorers | prompt_hash: 1836107a61fc1c86e8634a2a9d92d9deedaad704a9014127cd5ad188a49d7776 -->
+<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: 8c46c25120b4c1f3889a247173ce79cfb9aa2b6c7de3cb9f1e4e0f8f6cbd60e3 | diff: 498f174359e18e59f9ea98cd329ccaca329a9fbf | reviewer: r2-fresh-subagent-solution-minimalism-t4-t5-scorers | prompt_hash: 1836107a61fc1c86e8634a2a9d92d9deedaad704a9014127cd5ad188a49d7776 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: e3ce6a5539c0e47fb439e5c43a14dca40b47b923
-  scope_hash: 5bf1491d0bbe280a76cb2a84a8a599b77e9408bacb0a8d2ff906e45002475513
+  diff_sha: 498f174359e18e59f9ea98cd329ccaca329a9fbf
+  scope_hash: 8c46c25120b4c1f3889a247173ce79cfb9aa2b6c7de3cb9f1e4e0f8f6cbd60e3
   roadmap: agents/roadmaps/road-to-solution-minimalism.md
   roadmap_hash: e768a94f3d84f5f9a4f076f2107a4b3ed8c85990fc0b5a93fb8f810d917ab6ed
   ac_hash: 7ab1582bca391a472290482dae0484665225010a1aac906e1db20649f059e4ef
@@ -13,7 +13,10 @@ tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-17T03:23:48Z
 -->
 
-**Re-bound twice on 2026-08-17 — after the fix pass, then after the CI repair.**
+**Re-bound three times on 2026-08-17 — after the fix pass, after the CI repair,
+and after the own-orphan cleanup the pre-push ESLint gate forced.** Each move
+changed the reviewed content on purpose, which is what a fix pass is; none of
+them re-derived a finding or dropped one.
 The second move is `e3ce6a553`, which paid back the source-size ratchet by
 extraction and, in doing so, surfaced one defect the extraction itself created
 (a `PyFloat`-boxed figure read as 0, caught by the T5 adapter test). That defect
