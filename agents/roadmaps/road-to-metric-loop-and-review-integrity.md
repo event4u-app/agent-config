@@ -87,11 +87,11 @@ Source: an external capability-harvest session over this repository and ten publ
 
 ## Phase 3 — The experiment loop
 
-- [ ] Add an `experiment-loop` skill, born thin: the skill file routes, and the loop protocol, register format, and pivot ladder live in reference files loaded on demand. <!-- verify: ./scripts-run src/scripts/skill_linter -->
-- [ ] Implement the protocol: a bounded iteration count, one focused change per iteration, commit before verify, the evaluator-contract verdict as the decision input, keep on strict improvement and revert otherwise. <!-- verify: ./scripts-run src/scripts/validate_evals -->
-- [ ] Express the exit as two conditions rather than one — completion indicators and an explicit exit signal — as machine-checkable predicates, never prose. <!-- verify: ./scripts-run src/scripts/check_evaluator_schema -->
-- [ ] Keep loop state in an append-only register file re-read from disk each cycle, never in conversational state. <!-- verify: ./scripts-run src/scripts/validate_evals -->
-- [ ] Route the skill through the projection pipeline rather than relying on its description to trigger it. <!-- verify: ./scripts-run src/scripts/lint_featured_skills -->
+- [x] Add an `experiment-loop` skill, born thin: the skill file routes, and the loop protocol, register format, and pivot ladder live in reference files loaded on demand. <!-- verify: ./scripts-run src/scripts/skill_linter -->
+- [x] Implement the protocol: a bounded iteration count, one focused change per iteration, commit before verify, the evaluator-contract verdict as the decision input, keep on strict improvement and revert otherwise. <!-- verify: ./scripts-run src/scripts/check_trigger_evals -->
+- [x] Express the exit as two conditions rather than one — completion indicators and an explicit exit signal — as machine-checkable predicates, never prose. <!-- verify: ./scripts-run src/scripts/check_evaluator_schema -->
+- [x] Keep loop state in an append-only register file re-read from disk each cycle, never in conversational state. <!-- verify: ./scripts-run src/scripts/check_trigger_evals -->
+- [x] Route the skill through the projection pipeline rather than relying on its description to trigger it. <!-- verify: ./scripts-run src/scripts/lint_featured_skills -->
 
 **Exit criteria:** the loop runs the toy metric from Phase 0 end to end and its register reconstructs the run without the transcript.
 

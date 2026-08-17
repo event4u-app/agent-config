@@ -6,10 +6,10 @@
 
 ## Overall
 
-**252 / 544 steps done · 46%**
+**257 / 544 steps done · 47%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   46%
+███████████████████░░░░░░░░░░░░░░░░░░░░░   47%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -40,7 +40,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 14 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 2 | 2 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | █████░░░░░ 50% |
 | 15 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 16 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
-| 17 | [road-to-metric-loop-and-review-integrity.md](roadmaps/road-to-metric-loop-and-review-integrity.md) | 6 | 24 | 14 | 10 | 0 | 0 | 0 | ████░░░░░░ 42% |
+| 17 | [road-to-metric-loop-and-review-integrity.md](roadmaps/road-to-metric-loop-and-review-integrity.md) | 6 | 24 | 9 | 15 | 0 | 0 | 0 | ██████░░░░ 62% |
 | 18 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 19 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ░░░░░░░░░░ 0% |
 | 20 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 17 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -455,14 +455,14 @@ _1 blocker resolved._
 
 ### [road-to-metric-loop-and-review-integrity.md](roadmaps/road-to-metric-loop-and-review-integrity.md)
 
-**Road to metric loop and review integrity** — 10 / 24 done (42%)
+**Road to metric loop and review integrity** — 15 / 24 done (62%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Falsification spikes | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 1 | Evaluator contract | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | Independence on review output | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 3 | The experiment loop | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | The experiment loop | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 4 | Shipping-intent diff gate | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 5 | Measurement | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 
