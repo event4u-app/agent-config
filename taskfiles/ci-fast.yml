@@ -56,6 +56,16 @@ tasks:
       # default and SAYS SO, so an offline push is never blocked by the step.
       # No-op in CI, where the forge owns mergeability.
       - ./scripts-run src/scripts/check_branch_freshness --quiet
+      # Immediately after the freshness probe, and paired with it on purpose: that
+      # gate asks "is the branch behind its BASE", this one asks "does the open PR
+      # carry what is committed here, and did its green run against THIS head".
+      # Measured on PR #1391 — a fix committed locally while the PR still carried
+      # the failure, a green that had run against the pre-fix commit, and a branch
+      # behind its OWN remote after someone pressed Update branch. None of the
+      # three is visible from a green local gate, and all three make a CI fix look
+      # delivered when it is not. Degrades to exit 0 with the reason named when
+      # the remote cannot be observed; no-op where there is no open PR.
+      - ./scripts-run src/scripts/check_pr_ci_current --pre-push --quiet
       # FIRST among the content gates, and the order is the whole point: this
       # gate reads the host rule
       # trees as they stand, and check_bridge_derivation below REGENERATES them.

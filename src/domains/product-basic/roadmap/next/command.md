@@ -236,15 +236,38 @@ diagnose and fix in the working tree on red, within the N=3 budget per
 [`autonomous-execution`](../../rules/autonomous-execution.md).
 
 ```
-THE LOCAL FIX IS AUTONOMOUS. THE RE-PUSH IS NOT.
-git push IS A HARD-FLOOR TRIGGER AND THE FLOOR REFUSES A STANDING
-DIRECTIVE BY CONSTRUCTION. FIX, VERIFY, THEN SAY WHAT IS READY.
-NEVER INVENT A PER-PR "STANDING MANDATE" WORKAROUND.
+THE LOCAL FIX IS AUTONOMOUS. A RE-PUSH ON THE AGENT'S OWN AUTHORITY IS NOT.
+BUT AN INSTRUCTION WHOSE DELIVERABLE IS A REMOTE STATE — "FIX THE CI",
+"RESOLVE THE CONFLICT WITH MAIN", "UPDATE THE PR" — NAMES THE PUSH, AND
+DELIVERING IT IS NOT A SECOND OPERATION TO ASK ABOUT.
+NEVER INVENT A PER-PR "STANDING MANDATE" FOR A PUSH NOBODY ASKED FOR.
+AND NEVER CALL A CI FIX DONE OFF A LOCAL RUN — RE-VERIFY ON THE PUSHED HEAD.
 ```
+
+The full reading, its decidable test, and what it deliberately does **not**
+cover live in [`/create-pr` § 4d items 5–6](../../git/pr/create/command.md);
+this is the pointer, not a second copy.
+
+Measured on this command's own run, 2026-08-17: a `/roadmap:next` invocation
+raised a separate push ask **three times** — after a CI fix, after a
+cross-reference fix, and after resolving a merge conflict the user had asked
+for by name. Each ask cost a turn and returned the same answer, and the third
+was for a conflict whose entire existence is a remote fact. That is the friction
+this clause removes; the floor it keeps is the *unnamed* push.
+
+**Before every push to the open PR**, bring the branch up to its base with
+`./scripts-run src/scripts/sync_pr_branch` and regenerate afterwards. Measured on
+this run: the base moved three times, the push was rejected twice for it, and the
+PR reached `CONFLICTING` in between. Verify the result afterwards with
+`./scripts-run src/scripts/check_pr_ci_current` — a green local gate says nothing
+about a fix that was never pushed, and a green CI run on an earlier commit says
+nothing about the current one.
 
 The cheapest CI-fix loop is the one that never fires: run `task
 preflight` before the first push, which runs the same
-`skill_linter --changed` gate CI does.
+`skill_linter --changed` gate CI does. Two gates it does NOT reach are
+`check_references` and `check_r2_manifest`, both remote-only — measured on this
+run, each forced one extra commit and therefore one extra review re-bind.
 
 ### 8. Report
 
