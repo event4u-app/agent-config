@@ -1297,7 +1297,17 @@ function _CLAUDE_COMMANDS_DIR(): string {
     return path.join(MODULE_STATE.PROJECT_ROOT, '.claude', 'commands');
 }
 
-function _parse_frontmatter(content: string): [Record<string, unknown>, string] {
+/**
+ * Split a rule/skill file into its parsed frontmatter and its body.
+ *
+ * Exported so a census can read frontmatter **the way the emitter reads it**
+ * rather than re-implementing the parse. `rule_activation_census.ts` pairs this
+ * with the exported {@link _claude_paths_plan} and {@link _has_non_path_trigger}
+ * so its verdict per rule is the emitter's own verdict rather than a
+ * reconstruction of it — a reconstruction is the divergence class that made the
+ * shipped `.claude/rules/` count unreadable as evidence in the first place.
+ */
+export function _parse_frontmatter(content: string): [Record<string, unknown>, string] {
     if (!content.startsWith('---')) {
         return [{}, content];
     }

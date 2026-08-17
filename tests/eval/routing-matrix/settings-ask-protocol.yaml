@@ -1,0 +1,35 @@
+rule: settings-ask-protocol
+# road-to-mixed-trigger-activation-cost step 1.1. The second of the two rules
+# that flipped to always-on with no matrix behind them.
+#
+# This rule is the ASYMMETRIC case, and the matrix is where that becomes visible.
+# `design-review-after-ui-write` is a per-edit obligation with two generic
+# keywords bolted on, so its keywords are the removable half. Here the shape is
+# inverted: six keywords and four phrases carry the obligation, and exactly ONE
+# path_prefix trigger exists (`docs/contracts/settings-classes.md`, the contract
+# the rule routes to). That single path trigger is the only reason the emitter
+# classifies this rule as mixed at all. Restoring `paths:` here would narrow a
+# per-task, prompt-driven obligation to one documentation file — so the honest
+# Phase-2 disposition for this rule is "stays unconditional", and the removable
+# half is the incidental path trigger, not the keywords.
+positives:
+  - prompt: "Run agent-config settings:set personal.canary_name for me."
+  - prompt: "Soll ich rich_skills für dieses Projekt aktivieren?"
+  - prompt: "I need to ask about a setting before I can finish this step."
+  # The lone path-shaped trigger, exercised so the matrix covers every declared
+  # shape rather than only the ones that carry the obligation.
+  - prompt: "Walk me through how the A/B/C classes decide where an answer goes."
+    open_files: ["docs/contracts/settings-classes.md"]
+# Each near-miss matches zero declared triggers. The traps avoided, because
+# matching is unanchored substring: bare "settings" is not a trigger but
+# "settings:set" and "settings question" are, so no near-miss may contain either;
+# "nickname" is a phrase trigger, so no near-miss may name one; and none of
+# canary_name, rich_skills, adversarial_council, learn_on_session_end or
+# open_edited_files may appear even inside a longer identifier.
+near_misses:
+  - prompt: "Update the install instructions in the project readme."
+    open_files: ["README.md"]
+  - prompt: "Bitte dokumentiere die Cache-Konfiguration im Handbuch."
+    open_files: ["docs/guides/caching.md"]
+  - prompt: "Add a migration that drops the unused audit column."
+    open_files: ["database/migrations/2026_08_17_000000_drop_audit_column.php"]

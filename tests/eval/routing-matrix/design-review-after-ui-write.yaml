@@ -1,0 +1,43 @@
+rule: design-review-after-ui-write
+# road-to-mixed-trigger-activation-cost step 1.1. This rule flipped to always-on
+# with no matrix pinning its reach, so nothing recorded what its two keyword
+# triggers ("component", "design token") were buying. The file-less positive
+# below is deliberately included and deliberately labelled: it is the class
+# Phase 2 re-adjudicates, and the matrix has to state the current reach honestly
+# before any scoping decision is taken against it.
+#
+# The three path-backed positives cover both trigger shapes this rule declares:
+# path_prefix on resources/js/, resources/views/ and src/components/, and
+# file_pattern on *.vue, *.blade.php and *.tsx.
+positives:
+  - prompt: "Add a stats tile to the events dashboard and wire it to the summary endpoint."
+    open_files: ["resources/js/dashboard/StatsTile.vue"]
+  - prompt: "Bitte überarbeite dieses Blade-Template für die mobile Ansicht."
+    open_files: ["resources/views/events/show.blade.php"]
+  - prompt: "Refactor the ticket picker into a reusable widget with its own props."
+    open_files: ["src/components/tickets/TicketPicker.tsx"]
+  # This was authored as a FILE-LESS positive on 2026-08-17, reaching the rule
+  # through the "component" keyword alone. Phase 2's amendment (option (b),
+  # narrowed to the two path-dominant per-edit rules) decided that question the
+  # same day: pre-contact reach is not load-bearing for an obligation that binds
+  # when a UI file is touched, so both keyword triggers were removed as an
+  # authoring decision and the rule is path-scoped again.
+  #
+  # The prompt is kept and given the file it always implied, rather than deleted —
+  # the assertion moves from "reaches before contact" to "reaches at contact",
+  # which is exactly what the amendment claims. Deleting it would have shrunk the
+  # corpus to hide the change.
+  - prompt: "Build a component for the seating plan legend."
+    open_files: ["resources/js/seating/SeatingLegend.vue"]
+# Each near-miss avoids every declared trigger: no "component" or "design token"
+# substring in the prompt, no path under resources/views/, resources/js/,
+# components/, src/components/ or pages/, and no file matching *.vue, *.svelte,
+# *.tsx, *.jsx or *.blade.php. A plain *.php controller is the sharpest shape,
+# because *.blade.php would match it if the pattern were merely "*.php".
+near_misses:
+  - prompt: "Adjust the JSON response shape for the dashboard summary endpoint."
+    open_files: ["app/Http/Controllers/DashboardSummaryController.php"]
+  - prompt: "Bitte optimiere die Datenbankabfrage für die Teilnehmerliste."
+    open_files: ["app/Models/Attendee.php"]
+  - prompt: "Rotate the storage credentials and update the deployment secret."
+    open_files: ["config/filesystems.php"]
