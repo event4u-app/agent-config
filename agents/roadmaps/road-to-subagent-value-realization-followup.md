@@ -145,6 +145,7 @@ stands is exactly the shape that invites a wrong resume.
 ### blocker: telemetry-sample-size
 - **Status:** open
 - **Owner:** user
+- **Class:** 3 — human-only (only real parallel work fills the columns; no command synthesises usage)
 - **Blocks:** Phase 1 — Seed real telemetry
 - **What to do:**
   1. Use the agent with `subagents.enabled: true` under the post-ADR-117

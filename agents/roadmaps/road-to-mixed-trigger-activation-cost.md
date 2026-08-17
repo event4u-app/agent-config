@@ -511,6 +511,7 @@ and a census gap. That is the surface this phase closes.
   about a smaller delta than when they were written — re-register them against the
   post-amendment corpus before the first run, not after.
 - **Owner:** user
+- **Class:** 2 — consent-once (name a budget at this entry, or re-date the step)
 - **Blocks:** Phase 3 steps 3.1 and 3.2. Step 3.3's observer is repo work and
   proceeds without it.
 - **What to do:** authorise the paired A/B run, which bills model tokens across

@@ -145,6 +145,7 @@ Enforcement moves only where the tree can verify it; `enforced_by:` changes beca
 ### blocker: ui-session-capture-window
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 3 — human-only (needs human-authored observation files that do not exist)
 - **Blocks:** Phase 1 — Measure · Phase 2 — Deliver
 - **What to do:**
   1. **Rewritten after implementation, because the original text described a mechanism that does not exist.** It said "let the capture concern run … no human decision is required, only elapsed sessions". There is no concern: a `session_start` hook cannot see the injected catalogue (envelope carries `session_id`/`source`/`cwd`/`transcript_path`, and `preamble_byte_census` verified no local artifact holds the system payload). Capture is a script plus a labelled self-report, so the corpus does NOT fill by itself.
@@ -166,6 +167,7 @@ Enforcement moves only where the tree can verify it; `enforced_by:` changes beca
 ### blocker: ui-corpus-has-no-ui
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 2 — consent-once (a human names the consumer store, then the report re-runs)
 - **Blocks:** Phase 4 — Step 5 · Phase 5 — Reach and enforcement
 - **What to do:**
   1. The first measurement found **3 UI-write turns across 107 sessions** in this repo. That is not a low rate, it is an absent population: a skill/rule suite is not a frontend, so the question cannot be answered from this store no matter how long it runs.
