@@ -15,7 +15,7 @@ for `agents/runtime/state/` writes, and the Copilot fallback pattern. Does
 **not** specify per-platform install paths — those live in
 [`chat-history-platform-hooks.md`](../../agents/settings/contexts/chat-history-platform-hooks.md).
 
-Last refreshed: 2026-05-04.
+Last refreshed: 2026-08-17.
 
 ## Vocabulary
 
@@ -287,6 +287,53 @@ platforms:
 Validated by `scripts/lint_hook_manifest.py` (Phase 7.10): every
 concern script must exist on disk, every platform key must be a known
 platform, every event key must be in the agent-config event vocabulary.
+
+### Which hosts carry `pre_tool_use` — bound-and-denying, bound-only, unbound, absent
+
+Five `severity: blocking` concerns sit on `pre_tool_use` — `block-no-verify`,
+`block-unauthorized-git`, `block-kernel-rule-writes`, `block-config-weakening`
+and `evidence-independence` (its blocking branch) — so "which hosts is this
+actually enforced on" is asked of this manifest repeatedly. It has **four**
+answers, and every collapse of them has produced a false claim in shipped
+prose: collapsing the bottom two asserts a host limitation nobody established,
+collapsing the top two asserts an enforcement nobody measured.
+
+| State | Hosts | What the tree records |
+|---|---|---|
+| **Bound, and can deny** | `claude` | a `pre_tool_use:` key in the `platforms:` row, **and** membership of `VERIFIED_PLATFORMS` in `src/scripts/hooks/host_semantics.ts` — the one host whose native block contract is documented and verified, so `EXIT_BLOCK` is the code that host honours |
+| **Bound, cannot deny** | `augment`, `cowork` | a `pre_tool_use:` key, but outside `VERIFIED_PLATFORMS`, so the dispatcher falls through to the legacy pass-through whose own header documents `EXIT_BLOCK = 1` as *non-blocking*. Both trampolines (`augment-dispatcher.sh`, `cowork-dispatcher.sh`) additionally discard dispatcher output and `exit 0` unconditionally — "must never block the agent loop", in their own headers |
+| **Aliased but unbound** | `cursor`, `cline`, `gemini` | a native pre-tool event in `native_event_aliases` — `preToolUse`, `PreToolUse`, `BeforeTool` respectively — mapped onto `pre_tool_use`, with **no** `pre_tool_use:` key in the platform row |
+| **No pre-tool surface** | `windsurf`, `copilot` | no pre-tool alias row at all; `copilot` is additionally `fallback_only` |
+
+The two middle rows are the ones that get lost. Row 2: a concern bound on
+`augment` or `cowork` **runs and is then ignored** — the guard is real, the
+denial is not, so "deterministically blocked on augment, claude, cowork" is an
+over-claim of exactly two thirds. Row 3: on `cursor`, `cline` and `gemini` a
+guard is **unbound, not unbindable** — the host sends a pre-tool event and the
+translation table already accepts it; this package has simply never written the
+binding.
+
+**What is NOT established, in either direction:** whether an unbound host's
+pre-tool event can *deny* a call. Nothing here records it, and `severity:
+blocking` is a property of the concern, never of the host. So "bind it and the
+guard enforces" is as unbacked as "there is nowhere to bind". Row 2 is the
+standing evidence for that: those two hosts are bound and still do not deny.
+
+**Slot presence is not slot firing, and `cursor` is the recorded case.**
+`src/scripts/_lib/session_register.ts` notes that cursor's per-turn slots are
+IDE-only — the CLI fires shell-execution hooks alone — and that a slot-presence
+instrument "has no IDE/CLI dimension, so it reports cursor covered". The same
+comment records `cowork` as structurally wired with lifecycle events that do not
+fire. Read row 3 as "a binding could be written", never as "a binding would
+fire".
+
+`check_enforcement_coverage.ts` computes its `gap_platforms` from the **bound**
+set and skips every `fallback_only` platform before it starts, so it reports
+four gap hosts — `cursor`, `cline`, `windsurf`, `gemini` — and never `copilot`,
+which is excluded by declaration. A rule quoting the join is therefore right
+about coverage, silent about cause, and must not name copilot among the
+platforms the join reports. `agent-config hooks:status` answers the same
+question for the host the session is actually on.
 
 ### Optional per-concern `tools:` filter
 

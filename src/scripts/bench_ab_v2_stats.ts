@@ -46,6 +46,7 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2');
 const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 
+import { addPair, newPairedSample, searchClaimSection, searchClaimVerdict } from './_lib/bench_ab_search_adherence.js';
 import {
     evaluateSizeClaim,
     renderSizeClaimSection,
@@ -340,6 +341,7 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
     let saf_bl = 0;
     let saf_disc_t = 0;
     let saf_disc_b = 0;
+    const sea = newPairedSample(); // T5 — continuous in [0,1], collects like complexity.
     for (const { rt, rb } of _pairs(records, arm_t, arm_b)) {
         pairs_seen += 1;
         const t_err = _pyTruthy(rt['errored']);
@@ -410,6 +412,7 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
                 if (st && !sb2) saf_disc_t += 1;
                 else if (sb2 && !st) saf_disc_b += 1;
             }
+            addPair(sea, mt['search_adherence'], mb['search_adherence']);
         }
     }
     void both1;
@@ -453,6 +456,7 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
         size: _paired_median_block(size_t, size_b, size_diffs),
         complexity: _paired_median_block(cx_t, cx_b, cx_diffs),
         safety: _paired_rate_block(saf_n, saf_t, saf_bl, saf_disc_t, saf_disc_b),
+        search: _paired_median_block(sea.t, sea.b, sea.diffs),
     };
 }
 
@@ -706,6 +710,7 @@ export function analyse(payload: Dict): Dict {
         // reportable fact; omitting the block would read as "no size question
         // was asked", which is a different claim.
         size_claims: comps.map((c) => size_claim_verdict(c)),
+        search_claims: comps.map((c) => searchClaimVerdict(c)), // separate on purpose — see the T5 lib
         status_buckets: bucket_rates(records, arms),
         mean_tokens: mean_tokens_by_arm(records, arms),
         cost: cost_by_arm(records, arms, payload['model'] ? String(payload['model']) : null, PRICING_PATH),
@@ -756,6 +761,7 @@ function _size_claim_section(a: Dict): string[] {
     const claims = Array.isArray(a['size_claims']) ? (a['size_claims'] as unknown as SizeClaimVerdict[]) : [];
     return renderSizeClaimSection(claims);
 }
+
 
 export function gate_verdict(analysis: Dict): Dict {
     // L4 gate: PASS if ANY axis shows significant paired lift for package vs
@@ -844,7 +850,7 @@ export function to_markdown(analysis: Dict, payload: Dict): string {
     L.push(`- discipline lift significant: \`${_pyStr(g['discipline_significant'])}\``);
     L.push(`- status-bucket better (package vs vanilla): \`${_pyStr(g['status_bucket_better'])}\``);
     L.push('');
-    L.push(..._size_claim_section(a));
+    L.push(..._size_claim_section(a), '', ...searchClaimSection(a));
     if (g['verdict'] === 'PASS') {
         L.push(
             '> **Measurable discipline lift (significant).** On the scope-creep / ' +

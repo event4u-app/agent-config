@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 27 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **34** open blockers, **9** need you → `agent-config gates`
+> 32 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **38** open blockers, **13** need you → `agent-config gates`
 
 ## Overall
 
-**241 / 413 steps done · 58%**
+**242 / 413 steps done · 59%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   58%
+████████████████████████░░░░░░░░░░░░░░░░   59%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -45,7 +45,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 19 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 20 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
 | 21 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 22 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 7 | 28 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 80% |
+| 22 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
 | 23 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
 | 24 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 9 | 10 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | █████░░░░░ 53% |
 | 25 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -144,6 +144,18 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Post-merge dry-run verification (carried from parent Phase 3) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 2 | First real release + live drills (carried from parent Phase 4 + Phase 7) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+
+### [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md)
+
+**Road to context fidelity** — 0 / 24 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Falsification spikes | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Compaction-boundary rule reinjection | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 2 | Memory eviction on the curated store | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 3 | Skill-top position lint | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 4 | Context management for spawned workers | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 
 ### [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md)
 
@@ -436,6 +448,19 @@ _1 blocker resolved._
 | 3 | Make a release inheritable (the runbook) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 4 | Lower bus-factor toward >1 (opportunistic, honest) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
 
+### [road-to-metric-loop-and-review-integrity.md](roadmaps/road-to-metric-loop-and-review-integrity.md)
+
+**Road to metric loop and review integrity** — 0 / 24 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Falsification spikes | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Evaluator contract | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Independence on review output | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | The experiment loop | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | Shipping-intent diff gate | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 5 | Measurement | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+
 ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
 
 **Road to orchestration scope decision — one falsifiable minimal claim, or an honest exit from the front** — 4 / 10 done (40%)
@@ -489,6 +514,50 @@ _1 blocker resolved._
     which is a narrower gap than the prose above describes. `spawn_count ≥ 2` is
     still **0 of 367**, so the corpus has never produced a fan-out.
   - **Resolved when:** a probe result records whether any hook slot sees the task-completion payload, and — if one does — the current-month audit log carries ≥ 20 orchestration lines whose **quality** columns are populated rather than `null`. **Rewritten 2026-08-17.** The bare line-count condition this field carried until today (*"the current-month audit log holds ≥20 orchestration lines"*) was satisfied at 99 lines when it was written and stands at **367** now, while the blocker never stopped being open — a resolution test that is already met cannot resolve anything, and every feasibility screen that trusted it read this roadmap as resumable. The sibling `road-to-subagent-value-realization-followup` had the identical defect repaired on 2026-08-16; this one was missed in the same pass.
+
+### [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md)
+
+**Road to org telemetry** — 0 / 26 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Falsification spikes | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Emission in the dispatcher | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Transport | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | Consent | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | Report and the rationalization unblock | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Self-repair intake over the wire | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 6 | Aggregation and issues | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-org-telemetry"></a>
+**Blockers**
+
+- **sink-choice** (owner: user) — blocks Phase 2 (sink stand-up)
+  - **Recommendation:** the private repository. The volume is small, the write path is an existing authenticated primitive rather than new infrastructure to operate, and the Phase 6 clustering runs offline over the file set. An ingest endpoint is the better answer only if the volume outgrows a repository, which the current zero makes unlikely in the measurement window this roadmap needs.
+  - **If you do nothing:** Phases 0 and 1 still run in full — the spikes and the local emission need no sink. The plan stalls at the first outbound flush, which is also the first point at which any data would leave a machine, so the cost of the delay is bounded and the privacy posture is unaffected.
+  - **What to do:**
+    1. Pick one: a private repository (name it), or an ingest endpoint (name where it would run).
+    2. For the repository option, create it and record its identifier in the org pack settings — no public repository, and no repository this package's CI can reach.
+    3. For the endpoint option, name the runtime and who operates it; the operational burden is the deciding factor, not the code.
+  - **Resolved when:** the sink and its location are named, and the identifier exists in the org pack rather than in this repository.
+- **dpo-signoff** (owner: user) — blocks Phase 3 (org-wide enablement onward)
+  - **Recommendation:** run it as a written review of exactly two artefacts — the Class-A field list from Phase 1 and the one-line disclosure from Phase 3 — rather than of the roadmap. The design was built to make this review short: no content fields exist to argue about, and the pseudonymous hash is salted outside the public repository.
+  - **If you do nothing:** every phase through 2 still runs, and a single-machine enablement remains legitimate for testing. Only enablement across colleagues waits. The measurement in Phase 4 needs at least three distinct users, so the null it publishes without this sign-off would be an artifact of the missing approval rather than a finding about adoption — which is worth knowing before reading that number.
+  - **What to do:**
+    1. Take the Class-A field list from the Phase 1 step and the disclosure line from Phase 3.
+    2. Submit both through the internal data-protection review, noting explicitly that no project content, path, identifier, or prompt text is transmitted in that class.
+    3. Record the written outcome; the agent can draft the submission text on request.
+  - **Resolved when:** a written internal sign-off exists and is referenced from the ADR.
+
+### [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md)
+
+**Road to release-review P0** — 0 / 17 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Host-aware skill projection | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Evidence artifact typing | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Provider qualification | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
 
 ### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
 
@@ -667,14 +736,14 @@ _1 blocker resolved._
 
 ### [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md)
 
-**Road to solution minimalism — a first-class discipline against over-building** — 28 / 35 done (80%)
+**Road to solution minimalism — a first-class discipline against over-building** — 29 / 35 done (83%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Verification spikes (read-only, no authoring) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 1 | The ladder, as rule text | ✅ done | 0 | 12 | 0 | 1 | 100% |
 | 2 | Over-build review lens | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Pinned public-repo benchmark (the proof exhibit) | 🟡 in progress | 7 | 9 | 0 | 0 | 56% |
+| 3 | Pinned public-repo benchmark (the proof exhibit) | 🟡 in progress | 6 | 10 | 0 | 0 | 62% |
 
 <a id="blockers-road-to-solution-minimalism"></a>
 **Blockers**
@@ -900,6 +969,43 @@ _1 blocker resolved._
     and chose the named blocker over a re-scope that changes a pre-registered
     input.
   - **Resolved when:** either a host-renderable framework lane exists (a build/serve step for the React lane, landed for its own reason) **or** a supported generic-lane override exists — at which point the re-scope is recorded as a dated amendment in `internal/bench/corpora/ui-track-integrity-PREREG.md` and Measurement B becomes executable.
+
+### [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md)
+
+**Road to user-out-of-the-loop** — 0 / 40 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Measurement foundation | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | One elicitation surface | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 2 | Set scope, serial then parallel | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | Merge decoupling | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Question-elimination ladder | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 5 | Asynchronous disposition of deferred items | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 6 | Session continuity | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 7 | Unattended backlog operation | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 8 | Standing measurement | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-user-out-of-the-loop"></a>
+**Blockers**
+
+- **kernel-soak-window** (owner: user) — blocks Phase 1 (batch elicitation carve-out), Phase 2 (set-scoped autonomy form), Phase 4 (late-artifact policy), Phase 5 (deferred-policy delta)
+  - **Recommendation:** Authorize them in the order 1-3, 5-2, 4-4, 2-3 — the batch-elicitation carve-out first because Phases 2 and 4 both assume the single elicitation surface exists, and the deferred-policy delta second because it is the smallest and exercises the soak process on low-risk material before the two larger ones.
+  - **If you do nothing:** Phases 1, 2, 4, and 5 each stop at their rule-delta step. Everything else in the plan still runs — the measurement foundation, the mode-derivation ladder, the decision sheet, the set command, stacking, the merge train, the memo channel, and the session work do not touch a kernel rule. The plan degrades to roughly two thirds of its scope rather than stalling.
+  - **What to do:**
+    1. Confirm the four deltas are in scope at all: `ask-when-uncertain` (batch elicitation), `autonomy-mechanics` (set-scoped form), `artifact-drafting-protocol` (late artifacts), `roadmap-progress-sync` (deferred policy).
+    2. Name the order, or accept the recommended one.
+    3. Confirm the soak interval per `src/agent-src/contexts/authority/kernel-rule-edits.md` — the agent will not shorten it and cannot self-authorize it.
+  - **Resolved when:** the user names the set and the order, or declines the kernel-adjacent scope entirely.
+- **autonomy-defaults-sheet** (owner: user) — blocks Phase 1 (preselection), Phase 2 (lane cap), Phase 4 (late-artifact default), Phase 5 (policy breadth)
+  - **Recommendation:** Preselect `autonomous` at the contract screen, cap lanes at two, default late artifacts to `auto-research`, and keep the deferred policy limited to the follow-up-draft option. Rationale: each is reversible, each carries its own kill criterion in the phase text, and the conservative variant of all four together produces a plan that measures nothing because nothing changes.
+  - **If you do nothing:** the phases can still be built with the conservative variant of each; the measurement in Phase 0 then compares a smaller delta and takes proportionally longer to reach significance.
+  - **What to do:**
+    1. Confirm or override the preselection for `/roadmap:next`: `autonomous` versus `phase-checkpoints`.
+    2. Confirm or override the lane cap: 2 versus the configured `subagents.max_parallel`.
+    3. Confirm or override the late-artifact default: `auto-research` versus `halt`.
+    4. Confirm whether the deferred policy offers only the follow-up-draft option or also an explicit cancellation with a reasoning memo.
+  - **Resolved when:** the four values are named, and they are recorded in the decision sheet the Phase 1 contract screen renders.
 
 ---
 

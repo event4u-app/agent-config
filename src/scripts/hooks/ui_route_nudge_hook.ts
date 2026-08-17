@@ -30,9 +30,12 @@
  * degradation valve `design_slop_hook` carries, for the same reason: an agent
  * that has decided to proceed must not be re-prompted into a loop.
  *
- * HOST BOUNDARY, STATED RATHER THAN IMPLIED. `pre_tool_use` exists on three
- * hosts. Everywhere else this concern has nowhere to bind and the obligation
- * stays model-carried, exactly as the two rules already declare. Run
+ * HOST BOUNDARY, STATED RATHER THAN IMPLIED. `pre_tool_use` is BOUND on three
+ * hosts. Everywhere else the obligation stays model-carried, exactly as the two
+ * rules already declare. Corrected 2026-08-17: this comment said the concern has
+ * "nowhere to bind" elsewhere, which the manifest's own `native_event_aliases`
+ * table refutes for cursor, cline and gemini — unbound, not unbindable. See
+ * `docs/contracts/hook-architecture-v1.md` § Which hosts carry pre_tool_use. Run
  * `agent-config hooks:status` for the host you are actually on.
  *
  * Default-OFF: no-ops unless `hooks.ui_route_nudge.enabled: true`.
