@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Ownership map for the mixed-trigger-cleanup roadmap cohort
 
 **Source:** `agents/tmp.old/mixed-trigger-cleanup/roadmap-deltas-2026-08-17.md`
