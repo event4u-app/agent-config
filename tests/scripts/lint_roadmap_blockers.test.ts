@@ -6,7 +6,12 @@
 // the sibling linters in this family).
 import { describe, expect, it } from 'vitest';
 
-import { _hasExecutableSubstance, _scan, _scanBoth } from '../../src/scripts/lint_roadmap_blockers.js';
+import {
+    _blockerClass,
+    _hasExecutableSubstance,
+    _scan,
+    _scanBoth,
+} from '../../src/scripts/lint_roadmap_blockers.js';
 
 describe('lint_roadmap_blockers — the decidability half', () => {
     const decidable = [
@@ -97,6 +102,80 @@ describe('lint_roadmap_blockers — the decidability half', () => {
                     '- **What to do:** decide it.\n- **Resolved when:** `task ci` exits 0\n',
                 ),
             ).toBe(false);
+        });
+    });
+});
+
+describe('lint_roadmap_blockers — the gate-class contract', () => {
+    /** A decidable class-0 entry: it declares the command it is cleared by. */
+    const classified = (extra: readonly string[]): string =>
+        [
+            '## Blockers',
+            '',
+            '### blocker: time-window',
+            '- **Status:** open',
+            '- **Owner:** user',
+            '- **Blocks:** Phase 2',
+            ...extra,
+            '- **Recommendation:** (a) — the window is already past.',
+            '- **If you do nothing:** the phase stays parked on a satisfied test.',
+            '- **What to do:**',
+            '  1. Run `agent-config gates --execute time-window`.',
+            '- **Resolved when:** the probe exits 0',
+            '',
+        ].join('\n');
+
+    it('a class-0 entry that names its command is clean', () => {
+        const text = classified(['- **Class:** 0', '- **Run:** `date -u +%F`']);
+        expect(_scan(text)).toEqual([]);
+    });
+
+    it('a class-0 entry with no Run: is the new violation', () => {
+        const gaps = _scan(classified(['- **Class:** 0']));
+        expect(gaps).toHaveLength(1);
+        expect(gaps[0]!.message).toContain('class 0');
+        expect(gaps[0]!.message).toContain('**Run:**');
+    });
+
+    it('class 1 is held to the same bar as class 0', () => {
+        const gaps = _scan(classified(['- **Class:** 1', '- **Budget:** ~$2 per run']));
+        expect(gaps).toHaveLength(1);
+        expect(gaps[0]!.message).toContain('class 1');
+    });
+
+    it('classes 2 and 3 need no Run: — nobody claimed they were runnable', () => {
+        expect(_scan(classified(['- **Class:** 2']))).toEqual([]);
+        expect(_scan(classified(['- **Class:** 3']))).toEqual([]);
+    });
+
+    it('an absent Class is class 3, so the whole backlog stays legal', () => {
+        // The pre-existing shape: five fields, no class, no Run. This is the
+        // property that lets the check be hard instead of ratcheted.
+        expect(_scan(classified([]))).toEqual([]);
+    });
+
+    it('an unknown class is refused rather than silently treated as 3', () => {
+        const gaps = _scan(classified(['- **Class:** auto']));
+        expect(gaps).toHaveLength(1);
+        expect(gaps[0]!.message).toContain('unknown class');
+    });
+
+    it('history is not re-litigated — a resolved entry is exempt', () => {
+        const resolved = classified(['- **Class:** 0']).replace(
+            '- **Status:** open',
+            '- **Status:** resolved',
+        );
+        expect(_scan(resolved)).toEqual([]);
+    });
+
+    describe('_blockerClass', () => {
+        it('reads the leading token so the taxonomy name may follow', () => {
+            expect(_blockerClass('- **Class:** 1 — budget-preauthorized\n')).toBe('1');
+        });
+
+        it('an absent or empty field reads as no declaration', () => {
+            expect(_blockerClass('- **Owner:** user\n')).toBe('');
+            expect(_blockerClass('- **Class:**\n')).toBe('');
         });
     });
 });
