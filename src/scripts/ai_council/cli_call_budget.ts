@@ -278,6 +278,63 @@ export function resetAttribution(
     }
 }
 
+/** The subset of a CLI client this module reads — structural, so no import. */
+interface QuotaClientView {
+    readonly name?: unknown;
+    readonly max_calls_per_day?: unknown;
+    readonly warn_at?: unknown;
+}
+
+/**
+ * Format the pre-run quota summary from already-read counts.
+ *
+ * Returns `[summary, warnProviders]`, where `warnProviders` is the subset whose
+ * `used / cap` ratio crossed `warn_at`.
+ *
+ * Two silences that read to an operator as "within budget" are gone: a cap of `0`
+ * (the strictest setting available) used to be dropped by a Python-truthy filter,
+ * and no caps at all returned the empty string — in exactly the configuration
+ * where the shared counter runs unguarded. An omission is indistinguishable from
+ * a pass, and the counter reached 72/63/99 while nothing was printed.
+ */
+export function quotaSummaryLine(
+    clients: readonly QuotaClientView[],
+    counts: Record<string, number>,
+): [string, string[]] {
+    // Any number is a cap, zero included; only an absent one is uncapped.
+    const capOf = (c: QuotaClientView): number | null =>
+        typeof c.max_calls_per_day === 'number' && Number.isFinite(c.max_calls_per_day)
+            ? c.max_calls_per_day
+            : null;
+    const nameOf = (c: QuotaClientView): string =>
+        typeof c.name === 'string' && c.name !== '' ? c.name : '?';
+    const usedOf = (c: QuotaClientView): number => Math.trunc(counts[nameOf(c)] ?? 0);
+
+    if (clients.length === 0) {
+        return ['', []];
+    }
+    const parts: string[] = [];
+    const warn: string[] = [];
+    for (const c of clients) {
+        const limit = capOf(c);
+        const used = usedOf(c);
+        if (limit === null) {
+            // Named rather than omitted: real consumption, no protection.
+            parts.push(`${nameOf(c)} ${used}/uncapped`);
+            continue;
+        }
+        parts.push(`${nameOf(c)} ${used}/${Math.trunc(limit)}`);
+        const warnAt = typeof c.warn_at === 'number' ? c.warn_at : 0.8;
+        // Limit 0 admits nothing, so any booked call is already past it — the
+        // ratio is undefined there and 0.0 would read as "0 % used".
+        if (limit === 0 ? used > 0 : used / limit >= warnAt) {
+            warn.push(nameOf(c));
+        }
+    }
+    const prefix = warn.length > 0 ? '⚠️  ' : '';
+    return [`${prefix}council:quota · ${parts.join(' · ')}`, warn];
+}
+
 function _isObject(x: unknown): x is Record<string, unknown> {
     return typeof x === 'object' && x !== null && !Array.isArray(x);
 }

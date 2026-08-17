@@ -78,6 +78,7 @@ export function _resetModelCeilingMemo(): void {
     _modelCeilingMemo.clear();
 }
 import * as user_global_paths from '../_lib/user_global_paths.js';
+import { jsonDumpsIndent2 as _jsonDumpsIndent2 } from './_py_json.js';
 import * as budget from './cli_call_budget.js';
 import { appendEvent } from './events_log.js';
 
@@ -455,10 +456,9 @@ interface CliClientOptions {
     warn_at?: number | undefined;
     cli_calls_path?: string | null | undefined;
     /**
-     * Who is booking these calls — one of the `CLI_CONSUMER_*` constants.
-     * Declared by the construction site, never inferred from the class: the
-     * client has no way to know its caller, and guessing is how attribution
-     * becomes decoration. Omitted → `CLI_CONSUMER_UNKNOWN`, which is a finding.
+     * Who is booking these calls — a `CLI_CONSUMER_*` constant, declared by the
+     * construction site because the client cannot know its caller. Omitted →
+     * `CLI_CONSUMER_UNKNOWN`, which is a finding rather than a default.
      */
     consumer?: string | undefined;
 }
@@ -1137,69 +1137,14 @@ export function reset_cli_call_counts(
 }
 
 /**
- * Build the pre-run quota summary line (step-8 P1, D1 + D4).
- *
- * Returns `[summary, warn_providers]` where `warn_providers` is the subset whose
- * `used / max_calls_per_day` ratio crossed `warn_at`.
- *
- * Two silences were removed here (`road-to-council-quota-accounting-truth`
- * Phase 2), because both of them read to an operator as "you are within
- * budget" while meaning something else entirely:
- *
- *  - **A cap of `0` was dropped.** The filter was a Python-truthy check, so a
- *    provider deliberately capped at zero — the STRICTEST setting available —
- *    was excluded from the summary and reported nothing at all. A cap is now
- *    any number, including zero; only `null`/`undefined` means uncapped.
- *  - **No caps at all returned the empty string.** That is precisely the
- *    configuration where the shared counter runs unguarded, and it was the one
- *    configuration that produced no line. Genuinely-uncapped members are now
- *    NAMED as uncapped rather than omitted; an omission is indistinguishable
- *    from a pass, and the counter reached 72/63/99 while nothing was printed.
+ * Build the pre-run quota summary line (step-8 P1, D1 + D4). Formatting lives in
+ * `cli_call_budget.ts`; this reads the counter and delegates.
  */
 export function quota_summary_line(
     clients: CliClient[],
     opts: { cli_calls_path?: string | null } = {},
 ): [string, string[]] {
-    const cliCallsPath = opts.cli_calls_path ?? null;
-    // A cap is any number, zero included. Only an absent cap is uncapped —
-    // deliberately NOT a truthy check, which conflated "0 calls allowed" with
-    // "no limit configured", the two opposite ends of the range.
-    const capOf = (c: CliClient): number | null => {
-        const raw = _getattr(c, 'max_calls_per_day', null);
-        return typeof raw === 'number' && Number.isFinite(raw) ? raw : null;
-    };
-    const capped = clients.filter((c) => capOf(c) !== null);
-    const uncapped = clients.filter((c) => capOf(c) === null);
-    if (capped.length === 0 && uncapped.length === 0) {
-        // No CLI members at all — there is genuinely nothing to say.
-        return ['', []];
-    }
-    const counts = load_cli_call_counts(cliCallsPath);
-    const parts: string[] = [];
-    const warn: string[] = [];
-    for (const c of capped) {
-        const name = _getattr(c, 'name', '?') as string;
-        const used = _pyInt(counts[name] ?? 0);
-        const limit = _pyInt(capOf(c) as number);
-        parts.push(`${name} ${used}/${limit}`);
-        const ratio = limit > 0 ? used / limit : 0.0;
-        const warnAt = Number(_getattr(c, 'warn_at', 0.8));
-        // A cap of 0 admits nothing, so any booked call is already past it. The
-        // ratio is undefined there; treat it as a warn rather than as 0.0, which
-        // would have read as "0 % of budget used".
-        if (limit === 0 ? used > 0 : ratio >= warnAt) {
-            warn.push(name);
-        }
-    }
-    for (const c of uncapped) {
-        const name = _getattr(c, 'name', '?') as string;
-        const used = _pyInt(counts[name] ?? 0);
-        // Named, not omitted. `used` still comes from the shared bucket, so the
-        // operator sees consumption they are not protected against.
-        parts.push(`${name} ${used}/uncapped`);
-    }
-    const prefix = warn.length > 0 ? '⚠️  ' : '';
-    return [`${prefix}council:quota · ${parts.join(' · ')}`, warn];
+    return budget.quotaSummaryLine(clients, load_cli_call_counts(opts.cli_calls_path ?? null));
 }
 
 /** Transport-seam result, shaped like a finished `subprocess.run`. */
@@ -1511,9 +1456,8 @@ export abstract class CliClient extends ExternalAIClient {
                         cli: true,
                         cli_calls_used: used,
                         cli_calls_max: this.max_calls_per_day,
-                        // Refused by OUR counter, before any spawn — see
-                        // `QUOTA_SOURCE_LOCAL_BUDGET`. Nothing was sent and
-                        // nothing is booked for this call.
+                        // Our counter refused before any spawn — nothing sent,
+                        // nothing booked for this call.
                         quota_source: budget.QUOTA_SOURCE_LOCAL_BUDGET,
                     },
                 });
@@ -1623,14 +1567,10 @@ export abstract class CliClient extends ExternalAIClient {
                     cli: true,
                     returncode: proc.returncode,
                     stderr_tail: (proc.stderr || '').slice(-500),
-                    // `cli_quota_exhausted` names TWO different events: this
-                    // one (the vendor refused us) and the local-budget refusal
-                    // above, which returns before spawning. They call for
-                    // opposite responses — wait for the vendor's window versus
-                    // raise or reset our own cap — and the string alone cannot
-                    // tell them apart. Discriminate explicitly rather than
-                    // leaving it inferable from which metadata keys happen to
-                    // be absent.
+                    // The vendor refused us; the local-budget refusal above
+                    // returns before spawning. Opposite remedies, one error
+                    // string — so discriminate explicitly rather than leaving it
+                    // inferable from which metadata keys happen to be absent.
                     ...(code === 'cli_quota_exhausted'
                         ? { quota_source: budget.QUOTA_SOURCE_PROVIDER }
                         : {}),
@@ -2802,94 +2742,6 @@ function _excMessage(exc: unknown): string {
         return exc.message;
     }
     return String(exc);
-}
-
-/** `json.dumps(obj, indent=2)` — default ensure_ascii=True, insertion-order keys. */
-function _jsonDumpsIndent2(value: unknown): string {
-    return _jsonDumpsIndented(value, 2, 0);
-}
-
-function _jsonDumpsIndented(value: unknown, indent: number, level: number): string {
-    if (value === null || value === undefined) {
-        return 'null';
-    }
-    switch (typeof value) {
-        case 'boolean':
-            return value ? 'true' : 'false';
-        case 'number':
-            return _pyJsonNumber(value);
-        case 'string':
-            return _pyJsonStringAscii(value);
-        case 'object':
-            break;
-        default:
-            throw new TypeError(`Object of type ${typeof value} is not JSON serializable`);
-    }
-    const pad = ' '.repeat(indent * (level + 1));
-    const closePad = ' '.repeat(indent * level);
-    if (Array.isArray(value)) {
-        if (value.length === 0) {
-            return '[]';
-        }
-        const items = value.map((v) => pad + _jsonDumpsIndented(v, indent, level + 1));
-        return `[\n${items.join(',\n')}\n${closePad}]`;
-    }
-    const obj = value as Record<string, unknown>;
-    const keys = Object.keys(obj);
-    if (keys.length === 0) {
-        return '{}';
-    }
-    const items = keys.map(
-        (k) => `${pad}${_pyJsonStringAscii(k)}: ${_jsonDumpsIndented(obj[k], indent, level + 1)}`,
-    );
-    return `{\n${items.join(',\n')}\n${closePad}}`;
-}
-
-/** Render a number like Python `json.dumps` (int vs float; JS has one type). */
-function _pyJsonNumber(n: number): string {
-    if (!Number.isFinite(n)) {
-        if (Number.isNaN(n)) {
-            return 'NaN';
-        }
-        return n > 0 ? 'Infinity' : '-Infinity';
-    }
-    return String(n);
-}
-
-/** Escape a string like Python `json.dumps(..., ensure_ascii=True)` (default). */
-function _pyJsonStringAscii(s: string): string {
-    let out = '"';
-    for (const ch of s) {
-        const code = ch.codePointAt(0) ?? 0;
-        if (ch === '"') {
-            out += '\\"';
-        } else if (ch === '\\') {
-            out += '\\\\';
-        } else if (ch === '\b') {
-            out += '\\b';
-        } else if (ch === '\f') {
-            out += '\\f';
-        } else if (ch === '\n') {
-            out += '\\n';
-        } else if (ch === '\r') {
-            out += '\\r';
-        } else if (ch === '\t') {
-            out += '\\t';
-        } else if (code < 0x20) {
-            out += `\\u${code.toString(16).padStart(4, '0')}`;
-        } else if (code < 0x7f) {
-            out += ch;
-        } else if (code <= 0xffff) {
-            out += `\\u${code.toString(16).padStart(4, '0')}`;
-        } else {
-            // Astral plane → surrogate pair, matching Python json.dumps default.
-            const c = code - 0x10000;
-            const hi = 0xd800 + (c >> 10);
-            const lo = 0xdc00 + (c & 0x3ff);
-            out += `\\u${hi.toString(16).padStart(4, '0')}\\u${lo.toString(16).padStart(4, '0')}`;
-        }
-    }
-    return out + '"';
 }
 
 /** Python `shutil.which(name)` — resolve an executable on PATH. */
