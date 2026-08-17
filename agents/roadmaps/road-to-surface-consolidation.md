@@ -215,6 +215,18 @@ locked cluster contract disagree with what is actually on disk.
 - Contract-side, the inverse also exists: rows for sub-commands that have no
   file, and orchestrators with no contract row.
 
+**Correction (2026-08-17) — the two named examples have been repaired since,
+and the by-product finding must not be budgeted as if they had not.** Both
+bullets are now false: `/roadmap` has **7** sub-commands on disk and its
+`## Sub-commands` table lists **7**, `materialize` included; `/memory` has **6**
+on disk and its table lists **6**, `learn-low-impact` included. They are left
+above with this note rather than rewritten, so the finding stays auditable —
+but the post-window sweep this block feeds would otherwise budget for two fixes
+that no longer exist. **Scope of this correction, stated because it bounds
+what it proves:** only the first two bullets were re-measured. The `routes_to:`
+bullet (12 of 25) and the contract-side inverse were **not** re-checked and are
+neither confirmed nor refuted here.
+
 `check_cluster_patterns` cannot catch this class: it iterates the **contract**,
 never the filesystem, checks `routes_to` for *resolvability* but never
 *completeness*, and matches only the `## Sub-commands` table **header**, never

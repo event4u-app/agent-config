@@ -42,6 +42,16 @@ The cost side is measured: **28** `*.review-input/` directories carrying **28**
 **5.7 MB** under `agents/evidence`, and **4** re-bind entries in the 12.0.0
 changelog era alone.
 
+**Correction (2026-08-17) — every number in the paragraph above has grown, and
+the direction is the point.** Re-measured: **38** `*.review-input/` directories
+carrying **38** `diff.patch` files totalling **61,101** lines, **64**
+`*.findings.md`, **6.9 MB** under `agents/evidence` (of which **5.1 MB** is
+`reviews/`). The original figures are left in place rather than rewritten so the
+growth rate stays auditable: +10 directories, +15,503 patch lines and +1.2 MB in
+roughly two weeks. That strengthens the roadmap's premise rather than weakening
+it — but any decision taken against the old numbers is being taken against a
+tree ~36 % larger than the one they describe.
+
 ## Non-goals
 
 - Weakening what a binding proves. A review that no longer notices a code change
@@ -153,6 +163,15 @@ changelog era alone.
   tier at all, since 29 of 30 sit in the same one. The only line that separates
   them is the per-directory re-derivation verdict in
   `agents/evidence/analysis/review-binding-drift.md`.
+- **Correction (2026-08-17) — the list above is no longer decision-ready, and
+  that is the part a maintainer needs before answering.** The tree now holds
+  **38** directories, so the 30 Phase 3 classified cover **79 %** of it; eight
+  are unclassified and carry no reproducibility verdict. Choosing option (b)
+  against this list today would either skip those eight or act on them
+  unverified — neither is what the option says. The percentage it quotes moves
+  too: at most 34.7 % of *the 30*, and an unknown share of the eight. Re-run the
+  Phase 3 probe before the decision is taken, not after; the decision itself is
+  unchanged and still the maintainer's.
 - **What to do:** pick exactly one — (a) no compaction: the tiering and the
   reproducibility verdict are the whole deliverable, and step 3.3 is marked
   `[-]` cancelled; or (b) compact at a named tier boundary, dropping only

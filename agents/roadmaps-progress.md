@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 28 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **36** open blockers, **10** need you → `agent-config gates`
+> 28 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **35** open blockers, **9** need you → `agent-config gates`
 
 ## Overall
 
@@ -36,7 +36,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
 | 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
 | 12 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
-| 13 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 0 | 13 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy) | ██████████ 100% |
+| 13 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 0 | 13 | 1 | 0 | 0 | ██████████ 100% |
 | 14 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 2 | 2 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | █████░░░░░ 50% |
 | 15 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 16 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
@@ -107,7 +107,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
     when the experimental flag is on in a real environment,
     run the 5.1 spike, then bind the concerns with the same fail-open
     discipline as the #1223 set.
-  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts. - **Probed 2026-08-09:** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is unset on this host — condition unchanged, 5.4 stays open. - **Re-probed 2026-08-13:** still unset (`env | grep -i EXPERIMENTAL` returns nothing). Four days, no change. Recorded rather than left silent because the absence of a dated line is indistinguishable from nobody having looked — but the repetition is also the finding: this blocker does not clear by waiting on this host, so 5.4's realistic paths are an upstream flag flip or the "teams leave the experimental state" branch already named in the resolution clause.
+  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts.
 - **cross-vendor-worker-slices** (owner: maintainer) — blocks routing ordinary work slices to second-vendor CLI workers (huge-context analysis, independence-critical review — Source G shape)
   - **What to do:**
     the drafts cited a direction-policy artefact that does not
@@ -204,10 +204,6 @@ _1 blocker resolved._
     substantively-differing pairs; **R2** for Ü3 — is the `collective_blind_spot`
     field *decision-influencing* in ≥2 of 3 sampled runs (boilerplate such as
     "insufficient testing discussion" does not count).
-    - **Why no agent can close it:** the pre-registration names the *maintainer*
-    as the rater. Substituting an AI rater would break the pre-registration and
-    would itself be the self-preference bias this roadmap exists to measure — the
-    one substitution that invalidates the result it produces.
   - **Resolved when:** both readings exist, and each of Ü2 / Ü3 carries an adopt-or-honest-null verdict rather than a deferral.
 
 ### [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md)
@@ -258,6 +254,7 @@ _1 blocker resolved._
     2. Per observation: have a session write the entries it saw bare and the ones it saw described into `agents/evidence/metrics/skill-catalogue/<date>-<host>-{bare,described}.txt`, then run `./scripts-run src/scripts/capture_skill_catalogue --observed <bare> --described <described> --record --observed-at <ISO date> --host <host>`.
     3. Progress is `wc -l agents/evidence/metrics/skill-catalogue.jsonl` — one line per observation, currently 1.
     4. Vary the host and the session shape: a selector that only shows up on one host is exactly what the current `no-selector` verdict cannot distinguish from no selector at all.
+    5. **Correction (2026-08-17) — the progress figure in item 3 is stale and one half of the resolution condition is already met.** `skill-catalogue.jsonl` holds **5** observations, not 1, and they span **2 hosts** (`claude` ×1, `codex` ×4) — so the "across ≥ 2 hosts" half of *Resolved when* is satisfied and only the count half (5 of 20) is outstanding. Item 4's framing is stale too: the standing verdict is **not** a uniform `no-selector`. One observation reads `no-selector` (claude); the other four read **`insufficient-observation`** (codex), which is a different state and must not be aggregated with it. Those four also carry a field set this blocker predates — `observation_source: "host-event"` with `truncation_mode: "budget-strip-and-drop"` and `dropped_count` 330–402 — i.e. the host now publishes its own truncation, which is mechanism evidence the "selector is unknowable" framing above does not account for.
   - **Resolved when:** `skill-catalogue.jsonl` holds ≥ 20 observations across ≥ 2 hosts, and `capture_skill_catalogue` reports either a `selector-found` verdict or a `no-selector` that has stopped moving.
 - **ui-corpus-has-no-ui** (owner: maintainer) — blocks Phase 4 — Step 5 · Phase 5 — Reach and enforcement
   - **What to do:**
@@ -370,7 +367,7 @@ _1 blocker resolved._
 <a id="blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle"></a>
 **Blockers**
 
-- **evidence-compaction-approval** (owner: maintainer) — blocks step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2 proceed either way. - **Evidence now available (Phase 3, 2026-08-15):** the list and the proof the blocker was waiting for exist. **30** directories totalling **3.24 MB**, 29 of them `archived`. **11** were re-derived byte-for-byte (**1.12 MB**); **19** were not (**2.12 MB**) and stay regardless. So option (b) reclaims at most **34.7 %** of the tree — and the tier boundary it would need to name is not a tier at all, since 29 of 30 sit in the same one. The only line that separates them is the per-directory re-derivation verdict in `agents/evidence/analysis/review-binding-drift.md`.
+- **evidence-compaction-approval** (owner: maintainer) — blocks step 3.3 only. Phases 1 and 2 and the classification in 3.1–3.2 proceed either way.
   - **What to do:**
     pick exactly one — (a) no compaction: the tiering and the
     reproducibility verdict are the whole deliverable, and step 3.3 is marked
@@ -391,35 +388,6 @@ _1 blocker resolved._
 | 3 | One top-band context per task | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | Close the documented-but-unwired exposure | ✅ done | 0 | 7 | 1 | 0 | 100% |
 
-<a id="blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy"></a>
-**Blockers**
-
-- **picktier-wire-or-archive** (owner: user) — blocks Step 4.1 only. Phase 3 and Step 4.2 are closed and independent.
-  - **Recommendation:** fix the quorum, then take **(b)**. Two separate claims, and the order is the point. The quorum fix is unconditional — it costs one line, it is the only reason this entry has escalated twice, and every future contract-reversal question in this repository hits the same wall. On the disposition itself, (b) is where the evidence points: `decision-revisit-gate` says a lock is a decision under past conditions, and the condition that changed is not an opinion — the input `pickTier` requires has had no source since the settings key was deleted, so (a) does not mean "wire the contract", it means "invent a replacement for a category that was removed on purpose". (c) is the honest description of today and the weakest option to CHOOSE, because it leaves AC1–AC5 pre-registered against a mechanism that cannot run, which reads as coverage. **This is advice from the entry's own evidence, not a verdict** — a converged council reversal is still what (b) needs, which is why the quorum fix is first and not optional. **Superseded in part, 2026-08-16 — the (b) half stands, the ordering half does not.** "It costs one line" was true of the openai seat and is not true of what is left: the anthropic seat is a council-transport defect with no established cause, so "fix the quorum, THEN decide" now reads as "wait indefinitely". The two bullets below were corrected and this one was not, which is how a maintainer reading the field named for the decision got the pre-correction instruction. What replaces it: (b) is still where the evidence points, both vendors now say so independently, and `Resolved when:` states the one question that remains — whether that substitutes for the mechanism.
-  - **If you do nothing:** nothing breaks and no user sees anything wrong — the same honest no-cost answer four of the six entries rewritten on 2026-08-16 carry. What accrues is measurement debt in three places: 365 LOC of source and 355 LOC of tests keep asserting a lifecycle nothing runs; `budget.mjs tier` keeps summing a `reserved_usd` term whose store has no writer; and the v1 contract keeps five pre-registered acceptance criteria that can never fire, which a reader counts as coverage that exists. Step 4.1 and the acceptance criterion below it stay open indefinitely, so this roadmap cannot reach a terminal state.
-  - **What to do:**
-    pick exactly one —
-    (a) **wire** it, naming where `routing_switch` now comes from;
-    (b) **archive** the decision layer and permit lifecycle with a migration note
-    carrying the 0/327 reading and the complementary-not-replacement correction,
-    keeping `TIER_ORDER` / `readCooldowns`;
-    (c) **carry it deliberately**, on the ground that the state is disclosed and
-    monitored — which the step as written excludes, so choosing this amends the
-    step rather than satisfying it.
-    **A fourth thing has to happen first, and it is not one of the three:** restore
-    the council quorum, by removing the `model: gpt-4o` pin from the `openai`
-    member in `~/.event4u/agent-config/settings/.ai-council.yml` (or moving that
-    member to the API transport). Until that lands, the mechanism this entry
-    defers to cannot produce the converged verdict it defers to it FOR.
-    **Half done, and the other half moved (2026-08-16):** the openai seat is
-    repaired — as `model: codex-default`, never by removing the line, see the
-    correction block above. The remaining half is the anthropic seat, and it is a
-    council-transport defect rather than a config value, so it is no longer
-    something this entry can name a one-line fix for.
-  - **Resolved when:** the council quorum is restored AND the user states which of (a), (b) or (c) holds — or the user decides without the council and says so, which is theirs to do but is the reversal-of-a-converged-decision this entry escalated to avoid. **Narrowed 2026-08-16 to the one question actually left.** The evidence half is done: both vendors answer (b) on an identical neutral prompt, with independent reasoning and compatible `revisit-if` conditions. The mechanism half is not and will not be until the council-transport defect is fixed elsewhere. So the maintainer decides ONE thing: whether two independent vendor opinions, one hand-run, substitute for a converged council run as the basis for reversing a council-locked v1 contract. **Yes** → (b) executes on the plan below. **No** → this entry waits on the transport fix, and nobody re-gathers the opinions, because they are recorded above. The execution plan, from the two answers, so it needs no re-derivation (kept blank-line-free on purpose: `_blockerField` terminates a field at the first blank line, so a plan separated by one never reaches the generated dashboard or `agent-config gates` — the two surfaces this entry routes the maintainer to): 1. Archive the smallest coherent boundary — confirm first whether `reserveTtlMs`, `RESERVE_FILE` or `COOLDOWN_FILE` back the live cool-down diagnostics indirectly, and keep whatever does alongside `TIER_ORDER` and `readCooldowns`. 2. Remove the decision and permit APIs plus their exclusively-associated tests and state. 3. Replace the v1 contract with an archival migration record that formally retires AC1–AC5, carrying the 0/327 reading and the complementary-not-replacement correction. 4. Update claims, proof, config and routing documentation so no active-contract language remains. 5. Decide separately whether `budget.mjs tier` goes with it — its `reserved_usd` term reads a store that would then have no writer at all.
-
-_1 blocker resolved._
-
 ### [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md)
 
 **Road to the inbox-harvest residuals — four deferrals that outlived their parent** — 2 / 4 done (50%)
@@ -433,7 +401,7 @@ _1 blocker resolved._
 
 - **deferred-finding-decision-reopen** (owner: maintainer) — blocks R2 only
   - **Recommendation:** **cancel R2 against the decline** — option (b) below. The decline names a falsifiable trigger (*a disposition that genuinely cannot be recorded in the round record itself*), and no such case is on record; the 2026-08-14 blanket grant released the permission to revisit but supplies none of the evidence the trigger asks for. Building the index anyway adds a second artefact to keep in sync — a new drift source guarding a failure mode that has not occurred. Cancelling is not a refusal: the decline reopens by itself the day a real case appears.
-  - **If you do nothing:** R2 stays open indefinitely and this roadmap can never reach a terminal state, so it sits on the dashboard as permanent open work that no run can close. Nothing else is blocked, and no correctness or safety property degrades — the cost is purely that the backlog carries an item nobody can act on. That is a low cost, which is exactly why this has already survived two migrations without being decided. - **Options:** (a) reopen the decision, citing the real case that fired the trigger, and build the stable-finding-id index · (b) cancel R2 against the decline (`[-]`, recommended) · (c) leave it open and re-read at the next harvest.
+  - **If you do nothing:** R2 stays open indefinitely and this roadmap can never reach a terminal state, so it sits on the dashboard as permanent open work that no run can close. Nothing else is blocked, and no correctness or safety property degrades — the cost is purely that the backlog carries an item nobody can act on. That is a low cost, which is exactly why this has already survived two migrations without being decided.
   - **What to do:**
     R2 needs a stable-finding-id index that was explicitly declined
     at `src/scripts/check_review_dispositions.ts:16-22` with a named revisit
@@ -453,7 +421,7 @@ _1 blocker resolved._
   - **Resolved when:** the decision is reopened with the trigger cited (i.e. a real case exists), or R2 is cancelled against it.
 - **spent-inbox-artifacts-await-deletion** (owner: maintainer) — blocks nothing — pure housekeeping, carried so it is not lost
   - **Recommendation:** **record a keep-reason and close it** — option (c) below. The deletion frees nothing anyone measures: the objects live under a gitignored, per-checkout directory, so they are already invisible to every diff, every clone and every consumer. Set against that, naming the two files costs a human read of a 12-match glob whose intended two are not recoverable from the text. Deleting the wrong ten is the only outcome with a real cost, and it is the one an unaided agent would produce.
-  - **If you do nothing:** four spent items keep sitting in a local, gitignored scratch directory in one checkout. **Blocks nothing** — the entry itself says so — and the housekeeping value does not decay. Concretely: no gate reds, no reviewer sees them, and the directory is not replicated to any worktree. This is the cheapest non-decision on the board. - **Options:** (a) name the two `council-q-*.md` files explicitly and delete those four objects by name · (b) delete nothing and drop the entry as housekeeping noise · (c) record a keep-reason and close it (recommended).
+  - **If you do nothing:** four spent items keep sitting in a local, gitignored scratch directory in one checkout. **Blocks nothing** — the entry itself says so — and the housekeeping value does not decay. Concretely: no gate reds, no reviewer sees them, and the directory is not replicated to any worktree. This is the cheapest non-decision on the board.
   - **What to do:**
     four spent items under `agents/tmp.old/` should be removed:
     both `council-q-*.md` files (answered and shipped verbatim), `bench-local/`
@@ -476,7 +444,7 @@ _1 blocker resolved._
     appear in any diff a reviewer reads. Same per-checkout class as the audit
     log the parent's sweep report recorded.
     So the item needs the two filenames, not a broader authorization.
-  - **Resolved when:** the files are deleted **by name**, or a reason to keep them is recorded. - **Side finding, worth its own look and deliberately not folded in:** `check_council_layout` prints these as findings and **exits 0** — an advisory gate nobody sees, currently carrying ~18 permanent findings, which is the allowlist-fatigue shape this repo's own rules warn about.
+  - **Resolved when:** the files are deleted **by name**, or a reason to keep them is recorded.
 
 ### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
 
@@ -536,7 +504,20 @@ _1 blocker resolved._
     **(2)** The DROP branch below is premise-stale in its first clause and
     maintainer-owned in its second, so a DROP is not an agent-executable
     outcome either.
-  - **Resolved when:** the current-month audit log holds ≥20 orchestration lines.
+    **Correction (2026-08-17) — two of the numbers above have moved, and one of
+    them falsifies the mechanism claim rather than just the count.** Re-measured
+    against `2026-08.jsonl` at 368 lines / **367 orchestration** (July still holds
+    1): `token_delta: 0` and provenance `estimated` remain **367/367**, and
+    `first_pass_success`, `escalated`, `task_class` and `dispatch_mode` remain
+    `null` **367/367** — so the "at held quality has no input" conclusion stands
+    unchanged and PROVE is still not evaluable. What does **not** hold is the
+    parenthetical reason: `dispatch_tokens` is **numeric on 40 of 367** (327 null),
+    i.e. the sync completions the clause said we have none of are now landing, and
+    `wall_clock_ms` is numeric on **367/367**. The absolute-cost side therefore
+    exists; what is still missing is the counterfactual and the quality columns,
+    which is a narrower gap than the prose above describes. `spawn_count ≥ 2` is
+    still **0 of 367**, so the corpus has never produced a fan-out.
+  - **Resolved when:** a probe result records whether any hook slot sees the task-completion payload, and — if one does — the current-month audit log carries ≥ 20 orchestration lines whose **quality** columns are populated rather than `null`. **Rewritten 2026-08-17.** The bare line-count condition this field carried until today (*"the current-month audit log holds ≥20 orchestration lines"*) was satisfied at 99 lines when it was written and stands at **367** now, while the blocker never stopped being open — a resolution test that is already met cannot resolve anything, and every feasibility screen that trusted it read this roadmap as resumable. The sibling `road-to-subagent-value-realization-followup` had the identical defect repaired on 2026-08-16; this one was missed in the same pass.
 
 ### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
 
@@ -588,12 +569,6 @@ _1 blocker resolved._
     (`internal/bench/corpora/scale-history-PREREG.md:63-69`), and the rubric's
     own first line makes the anti-anchor ordering binding
     (`internal/bench/scale-history/rubric.md:4-5`).
-    - **Why no agent can close it:** an agent rating artifacts an agent produced
-    is the self-preference substitution that invalidates the result it is
-    meant to produce — the same refusal `road-to-council-blind-review` records
-    for its own blind ratings, and the reason `evaluator-independence` exists.
-    Substituting an AI rater here would not be a weaker result; it would be an
-    uncitable one.
   - **Resolved when:** a human rubric score exists per artifact, recorded before the secondary `lint_persistence` pass for that artifact. - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was never written down, which is why this roadmap read as spend-blocked-only.
 
 _2 blockers resolved._
@@ -794,11 +769,6 @@ _1 blocker resolved._
     `claude__PreToolUse__*.json` files written from inside it.
     4. Remove the `env` entry afterwards — the capture writes every payload
     verbatim, which is a standing egress surface, not a setting to leave on.
-    - **Why an agent must not do it:** the file is the agent's own tool
-    configuration, the change is user-global and reaches every other session live
-    on this repository, and `security-sensitive-stop` § self-modification routes a
-    self-config edit through the edit-permission gates rather than letting a
-    session apply it to itself.
   - **Resolved when:** a raw `SubagentStop` payload and a raw in-subagent `PreToolUse` payload exist as captured files, and their field lists are recorded in `agents/evidence/investigations/subagent-lifecycle-phase0-return-channel.md`.
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
@@ -844,6 +814,21 @@ _1 blocker resolved._
     the host populates only on a **sync** completion. All 99 were background
     dispatches, i.e. spawn acks with no usage fields, so the null is correct
     rather than lossy.
+    **Correction (2026-08-17) — the count moved and two of the field claims are
+    now false, one of them load-bearing.** `2026-08.jsonl` holds **368 lines,
+    367 orchestration** (July still 1). Unchanged and still true: `token_delta`
+    `0` with provenance `estimated` in **367/367**, and `first_pass_success`,
+    `escalated`, `task_class`, `dispatch_mode` `null` in **367/367** — the
+    quality columns really are absent, so the exit criterion below is untouched.
+    Now false: `dispatch_tokens` is **numeric on 40 of 367** (327 null, values
+    from 315 to 194330), and `wall_clock_ms` is numeric on **367/367** (0 to
+    955883), not null. That matters beyond bookkeeping, because the sentence
+    above explains the nulls by "all were background dispatches, and the host
+    populates usage only on a sync completion" — 40 sync completions have since
+    landed, so the absolute-cost half of the argument no longer applies. It does
+    **not** unblock the roadmap: there is still no counterfactual and no quality
+    column, and n=40 carries no family labels. `spawn_count` is **1 in 366 of
+    367** (one `0`, none ≥ 2), so the fan-out finding is unchanged.
     Consequence for the exit criterion: a hook at `post_tool_use` cannot supply
     the quality columns for a background dispatch at all. The usage does surface
     later, on the task-completion notification, so the open question is whether

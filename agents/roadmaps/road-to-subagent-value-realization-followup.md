@@ -176,6 +176,22 @@ stands is exactly the shape that invites a wrong resume.
   dispatches, i.e. spawn acks with no usage fields, so the null is correct
   rather than lossy.
 
+  **Correction (2026-08-17) — the count moved and two of the field claims are
+  now false, one of them load-bearing.** `2026-08.jsonl` holds **368 lines,
+  367 orchestration** (July still 1). Unchanged and still true: `token_delta`
+  `0` with provenance `estimated` in **367/367**, and `first_pass_success`,
+  `escalated`, `task_class`, `dispatch_mode` `null` in **367/367** — the
+  quality columns really are absent, so the exit criterion below is untouched.
+  Now false: `dispatch_tokens` is **numeric on 40 of 367** (327 null, values
+  from 315 to 194330), and `wall_clock_ms` is numeric on **367/367** (0 to
+  955883), not null. That matters beyond bookkeeping, because the sentence
+  above explains the nulls by "all were background dispatches, and the host
+  populates usage only on a sync completion" — 40 sync completions have since
+  landed, so the absolute-cost half of the argument no longer applies. It does
+  **not** unblock the roadmap: there is still no counterfactual and no quality
+  column, and n=40 carries no family labels. `spawn_count` is **1 in 366 of
+  367** (one `0`, none ≥ 2), so the fan-out finding is unchanged.
+
   Consequence for the exit criterion: a hook at `post_tool_use` cannot supply
   the quality columns for a background dispatch at all. The usage does surface
   later, on the task-completion notification, so the open question is whether
