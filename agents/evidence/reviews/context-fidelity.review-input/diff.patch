@@ -1,0 +1,723 @@
+diff --git a/agents/evidence/eval-findings/context-fidelity-cf02.md b/agents/evidence/eval-findings/context-fidelity-cf02.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..93c128c345e24feadf7dabe85bbbeb10248b9d80
+--- /dev/null
++++ b/agents/evidence/eval-findings/context-fidelity-cf02.md
+@@ -0,0 +1,267 @@
++<!-- evidence-type: analysis -->
++
++# Spike cf02 — memory staleness census on the curated store
++
++**Date:** 2026-08-17
++**Roadmap:** [road-to-context-fidelity.md](../../roadmaps/road-to-context-fidelity.md) Phase 0
++**Tree:** `9beeb0662` (branch base `origin/main`)
++**Host stamp:** Claude Code 2.1.233 · model `claude-opus-5[1m]`
++**Pre-registered threshold (Phase 2 kill criterion):** a stale ratio **below
++10 %** shrinks Phase 2 to stamps only, with the ladder unbuilt and the null
++published.
++
++## Verdict up front
++
++**The stale ratio is 21.5 % (23 of 107). The kill criterion does not fire and
++the eviction ladder stays justified.**
++
++And the more useful half: the ratio the *existing instrument* reports is
++**0.0 %**, and that 0.0 % is an artefact. Had this census read the instrument
++instead of the tree, it would have killed Phase 2 on a number that measures
++stamping rather than truth.
++
++## Why the shipped instrument reads 0.0 %
++
++`memory_report` prints `staleness-rate=0.0% (0/107)`, and `check_memory` reports
++zero findings. Both are correct about what they measure and neither measures
++staleness in the sense this roadmap means.
++
++| Fact | Value | Consequence |
++|---|---|---|
++| Entries carrying `last_validated` | 107 / 107 | The stamp is not missing — it is a `REQUIRED_KEY` (`check_memory.ts:60-68`) |
++| Distinct `last_validated` values | **1** — `2026-07-09` | Every entry was stamped on one day. 107 stamps, not 107 verifications |
++| Distinct `review_after_days` values | **1** — `365` | One uniform window, applied without regard to volatility |
++| Earliest date any entry can read stale | **2027-07-09** | The instrument is structurally silent for another 326 days |
++| Commit anchor in the stamp | **absent** | A date cannot be tied to a tree state, so no reader can tell a verified entry from a re-stamped one |
++| Store-wide contradiction sweep | **absent** | `check_memory_contradiction` requires `--type --key --body`: it validates one *proposed* entry, not the store |
++
++Two of those rows are the whole finding. A uniform stamp plus a uniform 365-day
++window means the age axis cannot distinguish a true entry from a false one, and
++the missing commit anchor means it cannot be repaired by reading the dates more
++carefully. This is the already-satisfied-test shape: a check that passes because
++it cannot fail.
++
++## Method — what was actually done
++
++Because no store-wide contradiction sweep exists, the tree axis was walked by
++hand: **all 107 entries**, one per row, each `body` claim checked against the
++current tree with a targeted grep or read. Three verdicts, assigned by evidence
++rather than by age:
++
++- **still-true** — the load-bearing assertion holds, with a `file:line`.
++- **stale** — the tree now contradicts it, with what the tree says instead.
++- **unverifiable** — the claim is about an external system, a past event, a host
++  behaviour, or a recorded preference, so the tree can neither confirm nor refute
++  it. Counted separately rather than folded into either side; folding them into
++  "true" would inflate the pass rate and folding them into "stale" would
++  manufacture defects.
++
++Three walkers were used, one per store. **They were not independent in any sense
++that buys confidence, and the earlier wording here claimed otherwise.** The sets
++are disjoint, so every one of the 107 entries has exactly one classifier and
++mutual blindness is vacuous — there is nothing to agree or disagree about.
++Inter-rater agreement is therefore not merely unmeasured, it is undefined for
++this design. Corrected on R2 finding 8.
++
++The per-entry verdicts are recorded **in this file**, below, and that too is a
++correction: they were first pointed at "this run's session transcript", i.e. under
++`agents/runtime/`, which this same change documents as gitignored state absent
++from any worktree. A ratio whose substrate lives in an unavailable store is not
++auditable, and the number that keeps Phase 2's kill criterion from firing is
++exactly the number that has to be.
++
++## Result
++
++| Store | n | still-true | stale | unverifiable | stale % (of n) |
++|---|---:|---:|---:|---:|---:|
++| `product-rules.yml` | 66 | 52 | 9 | 5 | 13.6 % |
++| `historical-patterns.yml` | 24 | 12 | **11** | 1 | **45.8 %** |
++| `incident-learnings.yml` | 17 | 9 | 3 | 5 | 17.6 % |
++| **Total** | **107** | **73** | **23** | **11** | **21.5 %** |
++
++Against the verifiable subset alone (107 − 11 = 96), the stale ratio is
++**24.0 %**. Both readings clear the 10 % threshold, so the verdict does not
++depend on which denominator a reader prefers — stated because a single
++denominator would have invited exactly that objection.
++
++**Age axis: 0.0 %. Tree axis: 21.5 %.** Same store, same day, same 107 entries.
++
++## The distribution is the second finding
++
++Staleness is not uniform across the stores, and the spread is large enough to
++matter for the ladder's thresholds:
++
++- `historical-patterns` is **45.8 %** stale — three times the `product-rules`
++  rate. Its entries are mostly *downstream-surface* notes ("adding X touches
++  these N places"), and those decay every time a generator changes. Six of its
++  eleven stale rows trace to one event: ADR-201 removed markdown condensation,
++  so every entry describing a manual dist write or a `--mark-done` step is now
++  wrong.
++- `product-rules` is **13.6 %** stale, and its stale rows cluster too: five of
++  nine are entries about the `subagents.auto` setting, which
++  always-on-orchestration deleted. One removal invalidated five entries.
++- `incident-learnings` carries the **highest unverifiable share** (5 of 17,
++  29 %) — unsurprising, since an incident is a past event by definition.
++
++**A uniform 365-day window is therefore the wrong shape**, independent of its
++length: the volatile store and the stable store get the same treatment, and the
++volatile one is the one that decays. That is a finding for Phase 2 step 3, whose
++thresholds this census was meant to supply.
++
++## What a single upstream change does to the store
++
++The clustering above is the mechanism worth carrying forward: **staleness
++arrives in batches, not per entry.** Two removals (ADR-201's condensation step,
++the `subagents.auto` knob) account for **11 of the 23** stale rows. An
++age-and-quarantine ladder handles the slow tail; it does not handle a batch, and
++a batch is what actually happened here twice.
++
++This is not an argument against the ladder — the 21.5 % justifies it. It is an
++argument that contradiction-against-the-tree has to be the *primary* signal and
++age the fallback, which is what Phase 2 step 5 already says ("contradiction
++outranks retention") and what the missing commit anchor currently makes
++impossible to compute.
++
++## Reproduction
++
++Age axis, deterministic:
++
++```
++./scripts-run src/scripts/memory_report --format text     # staleness-rate=0.0% (0/107)
++./scripts-run src/scripts/check_memory                    # 0 error(s), 0 warning(s), 0 info
++grep -h last_validated agents/memory/*.yml | sort | uniq -c   # 107 × 2026-07-09
++grep -h review_after_days agents/memory/*.yml | sort | uniq -c # 107 × 365
++```
++
++Tree axis: **not reproducible by a command** — that is the point of the missing
++sweep. It was a per-entry read, and re-running it means re-reading. What IS
++available is the substrate: every one of the 107 verdicts is listed below with the
++pointer it was decided on, so a reader can re-check any single row cheaply and
++disagree with it specifically rather than with the total.
++
++## Per-entry verdicts — the substrate
++
++Every row was decided on a targeted grep or read against the tree at `9beeb0662`.
++`stale` rows carry what the tree says instead, because those are the rows the
++verdict rests on and the ones most worth disagreeing with.
++
++### `incident-learnings.yml` — 17 entries: 9 still-true · 3 stale · 5 unverifiable
++
++| id | verdict | evidence |
++|---|---|---|
++| `adr-number-collision-on-parallel-prs` | still-true | `docs/decisions/INDEX.md`; per-file `adr:` frontmatter; `src/scripts/adr/regenerate_index.ts` |
++| `agent-config-hooks-need-global-binary` | **stale** | `hooks/hooks.json` now binds **9** events, not 5; each command resolves a project-local `dist/hooks/dispatch.js` FIRST, so no global install is required; the final fallback exits 0, not 127 |
++| `auto-commit-empties-roadmaps` | unverifiable | external git identity acting outside the repo; the tree only shows the backstop `src/scripts/lint_empty_roadmaps.ts` |
++| `commit-relocates-into-per-branch-worktree` | unverifiable | host-side automation; no relocation pipeline anywhere in `src/scripts`, `hooks/`, or the installed hooks |
++| `council-curl-timeout-fix` | still-true | `src/scripts/ai_council/clients.ts:475` (`--connect-timeout 30`, `--max-time 290`), `:481` |
++| `council-install-path-convergence` | still-true | archived roadmap records the Q1 SPLIT + bootstrap shim; `.claude-plugin/marketplace.json` |
++| `council-removal-depth-principle` | still-true | zero hits for the three named symbols across `src/` and `tests/`; `retrieval-v1` survives in `memory_status.ts` as stated |
++| `discovery-strict-frontmatterless-template` | **stale** | the named script is `.ts`, not `.py`; the Python CI job is gone (`.github/workflows/no-python-in-src.yml` forbids it); `test_projection_scoped` exists nowhere. The frontmatter-less template survives, but the failure mechanism is obsolete |
++| `enforcement-projection-honest-null` | still-true | `bench_ab_v2_run.ts:167`, `:206-219` (exactly the 3 safety-floor rules); `condense.ts` has zero `hardened` hits, so still unwired |
++| `feedback-locks-never-permanent` | still-true | encoded as the named `decision-revisit-gate` rule |
++| `fresh-worktree-gate-quirks` | **stale** | quirk 1 is gone: the pre-commit template states the runtime is Node/tsx and warns-then-exits-0 when the CLI is absent, with no `python3` call anywhere. Quirk 2's flag survives, but the headline mechanism is contradicted |
++| `git-stash-probe-conflict-hazard` | unverifiable | a past working-tree behaviour; nothing in the tree encodes or contradicts it |
++| `github-pr-head-sync-glitch` | unverifiable | external platform lag; the tree shows only a mitigation reading the same field |
++| `glama-sync-break-src-move` | still-true | `internal/glama/`, task `mcp:glama-test`, `src/scripts/mcp_server/` all present; the root cause itself is external |
++| `py2ts-bundle-macos-symlink-and-tmpdir-traps` | still-true | `dist/install/install.mjs` tracked; the realpath fix documented at `src/scripts/install.ts:5341-5352` |
++| `py2ts-parallel-snapshot-clobber` | still-true | shared golden tree at `tests/_lib/parity_oracle.ts:136`, capture gate `:139`, refusal text `:373-376` |
++| `roadmap-archival-vs-inbound-refs` | still-true | gate intact at `src/agent-src/scripts/update_roadmap_progress.ts:1080`, `:1108`; script is now `.ts` |
++
++### `historical-patterns.yml` — 24 entries: 12 still-true · 11 stale · 1 unverifiable
++
++| id | verdict | evidence |
++|---|---|---|
++| `a1-crosshost-subagent-degradation` | still-true | `condense.ts:2126`, `:2231`, `:2292-2308`, wired `:2592-2593`; ADR-109 present |
++| `adding-a-plain-skill-downstream-surface` | **stale** | the hand-maintained step is gone — `.md` is copied verbatim by `--sync` per ADR-201; no manual dist write remains |
++| `adding-a-standalone-command-downstream-surface` | **stale** | two load-bearing parts false: `task sync` DOES write dist commands now, and the plugin is a bootstrap shim with no content commands |
++| `ai-council-cli-repo-local-only` | still-true | `ai_council/config.ts:736-738` (ADR-104 supersedes ADR-093), `:692`, `:756` |
++| `bench-ab-cost-and-activation-mechanics` | still-true | `taskfiles/bench-ab.yml:104`, `:127`, `:120-122`; runner `bench_ab_task_runner.ts:245-260`. Path drift only (`.py` → `.ts`) |
++| `claude-plugin-local-install-via-worktree` | **stale** | the ADR it rests on is `status: superseded` and states "every quantity in this record's rationale is now false" |
++| `command-cluster-ci-surface` | still-true | hardcoded pack-id enum in the manifest schema; ADR-013 packs table; gate `lint_discovery_manifest.ts:258` |
++| `deleting-a-command-downstream-surface` | **stale** | core claim inverted — ADR-201 removed the condensation step; the plugin-symlink step is dead |
++| `gh-pr-diff-patch-per-commit-series` | **stale** | `consistency.yml:257-259` now states the OPPOSITE and the invocation carries no `--patch`; workflow and checker are both renamed |
++| `live-trigger-eval-human-gate` | still-true | `skill_trigger_eval.ts:497-502` opens `/dev/tty` and refuses automation; task `test-triggers-live` |
++| `local-task-ci-tools-empty-tension` | **stale** | `agents/.agent-tools.yml` lists 8 tools, not `tools: []`, so `generate-tools` is not a local no-op |
++| `media-substrate-extraction-a1` | **stale** | the roadmap it calls open is archived; the substrate half holds |
++| `node-modules-symlink-committed` | still-true | the single-line add is in history; `.gitignore:9-16` carries the no-trailing-slash rationale verbatim; `git ls-files node_modules` empty |
++| `pr-gate-roadmap-archival` | still-true | `archive_completed_roadmaps.ts:3`, `:19-28`; rule `roadmap-progress-sync.md:66,75`. Path drift (`.py` → `.ts`) |
++| `project-single-install-source-of-truth` | **stale** | the roadmap it calls active is archived; the mechanism landed and is TS, not Python |
++| `py2ts-mcp-serving-and-teardown-pr` | still-true | zero tracked `.py` under `src/`; no `pyproject.toml`/`requirements*`; MCP server is TS |
++| `roadmap-dashboard-phase-heading-gotcha` | still-true | `update_roadmap_progress.ts:586-587`, `PHASE_RE` `:71-72`, draft exclusion `:279`,`:684` |
++| `roadmap-dashboard-regen-script-mismatch` | still-true | canonical wrappers at `src/cli/registry.ts:72-73` |
++| `roadmap-progress-regen-side-effects` | **stale** | `roadmap:progress` does NOT auto-archive — no `git mv` in the script; archival is the separate `/create-pr` sweep |
++| `settings-schema-downstream-install-bundle` | still-true | bundle tracked; entry imports the settings schema; CI gate rebuilds and diffs `dist/install/` |
++| `source-confidentiality-sweep` | still-true | no `compare-*.md` under `agents/evidence/analysis/`; `_lib/link_crypto.ts:1-20` states the policy verbatim |
++| `typecheck-use-task-not-bare-tsc` | **stale** | the stated REASON is false: `tsconfig.json` excludes `tests`, and `npm run typecheck` never runs `tsconfig.test.json`. The advice survives; its rationale does not |
++| `video-strategy-2026-06` | **stale** | the cited council artifact is absent, all six video roadmaps are archived, and the adapter count is 10, not 5 |
++| `zed-agents-skills-dir` | unverifiable | the load-bearing half is external host behaviour; the tree-side anchor checks out |
++
++### `product-rules.yml` — 66 entries: 52 still-true · 9 stale · 5 unverifiable
++
++The nine stale rows, with what the tree says instead:
++
++| id | verdict | evidence |
++|---|---|---|
++| `council-ecc-parity-positioning` | **stale** | its verified counts (258 skills / 93 rules / 162 commands / 26 personas) are now 290 / 117 / 200 / 32 |
++| `council-judge-harness-2026-06-26` | **stale** | the adopted option is not what shipped — `check_quality_regression.ts:7` states there is no such dependency, and the hand-rolled stats layer is the live path |
++| `council-memory-knowledge-validation-tests` | **stale** | the claimed shared phase embedded in two roadmaps does not exist; the only tree hit is the memory entry itself |
++| `council-memory-tripwire-engine` | **stale** | ADR-116:12-19 records the pre-decided engine was **never built**; re-resolved to hand-rolled BM25 + trigram prefilter |
++| `council-orchestration-flip-honest-null` | **stale** | the `subagents.auto` knob it keeps at `ask` no longer exists — the template says it was REMOVED and a lint rejects it |
++| `council-subagent-auto-cost-downshift` | **stale** | same removal; what shipped is `subagents.downshift: true`, so "default stays ask" is no longer true of the tree |
++| `council-subagent-default-flip-revisit` | **stale** | same removal; the ask→on question was superseded by always-on orchestration |
++| `council-team-shared-memory` | **stale** | the gitignore-intake verdict is not implemented — `agents/memory/intake/` is not ignored and its README is tracked |
++| `evidence-v2-accumulation-killed` | still-true | both evals present; ground-truth linter is now `skill_linter.ts` (was `.py`) |
++
++The five unverifiable rows: `council-decisions-workspace-phases` (a past deferral),
++`gstack-adoption-disposition` (an external repo assessment),
++`local-ci-hygiene-shipped` (a past CI state),
++`route-design-decisions-to-ai-council` (a recorded user preference),
++`source-a-deep-dive-subagent-reframe` (an external codebase's internals).
++
++The remaining 52 verified still-true against named `file:line` pointers spanning
++`src/rules/`, `src/skills/`, `src/scripts/`, `docs/decisions/`,
++`src/config/agent-settings.template.yml`, `taskfiles/`, and the roadmap archive.
++Five are worth naming because they anchor rules this run relied on:
++`feedback-end-of-reply-summary-and-pr-link` (`src/rules/direct-answers.md:46`),
++`feedback-no-proactive-quality-tools`
++(`src/rules/senior-engineering-discipline.md:67`), `never-drop-inherited-commits`
++(`src/rules/git-history-discipline.md:32`), `no-cheap-sequencing-questions`
++(`src/rules/no-cheap-questions.md:34`), and `roadmap-later-disposition`
++(`agents/roadmaps/later/`, enforced by `lint_roadmap_later_disposition.ts`).
++
++## The batch mechanism, in the substrate
++
++The clustering claimed above is visible in the tables. Two upstream removals
++account for **11 of the 23**:
++
++- **ADR-201 removed markdown condensation** →
++  `adding-a-plain-skill-downstream-surface`,
++  `adding-a-standalone-command-downstream-surface`,
++  `deleting-a-command-downstream-surface`,
++  `discovery-strict-frontmatterless-template`,
++  `claude-plugin-local-install-via-worktree`,
++  `project-single-install-source-of-truth` — six rows, one change.
++- **`subagents.auto` was deleted** → `council-orchestration-flip-honest-null`,
++  `council-subagent-auto-cost-downshift`,
++  `council-subagent-default-flip-revisit` — three rows, one change.
++
++Plus two independent decays (`gh-pr-diff-patch-per-commit-series` reversing,
++`typecheck-use-task-not-bare-tsc` losing its rationale while keeping its advice).
++
++## What this does not show
++
++- **Every row has exactly one classifier**, so a borderline
++  `still-true` / `unverifiable` call could move a few rows and nothing in this
++  design would catch it. It cannot plausibly move 23 rows to below 11, which is
++  what the verdict would need to flip — but the right response to doubt is to
++  re-check a named row above, not to re-argue the total.
++- **`still-true` is the weakest verdict in the set.** It means the load-bearing
++  assertion held against one targeted probe, not that the whole body is accurate.
++  Several rows carry a note that a path or a count inside them has drifted while
++  the claim survived; those are counted true and are the most likely to be
++  reclassified by a stricter reading.
++- Nothing here says a stale entry ever misled a session. The harm is inferred
++  from the content, not observed in behaviour — the same boundary cf03 states.
++- The intake store (`agents/memory/intake/`) is out of scope: `learning_sidecar`
++  already decays it on a 30-day half-life and never promotes into the curated
++  files, which is a deliberate council condition, not a gap.
+diff --git a/agents/evidence/eval-findings/context-fidelity-cf03.md b/agents/evidence/eval-findings/context-fidelity-cf03.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..163444ae1d7b5d59552d7b331d710ddf0894216e
+--- /dev/null
++++ b/agents/evidence/eval-findings/context-fidelity-cf03.md
+@@ -0,0 +1,109 @@
++<!-- evidence-type: analysis -->
++
++# Spike cf03 — how often compaction actually happens, and at what fill
++
++**Date:** 2026-08-17
++**Roadmap:** [road-to-context-fidelity.md](../../roadmaps/road-to-context-fidelity.md) Phase 0
++**Tree:** `9beeb0662` (branch base `origin/main`)
++**Host stamp:** Claude Code 2.1.233 · model `claude-opus-5[1m]` · store `~/.claude/projects`
++**Pre-registered threshold:** none — this step is a count, not a gate. The
++gated censuses are cf01 (compaction survival) and cf02 (memory staleness).
++
++## Why this step changed source before it ran
++
++As drafted, the step read the session-start source field out of
++`agents/runtime/.agent-chat-history` and piggybacked on cf01. Two problems, both
++found while executing:
++
++1. **The file is absent from every worktree.** `hot_context_hook.ts:52` pins
++   `HISTORY_REL = 'agents/runtime/.agent-chat-history'`, and `agents/runtime/`
++   is gitignored session state written where a session actually runs. Read from
++   a fresh worktree it yields zero compaction events — the opposite of the
++   truth, reported confidently.
++2. **The piggyback was unnecessary.** cf01 needs an instrumented live session
++   with a manual compaction; this count does not. `session_eol_report` derives
++   it from the host-global `compact_boundary` system records
++   (`_lib/session_eol.ts:40`), which exist for every session on the machine.
++
++Correcting the source therefore decoupled a blocked step from its blocker. The
++count below needed no instrumented session at all.
++
++## Result
++
++| Metric | Observed |
++|---|---:|
++| Sessions in the store | 473 (1,673 files) |
++| Sessions that compacted at least once | **22** (4.7 %) |
++| Compaction events total | **29** |
++| — of which host-automatic | **29** (100 %) |
++| — of which manual | **0** |
++| Trigger pre-tokens (median) | 1,000,677 |
++| Trigger pre-tokens (min / max) | 964,035 / 1,031,366 |
++| Post-compaction tokens (median) | 17,890 |
++| Marker drift (29 boundary vs 29 summary records) | none |
++| Sessions ending ≥ 400k tokens | 239 (50.5 %) |
++| Sessions ending ≥ 800k tokens | 35 (7.4 %) |
++
++## Three findings, in descending order of consequence for this roadmap
++
++**1. Compaction is rare, and every RECORDED event is automatic — which is not
++the same as saying no manual one happened.** 29 events across 473 sessions, all
++29 tagged `auto`, zero tagged manual.
++
++**Corrected on R2 finding 6, and the correction matters more than the count.**
++The first version of this finding read "exclusively automatic … a shape the store
++shows has never once occurred here", which reports an unobservable as an
++observation. The detector is pinned to ONE observed auto event
++(`src/scripts/_lib/session_eol.ts:11-19`: "pinned to OBSERVED reality … a real
++auto-compaction recorded 2026-08-06"), and **nothing in this tree establishes
++that a manual compaction writes a `compact_boundary` record at all**, let alone
++one carrying `trigger: "manual"`. So the honest reading of "0 manual" is
++**absence of a record**, not absence of an event, and an instrument that could
++not have seen the thing is not evidence that the thing did not happen.
++
++What survives, and it is still useful for cf01: the automatic path is
++**demonstrably observable** and the manual path is **not known to be**. cf01 as
++written asks for a manual compaction, so before running it someone has to
++establish that the instrument can see one — otherwise a null result from cf01 is
++uninterpretable, indistinguishable from a compaction that happened and left no
++trace. That is a finding *for* cf01's method, produced before cf01 runs, which is
++the cheapest moment to have it. It is **not** a reason to conclude the manual path
++is unused.
++
++**2. The trigger sits near a hard ceiling, not at a fill fraction.** Every
++observed compaction fired between 964k and 1,031k pre-tokens — a 7 % spread
++around 1M. Compaction is therefore not a gradual pressure this roadmap can
++expect to meet halfway through a session; it is a cliff at the top of the
++window. The Context section's positional-attention argument (start-and-end
++advantage below roughly half-full, recency dominating above) applies to the
++*approach* to that cliff, and the approach is where half the sessions live: 239
++of 473 end above 400k.
++
++**3. The capture side is unobserved, and the report says so.** `capture: no
++session-eol state directory — capture side UNOBSERVED (not zero)`. So the 29
++events are what the *host* recorded, and nothing here establishes what the
++suite's own `pre_compact` concern captured at those boundaries. Phase 1's census
++re-run needs that directory to exist before a delta means anything, and the
++honest reading today is unobserved rather than absent.
++
++## Reproduction
++
++```
++./scripts-run src/scripts/session_eol_report
++```
++
++Host-global by construction: it reads `~/.claude/projects`, not the tree, so the
++number is a property of this machine's session history and is not reproducible
++on a different machine. Anyone re-running it should restate their own store size
++alongside the count.
++
++## What this does not show
++
++- Whether any obligation survived a compaction — that is cf01, still open.
++- Whether the suite re-injected anything at those 29 boundaries — the capture
++  side is unobserved.
++- **Whether a manual compaction is detectable at all.** The zero is a property of
++  the record set, and the detector's own header says it was pinned to an observed
++  auto event. Establishing manual detectability is a precondition for cf01, not a
++  result of this census.
++- Anything about hosts other than Claude Code; the store is single-host.
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 48b0938263040a7c631af3a50b7ae12da5bc2e72..5dccb8837e716e5c40f9121a63c66dea3cbfeca3 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 31 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **38** open blockers, **13** need you → `agent-config gates`
++> 31 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **41** open blockers, **14** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**261 / 520 steps done · 50%**
++**265 / 519 steps done · 51%**
+ 
+ ```text
+-████████████████████░░░░░░░░░░░░░░░░░░░░   50%
++████████████████████░░░░░░░░░░░░░░░░░░░░   51%
+ ```
+ 
+ ## ⚠️ Iron Law 3 — unresolved deferred items
+@@ -27,7 +27,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
+ | 2 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
+ | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 4 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 24 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 4 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 19 | 4 | 0 | 1 | [3](#blockers-road-to-context-fidelity) | ██░░░░░░░░ 17% |
+ | 5 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
+ | 6 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
+ | 7 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
+@@ -151,16 +151,45 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ 
+ ### [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md)
+ 
+-**Road to context fidelity** — 0 / 24 done (0%)
++**Road to context fidelity** — 4 / 23 done (17%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+-| 0 | Falsification spikes | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
++| 0 | Falsification spikes | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+ | 1 | Compaction-boundary rule reinjection | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+-| 2 | Memory eviction on the curated store | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+-| 3 | Skill-top position lint | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
++| 2 | Memory eviction on the curated store | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
++| 3 | Skill-top position lint | ⏭️ skipped | 0 | 0 | 0 | 1 | 0% |
+ | 4 | Context management for spawned workers | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+ 
++<a id="blockers-road-to-context-fidelity"></a>
++**Blockers**
++
++- **compaction-census-session** (owner: user) — blocks Phase 0 (cf01 compaction-survival census), and transitively all of Phase 1, whose build-or-close decision reads cf01's number
++  - **Recommendation:** Establish manual detectability first, then decide. **Corrected on R2 finding 6** — the earlier recommendation here said "re-specify cf01 against the automatic path" because "a manual-compaction census measures a path production never takes", and that overstated what cf03 can support. cf03 recorded 29 events across 473 sessions, all 29 tagged `auto` and none manual — but the detector is pinned to one OBSERVED auto event (`src/scripts/_lib/session_eol.ts:11-19`) and nothing establishes that a manual compaction writes a `compact_boundary` record at all. Zero manual is absence of a RECORD. So the cheap first move is a single manual compaction in one instrumented session to see whether it leaves a trace: if it does, cf01 runs as written; if it does not, cf01's null would be uninterpretable and the automatic path is the only measurable one. The automatic path needs no special session — probes placed in a session that is going to cross 1M tokens, which about half the recorded sessions do (239 of 473 end above 400k).
++  - **If you do nothing:** Phase 1 stays unstarted, which is the correct state rather than a stall — it is exactly what a pre-registered honest-null threshold is for. Phase 2 is unaffected: its own gate now reads cf02, which is done. Phase 3 is withdrawn on its own grounds and does not wait on this. The plan degrades to its memory half, and the memory half is the one with a measured defect behind it.
++  - **What to do:**
++    1. Run ONE manual compaction in an instrumented session and check whether `session_eol_report` counts it. This is the precondition and it is cheap — it decides whether cf01 is measurable at all, and without it a cf01 null is uninterpretable.
++    2. If a manual compaction IS detectable: run the five sessions with the three probes placed before each compaction, and stamp the host version per observation. Compaction survival is a host fact that changes without notice.
++    3. If it is NOT detectable: re-specify cf01 against the automatic path, and reword the five-session repetition — it was there to average manual variance.
++    4. Either way, note that the capture side is currently UNOBSERVED (`session_eol_report` reports no session-eol state directory), so a Phase 1 delta cannot be computed until that directory exists.
++  - **Resolved when:** a `context-fidelity-cf01.md` finding exists under `agents/evidence/eval-findings/` carrying a per-probe-class number and a host stamp, or the user records that the compaction-survival question is closed unmeasured and Phase 1 is cancelled. (The filename is deliberately not written as a full path here: `check_references` resolves a path in prose and the file does not exist yet, so a link would be a broken reference by construction. The step's own `verify:` probe holds the full path, which is where it belongs.)
++- **memory-sweep-instrument** (owner: maintainer) — blocks the backing of `context-fidelity-memory-staleness`, and Phase 2 step 3's thresholds
++  - **Recommendation:** Build the sweep as part of Phase 2 step 1, not as a separate phase. The commit anchor and the sweep are the same work seen from two sides: the anchor is what lets a sweep decide whether an entry was verified against *this* tree, and without it any automated reading repeats the 0.0 % artefact in a new form. Shipping the ladder on a hand reading would make the thresholds unre-derivable by the next maintainer, which is the property that made this census necessary in the first place.
++  - **If you do nothing:** the ladder can still be built — 21.5 % clears the 10 % threshold on both denominators, so the decision it gates is already made. What stays missing is the ability to re-measure, so the thresholds in Phase 2 step 3 would be set once from a number nobody can reproduce, and drift in either direction would be invisible.
++  - **What to do:**
++    1. Decide whether the sweep is Phase 2 step 1's scope or a new step.
++    2. If in scope, note that `check_memory_contradiction` is a per-proposal checker (`--type --key --body`) and is the wrong shape to extend — the sweep needs to iterate the store, which is a different entry point.
++    3. Record whether inter-rater agreement on the hand walk needs measuring before the ladder ships, or whether the 2:1 margin over the threshold makes that unnecessary.
++  - **Resolved when:** the maintainer records the sweep as in-scope for a named step, or records that the ladder ships on cf02's hand reading with the reproducibility limitation accepted.
++- **prominence-gate-skills-corpus** (owner: maintainer) — blocks Phase 3 (the withdrawn skill-top position step; this is the residual gap that survived the withdrawal)
++  - **Recommendation:** Extend it, but not by simply adding the path to the existing invocation — that lands 13 blocking findings in one change, which is the gate-that-arrives-as-N-instant-blockers shape this repository has refused before. The two-step version is cheap: first add a skills run whose findings are reported and baselined (the ratchet pattern this tree already uses for `ci-parity:local-only` and `lint_roadmap_blockers:decidability`), then drain. Note that 10 of the 13 are one repeated shape — an Iron Law H2 sitting behind `When to use` and `Goal` — so a single ordering convention clears most of them.
++  - **If you do nothing:** the skills tree stays unscanned for obligation prominence, which is the status quo and costs nothing new. What it does cost is the next executor of this phase: the step reads as unbuilt, so the next attempt is likely to rebuild what this branch already reverted. That is why the blocker exists rather than a re-opened step.
++  - **What to do:**
++    1. Decide extend-with-baseline versus leave-unscanned. If extending, the change is `./scripts-run src/scripts/check_iron_law_prominence --quiet src/skills` plus a baseline entry in `src/config/gate-violation-baselines.json` and a `min_scanned` floor in `src/config/gate-coverage.yml`.
++    2. If extending, decide whether skills are warn-level or blocking-with-baseline. The gate has no warn flag today (`--format`, `--quiet`, positional paths only), so warn-level means adding one.
++    3. Reconcile the two definitions before either lands: `preservation-guard` forbids Iron Law heading downgrades, and the gate already encodes that as `deep_iron_law`. Any new positional check must not contradict it — that contradiction is what got the first attempt reverted.
++  - **Resolved when:** the maintainer records extend-with-baseline (with the baseline landed) or leave-unscanned, and Phase 3's step text is updated to match so the next executor does not rebuild the reverted gate.
++
+ ### [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md)
+ 
+ **Road to cost parity — 1: the maintained estate shrinks where nothing else owns it** — 0 / 49 done (0%)
+diff --git a/agents/roadmaps/road-to-context-fidelity.md b/agents/roadmaps/road-to-context-fidelity.md
+index a17166aa6bbb225a75b45f3f329859557b0c37d0..85e3f2b4667f4dc37f431eeb89086a1c4b58ad96 100644
+--- a/agents/roadmaps/road-to-context-fidelity.md
++++ b/agents/roadmaps/road-to-context-fidelity.md
+@@ -14,46 +14,61 @@ Raise the measured post-compaction obligation-compliance rate for trigger-loaded
+ 
+ ## Prerequisites
+ 
+-- [ ] Read `src/rules/context-hygiene.md` and `src/scripts/hot_context_hook.ts`
+-- [ ] Read `src/scripts/hook_manifest.yaml` § `session_start` and § `pre_compact`
+-- [ ] Read `src/scripts/learning_sidecar.ts` — the decay mechanics that already exist for intake
+-- [ ] Re-verify the Context table against branch HEAD before executing a phase
++- [x] Read `src/rules/context-hygiene.md` and `src/scripts/hot_context_hook.ts`
++- [x] Read `src/scripts/hook_manifest.yaml` § `session_start` and § `pre_compact`
++- [x] Read `src/scripts/learning_sidecar.ts` — the decay mechanics that already exist for intake
++- [ ] Re-verify the Context table against branch HEAD before executing a phase — **RECURRING, one flip per phase, deliberately left open.** Done for this run at `9beeb0662` (see the Context table). It was briefly marked `[x]`; R2 finding 7 caught that, because this is a per-phase obligation and it is Acceptance Criterion 5's only tracked trigger. Spending the checkbox once would have let Phases 1, 2 and 4 run against a table this roadmap has already watched go stale twice — 373 commits, then 110, with one row wrong on half its claim the second time.
+ 
+ ## Context
+ 
+ Source: an external analysis session over this repository, 2026-08-13, pinned at `8a043ec`. That pin is 373 commits behind the branch base, so every claim was re-verified at `6d18f5bb2`. One load-bearing claim did not survive, and the plan below is adjusted for it rather than carried unchanged.
+ 
++**Re-verified a second time at `9beeb0662` (2026-08-17), per Prerequisite 4.** The `6d18f5bb2` pin was 110 commits behind by then. Two rows carried line numbers that had moved and one row was wrong on half its claim; the table below records the current reading, and the corrections are the reason Phase 2's scope narrows again. Line numbers are restated rather than removed because the claim they support is a negative one — the absence of a concern in a chain — and a reader has to be able to open the chain to see the absence.
++
+ **Two observed failure modes.** Rules stop being followed as a session grows; after compaction the agent behaves as though trigger-loaded rules never existed. Separately, learned memory goes stale, and the working fix a second user reports is deleting it by hand — a human substitute for a missing eviction policy.
+ 
+-**Re-verified at `6d18f5bb2`:**
++**Re-verified at `9beeb0662` (2026-08-17). Line numbers in the Evidence column are the ones that resolve at that commit; the `6d18f5bb2` readings are kept in the Status column only where they changed.**
+ 
+ | Claim as drafted | Status now | Evidence |
+ |---|---|---|
+-| `pre_compact` binds only the language pin | **overtaken** — it now binds `[language-mirror, hot-context]`, and the hot-context cache is written at the compaction boundary so the restore reflects the state immediately before it | `hook_manifest.yaml:701` |
+-| The `session_start` chain contains no rule-index concern | still true — the chain is unchanged across all platform blocks | `hook_manifest.yaml:672,679,723` |
++| `pre_compact` binds only the language pin | **overtaken** — it now binds `[language-mirror, hot-context]`, and the hot-context cache is written at the compaction boundary so the restore reflects the state immediately before it | `hook_manifest.yaml:746` (was cited as `:701`); the write set is `stop` / `session_end` / `pre_compact` at `hot_context_hook.ts:394` |
++| The `session_start` chain contains no rule-index concern | still true — no `reinject`- or rule-index-shaped concern in any of the seven platform chains | `hook_manifest.yaml:717,724,768,802,817,836,853` (was cited as `:672,679,723`) |
+ | No `reinject` concern exists anywhere | still true — zero hits across `src/scripts/` and `src/rules/` | negative grep, 2026-08-17 |
+-| No API-level context management for spawned workers | still true — zero hits for the relevant API parameters across `src/` | negative grep, 2026-08-17 |
+-| Learned memory carries no staleness enforcement | partially overtaken — `learning_sidecar.ts` implements a half-life decay, promotion thresholds, and a dead-end ledger for the **intake** path, but it never mutates the curated store, and the curated files still carry no verification stamp and no eviction ladder | `src/scripts/learning_sidecar.ts` |
++| No API-level context management for spawned workers | still true — zero hits for `context_management` across `src/` | negative grep, 2026-08-17 |
++| Learned memory carries no staleness enforcement | **wrong on the stamp half, and the correction narrows Phase 2 again.** `last_validated` and `review_after_days` are *required keys* on every curated entry, `check_memory` emits `stale:` findings plus a critical-stale SLA guard, and `memory_report` publishes a staleness rate. `learning_sidecar.ts` does implement half-life decay, a ≥2-origin promotion threshold, and a dead-end ledger — and it never mutates the curated store, which is a deliberate council condition, not an omission. What is genuinely missing is narrower: **the commit anchor in the stamp**, and **the quarantine→delete ladder** | `check_memory.ts:60-68` (REQUIRED_KEYS), `:378-397` (stale + critical-stale), `memory_report.ts`; zero `quarantine` hits in the memory scripts; `learning_sidecar.ts:20-23` |
++| — *(new, found by this re-verification)* | **The staleness instrument cannot fire.** All 107 curated entries carry the *same* `last_validated: 2026-07-09` and the *same* `review_after_days: 365`. The 0.0 % staleness rate is therefore the arithmetic of one bulk stamping event, not the result of 107 verifications, and the earliest date on which any entry can read as stale is 2027-07-09 | `agents/memory/*.yml`, uniform across all three stores; `memory_report` → `staleness-rate=0.0% (0/107)` |
+ 
+ **Consequence for scope.** The working-memory half of the compaction problem has been hardened independently; the rule-index half has not. Phase 2 reuses the existing decay mechanics as its reference rather than inventing decay a second time, and narrows to what is genuinely missing: verification stamps and eviction on the curated store.
+ 
++**Second consequence, from the 2026-08-17 re-verification.** The stamp exists and is required; the *anchor* does not. So Phase 2 step 1 narrows from "add a stamp" to "add the commit to the stamp and refresh it on a real check", and Phase 2 step 4 closes as already-shipped. More consequentially, Phase 2's own kill criterion reads a number the instrument cannot currently produce: a stale ratio below 10 % is supposed to shrink this phase to stamps only, and the measured ratio is 0.0 % — but that 0.0 % is a uniform bulk stamp with a 365-day window, so it measures stamping rather than truth. **The kill criterion is therefore not fired on it.** Firing it would be the already-satisfied-test failure this repository has recorded before: a gate that passes because it cannot fail.
++
+ **External evidence, mapped to the defects rather than added to them.** Degradation with growing input length is documented across frontier models and begins well before a window fills. Positional attention flips with fill level: the familiar start-and-end advantage holds only below roughly half-full, above which recency dominates — which makes per-turn injection at the end of context the structurally strongest carrier and the session-start block the weakest position in a long session. What survives a compaction on the primary host is contested: vendor-adjacent documentation and a field-reported issue disagree about whether disk-loaded instruction files are reliably re-injected, which is exactly why Phase 0 measures instead of picking a side. Two community hook patterns demonstrate the reinject shape as prior art, and their shared consensus is an index of at most twenty lines carrying pointers rather than payloads. On the memory side, field advice runs as far as disabling host auto-memory entirely because stale entries make an agent trust memory instead of looking things up, while the host's own idle-time consolidation performs prune, merge, and refresh — precedent that consolidation belongs in the system, not in the user's habits.
+ 
+ ## Phase 0 — Falsification spikes
+ 
+ - [ ] Run a compaction-survival census: in an instrumented session, place three probes before a manual compaction — a session-canary-bound obligation, a completion-gate reminder, and one trigger-loaded rule with a detectable obligation. Measure per probe whether it is still followed, present only as paraphrase, or gone. Repeat across at least five sessions and stamp the host version. <!-- verify: test -f agents/evidence/eval-findings/context-fidelity-cf01.md -->
+-- [ ] Run a memory staleness census: walk the curated memory store and check each entry against the live tree, producing a table of still-true, stale, and unverifiable with age where datable. <!-- verify: test -f agents/evidence/eval-findings/context-fidelity-cf02.md -->
+-- [ ] Count compaction events per long session from the session-start source field in the chat-history records, piggybacking on the first spike. <!-- verify: grep -c compact agents/evidence/eval-findings/context-fidelity-cf01.md -->
+-- [ ] Pre-register both measurements as claims with their honest-null thresholds: a baseline compliance at or above 90 % for all three probe classes closes Phase 1 unbuilt; a stale ratio below 10 % shrinks Phase 2 to stamps only. <!-- verify: ./scripts-run src/scripts/check_claims -->
++- [x] Run a memory staleness census: walk the curated memory store and check each entry against the live tree, producing a table of still-true, stale, and unverifiable with age where datable. **Result: 107 entries walked — 73 still-true, 23 stale, 11 unverifiable = 21.5 % stale against the tree, while the shipped instrument reports 0.0 % against age.** <!-- verify: test -f agents/evidence/eval-findings/context-fidelity-cf02.md -->
++- [x] Count compaction events per long session. **Source corrected 2026-08-17, and the correction is what made this step executable.** As drafted it read the session-start source field out of `agents/runtime/.agent-chat-history` and piggybacked on the first spike — but that file is gitignored runtime state present only where a session has actually run, so from any worktree it is absent and the count comes back zero, which is the opposite of the truth. `session_eol_report` already derives the same number from the host-global `compact_boundary` records, needs no instrumented session, and therefore decouples this step from the first spike entirely. <!-- verify: test -f agents/evidence/eval-findings/context-fidelity-cf03.md -->
++- [x] Pre-register both measurements as claims with their honest-null thresholds: a baseline compliance at or above 90 % for all three probe classes closes Phase 1 unbuilt; a stale ratio below 10 % shrinks Phase 2 to stamps only. **Landed as `context-fidelity-compaction-compliance` (a genuine pre-registration — cf01 has not run) and `context-fidelity-memory-staleness` (the threshold predates the data, the ledger row does not, and the entry says so).** <!-- verify: ./scripts-run src/scripts/check_claims -->
+ 
+ **Exit criteria:** both censuses exist as written findings with numbers, and both pre-registered claims carry a baseline.
+ 
++**Status 2026-08-17 — 3 of 4 closed, and the phase does NOT exit.** cf02 and cf03
++exist with numbers and a host stamp; both claims are registered. cf01 is the one
++still open, and it is open on a human ACTION rather than on effort: it needs an
++instrumented live session with a manual compaction, repeated across five
++sessions. cf03 sharpened that blocker rather than clearing it — **zero manual
++compactions exist in 473 recorded sessions**, so cf01's method measures a path no
++observed session has taken and its result will need that caveat attached.
++Consequently the `context-fidelity-compaction-compliance` claim carries no
++baseline yet and Phase 1 stays correctly unstarted.
++
+ **Rollback:** spikes are scratch work; nothing ships from this phase.
+ 
+ ## Phase 1 — Compaction-boundary rule reinjection
+ 
+ - [ ] Add a `reinject-index` concern bound on `session_start` and gated on the compact and resume sources, reusing the gating pattern the hot-context concern already proves works. <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->
+-- [ ] Generate the index at build time from rule frontmatter — tier plus a new optional reinject flag — rather than maintaining it by hand: a hand-maintained index is the staleness defect wearing a new hat. Cap it at twenty lines of pointers, never rule bodies; refilling the window with bulk material re-spends exactly the tokens the compaction reclaimed. <!-- verify: ./scripts-run src/scripts/lint_rule_references -->
++- [ ] Generate the index at build time from rule frontmatter — tier plus a new optional reinject flag — rather than maintaining it by hand: a hand-maintained index is the staleness defect wearing a new hat. Cap it at twenty lines of pointers, never rule bodies; refilling the window with bulk material re-spends exactly the tokens the compaction reclaimed. <!-- verify: ./scripts-run src/scripts/check_references -->
+ - [ ] Spotlight the injected block as data-plus-directive, consistent with the framing the hot-context concern already uses. <!-- verify: grep -q spotlight src/scripts/reinject_index_hook.ts -->
+ - [ ] Bind the concern on the primary host only, and report the other platforms as open gaps rather than as covered — the same honesty posture the session-canary rule states for its own uncovered hosts. <!-- verify: ./scripts-run src/scripts/check_enforcement_coverage -->
+ - [ ] Re-run the Phase 0 census with the concern live and record the delta against the baseline. No delta after five sessions reverts the concern and publishes the null. <!-- verify: ./scripts-run src/scripts/check_claims -->
+@@ -67,10 +82,10 @@ Source: an external analysis session over this repository, 2026-08-13, pinned at
+ 
+ ## Phase 2 — Memory eviction on the curated store
+ 
+-- [ ] Add a last-verified stamp per entry in the curated memory files — an ISO date plus the commit it was verified against — written on create and refreshed only when a check confirms the entry against the live tree. <!-- verify: ./scripts-run src/scripts/check_memory_contradiction -->
++- [ ] Add a last-verified stamp per entry in the curated memory files — an ISO date plus the commit it was verified against — written on create and refreshed only when a check confirms the entry against the live tree. **Narrowed 2026-08-17:** the ISO date half already ships and is a required key (`check_memory.ts` REQUIRED_KEYS), so what remains is the **commit anchor** and the refresh-on-check semantics. The anchor is the load-bearing half: without it a date cannot be tied to a tree state, which is precisely why the current 0.0 % staleness rate is unfalsifiable. <!-- verify: ./scripts-run src/scripts/check_memory -->
+ - [ ] Add the consolidation pass as a deterministic carrier reusing the existing condense, contradiction, and similarity tooling: what is new is the policy, not the machinery. Reference the existing intake decay implementation for its half-life and promotion semantics rather than reimplementing decay. <!-- verify: ./scripts-run src/scripts/condense_memory --help -->
+ - [ ] Add the eviction ladder: an entry not re-verified within the first threshold demotes to the quarantine directory where it stays inspectable; a further threshold without re-confirmation deletes it. Both thresholds come from the Phase 0 census, not from a guess. <!-- verify: ./scripts-run src/scripts/check_memory_proposal -->
+-- [ ] Cap the memory index injected at session start, enforced by the carrier refusing to inject beyond budget rather than by prose. <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->
++- [x] Cap the memory index injected at session start, enforced by the carrier refusing to inject beyond budget rather than by prose. **Closed 2026-08-17 as already-shipped, not built here.** `session_memory_index.ts:28` declares `SESSION_INDEX_ROW_CAP = 30` and it is the default argument of `session_index_rows()`, `build_session_index_block()`, and `session_index_cost()` — the cap is in the carrier, rows are `id · title · ~tokens` pointers, and bodies are never injected. Recorded rather than silently dropped: an executor who trusted the drafted Context table would have rebuilt this. <!-- verify: grep -q SESSION_INDEX_ROW_CAP src/scripts/session_memory_index.ts -->
+ - [ ] Make contradiction outrank retention: an entry failing the contradiction check against the live tree demotes immediately regardless of age. <!-- verify: ./scripts-run src/scripts/check_memory_contradiction -->
+ - [ ] Record the decision as an ADR: learned memory carries verification stamps, unverified entries decay through a quarantine ladder, and injection is budget-capped. Rejected alternatives: manual deletion (the unenforced status quo), disabling learned memory outright (discards the value the consolidation tooling was built for), and age-only expiry (age is a proxy; contradiction against the tree is the actual signal). <!-- verify: ./scripts-run src/scripts/adr/regenerate_index -->
+ 
+@@ -82,11 +97,38 @@ Source: an external analysis session over this repository, 2026-08-13, pinned at
+ 
+ ## Phase 3 — Skill-top position lint
+ 
+-- [ ] Add a check in the existing lint family asserting that load-bearing obligation blocks sit near the start of each skill file, because post-compaction skill re-injection truncates by keeping the file start. Re-verify the truncation cap against current host documentation at build time — it is a host fact, not a tree fact. Warn level first; escalation to blocking only after one release of data. <!-- verify: ./scripts-run src/scripts/lint_skill_top_position -->
++- [-] Add a check in the existing lint family asserting that load-bearing obligation blocks sit near the start of each skill file, because post-compaction skill re-injection truncates by keeping the file start. Re-verify the truncation cap against current host documentation at build time — it is a host fact, not a tree fact. Warn level first; escalation to blocking only after one release of data. **SKIPPED 2026-08-17 — the check already exists. `check_iron_law_prominence` is registered, has a coverage floor, is BLOCKING, and pointed at `src/skills` finds 13 violations with actionable diagnoses. What is missing is not a mechanism but a corpus: it runs with `argv: ["--quiet"]` and no path, so its corpus is `src/rules/*.md` and the skills tree is unscanned. Recorded as the `prominence-gate-skills-corpus` blocker, because extending an enforced blocking gate by 13 findings at once is a maintainer decision.** <!-- verify: grep -q check_iron_law_prominence src/config/gate-coverage.yml -->
+ 
+ **Exit criteria:** the check runs across the skill set and reports a count without failing the build.
+ 
+-**Rollback:** remove the check registration.
++**Status 2026-08-17 — the step is withdrawn, and the withdrawal is the finding.**
++A `lint_skill_top_position` gate WAS built, registered, tested (35 tests) and
++closed as passing, and then reverted on the R2 review. Three reasons, in
++descending order:
++
++1. **The obligation already ships.** The gate's own docblock asserted "nothing
++   checked it", which was false.
++2. **Two gates would have defined one construct incompatibly.** The new one
++   accepted any heading level including numbered `Iron Law N` and measured a line
++   offset; the existing one accepts H2 only, treats H3 as the violation itself,
++   and measures position among the first two H2 headings. The new gate's test
++   explicitly pinned `### Iron Law 1` as VALID — the shape `preservation-guard`
++   forbids. Two of its three findings were H3-only Iron Laws, so the two gates
++   disagreed on the same text.
++3. **Its premise was unverified and asserted as fact in five tracked surfaces.**
++   "Truncation keeps the file start" — the tree's one measured truncation fact is
++   ENTRY-level, a granularity intra-file ordering cannot help, and this
++   roadmap's own Context paragraph argues the opposite for attention.
++
++Worth recording plainly: this is the same defect the roadmap exists to fix,
++committed by its own executor ninety minutes after closing Phase 2 step 4 as
++already-shipped. The Prerequisite-4 re-verification checked the Context table and
++not the step's own premise, and the solution-size ladder's reuse-in-repo rung was
++skipped. The exit criterion is therefore **not** met by this branch — it is met
++for `src/rules/` by the existing gate, and unmet for `src/skills/` pending the
++corpus decision.
++
++**Rollback:** none needed — nothing shipped.
+ 
+ ## Phase 4 — Context management for spawned workers
+ 
+@@ -97,6 +139,59 @@ Source: an external analysis session over this repository, 2026-08-13, pinned at
+ 
+ **Rollback:** the parameters are per-request and removable without migration.
+ 
++## Blockers
++
++**Why this section exists at all, added 2026-08-17.** This roadmap shipped with
++**zero** structured blockers while five of its steps were gated on a human
++action, so the dashboard published a blocker count of 0 and the backlog screen
++read it as takeable. That is a measured recurring failure in this repository —
++seven roadmaps currently publish 0 blockers with open steps — and the fix is to
++declare the gate rather than to leave it in prose. Nothing about the plan changed;
++what changed is that the gate is now countable.
++
++### blocker: compaction-census-session
++
++- **Status:** open
++- **Owner:** user
++- **Blocks:** Phase 0 (cf01 compaction-survival census), and transitively all of Phase 1, whose build-or-close decision reads cf01's number
++- **Question:** cf01 needs an instrumented live session with a manual compaction, repeated across five sessions — and cf03 has since shown that no manual compaction has ever been recorded here. Do you run the five manual sessions anyway, or should cf01 be re-specified against the automatic path that actually occurs?
++- **Recommendation:** Establish manual detectability first, then decide. **Corrected on R2 finding 6** — the earlier recommendation here said "re-specify cf01 against the automatic path" because "a manual-compaction census measures a path production never takes", and that overstated what cf03 can support. cf03 recorded 29 events across 473 sessions, all 29 tagged `auto` and none manual — but the detector is pinned to one OBSERVED auto event (`src/scripts/_lib/session_eol.ts:11-19`) and nothing establishes that a manual compaction writes a `compact_boundary` record at all. Zero manual is absence of a RECORD. So the cheap first move is a single manual compaction in one instrumented session to see whether it leaves a trace: if it does, cf01 runs as written; if it does not, cf01's null would be uninterpretable and the automatic path is the only measurable one. The automatic path needs no special session — probes placed in a session that is going to cross 1M tokens, which about half the recorded sessions do (239 of 473 end above 400k).
++- **If you do nothing:** Phase 1 stays unstarted, which is the correct state rather than a stall — it is exactly what a pre-registered honest-null threshold is for. Phase 2 is unaffected: its own gate now reads cf02, which is done. Phase 3 is withdrawn on its own grounds and does not wait on this. The plan degrades to its memory half, and the memory half is the one with a measured defect behind it.
++- **What to do:**
++  1. Run ONE manual compaction in an instrumented session and check whether `session_eol_report` counts it. This is the precondition and it is cheap — it decides whether cf01 is measurable at all, and without it a cf01 null is uninterpretable.
++  2. If a manual compaction IS detectable: run the five sessions with the three probes placed before each compaction, and stamp the host version per observation. Compaction survival is a host fact that changes without notice.
++  3. If it is NOT detectable: re-specify cf01 against the automatic path, and reword the five-session repetition — it was there to average manual variance.
++  4. Either way, note that the capture side is currently UNOBSERVED (`session_eol_report` reports no session-eol state directory), so a Phase 1 delta cannot be computed until that directory exists.
++- **Resolved when:** a `context-fidelity-cf01.md` finding exists under `agents/evidence/eval-findings/` carrying a per-probe-class number and a host stamp, or the user records that the compaction-survival question is closed unmeasured and Phase 1 is cancelled. (The filename is deliberately not written as a full path here: `check_references` resolves a path in prose and the file does not exist yet, so a link would be a broken reference by construction. The step's own `verify:` probe holds the full path, which is where it belongs.)
++
++### blocker: memory-sweep-instrument
++
++- **Status:** open
++- **Owner:** maintainer
++- **Blocks:** the backing of `context-fidelity-memory-staleness`, and Phase 2 step 3's thresholds
++- **Question:** cf02's 21.5 % came from a hand walk of 107 entries by three observers, because no store-wide contradiction sweep exists. Is building that sweep in scope for Phase 2, or does the ladder ship on the hand reading?
++- **Recommendation:** Build the sweep as part of Phase 2 step 1, not as a separate phase. The commit anchor and the sweep are the same work seen from two sides: the anchor is what lets a sweep decide whether an entry was verified against *this* tree, and without it any automated reading repeats the 0.0 % artefact in a new form. Shipping the ladder on a hand reading would make the thresholds unre-derivable by the next maintainer, which is the property that made this census necessary in the first place.
++- **If you do nothing:** the ladder can still be built — 21.5 % clears the 10 % threshold on both denominators, so the decision it gates is already made. What stays missing is the ability to re-measure, so the thresholds in Phase 2 step 3 would be set once from a number nobody can reproduce, and drift in either direction would be invisible.
++- **What to do:**
++  1. Decide whether the sweep is Phase 2 step 1's scope or a new step.
++  2. If in scope, note that `check_memory_contradiction` is a per-proposal checker (`--type --key --body`) and is the wrong shape to extend — the sweep needs to iterate the store, which is a different entry point.
++  3. Record whether inter-rater agreement on the hand walk needs measuring before the ladder ships, or whether the 2:1 margin over the threshold makes that unnecessary.
++- **Resolved when:** the maintainer records the sweep as in-scope for a named step, or records that the ladder ships on cf02's hand reading with the reproducibility limitation accepted.
++
++### blocker: prominence-gate-skills-corpus
++
++- **Status:** open
++- **Owner:** maintainer
++- **Blocks:** Phase 3 (the withdrawn skill-top position step; this is the residual gap that survived the withdrawal)
++- **Question:** `check_iron_law_prominence` is enforced and blocking but scans `src/rules/*.md` only — its CI argv is `["--quiet"]` with no path. Pointed at `src/skills` it reports 13 violations nobody currently sees. Extend its corpus, or leave the skills tree unscanned?
++- **Recommendation:** Extend it, but not by simply adding the path to the existing invocation — that lands 13 blocking findings in one change, which is the gate-that-arrives-as-N-instant-blockers shape this repository has refused before. The two-step version is cheap: first add a skills run whose findings are reported and baselined (the ratchet pattern this tree already uses for `ci-parity:local-only` and `lint_roadmap_blockers:decidability`), then drain. Note that 10 of the 13 are one repeated shape — an Iron Law H2 sitting behind `When to use` and `Goal` — so a single ordering convention clears most of them.
++- **If you do nothing:** the skills tree stays unscanned for obligation prominence, which is the status quo and costs nothing new. What it does cost is the next executor of this phase: the step reads as unbuilt, so the next attempt is likely to rebuild what this branch already reverted. That is why the blocker exists rather than a re-opened step.
++- **What to do:**
++  1. Decide extend-with-baseline versus leave-unscanned. If extending, the change is `./scripts-run src/scripts/check_iron_law_prominence --quiet src/skills` plus a baseline entry in `src/config/gate-violation-baselines.json` and a `min_scanned` floor in `src/config/gate-coverage.yml`.
++  2. If extending, decide whether skills are warn-level or blocking-with-baseline. The gate has no warn flag today (`--format`, `--quiet`, positional paths only), so warn-level means adding one.
++  3. Reconcile the two definitions before either lands: `preservation-guard` forbids Iron Law heading downgrades, and the gate already encodes that as `deep_iron_law`. Any new positional check must not contradict it — that contradiction is what got the first attempt reverted.
++- **Resolved when:** the maintainer records extend-with-baseline (with the baseline landed) or leave-unscanned, and Phase 3's step text is updated to match so the next executor does not rebuild the reverted gate.
++
+ ## Risk Register
+ 
+ <!-- risk-review: v1 | reviewed: 2026-08-17 | reviewer: claude/host -->
+@@ -119,6 +214,6 @@ Source: an external analysis session over this repository, 2026-08-13, pinned at
+ 
+ ## Provenance
+ 
+-- Source: an external analysis session over this repository, 2026-08-13, pinned at `8a043ec` and re-verified at `6d18f5bb2` for this file. The Context table records which claims survived that re-verification and which did not.
++- Source: an external analysis session over this repository, 2026-08-13, pinned at `8a043ec`, re-verified at `6d18f5bb2` when this file was written, and re-verified again at `9beeb0662` on 2026-08-17 under Prerequisite 4. The Context table records which claims survived each re-verification and which did not.
+ - External evidence is summarized without naming the individual community repositories that demonstrate the reinject pattern; the raw session material with its links stays local and untracked at `agents/tmp.old/road-to-context-fidelity.txt`.
+ - Council: not convened.
+diff --git a/docs/CLAIMS.md b/docs/CLAIMS.md
+index bb147bfc20a391dfa6d2711ab92c2009703a33e9..088bfdecae1d8325cd8c2d024f1334eeb845a5c2 100644
+--- a/docs/CLAIMS.md
++++ b/docs/CLAIMS.md
+@@ -623,3 +623,17 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
+ - evidence: PRE-REGISTERED 2026-08-17 (road-to-user-out-of-the-loop Phase 0 Step 3). SEPARATE FROM `user-out-of-loop-baseline` BY CONSTRUCTION, never merged into it: the roadmap's Goal states the two axes are deliberately not one, because a run can ask zero questions and still be slow — a single blended metric would let a contact win pay for a wall-clock loss and report the pair as progress. INSTRUMENT: `src/scripts/interruption_report.ts` derives elapsed time per run from `agents/runtime/.agent-chat-history` timestamps and splits it into WAITING (agent turn → the next real user turn) and WORKING (elapsed minus waiting). The join to the contact axis is the session tag: the ledger writes `run_id` via `derive_session_tag`, the same derivation that file writes as `s`. SYNTHETIC-TURN EXCLUSION is part of the definition, not a filter applied later: the harness writes task notifications and system reminders into the user role, and counting those as replies collapses every measured wait toward zero and makes the whole axis read as already-solved. The count of excluded turns is reported so the exclusion is auditable. POWER CAVEAT: identical to the sibling claim — 5 sessions measured against a 30-session request on the day of registration; `window_short` is reported and a short window may not be cited as a baseline. FALSIFICATION fixed before data: (1) the QUALITY ANCHOR is the held defect rate, same as the sibling — a wall-clock win that moves it is a FAIL; (2) WORKING time, not elapsed, is the number a mechanism is judged on when the mechanism claims to remove waiting — reporting an elapsed improvement produced entirely by a faster human is the attribution error this criterion exists to block; (3) ≥ 20 recorded runs before any comparison, else UNDERPOWERED. HONEST-NULL PATH: if elapsed falls while working time does not, the recorded finding is that the change moved the human's response time and not the run's, and no autonomy claim is made from it.
+ - status: unbacked
+ - last_verified:
++
++### claim: context-fidelity-compaction-compliance
++- claim: Across a compaction boundary, a measured share of trigger-loaded obligations is still followed afterwards, and that share is high enough to decide whether a reinjection carrier is worth building.
++- kind: quant
++- evidence: PRE-REGISTERED 2026-08-17 (road-to-context-fidelity Phase 0 Step 4 — registered while the census that would answer it, cf01, has NOT been run, so this is a genuine pre-registration and not a ledger entry written around a number already in hand). THRESHOLD fixed before data, taken verbatim from the roadmap: **a baseline compliance at or above 90 % for all three probe classes closes Phase 1 UNBUILT** and the null is published with the host version recorded. The three probe classes are a session-canary-bound obligation, a completion-gate reminder, and one trigger-loaded rule with a detectable obligation; the threshold binds all three separately, so a mean of 90 % carried by one strong class is not a pass. METHOD CONSTRAINT discovered before the census ran, and it is why this entry does not simply wait: cf03 measured 29 compaction events across 473 sessions, **all 29 tagged host-automatic and none tagged manual** (`agents/evidence/eval-findings/context-fidelity-cf03.md`). That zero is **absence of a RECORD, not absence of an event** — corrected on R2 finding 6, which caught the first phrasing here reporting an unobservable as an observation. The detector is pinned to one OBSERVED auto event (`src/scripts/_lib/session_eol.ts:11-19`) and nothing in the tree establishes that a manual compaction writes a `compact_boundary` record at all. So the constraint on cf01 is sharper than "measures a rare path": until manual detectability is established, a cf01 null is UNINTERPRETABLE — indistinguishable from a compaction that happened and left no trace. Establishing it is one manual compaction in one instrumented session, and it is a precondition rather than a result. FALSIFICATION fixed before data: (1) the host version is stamped on every observation, because compaction survival is a host fact that changes without notice; (2) a probe present only as paraphrase counts as NOT followed — the obligation is the behaviour, not the recall; (3) at or above 90 % on all three classes the recorded consequence is that Phase 1 is not built and the folklore is named as folklore, with the same force as the positive direction. HONEST-NULL PATH is therefore the DEFAULT outcome of a high reading, not a fallback: this claim exists to be able to close work rather than to justify it.
++- status: unbacked
++- last_verified:
++
++### claim: context-fidelity-memory-staleness
++- claim: A materially large share of the curated memory store is stale against the live tree — large enough that an eviction ladder is justified rather than shrunk to stamps.
++- kind: quant
++- evidence: PRE-REGISTERED 2026-08-17 (road-to-context-fidelity Phase 0 Step 4). THE THRESHOLD PREDATES THE DATA, THE LEDGER ENTRY DOES NOT, and the distinction is stated rather than blurred: the roadmap fixed **a stale ratio below 10 % shrinks Phase 2 to stamps only** on the day it was written, BEFORE any census ran; this entry was written after cf02 produced a first reading, so it records a resolution-in-progress rather than claiming the ledger row itself came first. FIRST READING, from `agents/evidence/eval-findings/context-fidelity-cf02.md`: 107 curated entries walked one by one against the tree — 73 still-true, 23 stale, 11 unverifiable, i.e. **21.5 % of all entries and 24.0 % of the verifiable subset**. Both denominators clear 10 %, so the kill criterion does not fire on either reading and the ladder stays justified. THE LOAD-BEARING FINDING is that the shipped instrument disagrees: `memory_report` reports `staleness-rate=0.0%` because all 107 entries carry the SAME `last_validated: 2026-07-09` and the SAME `review_after_days: 365` — one bulk stamping event, so the age axis cannot read stale before 2027-07-09. Reading the kill criterion off that 0.0 % would have closed Phase 2 on a number that measures stamping rather than truth, which is the already-satisfied-test failure this repository has recorded before. WHY THIS STAYS UNBACKED despite having a number: the tree axis was walked BY HAND because no store-wide contradiction sweep exists (`check_memory_contradiction` takes `--type --key --body`, i.e. it validates one proposed entry), three observers each classified one store, and inter-rater agreement is therefore UNMEASURED. A hand classification is not a reproducible instrument, and a ratio that cannot be re-derived by a command is not backing. BACKING TRIGGER: a store-wide sweep exists AND reproduces a ratio within its own stated error of 21.5 %. FALSIFICATION fixed before data: (1) unverifiable entries are counted as their own class and folded into neither side — folding them into still-true inflates the pass rate, folding them into stale manufactures defects; (2) the commit anchor is the precondition for any automated reading, because without it a date cannot be tied to a tree state; (3) below 10 % on a reproducible sweep the recorded consequence is the roadmap's own: the ladder is unbuilt, only stamps ship, and the null is published.
++- status: unbacked
++- last_verified:
+diff --git a/docs/proof.md b/docs/proof.md
+index 937edf405b0fb8682975398f15e19d4f137c65c0..b5ebec824dcc732a9594a3d0364ef0e6fbf7fccf 100644
+--- a/docs/proof.md
++++ b/docs/proof.md
+@@ -153,7 +153,7 @@ guidelines, personas) are **generated from source and CI-drift-checked**:
+ fails the build on any count-shaped prose mention that drifts from the
+ source count — or on two different numbers for the same artefact kind.
+ 
+-We also publish our **debt**: 14 claim(s) are logged as
++We also publish our **debt**: 16 claim(s) are logged as
+ `unbacked` inventory in the ledger — not yet bound, and therefore not
+ allowed to carry a marker in public prose. Hiding them would be the
+ opposite of the point.
+@@ -325,7 +325,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
+ 
+ Undeclared rules (84) carry no row — an honest gap beats a false claim.
+ 
+-**Axis 2 — evidence form per public claim.** 66 ledger entries · 47 backed · 14 unbacked inventory · 5 resolved-null.
++**Axis 2 — evidence form per public claim.** 68 ledger entries · 47 backed · 16 unbacked inventory · 5 resolved-null.
+ 
+ | Claim id | Kind | Status | Evidence pointer |
+ |---|---|---|---|
+@@ -338,6 +338,8 @@ Undeclared rules (84) carry no row — an honest gap beats a false claim.
+ | `code-graph-retrieval-null` | quant | backed | `internal/bench/reports/code-graph-vs-grep.md#Verdict — NULL, decisively` |
+ | `command-count` | quant | backed | `exec:check_artefact_count_messaging -> 0` |
+ | `conformance-advisory-vs-blocking` | quant | backed | `src/domains/analysis-workbench/analyze/conformance/command.md#Both blocking carriers reached zero` |
++| `context-fidelity-compaction-compliance` | quant | unbacked | `PRE-REGISTERED 2026-08-17 (road-to-context-fidelity Phase 0 Step 4 — registered while the census that would answer it, cf01, has NOT been run, so this is a genuine pre-registration and not a ledger entry written around a number already in hand). THRESHOLD fixed before data, taken verbatim from the roadmap: **a baseline compliance at or above 90 % for all three probe classes closes Phase 1 UNBUILT** and the null is published with the host version recorded. The three probe classes are a session-canary-bound obligation, a completion-gate reminder, and one trigger-loaded rule with a detectable obligation; the threshold binds all three separately, so a mean of 90 % carried by one strong class is not a pass. METHOD CONSTRAINT discovered before the census ran, and it is why this entry does not simply wait: cf03 measured 29 compaction events across 473 sessions, **all 29 tagged host-automatic and none tagged manual** (`agents/evidence/eval-findings/context-fidelity-cf03.md`). That zero is **absence of a RECORD, not absence of an event** — corrected on R2 finding 6, which caught the first phrasing here reporting an unobservable as an observation. The detector is pinned to one OBSERVED auto event (`src/scripts/_lib/session_eol.ts:11-19`) and nothing in the tree establishes that a manual compaction writes a `compact_boundary` record at all. So the constraint on cf01 is sharper than "measures a rare path": until manual detectability is established, a cf01 null is UNINTERPRETABLE — indistinguishable from a compaction that happened and left no trace. Establishing it is one manual compaction in one instrumented session, and it is a precondition rather than a result. FALSIFICATION fixed before data: (1) the host version is stamped on every observation, because compaction survival is a host fact that changes without notice; (2) a probe present only as paraphrase counts as NOT followed — the obligation is the behaviour, not the recall; (3) at or above 90 % on all three classes the recorded consequence is that Phase 1 is not built and the folklore is named as folklore, with the same force as the positive direction. HONEST-NULL PATH is therefore the DEFAULT outcome of a high reading, not a fallback: this claim exists to be able to close work rather than to justify it.` |
++| `context-fidelity-memory-staleness` | quant | unbacked | `PRE-REGISTERED 2026-08-17 (road-to-context-fidelity Phase 0 Step 4). THE THRESHOLD PREDATES THE DATA, THE LEDGER ENTRY DOES NOT, and the distinction is stated rather than blurred: the roadmap fixed **a stale ratio below 10 % shrinks Phase 2 to stamps only** on the day it was written, BEFORE any census ran; this entry was written after cf02 produced a first reading, so it records a resolution-in-progress rather than claiming the ledger row itself came first. FIRST READING, from `agents/evidence/eval-findings/context-fidelity-cf02.md`: 107 curated entries walked one by one against the tree — 73 still-true, 23 stale, 11 unverifiable, i.e. **21.5 % of all entries and 24.0 % of the verifiable subset**. Both denominators clear 10 %, so the kill criterion does not fire on either reading and the ladder stays justified. THE LOAD-BEARING FINDING is that the shipped instrument disagrees: `memory_report` reports `staleness-rate=0.0%` because all 107 entries carry the SAME `last_validated: 2026-07-09` and the SAME `review_after_days: 365` — one bulk stamping event, so the age axis cannot read stale before 2027-07-09. Reading the kill criterion off that 0.0 % would have closed Phase 2 on a number that measures stamping rather than truth, which is the already-satisfied-test failure this repository has recorded before. WHY THIS STAYS UNBACKED despite having a number: the tree axis was walked BY HAND because no store-wide contradiction sweep exists (`check_memory_contradiction` takes `--type --key --body`, i.e. it validates one proposed entry), three observers each classified one store, and inter-rater agreement is therefore UNMEASURED. A hand classification is not a reproducible instrument, and a ratio that cannot be re-derived by a command is not backing. BACKING TRIGGER: a store-wide sweep exists AND reproduces a ratio within its own stated error of 21.5 %. FALSIFICATION fixed before data: (1) unverifiable entries are counted as their own class and folded into neither side — folding them into still-true inflates the pass rate, folding them into stale manufactures defects; (2) the commit anchor is the precondition for any automated reading, because without it a date cannot be tied to a tree state; (3) below 10 % on a reproducible sweep the recorded consequence is the roadmap's own: the ladder is unbuilt, only stamps ship, and the null is published.` |
+ | `context-token-reduction` | quant | backed | `internal/bench/reports/token-baseline.json#eager_rule_load` |
+ | `council-vs-solo-baseline` | comparative | unbacked | `PRE-REGISTERED 2026-07-12 (road-to-feedback-8.11 Phase 3 — no goalpost-moving after the numbers land; design at `docs/design/council-vs-solo-baseline.md`). Falsification criteria fixed BEFORE data: (1) quality = blind post-hoc grading against known ground-truth dispositions, two blind judges, admissible only at Cohen's κ ≥ 0.60 (reuse `check_quality_regression.ts` kappa machinery); (2) the five feedback-proposed admission dimensions are recorded per decision AT pre-registration, so "≥2-of-5" is a testable post-hoc correlate, never a pre-imposed gate; (3) NO lift on any subset (overall, per impact class, per dimension stratum) → honest null, deliberation-protocol phases stop (maintenance-only), recorded in road-to-opt-council-deliberation; lift on a subset → admission criteria derived FROM that subset's characteristics. Execution is spend-gated (user confirms rendered estimate in-session); shadow-log was absent/empty at design time — zero prior council-vs-solo data exists.` |
+ | `critic-protocol-load-bearing-ab` | quant | resolved-null | `internal/bench/adversarial-council/runs/critic-protocol-ab-report.json` |
