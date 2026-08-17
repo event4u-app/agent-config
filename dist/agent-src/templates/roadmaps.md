@@ -86,8 +86,13 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
     execution:
       mode: autonomous        # autonomous | phase-checkpoints | interactive
     ```
-    - `interactive` (default when the field is absent) — today's behavior:
-      every gate fires as authored by its owning rule.
+    - `interactive` — every gate fires as authored by its owning rule.
+      **Not what an absent field means.** When the field is absent the mode is
+      DERIVED from the invocation form (`roadmap-process-loop § 3a`):
+      `process-full` and `/roadmap:next` derive `autonomous`, `process-phase`
+      derives `phase-checkpoints`, `process-step` runs without a contract. The
+      contract screen is still shown once and still carries "run interactive
+      instead", so declaring nothing costs a keystroke, never control.
     - `phase-checkpoints` — the run halts at each phase boundary with a
       compact status + continue prompt; inside a phase it behaves like
       `autonomous`.
