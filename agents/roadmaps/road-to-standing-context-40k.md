@@ -164,6 +164,16 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
   > the unconditional set this step targets is wider, so this is a floor on the
   > available residue, never a ceiling.
   >
+  > **A named prospect this table does NOT cover.**
+  > `rule-body-migration-inventory.md` calls `legal-safety-floor` "already the
+  > best existing exemplar of the P4 pattern applied within a safety floor" and a
+  > template for six siblings that have not had it: `finance-safety-floor`,
+  > `strategy-safety-floor`, `engineering-safety-floor`,
+  > `domain-safety-disclaimer`, `domain-safety-pii`, `domain-safety-retention`.
+  > None carries a migration pointer, so none appears above — the table's
+  > population is rules that already declare a migration, which is a floor on the
+  > available residue and not a survey of it.
+  >
   > Moves made under 2.2 now land against **per-rule ceilings**
   > (`src/config/rule-stub-ceilings.json`, gated by `check_rule_stub_ceiling`), so
   > each move's effect is visible per rule instead of only in the aggregate
