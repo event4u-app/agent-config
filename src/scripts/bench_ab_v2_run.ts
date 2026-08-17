@@ -45,7 +45,6 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -53,7 +52,7 @@ import { parse as parseYaml } from 'yaml';
 
 import * as v1 from './bench_ab_task_runner.js';
 import * as scoring from './_lib/bench_ab_scoring_v2.js';
-import { preserve_transcript, reset_fixture, workspace_dir } from './_lib/bench_ab_workspace.js';
+import { preserve_transcript, reset_fixture } from './_lib/bench_ab_workspace.js';
 import {
     SweepBudget,
     activation_verdict,
@@ -76,7 +75,6 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const ROUTER_PATH = path.join(REPO_ROOT, 'dist', 'router.json');
 const RULES_DIR = path.join(REPO_ROOT, 'dist', 'agent-src', 'rules');
 const CORPUS_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'corpora', 'ab-trackb-v2.yaml');
-const FIXTURES_ROOT = path.join(REPO_ROOT, 'internal', 'bench', 'ab');
 const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2');
 const CHECKPOINTS_DIR = path.join(REPORTS_DIR, 'checkpoints');
 const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
