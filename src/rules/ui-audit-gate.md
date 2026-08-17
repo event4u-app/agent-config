@@ -121,10 +121,15 @@ every `file_pattern` declared here is accepted by that predicate. The predicate
 is deliberately wider (it also covers `.css`, `.scss`, `.astro`), because a
 measurement denominator and a routing trigger are not the same population.
 
-Warn-only, capped at two per session, default-OFF, bound only where a
-`pre_tool_use` slot exists. A reminder that can be ignored is not a gate, so
-`enforced_by:` stays `none`. Run `agent-config hooks:status` for the host you
-are on rather than trusting this sentence.
+Warn-only, capped at two per session, default-OFF, and bound only in the three
+`platforms:` rows that carry a `pre_tool_use` key — augment, claude, cowork
+(**clarified 2026-08-17**: "where a slot exists" read as a host property, and it
+is a manifest one; three further hosts alias a native pre-tool event without a
+binding, and only claude honours a deny at all — the four states are tabulated
+in [`hook-architecture-v1 § Which hosts carry pre_tool_use`](../../docs/contracts/hook-architecture-v1.md)).
+None of that changes the verdict here: a reminder that can be ignored is not a
+gate, so `enforced_by:` stays `none`. Run `agent-config hooks:status` for the
+host you are on rather than trusting this sentence.
 
 ## Failure modes
 
