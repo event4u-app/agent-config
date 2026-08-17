@@ -14842,13 +14842,13 @@ var settingsSchema = external_exports.object({
       ),
       per_tier: external_exports.object({
         cheap: external_exports.number().min(0).nullable().default(null).describe(
-          "USD ceiling for the cheap model tier under budget-aware delegation (docs/contracts/budget-routing.md). null = no separate tier cap; global ceilings still apply."
+          "USD ceiling for the cheap model tier. Budget-aware delegation was ARCHIVED 2026-08-16 (docs/contracts/budget-routing.md), so no code routes on this today; the cap is still summed and reported by `budget.mjs tier`. null = no separate tier cap; global ceilings still apply."
         ),
         medium: external_exports.number().min(0).nullable().default(null).describe(
           "USD ceiling for the medium model tier. null = no separate tier cap."
         ),
         strong: external_exports.number().min(0).nullable().default(null).describe(
-          "USD ceiling for the strong model tier. null = no separate tier cap \u2014 with cheap exhausted and strong funded, budget routing uses the strong tier rather than blocking work."
+          "USD ceiling for the strong model tier. null = no separate tier cap. The never-block-to-save-money relation this used to describe went with the archived budget-routing layer (docs/contracts/budget-routing.md); nothing routes between tiers today."
         )
       }).default({ cheap: null, medium: null, strong: null })
     }),

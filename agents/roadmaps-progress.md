@@ -2,15 +2,23 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 27 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **35** open blockers, **10** need you → `agent-config gates`
+> 27 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **34** open blockers, **9** need you → `agent-config gates`
 
 ## Overall
 
-**239 / 413 steps done · 58%**
+**241 / 413 steps done · 58%**
 
 ```text
 ███████████████████████░░░░░░░░░░░░░░░░░   58%
 ```
+
+## ⚠️ Iron Law 3 — unresolved deferred items
+
+These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
+
+| Roadmap | Done | Deferred | Cancelled |
+|---|---:|---:|---:|
+| [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 13 | 1 | 0 |
 
 ## Open roadmaps
 
@@ -27,7 +35,7 @@
 | 9 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
 | 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
 | 11 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
-| 12 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 2 | 11 | 1 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy) | ████████░░ 85% |
+| 12 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 0 | 13 | 1 | 0 | 0 | ██████████ 100% |
 | 13 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 2 | 2 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | █████░░░░░ 50% |
 | 14 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 15 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
@@ -341,43 +349,14 @@ _1 blocker resolved._
 
 ### [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md)
 
-**Road to at most one top-band context per task** — 11 / 13 done (85%)
+**Road to at most one top-band context per task** — 13 / 13 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Measure the leak before naming a band for it | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 2 | The band, if the reopen condition holds | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 3 | One top-band context per task | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | Close the documented-but-unwired exposure | 🟡 in progress | 2 | 5 | 1 | 0 | 71% |
-
-<a id="blockers-road-to-inbox-harvest-2026-08-d-top-band-model-economy"></a>
-**Blockers**
-
-- **picktier-wire-or-archive** (owner: user) — blocks Step 4.1 only. Phase 3 and Step 4.2 are closed and independent.
-  - **Recommendation:** fix the quorum, then take **(b)**. Two separate claims, and the order is the point. The quorum fix is unconditional — it costs one line, it is the only reason this entry has escalated twice, and every future contract-reversal question in this repository hits the same wall. On the disposition itself, (b) is where the evidence points: `decision-revisit-gate` says a lock is a decision under past conditions, and the condition that changed is not an opinion — the input `pickTier` requires has had no source since the settings key was deleted, so (a) does not mean "wire the contract", it means "invent a replacement for a category that was removed on purpose". (c) is the honest description of today and the weakest option to CHOOSE, because it leaves AC1–AC5 pre-registered against a mechanism that cannot run, which reads as coverage. **This is advice from the entry's own evidence, not a verdict** — a converged council reversal is still what (b) needs, which is why the quorum fix is first and not optional. **Superseded in part, 2026-08-16 — the (b) half stands, the ordering half does not.** "It costs one line" was true of the openai seat and is not true of what is left: the anthropic seat is a council-transport defect with no established cause, so "fix the quorum, THEN decide" now reads as "wait indefinitely". The two bullets below were corrected and this one was not, which is how a maintainer reading the field named for the decision got the pre-correction instruction. What replaces it: (b) is still where the evidence points, both vendors now say so independently, and `Resolved when:` states the one question that remains — whether that substitutes for the mechanism.
-  - **If you do nothing:** nothing breaks and no user sees anything wrong — the same honest no-cost answer four of the six entries rewritten on 2026-08-16 carry. What accrues is measurement debt in three places: 365 LOC of source and 355 LOC of tests keep asserting a lifecycle nothing runs; `budget.mjs tier` keeps summing a `reserved_usd` term whose store has no writer; and the v1 contract keeps five pre-registered acceptance criteria that can never fire, which a reader counts as coverage that exists. Step 4.1 and the acceptance criterion below it stay open indefinitely, so this roadmap cannot reach a terminal state.
-  - **What to do:**
-    pick exactly one —
-    (a) **wire** it, naming where `routing_switch` now comes from;
-    (b) **archive** the decision layer and permit lifecycle with a migration note
-    carrying the 0/327 reading and the complementary-not-replacement correction,
-    keeping `TIER_ORDER` / `readCooldowns`;
-    (c) **carry it deliberately**, on the ground that the state is disclosed and
-    monitored — which the step as written excludes, so choosing this amends the
-    step rather than satisfying it.
-    **A fourth thing has to happen first, and it is not one of the three:** restore
-    the council quorum, by removing the `model: gpt-4o` pin from the `openai`
-    member in `~/.event4u/agent-config/settings/.ai-council.yml` (or moving that
-    member to the API transport). Until that lands, the mechanism this entry
-    defers to cannot produce the converged verdict it defers to it FOR.
-    **Half done, and the other half moved (2026-08-16):** the openai seat is
-    repaired — as `model: codex-default`, never by removing the line, see the
-    correction block above. The remaining half is the anthropic seat, and it is a
-    council-transport defect rather than a config value, so it is no longer
-    something this entry can name a one-line fix for.
-  - **Resolved when:** the council quorum is restored AND the user states which of (a), (b) or (c) holds — or the user decides without the council and says so, which is theirs to do but is the reversal-of-a-converged-decision this entry escalated to avoid. **Narrowed 2026-08-16 to the one question actually left.** The evidence half is done: both vendors answer (b) on an identical neutral prompt, with independent reasoning and compatible `revisit-if` conditions. The mechanism half is not and will not be until the council-transport defect is fixed elsewhere. So the maintainer decides ONE thing: whether two independent vendor opinions, one hand-run, substitute for a converged council run as the basis for reversing a council-locked v1 contract. **Yes** → (b) executes on the plan below. **No** → this entry waits on the transport fix, and nobody re-gathers the opinions, because they are recorded above. The execution plan, from the two answers, so it needs no re-derivation (kept blank-line-free on purpose: `_blockerField` terminates a field at the first blank line, so a plan separated by one never reaches the generated dashboard or `agent-config gates` — the two surfaces this entry routes the maintainer to): 1. Archive the smallest coherent boundary — confirm first whether `reserveTtlMs`, `RESERVE_FILE` or `COOLDOWN_FILE` back the live cool-down diagnostics indirectly, and keep whatever does alongside `TIER_ORDER` and `readCooldowns`. 2. Remove the decision and permit APIs plus their exclusively-associated tests and state. 3. Replace the v1 contract with an archival migration record that formally retires AC1–AC5, carrying the 0/327 reading and the complementary-not-replacement correction. 4. Update claims, proof, config and routing documentation so no active-contract language remains. 5. Decide separately whether `budget.mjs tier` goes with it — its `reserved_usd` term reads a store that would then have no writer at all.
-
-_1 blocker resolved._
+| 4 | Close the documented-but-unwired exposure | ✅ done | 0 | 7 | 1 | 0 | 100% |
 
 ### [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md)
 

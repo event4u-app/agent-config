@@ -239,6 +239,12 @@ remembers deciding.
       blocked to save money and that budget machinery may degrade the
       savings, never the work. A dispatch downgrade on a token cap is exactly
       the prohibited shape.
+      **Citation correction 2026-08-16:** the budget-routing contract is now an
+      ARCHIVED migration record, not a binding constraint — the layer it
+      specified was removed on a converged council verdict. The constraint this
+      step relies on survives the archival on its own footing (never block work
+      to save money is a principle this package holds independently), but do not
+      cite that page as live policy; cite the principle.
 - [ ] 4.3 **No audited model override.** `ADR-105` defers LLM classification
       to a benchmark that `ADR-117` records as non-producible; `ADR-212`
       forbids an LLM judge in gate paths; and

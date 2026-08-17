@@ -165,14 +165,23 @@ export interface OrchestrationReport {
 }
 
 /**
- * Adherence ≠ delivery: budget-aware tier routing has no on/off setting any
- * more (always-on orchestration removed `subagents.budget_routing`), so the
- * doctor always checks the DELIVERY evidence — orchestration audit lines
- * that carry a tier decision. Dispatches recorded with ZERO tier-carrying
- * lines → WARN with the exact reason. Read-only over
- * agents/runtime/state/audit/*.jsonl; no new state. This closes the same
- * blind-spot class the session-canary incident exposed (policy present,
- * delivery silently absent).
+ * Tier-decision coverage in the orchestration record.
+ *
+ * REPOINTED 2026-08-16. This used to check "delivery evidence" for budget-aware
+ * tier routing, on the reasoning that policy can be present while delivery is
+ * silently absent — the session-canary blind-spot class. That layer is now
+ * ARCHIVED (`docs/contracts/budget-routing.md`), so the old rationale no longer
+ * holds and the old warning would have been permanently true and un-actionable:
+ * nothing dispatches through a tier decision by design, so telling the operator
+ * "the relation may not be running" is a dead advisory of exactly the shape this
+ * repository keeps removing elsewhere.
+ *
+ * What it measures now is narrower and still worth having: how many recorded
+ * dispatches carry a `tier` at all. That is the SAME field the archived layer's
+ * revisit-if depends on — a saving can only be computed once both the chosen and
+ * the realized tier are recorded — so this is the instrument that would show the
+ * reopen condition arriving. It reports coverage rather than warning about it.
+ * Read-only over agents/runtime/state/audit/*.jsonl; no new state.
  */
 export function check_budget_delivery(
   workspace_root: string,
@@ -209,9 +218,10 @@ export function check_budget_delivery(
   }
   if (out.eligible_dispatches > 0 && out.budget_evidence_lines === 0) {
     out.warning =
-      `budget-aware tier routing shows no delivery evidence: ` +
-      `${out.eligible_dispatches} orchestration dispatch(es) recorded, 0 carry a tier decision — ` +
-      `the relation may not be running (adherence != delivery)`;
+      `tier-decision coverage is 0 of ${out.eligible_dispatches} recorded dispatch(es) — ` +
+      `expected while budget routing stays archived (docs/contracts/budget-routing.md). ` +
+      `This is the counter its revisit-if reads: a non-zero value here is the signal ` +
+      `that per-tier dispatch has reappeared and the decision can be reopened`;
   }
   return out;
 }
@@ -645,7 +655,12 @@ function _render(report: DoctorReport): string {
   );
   const tierBits = Object.entries(o.tier_budgets).map(([t, s]) => {
     const cap = s.ceiling_usd === null ? "no cap" : `$${s.ceiling_usd}`;
-    const cool = s.cooldown_until_ms > 0 ? " COOLING" : "";
+    // `> Date.now()`, not `> 0`. The purger went with the archived permit
+    // lifecycle (`tripCooldown` rewrote the map on every write), so a stale
+    // entry now has nothing to clear it and `> 0` would render COOLING for
+    // ever. Latent rather than live — there is no writer either — but the
+    // comparison should be the one that stays correct if a writer returns.
+    const cool = s.cooldown_until_ms > Date.now() ? " COOLING" : "";
     return `${t}=${cap}${cool}`;
   });
   lines.push(`  tier budgets (rolling-24h): ${tierBits.join(" · ")}`);

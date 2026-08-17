@@ -140,8 +140,32 @@ is not gated on the answer.
 
 ## Phase 4 — Close the documented-but-unwired exposure
 
-- [ ] 4.1 Wire or archive `pickTier`. **Blocked on `picktier-wire-or-archive`
-      below — a maintainer call, not a withheld agent decision.** The evidence
+- [x] 4.1 **ARCHIVED, 2026-08-16, on a converged council verdict.** anthropic
+      (claude-sonnet-4-5) and openai answered **2 of 2** for **(b)**, neither
+      reporting a premise correction, each reaching it independently — anthropic
+      on `decision-revisit-gate` ("a lock settles the mechanism it tested, and
+      that mechanism no longer exists"), openai on acceptance criteria that
+      cannot fire being coverage that does not exist. The quorum was reached by
+      running the council at **one round**: both seats answer in under a minute
+      there (49 s / 58 s), while the 2-round run had the anthropic seat blow past
+      a 300 s cap — which localises the transport defect to what round 2 adds and
+      is recorded in the blocker rather than fixed here.
+      **What shipped:** `pickTier`, `acquireBudgetPermit`, `settlePermit`,
+      `tripCooldown`, `reserveTtlMs`, `RESERVE_FILE`, `DEFAULT_COOLDOWN_MS` and
+      the reserve/lock machinery removed; their pre-registered suites removed
+      with them; the reserve-lifecycle config under `src/config/` (deleted, so
+      it is named without a path here) went too — it existed only to keep two
+      reserve readers on one TTL, and both are gone;
+      `budget.mjs tier` lost its `reserved_usd` term, whose store had exactly one
+      writer and was therefore provably always zero. `TIER_ORDER` and
+      `readCooldowns` stay — `routing_doctor.ts` consumes them, and that is
+      monitoring rather than routing. Contract rewritten as a migration record
+      retiring AC1–AC5; the CLAIMS entry moved `backed` → `resolved-null` with
+      the claim text kept verbatim as what was asserted while the code existed.
+      <!-- verify: grep -c 'ARCHIVED 2026-08-16' src/scripts/_lib/tier_budget_routing.ts -->
+      The original text of this step, for the record: "Wire or archive
+      `pickTier`. **Blocked on `picktier-wire-or-archive`
+      below — a maintainer call, not a withheld agent decision.**" The evidence
       is gathered and one live defect in the same surface is already repaired
       (see below); what remains is a reversal of a council-locked v1 contract,
       and the council could not reach quorum on it (1/2, `openai` absent with
@@ -194,8 +218,10 @@ is not gated on the answer.
       `high`, not at the top mapped rung — see 3.1:** ADR-232 mapped `frontier`
       mid-roadmap, so the literal wording would clamp nothing. Both clauses use
       the same rung, which is what the criterion is actually protecting.
-- [ ] `pickTier` has either a named production caller or a removal note.
-      Blocked — see `picktier-wire-or-archive`.
+- [x] `pickTier` has either a named production caller or a removal note.
+      **Removal note**, 2026-08-16: archived on a converged 2-of-2 council
+      verdict; `docs/contracts/budget-routing.md` is the migration record and
+      carries the union revisit-if.
 - [x] The downshift-versus-cache reading is published, in either direction.
 - [~] No `.md` in the tree names a vendor model as the resolution of a band.
       **Unsatisfiable as literally written, and the contradiction is with
@@ -211,7 +237,15 @@ is not gated on the answer.
 
 ### blocker: picktier-wire-or-archive
 
-- **Status:** open
+- **Status:** resolved
+- **Resolution (2026-08-16):** **(b) archive**, on a converged AI-council verdict
+  — anthropic + openai, **2 of 2 present**, neither reporting a premise
+  correction, each reaching (b) by a different route. The quorum that two earlier
+  attempts could not reach (0/2, then 1/2) came from running at **one round**:
+  both seats answer in under a minute there, so the transport defect is in what
+  round 2 adds. That defect is NOT fixed here and has no roadmap yet. Executed in
+  full: see Step 4.1 for the shipped surface, and the migration record for the
+  revisit-if that would reopen it.
 - **Owner:** user
 - **Blocks:** Step 4.1 only. Phase 3 and Step 4.2 are closed and independent.
 - **Question:** `pickTier` and the permit lifecycle around it have no
