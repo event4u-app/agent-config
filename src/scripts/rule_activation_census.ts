@@ -50,12 +50,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import {
-    _claude_paths_plan,
-    _has_non_path_trigger,
-    _parse_frontmatter,
-    derive_trigger_globs,
-} from './condense.js';
+import { _claude_paths_plan, _has_non_path_trigger, _parse_frontmatter } from './condense.js';
 
 const RULES_DIR = path.join('src', 'rules');
 
