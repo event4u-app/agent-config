@@ -45,6 +45,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { GateLedger } from './_lib/gate_ledger.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 import { parse_frontmatter } from './validate_frontmatter.js';
 
@@ -310,6 +311,18 @@ export function main(argv: readonly string[]): number {
     const dir = path.join(ROOT, ARCHIVE_REL);
 
     const entries = buildIndex(dir);
+
+    // Per-target accounting over the archive. `scanned:` proves the walk found
+    // files; the ledger proves what each one YIELDED — and the distinction is
+    // load-bearing here, because this builder's whole contract is that a verdict
+    // the frontmatter does not carry is emitted as `not-extractable` rather than
+    // invented. That outcome is a real reading, not a skip, so every entry
+    // completes: the ledger's value is the count a reader can compare against
+    // the disposition tally in INDEX.md.
+    const ledger = new GateLedger('build_archive_index');
+    ledger.plan(entries.map((e) => e.slug));
+    for (const e of entries) ledger.complete(e.slug);
+
     try {
         reportScanned({
             gate: 'build_archive_index',
@@ -324,6 +337,11 @@ export function main(argv: readonly string[]): number {
         }
         throw err;
     }
+
+    // Reported before either exit path branches, so a `--check` red and a
+    // successful write publish the same accounting. A ledger emitted on only one
+    // path is the selective-reporting shape the library exists to remove.
+    ledger.report();
 
     const mdPath = path.join(dir, INDEX_MD);
     const jsonPath = path.join(dir, INDEX_JSON);

@@ -50,6 +50,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as yaml from 'js-yaml';
 import { checkRatchet } from './_lib/gate_baseline.js';
+import { GateLedger } from './_lib/gate_ledger.js';
 import { runCountedProbe } from './_lib/counted_probe.js';
 import { listGateScripts } from './_lib/gate_population.js';
 import { describeOutcome, namesEstateInvalidatingError } from './_lib/gate_result.js';
@@ -323,6 +324,16 @@ export function main(argv: readonly string[]): number {
     return 0;
   }
 
+  // Per-target accounting over the manifest rows, and the reason it belongs
+  // HERE specifically: this gate already carries a `pending` verdict that means
+  // "listed but not enforced" and an `unavailable` one that means "could not be
+  // measured". Both are, in the ledger's own vocabulary, SKIPS with a reason —
+  // and until now they existed only as a status string in prose output, which is
+  // exactly the invisible-skip shape the ledger exists to make countable. The
+  // gate that audits gate coverage was itself unaudited.
+  const ledger = new GateLedger('check_gate_coverage');
+  ledger.plan(specs.map((s) => s.id));
+
   const results = specs.map((s) => {
     if (spec_is_pending(s)) {
       const { scanned, crashed } = probe_pending(s);
@@ -331,6 +342,24 @@ export function main(argv: readonly string[]): number {
     const { scanned, crashed, exit_code, output } = run_gate(s);
     return classify(s, scanned, crashed, exit_code, output);
   });
+
+  for (const r of results) {
+    if (r.verdict === 'pending') {
+      ledger.skip(r.id, 'disabled_by_configuration');
+    } else if (r.verdict === 'unavailable') {
+      ledger.skip(r.id, 'missing_credentials');
+    } else if (
+      r.verdict === 'crashed' ||
+      r.verdict === 'silent' ||
+      r.verdict === 'below_floor' ||
+      r.verdict === 'estate_invalid'
+    ) {
+      ledger.fail(r.id, r.message);
+    } else {
+      ledger.complete(r.id);
+    }
+  }
+  ledger.report();
 
   if (wantJson) {
     process.stdout.write(`${JSON.stringify({ generated_by: 'check_gate_coverage', results }, null, 2)}\n`);
