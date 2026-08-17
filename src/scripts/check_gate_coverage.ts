@@ -380,7 +380,14 @@ export function main(argv: readonly string[]): number {
   // differ by the skips and that is correct, but only the latter is what
   // `SCANNED_RE` parses.
   const ledger = new GateLedger('check_gate_coverage');
-  ledger.plan(specs.map((s) => s.id));
+  // Deduplicated on purpose. `load_manifest` does not check id uniqueness, and a
+  // copy-pasted row with a forgotten rename would otherwise make `plan()` throw
+  // an uncaught LedgerUsageError — surfacing a manifest mistake as a stack trace
+  // and Node's exit 1, which this file's own contract reads as "a gate is blind,
+  // collapsed, or silent" rather than as the exit 2 a malformed manifest earns.
+  // The duplicate still runs twice and still prints twice; only the accounting
+  // refuses to double-count it.
+  ledger.plan([...new Set(specs.map((s) => s.id))]);
 
   const results = specs.map((s) => {
     if (spec_is_pending(s)) {
@@ -391,7 +398,13 @@ export function main(argv: readonly string[]): number {
     return classify(s, scanned, crashed, exit_code, output);
   });
 
+  // `recorded` pairs with the deduplicated plan above: a duplicated manifest id
+  // must be accounted once, and recording it twice would raise the same
+  // LedgerUsageError the dedupe exists to avoid.
+  const recorded = new Set<string>();
   for (const r of results) {
+    if (recorded.has(r.id)) continue;
+    recorded.add(r.id);
     const outcome = ledgerOutcomeFor(r.verdict);
     if (outcome === 'complete') ledger.complete(r.id);
     else if (outcome === 'fail') ledger.fail(r.id, r.message);
