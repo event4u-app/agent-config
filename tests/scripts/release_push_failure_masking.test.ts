@@ -15,6 +15,34 @@
 // The gate's own message never reached them. An hour went into the git layer
 // before anyone looked at the layer that had actually refused.
 //
+// Measured 2026-08-17 on the 13.0.0 release, the mirror failure: the recovery
+// did NOT engage for a ref that had genuinely moved. Two `--resume` runs
+// overlapped, run A pushed the era-split plus main-merge head, run B had
+// snapshotted the remote before that and pushed after, so the server refused
+// the ref transaction and quoted the stale expectation back:
+//
+//     ! [remote rejected]  release/13.0.0 -> release/13.0.0
+//       (cannot lock ref 'refs/heads/release/13.0.0': is at dbd2efb9e
+//        but expected 11ab66bba)
+//
+// Neither half of the discriminator matched. `[remote rejected]` does not
+// contain the literal `[rejected]`, and the reason phrase was in no list — so
+// the classifier said false and the caller asserted "the remote ref did not
+// move" one line after printing an error stating that it had. The operator was
+// sent to pre-push gates, credentials and branch protection, none of which were
+// involved, while the repair sat directly below the check that refused it.
+//
+// Widening the marker to admit `[remote rejected]` also admits server-side hook
+// declines, which print the identical marker. The reason list therefore stays
+// the discriminator, and a `pre-receive hook declined` is pinned false below —
+// a near-miss probing the direction that widening opened, not one that was
+// already closed (the 9.26.0 case above carries no marker at all, so it could
+// not have caught an over-broad marker).
+//
+// The narrative lives here rather than in `release.ts` because `src/**/*.ts`
+// carries a growth ratchet (`check_source_size_budget`) and `tests/` does not —
+// the same reason the 9.26.0 case above is documented here.
+//
 // So the discriminator is pinned here against git's real wording, in both
 // directions: the recovery must engage for a moved ref and must NOT engage for
 // anything else.
@@ -52,6 +80,37 @@ describe('_is_non_fast_forward — only the moved-ref case takes the retry path'
     // `error: failed to push some refs` alone must not arm the recovery —
     // that line is common to every push failure, which is exactly how the
     // hook rejection got misread as a moved ref.
+    expect(_is_non_fast_forward(stderr, '')).toBe(false);
+  });
+
+  it('recognises the stale-lease rejection two concurrent resume runs produce — the 13.0.0 case', () => {
+    // Measured 2026-08-17. Run A pushed the era-split + main-merge head; run B
+    // had snapshotted the remote before that and pushed after, so the server
+    // quoted the client's stale expectation back. The ref HAD moved and the
+    // fetch + merge + retry was the repair — but the marker is
+    // `[remote rejected]`, which does not contain the literal `[rejected]`,
+    // and the reason phrase was in no list, so the recovery never engaged.
+    const stderr = [
+      'To github.com:event4u-app/agent-config.git',
+      ' ! [remote rejected]     release/13.0.0 -> release/13.0.0 ' +
+        "(cannot lock ref 'refs/heads/release/13.0.0': is at " +
+        'dbd2efb9e9388b500a49bd189f7e37318bc59bc7 but expected ' +
+        '11ab66bbae8f052fc83a51b0def90c9abb075b8a)',
+      "error: failed to push some refs to 'github.com:event4u-app/agent-config.git'",
+    ].join('\n');
+    expect(_is_non_fast_forward(stderr, '')).toBe(true);
+  });
+
+  it('does NOT treat a server-side hook decline as a moved ref — same marker, different reason', () => {
+    // The direction the `[remote rejected]` widening opens. A pre-receive hook
+    // decline carries the identical marker, so if the reason list ever stops
+    // being the discriminator this goes green and the recovery fires on a
+    // refusal it cannot repair.
+    const stderr = [
+      'To github.com:event4u-app/agent-config.git',
+      ' ! [remote rejected]     main -> main (pre-receive hook declined)',
+      "error: failed to push some refs to 'github.com:event4u-app/agent-config.git'",
+    ].join('\n');
     expect(_is_non_fast_forward(stderr, '')).toBe(false);
   });
 
