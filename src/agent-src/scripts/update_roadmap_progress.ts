@@ -365,6 +365,28 @@ interface Blocker {
      * costs one enum entry and turns a silent swallow into a rendered field.
      */
     question: string;
+    /**
+     * Gate taxonomy: `0` auto-run · `1` budget-preauthorized · `2`
+     * consent-once · `3` human-only. Empty string when the entry declares
+     * none, and an absent class READS AS 3 at every consumer.
+     *
+     * The default is the safe end on purpose. An agent that inferred the class
+     * at runtime could promote a Hard-Floor gate into something it executes;
+     * authoring it into the file means a misclassification is a reviewed edit,
+     * and `lint_roadmap_blockers` refuses a runnable class that names no
+     * command.
+     */
+    blockerClass: string;
+    /** The command a class-0/1 entry is resolved by running. */
+    run: string;
+    /** Spend estimate for class 1 — recorded, never enforced by the lint. */
+    budget: string;
+}
+
+/** Class of a blocker, with the absent-field default applied. */
+function blocker_class(b: Blocker): '0' | '1' | '2' | '3' {
+    const c = _strip(b.blockerClass).split(/[\s—–-]/)[0] as string;
+    return c === '0' || c === '1' || c === '2' ? c : '3';
 }
 
 // Strip fenced code blocks before blocker detection — a roadmap that shows the
@@ -508,6 +530,9 @@ function parse_blockers(raw_text: string): Blocker[] {
                 recommendation: _blockerField(body, 'Recommendation') ?? '',
                 ifNothing: _blockerField(body, 'If you do nothing') ?? '',
                 question: _blockerField(body, 'Question') ?? '',
+                blockerClass: _blockerField(body, 'Class') ?? '',
+                run: _blockerField(body, 'Run') ?? '',
+                budget: _blockerField(body, 'Budget') ?? '',
             });
         }
     }
@@ -542,6 +567,9 @@ function parse_blockers(raw_text: string): Blocker[] {
             recommendation: '',
             ifNothing: '',
             question: '',
+            blockerClass: '',
+            run: '',
+            budget: '',
         });
     }
     return blockers;
@@ -1187,6 +1215,7 @@ export {
     is_roadmap_candidate,
     count_checkboxes,
     parse_blockers,
+    blocker_class,
     blocker_needs_user,
     parse_roadmap,
     bar,
