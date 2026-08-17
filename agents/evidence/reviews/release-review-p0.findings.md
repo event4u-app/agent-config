@@ -1,10 +1,10 @@
 # Findings: release-review-p0
-<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: 3044e3d2e3c109974ee491bc4d66dbf93cbe8e9e77659da4763c82bf4e3d8e03 | diff: e69a10b52a94d0cb8920d11430f3c29ecd93f9b0 | reviewer: r2-fresh-subagent-release-review-p0 | prompt_hash: c034ceb3e2031a33a39a64be4fe2c0c269a99176d37ff0c8ba5bc8efff060208 -->
+<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: 13e9e477d062fdf7078e5961b42f991a4cfcd17c63c346119c5f9798219e9de6 | diff: f0013821e005888f781e54a43a9bd3d260e74f76 | reviewer: r2-fresh-subagent-release-review-p0 | prompt_hash: c034ceb3e2031a33a39a64be4fe2c0c269a99176d37ff0c8ba5bc8efff060208 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: e69a10b52a94d0cb8920d11430f3c29ecd93f9b0
-  scope_hash: 3044e3d2e3c109974ee491bc4d66dbf93cbe8e9e77659da4763c82bf4e3d8e03
+  diff_sha: f0013821e005888f781e54a43a9bd3d260e74f76
+  scope_hash: 13e9e477d062fdf7078e5961b42f991a4cfcd17c63c346119c5f9798219e9de6
   roadmap: agents/roadmaps/road-to-release-review-p0.md
   roadmap_hash: fe9b312dcf961e5cebc7ad9ea5cc216141c4da63dd89542e0828c8052ffd67f4
   ac_hash: b8e459f524b34b2697dd3b00e1246f945edc2379a3077dcf58b67ac12d730edb
