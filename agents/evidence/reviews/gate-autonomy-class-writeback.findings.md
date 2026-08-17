@@ -1,11 +1,11 @@
 # Findings: gate-autonomy-class-writeback
-<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: 24fed5e5025ab0ea1f26a13fe4c54465d044d4cd04cbb11bb2025d6e6e6fa5bf | diff: 5c9ba42b938318819f43d33a3ce304eddd44e934 | reviewer: r2-fresh-subagent-gate-autonomy-class-writeback | prompt_hash: 287ce9889f5371bdc4a38f80cfd650593bc7eea15f765341b884501513ea8beb -->
+<!-- completion-review: v1 | reviewed: 2026-08-17 | scope: 88c4cc3d4cec034fab95160f8f83fd4336ee0e9f64cbda3aeb02ad88e859e42d | diff: 86f1f40c67618c4cd19bf2b7180948c825459e9b | reviewer: r2-fresh-subagent-gate-autonomy-class-writeback | prompt_hash: 287ce9889f5371bdc4a38f80cfd650593bc7eea15f765341b884501513ea8beb -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-17 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 5c9ba42b938318819f43d33a3ce304eddd44e934
-  scope_hash: 24fed5e5025ab0ea1f26a13fe4c54465d044d4cd04cbb11bb2025d6e6e6fa5bf
+  diff_sha: 86f1f40c67618c4cd19bf2b7180948c825459e9b
+  scope_hash: 88c4cc3d4cec034fab95160f8f83fd4336ee0e9f64cbda3aeb02ad88e859e42d
   roadmap: none
   roadmap_hash: none
   ac_hash: none
@@ -28,10 +28,26 @@ Re-pointed a second time after `origin/main` moved mid-run (PR #1401 merged) and
 the branch merged it in: a merge changes the base, so it changes the scope even
 though no reviewed line changed. Chain:
 3c9bfc9f657b (dispatch) -> 4c20ec0df95f (post-fix) ->
-24fed5e5025a (post-merge, current). The reviewed CONTENT is unchanged across the
-second hop — `road-to-stop-gate-honesty.md` auto-merged clean and the only
-conflict was the generated dashboard, resolved by regenerating rather than by
-hand. -->
+24fed5e5025a (post-merge) -> 88c4cc3d4cec (current). The reviewed CONTENT is
+unchanged across the second hop — `road-to-stop-gate-honesty.md` auto-merged clean
+and the only conflict was the generated dashboard, resolved by regenerating rather
+than by hand.
+
+**Coverage statement for the third hop, because this artefact alone no longer
+spans the branch.** Two reviews cover it and neither is claimed to cover the
+other's half:
+
+- **this artefact** — the class write-back and the `renderJson` change (7 findings,
+  1 high, 6 fixed);
+- **`estate-gate-class-honest.findings.md`**, merged in via PR #1409 — the twelve
+  reclassifications and the follow-up decisions (9 findings, 1 critical, 8 fixed).
+
+What neither reviewer saw is the delta added after both: a prose correction
+(`86f1f40c6`) repairing a staleness the reviews themselves caused to surface —
+the spend-cap claim, first wrong because the fix sat on a sibling branch, then
+wrong the other way once that branch merged. It changes no code and no verdict; it
+makes three passages describe the tree they are in and name `ad23aab7e` rather
+than a relative event. Re-binding here asserts that and nothing wider. -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
