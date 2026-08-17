@@ -181,3 +181,60 @@ the estate.
   roadmap, so it is not this work; every one of the 28 is in another roadmap's
   blocker section. `lint_roadmap_blockers` is registered only under `task ci`
   and in no workflow, so nothing on a PR reports it either way.
+
+### 4c. Materialisation — added 2026-08-17 by step 1.3, and it falsifies § 4 again
+
+Writing § 3's verdicts back into the entries themselves is what step 1.3 does,
+and doing it surfaced a **second falsification, of this document's own
+conclusion 1**. It is recorded here rather than in the roadmap because it is a
+result about this measurement, not about that plan.
+
+**What landed.** 34 of the 49 open blockers now carry `Class:` as a field.
+Every value comes from the § 3 row for that id — the id sets matched exactly
+(49 live against 50 rows, the difference being row 39, resolved since, and row
+12's `legacy (blocked-until)` normalising to the parser's `legacy`), so no
+class was inferred and none was invented. The population was joined
+mechanically: ids from `agent-config gates --json --all`, classes from the
+table above.
+
+**What did not, and why it matters more than what did.** The **12 class-0 and
+class-1 entries were left unwritten**, because `Class: 0` or `Class: 1` without
+a `Run:` field is a HARD `lint_roadmap_blockers` failure by design — a gate
+that claims to be runnable must name the command. Every one of the twelve was
+read in full to find that command. **None of them can carry an honest one:**
+
+| what was found | count | entries |
+|---|---:|---|
+| names no command at all | 8 | `utilization-sweep-window`, `b-rules-efficiency-signal`, `skill-activation-window`, `b-live-trigger-eval`, `phase3-harness-deltas-9-10`, `human-gated-live-trigger-eval`, `b-behavioural-bench-spend`, plus `ui-corpus-has-no-ui`'s primary command, which carries an unfilled `<placeholder>` |
+| names a progress *read* that cannot clear the gate | 2 | `ui-session-capture-window`, `telemetry-sample-size` — both `wc -l`; a green result would read as progress the gate does not make |
+| names a probe that exits non-zero in its expected state | 1 | `team-telemetry-behind-flag` — `env \| grep -i EXPERIMENTAL`, which `--execute` would record as a command failure |
+| names a real runner whose documented cap does not apply | 1 | `benchmark-spend` — see the defect below |
+
+**So the honest auto-runnable share of the estate is 0 of 49, not 12.** § 3
+assigned the class from *what would clear the gate in principle*; the field
+requires *what the entry can actually run*. Those are different questions, and
+the first one flatters the second. Conclusion 1 above — "`gates --execute` is
+worth having for the six class-0 entries" — does not survive: **none of the six
+is executable as authored.** The class-0 path shipped in Phase 2 has zero live
+targets today, and this table is why.
+
+This is not a reason to rewrite § 3. The classification is a legitimate reading
+of clearability and it is what step 1.2 asked for; what it is not is a
+materialisable field, and that only became visible when someone tried to write
+it. The twelve therefore resolve to the absent-field default — class 3 — which
+is the safe direction and is what every consumer already applies.
+
+**Reclassifying them in the tree is NOT done here.** Twelve verdicts across
+eight roadmaps this branch does not own is a judgement on other people's plans,
+not a field write-back; it is surfaced as a decision instead.
+
+- **A documented spend cap is silently dropped. FOUND, NOT fixed.**
+  `benchmark-spend` authorises `task bench:ab:live -- --budget <N>` and states
+  the command "caps per-task spend". It does not: `taskfiles/bench-ab.yml:98-101`
+  invokes `bench_ab_task_runner --variant both --mode live` with **no
+  `{{.CLI_ARGS}}`**, unlike its sibling at `:28`, so the trailing `--budget <N>`
+  never reaches the runner and the run falls back to the parser default of
+  `2.0` (`src/scripts/bench_ab_task_runner.ts:911`). An operator who names a cap
+  gets a different one, silently, on a cost-bearing path. The fix is one
+  interpolation; it is outside this branch's module and changes what a paid
+  runner does, so it is surfaced as a decision rather than taken.

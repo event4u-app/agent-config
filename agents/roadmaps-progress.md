@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **49** open blockers, **21** need you → `agent-config gates`
+> 39 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **49** open blockers, **21** need you → `agent-config gates`
 
 ## Overall
 
-**276 / 575 steps done · 48%**
+**277 / 592 steps done · 47%**
 
 ```text
-███████████████████░░░░░░░░░░░░░░░░░░░░░   48%
+███████████████████░░░░░░░░░░░░░░░░░░░░░   47%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -34,7 +34,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 8 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 5 | 0 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
-| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 2 | 5 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | ███████░░░ 71% |
+| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
 | 12 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 13 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
 | 14 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
@@ -381,11 +381,11 @@ _1 blocker resolved._
 
 ### [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md)
 
-**Road to gate autonomy — human gates only where a human is the point** — 5 / 7 done (71%)
+**Road to gate autonomy — human gates only where a human is the point** — 6 / 7 done (86%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Blocker schema: class and command become fields | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
+| 1 | Blocker schema: class and command become fields | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | `gates --execute` (the acting half) | ✅ done | 0 | 2 | 1 | 0 | 100% |
 | 3 | Agent runs via CLI: open the delegate gate for the maintainer profile | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
 | 4 | Liveness: gates that open must be seen | ✅ done | 0 | 1 | 0 | 0 | 100% |
@@ -1173,7 +1173,7 @@ _1 blocker resolved._
 <a id="blockers-road-to-ui-track-integrity-followup"></a>
 **Blockers**
 
-- **measurement-a-no-per-arm-builder-tier** (owner: maintainer (scope decision) / any roadmap that needs a UI-generation runner for its own reason) — blocks Measurement A (both steps) and the two A acceptance criteria. It does **not** block the pre-registration, which is committed and complete.
+- **measurement-a-no-per-arm-builder-tier** (owner: maintainer (scope decision) / any roadmap that needs a UI-generation) — blocks Measurement A (both steps) and the two A acceptance criteria. It does **not** block the pre-registration, which is committed and complete.
   - **Recommendation:** hold, and do **not** build the runner here. The owner line already names the exit — "any roadmap that needs a UI-generation runner for its own reason" — and building it inside this roadmap is what its own Non-goal forbids. The alternative that keeps surfacing is weakening Measurement A to something the current harness can run (a session-level `--model` instead of per-skill tiers); that is rejected on the evidence above, because the two outlier arms are per-skill tier facts no session flag can express, so the weakened measurement would answer a different question under the same name.
   - **If you do nothing:** nothing degrades — the pre-registration is committed and complete, and holding is the intended state. The cost is bounded and specific: Measurement A and its two acceptance criteria stay open, so this roadmap cannot archive, and every future sweep pays to re-read the same blocker to reach the same conclusion.
   - **What to do:**
@@ -1204,7 +1204,7 @@ _1 blocker resolved._
     `--model` can express them, so they cannot be measured without exactly the
     per-skill control that is missing.
   - **Resolved when:** a UI-generation runner with per-skill tier control exists — landed for its own reason, with its arm isolation validated (the port task demonstrably dispatches the builder skill, and the tier demonstrably reaches it) — at which point Measurement A runs against the committed pre-registration unchanged, in the controls' epoch.
-- **measurement-b-no-renderable-lane-pair** (owner: maintainer (host capability) / any roadmap that lands a host-renderable framework lane or a generic-lane override for its own reason) — blocks Measurement B (both steps) and the two B acceptance criteria. Measurement A is **not** blocked by it — a null on one is not a null on the other, which is why they were authored as separate sub-sections.
+- **measurement-b-no-renderable-lane-pair** (owner: maintainer (host capability) / any roadmap that lands a) — blocks Measurement B (both steps) and the two B acceptance criteria. Measurement A is **not** blocked by it — a null on one is not a null on the other, which is why they were authored as separate sub-sections.
   - **Recommendation:** hold, and if either exit is taken, take the **supported generic-lane override** rather than the React build/serve step. The override is a bounded change to how `GENERIC_LANES` is derived; a build/serve step is a new subsystem in the scorer's capture path, and the scorer captures `file://` HTML today. Docker stays rejected on the council's reasoning above, not re-opened: one arm containerised and one on the host makes the 0.40-weighted `pixel` component a cross-epoch comparison, and containerising both voids the calibration anchors.
   - **If you do nothing:** nothing degrades — as with Measurement A, holding is the intended state and the pre-registration stays intact. The cost is that Measurement B and its two acceptance criteria stay open, so the roadmap cannot archive, and the pairing question gets re-derived from scratch by whoever screens it next.
   - **What to do:**

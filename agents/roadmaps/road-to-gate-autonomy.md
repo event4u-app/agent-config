@@ -146,7 +146,7 @@ safeguards.**
       including two a live parallel session is holding. The classification is
       committed as the evidence table instead, which is what step 1.2 asks for; the
       write-back is named as the follow-up rather than done half-way.
-- [ ] **1.3** Write the swept classes back into the blocker entries themselves, so
+- [x] **1.3** Write the swept classes back into the blocker entries themselves, so
       `Class:` is a field in the tree and not only a row in the evidence table.
       **Added 2026-08-17 by R2 finding 7**, which is the reason it exists as a step:
       1.2 deferred this in prose, and prose in a done-note is not tracked — it
@@ -156,12 +156,51 @@ safeguards.**
       parallel session at the time; only this roadmap's own two entries carry the
       field today.
       `verify:` every open blocker in `agent-config gates --json --all` carries a
-      class, and `lint_roadmap_blockers` is green.
+      class, and `lint_roadmap_blockers` reports **no new** violation — see the
+      clause correction below; "green" was never reachable.
+      **Done 2026-08-17, and the step's own result falsifies the sweep a second
+      time.** 34 of the 49 open blockers now carry `Class:` as a field, every
+      value joined mechanically from the committed § 3 table (ids from
+      `gates --json --all`, classes from the row) — the two id sets matched
+      exactly, so nothing was inferred. `renderJson` gained `class` and `run`
+      (`roadmap_gates.ts`), resolving the class through the same absent-field
+      default every other consumer applies; four new tests pin the surface,
+      including the case that makes the parser's synthesised `legacy` note read
+      as class 3 rather than as a hole.
+      **The 12 class-0/1 entries were deliberately NOT written, and that is the
+      finding.** `Class: 0` without `Run:` is a HARD lint failure by design, so
+      all twelve were read in full to find the command — and none can carry an
+      honest one: 8 name no command at all, 2 name a `wc -l` progress read that
+      cannot clear the gate, 1 names a probe that exits non-zero in its expected
+      state, and 1 names a runner whose documented `--budget` cap is silently
+      dropped. **The auto-runnable share of the estate is therefore 0 of 49, not
+      12**: § 3 classified by what would clear a gate in principle, the field
+      requires what the entry can actually run. The sweep's own conclusion —
+      "`gates --execute` is worth having for the six class-0 entries" — does not
+      survive it; the class-0 path Phase 2 shipped has zero live targets. Full
+      table and the reasoning: the sweep artefact § 4c.
+      **Two things this step refused to do.** It did not fabricate a `Run:` to
+      satisfy the lint, and it did not reclassify the twelve in the tree —
+      twelve verdicts across eight roadmaps this branch does not own is a
+      judgement on other plans, not a field write-back. Both are surfaced as
+      decisions instead.
+      **Clause correction, recorded rather than quietly met.** The `verify:`
+      above asked for `lint_roadmap_blockers` to be *green*. It cannot be, and
+      step 1.1's own done-note already said so two steps earlier: the
+      decidability ratchet reads 28 against a baseline of 26 on a **pristine**
+      tree, and all 28 sit in other roadmaps. The checkable claim is the one now
+      written: **28 before this branch, 28 after** — measured both times — plus
+      zero findings from the class/`Run:` HARD checks. A clause that can only be
+      satisfied by fixing two unrelated entries in other people's files was
+      mis-authored, not failed.
 - **AC-1:** every open blocker carries a class; the lint enforces `run:` on classes
-  0 and 1; the sweep table is committed with its share. **Not met — step 1.3
-  carries the remainder.** The lint half and the sweep half are done; the
-  write-back is not, and the phase is marked complete only in the sense that
-  every step authored in it at the time is closed.
+  0 and 1; the sweep table is committed with its share. **Met in the field sense,
+  refuted in the meaning sense — and the split is the point.** Every record in
+  `gates --json --all` now carries a class, 34 of them authored and 15 resolving
+  through the absent-field default. But 12 of those defaults contradict their own
+  swept verdict, because the swept verdict is not materialisable (step 1.3, sweep
+  § 4c). Ticking this criterion without that sentence would report the taxonomy as
+  live on an estate where nothing is auto-runnable.
 
 ### Phase 2 — `gates --execute` (the acting half)
 
