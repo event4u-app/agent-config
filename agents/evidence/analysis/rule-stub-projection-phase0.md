@@ -183,17 +183,54 @@ with *no* path-shaped trigger, and every absent rule has one (`design-fidelity`,
 `persona-governance` are all in the census mixed set). They were out of the
 record's scope by construction.
 
-### The one contradiction: `legal-safety-floor`
+### The `keep` overlap is NOT a contradiction — corrected 2026-08-17
 
-`legal-safety-floor` is recorded **`keep`** — "stays always-on and monolithic,
-deliberately" — and simultaneously carries a migration pointer to
-`../skills/legal-practice-profile/SKILL.md`. The two statements are opposites.
+`legal-safety-floor` is the one migrated rule also recorded **`keep`**. This
+document first reported that as a contradiction — "`keep` means stays always-on
+and monolithic, and a pointer says the opposite" — and **that was wrong.** The
+claim was retracted against the record's own text, not softened.
 
-Reported, not resolved. The record is closed and this roadmap never adds a row to
-it; whether the `keep` or the pointer is the stale half is a maintainer call. Its
-measured shape, for whoever takes it: 1,706 tokens, of which 665 are floor and
-736 residue — the highest floor share of any rule in the set, which is at least
-consistent with a deliberate `keep`.
+Three pieces of evidence, each sufficient on its own:
+
+1. **The record defines `keep` against `digest`, not against "was ever
+   migrated".** Its vocabulary section: *"`keep` therefore means: stays always-on
+   and monolithic, deliberately, with a named reason. It is not a deferral and not
+   a pending item."* The alternative it rules out is demotion to a shared digest
+   with the body set `type: manual` — which would remove an enforcement surface
+   from context. It says nothing about a migration that already happened.
+2. **The row describes the POST-migration rule.** It records `body_lines: 139`,
+   which is the rule's size today. The migration landed 2026-07-11
+   (`6ef4102d6`, *"thin-stub the five heaviest auto-rules"*); the residue was
+   measured 2026-08-09. The disposition was assigned to the already-thinned file,
+   so there was never a moment when the two statements described the same body.
+3. **The inventory that produced the classification says so outright.**
+   `rule-body-migration-inventory.md` classes it `stay` **because** of the
+   migration: *"already the best existing exemplar of the P4 pattern applied
+   within a safety floor (5 Iron Laws kept inline, all operating mechanics
+   migrated to `skill:legal-practice-profile`); a template for the other 6 safety
+   floors below, none of which do this yet."*
+
+So `stay` here means *the residue that remains is floor — do not move it
+further*, which is exactly what the measurement shows: 665 floor against 736
+residue, the highest floor share in the set. The tree was coherent; the reading
+was not.
+
+**The real finding, which is more useful than the retracted one.** The record
+names `legal-safety-floor` as the **template** for six sibling safety floors that
+have not had the same treatment: `finance-safety-floor`,
+`strategy-safety-floor`, `engineering-safety-floor`, `domain-safety-disclaimer`,
+`domain-safety-pii`, `domain-safety-retention`. None of them carries a migration
+pointer, so none appears in this table at all — they are outside this roadmap's
+population by construction, and they are a named, sized prospect for
+`road-to-standing-context-40k` rather than a defect here.
+
+**Why the false positive happened, since the mechanism recurs.** The
+reconciliation compared two *labels* — "has a pointer" against "`keep`" — and
+inferred a contradiction from the labels' plain-English connotations without
+opening the register's own definition section, which sits 280 lines above the
+row. A label is not a definition. The same shape produced the three roadmap-prose
+claims this document corrects further up; the fix is the same one each time, and
+it is the cheap half: read the definition, then compare.
 
 ## The live defect this measures, restated with fresh numbers
 

@@ -193,9 +193,9 @@ Siblings and their boundaries, so no step here duplicates an owner:
       and monolithic, deliberately", and a pointer says the opposite.
       **Done: 25 `digest` · 1 `keep` · 18 absent.** The 18 absences are expected,
       not drift — the record covers non-kernel rules with no path trigger, and
-      every absent rule has one. **The one contradiction is `legal-safety-floor`**,
-      recorded `keep` while carrying a pointer to `legal-practice-profile`.
-      Reported under 3.3, never resolved here; the record is unchanged.
+      every absent rule has one. The `keep` row is `legal-safety-floor`; this step
+      first called it a contradiction and **that was retracted** — see 3.3. The
+      record is unchanged either way.
 - **Pre-registered expectation, to falsify:** residue ≥ 25 % of the 103,265-token
   baseline. Priors that make this a measurement rather than a hope: the 42
   migrated rules total 128,261 bytes, and the four largest each exceed 8 KB while
@@ -296,14 +296,29 @@ Siblings and their boundaries, so no step here duplicates an owner:
       **Done**, one sentence, no restatement.
 - [x] **3.3** Report the contradictions from 0.3 (pointer-carrying `keep` rows,
       if any) as findings on this roadmap, not as edits to the closed record.
-      **Finding, one row: `legal-safety-floor`** is recorded `keep` — "stays
-      always-on and monolithic, deliberately" — while carrying a migration pointer
-      to `../skills/legal-practice-profile/SKILL.md`. The two statements are
-      opposites and exactly one is stale. Not resolved here: the record is closed
-      and this roadmap adds no row to it, so which half goes is a maintainer call.
-      Its shape, for whoever takes it: 1,706 tokens, 665 floor / 736 residue — the
-      highest floor share in the set, which is at least consistent with a
-      deliberate `keep`.
+      **RETRACTED 2026-08-17 — there is no contradiction, and the retraction is
+      the finding.** This step reported `legal-safety-floor` as recorded `keep`
+      while carrying a migration pointer, called the two statements opposites, and
+      handed the choice to a maintainer. Checked against the record's own text, all
+      three parts were wrong:
+      (a) the register defines `keep` against `digest` — "stays always-on and
+      monolithic, deliberately" rules out demotion to a shared digest, not a
+      migration that already happened;
+      (b) the row records `body_lines: 139`, the rule's size TODAY — the migration
+      landed 2026-07-11 (`6ef4102d6`) and the disposition was measured 2026-08-09,
+      so the two never described the same body;
+      (c) `rule-body-migration-inventory.md` classes it `stay` *because* of the
+      migration, calling it "already the best existing exemplar of the P4 pattern
+      applied within a safety floor".
+      **The real finding:** that inventory names this rule as the template for six
+      sibling safety floors that have NOT had the treatment —
+      `finance-safety-floor`, `strategy-safety-floor`, `engineering-safety-floor`,
+      `domain-safety-disclaimer`, `domain-safety-pii`, `domain-safety-retention`.
+      None carries a pointer, so none is in this roadmap's population; they are a
+      named prospect for `road-to-standing-context-40k`, not a defect here.
+      **Mechanism, because it recurs:** the reconciliation compared two labels and
+      inferred a contradiction from their plain-English connotations without opening
+      the definition section 280 lines above the row. A label is not a definition.
 - **Exit:** the receiving roadmap carries the table; this roadmap owns no
   body-moving step. **Met.**
 - **Rollback:** revert the edit to the sibling roadmap; the table survives in
