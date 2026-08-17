@@ -101,8 +101,8 @@ Source: an external capability-harvest session over this repository and ten publ
 
 ## Phase 4 — Shipping-intent diff gate
 
-- [ ] Add the gate at ship verbs, measuring diff volume rather than files touched per turn, with thresholds derived from this repository's own history rather than copied from the reference that suggested it. <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->
-- [ ] Ship it warn-level first and escalate only after one release of recorded firings. <!-- verify: ./scripts-run src/scripts/check_enforcement_coverage -->
+- [x] Add the gate at ship verbs, measuring diff volume rather than files touched per turn, with thresholds derived from this repository's own history rather than copied from the reference that suggested it. <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->
+- [x] Ship it warn-level first and escalate only after one release of recorded firings. <!-- verify: ./scripts-run src/scripts/check_enforcement_coverage -->
 
 **Exit criteria:** the gate has a recorded firing rate over one release window.
 
