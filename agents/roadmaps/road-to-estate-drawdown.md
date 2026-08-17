@@ -170,6 +170,7 @@ sibling roadmap — it is runnable with today's tooling.**
 ### blocker: b-consolidated-decision-sheet
 - **Status:** open
 - **Owner:** user
+- **Class:** 2 — consent-once
 - **Blocks:** Phase 0 step 0.2, and through it the class-1 tranche in 1.2. Step 0.1
   generates the sheet without it, and Phase 2's triage sweep proceeds independently.
 - **What to do:** answer the consolidated decision sheet that step 0.1 produces —

@@ -153,6 +153,7 @@ what changed is that the gate is now countable.
 
 - **Status:** open
 - **Owner:** user
+- **Class:** 3 — human-only
 - **Blocks:** Phase 0 (cf01 compaction-survival census), and transitively all of Phase 1, whose build-or-close decision reads cf01's number
 - **Question:** cf01 needs an instrumented live session with a manual compaction, repeated across five sessions — and cf03 has since shown that no manual compaction has ever been recorded here. Do you run the five manual sessions anyway, or should cf01 be re-specified against the automatic path that actually occurs?
 - **Recommendation:** Establish manual detectability first, then decide. **Corrected on R2 finding 6** — the earlier recommendation here said "re-specify cf01 against the automatic path" because "a manual-compaction census measures a path production never takes", and that overstated what cf03 can support. cf03 recorded 29 events across 473 sessions, all 29 tagged `auto` and none manual — but the detector is pinned to one OBSERVED auto event (`src/scripts/_lib/session_eol.ts:11-19`) and nothing establishes that a manual compaction writes a `compact_boundary` record at all. Zero manual is absence of a RECORD. So the cheap first move is a single manual compaction in one instrumented session to see whether it leaves a trace: if it does, cf01 runs as written; if it does not, cf01's null would be uninterpretable and the automatic path is the only measurable one. The automatic path needs no special session — probes placed in a session that is going to cross 1M tokens, which about half the recorded sessions do (239 of 473 end above 400k).
@@ -168,6 +169,7 @@ what changed is that the gate is now countable.
 
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 2 — consent-once
 - **Blocks:** the backing of `context-fidelity-memory-staleness`, and Phase 2 step 3's thresholds
 - **Question:** cf02's 21.5 % came from a hand walk of 107 entries by three observers, because no store-wide contradiction sweep exists. Is building that sweep in scope for Phase 2, or does the ladder ship on the hand reading?
 - **Recommendation:** Build the sweep as part of Phase 2 step 1, not as a separate phase. The commit anchor and the sweep are the same work seen from two sides: the anchor is what lets a sweep decide whether an entry was verified against *this* tree, and without it any automated reading repeats the 0.0 % artefact in a new form. Shipping the ladder on a hand reading would make the thresholds unre-derivable by the next maintainer, which is the property that made this census necessary in the first place.
@@ -182,6 +184,7 @@ what changed is that the gate is now countable.
 
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 2 — consent-once
 - **Blocks:** Phase 3 (the withdrawn skill-top position step; this is the residual gap that survived the withdrawal)
 - **Question:** `check_iron_law_prominence` is enforced and blocking but scans `src/rules/*.md` only — its CI argv is `["--quiet"]` with no path. Pointed at `src/skills` it reports 13 violations nobody currently sees. Extend its corpus, or leave the skills tree unscanned?
 - **Recommendation:** Extend it, but not by simply adding the path to the existing invocation — that lands 13 blocking findings in one change, which is the gate-that-arrives-as-N-instant-blockers shape this repository has refused before. The two-step version is cheap: first add a skills run whose findings are reported and baselined (the ratchet pattern this tree already uses for `ci-parity:local-only` and `lint_roadmap_blockers:decidability`), then drain. Note that 10 of the 13 are one repeated shape — an Iron Law H2 sitting behind `When to use` and `Goal` — so a single ordering convention clears most of them.

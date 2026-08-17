@@ -135,6 +135,7 @@ none edits existing behaviour.
 
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 2 — consent-once
 - **Blocks:** R2 only
 - **What to do:** R2 needs a stable-finding-id index that was explicitly declined
   at `src/scripts/check_review_dispositions.ts:16-22` with a named revisit
@@ -177,6 +178,7 @@ none edits existing behaviour.
 
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 2 — consent-once
 - **Blocks:** nothing — pure housekeeping, carried so it is not lost
 - **What to do:** four spent items under `agents/tmp.old/` should be removed:
   both `council-q-*.md` files (answered and shipped verbatim), `bench-local/`

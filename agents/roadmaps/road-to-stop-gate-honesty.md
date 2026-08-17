@@ -137,6 +137,7 @@ Verified 2026-08-17 against `origin/main` @ `097ab6549`.
 ### blocker: b-detector-demotion-bars
 - **Status:** open
 - **Owner:** user
+- **Class:** 2 — consent-once
 - **Blocks:** Phase 2 step 2.1, and therefore any demotion. Steps 1.x, 2.2 and 3.x
   are repo work and proceed without it.
 - **What to do:** pre-register the demotion bar per detector, before reading Phase

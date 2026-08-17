@@ -148,6 +148,7 @@ tree ~36 % larger than the one they describe.
 ### blocker: evidence-compaction-approval
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 3 — human-only
 - **Question:** may provably-reproducible `diff.patch` bodies be dropped in
   favour of their recorded base/head revisions? Phase 3 produces the list and
   the proof of reproducibility; the removal itself is a bulk deletion of

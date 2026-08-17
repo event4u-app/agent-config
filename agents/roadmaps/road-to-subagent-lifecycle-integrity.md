@@ -556,6 +556,7 @@ inherit them.
 
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 3 — human-only
 - **Blocks:** Phase 0 Steps 2 and 4 — and only their raw-payload half. Step 3 is
   closed; Step 2's `agent_type` assertion is answered without it.
 - **What to do:** the capture facility is shipped and verified

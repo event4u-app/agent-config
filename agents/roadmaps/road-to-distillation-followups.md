@@ -86,6 +86,7 @@ command instead of an evidence gap.
 ### blocker: router-head-retrofit-instrument
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 2 — consent-once
 - **Blocks:** Phase 1 Step 1 only.
 - **What to do:** either supply an instrument that observes what the host
   actually loads on skill trigger (no such observation exists in this tree
@@ -98,6 +99,7 @@ command instead of an evidence gap.
 ### blocker: first-contract-true-analysis-run
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 2 — consent-once
 - **Blocks:** Phase 2 Step 1 only.
 - **What to do:** run the command against a small reference and land the
   evidence artefact. Two things make this a maintainer call rather than an

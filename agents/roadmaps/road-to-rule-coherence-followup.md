@@ -186,6 +186,7 @@ committed twice more itself.
 ### blocker: default-flip-release-gate
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 2 — consent-once
 - **Blocks:** Phase 1
 - **What to do:** rule on whether the measured configuration becomes the shipped
   default. The evidence is prepared and cited in F1.1–F1.4; the settings
@@ -197,6 +198,7 @@ committed twice more itself.
 ### blocker: bench-spend-and-methodology
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 3 — human-only
 - **Blocks:** Phase 2
 - **What to do:** authorize the A/B run and confirm the methodology. The council
   was explicit that an LLM-judged probe has no power against the original

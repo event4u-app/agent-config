@@ -212,6 +212,7 @@ production host mode; method in `internal/bench/council-blind-review/`.
 
 - **Status:** open
 - **Owner:** user
+- **Class:** 3 — human-only
 - **Blocks:** Ü2 and Ü3 adoption (Phase 2 pre-registered decision rules) and
   the Ü2/Ü3 half of Phase 3's merge-or-null. **Ü1 is NOT blocked** — it is
   decided, adopted and merged (`blind_chairman` default true, opt-out flag,

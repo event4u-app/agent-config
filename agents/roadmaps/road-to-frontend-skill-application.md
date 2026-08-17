@@ -176,6 +176,7 @@ Enforcement moves only where the tree can verify it; `enforced_by:` changes beca
 ### blocker: enforcement-evidence
 - **Status:** open
 - **Owner:** maintainer
+- **Class:** 2 — consent-once
 - **Blocks:** Phase 5 — Reach and enforcement
 - **What to do:**
   1. Read the published consultation and discharge rates from Phase 1 and the nudge A/B from Phase 4.
