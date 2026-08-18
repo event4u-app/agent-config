@@ -57,6 +57,20 @@ import { build_claude_hook_matrix } from './_lib/claude_settings_hooks.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const BUNDLE = path.join(REPO_ROOT, 'dist', 'hooks', 'dispatch.js');
+/**
+ * Override the measured dispatcher bundle (`--bundle <path>`), so a
+ * two-version comparison on ONE machine is a flag rather than a throwaway
+ * script. Added for road-to-per-turn-hook-economy step 0.5, whose decisive
+ * probe is exactly that: the same events, the same method, two bundles built
+ * from two trees, same hardware. The measured process is the bundle itself —
+ * a bundle from another tree carries that tree's manifest resolution, so pass
+ * `--project-dir`-shaped state via the workspace as usual.
+ *
+ * Deliberately measurement-only: `--gate` and `--update` refuse an override,
+ * because a budget row and a regression baseline describe THIS tree's bundle
+ * and a foreign reading must never be written into either.
+ */
+let BUNDLE_OVERRIDE: string | null = null;
 const CLI_BIN = path.join(REPO_ROOT, 'dist', 'cli', 'agent-config.js');
 const SHIM = path.join(REPO_ROOT, 'agent-config');
 const MANIFEST_PATH = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
@@ -144,7 +158,15 @@ export function benchEvent(
             ? ['bash', ['-c', hooksJsonCommand(event)]]
             : [
                   process.execPath,
-                  [BUNDLE, '--platform', 'claude', '--event', event, '--project-dir', workspace],
+                  [
+                      BUNDLE_OVERRIDE ?? BUNDLE,
+                      '--platform',
+                      'claude',
+                      '--event',
+                      event,
+                      '--project-dir',
+                      workspace,
+                  ],
               ];
     for (let i = 0; i < runs; i += 1) {
         const started = performance.now();
@@ -218,9 +240,35 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const runsIdx = argv.indexOf('--runs');
     const runs = runsIdx >= 0 ? Number.parseInt(argv[runsIdx + 1] ?? '50', 10) : 50;
 
-    if (!fs.existsSync(BUNDLE)) {
+    const bundleIdx = argv.indexOf('--bundle');
+    if (bundleIdx >= 0) {
+        const raw = argv[bundleIdx + 1];
+        if (raw === undefined || raw.startsWith('--')) {
+            process.stderr.write('bench_hook_latency: --bundle requires a path\n');
+            return 2;
+        }
+        if (gate || update || baselineIdx >= 0) {
+            process.stderr.write(
+                'bench_hook_latency: --bundle is measurement-only — it cannot be combined with ' +
+                    '--gate, --update or --baseline (a foreign bundle must never be written ' +
+                    "into this tree's budget or regression baseline)\n",
+            );
+            return 2;
+        }
+        if (viaCli) {
+            process.stderr.write(
+                'bench_hook_latency: --bundle overrides the bundle path, which the --via-cli ' +
+                    'path does not use (the shim resolves its own) — pick one\n',
+            );
+            return 2;
+        }
+        BUNDLE_OVERRIDE = path.resolve(raw);
+    }
+
+    const measured_bundle = BUNDLE_OVERRIDE ?? BUNDLE;
+    if (!fs.existsSync(measured_bundle)) {
         process.stderr.write(
-            `bench_hook_latency: bundle missing at ${BUNDLE} — run \`npm run build:hooks\` first\n`,
+            `bench_hook_latency: bundle missing at ${measured_bundle} — run \`npm run build:hooks\` first\n`,
         );
         return 2;
     }
@@ -264,7 +312,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             const r = benchEvent(event, runs, workspace, via);
             results.push(r);
             process.stdout.write(
-                `${event.padEnd(20)} p50 ${String(r.p50_ms).padStart(5)} ms · p95 ${String(r.p95_ms).padStart(5)} ms · max ${String(r.max_ms).padStart(5)} ms (n=${r.runs}, via ${via})\n`,
+                `${event.padEnd(20)} p50 ${String(r.p50_ms).padStart(5)} ms · p95 ${String(r.p95_ms).padStart(5)} ms · max ${String(r.max_ms).padStart(5)} ms (n=${r.runs}, via ${via}${BUNDLE_OVERRIDE === null ? '' : ` @ ${BUNDLE_OVERRIDE}`})\n`,
             );
         }
     } finally {

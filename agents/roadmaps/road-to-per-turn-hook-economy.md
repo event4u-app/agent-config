@@ -101,7 +101,7 @@ this file at all, it is the activation flip owned by
 
 This phase is a blocker on citing "a 12.1 latency regression" anywhere.
 
-- [ ] **0.0** Cheapest decisive probe first: the rule-activation census from
+- [x] **0.0** Cheapest decisive probe first: the rule-activation census from
       `road-to-mixed-trigger-activation-cost` step 1.0. **Use the census, not the
       `grep -l '^paths:'` one-liner** — that one-liner is refuted as a
       discriminator (it returns zero on a maintainer machine regardless of the
@@ -109,6 +109,20 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       census shows the flip is live locally, the behavioural roadmap is the fix path
       and this latency matrix is secondary.
       `verify:` the census output, recorded with the projection scope it ran at.
+      **Ran 2026-08-18 on this machine, both scopes. The flip is NOT live here,
+      so this latency matrix does not become secondary.** Source:
+      `./scripts-run src/scripts/rule_activation_census` — 117 rule files, 25
+      declaring a path-shaped trigger, **17 mixed** and **8 path-only**; emitter
+      verdict **8 scoped · 100 unconditional · 9 always**. Projection:
+      `--projection .claude/rules` reads **111 files, 8 declaring `paths:`** —
+      *equal* to the source's scoped count, which is the discriminator. The
+      earlier reading this step was written against (92 files / 0 `paths:`) was a
+      stale projection, not a flipped one: the projection is now current and
+      agrees with the emitter, and the 17 mixed rules still load every session.
+      So "the flip is live locally" is **false** — the flip
+      `road-to-mixed-trigger-activation-cost` owns is the conversion of those 17,
+      and none of it has happened. The one-liner refutation this step carries is
+      unchanged and was not re-tested, because the census supersedes it.
 - [ ] **0.1** On the affected machine, record: the prior installed version
       (lockfile history), the node version, the OS, and whether
       `AGENT_CONFIG_HOOKS_ISOLATED=1` is set anywhere — env, shell profile, or CI.
@@ -148,7 +162,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       PR re-measures both legs on every Static Checks run.
       `verify:` run 32103306843's Static Checks log, both `via bundle` and
       `via cli` blocks, plus the gate leg above them.
-- [ ] **0.5** Settle the magnitude question 0.4 raises but cannot answer.
+- [x] **0.5** Settle the magnitude question 0.4 raises but cannot answer.
       `docs/hook-latency.json` records the bundle path at `pre_tool_use` p95
       **81 ms** on 2026-07-27; 0.4 measures the same path at **146 ms**. That is
       **cross-runner** and therefore exactly the comparison § 2 refuses to treat
@@ -171,6 +185,48 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       bundle-vs-record gap is n=2 (146 and 141 against a recorded 81), which
       makes "a faster runner generation in July" thinner but does not exclude
       it — only the same-machine two-version run above can.
+      **Ran 2026-08-18. Both halves answered, and the answer is "runner, not
+      code".** Method: `bench_hook_latency --runs 15` (bundle arm) against HEAD,
+      then the same command with the new `--bundle <path>` override against a
+      bundle built from tag `11.0.0` (`e4ca46123`) — `git archive` into
+      `/private/tmp`, this tree's `node_modules` symlinked, `npm run
+      build:hooks`. One machine, one session, n=15 per cell, identical synthetic
+      payload:
+
+      | event | HEAD p50 / p95 | 11.0.0 p50 / p95 | p50 delta |
+      |---|---:|---:|---:|
+      | `pre_tool_use` | 82 / 87 | 82 / 93 | 0 |
+      | `post_tool_use` | 85 / 95 | 81 / 84 | +4 |
+      | `user_prompt_submit` | 85 / 89 | 86 / 89 | −1 |
+      | `stop` | 123 / 136 | 127 / 138 | −4 |
+      | `session_start` | 86 / 92 | 86 / 90 | 0 |
+      | `session_end` | 79 / 82 | 81 / 85 | −2 |
+
+      **Result 1 — M-2's honest null replicates here.** Every p50 delta is
+      within ±4 ms and the sign is not even consistent; no slot shows a code
+      regression across the whole 11.0.0 → 14.1.0 window. The "12.1 is slower"
+      framing has now failed on two independent machines.
+      **Result 2 — the 81 → 146 ms gap is runner-bound, and risk 8 resolves in
+      the direction it feared being cited for.** This machine measures the same
+      bundle path at **87 ms p95**, i.e. inside the band of the 2026-07-27
+      record (81 ms) and nowhere near the CI readings (146, 141, 151, 152,
+      117 ms). Identical code at 87 ms here and ~146 ms there is a hardware
+      statement, so `main`'s gate flapping is runner variance and NOT a
+      regression this roadmap's levers could remove. The cross-runner comparison
+      stays forbidden as a repo fact; what is now a repo fact is the
+      **same-machine** null that makes the cross-runner reading unnecessary.
+      **Caveat, stated because it bounds the claim:** both arms ran against
+      HEAD's `hook_manifest.yaml` (the bench stages a workspace pointing at this
+      tree), so the comparison isolates **dispatcher code** with the concern
+      chain held constant. It does not measure an 11.0.0-era chain, and it
+      cannot prove the older dispatcher executed every concern the current
+      manifest declares. That is the right isolation for "did the dispatcher get
+      slower" and the wrong one for "did the chain get longer" — the latter is
+      D-1, which Phase 4 registers rather than benches here.
+      **Reproducer**, now a flag rather than a throwaway script: `--bundle` is
+      measurement-only and refuses `--gate` / `--update` / `--baseline`, so a
+      foreign bundle's reading can never be written into this tree's budget or
+      regression baseline.
 - **AC-0:** a one-page evidence note naming which of {env flag, hardware, version
   jump larger than one major, stop-gate refusals, activation flip, none}
   reproduced, with the matrix numbers inline.
