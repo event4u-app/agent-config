@@ -244,9 +244,19 @@ export function benchEvent(
  * (150 against an observed 107-187) fails by construction rather than on a
  * regression.
  *
- * The control isolates the shared term so `slot - control` is what this tree
- * actually costs. It is measurement only — see `normalizedRows` for why it
- * does not gate yet.
+ * The control isolates the process-spawn term so `slot - control` is closer to
+ * this tree's own cost than the raw reading is. It is measurement only — see
+ * `normalizedRows` for why it does not gate yet.
+ *
+ * MEASURED LIMIT, first CI reading (2026-08-19): it under-corrects, and by a
+ * lot. The same commit read slot 101 / control 45 / excess 56 ms on darwin and
+ * slot 151 / control 26 / excess 124 ms on a GitHub ubuntu runner — the control
+ * went DOWN while the slot went UP. `node -e 0` covers interpreter startup
+ * only, while a dispatch also loads a ~1 MB bundle and runs the concern chain,
+ * and that term is both the dominant one and the one that varies. So the excess
+ * is NOT invariant across hardware classes; whether it is nonetheless more
+ * stable than the absolute reading across runs on the SAME runner class is the
+ * open question the observe-only collection exists to answer.
  */
 export function benchControl(runs: number, workspace: string): EventResult {
     const durations: number[] = [];
