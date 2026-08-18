@@ -136,6 +136,41 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       perceived slowness is extra model turns rather than hook wall clock.
       `verify:` the per-session counts, with the split before and after the local
       12.1 install date.
+- [x] **0.4** Same-runner path split, so 0.2 does not have to measure two things
+      at once. CI run **32103306843** (job 95607853943, `ubuntu-latest`) measures
+      the bundle path and the cli path back to back inside ONE job:
+      `pre_tool_use` p95 **146 ms via bundle**, **148 ms via cli**, with the
+      gate's own cold cli leg at **150 ms**. The wrapper the consumer pays —
+      bash + shim probe + CLI startup — therefore costs **2 ms**, not the tens of
+      milliseconds the budget argument on PR #1410 assumed (a local run on
+      unrelated hardware measured 4 ms, so the shape replicates). Standing
+      diagnostic: the non-gating comparison step added to `tests.yml` in the same
+      PR re-measures both legs on every Static Checks run.
+      `verify:` run 32103306843's Static Checks log, both `via bundle` and
+      `via cli` blocks, plus the gate leg above them.
+- [ ] **0.5** Settle the magnitude question 0.4 raises but cannot answer.
+      `docs/hook-latency.json` records the bundle path at `pre_tool_use` p95
+      **81 ms** on 2026-07-27; 0.4 measures the same path at **146 ms**. That is
+      **cross-runner** and therefore exactly the comparison § 2 refuses to treat
+      as a repo fact — but it is now the only surviving explanation for the gate
+      flapping on `main` (151 ms in run 32008629786, 152 ms in 32052289206,
+      117 ms in 32060724505, identical code), because 0.4 has excluded the
+      wrapper. It also sits in tension with this phase's own opening line
+      ("the same numbers reproduce at 11.0.0"), which is a source-draft claim
+      this phase exists to test — the two are compatible only if the 81 ms
+      record came from a faster runner generation, and nobody has checked.
+      Decisive probe: 0.2's two-version matrix run on ONE machine, restricted to
+      the **bundle arm only** — 0.4 has already excluded the cli wrapper, so the
+      cli arm buys nothing here.
+      `verify:` bundle-path p95 per event at the installed version and at
+      11.0.0, same machine, at least three runs per cell.
+      **Replication, so this is not read off one job:** run **32119695614**
+      repeats 0.4's split independently — `pre_tool_use` p95 141 ms via bundle
+      against 142 ms via cli, a **1 ms** wrapper cost beside 0.4's 2 ms and a
+      local 4 ms. The wrapper exclusion is therefore n=3 across two runners. The
+      bundle-vs-record gap is n=2 (146 and 141 against a recorded 81), which
+      makes "a faster runner generation in July" thinner but does not exclude
+      it — only the same-machine two-version run above can.
 - **AC-0:** a one-page evidence note naming which of {env flag, hardware, version
   jump larger than one major, stop-gate refusals, activation flip, none}
   reproduced, with the matrix numbers inline.
@@ -314,7 +349,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-08-17 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-18 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -325,6 +360,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
 | 5 | The composite budget flaps on shared CI runners | implementation | A per-turn composite sums many measurements, so it accumulates variance faster than any single slot and would produce red builds unrelated to any change | Same treatment the latency file already records for its slots: an absolute cap plus a pathology net rather than a tight creep window | Phase 4 — Register the number the user feels |
 | 6 | The container numbers are cited as repo facts | product | M-1 is environment-bound; quoting it as measured-here would be exactly the unbacked-number failure this repo gates against | M-1 carries its verdict in § 1 and § 2 states the shape-transfers-not-magnitudes rule; Phase 0.2 re-measures on target hardware before any citation | Measurement method |
 | 7 | The host's hook semantics change upstream | implementation | Claims 10–12 are external documentation read at one host version; a host bump could change matcher semantics or the fail-open direction | Each carrier records the host version it was verified on, and the fail-open direction is the safe one for advisory paths; no blocking behaviour rides on `if` | Phase 5 — Host-native prefiltering |
+| 8 | The 81 → 146 ms bundle delta is quoted as a measured regression | product | It is a CROSS-RUNNER comparison — a 2026-07-27 record against a 2026-08-18 CI job — and this roadmap's own § 2 refuses exactly that shape as a repo fact. It is persuasive because the wrapper has been excluded and nothing else explains `main` flapping on identical code, and persuasive-but-cross-runner is the easiest number in this file to cite carelessly. The same shape already produced one budget relaxation on PR #1410 before it was reverted | Step 0.5 carries the caveat in its own text and names the same-machine two-version run as the decisive probe; the number is stated as tension with this phase's opening line rather than as its refutation. Row 6's rule applies to it unchanged | Phase 0 — Falsify or localise |
 
 ## CUT list — do not re-litigate
 

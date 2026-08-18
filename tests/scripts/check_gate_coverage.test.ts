@@ -17,6 +17,7 @@ import {
     type GateSpec,
     classify,
     count_gate_scripts,
+    ledgerOutcomeFor,
     enforced_manifest_ids,
     list_self_test_non_adopters,
     list_unhardened_gates,
@@ -523,5 +524,49 @@ describe('vulnerability ratchet — unhardened gate population', () => {
             readFileSync(join(REPO_ROOT, 'src/config/gate-violation-baselines.json'), 'utf8'),
         ) as { gates: Record<string, { count: number }> };
         expect(raw.gates['gate-hardening:unhardened-scan-scope']).toBeUndefined();
+    });
+});
+
+describe('ledgerOutcomeFor — inspected vs not inspected', () => {
+    // The three cases this pins were all mis-mappings in the first version:
+    // `estate_invalid` and `crashed` were recorded as `fail`, which counts into
+    // the ledger's inspected total and so over-reported coverage on a target
+    // that was never read; and `unavailable` was mapped to a credential reason
+    // when the only gate it applies to is unavailable for an unbuilt artefact.
+    it('never counts an unread target as inspected', () => {
+        for (const v of ['crashed', 'estate_invalid', 'pending', 'unavailable'] as const) {
+            const outcome = ledgerOutcomeFor(v);
+            expect(outcome, `${v} must be a skip`).not.toBe('complete');
+            expect(outcome, `${v} must be a skip`).not.toBe('fail');
+        }
+    });
+
+    it('counts a measured violation as failed, not skipped', () => {
+        expect(ledgerOutcomeFor('silent')).toBe('fail');
+        expect(ledgerOutcomeFor('below_floor')).toBe('fail');
+    });
+
+    it('counts a clean measured gate as completed', () => {
+        expect(ledgerOutcomeFor('ok')).toBe('complete');
+    });
+
+    it('does not blame a missing credential for an unbuilt artefact', () => {
+        // The skip sentence is the audit surface: a reader seeing this must not
+        // be sent hunting for an unset token.
+        expect(ledgerOutcomeFor('unavailable')).not.toBe('missing_credentials');
+    });
+
+    it('does not blame a dead scan root for a gate that threw', () => {
+        // Same audit-sentence class as the credential case above: `crashed`
+        // means the check could not execute, and its root is usually fine.
+        expect(ledgerOutcomeFor('crashed')).toBe('check_did_not_run');
+        expect(ledgerOutcomeFor('estate_invalid')).toBe('dead_scan_root');
+    });
+
+    it('refuses an unclassified verdict instead of counting it as inspected', () => {
+        // The `default: return 'complete'` this replaced would have counted a
+        // newly added Verdict member as READ, with the switch and every test
+        // above still green. The throw is the point.
+        expect(() => ledgerOutcomeFor('timeout' as never)).toThrow(/unhandled verdict/);
     });
 });

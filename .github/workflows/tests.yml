@@ -331,6 +331,42 @@ jobs:
         # matches; absolute budgets always bind).
         run: ./scripts-run src/scripts/bench_hook_latency --gate --via-cli
 
+      - name: hook-latency path comparison (diagnostic, never gates)
+        # Answers ONE question the gate above cannot: when the cli path misses
+        # 150 ms, is the path intrinsically that expensive, or did it REGRESS?
+        # road-to-hook-latency-repair closed on 2026-08-03 at cli p95 84 ms
+        # against this same budget; main now measures 117-152 ms and fails the
+        # gate outright on some runs. Those two numbers come from different
+        # runners weeks apart, so on their own they cannot separate a real
+        # regression from runner variance — and picking the wrong explanation
+        # is what a budget relaxation looks like when it is written up as a
+        # calibration fix.
+        #
+        # The discriminator is the BUNDLE path measured beside the cli path:
+        # dist/hooks/dispatch.js is recorded at p95 81 ms in
+        # docs/hook-latency.json. Bundle still ~81 while cli sits near 150 puts
+        # the growth in the wrapper the consumer pays (bash + shim probe + CLI
+        # startup); both risen together puts it in the dispatcher itself.
+        #
+        # Both legs run here, back to back, so they share a cache state and the
+        # comparison between THEM is symmetric. The gate above keeps its own
+        # position and conditions untouched — perturbing the measurement under
+        # dispute would defeat the point — and the delta between its cli number
+        # and this step's cli number reports the warm/cold effect for free.
+        #
+        # `always()` because the gate red is exactly the run whose numbers are
+        # worth having. Never gates: it prints, and a human reads it. Wiring a
+        # second budget here would re-introduce the moved-bar move this step
+        # exists to make unnecessary.
+        if: always()
+        run: |
+          echo "::group::bundle path — node dist/hooks/dispatch.js"
+          ./scripts-run src/scripts/bench_hook_latency
+          echo "::endgroup::"
+          echo "::group::cli path — the exact command hooks.json installs"
+          ./scripts-run src/scripts/bench_hook_latency --via-cli
+          echo "::endgroup::"
+
       - name: publint (published-package shape)
         # Release-gate addition (road-to-credible-install Phase 0): catches
         # dead script targets / broken exports / files[] mistakes in the

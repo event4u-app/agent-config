@@ -34,12 +34,29 @@
  * Exit codes (contract §6): 0 = current, or unobservable-and-said-so ·
  * 1 = the remote answered and the verdict is not about the branch head ·
  * 2 = internal error. `scanned:` is emitted on EVERY exit path.
+ *
+ * ## The per-target ledger, and the exemption that was withdrawn
+ *
+ * This gate first shipped with a `// ledger-exempt:` marker arguing it had "no
+ * target population to account for — a short-circuiting chain of 0-3 remote
+ * facts". Its completion review refuted that from the file itself: the check
+ * rows ARE a population, and the parse below **drops** every row whose `state`
+ * is not a string. A dropped row could be the failing one, so the gate could
+ * print *"green on its own head"* over a check it never read — the precise
+ * "absence of scanning looks like absence of findings" shape the ledger exists
+ * to count.
+ *
+ * The exemption's secondary claim was accurate — every `main()` exit already
+ * self-reports through `scanReport` with an explicit `allowEmpty` reason — and
+ * that is exactly why the first argument was easy to believe. It was still
+ * resting on the false half.
  */
 
 import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { GateLedger } from './_lib/gate_ledger.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
 const NETWORK_TIMEOUT_MS = 8_000;
@@ -117,6 +134,12 @@ export interface Facts {
     /** The head SHA the reported checks ran against. */
     checksHead: string | null;
     rows: readonly CheckRow[];
+    /**
+     * Names of check rows the parse DROPPED because their `state` was not a
+     * string. Carried out rather than swallowed: a dropped row could be the
+     * failing one, so it is a skip the ledger must count, not a non-event.
+     */
+    droppedRows?: readonly string[];
     /** Set when something could not be observed; forces the degrade path. */
     unobservable: string | null;
     /**
@@ -236,6 +259,51 @@ export function decide(f: Facts, opts: DecideOptions = {}): Verdict {
 }
 
 /**
+ * Whether {@link decide} reached the check rows at all.
+ *
+ * Every branch above the row logic — unobservable, no open PR, behind/diverged,
+ * ahead — settles the verdict WITHOUT reading a single row state. Recording
+ * those rows as `complete` would publish `scanned=N` for a run that inspected
+ * none of them: the absence-of-scanning-reads-as-absence-of-findings inflation
+ * the ledger exists to count, in the gate that adopted it. Under `--pre-push`,
+ * `ahead` is the NORMAL state, so this is the common path, not the exotic one.
+ */
+export function rowsWereEvaluated(f: Facts): boolean {
+    if (f.unobservable !== null) return false;
+    if (f.pr === null) return false;
+    return f.relation !== 'behind' && f.relation !== 'diverged' && f.relation !== 'ahead';
+}
+
+/**
+ * Publish the row-level accounting for one run.
+ *
+ * Three populations, three outcomes: rows the parse dropped are skips (a dropped
+ * row could be the failing one), rows a row-reading verdict covered are
+ * completions, and rows the verdict never reached are out of scope for THIS run.
+ *
+ * The line is emitted even under `--quiet` — {@link GateLedger.report} writes
+ * unconditionally by design, so a `--quiet` run of this gate is one line louder
+ * than before. Stated here because it is a change to this gate's own contract.
+ */
+function reportRowLedger(f: Facts): void {
+    const ledger = new GateLedger('check_pr_ci_current');
+    const dropped = new Set(f.droppedRows ?? []);
+    // Duplicate check names are a normal remote condition — a cancelled re-run
+    // beside a live one, two workflows sharing a job name, or a dropped row
+    // whose name equals a kept row's. `plan` throws on a repeat, and this gate
+    // promises to degrade rather than block, so the plan is deduplicated.
+    const planned = [...new Set([...f.rows.map((r) => r.name), ...dropped])];
+    ledger.plan(planned);
+    const evaluated = rowsWereEvaluated(f);
+    for (const name of planned) {
+        if (dropped.has(name)) ledger.skip(name, 'not_applicable_kind');
+        else if (evaluated) ledger.complete(name);
+        else ledger.outOfScope(name, 'precondition_unmet');
+    }
+    ledger.report();
+}
+
+/**
  * Ancestry between the local tip and the PR head.
  *
  * Equality is not enough: "local is ahead" and "local is behind" are opposite
@@ -261,7 +329,7 @@ export function relate(
 /** Gather the facts `decide` consumes. Every failure becomes `unobservable`. */
 export function gather(repo: string): Facts {
     const empty: Facts = {
-        pr: null, prHead: null, localHead: null, checksHead: null, rows: [], unobservable: null, relation: 'unknown',
+        pr: null, prHead: null, localHead: null, checksHead: null, rows: [], droppedRows: [], unobservable: null, relation: 'unknown',
     };
 
     const branch = run('git', ['rev-parse', '--abbrev-ref', 'HEAD'], repo);
@@ -296,9 +364,19 @@ export function gather(repo: string): Facts {
     // with parseable stdout is DATA, not an error. Treating it as unobservable
     // would make the gate blind in exactly the red case it exists for.
     let rows: CheckRow[] = [];
+    // A row whose `state` is not a string is DROPPED, and that drop is the one
+    // thing in this gate worth counting: a dropped row could be the failing one,
+    // and without accounting the gate prints "green on its own head" over a
+    // check it never read. `dropped` is surfaced by the caller through the
+    // ledger rather than swallowed here.
+    let dropped: string[] = [];
     if (checks.stdout.trim() !== '') {
         try {
-            rows = (JSON.parse(checks.stdout) as CheckRow[]).filter((r) => typeof r.state === 'string');
+            const parsed = JSON.parse(checks.stdout) as CheckRow[];
+            rows = parsed.filter((r) => typeof r.state === 'string');
+            dropped = parsed
+                .filter((r) => typeof r.state !== 'string')
+                .map((r, i) => (typeof r.name === 'string' ? r.name : `row-${String(i)}`));
         } catch {
             rows = [];
         }
@@ -329,6 +407,7 @@ export function gather(repo: string): Facts {
         localHead: localSha,
         checksHead: runsHead.ok && runsHead.stdout.trim() !== '' ? runsHead.stdout.trim() : null,
         rows,
+        droppedRows: dropped,
         unobservable: null,
         relation: relate(repo, localSha, prSha),
     };
@@ -374,7 +453,11 @@ export function main(argv?: readonly string[]): number {
 
     let verdict: Verdict;
     try {
-        verdict = decide(gather(repo), { prePush });
+        const facts = gather(repo);
+        // The verdict comes FIRST: whether the rows were inspected at all is a
+        // property of the verdict's path, not of the parse (see reportRowLedger).
+        verdict = decide(facts, { prePush });
+        reportRowLedger(facts);
     } catch (exc) {
         scanReport(0, 'internal error — nothing was compared');
         process.stderr.write(

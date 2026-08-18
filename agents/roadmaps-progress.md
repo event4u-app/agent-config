@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **51** open blockers, **23** need you → `agent-config gates`
+> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **49** open blockers, **21** need you → `agent-config gates`
 
 ## Overall
 
-**286 / 576 steps done · 50%**
+**287 / 578 steps done · 50%**
 
 ```text
 ████████████████████░░░░░░░░░░░░░░░░░░░░   50%
@@ -34,7 +34,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 8 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 5 | 0 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
-| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [3](#blockers-road-to-gate-autonomy) | █████████░ 86% |
+| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
 | 12 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 13 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
 | 14 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
@@ -43,10 +43,10 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 17 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 2 | 2 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | █████░░░░░ 50% |
 | 18 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 19 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
-| 20 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [2](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
+| 20 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [1](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
 | 21 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 22 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ░░░░░░░░░░ 0% |
-| 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 16 | 15 | 0 | 1 | 0 | [1](#blockers-road-to-per-turn-hook-economy) | ░░░░░░░░░░ 0% |
+| 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 16 | 1 | 1 | 0 | [1](#blockers-road-to-per-turn-hook-economy) | █░░░░░░░░░ 6% |
 | 24 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
 | 25 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
 | 26 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
@@ -420,26 +420,8 @@ _1 blocker resolved._
     in scope for any option — the settings schema's own describe text states the
     two-gate contract, and this decision moves one profile, not a default.
   - **Resolved when:** one option is recorded at this blocker, and for (a) or (b) the profile carries the setting with the cap named.
-- **b-estate-prose-pass-from-1-3** (owner: user) — blocks nothing in this roadmap — every step here is closed or spend-gated. It exists because step 1.3 surfaced three estate-level findings that this branch deliberately did not act on, and R2 finding 4 is right that a paragraph in an evidence file is a note rather than a discharge: without an entry here, nothing renders them in `agent-config gates` and nothing counts them.
-  - **Recommendation:** **(a) as its own change, (b) reclassify, (c) accept for now.** (a) is a one-line spend-safety fix on a cost-bearing path and should not ride in a documentation PR where a reviewer would skim it. (b) because a field that contradicts its own evidence table is the exact half-truth this roadmap exists to remove — and reclassifying *down* to 3 is the safe direction, never up. (c) last, because it is prose in eleven other roadmaps, the notice is advisory, and the overflow predates this work; it is a real reading-load defect but the cheapest of the three to defer.
-  - **If you do nothing:** the spend cap stays silently wrong, so an operator who names a budget gets a different one on a paid path. Twelve entries keep declaring a class their text cannot support, which is the shape `gates --execute` was built to stop. And the class-2 half keeps rendering paragraphs where the taxonomy promises one line, so the reading-load defect § 0 set out to remove survives inside the class meant to absorb it.
-  - **What to do:**
-    decide each of the three independently. (a) **The dropped spend
-    cap** — `taskfiles/bench-ab.yml` runs `bench_ab_task_runner` for `bench:ab:live`
-    with no `{{.CLI_ARGS}}`, unlike its sibling one target up, so the
-    `task bench:ab:live -- --budget <N>` that `road-to-surface-consolidation`'s
-    `benchmark-spend` entry authorises silently falls back to the parser default of
-    `2.0` (`src/scripts/bench_ab_task_runner.ts:911`). Fix is one interpolation;
-    the decision is whether it lands here, on `road-to-surface-consolidation`, or as
-    its own change. (b) **The twelve class-0/1 entries** — their swept verdict is not
-    materialisable (sweep § 4c), so they sit at the absent-field default of 3 while
-    the table says 0 or 1. Either reclassify them in the tree to match what their
-    entries can actually run, or leave the default standing and let § 4c carry the
-    discrepancy. (c) **The eleven over-length class-2 recommendations** — each
-    exceeds the renderer's own 156-char consent bar, whose remedy is reclassification
-    to 3 rather than a longer line. Either rewrite the eleven to one line, reclassify
-    them, or accept the overflow as advisory.
-  - **Resolved when:** each of (a), (b) and (c) carries a recorded decision at this blocker — a fix, a deferral with a reason, or an explicit accept.
+
+_1 blocker resolved._
 
 ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
 
@@ -622,18 +604,6 @@ _1 blocker resolved._
 <a id="blockers-road-to-mixed-trigger-activation-cost"></a>
 **Blockers**
 
-- **b-matrix-semantics-amendment** (owner: user) — blocks Phase 2 (step 2.1 and everything downstream of it). Phases 1 and 4 are repo work and proceed without it.
-  - **Recommendation:** **option (b) — adopt it narrowed to the enumerated per-edit subset.** Option (a) is the cleaner rule but it grants the amendment to rules nobody has examined, which is how the original silent narrowing happened: a general emitter decision applied to a set with mixed obligations. Option (c) keeps the current state, whose cost is measured and whose benefit — pre-contact routing for obligations that bind at contact — is the thing no evidence supports. (b) buys the same relief as (a) for the eleven rules where the argument is concrete, and leaves the rest to a second pass with their matrices in hand.
-  - **If you do nothing:** the seventeen stay unconditional, the standing-token cost stays on every session for every consumer, and Phase 2 cannot start — which also strands Phase 3's bench, because there is no second arm to compare against. Phases 1 and 4 still land, so the estate keeps the two new matrices and the census ratchet but none of the payload relief.
-  - **What to do:**
-    decide whether a routing-matrix positive may be satisfied
-    `by-first-file-contact` for rules whose obligation binds at file contact.
-    Three options: (a) adopt the amendment as written, with gates and per-turn rules
-    excluded by construction; (b) adopt it narrowed to an enumerated subset of the
-    11 per-edit rules, naming which; (c) reject it, in which case the 17 keep their
-    current pre-contact positives and Phase 2 closes as a null with that reason.
-    The amendment text and the excluded set are in Phase 2's preamble.
-  - **Resolved when:** one of the three options is recorded at this blocker, and — for (a) or (b) — the matrix-semantics documentation carries the amendment.
 - **b-behavioural-bench-spend** (owner: user) — blocks Phase 3 steps 3.1 and 3.2. Step 3.3's observer is repo work and proceeds without it.
   - **Recommendation:** **defer it to the class-1 budget ledger** rather than naming a one-off budget now. The bench is the most expensive step in this roadmap and the least urgent: Phase 2's dispositions are justified by the token census on their own, and the bench decides only whether they are *mandatory* or merely *available*. Paying for it before the ledger exists spends the consent twice — once here, once again for the next bench — which is the exact couriering `road-to-gate-autonomy` was opened to end.
   - **If you do nothing:** the behavioural-regression claim stays an argument rather than a number. Phase 2 can still ship on the token census, but the roadmap loses its falsifiability spine — nothing would refute the premise if it were wrong, and the honest-null consequence below becomes unreachable.
@@ -644,6 +614,8 @@ _1 blocker resolved._
     the consent. The pre-registered success and kill bars are in step 3.2 and must
     be recorded before the first run, not after.
   - **Resolved when:** a budget is named at this blocker, or the step is re-dated against the ledger mechanism with that dependency stated.
+
+_1 blocker resolved._
 
 ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
 
@@ -735,11 +707,11 @@ _1 blocker resolved._
 
 ### [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md)
 
-**Road to per-turn hook economy — the latency tax no registered budget can see** — 0 / 15 done (0%)
+**Road to per-turn hook economy — the latency tax no registered budget can see** — 1 / 17 done (6%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Falsify or localise the report | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 0 | Falsify or localise the report | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
 | 5 | Host-native prefiltering (runs first, deliberately) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 1 | Serialize once (D-2) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 2 | Payload opt-in per concern (D-2, second lever) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
