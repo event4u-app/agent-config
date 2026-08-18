@@ -40,8 +40,8 @@ at 165 ms before the Phase-2 levers turned it green at cli p95 84 ms).
 | 3 | high | `docs/CLAIMS.md:367` → `docs/proof.md:73`, `docs/evaluator.md:25` | Public claim `status: backed` still reads "Budgets unchanged (pre_tool_use p95 <= 150 ms)" while the gated path enforces 200. `check_claims` only resolves the pointer, so CI cannot catch the drift. | fixed | Falls with the revert — the published claim and the enforced cap agree again at 150. |
 | 4 | high | `src/scripts/check_pr_ci_current.ts:416-421` | Ledger marks every row `complete` **before** `decide()` runs, but `decide` returns on `unobservable`/`behind`/`diverged`/`ahead`/stale-head before reading any row. On `--pre-push`, local-ahead is the normal state. | fixed | `decide` now runs first; `rowsWereEvaluated` gates complete-vs-out-of-scope. Verified live on `--pre-push`: `scanned=0 planned=32 skipped=32` where it printed `scanned=32 skipped=0`. |
 | 5 | medium | `src/scripts/bench_hook_latency.ts:295`, `src/config/hook-latency-budget.json:14` | Only `pre_tool_use` gets a cli cap; the other five keep the bundle-registered 250, though measured cli p95 reaches 164. The change's own argument is left unapplied to 5 of 6 events. | fixed | Falls with the revert — no per-path cap exists on any event. |
-| 6 | medium | `src/config/hook-latency-budget.json:19-21` | The evidence shows the distribution straddles 150; it does not show 150 was wrong *for this path*. The competing hypothesis — the consumer path regressed since the repair closed at cli p95 84 ms — is untested and unmentioned. | OPEN | **Now the leading hypothesis, with evidence.** `main` itself fails this gate: run 32008629786 at p95 151 ms, run 32052289206 at 152 ms, against a repair that closed at cli p95 84 ms on 2026-08-03. Route selection is maintainer-owned — see the three routes below. |
-| 7 | medium | `src/scripts/bench_hook_latency.ts:303,317-321`; `docs/hook-latency.json` | The regression net has been inert on the gated path since 2026-08-03 — no top-level `invocation_path`, so `priorPath='bundle'` mismatches `cli` and CI prints "regression net skipped" every run. | OPEN | Pre-existing and outside this diff — the inertness predates it by two weeks and is why finding 6's drift went unseen. Re-arming it means recording a baseline, and recording today's numbers would cement the drift, so it is gated on the route chosen for 6. |
+| 6 | medium | `src/config/hook-latency-budget.json:19-21` | The evidence shows the distribution straddles 150; it does not show 150 was wrong *for this path*. The competing hypothesis — the consumer path regressed since the repair closed at cli p95 84 ms — is untested and unmentioned. | **CONFIRMED** | Measured, see § The measurement. The wrapper costs 2 ms; the dispatcher regressed 81 → 146 ms. The reverted change would have raised the cap to accommodate a real regression — exactly what the lock exists to stop. The repair belongs in the dispatcher; scoping it is maintainer-owned. |
+| 7 | medium | `src/scripts/bench_hook_latency.ts:303,317-321`; `docs/hook-latency.json` | The regression net has been inert on the gated path since 2026-08-03 — no top-level `invocation_path`, so `priorPath='bundle'` mismatches `cli` and CI prints "regression net skipped" every run. | OPEN | Confirmed as the cause of finding 6 going unseen: `invocation_path` is absent from `docs/hook-latency.json` (verified in the file). Still gated on 6 — recording a cli baseline today would write an 80 % regression into the reference as if it were the norm. Arm it after the dispatcher repair, not before. |
 | 8 | medium | `src/config/gate-violation-baselines.json:39` | The note says `check_pr_ci_current` "took a reasoned exemption" and "two adopted a real ledger" — but this diff *withdraws* that exemption and all three adopted ledgers. | fixed | Note rewritten to what landed, including why the exemption was withdrawn. |
 | 9 | medium | `src/scripts/check_gate_coverage.ts:216-222` | `ledgerOutcomeFor`'s `default:` returns `'complete'` with no `never` exhaustiveness guard; the new test enumerates a hardcoded verdict list. | fixed | `ok` handled explicitly; `default` is a `never` guard that throws. Pinned by a test that calls it with an unlisted verdict. |
 | 10 | medium | `src/scripts/check_gate_coverage.ts:209-212` | `crashed` maps to `dead_scan_root` ("the root … no longer exists"); a gate that threw has no dead root. Same mis-mapping class round 1 rejected for `unavailable`→`missing_credentials`. | fixed | Vocabulary extended rather than approximated: new `check_did_not_run` reason. `estate_invalid` keeps `dead_scan_root`, which is accurate for it. |
@@ -63,6 +63,44 @@ this file was committed. That inverts the artefact-before-fix ordering, and it i
 recorded here rather than concealed: the reverted commit crossed a recorded lock
 on a live branch, and leaving a lock violation in place while prose was written
 was the worse of the two options. Every other row was OPEN when this file landed.
+
+## The measurement
+
+Route (c) was run. Source: GitHub Actions run **32103306843**, job 95607853943,
+Static Checks, `ubuntu-latest` — all three numbers from ONE job on ONE runner, so
+the comparison between them carries no hardware term.
+
+| Path | `pre_tool_use` p95 | Provenance |
+|---|---|---|
+| bundle | **81 ms** | `docs/hook-latency.json`, recorded 2026-07-27 |
+| bundle | **146 ms** | run 32103306843, diagnostic step, warm |
+| cli | **148 ms** | run 32103306843, diagnostic step, warm |
+| cli | **150 ms** | run 32103306843, the gate itself, cold — passed by 0 ms |
+
+Two readings, and the first is the one that matters:
+
+1. **The wrapper is not the cost.** cli minus bundle is **2 ms** on the same
+   runner in the same run (a local run on unrelated hardware measured 4 ms, so
+   the shape replicates). The premise of the reverted change — that the bundle
+   number "never described this path" — is refuted by direct measurement, not
+   only by the archived roadmap.
+2. **The dispatcher regressed.** The bundle path itself moved 81 → 146 ms,
+   **+80 %**. That is a cross-runner comparison and therefore the weaker of the
+   two, but it is now the only surviving explanation, and it is corroborated by
+   shape: all six events sit at 135–157 ms on *both* paths, where the recorded
+   bundle set sat at 81–89 ms across the board.
+
+Consequence for the gate: every event now hugs the 150 ms bar, so the gate
+passes or fails on noise — which is why `main` flips between green and red
+(151 ms in run 32008629786, 152 ms in 32052289206, 117 ms in 32060724505). The
+flapping is a symptom of the regression, not a reason to move the bar.
+
+**What this closes and what it does not.** It closes the question the reverted
+change guessed at, and it retires routes (a) and (b) as answers to *this*
+symptom: there is no honest-null to declare and no target to re-open, because the
+budget was never the problem. It does not identify what inside the dispatcher got
+slower — that needs a bisect over the window 2026-07-27 → today, and it is work
+this branch does not carry.
 
 ## What would make the threshold change defensible
 
