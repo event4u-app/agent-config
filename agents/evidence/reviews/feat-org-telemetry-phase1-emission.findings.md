@@ -1,11 +1,11 @@
 # Findings: feat-org-telemetry-phase1-emission
-<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: 6a9ca34deeb83bb7addc179ab3fdb70325fd073b80ded427bbaf49c30a338a76 | diff: f13b8a56cd1d1f1dcbc901c3a57b7226a4d9bb81 | reviewer: r2-fresh-subagent-feat-org-telemetry-phase1-emission | prompt_hash: 0f5c59414b39bd005fe1cbe1f2375a5c40ed3329d6de5b0b73218ec8db2aa507 -->
+<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: c19d835abef83958a62e85009085b130fa26b8e7885cbe978f0c7d392d95df21 | diff: 9159cdd05cc567547e371edf268b179357c8bffd | reviewer: r2-fresh-subagent-feat-org-telemetry-phase1-emission | prompt_hash: 0f5c59414b39bd005fe1cbe1f2375a5c40ed3329d6de5b0b73218ec8db2aa507 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-18 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: f13b8a56cd1d1f1dcbc901c3a57b7226a4d9bb81
-  scope_hash: 6a9ca34deeb83bb7addc179ab3fdb70325fd073b80ded427bbaf49c30a338a76
+  diff_sha: 9159cdd05cc567547e371edf268b179357c8bffd
+  scope_hash: c19d835abef83958a62e85009085b130fa26b8e7885cbe978f0c7d392d95df21
   roadmap: agents/roadmaps/road-to-org-telemetry.md
   roadmap_hash: 6cd49fa7dda1f43ef46cb649419045a42a45dc219bde31428fcecad7720b6858
   ac_hash: 62d3483b628c50db130545b5ffbacbfd2cbdc618a6f39774b7b6465d1176fc1a
