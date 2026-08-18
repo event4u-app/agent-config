@@ -657,6 +657,93 @@ describe('dispatch_r2_reviewer — pure helpers', () => {
         expect(extractAcceptanceCriteria(lower)).toContain('- crit A');
     });
 
+    // The inline `- **AC-n:**` form. Measured 2026-08-18 over the active
+    // roadmap tree: 21 heading-only, **7 inline-only** — and the inline set
+    // produced a 0-byte acceptance-criteria.md under a prompt line saying the
+    // criteria had been extracted, with ac_hash stamped as the SHA-256 of ''.
+    const INLINE_ROADMAP = [
+        '# Roadmap: X',
+        '',
+        '## Phases',
+        '',
+        '### Phase 0',
+        '',
+        '- [ ] **0.1** do a thing',
+        '- **AC-0:** the sheet exists and carries every item,',
+        '      each with a labelled source.',
+        '',
+        '### Phase 3',
+        '',
+        '- [ ] **3.1** build the gate',
+        '- **AC-3:** both gates exist and are red/green against fixtures.',
+        '',
+        '## Blockers',
+        '',
+        '- **AC-4:** a criterion declared below the phase list is still a criterion.',
+        '',
+    ].join('\n');
+
+    it('extractAcceptanceCriteria collects inline AC bullets when no heading exists', () => {
+        const out = extractAcceptanceCriteria(INLINE_ROADMAP);
+        // Vacuity guard first: the heading-only path would return '' here, so
+        // assert non-empty before asserting content.
+        expect(out).not.toBe('');
+        expect(out).toContain('**AC-0:**');
+        expect(out).toContain('**AC-3:**');
+        // Continuation lines ride with their bullet rather than being dropped.
+        expect(out).toContain('each with a labelled source.');
+        // Position is deliberately NOT constrained: a criterion declared below
+        // the phase list is still a criterion, and constraining it would make
+        // the extractor's corpus depend on heading order.
+        expect(out).toContain('**AC-4:**');
+        // One line per criterion — the continuation was joined, not appended.
+        expect(out.split('\n').filter((l) => l.includes('**AC-')).length).toBe(3);
+    });
+
+    it('extractAcceptanceCriteria prefers the heading section over inline bullets', () => {
+        // A roadmap carrying BOTH must not have its section diluted by phase
+        // bullets; the heading is the declared list and wins.
+        const both = `${INLINE_ROADMAP}\n## Acceptance Criteria\n\n- the declared one\n`;
+        const out = extractAcceptanceCriteria(both);
+        expect(out).toContain('- the declared one');
+        expect(out).not.toContain('**AC-0:**');
+    });
+
+    it('extractAcceptanceCriteria still returns empty when neither form is present', () => {
+        expect(extractAcceptanceCriteria('# X\n\n## Phase 1\n\n- [ ] a\n')).toBe('');
+    });
+
+    it('expectedHashes maps an EMPTY AC string to none, not to the SHA of the empty string', () => {
+        // The defect this closes: '' took the `!= null` branch, so the manifest
+        // recorded e3b0c442… — a plausible-looking hash that re-derives
+        // identically on --verify-current, letting the gate confirm an AC
+        // binding over a 0-byte file.
+        const h = expectedHashes({ scopeDiffText: 'd', roadmapText: 'r', acText: '' });
+        expect(h.ac_hash).toBe('none');
+        expect(h.ac_hash).not.toBe(sha256(''));
+        expect(h.roadmap_hash).toBe(sha256('r'));
+    });
+
+    it('every active roadmap that declares criteria yields a non-empty extraction', () => {
+        // The population check, over the real tree rather than a fixture: no
+        // active roadmap may declare criteria in a form the extractor cannot
+        // read. This is the assertion that would have failed before the fix.
+        const dir = path.join(REPO_ROOT, 'agents', 'roadmaps');
+        const blind: string[] = [];
+        let declaring = 0;
+        for (const name of fs.readdirSync(dir)) {
+            if (!name.endsWith('.md')) continue;
+            const text = fs.readFileSync(path.join(dir, name), 'utf-8');
+            const declares = /^## acceptance criteria\s*$/im.test(text) || /^\s*[-*+]\s+\*\*AC-[\w.]+:?\*\*/m.test(text);
+            if (!declares) continue;
+            declaring += 1;
+            if (extractAcceptanceCriteria(text) === '') blind.push(name);
+        }
+        // Vacuity guard: a moved roadmaps root would make the loop assert nothing.
+        expect(declaring).toBeGreaterThan(10);
+        expect(blind).toEqual([]);
+    });
+
     it('reviewScopeDiffArgs excludes every gate-owned evidence path from the reviewed scope', () => {
         const argv = reviewScopeDiffArgs('origin/main');
         // Asserted as structure, not as a frozen array: the byte-stability flag

@@ -426,13 +426,34 @@ export function expectedHashes(args: {
     return {
         scope_hash: sha256(args.scopeDiffText),
         roadmap_hash: args.roadmapText == null ? 'none' : sha256(args.roadmapText),
-        ac_hash: args.acText == null ? 'none' : sha256(args.acText),
+        // Empty reads as 'none', not as the SHA-256 of the empty string. A
+        // roadmap whose criteria the extractor cannot see used to record
+        // `e3b0c442…` — a value that looks like a real hash, re-derives
+        // identically on `--verify-current`, and therefore let the manifest gate
+        // CONFIRM an AC binding over a 0-byte file.
+        ac_hash: args.acText == null || args.acText === '' ? 'none' : sha256(args.acText),
     };
 }
 
 /**
- * Extract the `## Acceptance Criteria` section — from that heading (inclusive)
- * to the next `## ` heading or EOF. No section → empty string.
+ * Extract the acceptance criteria a roadmap declares, in either of the two forms
+ * the tree actually uses.
+ *
+ * 1. A `## Acceptance Criteria` section — from that heading (inclusive) to the
+ *    next `## ` heading or EOF.
+ * 2. Failing that, inline `- **AC-n:**` bullets declared per phase, collected
+ *    with their continuation lines in document order.
+ *
+ * Neither form present → empty string, and the callers treat that as "no ACs"
+ * rather than as an empty section (see {@link expectedHashes} and the prompt's
+ * roadmap line).
+ *
+ * Form 2 is not a nicety: measured 2026-08-18 over the active tree, roadmaps
+ * carried ACs as 21 heading-only and **7 inline-only**, and the inline set
+ * silently produced a 0-byte `acceptance-criteria.md` while the reviewer prompt
+ * said the criteria had been extracted. The R2 reviewer is the independent check
+ * on AC conformance, so an AC-blind reviewer whose artefact reads as though it
+ * checked them is the gate-that-scans-nothing shape one layer up.
  */
 export function extractAcceptanceCriteria(roadmapText: string): string {
     const lines = roadmapText.split('\n');
@@ -446,15 +467,52 @@ export function extractAcceptanceCriteria(roadmapText: string): string {
             break;
         }
     }
-    if (start === -1) return '';
-    let end = lines.length;
-    for (let i = start + 1; i < lines.length; i++) {
-        if (/^## /.test(lines[i] as string)) {
-            end = i;
-            break;
+    if (start !== -1) {
+        let end = lines.length;
+        for (let i = start + 1; i < lines.length; i++) {
+            if (/^## /.test(lines[i] as string)) {
+                end = i;
+                break;
+            }
         }
+        return lines.slice(start, end).join('\n');
     }
-    return lines.slice(start, end).join('\n');
+    return extractInlineAcceptanceCriteria(lines);
+}
+
+/** `- **AC-3:**` / `- **AC-3.1:**`, optionally indented — the inline declaration form. */
+const INLINE_AC_RE = /^\s*[-*+]\s+\*\*AC-[\w.]+:?\*\*/;
+
+/**
+ * Collect inline `- **AC-n:**` bullets plus their continuation lines.
+ *
+ * A bullet ends at the next bullet, at any heading, or at a blank line followed
+ * by something that is not an indented continuation. Continuations are kept
+ * because the criteria are prose and the second half of a wrapped sentence is
+ * as load-bearing as the first.
+ */
+function extractInlineAcceptanceCriteria(lines: readonly string[]): string {
+    const out: string[] = [];
+    let inBullet = false;
+    for (const line of lines) {
+        if (INLINE_AC_RE.test(line)) {
+            out.push(line.trim());
+            inBullet = true;
+            continue;
+        }
+        if (!inBullet) continue;
+        // A heading, a new non-AC bullet, or a blank line closes the bullet;
+        // an indented non-blank line continues it.
+        if (line.trim() === '' || /^#{1,6} /.test(line) || /^\s*[-*+]\s/.test(line) || /^\S/.test(line)) {
+            inBullet = false;
+            continue;
+        }
+        out[out.length - 1] = `${out[out.length - 1] as string} ${line.trim()}`;
+    }
+    if (out.length === 0) return '';
+    return ['## Acceptance Criteria (collected from the roadmap’s inline per-phase bullets)', '', ...out].join(
+        '\n',
+    );
 }
 
 /**
@@ -576,11 +634,21 @@ function reviewerPrompt(args: {
     headSha: string;
     scopeHash: string;
     roadmapGiven: boolean;
+    /**
+     * Whether the extraction actually produced criteria. Separate from
+     * `roadmapGiven` on purpose: the prompt used to claim "Acceptance Criteria
+     * extracted" on the strength of a roadmap being supplied, so a roadmap the
+     * extractor could not read handed the reviewer an empty file under a line
+     * saying the criteria were there.
+     */
+    acGiven: boolean;
     changedFiles: readonly string[];
 }): string {
-    const roadmapLine = args.roadmapGiven
-        ? '- roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)'
-        : '- roadmap under review: none (`acceptance-criteria.md` is empty)';
+    const roadmapLine = !args.roadmapGiven
+        ? '- roadmap under review: none (`acceptance-criteria.md` is empty)'
+        : args.acGiven
+          ? '- roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)'
+          : '- roadmap under review: `roadmap.md` — it declares NO acceptance criteria this tool can extract, so `acceptance-criteria.md` is empty. Judge conformance against the roadmap body itself, and say in your findings that no AC list was supplied.';
     return [
         `# R2 completion review — ${args.slug}`,
         '',
@@ -1037,6 +1105,7 @@ function runDispatch(args: Args): number {
         headSha,
         scopeHash: hashes.scope_hash,
         roadmapGiven: roadmapText !== null,
+        acGiven: acText !== null && acText !== '',
         changedFiles,
     });
     const manifest = deriveManifest({
