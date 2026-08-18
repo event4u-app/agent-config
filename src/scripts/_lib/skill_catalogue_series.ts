@@ -409,3 +409,94 @@ export function formatPointableBare(
     }
     return lines.join('\n');
 }
+
+/* ------------------------------------------------------------------ *
+ * The delivery filter — what the runtime router must not name.
+ * ------------------------------------------------------------------ */
+
+/**
+ * The bare names one host is KNOWN to have delivered, or `null` when nothing
+ * about that host's per-entry delivery was ever enumerated.
+ *
+ * `joinPointableBare` above answers "how large is the D-4 divergence" for an
+ * operator report. This answers the runtime question the same log can settle:
+ * given this host, which skill names must a pointer line not name? It is the
+ * reducer `skill_route_hook` consumes, and it lives here rather than in that
+ * hook for one reason — every guard below is already argued in this module's
+ * prose, and a second reducer over the same log is how two readers start
+ * breaking the same tie in opposite directions (`_supersedes`, in the parent
+ * module, exists because that happened once and printed two drop counts for one
+ * host on one day).
+ *
+ * THE THREE-WAY DISTINCTION IS THE WHOLE POINT, and collapsing any two of them
+ * is the failure:
+ *
+ *   - **`null` — nothing was enumerated.** No record for this host, or none of
+ *     its records is a `per-entry` observation, or the latest one carries no
+ *     `bare_names` array. The consumer must fail OPEN: filtering on this would
+ *     be a zero inferred from silence, and a filter that quietly narrows on
+ *     missing data is worse than the divergence it treats.
+ *   - **An EMPTY set — enumerated, and nothing was bare.** A legitimate answer,
+ *     and behaviourally identical to `null` at today's only consumer. It is
+ *     still returned distinctly, because "measured clean" and "never measured"
+ *     are different facts and this module refuses to let them look alike.
+ *   - **A NON-EMPTY set — these names went dark.** The pointer must not name
+ *     them.
+ *
+ * A `budget-strip-and-drop` host is therefore always `null` here, never an
+ * empty set: it publishes no per-entry list at all, so its empty `bare_names`
+ * records that nothing was counted. That is the same skip `joinPointableBare`
+ * makes, for the same reason, and it is why a codex install gets no filtering
+ * rather than a filter that believes nothing was degraded.
+ *
+ * LATEST WINS, per host, by `observed_at` — the `latestPointableBarePerHost`
+ * tie-break rather than a union across the series. A union would let a
+ * superseded observation keep suppressing a skill the host now delivers fine,
+ * which is a filter that only ever narrows; the whole series is available to an
+ * operator report, and a runtime filter wants the current reading.
+ *
+ * `bare_names` is guarded with `Array.isArray`, and `observed_at` with a
+ * `typeof` check, because `readObservationLog` produces records by an unchecked
+ * `JSON.parse … as` over an append-only log with more than one producer — the
+ * same guard, for the same recorded reason, that `joinPointableBare` and
+ * `knownHostLimits` carry. Both guards resolve to `null`, never to an older
+ * reading: a malformed LATEST record means the current state is unknown, and
+ * falling back to a superseded one would be the stale-suppression failure this
+ * function's own tie-break exists to prevent.
+ */
+export function knownBareNames(
+    records: readonly ObservationRecord[],
+    host: string,
+): Set<string> | null {
+    // The latest record for the host decides, and the mode is read OFF that
+    // record rather than used to select it. R2 finding 2: filtering `per-entry`
+    // first meant a NEWER `budget-strip-and-drop` record could never supersede
+    // an older `per-entry` one, so a host that changed truncation mode kept
+    // being filtered against a bare set from before the change — the precise
+    // failure the LATEST-WINS paragraph above claims to prevent.
+    //
+    // `headlineRecordPerHost` rather than a fourth inline tie-break (R2 finding
+    // 7): this module already imports it, already defines
+    // `latestPointableBarePerHost`, and its own comment cites `_supersedes` as
+    // the reason duplicate reducers are dangerous. Restating the rule here would
+    // have meant the runtime filter silently not inheriting any precedence the
+    // parent adds later.
+    //
+    // The `observed_at` pre-filter is R2 finding 6, and it is a pre-filter
+    // rather than a change to `_supersedes` because that reducer is shared.
+    // `_supersedes` compares dates with `!==` then `>`, and BOTH
+    // `undefined > "2026-08-12"` and `"2026-08-12" > undefined` are false — so a
+    // record with a missing or non-string date, once it becomes the incumbent,
+    // can never be displaced by a well-formed later one. One malformed line in
+    // an append-only log with two producers would pin the filter to it forever.
+    // Feeding the shared reducer only well-dated records avoids that without
+    // changing behaviour for its other callers.
+    const dated = records.filter(
+        (record) => record.host === host && typeof record.observed_at === 'string',
+    );
+    const latest = headlineRecordPerHost(dated).get(host);
+    if (latest === undefined) return null;
+    if (truncationModeOf(latest) !== 'per-entry') return null;
+    if (!Array.isArray(latest.bare_names)) return null;
+    return new Set(latest.bare_names.filter((name): name is string => typeof name === 'string'));
+}
