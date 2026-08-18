@@ -14,9 +14,9 @@ Replace the zero-activation reading in the usage report with a number that is ei
 
 ## Prerequisites
 
-- [ ] Read `docs/contracts/hook-architecture-v1.md` and `src/rules/self-repair-loop.md`
-- [ ] Read `src/agent-src/templates/scripts/telemetry/settings.ts` and `src/shared/settingsConsent.ts`
-- [ ] Re-verify every path in Context against branch HEAD before executing a phase
+- [x] Read `docs/contracts/hook-architecture-v1.md` and `src/rules/self-repair-loop.md`
+- [x] Read `src/agent-src/templates/scripts/telemetry/settings.ts` and `src/shared/settingsConsent.ts`
+- [x] Re-verify every path in Context against branch HEAD before executing a phase — all five Context claims re-verified at `851568b5c` for Phase 0; see the note below the table
 
 ## Context
 
@@ -32,6 +32,8 @@ Source: an external analysis session over this repository, 2026-08-13, pinned at
 | No transport exists: every record stays on the machine that wrote it | still true — zero hits for outbound calls across the telemetry surface | negative grep, 2026-08-17 |
 | No remote telemetry namespace exists in the settings template | still true | negative grep, 2026-08-17 |
 
+**Re-verified again at `851568b5c` (2026-08-18, before executing Phase 0).** All five rows still hold: the report header is still byte-identical; the collector still derives its slug from `REPO`; the trigger is still `taskfiles/ci-fast.yml:243`+`:252`; the telemetry surface still has zero outbound calls; and the 1,405-line settings template still carries no `telemetry:` namespace (two prose mentions only, neither a key). Phase 0 then found one claim **understated** and one path **broken** — both in `org-telemetry-s03.md`: the zero is not merely blind to invocation, it is uncorrelated with it, and the path both scripts read (`agents/metrics/skill-usage.jsonl`) does not exist while the data sits at `agents/runtime/metrics/`.
+
 The zero is therefore an instrumentation artifact, not an adoption measurement. Estate decisions currently waiting on usage data — the skill rationalization sweep foremost — are blocked on this gap and have been for the whole 479-commit window.
 
 **What already exists and is reused rather than rebuilt.** The hook dispatcher runs in every consumer install and already receives all events. The settings surface has a tolerant reader whose doctrine is that anything unparseable means disabled. A distinct-user threshold constant already exists in the tier-usage defaults. Consent provenance already distinguishes a human-chosen value from a machine-inferred one, with the standing doctrine that an auto-detected value never grants consent. The self-repair loop already queues user-reported and detector-found defects, with the Iron Law that the outward step needs the user's word in the same turn.
@@ -40,13 +42,40 @@ The zero is therefore an instrumentation artifact, not an adoption measurement. 
 
 ## Phase 0 — Falsification spikes
 
-- [ ] Confirm the tool-event payload delivered to the dispatcher carries enough identity to name an invoked skill. If it does not, the design falls back to a transcript scan at session end and the per-invocation precision claim is withdrawn rather than weakened. <!-- verify: test -f agents/evidence/eval-findings/org-telemetry-s01.md -->
-- [ ] Measure a fire-and-forget outbound call from a session-end hook against a stub endpoint. Pass condition: added latency at or below one second at p95, silent on failure, no session block. Failure moves transport to a detached spool process with session end only enqueuing. <!-- verify: test -f agents/evidence/eval-findings/org-telemetry-s02.md -->
-- [ ] Run the existing regex collector and an event-based emitter over the same session set and record the delta as the published undercount of the current method. <!-- verify: test -f agents/evidence/eval-findings/org-telemetry-s03.md -->
+- [x] Confirm the tool-event payload delivered to the dispatcher carries enough identity to name an invoked skill. If it does not, the design falls back to a transcript scan at session end and the per-invocation precision claim is withdrawn rather than weakened. **PASS** — `tool_name: "Skill"` on 22 live `post_tool_use` records out of 14,171, and `input.skill` present in 164/164 real invocations. The fallback branch does not fire. <!-- verify: test -f agents/evidence/eval-findings/org-telemetry-s01.md -->
+- [x] Measure a fire-and-forget outbound call from a session-end hook against a stub endpoint. Pass condition: added latency at or below one second at p95, silent on failure, no session block. Failure moves transport to a detached spool process with session end only enqueuing. **FAIL for the inline flush — the pre-registered fallback fires.** Healthy 0.4 ms p95, refused 0.3 ms, but a blackhole costs 1002 ms p95 against a 1000 ms bar; the detached spool reads 20.5 ms against the same blackhole. <!-- verify: test -f agents/evidence/eval-findings/org-telemetry-s02.md -->
+- [x] Run the existing regex collector and an event-based emitter over the same session set and record the delta as the published undercount of the current method. **PUBLISHED: 0 of 89** invocations detected on the set the collector reads; 163 of 164 across every worktree slug. <!-- verify: test -f agents/evidence/eval-findings/org-telemetry-s03.md -->
 
-**Exit criteria:** all three spikes have a written pass or fail with numbers under `agents/evidence/eval-findings/`.
+**Exit criteria:** all three spikes have a written pass or fail with numbers under `agents/evidence/eval-findings/`. **Met** — `org-telemetry-s01.md`, `-s02.md`, `-s03.md`, all three at tree `851568b5c`.
 
 **Rollback:** spikes are scratch-only; nothing ships.
+
+### What Phase 0 changed for the phases behind it
+
+Recorded here so nobody re-derives it from the findings files.
+
+- **Phase 1 keeps its event and gains one requirement.** The confirmed event is
+  `post_tool_use` with `tool_name == "Skill"`, name from `tool_input.skill`. But
+  the host sends the *same* skill under two spellings — `roadmap:process-full`
+  (64) and `roadmap-process-full` (22), likewise `roadmap:ai-council` — so the
+  emitter must normalise before writing, or per-skill counts split and the
+  busiest skills undercount by roughly a quarter. Normalising in the report
+  instead would leave the raw records ambiguous.
+- **Phase 2 resolves to enqueue-only.** Its step already reads "per the second
+  spike's result", and that result is: session end appends to a local queue and
+  spawns a detached sender. 20.5 ms p95 is the number not to regress. Two
+  properties the spike did **not** measure and Phase 2 must: whether a detached
+  child survives host teardown of the session process group, and the queue's
+  growth bound across a multi-day outage.
+- **Phase 4 inherits a broken first source.** Both scripts read
+  `agents/metrics/skill-usage.jsonl`; that path does not exist, while the data
+  sits at `agents/runtime/metrics/skill-usage.jsonl` (gitignored, last written
+  2026-05-16 — the path the report's own emitted prose still names). Adding the
+  sink as a *second* source lands beside a first source that reads nothing, so
+  the path repair is a Phase 4 prerequisite rather than a nicety.
+- **Neither blocker moved, and neither had to.** `sink-choice` blocks Phase 2 and
+  `dpo-signoff` blocks Phase 3 onward; both say in as many words that Phase 0
+  runs in full without them. It did.
 
 ## Phase 1 — Emission in the dispatcher
 

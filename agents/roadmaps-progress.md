@@ -6,7 +6,7 @@
 
 ## Overall
 
-**300 / 578 steps done · 52%**
+**303 / 578 steps done · 52%**
 
 ```text
 █████████████████████░░░░░░░░░░░░░░░░░░░   52%
@@ -45,7 +45,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 19 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
 | 20 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [1](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
 | 21 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 22 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ░░░░░░░░░░ 0% |
+| 22 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 26 | 23 | 3 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | █░░░░░░░░░ 12% |
 | 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 6 | 9 | 1 | 2 | [3](#blockers-road-to-per-turn-hook-economy) | ██████░░░░ 60% |
 | 24 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
 | 25 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
@@ -681,11 +681,11 @@ _1 blocker resolved._
 
 ### [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md)
 
-**Road to org telemetry** — 0 / 26 done (0%)
+**Road to org telemetry** — 3 / 26 done (12%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Falsification spikes | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 0 | Falsification spikes | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 1 | Emission in the dispatcher | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 2 | Transport | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | Consent | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
