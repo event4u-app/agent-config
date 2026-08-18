@@ -6,7 +6,7 @@
 
 ## Overall
 
-**294 / 577 steps done · 51%**
+**295 / 576 steps done · 51%**
 
 ```text
 ████████████████████░░░░░░░░░░░░░░░░░░░░   51%
@@ -46,7 +46,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 20 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [1](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
 | 21 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 22 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ░░░░░░░░░░ 0% |
-| 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 8 | 8 | 1 | 1 | [2](#blockers-road-to-per-turn-hook-economy) | █████░░░░░ 50% |
+| 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 6 | 9 | 1 | 2 | [2](#blockers-road-to-per-turn-hook-economy) | ██████░░░░ 60% |
 | 24 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
 | 25 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
 | 26 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
@@ -707,13 +707,13 @@ _1 blocker resolved._
 
 ### [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md)
 
-**Road to per-turn hook economy — the latency tax no registered budget can see** — 8 / 16 done (50%)
+**Road to per-turn hook economy — the latency tax no registered budget can see** — 9 / 15 done (60%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Falsify or localise the report | 🟡 in progress | 3 | 3 | 0 | 0 | 50% |
 | 5 | Host-native prefiltering (runs first, deliberately) | 🟡 in progress | 1 | 1 | 0 | 1 | 50% |
-| 1 | Serialize once (D-2) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 1 | Serialize once (D-2) | ✅ done | 0 | 1 | 0 | 1 | 100% |
 | 2 | Payload opt-in per concern (D-2, second lever) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | Take the two spawns off the hot path (D-3) | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 4 | Register the number the user feels (D-1) | ✅ done | 0 | 2 | 1 | 0 | 100% |

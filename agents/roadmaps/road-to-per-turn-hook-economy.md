@@ -349,14 +349,33 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
 
 ### Phase 1 — Serialize once (D-2)
 
-- [ ] **1.1** Compute the compact envelope **once per event** in the caller and
+- [-] **1.1** Compute the compact envelope **once per event** in the caller and
       pass it down, or better: let the stdin-override surface carry the
       already-parsed object behind the existing read helper, with a lazy stringify
       for the rare concern that wants raw text. The concern contract stays
       identical — concerns keep reading through the same helper.
       `verify:` every concern's own tests green, plus the mutation-isolation test
       from risk 1 below.
-- [ ] **1.2** Pre-registered spike **before** merge: A/B on the large payload cell.
+      **BUILT, MEASURED, AND REVERTED 2026-08-18 — see 1.2's result.** The hoist
+      was implemented (one `_compactJsonDumps` per event, threaded to both the
+      in-process and the spawn path) and then taken back out, because 1.2's
+      pre-registered bar returned the **kill** outcome. Keeping a mechanism whose
+      premise the run falsified is the failure this roadmap's own honest-null
+      discipline exists to prevent, so the tree re-serialises per concern exactly
+      as before.
+      **Two things from the attempt were kept, because neither depends on the
+      hypothesis:**
+      · `_run_concern_inproc` now carries the falsification in its header, so the
+      next reader does not re-derive an "obvious" optimisation that has already
+      been tried and did not pay.
+      · The risk-1 mutation-isolation test ships
+      (`tests/scripts/hooks/dispatch_envelope_isolation.test.ts`, 4 cases). It
+      pins the property a re-attempt must preserve — a concern receives TEXT, so
+      nothing one concern touches can reach the next — which turns the
+      "accidentally an isolation boundary" risk 1 names into a checked one.
+      **And the attempt paid for itself anyway**: building 1.2's instrument is
+      what surfaced F-1, the large-payload guard bypass.
+- [x] **1.2** Pre-registered spike **before** merge: A/B on the large payload cell.
       Register the success and kill bars first — a reduction below the kill bar
       publishes the null in the benchmark doc and stops the phase, because the
       churn was then not where the model said it was.
@@ -386,9 +405,44 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       | inconclusive | **5–20 %** | land it anyway (strictly less work, and risk 1 is not incurred — see 1.1), but do NOT claim the AC, and record that serialisation is not the dominant cost |
       | kill | < **5 %** | publish the null here and in the benchmark doc, and STOP Phase 1 — the churn was not where the model said it was |
 
-      **RESULT:** _(empty until the run — do not fill this in from a prediction)_
+      **RESULT — KILL. The bar was not met and the effect does not reproduce.**
+      Ran 2026-08-18, one machine, bundle arm, 2 MB `tool_response`. Both arms
+      built from THIS tree so the only difference is the hoist: arm A
+      re-serialises per concern, arm B once per event.
+
+      | run | cell | arm A (per concern) | arm B (once) | delta |
+      |---|---|---:|---:|---:|
+      | n=15 | `post_tool_use` p50 | 166 ms | 135 ms | **−18.7 %** |
+      | n=25 | `post_tool_use` p50 | 139 ms | 143 ms | **+2.9 %** |
+      | n=15 | `pre_tool_use` p50 | 159 ms | 188 ms | +18.2 % |
+      | n=25 | `pre_tool_use` p50 | 157 ms | 149 ms | −5.1 % |
+
+      **The two runs disagree in sign on the pre-registered cell, and every
+      arm's own p95 spread (190–228 ms at a p50 of ~140) is larger than the
+      effect.** Under the registered rule that is < 5 %, i.e. the kill band: the
+      null is published, 1.1 is reverted, and Phase 1 stops.
+      **Where the churn is NOT.** D-2 asserted that re-serialising a large
+      envelope per concern is a material per-turn cost. On the in-process path it
+      is not measurable against runner noise, so whatever the 2 MB cell costs
+      (and it does cost — ~140 ms against ~85 ms for the minimal cell) is spent
+      elsewhere: the per-concern parse, the concern bodies, or the pipe transfer
+      itself.
+      **One honest limitation of the fixture, stated without using it to rescue
+      the hypothesis.** The filler is a single long string, which V8 serialises
+      close to a memcpy; a deeply nested 2 MB object would cost more per
+      stringify. The pre-registration named this fixture, so this result stands
+      as the answer to the question that was asked. A re-attempt must
+      pre-register the nested fixture as a NEW question rather than re-running
+      this one.
+      **Consequence for Phase 2, which is not automatic.** 2.1/2.2 avoid the body
+      entirely rather than serialise it once, so they are a different mechanism
+      and this null does not falsify them — but their premise is now weaker than
+      when they were written, and their AC ("the large-payload cell lands close to
+      the small-payload cell") is exactly what this run failed to move. Left open
+      as a decision rather than built on a premise that just lost its first test.
 - **AC-1:** the table exists and the pre-registered bar is met or the null is
-  published.
+  published. **MET, by the null half** — the table is in 1.2 above and the null is
+  published there and in `_run_concern_inproc`'s header.
 
 ### Phase 2 — Payload opt-in per concern (D-2, second lever)
 
@@ -539,6 +593,62 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       measure.
 - **AC-4:** the composite is registered and gated, and the census it shares with
   the chain cap is current as of that PR.
+
+## Findings the phases produced
+
+### F-1 — a measured guard bypass on large payloads, found by 1.2's own instrument
+
+**Fixed in this PR, with a mutation-verified negative test.** Recorded here
+because it is the most valuable thing this roadmap produced and it was not on any
+step's list.
+
+Building 1.2's large-payload cell made `bench_hook_latency` crash with `EPIPE`
+above a few hundred KB. The crash was the symptom; the cause is a silent guard
+bypass in the shipped dispatcher:
+
+1. `dispatch_hook` guarded its stdin read with `process.stdin.isTTY`. Merely
+   READING that property lazily constructs the stdin stream, which puts fd 0 into
+   **non-blocking** mode — so the guard broke its own read.
+2. `fs.readFileSync(0)` on a non-blocking pipe throws `EAGAIN` once the payload
+   exceeds the pipe buffer.
+3. `_readStdin`'s `catch { return "" }` converted that into *no input*, so the
+   dispatcher built an envelope with an EMPTY payload and exited **0**.
+
+**Consequence, reproduced on the real bundle rather than argued:** a `PreToolUse`
+payload carrying `git commit --no-verify` is DENIED at a small size (exit 2,
+`block-no-verify`) and **ALLOWED** once the same payload is padded to 300 KB.
+With no tool name and no command in the envelope, every `PreToolUse` guard —
+`block-no-verify`, `block-unauthorized-git`, `block-kernel-rule-writes`,
+`block-config-weakening` — is silently blind. Padding is not an exotic input: a
+`PostToolUse` `tool_response` holding a large file read or verbose command output
+reaches these sizes routinely, so the same blindness applies to
+`injection-scan` and `context-hygiene` on ordinary traffic.
+
+**The class was already known in this repo, and that is the transferable part.**
+`_lib/stdin.ts` exists, documents this exact EAGAIN failure from a 2026-08-04 CI
+diff, and states the rule the hooks path violated: *never substitute an empty
+string for a failed read*. `check_no_new_legacy_path` carries the same comment.
+Knowing the read was fragile was not enough, because the **trigger** lived in a
+different file — the `isTTY` probe. A defect ledger that records the *read* and
+not the *thing that makes the read fail* does not prevent the next instance.
+
+**Fix:** `tty.isatty(0)` instead of `process.stdin.isTTY` (answers the same
+question without constructing the stream), and the read delegated to the audited
+`readStdinText` (bounded EAGAIN retries, never empty-on-failure). Both halves,
+because either alone is a single point of failure. Verified by mutation: the new
+test fails on the pre-fix bundle at exactly the two padded sizes and passes on the
+fixed one.
+
+**Sibling search, reported with its count.** `process.stdin.isTTY`: **19**
+occurrences outside the two hook files, all in interactive CLI paths that never
+read fd 0 as data (`install`, `release`, `new_skill`, the RDP gates,
+`initRouting`, `decision_engine`, `interactiveContext`) — none is this defect,
+because none pairs the probe with a data read. `fs.readFileSync(0`: **16** call
+sites outside the hooks path and `_lib/stdin.ts`; `check_release_pr_shape:183` carries the exact
+`catch { data = '' }` shape that turns an oversized diff into a passing gate over
+nothing, which `_lib/stdin.ts`'s own header already names as worse than the crash.
+Not fixed here — it is a different surface with no security dimension, and this
+PR is already a performance change carrying one security fix.
 
 ## Blockers
 

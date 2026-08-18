@@ -125,6 +125,17 @@ function percentile(sorted: number[], p: number): number {
  */
 let PAYLOAD_BYTES = 0;
 
+/**
+ * Events a `tool_response` belongs on. The § 2 matrix pads a `PostToolUse` with
+ * a large tool response and a `Stop` with a large *transcript* — two different
+ * fixtures, not one field sprayed across every slot. Padding `stop` was tried
+ * and is wrong twice over: the shape does not occur, and `spawnSync` throws
+ * EPIPE because a dispatcher that never drains a body it has no reason to read
+ * exits while the parent is still writing. The transcript cell is a separate
+ * fixture and is not implemented here.
+ */
+const TOOL_EVENTS: ReadonlySet<string> = new Set(['pre_tool_use', 'post_tool_use']);
+
 function syntheticPayload(event: string, workspace: string): string {
     // Claude-shaped payload; concerns read tool_name/tool_input for
     // pre/post_tool_use. A plain Read is the common non-matching case —
@@ -136,9 +147,9 @@ function syntheticPayload(event: string, workspace: string): string {
         tool_name: 'Read',
         tool_input: { file_path: path.join(workspace, 'README.md') },
     };
-    if (PAYLOAD_BYTES > 0) {
-        // Incompressible-ish filler with no JSON metacharacters, so the cost
-        // measured is serialisation volume rather than escaping.
+    if (PAYLOAD_BYTES > 0 && TOOL_EVENTS.has(event)) {
+        // Filler with no JSON metacharacters, so the cost measured is
+        // serialisation volume rather than escaping.
         body['tool_response'] = 'x'.repeat(PAYLOAD_BYTES);
     }
     return JSON.stringify(body);
