@@ -1,11 +1,11 @@
 # Findings: feat-hook-payload-optin
-<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: 8027cde13d336ee10bc47a241bd7fba11c77f49c3cfa6c8a9510f7bc0031cf23 | diff: 342a71a8b08390869f6b3082c2f22b2a1f09c1ca | reviewer: r2-fresh-subagent-feat-hook-payload-optin | prompt_hash: 19ac1a5f62a9c33a19a6c2d8484bdd7f8dacaf405aef8b5ba451341b23708cf3 -->
+<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: a68fe34188335d3b42a6e8ef266113980f05c4b6ecb45cec430692db6e3b46b5 | diff: 7de21d6a788ce73f2df8c78c8728b00b90c8161f | reviewer: r2-fresh-subagent-feat-hook-payload-optin | prompt_hash: 19ac1a5f62a9c33a19a6c2d8484bdd7f8dacaf405aef8b5ba451341b23708cf3 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-18 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 342a71a8b08390869f6b3082c2f22b2a1f09c1ca
-  scope_hash: 8027cde13d336ee10bc47a241bd7fba11c77f49c3cfa6c8a9510f7bc0031cf23
+  diff_sha: 7de21d6a788ce73f2df8c78c8728b00b90c8161f
+  scope_hash: a68fe34188335d3b42a6e8ef266113980f05c4b6ecb45cec430692db6e3b46b5
   roadmap: agents/roadmaps/road-to-per-turn-hook-economy.md
   roadmap_hash: 4b7328ddb9fd347360aa09f3d90d39fc375aacea46797bc7d4dcd998402c08b4
   ac_hash: 8b3d8200231b13c05e62f5b58611857c85c94ade33509e924fb0420f8e18c9ba
