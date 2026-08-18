@@ -38,6 +38,15 @@
  * The result is measured, never read: `_resultBytes` computes a length and
  * discards the value in the same expression.
  *
+ * payload-bodies-waiver: result — measured, never read. This concern
+ * deliberately declares NO `needs_payload_bodies` in `hook_manifest.yaml`: the
+ * dispatcher omits the body and passes its exact UTF-8 byte length in the stub,
+ * which is the only thing this file ever wanted. Declaring `result` here would
+ * silently restore the 2 MB payload for the one concern the omission was built
+ * for (`road-to-per-turn-hook-economy` step 2.2), and the census would look
+ * identical while the cost came back. The `RESULT_KEYS` literals below are the
+ * key NAMES this concern looks under, not a read of the body.
+ *
  * ── Always exit 0 ─────────────────────────────────────────────────────
  *
  * A `warn` (exit 2) is read as a hard BLOCK on this host, and this concern

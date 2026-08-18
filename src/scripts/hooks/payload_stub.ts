@@ -35,8 +35,17 @@
  * A concern declares `needs_payload_bodies: [input, result]` in
  * `hook_manifest.yaml` for the classes it reads. An undeclared class arrives
  * as a stub carrying the key's NAME, the value's SHAPE, its UTF-8 BYTE LENGTH,
- * and (for an object) its top-level keys. Nothing that could hold file
- * contents, command output, or an API response survives into the stub.
+ * and (for an object) its top-level key COUNT. Nothing that could hold file
+ * contents, command output, or an API response survives into the stub — no
+ * field of `PayloadStub` is able to carry a payload-derived string, which is
+ * the same PII-exclusion-by-construction the sibling instruments use rather
+ * than a scrubber that could fail.
+ *
+ * `lint_hook_manifest` derives the requirement from SOURCE, not from trust: a
+ * concern bound on a tool slot whose script references a body key must declare
+ * that class, or carry a `payload-bodies-waiver:` line saying why it does not.
+ * That is the authoring-time half; without it, an added concern that forgets
+ * the declaration reads `undefined` in silence.
  *
  * The stub is deliberately a self-describing object rather than `null` or a
  * missing key. A concern that silently depended on a body sees a marked object
@@ -112,8 +121,17 @@ export interface PayloadStub extends JsonObject {
   bytes: number | null;
   /** `string` | `object` | `array` | `other` — the omitted value's shape. */
   value_type: string;
-  /** Top-level keys of an omitted object. Absent for other shapes. */
-  keys?: JsonValue;
+  /**
+   * Number of top-level keys of an omitted object. Absent for other shapes.
+   *
+   * A COUNT, not the key names. The names were carried verbatim in the first
+   * version of this module and the review caught it against the header's own
+   * absolute claim: an object result keyed by ids, filenames or addresses puts
+   * payload-derived strings back into the stub, and no concern read the field.
+   * A count keeps the shape information the name-and-sizes stub is for while
+   * the type again has no field able to hold content.
+   */
+  key_count?: number;
 }
 
 function isObject(v: unknown): v is JsonObject {
@@ -135,17 +153,52 @@ export function bodyBytes(value: JsonValue): number | null {
   }
 }
 
-/** Build the stub that stands in for `value` under `key`. */
+/**
+ * Measure every body this envelope carries, ONCE.
+ *
+ * `bodyBytes` serialises the value it measures, so calling it per stub meant
+ * re-serialising a 2 MB result once per keep-set — up to four extra full
+ * `JSON.stringify` passes per dispatch, on the hot path, in a change whose
+ * whole subject is serialisation cost. The review caught it, and noted it may
+ * partly explain the published null. The measurement is therefore taken once
+ * per dispatch and threaded through, and `stubPayloadBodies` REQUIRES the map
+ * rather than accepting an optional one — an optional parameter is how the
+ * per-stub re-serialisation would silently come back.
+ */
+export function measureBodies(envelope: JsonObject): Map<string, number | null> {
+  const measured = new Map<string, number | null>();
+  const payload = envelope["payload"];
+  if (!isObject(payload)) return measured;
+  for (const cls of BODY_CLASSES) {
+    for (const key of BODY_KEYS[cls]) {
+      const v = payload[key];
+      if (v === undefined || v === null) continue;
+      if (isPayloadStub(v)) continue;
+      measured.set(key, bodyBytes(v));
+    }
+  }
+  return measured;
+}
+
+/**
+ * Build the stub that stands in for `value` under `key`.
+ *
+ * `bytes` comes from the pre-measured map, never from re-serialising here.
+ * A key absent from the map is a caller bug rather than an unmeasurable body,
+ * and it degrades to `null` (unmeasurable) rather than to a wrong number.
+ */
 export function makePayloadStub(
   key: string,
   body_class: BodyClass,
   value: JsonValue,
+  measured: ReadonlyMap<string, number | null>,
 ): PayloadStub {
+  const bytes = measured.has(key) ? (measured.get(key) ?? null) : null;
   const stub: PayloadStub = {
     [STUB_MARKER]: true,
     key,
     body_class,
-    bytes: bodyBytes(value),
+    bytes,
     value_type: Array.isArray(value)
       ? "array"
       : typeof value === "string"
@@ -155,7 +208,7 @@ export function makePayloadStub(
           : "other",
   };
   if (isObject(value)) {
-    stub.keys = Object.keys(value);
+    stub.key_count = Object.keys(value).length;
   }
   return stub;
 }
@@ -209,6 +262,7 @@ export function presentBodyClasses(envelope: JsonObject): Set<BodyClass> {
 export function stubPayloadBodies(
   envelope: JsonObject,
   keep: ReadonlySet<BodyClass>,
+  measured: ReadonlyMap<string, number | null>,
 ): JsonObject {
   const payload = envelope["payload"];
   if (!isObject(payload)) return envelope;
@@ -232,7 +286,7 @@ export function stubPayloadBodies(
       const v = nextPayload[key];
       if (v === undefined || v === null) continue;
       if (isPayloadStub(v)) continue;
-      nextPayload[key] = makePayloadStub(key, cls, v);
+      nextPayload[key] = makePayloadStub(key, cls, v, measured);
     }
   }
   return { ...envelope, payload: nextPayload };

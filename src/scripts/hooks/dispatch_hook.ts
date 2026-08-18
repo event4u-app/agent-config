@@ -53,6 +53,7 @@ import { emitFor, type Severity } from "./host_semantics.js";
 import {
   allBodyClasses,
   countStubbedKeys,
+  measureBodies,
   parseBodyClasses,
   presentBodyClasses,
   stubPayloadBodies,
@@ -1271,13 +1272,17 @@ export function main(argv?: string[]): number {
   // `present` is the set of body classes this event actually carries — empty on
   // every non-tool event, which is why those pay nothing at all.
   const present = presentBodyClasses(envelope);
+  // Measured ONCE per dispatch, never per stub: `bodyBytes` serialises what it
+  // measures, so a per-stub call re-serialised the same 2 MB result once per
+  // keep-set. Empty map on a body-less event, so `stop` and friends pay nothing.
+  const measured_bodies = present.size > 0 ? measureBodies(envelope) : new Map();
   const shaped = new Map<string, JsonObject>();
   const shapeFor = (keep: ReadonlySet<BodyClass>): JsonObject => {
     if (present.size === 0) return envelope;
     const cacheKey = [...keep].sort().join(",");
     const hit = shaped.get(cacheKey);
     if (hit !== undefined) return hit;
-    const built = stubPayloadBodies(envelope, keep);
+    const built = stubPayloadBodies(envelope, keep, measured_bodies);
     shaped.set(cacheKey, built);
     return built;
   };
@@ -1288,6 +1293,12 @@ export function main(argv?: string[]): number {
     const keep_classes = _concern_body_classes(concern);
     const concern_envelope = shapeFor(keep_classes);
     const stubs_served = countStubbedKeys(envelope, keep_classes);
+    // What was actually SERVED, not what was declared. Recording the
+    // declaration made the record wrong in both directions on a body-less
+    // event: a blocking `stop` concern read "input,result" for bodies it can
+    // never receive, and an advisory one read "none" while the full envelope
+    // went to it untouched.
+    const served_classes = [...keep_classes].filter((c) => present.has(c)).sort();
     const concern_started = _now_iso();
     const { rc: rawRcResult, stderr: stderr_text, stdout: stdout_text, duration_ms } =
       _run_concern(concern, concern_envelope);
@@ -1362,11 +1373,14 @@ export function main(argv?: string[]): number {
       started_at: concern_started,
       completed_at: _now_iso(),
       fail_closed: Boolean(concern["fail_closed"]),
-      // Step 2.1's `verify:`. A concern that silently depended on a body it
-      // did not declare shows up as a rising number here, per concern, rather
-      // than as a bug report. A sorted class list and an integer — nothing
-      // that can hold the body they stand for.
-      payload_bodies: [...keep_classes].sort().join(",") || "none",
+      // Step 2.1's counter — an EXPOSURE denominator, not a detector, and the
+      // review was right to refuse the stronger reading: these numbers are a
+      // function of the declaration and the payload shape, so they say how
+      // often a concern ran without a body, never whether it wanted one. The
+      // detector for the wanting-one case is the source-derived check in
+      // `lint_hook_manifest`, at authoring time, where it is decidable.
+      // A sorted class list and an integer — nothing that can hold a body.
+      payload_bodies: served_classes.join(",") || "none",
       payload_stubs: stubs_served,
     });
   }

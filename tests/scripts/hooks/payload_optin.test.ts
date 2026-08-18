@@ -38,6 +38,7 @@ import {
   allBodyClasses,
   countStubbedKeys,
   isPayloadStub,
+  measureBodies,
   parseBodyClasses,
   presentBodyClasses,
   stubPayloadBodies,
@@ -57,6 +58,15 @@ const TSX_BIN = path.join(
 );
 const REAL_MANIFEST = path.join(REPO_ROOT, "src", "scripts", "hook_manifest.yaml");
 const FIXTURE_CONCERN = "tests/hooks/fixtures/concern_report_body.ts";
+
+/**
+ * Measure once, then stub — the dispatcher's own order. `stubPayloadBodies`
+ * requires the measurement map rather than taking an optional one, so that the
+ * per-stub re-serialisation the review caught cannot come back by omission.
+ */
+function shape(envelope: JsonObject, keep: ReadonlySet<BodyClass>): JsonObject {
+  return stubPayloadBodies(envelope, keep, measureBodies(envelope));
+}
 
 const KEEP_NONE = new Set<BodyClass>();
 const KEEP_INPUT = new Set<BodyClass>(["input"]);
@@ -86,24 +96,24 @@ function postEnvelope(response: unknown = "x".repeat(4096)): JsonObject {
 
 describe("payload opt-in — what the stub replaces", () => {
   it("stubs both classes when the concern declared neither", () => {
-    const shaped = stubPayloadBodies(postEnvelope(), KEEP_NONE);
+    const shaped = shape(postEnvelope(), KEEP_NONE);
     const payload = shaped["payload"] as JsonObject;
     expect(isPayloadStub(payload["tool_response"])).toBe(true);
     expect(isPayloadStub(payload["tool_input"])).toBe(true);
   });
 
   it("keeps the declared class and stubs only the other one", () => {
-    const keptInput = stubPayloadBodies(postEnvelope(), KEEP_INPUT)["payload"] as JsonObject;
+    const keptInput = shape(postEnvelope(), KEEP_INPUT)["payload"] as JsonObject;
     expect(isPayloadStub(keptInput["tool_input"])).toBe(false);
     expect(isPayloadStub(keptInput["tool_response"])).toBe(true);
 
-    const keptResult = stubPayloadBodies(postEnvelope(), KEEP_RESULT)["payload"] as JsonObject;
+    const keptResult = shape(postEnvelope(), KEEP_RESULT)["payload"] as JsonObject;
     expect(isPayloadStub(keptResult["tool_response"])).toBe(false);
     expect(isPayloadStub(keptResult["tool_input"])).toBe(true);
   });
 
   it("leaves every non-body payload key untouched", () => {
-    const shaped = stubPayloadBodies(postEnvelope(), KEEP_NONE);
+    const shaped = shape(postEnvelope(), KEEP_NONE);
     const payload = shaped["payload"] as JsonObject;
     // The eight keys the audit found live in concerns that read no tool body.
     expect(payload["tool_name"]).toBe("Read");
@@ -123,35 +133,42 @@ describe("payload opt-in — what the stub replaces", () => {
       payload: { transcript_path: "/tmp/t.jsonl", stop_hook_active: true },
     };
     expect(presentBodyClasses(stop).size).toBe(0);
-    expect(stubPayloadBodies(stop, KEEP_NONE)).toBe(stop);
+    expect(shape(stop, KEEP_NONE)).toBe(stop);
     expect(countStubbedKeys(stop, KEEP_NONE)).toBe(0);
   });
 
   it("does not double-wrap an already-stubbed body", () => {
-    const once = stubPayloadBodies(postEnvelope(), KEEP_NONE);
-    const twice = stubPayloadBodies(once, KEEP_NONE);
+    const once = shape(postEnvelope(), KEEP_NONE);
+    const twice = shape(once, KEEP_NONE);
     expect(twice).toBe(once);
   });
 
   it("carries no fragment of the omitted body", () => {
     const secret = "AKIAIOSFODNN7EXAMPLE-and-a-customer-address";
-    const shaped = stubPayloadBodies(postEnvelope(`prefix ${secret} suffix`), KEEP_NONE);
+    const shaped = shape(postEnvelope(`prefix ${secret} suffix`), KEEP_NONE);
     const serialised = JSON.stringify(shaped);
     expect(serialised).not.toContain(secret);
     expect(serialised).not.toContain("prefix");
   });
 
-  it("reports an object body's shape without its values", () => {
-    const shaped = stubPayloadBodies(
-      postEnvelope({ stdout: "secret-output", stderr: "" }),
+  it("reports an object body's shape as a COUNT, never its key names", () => {
+    // The key NAMES were carried verbatim in the first version and the review
+    // caught it against the module's own absolute no-content claim. The probe
+    // is a content-derived key, not `stdout`/`stderr`: an object result keyed
+    // by an address or a filename is the case that made the claim false.
+    const shaped = shape(
+      postEnvelope({ "/Users/realname/customers/acme-invoice.pdf": "body", stderr: "" }),
       KEEP_NONE,
     );
     const stub = (shaped["payload"] as JsonObject)["tool_response"];
     expect(isPayloadStub(stub)).toBe(true);
     if (!isPayloadStub(stub)) return;
-    expect(stub["keys"]).toEqual(["stdout", "stderr"]);
+    expect(stub["key_count"]).toBe(2);
     expect(stub["value_type"]).toBe("object");
-    expect(JSON.stringify(stub)).not.toContain("secret-output");
+    const serialised = JSON.stringify(stub);
+    expect(serialised).not.toContain("realname");
+    expect(serialised).not.toContain("acme-invoice");
+    expect(serialised).not.toContain("stderr");
   });
 });
 
@@ -164,7 +181,7 @@ describe("payload opt-in — absent stays distinguishable from empty", () => {
       payload: { tool_name: "Read", tool_input: { file_path: "/a" } } as JsonObject,
     };
     expect(presentBodyClasses(env).has("result")).toBe(false);
-    const shaped = stubPayloadBodies(env, KEEP_INPUT);
+    const shaped = shape(env, KEEP_INPUT);
     // Nothing to stub in the kept-input case → same reference, and the result
     // key is still ABSENT rather than present-and-zero.
     expect(shaped).toBe(env);
@@ -175,7 +192,7 @@ describe("payload opt-in — absent stays distinguishable from empty", () => {
     const circular: Record<string, unknown> = {};
     circular["self"] = circular;
     const env = postEnvelope(circular);
-    const shaped = stubPayloadBodies(env, KEEP_NONE);
+    const shaped = shape(env, KEEP_NONE);
     const stub = (shaped["payload"] as JsonObject)["tool_response"];
     expect(stubbedBytes(stub)).toBeNull();
     expect(_resultBytes(shaped["payload"] as JsonObject)).toBeNull();
@@ -191,7 +208,7 @@ describe("payload opt-in — byte-length fidelity (step 2.2)", () => {
   ] as Array<[string, unknown]>) {
     it(`reports the same byte count for ${label}, stubbed or not`, () => {
       const full = postEnvelope(body);
-      const stubbed = stubPayloadBodies(full, KEEP_NONE);
+      const stubbed = shape(full, KEEP_NONE);
       const before = _resultBytes(full["payload"] as JsonObject);
       const after = _resultBytes(stubbed["payload"] as JsonObject);
       expect(after).toBe(before);
@@ -370,5 +387,124 @@ describe("payload opt-in — end to end through the dispatcher", () => {
       fs.readFileSync(path.join(dispatcherDir, "summary.json"), "utf8"),
     ) as Record<string, unknown>;
     expect(summary["payload_stubs_served"]).toBe(3);
+  });
+});
+
+// --- The authoring-time detector (R2 findings 1 + 2) ------------------
+
+/**
+ * The runtime counter is an exposure denominator, not a detector: it is a
+ * function of the declaration and the payload shape, so it can say how often a
+ * concern ran without a body and never whether it wanted one. The R2 review
+ * named that precisely, and named the failure it leaves open — a NEW advisory
+ * concern that reads a body and forgets the declaration.
+ *
+ * These cases pin the detector that IS decidable: the source-derived check in
+ * `lint_hook_manifest`. They drive the real gate over a temp manifest, because
+ * a check that only ever sees the shipped manifest cannot demonstrate that it
+ * would refuse anything.
+ */
+describe("payload opt-in — the source-derived declaration check", () => {
+  function runLint(manifestBody: string[]): { code: number; err: string } {
+    const manifest = path.join(tmp, "lint-manifest.yaml");
+    fs.writeFileSync(manifest, manifestBody.join("\n") + "\n", "utf8");
+    const r = spawnSync(
+      TSX_BIN,
+      [
+        path.join(REPO_ROOT, "src", "scripts", "lint_hook_manifest.ts"),
+        "--manifest",
+        manifest,
+      ],
+      { encoding: "utf8", cwd: REPO_ROOT },
+    );
+    return { code: r.status ?? -1, err: `${r.stderr}${r.stdout}` };
+  }
+
+  /** The fixture concern references `tool_response`; that is the whole point. */
+  const undeclared = [
+    "schema_version: 1",
+    "concerns:",
+    "  reads_a_body:",
+    `    script: ${FIXTURE_CONCERN}`,
+    "    fail_closed: false",
+    "    severity: advisory",
+    "platforms:",
+    "  claude:",
+    "    post_tool_use: [reads_a_body]",
+  ];
+
+  it("REFUSES a tool-slot concern that reads a body without declaring it", () => {
+    const { code, err } = runLint(undeclared);
+    expect(code).toBe(1);
+    expect(err).toContain("reads_a_body");
+    expect(err).toContain("tool_response");
+    expect(err).toContain("does not declare");
+  });
+
+  it("accepts the same concern once the class is declared", () => {
+    const declared = [...undeclared];
+    declared.splice(6, 0, "    needs_payload_bodies: [result]");
+    const { err } = runLint(declared);
+    // Asserted on the SPECIFIC finding, not on the exit code: a minimal temp
+    // manifest naming one platform also trips the orphan-trampoline check,
+    // which is unrelated noise here and would make this case pass or fail for
+    // the wrong reason.
+    expect(err).not.toContain("does not declare");
+  });
+
+  it("does not fire on a concern bound only on a body-less slot", () => {
+    // The scan is scoped to the two tool slots. A `stop`-bound concern cannot
+    // receive a tool body, so requiring a declaration there would document
+    // nothing — the same reason the guard floor is tool-slot-scoped.
+    const stopOnly = [...undeclared];
+    stopOnly[stopOnly.length - 1] = "    stop: [reads_a_body]";
+    const { err } = runLint(stopOnly);
+    expect(err).not.toContain("does not declare");
+  });
+
+  it("the shipped tool-result-bytes waiver is what keeps step 2.2 legal", () => {
+    // Without the `payload-bodies-waiver:` line in its source, the check would
+    // force `[result]` onto the one concern the omission exists for, and the
+    // 2 MB payload would silently come back. Assert the waiver is present and
+    // carries a reason, not just that the tree lints clean.
+    const src = fs.readFileSync(
+      path.join(REPO_ROOT, "src", "scripts", "hooks", "tool_result_bytes_hook.ts"),
+      "utf8",
+    );
+    const m = /payload-bodies-waiver:\s*result\s*[—:-]\s*(.+)/.exec(src);
+    expect(m, "waiver line missing from tool_result_bytes_hook.ts").not.toBeNull();
+    expect((m?.[1] ?? "").trim().length).toBeGreaterThan(10);
+  });
+});
+
+// --- bytes comes from the measurement, never a fresh serialisation ----
+
+describe("payload opt-in — the body is measured once, not per stub", () => {
+  it("makePayloadStub reads bytes from the map instead of re-serialising", () => {
+    // A doctored map proves the direction of the dependency: if the stub
+    // re-serialised the body it would compute the true length and ignore this.
+    // That is what the R2 review found — up to four extra full stringify passes
+    // over a 2 MB body, on the hot path, in a change about serialisation cost.
+    const env = postEnvelope("z".repeat(50_000));
+    const doctored = new Map<string, number | null>([["tool_response", 7]]);
+    const shaped = stubPayloadBodies(env, KEEP_INPUT, doctored);
+    const stub = (shaped["payload"] as JsonObject)["tool_response"];
+    expect(stubbedBytes(stub)).toBe(7);
+  });
+
+  it("measures every present body exactly once, with the real lengths", () => {
+    const body = "ü".repeat(1_000);
+    const measured = measureBodies(postEnvelope(body));
+    expect(measured.get("tool_response")).toBe(Buffer.byteLength(body, "utf8"));
+    expect(measured.get("tool_input")).toBe(
+      Buffer.byteLength(JSON.stringify({ file_path: "/tmp/ws/a.ts" }), "utf8"),
+    );
+    expect(measured.size).toBe(2);
+  });
+
+  it("degrades a key missing from the map to unmeasurable, never to a number", () => {
+    const shaped = stubPayloadBodies(postEnvelope(), KEEP_NONE, new Map());
+    const stub = (shaped["payload"] as JsonObject)["tool_response"];
+    expect(stubbedBytes(stub)).toBeNull();
   });
 });

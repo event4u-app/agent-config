@@ -225,21 +225,61 @@ const TOOL_BODY_EVENTS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * A guard bound on a tool slot must declare `needs_payload_bodies: true`
+ * Payload keys per body class, mirroring `hooks/payload_stub.ts::BODY_KEYS`.
+ *
+ * Duplicated deliberately rather than imported: this gate must keep working if
+ * the dispatcher module moves, and the pair is pinned by a test that asserts
+ * the two lists agree. A silent divergence would make the gate scan for keys
+ * the dispatcher no longer stubs.
+ */
+const BODY_KEY_LITERALS: Readonly<Record<'input' | 'result', readonly string[]>> = {
+  input: ["tool_input", "toolInput"],
+  result: ["tool_response", "toolResponse", "tool_result", "toolUseResult"],
+};
+
+/** `// payload-bodies-waiver: <class> — <reason>` in a concern's own source. */
+const WAIVER_RE = /payload-bodies-waiver:\s*(input|result)\s*[—:-]\s*(.+)/g;
+
+/**
+ * A concern that READS a payload body must declare it
  * (`road-to-per-turn-hook-economy` step 2.1).
  *
- * A guard reads its subject out of the payload body — `block-no-verify` reads
- * `tool_input.command` — so a guard served a stub has nothing to match and
- * exits ALLOW. The dispatcher already refuses to stub one
- * (`_concern_needs_payload_bodies` treats `fail_closed` / `severity: blocking`
- * as an implicit opt-in, and does not depend on this lint having run); this is
- * the manifest half of the same fact, so a reader can see from the YAML that
- * the guard receives bodies.
+ * ## Why this is derived from source rather than from trust
+ *
+ * The first version of this check covered guards only, and the R2 review named
+ * the gap precisely: the failure mode the change itself introduces — a NEW
+ * advisory `post_tool_use` concern that reads `tool_response` and forgets the
+ * declaration — passed the lint, passed every test, and then read `undefined`
+ * in silence. Runtime cannot catch it either: the dispatcher's stub counter is
+ * a function of the declaration and the payload shape, so it says how often a
+ * concern ran without a body and never whether it wanted one.
+ *
+ * Authoring time is where the question is decidable, so the requirement is
+ * computed from the concern's own script: if it mentions a body key, it
+ * declares that class or says in the file why it does not.
+ *
+ * ## Over-detection is the safe direction, on purpose
+ *
+ * The scan is a literal match on the key name in quotes or after a dot, so a
+ * COMMENT mentioning `tool_response` also trips it. That is deliberate: a false
+ * positive costs one concern receiving a body it does not need, which is
+ * exactly the status quo before this phase; a false negative costs silence. The
+ * escape hatch is a `payload-bodies-waiver:` line naming the class and a
+ * reason, which keeps the claim next to the code that makes it instead of in a
+ * manifest a concern author may never open.
+ *
+ * ## The guard floor stays, and is stricter than the source scan
+ *
+ * `fail_closed` / `severity: blocking` on a tool slot requires `input`
+ * regardless of what the source scan finds, and a waiver cannot lift it: a
+ * guard served a stub has nothing to match and exits ALLOW. The dispatcher
+ * enforces the same floor independently (`_concern_body_classes` returns every
+ * class for a guard) and does not depend on this lint having run.
  *
  * Scoped to the two tool slots deliberately. `turn-end-gate` is blocking and
- * binds `stop`, whose payload carries no tool body at all — requiring the flag
- * there would put a "give me the bodies" line on a concern that can never
- * receive one, which documents nothing and misleads the next reader.
+ * binds `stop`, whose payload carries no tool body at all — requiring a
+ * declaration there would put a "give me the bodies" line on a concern that
+ * can never receive one, which documents nothing and misleads the next reader.
  */
 function _check_guard_payload_bodies(
   manifest: YamlObject,
@@ -262,13 +302,49 @@ function _check_guard_payload_bodies(
     if (!isObject(spec) || !onToolSlot.has(name)) continue;
     const isGuard = spec["fail_closed"] === true || spec["severity"] === "blocking";
     const declared = spec["needs_payload_bodies"];
-    const declaresInput = Array.isArray(declared) && declared.includes("input");
-    if (isGuard && !declaresInput) {
+    const declaredSet = new Set(
+      Array.isArray(declared)
+        ? declared.filter((c): c is string => typeof c === "string")
+        : [],
+    );
+    if (isGuard && !declaredSet.has("input")) {
       errors.push(
         `concerns.${name}: bound on a tool slot and fail_closed / ` +
           `severity: blocking, so it must declare 'needs_payload_bodies' ` +
           `including 'input' — a guard served a payload stub has nothing to ` +
           `match and exits ALLOW`,
+      );
+    }
+    const script = spec["script"];
+    if (typeof script !== "string") continue;
+    let source = "";
+    try {
+      source = fs.readFileSync(path.join(REPO_ROOT, script), "utf8");
+    } catch {
+      continue; // missing script is already reported by _check_concerns
+    }
+    const waived = new Map<string, string>();
+    for (const m of source.matchAll(WAIVER_RE)) {
+      const cls = m[1];
+      const reason = (m[2] ?? "").trim();
+      if (cls !== undefined && reason) waived.set(cls, reason);
+    }
+    for (const [cls, keys] of Object.entries(BODY_KEY_LITERALS)) {
+      if (declaredSet.has(cls)) continue;
+      const hit = keys.find(
+        (k) =>
+          source.includes(`'${k}'`) ||
+          source.includes(`"${k}"`) ||
+          source.includes(`.${k}`),
+      );
+      if (hit === undefined) continue;
+      if (waived.has(cls)) continue;
+      errors.push(
+        `concerns.${name}: ${script} references '${hit}' but does not declare ` +
+          `'${cls}' in needs_payload_bodies — it would receive a stub and read ` +
+          `undefined in silence. Declare the class, or put ` +
+          `\`payload-bodies-waiver: ${cls} — <reason>\` in the script saying ` +
+          `why the body is not needed`,
       );
     }
   }
