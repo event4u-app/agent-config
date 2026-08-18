@@ -324,7 +324,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       `stop` or `session_start` handler silently disables that handler
       completely. It fails open only on an unparseable **Bash** command, which is
       a narrower guarantee than the roadmap's unqualified wording implied.
-- [ ] **5.3** Move the non-gating Stop concerns to the host's async handler form,
+- [~] **5.3** Move the non-gating Stop concerns to the host's async handler form,
       so turn-end wall clock carries only the concerns that can actually refuse.
       `end-review-nudge` needs its stdout to reach the model, so it stays
       synchronous until measured otherwise.
@@ -332,7 +332,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       produces its disk artefact.
       <!-- the set membership IS the risky decision here — mis-classifying a
       gating concern as non-gating is the failure mode — so it is named, measured
-      at 86cdbf652, and the draft's version of it is corrected on both sides.
+      at 86bf652, and the draft's version of it is corrected on both sides.
       `stop` binds TEN concerns on claude, not the draft's six: chat-history,
       hot-context, verify-before-complete, team-review-gate, end-review-nudge,
       turn-end-gate, self-repair, session-register, session-eol,
@@ -343,6 +343,85 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       session-register, self-repair. `session-eol` and `interruption-ledger`
       postdate the draft and are unclassified — classify all ten here, from the
       manifest, rather than inheriting a six-row list. -->
+
+      **DEFERRED 2026-08-18 — the classification was done, and it turned this
+      step into a different and larger one. Two named halt conditions fire.** The
+      host capability is NOT the blocker and is settled: the installed Claude Code
+      2.1.234 binary carries `asyncRewake`, and the current docs
+      (`code.claude.com/docs/en/hooks`, fetched 2026-08-18) define `async` and
+      `asyncRewake` as command-hook fields. Everything below is about this
+      repository, not about the host.
+
+      **The set, classified from source — eleven members, not ten, and THREE
+      sync-required, not one.** The comment above is stale in its own roadmap:
+      step 3.1 added `roadmap-progress` to this slot after it was written.
+
+      | verdict | concerns |
+      |---|---|
+      | **SYNC-REQUIRED** | `turn-end-gate` (the gate itself — `EXIT_BLOCK`, stderr is the deciding reason) · `end-review-nudge` (`EXIT_WARN` + `reason` + `additional_context`) · **`session-eol`** (`EXIT_WARN` + both fields on TWO paths, one of which is the warning that the recycle envelope was never written before `/clear` destroys the session) |
+      | **ASYNC-CAPABLE** | `chat-history` · `hot-context` · `verify-before-complete` · `team-review-gate` · `self-repair` · `session-register` · `interruption-ledger` · `roadmap-progress` |
+
+      `session-eol` is the correction that matters: the draft's premise was that
+      `end-review-nudge` is the only concern whose stdout must reach the model.
+      Backgrounding `session-eol` would silently drop the one advisory whose whole
+      purpose is preventing total context loss.
+
+      **Why it is not buildable as written — five prerequisites, each verified,
+      none in this step's scope.**
+
+      1. **It breaks a pinned parity contract.** `build_claude_hook_matrix`
+         returns ONE command string per native event and
+         `claude_hook_matrix_parity.test.ts` asserts exactly one group with exactly
+         one command per event. The dispatcher's own `tools:`-filter header cites
+         that contract as a reason NOT to split groups. A sync/async split needs
+         two entries on `Stop`, i.e. a deliberate change to the type that carries
+         the hook matrix into every claude consumer's settings.
+      2. **A cross-group ordering dependency lands on the turn-end gate.**
+         `turn_end_gate_hook` reads `agents/state/verify-before-complete.json`
+         for its completion-claim detector, and `verify-before-complete` is
+         async-capable — so the producer would run in a parallel process while the
+         gate reads it. The order-sensitive case is the session-boundary reset
+         (`state["ci_last"] = null`), which can flip the gate from "CI observed
+         unsettled" to "no CI observed ⇒ allow" depending on which process wins.
+         That is a refusal surface, and a race that makes a gate allow is not a
+         latency question.
+      3. **Two parallel dispatches collide on disk, and one collision is
+         CORRUPTION-capable rather than merely lossy.** `feedback_dir` keys only
+         on `session_id`, with no invocation discriminator, so both halves write
+         the same directory. `summary.json` is a whole-document overwrite —
+         last writer wins, and `hooks:status` would then report a five-member stop
+         slot instead of eleven. `rule-trips.json` is a read-modify-write whose
+         READ is outside the lock — a classic lost update, and the split puts the
+         block-capable and warn-capable concerns on opposite sides, which is
+         exactly when both write. `dispatch-issues.jsonl` has **no lock and no
+         tmp+rename** — two `writeFileSync` calls can interleave and truncate, and
+         it is written precisely when something already went wrong.
+      4. **The lock the design would rely on has an escape hatch that this case
+         triggers.** `state_io`'s header names "concurrent dispatcher invocations"
+         as the case it guards; after a 5000 ms deadline a waiter `rmSync`s the
+         other holder's sentinel and proceeds anyway. Under sustained contention
+         it stops guarding the one case it was built for.
+      5. **The `verify:` is not observable from this repository.** "Artifact diff
+         against a synchronous run — every async concern still produces its disk
+         artefact" is a claim about what the HOST does with `async: true`. The
+         dispatcher-side subset filter is testable here; the host-side half needs a
+         live session with the split config installed. Landing the filter and the
+         manifest field without the emission would ship a function with no caller,
+         which is the antipattern this roadmap's own sibling rejected.
+
+      **Halt conditions, named rather than invented.** Prerequisite 1 is
+      `/roadmap:process-full` halt 2 — council-off plus genuine ambiguity on a
+      recorded in-tree contract; the council was probed this session and is
+      unreachable (both seats skipped pre-run, quorum 0/2, no spend). Prerequisite
+      2 is halt 3 — a security-sensitive surface reached. Filed as
+      `b-stop-async-split-prerequisites` so the next attempt starts from this
+      evidence instead of re-deriving it.
+
+      **What the classification is worth on its own, independent of the split.**
+      `roadmap-progress` is the single best async candidate and the only one whose
+      cost is a `spawnSync` with a 30 s timeout that `_run_concern_inproc` cannot
+      preempt — so if any part of this ever lands first, it is that one, alone, and
+      the three sync-required concerns are the set that must never move.
 
 - **AC-5:** on the § 2 matrix, a `PreToolUse` with a non-matching payload costs no
   dispatcher spawn at all, and the Stop cell drops materially on the large-transcript
@@ -525,19 +604,33 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       **AC-2 is NOT MET, and the null is published rather than the AC claimed.**
       Same instrument as Phase 1 (`bench_hook_latency --payload-bytes 2000000`,
       bundle arm, one machine, one session), `post_tool_use` p50. Arm A is the
-      `origin/main` bundle built from a `git archive` of the trunk with the same
-      `node_modules`; arm B is this branch.
+      `origin/main` bundle built from a `git archive` of the trunk against the
+      same `node_modules`; arm B is this branch. All pairs below are n=25, taken
+      alternating in one session, and they are the RE-measurement after the R2
+      fix pass — see the correction note under the table.
 
-      | cell | arm A (trunk) | arm B (this change) | delta |
+      | pair | arm A (trunk) | arm B (this change) | delta |
       |---|---:|---:|---:|
-      | 2 MB payload, n=15 | 123 ms | 112 ms | −8.9 % |
-      | 2 MB payload, n=25 | 141 ms | 143 ms | **+1.4 %** |
-      | small payload (0 B), n=15 | — | **88 ms** | — |
+      | 2 MB payload, run 1 | 143 ms | 133 ms | −7.0 % |
+      | 2 MB payload, run 2 | 131 ms | 130 ms | **−0.8 %** |
+      | small payload (0 B) | 82 ms | 82 ms | 0 % |
 
-      The two runs disagree in sign, exactly as Phase 1's did, and the large cell
-      (112–143 ms) is nowhere near the small cell (88 ms). AC-2's wording — "the
-      large-payload cell lands close to the small-payload cell" — is refuted on
-      this machine.
+      The two runs do not reproduce each other, exactly as Phase 1's did not, and
+      the large cell (130–143 ms) is nowhere near the small cell (82 ms). AC-2's
+      wording — "the large-payload cell lands close to the small-payload cell" —
+      is refuted on this machine. The small cell being IDENTICAL across arms is
+      the control this pair adds and Phase 1's lacked: it confirms the mechanism
+      costs nothing where there is nothing to omit.
+
+      **The first measurement was confounded and is superseded, not quietly
+      replaced.** It read 123→112 ms (n=15) and 141→143 ms (n=25) against an arm B
+      in which `bodyBytes` re-serialised each omitted body once per keep-set — up
+      to four extra full `JSON.stringify` passes over the same 2 MB payload, on
+      the hot path, in a change whose subject is serialisation cost. The R2 review
+      found it and named the consequence: the added cost may partly explain the
+      published null. It was removed (measure once per dispatch, thread the map
+      through) and the cell re-measured; the null survives the fix, which is the
+      only reason it is publishable.
 
       **What the measurement DID establish: where the cost actually is.** The
       residual large-vs-small delta is the dispatcher's OWN single read + parse of
@@ -560,10 +653,27 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       classes for every concern" and deletes the field. Not "if nobody reads the
       counter" — that is unfalsifiable by construction.
 
-      22 cases green in `tests/scripts/hooks/payload_optin.test.ts`, including the
-      end-to-end run that reads what a concern actually received on stdin, the
-      guard floor in both directions, no-content-leak, absent-vs-empty, and byte
-      fidelity across string / multibyte / object / array / unserialisable bodies.
+      **The runtime counter is an exposure denominator, not a detector — the R2
+      review refused the stronger reading and it was right.** `payload_stubs` is a
+      function of the declaration and the payload shape, so it rises with tool
+      calls and can never say that a concern *wanted* the body it lost. The
+      detector therefore lives at authoring time, where the question is decidable:
+      `lint_hook_manifest` reads each tool-slot concern's SOURCE and requires the
+      matching declaration for every body key it references. Over-detection is
+      the deliberate direction — a false positive costs one concern receiving a
+      body it does not need, which is the status quo before this phase, while a
+      false negative costs silence. The escape hatch is a
+      `payload-bodies-waiver: <class> — <reason>` line in the concern's own file,
+      and exactly one exists: `tool-result-bytes`, which is what keeps step 2.2
+      legal.
+
+      29 cases green in `tests/scripts/hooks/payload_optin.test.ts`, including the
+      end-to-end run that reads what a concern actually received on stdin, a
+      temp-manifest run proving the new check REFUSES an undeclared body reader,
+      a doctored-map case pinning `bytes` to the measurement rather than a fresh
+      serialisation, the guard floor in both directions, no-content-leak probed
+      with a content-derived object KEY, absent-vs-empty, and byte fidelity across
+      string / multibyte / object / array / unserialisable bodies.
 - [x] **2.2** `tool-result-bytes` explicitly does not need content — its own header
       says "measured, never read". It needs a length, which the dispatcher can pass
       precomputed.
@@ -578,9 +688,9 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       later edit adding `[result]` here would make the census look identical while
       the 2 MB payload flowed again.
 - **AC-2:** the large-payload cell lands close to the small-payload cell on the
-  § 2 matrix. **NOT MET — null published in 2.1.** 88 ms small vs 112–143 ms
-  large, and the two arms disagree in sign. The dominant term is the dispatcher's
-  own read+parse, filed as `b-payload-read-parse-dominates`.
+  § 2 matrix. **NOT MET — null published in 2.1.** 82 ms small vs 130–143 ms
+  large, and the two arms do not reproduce each other. The dominant term is the
+  dispatcher's own read+parse, filed as `b-payload-read-parse-dominates`.
 
 ### Phase 3 — Take the two spawns off the hot path (D-3)
 
@@ -945,12 +1055,12 @@ PR is already a performance change carrying one security fix.
   read + parse of the payload, which two independent measurements now name as the
   dominant term of the large-payload cell. Phase 1 removed ten of eleven
   stringifies and moved nothing; Phase 2 removed the body from six of eleven
-  concerns and moved nothing (88 ms small vs 112–143 ms large, arms disagreeing in
-  sign). What remains between the two cells happens ONCE per event, before any
+  concerns and moved nothing (82 ms small vs 130–143 ms large, and the two arm
+  pairs do not reproduce each other). What remains between the two cells happens ONCE per event, before any
   concern runs: `readFd0ToEnd` reads the whole payload from the pipe and
   `_build_envelope` `JSON.parse`s it. Options: (a) open a phase to measure that
   step in isolation — a dispatcher that reads and immediately exits, against the
-  same fixture, which would say how much of the 24–55 ms is unavoidable transport;
+  same fixture, which would say how much of the ~50 ms gap is unavoidable transport;
   (b) accept the cell as host-imposed and close D-2 as mis-attributed, keeping
   the two landed levers as the strictly-less-work outcome; (c) treat it as a
   streaming/incremental-parse question, which is a much larger change than
@@ -963,7 +1073,7 @@ PR is already a performance change carrying one security fix.
 - **Resolved when:** one option is recorded at this blocker and — for (a) — the
   read-and-exit cell exists on the § 2 matrix, so the unavoidable transport share
   of the large-payload cell is a number rather than an assumption.
-- **If you do nothing:** the large-payload cell stays 25–60 % above the small one
+- **If you do nothing:** the large-payload cell stays roughly 60 % above the small one
   with no owner, and D-2's remaining cost keeps being attributed to per-concern
   churn in any future reading of § 0 — which is the specific error two phases of
   measurement have now refuted.
@@ -1000,6 +1110,59 @@ PR is already a performance change carrying one security fix.
 - **If you do nothing:** `ship-diff-volume` stays a concern that runs, costs a
   dispatch, and can never fire; and `injection-scan`'s coverage depends on a
   fallback that any future envelope change could remove without a test noticing.
+
+### blocker: b-stop-async-split-prerequisites
+- **Status:** open
+- **Owner:** user
+- **Class:** 2 — consent-once
+- **Blocks:** step 5.3 only. Phases 1-4 are unaffected and Phase 2 has landed.
+- **What to do:** decide whether to open the prerequisite work that makes 5.3
+  buildable. The classification it needed is DONE and is recorded at the step —
+  eleven concerns on claude's `stop`, three sync-required (`turn-end-gate`,
+  `end-review-nudge`, `session-eol`), eight async-capable. The host capability is
+  also settled: the installed binary carries `asyncRewake`. What is open is five
+  prerequisites, each verified against the tree:
+  · **(P1)** `build_claude_hook_matrix` returns ONE command per native event and
+  `claude_hook_matrix_parity.test.ts` asserts exactly one group with exactly one
+  command; a sync/async split needs two `Stop` entries, i.e. a deliberate change
+  to the type that carries the hook matrix into every claude consumer's settings.
+  · **(P2)** `turn_end_gate_hook` reads `agents/state/verify-before-complete.json`
+  and its producer is async-capable, so the split puts a refusal surface's input
+  behind a race whose losing branch makes the gate ALLOW.
+  · **(P3)** two parallel dispatches collide on `summary.json` (lossy overwrite),
+  `rule-trips.json` (lost update — the read is outside the lock), and
+  `dispatch-issues.jsonl` (**no lock, no tmp+rename — corruption-capable**, and
+  written precisely when something already went wrong).
+  · **(P4)** `state_io`'s lock names concurrent dispatcher invocations as the case
+  it guards and then `rmSync`s the other holder's sentinel after a 5000 ms
+  deadline, so under contention it stops guarding that case.
+  · **(P5)** the step's `verify:` — an artefact diff proving every async concern
+  still writes its artefact — is a claim about what the HOST does with
+  `async: true` and is not observable from this repository.
+  Options: (a) open a phase that lands P3 and P4 first (locking and per-invocation
+  discriminators are useful on their own, independent of any split), then P1 and P2
+  as one reviewed change, then the split behind P5's live check; (b) land ONLY
+  `roadmap-progress` async — the single best candidate, the only concern whose cost
+  is a `spawnSync` with a 30 s timeout the in-process runner cannot preempt — which
+  still needs P1 and P3 but not P2; (c) cancel 5.3 the way 5.1 was cancelled and
+  record that turn-end wall clock is addressed only by Phase 4's measurement.
+- **Recommendation:** **(a), and P3 before anything else.** P3 is a live
+  data-integrity defect that does not need the split to matter: `dispatch-issues.jsonl`
+  already has no lock today, and any second concurrent dispatcher — two platforms
+  installed into one workspace, which the manifest supports — can truncate it. Fixing
+  it is small, independently valuable, and turns the riskiest part of a future split
+  into a non-issue. Option (b) is tempting and is the wrong first move: it pays P1's
+  contract change for one concern while leaving the collisions in place. Option (c)
+  is defensible only if Phase 4's composite says turn-end wall clock is not the
+  binding cost.
+- **Resolved when:** one option is recorded at this blocker and — for (a) or (b) —
+  P3's three files are written under a lock with a tmp+rename and a test that fails
+  against the current unlocked write, before any group split ships.
+- **If you do nothing:** turn-end wall clock keeps carrying eight concerns that
+  cannot refuse anything, `dispatch-issues.jsonl` stays corruption-capable under any
+  concurrent dispatch, and the classification above rots — it is pinned to
+  `hook_manifest.yaml` as it stands today, and every added `stop` concern makes it
+  less true.
 
 ## Risk Register
 
