@@ -136,6 +136,34 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       perceived slowness is extra model turns rather than hook wall clock.
       `verify:` the per-session counts, with the split before and after the local
       12.1 install date.
+- [x] **0.4** Same-runner path split, so 0.2 does not have to measure two things
+      at once. CI run **32103306843** (job 95607853943, `ubuntu-latest`) measures
+      the bundle path and the cli path back to back inside ONE job:
+      `pre_tool_use` p95 **146 ms via bundle**, **148 ms via cli**, with the
+      gate's own cold cli leg at **150 ms**. The wrapper the consumer pays —
+      bash + shim probe + CLI startup — therefore costs **2 ms**, not the tens of
+      milliseconds the budget argument on PR #1410 assumed (a local run on
+      unrelated hardware measured 4 ms, so the shape replicates). Standing
+      diagnostic: the non-gating comparison step added to `tests.yml` in the same
+      PR re-measures both legs on every Static Checks run.
+      `verify:` run 32103306843's Static Checks log, both `via bundle` and
+      `via cli` blocks, plus the gate leg above them.
+- [ ] **0.5** Settle the magnitude question 0.4 raises but cannot answer.
+      `docs/hook-latency.json` records the bundle path at `pre_tool_use` p95
+      **81 ms** on 2026-07-27; 0.4 measures the same path at **146 ms**. That is
+      **cross-runner** and therefore exactly the comparison § 2 refuses to treat
+      as a repo fact — but it is now the only surviving explanation for the gate
+      flapping on `main` (151 ms in run 32008629786, 152 ms in 32052289206,
+      117 ms in 32060724505, identical code), because 0.4 has excluded the
+      wrapper. It also sits in tension with this phase's own opening line
+      ("the same numbers reproduce at 11.0.0"), which is a source-draft claim
+      this phase exists to test — the two are compatible only if the 81 ms
+      record came from a faster runner generation, and nobody has checked.
+      Decisive probe: 0.2's two-version matrix run on ONE machine, restricted to
+      the **bundle arm only** — 0.4 has already excluded the cli wrapper, so the
+      cli arm buys nothing here.
+      `verify:` bundle-path p95 per event at the installed version and at
+      11.0.0, same machine, at least three runs per cell.
 - **AC-0:** a one-page evidence note naming which of {env flag, hardware, version
   jump larger than one major, stop-gate refusals, activation flip, none}
   reproduced, with the matrix numbers inline.
