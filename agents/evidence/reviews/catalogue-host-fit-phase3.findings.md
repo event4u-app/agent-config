@@ -35,3 +35,27 @@ declared rather than closed, and the reason cell says why closing it would be wo
 | 10 | low | src/scripts/hooks/skill_route_hook.ts:184 | The cost paragraph was re-argued only on the free path. Every firing prompt now additionally reads and JSON-parses the whole observation log, uncached, per prompt (`knownBareForHost` → `readObservationLog`), yet the header still presents the pre-branch "12.3 ms warm … about 5 % of the 250 ms p95 budget" as the cost of a prompt that reaches the ranker. The new paragraph only establishes that the SUB-floor path stays at 0 ms. The added cost is likely small, which is an argument for measuring it once and saying so, not for leaving a measured claim describing a path that changed. | fixed | c41b89a1c — measured: 0.015 ms median / 0.022 ms p95 (n=2000, warm) against an 8.3 ms ranked pass. Header also states that `bench_hook_latency` cannot see it (its payload carries neither `prompt` nor `platform`) |
 | 11 | low | src/config/hook-token-budget.json:60 | The falsifier baseline is a bare ratio with an ambiguous denominator: `16/338` "of the observed catalogue", while the ranker catalogue is cited as 337 entries in the consuming hook (`skill_route_hook.ts:236`). A future reader cannot tell whether 338 is the host-observed entry count or the ranker catalogue size, and the two are the populations the join deliberately keeps apart. Name the denominator (`entries_total` of the 2026-08-12 claude observation, or the ranker catalogue) so the comparison is reproducible. | fixed | 03fe4732d — all three populations named: `entries_total` 336, 35 enumerated (16 bare + 19 described), ranker catalogue 338. The comparable share is 16 of 35 |
 <!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->
+
+
+## Acceptance-criteria binding — this review was AC-BLIND
+
+Recorded 2026-08-18, after the fact.
+
+The manifest above carries `ac_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
+which is the SHA-256 of the **empty string** rather than of any criteria. This
+review was dispatched against `agents/roadmaps/road-to-catalogue-host-fit.md`,
+which declares its criteria as inline `- **AC-n:**` bullets per phase and
+carries no `## Acceptance Criteria` heading at all, while the extractor of the
+day matched the heading form and nothing else. The reviewer therefore received a **0-byte** `acceptance-criteria.md`
+under a prompt stating that the acceptance criteria had been extracted for it.
+
+**So the findings above review the DIFF, and nothing in them was checked against
+the acceptance criteria** — the criteria were not in the reviewer context at all.
+The same roadmap yields 19 lines of criteria under the extractor as it stands
+today. The extractor learned the inline form in PR #1419 (2026-08-18).
+
+The manifest is deliberately left unchanged. `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+is the honest record of the input this review actually received, and rewriting it
+to today's value would assert a binding that never existed — the precise failure
+this note exists to prevent. The artefact binds a scope that no longer exists, so
+no gate re-derives it and nothing here is stale.
