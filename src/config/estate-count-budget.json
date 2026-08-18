@@ -16,9 +16,9 @@
         ]
     },
     "baseline": {
-        "active_roadmaps": 38,
+        "active_roadmaps": 37,
         "later_roadmaps": 43,
-        "open_blockers": 72
+        "open_blockers": 71
     },
     "baseline_history": [
         {
@@ -48,6 +48,13 @@
             "later_roadmaps": 43,
             "open_blockers": 72,
             "why": "RAISED by 3, on top of the 67 -> 69 correction above rather than beside it. All three are road-to-per-turn-hook-economy Phase 2, and each records a finding that would otherwise rot: b-payload-read-parse-dominates (two independent measurements now say D-2's cost is the dispatcher's own read+parse of the payload, once per event, not the per-concern churn the roadmap blamed — so the phase's AC is refuted and the null is published), b-payload-mis-nested-readers (two concerns read tool payload keys off the envelope root; one is a security scanner that works only via a whole-envelope fallback, the other returns 0 on every dispatcher-path call today), and b-stop-async-split-prerequisites (step 5.3 deferred, carrying the five prerequisites its classification surfaced). A blocker that puts a maintainer decision in front of the maintainer is the estate growing in the direction this ratchet exists FOR, which is why the raise is taken rather than the findings being dropped into prose where nothing tracks them. My first version of this entry claimed two of five as unattributed drift; the trunk's correction identified the same two and named their cause, so that half is withdrawn rather than restated."
+        },
+        {
+            "at": "2026-08-19",
+            "active_roadmaps": 37,
+            "later_roadmaps": 43,
+            "open_blockers": 71,
+            "why": "LOWERED by 1 on each gated metric, in the direction this ratchet exists for. road-to-stop-gate-honesty reached zero open steps and zero deferred items and was archived, which is a terminal disposition rather than a park; its `b-detector-demotion-bars` was resolved with the decision recorded at the entry, not moved elsewhere. Both numbers are therefore measurements of a smaller estate, not room bought by relocating work — later_roadmaps is unchanged at 43, which is the check that distinguishes the two. Walked down because the count gate reported both as free tightening and its unit test asserts the committed budget equals the live tree: a baseline left above a lower measurement is headroom a later change can spend without any gate objecting, which is the loose-ratchet failure the 67 -> 69 entry above records from the other direction."
         }
     ],
     "target": {
