@@ -224,7 +224,7 @@ This phase unblocks everything else in the file, and it is repo work.
 
 ### Phase 3 — Make `skill-route` host-honest
 
-- [ ] **3.1** If Phase 1's join shows pointable-but-bare above zero in practice:
+- [x] **3.1** If Phase 1's join shows pointable-but-bare above zero in practice:
       the pointer line names only skills whose delivery is not known-bare, reading
       the latest observation record if one is present. Absent record means **no
       filtering** — fail open, never fail silent-narrow, because a filter that
@@ -232,14 +232,69 @@ This phase unblocks everything else in the file, and it is repo work.
       `verify:` fixture — an observation marking skill X bare means the pointer
       never names X; an absent observation file means behaviour byte-identical to
       today.
-- [ ] **3.2** Register the corresponding outcome metric next to the existing
+
+      **Landed 2026-08-18.** The reducer is `knownBareNames` in
+      `_lib/skill_catalogue_series.ts` — beside the other observation reducers
+      rather than inside the hook, because every guard it needs is already argued
+      in that module's prose and a second reducer over one log is how two readers
+      start breaking the same tie in opposite directions. `skill_route_hook`
+      consumes it through `knownBareForHost` + `filterKnownBare`.
+
+      **The reducer returns three states and the middle one is the point.**
+      `null` = nothing was enumerated → no filtering; an **empty set** = measured
+      clean; non-empty = these went dark. A `budget-strip-and-drop` host is always
+      `null`, never an empty set: its empty `bare_names` records that nothing was
+      counted, so an empty set there would read as "codex delivered everything
+      described" — the zero-inferred-from-silence failure this file's Phase 1 note
+      already refused once. Latest-per-host wins rather than the union of the
+      series, or a superseded observation would keep suppressing a skill the host
+      now delivers.
+
+      **Fail-open is a construction, not a convention.** No log, no record for the
+      host, a host that enumerates nothing, a malformed line, an unknown host, or
+      any throw all resolve to `null`, and `filterKnownBare(rows, null)` returns
+      its input untouched.
+
+      **One correction to the step's own framing, found by its fixture.** The
+      filter runs before `MIN_TOP_SCORE`, so the floor asks its question of the
+      best *deliverable* pointer — and that makes silence a real outcome rather
+      than a theoretical one. On `"review the authorization policy and tenant
+      scope for this endpoint"` the ranker returns `authz-review` at 47 and the
+      next entry at 23 against a floor of 31: suppress the top-1 and the line goes
+      silent instead of promoting a 23/100 pointer. That is the intended reading of
+      a confidence floor, and `suppressed` is what distinguishes that silence from
+      an unranked prompt. Both cases are pinned against the real corpus.
+      <!-- verify: npx vitest run tests/hooks/skill_route_hook.test.ts tests/scripts/catalogue_capture.test.ts -->
+- [x] **3.2** Register the corresponding outcome metric next to the existing
       pointer-rate metric with the same owner, review and kill discipline. **No
       adoption threshold is invented here** — the hook's own header refuses that,
       correctly, and this step inherits the refusal.
       `verify:` the metric is registered with its owner and kill standard, and no
       threshold appears that has no measurement behind it.
-- **AC-3:** the fixture passes in both directions — filtered when an observation
-  exists, unchanged when none does.
+
+      **Landed 2026-08-18** as `skill_route_bare_suppression_rate` in
+      `hook-token-budget.json` § `advisory_adoption_metrics`, inheriting that
+      block's owner and its `2026-11-10` review date. `threshold` reads "none
+      committed before data"; the refusal is inherited rather than restated.
+
+      **Its numerator had to be created to be registrable, and the gap is
+      recorded as a gap.** `rule-trips.json` counts fires per concern and does not
+      retain the warn reason, so the hook appends `, N suppressed as host-bare` to
+      its reason — only when non-zero, so the common line keeps its shape — and
+      the registration says the numerator is log-carried, not counter-carried.
+      Two falsifiers are named for the filter half rather than for the outcome: a
+      live rate of 0 on a host that *has* a per-entry observation falsifies the
+      join; a rate far above the observed 16/338 share means the ranker
+      preferentially ranks what the host degrades, which is a Phase 2 finding.
+      <!-- verify: agent-config settings dump is not the instrument — read src/config/hook-token-budget.json -->
+- [x] **AC-3:** the fixture passes in both directions — filtered when an observation
+  exists, unchanged when none does. **Met.** The filtered direction runs
+  end-to-end against the committed log (`knownBareForHost('.', 'claude')`) and
+  carries a vacuity guard first — it asserts the *unfiltered* line named a
+  suppressed skill before asserting the filtered one does not, because a
+  `not.toContain` over an empty result passes on a filter that broke everything.
+  The unchanged direction pins `null`, a throwing provider and an empty set all
+  equal to today's output.
 
 ## 1b. External corroboration for the `skill-route` posture
 
