@@ -24,3 +24,28 @@ dispatched: 2026-08-06T22:27:00Z
 | 7 | medium | agents/roadmaps/archive/road-to-zero-ceremony-settings.md:175 | The decision to keep the Phase-2 item at `[~]` rests on "with the three Phase-3 steps re-encoded to `[ ]` this roadmap keeps `open_ ≥ 3`, so it does not archive". That premise expires the moment the recorded blocker `absent-is-not-default-for-projection-mode` clears and Phase 3 closes: `count_open` returns to 0 with one `[~]` still present, re-firing the same `roadmap-progress-sync` Iron Law 3 condition the § Glyph re-encoding section documents as a repo-wide **commit refusal** with no agent-side bypass. The section declines the council's fix on a temporary property without recording the recurrence as a blocker, a follow-up, or an exit condition — so the next contributor to close Phase 3 hits an unannounced commit block. | fixed | e0-fix — recorded as an exit condition on the step AND in the blocker resolution |
 | 8 | low | src/scripts/memory_learn_hook.ts:73 | The docstring states `readLearnValue` returns "The raw scalar … or `undefined` when the file or the key is absent", and a sibling test (`memory_learn_hook.test.ts:113`) pins "distinguishes an absent key from a key set to false". Neither is accurate: a present-but-non-`true` scalar (`yes`, `1`, `on`, `maybe`) also returns `false` via `m[1] === 'true'` at :94, so a malformed value is indistinguishable from a deliberate opt-out. The fail-safe direction is right, but the exported tri-state does not mean what it documents, and a user who wrote `learn_on_session_end: yes` gets a silent permanent no-op with no diagnostic on either the value or the shape. | fixed | e0-fix — docstring states the false/malformed ambiguity; a test pins it |
 | 9 | low | tests/shared/nicknamePrefill.test.ts:73 | The rule file is read via `path.resolve('src/rules/settings-ask-protocol.md')` — CWD-relative, and evaluated in the describe body (i.e. at collection time), so a runner rooted anywhere but the repo root turns a targeted assertion into a whole-file collection error. Same pattern at `tests/scripts/memory_learn_hook.test.ts:84`. The sibling suite for the same feature already establishes the robust convention: `const REPO = path.resolve(__dirname, '..', '..')` (`jit_ask_budget.test.ts:40`), anchored on the test's own location rather than on the process CWD. | fixed | e0-fix — both suites anchor on __dirname, not the process CWD |
+
+
+## Acceptance-criteria binding — this review was AC-BLIND
+
+Recorded 2026-08-18, after the fact.
+
+The manifest above carries `ac_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
+which is the SHA-256 of the **empty string** rather than of any criteria. This
+review was dispatched against `agents/roadmaps/archive/road-to-zero-ceremony-settings.md`,
+which declares its criteria under a `## Acceptance criteria` heading spelled
+with a lowercase `c`, while the extractor of the day matched
+`## Acceptance Criteria` case-SENSITIVELY. The reviewer therefore received a **0-byte** `acceptance-criteria.md`
+under a prompt stating that the acceptance criteria had been extracted for it.
+
+**So the findings above review the DIFF, and nothing in them was checked against
+the acceptance criteria** — the criteria were not in the reviewer context at all.
+The same roadmap yields 25 lines of criteria under the extractor as it stands
+today. The extractor was made case-insensitive on 2026-08-09 — found by the zcs-close
+review itself. This artefact predates that repair.
+
+The manifest is deliberately left unchanged. `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+is the honest record of the input this review actually received, and rewriting it
+to today's value would assert a binding that never existed — the precise failure
+this note exists to prevent. The artefact binds a scope that no longer exists, so
+no gate re-derives it and nothing here is stale.

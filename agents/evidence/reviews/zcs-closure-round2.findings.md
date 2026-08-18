@@ -24,3 +24,28 @@ dispatched: 2026-08-06T22:42:44Z
 | 7 | low | tests/scripts/jit_ask_budget.test.ts:486 | `seeAlsoBoundary` returns `lines.length` when no line matches `/^#{1,6}\s+see also\s*$/iu` exactly (a heading with trailing text, or no See-also section at all). The `inBody` check at :509 then degenerates to the plain `toContain('settings-ask-protocol')` that the block's own comment rejects as insufficient against the stated mutation. Nothing asserts a boundary was actually found, so the discriminator can be silently absent for some of the four MIGRATED files. | fixed | e1-fix — seeAlsoBoundary returns null for "no section" and the two cases assert differently; a near-miss heading now fails loudly instead of degrading to plain presence |
 | 8 | low | src/scripts/memory_learn_hook.ts:73 | The tri-state paragraph says "`undefined` means the key is absent", contradicting the same docstring's opening line and the code at :87: an unreadable settings file (permissions, a directory at the path, I/O error) also yields `undefined`, and `learnConsent` then reports `withheld-default`. An unreadable-but-permissive file is therefore indistinguishable from an absent one — the same silent-no-op class the docstring flags for malformed scalars, but not listed among them. | fixed | e1-fix — docstring names BOTH collapses (absent/unreadable, deliberate-false/malformed); a test pins the unreadable-file case |
 | 9 | low | tests/scripts/memory_learn_hook.test.ts:121 | "does NOT distinguish a deliberate false from a malformed value" asserts only equality between the two reads, so it would still pass if the parser regressed to returning `undefined` for both — i.e. it cannot fail for the reason it names. The preceding case pins the concrete `false`, so the behaviour is covered; this case adds no independent signal. | fixed | e1-fix — asserts the concrete false on both reads, so a regression to undefined fails the case it is named after |
+
+
+## Acceptance-criteria binding — this review was AC-BLIND
+
+Recorded 2026-08-18, after the fact.
+
+The manifest above carries `ac_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
+which is the SHA-256 of the **empty string** rather than of any criteria. This
+review was dispatched against `agents/roadmaps/archive/road-to-zero-ceremony-settings.md`,
+which declares its criteria under a `## Acceptance criteria` heading spelled
+with a lowercase `c`, while the extractor of the day matched
+`## Acceptance Criteria` case-SENSITIVELY. The reviewer therefore received a **0-byte** `acceptance-criteria.md`
+under a prompt stating that the acceptance criteria had been extracted for it.
+
+**So the findings above review the DIFF, and nothing in them was checked against
+the acceptance criteria** — the criteria were not in the reviewer context at all.
+The same roadmap yields 25 lines of criteria under the extractor as it stands
+today. The extractor was made case-insensitive on 2026-08-09 — found by the zcs-close
+review itself. This artefact predates that repair.
+
+The manifest is deliberately left unchanged. `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+is the honest record of the input this review actually received, and rewriting it
+to today's value would assert a binding that never existed — the precise failure
+this note exists to prevent. The artefact binds a scope that no longer exists, so
+no gate re-derives it and nothing here is stale.

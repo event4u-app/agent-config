@@ -30,3 +30,27 @@ dispatched: 2026-08-18T00:41:29Z
 | 12 | low | src/scripts/capture_skill_catalogue.ts:287 | The join's disk side carries no scope or freshness discipline while the host side is built entirely around it. `resolveSkillsRoot` picks `.claude/skills` first, which in this checkout holds 338 entries against the roadmap's stated scoped 219 / legacy-all 290 — i.e. the joined catalogue matches neither projection mode, the same `indeterminate` condition `projectionModeFlagFor` refuses to label three functions earlier. The output prints the root and raw entry count, so it is traceable, but `pointableBare` grows with a stale-large root and the row carries no record of which projection it was joined against. Record the resolved root's mode classification in the `--json` payload. | fixed | 87ec63a15 |
 | 13 | low | agents/roadmaps-progress.md:37,46,79-98,125 | The regeneration folds in blocker-section churn for two roadmaps this branch does not touch — `road-to-gate-autonomy` (blocker count 2→3, new `b-estate-prose-pass-from-1-3`) and `road-to-mixed-trigger-activation-cost` (1→2, new `b-matrix-semantics-amendment`) — and drops both sections' `_1 blocker resolved._` footers. Neither source roadmap appears in the diff, so either the base dashboard was stale (benign, but unstated) or the regeneration read a tree state this commit does not contain. Per `minimal-safe-diff` this is unrelated drift riding in a Phase-1 change; state which of the two it is in the commit message, so a later bisect does not attribute those blockers here. | accepted-risk | It is the FIRST of the two, verified rather than assumed: at `origin/main` those roadmap files already carry 3 and 2 `### blocker:` sections while the committed dashboard says 2 and 1, so the base dashboard was stale and this regeneration corrected it. Nothing in the branch produced those blockers. Stated here and in the PR body so a bisect does not attribute them to this change; the correction itself is kept, since reverting it would re-ship a dashboard known to disagree with the tree. |
 | 14 | low | agents/evidence/reviews/catalogue-host-fit-phase1.review-input/acceptance-criteria.md:1 | The AC input handed to this review is 0 bytes, and the manifest's `ac_hash` is `e3b0c442…b7852b855` — the SHA-256 of the empty string — while `roadmap.md` plainly carries `**AC-0:**` through `**AC-3:**`. The extractor produced an empty file and the pipeline hashed it without complaint, so this review could not check the diff against its acceptance criteria and the artefact records that silently. Out of the diff's scope, reported because it degraded this review: the extractor should fail loudly on a roadmap that contains `AC-` lines but yields none. | deferred | `agents/roadmaps/road-to-plan-gates-measurement.md` § Defect to fix BEFORE the enforced flip — filed there because the defect is in `dispatch_r2_reviewer`, not in this diff, and that roadmap owns the R2 advisory window this corrupts. An enforced gate whose AC input can be empty is worse than an advisory one. |
+
+
+## Acceptance-criteria binding — this review was AC-BLIND
+
+Recorded 2026-08-18, after the fact.
+
+The manifest above carries `ac_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
+which is the SHA-256 of the **empty string** rather than of any criteria. This
+review was dispatched against `agents/roadmaps/road-to-catalogue-host-fit.md`,
+which declares its criteria as inline `- **AC-n:**` bullets per phase and
+carries no `## Acceptance Criteria` heading at all, while the extractor of the
+day matched the heading form and nothing else. The reviewer therefore received a **0-byte** `acceptance-criteria.md`
+under a prompt stating that the acceptance criteria had been extracted for it.
+
+**So the findings above review the DIFF, and nothing in them was checked against
+the acceptance criteria** — the criteria were not in the reviewer context at all.
+The same roadmap yields 19 lines of criteria under the extractor as it stands
+today. The extractor learned the inline form in PR #1419 (2026-08-18).
+
+The manifest is deliberately left unchanged. `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+is the honest record of the input this review actually received, and rewriting it
+to today's value would assert a binding that never existed — the precise failure
+this note exists to prevent. The artefact binds a scope that no longer exists, so
+no gate re-derives it and nothing here is stale.

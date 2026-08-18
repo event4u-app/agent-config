@@ -56,3 +56,28 @@ Checked and deliberately NOT filed, with what was traced:
 - **`--source`** cannot influence the class lookup or the write target.
 - **`gate-coverage.yml` header numbers**: 27 claimed, 27 present.
 
+
+
+## Acceptance-criteria binding — this review was AC-BLIND
+
+Recorded 2026-08-18, after the fact.
+
+The manifest above carries `ac_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
+which is the SHA-256 of the **empty string** rather than of any criteria. This
+review was dispatched against `agents/roadmaps/archive/road-to-zero-ceremony-settings.md`,
+which declares its criteria under a `## Acceptance criteria` heading spelled
+with a lowercase `c`, while the extractor of the day matched
+`## Acceptance Criteria` case-SENSITIVELY. The reviewer therefore received a **0-byte** `acceptance-criteria.md`
+under a prompt stating that the acceptance criteria had been extracted for it.
+
+**So the findings above review the DIFF, and nothing in them was checked against
+the acceptance criteria** — the criteria were not in the reviewer context at all.
+The same roadmap yields 25 lines of criteria under the extractor as it stands
+today. The extractor was made case-insensitive on 2026-08-09 — found by the zcs-close
+review itself. This artefact predates that repair.
+
+The manifest is deliberately left unchanged. `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+is the honest record of the input this review actually received, and rewriting it
+to today's value would assert a binding that never existed — the precise failure
+this note exists to prevent. The artefact binds a scope that no longer exists, so
+no gate re-derives it and nothing here is stale.
