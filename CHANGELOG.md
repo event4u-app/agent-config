@@ -359,284 +359,121 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > keeps the active era under the 250-line drift cap enforced by
 > `tests/test_changelog_eras.py`.
 
-# Era: 14.0.x — current
+# Era: pre-14.3.0 — archived
 
-> Started at `14.0.0`. Full entries live inline below.
+> All entries before `14.3.0` live in
+> [`docs/archive/CHANGELOG-pre-14.3.0.md`](docs/archive/CHANGELOG-pre-14.3.0.md).
+> The archive is read-only; git tags remain the canonical
+> source for what shipped. Splitting them out of the main file
+> keeps the active era under the 250-line drift cap enforced by
+> `tests/test_changelog_eras.py`.
+
+# Era: 14.3.x — current
+
+> Started at `14.3.0`. Full entries live inline below.
 > The drift test caps this era at 250 lines of entry body; growth past
-> that forces a new era split (`# Era: 14.1.x`, etc.) — see
+> that forces a new era split (`# Era: 14.4.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
-## [14.2.0](https://github.com/event4u-app/agent-config/compare/14.1.0...14.2.0) (2026-08-18)
+## [14.3.0](https://github.com/event4u-app/agent-config/compare/14.2.0...14.3.0) (2026-08-19)
 
 ### Release highlights
 
 <!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
 - **Behaviour changes:** _none_
 - **Default changes + migration:** _none_
-- **Security and correctness:** _auto-derived, rewrite before merge:_ security-scoped commits or fixes to executable surface in 61fdf7d, 604632b, c41b89a, 42e8955, cc19737, bbb60a8.
-- **Honest nulls:** _none_
+- **Security and correctness:** _auto-derived, rewrite before merge:_ security-scoped commits or fixes to executable surface in c50e92b, d80398a, a0ec3b9, 4ffee76, 9c7e0cf, b3b42ad +3 more.
+- **Honest nulls:** _auto-derived, rewrite before merge:_ commits recording a null, waived or falsified result in fbed7cc, 0d53c42, 231d8ea.
 - **Known limitations:** _none_
 
 ### Features
 
-* **hooks:** stop skill-route pointing at skills the host delivered bare ([508bba9](https://github.com/event4u-app/agent-config/commit/508bba908e074c1c69dc1b36ef2dd679b9e9f1ba))
-* **catalogue:** add the delivery reducer the runtime router was missing ([1b65432](https://github.com/event4u-app/agent-config/commit/1b65432d719094b148bc4e30cf328d3e80b3c597))
+* **gates:** add `gates --sheet` — one decision sheet with per-row provenance ([9e58315](https://github.com/event4u-app/agent-config/commit/9e5831536f14b178f13094e9f9842e15b3ab53c0))
+* **gates:** ratchet the roadmap estate and make a new roadmap pay for itself ([6f808e6](https://github.com/event4u-app/agent-config/commit/6f808e6b85d8da6df49f0e11f62bc33b6bddbd00))
+* **hooks:** register the per-turn composite as an observe-only budget row ([1d810b3](https://github.com/event4u-app/agent-config/commit/1d810b39053ed0795d1d66fa5f40ec98d192bc4e))
+* **bench:** add a --bundle override so a two-version latency run is a flag ([231d8ea](https://github.com/event4u-app/agent-config/commit/231d8eaaf0a675828157b1d93385d1573adc5eb3))
 
 ### Bug Fixes
 
-* **r2:** report the extraction, not the roadmap, and stop truncating criteria ([61fdf7d](https://github.com/event4u-app/agent-config/commit/61fdf7d26f1d9eb634c02451621c573784216bbe))
-* **r2:** read inline acceptance criteria, stop faking an empty extraction ([604632b](https://github.com/event4u-app/agent-config/commit/604632b3c991933fb354e3afb50423697489d692))
-* **metrics:** name the suppression denominator and register the invisible case ([03fe473](https://github.com/event4u-app/agent-config/commit/03fe4732dabab6b267a8dc1706b4da2a72a74a6d))
-* **hooks:** count suppression over the pointer window and pin the envelope wiring ([c41b89a](https://github.com/event4u-app/agent-config/commit/c41b89a1cb21eac3f5e651c4271bd91811a3d66c))
-* **catalogue:** let the LATEST record decide the bare set, not the mode filter ([42e8955](https://github.com/event4u-app/agent-config/commit/42e8955148a78314adc3f13cf695ed82e2fe0086))
-* **hooks:** let a delete-only push skip the content gates ([cc19737](https://github.com/event4u-app/agent-config/commit/cc197371a66a7b1ee7ddb05ea1a505193434d2b8))
-* **ci:** serialize the two publish triggers on the version, not the ref ([bbb60a8](https://github.com/event4u-app/agent-config/commit/bbb60a895b650b1d1e7ce91b49f5ddd025cf00a9))
+* **hooks:** drop the BodyClass import the extraction orphaned ([c50e92b](https://github.com/event4u-app/agent-config/commit/c50e92b6d04b54b394e488b22d39c844c4e779cf))
+* **config:** correct the estate baseline to the trunk value it never described ([6a5ad7f](https://github.com/event4u-app/agent-config/commit/6a5ad7fc800b3c08928f7a8464860c7d6676ab73))
+* **hooks:** apply the R2 fix pass — 6 of 7 findings ([d80398a](https://github.com/event4u-app/agent-config/commit/d80398ab24f8ca9c0731623b8cb53a918c3e135b))
+* **hooks:** make fd 0 non-blocking on purpose — the two stdin properties are coupled ([a0ec3b9](https://github.com/event4u-app/agent-config/commit/a0ec3b9d1f55be220d3eb76ed1555828eb7e4b35))
+* **config:** give the estate-count budget the review_by every budget needs ([c1789aa](https://github.com/event4u-app/agent-config/commit/c1789aa28ce4d9c4eb2dba59a271989e40a75667))
+* **hooks:** cap the first-byte wait — the stdin fix was hanging idle callers ([4ffee76](https://github.com/event4u-app/agent-config/commit/4ffee765d588b88fa50a221364840b06fdf10d19))
+* **gates:** close all 11 R2 findings — the ratchet now reads its base ref ([9c7e0cf](https://github.com/event4u-app/agent-config/commit/9c7e0cfc66e8c61639973b8ccf76d3c093d377e0))
+* **roadmaps:** draft the six missing recommendations, and repair a red ratchet ([fbed7cc](https://github.com/event4u-app/agent-config/commit/fbed7cc624b35af4652d7da86c49bb35f5d934ff))
+* **review:** let the R2 reviewer see inline acceptance criteria ([b3b42ad](https://github.com/event4u-app/agent-config/commit/b3b42ada2acba3dcb5ccbc56b51db29a67cb969a))
+* **hooks:** apply the R2 fix pass — 14 fixed, 1 split into a policy blocker ([ef0f2dc](https://github.com/event4u-app/agent-config/commit/ef0f2dc785ce289c24dafd60943db9e5a648559a))
+* **test:** type the spawn env so the tests typecheck reaches it ([173aaa2](https://github.com/event4u-app/agent-config/commit/173aaa2185ce98a717a9e83fac0a68c4f4b22b2c))
+* **hooks:** guards were blind above the pipe buffer; publish the Phase 1 null ([bcd73ed](https://github.com/event4u-app/agent-config/commit/bcd73ed2d74d62e7e7b58e1323dd982a130e1947))
+
+### Performance
+
+* **hooks:** measure only the bodies some concern actually loses ([6b7463b](https://github.com/event4u-app/agent-config/commit/6b7463b96d223dc771ba92cb718808ed82cadbff))
+* **hooks:** payload opt-in — a concern gets the bodies it declares ([b4ef8e5](https://github.com/event4u-app/agent-config/commit/b4ef8e548c67659404d78dd9894892805265ffcb))
+* **hooks:** take both per-write spawns off the hot path ([ae7e097](https://github.com/event4u-app/agent-config/commit/ae7e097c4a019ab120369525f813d4306d76dc43))
 
 ### Documentation
 
-* **review:** close all six R2 findings and re-bind the artefact ([fe639e5](https://github.com/event4u-app/agent-config/commit/fe639e548109892724b15f4f299132d77658d745))
-* **review:** record the R2 findings for the inline-AC fix, all rows open ([5dc1298](https://github.com/event4u-app/agent-config/commit/5dc1298bbc82d3fc7bcd9fe776c56b0be3ce4cd6))
-* **review:** re-bind the R2 artefact after the fix pass ([a4b320c](https://github.com/event4u-app/agent-config/commit/a4b320cf371b0828d49799948b0bed94eee6e970))
-* **roadmap:** un-checkbox AC-3, make its verify runnable, record what R2 found ([0720e1d](https://github.com/event4u-app/agent-config/commit/0720e1d434bf658dd668bef64ca742897f72594d))
-* **review:** bind the R2 completion review for catalogue-host-fit Phase 3 ([1e7b2fd](https://github.com/event4u-app/agent-config/commit/1e7b2fde7ff752f45f907187b61f8f83902a0e75))
-* **roadmap:** close catalogue-host-fit Phase 3 and record what its fixture found ([852a8c4](https://github.com/event4u-app/agent-config/commit/852a8c4dbe3a8c9d0b52e7a229460a4d2752d0d3))
-* **release:** stop promising an approval checkpoint that does not fire ([7327d2e](https://github.com/event4u-app/agent-config/commit/7327d2ea4aec42e290f951572f972b0f441e563e))
-
-### Chores
-
-* **metrics:** register the bare-suppression rate beside the pointer rate ([707f332](https://github.com/event4u-app/agent-config/commit/707f332a0af8f5d81ff7bf6b73aa46006776422c))
-
-Tests: 14629 (+37 since 14.1.0)
-
-## [14.1.0](https://github.com/event4u-app/agent-config/compare/14.0.0...14.1.0) (2026-08-18)
-
-### Release highlights
-
-<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
-- **Behaviour changes:** _none_
-- **Default changes + migration:** _none_
-- **Security and correctness:** _auto-derived, rewrite before merge:_ security-scoped commits or fixes to executable surface in 2ee0642, d8c14a2, 4a60aeb, 3952d49, c9753b1, aa48d84 +1 more.
-- **Honest nulls:** _auto-derived, rewrite before merge:_ commits recording a null, waived or falsified result in 7ebc802.
-- **Known limitations:** _none_
-
-### Features
-
-* **gates:** adopt per-target ledgers in two new arrivals ([a0f3326](https://github.com/event4u-app/agent-config/commit/a0f332632ac4769184cf993c8efd58b2063d0e6f))
-
-### Bug Fixes
-
-* **tests:** a raw NUL byte where a space was meant ([2ee0642](https://github.com/event4u-app/agent-config/commit/2ee0642ddcc99e2eba2a30ba2655263c5048b36a))
-* **hooks:** keep an authorization from being clobbered by a parallel session ([d8c14a2](https://github.com/event4u-app/agent-config/commit/d8c14a2da7238e03b3b34c6ed56cfdcb58ed5525))
-* **review:** unbreak the reference the findings row created, and replicate ([4708792](https://github.com/event4u-app/agent-config/commit/47087927fff242380c03cf95853e9d4106e1b054))
-* **gates:** stop three ledgers reporting targets they never read ([4a60aeb](https://github.com/event4u-app/agent-config/commit/4a60aeb09f429b5fff348b09c5fd5626f7e3f38e))
-* **bench:** give the consumer hook path its own budget, which it never had ([c9753b1](https://github.com/event4u-app/agent-config/commit/c9753b151dfd7a0aa95af08e59cff298c4220318))
-* **gates:** finding 6 — deduplicate the manifest ids before planning ([aa48d84](https://github.com/event4u-app/agent-config/commit/aa48d845a0ec1e81368ad103336b27438c6fcc16))
-* **gates:** apply the R2 review — all 11 findings ([8ec1dbb](https://github.com/event4u-app/agent-config/commit/8ec1dbb65b0a3840865aac0d91c8301eea9cbb1c))
-
-### Documentation
-
-* **roadmap:** carry the replication into step 0.5 ([1219376](https://github.com/event4u-app/agent-config/commit/1219376feca58df91c76e1f24f99d162ab5f7e95))
-* **roadmap:** re-review the risk register the Phase 0 addition invalidated ([c6ff0ed](https://github.com/event4u-app/agent-config/commit/c6ff0ed14b39621765458d9ec39b654bff684b71))
-* **roadmap:** record the path split in Phase 0, where the question already lived ([9fc8cf9](https://github.com/event4u-app/agent-config/commit/9fc8cf9f9f6651e6872d3026d5707191dcaffcdf))
-* **review:** the measurement settles finding 6 — the dispatcher regressed ([7ebc802](https://github.com/event4u-app/agent-config/commit/7ebc8027aba369b34a500377dc588ac526b2ac4f))
-* **review:** close 18 of 20 round-2 findings, name the two that stay open ([80ba9cc](https://github.com/event4u-app/agent-config/commit/80ba9cc12fbf0e336f912766719d61b421f902cd))
-* **baselines:** describe what the ratchet lowering actually landed ([0ce7a17](https://github.com/event4u-app/agent-config/commit/0ce7a17baefad295c2fcb1849b02cca4a07f6bd9))
-* **review:** record round 2 of the completion review, rows open ([41e8a1e](https://github.com/event4u-app/agent-config/commit/41e8a1e4ffc3b378fc2ff2bb9add9c31c3e4936f))
-* **review:** re-bind the findings to the post-fix scope ([43847c1](https://github.com/event4u-app/agent-config/commit/43847c1e1bd07c3d5ebe2ff38060a761e8552e9b))
-* **review:** all 11 findings terminal, with their fix refs ([957a53e](https://github.com/event4u-app/agent-config/commit/957a53e860a973b87b32bba07479b50f43b4f6f1))
-* **review:** the R2 completion review, 11 findings, all rows open ([f7d9581](https://github.com/event4u-app/agent-config/commit/f7d9581ceac1388786fc6a8e0f9b6192c5f10502))
-* **gates:** exempt check_pr_ci_current from the ledger, with the reason ([080e17c](https://github.com/event4u-app/agent-config/commit/080e17c41dd7904fe1bc76c7556417ffb7f525b4))
-
-### CI
-
-* **bench:** measure both hook paths on one runner, without gating either ([7d8be6e](https://github.com/event4u-app/agent-config/commit/7d8be6e1bee4f04d902d660b04f05b03ed1109d7))
-
-### Chores
-
-* **gates:** lower the ledger-adoption baseline 216 to 215 ([6868213](https://github.com/event4u-app/agent-config/commit/686821324b2ad94533a277a43cb857d21bb600c6))
-
-### Other
-
-* Revert "fix(bench): give the consumer hook path its own budget, which it never had" ([3952d49](https://github.com/event4u-app/agent-config/commit/3952d49bf3a3af770cb522dafc540c1458050f3d))
-
-Tests: 14592 (+72 since 14.0.0)
-
-## [14.0.0](https://github.com/event4u-app/agent-config/compare/13.0.0...14.0.0) (2026-08-18)
-
-### Release highlights
-
-<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
-- **Behaviour changes:** the council quorum plumbing moved behind an extracted seam and the size ratchet dropped with it (`f001382`, breaking); a HIGH-tier command-suggestion match now routes directly instead of always emitting the options block (`2fcb2af`); the two path-dominant UI rules regained path scoping (`0518426`); review independence and the evaluator-output contract became declared, gated properties instead of conventions (`1b224f1`, `ca25bc3`).
-- **Default changes + migration:** _none_
-- **Security and correctness:** the release pipeline no longer dies with the PR body in a stack trace on a GitHub 5xx (`2c611bb`), and it bounds a changelog section at the era banner rather than only at the next version (`6bcc273`) — the second had already pushed 12 archived-era banners into this release's own first PR body; the bench spend cap reaches the task runner on paid targets (`6efb8a7`); 19 R2 review findings closed, one of them structural (`3b85af7`).
-- **Honest nulls:** two Phase-0 measurements were published against their own pre-registrations and falsified them (`f29953f`, `ab5d2f7`); the context-fidelity and user-out-of-the-loop baselines are pre-registered before anything is measured (`a8c0edc`, `fe15fc5`).
-- **Known limitations:** the CI-native release path merges and publishes unattended once checks go green — the "Approve workflows to run" checkpoint that `release.yml` documents for a repo without `RELEASE_PR_TOKEN` did not materialise here, so a dispatched release has to be cancelled by hand if a human gate before merge is wanted.
-
-### BREAKING CHANGES
-
-* **council:** extract the quorum plumbing, and lower the size ratchet ([f001382](https://github.com/event4u-app/agent-config/commit/f0013821e005888f781e54a43a9bd3d260e74f76))
-
-### Features
-
-* **gates:** the JSON surface carries the gate class and its command ([2d15422](https://github.com/event4u-app/agent-config/commit/2d154224d13721b147a541c7eac476efaacfc4de))
-* **gates:** register the stub-ceiling gate under CI-identical argv ([8bb5bd0](https://github.com/event4u-app/agent-config/commit/8bb5bd0f8b332f623b5fb00baed11a63bf840ec0))
-* **rules:** hold a migrated rule at the size its pointer claims ([797e5e0](https://github.com/event4u-app/agent-config/commit/797e5e071332aac95fde2d1cf40c1019b8cdbbdc))
-* **gates:** resolve a class-0 gate by running it, render everything else ([fdc44de](https://github.com/event4u-app/agent-config/commit/fdc44de895c3959de3c3c2e8375a4f776b65957b))
-* **hooks:** skip idempotent Stop concerns on a refusal retry ([d852555](https://github.com/event4u-app/agent-config/commit/d85255518134ec6ab8378cd31d274e06c54bae0a))
-* **hooks:** report the turn-end refusal rate in the hooks doctor ([d1d854a](https://github.com/event4u-app/agent-config/commit/d1d854ac3b70ea7843d3c6862ebdacbca4c4d829))
-* **hooks:** prune refusal state and surface this session count ([c285a30](https://github.com/event4u-app/agent-config/commit/c285a30ab1891d34ea4401e162357ee01d5efd0f))
-* **hooks:** count turn-end refusals per detector instead of overwriting ([0a42f28](https://github.com/event4u-app/agent-config/commit/0a42f2829dacaae5d44c701ef3fc635234d5b010))
-* **gates:** report parked roadmaps whose resume condition has fired ([8519948](https://github.com/event4u-app/agent-config/commit/8519948b435d329bd47b539736b2362d1c94f3ae))
-* **roadmaps:** adopt road-to-rule-stub-projection, scope narrowed by verification ([be9db6a](https://github.com/event4u-app/agent-config/commit/be9db6a66d81366e47de0970e5e73123916bf67d))
-* **blockers:** a gate declares its class, and a runnable class names its command ([e2259ca](https://github.com/event4u-app/agent-config/commit/e2259ca914862fb49ddf8ded4f2aac52839bc16a))
-* **gate:** report where a skill keeps its obligation block, at warn level ([ea00e76](https://github.com/event4u-app/agent-config/commit/ea00e76ef4311dd5a28c11ccde2d9a44e363f74f))
-* **evidence:** the two Phase 0 censuses, and the instrument that reads 0.0 % ([9115922](https://github.com/event4u-app/agent-config/commit/9115922663405c880cb37181d814d7aed6080b54))
-* **rules:** restore path scoping on the two path-dominant UI rules ([0518426](https://github.com/event4u-app/agent-config/commit/051842644ab9edc72de94283da5de32aaf5f471b))
-* **rules:** measure rule activation from source, and pin the two unmatrixed rules ([ea068b8](https://github.com/event4u-app/agent-config/commit/ea068b804dc40f36be46e6bb6642bb3596899af9))
-* **suggestion:** route a HIGH-tier match directly, with a narrow carve-out ([2fcb2af](https://github.com/event4u-app/agent-config/commit/2fcb2afb865239b86b3db55cd0242d8bdf0e73e1))
-* **contexts:** add the contract decision sheet as the single elicitation surface ([367c5bf](https://github.com/event4u-app/agent-config/commit/367c5bf23e90a02dede67fe781bc2e276a1bdbb5))
-* **scripts:** add interruption_report for the contact and wall-clock axes ([9cb33d2](https://github.com/event4u-app/agent-config/commit/9cb33d23346ab71a9bf0ae4faf7e447b20c6a183))
-* **hooks:** add the interruption-ledger concern on the stop slot ([4b5fc26](https://github.com/event4u-app/agent-config/commit/4b5fc26bbd72aeb5795771276f44d859417b46f1))
-* **cli:** reach council:quota from agent-config, and name who spent the budget ([7d4d503](https://github.com/event4u-app/agent-config/commit/7d4d503721da1104615445ab339d034ede830536))
-* **council:** route judgement calls to the council before the user ([3655fb4](https://github.com/event4u-app/agent-config/commit/3655fb4d68ca70738752475c00e737698c735ac1))
-* **git:** make a fix-the-CI instruction reach the remote, and verify it there ([764bb23](https://github.com/event4u-app/agent-config/commit/764bb23cc081eb92f8c216eba857637ce071acf7))
-* **claims:** pre-register both capability claims, and record what is NOT shown ([a16e413](https://github.com/event4u-app/agent-config/commit/a16e41369ceef8a1309c774f14bb9ab93ff44128))
-* **ship-gate:** warn on shipping-intent diff volume, threshold derived here ([c4285a6](https://github.com/event4u-app/agent-config/commit/c4285a62b84de3332d354485d016ac1e3a92db5a))
-* **experiment-loop:** a bounded keep-or-revert loop against a scalar metric ([4239173](https://github.com/event4u-app/agent-config/commit/42391730909bf794082c1446fe322567b7b2c2b7))
-* **review:** make review independence a declared property, not a silence ([1b224f1](https://github.com/event4u-app/agent-config/commit/1b224f178ff729b4344ffd97924f4e086b45b4a8))
-* **evaluator:** the evaluator-output contract, its error semantics, and its gate ([ca25bc3](https://github.com/event4u-app/agent-config/commit/ca25bc39971aef58f72eb35afc9d22988516dc16))
-* **evidence:** one definition of what an evidence artifact is, and a forward-looking check ([3ddbb5c](https://github.com/event4u-app/agent-config/commit/3ddbb5ce4c647c4347144e5601749ebb54674ebb))
-* **council:** gate pre-run attendance on qualification, and record what a pass observed ([13d1abd](https://github.com/event4u-app/agent-config/commit/13d1abdeec2dc31b03c76009c22c5c28d47ad0aa))
-* **council:** four-value provider qualification and its observation store ([bc506a5](https://github.com/event4u-app/agent-config/commit/bc506a52adf5403e58816c4c2cc829ac676e8978))
-* **review:** write the evidence type at creation, not later ([5a70ae6](https://github.com/event4u-app/agent-config/commit/5a70ae6662e086361a99266c64fccb15336132aa))
-* **gates:** enforce the evidence-artifact type contract ([adfe57d](https://github.com/event4u-app/agent-config/commit/adfe57d79ecbca40225631bdbd3016a7678b7016))
-* **metric-loop:** Phase 0 falsification spikes, four kills evaluated ([052a25d](https://github.com/event4u-app/agent-config/commit/052a25d24545c4caa768fe1b1a1e30622c60d23e))
-
-### Bug Fixes
-
-* **docs:** stop claiming the spend cap is fixed in a tree where it is not ([3a517f3](https://github.com/event4u-app/agent-config/commit/3a517f3aa760cc1c325fe87d87a3931fba2c232e))
-* **release:** retry GitHub 5xx instead of dying with the PR body in the stack trace ([2c611bb](https://github.com/event4u-app/agent-config/commit/2c611bb2f596116dba751bfbbbf6a547ce966cca))
-* **release:** bound a changelog section at the era banner, not only at the next version ([6bcc273](https://github.com/event4u-app/agent-config/commit/6bcc273515e198a429fc124c0a93c87e0487d7cf))
-* **bench:** let the spend cap reach the task runner on paid targets ([6efb8a7](https://github.com/event4u-app/agent-config/commit/6efb8a70817d56a12cf63a5135ea37c459b0cf0d))
-* **evidence:** retract the legal-safety-floor contradiction, it was a misreading ([0cfba5a](https://github.com/event4u-app/agent-config/commit/0cfba5a9025e0b0ce7ae29e98c7816205b1e27cf))
-* **roadmaps:** repair two owner values the class write-back truncated ([5f9ba2a](https://github.com/event4u-app/agent-config/commit/5f9ba2a9f49a1963f13d144f9388f7b0231c5090))
-* **gates:** correct the manifest header denominators for the new row ([aae8fad](https://github.com/event4u-app/agent-config/commit/aae8fadc1de38f2a565df2231ab284c919e15052))
-* **rules:** apply the R2 review — all 19 findings, one of them structural ([3b85af7](https://github.com/event4u-app/agent-config/commit/3b85af7b164bf680c992eee3a69535fcab6c32b0))
-* **roadmap:** re-depth the archived roadmap links and regenerate the dashboard ([1ac4426](https://github.com/event4u-app/agent-config/commit/1ac4426a73bf7fb7b848e7d1dfb5da0414d6cdf8))
-* **tests:** the gates fixture builds a whole Blocker again ([718f543](https://github.com/event4u-app/agent-config/commit/718f5432097766a0bea50d89d0b0aba9aa661fcf))
-* **gates:** apply the R2 review — 18 of 19 findings, one recorded as unmeetable ([3c9abbf](https://github.com/event4u-app/agent-config/commit/3c9abbf6bef50a8479bc5e01c501fe52cc1f19d5))
-* **hooks:** recognise phpstan and lint_ scripts as verification ([b302f56](https://github.com/event4u-app/agent-config/commit/b302f568dd0e07dd141d74cf08c8b2b3128db508))
-* **roadmap:** a status carrying its own resolution still counts as resolved ([233ee59](https://github.com/event4u-app/agent-config/commit/233ee59b8539bae95ccb91d37e7e95c611b36812))
-* **roadmaps:** apply the verified residue from the performance-regression drafts ([179e8c0](https://github.com/event4u-app/agent-config/commit/179e8c067fded5d3007be6babd94516206e99548))
-* **ci:** clear the four red gates on PR 1398 ([b879d6b](https://github.com/event4u-app/agent-config/commit/b879d6b5a1f7933c655c33dc377b87f01f85551e))
-* **evidence,roadmap:** apply R2 findings 6, 7 and 8 — the three that survived ([c19e0df](https://github.com/event4u-app/agent-config/commit/c19e0df8e45d04ec7f574858ab7361578345043d))
-* **census:** drop the unused derive_trigger_globs import ([c61b3c0](https://github.com/event4u-app/agent-config/commit/c61b3c02a5a7e30b04912fd511e8ddbcb184152d))
-* **roadmaps:** satisfy the evidence-type and risk-anchor contracts ([893284d](https://github.com/event4u-app/agent-config/commit/893284d2f9ab626fba3ec6be0557cd234179f6a9))
-* **evidence:** declare both censuses as analysis artifacts ([fb49e4c](https://github.com/event4u-app/agent-config/commit/fb49e4c767cf99b6736f34b7308b247fcff7dbff))
-* **roadmap-loop:** derive the execution mode instead of silently defaulting ([ffd2a01](https://github.com/event4u-app/agent-config/commit/ffd2a016b2283ac3f26973b21da249bc97135f98))
-* **ai-team:** read the quota bucket the run actually books into ([19f9551](https://github.com/event4u-app/agent-config/commit/19f9551f67a5157553143eb0291fb4a0e5add530))
-* **council:** resolve the CLI-call cap from a single authority ([95be8b0](https://github.com/event4u-app/agent-config/commit/95be8b07be6c85308a5d466e5ca0cb831b7c4b57))
-* **council:** make the shared CLI-call counter atomic and attributable ([9c10ddf](https://github.com/event4u-app/agent-config/commit/9c10ddfc12befe1872a2cefe6cbdac3fa33cf2df))
-* **ci:** declare check_pr_ci_current as intentionally local-only ([909209c](https://github.com/event4u-app/agent-config/commit/909209c86765a109beabdb3d390891af565b2391))
-* **ci:** regenerate the two count-derived artefacts the new skill invalidated ([d74d4e0](https://github.com/event4u-app/agent-config/commit/d74d4e09dc73cdfed971ee604f2d1851748e59a5))
-* **deps:** bump the npm-production group across 1 directory with 3 updates ([5c041de](https://github.com/event4u-app/agent-config/commit/5c041de900e8ea0e7d3c0326c1b7dee6176c864b))
-* **council,evidence:** apply the R2 review — the high finding reopened the defect one layer down ([e69a10b](https://github.com/event4u-app/agent-config/commit/e69a10b52a94d0cb8920d11430f3c29ecd93f9b0))
-* **roadmaps:** stop check_references reading prose as a rule reference ([45a7dd7](https://github.com/event4u-app/agent-config/commit/45a7dd73d35ca044fb79fed7887818a9b08adc80))
-* **gates:** close the 11 R2 findings on the evidence-type gate ([21c9865](https://github.com/event4u-app/agent-config/commit/21c9865c8865c0b6bd09368b91d86b7928a05707))
-
-### Reverts
-
-* **gate:** withdraw lint_skill_top_position — the obligation already ships ([059250e](https://github.com/event4u-app/agent-config/commit/059250e9b423abbbf6fcecac4c0794beed4245a9))
-
-### Documentation
-
-* **review:** declare the completion-review skip for a zero-code-path diff ([d0cf1cb](https://github.com/event4u-app/agent-config/commit/d0cf1cbd6ccd977702bd1fba68bf9676333fb840))
-* **roadmap:** close Phase 2 Step 1 and say why it was never gated on the baseline ([0e3ee68](https://github.com/event4u-app/agent-config/commit/0e3ee6888d65b5f1baeb9a11344caf33282a3c48))
-* **evidence:** correct the symptom number on the reproduced return-channel failure ([bfe0296](https://github.com/event4u-app/agent-config/commit/bfe0296175e52de92a7a4b0ede6bbf8474ec3574))
-* **contracts:** a worker final message is text-only, and the envelope hits disk first ([4dbdccf](https://github.com/event4u-app/agent-config/commit/4dbdccf1dd267712041a6dfa49274c0d693dd66d))
-* **review:** re-bind and state which review covers which half of the branch ([8022676](https://github.com/event4u-app/agent-config/commit/80226766d30cc7abe1d05e6240d58dc6c0376347))
-* the spend-cap claims describe the tree again, and name a commit not an event ([86f1f40](https://github.com/event4u-app/agent-config/commit/86f1f40c67618c4cd19bf2b7180948c825459e9b))
-* **review:** fill the R2 findings and re-bind to the post-fix scope ([7b3e707](https://github.com/event4u-app/agent-config/commit/7b3e707fb380d91b59ff7a67f8b350ffde24ccc8))
-* **review:** rescope the R2 review to match the gate scope ([c2bfba0](https://github.com/event4u-app/agent-config/commit/c2bfba0b1a89fae57382097cde8b3b9d77c4a44a))
-* **review:** open the R2 review for the follow-up decisions ([4a8a488](https://github.com/event4u-app/agent-config/commit/4a8a488809212bf828e1877f0623381cafa80375))
-* record the three follow-up decisions and resolve their blocker ([5684754](https://github.com/event4u-app/agent-config/commit/5684754b8f0b23e1e93bd2b4103a6c634bbe36e8))
-* **roadmaps:** reclassify the twelve gates whose swept class was not materialisable ([ad7fe04](https://github.com/event4u-app/agent-config/commit/ad7fe04bbfe2064bad0395634e15df7eebf3dbab))
-* **review:** restore the merged findings artefact and declare a skip for the retraction ([132f07d](https://github.com/event4u-app/agent-config/commit/132f07d56965b19bc42493763a86326dabdea14d))
-* **review:** re-bind the findings after the retraction ([8728f00](https://github.com/event4u-app/agent-config/commit/8728f00cf09d78c38f497e477a3bac31ce76af73))
-* **review:** commit the R2 input package the reviewer actually read ([13f37aa](https://github.com/event4u-app/agent-config/commit/13f37aa02a1a79fd2051b08961e66bd470540a61))
-* **review:** re-bind the findings to the post-merge scope ([6a0240e](https://github.com/event4u-app/agent-config/commit/6a0240e22e0ed419ee0c9d0b7adc0b415f091cc7))
-* **review:** re-bind the findings after the archive-index regeneration ([1e12c2f](https://github.com/event4u-app/agent-config/commit/1e12c2f6419e5bce016cc06377d19534628d3104))
-* **review:** fill the R2 findings with their outcomes ([92b385c](https://github.com/event4u-app/agent-config/commit/92b385c72c933affb7c26e565f9b59d4767eeefb))
-* correct the write-back counts and track the three follow-ups ([23c74e1](https://github.com/event4u-app/agent-config/commit/23c74e1a53670509bf8b28d76fbc512ee02d2291))
-* **review:** re-bind the findings artefact after merging main ([58552ee](https://github.com/event4u-app/agent-config/commit/58552ee481c8185c656eb6c0a0f2db2740c99c7b))
-* **review:** re-bind the findings and record the ordering round-trip on row 6 ([b536924](https://github.com/event4u-app/agent-config/commit/b536924bea59f9cfe135a7476dc604a01199eb1b))
-* **review:** the R2 completion review, 19 findings, all rows open ([d8e2ee6](https://github.com/event4u-app/agent-config/commit/d8e2ee6559f630e0ec94f778829aa01c2d8e6904))
-* **review:** open the R2 completion review for the class write-back ([b40d124](https://github.com/event4u-app/agent-config/commit/b40d1249f62c8decbb4b7f169954ff0b44d77e51))
-* **gates:** correct the manifest header denominators for the new row ([0d12acd](https://github.com/event4u-app/agent-config/commit/0d12acd1c9cc02075a380eba250b67b3ed16c06c))
-* **evidence:** record that the swept class-0 and class-1 verdicts cannot be materialised ([585a1c1](https://github.com/event4u-app/agent-config/commit/585a1c1abc6ad378721b3f69ce92b007073cbe1e))
-* **roadmaps:** materialise the swept gate class into 34 blocker entries ([6e40b7e](https://github.com/event4u-app/agent-config/commit/6e40b7e0af4f559c49e92971703e3d7e61f7c1d2))
-* **roadmap:** close rule-stub-projection and hand the sized residue to its owner ([20d0f14](https://github.com/event4u-app/agent-config/commit/20d0f144a6e7333de11cce0eb7d4578210464a17))
-* **evidence:** the Phase-0 measurement, and it falsifies its own pre-registration ([f29953f](https://github.com/event4u-app/agent-config/commit/f29953f57fb92c317044f1fa3fb01d3f3b8bf48e))
-* **roadmap:** mark stop-gate-honesty 2.1 open rather than deferred ([aff95dc](https://github.com/event4u-app/agent-config/commit/aff95dce1eaab2a4952a7bdcf50834a13148883b))
-* **review:** give every fixed row its resolvable fix ref ([f10d7b8](https://github.com/event4u-app/agent-config/commit/f10d7b803a6d94193666585aae06643e92a944e1))
-* **review:** re-bind the R2 findings to the post-fix scope, 18 fixed and 1 deferred ([02ced8e](https://github.com/event4u-app/agent-config/commit/02ced8e8a40690af8391d43355554f49cccafe38))
-* **roadmap:** close stop-gate-honesty phases 1 to 3 ([1dd54a1](https://github.com/event4u-app/agent-config/commit/1dd54a10daf0285f3dd006698c55071e4f374dd1))
-* **evidence:** the gate-class sweep falsifies its own pre-registration ([ab5d2f7](https://github.com/event4u-app/agent-config/commit/ab5d2f73e7bc7a827584901e0dd88aa1d9a5dd2c))
-* **roadmap:** close gate-autonomy 1.1 and pre-register the 1.2 share ([b5a5151](https://github.com/event4u-app/agent-config/commit/b5a51510aa841cb5ecc1e9adf755f2d2aef15a05))
-* **review:** re-bind the findings to the post-fix scope, all 13 terminal ([8f2176d](https://github.com/event4u-app/agent-config/commit/8f2176da07dd542191877739847188ad6e0a17f5))
-* **review:** the R2 completion review, 13 findings, all rows open ([7ec6be6](https://github.com/event4u-app/agent-config/commit/7ec6be613624a62242616f0eb3948031b0b95a2c))
-* **roadmap:** re-verify the Context table, and make the human gate countable ([73c242b](https://github.com/event4u-app/agent-config/commit/73c242bd21d7d244c61b85698a686b36d4a67577))
-* **claims:** pre-register the two context-fidelity measurements ([a8c0edc](https://github.com/event4u-app/agent-config/commit/a8c0edc3c2b4ed944c1b9ebab14dd88ac2161215))
-* **roadmaps:** adopt the mixed-trigger-cleanup cohort after claim verification ([80d80d4](https://github.com/event4u-app/agent-config/commit/80d80d4626536eba09d47ac32b097fe186715802))
-* **roadmap:** close Phase 0 and six of seven Phase 1 steps ([e74a956](https://github.com/event4u-app/agent-config/commit/e74a9565f5a634160a408a9f0562538ea768a07c))
-* **claims:** pre-register the two user-out-of-the-loop baselines ([fe15fc5](https://github.com/event4u-app/agent-config/commit/fe15fc59d3b96b46d8793eaa580a8e71436dad99))
-* **roadmaps:** record the council-quota accounting verification and its result ([ed2e566](https://github.com/event4u-app/agent-config/commit/ed2e5668e5897d8ed2b80808ff1c1449870e5def))
-* **evidence:** re-bind the R2 artefact after merging main ([baecdfb](https://github.com/event4u-app/agent-config/commit/baecdfbfe9a8c23869c684cbe38e3b70f8d0c3f7))
-* **evidence:** re-bind marker AND manifest after the main merge ([b426d8e](https://github.com/event4u-app/agent-config/commit/b426d8e3804781b4af7ce5f49ba864df566bceae))
-* **evidence:** re-bind the R2 artefact after the quorum extraction ([4c0047e](https://github.com/event4u-app/agent-config/commit/4c0047eef2e92392d455dc67d7bac1d39dc52809))
-* **evidence:** re-bind the R2 artefact after the fixes, all 16 rows terminal ([13c854a](https://github.com/event4u-app/agent-config/commit/13c854aebf976aabcdffd881f7ca91acdd26c2f1))
-* **evidence:** re-bind after the cross-reference fix ([74ee5e8](https://github.com/event4u-app/agent-config/commit/74ee5e89fdc8a0b1c82ebe515b9166f753c555f0))
-* **evidence:** record the R2 completion review, all 16 rows open ([0f07cac](https://github.com/event4u-app/agent-config/commit/0f07cac8e615a09fbeaa02f3fc42cca39853f89f))
-* **evidence:** re-bind the findings at the final head ([a1476cb](https://github.com/event4u-app/agent-config/commit/a1476cbf5aaf35ff583a38ea9f12c05652ad3b85))
-* **evidence:** re-bind the R2 findings at the post-merge scope ([acf8229](https://github.com/event4u-app/agent-config/commit/acf8229b4e3de0b0138e1bc7343893572eebe2dd))
-* **roadmaps:** close release-review-p0 Phases 2 and 3, and record why Phase 1 did not start ([11ce2ea](https://github.com/event4u-app/agent-config/commit/11ce2ea372d534300e0fcfa032bb764393af3b49))
-* **evidence:** record the R2 review of the evidence-type gate ([fc1a1aa](https://github.com/event4u-app/agent-config/commit/fc1a1aabf0fe1e583b00f67d9bda8790e3e336f3))
-* **roadmaps:** close release-review-p0 Phase 2 ([e16b1d1](https://github.com/event4u-app/agent-config/commit/e16b1d1fbae2f221ffe67bf567b726eec5287424))
-* **contracts:** define what kind of evidence a stored artifact is ([dbcf664](https://github.com/event4u-app/agent-config/commit/dbcf66472a03063df0d2b1dddbf8fab9362b2f52))
+* **review:** re-bind the findings after merging the PR base ([b320587](https://github.com/event4u-app/agent-config/commit/b320587ddf2273cff09d89d3100c4354e126f612))
+* **review:** re-bind the findings after the orphan removal ([9364896](https://github.com/event4u-app/agent-config/commit/9364896c7f905024ba24e040ac1293717ed450da))
+* **review:** re-bind the findings after the source-size extraction ([c6910f5](https://github.com/event4u-app/agent-config/commit/c6910f5e339a9a986252adc62aac420a8361cf79))
+* **review:** re-bind the skip declaration and correct the inherited-red section ([6f69dc7](https://github.com/event4u-app/agent-config/commit/6f69dc789fc9f6be1ac3e5fea00b258a49409b9e))
+* **roadmap:** record that the estate-ratchet breach was closed on the base ([d818131](https://github.com/event4u-app/agent-config/commit/d8181316288d2400899865f14e3ec3f6a73b26c3))
+* **review:** re-bind the findings after merging the base ([e572ed3](https://github.com/event4u-app/agent-config/commit/e572ed339adff51ef6bd80525fa81aa158ba8048))
+* **review:** re-bind the skip declaration to the moved review scope ([29ad745](https://github.com/event4u-app/agent-config/commit/29ad745286c6a44ed3f15f171ecc45e8831ef6c8))
+* **roadmap:** restore two mismarked deferrals and refute both tempting reasons ([2c2b6ca](https://github.com/event4u-app/agent-config/commit/2c2b6ca547ab619f33d07d8f612451297a435e76))
+* **review:** declare the completion review skipped — no code surface ([fd7017e](https://github.com/event4u-app/agent-config/commit/fd7017ebfa1f0696d04f1f141c043a696d7a8fbc))
+* **roadmap:** close ci-economy 3.4 and restore two mismarked deferrals ([604451f](https://github.com/event4u-app/agent-config/commit/604451ff5765f684495f5bad5a56ff2c71a60049))
+* **review:** re-bind the findings after the CI fix pass ([1cf1b81](https://github.com/event4u-app/agent-config/commit/1cf1b8189391f5d66325c7eb11a07a66e0a0165f))
+* **review:** re-bind the findings artefact after the fix pass ([31ba213](https://github.com/event4u-app/agent-config/commit/31ba213c0c2d4d748d661f7bfbb4ccec36bae930))
+* **review:** disposition all 7 R2 findings with commit refs ([342a71a](https://github.com/event4u-app/agent-config/commit/342a71a8b08390869f6b3082c2f22b2a1f09c1ca))
+* **roadmap:** defer 5.3 with its classification, and re-measure AC-2 after the fix pass ([8e7a1dd](https://github.com/event4u-app/agent-config/commit/8e7a1dd2410cc278b22f212ded86a868ff345dad))
+* **review:** commit the R2 reviewer input package ([2f91955](https://github.com/event4u-app/agent-config/commit/2f91955f26b5f18626b6b218fb2a81a26ab4f75b))
+* **review:** commit the R2 findings skeleton before the fix pass ([42490e3](https://github.com/event4u-app/agent-config/commit/42490e395fa094cbd656b674e60c47846c1341ab))
+* **roadmap:** close Phase 2 and publish the AC-2 null ([b59572e](https://github.com/event4u-app/agent-config/commit/b59572e6e648ecee4777c7f88a3998180af398a9))
+* **review:** declare the Phase 0 completion skip — zero code paths of five files ([37e3084](https://github.com/event4u-app/agent-config/commit/37e3084d384525ef75dfd8d412da99f0b14c28e4))
+* **roadmaps:** close org-telemetry Phase 0 and record what it changed downstream ([c86fa4a](https://github.com/event4u-app/agent-config/commit/c86fa4aa72e5c7f1f6ab303e4ee70bf0356c028c))
+* **evidence:** publish the three org-telemetry Phase 0 spike findings ([71a9f2f](https://github.com/event4u-app/agent-config/commit/71a9f2f53fc83d176a9d6eb41afe7251ee54a81b))
+* **review:** re-bind the findings after merging the PR head ([9c8a5fc](https://github.com/event4u-app/agent-config/commit/9c8a5fc1251d2cbb1dd2eed7a173b338aaa90dc7))
+* **review:** re-bind the findings after the non-blocking fd fix ([2788770](https://github.com/event4u-app/agent-config/commit/2788770284a64bc0c49fb86a3f7980fa7ae36479))
+* **review:** re-bind after the CI fix ([8ca01d6](https://github.com/event4u-app/agent-config/commit/8ca01d6023cfde6f8942e00f99b414edb2de6967))
+* **review:** mark the six committed reviews that were dispatched AC-blind ([295ced9](https://github.com/event4u-app/agent-config/commit/295ced9d90ec82a47b92e8ca0215cea1ca0b3982))
+* **review:** re-bind after the trunk merge, and correct finding 11's ref ([348c9aa](https://github.com/event4u-app/agent-config/commit/348c9aad43afa7e80e40b71502c4f992894f9d29))
+* **review:** re-bind the findings after the first-byte-cap fix ([485a302](https://github.com/event4u-app/agent-config/commit/485a3027c54e8db260d3042bff2723ecc20daef9))
+* **review:** re-bind the R2 artefact and record the dispositions ([0ab50ca](https://github.com/event4u-app/agent-config/commit/0ab50ca2d8b2bb3b7c2d3d12512aa0ed497988a7))
+* **review:** record the R2 findings for estate-drawdown 0.1 + 3.1 ([479c993](https://github.com/event4u-app/agent-config/commit/479c993267db052b61a32cc4f3db7dbd8a2b435b))
+* **roadmap:** land the decision sheet and close estate-drawdown 0.1 + 3.1 ([1b9a034](https://github.com/event4u-app/agent-config/commit/1b9a034df50db3d57c24de2d57c402b5862888f9))
+* **review:** re-bind the findings after the base merge moved the scope ([5198659](https://github.com/event4u-app/agent-config/commit/51986599cec38a73427dc5b4f124d7aed74978c2))
+* **review:** bind the findings to the fix pass and re-derive the manifest ([12e2aff](https://github.com/event4u-app/agent-config/commit/12e2aff17981ee0a440c4b7785ef657904348595))
+* **review:** land the R2 findings, all rows open, before any fix pass ([8ea8731](https://github.com/event4u-app/agent-config/commit/8ea8731a1c2d9850ebbd0bea97f34a1fe7f57911))
+* **review:** commit the R2 findings skeleton before any fix pass ([e17a9fe](https://github.com/event4u-app/agent-config/commit/e17a9fe4e5a7be612f16c04d2a492009a891eb36))
+* **hooks:** record the host's matcher/if semantics, and cancel 5.1 on them ([606fb93](https://github.com/event4u-app/agent-config/commit/606fb9391074d0bd1aa3fb8491fef55f1407a408))
 
 ### Refactoring
 
-* **gates:** withdraw run from the JSON surface, keep class ([a168122](https://github.com/event4u-app/agent-config/commit/a16812274d7270a7e563f6844cf34b6087b29266))
-* **council:** extract the parity serialiser and lower the size ratchet ([0982ff2](https://github.com/event4u-app/agent-config/commit/0982ff2bbba1f6d50720520c1d99357c9b316f71))
-* **council:** extract the CLI-call budget into its own module ([ece9d45](https://github.com/event4u-app/agent-config/commit/ece9d45789b0a0490e3c149d07c3303462911504))
-* **council:** extract the qualification seam out of council_cli.ts ([0422b86](https://github.com/event4u-app/agent-config/commit/0422b86f072de75dd44fab03ba9d65b96d9204e2))
+* **hooks:** move the payload shaping plan out of the dispatcher ([a9637d0](https://github.com/event4u-app/agent-config/commit/a9637d0015e4c40f98a3bf5e38ec601b6b09d8da))
 
 ### Tests
 
-* **census:** give the activation gate a self-test so it proves discrimination ([0b0d4fc](https://github.com/event4u-app/agent-config/commit/0b0d4fc5f6137d74e68773acfa946a1a441b9915))
-* **review:** follow the skeleton placeholder change downstream ([de3015c](https://github.com/event4u-app/agent-config/commit/de3015c7a02e9f3f2e72948dbf6dd5d906c1c39f))
+* **hooks:** pin the payload opt-in from the concern side of stdin ([b319c6a](https://github.com/event4u-app/agent-config/commit/b319c6a07b91ee3511b91916795c72156c711909))
+* **bench:** add a large-payload cell, and pre-register the Phase 1 A/B bars ([0d53c42](https://github.com/event4u-app/agent-config/commit/0d53c42ba490be92039a04b0f2f6c980ac2dcb30))
 
 ### CI
 
-* run the evidence-type gate, and correct the gate-script population figure ([676a1fa](https://github.com/event4u-app/agent-config/commit/676a1faf13220d47ec3a7e3aaf7a554aef4887a3))
+* **tests:** drop the falsified balanced-shards claim from the exclusion comment ([2cc2060](https://github.com/event4u-app/agent-config/commit/2cc2060be8e3085b0e47dc0c91a2112cd9680d3b))
+* **economy:** re-measure the shard baseline over 50 runs and settle the fold-back ([b23afc0](https://github.com/event4u-app/agent-config/commit/b23afc03ab6db9cda0876dfd8a36c9b97ad36f1e))
 
 ### Chores
 
-* **roadmap:** regenerate the archive index for the newly archived roadmap ([4a6ec0d](https://github.com/event4u-app/agent-config/commit/4a6ec0db0dceb1da526482e4683795b379842df6))
-* **roadmap:** regenerate the dashboard after merging main ([1add1cd](https://github.com/event4u-app/agent-config/commit/1add1cd2a16fd8b6f2899da2ccea4b625fb3f333))
-* **gates:** revert the header denominators, to re-land them after the findings ([03f9836](https://github.com/event4u-app/agent-config/commit/03f98362c95f40a82422a3053c80ddaae1d33fbf))
-* **roadmap:** archive rule-stub-projection, complete at 17 of 17 steps ([7c67f62](https://github.com/event4u-app/agent-config/commit/7c67f6233bb960f87a1d06d9d681aad806bd3a13))
-* **dist:** regenerate the agent-src projection ([186ddaa](https://github.com/event4u-app/agent-config/commit/186ddaa747062b527400676967d14676a8dd672f))
-* **sync:** regenerate the dist projection ([7124ae6](https://github.com/event4u-app/agent-config/commit/7124ae6a1dae48b418a7828e68ef995a9a2c0c85))
-* **roadmaps:** archive the completed council-quota roadmap ([fbb729a](https://github.com/event4u-app/agent-config/commit/fbb729a223cb4b9586d0fe773e2c320a082fadeb))
-* **evals:** move cli_help_command_count 98 -> 99 for council:quota ([e0c46d6](https://github.com/event4u-app/agent-config/commit/e0c46d66665df4c12a30397bbd593afbdf5f5cdc))
-* **dist:** re-project the edited commands and the council skill ([41b6b1e](https://github.com/event4u-app/agent-config/commit/41b6b1e4a036ed9f374ab63a648bc8ec139cd71f))
-* **deps-dev:** bump the npm-development group across 1 directory with 5 updates ([01872a8](https://github.com/event4u-app/agent-config/commit/01872a8baf6bc03c16884395c10e9a99b83a8277))
-* **index:** regenerate agents/index.md + docs/catalog.md after the merge ([f2e3d4d](https://github.com/event4u-app/agent-config/commit/f2e3d4d881465c3a89a35926e798c539a841f5d0))
-* **roadmaps:** archive road-to-metric-loop-and-review-integrity ([bf3e144](https://github.com/event4u-app/agent-config/commit/bf3e144f2b84045639eb12118f3b03ff096adc8a))
-* **ci:** register the evidence-type gate on both its scopes ([16239d4](https://github.com/event4u-app/agent-config/commit/16239d4880adff8959af2fa8e684bd62b6df67f9))
+* **gates:** raise the estate open-blockers baseline 67 to 72, with the split measured ([7de21d6](https://github.com/event4u-app/agent-config/commit/7de21d6a788ce73f2df8c78c8728b00b90c8161f))
+* **sync:** project the roadmap_gates --sheet renderer into dist/agent-src ([e184eb9](https://github.com/event4u-app/agent-config/commit/e184eb9e2aa56acdce4613564dad62e353529375))
+* **roadmap:** regenerate the dashboard after the base merge ([f8469f3](https://github.com/event4u-app/agent-config/commit/f8469f390b4eac90945582cffdcfed85b1433ca9))
+* **roadmap:** regenerate the dashboard after the fix pass ([297731a](https://github.com/event4u-app/agent-config/commit/297731a36e7813c9a931c417864445465b826af0))
+* **roadmap:** regenerate the dashboard after the Phase 0/4/5 flips ([baa7517](https://github.com/event4u-app/agent-config/commit/baa7517b31bc9f1593fcb1ded68864ff64057bfd))
 
-Tests: 14520 (+347 since 13.0.0)
+Tests: 14730 (+101 since 14.2.0)
 
 # Era: pre-4.0.0 — archived
 
