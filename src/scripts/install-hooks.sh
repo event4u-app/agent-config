@@ -35,6 +35,32 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 # so any derived-output drift blocks the push here. Runtime ~15-40s (it
 # regenerates the tool trees) — cheaper than a red CI run and a fixup re-push.
 
+# A delete-only push has no content to gate, so every check below is answering
+# a question nobody asked. Measured 2026-08-18 during the 14.0.0 release:
+# `git push origin --delete release/14.0.0` was refused by the branch-freshness
+# gate because the CHECKED-OUT branch was behind main — a fact with no bearing
+# on removing a remote ref. The deletion had to go through the GitHub API to
+# happen at all, which routes around the whole hook rather than around one gate.
+#
+# Git feeds pre-push one line per ref on stdin:
+#   <local ref> <local sha> <remote ref> <remote sha>
+# and a deletion carries the all-zero local sha. Reading stdin is safe here:
+# nothing below consumes it.
+delete_only=1
+saw_ref=0
+while read -r _local_ref local_sha _remote_ref _remote_sha; do
+    [ -z "${local_sha:-}" ] && continue
+    saw_ref=1
+    # Any non-zero character means a real object is being pushed.
+    case "$local_sha" in
+        *[!0]*) delete_only=0 ;;
+    esac
+done
+if [ "$saw_ref" = "1" ] && [ "$delete_only" = "1" ]; then
+    echo "🗑️  Delete-only push — no ref advances, so the content gates have nothing to check. Skipping."
+    exit 0
+fi
+
 fail=0
 
 if ! command -v task >/dev/null 2>&1; then

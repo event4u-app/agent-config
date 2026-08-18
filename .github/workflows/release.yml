@@ -23,16 +23,23 @@ name: Release
 #
 #   - With RELEASE_PR_TOKEN (contents + pull-requests + actions): fully
 #     unattended end-to-end.
-#   - Without it (default): GitHub's bot-created-PR safeguard (introduced
-#     2026-06-11) queues the release PR's checks — including the required
-#     "Sync + Generate Tools Consistency" check — in an approval-required
-#     state, because the PR was opened via GITHUB_TOKEN. A maintainer must
-#     click "Approve workflows to run" on the release PR once per release
-#     before this job's `gh pr checks --watch` step can see them go green
-#     and proceed to merge. This is a deliberate, acceptable manual
-#     checkpoint for a production-release action (see
-#     docs/contracts/branch-protection-policy.md) — not a bug. Configure
-#     RELEASE_PR_TOKEN to remove it entirely.
+#   - Without it: DO NOT COUNT ON A MANUAL CHECKPOINT. This block used to
+#     promise one — that GitHub's bot-created-PR safeguard queues the release
+#     PR's checks in an approval-required state, so a maintainer must click
+#     "Approve workflows to run" once per release before `gh pr checks --watch`
+#     can proceed to merge. Measured on 14.0.0 (2026-08-18) on this repo with
+#     no RELEASE_PR_TOKEN configured: the checks started IMMEDIATELY, no
+#     approval was requested, and the run would have merged to main, tagged and
+#     published without a human touching it. The dispatched run had to be
+#     cancelled by hand to stop before the merge.
+#
+#     Whether the safeguard applies is a repository/organisation Actions
+#     setting, not a property of this workflow, so the honest contract is:
+#     **treat a dispatched release as unattended end-to-end unless you have
+#     verified the approval gate on THIS repo.** If you want a human gate
+#     before the merge, the reliable ones are a branch-protection required
+#     review (see docs/contracts/branch-protection-policy.md) or cancelling
+#     the run — not this comment.
 #
 # See also:
 #   - src/scripts/release.ts — the shared pipeline (--ci mode).
@@ -191,8 +198,9 @@ jobs:
               echo "❌  Release pipeline failed — see logs. Re-run this workflow (workflow_dispatch) to resume;"
               echo "    src/scripts/release.ts's --ci steps are idempotent."
               echo
-              echo "If the run is stuck waiting on PR checks: the release PR likely needs a maintainer to"
-              echo "click **Approve workflows to run** on it (GitHub's bot-created-PR safeguard) — see the"
-              echo "header comment in this workflow file for the RELEASE_PR_TOKEN alternative."
+              echo "If the run is stuck waiting on PR checks: check whether the release PR is waiting on a"
+              echo "maintainer clicking **Approve workflows to run** (GitHub's bot-created-PR safeguard)."
+              echo "That safeguard is a repo/org Actions setting and does NOT apply everywhere — on 14.0.0"
+              echo "it did not fire at all. If the checks are simply running, the run is not stuck."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
