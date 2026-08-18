@@ -1,11 +1,11 @@
 # Findings: feat-estate-drawdown-sheet-and-ratchet
-<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: 693e5ebcf59815166ff0865f297096a9933cdcf24931594c4d741300b6cee84e | diff: 13f7aba784083dd0451d205a480874e97625f54c | reviewer: r2-fresh-subagent-feat-estate-drawdown-sheet-and-ratchet | prompt_hash: e109c88c3c1aac54cfb4b50d807ca34ab3c01de57d2d74cb67b2283d26e6231f -->
+<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: b075215bd99dac985aff466deda9a5033f75689188669b0dfb9004663077836f | diff: c1789aa28ce4d9c4eb2dba59a271989e40a75667 | reviewer: r2-fresh-subagent-feat-estate-drawdown-sheet-and-ratchet | prompt_hash: e109c88c3c1aac54cfb4b50d807ca34ab3c01de57d2d74cb67b2283d26e6231f -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-18 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 13f7aba784083dd0451d205a480874e97625f54c
-  scope_hash: 693e5ebcf59815166ff0865f297096a9933cdcf24931594c4d741300b6cee84e
+  diff_sha: c1789aa28ce4d9c4eb2dba59a271989e40a75667
+  scope_hash: b075215bd99dac985aff466deda9a5033f75689188669b0dfb9004663077836f
   roadmap: agents/roadmaps/road-to-estate-drawdown.md
   roadmap_hash: 0f63f72e34b0abc0849059a2d49b761f171d65d95161598ecf98cdd3ebeeff4e
   ac_hash: 0308d5582ca2f060845f17b92dd930b0fe6865baf31272e8b3fad4c2880611bd
