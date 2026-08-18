@@ -1,11 +1,11 @@
 # Findings: stop-gate-detector-demotion
-<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: 1fd2ca30f344a9a2d9dc93b4a30f1917d88cdf0d376ef5abfbb0d39b66329d3e | diff: 08323955dc32045a4d473ebcd3d89f453a082e89 | reviewer: r2-fresh-subagent-stop-gate-detector-demotion | prompt_hash: 5e1cc4010805c267a9e07e3bf54f9a2e44d029089137458acdcbc0cd903ec468 -->
+<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: 1c84f6f56aff0a64ede24c62c6e6cb1c5178203153536754f176eb4e78dc16b8 | diff: 5ae35caaea12523660adc4b9f86b22b0ef478e43 | reviewer: r2-fresh-subagent-stop-gate-detector-demotion | prompt_hash: 5e1cc4010805c267a9e07e3bf54f9a2e44d029089137458acdcbc0cd903ec468 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-18 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 08323955dc32045a4d473ebcd3d89f453a082e89
-  scope_hash: 1fd2ca30f344a9a2d9dc93b4a30f1917d88cdf0d376ef5abfbb0d39b66329d3e
+  diff_sha: 5ae35caaea12523660adc4b9f86b22b0ef478e43
+  scope_hash: 1c84f6f56aff0a64ede24c62c6e6cb1c5178203153536754f176eb4e78dc16b8
   roadmap: none
   roadmap_hash: none
   ac_hash: none
