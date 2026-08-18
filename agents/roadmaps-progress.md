@@ -6,10 +6,10 @@
 
 ## Overall
 
-**295 / 576 steps done · 51%**
+**297 / 576 steps done · 52%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   51%
+█████████████████████░░░░░░░░░░░░░░░░░░░   52%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -26,7 +26,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
 | 2 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
-| 3 | [road-to-catalogue-host-fit.md](roadmaps/road-to-catalogue-host-fit.md) | 4 | 8 | 5 | 2 | 1 | 0 | [1](#blockers-road-to-catalogue-host-fit) | ███░░░░░░░ 29% |
+| 3 | [road-to-catalogue-host-fit.md](roadmaps/road-to-catalogue-host-fit.md) | 4 | 8 | 3 | 4 | 1 | 0 | [1](#blockers-road-to-catalogue-host-fit) | ██████░░░░ 57% |
 | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 19 | 4 | 0 | 1 | [3](#blockers-road-to-context-fidelity) | ██░░░░░░░░ 17% |
 | 6 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
@@ -149,14 +149,14 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 
 ### [road-to-catalogue-host-fit.md](roadmaps/road-to-catalogue-host-fit.md)
 
-**Road to catalogue host fit — a truncated entry is a skill that cannot route** — 2 / 7 done (29%)
+**Road to catalogue host fit — a truncated entry is a skill that cannot route** — 4 / 7 done (57%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Run the live trigger eval | ⏭️ skipped | 0 | 0 | 1 | 0 | 0% |
 | 1 | Fill the observation corpus | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 2 | Project a host-fitting catalogue by default | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Make `skill-route` host-honest | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Make `skill-route` host-honest | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 
 <a id="blockers-road-to-catalogue-host-fit"></a>
 **Blockers**
