@@ -5,6 +5,12 @@
  * `telemetry.artifact_engagement` namespace from `.agent-settings.yml`.
  * Tolerates a missing file, a missing section, and a missing YAML parser —
  * the default-off doctrine means "everything unparseable means disabled".
+ *
+ * Three namespaces live here, all under `telemetry:` and all default-off:
+ * `artifact_engagement` (the CLI's own log), `tier_usage` (the documented
+ * signal contract), and `remote` (road-to-org-telemetry Phase 1 — the
+ * org-pack-enabled Class-A usage record). They share one doctrine and one
+ * set of coercion helpers; they share no state.
  */
 import { createRequire } from 'node:module';
 import * as fs from 'node:fs';
@@ -100,32 +106,49 @@ function _isFile(p: string): boolean {
     }
 }
 
-/** Return parsed telemetry settings — never raises on missing data. */
-export function read_settings(p: string): TelemetrySettings {
-    let section: Record<string, unknown> = {};
-    let section_present = false;
-
-    if (_isFile(p)) {
-        let raw: unknown = {};
-        try {
-            raw = YAML.parse(fs.readFileSync(p, 'utf-8'), { version: '1.1' });
-            if (raw === null || raw === undefined) {
-                raw = {};
-            }
-        } catch {
+/**
+ * Read one `telemetry.<key>` section out of a settings file.
+ *
+ * Every branch that cannot produce a section returns the empty one with
+ * `present: false` — a missing file, unparseable YAML, a missing `telemetry:`
+ * mapping, and a missing sub-key are deliberately indistinguishable here.
+ * That IS the default-off doctrine: unparseable means disabled, and a reader
+ * that could tell those cases apart would invite a caller to treat one of
+ * them as consent.
+ */
+function _read_telemetry_section(
+    p: string,
+    key: string,
+): { section: Record<string, unknown>; present: boolean } {
+    if (!_isFile(p)) {
+        return { section: {}, present: false };
+    }
+    let raw: unknown = {};
+    try {
+        raw = YAML.parse(fs.readFileSync(p, 'utf-8'), { version: '1.1' });
+        if (raw === null || raw === undefined) {
             raw = {};
         }
-        if (_isPlainObject(raw)) {
-            const tele = raw['telemetry'];
-            if (_isPlainObject(tele)) {
-                const artefact = tele['artifact_engagement'];
-                if (_isPlainObject(artefact)) {
-                    section = artefact;
-                    section_present = true;
-                }
-            }
-        }
+    } catch {
+        raw = {};
     }
+    if (!_isPlainObject(raw)) {
+        return { section: {}, present: false };
+    }
+    const tele = raw['telemetry'];
+    if (!_isPlainObject(tele)) {
+        return { section: {}, present: false };
+    }
+    const sub = tele[key];
+    if (!_isPlainObject(sub)) {
+        return { section: {}, present: false };
+    }
+    return { section: sub, present: true };
+}
+
+/** Return parsed telemetry settings — never raises on missing data. */
+export function read_settings(p: string): TelemetrySettings {
+    const { section, present: section_present } = _read_telemetry_section(p, 'artifact_engagement');
 
     const record = _isPlainObject(section['record']) ? section['record'] : {};
     const output = _isPlainObject(section['output']) ? section['output'] : {};
@@ -164,27 +187,7 @@ export class TierUsageSettings {
 
 /** Return parsed tier-usage settings — never raises on missing data. */
 export function read_tier_usage_settings(p: string): TierUsageSettings {
-    let section: Record<string, unknown> = {};
-    if (_isFile(p)) {
-        let raw: unknown = {};
-        try {
-            raw = YAML.parse(fs.readFileSync(p, 'utf-8'), { version: '1.1' });
-            if (raw === null || raw === undefined) {
-                raw = {};
-            }
-        } catch {
-            raw = {};
-        }
-        if (_isPlainObject(raw)) {
-            const tele = raw['telemetry'];
-            if (_isPlainObject(tele)) {
-                const tu = tele['tier_usage'];
-                if (_isPlainObject(tu)) {
-                    section = tu;
-                }
-            }
-        }
-    }
+    const { section } = _read_telemetry_section(p, 'tier_usage');
 
     const output = _isPlainObject(section['output']) ? section['output'] : {};
     const retier = _isPlainObject(section['retier']) ? section['retier'] : {};
@@ -206,5 +209,97 @@ export function read_tier_usage_settings(p: string): TierUsageSettings {
         window_days: _coerce_int(retier['window_days'], defaults.window_days),
         min_invocations: _coerce_int(retier['min_invocations'], defaults.min_invocations),
         min_distinct_users: _coerce_int(retier['min_distinct_users'], defaults.min_distinct_users),
+    });
+}
+
+// ── telemetry.remote — org-pack Class-A usage records ───────────────────
+//
+// road-to-org-telemetry Phase 1. Same default-off doctrine as the two
+// namespaces above, with one addition the others do not need: this is the
+// only namespace whose records are intended to LEAVE the machine (Phase 2
+// transports them; Phase 1 writes them locally and nothing else). So
+// `enabled: true` alone is deliberately not enough to switch it on.
+
+export const DEFAULT_REMOTE_LOG_PATH = '.agent-telemetry.jsonl';
+export const DEFAULT_REMOTE_FLUSH = 'session-end';
+export const ALLOWED_REMOTE_FLUSH = ['session-end', 'never'] as const;
+
+/**
+ * The four fields that must ALL carry a value before a single record is
+ * written. `endpoint` and `org_id` name where the data goes and on whose
+ * authority; `salt` is the org-pack secret without which the user hash
+ * would be a plain hash of a login name — i.e. reversible by dictionary.
+ *
+ * None of the four has a usable default, and that is the point: an
+ * external clone of this repository carries the key NAMES and no values,
+ * so it cannot reach `active` by copying the tree.
+ */
+export const REMOTE_REQUIRED_FIELDS = ['endpoint', 'org_id', 'salt'] as const;
+
+export class RemoteTelemetrySettings {
+    /** The raw `enabled:` value. NOT the switch — see `active`. */
+    readonly enabled: boolean;
+    readonly endpoint: string;
+    readonly org_id: string;
+    /** Org-pack secret. Never written into a record, never logged. */
+    readonly salt: string;
+    readonly flush: string;
+    readonly log_path: string;
+
+    constructor(init: {
+        enabled: boolean;
+        endpoint: string;
+        org_id: string;
+        salt: string;
+        flush: string;
+        log_path: string;
+    }) {
+        this.enabled = init.enabled;
+        this.endpoint = init.endpoint;
+        this.org_id = init.org_id;
+        this.salt = init.salt;
+        this.flush = init.flush;
+        this.log_path = init.log_path;
+    }
+
+    /**
+     * Which required fields are absent. Empty array + `enabled` ⇒ `active`.
+     * Exposed so a doctor command can say WHICH field is missing without
+     * printing the salt, rather than reporting a bare "disabled".
+     */
+    get missing(): string[] {
+        const out: string[] = [];
+        for (const field of REMOTE_REQUIRED_FIELDS) {
+            if (!this[field]) {
+                out.push(field);
+            }
+        }
+        return out;
+    }
+
+    /** The real switch: opted in AND fully configured by the org pack. */
+    get active(): boolean {
+        return this.enabled && this.missing.length === 0;
+    }
+}
+
+/**
+ * Return parsed remote-telemetry settings — never raises on missing data.
+ *
+ * Fail-closed on every axis. A missing file, unparseable YAML, a missing
+ * section, a missing field, or an unknown `flush` value all resolve to a
+ * settings object whose `active` is false.
+ */
+export function read_remote_settings(p: string): RemoteTelemetrySettings {
+    const { section } = _read_telemetry_section(p, 'remote');
+    const output = _isPlainObject(section['output']) ? section['output'] : {};
+
+    return new RemoteTelemetrySettings({
+        enabled: _coerce_bool(section['enabled'], false),
+        endpoint: _coerce_str(section['endpoint'], ''),
+        org_id: _coerce_str(section['org_id'], ''),
+        salt: _coerce_str(section['salt'], ''),
+        flush: _coerce_str(section['flush'], DEFAULT_REMOTE_FLUSH, ALLOWED_REMOTE_FLUSH),
+        log_path: _coerce_path(output['path'], DEFAULT_REMOTE_LOG_PATH),
     });
 }

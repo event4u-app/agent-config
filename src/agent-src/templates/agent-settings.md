@@ -507,6 +507,42 @@ telemetry:
       # Append-only JSONL log. Path is relative to the project root.
       # Always gitignored (see config/gitignore-block.txt).
       path: .agent-engagement.jsonl
+  # --- Org telemetry (road-to-org-telemetry Phase 1) ---
+  #
+  # Class-A usage records: which skill was invoked, on which host, at which
+  # package version and rule tier, under a pseudonymous user hash and an
+  # hour-bucketed timestamp. Zero bytes of project content — the record type
+  # has no field capable of holding free text.
+  #
+  # `enabled: true` on its own does NOT switch this on. All three of
+  # `endpoint`, `org_id`, and `salt` must also carry a value, and none of
+  # them has a default. That is deliberate: this repository is public, so it
+  # ships the key NAMES and no values, and a clone cannot reach the write
+  # path by copying the tree. The values come from an org pack.
+  #
+  # Phase 1 writes records LOCALLY and nothing else. The outbound flush is
+  # Phase 2 and org-wide enablement is Phase 3; both are gated on open
+  # blockers in the roadmap.
+  remote:
+    # Master switch. Combined with the three required fields below — see
+    # `active` in scripts/telemetry/settings.ts.
+    enabled: false
+    # Where Phase 2 will flush to. Recorded now, never called in Phase 1.
+    endpoint: ""
+    # The org whose pack enabled this install; written into every record.
+    org_id: ""
+    # Org-pack secret. Salts the user and session hashes so a digest of a
+    # login name is not reversible by dictionary. Never written into a
+    # record, never logged. Belongs in the machine-local override layer,
+    # never in a committed `.agent-settings.yml`.
+    salt: ""
+    # `session-end` = flush at session end (Phase 2). `never` = keep records
+    # local indefinitely, which is a legitimate way to run the local half
+    # while the sink question is still open.
+    flush: session-end
+    output:
+      # Append-only JSONL log, relative to the project root. Gitignored.
+      path: .agent-telemetry.jsonl
 
 # --- Linked projects (cross-repo awareness, local-only) ---
 #
@@ -602,6 +638,12 @@ the canonical narrative lives in
 | `telemetry.artifact_engagement.record.consulted` | `true`, `false` | `true` | When `true`: record artefacts loaded into context. |
 | `telemetry.artifact_engagement.record.applied` | `true`, `false` | `true` | When `true`: record artefacts cited or driving a decision. |
 | `telemetry.artifact_engagement.output.path` | path | `.agent-engagement.jsonl` | Append-only JSONL log path, relative to the project root. Always gitignored. |
+| `telemetry.remote.enabled` | `true`, `false` | `false` | Opt-in for Class-A org usage records. **Not the switch on its own** — `endpoint`, `org_id`, and `salt` must all carry a value too, and none has a default, so a clone of the public repository cannot reach the write path. Not in the shipped template; a missing section means disabled. |
+| `telemetry.remote.endpoint` | URL | *(none)* | Where Phase 2 will flush records to. Recorded now; no outbound call exists in Phase 1. Empty ⇒ inactive. |
+| `telemetry.remote.org_id` | string | *(none)* | The org whose pack enabled this install; written into every record. Empty ⇒ inactive. |
+| `telemetry.remote.salt` | string | *(none)* | Org-pack secret salting the user and session hashes — without it a digest of a login name is dictionary-reversible. Never written into a record, never logged. Belongs in the machine-local override layer, never in a committed `.agent-settings.yml`. Empty ⇒ inactive. |
+| `telemetry.remote.flush` | `session-end`, `never` | `session-end` | When Phase 2 flushes. `never` keeps records local indefinitely — a legitimate way to run the local half while the sink question is open. |
+| `telemetry.remote.output.path` | path | `.agent-telemetry.jsonl` | Append-only JSONL log path, relative to the project root. Gitignored. |
 | `linked_projects` | list of `{path, include}` | `[]` | IDE-attached sibling repos in scope for proactive cross-repo awareness. **Belongs in `.agent-settings.local.yml` (in agents/settings/)** (per-machine, gitignored). See [cross-repo guide](../../docs/guides/cross-repo-linked-projects.md) + ADR-032. |
 | `linked_projects_max_files` | integer | `20000` | File-count ceiling above which a detected sibling is flagged `large` (awareness only). Never excludes. |
 | `knowledge.global_sharing.enabled` | `true`, `false` | `true` | **User-global** (keep in `~/.event4u/agent-config/agent-settings.yml`). Master switch for the file-first global knowledge-card store (ADR-100; default-ON per ADR-119, the council-validated bounded-downside flip superseding ADR-103 — adversarially spot-checked redaction incl. hidden-unicode hardening, narrowest tier default, pre-registered demotion trigger). `false` fully no-ops the layer (single-key revert); v1 project-local cards unaffected. |
