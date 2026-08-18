@@ -43,6 +43,51 @@
  * need an invalidation story for a tree that changes under the session, and
  * 12.3 ms does not buy one.
  *
+ * HOST-HONEST, AND FAIL-OPEN BY CONSTRUCTION (road-to-catalogue-host-fit Phase
+ * 3). The ranker reads the on-disk tree; the host does not necessarily deliver
+ * it. A skill the host truncated is still rankable and still pointable, and the
+ * pointer then names a skill whose description the model never received — worse
+ * than silence, because a pointer reads as a delivered capability. That is the
+ * roadmap's D-4, and it is MEASURED rather than assumed: 16 of 16 bare entries
+ * in the 2026-08-12 claude observation are still in this ranker's catalogue
+ * (`capture_skill_catalogue --pointable-bare`), among them `design-review`,
+ * `design-intelligence` and `fe-design` — skills this estate's own rules route
+ * to. So the pointer set is filtered against the latest per-entry observation
+ * for the CURRENT host.
+ *
+ * The filter only ever narrows on a positive reading, and every uncertain state
+ * resolves to no filtering at all: no observation log, no record for this host,
+ * a host that publishes no per-entry list, a malformed line, an unknown host, or
+ * any throw. `knownBareNames` returns `null` for each of them and
+ * `filterKnownBare` treats `null` as a pass-through, so behaviour is
+ * byte-identical to the unfiltered line. A filter that quietly hides skills on
+ * missing data is worse than the divergence it treats — the roadmap's own words,
+ * and the reason fail-open is a construction here rather than a convention.
+ *
+ * IT COSTS ZERO ON THE PATH THE HEADER ABOVE PROMISES IS FREE. The log read is
+ * passed in as a thunk, not a value, and `routePointers` calls it only after the
+ * term floor AND the rank both pass. A prompt below `MIN_TASK_TERMS` therefore
+ * still reads no files at all, which is the claim the 0 ms paragraph makes and
+ * an eagerly-read log would have quietly falsified.
+ *
+ * THE FLOOR APPLIES TO WHAT IS DELIVERED, NOT TO WHAT WAS RANKED. Filtering
+ * happens BEFORE `MIN_TOP_SCORE` and before the `TOP_K` slice, so the confidence
+ * question is asked of the best pointer the model can actually use. One rule, in
+ * one order: rank → drop the undeliverable → apply the floor → take the top
+ * three.
+ *
+ * That ordering makes silence a real outcome, and the number says so rather than
+ * the prose guessing: on `"review the authorization policy and tenant scope for
+ * this endpoint"` the ranker returns `authz-review` at 47 and the next entry at
+ * 23, against a floor of 31. Suppress the top-1 and NOTHING clears the floor —
+ * the line goes silent instead of naming a 23/100 pointer because the 47 one was
+ * undeliverable. That is the intended reading of a floor calibrated for
+ * confidence, and promoting a sub-floor pointer to fill the gap would be the
+ * "advisory worse than silence" failure this file's risk paragraph ranks first.
+ * `suppressed` is what distinguishes that silence from an unranked prompt, and
+ * `tests/hooks/skill_route_hook.test.ts` pins both cases against the real
+ * corpus rather than a constructed one.
+ *
  * NO ADOPTION THRESHOLD IS COMMITTED HERE. Whether the line changes behaviour
  * is a question for data, not for this header: `skill_route_pointer_rate` is
  * registered in `hook-token-budget.json` under the same owner/review discipline
@@ -50,6 +95,13 @@
  * verdicts are measurably ignored gets its trigger tightened or its line
  * removed. The score floor above is a TRIGGER calibration and is measured; the
  * adoption threshold is an OUTCOME claim and is deliberately absent.
+ *
+ * `skill_route_bare_suppression_rate` is registered beside it under the same
+ * owner, review date and kill discipline, and inherits the same refusal: how
+ * often the filter fires is a number to collect, not one to promise. Its
+ * numerator is carried in the warn `reason` below — `N suppressed` — because no
+ * dedicated counter exists, and that gap is registered as a gap rather than
+ * implied to be automatic.
  *
  * DELIVERY PATH — the verified one, copied rather than re-derived. A
  * `user_prompt_submit` concern returning `{decision:"allow", context:…}` at
@@ -73,7 +125,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { readHookStdin } from "./hook_stdin.js";
 import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
-import { resolveSkillsRoot } from "../_lib/skill_catalogue.js";
+import { OBSERVATION_LOG, readObservationLog, resolveSkillsRoot } from "../_lib/skill_catalogue.js";
+import { knownBareNames } from "../_lib/skill_catalogue_series.js";
 import { _tokenize, rank, type RankRow } from "../skill_tools/score_skill_relevance.js";
 
 const EXIT_ALLOW = 0;
@@ -120,30 +173,102 @@ function _isObject(v: unknown): v is JsonObject {
 }
 
 /**
+ * Names this host is known to have delivered bare, or `null` for no filtering.
+ *
+ * Every failure mode collapses to `null` — an unknown host, a missing log, an
+ * unreadable one, a host that enumerates nothing, a throw from anywhere in the
+ * read. The three-way distinction `knownBareNames` draws is preserved: an empty
+ * set means *measured clean*, `null` means *never measured*, and only the second
+ * one is produced here by accident.
+ */
+export function knownBareForHost(workspaceRoot: string, host: string | null): Set<string> | null {
+  if (host === null || host === "") return null;
+  try {
+    return knownBareNames(readObservationLog(path.join(workspaceRoot, OBSERVATION_LOG)), host);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Drop the ranked rows this host is known to have delivered bare.
+ *
+ * `null` is a pass-through and returns the input order untouched, which is the
+ * fail-open half of the header's contract and what makes an absent observation
+ * byte-identical to today.
+ */
+export function filterKnownBare(
+  rows: readonly RankRow[],
+  bare: Set<string> | null,
+): RankRow[] {
+  if (bare === null || bare.size === 0) return [...rows];
+  return rows.filter(([name]) => !bare.has(name));
+}
+
+/** What one routing pass decided, including what it refused to name. */
+export interface RouteDecision {
+  rows: RankRow[];
+  /** Ranked rows dropped as known-bare. The suppression metric's numerator. */
+  suppressed: number;
+}
+
+/**
  * Rank a prompt and return the pointers worth injecting, or `[]` for silence.
  *
  * Total by construction: a missing root, an unreadable catalogue, or a ranker
  * error all resolve to `[]`. A routing advisory that can crash a turn is worse
  * than one that says nothing.
+ *
+ * `bareProvider` is a THUNK, deliberately — see the header's zero-cost
+ * paragraph. It is called only once both the term floor and the rank have
+ * passed, so the short-prompt path still touches no files. Omitting it disables
+ * filtering entirely, which is what keeps every caller that predates the filter
+ * behaviourally unchanged.
  */
-export function routePointers(prompt: string, skillsDir: string | null): RankRow[] {
-  if (skillsDir === null) return [];
+export function routeDecision(
+  prompt: string,
+  skillsDir: string | null,
+  bareProvider?: () => Set<string> | null,
+): RouteDecision {
+  const silent: RouteDecision = { rows: [], suppressed: 0 };
+  if (skillsDir === null) return silent;
   // Denominator floor BEFORE the catalogue read: a prompt too short to score
   // meaningfully cannot produce a pointer worth 337 file reads either.
   try {
-    if (_tokenize(prompt).size < MIN_TASK_TERMS) return [];
+    if (_tokenize(prompt).size < MIN_TASK_TERMS) return silent;
   } catch {
-    return [];
+    return silent;
   }
   let rows: RankRow[];
   try {
     rows = rank(prompt, skillsDir);
   } catch {
-    return [];
+    return silent;
   }
-  const top = rows[0];
-  if (top === undefined || top[1] < MIN_TOP_SCORE) return [];
-  return rows.slice(0, TOP_K);
+  let bare: Set<string> | null = null;
+  if (bareProvider !== undefined) {
+    try {
+      bare = bareProvider();
+    } catch {
+      bare = null; // fail open, never silent-narrow
+    }
+  }
+  const deliverable = filterKnownBare(rows, bare);
+  const suppressed = rows.length - deliverable.length;
+  // The floor asks its question of the best DELIVERABLE pointer, not of a
+  // pointer the model cannot use. See the header's one-rule-one-order note.
+  const top = deliverable[0];
+  if (top === undefined || top[1] < MIN_TOP_SCORE) return { rows: [], suppressed };
+  return { rows: deliverable.slice(0, TOP_K), suppressed };
+}
+
+/** The rows alone. Kept because most callers and fixtures want only these. */
+export function routePointers(
+  prompt: string,
+  skillsDir: string | null,
+  bareProvider?: () => Set<string> | null,
+): RankRow[] {
+  return routeDecision(prompt, skillsDir, bareProvider).rows;
 }
 
 /**
@@ -191,13 +316,22 @@ export function main(): number {
   if (!prompt) return EXIT_ALLOW;
   if (isSyntheticPrompt(prompt)) return EXIT_ALLOW; // harness turn, not a task
 
-  const rows = routePointers(prompt, resolveSkillsRoot(_workspaceRoot(env)));
+  const root = _workspaceRoot(env);
+  const platform = env["platform"];
+  const host = typeof platform === "string" && platform ? platform : null;
+  const { rows, suppressed } = routeDecision(prompt, resolveSkillsRoot(root), () =>
+    knownBareForHost(root, host),
+  );
   if (rows.length === 0) return EXIT_ALLOW; // silence is the default
 
   process.stdout.write(
     `${JSON.stringify({
       decision: "warn",
-      reason: `skill-route: ${rows.length} pointer(s), top ${rows[0]![1]}/100`,
+      reason:
+        `skill-route: ${rows.length} pointer(s), top ${rows[0]![1]}/100` +
+        // The suppression metric's numerator. Named only when non-zero, so the
+        // common line keeps its shape and its registered byte budget.
+        (suppressed > 0 ? `, ${suppressed} suppressed as host-bare` : ""),
       additional_context: buildRouteLine(rows),
     })}\n`,
   );
