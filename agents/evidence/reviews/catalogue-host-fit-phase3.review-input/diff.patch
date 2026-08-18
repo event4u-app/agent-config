@@ -1,0 +1,704 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 92e13d254c0fdfa5399662813ff3821606355bef..4b1551756d38c0be4d122145e86bf49bf163be4e 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -6,7 +6,7 @@
+ 
+ ## Overall
+ 
+-**287 / 578 steps done · 50%**
++**290 / 579 steps done · 50%**
+ 
+ ```text
+ ████████████████████░░░░░░░░░░░░░░░░░░░░   50%
+@@ -26,7 +26,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ |---|---|---:|---:|---:|---:|---:|---:|---:|---|
+ | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
+ | 2 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
+-| 3 | [road-to-catalogue-host-fit.md](roadmaps/road-to-catalogue-host-fit.md) | 4 | 8 | 5 | 2 | 1 | 0 | [1](#blockers-road-to-catalogue-host-fit) | ███░░░░░░░ 29% |
++| 3 | [road-to-catalogue-host-fit.md](roadmaps/road-to-catalogue-host-fit.md) | 4 | 9 | 3 | 5 | 1 | 0 | [1](#blockers-road-to-catalogue-host-fit) | ██████░░░░ 62% |
+ | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+ | 5 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 19 | 4 | 0 | 1 | [3](#blockers-road-to-context-fidelity) | ██░░░░░░░░ 17% |
+ | 6 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
+@@ -149,14 +149,14 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ 
+ ### [road-to-catalogue-host-fit.md](roadmaps/road-to-catalogue-host-fit.md)
+ 
+-**Road to catalogue host fit — a truncated entry is a skill that cannot route** — 2 / 7 done (29%)
++**Road to catalogue host fit — a truncated entry is a skill that cannot route** — 5 / 8 done (62%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+ | 0 | Run the live trigger eval | ⏭️ skipped | 0 | 0 | 1 | 0 | 0% |
+ | 1 | Fill the observation corpus | ✅ done | 0 | 2 | 0 | 0 | 100% |
+ | 2 | Project a host-fitting catalogue by default | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+-| 3 | Make `skill-route` host-honest | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
++| 3 | Make `skill-route` host-honest | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+ 
+ <a id="blockers-road-to-catalogue-host-fit"></a>
+ **Blockers**
+diff --git a/agents/roadmaps/road-to-catalogue-host-fit.md b/agents/roadmaps/road-to-catalogue-host-fit.md
+index 543f7e9fdb773c88e4e8a46e0bc69d22509ef2db..e3a31df900d92a1b52e400d605745f979fee3d7c 100644
+--- a/agents/roadmaps/road-to-catalogue-host-fit.md
++++ b/agents/roadmaps/road-to-catalogue-host-fit.md
+@@ -224,7 +224,7 @@ This phase unblocks everything else in the file, and it is repo work.
+ 
+ ### Phase 3 — Make `skill-route` host-honest
+ 
+-- [ ] **3.1** If Phase 1's join shows pointable-but-bare above zero in practice:
++- [x] **3.1** If Phase 1's join shows pointable-but-bare above zero in practice:
+       the pointer line names only skills whose delivery is not known-bare, reading
+       the latest observation record if one is present. Absent record means **no
+       filtering** — fail open, never fail silent-narrow, because a filter that
+@@ -232,14 +232,69 @@ This phase unblocks everything else in the file, and it is repo work.
+       `verify:` fixture — an observation marking skill X bare means the pointer
+       never names X; an absent observation file means behaviour byte-identical to
+       today.
+-- [ ] **3.2** Register the corresponding outcome metric next to the existing
++
++      **Landed 2026-08-18.** The reducer is `knownBareNames` in
++      `_lib/skill_catalogue_series.ts` — beside the other observation reducers
++      rather than inside the hook, because every guard it needs is already argued
++      in that module's prose and a second reducer over one log is how two readers
++      start breaking the same tie in opposite directions. `skill_route_hook`
++      consumes it through `knownBareForHost` + `filterKnownBare`.
++
++      **The reducer returns three states and the middle one is the point.**
++      `null` = nothing was enumerated → no filtering; an **empty set** = measured
++      clean; non-empty = these went dark. A `budget-strip-and-drop` host is always
++      `null`, never an empty set: its empty `bare_names` records that nothing was
++      counted, so an empty set there would read as "codex delivered everything
++      described" — the zero-inferred-from-silence failure this file's Phase 1 note
++      already refused once. Latest-per-host wins rather than the union of the
++      series, or a superseded observation would keep suppressing a skill the host
++      now delivers.
++
++      **Fail-open is a construction, not a convention.** No log, no record for the
++      host, a host that enumerates nothing, a malformed line, an unknown host, or
++      any throw all resolve to `null`, and `filterKnownBare(rows, null)` returns
++      its input untouched.
++
++      **One correction to the step's own framing, found by its fixture.** The
++      filter runs before `MIN_TOP_SCORE`, so the floor asks its question of the
++      best *deliverable* pointer — and that makes silence a real outcome rather
++      than a theoretical one. On `"review the authorization policy and tenant
++      scope for this endpoint"` the ranker returns `authz-review` at 47 and the
++      next entry at 23 against a floor of 31: suppress the top-1 and the line goes
++      silent instead of promoting a 23/100 pointer. That is the intended reading of
++      a confidence floor, and `suppressed` is what distinguishes that silence from
++      an unranked prompt. Both cases are pinned against the real corpus.
++      <!-- verify: npx vitest run tests/hooks/skill_route_hook.test.ts tests/scripts/catalogue_capture.test.ts -->
++- [x] **3.2** Register the corresponding outcome metric next to the existing
+       pointer-rate metric with the same owner, review and kill discipline. **No
+       adoption threshold is invented here** — the hook's own header refuses that,
+       correctly, and this step inherits the refusal.
+       `verify:` the metric is registered with its owner and kill standard, and no
+       threshold appears that has no measurement behind it.
+-- **AC-3:** the fixture passes in both directions — filtered when an observation
+-  exists, unchanged when none does.
++
++      **Landed 2026-08-18** as `skill_route_bare_suppression_rate` in
++      `hook-token-budget.json` § `advisory_adoption_metrics`, inheriting that
++      block's owner and its `2026-11-10` review date. `threshold` reads "none
++      committed before data"; the refusal is inherited rather than restated.
++
++      **Its numerator had to be created to be registrable, and the gap is
++      recorded as a gap.** `rule-trips.json` counts fires per concern and does not
++      retain the warn reason, so the hook appends `, N suppressed as host-bare` to
++      its reason — only when non-zero, so the common line keeps its shape — and
++      the registration says the numerator is log-carried, not counter-carried.
++      Two falsifiers are named for the filter half rather than for the outcome: a
++      live rate of 0 on a host that *has* a per-entry observation falsifies the
++      join; a rate far above the observed 16/338 share means the ranker
++      preferentially ranks what the host degrades, which is a Phase 2 finding.
++      <!-- verify: agent-config settings dump is not the instrument — read src/config/hook-token-budget.json -->
++- [x] **AC-3:** the fixture passes in both directions — filtered when an observation
++  exists, unchanged when none does. **Met.** The filtered direction runs
++  end-to-end against the committed log (`knownBareForHost('.', 'claude')`) and
++  carries a vacuity guard first — it asserts the *unfiltered* line named a
++  suppressed skill before asserting the filtered one does not, because a
++  `not.toContain` over an empty result passes on a filter that broke everything.
++  The unchanged direction pins `null`, a throwing provider and an empty set all
++  equal to today's output.
+ 
+ ## 1b. External corroboration for the `skill-route` posture
+ 
+diff --git a/src/config/hook-token-budget.json b/src/config/hook-token-budget.json
+index b691bc3a46459f6f8534ad900b2577766c25b3a1..3d687a8f0ef47826af6dee69cf5c80b8908dc66c 100644
+--- a/src/config/hook-token-budget.json
++++ b/src/config/hook-token-budget.json
+@@ -56,6 +56,11 @@
+             "instrument": "rule-trips.json warn counters for the skill-route concern (fires) + conformance audits for whether the pointed-at skill was opened (adoption); HONEST GAP: no deterministic counter exists for 'the agent acted on the pointer' - the numerator is audit-carried and registered as such rather than implied to be automatic",
+             "threshold": "none committed before data - baseline first, threshold at review date (2026-11-10)"
+         },
++        "skill_route_bare_suppression_rate": {
++            "definition": "road-to-catalogue-host-fit Phase 3 step 3.2: of the prompts where skill-route fires, the share whose warn reason carries `N suppressed as host-bare` - i.e. how often the ranker wanted to point at a skill the current host is KNOWN to have delivered without its description. Registered beside skill_route_pointer_rate because it measures the same concern's behaviour under the same owner and review date. NO THRESHOLD IS COMMITTED, and the refusal is inherited from the sibling rather than restated: the FILTER is derived from a measurement (16 of 16 bare entries in the 2026-08-12 claude observation are in the ranker's catalogue, `capture_skill_catalogue --pointable-bare`), the OUTCOME - whether suppressing them changes what the agent does - is not. Falsifier for the filter half: a live suppression rate of 0 across a review window on a host with a per-entry observation means the ranker and the host's bare set do not intersect in practice, which is a finding about the join and is published either way. A rate far above the 16/338 share of the observed catalogue means the ranker preferentially ranks exactly the entries the host degrades, which is a finding about the projection and belongs to Phase 2, not here.",
++            "instrument": "the dispatcher's warn reason string for the skill-route concern (`, N suppressed as host-bare`, appended only when non-zero) + agents/evidence/metrics/skill-catalogue.jsonl for the denominator population; HONEST GAP: rule-trips.json counts fires per concern and does NOT retain the reason, so the numerator is log-carried rather than counter-carried - registered as a gap, exactly as the sibling metric registers its own audit-carried numerator rather than implying a counter exists",
++            "threshold": "none committed before data - baseline first, threshold at the shared review date (2026-11-10)"
++        },
+         "full_rewrite_small_diff_rate": {
+             "definition": "edit-shape fires / Write calls per session (the full-rewrite-with-small-diff rate). Kill criterion per the shipped nudge standard: a nudge whose verdicts are measurably ignored (adoption near zero over the review window, from conformance audits) gets its trigger tightened or the injected line removed.",
+             "instrument": "rule-trips.json warn counters (the dispatcher already counts every warn per concern) + conformance audits for adoption"
+diff --git a/src/scripts/_lib/skill_catalogue_series.ts b/src/scripts/_lib/skill_catalogue_series.ts
+index 11ccbed46814c53cfe8ba36b0e937d2196cdeee7..5e995b114c00df97b97350b1eb7e2219e08687a8 100644
+--- a/src/scripts/_lib/skill_catalogue_series.ts
++++ b/src/scripts/_lib/skill_catalogue_series.ts
+@@ -409,3 +409,68 @@ export function formatPointableBare(
+     }
+     return lines.join('\n');
+ }
++
++/* ------------------------------------------------------------------ *
++ * The delivery filter — what the runtime router must not name.
++ * ------------------------------------------------------------------ */
++
++/**
++ * The bare names one host is KNOWN to have delivered, or `null` when nothing
++ * about that host's per-entry delivery was ever enumerated.
++ *
++ * `joinPointableBare` above answers "how large is the D-4 divergence" for an
++ * operator report. This answers the runtime question the same log can settle:
++ * given this host, which skill names must a pointer line not name? It is the
++ * reducer `skill_route_hook` consumes, and it lives here rather than in that
++ * hook for one reason — every guard below is already argued in this module's
++ * prose, and a second reducer over the same log is how two readers start
++ * breaking the same tie in opposite directions (`_supersedes`, in the parent
++ * module, exists because that happened once and printed two drop counts for one
++ * host on one day).
++ *
++ * THE THREE-WAY DISTINCTION IS THE WHOLE POINT, and collapsing any two of them
++ * is the failure:
++ *
++ *   - **`null` — nothing was enumerated.** No record for this host, or none of
++ *     its records is a `per-entry` observation, or the latest one carries no
++ *     `bare_names` array. The consumer must fail OPEN: filtering on this would
++ *     be a zero inferred from silence, and a filter that quietly narrows on
++ *     missing data is worse than the divergence it treats.
++ *   - **An EMPTY set — enumerated, and nothing was bare.** A legitimate answer,
++ *     and behaviourally identical to `null` at today's only consumer. It is
++ *     still returned distinctly, because "measured clean" and "never measured"
++ *     are different facts and this module refuses to let them look alike.
++ *   - **A NON-EMPTY set — these names went dark.** The pointer must not name
++ *     them.
++ *
++ * A `budget-strip-and-drop` host is therefore always `null` here, never an
++ * empty set: it publishes no per-entry list at all, so its empty `bare_names`
++ * records that nothing was counted. That is the same skip `joinPointableBare`
++ * makes, for the same reason, and it is why a codex install gets no filtering
++ * rather than a filter that believes nothing was degraded.
++ *
++ * LATEST WINS, per host, by `observed_at` — the `latestPointableBarePerHost`
++ * tie-break rather than a union across the series. A union would let a
++ * superseded observation keep suppressing a skill the host now delivers fine,
++ * which is a filter that only ever narrows; the whole series is available to an
++ * operator report, and a runtime filter wants the current reading.
++ *
++ * `bare_names` is guarded with `Array.isArray` because `readObservationLog`
++ * produces records by an unchecked `JSON.parse … as` over an append-only log
++ * with more than one producer — the same guard, for the same recorded reason,
++ * that `joinPointableBare` and `knownHostLimits` carry.
++ */
++export function knownBareNames(
++    records: readonly ObservationRecord[],
++    host: string,
++): Set<string> | null {
++    let latest: ObservationRecord | null = null;
++    for (const record of records) {
++        if (record.host !== host) continue;
++        if (truncationModeOf(record) !== 'per-entry') continue;
++        if (!Array.isArray(record.bare_names)) continue;
++        if (latest === null || record.observed_at >= latest.observed_at) latest = record;
++    }
++    if (latest === null) return null;
++    return new Set(latest.bare_names.filter((name): name is string => typeof name === 'string'));
++}
+diff --git a/src/scripts/hooks/skill_route_hook.ts b/src/scripts/hooks/skill_route_hook.ts
+index 810e0f7f2fb2a70b55ab30239a97f4d97720f3ca..ca34667b2f9bd803b74d5ec85942a1a66ca5962a 100644
+--- a/src/scripts/hooks/skill_route_hook.ts
++++ b/src/scripts/hooks/skill_route_hook.ts
+@@ -43,6 +43,51 @@
+  * need an invalidation story for a tree that changes under the session, and
+  * 12.3 ms does not buy one.
+  *
++ * HOST-HONEST, AND FAIL-OPEN BY CONSTRUCTION (road-to-catalogue-host-fit Phase
++ * 3). The ranker reads the on-disk tree; the host does not necessarily deliver
++ * it. A skill the host truncated is still rankable and still pointable, and the
++ * pointer then names a skill whose description the model never received — worse
++ * than silence, because a pointer reads as a delivered capability. That is the
++ * roadmap's D-4, and it is MEASURED rather than assumed: 16 of 16 bare entries
++ * in the 2026-08-12 claude observation are still in this ranker's catalogue
++ * (`capture_skill_catalogue --pointable-bare`), among them `design-review`,
++ * `design-intelligence` and `fe-design` — skills this estate's own rules route
++ * to. So the pointer set is filtered against the latest per-entry observation
++ * for the CURRENT host.
++ *
++ * The filter only ever narrows on a positive reading, and every uncertain state
++ * resolves to no filtering at all: no observation log, no record for this host,
++ * a host that publishes no per-entry list, a malformed line, an unknown host, or
++ * any throw. `knownBareNames` returns `null` for each of them and
++ * `filterKnownBare` treats `null` as a pass-through, so behaviour is
++ * byte-identical to the unfiltered line. A filter that quietly hides skills on
++ * missing data is worse than the divergence it treats — the roadmap's own words,
++ * and the reason fail-open is a construction here rather than a convention.
++ *
++ * IT COSTS ZERO ON THE PATH THE HEADER ABOVE PROMISES IS FREE. The log read is
++ * passed in as a thunk, not a value, and `routePointers` calls it only after the
++ * term floor AND the rank both pass. A prompt below `MIN_TASK_TERMS` therefore
++ * still reads no files at all, which is the claim the 0 ms paragraph makes and
++ * an eagerly-read log would have quietly falsified.
++ *
++ * THE FLOOR APPLIES TO WHAT IS DELIVERED, NOT TO WHAT WAS RANKED. Filtering
++ * happens BEFORE `MIN_TOP_SCORE` and before the `TOP_K` slice, so the confidence
++ * question is asked of the best pointer the model can actually use. One rule, in
++ * one order: rank → drop the undeliverable → apply the floor → take the top
++ * three.
++ *
++ * That ordering makes silence a real outcome, and the number says so rather than
++ * the prose guessing: on `"review the authorization policy and tenant scope for
++ * this endpoint"` the ranker returns `authz-review` at 47 and the next entry at
++ * 23, against a floor of 31. Suppress the top-1 and NOTHING clears the floor —
++ * the line goes silent instead of naming a 23/100 pointer because the 47 one was
++ * undeliverable. That is the intended reading of a floor calibrated for
++ * confidence, and promoting a sub-floor pointer to fill the gap would be the
++ * "advisory worse than silence" failure this file's risk paragraph ranks first.
++ * `suppressed` is what distinguishes that silence from an unranked prompt, and
++ * `tests/hooks/skill_route_hook.test.ts` pins both cases against the real
++ * corpus rather than a constructed one.
++ *
+  * NO ADOPTION THRESHOLD IS COMMITTED HERE. Whether the line changes behaviour
+  * is a question for data, not for this header: `skill_route_pointer_rate` is
+  * registered in `hook-token-budget.json` under the same owner/review discipline
+@@ -51,6 +96,13 @@
+  * removed. The score floor above is a TRIGGER calibration and is measured; the
+  * adoption threshold is an OUTCOME claim and is deliberately absent.
+  *
++ * `skill_route_bare_suppression_rate` is registered beside it under the same
++ * owner, review date and kill discipline, and inherits the same refusal: how
++ * often the filter fires is a number to collect, not one to promise. Its
++ * numerator is carried in the warn `reason` below — `N suppressed` — because no
++ * dedicated counter exists, and that gap is registered as a gap rather than
++ * implied to be automatic.
++ *
+  * DELIVERY PATH — the verified one, copied rather than re-derived. A
+  * `user_prompt_submit` concern returning `{decision:"allow", context:…}` at
+  * exit 0 produces zero stdout: `host_semantics.emitFor` drops the field for
+@@ -73,7 +125,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
+ 
+ import { readHookStdin } from "./hook_stdin.js";
+ import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
+-import { resolveSkillsRoot } from "../_lib/skill_catalogue.js";
++import { OBSERVATION_LOG, readObservationLog, resolveSkillsRoot } from "../_lib/skill_catalogue.js";
++import { knownBareNames } from "../_lib/skill_catalogue_series.js";
+ import { _tokenize, rank, type RankRow } from "../skill_tools/score_skill_relevance.js";
+ 
+ const EXIT_ALLOW = 0;
+@@ -119,31 +172,103 @@ function _isObject(v: unknown): v is JsonObject {
+   return typeof v === "object" && v !== null && !Array.isArray(v);
+ }
+ 
++/**
++ * Names this host is known to have delivered bare, or `null` for no filtering.
++ *
++ * Every failure mode collapses to `null` — an unknown host, a missing log, an
++ * unreadable one, a host that enumerates nothing, a throw from anywhere in the
++ * read. The three-way distinction `knownBareNames` draws is preserved: an empty
++ * set means *measured clean*, `null` means *never measured*, and only the second
++ * one is produced here by accident.
++ */
++export function knownBareForHost(workspaceRoot: string, host: string | null): Set<string> | null {
++  if (host === null || host === "") return null;
++  try {
++    return knownBareNames(readObservationLog(path.join(workspaceRoot, OBSERVATION_LOG)), host);
++  } catch {
++    return null;
++  }
++}
++
++/**
++ * Drop the ranked rows this host is known to have delivered bare.
++ *
++ * `null` is a pass-through and returns the input order untouched, which is the
++ * fail-open half of the header's contract and what makes an absent observation
++ * byte-identical to today.
++ */
++export function filterKnownBare(
++  rows: readonly RankRow[],
++  bare: Set<string> | null,
++): RankRow[] {
++  if (bare === null || bare.size === 0) return [...rows];
++  return rows.filter(([name]) => !bare.has(name));
++}
++
++/** What one routing pass decided, including what it refused to name. */
++export interface RouteDecision {
++  rows: RankRow[];
++  /** Ranked rows dropped as known-bare. The suppression metric's numerator. */
++  suppressed: number;
++}
++
+ /**
+  * Rank a prompt and return the pointers worth injecting, or `[]` for silence.
+  *
+  * Total by construction: a missing root, an unreadable catalogue, or a ranker
+  * error all resolve to `[]`. A routing advisory that can crash a turn is worse
+  * than one that says nothing.
++ *
++ * `bareProvider` is a THUNK, deliberately — see the header's zero-cost
++ * paragraph. It is called only once both the term floor and the rank have
++ * passed, so the short-prompt path still touches no files. Omitting it disables
++ * filtering entirely, which is what keeps every caller that predates the filter
++ * behaviourally unchanged.
+  */
+-export function routePointers(prompt: string, skillsDir: string | null): RankRow[] {
+-  if (skillsDir === null) return [];
++export function routeDecision(
++  prompt: string,
++  skillsDir: string | null,
++  bareProvider?: () => Set<string> | null,
++): RouteDecision {
++  const silent: RouteDecision = { rows: [], suppressed: 0 };
++  if (skillsDir === null) return silent;
+   // Denominator floor BEFORE the catalogue read: a prompt too short to score
+   // meaningfully cannot produce a pointer worth 337 file reads either.
+   try {
+-    if (_tokenize(prompt).size < MIN_TASK_TERMS) return [];
++    if (_tokenize(prompt).size < MIN_TASK_TERMS) return silent;
+   } catch {
+-    return [];
++    return silent;
+   }
+   let rows: RankRow[];
+   try {
+     rows = rank(prompt, skillsDir);
+   } catch {
+-    return [];
++    return silent;
++  }
++  let bare: Set<string> | null = null;
++  if (bareProvider !== undefined) {
++    try {
++      bare = bareProvider();
++    } catch {
++      bare = null; // fail open, never silent-narrow
++    }
+   }
+-  const top = rows[0];
+-  if (top === undefined || top[1] < MIN_TOP_SCORE) return [];
+-  return rows.slice(0, TOP_K);
++  const deliverable = filterKnownBare(rows, bare);
++  const suppressed = rows.length - deliverable.length;
++  // The floor asks its question of the best DELIVERABLE pointer, not of a
++  // pointer the model cannot use. See the header's one-rule-one-order note.
++  const top = deliverable[0];
++  if (top === undefined || top[1] < MIN_TOP_SCORE) return { rows: [], suppressed };
++  return { rows: deliverable.slice(0, TOP_K), suppressed };
++}
++
++/** The rows alone. Kept because most callers and fixtures want only these. */
++export function routePointers(
++  prompt: string,
++  skillsDir: string | null,
++  bareProvider?: () => Set<string> | null,
++): RankRow[] {
++  return routeDecision(prompt, skillsDir, bareProvider).rows;
+ }
+ 
+ /**
+@@ -191,13 +316,22 @@ export function main(): number {
+   if (!prompt) return EXIT_ALLOW;
+   if (isSyntheticPrompt(prompt)) return EXIT_ALLOW; // harness turn, not a task
+ 
+-  const rows = routePointers(prompt, resolveSkillsRoot(_workspaceRoot(env)));
++  const root = _workspaceRoot(env);
++  const platform = env["platform"];
++  const host = typeof platform === "string" && platform ? platform : null;
++  const { rows, suppressed } = routeDecision(prompt, resolveSkillsRoot(root), () =>
++    knownBareForHost(root, host),
++  );
+   if (rows.length === 0) return EXIT_ALLOW; // silence is the default
+ 
+   process.stdout.write(
+     `${JSON.stringify({
+       decision: "warn",
+-      reason: `skill-route: ${rows.length} pointer(s), top ${rows[0]![1]}/100`,
++      reason:
++        `skill-route: ${rows.length} pointer(s), top ${rows[0]![1]}/100` +
++        // The suppression metric's numerator. Named only when non-zero, so the
++        // common line keeps its shape and its registered byte budget.
++        (suppressed > 0 ? `, ${suppressed} suppressed as host-bare` : ""),
+       additional_context: buildRouteLine(rows),
+     })}\n`,
+   );
+diff --git a/tests/hooks/skill_route_hook.test.ts b/tests/hooks/skill_route_hook.test.ts
+index c131ad82713cf9c29a217ae1d67de358a6b9ab32..f877392094c15e048d7edca2b43d339c3a40d17e 100644
+--- a/tests/hooks/skill_route_hook.test.ts
++++ b/tests/hooks/skill_route_hook.test.ts
+@@ -5,6 +5,8 @@ import {
+     MIN_TOP_SCORE,
+     TOP_K,
+     buildRouteLine,
++    knownBareForHost,
++    routeDecision,
+     routePointers,
+ } from '../../src/scripts/hooks/skill_route_hook.js';
+ import { _tokenize, rank } from '../../src/scripts/skill_tools/score_skill_relevance.js';
+@@ -103,3 +105,128 @@ describe('skill-route — the injected line', () => {
+         expect(Buffer.byteLength(worst)).toBeLessThan(512);
+     });
+ });
++
++/**
++ * AC-3 of road-to-catalogue-host-fit Phase 3, in both directions.
++ *
++ * The defect: the ranker reads the on-disk tree, so a skill the host truncated
++ * is still rankable and still pointable — and the pointer then names a skill
++ * whose description the model never received. Measured, not assumed: 16 of 16
++ * bare entries in the 2026-08-12 claude observation are in this ranker's
++ * catalogue.
++ *
++ * Both directions are asserted because only one of them is the risk. Filtering
++ * on a present observation is the feature; behaving IDENTICALLY on an absent one
++ * is the safety property, and a suite that only tested the feature would pass on
++ * a filter that silently narrows whenever the log is missing.
++ */
++describe('skill-route — the host-bare delivery filter', () => {
++    /** A prompt that reliably clears both floors on the real catalogue. */
++    const PROMPT = 'review the authorization policy and tenant scope for this endpoint';
++
++    it('never names a skill the REAL claude observation recorded as bare', () => {
++        // End-to-end against the committed log rather than a constructed set,
++        // because the real data is the argument: the 2026-08-12 claude
++        // observation records 16 bare entries and all 16 are in this ranker's
++        // catalogue, among them `design-review` and `design-intelligence`.
++        //
++        // The vacuity guard is the first assertion, not an afterthought — a
++        // `not.toContain` over an empty result passes on a filter that broke
++        // everything, so this pins that the unfiltered line DID name a
++        // suppressed skill before asserting the filtered one does not.
++        const bare = knownBareForHost('.', 'claude');
++        expect(bare).not.toBeNull();
++        expect(bare!.size).toBeGreaterThan(0);
++
++        const designPrompt = 'audit this dashboard design against our design tokens and review it';
++        const unfiltered = routePointers(designPrompt, SKILLS_DIR).map(([name]) => name);
++        expect(unfiltered.some((name) => bare!.has(name))).toBe(true);
++
++        const filtered = routePointers(designPrompt, SKILLS_DIR, () => bare).map(([n]) => n);
++        for (const name of filtered) expect(bare!.has(name)).toBe(false);
++    });
++
++    it('keeps the survivors when a suppressed skill was not the one carrying the score', () => {
++        // The filter narrows the SET; it does not gate the line. Suppressing a
++        // lower-ranked pointer leaves the top-1 intact, so the line still fires
++        // and simply names one skill fewer.
++        const unfiltered = routePointers(PROMPT, SKILLS_DIR);
++        expect(unfiltered.length).toBeGreaterThan(1);
++        const dropped = unfiltered[1]![0];
++        const filtered = routePointers(PROMPT, SKILLS_DIR, () => new Set([dropped]));
++        expect(filtered.length).toBeGreaterThan(0);
++        expect(filtered.length).toBeLessThanOrEqual(TOP_K);
++        expect(filtered.map(([name]) => name)).not.toContain(dropped);
++        expect(filtered[0]![0]).toBe(unfiltered[0]![0]);
++    });
++
++    it('falls silent when the suppressed skill WAS the score, and says so in the count', () => {
++        // Written against the real corpus rather than a constructed one, because
++        // the real numbers are the argument: on this prompt the ranker returns
++        // `authz-review` at 47 and the next entry at 23, and MIN_TOP_SCORE is
++        // 31. So suppressing the top-1 leaves nothing that clears a floor
++        // calibrated for CONFIDENCE — and naming a 23/100 pointer because the
++        // 47 one is undeliverable would be the "advisory worse than silence"
++        // failure this concern's header ranks as its first risk.
++        //
++        // This is the load-bearing consequence of applying the floor to what is
++        // DELIVERABLE rather than to what was ranked, and it is pinned rather
++        // than smoothed over: the suppressed count is what distinguishes this
++        // silence from an unranked prompt.
++        const rows = rank(PROMPT, SKILLS_DIR);
++        expect(rows[0]![1]).toBeGreaterThanOrEqual(MIN_TOP_SCORE);
++        expect(rows[1]![1]).toBeLessThan(MIN_TOP_SCORE);
++
++        const decision = routeDecision(PROMPT, SKILLS_DIR, () => new Set([rows[0]![0]]));
++        expect(decision.rows).toEqual([]);
++        expect(decision.suppressed).toBe(1);
++    });
++
++    it('is byte-identical to today when no observation is present', () => {
++        // The fail-open half. `null` is what every uncertain state resolves to:
++        // no log, no record for this host, a host that enumerates nothing, a
++        // malformed line, an unknown host, or a throw from the provider.
++        const baseline = routePointers(PROMPT, SKILLS_DIR);
++        expect(routePointers(PROMPT, SKILLS_DIR, () => null)).toEqual(baseline);
++        expect(
++            routePointers(PROMPT, SKILLS_DIR, () => {
++                throw new Error('unreadable log');
++            }),
++        ).toEqual(baseline);
++        // An empty set means "measured clean" rather than "never measured" —
++        // a different fact, and deliberately the same behaviour.
++        expect(routePointers(PROMPT, SKILLS_DIR, () => new Set())).toEqual(baseline);
++    });
++
++    it('does not read the log on a prompt below the term floor', () => {
++        // The header promises a sub-floor prompt costs 0 ms because the term
++        // check precedes the catalogue read. The provider is a thunk for the
++        // same reason, so pin that it is never called — an eager read would
++        // have quietly falsified that paragraph.
++        let called = 0;
++        routePointers('fix it', SKILLS_DIR, () => {
++            called += 1;
++            return null;
++        });
++        expect(called).toBe(0);
++        expect(_tokenize('fix it').size).toBeLessThan(MIN_TASK_TERMS);
++    });
++
++    it('reports the suppressed count so the registered metric has a numerator', () => {
++        const unfiltered = routePointers(PROMPT, SKILLS_DIR);
++        const decision = routeDecision(PROMPT, SKILLS_DIR, () => new Set([unfiltered[0]![0]]));
++        expect(decision.suppressed).toBe(1);
++        expect(routeDecision(PROMPT, SKILLS_DIR, () => null).suppressed).toBe(0);
++    });
++
++    it('applies the score floor to the best DELIVERABLE pointer', () => {
++        // Suppressing every ranked skill cannot leave a pointer standing, and
++        // the count still reports what was dropped — silence with a reason
++        // rather than silence that looks like an unranked prompt.
++        const all = new Set(rank(PROMPT, SKILLS_DIR).map(([name]) => name));
++        const decision = routeDecision(PROMPT, SKILLS_DIR, () => all);
++        expect(decision.rows).toEqual([]);
++        expect(decision.suppressed).toBeGreaterThan(0);
++        expect(MIN_TOP_SCORE).toBeGreaterThan(0);
++    });
++});
+diff --git a/tests/scripts/catalogue_capture.test.ts b/tests/scripts/catalogue_capture.test.ts
+index af85d4650b334722b5cf13d833f12fe8e7f472bb..8f59d071df017be7e2d33035b890fadca9f049fc 100644
+--- a/tests/scripts/catalogue_capture.test.ts
++++ b/tests/scripts/catalogue_capture.test.ts
+@@ -30,6 +30,7 @@ import {
+     formatPointableBare,
+     formatReport,
+     joinPointableBare,
++    knownBareNames,
+     knownHostLimits,
+     latestPointableBarePerHost,
+     migrationEligibility,
+@@ -687,3 +688,118 @@ describe('migration eligibility (AI council 2026-08-15, 2/2)', () => {
+         expect(lines).toContain('legitimate choice');
+     });
+ });
++
++/**
++ * `knownBareNames` — the runtime delivery filter's reducer
++ * (road-to-catalogue-host-fit Phase 3 step 3.1).
++ *
++ * Every test here is written against the three-way distinction the reducer
++ * exists to preserve, because collapsing any two of them is the defect:
++ * `null` = never enumerated (fail open) · empty set = measured clean · non-empty
++ * = these went dark. Two of the three are behaviourally identical at today's
++ * only consumer, which is exactly why they need a test that separates them.
++ */
++describe('knownBareNames — what the runtime router must not name', () => {
++    const claudePerEntry: ObservationRecord = {
++        schema: 1,
++        observed_at: '2026-08-12',
++        host: 'claude',
++        entries_total: 300,
++        bare_count: 2,
++        described_count: 9,
++        bare_names: ['design-review', 'design-intelligence'],
++        verdict: 'no-selector',
++        separating_candidates: [],
++        truncation_mode: 'per-entry',
++        observation_source: 'self-report',
++    };
++    const codexStripAndDrop: ObservationRecord = {
++        schema: 1,
++        observed_at: '2026-08-18',
++        host: 'codex',
++        entries_total: 497,
++        bare_count: 0,
++        described_count: 0,
++        bare_names: [],
++        verdict: 'insufficient-observation',
++        separating_candidates: [],
++        truncation_mode: 'budget-strip-and-drop',
++        observation_source: 'host-event',
++        dropped_count: 402,
++    };
++
++    it('returns the bare names of the matching host', () => {
++        const bare = knownBareNames([claudePerEntry], 'claude');
++        expect(bare).not.toBeNull();
++        expect([...bare!].sort()).toEqual(['design-intelligence', 'design-review']);
++    });
++
++    it('returns null for a host with no record at all — fail open, never narrow', () => {
++        expect(knownBareNames([claudePerEntry], 'cursor')).toBeNull();
++        expect(knownBareNames([], 'claude')).toBeNull();
++    });
++
++    // The load-bearing test, and the sibling of the join's own skip. A
++    // strip-and-drop host enumerates nothing, so its empty `bare_names` means
++    // "not counted". Returning an EMPTY SET here would read as "codex delivered
++    // everything described" — a zero inferred from silence, and the one failure
++    // this module's header forbids outright.
++    it('returns null, not an empty set, for a host that enumerates nothing', () => {
++        expect(knownBareNames([codexStripAndDrop], 'codex')).toBeNull();
++        expect(knownBareNames([claudePerEntry, codexStripAndDrop], 'codex')).toBeNull();
++        // …and the per-entry host in the same log is unaffected by its presence.
++        expect(knownBareNames([claudePerEntry, codexStripAndDrop], 'claude')?.size).toBe(2);
++    });
++
++    it('distinguishes measured-clean from never-measured', () => {
++        const clean: ObservationRecord = { ...claudePerEntry, bare_count: 0, bare_names: [] };
++        const measured = knownBareNames([clean], 'claude');
++        expect(measured).not.toBeNull();
++        expect(measured!.size).toBe(0);
++        // Behaviourally identical to `null` at the consumer, deliberately —
++        // and a different FACT, which is why the reducer keeps them apart.
++        expect(knownBareNames([], 'claude')).toBeNull();
++    });
++
++    // LATEST wins rather than a union across the series. A union would let a
++    // superseded observation keep suppressing a skill the host now delivers
++    // fine, i.e. a filter that only ever narrows.
++    it('reads the latest observation per host, never the union of the series', () => {
++        const older: ObservationRecord = {
++            ...claudePerEntry,
++            observed_at: '2026-08-01',
++            bare_names: ['fe-design', 'design-tokens'],
++        };
++        const bare = knownBareNames([older, claudePerEntry], 'claude');
++        expect([...bare!].sort()).toEqual(['design-intelligence', 'design-review']);
++        expect(bare!.has('fe-design')).toBe(false);
++        // Input order must not decide it.
++        const reversed = knownBareNames([claudePerEntry, older], 'claude');
++        expect([...reversed!].sort()).toEqual([...bare!].sort());
++    });
++
++    // Same guard, same recorded reason as `joinPointableBare`: the log is built
++    // by an unchecked `JSON.parse … as` and has more than one producer, so a
++    // line missing `bare_names` is a real state and must not take the filter
++    // down with a TypeError.
++    it('skips a malformed record instead of crashing', () => {
++        const malformed = {
++            ...claudePerEntry,
++            bare_names: undefined,
++        } as unknown as ObservationRecord;
++        expect(knownBareNames([malformed], 'claude')).toBeNull();
++        // A malformed LATEST record does not shadow a well-formed earlier one:
++        // the reducer never selects it, so the older reading still applies.
++        const older: ObservationRecord = { ...claudePerEntry, observed_at: '2026-08-01' };
++        const late = { ...malformed, observed_at: '2026-08-20' } as unknown as ObservationRecord;
++        expect(knownBareNames([older, late], 'claude')?.size).toBe(2);
++    });
++
++    it('drops a non-string entry rather than trusting the parse', () => {
++        const dirty = {
++            ...claudePerEntry,
++            bare_names: ['design-review', 42, null],
++        } as unknown as ObservationRecord;
++        expect([...knownBareNames([dirty], 'claude')!]).toEqual(['design-review']);
++    });
++});
