@@ -1,11 +1,11 @@
 # Findings: stop-gate-detector-demotion
-<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: 29fd19c65fb5ade86add47abde0c51051bce843061f7e663ecc13787eb8c88e9 | diff: 403084968f98a7f15278f033b218204efd956990 | reviewer: r2-fresh-subagent-stop-gate-detector-demotion | prompt_hash: 5e1cc4010805c267a9e07e3bf54f9a2e44d029089137458acdcbc0cd903ec468 -->
+<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: 1fd2ca30f344a9a2d9dc93b4a30f1917d88cdf0d376ef5abfbb0d39b66329d3e | diff: 08323955dc32045a4d473ebcd3d89f453a082e89 | reviewer: r2-fresh-subagent-stop-gate-detector-demotion | prompt_hash: 5e1cc4010805c267a9e07e3bf54f9a2e44d029089137458acdcbc0cd903ec468 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-18 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 403084968f98a7f15278f033b218204efd956990
-  scope_hash: 29fd19c65fb5ade86add47abde0c51051bce843061f7e663ecc13787eb8c88e9
+  diff_sha: 08323955dc32045a4d473ebcd3d89f453a082e89
+  scope_hash: 1fd2ca30f344a9a2d9dc93b4a30f1917d88cdf0d376ef5abfbb0d39b66329d3e
   roadmap: none
   roadmap_hash: none
   ac_hash: none
