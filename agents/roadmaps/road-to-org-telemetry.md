@@ -79,13 +79,52 @@ Recorded here so nobody re-derives it from the findings files.
 
 ## Phase 1 — Emission in the dispatcher
 
-- [ ] Add a remote telemetry namespace beside the existing engagement namespace in the settings template, defaulting to disabled, with an endpoint, an org identifier, and a session-end flush policy; extend the tolerant reader with the same default-off semantics. <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
-- [ ] Append Class-A usage records in the consumer project on the tool event confirmed by the first spike, with a schema aligned to the existing records plus user hash, package version, host, and active tier. Perform zero file operations when disabled. <!-- verify: ./scripts-run src/scripts/test_telemetry_settings -->
-- [ ] Derive the user hash as a salted hash of hostname and user, with the salt living in the org pack rather than the public repository. No prompt content anywhere in Class A. <!-- verify: grep -q user_hash src/agent-src/templates/scripts/telemetry/settings.ts -->
+- [x] Add a remote telemetry namespace beside the existing engagement namespace in the settings template, defaulting to disabled, with an endpoint, an org identifier, and a session-end flush policy; extend the tolerant reader with the same default-off semantics. **Landed as `telemetry.remote`** — `read_remote_settings` in `telemetry/settings.ts`, documented in `agent-settings.md` beside `artifact_engagement`. `enabled: true` alone is deliberately NOT the switch; see the note below. <!-- verify: npx vitest run tests/scripts/templates_telemetry_remote.test.ts -->
+- [x] Append Class-A usage records in the consumer project on the tool event confirmed by the first spike, with a schema aligned to the existing records plus user hash, package version, host, and active tier. Perform zero file operations when disabled. **Landed as the `telemetry-usage` PostToolUse concern**, bound on all six platforms carrying `post_tool_use`, `tools: [Skill]`. Active tier reads `rule_loading_tier`; an unresolvable version or tier records `null` rather than a guess. <!-- verify: npx vitest run tests/hooks/telemetry_usage_hook.test.ts -->
+- [x] Derive the user hash as a salted hash of hostname and user, with the salt living in the org pack rather than the public repository. No prompt content anywhere in Class A. **Landed in `telemetry/remote.ts`** — `derive_user_hash` refuses an empty salt outright, and the settings reader will not activate without one. <!-- verify: npx vitest run tests/scripts/templates_telemetry_remote.test.ts -->
 
-**Exit criteria:** an enabled install writes records for real invocations; a disabled install performs zero file operations, matching the doctrine the engagement telemetry already follows.
+**Exit criteria:** an enabled install writes records for real invocations; a disabled install performs zero file operations, matching the doctrine the engagement telemetry already follows. **Met** — both halves asserted in `tests/hooks/telemetry_usage_hook.test.ts`, the disabled half across four not-fully-opted-in shapes, each asserting the log file does not exist.
 
 **Rollback:** the namespace defaults off; removing the dispatch branch restores current behaviour exactly.
+
+### What Phase 1 settled, and one place the step text was imprecise
+
+- **"The settings template" is two files, and the shipped YAML deliberately
+  carries no `telemetry:` key at all.** `src/config/agent-settings.template.yml`
+  has none — that absence IS the default-off mechanism, and
+  `agent-settings.md` line 636 already says so in as many words ("Not in the
+  shipped template — a missing `telemetry:` section means disabled"). So the
+  namespace was added where the engagement one actually lives: the documented
+  example block and the key table in `agent-settings.md`. Adding live keys to
+  the shipped YAML would have contradicted the doctrine the step asked to
+  match.
+- **`enabled: true` is not the switch, and that is a deliberate strengthening
+  of what the step asked for.** `active` requires `enabled` AND an `endpoint`
+  AND an `org_id` AND a `salt`, none of which has a default. The reason is
+  acceptance criterion 4: this repository is public, so it must ship the key
+  names and no values. A clone cannot reach the write path by copying the
+  documented block. `missing` names which field is absent so a future doctor
+  command can explain an inactive install without printing the salt.
+- **The salt is load-bearing, not decoration.** An unsalted digest of a login
+  name is dictionary-reversible in seconds, so `derive_user_hash` throws on an
+  empty salt rather than producing one. Hash parts join on NUL — a username
+  may contain a space, so a space join would let `("a b", "c")` and
+  `("a", "b c")` collide.
+- **Phase 0's normalisation requirement is enforced at write time**, as its
+  note demanded. The collapse direction is `:` → `-` because that mapping is
+  total; the reverse is undecidable without carrying the command catalogue
+  into the hot path (`brand-asset-generation` has no cluster). Asserted on
+  both spellings of `roadmap:process-full`.
+- **Two `verify:` annotations named scripts that do not exist.**
+  `src/scripts/test_telemetry_settings` is absent from the tree, and
+  `grep -q user_hash …/settings.ts` would have failed because the hash lives
+  in `remote.ts` (schema + derivation) rather than in the settings reader —
+  the same split `engagement.ts` and `settings.ts` already use. Both
+  re-pointed at the real tests. Seventh recorded instance of a step naming a
+  measurement path that does not exist.
+- **No outbound call ships here.** Both blockers stand: `sink-choice` gates
+  Phase 2's transport and `dpo-signoff` gates Phase 3's enablement. The
+  concern appends to a local JSONL file and stops.
 
 ## Phase 2 — Transport
 
