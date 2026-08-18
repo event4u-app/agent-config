@@ -26,7 +26,7 @@
  * A regression here reads as "the guard stopped seeing large payloads", which is
  * exactly the sentence the old code made unobservable.
  */
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -109,5 +109,48 @@ describe.skipIf(!fs.existsSync(BUNDLE))("dispatch — guards see the payload at 
     // Guards the guard: if a future edit shrinks PAD_SIZES below the threshold
     // the cases above would pass while testing nothing.
     expect(Math.max(...PAD_SIZES)).toBeGreaterThan(64 * 1024);
+  });
+});
+
+// ── the other direction: an fd 0 nobody writes to ────────────────────
+//
+// The retry loop that fixed the large-payload read made the OPPOSITE case
+// expensive, and it cost a CI hang to notice. A child that inherits an open but
+// unwritten stdin — what a caller gets when it spawns without piping stdin —
+// used to return immediately (`readFileSync(0)` threw EAGAIN, the catch returned
+// ""). With an uncapped retry budget it instead spent ~10 s spinning and returned
+// "" anyway: measured 12.4 s per invocation, and hundreds of them left three
+// Node-Tests shards in_progress for over an hour.
+//
+// `HOOK_FIRST_BYTE_TIMEOUT_MS` caps the wait for the FIRST byte only, so this
+// case is fast again while the large-payload cases above still get the full
+// budget once bytes are flowing. Both directions are asserted, because fixing
+// either one alone is what produced each of these two defects in turn.
+
+describe.skipIf(!fs.existsSync(BUNDLE))("dispatch — an idle stdin does not stall the hook", () => {
+  it("returns promptly when fd 0 is an open pipe nobody writes to", async () => {
+    const projectDir = makeProjectDir();
+    const started = Date.now();
+    const code = await new Promise<number | null>((resolve) => {
+      const child = spawn(
+        process.execPath,
+        [BUNDLE, "--platform", "claude", "--event", "stop", "--project-dir", projectDir],
+        {
+          // 'pipe' and then never write, never end() — the inherited-idle shape.
+          stdio: ["pipe", "ignore", "ignore"],
+          env: { ...process.env, AGENT_CONFIG_REPLAY: "1", CLAUDE_PROJECT_DIR: projectDir },
+        },
+      );
+      const killer = setTimeout(() => child.kill("SIGKILL"), 8_000);
+      child.on("exit", (c) => {
+        clearTimeout(killer);
+        resolve(c);
+      });
+    });
+    const elapsed = Date.now() - started;
+    expect(code).toBe(0);
+    // Generous against runner noise and still an order of magnitude under the
+    // ~10 s budget an uncapped read would spend here.
+    expect(elapsed).toBeLessThan(4_000);
   });
 });

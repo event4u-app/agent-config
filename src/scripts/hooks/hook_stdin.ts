@@ -68,8 +68,23 @@ export function clearHookStdinOverride(): void {
  * `tests/scripts/hooks/dispatch_large_payload_guard.test.ts`, which fails on the
  * pre-fix bundle.
  */
+export const HOOK_FIRST_BYTE_TIMEOUT_MS = 500;
+
 export function readFd0ToEnd(): string {
-    return readStdinText(0);
+    // The first-byte cap is what keeps the fix from being worse than the defect.
+    // A host writes the hook payload synchronously on spawn, so a byte that has
+    // not arrived within half a second means fd 0 is idle — which is exactly what
+    // a child inherits when a caller spawns it without piping stdin. Without the
+    // cap the shared reader spends its full ~10 s EAGAIN budget on every such
+    // invocation and returns '' anyway: measured 12.4 s per call, and hundreds of
+    // them hung three CI shards for over an hour before this was capped. The old
+    // `fs.readFileSync(0)` returned immediately in that case, so a cap is what
+    // preserves the behaviour that mattered while fixing the one that did not.
+    //
+    // Once any byte has arrived the cap stops applying, so a multi-megabyte
+    // payload still gets the full budget — the large-payload guard test covers
+    // that direction.
+    return readStdinText(0, { firstByteTimeoutMs: HOOK_FIRST_BYTE_TIMEOUT_MS });
 }
 
 /**

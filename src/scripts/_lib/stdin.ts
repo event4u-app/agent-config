@@ -41,6 +41,31 @@ function _sleepSync(ms: number): void {
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
+/** Options for {@link readStdinText}. */
+export interface ReadStdinOptions {
+    /**
+     * Give up and return `''` when the FIRST byte has not arrived within this
+     * many milliseconds. Undefined (the default) keeps the historical behaviour:
+     * the full {@link MAX_RETRIES} budget applies from the first read, which is
+     * what a `gh pr diff` pipe needs — its first byte can legitimately take a
+     * while, and reporting that as empty input is the defect this module exists
+     * to prevent.
+     *
+     * A HOOK is the opposite case, and it cost a CI hang to learn the difference.
+     * The host writes the payload synchronously on spawn, so a byte that has not
+     * arrived promptly is not a slow writer — it is an fd 0 nobody will ever
+     * write to, which is what a child inherits when a test spawns it without
+     * piping stdin. With no cap the dispatcher then span the full ~10 s budget on
+     * EVERY such invocation and returned "" anyway; measured 12.4 s per call
+     * against an immediate return before the retry loop existed. Hundreds of
+     * those hung three Node-Tests shards for over an hour.
+     *
+     * Once ANY byte has arrived the cap no longer applies: a writer demonstrably
+     * exists, so the full budget is right and the large-payload fix is intact.
+     */
+    firstByteTimeoutMs?: number;
+}
+
 /**
  * Read all of fd 0 as UTF-8.
  *
@@ -48,10 +73,13 @@ function _sleepSync(ms: number): void {
  *         {@link MAX_RETRIES} consecutive EAGAINs — a caller must not be able to
  *         mistake a failed read for empty input.
  */
-export function readStdinText(fd = 0): string {
+export function readStdinText(fd = 0, opts: ReadStdinOptions = {}): string {
     const chunks: Buffer[] = [];
     const buf = Buffer.alloc(CHUNK);
     let retries = 0;
+    let got_any = false;
+    const first_byte_deadline =
+        opts.firstByteTimeoutMs === undefined ? null : Date.now() + opts.firstByteTimeoutMs;
     for (;;) {
         let read: number;
         try {
@@ -60,6 +88,11 @@ export function readStdinText(fd = 0): string {
         } catch (exc) {
             const code = (exc as NodeJS.ErrnoException).code;
             if (code === 'EAGAIN') {
+                // An idle fd 0 is "no input", not a slow writer — but only
+                // before the first byte. See ReadStdinOptions.firstByteTimeoutMs.
+                if (!got_any && first_byte_deadline !== null && Date.now() >= first_byte_deadline) {
+                    return '';
+                }
                 retries += 1;
                 if (retries > MAX_RETRIES) {
                     throw new Error(
@@ -76,6 +109,7 @@ export function readStdinText(fd = 0): string {
             throw exc;
         }
         if (read === 0) break;
+        got_any = true;
         chunks.push(Buffer.from(buf.subarray(0, read)));
     }
     return Buffer.concat(chunks).toString('utf-8');
