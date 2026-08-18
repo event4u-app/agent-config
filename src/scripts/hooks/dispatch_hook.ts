@@ -50,6 +50,7 @@ import {
   readFd0ToEnd,
 } from "./hook_stdin.js";
 import { emitFor, type Severity } from "./host_semantics.js";
+import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
 
 // Free-form JSON values flow through every helper here; a documented
@@ -938,10 +939,18 @@ function _write_feedback(
     "decision",
     "reason",
     "duration_ms",
+    "payload_bodies",
+    "payload_stubs",
   ]);
   const summary: JsonObject = {
     schema_version: 1,
     session_id,
+    // Run-level roll-up of step 2.1's counter: how many payload bodies this
+    // dispatch omitted across the whole chain. A number, never a body.
+    payload_stubs_served: entries.reduce(
+      (n, e) => n + (typeof e["payload_stubs"] === "number" ? e["payload_stubs"] : 0),
+      0,
+    ),
     platform: (envelope["platform"] ?? null) as JsonValue,
     event: (envelope["event"] ?? null) as JsonValue,
     native_event: (envelope["native_event"] || "") as JsonValue,
@@ -1214,13 +1223,38 @@ export function main(argv?: string[]): number {
   // Per-concern `tools:` filter (see _concern_matches_tool). Applied here so it
   // is one place, after the envelope exists and before any concern is spawned.
   const tool_name = _payload_tool_name(envelope);
-  for (const concern of concerns) {
+  // Payload opt-in (step 2.1). There are at most FOUR distinct envelope shapes
+  // per dispatch (keep neither / input / result / both), so they are memoised
+  // by keep-set: concerns sharing a declaration share one clone, and building
+  // one per concern would re-pay the allocation the stub exists to avoid.
+  // `present` is the set of body classes this event actually carries — empty on
+  // every non-tool event, which is why those pay nothing at all.
+  // Payload opt-in (step 2.1). One planner owns the whole decision — which
+  // classes are present, which any concern loses, the single measurement pass,
+  // and the at-most-four envelope shapes — so the loop below reads a shape
+  // rather than re-deriving one. Rationale and cost model: payload_stub.ts.
+  const keep_by_concern = concerns.map(
+    (c) => [c, _concern_body_classes(c)] as const,
+  );
+  const shapes = planPayloadShapes(
+    envelope,
+    keep_by_concern.map(([, keep]) => keep),
+  );
+  for (const [concern, keep_classes] of keep_by_concern) {
     if (!_concern_matches_tool(concern, tool_name)) {
       continue;
     }
+    const concern_envelope = shapes.shapeFor(keep_classes);
+    const stubs_served = shapes.stubsFor(keep_classes);
+    // What was actually SERVED, not what was declared. Recording the
+    // declaration made the record wrong in both directions on a body-less
+    // event: a blocking `stop` concern read "input,result" for bodies it can
+    // never receive, and an advisory one read "none" while the full envelope
+    // went to it untouched.
+    const served_classes = shapes.servedBy(keep_classes);
     const concern_started = _now_iso();
     const { rc: rawRcResult, stderr: stderr_text, stdout: stdout_text, duration_ms } =
-      _run_concern(concern, envelope);
+      _run_concern(concern, concern_envelope);
     let rc = rawRcResult;
     const raw_rc = rc;
     if (rc >= 3) {
@@ -1292,6 +1326,15 @@ export function main(argv?: string[]): number {
       started_at: concern_started,
       completed_at: _now_iso(),
       fail_closed: Boolean(concern["fail_closed"]),
+      // Step 2.1's counter — an EXPOSURE denominator, not a detector, and the
+      // review was right to refuse the stronger reading: these numbers are a
+      // function of the declaration and the payload shape, so they say how
+      // often a concern ran without a body, never whether it wanted one. The
+      // detector for the wanting-one case is the source-derived check in
+      // `lint_hook_manifest`, at authoring time, where it is decidable.
+      // A sorted class list and an integer — nothing that can hold a body.
+      payload_bodies: served_classes.join(",") || "none",
+      payload_stubs: stubs_served,
     });
   }
   const final_rc = _reduce(rcs);
