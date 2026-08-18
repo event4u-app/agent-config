@@ -43,7 +43,7 @@ function dispatchPreToolUse(padBytes: number): { status: number | null; stderr: 
     command: 'git commit --no-verify -m "bypass"',
   };
   if (padBytes > 0) toolInput["description"] = "x".repeat(padBytes);
-  const env = { ...process.env, CLAUDE_PROJECT_DIR: REPO_ROOT };
+  const env: NodeJS.ProcessEnv = { ...process.env, CLAUDE_PROJECT_DIR: REPO_ROOT };
   // NOT replay mode: replay short-circuits concerns, which would make this
   // assert nothing at all.
   delete env["AGENT_CONFIG_REPLAY"];
