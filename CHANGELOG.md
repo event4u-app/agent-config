@@ -366,6 +366,59 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 14.1.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [14.1.0](https://github.com/event4u-app/agent-config/compare/14.0.0...14.1.0) (2026-08-18)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _none_
+- **Security and correctness:** _auto-derived, rewrite before merge:_ security-scoped commits or fixes to executable surface in 2ee0642, d8c14a2, 4a60aeb, 3952d49, c9753b1, aa48d84 +1 more.
+- **Honest nulls:** _auto-derived, rewrite before merge:_ commits recording a null, waived or falsified result in 7ebc802.
+- **Known limitations:** _none_
+
+### Features
+
+* **gates:** adopt per-target ledgers in two new arrivals ([a0f3326](https://github.com/event4u-app/agent-config/commit/a0f332632ac4769184cf993c8efd58b2063d0e6f))
+
+### Bug Fixes
+
+* **tests:** a raw NUL byte where a space was meant ([2ee0642](https://github.com/event4u-app/agent-config/commit/2ee0642ddcc99e2eba2a30ba2655263c5048b36a))
+* **hooks:** keep an authorization from being clobbered by a parallel session ([d8c14a2](https://github.com/event4u-app/agent-config/commit/d8c14a2da7238e03b3b34c6ed56cfdcb58ed5525))
+* **review:** unbreak the reference the findings row created, and replicate ([4708792](https://github.com/event4u-app/agent-config/commit/47087927fff242380c03cf95853e9d4106e1b054))
+* **gates:** stop three ledgers reporting targets they never read ([4a60aeb](https://github.com/event4u-app/agent-config/commit/4a60aeb09f429b5fff348b09c5fd5626f7e3f38e))
+* **bench:** give the consumer hook path its own budget, which it never had ([c9753b1](https://github.com/event4u-app/agent-config/commit/c9753b151dfd7a0aa95af08e59cff298c4220318))
+* **gates:** finding 6 — deduplicate the manifest ids before planning ([aa48d84](https://github.com/event4u-app/agent-config/commit/aa48d845a0ec1e81368ad103336b27438c6fcc16))
+* **gates:** apply the R2 review — all 11 findings ([8ec1dbb](https://github.com/event4u-app/agent-config/commit/8ec1dbb65b0a3840865aac0d91c8301eea9cbb1c))
+
+### Documentation
+
+* **roadmap:** carry the replication into step 0.5 ([1219376](https://github.com/event4u-app/agent-config/commit/1219376feca58df91c76e1f24f99d162ab5f7e95))
+* **roadmap:** re-review the risk register the Phase 0 addition invalidated ([c6ff0ed](https://github.com/event4u-app/agent-config/commit/c6ff0ed14b39621765458d9ec39b654bff684b71))
+* **roadmap:** record the path split in Phase 0, where the question already lived ([9fc8cf9](https://github.com/event4u-app/agent-config/commit/9fc8cf9f9f6651e6872d3026d5707191dcaffcdf))
+* **review:** the measurement settles finding 6 — the dispatcher regressed ([7ebc802](https://github.com/event4u-app/agent-config/commit/7ebc8027aba369b34a500377dc588ac526b2ac4f))
+* **review:** close 18 of 20 round-2 findings, name the two that stay open ([80ba9cc](https://github.com/event4u-app/agent-config/commit/80ba9cc12fbf0e336f912766719d61b421f902cd))
+* **baselines:** describe what the ratchet lowering actually landed ([0ce7a17](https://github.com/event4u-app/agent-config/commit/0ce7a17baefad295c2fcb1849b02cca4a07f6bd9))
+* **review:** record round 2 of the completion review, rows open ([41e8a1e](https://github.com/event4u-app/agent-config/commit/41e8a1e4ffc3b378fc2ff2bb9add9c31c3e4936f))
+* **review:** re-bind the findings to the post-fix scope ([43847c1](https://github.com/event4u-app/agent-config/commit/43847c1e1bd07c3d5ebe2ff38060a761e8552e9b))
+* **review:** all 11 findings terminal, with their fix refs ([957a53e](https://github.com/event4u-app/agent-config/commit/957a53e860a973b87b32bba07479b50f43b4f6f1))
+* **review:** the R2 completion review, 11 findings, all rows open ([f7d9581](https://github.com/event4u-app/agent-config/commit/f7d9581ceac1388786fc6a8e0f9b6192c5f10502))
+* **gates:** exempt check_pr_ci_current from the ledger, with the reason ([080e17c](https://github.com/event4u-app/agent-config/commit/080e17c41dd7904fe1bc76c7556417ffb7f525b4))
+
+### CI
+
+* **bench:** measure both hook paths on one runner, without gating either ([7d8be6e](https://github.com/event4u-app/agent-config/commit/7d8be6e1bee4f04d902d660b04f05b03ed1109d7))
+
+### Chores
+
+* **gates:** lower the ledger-adoption baseline 216 to 215 ([6868213](https://github.com/event4u-app/agent-config/commit/686821324b2ad94533a277a43cb857d21bb600c6))
+
+### Other
+
+* Revert "fix(bench): give the consumer hook path its own budget, which it never had" ([3952d49](https://github.com/event4u-app/agent-config/commit/3952d49bf3a3af770cb522dafc540c1458050f3d))
+
+Tests: 14592 (+72 since 14.0.0)
+
 ## [14.0.0](https://github.com/event4u-app/agent-config/compare/13.0.0...14.0.0) (2026-08-18)
 
 ### Release highlights
