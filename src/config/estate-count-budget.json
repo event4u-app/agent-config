@@ -18,7 +18,7 @@
     "baseline": {
         "active_roadmaps": 38,
         "later_roadmaps": 43,
-        "open_blockers": 67
+        "open_blockers": 69
     },
     "baseline_history": [
         {
@@ -34,6 +34,13 @@
             "later_roadmaps": 43,
             "open_blockers": 67,
             "why": "Two metrics REDEFINED before the gate ever ran on a second commit, both on R2 findings against this same change, so these are re-measurements rather than raises. later_roadmaps 44 -> 43: the first count included later/README.md, which the active side's own name filter excludes — an off-by-one that made the baseline describe 43 roadmaps plus a README. open_blockers 49 -> 67: the first count spanned the active tree only, so PARKING a roadmap dropped the gated number without resolving anything and the ratchet printed 'free tightening' over a burial. It now spans active + later/ (49 + 18), which is why the number rose while the estate did not. The cost is stated rather than hidden: this metric no longer equals the dashboard header, and the first version claimed that parity as a virtue."
+        },
+        {
+            "at": "2026-08-18",
+            "active_roadmaps": 38,
+            "later_roadmaps": 43,
+            "open_blockers": 69,
+            "why": "open_blockers 67 -> 69, and this is a correction of a baseline that never described the trunk rather than room made for new growth. 67 was measured at 554b032aa, the commit that registered this gate (PR #1420). PR #1418 merged AFTER it and carried road-to-per-turn-hook-economy from one open blocker to three — verified by counting that one file at both refs, 1 at 554b032aa and 3 at 851568b5c, which is the entire delta. #1418's own CI ran before the gate existed, so nothing objected at the time and the trunk arrived at 69 with the file still claiming 67. The consequence was not a loose ratchet but a permanently red one: the count half compares the live tree against this baseline irrespective of the diff, so EVERY subsequent PR failed on growth it had not caused, and the first to notice was an evidence-only PR that adds no blocker at all. Raising to the measured trunk value restores the property the gate is for — it fails on growth from here, and 69 is now the number that must walk down. The two blockers themselves are untouched and remain open work on road-to-per-turn-hook-economy; closing or parking someone else's blockers to buy the old number back would have been a terminal disposition of another session's work, which is exactly what this ratchet must never incentivise."
         }
     ],
     "target": {
