@@ -76,10 +76,10 @@ index 92e13d254c0fdfa5399662813ff3821606355bef..0f9eeff8a3523dedba98778c7250e2dd
  ### [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md)
  
 diff --git a/agents/roadmaps/road-to-cost-parity-1-rule-payload-diet.md b/agents/roadmaps/road-to-cost-parity-1-rule-payload-diet.md
-index 0cf5c17e110e9987e089c4883813751a7a226f4c..36482865042eb38e654c0847a8d6f064f50023cb 100644
+index 0cf5c17e110e9987e089c4883813751a7a226f4c..9cd0241f18301b13f4fa938f1d715552800244e9 100644
 --- a/agents/roadmaps/road-to-cost-parity-1-rule-payload-diet.md
 +++ b/agents/roadmaps/road-to-cost-parity-1-rule-payload-diet.md
-@@ -281,8 +281,32 @@ part 0's table.
+@@ -281,8 +281,41 @@ part 0's table.
        <!-- verify: ./scripts-run src/scripts/check_cli_registry_budget_sync --quiet -->
  - [ ] 4.3 Hook chain-length cap as a manifest lint: a new concern on a
        capped slot must name the concern it replaces or merges into. Measured
@@ -94,14 +94,23 @@ index 0cf5c17e110e9987e089c4883813751a7a226f4c..36482865042eb38e654c0847a8d6f064
 +
 +      | host | `user_prompt_submit` | `pre_tool_use` | `post_tool_use` | `stop` | `session_start` | `session_end` |
 +      |---|---:|---:|---:|---:|---:|---:|
-+      | augment | — | 11 | 10 | 5 | 13 | 3 |
-+      | claude | **10** | **12** | **11** | **10** | 13 | 3 |
-+      | cowork | 8 | 12 | 10 | 5 | 13 | 3 |
-+      | cursor | 8 | — | 10 | 5 | 13 | 3 |
-+      | cline | 8 | — | 10 | 5 | 13 | 3 |
++      | augment | — | 11 | 10 | 6 | 13 | 4 |
++      | claude | **10** | **12** | **11** | **11** | 13 | 4 |
++      | cowork | 8 | 12 | 10 | 6 | 13 | 4 |
++      | cursor | 8 | — | 10 | 6 | 13 | 4 |
++      | cline | 8 | — | 10 | 6 | 13 | 4 |
 +      | windsurf | 7 | — | — | 5 | 12 | — |
-+      | gemini | 8 | — | 10 | 5 | 13 | 3 |
++      | gemini | 8 | — | 10 | 6 | 13 | 4 |
 +      | copilot | — | — | — | — | — | — |
++
++      **Re-measured AFTER the flush bindings in the same PR, which the first pass
++      got wrong.** The table originally read `stop` 5/10 and `session_end` 3 — a
++      census taken before `road-to-per-turn-hook-economy` step 3.1 added
++      `roadmap-progress` to those two slots on six hosts, i.e. a baseline stale by
++      the very change the same PR made. `windsurf` keeps 5 and no `session_end`
++      because it has no `post_tool_use` surface, so it never marks the ledger and
++      received no flush binding. Caught by the R2 review; the lesson is the
++      cheap half — re-read the manifest AFTER your own edit, not before it.
 +
 +      A dash is **no binding on that slot for that host**, not a zero-length
 +      chain — copilot is `fallback_only` and carries no hook surface at all,
@@ -115,7 +124,7 @@ index 0cf5c17e110e9987e089c4883813751a7a226f4c..36482865042eb38e654c0847a8d6f064
  - [ ] 4.4 Each of the two caps names the mechanism it removes or replaces,
        per `surface-consolidation-restraint.md`'s load-bearing rule that
 diff --git a/agents/roadmaps/road-to-per-turn-hook-economy.md b/agents/roadmaps/road-to-per-turn-hook-economy.md
-index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..4368b2af3d737e9a84c188073a41fb164a78df61 100644
+index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..601bd54828b3ec092b340b6b9f6797fa3051d1b7 100644
 --- a/agents/roadmaps/road-to-per-turn-hook-economy.md
 +++ b/agents/roadmaps/road-to-per-turn-hook-economy.md
 @@ -101,7 +101,7 @@ this file at all, it is the activation flip owned by
@@ -215,7 +224,7 @@ index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..4368b2af3d737e9a84c188073a41fb16
        pre/post concerns that only care about one tool family get a `matcher`, and
        command-shaped guards additionally get an `if` prefilter. The dispatcher
        contract is unchanged — the same bundle runs, it just runs on fewer events.
-@@ -197,12 +253,76 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+@@ -197,12 +253,77 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
        so its matcher is a post-slot matcher. Treat this as the input to 5.1, not
        its output — each row still needs its own absent-invocation proof. -->
  
@@ -232,12 +241,13 @@ index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..4368b2af3d737e9a84c188073a41fb16
 +         `matcher: Edit|Write` group and the group carrying the unscoped concerns
 +         pays **two** cold starts where it pays one today.
 +      2. **An unscoped group is mandatory on `pre_tool_use`, so nothing can be
-+         skipped.** Eight of the twelve claude `pre_tool_use` concerns declare no
-+         tool scope at all (`block-no-verify`, `block-unauthorized-git`,
++         skipped.** **Nine** of the twelve claude `pre_tool_use` concerns declare
++         no tool scope at all (`block-no-verify`, `block-unauthorized-git`,
 +         `evidence-independence`, `block-kernel-rule-writes`,
 +         `block-config-weakening`, `rtk-wrap`, `design-slop`, `ui-route-nudge`,
 +         `ship-diff-volume` — only `code-graph-nudge`, `reread-guard` and
-+         `spawn-guard-shadow` carry `tools:`). Any payload must therefore reach a
++         `spawn-guard-shadow` carry `tools:`; the enumeration was right and the
++         count said eight, corrected after the R2 review). Any payload must therefore reach a
 +         group with no `matcher`, and a group with no matcher fires on every tool
 +         call. AC-5's *"a `PreToolUse` with a non-matching payload costs no
 +         dispatcher spawn at all"* cannot hold. The same is true of
@@ -293,7 +303,7 @@ index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..4368b2af3d737e9a84c188073a41fb16
  - [ ] **5.3** Move the non-gating Stop concerns to the host's async handler form,
        so turn-end wall clock carries only the concerns that can actually refuse.
        `end-review-nudge` needs its stdout to reach the model, so it stays
-@@ -229,21 +349,100 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+@@ -229,21 +350,100 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
  
  ### Phase 1 — Serialize once (D-2)
  
@@ -397,7 +407,7 @@ index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..4368b2af3d737e9a84c188073a41fb16
  
  ### Phase 2 — Payload opt-in per concern (D-2, second lever)
  
-@@ -270,18 +469,66 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+@@ -270,18 +470,66 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
  
  ### Phase 3 — Take the two spawns off the hot path (D-3)
  
@@ -466,7 +476,7 @@ index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..4368b2af3d737e9a84c188073a41fb16
  - **AC-3:** the Stop cell on a heavily-untracked workspace lands within a declared
    band of the clean-workspace cell.
  
-@@ -293,7 +540,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+@@ -293,7 +541,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
  > refresh with it — that step's recorded baseline is stale in the *growing*
  > direction, which is the worst direction for a cap's own census to age in.
  
@@ -475,7 +485,7 @@ index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..4368b2af3d737e9a84c188073a41fb16
        pre and post chains across a representative tool-call count plus the prompt
        and stop slots, benchmarked in CI. Register it **before** Phases 1–3 merge —
        the bar precedes the lever, which is this repo's own budget-ownership
-@@ -304,15 +551,105 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+@@ -304,15 +552,119 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
        implementable: two people would compute two different composites and both
        would call the row green.
        `verify:` the composite appears in the latency bench output and its CI gate.
@@ -496,6 +506,16 @@ index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..4368b2af3d737e9a84c188073a41fb16
 +      individual slot comfortably inside its own budget — which is D-1 stated as
 +      a number for the first time. It is ONE local reading, so it is an input to
 +      4.2 and explicitly not the bar.
++      **What the composite CANNOT see, stated because the R2 review found it and
++      the row would otherwise read as broader than it is:** `bench_hook_latency`
++      forces `AGENT_CONFIG_REPLAY=1` so a bench run leaves no session state, and
++      `roadmap_progress_hook` short-circuits on replay for **both** its write and
++      its flush path. So the composite is blind to step 3.1 in both directions —
++      it cannot show the removed `post_tool_use` spawn, nor the `stop`-slot flush
++      that replaced it. It measures the dispatcher and the concerns that run under
++      replay, which is what it was registered to bound (D-1 is dispatch count, not
++      one concern's spawn); a bench fixture that exercises the debounce needs a
++      throwaway workspace with a roadmap in it, and is not built here.
 +      `perTurnComposite` returns **null** rather than a number when a slot the
 +      definition needs is missing from a run: a composite over a subset reads
 +      low, and low is the direction that makes a ceiling look met. Pinned by
@@ -512,8 +532,12 @@ index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..4368b2af3d737e9a84c188073a41fb16
 +      `user_prompt_submit` for claude, 7–8 on other hosts". Fresh read of
 +      `hook_manifest.yaml`: claude carries **10**, and the other hosts carry
 +      7–8 only on that one slot — claude is the binding host on *every* slot
-+      (`pre_tool_use` 12, `post_tool_use` 11, `stop` 10). The full per-host × slot
++      (`pre_tool_use` 12, `post_tool_use` 11, `stop` 11). The full per-host × slot
 +      table now sits in that step.
++      **Corrected once, after the R2 review, and the miss is worth naming:** the
++      first table was read BEFORE step 3.1 added `roadmap-progress` to `stop` and
++      `session_end` in the same PR, so a refresh whose whole point was a current
++      baseline shipped one stale by its own diff. Measure after your own edit.
 +      **One correction the refresh adds beyond the numbers:** four hosts show no
 +      `pre_tool_use` chain and copilot shows none anywhere, and those are **not**
 +      zero-length chains a cap could read as headroom — they are unbound slots and
@@ -582,10 +606,43 @@ index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..4368b2af3d737e9a84c188073a41fb16
  ## Blockers
  
  ### blocker: b-per-turn-composite-bar
-@@ -347,6 +684,41 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+@@ -347,6 +699,74 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
    the row exists in `hook-latency-budget.json` with its bar or its observe-only
    marker.
  
++### blocker: b-stdin-read-failure-policy
++- **Status:** open
++- **Owner:** user
++- **Class:** 2 — consent-once
++- **Blocks:** nothing — F-1's trigger is fixed and the residual failure is now
++  loud. This records the half that is a policy call rather than a bug fix.
++- **What to do:** decide what the dispatcher does when the stdin read **fails**,
++  as distinct from stdin being empty. Both `_readStdin` and `readHookStdin` still
++  convert any residual failure — an exhausted EAGAIN budget (~10 s), `EIO`,
++  `EBADF` — into an empty string, after which the whole chain runs with no
++  `tool_name` and the dispatcher exits 0. For a `fail_closed: true`,
++  `severity: blocking` guard that is an allow. Options: (a) **deny** on a failed
++  read for block-capable events that carry at least one fail-closed concern —
++  the honest reading of fail-closed, at the cost of refusing a tool call on a
++  transient I/O error; (b) keep allowing but treat the loud stderr line and the
++  dispatch issue that now ship as sufficient, which is the current state;
++  (c) deny only on the block-capable slot and allow elsewhere, which is (a)
++  narrowed to where a guard can actually refuse.
++- **Recommendation:** **option (c).** The bypass F-1 records is only consequential
++  where a guard can refuse, and `pre_tool_use` is the one block-capable slot on
++  this host; denying there costs a retryable refusal on an I/O error the retry
++  budget already survived ten seconds of, while denying on `stop` or
++  `post_tool_use` would refuse nothing and could break a turn end. Option (b) is
++  the status quo and leaves a documented allow-on-failure on a security path;
++  option (a) is right in spirit and pays for it on slots where it buys nothing.
++- **If you do nothing:** the residual failure stays an allow. It is no longer
++  silent — that was the actual defect and it is fixed — but a reader of
++  `hook-architecture-v1`'s fail-closed contract would still expect a refusal that
++  does not happen, and nothing in the tree records the gap except this blocker.
++- **Resolved when:** one option is recorded at this blocker and, for (a) or (c),
++  `_readStdin`'s failure path returns a deny for the named slots with a test that
++  fails when it allows.
++
 +### blocker: b-guard-tool-partition
 +- **Status:** open
 +- **Owner:** user
@@ -625,10 +682,10 @@ index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..4368b2af3d737e9a84c188073a41fb16
  
  <!-- risk-review: v1 | reviewed: 2026-08-18 | reviewer: claude/host -->
 diff --git a/docs/contracts/hook-architecture-v1.md b/docs/contracts/hook-architecture-v1.md
-index dfcddef475f8453f94326dc58f05534b038bf552..abc2959b9c9978fd706baa6397b8c5de90fd2859 100644
+index dfcddef475f8453f94326dc58f05534b038bf552..4f3864bfeb72a6e523fc8ea11e6aa94dfb38755d 100644
 --- a/docs/contracts/hook-architecture-v1.md
 +++ b/docs/contracts/hook-architecture-v1.md
-@@ -376,6 +376,36 @@ The filter is deliberately absent from the blocking PreToolUse guards, whose
+@@ -376,6 +376,37 @@ The filter is deliberately absent from the blocking PreToolUse guards, whose
  tool sets span host naming variants (`Bash` / `BashTool` / `launch-process` / …);
  a list that misses one variant silently disables a guard on that host.
  
@@ -657,19 +714,20 @@ index dfcddef475f8453f94326dc58f05534b038bf552..abc2959b9c9978fd706baa6397b8c5de
 +- **Group splitting costs processes, it does not save them.** Because every
 +  matching group fires, a split only avoids a dispatch for a payload that matches
 +  **no** group. On `pre_tool_use` that is unreachable while any concern is
-+  unscoped — eight of the twelve claude concerns are, deliberately, per the
-+  paragraph above — so a group with no `matcher` must exist and fires on every
-+  tool call. `road-to-per-turn-hook-economy` step 5.1 was cancelled on exactly
++  unscoped — **nine** of the twelve claude concerns are, deliberately, per the
++  paragraph above; only `code-graph-nudge`, `reread-guard` and
++  `spawn-guard-shadow` declare `tools:` — so a group with no `matcher` must exist
++  and fires on every tool call. `road-to-per-turn-hook-economy` step 5.1 was cancelled on exactly
 +  this reading.
 +
  ### Optional `roles:` axis — session-role chain thinning
  
  A top-level `roles:` block lets a marked session run a shorter chain
 diff --git a/src/config/hook-latency-budget.json b/src/config/hook-latency-budget.json
-index 4475d8e765d87a380a6f8d5b8dabc5f1c850f6a5..56309e2746f02487454045ac98cc1fb1d9717c8a 100644
+index 4475d8e765d87a380a6f8d5b8dabc5f1c850f6a5..113d938c047f9dacc0abea15bba57b28e2f98e3c 100644
 --- a/src/config/hook-latency-budget.json
 +++ b/src/config/hook-latency-budget.json
-@@ -12,6 +12,15 @@
+@@ -12,6 +12,16 @@
          "pre_tool_use": { "p95_ci": 150, "p95_1vcpu": 400 },
          "any_hook_event": { "p95_ci": 250 }
      },
@@ -677,16 +735,17 @@ index 4475d8e765d87a380a6f8d5b8dabc5f1c850f6a5..56309e2746f02487454045ac98cc1fb1
 +        "_comment": "D-1 of road-to-per-turn-hook-economy: the slot budgets above gate per EVENT, and a single tool call fires both pre_tool_use and post_tool_use with their full concern chains. A ten-tool-call turn therefore pays twenty dispatcher cold starts plus the prompt and stop slots while every individual slot stays green — the number the user experiences has no row. This row is that number. Registered by step 4.1; the CEILING is step 4.2 and is the maintainer's, so the row ships observe-only and CANNOT fail a build. Definition before bar, deliberately: two people computing two different composites would both call the row green.",
 +        "definition": "(pre_tool_use + post_tool_use) * tool_calls + user_prompt_submit + stop",
 +        "aggregation": "p50",
++        "_aggregation_note": "Documentation of the code, not an input to it: the bench reads tool_calls from this file but hardcodes the p50 aggregation and re-implements the formula, so editing `aggregation` or `definition` changes nothing. Kept because a row whose meaning lives only in a TS file is unreadable here; corrected from silence to a stated non-binding after the R2 review flagged both keys as unread.",
 +        "tool_calls": 10,
 +        "observe_only": true,
 +        "p50_ci": null,
-+        "_observe_only_note": "While observe_only is true the bench PRINTS the composite on every run, including the CI gate run, and never fails on it. Setting p50_ci to a number and observe_only to false is the whole of step 4.2 — no code change is needed to arm it. Do not arm it from a single run: the composite sums six measurements and therefore accumulates runner variance faster than any slot (risk 5), which is why the same absolute-cap-plus-pathology-net posture the slots use applies here too."
++        "_observe_only_note": "While observe_only is true the bench PRINTS the composite on every run, including the CI gate run, and never fails on it. Setting p50_ci to a number and observe_only to false is the whole of step 4.2 — no code change is needed to arm it. Do not arm it from a single run: the composite sums four slot measurements and multiplies two of them by tool_calls, so it accumulates runner variance faster than any single slot (risk 5), which is why the same absolute-cap-plus-pathology-net posture the slots use applies here too."
 +    },
      "regression_gate": {
          "max_regression_pct": 200,
          "_comment": "Pathology net only — the ABSOLUTE budgets above are the binding gate for wall-clock. The original 20% window was falsified by measured GitHub-runner variance: two CI runs of IDENTICAL code measured p95 77-89 ms and 92-103 ms (+23% run-to-run, 2026-07-27, runs 30303438480 / round-2 tests.yml). Same rationale as the regression_pct 200 override on the evaluator timing budgets: a tight creep rule on shared-runner wall-clock flaps; sizes/counts keep tight windows, timings get absolute caps."
 diff --git a/src/scripts/bench_hook_latency.ts b/src/scripts/bench_hook_latency.ts
-index 8f79b837e0038bd8d145c9e4ad684f8adca36a16..30e55e41e99b9ef114511d4d2a44558252866cea 100644
+index 8f79b837e0038bd8d145c9e4ad684f8adca36a16..989d3599ce1a917f06d354f9f9badd58093c6710 100644
 --- a/src/scripts/bench_hook_latency.ts
 +++ b/src/scripts/bench_hook_latency.ts
 @@ -57,6 +57,20 @@ import { build_claude_hook_matrix } from './_lib/claude_settings_hooks.js';
@@ -710,7 +769,7 @@ index 8f79b837e0038bd8d145c9e4ad684f8adca36a16..30e55e41e99b9ef114511d4d2a445582
  const CLI_BIN = path.join(REPO_ROOT, 'dist', 'cli', 'agent-config.js');
  const SHIM = path.join(REPO_ROOT, 'agent-config');
  const MANIFEST_PATH = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
-@@ -98,17 +112,47 @@ function percentile(sorted: number[], p: number): number {
+@@ -98,17 +112,55 @@ function percentile(sorted: number[], p: number): number {
      return sorted[Math.max(0, idx)] as number;
  }
  
@@ -753,14 +812,22 @@ index 8f79b837e0038bd8d145c9e4ad684f8adca36a16..30e55e41e99b9ef114511d4d2a445582
 +    };
 +    if (PAYLOAD_BYTES > 0 && TOOL_EVENTS.has(event)) {
 +        // Filler with no JSON metacharacters, so the cost measured is
-+        // serialisation volume rather than escaping.
-+        body['tool_response'] = 'x'.repeat(PAYLOAD_BYTES);
++        // serialisation volume rather than escaping. The FIELD differs per slot
++        // and that matters: `tool_response` does not exist on a `PreToolUse`
++        // payload, so padding it there would measure a shape the host never
++        // sends — the same objection this file raises against padding `stop`.
++        const filler = 'x'.repeat(PAYLOAD_BYTES);
++        if (event === 'post_tool_use') {
++            body['tool_response'] = filler;
++        } else {
++            body['tool_input'] = { ...(body['tool_input'] as object), description: filler };
++        }
 +    }
 +    return JSON.stringify(body);
  }
  
  /**
-@@ -144,7 +188,15 @@ export function benchEvent(
+@@ -144,7 +196,15 @@ export function benchEvent(
              ? ['bash', ['-c', hooksJsonCommand(event)]]
              : [
                    process.execPath,
@@ -777,7 +844,7 @@ index 8f79b837e0038bd8d145c9e4ad684f8adca36a16..30e55e41e99b9ef114511d4d2a445582
                ];
      for (let i = 0; i < runs; i += 1) {
          const started = performance.now();
-@@ -184,6 +236,47 @@ interface Budget {
+@@ -184,6 +244,47 @@ interface Budget {
          any_hook_event: { p95_ci: number };
      };
      regression_gate: { max_regression_pct: number };
@@ -825,7 +892,23 @@ index 8f79b837e0038bd8d145c9e4ad684f8adca36a16..30e55e41e99b9ef114511d4d2a445582
  }
  
  interface HistoryEntry {
-@@ -218,9 +311,53 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+@@ -205,6 +306,15 @@ interface ResultsDoc {
+ }
+ 
+ export function main(argv: string[] = process.argv.slice(2)): number {
++    // Reset the measurement-only globals per invocation. Their guard below is
++    // per-call, so leaving them set let a second `main()` in the same process —
++    // `main(['--bundle', …])` then `main(['--update'])` — write a foreign or
++    // padded reading into this tree's budget row and regression baseline, the
++    // exact outcome the guard's own message says must never happen. Found by
++    // the R2 review.
++    BUNDLE_OVERRIDE = null;
++    PAYLOAD_BYTES = 0;
++
+     const gate = argv.includes('--gate');
+     const update = argv.includes('--update');
+     const viaCli = argv.includes('--via-cli');
+@@ -218,9 +328,53 @@ export function main(argv: string[] = process.argv.slice(2)): number {
      const runsIdx = argv.indexOf('--runs');
      const runs = runsIdx >= 0 ? Number.parseInt(argv[runsIdx + 1] ?? '50', 10) : 50;
  
@@ -881,7 +964,7 @@ index 8f79b837e0038bd8d145c9e4ad684f8adca36a16..30e55e41e99b9ef114511d4d2a445582
          );
          return 2;
      }
-@@ -264,7 +401,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+@@ -264,7 +418,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
              const r = benchEvent(event, runs, workspace, via);
              results.push(r);
              process.stdout.write(
@@ -890,7 +973,7 @@ index 8f79b837e0038bd8d145c9e4ad684f8adca36a16..30e55e41e99b9ef114511d4d2a445582
              );
          }
      } finally {
-@@ -303,6 +440,44 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+@@ -303,6 +457,44 @@ export function main(argv: string[] = process.argv.slice(2)): number {
          );
      }
  
@@ -935,7 +1018,7 @@ index 8f79b837e0038bd8d145c9e4ad684f8adca36a16..30e55e41e99b9ef114511d4d2a445582
      if (update || baselineHardware !== null) {
          const existing = prior ?? ({ results: [] } as ResultsDoc);
          const history: HistoryEntry[] = existing.history ?? [];
-@@ -329,6 +504,16 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+@@ -329,6 +521,16 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                    invocation_path: via,
                    runs_per_event: runs,
                    results,
@@ -1053,7 +1136,7 @@ index cb3dadf52c3e2ad1f62496edf10c33fab659aa03..4b1e486c3cd2bc7f73e16e3fa6d7588c
      post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
  
 diff --git a/src/scripts/hooks/dispatch_hook.ts b/src/scripts/hooks/dispatch_hook.ts
-index 29e96023881312a03935161eb664d05b5de57dd2..9399d82be044be380dfe47fddf13c17a4caa7bdc 100644
+index 29e96023881312a03935161eb664d05b5de57dd2..6197e6b47b6ccb8c3d298378c4623022ca4ad0b0 100644
 --- a/src/scripts/hooks/dispatch_hook.ts
 +++ b/src/scripts/hooks/dispatch_hook.ts
 @@ -32,6 +32,7 @@
@@ -1104,7 +1187,7 @@ index 29e96023881312a03935161eb664d05b5de57dd2..9399d82be044be380dfe47fddf13c17a
  function _run_concern_inproc(
    main_fn: ConcernMain,
    concern: ConcernDef,
-@@ -1116,7 +1143,12 @@ export function main(argv?: string[]): number {
+@@ -1116,7 +1143,34 @@ export function main(argv?: string[]): number {
      }
    }
  
@@ -1115,24 +1198,80 @@ index 29e96023881312a03935161eb664d05b5de57dd2..9399d82be044be380dfe47fddf13c17a
 +  // yields an EMPTY envelope. That is a measured guard bypass, not a theory —
 +  // see readFd0ToEnd's header in hooks/hook_stdin.ts.
 +  const payload_text = tty.isatty(0) ? "" : _readStdin();
++  if (_stdin_read_failed !== null) {
++    // NEVER silent: an empty envelope reached from a failed read means every
++    // guard on this event evaluated nothing. The exit code is unchanged (see
++    // `_stdin_read_failed`), so this line and the dispatch issue are the only
++    // signal that the chain ran blind.
++    process.stderr.write(
++      `dispatch_hook: STDIN READ FAILED (${_stdin_read_failed}) — the concern ` +
++        `chain for '${args.event}' ran against an EMPTY payload and could not ` +
++        `evaluate anything. This is not an empty stdin.\n`,
++    );
++    try {
++      log_dispatch_issue(
++        process.cwd(),
++        "dispatcher",
++        "execution_failed",
++        `stdin read failed on ${args.event}: ${_stdin_read_failed} — chain ran with an empty payload`,
++        fix_hint(),
++      );
++    } catch {
++      // observability never breaks the hook
++    }
++  }
    _maybe_capture_payload(args, payload_text);
    const session_role = resolveSessionRole(process.env);
    const refusal_retry = _is_refusal_retry(args.event, payload_text);
-@@ -1287,7 +1319,9 @@ function _sortedRepr(s: ReadonlySet<string>): string {
+@@ -1285,10 +1339,31 @@ function _sortedRepr(s: ReadonlySet<string>): string {
+   return `[${items.map((x) => `'${x}'`).join(", ")}]`;
+ }
  
++/**
++ * Set when the stdin read FAILED, as distinct from stdin being genuinely empty.
++ *
++ * The two were indistinguishable, and that was the second half of the bypass
++ * F-1 records: removing the EAGAIN *trigger* still left `catch { return "" }`
++ * converting any residual failure — an exhausted retry budget, `EIO`, `EBADF` —
++ * into "no input", after which the whole chain runs with no `tool_name` and the
++ * dispatcher exits 0. For a `fail_closed: true`, `severity: blocking` guard that
++ * is an allow, emitted silently. Found by the R2 review.
++ *
++ * The failure is now LOUD (stderr + a dispatch issue) while the allow/deny
++ * decision is unchanged. Turning a failed read into a DENY is a policy change on
++ * a security surface, so it is filed as `b-stdin-read-failure-policy` rather than
++ * improvised here: an unreadable payload on a block-capable event arguably must
++ * refuse, and that call is the maintainer's.
++ */
++let _stdin_read_failed: string | null = null;
++
  function _readStdin(): string {
    try {
 -    return fs.readFileSync(0, "utf-8");
+-  } catch {
 +    // Reads to EOF and retries on EAGAIN rather than treating it as empty
 +    // input; shared with the concern-side reader so both paths cannot drift.
 +    return readFd0ToEnd();
-   } catch {
++  } catch (exc) {
++    _stdin_read_failed = exc instanceof Error ? exc.message : String(exc);
      return "";
    }
+ }
 diff --git a/src/scripts/hooks/end_review_nudge_hook.ts b/src/scripts/hooks/end_review_nudge_hook.ts
-index 88afa1571b7ce5104874038e477e5dbe6d062e54..70dc87e8dea3cba9357241606a54b33a1afb239f 100644
+index 88afa1571b7ce5104874038e477e5dbe6d062e54..dd17ebb17a4c1e2cc80353d58fe35f9e29d87f22 100644
 --- a/src/scripts/hooks/end_review_nudge_hook.ts
 +++ b/src/scripts/hooks/end_review_nudge_hook.ts
+@@ -25,8 +25,8 @@
+  *
+  * `git diff --numstat HEAD` at `workspace_root`: the working tree vs the
+  * last commit, TRACKED files only, PLUS every untracked non-doc file
+- * (`git ls-files --others --exclude-standard`, one `git diff --numstat
+- * --no-index /dev/null <file>` per file — see "Untracked files" below;
++ * (`git ls-files --others --exclude-standard`, each one READ from the
++ * filesystem rather than diffed in a subprocess — see "Untracked files" below;
+  * fixes a review finding, F6, that a brand-new file was previously invisible
+  * to this count entirely). Chosen over a session-start SHA/timestamp
+  * baseline because no such baseline exists anywhere a `stop` concern can
 @@ -52,10 +52,15 @@
   * that authored a brand-new 300-line module was previously measured as a
   * 0-line mutation. `untrackedNonDocFiles` lists the candidates
@@ -1153,7 +1292,26 @@ index 88afa1571b7ce5104874038e477e5dbe6d062e54..70dc87e8dea3cba9357241606a54b33a
   * worse than an imprecise answer — and instead reports a line count
   * GUARANTEED to be over `MUTATION_LINE_THRESHOLD`: "many new files this
   * session" is itself sufficient signal to fire without the exact count.
-@@ -366,21 +371,58 @@ export function untrackedNonDocFiles(cwd: string): string[] {
+@@ -224,10 +229,14 @@ import { atomic_write_json, is_replay_mode } from './state_io.js';
+ export const MUTATION_LINE_THRESHOLD = 50;
+ 
+ /**
+- * Untracked non-doc files past which this hook refuses to spawn one
+- * `git diff --no-index` subprocess per file and instead reports the
+- * mutation as certainly over threshold (F6, review — see the file header's
+- * "Untracked files" section).
++ * Untracked non-doc files past which this hook refuses to size them at all and
++ * instead reports the mutation as certainly over threshold (F6, review — see the
++ * file header's "Untracked files" section).
++ *
++ * It bounds the file COUNT. The per-file byte bound is separate and lives in
++ * `untrackedFileLineCount`: since step 3.2 replaced the per-file subprocess with
++ * a read, an unbounded read would move an arbitrarily large file INTO this
++ * process, which the subprocess never did.
+  */
+ export const UNTRACKED_FILE_CAP = 20;
+ 
+@@ -366,21 +375,84 @@ export function untrackedNonDocFiles(cwd: string): string[] {
  }
  
  /**
@@ -1169,6 +1327,25 @@ index 88afa1571b7ce5104874038e477e5dbe6d062e54..70dc87e8dea3cba9357241606a54b33a
 + * that either is exhaustive.
 + */
 +export const BINARY_PROBE_BYTES = 8000;
++
++/**
++ * Per-file read ceiling for the untracked-file line count.
++ *
++ * `UNTRACKED_FILE_CAP` bounds how MANY files are sized; nothing bounded how
++ * LARGE one of them may be, and that gap arrived with step 3.2: the
++ * `git diff --no-index` subprocess it replaced never materialised file content in
++ * the hook process, while a `readFileSync` does. One untracked-but-not-ignored
++ * dataset or media file would then cost a full allocation plus an O(n) byte scan
++ * at every turn end, and past ~2 GiB the read throws and silently counts 0.
++ * Found by the R2 review.
++ *
++ * 8 MiB is far above any hand-written source file and far below a size worth
++ * allocating on the Stop path. A file over it is counted as
++ * `MUTATION_LINE_THRESHOLD + 1` rather than 0: "a huge new file appeared" is a
++ * mutation, and the old code's answer for an unreadable file — zero — is the
++ * direction that hides one.
++ */
++export const UNTRACKED_FILE_READ_CAP_BYTES = 8 * 1024 * 1024;
 +
 +/**
 + * Added line count for ONE untracked file, read from the filesystem.
@@ -1201,7 +1378,14 @@ index 88afa1571b7ce5104874038e477e5dbe6d062e54..70dc87e8dea3cba9357241606a54b33a
 -            maxBuffer: 16 * 1024 * 1024,
 -        });
 -        return parseNumstat(r.stdout ?? '').reduce((sum, row) => sum + row.added + row.deleted, 0);
-+        const buf = fs.readFileSync(path.resolve(cwd, relPath));
++        const abs = path.resolve(cwd, relPath);
++        // Size before read: the point of the cap is not to allocate the file.
++        const size = fs.statSync(abs).size;
++        if (size === 0) return 0;
++        if (size > UNTRACKED_FILE_READ_CAP_BYTES) {
++            return MUTATION_LINE_THRESHOLD + 1;
++        }
++        const buf = fs.readFileSync(abs);
 +        if (buf.length === 0) return 0;
 +        // Binary detection, matching what this function replaced rather than
 +        // improving on it: numstat prints a dash for each side of a binary file
@@ -1224,6 +1408,18 @@ index 88afa1571b7ce5104874038e477e5dbe6d062e54..70dc87e8dea3cba9357241606a54b33a
      } catch {
          return 0;
      }
+@@ -399,8 +471,9 @@ export interface MutationMeasurement {
+  * HEAD`) and untracked (`git ls-files --others --exclude-standard`) files —
+  * see the file header's "Untracked files (F6)" section for why both sources
+  * are required. Past `UNTRACKED_FILE_CAP` untracked non-doc files this
+- * function refuses to spawn one `git diff --no-index` subprocess per file
+- * (an unbounded loop) and instead returns a value GUARANTEED to be over
++ * function refuses to size them individually at all (what used to be an
++ * unbounded spawn loop, and is now an unbounded read loop) and instead returns a
++ * value GUARANTEED to be over
+  * `MUTATION_LINE_THRESHOLD` — "many new files this session" is itself
+  * sufficient signal, no exact count needed. `measure` records WHICH of
+  * those two shapes the returned `lines` value is, so a consumer (the
 diff --git a/src/scripts/hooks/hook_stdin.ts b/src/scripts/hooks/hook_stdin.ts
 index 665ad948b16731ee5804be51026ac0d474dd044a..d319589ab1a2acebae484c69dabb05bd4e1a8d09 100644
 --- a/src/scripts/hooks/hook_stdin.ts
@@ -1309,10 +1505,22 @@ index 665ad948b16731ee5804be51026ac0d474dd044a..d319589ab1a2acebae484c69dabb05bd
          return '';
      }
 diff --git a/src/scripts/roadmap_progress_hook.ts b/src/scripts/roadmap_progress_hook.ts
-index 8de45d8affede4b68245e557006551dda97db7d0..0051cf6d534cdb7ebf8c1b19c9abe8de57a2d27b 100644
+index 8de45d8affede4b68245e557006551dda97db7d0..f3473d82698ac92ca0964a3e28178d69034bc2fd 100644
 --- a/src/scripts/roadmap_progress_hook.ts
 +++ b/src/scripts/roadmap_progress_hook.ts
-@@ -44,6 +44,104 @@ import { readHookStdin } from "./hooks/hook_stdin.js";
+@@ -34,6 +34,7 @@
+  */
+ 
+ import { spawnSync } from "node:child_process";
++import * as crypto from "node:crypto";
+ import fs from "node:fs";
+ import path from "node:path";
+ import { fileURLToPath, pathToFileURL } from "node:url";
+@@ -41,9 +42,146 @@ import { fileURLToPath, pathToFileURL } from "node:url";
+ import { hardenedSpawnEnv } from "./_lib/spawn_env.js";
+ import { log_dispatch_issue } from "./hooks/dispatch_issues.js";
+ import { readHookStdin } from "./hooks/hook_stdin.js";
++import { atomic_write_json } from "./hooks/state_io.js";
  
  export const REPLAY_ENV_VAR = "AGENT_CONFIG_REPLAY";
  
@@ -1344,71 +1552,109 @@ index 8de45d8affede4b68245e557006551dda97db7d0..0051cf6d534cdb7ebf8c1b19c9abe8de
 +  "runtime",
 +  "state",
 +  "roadmap-progress",
-+  "dirty-roots.json",
++  "dirty",
 +);
 +
-+/**
-+ * Events that flush the ledger rather than appending to it — in BOTH spellings.
-+ * The dispatcher envelope carries the agent-config event id (`stop`), and a bare
-+ * host payload carries the native name (`Stop`). The hook accepts either shape
-+ * for the write path already, so accepting only one here would leave a host that
-+ * does not wrap marking a ledger nothing ever flushes.
-+ */
++/** Events that flush the ledger rather than appending to it. */
 +export const FLUSH_EVENTS: ReadonlySet<string> = new Set([
 +  "stop",
 +  "session_end",
++  // The dispatcher envelope carries the agent-config event id; a bare host
++  // payload carries the native name, and the hook accepts either shape on the
++  // write path already.
 +  "Stop",
 +  "SessionEnd",
 +  "sessionEnd",
++  // Native aliases `hook_manifest.yaml` maps onto those two events. Missing them
++  // was a real gap rather than a completeness nit: the write path keys on
++  // `tool_name`, not on the event, so a host whose turn end arrives under one of
++  // these names accumulated dirty roots that nothing ever flushed. Found by the
++  // R2 review of the commit that introduced this ledger.
++  "TaskComplete",
++  "TaskCancel",
++  "AfterAgent",
 +]);
 +
-+interface DirtyLedger {
-+  roots: string[];
-+  marked_at: string;
-+}
-+
-+function _ledger_path(consumer_root: string): string {
++function _ledger_dir(consumer_root: string): string {
 +  return path.join(consumer_root, DIRTY_LEDGER_REL);
 +}
 +
-+/** Read the ledger; a missing or unparseable file reads as empty. */
++/**
++ * One entry file per root, named from a hash of the root path.
++ *
++ * **This shape is the concurrency fix, not a style choice.** The first version
++ * kept a single JSON array and did a read-modify-write on it, which is a
++ * lost-update: two `post_tool_use` dispatches from parallel tool calls in one
++ * turn both read `[]`, the second write drops the first root, and `mark_dirty`
++ * still returns `true` — so the inline-regeneration fallback never fires and the
++ * dashboard goes silently stale, which is exactly what the debounce exists to
++ * prevent. Found by the R2 review of the commit that introduced it.
++ *
++ * Independent per-root files remove the race by construction rather than by
++ * holding a lock across a read and a write: concurrent dispatches touch
++ * different paths, and the same root twice is the same path — so N writes to one
++ * repo still leave ONE entry.
++ */
++function _entry_path(consumer_root: string, root: string): string {
++  const digest = crypto.createHash("sha256").update(root).digest("hex").slice(0, 16);
++  return path.join(_ledger_dir(consumer_root), `${digest}.json`);
++}
++
++/** Read the ledger; a missing directory or an unparseable entry reads as empty. */
 +export function read_dirty_roots(consumer_root: string): string[] {
++  let names: string[];
 +  try {
-+    const raw = fs.readFileSync(_ledger_path(consumer_root), "utf8");
-+    const parsed = JSON.parse(raw) as unknown;
-+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return [];
-+    const roots = (parsed as DirtyLedger).roots;
-+    if (!Array.isArray(roots)) return [];
-+    return roots.filter((r): r is string => typeof r === "string" && r.trim() !== "");
++    names = fs.readdirSync(_ledger_dir(consumer_root));
 +  } catch {
 +    return [];
 +  }
++  const roots: string[] = [];
++  for (const name of names.sort()) {
++    if (!name.endsWith(".json")) continue;
++    try {
++      const raw = fs.readFileSync(path.join(_ledger_dir(consumer_root), name), "utf8");
++      const parsed = JSON.parse(raw) as unknown;
++      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) continue;
++      const root = (parsed as { root?: unknown }).root;
++      if (typeof root === "string" && root.trim() !== "") roots.push(root);
++    } catch {
++      // A torn or hand-edited entry is dropped, never fatal.
++    }
++  }
++  return Array.from(new Set(roots)).sort();
 +}
 +
 +/**
-+ * Append roots to the ledger, deduped. Returns false when the ledger could not
-+ * be written — the caller then regenerates inline, so a broken state directory
-+ * costs latency rather than correctness.
++ * Record each root as its own entry. Returns false when any write failed — the
++ * caller then regenerates inline, so a broken state directory costs latency
++ * rather than a silently stale dashboard.
++ *
++ * Writes go through `atomic_write_json` (tmp → rename under the dispatcher
++ * lock), which `hook-architecture-v1` requires for everything written under
++ * `agents/runtime/state/`. That call is a no-op under `AGENT_CONFIG_REPLAY=1`,
++ * which is why the replay guard stays in the caller rather than relying on it.
 + */
 +export function mark_dirty(consumer_root: string, roots: readonly string[]): boolean {
-+  try {
-+    const merged = Array.from(new Set([...read_dirty_roots(consumer_root), ...roots])).sort();
-+    const file = _ledger_path(consumer_root);
-+    fs.mkdirSync(path.dirname(file), { recursive: true });
-+    fs.writeFileSync(
-+      file,
-+      `${JSON.stringify({ roots: merged, marked_at: new Date().toISOString() }, null, 2)}\n`,
-+    );
-+    return true;
-+  } catch {
-+    return false;
++  if (roots.length === 0) return true;
++  let wrote = 0;
++  for (const root of roots) {
++    try {
++      atomic_write_json(_entry_path(consumer_root, root), {
++        root,
++        marked_at: new Date().toISOString(),
++      });
++      wrote += 1;
++    } catch {
++      // A partial write still needs the caller's inline fallback.
++    }
 +  }
++  return wrote === roots.length;
 +}
 +
-+/** Drop the ledger. A missing file is success — flush is idempotent. */
++/** Drop every entry. A missing directory is success — flush is idempotent. */
 +export function clear_dirty(consumer_root: string): void {
 +  try {
-+    fs.rmSync(_ledger_path(consumer_root), { force: true });
++    fs.rmSync(_ledger_dir(consumer_root), { recursive: true, force: true });
 +  } catch {
 +    // observability never breaks the hook
 +  }
@@ -1417,7 +1663,7 @@ index 8de45d8affede4b68245e557006551dda97db7d0..0051cf6d534cdb7ebf8c1b19c9abe8de
  // Tools whose successful execution can write to a roadmap file. We keep
  // the list explicit so an unknown tool name (e.g. a new MCP tool that
  // happens to mention a roadmap path in its input) does not trigger a
-@@ -322,6 +420,59 @@ function _resolve_tsx_invocation(scriptPath: string): { command: string; args: s
+@@ -322,6 +460,59 @@ function _resolve_tsx_invocation(scriptPath: string): { command: string; args: s
    return { command: "npx", args: ["tsx", scriptPath] };
  }
  
@@ -1477,7 +1723,7 @@ index 8de45d8affede4b68245e557006551dda97db7d0..0051cf6d534cdb7ebf8c1b19c9abe8de
  export function run(
    stdin_text: string,
    options: { consumer_root: string; verbose?: boolean },
-@@ -341,8 +492,18 @@ export function run(
+@@ -341,8 +532,18 @@ export function run(
      }
    }
  
@@ -1497,7 +1743,7 @@ index 8de45d8affede4b68245e557006551dda97db7d0..0051cf6d534cdb7ebf8c1b19c9abe8de
      const inner = payload["payload"];
      payload =
        typeof inner === "object" && inner !== null && !Array.isArray(inner)
-@@ -350,6 +511,38 @@ export function run(
+@@ -350,6 +551,38 @@ export function run(
          : {};
    }
  
@@ -1536,7 +1782,7 @@ index 8de45d8affede4b68245e557006551dda97db7d0..0051cf6d534cdb7ebf8c1b19c9abe8de
    const tool = payload["tool_name"] || payload["toolName"] || payload["tool"];
    if (!(typeof tool === "string" && WRITE_TOOLS.has(tool))) {
      return 0;
-@@ -369,59 +562,34 @@ export function run(
+@@ -369,59 +602,34 @@ export function run(
      return 0;
    }
  
@@ -1886,10 +2132,10 @@ index 0000000000000000000000000000000000000000..a843020f2018550744ae65e0862fd26e
 +});
 diff --git a/tests/scripts/hooks/dispatch_large_payload_guard.test.ts b/tests/scripts/hooks/dispatch_large_payload_guard.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..9aabae9290cfc2c46729f49eda1d75835a69cade
+index 0000000000000000000000000000000000000000..12e953f3c480e6a212d293957350abd3845b13d4
 --- /dev/null
 +++ b/tests/scripts/hooks/dispatch_large_payload_guard.test.ts
-@@ -0,0 +1,85 @@
+@@ -0,0 +1,113 @@
 +/**
 + * Large-payload guard integrity — the negative test for a MEASURED bypass.
 + *
@@ -1922,7 +2168,9 @@ index 0000000000000000000000000000000000000000..9aabae9290cfc2c46729f49eda1d7583
 +import * as fs from "node:fs";
 +import * as path from "node:path";
 +import { fileURLToPath } from "node:url";
-+import { describe, expect, it } from "vitest";
++import * as os from "node:os";
++
++import { afterAll, describe, expect, it } from "vitest";
 +
 +const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), "..", "..", "..", "..");
 +const BUNDLE = path.join(REPO_ROOT, "dist", "hooks", "dispatch.js");
@@ -1930,29 +2178,55 @@ index 0000000000000000000000000000000000000000..9aabae9290cfc2c46729f49eda1d7583
 +/** Pad sizes: below the pipe buffer, and two sizes measured to break it. */
 +const PAD_SIZES = [0, 300_000, 2_000_000];
 +
++/**
++ * A throwaway project dir, NOT the working repo.
++ *
++ * `--project-dir` is where the concern chain writes its state and where
++ * `ship-diff-volume` runs its git scans; pointing it at `REPO_ROOT` meant three
++ * real twelve-concern chains executed against the live checkout every time the
++ * suite ran. The property under test needs only the payload — the dispatcher
++ * resolves its manifest from the BUNDLE's own tree, not from here. Found by the
++ * R2 review.
++ */
++function makeProjectDir(): string {
++  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dispatch-large-payload-"));
++  projectDirs.push(dir);
++  return dir;
++}
++
++const projectDirs: string[] = [];
++afterAll(() => {
++  for (const d of projectDirs) fs.rmSync(d, { recursive: true, force: true });
++});
++
 +function dispatchPreToolUse(padBytes: number): { status: number | null; stderr: string } {
++  const projectDir = makeProjectDir();
 +  const toolInput: Record<string, unknown> = {
 +    command: 'git commit --no-verify -m "bypass"',
 +  };
 +  if (padBytes > 0) toolInput["description"] = "x".repeat(padBytes);
-+  const env = { ...process.env, CLAUDE_PROJECT_DIR: REPO_ROOT };
++  const env: NodeJS.ProcessEnv = { ...process.env, CLAUDE_PROJECT_DIR: projectDir };
 +  // NOT replay mode: replay short-circuits concerns, which would make this
 +  // assert nothing at all.
 +  delete env["AGENT_CONFIG_REPLAY"];
 +  const proc = spawnSync(
 +    process.execPath,
-+    [BUNDLE, "--platform", "claude", "--event", "pre_tool_use", "--project-dir", REPO_ROOT],
++    [BUNDLE, "--platform", "claude", "--event", "pre_tool_use", "--project-dir", projectDir],
 +    {
 +      input: JSON.stringify({
 +        session_id: "dispatch-large-payload-guard-test",
-+        cwd: REPO_ROOT,
++        cwd: projectDir,
 +        hook_event_name: "PreToolUse",
 +        tool_name: "Bash",
 +        tool_input: toolInput,
 +      }),
 +      encoding: "utf-8",
 +      env,
-+      timeout: 120_000,
++      // Under the vitest testTimeout (10 s) and just over readStdinText's
++      // ~10 s EAGAIN budget, so a regression of the class this test exists to
++      // catch fails the assertion rather than timing the suite out. Found by
++      // the R2 review.
++      timeout: 8_000,
 +    },
 +  );
 +  return { status: proc.status, stderr: proc.stderr ?? "" };
@@ -1976,7 +2250,7 @@ index 0000000000000000000000000000000000000000..9aabae9290cfc2c46729f49eda1d7583
 +  });
 +});
 diff --git a/tests/scripts/hooks/roadmap_progress_hook.test.ts b/tests/scripts/hooks/roadmap_progress_hook.test.ts
-index f2a6a4f403a4eae4a17227e4d36961fc013f37ca..cdb73ac8e7028aa8f707667249113956759df40d 100644
+index f2a6a4f403a4eae4a17227e4d36961fc013f37ca..71a70f10bfaf209a26961742c14d874dd209089b 100644
 --- a/tests/scripts/hooks/roadmap_progress_hook.test.ts
 +++ b/tests/scripts/hooks/roadmap_progress_hook.test.ts
 @@ -13,6 +13,10 @@ import {
@@ -2114,7 +2388,7 @@ index f2a6a4f403a4eae4a17227e4d36961fc013f37ca..cdb73ac8e7028aa8f707667249113956
          expect(fs.existsSync(sib.marker)).toBe(true); // sibling regenerated
          expect(fs.existsSync(proj.marker)).toBe(false); // project-dir untouched
      });
-@@ -328,3 +354,132 @@ describe('roadmap_progress — _relativize', () => {
+@@ -328,3 +354,151 @@ describe('roadmap_progress — _relativize', () => {
      });
  });
  
@@ -2124,7 +2398,11 @@ index f2a6a4f403a4eae4a17227e4d36961fc013f37ca..cdb73ac8e7028aa8f707667249113956
 +// write. These cases pin the four properties that make deferring it safe rather
 +// than merely cheaper.
 +
-+describe('roadmap_progress — debounce ledger', () => {
++// `.skipIf(!tsx)` like the sibling run() block: five of these cases assert the
++// marker the tsx-run regenerator writes, so without a project-local tsx they
++// would fail — or fall through to a network `npx tsx`. Missed on the first pass
++// and caught by the R2 review.
++describe.skipIf(!tsx)('roadmap_progress — debounce ledger', () => {
 +    it('a write records the root and does NOT regenerate', () => {
 +        const { root, marker } = consumerRoot();
 +        const stdin = payload('save-file', { paths: ['agents/roadmaps/x.md'] });
@@ -2199,23 +2477,38 @@ index f2a6a4f403a4eae4a17227e4d36961fc013f37ca..cdb73ac8e7028aa8f707667249113956
 +
 +    it('an unwritable ledger regenerates INLINE instead of losing the update', () => {
 +        // The debounce is an optimisation; it must never be the reason a
-+        // dashboard silently stops updating. A directory where the ledger file
-+        // belongs makes the write fail, and the hook falls back to the old path.
++        // dashboard silently stops updating. A FILE where the ledger DIRECTORY
++        // belongs makes every entry write fail, and the hook falls back to the
++        // old per-write path. (This was a directory-in-place-of-a-file before the
++        // ledger became one entry per root; the inversion is the point.)
 +        const { root, marker } = consumerRoot();
-+        fs.mkdirSync(path.join(root, DIRTY_LEDGER_REL), { recursive: true });
++        fs.mkdirSync(path.dirname(path.join(root, DIRTY_LEDGER_REL)), { recursive: true });
++        fs.writeFileSync(path.join(root, DIRTY_LEDGER_REL), 'not a directory');
 +        expect(run(payload('save-file', { paths: ['agents/roadmaps/x.md'] }), {
 +            consumer_root: root,
 +        })).toBe(0);
 +        expect(fs.existsSync(marker)).toBe(true);
 +    });
 +
-+    it('a corrupt ledger reads as empty rather than throwing', () => {
++    it('a corrupt entry is dropped rather than throwing', () => {
 +        const { root } = consumerRoot();
-+        const file = path.join(root, DIRTY_LEDGER_REL);
-+        fs.mkdirSync(path.dirname(file), { recursive: true });
-+        fs.writeFileSync(file, 'not json {');
++        const dir = path.join(root, DIRTY_LEDGER_REL);
++        fs.mkdirSync(dir, { recursive: true });
++        fs.writeFileSync(path.join(dir, 'deadbeefdeadbeef.json'), 'not json {');
 +        expect(read_dirty_roots(root)).toEqual([]);
 +        expect(run(flushStdin(), { consumer_root: root })).toBe(0);
++    });
++
++    it('a second root written concurrently is not lost (no read-modify-write)', () => {
++        // The defect this shape removes: a single JSON array meant two parallel
++        // post_tool_use dispatches both read [] and the second write dropped the
++        // first root. Independent per-root files cannot lose one, and the same
++        // root twice is still one entry.
++        const { root } = consumerRoot();
++        expect(mark_dirty(root, ['/repo/a'])).toBe(true);
++        expect(mark_dirty(root, ['/repo/b'])).toBe(true);
++        expect(mark_dirty(root, ['/repo/a'])).toBe(true);
++        expect(read_dirty_roots(root)).toEqual(['/repo/a', '/repo/b']);
 +    });
 +
 +    it('mark_dirty / clear_dirty round-trip and clear is idempotent', () => {
