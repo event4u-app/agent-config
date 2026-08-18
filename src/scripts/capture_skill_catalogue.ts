@@ -77,31 +77,36 @@ import {
     buildHostEventRecord,
     buildNoTruncationRecord,
     buildObservationRecord,
-    cadenceStatus,
     classifyHostProjection,
-    formatCadenceStatus,
     formatPerHostVerdicts,
-    formatPointableBare,
     formatProjectionModes,
     formatReport,
-    joinPointableBare,
     knownHostLimits,
     measureCatalogueVolume,
     parseHostBudgetEvent,
     readObservationLog,
     readProjectedCatalogue,
     resolveSkillsRoot,
-    scopeFlagDecision,
     type HostProjectionRow,
     type ProjectionMode,
     type ProjectionModeCounts,
     type SelectorReport,
 } from './_lib/skill_catalogue.js';
+import {
+    cadenceStatus,
+    formatCadenceStatus,
+    formatPointableBare,
+    joinPointableBare,
+    scopeFlagDecision,
+} from './_lib/skill_catalogue_series.js';
 import { scoped_projection_stats } from './_lib/scoped_projection.js';
 import { iter_skills } from './update_counts.js';
 
-// Re-exported so the CLI module stays the one public name for this tool.
+// Re-exported so the CLI module stays the one public name for this tool —
+// both halves, so the split into a series layer is an internal seam and not a
+// second import path every consumer has to learn.
 export * from './_lib/skill_catalogue.js';
+export * from './_lib/skill_catalogue_series.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
