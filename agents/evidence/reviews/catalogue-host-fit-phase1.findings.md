@@ -1,11 +1,11 @@
 # Findings: catalogue-host-fit-phase1
-<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: 958a61e256b854f8eab04ff0fb032cacfb37335b4441c3866281d89be805d047 | diff: a190ce417ec99da45e0ddba24eced703cd425cb8 | reviewer: r2-fresh-subagent-catalogue-host-fit-phase1 | prompt_hash: b5c4b34da68380d7fca95b673dd0c700fd51d4c9601501c040274d50475d4adb -->
+<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: 341e1312d15903ffd7ec76ddd028208c861293ff1b449aa086c62931d2953574 | diff: 7e9b5086ee55407f53d9f842bbf754f3b036bd2f | reviewer: r2-fresh-subagent-catalogue-host-fit-phase1 | prompt_hash: b5c4b34da68380d7fca95b673dd0c700fd51d4c9601501c040274d50475d4adb -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-18 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: a190ce417ec99da45e0ddba24eced703cd425cb8
-  scope_hash: 958a61e256b854f8eab04ff0fb032cacfb37335b4441c3866281d89be805d047
+  diff_sha: 7e9b5086ee55407f53d9f842bbf754f3b036bd2f
+  scope_hash: 341e1312d15903ffd7ec76ddd028208c861293ff1b449aa086c62931d2953574
   roadmap: agents/roadmaps/road-to-catalogue-host-fit.md
   roadmap_hash: 72efcb83e01802a56c813c8dd36f26f29cbd73cb61be15d062564cf29a768d9e
   ac_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
