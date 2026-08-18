@@ -179,9 +179,99 @@ function _check_concerns(manifest: YamlObject, errors: string[]): Set<string> {
         }
       }
     }
+    // `needs_payload_bodies:` — the payload opt-in
+    // (`road-to-per-turn-hook-economy` step 2.1). Validated for the same
+    // reason `tools:` is, with the polarity reversed: the dispatcher ignores
+    // anything it does not recognise, so `true`, `"input"`, or a misspelled
+    // `[inputs]` all resolve to "keep nothing" and the concern silently
+    // receives stubs it was meant to opt out of. A concern that reads a body
+    // and gets a stub does not crash — it reads `undefined` and reports
+    // nothing, which is the failure this check exists to keep a YAML typo from
+    // introducing. The runtime deliberately does NOT widen on a malformed
+    // value; that would make this check unenforceable.
+    if ("needs_payload_bodies" in spec) {
+      const raw = spec["needs_payload_bodies"];
+      if (!Array.isArray(raw)) {
+        errors.push(
+          `concerns.${name}: 'needs_payload_bodies' must be a list of body ` +
+            `classes (got ${pyTypeName(raw)}) — use [input], [result], or ` +
+            `[input, result]; omit the key to receive stubs, which is the default`,
+        );
+      } else if (raw.length === 0) {
+        errors.push(
+          `concerns.${name}: 'needs_payload_bodies' is an empty list — omit ` +
+            `the key rather than declaring a need for nothing`,
+        );
+      } else {
+        for (const cls of raw) {
+          if (cls !== "input" && cls !== "result") {
+            errors.push(
+              `concerns.${name}: 'needs_payload_bodies' entries must be ` +
+                `'input' or 'result', got ${JSON.stringify(cls)}`,
+            );
+          }
+        }
+      }
+    }
     names.add(name);
   }
   return names;
+}
+
+/** The two slots whose payload carries a stubbable tool body. */
+const TOOL_BODY_EVENTS: ReadonlySet<string> = new Set([
+  "pre_tool_use",
+  "post_tool_use",
+]);
+
+/**
+ * A guard bound on a tool slot must declare `needs_payload_bodies: true`
+ * (`road-to-per-turn-hook-economy` step 2.1).
+ *
+ * A guard reads its subject out of the payload body — `block-no-verify` reads
+ * `tool_input.command` — so a guard served a stub has nothing to match and
+ * exits ALLOW. The dispatcher already refuses to stub one
+ * (`_concern_needs_payload_bodies` treats `fail_closed` / `severity: blocking`
+ * as an implicit opt-in, and does not depend on this lint having run); this is
+ * the manifest half of the same fact, so a reader can see from the YAML that
+ * the guard receives bodies.
+ *
+ * Scoped to the two tool slots deliberately. `turn-end-gate` is blocking and
+ * binds `stop`, whose payload carries no tool body at all — requiring the flag
+ * there would put a "give me the bodies" line on a concern that can never
+ * receive one, which documents nothing and misleads the next reader.
+ */
+function _check_guard_payload_bodies(
+  manifest: YamlObject,
+  errors: string[],
+): void {
+  const concernsRaw = manifest["concerns"];
+  const platformsRaw = manifest["platforms"];
+  if (!isObject(concernsRaw) || !isObject(platformsRaw)) return;
+  const onToolSlot = new Set<string>();
+  for (const block of Object.values(platformsRaw)) {
+    if (!isObject(block)) continue;
+    for (const [event, names] of Object.entries(block)) {
+      if (!TOOL_BODY_EVENTS.has(event) || !Array.isArray(names)) continue;
+      for (const n of names) {
+        if (typeof n === "string") onToolSlot.add(n);
+      }
+    }
+  }
+  for (const [name, spec] of Object.entries(concernsRaw)) {
+    if (!isObject(spec) || !onToolSlot.has(name)) continue;
+    const isGuard = spec["fail_closed"] === true || spec["severity"] === "blocking";
+    const declared = spec["needs_payload_bodies"];
+    const declaresInput = Array.isArray(declared) && declared.includes("input");
+    if (isGuard && !declaresInput) {
+      errors.push(
+        `concerns.${name}: bound on a tool slot and fail_closed / ` +
+          `severity: blocking, so it must declare 'needs_payload_bodies' ` +
+          `including 'input' — a guard served a payload stub has nothing to ` +
+          `match and exits ALLOW`,
+      );
+    }
+  }
 }
 
 function _check_platforms(
@@ -425,6 +515,7 @@ export function lint(manifestPath: string, strict: boolean): number {
   const warnings: string[] = [];
   const concernNames = _check_concerns(manifest, errors);
   const bound = _check_platforms(manifest, concernNames, errors, warnings);
+  _check_guard_payload_bodies(manifest, errors);
   _check_roles(manifest, concernNames, errors);
   _check_aliases(manifest, errors);
   _check_orphan_trampolines(manifest, errors);

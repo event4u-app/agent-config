@@ -50,6 +50,14 @@ import {
   readFd0ToEnd,
 } from "./hook_stdin.js";
 import { emitFor, type Severity } from "./host_semantics.js";
+import {
+  allBodyClasses,
+  countStubbedKeys,
+  parseBodyClasses,
+  presentBodyClasses,
+  stubPayloadBodies,
+  type BodyClass,
+} from "./payload_stub.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
 
 // Free-form JSON values flow through every helper here; a documented
@@ -315,6 +323,40 @@ export function _concern_matches_tool(concern: JsonObject, tool_name: string): b
     return true;
   }
   return names.includes(tool_name);
+}
+
+/**
+ * The payload-body classes a concern receives in full; every other class
+ * arrives as a stub (`road-to-per-turn-hook-economy` Phase 2, step 2.1).
+ *
+ * The default is EMPTY, deliberately: a concern that reads a body says so,
+ * rather than every concern paying for the bodies because one of them might.
+ * The audit that assigned the declarations is in the PR that added the field;
+ * the dispatcher's stub counter is what catches an assignment that was wrong.
+ *
+ * ## Why a blocking or fail-closed concern can never be stubbed
+ *
+ * For an advisory concern a missing declaration costs a finding: it reads
+ * `undefined` where it expected a body and stays quiet. For a guard it costs
+ * an ALLOW — `block-no-verify` reads `tool_input.command`, and a stub makes
+ * that `undefined`, after which the guard has nothing to match and exits 0.
+ * That is the identical shape as the measured stdin bypass this same roadmap
+ * fixed in Phase 1 (an empty payload silently disarming every guard on the
+ * event), and it would be re-introduced by a single omitted YAML line.
+ *
+ * So the declaration is not the only path to the bodies: `fail_closed` or
+ * `severity: blocking` keeps ALL classes, structurally, regardless of what the
+ * manifest says. The lint additionally requires those concerns to declare
+ * their classes explicitly so a reader of the manifest sees the truth — but
+ * the dispatcher does not depend on the lint having run. The cost of the floor
+ * is zero on the one blocking concern that reads no body: `turn-end-gate`
+ * binds `stop`, which carries no tool bodies to stub.
+ */
+export function _concern_body_classes(concern: JsonObject): Set<BodyClass> {
+  if (concern["fail_closed"] === true || concern["severity"] === "blocking") {
+    return allBodyClasses();
+  }
+  return parseBodyClasses(concern["needs_payload_bodies"]);
 }
 
 /**
@@ -938,10 +980,18 @@ function _write_feedback(
     "decision",
     "reason",
     "duration_ms",
+    "payload_bodies",
+    "payload_stubs",
   ]);
   const summary: JsonObject = {
     schema_version: 1,
     session_id,
+    // Run-level roll-up of step 2.1's counter: how many payload bodies this
+    // dispatch omitted across the whole chain. A number, never a body.
+    payload_stubs_served: entries.reduce(
+      (n, e) => n + (typeof e["payload_stubs"] === "number" ? e["payload_stubs"] : 0),
+      0,
+    ),
     platform: (envelope["platform"] ?? null) as JsonValue,
     event: (envelope["event"] ?? null) as JsonValue,
     native_event: (envelope["native_event"] || "") as JsonValue,
@@ -1214,13 +1264,33 @@ export function main(argv?: string[]): number {
   // Per-concern `tools:` filter (see _concern_matches_tool). Applied here so it
   // is one place, after the envelope exists and before any concern is spawned.
   const tool_name = _payload_tool_name(envelope);
+  // Payload opt-in (step 2.1). There are at most FOUR distinct envelope shapes
+  // per dispatch (keep neither / input / result / both), so they are memoised
+  // by keep-set: concerns sharing a declaration share one clone, and building
+  // one per concern would re-pay the allocation the stub exists to avoid.
+  // `present` is the set of body classes this event actually carries — empty on
+  // every non-tool event, which is why those pay nothing at all.
+  const present = presentBodyClasses(envelope);
+  const shaped = new Map<string, JsonObject>();
+  const shapeFor = (keep: ReadonlySet<BodyClass>): JsonObject => {
+    if (present.size === 0) return envelope;
+    const cacheKey = [...keep].sort().join(",");
+    const hit = shaped.get(cacheKey);
+    if (hit !== undefined) return hit;
+    const built = stubPayloadBodies(envelope, keep);
+    shaped.set(cacheKey, built);
+    return built;
+  };
   for (const concern of concerns) {
     if (!_concern_matches_tool(concern, tool_name)) {
       continue;
     }
+    const keep_classes = _concern_body_classes(concern);
+    const concern_envelope = shapeFor(keep_classes);
+    const stubs_served = countStubbedKeys(envelope, keep_classes);
     const concern_started = _now_iso();
     const { rc: rawRcResult, stderr: stderr_text, stdout: stdout_text, duration_ms } =
-      _run_concern(concern, envelope);
+      _run_concern(concern, concern_envelope);
     let rc = rawRcResult;
     const raw_rc = rc;
     if (rc >= 3) {
@@ -1292,6 +1362,12 @@ export function main(argv?: string[]): number {
       started_at: concern_started,
       completed_at: _now_iso(),
       fail_closed: Boolean(concern["fail_closed"]),
+      // Step 2.1's `verify:`. A concern that silently depended on a body it
+      // did not declare shows up as a rising number here, per concern, rather
+      // than as a bug report. A sorted class list and an integer — nothing
+      // that can hold the body they stand for.
+      payload_bodies: [...keep_classes].sort().join(",") || "none",
+      payload_stubs: stubs_served,
     });
   }
   const final_rc = _reduce(rcs);
