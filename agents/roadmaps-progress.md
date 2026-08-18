@@ -6,7 +6,7 @@
 
 ## Overall
 
-**312 / 614 steps done · 51%**
+**315 / 614 steps done · 51%**
 
 ```text
 ████████████████████░░░░░░░░░░░░░░░░░░░░   51%
@@ -30,7 +30,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 19 | 4 | 0 | 1 | [3](#blockers-road-to-context-fidelity) | ██░░░░░░░░ 17% |
 | 6 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
-| 7 | [road-to-council-api-fallback.md](roadmaps/road-to-council-api-fallback.md) | 6 | 17 | 12 | 4 | 1 | 0 | 0 | ██░░░░░░░░ 25% |
+| 7 | [road-to-council-api-fallback.md](roadmaps/road-to-council-api-fallback.md) | 6 | 17 | 9 | 7 | 1 | 0 | 0 | ████░░░░░░ 44% |
 | 8 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
 | 9 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 2 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ████░░░░░░ 40% |
@@ -270,12 +270,12 @@ _1 blocker resolved._
 
 ### [road-to-council-api-fallback.md](roadmaps/road-to-council-api-fallback.md)
 
-**Road to council api fallback — the contract promised a retry no path performed** — 4 / 16 done (25%)
+**Road to council api fallback — the contract promised a retry no path performed** — 7 / 16 done (44%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Core wiring | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
-| 1 | Remaining call paths | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Remaining call paths | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | Config as a first-class key | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | Observability | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | Falsifiability gate (blocker for default-on of anything) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |

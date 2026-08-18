@@ -1498,6 +1498,7 @@ function _maybe_run_chairman(
     table: PriceTable,
     project: unknown,
     args: Args,
+    cli_fallback: CliFallbackOptions | null = null,
 ): ChairmanResult | null {
     const ch = (_isDict(ai_cfg) ? (ai_cfg['chairman'] as Dict) : null) || {};
     const mode = typeof ch['mode'] === 'string' ? (ch['mode'] as string) : 'host';
@@ -1566,10 +1567,29 @@ function _maybe_run_chairman(
         user_prompt: synth_prompt,
         max_tokens: question.max_tokens,
     });
+    // The synthesis falls back like any other billable pass. Council
+    // 2026-08-19 (single anthropic seat — the openai seat failed with
+    // `os_error: ENOBUFS`, so this is one opinion, not convergence) and this
+    // roadmap's own recommendation agree here, on the asymmetry: an
+    // individual seat has N−1 redundancy behind it, the synthesis has none,
+    // so a transport failure loses the artefact the whole pass exists for.
+    //
+    // The counter it named and that is NOT dismissed: the chairman often runs
+    // a larger model, whose api twin may fail differently (unserved model,
+    // separate quota pool), so the retry can spend to discover a second
+    // failure. That is bounded by `model_unservable` already being an
+    // eligible class and by the retry's own projected-spend gate; the
+    // annotation below still reports FAILED when the twin does not answer, so
+    // the operator sees a degraded synthesis rather than a silent one.
+    //
+    // `consult` builds its own ledger for this invocation, which is correct:
+    // the synthesis is a separate invocation from the deliberation rounds and
+    // uses a different member set (one client).
     const out = consult([client], synthQ, budget, {
         table,
         project: project as never,
         original_ask: args.original_ask,
+        cli_fallback,
     });
     const r = out[0] ?? null;
     if (r === null || r.error !== null || r.text.trim() === '') {
@@ -1776,6 +1796,17 @@ function _resolve_max_tokens(args: Args, ai_cfg: Dict): number {
 
 // ── subcommands ─────────────────────────────────────────────────────
 
+/**
+ * Cost preview only — it constructs members to price them and never calls
+ * one, so there is no mid-flight failure to fall back from.
+ *
+ * **`fallback_out` here is a decided non-goal, not an oversight.** The
+ * callsite census over `build_members` finds three sites (`cmd_estimate`,
+ * `cmd_run`, `cmd_debate`) and two of them now pass `fallback_out`; without
+ * this note the third reads as a gap and re-opens on every census. It is
+ * recorded rather than wired because wiring it would construct an api twin
+ * factory that nothing can ever invoke on a spend-free path.
+ */
 function cmd_estimate(
     args: Args,
     opts: { settings?: Dict | null; members?: ExternalAIClient[] | null; table?: PriceTable | null } = {},
@@ -2819,7 +2850,17 @@ function cmd_run(
         { persona_labels },
     );
     const consensus = _maybe_run_consensus(ai_cfg, question, members, responses, budget, table, project, args);
-    const chairman = _maybe_run_chairman(ai_cfg, question, members, responses, budget, table, project, args);
+    const chairman = _maybe_run_chairman(
+        ai_cfg,
+        question,
+        members,
+        responses,
+        budget,
+        table,
+        project,
+        args,
+        fallback_out.options,
+    );
     // road-to-council-blind-review Phase 1 (Ü1), host-path only: when no
     // member chairman ran (mode === 'host'), the blind mapping is computed
     // here (seeded from the question text) and persisted for a later
@@ -3075,6 +3116,10 @@ function cmd_debate(
     // gap is declared in quorum-attendance-budget.json rather than left for a
     // reader to discover from a missing row.
     const quorum_out: { result: QuorumResult | null } = { result: null };
+    // Mid-flight fallback for the debate path. `null` when `build_members` is
+    // never called (injected members in tests) — `run_debate` then behaves
+    // byte-identically to before, which is the same shape `cmd_run` uses.
+    const fallback_out: { options: CliFallbackOptions | null } = { options: null };
     if (members === null) {
         members = build_members(settings, {
             invocation_mode: args.mode_override,
@@ -3084,6 +3129,7 @@ function cmd_debate(
             quorum_out,
             probe_store: readProbeStore(REPO_ROOT),
             command: 'debate',
+            fallback_out,
         });
     }
     if (table === null) {
@@ -3282,6 +3328,7 @@ function cmd_debate(
             on_restate: restate_on ? on_restate : null,
             advisor_plans,
             seed_round_1: seed,
+            cli_fallback: fallback_out.options,
         });
     } catch (exc) {
         if (exc instanceof DebateCapExceeded) {

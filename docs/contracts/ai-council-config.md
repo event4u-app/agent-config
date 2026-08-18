@@ -190,6 +190,33 @@ read-only environment report from `src/scripts/_lib/environment_detector.ts`.
   `metadata.fallback_skipped: cost_budget`. A retried seat carries
   `metadata.fallback_from / fallback_reason / fallback_original_error` and is
   stamped, billed, and daily-ledgered as the api member that answered.
+- **"At most once" is about ESTABLISHING the twin, not about answering once.**
+  A provider that falls through is **substituted for the remainder of the
+  invocation**: every later call in that invocation goes straight to the twin,
+  so the dead binary is spawned once and the twin is constructed once. Those
+  later responses carry `metadata.fallback_sticky: true` alongside the same
+  `fallback_from / fallback_reason` stamp, which is how a reader separates the
+  one escalation from the calls that merely reused it.
+
+  Without the substitution the invocation scope would be strictly worse than a
+  per-round one: the ledger grants `'api'` once per provider, so round 2 would
+  call the dead binary again, fail again, be refused by the ledger, and lose
+  the seat for the rest of the pass — having fallen back exactly once.
+- **Which calls are covered.** `consult()` and all its rounds; `run_debate()`
+  — its restate pass, every debate round, and the gate-repair re-prompts, all
+  under ONE ledger and one twin map per `run_debate` invocation; the
+  stance-repair re-prompt, on the same invocation-wide ledger as the rounds it
+  repairs; and the chairman synthesis, which is a separate invocation with its
+  own ledger and its own single-client member set. `cmd_estimate` is a decided
+  non-goal — it prices members and never calls one.
+- **A `billable: false` cli member is covered, and this is the load-bearing
+  case.** Every vendor-official CLI client is `billable = false` +
+  `transport = 'cli'`; only the two community CLI subclasses that consume an
+  API key are billable. A fallback wired only into the billable path would
+  therefore never fire for anthropic, openai, or gemini — the members the
+  mechanism exists for. The establishing retry runs in the non-billable branch
+  and then rejoins the metered path, so the twin's call is projected, gated,
+  booked, and stamped like any other api call.
 - **Quota fall-through is opt-in: `fallback.api_on_quota` (default `false`).**
   Both quota shapes — the local `cli_call_budget` refusal (pre-spawn, nothing
   sent) and the provider-side plan-quota reject (request boundary) — satisfy

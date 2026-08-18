@@ -89,6 +89,25 @@ read leniently off the raw settings dict; it is not yet a first-class,
 schema-declared key. No events are emitted; the fallback is visible only in
 response metadata. These are Phases 1–3, stated as gaps, not glossed.
 
+## 3. Council input on the Phase 1 decisions — one seat, not convergence
+
+Run 2026-08-19, `mode=prompt`, 2 rounds, $0.0421 actual. **1 of 2 seats
+answered**: the openai/codex seat returned `os_error: ENOBUFS` and is in
+`absent_members`. So this is a single model's opinion and is labelled one
+everywhere it is cited — it is not council convergence, and no gate rests on
+it.
+
+| Question | Verdict | Adopted |
+|---|---|---|
+| Ledger scope for `run_debate` | one ledger per invocation, **conditional on the escalation being visible** | yes — plus F-1's twin map, without which the pick's own premise is false |
+| Stance repair may fall back | yes — transport health and structural validity are independent failure modes | yes, departing from this roadmap's original recommendation |
+| Chairman synthesis may fall back | yes — no redundancy behind it, unlike a seat | yes, matching the original recommendation |
+
+The condition attached to the first verdict — *"fallback should never be
+silent"* — is discharged in this same change-set: every fallen-back response
+carries `fallback_from` / `fallback_reason`, reuses are marked
+`fallback_sticky`, and Phase 3.0 emits the event.
+
 ## Phases
 
 ### Phase 0 — Core wiring
@@ -120,23 +139,51 @@ response metadata. These are Phases 1–3, stated as gaps, not glossed.
 
 ### Phase 1 — Remaining call paths
 
-- [ ] **1.0** `cmd_debate`: pass `fallback_out` into its `build_members`
-      call and thread `cli_fallback` + a per-invocation ledger into
-      `run_debate`'s `_run_round` calls (restate round, debate rounds,
-      gate repairs). Decide explicitly whether ONE ledger spans the whole
-      debate or one per round — the contract's unit is "invocation";
-      recommend one per `run_debate` call.
-      `verify:` `npx vitest run tests/scripts/ai_council/orchestrator.test.ts`
-- [ ] **1.1** Stance-repair transport (`_run_round([member], repairQ, …)`)
-      and chairman synthesis (`consult([client], synthQ, …)`): decide and
-      document per path whether fallback applies. Default recommendation:
-      yes for synthesis (it is a normal billable pass), no for repair (a
-      repair call for a member that just lost its transport should surface,
-      not silently re-bill).
-      `verify:` `npx vitest run tests/scripts/ai_council/orchestrator.test.ts`
-- [ ] **1.2** `cmd_estimate`: no wiring needed (spend-free preview, no
-      calls) — record that as a decided non-goal so the callsite census
-      does not re-open it.
+- [x] **1.0** `cmd_debate`: `fallback_out` into its `build_members` call,
+      `cli_fallback` threaded into `run_debate`, and ONE ledger per
+      `run_debate` invocation spanning the restate pass, every round, and
+      the gate repairs. **Decision: one ledger per invocation** (council
+      2026-08-19, single anthropic seat — see § 3), on the ground that the
+      eligible classes are durable and a per-round ledger re-spawns the
+      dead binary once per round.
+      `verify:` `npx vitest run tests/scripts/ai_council/orchestrator.test.ts` — 70 green.
+- [x] **1.1** Stance repair **and** chairman synthesis both fall back.
+      Synthesis matches the original recommendation; **stance repair
+      departs from it** on the council's argument that transport health and
+      structural validity are independent failure modes, so refusing the
+      retry discards salvageable work for an unrelated reason. Both
+      rationales, including the counter-arguments, are recorded at the
+      call sites rather than only here.
+      `verify:` `npx vitest run tests/scripts/ai_council/orchestrator.test.ts` — 70 green.
+- [x] **1.2** `cmd_estimate`: decided non-goal, recorded as a docblock on
+      the function so the three-site `build_members` census does not
+      re-open it. It prices members and never calls one, so there is no
+      mid-flight failure to fall back from.
+
+#### What Phase 1 found — two defects the wiring exposed
+
+Both were discovered by writing the multi-round test the roadmap's own
+`verify:` line asked for, and both are fixed in this phase.
+
+- **F-1 — invocation scope was strictly worse than round scope.**
+  `MidFlightFallback.attempt` grants `'api'` at most once per provider, and
+  nothing substituted the twin afterwards. So under an invocation-wide
+  ledger round 2 called the dead binary again, failed again, was refused by
+  the ledger, and lost the seat for the rest of the pass. The scope was
+  chosen for a property the mechanism did not have. **Fix:** a per-invocation
+  twin map; a fallen-back provider is substituted BEFORE the call from the
+  next round on, so the binary is spawned once, the twin is built once, and
+  the ledger keeps guarding the one spend-bearing establishment.
+- **F-2 — the fallback was unreachable for every vendor CLI.** `CliClient`
+  is `billable = false`; the non-billable branch of `_run_round` returns
+  before the retry block. Only `XAICliClient` and `PerplexityCliClient`
+  (`billable = true`, they consume an API key) could ever reach it — never
+  anthropic, openai, or gemini. Phase 0's tests passed because they mock a
+  billable cli seat. This is D-1 one layer down: shipped, tested,
+  never executed. **Fix:** the establishing retry runs in the non-billable
+  branch and rejoins the metered path, so the twin is projected, gated,
+  booked and stamped as the api member it is. Pinned by a named regression
+  test.
 
 ### Phase 2 — Config as a first-class key
 

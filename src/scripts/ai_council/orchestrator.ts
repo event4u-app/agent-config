@@ -540,6 +540,8 @@ export function consult(
     // guard's unit (see `ConsultOptions.cli_fallback`).
     const cli_fallback = opts.cli_fallback ?? null;
     const fallback_ledger = cli_fallback !== null ? new MidFlightFallback() : null;
+    const fallback_twins =
+        cli_fallback !== null ? new Map<string, EstablishedTwin>() : null;
     let last_results: CouncilResponse[] = [];
     // A3 read unlock: the stable prefix is ALWAYS the original user prompt;
     // per-round critiques + the STANCE contract ride in a volatile suffix so
@@ -573,6 +575,7 @@ export function consult(
             advisor_plans,
             cli_fallback,
             fallback_ledger,
+            fallback_twins,
             member_prompt_suffix: opts.member_prompt_suffix ?? null,
             no_project_context_members: opts.no_project_context_members ?? null,
             split: suffix_for_round
@@ -610,12 +613,32 @@ export function consult(
                     `Reply with ONLY that single line for your final position.\n\n${STANCE_LINE_CONTRACT}`,
                 max_tokens: question.max_tokens,
             });
+            // Stance repair falls back on the SAME invocation-wide ledger as
+            // the rounds above. Council 2026-08-19 (single anthropic seat —
+            // the openai seat failed with `os_error: ENOBUFS`, so this is one
+            // opinion, not convergence) departed from this roadmap's own
+            // recommendation here, and the argument is why it was adopted:
+            // transport health and structural validity are INDEPENDENT
+            // failure modes. A seat whose CLI auth expired can still return a
+            // perfectly well-formed stance line over the api rung, so
+            // refusing the retry discards salvageable work for an
+            // infrastructure reason unrelated to the defect being repaired.
+            //
+            // The counter-argument, kept rather than dropped: this seat has
+            // already consumed a full answer plus a repair attempt, so the
+            // metered retry compounds cost on an already-expensive seat. That
+            // is bounded by the retry's own projected-spend gate and by the
+            // once-per-provider ledger, which the repair shares with the
+            // rounds rather than getting a fresh one.
             const rr = _run_round([member], repairQ, resolvedBudget, spent, {
                 table,
                 on_overrun,
                 project,
                 original_ask,
                 advisor_plans,
+                cli_fallback,
+                fallback_ledger,
+                fallback_twins,
             });
             const rep = rr[0];
             if (rep !== undefined) {
@@ -657,6 +680,31 @@ interface RunRoundOptions {
     /** See `ConsultOptions.cli_fallback`. Both set together, or neither. */
     cli_fallback?: CliFallbackOptions | null;
     fallback_ledger?: MidFlightFallback | null;
+    /**
+     * Twins established earlier in THIS invocation, keyed by provider — the
+     * half that makes an invocation-scoped ledger coherent across rounds.
+     *
+     * Without it the scope is strictly worse than a per-round ledger, and the
+     * reason is worth stating because it is not obvious: `MidFlightFallback`
+     * hands out `'api'` at most ONCE per provider, so on round 2 the dead cli
+     * member is called again, fails again, and the ledger answers `'stop'` —
+     * the seat is lost for the rest of the debate, having fallen back exactly
+     * once. Round scope would at least retry each round.
+     *
+     * With this map the promise the scope was chosen for actually holds: the
+     * provider is substituted BEFORE the call from the round after it fell
+     * back, so the dead binary is never spawned again, nothing is constructed
+     * twice, and the ledger keeps guarding the one thing it was built to
+     * guard — the first, spend-bearing establishment.
+     */
+    fallback_twins?: Map<string, EstablishedTwin> | null;
+}
+
+/** A provider's api twin, plus why it replaced the cli transport. */
+export interface EstablishedTwin {
+    readonly client: ExternalAIClient;
+    readonly reason: string;
+    readonly original_error: string;
 }
 
 /** Run a single round; mutate `spent` with cumulative totals. */
@@ -709,8 +757,16 @@ function _run_round(
               })
             : null;
 
+    const twins = opts.fallback_twins ?? null;
     for (let idx = 0; idx < members.length; idx++) {
-        const member = members[idx] as ExternalAIClient;
+        const declared = members[idx] as ExternalAIClient;
+        // ── sticky substitution ──────────────────────────────────────
+        // A provider that already fell back earlier in this invocation is
+        // replaced BEFORE the call, so the dead cli binary is not spawned
+        // again once per round. See `RunRoundOptions.fallback_twins`.
+        let established = twins?.get(declared.name) ?? null;
+        const substituted_on_entry = established !== null;
+        let member = established !== null ? established.client : declared;
         // ── non-billable members skip the cost gate entirely ─────────
         // ManualClient (and future PlaywrightClient) cost us $0; their
         // token counts are still tracked from the response below for
@@ -738,15 +794,75 @@ function _run_round(
                     error: _excTag(exc),
                 });
             }
-            _stamp_transport_metadata(response, member);
-            results.push(response);
-            spent.input += response.input_tokens;
-            spent.output += response.output_tokens;
-            continue;
+            // ── the fallback's real entry point ──────────────────────
+            // A vendor-official CLI member is `billable = false` +
+            // `transport = 'cli'` (`CliClient` in clients.ts) — the exact
+            // shape this branch returns early for. The retry block further
+            // down therefore never saw the members the whole mechanism was
+            // built for: it could only ever fire for the two community CLI
+            // subclasses that consume an API key and set `billable = true`.
+            //
+            // That is defect D-1 one layer down — code that exists, tests
+            // that pass because they mock a billable cli seat, and a
+            // production path that never executes it. So the establishing
+            // retry happens HERE, and then the loop deliberately does NOT
+            // `continue`: it falls through to the billable path below with
+            // `member` swapped for the twin, which is metered and must run
+            // the projection, the budget gate, realized-cost booking and the
+            // transport stamp exactly as any other api member does.
+            let escalated = false;
+            const nb_fallback = opts.cli_fallback ?? null;
+            const nb_ledger = opts.fallback_ledger ?? null;
+            if (
+                nb_fallback !== null &&
+                nb_ledger !== null &&
+                response.error !== null &&
+                String(response.error) !== '' &&
+                (_getattr(member, 'transport', 'api') as string) === 'cli'
+            ) {
+                const nb_failure = classifyCliFailure(String(response.error));
+                const nb_policy: FallbackPolicy = { apiOnQuota: nb_fallback.api_on_quota };
+                if (
+                    isFallbackEligibleUnder(nb_failure, nb_policy) &&
+                    nb_ledger.attempt(member.name, nb_failure, nb_policy) === 'api'
+                ) {
+                    const nb_twin = nb_fallback.construct(member.name);
+                    if (nb_twin !== null) {
+                        established = {
+                            client: nb_twin,
+                            reason: nb_failure,
+                            original_error: String(response.error),
+                        };
+                        twins?.set(member.name, established);
+                        member = nb_twin;
+                        escalated = true;
+                    }
+                }
+            }
+            if (!escalated) {
+                _stamp_transport_metadata(response, member);
+                results.push(response);
+                spent.input += response.input_tokens;
+                spent.output += response.output_tokens;
+                continue;
+            }
         }
 
         // ── projected spend check ────────────────────────────────────
-        const est = estimates ? (estimates[idx] as CostEstimate) : null;
+        // A substituted twin is priced as ITSELF: the pre-loop estimate array
+        // was built over the declared members, and the seat this replaces was
+        // an unmetered subscription call. Reusing that row would gate a
+        // metered call against a $0 projection.
+        const est =
+            established !== null && table !== null
+                ? (estimate(question, [member], table, {
+                      project,
+                      original_ask,
+                      advisor_plans: opts.advisor_plans ?? null,
+                  })[0] as CostEstimate)
+                : estimates
+                  ? (estimates[idx] as CostEstimate)
+                  : null;
         const proj_input = spent.input + (est ? est.input_tokens : 0);
         const proj_output = spent.output + (est ? est.output_tokens : 0);
         const proj_usd = spent.usd + (est ? _total_usd(est) : 0.0);
@@ -906,6 +1022,14 @@ function _run_round(
                         };
                         response = twin_response;
                         effective = twin;
+                        // Establish the twin for the rest of the invocation so
+                        // later rounds do not re-spawn the dead binary and the
+                        // once-per-provider ledger is not consulted again.
+                        twins?.set(member.name, {
+                            client: twin,
+                            reason: failure,
+                            original_error,
+                        });
                     } else {
                         // Failure surfaces unchanged; the skip is named so a
                         // reader can tell "not retried" from "retry refused".
@@ -916,6 +1040,21 @@ function _run_round(
                     }
                 }
             }
+        }
+        if (established !== null) {
+            // A fallen-back call is a metered call the operator did not ask
+            // for directly, so no round of the invocation is silent about
+            // which transport answered. `fallback_sticky` separates the
+            // rounds that merely REUSED an established twin from the one
+            // round that established it — a reader counting escalations
+            // should count the latter.
+            response.metadata = {
+                ...(response.metadata ?? {}),
+                fallback_from: 'cli',
+                fallback_reason: established.reason,
+                fallback_original_error: established.original_error,
+                ...(substituted_on_entry ? { fallback_sticky: true } : {}),
+            };
         }
         results.push(response);
         spent.input += response.input_tokens;
@@ -1204,6 +1343,10 @@ function _run_debate_gate_repairs(
         project: ProjectContext | null;
         original_ask: string;
         advisor_plans: Map<string, AdvisorPlan> | null;
+        /** Threaded from `run_debate`; ledger and twins are invocation-wide. */
+        cli_fallback?: CliFallbackOptions | null;
+        fallback_ledger?: MidFlightFallback | null;
+        fallback_twins?: Map<string, EstablishedTwin> | null;
     },
     on_repair: ((member: string, reason: string) => boolean) | null,
 ): CouncilResponse[] {
@@ -1319,6 +1462,29 @@ export interface RunDebateOptions {
     restate?: boolean;
     /** Receives the restate responses (rendering, divergence flags, cost). */
     on_restate?: ((responses: CouncilResponse[]) => void) | null;
+    /**
+     * Mid-flight cli→api fallback for every call this debate makes — the
+     * restate pass, each debate round, and the gate-repair re-prompts.
+     * Absent/`null` → no retry, byte-identical to today.
+     *
+     * ONE ledger spans the whole `run_debate` invocation, not one per round.
+     * Council 2026-08-19 (anthropic seat; the openai seat failed with
+     * `os_error: ENOBUFS`, so this is a single opinion and not convergence)
+     * picked invocation scope on the ground that the eligible classes are
+     * overwhelmingly DURABLE — `binary_missing`, `auth_rejected`,
+     * `cli_unsupported`, `model_unservable` do not heal between rounds — so a
+     * per-round ledger would re-spawn and re-fail the dead CLI once per round
+     * before falling back each time. That also matches the contract's own
+     * unit, which is the invocation.
+     *
+     * The cost of that choice, stated rather than hidden: a TRANSIENT
+     * single-round failure moves the seat to the metered rung for the rest of
+     * the debate even if the CLI would have recovered. The mitigation the
+     * same council made a condition of its pick is visibility, not a narrower
+     * scope — the escalation is emitted as an event (Phase 3.0) so an
+     * operator can see which seat moved, when, and why.
+     */
+    cli_fallback?: CliFallbackOptions | null;
 }
 
 /**
@@ -1378,6 +1544,13 @@ export function run_debate(
     }
 
     const spent: Spent = { input: 0, output: 0, usd: 0.0 };
+    // One ledger per `run_debate` invocation, shared across the restate pass,
+    // every round, and the gate repairs — see `RunDebateOptions.cli_fallback`
+    // for why the scope is the invocation and what that costs.
+    const cli_fallback = opts.cli_fallback ?? null;
+    const fallback_ledger = cli_fallback !== null ? new MidFlightFallback() : null;
+    const fallback_twins =
+        cli_fallback !== null ? new Map<string, EstablishedTwin>() : null;
     const all_rounds: CouncilResponse[][] = [];
     // A3 read unlock (debate twin): stable prefix = the original prompt; the
     // per-round positions block rides in a volatile suffix (see consult loop).
@@ -1404,6 +1577,9 @@ export function run_debate(
             project,
             original_ask,
             advisor_plans,
+            cli_fallback,
+            fallback_ledger,
+            fallback_twins,
         });
         opts.on_restate?.(restated);
     }
@@ -1433,6 +1609,9 @@ export function run_debate(
                 project,
                 original_ask,
                 advisor_plans,
+                cli_fallback,
+                fallback_ledger,
+                fallback_twins,
                 split: current_suffix
                     ? { stable: question.user_prompt, suffix: current_suffix }
                     : null,
@@ -1452,7 +1631,16 @@ export function run_debate(
                 }),
                 budget,
                 spent,
-                { table, on_overrun, project, original_ask, advisor_plans },
+                {
+                    table,
+                    on_overrun,
+                    project,
+                    original_ask,
+                    advisor_plans,
+                    cli_fallback,
+                    fallback_ledger,
+                    fallback_twins,
+                },
                 opts.on_repair ?? null,
             );
         }

@@ -300,6 +300,201 @@ describe('orchestrator — mid-flight cli→api fallback', () => {
     });
 });
 
+// ── Phase 1: the fallback across the remaining call paths ────────────────
+//
+// The invocation-scoped ledger only delivers what it was chosen for if a
+// provider that fell back is SUBSTITUTED for the rest of the invocation.
+// Without that, `MidFlightFallback` hands out `'api'` once per provider and
+// round 2 loses the seat outright — strictly worse than a per-round ledger.
+// These tests pin the substitution, not just the first retry.
+
+describe('orchestrator — fallback across rounds (sticky substitution)', () => {
+    const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'x' });
+
+    /** Fails on every call, as a dead cli binary does. */
+    const deadCli = (error: string): Mock =>
+        new Mock('anthropic', 'claude-sonnet-4-6', {
+            error,
+            transport: 'cli',
+            billable: false,
+        });
+
+    it('a NON-BILLABLE cli seat falls back — the shape every vendor CLI actually has', () => {
+        // `CliClient` (clients.ts) is `billable = false` + `transport = 'cli'`,
+        // and that branch used to return early, before the retry block. So the
+        // mechanism could only fire for the two community subclasses that set
+        // `billable = true` — never for anthropic/openai/gemini, the members it
+        // was built for. This is the regression pin for that.
+        const res = consult([deadCli('auth_expired')], q, null, {
+            cli_fallback: {
+                api_on_quota: false,
+                construct: () =>
+                    new Mock('anthropic', 'claude-sonnet-4-6', { text: 'via api' }),
+            },
+        });
+        expect(res[0]!.error).toBeNull();
+        expect(res[0]!.text).toBe('via api');
+        expect(res[0]!.metadata['fallback_from']).toBe('cli');
+        // The escalating round is not marked sticky — only the reuses are.
+        expect(res[0]!.metadata['fallback_sticky']).toBeUndefined();
+        // The twin is metered, so the seat is stamped as the api member that
+        // answered rather than as the subscription seat that failed.
+        expect(res[0]!.metadata['transport']).toBe('api');
+        expect(res[0]!.metadata['billable']).toBe(true);
+    });
+
+    it('consult over 3 rounds: one construction, one dead-binary call, api for the rest', () => {
+        const cli = deadCli('auth_expired');
+        let calls = 0;
+        const origAsk = cli.ask.bind(cli);
+        cli.ask = ((...a: unknown[]) => {
+            calls += 1;
+            return (origAsk as (...x: unknown[]) => CouncilResponse)(...a);
+        }) as typeof cli.ask;
+
+        const constructed: string[] = [];
+        consult([cli], q, null, {
+            rounds: 3,
+            cli_fallback: {
+                api_on_quota: false,
+                construct: (p) => {
+                    constructed.push(p);
+                    return new Mock('anthropic', 'claude-sonnet-4-6', { text: 'via api' });
+                },
+            },
+        });
+
+        // The twin is built ONCE — the roadmap's own verify line.
+        expect(constructed).toEqual(['anthropic']);
+        // And the dead binary is spawned ONCE, not once per round. This is the
+        // whole efficiency argument for invocation scope; without the sticky
+        // map it would be 3.
+        expect(calls).toBe(1);
+    });
+
+    it('every round after the fallback answers via the twin and says so', () => {
+        const res: CouncilResponse[][] = [];
+        consult([deadCli('auth_expired')], q, null, {
+            rounds: 3,
+            on_round_complete: (_i, r) => {
+                res.push(r);
+            },
+            cli_fallback: {
+                api_on_quota: false,
+                construct: () =>
+                    new Mock('anthropic', 'claude-sonnet-4-6', { text: 'via api' }),
+            },
+        });
+        expect(res).toHaveLength(3);
+        for (const round of res) {
+            expect(round[0]!.error).toBeNull();
+            expect(round[0]!.text).toBe('via api');
+            // No round is silent about the escalation — the condition the
+            // council attached to picking invocation scope.
+            expect(round[0]!.metadata['fallback_from']).toBe('cli');
+            expect(round[0]!.metadata['fallback_reason']).toBe('auth_rejected');
+        }
+        // Round 1 is the establishing retry; 2 and 3 are substitutions.
+        expect(res[0]![0]!.metadata['fallback_sticky']).toBeUndefined();
+        expect(res[1]![0]!.metadata['fallback_sticky']).toBe(true);
+        expect(res[2]![0]!.metadata['fallback_sticky']).toBe(true);
+    });
+
+    it('an INELIGIBLE failure never establishes a twin — every round fails unchanged', () => {
+        const constructed: string[] = [];
+        const res: CouncilResponse[][] = [];
+        consult([deadCli('timeout')], q, null, {
+            rounds: 2,
+            on_round_complete: (_i, r) => {
+                res.push(r);
+            },
+            cli_fallback: {
+                api_on_quota: false,
+                construct: (p) => {
+                    constructed.push(p);
+                    return new Mock('anthropic', 'claude-sonnet-4-6', { text: 'via api' });
+                },
+            },
+        });
+        expect(constructed).toEqual([]);
+        expect(res[0]![0]!.error).toBe('timeout');
+        expect(res[1]![0]!.error).toBe('timeout');
+    });
+
+    it('no cli_fallback → multi-round behaviour is byte-identical to today', () => {
+        const res: CouncilResponse[][] = [];
+        consult([deadCli('auth_expired')], q, null, {
+            rounds: 2,
+            on_round_complete: (_i, r) => {
+                res.push(r);
+            },
+        });
+        expect(res[0]![0]!.error).toBe('auth_expired');
+        expect(res[1]![0]!.error).toBe('auth_expired');
+        expect(res[1]![0]!.metadata['fallback_from']).toBeUndefined();
+    });
+});
+
+describe('orchestrator — fallback on the debate path', () => {
+    const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'x' });
+    const deadCli = (): Mock =>
+        new Mock('anthropic', 'claude-sonnet-4-6', {
+            error: 'auth_expired',
+            transport: 'cli',
+            billable: false,
+        });
+
+    it('a cli seat failing eligibly in round 1 answers via api in every later round, built once', () => {
+        const constructed: string[] = [];
+        const rounds = run_debate([deadCli()], q, {
+            max_rounds: 3,
+            cli_fallback: {
+                api_on_quota: false,
+                construct: (p) => {
+                    constructed.push(p);
+                    return new Mock('anthropic', 'claude-sonnet-4-6', { text: 'via api' });
+                },
+            },
+        });
+        expect(constructed).toEqual(['anthropic']);
+        expect(rounds).toHaveLength(3);
+        for (const round of rounds) {
+            expect(round[0]!.text).toBe('via api');
+            expect(round[0]!.metadata['fallback_from']).toBe('cli');
+        }
+    });
+
+    it('the restate pass shares the debate ledger — it does not get its own', () => {
+        const constructed: string[] = [];
+        let restated: CouncilResponse[] = [];
+        run_debate([deadCli()], q, {
+            max_rounds: 2,
+            restate: true,
+            on_restate: (r) => {
+                restated = r;
+            },
+            cli_fallback: {
+                api_on_quota: false,
+                construct: (p) => {
+                    constructed.push(p);
+                    return new Mock('anthropic', 'claude-sonnet-4-6', { text: 'via api' });
+                },
+            },
+        });
+        // Restate + 2 rounds = 3 opportunities, ONE construction: the ledger
+        // and the twin map span the whole `run_debate` invocation.
+        expect(constructed).toEqual(['anthropic']);
+        expect(restated[0]!.text).toBe('via api');
+    });
+
+    it('no cli_fallback on the debate path → byte-identical to today', () => {
+        const rounds = run_debate([deadCli()], q, { max_rounds: 2 });
+        expect(rounds[0]![0]!.error).toBe('auth_expired');
+        expect(rounds[1]![0]!.error).toBe('auth_expired');
+        expect(rounds[1]![0]!.metadata['fallback_from']).toBeUndefined();
+    });
+});
+
 describe('orchestrator — cost gating', () => {
     // Token-cap breach with no on_overrun → short-circuits remaining members.
     it('token breach short-circuits remaining members (v1)', () => {
