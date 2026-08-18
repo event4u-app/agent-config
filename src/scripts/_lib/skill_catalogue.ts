@@ -454,10 +454,27 @@ export function observationSourceOf(record: ObservationRecord): ObservationSourc
     return record.observation_source ?? 'self-report';
 }
 
+/**
+ * The self-report path's record.
+ *
+ * `projectedSkillCount` and `projectionMode` are optional in the SAME shape the
+ * two host-event builders use — omitted rather than defaulted, because absence
+ * is not `legacy-all` and never was (see `ObservationRecord.projection_mode`).
+ *
+ * They were missing here until 2026-08-18, and the omission was load-bearing in
+ * one direction: the self-report path is the ONLY one that fills `bare_names`,
+ * so it is the only source the pointable-but-bare join below can read — and
+ * every claude observation in the corpus therefore carried no scope at all,
+ * while the codex records beside them did. A series that changes scope
+ * mid-flight without recording it is not comparable, which is exactly what
+ * claim 7 of the roadmap that asked for the field says.
+ */
 export function buildObservationRecord(
     report: SelectorReport,
     host: string,
     observedAt: string,
+    projectedSkillCount?: number,
+    projectionMode?: ProjectionMode,
 ): ObservationRecord {
     return {
         schema: 1,
@@ -471,6 +488,8 @@ export function buildObservationRecord(
         separating_candidates: report.candidates.filter((c) => c.separates).map((c) => c.id),
         truncation_mode: 'per-entry',
         observation_source: 'self-report',
+        ...(projectedSkillCount === undefined ? {} : { projected_skill_count: projectedSkillCount }),
+        ...(projectionMode === undefined ? {} : { projection_mode: projectionMode }),
     };
 }
 
@@ -1113,3 +1132,4 @@ export function formatReport(report: SelectorReport): string {
     );
     return lines.join('\n');
 }
+

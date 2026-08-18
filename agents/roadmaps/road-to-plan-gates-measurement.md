@@ -29,6 +29,27 @@ parent_roadmap: road-to-plan-governance-gates
   `docs/contracts/plan-review-gates.md` § Advisory window.
 - R2 runs `--advisory` in CI until this roadmap's Phase 1 completes.
 
+### Defect to fix BEFORE the enforced flip — the AC extractor can produce nothing, silently
+
+Filed 2026-08-18 from a live R2 run on `road-to-catalogue-host-fit`
+(finding 14 of `agents/evidence/reviews/catalogue-host-fit-phase1.findings.md`).
+The reviewer reported it unprompted and out of its own scope, because it
+degraded that review:
+
+`dispatch_r2_reviewer` wrote a **0-byte** `acceptance-criteria.md` into the
+review-input package while the roadmap plainly carried `AC-0` through `AC-3`,
+and the manifest recorded `ac_hash` as the SHA-256 of the empty string without
+complaint. The review therefore ran with no acceptance criteria and the artefact
+recorded that silently — a reviewer cannot check a diff against criteria it was
+handed none of.
+
+This is Stage-A-shaped work, not Stage B: it belongs to the advisory window it
+is currently corrupting. **An enforced gate whose AC input can be empty is worse
+than an advisory one**, because the blocking verdict then rests on an input
+nobody supplied. The extractor should fail loudly when a roadmap contains `AC-`
+lines and yields none, and the baseline PRs whose packages carry a 0-byte AC file
+should be identified before their catch rate is read as a threshold.
+
 ## Phase 1: Stage B — derive and freeze the threshold
 
 - [ ] **Step 1:** Compute the observed critical/high catch rate over the
