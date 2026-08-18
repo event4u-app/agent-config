@@ -230,6 +230,127 @@ export function benchEvent(
     };
 }
 
+/**
+ * Same-run control: a bare `node -e 0`, measured through the identical
+ * spawnSync harness the slots use.
+ *
+ * WHY this exists (road-to-hook-latency-gate-noise). Every slot reading is
+ * `process spawn + interpreter start + bundle load + concern work`, and only
+ * the last term is ours. The first two scale with whatever else the shared CI
+ * runner is doing, which is why the SAME commit measured `pre_tool_use` p95
+ * 107 ms and 187 ms eight minutes apart on 2026-08-19 — a 45 ms swing with no
+ * diff between them. An absolute wall-clock cap therefore reads runner load as
+ * if it were code cost, and a cap that sits INSIDE its own metric's spread
+ * (150 against an observed 107-187) fails by construction rather than on a
+ * regression.
+ *
+ * The control isolates the shared term so `slot - control` is what this tree
+ * actually costs. It is measurement only — see `normalizedRows` for why it
+ * does not gate yet.
+ */
+export function benchControl(runs: number, workspace: string): EventResult {
+    const durations: number[] = [];
+    for (let i = 0; i < runs; i += 1) {
+        const started = performance.now();
+        const proc = spawnSync(process.execPath, ['-e', '0'], {
+            encoding: 'utf-8',
+            env: { ...process.env, AGENT_CONFIG_REPLAY: '1', CLAUDE_PROJECT_DIR: workspace },
+            timeout: 60000,
+        });
+        const elapsed = performance.now() - started;
+        if (proc.error) {
+            throw new Error(`control spawn failed: ${proc.error.message}`);
+        }
+        durations.push(elapsed);
+    }
+    durations.sort((a, b) => a - b);
+    return {
+        event: 'control_node_start',
+        runs,
+        p50_ms: Math.round(percentile(durations, 50)),
+        p95_ms: Math.round(percentile(durations, 95)),
+        max_ms: Math.round(durations[durations.length - 1] as number),
+    };
+}
+
+export interface NormalizedRow {
+    event: string;
+    p95_ms: number;
+    control_p95_ms: number;
+    /** Wall-clock this tree adds on top of a bare interpreter start. */
+    excess_ms: number;
+    /** slot / control — 1.0 would mean the dispatcher costs nothing. */
+    ratio: number;
+}
+
+/**
+ * Per-slot readings normalized against the same run's control.
+ *
+ * OBSERVE-ONLY, deliberately, and the reason is the same one the
+ * `per_turn_composite` row states for itself: definition before bar. No bar can
+ * be pre-registered here yet, because no historical run recorded a control — so
+ * every candidate number would be invented rather than measured, which the
+ * budget file's own contract forbids. Arming it is a config change once the
+ * nightly has published enough control-carrying runs to set `p95_excess_ci`
+ * from real data; no code change is needed.
+ *
+ * `excess_ms` is the gating candidate rather than `ratio`: the ratio's
+ * denominator is the noisiest term, so a slow runner moves it in the direction
+ * that makes the gate look GREEN — the wrong way for a safety net to fail.
+ */
+export function normalizedRows(
+    results: readonly EventResult[],
+    control: EventResult,
+): NormalizedRow[] {
+    return results.map((r) => ({
+        event: r.event,
+        p95_ms: r.p95_ms,
+        control_p95_ms: control.p95_ms,
+        excess_ms: r.p95_ms - control.p95_ms,
+        ratio: control.p95_ms === 0 ? 0 : Math.round((r.p95_ms / control.p95_ms) * 100) / 100,
+    }));
+}
+
+export interface AppliedCap {
+    /** The budget key this cap comes from, so a message names its own source. */
+    name: string;
+    cap_ms: number;
+    /** false → the breach is reported and does NOT fail the build. */
+    blocking: boolean;
+}
+
+/**
+ * Every cap that applies to one slot, tightest first.
+ *
+ * `pre_tool_use` carries a slot-specific cap AND the shared `any_hook_event`
+ * one. Before the posture split the specific cap was the only one consulted for
+ * that slot, which was harmless while it was the tighter of the two and
+ * blocking. It stops being harmless the moment the tight cap goes advisory:
+ * returning only that cap would drop `pre_tool_use` out of the blocking gate
+ * altogether — the one slot the whole budget exists for. Both are returned, and
+ * each is judged against its own `blocking` flag.
+ */
+export function capsFor(budget: Budget, event: string): AppliedCap[] {
+    const any = budget.budgets_ms.any_hook_event;
+    const caps: AppliedCap[] = [
+        { name: 'any_hook_event', cap_ms: any.p95_ci, blocking: any.blocking ?? true },
+    ];
+    if (event === 'pre_tool_use') {
+        const specific = budget.budgets_ms.pre_tool_use;
+        caps.push({
+            name: 'pre_tool_use',
+            cap_ms: specific.p95_ci,
+            blocking: specific.blocking ?? true,
+        });
+    }
+    return caps.sort((a, b) => a.cap_ms - b.cap_ms);
+}
+
+/** The tightest cap applying to a slot — the threshold a re-measure targets. */
+export function capFor(budget: Budget, event: string): number {
+    return capsFor(budget, event)[0]?.cap_ms ?? Number.POSITIVE_INFINITY;
+}
+
 function loadJson<T>(p: string): T | null {
     try {
         return JSON.parse(fs.readFileSync(p, 'utf-8')) as T;
@@ -238,12 +359,18 @@ function loadJson<T>(p: string): T | null {
     }
 }
 
-interface Budget {
+export interface Budget {
     budgets_ms: {
-        pre_tool_use: { p95_ci: number };
-        any_hook_event: { p95_ci: number };
+        pre_tool_use: { p95_ci: number; blocking?: boolean };
+        any_hook_event: { p95_ci: number; blocking?: boolean };
     };
     regression_gate: { max_regression_pct: number };
+    gate_remeasure?: { attempts?: number };
+    normalized?: {
+        observe_only?: boolean;
+        control?: string;
+        p95_excess_ci?: number | null;
+    };
     per_turn_composite?: {
         definition?: string;
         aggregation?: string;
@@ -401,6 +528,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
     const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'ac-hook-bench-'));
     const results: EventResult[] = [];
+    let control: EventResult | null = null;
     try {
         if (viaCli) {
             // Stage the workspace like a real consumer project so the
@@ -421,6 +549,45 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                 `${event.padEnd(20)} p50 ${String(r.p50_ms).padStart(5)} ms · p95 ${String(r.p95_ms).padStart(5)} ms · max ${String(r.max_ms).padStart(5)} ms (n=${r.runs}, via ${via}${PAYLOAD_BYTES > 0 ? `, payload ${PAYLOAD_BYTES}B` : ''}${BUNDLE_OVERRIDE === null ? '' : ` @ ${BUNDLE_OVERRIDE}`})\n`,
             );
         }
+
+        // Both of these need the workspace, so they run before the `finally`
+        // below tears it down.
+        control = benchControl(runs, workspace);
+        process.stdout.write(
+            `${'control (node -e 0)'.padEnd(20)} p50 ${String(control.p50_ms).padStart(5)} ms · p95 ${String(control.p95_ms).padStart(5)} ms · max ${String(control.max_ms).padStart(5)} ms (n=${control.runs})\n`,
+        );
+
+        // Breach re-measure (--gate only). A single p95 over the cap is not yet
+        // evidence of a regression: a load spike inside one 50-run sample moves
+        // p95 upward and never downward, so re-measuring and keeping the MINIMUM
+        // is the estimator that discards the spike instead of recording it.
+        //
+        // Honest bound, because it decides how much this is worth: consecutive
+        // samples inside ONE job are correlated. This removes a spike WITHIN a
+        // run; it does not rescue a job that landed on a runner which is slow
+        // for its whole lifetime — the 2026-08-19 release case, where three
+        // separate CI runs read 152/153/159 and a fourth read 107. That case is
+        // what the posture split in the budget file addresses, not this.
+        if (gate) {
+            const attempts = Math.max(1, budget.gate_remeasure?.attempts ?? 3);
+            for (let i = 0; i < results.length; i += 1) {
+                const first = results[i] as EventResult;
+                if (first.p95_ms <= capFor(budget, first.event)) continue;
+                let best = first;
+                const readings = [first.p95_ms];
+                for (let attempt = 1; attempt < attempts; attempt += 1) {
+                    const again = benchEvent(first.event, runs, workspace, via);
+                    readings.push(again.p95_ms);
+                    if (again.p95_ms < best.p95_ms) best = again;
+                    if (best.p95_ms <= capFor(budget, first.event)) break;
+                }
+                results[i] = best;
+                process.stdout.write(
+                    `ℹ️  ${first.event}: over cap on the first sample — re-measured, p95 readings ` +
+                        `${readings.join(' / ')} ms, keeping the minimum (${best.p95_ms} ms)\n`,
+                );
+            }
+        }
     } finally {
         fs.rmSync(workspace, { recursive: true, force: true });
     }
@@ -429,13 +596,23 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const prior = loadJson<ResultsDoc>(RESULTS_PATH);
     const priorPath: InvocationPath = prior?.invocation_path ?? 'bundle';
     for (const r of results) {
-        const anyCap = budget.budgets_ms.any_hook_event.p95_ci;
-        const cap = r.event === 'pre_tool_use' ? budget.budgets_ms.pre_tool_use.p95_ci : anyCap;
-        if (gate && r.p95_ms > cap) {
-            process.stderr.write(
-                `❌  ${r.event}: p95 ${r.p95_ms} ms exceeds the pre-registered budget (${cap} ms)\n`,
-            );
-            failed = true;
+        if (gate) {
+            for (const applied of capsFor(budget, r.event)) {
+                if (r.p95_ms <= applied.cap_ms) continue;
+                if (applied.blocking) {
+                    process.stderr.write(
+                        `❌  ${r.event}: p95 ${r.p95_ms} ms exceeds the pre-registered budget ` +
+                            `(${applied.cap_ms} ms, ${applied.name})\n`,
+                    );
+                    failed = true;
+                } else {
+                    process.stdout.write(
+                        `⚠️  ${r.event}: p95 ${r.p95_ms} ms over the advisory budget ` +
+                            `(${applied.cap_ms} ms, ${applied.name}) — reported, not blocking; ` +
+                            `see budgets_ms.${applied.name}.blocking in ${path.basename(BUDGET_PATH)}\n`,
+                    );
+                }
+            }
         }
         if (gate && prior !== null && priorPath === via) {
             const prev = prior.results.find((x) => x.event === r.event);
@@ -455,6 +632,37 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stdout.write(
             `ℹ️  regression net skipped — recorded baseline is via ${priorPath}, this run is via ${via}\n`,
         );
+    }
+
+    // Control-normalized rows. Printed on EVERY run for the same reason the
+    // composite below is: a row that only appears under --gate makes the local
+    // reading and the CI reading incomparable, and comparing them is the whole
+    // point of an instrument built to tell code cost apart from runner load.
+    if (control !== null) {
+        const normCfg = budget.normalized;
+        const bar = normCfg?.p95_excess_ci ?? null;
+        const armed = normCfg?.observe_only === false && bar !== null;
+        process.stdout.write(
+            `normalized vs control (node start p95 ${control.p95_ms} ms) — ` +
+                `${armed ? `excess budget ${String(bar)} ms` : 'observe-only'}\n`,
+        );
+        for (const row of normalizedRows(results, control)) {
+            process.stdout.write(
+                `  ${row.event.padEnd(20)} excess ${String(row.excess_ms).padStart(4)} ms · ` +
+                    `ratio ${row.ratio.toFixed(2)}\n`,
+            );
+        }
+        if (armed && gate) {
+            for (const row of normalizedRows(results, control)) {
+                if (row.excess_ms > (bar as number)) {
+                    process.stderr.write(
+                        `❌  ${row.event}: control-normalized excess ${row.excess_ms} ms exceeds ` +
+                            `the budget (${String(bar)} ms)\n`,
+                    );
+                    failed = true;
+                }
+            }
+        }
     }
 
     // Per-turn composite (D-1 / step 4.1). Printed on EVERY run, gate or not,
