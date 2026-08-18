@@ -30,6 +30,7 @@ import {
     formatPointableBare,
     formatReport,
     joinPointableBare,
+    knownBareNames,
     knownHostLimits,
     latestPointableBarePerHost,
     migrationEligibility,
@@ -685,5 +686,156 @@ describe('migration eligibility (AI council 2026-08-15, 2/2)', () => {
         expect(lines).toContain('mode: scoped');
         expect(lines).toContain('agent-config config');
         expect(lines).toContain('legitimate choice');
+    });
+});
+
+/**
+ * `knownBareNames` — the runtime delivery filter's reducer
+ * (road-to-catalogue-host-fit Phase 3 step 3.1).
+ *
+ * Every test here is written against the three-way distinction the reducer
+ * exists to preserve, because collapsing any two of them is the defect:
+ * `null` = never enumerated (fail open) · empty set = measured clean · non-empty
+ * = these went dark. Two of the three are behaviourally identical at today's
+ * only consumer, which is exactly why they need a test that separates them.
+ */
+describe('knownBareNames — what the runtime router must not name', () => {
+    const claudePerEntry: ObservationRecord = {
+        schema: 1,
+        observed_at: '2026-08-12',
+        host: 'claude',
+        entries_total: 300,
+        bare_count: 2,
+        described_count: 9,
+        bare_names: ['design-review', 'design-intelligence'],
+        verdict: 'no-selector',
+        separating_candidates: [],
+        truncation_mode: 'per-entry',
+        observation_source: 'self-report',
+    };
+    const codexStripAndDrop: ObservationRecord = {
+        schema: 1,
+        observed_at: '2026-08-18',
+        host: 'codex',
+        entries_total: 497,
+        bare_count: 0,
+        described_count: 0,
+        bare_names: [],
+        verdict: 'insufficient-observation',
+        separating_candidates: [],
+        truncation_mode: 'budget-strip-and-drop',
+        observation_source: 'host-event',
+        dropped_count: 402,
+    };
+
+    it('returns the bare names of the matching host', () => {
+        const bare = knownBareNames([claudePerEntry], 'claude');
+        expect(bare).not.toBeNull();
+        expect([...bare!].sort()).toEqual(['design-intelligence', 'design-review']);
+    });
+
+    it('returns null for a host with no record at all — fail open, never narrow', () => {
+        expect(knownBareNames([claudePerEntry], 'cursor')).toBeNull();
+        expect(knownBareNames([], 'claude')).toBeNull();
+    });
+
+    // The load-bearing test, and the sibling of the join's own skip. A
+    // strip-and-drop host enumerates nothing, so its empty `bare_names` means
+    // "not counted". Returning an EMPTY SET here would read as "codex delivered
+    // everything described" — a zero inferred from silence, and the one failure
+    // this module's header forbids outright.
+    it('returns null, not an empty set, for a host that enumerates nothing', () => {
+        expect(knownBareNames([codexStripAndDrop], 'codex')).toBeNull();
+        expect(knownBareNames([claudePerEntry, codexStripAndDrop], 'codex')).toBeNull();
+        // …and the per-entry host in the same log is unaffected by its presence.
+        expect(knownBareNames([claudePerEntry, codexStripAndDrop], 'claude')?.size).toBe(2);
+    });
+
+    it('distinguishes measured-clean from never-measured', () => {
+        const clean: ObservationRecord = { ...claudePerEntry, bare_count: 0, bare_names: [] };
+        const measured = knownBareNames([clean], 'claude');
+        expect(measured).not.toBeNull();
+        expect(measured!.size).toBe(0);
+        // Behaviourally identical to `null` at the consumer, deliberately —
+        // and a different FACT, which is why the reducer keeps them apart.
+        expect(knownBareNames([], 'claude')).toBeNull();
+    });
+
+    // LATEST wins rather than a union across the series. A union would let a
+    // superseded observation keep suppressing a skill the host now delivers
+    // fine, i.e. a filter that only ever narrows.
+    it('reads the latest observation per host, never the union of the series', () => {
+        const older: ObservationRecord = {
+            ...claudePerEntry,
+            observed_at: '2026-08-01',
+            bare_names: ['fe-design', 'design-tokens'],
+        };
+        const bare = knownBareNames([older, claudePerEntry], 'claude');
+        expect([...bare!].sort()).toEqual(['design-intelligence', 'design-review']);
+        expect(bare!.has('fe-design')).toBe(false);
+        // Input order must not decide it.
+        const reversed = knownBareNames([claudePerEntry, older], 'claude');
+        expect([...reversed!].sort()).toEqual([...bare!].sort());
+    });
+
+    // Same guard, same recorded reason as `joinPointableBare`: the log is built
+    // by an unchecked `JSON.parse … as` and has more than one producer, so a
+    // line missing `bare_names` is a real state and must not take the filter
+    // down with a TypeError.
+    // R2 finding 2 — the defect this test exists for. The `per-entry` check used
+    // to run BEFORE the latest-wins pick, so a NEWER non-per-entry record could
+    // never supersede an older per-entry one and a host that changed truncation
+    // mode kept being filtered against a bare set from before the change. The
+    // earlier fixture missed it by mixing two DIFFERENT hosts; this one is ONE
+    // host across a mode change, which is the only shape that catches it.
+    it('stops filtering when the host LATEST record changed truncation mode', () => {
+        const sameHostLater: ObservationRecord = {
+            ...codexStripAndDrop,
+            host: 'claude',
+            observed_at: '2026-08-20',
+        };
+        expect(knownBareNames([claudePerEntry, sameHostLater], 'claude')).toBeNull();
+        // Input order must not decide it, and the older reading must not survive.
+        expect(knownBareNames([sameHostLater, claudePerEntry], 'claude')).toBeNull();
+        // The reverse direction still filters: an OLDER strip-and-drop record
+        // does not stop a newer per-entry one from being read.
+        const olderStrip: ObservationRecord = { ...sameHostLater, observed_at: '2026-08-01' };
+        expect(knownBareNames([olderStrip, claudePerEntry], 'claude')?.size).toBe(2);
+    });
+
+    it('skips a malformed record instead of crashing', () => {
+        const malformed = {
+            ...claudePerEntry,
+            bare_names: undefined,
+        } as unknown as ObservationRecord;
+        expect(knownBareNames([malformed], 'claude')).toBeNull();
+        // A malformed LATEST record yields `null`, NOT the older reading. The
+        // current state is unknown, and falling back to a superseded record is
+        // the stale-suppression failure the tie-break exists to prevent — the
+        // same principle R2 finding 2 forced on the mode-change case above.
+        const older: ObservationRecord = { ...claudePerEntry, observed_at: '2026-08-01' };
+        const late = { ...malformed, observed_at: '2026-08-20' } as unknown as ObservationRecord;
+        expect(knownBareNames([older, late], 'claude')).toBeNull();
+    });
+
+    // R2 finding 6. `_supersedes` compares dates with `!==` then `>`, and BOTH
+    // `undefined > "2026-08-12"` and `"2026-08-12" > undefined` are false — so an
+    // undated record that became the incumbent could never be displaced, pinning
+    // the filter to it forever. The reducer pre-filters on a string date rather
+    // than changing the shared reducer, so an undated line is simply not a
+    // candidate and a well-formed record still wins.
+    it('ignores a record whose observed_at is not a string', () => {
+        const undated = { ...claudePerEntry, observed_at: undefined } as unknown as ObservationRecord;
+        expect(knownBareNames([undated], 'claude')).toBeNull();
+        expect(knownBareNames([undated, claudePerEntry], 'claude')?.size).toBe(2);
+        expect(knownBareNames([claudePerEntry, undated], 'claude')?.size).toBe(2);
+    });
+
+    it('drops a non-string entry rather than trusting the parse', () => {
+        const dirty = {
+            ...claudePerEntry,
+            bare_names: ['design-review', 42, null],
+        } as unknown as ObservationRecord;
+        expect([...knownBareNames([dirty], 'claude')!]).toEqual(['design-review']);
     });
 });
