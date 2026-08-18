@@ -376,6 +376,37 @@ The filter is deliberately absent from the blocking PreToolUse guards, whose
 tool sets span host naming variants (`Bash` / `BashTool` / `launch-process` / …);
 a list that misses one variant silently disables a guard on that host.
 
+### The host's own `matcher` / `if`: a prefilter, never an enforcement
+
+Claude Code offers two host-side filters that look like the `tools:` key above
+and are not interchangeable with it. Verified against
+`code.claude.com/docs/en/hooks`, fetched **2026-08-18**; re-read on a host bump,
+because this is external documentation (road-to-per-turn-hook-economy risk 7).
+
+| Field | Semantics as documented |
+|---|---|
+| `matcher` (group level) | a group runs when its matcher matches. **"All matching hooks run in parallel"** — several matching groups on one event means several processes, not one |
+| `if` (handler level) | permission-rule syntax (`Bash(git *)`, `Edit(*.ts)`). **Only evaluated on tool events** — `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest`, `PermissionDenied`. *"On other events, a hook with `if` set never runs."* Fails **open** — the hook runs regardless of the pattern — when the Bash command cannot be parsed |
+
+Three invariants follow, and each one is a way this has already almost gone
+wrong:
+
+- **`if` is a prefilter, never the enforcement.** Its fail-open direction is
+  correct for a fail-closed guard — unparseable means the hook runs and the hook
+  decides — and useless as a replacement for the guard's own check. A guard's
+  detection logic is never removed because an `if` was added in front of it.
+- **`if` on a non-tool event disables the handler outright.** Not "runs
+  unfiltered" — never runs. A `stop` or `session_start` handler that acquires an
+  `if` is silently dead, which no test in this tree would notice.
+- **Group splitting costs processes, it does not save them.** Because every
+  matching group fires, a split only avoids a dispatch for a payload that matches
+  **no** group. On `pre_tool_use` that is unreachable while any concern is
+  unscoped — **nine** of the twelve claude concerns are, deliberately, per the
+  paragraph above; only `code-graph-nudge`, `reread-guard` and
+  `spawn-guard-shadow` declare `tools:` — so a group with no `matcher` must exist
+  and fires on every tool call. `road-to-per-turn-hook-economy` step 5.1 was cancelled on exactly
+  this reading.
+
 ### Optional `roles:` axis — session-role chain thinning
 
 A top-level `roles:` block lets a marked session run a shorter chain

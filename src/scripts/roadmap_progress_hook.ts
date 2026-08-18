@@ -34,6 +34,7 @@
  */
 
 import { spawnSync } from "node:child_process";
+import * as crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -41,8 +42,145 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { hardenedSpawnEnv } from "./_lib/spawn_env.js";
 import { log_dispatch_issue } from "./hooks/dispatch_issues.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
+import { atomic_write_json } from "./hooks/state_io.js";
 
 export const REPLAY_ENV_VAR = "AGENT_CONFIG_REPLAY";
+
+/**
+ * Debounce ledger (road-to-per-turn-hook-economy step 3.1 / D-3).
+ *
+ * The hook used to re-shell the regenerator through tsx on EVERY roadmap write.
+ * A cold tsx start per write, in the roadmap-heavy workflow this repo runs, is
+ * the second of the two spawns that escape the in-process concern table.
+ *
+ * It now records the touched repo roots and regenerates ONCE at turn end.
+ * Two properties make that safe rather than merely cheaper:
+ *
+ * - **The ledger lives under `consumer_root`, not under the target root.** A
+ *   touched root may be a sibling worktree, and at `stop` the payload carries no
+ *   roadmap path — so a marker written beside the edited file would be
+ *   unfindable at flush time. `--project-dir` is the same value on both events,
+ *   which makes one ledger per consumer the only shape that closes.
+ * - **A ledger write that fails regenerates immediately instead.** Losing the
+ *   dashboard-stays-in-sync guarantee silently is worse than paying the spawn,
+ *   so the debounce degrades to the old behaviour rather than to a no-op.
+ *
+ * Flushed by `stop` AND `session_end`, so the worst case is a regeneration
+ * deferred to turn end (risk 4) and never a dropped one. The per-write guarantee
+ * was never a stated contract; session granularity is.
+ */
+export const DIRTY_LEDGER_REL = path.join(
+  "agents",
+  "runtime",
+  "state",
+  "roadmap-progress",
+  "dirty",
+);
+
+/** Events that flush the ledger rather than appending to it. */
+export const FLUSH_EVENTS: ReadonlySet<string> = new Set([
+  "stop",
+  "session_end",
+  // The dispatcher envelope carries the agent-config event id; a bare host
+  // payload carries the native name, and the hook accepts either shape on the
+  // write path already.
+  "Stop",
+  "SessionEnd",
+  "sessionEnd",
+  // Native aliases `hook_manifest.yaml` maps onto those two events. Missing them
+  // was a real gap rather than a completeness nit: the write path keys on
+  // `tool_name`, not on the event, so a host whose turn end arrives under one of
+  // these names accumulated dirty roots that nothing ever flushed. Found by the
+  // R2 review of the commit that introduced this ledger.
+  "TaskComplete",
+  "TaskCancel",
+  "AfterAgent",
+]);
+
+function _ledger_dir(consumer_root: string): string {
+  return path.join(consumer_root, DIRTY_LEDGER_REL);
+}
+
+/**
+ * One entry file per root, named from a hash of the root path.
+ *
+ * **This shape is the concurrency fix, not a style choice.** The first version
+ * kept a single JSON array and did a read-modify-write on it, which is a
+ * lost-update: two `post_tool_use` dispatches from parallel tool calls in one
+ * turn both read `[]`, the second write drops the first root, and `mark_dirty`
+ * still returns `true` — so the inline-regeneration fallback never fires and the
+ * dashboard goes silently stale, which is exactly what the debounce exists to
+ * prevent. Found by the R2 review of the commit that introduced it.
+ *
+ * Independent per-root files remove the race by construction rather than by
+ * holding a lock across a read and a write: concurrent dispatches touch
+ * different paths, and the same root twice is the same path — so N writes to one
+ * repo still leave ONE entry.
+ */
+function _entry_path(consumer_root: string, root: string): string {
+  const digest = crypto.createHash("sha256").update(root).digest("hex").slice(0, 16);
+  return path.join(_ledger_dir(consumer_root), `${digest}.json`);
+}
+
+/** Read the ledger; a missing directory or an unparseable entry reads as empty. */
+export function read_dirty_roots(consumer_root: string): string[] {
+  let names: string[];
+  try {
+    names = fs.readdirSync(_ledger_dir(consumer_root));
+  } catch {
+    return [];
+  }
+  const roots: string[] = [];
+  for (const name of names.sort()) {
+    if (!name.endsWith(".json")) continue;
+    try {
+      const raw = fs.readFileSync(path.join(_ledger_dir(consumer_root), name), "utf8");
+      const parsed = JSON.parse(raw) as unknown;
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) continue;
+      const root = (parsed as { root?: unknown }).root;
+      if (typeof root === "string" && root.trim() !== "") roots.push(root);
+    } catch {
+      // A torn or hand-edited entry is dropped, never fatal.
+    }
+  }
+  return Array.from(new Set(roots)).sort();
+}
+
+/**
+ * Record each root as its own entry. Returns false when any write failed — the
+ * caller then regenerates inline, so a broken state directory costs latency
+ * rather than a silently stale dashboard.
+ *
+ * Writes go through `atomic_write_json` (tmp → rename under the dispatcher
+ * lock), which `hook-architecture-v1` requires for everything written under
+ * `agents/runtime/state/`. That call is a no-op under `AGENT_CONFIG_REPLAY=1`,
+ * which is why the replay guard stays in the caller rather than relying on it.
+ */
+export function mark_dirty(consumer_root: string, roots: readonly string[]): boolean {
+  if (roots.length === 0) return true;
+  let wrote = 0;
+  for (const root of roots) {
+    try {
+      atomic_write_json(_entry_path(consumer_root, root), {
+        root,
+        marked_at: new Date().toISOString(),
+      });
+      wrote += 1;
+    } catch {
+      // A partial write still needs the caller's inline fallback.
+    }
+  }
+  return wrote === roots.length;
+}
+
+/** Drop every entry. A missing directory is success — flush is idempotent. */
+export function clear_dirty(consumer_root: string): void {
+  try {
+    fs.rmSync(_ledger_dir(consumer_root), { recursive: true, force: true });
+  } catch {
+    // observability never breaks the hook
+  }
+}
 
 // Tools whose successful execution can write to a roadmap file. We keep
 // the list explicit so an unknown tool name (e.g. a new MCP tool that
@@ -322,63 +460,14 @@ function _resolve_tsx_invocation(scriptPath: string): { command: string; args: s
   return { command: "npx", args: ["tsx", scriptPath] };
 }
 
-export function run(
-  stdin_text: string,
-  options: { consumer_root: string; verbose?: boolean },
-): number {
-  const { consumer_root } = options;
-  const verbose = options.verbose ?? false;
-
-  let payload: JsonObject = {};
-  if (stdin_text.trim()) {
-    try {
-      const decoded = JSON.parse(stdin_text) as unknown;
-      if (typeof decoded === "object" && decoded !== null && !Array.isArray(decoded)) {
-        payload = decoded as JsonObject;
-      }
-    } catch {
-      return 0; // malformed stdin → silent no-op, never block
-    }
-  }
-
-  // Unwrap dispatcher envelope (Phase 7.3, hook-architecture-v1.md).
-  if (["schema_version", "platform", "event", "payload"].every((k) => k in payload)) {
-    const inner = payload["payload"];
-    payload =
-      typeof inner === "object" && inner !== null && !Array.isArray(inner)
-        ? (inner as JsonObject)
-        : {};
-  }
-
-  const tool = payload["tool_name"] || payload["toolName"] || payload["tool"];
-  if (!(typeof tool === "string" && WRITE_TOOLS.has(tool))) {
-    return 0;
-  }
-
-  // Each touched roadmap regenerates the dashboard of ITS OWN repo (which may
-  // be a worktree/sibling of `consumer_root`, not consumer_root itself). Dedupe
-  // so N edits in one repo regenerate once.
-  const targetRoots = new Set<string>();
-  for (const p of _candidate_paths(payload)) {
-    const root = _target_root(p, consumer_root);
-    if (root !== null) {
-      targetRoots.add(root);
-    }
-  }
-  if (targetRoots.size === 0) {
-    return 0;
-  }
-
-  // Replay mode (`AGENT_CONFIG_REPLAY=1`) skips the regenerator subprocess
-  // so fixture dispatches never rewrite agents/roadmaps-progress.md.
-  if ((process.env[REPLAY_ENV_VAR] ?? "").trim() === "1") {
-    if (verbose) {
-      process.stderr.write("roadmap-progress-hook: replay mode, skipping regenerator\n");
-    }
-    return 0;
-  }
-
-  for (const root of targetRoots) {
+/**
+ * Run the regenerator once per root. Extracted by step 3.1 so the write path
+ * and the flush path share ONE implementation — a debounce whose flush
+ * regenerated differently from the per-write path would be a second code path
+ * nobody compares.
+ */
+function _regenerate(roots: Iterable<string>, verbose: boolean): void {
+  for (const root of roots) {
     const script = _resolve_regenerator(root);
     if (script === null) {
       // Phase 1 of road-to-hooks-actually-fire-in-consumers: log dispatch
@@ -422,6 +511,125 @@ export function run(
       // never propagate regenerator failures into the agent loop
     }
   }
+}
+
+export function run(
+  stdin_text: string,
+  options: { consumer_root: string; verbose?: boolean },
+): number {
+  const { consumer_root } = options;
+  const verbose = options.verbose ?? false;
+
+  let payload: JsonObject = {};
+  if (stdin_text.trim()) {
+    try {
+      const decoded = JSON.parse(stdin_text) as unknown;
+      if (typeof decoded === "object" && decoded !== null && !Array.isArray(decoded)) {
+        payload = decoded as JsonObject;
+      }
+    } catch {
+      return 0; // malformed stdin → silent no-op, never block
+    }
+  }
+
+  // Unwrap dispatcher envelope (Phase 7.3, hook-architecture-v1.md). The
+  // envelope's `event` is read BEFORE the unwrap and kept: step 3.1 needs it to
+  // tell a write (append to the ledger) from a turn end (flush it), and the
+  // inner payload does not carry it.
+  let envelope_event = "";
+  const raw_native = payload["hook_event_name"];
+  if (typeof raw_native === "string") {
+    envelope_event = raw_native;
+  }
+  if (["schema_version", "platform", "event", "payload"].every((k) => k in payload)) {
+    const raw_event = payload["event"];
+    envelope_event = typeof raw_event === "string" ? raw_event : envelope_event;
+    const inner = payload["payload"];
+    payload =
+      typeof inner === "object" && inner !== null && !Array.isArray(inner)
+        ? (inner as JsonObject)
+        : {};
+  }
+
+  const replay = (process.env[REPLAY_ENV_VAR] ?? "").trim() === "1";
+
+  // Flush path (step 3.1): `stop` / `session_end` carry no roadmap path, so the
+  // roots come from the ledger the write path appended to. Nothing dirty → a
+  // read of one small file and exit, which is what makes this cheap enough to
+  // bind on a slot that already carries ten concerns.
+  if (FLUSH_EVENTS.has(envelope_event)) {
+    if (replay) {
+      if (verbose) {
+        process.stderr.write("roadmap-progress-hook: replay mode, skipping flush\n");
+      }
+      return 0;
+    }
+    const dirty = read_dirty_roots(consumer_root);
+    if (dirty.length === 0) {
+      return 0;
+    }
+    // Clear FIRST: a regenerator that hangs or throws must not leave a ledger
+    // that replays the same roots on every subsequent turn end. `_regenerate`
+    // already swallows its own failures, so a cleared ledger plus a failed
+    // regeneration degrades to "stale until the next roadmap write", which is
+    // the same worst case the debounce already accepts.
+    clear_dirty(consumer_root);
+    _regenerate(dirty, verbose);
+    if (verbose) {
+      process.stderr.write(
+        `roadmap-progress-hook: flushed ${dirty.length} dirty root(s) at ${envelope_event}\n`,
+      );
+    }
+    return 0;
+  }
+
+  const tool = payload["tool_name"] || payload["toolName"] || payload["tool"];
+  if (!(typeof tool === "string" && WRITE_TOOLS.has(tool))) {
+    return 0;
+  }
+
+  // Each touched roadmap regenerates the dashboard of ITS OWN repo (which may
+  // be a worktree/sibling of `consumer_root`, not consumer_root itself). Dedupe
+  // so N edits in one repo regenerate once.
+  const targetRoots = new Set<string>();
+  for (const p of _candidate_paths(payload)) {
+    const root = _target_root(p, consumer_root);
+    if (root !== null) {
+      targetRoots.add(root);
+    }
+  }
+  if (targetRoots.size === 0) {
+    return 0;
+  }
+
+  // Replay mode (`AGENT_CONFIG_REPLAY=1`) skips both the ledger write and the
+  // regenerator subprocess, so fixture dispatches leave no state and never
+  // rewrite agents/roadmaps-progress.md.
+  if (replay) {
+    if (verbose) {
+      process.stderr.write("roadmap-progress-hook: replay mode, skipping regenerator\n");
+    }
+    return 0;
+  }
+
+  // Write path (step 3.1): record and return. The spawn this used to pay per
+  // write now happens once, at turn end. A ledger that cannot be written falls
+  // back to regenerating inline — the debounce is an optimisation and must never
+  // be the reason a dashboard silently stops updating.
+  if (mark_dirty(consumer_root, Array.from(targetRoots))) {
+    if (verbose) {
+      process.stderr.write(
+        `roadmap-progress-hook: marked ${targetRoots.size} root(s) dirty for tool=${tool}\n`,
+      );
+    }
+    return 0;
+  }
+  if (verbose) {
+    process.stderr.write(
+      "roadmap-progress-hook: ledger unwritable, regenerating inline\n",
+    );
+  }
+  _regenerate(targetRoots, verbose);
 
   if (verbose) {
     process.stderr.write(`roadmap-progress-hook: regenerated for tool=${tool}\n`);

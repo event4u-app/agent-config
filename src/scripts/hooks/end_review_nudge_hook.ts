@@ -25,8 +25,8 @@
  *
  * `git diff --numstat HEAD` at `workspace_root`: the working tree vs the
  * last commit, TRACKED files only, PLUS every untracked non-doc file
- * (`git ls-files --others --exclude-standard`, one `git diff --numstat
- * --no-index /dev/null <file>` per file — see "Untracked files" below;
+ * (`git ls-files --others --exclude-standard`, each one READ from the
+ * filesystem rather than diffed in a subprocess — see "Untracked files" below;
  * fixes a review finding, F6, that a brand-new file was previously invisible
  * to this count entirely). Chosen over a session-start SHA/timestamp
  * baseline because no such baseline exists anywhere a `stop` concern can
@@ -52,10 +52,15 @@
  * that authored a brand-new 300-line module was previously measured as a
  * 0-line mutation. `untrackedNonDocFiles` lists the candidates
  * (`git ls-files --others --exclude-standard`, filtered by the same
- * `isDocPath` carve-out); `untrackedFileLineCount` sizes each one via
- * `git diff --no-index /dev/null <file>` (the only way to diff a path git's
- * index has never seen). Past `UNTRACKED_FILE_CAP` untracked non-doc files
- * this hook refuses to spawn one subprocess per file — an unbounded loop is
+ * `isDocPath` carve-out); `untrackedFileLineCount` sizes each one by READING
+ * IT — an untracked file's diff against nothing is its own content, so the
+ * count needs no git. It used to spawn `git diff --no-index /dev/null <file>`
+ * per file, on the Stop slot; step 3.2 of `road-to-per-turn-hook-economy`
+ * removed that process and preserved both edges that could otherwise move a
+ * threshold decision silently (a binary file counts 0, an unterminated last
+ * line still counts). The CAP is unchanged and still the outer bound: past
+ * `UNTRACKED_FILE_CAP` untracked non-doc files
+ * this hook refuses to read them all — an unbounded loop is
  * worse than an imprecise answer — and instead reports a line count
  * GUARANTEED to be over `MUTATION_LINE_THRESHOLD`: "many new files this
  * session" is itself sufficient signal to fire without the exact count.
@@ -224,10 +229,14 @@ import { atomic_write_json, is_replay_mode } from './state_io.js';
 export const MUTATION_LINE_THRESHOLD = 50;
 
 /**
- * Untracked non-doc files past which this hook refuses to spawn one
- * `git diff --no-index` subprocess per file and instead reports the
- * mutation as certainly over threshold (F6, review — see the file header's
- * "Untracked files" section).
+ * Untracked non-doc files past which this hook refuses to size them at all and
+ * instead reports the mutation as certainly over threshold (F6, review — see the
+ * file header's "Untracked files" section).
+ *
+ * It bounds the file COUNT. The per-file byte bound is separate and lives in
+ * `untrackedFileLineCount`: since step 3.2 replaced the per-file subprocess with
+ * a read, an unbounded read would move an arbitrarily large file INTO this
+ * process, which the subprocess never did.
  */
 export const UNTRACKED_FILE_CAP = 20;
 
@@ -366,21 +375,84 @@ export function untrackedNonDocFiles(cwd: string): string[] {
 }
 
 /**
- * Added+deleted line count for ONE untracked file, via
- * `git diff --numstat --no-index /dev/null <relPath>` — the only way to
- * diff a path git's index has never seen. `--no-index` exits `1` whenever a
- * diff exists (by design, unlike `gitNumstatRows`'s tracked-diff contract,
- * where a nonzero status means failure) — only the parsed numstat rows
- * matter here, never the exit code. Fails closed to `0`, never throws.
+ * Leading bytes probed for a NUL when deciding whether an untracked file is
+ * binary. git uses its own leading-block heuristic for the same call; the point
+ * of matching the size is that both agree on which files count as binary, not
+ * that either is exhaustive.
+ */
+export const BINARY_PROBE_BYTES = 8000;
+
+/**
+ * Per-file read ceiling for the untracked-file line count.
+ *
+ * `UNTRACKED_FILE_CAP` bounds how MANY files are sized; nothing bounded how
+ * LARGE one of them may be, and that gap arrived with step 3.2: the
+ * `git diff --no-index` subprocess it replaced never materialised file content in
+ * the hook process, while a `readFileSync` does. One untracked-but-not-ignored
+ * dataset or media file would then cost a full allocation plus an O(n) byte scan
+ * at every turn end, and past ~2 GiB the read throws and silently counts 0.
+ * Found by the R2 review.
+ *
+ * 8 MiB is far above any hand-written source file and far below a size worth
+ * allocating on the Stop path. A file over it is counted as
+ * `MUTATION_LINE_THRESHOLD + 1` rather than 0: "a huge new file appeared" is a
+ * mutation, and the old code's answer for an unreadable file — zero — is the
+ * direction that hides one.
+ */
+export const UNTRACKED_FILE_READ_CAP_BYTES = 8 * 1024 * 1024;
+
+/**
+ * Added line count for ONE untracked file, read from the filesystem.
+ *
+ * **No subprocess (road-to-per-turn-hook-economy step 3.2 / D-3).** This used to
+ * run `git diff --numstat --no-index /dev/null <relPath>`, one spawn per
+ * untracked non-doc file, on the Stop slot — so a workspace with nineteen new
+ * files paid nineteen `git` process starts at every turn end. An untracked
+ * file's diff against nothing is just its own content, so the count needs no
+ * git at all.
+ *
+ * Behaviour is preserved rather than improved, in both directions that could
+ * silently change a threshold decision: a binary file still counts 0 (numstat
+ * printed a dash per side and `parseNumstat` mapped that to 0), and a file whose
+ * last line lacks a trailing newline still counts that line.
+ *
+ * The remaining bound is unchanged and lives one level up:
+ * `totalNonDocMutatedLinesWithMeasure` still refuses to read more than
+ * `UNTRACKED_FILE_CAP` files and returns a labelled `capped_approximation`
+ * instead — "many new files this session" is signal enough without an exact
+ * count. What 3.2 removes is the per-file *process*, not the cap.
+ *
+ * Fails closed to `0` and never throws, exactly as the spawn version did.
  */
 export function untrackedFileLineCount(cwd: string, relPath: string): number {
     try {
-        const r = spawnSync('git', ['diff', '--numstat', '--no-index', '/dev/null', relPath], {
-            cwd,
-            encoding: 'utf8',
-            maxBuffer: 16 * 1024 * 1024,
-        });
-        return parseNumstat(r.stdout ?? '').reduce((sum, row) => sum + row.added + row.deleted, 0);
+        const abs = path.resolve(cwd, relPath);
+        // Size before read: the point of the cap is not to allocate the file.
+        const size = fs.statSync(abs).size;
+        if (size === 0) return 0;
+        if (size > UNTRACKED_FILE_READ_CAP_BYTES) {
+            return MUTATION_LINE_THRESHOLD + 1;
+        }
+        const buf = fs.readFileSync(abs);
+        if (buf.length === 0) return 0;
+        // Binary detection, matching what this function replaced rather than
+        // improving on it: numstat prints a dash for each side of a binary file
+        // and `parseNumstat` maps a dash to 0, so a binary file contributed 0
+        // lines before and must contribute 0 now. Counting newline bytes in
+        // binary content would invent mutation volume out of image data. git's
+        // own heuristic is a NUL byte in the leading block, so the same block
+        // size is used here and the two agree on the same files.
+        const probe = buf.subarray(0, Math.min(buf.length, BINARY_PROBE_BYTES));
+        if (probe.includes(0)) return 0;
+        // The replaced spawn reported every line of the file as added, INCLUDING
+        // a final line with no trailing newline. Counting newline bytes alone
+        // would be one short on exactly the files an editor leaves unterminated.
+        let lines = 0;
+        for (const byte of buf) {
+            if (byte === 0x0a) lines += 1;
+        }
+        if (buf[buf.length - 1] !== 0x0a) lines += 1;
+        return lines;
     } catch {
         return 0;
     }
@@ -399,8 +471,9 @@ export interface MutationMeasurement {
  * HEAD`) and untracked (`git ls-files --others --exclude-standard`) files —
  * see the file header's "Untracked files (F6)" section for why both sources
  * are required. Past `UNTRACKED_FILE_CAP` untracked non-doc files this
- * function refuses to spawn one `git diff --no-index` subprocess per file
- * (an unbounded loop) and instead returns a value GUARANTEED to be over
+ * function refuses to size them individually at all (what used to be an
+ * unbounded spawn loop, and is now an unbounded read loop) and instead returns a
+ * value GUARANTEED to be over
  * `MUTATION_LINE_THRESHOLD` — "many new files this session" is itself
  * sufficient signal, no exact count needed. `measure` records WHICH of
  * those two shapes the returned `lines` value is, so a consumer (the

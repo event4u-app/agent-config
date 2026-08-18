@@ -1,0 +1,2785 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 6bb7f72e341ff4e1ce3810b95350d90dc6b534de..ff0d1960c7ef5526abc1416d531e7790cc49b492 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **49** open blockers, **21** need you → `agent-config gates`
++> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **51** open blockers, **23** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**289 / 578 steps done · 50%**
++**297 / 576 steps done · 52%**
+ 
+ ```text
+-████████████████████░░░░░░░░░░░░░░░░░░░░   50%
++█████████████████████░░░░░░░░░░░░░░░░░░░   52%
+ ```
+ 
+ ## ⚠️ Iron Law 3 — unresolved deferred items
+@@ -46,7 +46,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ | 20 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [1](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
+ | 21 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+ | 22 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ░░░░░░░░░░ 0% |
+-| 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 16 | 1 | 1 | 0 | [1](#blockers-road-to-per-turn-hook-economy) | █░░░░░░░░░ 6% |
++| 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 6 | 9 | 1 | 2 | [3](#blockers-road-to-per-turn-hook-economy) | ██████░░░░ 60% |
+ | 24 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
+ | 25 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+ | 26 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+@@ -707,16 +707,16 @@ _1 blocker resolved._
+ 
+ ### [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md)
+ 
+-**Road to per-turn hook economy — the latency tax no registered budget can see** — 1 / 17 done (6%)
++**Road to per-turn hook economy — the latency tax no registered budget can see** — 9 / 15 done (60%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+-| 0 | Falsify or localise the report | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
+-| 5 | Host-native prefiltering (runs first, deliberately) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+-| 1 | Serialize once (D-2) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
++| 0 | Falsify or localise the report | 🟡 in progress | 3 | 3 | 0 | 0 | 50% |
++| 5 | Host-native prefiltering (runs first, deliberately) | 🟡 in progress | 1 | 1 | 0 | 1 | 50% |
++| 1 | Serialize once (D-2) | ✅ done | 0 | 1 | 0 | 1 | 100% |
+ | 2 | Payload opt-in per concern (D-2, second lever) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+-| 3 | Take the two spawns off the hot path (D-3) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+-| 4 | Register the number the user feels (D-1) | ⬜ not started | 2 | 0 | 1 | 0 | 0% |
++| 3 | Take the two spawns off the hot path (D-3) | ✅ done | 0 | 2 | 0 | 0 | 100% |
++| 4 | Register the number the user feels (D-1) | ✅ done | 0 | 2 | 1 | 0 | 100% |
+ 
+ <a id="blockers-road-to-per-turn-hook-economy"></a>
+ **Blockers**
+@@ -737,6 +737,39 @@ _1 blocker resolved._
+     posture: an absolute cap plus a pathology net, not a tight creep window, because
+     shared CI runners flap.
+   - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — the row exists in `hook-latency-budget.json` with its bar or its observe-only marker.
++- **b-stdin-read-failure-policy** (owner: user) — blocks nothing — F-1's trigger is fixed and the residual failure is now loud. This records the half that is a policy call rather than a bug fix.
++  - **Recommendation:** **option (c).** The bypass F-1 records is only consequential where a guard can refuse, and `pre_tool_use` is the one block-capable slot on this host; denying there costs a retryable refusal on an I/O error the retry budget already survived ten seconds of, while denying on `stop` or `post_tool_use` would refuse nothing and could break a turn end. Option (b) is the status quo and leaves a documented allow-on-failure on a security path; option (a) is right in spirit and pays for it on slots where it buys nothing.
++  - **If you do nothing:** the residual failure stays an allow. It is no longer silent — that was the actual defect and it is fixed — but a reader of `hook-architecture-v1`'s fail-closed contract would still expect a refusal that does not happen, and nothing in the tree records the gap except this blocker.
++  - **What to do:**
++    decide what the dispatcher does when the stdin read **fails**,
++    as distinct from stdin being empty. Both `_readStdin` and `readHookStdin` still
++    convert any residual failure — an exhausted EAGAIN budget (~10 s), `EIO`,
++    `EBADF` — into an empty string, after which the whole chain runs with no
++    `tool_name` and the dispatcher exits 0. For a `fail_closed: true`,
++    `severity: blocking` guard that is an allow. Options: (a) **deny** on a failed
++    read for block-capable events that carry at least one fail-closed concern —
++    the honest reading of fail-closed, at the cost of refusing a tool call on a
++    transient I/O error; (b) keep allowing but treat the loud stderr line and the
++    dispatch issue that now ship as sufficient, which is the current state;
++    (c) deny only on the block-capable slot and allow elsewhere, which is (a)
++    narrowed to where a guard can actually refuse.
++  - **Resolved when:** one option is recorded at this blocker and, for (a) or (c), `_readStdin`'s failure path returns a deny for the named slots with a test that fails when it allows.
++- **b-guard-tool-partition** (owner: user) — blocks nothing in this roadmap — step 5.1 is cancelled and Phases 1-4 proceed without it. It records the one reachable form of 5.1's goal so a later attempt starts from the decision rather than re-deriving it.
++  - **Recommendation:** **option (c) — decline, and revisit only if Phase 4's registered composite exceeds its bar.** The gain is real but unmeasured, and the cost is a silently-skippable filter in front of the two guards that exist because a bypass must be impossible: `matcher` is a plain non-match, so unlike `if` it does not fail open, and a Claude tool-name addition (a renamed Bash variant, a new edit tool) would disable a guard with nothing in the tree noticing. Option (a) is the version worth having *after* the composite says the dispatch count is the binding cost; option (b) is strictly waste.
++  - **If you do nothing:** the dispatcher keeps firing on every tool call regardless of whether any concern can act, the in-process `tools:` filter keeps absorbing the per-concern half on all eight platforms, and Phase 4's composite row is what tells anyone whether the remaining per-turn cost is worth a security-surface decision at all.
++  - **What to do:**
++    decide whether the three blocking `pre_tool_use` guards
++    (`block-no-verify`, `block-kernel-rule-writes`, `block-config-weakening`) may
++    carry a **claude-only** host tool filter. Only that unlocks a zero-dispatch
++    path for tools no concern can act on — `WebFetch`, `WebSearch`, `TodoWrite`,
++    `Skill`, MCP tools — which is a large share of calls in an agentic turn.
++    Options: (a) partition the claude tool space into disjoint classes and assign
++    every concern, guards included, per class; (b) partition only the advisory
++    concerns and keep one unscoped group for the guards, which keeps the guards
++    safe and buys **nothing** (finding 2 of step 5.1 — the unscoped group still
++    fires on every call); (c) decline, and D-1 is addressed only by Phase 4's
++    measurement plus the in-process `tools:` filter that already ships.
++  - **Resolved when:** one option is recorded at this blocker, and — for (a) — the partition ships with a per-class absent-invocation proof and a test that fails when a claude tool name is added to no class.
+ 
+ ### [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md)
+ 
+diff --git a/agents/roadmaps/road-to-cost-parity-1-rule-payload-diet.md b/agents/roadmaps/road-to-cost-parity-1-rule-payload-diet.md
+index 0cf5c17e110e9987e089c4883813751a7a226f4c..9cd0241f18301b13f4fa938f1d715552800244e9 100644
+--- a/agents/roadmaps/road-to-cost-parity-1-rule-payload-diet.md
++++ b/agents/roadmaps/road-to-cost-parity-1-rule-payload-diet.md
+@@ -281,8 +281,41 @@ part 0's table.
+       <!-- verify: ./scripts-run src/scripts/check_cli_registry_budget_sync --quiet -->
+ - [ ] 4.3 Hook chain-length cap as a manifest lint: a new concern on a
+       capped slot must name the concern it replaces or merges into. Measured
+-      baseline: 9 concerns on `user_prompt_submit` for claude, 7–8 on other
+-      hosts — the cap is per host because the chains are.
++      baseline: **refreshed 2026-08-18** by `road-to-per-turn-hook-economy` step
++      4.3, read straight off `src/scripts/hook_manifest.yaml`. The prior line
++      here said "9 concerns on `user_prompt_submit` for claude, 7–8 on other
++      hosts"; both halves had drifted, and a cap anchored on a stale census ages
++      in the one direction that matters — upward, so the cap admits growth it was
++      written to refuse.
++
++      | host | `user_prompt_submit` | `pre_tool_use` | `post_tool_use` | `stop` | `session_start` | `session_end` |
++      |---|---:|---:|---:|---:|---:|---:|
++      | augment | — | 11 | 10 | 6 | 13 | 4 |
++      | claude | **10** | **12** | **11** | **11** | 13 | 4 |
++      | cowork | 8 | 12 | 10 | 6 | 13 | 4 |
++      | cursor | 8 | — | 10 | 6 | 13 | 4 |
++      | cline | 8 | — | 10 | 6 | 13 | 4 |
++      | windsurf | 7 | — | — | 5 | 12 | — |
++      | gemini | 8 | — | 10 | 6 | 13 | 4 |
++      | copilot | — | — | — | — | — | — |
++
++      **Re-measured AFTER the flush bindings in the same PR, which the first pass
++      got wrong.** The table originally read `stop` 5/10 and `session_end` 3 — a
++      census taken before `road-to-per-turn-hook-economy` step 3.1 added
++      `roadmap-progress` to those two slots on six hosts, i.e. a baseline stale by
++      the very change the same PR made. `windsurf` keeps 5 and no `session_end`
++      because it has no `post_tool_use` surface, so it never marks the ledger and
++      received no flush binding. Caught by the R2 review; the lesson is the
++      cheap half — re-read the manifest AFTER your own edit, not before it.
++
++      A dash is **no binding on that slot for that host**, not a zero-length
++      chain — copilot is `fallback_only` and carries no hook surface at all,
++      while cursor / cline / windsurf / gemini alias a native pre-tool event that
++      nothing binds (the four states are tabulated in
++      [`hook-architecture-v1`](../../docs/contracts/hook-architecture-v1.md)).
++      The cap must not read a dash as headroom.
++      **claude is the binding host on every slot**, so a per-host cap set from
++      any other row is set from the wrong row.
+       <!-- verify: task test -- --filter=hook_manifest -->
+ - [ ] 4.4 Each of the two caps names the mechanism it removes or replaces,
+       per `surface-consolidation-restraint.md`'s load-bearing rule that
+diff --git a/agents/roadmaps/road-to-per-turn-hook-economy.md b/agents/roadmaps/road-to-per-turn-hook-economy.md
+index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..d82e1695efce9c7effcc11302518980ebe577e27 100644
+--- a/agents/roadmaps/road-to-per-turn-hook-economy.md
++++ b/agents/roadmaps/road-to-per-turn-hook-economy.md
+@@ -101,7 +101,7 @@ this file at all, it is the activation flip owned by
+ 
+ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+ 
+-- [ ] **0.0** Cheapest decisive probe first: the rule-activation census from
++- [x] **0.0** Cheapest decisive probe first: the rule-activation census from
+       `road-to-mixed-trigger-activation-cost` step 1.0. **Use the census, not the
+       `grep -l '^paths:'` one-liner** — that one-liner is refuted as a
+       discriminator (it returns zero on a maintainer machine regardless of the
+@@ -109,6 +109,20 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+       census shows the flip is live locally, the behavioural roadmap is the fix path
+       and this latency matrix is secondary.
+       `verify:` the census output, recorded with the projection scope it ran at.
++      **Ran 2026-08-18 on this machine, both scopes. The flip is NOT live here,
++      so this latency matrix does not become secondary.** Source:
++      `./scripts-run src/scripts/rule_activation_census` — 117 rule files, 25
++      declaring a path-shaped trigger, **17 mixed** and **8 path-only**; emitter
++      verdict **8 scoped · 100 unconditional · 9 always**. Projection:
++      `--projection .claude/rules` reads **111 files, 8 declaring `paths:`** —
++      *equal* to the source's scoped count, which is the discriminator. The
++      earlier reading this step was written against (92 files / 0 `paths:`) was a
++      stale projection, not a flipped one: the projection is now current and
++      agrees with the emitter, and the 17 mixed rules still load every session.
++      So "the flip is live locally" is **false** — the flip
++      `road-to-mixed-trigger-activation-cost` owns is the conversion of those 17,
++      and none of it has happened. The one-liner refutation this step carries is
++      unchanged and was not re-tested, because the census supersedes it.
+ - [ ] **0.1** On the affected machine, record: the prior installed version
+       (lockfile history), the node version, the OS, and whether
+       `AGENT_CONFIG_HOOKS_ISOLATED=1` is set anywhere — env, shell profile, or CI.
+@@ -148,7 +162,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+       PR re-measures both legs on every Static Checks run.
+       `verify:` run 32103306843's Static Checks log, both `via bundle` and
+       `via cli` blocks, plus the gate leg above them.
+-- [ ] **0.5** Settle the magnitude question 0.4 raises but cannot answer.
++- [x] **0.5** Settle the magnitude question 0.4 raises but cannot answer.
+       `docs/hook-latency.json` records the bundle path at `pre_tool_use` p95
+       **81 ms** on 2026-07-27; 0.4 measures the same path at **146 ms**. That is
+       **cross-runner** and therefore exactly the comparison § 2 refuses to treat
+@@ -171,6 +185,48 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+       bundle-vs-record gap is n=2 (146 and 141 against a recorded 81), which
+       makes "a faster runner generation in July" thinner but does not exclude
+       it — only the same-machine two-version run above can.
++      **Ran 2026-08-18. Both halves answered, and the answer is "runner, not
++      code".** Method: `bench_hook_latency --runs 15` (bundle arm) against HEAD,
++      then the same command with the new `--bundle <path>` override against a
++      bundle built from tag `11.0.0` (`e4ca46123`) — `git archive` into
++      `/private/tmp`, this tree's `node_modules` symlinked, `npm run
++      build:hooks`. One machine, one session, n=15 per cell, identical synthetic
++      payload:
++
++      | event | HEAD p50 / p95 | 11.0.0 p50 / p95 | p50 delta |
++      |---|---:|---:|---:|
++      | `pre_tool_use` | 82 / 87 | 82 / 93 | 0 |
++      | `post_tool_use` | 85 / 95 | 81 / 84 | +4 |
++      | `user_prompt_submit` | 85 / 89 | 86 / 89 | −1 |
++      | `stop` | 123 / 136 | 127 / 138 | −4 |
++      | `session_start` | 86 / 92 | 86 / 90 | 0 |
++      | `session_end` | 79 / 82 | 81 / 85 | −2 |
++
++      **Result 1 — M-2's honest null replicates here.** Every p50 delta is
++      within ±4 ms and the sign is not even consistent; no slot shows a code
++      regression across the whole 11.0.0 → 14.1.0 window. The "12.1 is slower"
++      framing has now failed on two independent machines.
++      **Result 2 — the 81 → 146 ms gap is runner-bound, and risk 8 resolves in
++      the direction it feared being cited for.** This machine measures the same
++      bundle path at **87 ms p95**, i.e. inside the band of the 2026-07-27
++      record (81 ms) and nowhere near the CI readings (146, 141, 151, 152,
++      117 ms). Identical code at 87 ms here and ~146 ms there is a hardware
++      statement, so `main`'s gate flapping is runner variance and NOT a
++      regression this roadmap's levers could remove. The cross-runner comparison
++      stays forbidden as a repo fact; what is now a repo fact is the
++      **same-machine** null that makes the cross-runner reading unnecessary.
++      **Caveat, stated because it bounds the claim:** both arms ran against
++      HEAD's `hook_manifest.yaml` (the bench stages a workspace pointing at this
++      tree), so the comparison isolates **dispatcher code** with the concern
++      chain held constant. It does not measure an 11.0.0-era chain, and it
++      cannot prove the older dispatcher executed every concern the current
++      manifest declares. That is the right isolation for "did the dispatcher get
++      slower" and the wrong one for "did the chain get longer" — the latter is
++      D-1, which Phase 4 registers rather than benches here.
++      **Reproducer**, now a flag rather than a throwaway script: `--bundle` is
++      measurement-only and refuses `--gate` / `--update` / `--baseline`, so a
++      foreign bundle's reading can never be written into this tree's budget or
++      regression baseline.
+ - **AC-0:** a one-page evidence note naming which of {env flag, hardware, version
+   jump larger than one major, stop-gate refusals, activation flip, none}
+   reproduced, with the matrix numbers inline.
+@@ -181,7 +237,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+ > cheapen the events that remain. Because Phase 5 changes the denominator every
+ > later benchmark divides by, it lands first and pre-registers its own A/B.
+ 
+-- [ ] **5.1** Split the monolithic per-event registration into matcher groups:
++- [-] **5.1** Split the monolithic per-event registration into matcher groups:
+       pre/post concerns that only care about one tool family get a `matcher`, and
+       command-shaped guards additionally get an `if` prefilter. The dispatcher
+       contract is unchanged — the same bundle runs, it just runs on fewer events.
+@@ -197,12 +253,77 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+       so its matcher is a post-slot matcher. Treat this as the input to 5.1, not
+       its output — each row still needs its own absent-invocation proof. -->
+ 
+-- [ ] **5.2** Safety invariant, stated because claim 11 demands it: `if` is a
++      **CANCELLED 2026-08-18 — as written this step makes the common case worse,
++      and AC-5 is unreachable while three blocking guards stay unscoped.** Three
++      findings, each verified rather than reasoned:
++
++      1. **The host runs every matching group, in parallel.** Fetched from
++         `code.claude.com/docs/en/hooks` on 2026-08-18 (§ "Hook handler fields"):
++         *"All matching hooks run in parallel."* So a group split does not move a
++         payload from one group to another — it adds one dispatcher process per
++         additional matching group. An `Edit` payload that matches both a
++         `matcher: Edit|Write` group and the group carrying the unscoped concerns
++         pays **two** cold starts where it pays one today.
++      2. **An unscoped group is mandatory on `pre_tool_use`, so nothing can be
++         skipped.** **Nine** of the twelve claude `pre_tool_use` concerns declare
++         no tool scope at all (`block-no-verify`, `block-unauthorized-git`,
++         `evidence-independence`, `block-kernel-rule-writes`,
++         `block-config-weakening`, `rtk-wrap`, `design-slop`, `ui-route-nudge`,
++         `ship-diff-volume` — only `code-graph-nudge`, `reread-guard` and
++         `spawn-guard-shadow` carry `tools:`; the enumeration was right and the
++         count said eight, corrected after the R2 review). Any payload must therefore reach a
++         group with no `matcher`, and a group with no matcher fires on every tool
++         call. AC-5's *"a `PreToolUse` with a non-matching payload costs no
++         dispatcher spawn at all"* cannot hold. The same is true of
++         `post_tool_use`, where `chat-history` records every call.
++      3. **Closing that gap means tool-scoping the blocking guards, which the
++         architecture contract refuses on a stated reason.**
++         [`hook-architecture-v1 § Optional per-concern tools: filter`](../../docs/contracts/hook-architecture-v1.md)
++         ends: *"The filter is deliberately absent from the blocking PreToolUse
++         guards, whose tool sets span host naming variants … a list that misses
++         one variant silently disables a guard on that host."* A host `matcher`
++         inherits that hazard exactly, and adds a second: `matcher` is a plain
++         non-match, so a missed variant does not fail open the way `if` does on an
++         unparseable command.
++
++      **What is genuinely reachable, and is NOT taken here.** A claude-only
++      partition of the *tool space* into disjoint classes, with every concern —
++      guards included — assigned per class, would skip the dispatcher for a tool
++      no concern can act on (`WebFetch`, `WebSearch`, `TodoWrite`, MCP tools,
++      `Skill`) at one spawn for every tool that is covered. That is a real win on
++      a real share of calls. It also puts a silently-skippable filter in front of
++      `block-no-verify` and `block-kernel-rule-writes`, which is a
++      security-surface decision and not the agent's to take: filed as
++      `b-guard-tool-partition` below. `5.2`'s invariant is what keeps a future
++      attempt honest about it.
++
++      **The cheap half already ships.** The per-concern `tools:` filter skips a
++      concern in-process on all eight platforms, where a `matcher` would help the
++      two that support one. What it does not do — and what this step wanted — is
++      avoid the spawn; finding 2 is why nothing can.
++
++- [x] **5.2** Safety invariant, stated because claim 11 demands it: `if` is a
+       **prefilter, never the enforcement**. It fails open on unparseable commands —
+       which is exactly right for fail-closed guards, because unparseable means the
+       hook runs and the hook decides — and wrong as a replacement for the in-hook
+       check. **No guard's own detection logic is removed in this phase.**
+       `verify:` each fail-closed guard's own test suite is untouched and green.
++      **Landed 2026-08-18 as a contract paragraph rather than as code, because
++      5.1 was cancelled and there is no `if` in the tree to constrain.** The
++      invariant is now stated in
++      [`hook-architecture-v1`](../../docs/contracts/hook-architecture-v1.md)
++      beside the `tools:` filter it will be confused with, carrying the host
++      version it was verified at. No guard's detection logic was touched — the
++      diff adds no code, so every fail-closed guard's suite is untouched by
++      construction.
++      **Claim 11 is now first-hand and sharper than "fails open".** Same fetch:
++      `if` is *"Only evaluated on tool events: `PreToolUse`, `PostToolUse`,
++      `PostToolUseFailure`, `PermissionRequest`, and `PermissionDenied`. On other
++      events, a hook with `if` set never runs."* That second sentence is the more
++      dangerous half and this roadmap did not have it: an `if` typed onto a
++      `stop` or `session_start` handler silently disables that handler
++      completely. It fails open only on an unparseable **Bash** command, which is
++      a narrower guarantee than the roadmap's unqualified wording implied.
+ - [ ] **5.3** Move the non-gating Stop concerns to the host's async handler form,
+       so turn-end wall clock carries only the concerns that can actually refuse.
+       `end-review-nudge` needs its stdout to reach the model, so it stays
+@@ -229,21 +350,100 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+ 
+ ### Phase 1 — Serialize once (D-2)
+ 
+-- [ ] **1.1** Compute the compact envelope **once per event** in the caller and
++- [-] **1.1** Compute the compact envelope **once per event** in the caller and
+       pass it down, or better: let the stdin-override surface carry the
+       already-parsed object behind the existing read helper, with a lazy stringify
+       for the rare concern that wants raw text. The concern contract stays
+       identical — concerns keep reading through the same helper.
+       `verify:` every concern's own tests green, plus the mutation-isolation test
+       from risk 1 below.
+-- [ ] **1.2** Pre-registered spike **before** merge: A/B on the large payload cell.
++      **BUILT, MEASURED, AND REVERTED 2026-08-18 — see 1.2's result.** The hoist
++      was implemented (one `_compactJsonDumps` per event, threaded to both the
++      in-process and the spawn path) and then taken back out, because 1.2's
++      pre-registered bar returned the **kill** outcome. Keeping a mechanism whose
++      premise the run falsified is the failure this roadmap's own honest-null
++      discipline exists to prevent, so the tree re-serialises per concern exactly
++      as before.
++      **Two things from the attempt were kept, because neither depends on the
++      hypothesis:**
++      · `_run_concern_inproc` now carries the falsification in its header, so the
++      next reader does not re-derive an "obvious" optimisation that has already
++      been tried and did not pay.
++      · The risk-1 mutation-isolation test ships
++      (`tests/scripts/hooks/dispatch_envelope_isolation.test.ts`, 4 cases). It
++      pins the property a re-attempt must preserve — a concern receives TEXT, so
++      nothing one concern touches can reach the next — which turns the
++      "accidentally an isolation boundary" risk 1 names into a checked one.
++      **And the attempt paid for itself anyway**: building 1.2's instrument is
++      what surfaced F-1, the large-payload guard bypass.
++- [x] **1.2** Pre-registered spike **before** merge: A/B on the large payload cell.
+       Register the success and kill bars first — a reduction below the kill bar
+       publishes the null in the benchmark doc and stops the phase, because the
+       churn was then not where the model said it was.
+       `verify:` the benchmark table in the PR, both cells, at least three runs,
+       same machine.
++
++      **PRE-REGISTRATION — committed 2026-08-18 with the result section EMPTY,
++      before the 1.1 change was written.** That ordering is the only part of a
++      pre-registration a later reader can check, so it is the part that is done
++      first.
++
++      *Instrument:* `bench_hook_latency --runs 15 --payload-bytes 2000000`,
++      bundle arm, one machine, one session. The pre-change arm is the bundle
++      built at this commit and kept aside; the post-change arm is the rebuilt
++      bundle. Same fixture on both, per § 2's shape-transfers rule.
++      *Cell:* `post_tool_use` p50 — the slot that carries eleven concerns on
++      claude and therefore eleven serialisations of the same payload.
++      *Reasoning behind the bars, stated so they are not arbitrary:* the
++      mechanism removes ten of eleven stringifies of a 2 MB envelope. If
++      stringify volume is the dominant cost of that cell, the saving should be
++      large and obvious; if it is not, the cell is dominated by something else and
++      D-2 is mis-attributed.
++
++      | outcome | bar | consequence |
++      |---|---|---|
++      | success | ≥ **20 %** p50 reduction on the cell | the mechanism is where the cost was; Phase 1's AC is met |
++      | inconclusive | **5–20 %** | land it anyway (strictly less work, and risk 1 is not incurred — see 1.1), but do NOT claim the AC, and record that serialisation is not the dominant cost |
++      | kill | < **5 %** | publish the null here and in the benchmark doc, and STOP Phase 1 — the churn was not where the model said it was |
++
++      **RESULT — KILL. The bar was not met and the effect does not reproduce.**
++      Ran 2026-08-18, one machine, bundle arm, 2 MB `tool_response`. Both arms
++      built from THIS tree so the only difference is the hoist: arm A
++      re-serialises per concern, arm B once per event.
++
++      | run | cell | arm A (per concern) | arm B (once) | delta |
++      |---|---|---:|---:|---:|
++      | n=15 | `post_tool_use` p50 | 166 ms | 135 ms | **−18.7 %** |
++      | n=25 | `post_tool_use` p50 | 139 ms | 143 ms | **+2.9 %** |
++      | n=15 | `pre_tool_use` p50 | 159 ms | 188 ms | +18.2 % |
++      | n=25 | `pre_tool_use` p50 | 157 ms | 149 ms | −5.1 % |
++
++      **The two runs disagree in sign on the pre-registered cell, and every
++      arm's own p95 spread (190–228 ms at a p50 of ~140) is larger than the
++      effect.** Under the registered rule that is < 5 %, i.e. the kill band: the
++      null is published, 1.1 is reverted, and Phase 1 stops.
++      **Where the churn is NOT.** D-2 asserted that re-serialising a large
++      envelope per concern is a material per-turn cost. On the in-process path it
++      is not measurable against runner noise, so whatever the 2 MB cell costs
++      (and it does cost — ~140 ms against ~85 ms for the minimal cell) is spent
++      elsewhere: the per-concern parse, the concern bodies, or the pipe transfer
++      itself.
++      **One honest limitation of the fixture, stated without using it to rescue
++      the hypothesis.** The filler is a single long string, which V8 serialises
++      close to a memcpy; a deeply nested 2 MB object would cost more per
++      stringify. The pre-registration named this fixture, so this result stands
++      as the answer to the question that was asked. A re-attempt must
++      pre-register the nested fixture as a NEW question rather than re-running
++      this one.
++      **Consequence for Phase 2, which is not automatic.** 2.1/2.2 avoid the body
++      entirely rather than serialise it once, so they are a different mechanism
++      and this null does not falsify them — but their premise is now weaker than
++      when they were written, and their AC ("the large-payload cell lands close to
++      the small-payload cell") is exactly what this run failed to move. Left open
++      as a decision rather than built on a premise that just lost its first test.
+ - **AC-1:** the table exists and the pre-registered bar is met or the null is
+-  published.
++  published. **MET, by the null half** — the table is in 1.2 above and the null is
++  published there and in `_run_concern_inproc`'s header.
+ 
+ ### Phase 2 — Payload opt-in per concern (D-2, second lever)
+ 
+@@ -270,18 +470,66 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+ 
+ ### Phase 3 — Take the two spawns off the hot path (D-3)
+ 
+-- [ ] **3.1** `roadmap-progress`: debounce. Write a cheap dirty marker on
++- [x] **3.1** `roadmap-progress`: debounce. Write a cheap dirty marker on
+       `PostToolUse`, regenerate once at Stop rather than per write. This preserves
+       the "dashboard stays in sync without agent self-discipline" guarantee at
+       session granularity; the per-write guarantee was never a stated contract.
+       Both Stop and session end flush the marker.
+       `verify:` a session with several roadmap writes produces one regeneration and
+       a dashboard identical to the per-write result.
+-- [ ] **3.2** `end-review-nudge`: batch untracked files through a single diff
++      **Landed 2026-08-18.** `post_tool_use` appends the touched repo roots to
++      `agents/runtime/state/roadmap-progress/dirty-roots.json`; `stop` and
++      `session_end` regenerate once and clear it. Bound on all six hosts that
++      carry `roadmap-progress` on `post_tool_use` — windsurf has no such surface,
++      so nothing there ever marks the ledger and no flush binding was added.
++      **Three decisions the step did not specify, each forced by something that
++      would otherwise have broken it:**
++      · **The ledger lives under `--project-dir`, not beside the edited file.** A
++      touched root may be a sibling worktree, and `stop` carries no roadmap path —
++      a marker written at the target would be unfindable at flush time. This
++      hook's existing sibling-worktree test is what made that visible.
++      · **A ledger that cannot be written regenerates inline.** The debounce is an
++      optimisation and must never be the reason a dashboard silently stops
++      updating; pinned by a test that puts a directory where the ledger file
++      belongs.
++      · **The flush clears BEFORE it regenerates.** A regenerator that hangs must
++      not leave a ledger that replays the same roots at every later turn end.
++      **Both paths share one implementation** (`_regenerate`), so the flush cannot
++      regenerate differently from the write path — which is the "dashboard
++      identical to the per-write result" half of the verify, by construction
++      rather than by comparison. Empirically re-checked in the same session: a
++      flush-driven regeneration produced a byte-identical
++      `agents/roadmaps-progress.md` to a direct `roadmap:progress` run.
++      41 cases green in `tests/scripts/hooks/roadmap_progress_hook.test.ts`,
++      including N-writes→one-entry, second-flush-is-a-no-op, both event
++      spellings, and replay mode marking nothing.
++      **The pre-existing tests were the real cost.** Nine of them asserted the
++      per-write regeneration; each now drives write-then-flush through one
++      helper, so the property they protected ("does this write reach the
++      regenerator for the RIGHT repo?") is unchanged and only the moment moved.
++- [x] **3.2** `end-review-nudge`: batch untracked files through a single diff
+       invocation or a pure-filesystem line count, and cap the untracked scan with an
+       honest "scan truncated" note in the state record rather than unbounded spawns.
+       `verify:` Stop on a workspace with many untracked files costs approximately
+       the same as Stop on a clean one.
++      **Landed 2026-08-18, and the shape is better than the step asked for: not
++      one batched diff, but no subprocess at all.** An untracked file's diff
++      against nothing is its own content, so `untrackedFileLineCount` now reads
++      the file. Nineteen new files used to cost nineteen `git` process starts at
++      every turn end; they now cost nineteen `readFileSync` calls.
++      **Behaviour is preserved rather than improved, in both directions that could
++      move a threshold decision without anyone noticing:** a binary file still
++      counts 0 (numstat printed a dash per side and `parseNumstat` mapped that to
++      0, so counting newline bytes in image data would have invented mutation
++      volume), and a final line with no trailing newline still counts, which a
++      plain newline count would have under-reported by one. Both are pinned,
++      and one test asserts equality against a real
++      `git diff --numstat --no-index` run rather than against my reading of it.
++      **The step's "unbounded spawns" premise was already half-fixed and its
++      correction survives**: `UNTRACKED_FILE_CAP = 20` and the labelled
++      `capped_approximation` already shipped. 3.2 removes the per-file *process*
++      below the cap; the cap itself is untouched and still the outer bound.
++      54 cases green in `tests/scripts/end_review_nudge_hook.test.ts` (+7).
+ - **AC-3:** the Stop cell on a heavily-untracked workspace lands within a declared
+   band of the clean-workspace cell.
+ 
+@@ -293,7 +541,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+ > refresh with it — that step's recorded baseline is stale in the *growing*
+ > direction, which is the worst direction for a cap's own census to age in.
+ 
+-- [ ] **4.1** Add a per-turn row to the latency budget: the derived composite of
++- [x] **4.1** Add a per-turn row to the latency budget: the derived composite of
+       pre and post chains across a representative tool-call count plus the prompt
+       and stop slots, benchmarked in CI. Register it **before** Phases 1–3 merge —
+       the bar precedes the lever, which is this repo's own budget-ownership
+@@ -304,15 +552,172 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+       implementable: two people would compute two different composites and both
+       would call the row green.
+       `verify:` the composite appears in the latency bench output and its CI gate.
++      **Landed 2026-08-18.** `per_turn_composite` in
++      `src/config/hook-latency-budget.json` carries the definition, the
++      `tool_calls: 10`, `aggregation: p50` and `observe_only: true`;
++      `bench_hook_latency` derives it from the same `results` the slot rows come
++      from and prints it on **every** run, so the local reading and the CI gate
++      run (`--gate --via-cli`, `tests.yml`) are the same number. It is written
++      into `docs/hook-latency.json` under `--update`.
++      **Arming it is a config edit, not a code change** — set `p50_ci` and flip
++      `observe_only` to false. `observe_only` is honoured even when a ceiling is
++      present, which is what lets 4.2 record a number for one release before it
++      starts failing builds (the blocker's recommended option (b)).
++      **First observation, and it is not small: 1,864 ms** on this machine
++      (pre 83 + post 82) × 10 + ups 84 + stop 130. That is already **above** the
++      source draft's candidate p50 ≤ 1.5 s, on hardware that measures every
++      individual slot comfortably inside its own budget — which is D-1 stated as
++      a number for the first time. It is ONE local reading, so it is an input to
++      4.2 and explicitly not the bar.
++      **What the composite CANNOT see, stated because the R2 review found it and
++      the row would otherwise read as broader than it is:** `bench_hook_latency`
++      forces `AGENT_CONFIG_REPLAY=1` so a bench run leaves no session state, and
++      `roadmap_progress_hook` short-circuits on replay for **both** its write and
++      its flush path. So the composite is blind to step 3.1 in both directions —
++      it cannot show the removed `post_tool_use` spawn, nor the `stop`-slot flush
++      that replaced it. It measures the dispatcher and the concerns that run under
++      replay, which is what it was registered to bound (D-1 is dispatch count, not
++      one concern's spawn); a bench fixture that exercises the debounce needs a
++      throwaway workspace with a roadmap in it, and is not built here.
++      `perTurnComposite` returns **null** rather than a number when a slot the
++      definition needs is missing from a run: a composite over a subset reads
++      low, and low is the direction that makes a ceiling look met. Pinned by
++      `tests/scripts/bench_hook_latency_composite.test.ts` (9 cases).
+ - [~] **4.2** The bar itself is the maintainer's to pre-register, not this
+       document's. Blocked on `b-per-turn-composite-bar`.
+-- [ ] **4.3** Refresh the stale chain-length census in cost-parity-1 step 4.3 in the
++- [x] **4.3** Refresh the stale chain-length census in cost-parity-1 step 4.3 in the
+       same PR, so the cap is measured against the live chain rather than an older
+       one.
+       `verify:` the recorded counts match a fresh read of the manifest.
++      **Landed 2026-08-18 in the same PR, and BOTH halves of the old baseline
++      were wrong.** cost-parity-1 step 4.3 read "9 concerns on
++      `user_prompt_submit` for claude, 7–8 on other hosts". Fresh read of
++      `hook_manifest.yaml`: claude carries **10**, and the other hosts carry
++      7–8 only on that one slot — claude is the binding host on *every* slot
++      (`pre_tool_use` 12, `post_tool_use` 11, `stop` 11). The full per-host × slot
++      table now sits in that step.
++      **Corrected once, after the R2 review, and the miss is worth naming:** the
++      first table was read BEFORE step 3.1 added `roadmap-progress` to `stop` and
++      `session_end` in the same PR, so a refresh whose whole point was a current
++      baseline shipped one stale by its own diff. Measure after your own edit.
++      **One correction the refresh adds beyond the numbers:** four hosts show no
++      `pre_tool_use` chain and copilot shows none anywhere, and those are **not**
++      zero-length chains a cap could read as headroom — they are unbound slots and
++      a `fallback_only` platform. A cap that treats a missing binding as a count
++      of zero would license unlimited growth on exactly the hosts it cannot
++      measure.
+ - **AC-4:** the composite is registered and gated, and the census it shares with
+   the chain cap is current as of that PR.
+ 
++## Findings the phases produced
++
++### F-1 — a measured guard bypass on large payloads, found by 1.2's own instrument
++
++**Fixed in this PR, with a mutation-verified negative test.** Recorded here
++because it is the most valuable thing this roadmap produced and it was not on any
++step's list.
++
++Building 1.2's large-payload cell made `bench_hook_latency` crash with `EPIPE`
++above a few hundred KB. The crash was the symptom; the cause is a silent guard
++bypass in the shipped dispatcher:
++
++1. `dispatch_hook` guarded its stdin read with `process.stdin.isTTY`. Merely
++   READING that property lazily constructs the stdin stream, which puts fd 0 into
++   **non-blocking** mode — so the guard broke its own read.
++2. `fs.readFileSync(0)` on a non-blocking pipe throws `EAGAIN` once the payload
++   exceeds the pipe buffer.
++3. `_readStdin`'s `catch { return "" }` converted that into *no input*, so the
++   dispatcher built an envelope with an EMPTY payload and exited **0**.
++
++**Consequence, reproduced on the real bundle rather than argued:** a `PreToolUse`
++payload carrying `git commit --no-verify` is DENIED at a small size (exit 2,
++`block-no-verify`) and **ALLOWED** once the same payload is padded to 300 KB.
++With no tool name and no command in the envelope, every `PreToolUse` guard —
++`block-no-verify`, `block-unauthorized-git`, `block-kernel-rule-writes`,
++`block-config-weakening` — is silently blind. Padding is not an exotic input: a
++`PostToolUse` `tool_response` holding a large file read or verbose command output
++reaches these sizes routinely, so the same blindness applies to
++`injection-scan` and `context-hygiene` on ordinary traffic.
++
++**The class was already known in this repo, and that is the transferable part.**
++`_lib/stdin.ts` exists, documents this exact EAGAIN failure from a 2026-08-04 CI
++diff, and states the rule the hooks path violated: *never substitute an empty
++string for a failed read*. `check_no_new_legacy_path` carries the same comment.
++Knowing the read was fragile was not enough, because the **trigger** lived in a
++different file — the `isTTY` probe. A defect ledger that records the *read* and
++not the *thing that makes the read fail* does not prevent the next instance.
++
++**Fix:** `tty.isatty(0)` instead of `process.stdin.isTTY` (answers the same
++question without constructing the stream), and the read delegated to the audited
++`readStdinText` (bounded EAGAIN retries, never empty-on-failure). Both halves,
++because either alone is a single point of failure. Verified by mutation: the new
++test fails on the pre-fix bundle at exactly the two padded sizes and passes on the
++fixed one.
++
++**The fix was worse than the defect for two turns, and the interesting part is
++WHY the first version looked correct.** The two properties are coupled, and the
++old code satisfied one of them *through* the bug that broke the other:
++
++- **A large payload must not truncate** — the bypass above.
++- **An idle fd 0 must be cheap.** A concern also runs with fd 0 merely open and
++  never written: a child that inherits stdin, or a test calling `main()`
++  in-process. A read that blocks there hangs the caller outright.
++
++Reading `process.stdin.isTTY` put fd 0 into **non-blocking** mode, so the
++following `readFileSync` failed fast with EAGAIN on an idle fd — and, identically,
++on a large one. One property was bought with the other. Removing the probe fixed
++the large read and broke the idle case in the worst available way: `fs.readSync`
++on a **blocking**, open, unwritten fd does not return EAGAIN, it BLOCKS, so no
++retry budget can bound it. Measured 12.4 s per invocation, and it left three
++Node-Tests shards `in_progress` for over an hour while shard 3/4 finished in
++minutes; the whole Tests workflow was then cancelled on timeout, which reads as
++23 "failed" checks that were nothing of the kind.
++
++**A second attempt fixed the wrong layer.** Capping the first-byte wait removed
++the *infinite* stall but not the cost, because the fd was still blocking: the cap
++could only fire after the read returned, which it never did. Then the same cap at
++500 ms with the non-blocking mode restored turned a 416 ms test file into a 5.0 s
++one — bounded, and still a 12× regression paid on every in-process concern call.
++
++**The shipped shape makes the coupling deliberate instead of accidental.** fd 0 is
++put into non-blocking mode ON PURPOSE (so a read can never block), the read goes
++through the retrying `readStdinText` (so EAGAIN mid-stream is retried rather than
++reported as empty), and the first-byte wait is capped at **25 ms** — enough to
++absorb a scheduling race between the parent's first write and the child's first
++read, and nothing more, because the host writes its payload before the child can
++run. Once any byte has arrived the full budget applies.
++
++Verified in all three directions rather than the one that was being fixed:
++`BLOCKED` at 0 / 300 KB / 2 MB, **239 ms** on the idle pipe (from 12,373 ms), and
++`tests/scripts/hooks/` at **26 files / 392 tests / 6.3 s** where it previously
++never finished. The shared reader keeps its old behaviour by default — a
++`gh pr diff` pipe genuinely can be slow to first byte, and calling that empty
++input is the defect `_lib/stdin.ts` exists to prevent — so only the hook path
++opts in.
++
++Three process notes, which are the transferable part:
++
++- **The signal was in front of me and I narrowed around it.** A local
++  `vitest run tests/scripts/hooks/` had timed out at 400 s earlier in the same
++  session; I re-ran a smaller file set instead of asking why.
++- **"The shards are slow" would have been the wrong diagnosis.** Three hung while
++  one passed, which is a stall, not slowness — only the per-job `startedAt`
++  showed it, and only `bucket` distinguished the 23 cancellations from failures.
++- **Pristine-main comparison settled authorship in one step.** Restoring the two
++  stdin files from `origin/main` in place made the hanging test pass in 416 ms,
++  which is what turned "probably mine" into "mine, in these two files".
++
++**Sibling search, reported with its count.** `process.stdin.isTTY`: **19**
++occurrences outside the two hook files, all in interactive CLI paths that never
++read fd 0 as data (`install`, `release`, `new_skill`, the RDP gates,
++`initRouting`, `decision_engine`, `interactiveContext`) — none is this defect,
++because none pairs the probe with a data read. `fs.readFileSync(0`: **16** call
++sites outside the hooks path and `_lib/stdin.ts`; `check_release_pr_shape:183` carries the exact
++`catch { data = '' }` shape that turns an oversized diff into a passing gate over
++nothing, which `_lib/stdin.ts`'s own header already names as worse than the crash.
++Not fixed here — it is a different surface with no security dimension, and this
++PR is already a performance change carrying one security fix.
++
+ ## Blockers
+ 
+ ### blocker: b-per-turn-composite-bar
+@@ -347,6 +752,74 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+   the row exists in `hook-latency-budget.json` with its bar or its observe-only
+   marker.
+ 
++### blocker: b-stdin-read-failure-policy
++- **Status:** open
++- **Owner:** user
++- **Class:** 2 — consent-once
++- **Blocks:** nothing — F-1's trigger is fixed and the residual failure is now
++  loud. This records the half that is a policy call rather than a bug fix.
++- **What to do:** decide what the dispatcher does when the stdin read **fails**,
++  as distinct from stdin being empty. Both `_readStdin` and `readHookStdin` still
++  convert any residual failure — an exhausted EAGAIN budget (~10 s), `EIO`,
++  `EBADF` — into an empty string, after which the whole chain runs with no
++  `tool_name` and the dispatcher exits 0. For a `fail_closed: true`,
++  `severity: blocking` guard that is an allow. Options: (a) **deny** on a failed
++  read for block-capable events that carry at least one fail-closed concern —
++  the honest reading of fail-closed, at the cost of refusing a tool call on a
++  transient I/O error; (b) keep allowing but treat the loud stderr line and the
++  dispatch issue that now ship as sufficient, which is the current state;
++  (c) deny only on the block-capable slot and allow elsewhere, which is (a)
++  narrowed to where a guard can actually refuse.
++- **Recommendation:** **option (c).** The bypass F-1 records is only consequential
++  where a guard can refuse, and `pre_tool_use` is the one block-capable slot on
++  this host; denying there costs a retryable refusal on an I/O error the retry
++  budget already survived ten seconds of, while denying on `stop` or
++  `post_tool_use` would refuse nothing and could break a turn end. Option (b) is
++  the status quo and leaves a documented allow-on-failure on a security path;
++  option (a) is right in spirit and pays for it on slots where it buys nothing.
++- **If you do nothing:** the residual failure stays an allow. It is no longer
++  silent — that was the actual defect and it is fixed — but a reader of
++  `hook-architecture-v1`'s fail-closed contract would still expect a refusal that
++  does not happen, and nothing in the tree records the gap except this blocker.
++- **Resolved when:** one option is recorded at this blocker and, for (a) or (c),
++  `_readStdin`'s failure path returns a deny for the named slots with a test that
++  fails when it allows.
++
++### blocker: b-guard-tool-partition
++- **Status:** open
++- **Owner:** user
++- **Class:** 2 — consent-once
++- **Blocks:** nothing in this roadmap — step 5.1 is cancelled and Phases 1-4
++  proceed without it. It records the one reachable form of 5.1's goal so a later
++  attempt starts from the decision rather than re-deriving it.
++- **What to do:** decide whether the three blocking `pre_tool_use` guards
++  (`block-no-verify`, `block-kernel-rule-writes`, `block-config-weakening`) may
++  carry a **claude-only** host tool filter. Only that unlocks a zero-dispatch
++  path for tools no concern can act on — `WebFetch`, `WebSearch`, `TodoWrite`,
++  `Skill`, MCP tools — which is a large share of calls in an agentic turn.
++  Options: (a) partition the claude tool space into disjoint classes and assign
++  every concern, guards included, per class; (b) partition only the advisory
++  concerns and keep one unscoped group for the guards, which keeps the guards
++  safe and buys **nothing** (finding 2 of step 5.1 — the unscoped group still
++  fires on every call); (c) decline, and D-1 is addressed only by Phase 4's
++  measurement plus the in-process `tools:` filter that already ships.
++- **Recommendation:** **option (c) — decline, and revisit only if Phase 4's
++  registered composite exceeds its bar.** The gain is real but unmeasured, and
++  the cost is a silently-skippable filter in front of the two guards that exist
++  because a bypass must be impossible: `matcher` is a plain non-match, so unlike
++  `if` it does not fail open, and a Claude tool-name addition (a renamed Bash
++  variant, a new edit tool) would disable a guard with nothing in the tree
++  noticing. Option (a) is the version worth having *after* the composite says the
++  dispatch count is the binding cost; option (b) is strictly waste.
++- **If you do nothing:** the dispatcher keeps firing on every tool call
++  regardless of whether any concern can act, the in-process `tools:` filter keeps
++  absorbing the per-concern half on all eight platforms, and Phase 4's composite
++  row is what tells anyone whether the remaining per-turn cost is worth a
++  security-surface decision at all.
++- **Resolved when:** one option is recorded at this blocker, and — for (a) — the
++  partition ships with a per-class absent-invocation proof and a test that fails
++  when a claude tool name is added to no class.
++
+ ## Risk Register
+ 
+ <!-- risk-review: v1 | reviewed: 2026-08-18 | reviewer: claude/host -->
+diff --git a/docs/contracts/hook-architecture-v1.md b/docs/contracts/hook-architecture-v1.md
+index dfcddef475f8453f94326dc58f05534b038bf552..4f3864bfeb72a6e523fc8ea11e6aa94dfb38755d 100644
+--- a/docs/contracts/hook-architecture-v1.md
++++ b/docs/contracts/hook-architecture-v1.md
+@@ -376,6 +376,37 @@ The filter is deliberately absent from the blocking PreToolUse guards, whose
+ tool sets span host naming variants (`Bash` / `BashTool` / `launch-process` / …);
+ a list that misses one variant silently disables a guard on that host.
+ 
++### The host's own `matcher` / `if`: a prefilter, never an enforcement
++
++Claude Code offers two host-side filters that look like the `tools:` key above
++and are not interchangeable with it. Verified against
++`code.claude.com/docs/en/hooks`, fetched **2026-08-18**; re-read on a host bump,
++because this is external documentation (road-to-per-turn-hook-economy risk 7).
++
++| Field | Semantics as documented |
++|---|---|
++| `matcher` (group level) | a group runs when its matcher matches. **"All matching hooks run in parallel"** — several matching groups on one event means several processes, not one |
++| `if` (handler level) | permission-rule syntax (`Bash(git *)`, `Edit(*.ts)`). **Only evaluated on tool events** — `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest`, `PermissionDenied`. *"On other events, a hook with `if` set never runs."* Fails **open** — the hook runs regardless of the pattern — when the Bash command cannot be parsed |
++
++Three invariants follow, and each one is a way this has already almost gone
++wrong:
++
++- **`if` is a prefilter, never the enforcement.** Its fail-open direction is
++  correct for a fail-closed guard — unparseable means the hook runs and the hook
++  decides — and useless as a replacement for the guard's own check. A guard's
++  detection logic is never removed because an `if` was added in front of it.
++- **`if` on a non-tool event disables the handler outright.** Not "runs
++  unfiltered" — never runs. A `stop` or `session_start` handler that acquires an
++  `if` is silently dead, which no test in this tree would notice.
++- **Group splitting costs processes, it does not save them.** Because every
++  matching group fires, a split only avoids a dispatch for a payload that matches
++  **no** group. On `pre_tool_use` that is unreachable while any concern is
++  unscoped — **nine** of the twelve claude concerns are, deliberately, per the
++  paragraph above; only `code-graph-nudge`, `reread-guard` and
++  `spawn-guard-shadow` declare `tools:` — so a group with no `matcher` must exist
++  and fires on every tool call. `road-to-per-turn-hook-economy` step 5.1 was cancelled on exactly
++  this reading.
++
+ ### Optional `roles:` axis — session-role chain thinning
+ 
+ A top-level `roles:` block lets a marked session run a shorter chain
+diff --git a/src/config/hook-latency-budget.json b/src/config/hook-latency-budget.json
+index 4475d8e765d87a380a6f8d5b8dabc5f1c850f6a5..113d938c047f9dacc0abea15bba57b28e2f98e3c 100644
+--- a/src/config/hook-latency-budget.json
++++ b/src/config/hook-latency-budget.json
+@@ -12,6 +12,16 @@
+         "pre_tool_use": { "p95_ci": 150, "p95_1vcpu": 400 },
+         "any_hook_event": { "p95_ci": 250 }
+     },
++    "per_turn_composite": {
++        "_comment": "D-1 of road-to-per-turn-hook-economy: the slot budgets above gate per EVENT, and a single tool call fires both pre_tool_use and post_tool_use with their full concern chains. A ten-tool-call turn therefore pays twenty dispatcher cold starts plus the prompt and stop slots while every individual slot stays green — the number the user experiences has no row. This row is that number. Registered by step 4.1; the CEILING is step 4.2 and is the maintainer's, so the row ships observe-only and CANNOT fail a build. Definition before bar, deliberately: two people computing two different composites would both call the row green.",
++        "definition": "(pre_tool_use + post_tool_use) * tool_calls + user_prompt_submit + stop",
++        "aggregation": "p50",
++        "_aggregation_note": "Documentation of the code, not an input to it: the bench reads tool_calls from this file but hardcodes the p50 aggregation and re-implements the formula, so editing `aggregation` or `definition` changes nothing. Kept because a row whose meaning lives only in a TS file is unreadable here; corrected from silence to a stated non-binding after the R2 review flagged both keys as unread.",
++        "tool_calls": 10,
++        "observe_only": true,
++        "p50_ci": null,
++        "_observe_only_note": "While observe_only is true the bench PRINTS the composite on every run, including the CI gate run, and never fails on it. Setting p50_ci to a number and observe_only to false is the whole of step 4.2 — no code change is needed to arm it. Do not arm it from a single run: the composite sums four slot measurements and multiplies two of them by tool_calls, so it accumulates runner variance faster than any single slot (risk 5), which is why the same absolute-cap-plus-pathology-net posture the slots use applies here too."
++    },
+     "regression_gate": {
+         "max_regression_pct": 200,
+         "_comment": "Pathology net only — the ABSOLUTE budgets above are the binding gate for wall-clock. The original 20% window was falsified by measured GitHub-runner variance: two CI runs of IDENTICAL code measured p95 77-89 ms and 92-103 ms (+23% run-to-run, 2026-07-27, runs 30303438480 / round-2 tests.yml). Same rationale as the regression_pct 200 override on the evaluator timing budgets: a tight creep rule on shared-runner wall-clock flaps; sizes/counts keep tight windows, timings get absolute caps."
+diff --git a/src/scripts/_lib/stdin.ts b/src/scripts/_lib/stdin.ts
+index 73b04031ccb9251f1b6c401e4d6c5fa405585ce5..778ed917a8f710a1a72d72e81703c23abffd9dbc 100644
+--- a/src/scripts/_lib/stdin.ts
++++ b/src/scripts/_lib/stdin.ts
+@@ -41,6 +41,31 @@ function _sleepSync(ms: number): void {
+     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+ }
+ 
++/** Options for {@link readStdinText}. */
++export interface ReadStdinOptions {
++    /**
++     * Give up and return `''` when the FIRST byte has not arrived within this
++     * many milliseconds. Undefined (the default) keeps the historical behaviour:
++     * the full {@link MAX_RETRIES} budget applies from the first read, which is
++     * what a `gh pr diff` pipe needs — its first byte can legitimately take a
++     * while, and reporting that as empty input is the defect this module exists
++     * to prevent.
++     *
++     * A HOOK is the opposite case, and it cost a CI hang to learn the difference.
++     * The host writes the payload synchronously on spawn, so a byte that has not
++     * arrived promptly is not a slow writer — it is an fd 0 nobody will ever
++     * write to, which is what a child inherits when a test spawns it without
++     * piping stdin. With no cap the dispatcher then span the full ~10 s budget on
++     * EVERY such invocation and returned "" anyway; measured 12.4 s per call
++     * against an immediate return before the retry loop existed. Hundreds of
++     * those hung three Node-Tests shards for over an hour.
++     *
++     * Once ANY byte has arrived the cap no longer applies: a writer demonstrably
++     * exists, so the full budget is right and the large-payload fix is intact.
++     */
++    firstByteTimeoutMs?: number;
++}
++
+ /**
+  * Read all of fd 0 as UTF-8.
+  *
+@@ -48,10 +73,13 @@ function _sleepSync(ms: number): void {
+  *         {@link MAX_RETRIES} consecutive EAGAINs — a caller must not be able to
+  *         mistake a failed read for empty input.
+  */
+-export function readStdinText(fd = 0): string {
++export function readStdinText(fd = 0, opts: ReadStdinOptions = {}): string {
+     const chunks: Buffer[] = [];
+     const buf = Buffer.alloc(CHUNK);
+     let retries = 0;
++    let got_any = false;
++    const first_byte_deadline =
++        opts.firstByteTimeoutMs === undefined ? null : Date.now() + opts.firstByteTimeoutMs;
+     for (;;) {
+         let read: number;
+         try {
+@@ -60,6 +88,11 @@ export function readStdinText(fd = 0): string {
+         } catch (exc) {
+             const code = (exc as NodeJS.ErrnoException).code;
+             if (code === 'EAGAIN') {
++                // An idle fd 0 is "no input", not a slow writer — but only
++                // before the first byte. See ReadStdinOptions.firstByteTimeoutMs.
++                if (!got_any && first_byte_deadline !== null && Date.now() >= first_byte_deadline) {
++                    return '';
++                }
+                 retries += 1;
+                 if (retries > MAX_RETRIES) {
+                     throw new Error(
+@@ -76,6 +109,7 @@ export function readStdinText(fd = 0): string {
+             throw exc;
+         }
+         if (read === 0) break;
++        got_any = true;
+         chunks.push(Buffer.from(buf.subarray(0, read)));
+     }
+     return Buffer.concat(chunks).toString('utf-8');
+diff --git a/src/scripts/bench_hook_latency.ts b/src/scripts/bench_hook_latency.ts
+index 8f79b837e0038bd8d145c9e4ad684f8adca36a16..989d3599ce1a917f06d354f9f9badd58093c6710 100644
+--- a/src/scripts/bench_hook_latency.ts
++++ b/src/scripts/bench_hook_latency.ts
+@@ -57,6 +57,20 @@ import { build_claude_hook_matrix } from './_lib/claude_settings_hooks.js';
+ 
+ const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
+ const BUNDLE = path.join(REPO_ROOT, 'dist', 'hooks', 'dispatch.js');
++/**
++ * Override the measured dispatcher bundle (`--bundle <path>`), so a
++ * two-version comparison on ONE machine is a flag rather than a throwaway
++ * script. Added for road-to-per-turn-hook-economy step 0.5, whose decisive
++ * probe is exactly that: the same events, the same method, two bundles built
++ * from two trees, same hardware. The measured process is the bundle itself —
++ * a bundle from another tree carries that tree's manifest resolution, so pass
++ * `--project-dir`-shaped state via the workspace as usual.
++ *
++ * Deliberately measurement-only: `--gate` and `--update` refuse an override,
++ * because a budget row and a regression baseline describe THIS tree's bundle
++ * and a foreign reading must never be written into either.
++ */
++let BUNDLE_OVERRIDE: string | null = null;
+ const CLI_BIN = path.join(REPO_ROOT, 'dist', 'cli', 'agent-config.js');
+ const SHIM = path.join(REPO_ROOT, 'agent-config');
+ const MANIFEST_PATH = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
+@@ -98,17 +112,55 @@ function percentile(sorted: number[], p: number): number {
+     return sorted[Math.max(0, idx)] as number;
+ }
+ 
++/**
++ * Size of the synthetic `tool_response` body, in characters (`--payload-bytes`).
++ *
++ * The default 0 keeps the historical minimal payload, so every recorded number
++ * and the CI gate stay comparable. A non-zero value is the **large-payload
++ * cell** of the § 2 matrix in `road-to-per-turn-hook-economy`: D-2 is that the
++ * dispatcher re-serialises the whole envelope — tool result included — once per
++ * concern, so the cost the payload adds is what step 1.2's A/B measures.
++ * Deliberately measurement-only, like `--bundle`: a padded payload must never
++ * write a budget row or a regression baseline.
++ */
++let PAYLOAD_BYTES = 0;
++
++/**
++ * Events a `tool_response` belongs on. The § 2 matrix pads a `PostToolUse` with
++ * a large tool response and a `Stop` with a large *transcript* — two different
++ * fixtures, not one field sprayed across every slot. Padding `stop` was tried
++ * and is wrong twice over: the shape does not occur, and `spawnSync` throws
++ * EPIPE because a dispatcher that never drains a body it has no reason to read
++ * exits while the parent is still writing. The transcript cell is a separate
++ * fixture and is not implemented here.
++ */
++const TOOL_EVENTS: ReadonlySet<string> = new Set(['pre_tool_use', 'post_tool_use']);
++
+ function syntheticPayload(event: string, workspace: string): string {
+     // Claude-shaped payload; concerns read tool_name/tool_input for
+     // pre/post_tool_use. A plain Read is the common non-matching case —
+     // the fast path consumers pay on every tool call.
+-    return JSON.stringify({
++    const body: Record<string, unknown> = {
+         session_id: 'bench-hook-latency',
+         cwd: workspace,
+         hook_event_name: event,
+         tool_name: 'Read',
+         tool_input: { file_path: path.join(workspace, 'README.md') },
+-    });
++    };
++    if (PAYLOAD_BYTES > 0 && TOOL_EVENTS.has(event)) {
++        // Filler with no JSON metacharacters, so the cost measured is
++        // serialisation volume rather than escaping. The FIELD differs per slot
++        // and that matters: `tool_response` does not exist on a `PreToolUse`
++        // payload, so padding it there would measure a shape the host never
++        // sends — the same objection this file raises against padding `stop`.
++        const filler = 'x'.repeat(PAYLOAD_BYTES);
++        if (event === 'post_tool_use') {
++            body['tool_response'] = filler;
++        } else {
++            body['tool_input'] = { ...(body['tool_input'] as object), description: filler };
++        }
++    }
++    return JSON.stringify(body);
+ }
+ 
+ /**
+@@ -144,7 +196,15 @@ export function benchEvent(
+             ? ['bash', ['-c', hooksJsonCommand(event)]]
+             : [
+                   process.execPath,
+-                  [BUNDLE, '--platform', 'claude', '--event', event, '--project-dir', workspace],
++                  [
++                      BUNDLE_OVERRIDE ?? BUNDLE,
++                      '--platform',
++                      'claude',
++                      '--event',
++                      event,
++                      '--project-dir',
++                      workspace,
++                  ],
+               ];
+     for (let i = 0; i < runs; i += 1) {
+         const started = performance.now();
+@@ -184,6 +244,47 @@ interface Budget {
+         any_hook_event: { p95_ci: number };
+     };
+     regression_gate: { max_regression_pct: number };
++    per_turn_composite?: {
++        definition?: string;
++        aggregation?: string;
++        tool_calls?: number;
++        observe_only?: boolean;
++        p50_ci?: number | null;
++    };
++}
++
++/**
++ * The per-turn composite (D-1 / step 4.1): the number a user experiences on one
++ * agentic turn, which no per-slot budget can represent. A single tool call fires
++ * `pre_tool_use` AND `post_tool_use`, so ten tool calls pay twenty dispatches
++ * plus the prompt and stop slots.
++ *
++ * Derived, never separately measured — feeding it the same `results` the slot
++ * rows come from is what keeps the two from disagreeing. `tool_calls` is read
++ * from the budget file rather than hardcoded, so the definition lives with the
++ * row it gates.
++ *
++ * Returns null when a slot the definition needs is missing from `results` (a
++ * partial run), because a composite computed over a subset would silently read
++ * LOW — which is the direction that makes a cap look met.
++ */
++export function perTurnComposite(
++    results: readonly EventResult[],
++    tool_calls: number,
++): { ms: number; parts: Record<string, number> } | null {
++    const p50 = (event: string): number | null => {
++        const r = results.find((x) => x.event === event);
++        return r === undefined ? null : r.p50_ms;
++    };
++    const pre = p50('pre_tool_use');
++    const post = p50('post_tool_use');
++    const ups = p50('user_prompt_submit');
++    const stop = p50('stop');
++    if (pre === null || post === null || ups === null || stop === null) return null;
++    return {
++        ms: (pre + post) * tool_calls + ups + stop,
++        parts: { pre_tool_use: pre, post_tool_use: post, user_prompt_submit: ups, stop },
++    };
+ }
+ 
+ interface HistoryEntry {
+@@ -205,6 +306,15 @@ interface ResultsDoc {
+ }
+ 
+ export function main(argv: string[] = process.argv.slice(2)): number {
++    // Reset the measurement-only globals per invocation. Their guard below is
++    // per-call, so leaving them set let a second `main()` in the same process —
++    // `main(['--bundle', …])` then `main(['--update'])` — write a foreign or
++    // padded reading into this tree's budget row and regression baseline, the
++    // exact outcome the guard's own message says must never happen. Found by
++    // the R2 review.
++    BUNDLE_OVERRIDE = null;
++    PAYLOAD_BYTES = 0;
++
+     const gate = argv.includes('--gate');
+     const update = argv.includes('--update');
+     const viaCli = argv.includes('--via-cli');
+@@ -218,9 +328,53 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+     const runsIdx = argv.indexOf('--runs');
+     const runs = runsIdx >= 0 ? Number.parseInt(argv[runsIdx + 1] ?? '50', 10) : 50;
+ 
+-    if (!fs.existsSync(BUNDLE)) {
++    const payloadIdx = argv.indexOf('--payload-bytes');
++    if (payloadIdx >= 0) {
++        const raw = argv[payloadIdx + 1];
++        const parsed = raw === undefined ? Number.NaN : Number.parseInt(raw, 10);
++        if (!Number.isFinite(parsed) || parsed < 0) {
++            process.stderr.write('bench_hook_latency: --payload-bytes requires a non-negative integer\n');
++            return 2;
++        }
++        if (gate || update || baselineIdx >= 0) {
++            process.stderr.write(
++                'bench_hook_latency: --payload-bytes is measurement-only — a padded payload must ' +
++                    "never write this tree's budget row or regression baseline\n",
++            );
++            return 2;
++        }
++        PAYLOAD_BYTES = parsed;
++    }
++
++    const bundleIdx = argv.indexOf('--bundle');
++    if (bundleIdx >= 0) {
++        const raw = argv[bundleIdx + 1];
++        if (raw === undefined || raw.startsWith('--')) {
++            process.stderr.write('bench_hook_latency: --bundle requires a path\n');
++            return 2;
++        }
++        if (gate || update || baselineIdx >= 0) {
++            process.stderr.write(
++                'bench_hook_latency: --bundle is measurement-only — it cannot be combined with ' +
++                    '--gate, --update or --baseline (a foreign bundle must never be written ' +
++                    "into this tree's budget or regression baseline)\n",
++            );
++            return 2;
++        }
++        if (viaCli) {
++            process.stderr.write(
++                'bench_hook_latency: --bundle overrides the bundle path, which the --via-cli ' +
++                    'path does not use (the shim resolves its own) — pick one\n',
++            );
++            return 2;
++        }
++        BUNDLE_OVERRIDE = path.resolve(raw);
++    }
++
++    const measured_bundle = BUNDLE_OVERRIDE ?? BUNDLE;
++    if (!fs.existsSync(measured_bundle)) {
+         process.stderr.write(
+-            `bench_hook_latency: bundle missing at ${BUNDLE} — run \`npm run build:hooks\` first\n`,
++            `bench_hook_latency: bundle missing at ${measured_bundle} — run \`npm run build:hooks\` first\n`,
+         );
+         return 2;
+     }
+@@ -264,7 +418,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+             const r = benchEvent(event, runs, workspace, via);
+             results.push(r);
+             process.stdout.write(
+-                `${event.padEnd(20)} p50 ${String(r.p50_ms).padStart(5)} ms · p95 ${String(r.p95_ms).padStart(5)} ms · max ${String(r.max_ms).padStart(5)} ms (n=${r.runs}, via ${via})\n`,
++                `${event.padEnd(20)} p50 ${String(r.p50_ms).padStart(5)} ms · p95 ${String(r.p95_ms).padStart(5)} ms · max ${String(r.max_ms).padStart(5)} ms (n=${r.runs}, via ${via}${PAYLOAD_BYTES > 0 ? `, payload ${PAYLOAD_BYTES}B` : ''}${BUNDLE_OVERRIDE === null ? '' : ` @ ${BUNDLE_OVERRIDE}`})\n`,
+             );
+         }
+     } finally {
+@@ -303,6 +457,44 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+         );
+     }
+ 
++    // Per-turn composite (D-1 / step 4.1). Printed on EVERY run, gate or not,
++    // because an observe-only row that only appears under --gate would leave
++    // the local reading and the CI reading incomparable.
++    const compositeCfg = budget.per_turn_composite;
++    const composite =
++        compositeCfg === undefined
++            ? null
++            : perTurnComposite(results, compositeCfg.tool_calls ?? 10);
++    if (compositeCfg !== undefined) {
++        const calls = compositeCfg.tool_calls ?? 10;
++        if (composite === null) {
++            process.stdout.write(
++                `ℹ️  per-turn composite not computed — a slot the definition needs is missing from this run\n`,
++            );
++        } else {
++            const ceiling = compositeCfg.p50_ci ?? null;
++            const observe = compositeCfg.observe_only !== false;
++            const label =
++                observe || ceiling === null ? 'observe-only' : `budget ${String(ceiling)} ms`;
++            process.stdout.write(
++                `per-turn composite  ${String(composite.ms).padStart(5)} ms ` +
++                    `= (pre ${composite.parts['pre_tool_use']} + post ${composite.parts['post_tool_use']}) × ${calls}` +
++                    ` + ups ${composite.parts['user_prompt_submit']} + stop ${composite.parts['stop']}` +
++                    ` (p50, ${label})\n`,
++            );
++            // observe_only is the arming switch for step 4.2 and is honoured
++            // even when a ceiling is present, so a number can be recorded for
++            // one release before it starts failing builds.
++            if (gate && !observe && ceiling !== null && composite.ms > ceiling) {
++                process.stderr.write(
++                    `❌  per-turn composite: ${composite.ms} ms exceeds the pre-registered ` +
++                        `budget (${ceiling} ms)\n`,
++                );
++                failed = true;
++            }
++        }
++    }
++
+     if (update || baselineHardware !== null) {
+         const existing = prior ?? ({ results: [] } as ResultsDoc);
+         const history: HistoryEntry[] = existing.history ?? [];
+@@ -329,6 +521,16 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+                   invocation_path: via,
+                   runs_per_event: runs,
+                   results,
++                  ...(composite === null
++                      ? {}
++                      : {
++                            per_turn_composite: {
++                                ms: composite.ms,
++                                tool_calls: compositeCfg?.tool_calls ?? 10,
++                                aggregation: 'p50',
++                                parts: composite.parts,
++                            },
++                        }),
+                   ...(history.length > 0 ? { history } : {}),
+               }
+             : { ...existing, history };
+diff --git a/src/scripts/hook_manifest.yaml b/src/scripts/hook_manifest.yaml
+index cb3dadf52c3e2ad1f62496edf10c33fab659aa03..4b1e486c3cd2bc7f73e16e3fa6d7588c5b215a42 100644
+--- a/src/scripts/hook_manifest.yaml
++++ b/src/scripts/hook_manifest.yaml
+@@ -43,6 +43,24 @@ concerns:
+     args: []
+     fail_closed: false
+     severity: advisory
++  # Debounced since road-to-per-turn-hook-economy step 3.1 (D-3). It used to
++  # re-shell the dashboard regenerator through tsx on EVERY roadmap write — a
++  # cold tsx start per write, in exactly the roadmap-heavy workflow this repo
++  # runs. It now APPENDS the touched repo roots to a ledger on post_tool_use and
++  # regenerates ONCE from `stop` / `session_end`, which is why it is bound on
++  # three slots rather than one.
++  #
++  # The two extra bindings are paid for, not free additions to a capped chain:
++  # they REPLACE an unbounded number of per-write spawns with one per turn, and
++  # the flush path costs a read of one small JSON file when nothing is dirty.
++  # No flush binding on windsurf, deliberately — it has no post_tool_use surface,
++  # so nothing there ever marks the ledger.
++  #
++  # The ledger lives under `--project-dir`, not beside the edited file: a touched
++  # root may be a sibling worktree and `stop` carries no roadmap path, so a
++  # marker written at the target would be unfindable at flush time. A ledger that
++  # cannot be written makes the hook regenerate inline, so a broken state
++  # directory costs latency rather than a silently stale dashboard.
+   roadmap-progress:
+     script: src/scripts/roadmap_progress_hook.ts
+     args: []
+@@ -737,15 +755,15 @@ roles:
+ platforms:
+   augment:
+     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+-    session_end:      [chat-history, memory-learn, session-register]
+-    stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register]
++    session_end:      [chat-history, memory-learn, session-register, roadmap-progress]
++    stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
+     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard]
+     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
+ 
+   claude:
+     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+-    session_end:      [chat-history, memory-learn, session-register]
+-    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger]
++    session_end:      [chat-history, memory-learn, session-register, roadmap-progress]
++    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register]
+     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow]
+     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape, language-mirror]
+@@ -788,7 +806,7 @@ platforms:
+   # agents/settings/contexts/chat-history-platform-hooks.md § Cowork.
+   cowork:
+     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+-    session_end:      [chat-history, memory-learn, session-register]
++    session_end:      [chat-history, memory-learn, session-register, roadmap-progress]
+     # end-review-nudge and delegation-nudge are DELIBERATELY NOT bound on
+     # this platform (F10, review) — cowork-dispatcher.sh's own header states
+     # it "always exit[s] 0" and its dispatch line discards the dispatcher's
+@@ -799,7 +817,7 @@ platforms:
+     # is later verified to forward it. Binding them here would be dead
+     # weight: the concern still runs (git diff, transcript scan, classifier),
+     # still costs the dispatch, and its entire output is thrown away.
+-    stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register]
++    stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow]
+     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
+@@ -822,8 +840,8 @@ platforms:
+   # agents/settings/contexts/chat-history-platform-hooks.md.
+   cursor:
+     session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+-    session_end:        [chat-history, memory-learn, session-register]
+-    stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register]
++    session_end:        [chat-history, memory-learn, session-register, roadmap-progress]
++    stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
+ 
+@@ -837,8 +855,8 @@ platforms:
+   # session is interrupted with partial state (mirrors Augment Stop).
+   cline:
+     session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+-    session_end:        [chat-history, memory-learn, session-register]
+-    stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register]
++    session_end:        [chat-history, memory-learn, session-register, roadmap-progress]
++    stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
+ 
+@@ -873,8 +891,8 @@ platforms:
+   # — this is our `stop` slot.
+   gemini:
+     session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+-    session_end:        [chat-history, memory-learn, session-register]
+-    stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register]
++    session_end:        [chat-history, memory-learn, session-register, roadmap-progress]
++    stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
+ 
+diff --git a/src/scripts/hooks/dispatch_hook.ts b/src/scripts/hooks/dispatch_hook.ts
+index 29e96023881312a03935161eb664d05b5de57dd2..6197e6b47b6ccb8c3d298378c4623022ca4ad0b0 100644
+--- a/src/scripts/hooks/dispatch_hook.ts
++++ b/src/scripts/hooks/dispatch_hook.ts
+@@ -32,6 +32,7 @@
+ import { spawnSync } from "node:child_process";
+ import fs from "node:fs";
+ import path from "node:path";
++import * as tty from "node:tty";
+ import { fileURLToPath, pathToFileURL } from "node:url";
+ import { parse as parseYaml } from "yaml";
+ 
+@@ -46,6 +47,7 @@ import { CONCERN_REGISTRY, type ConcernMain } from "./concern_registry.js";
+ import {
+   setHookStdinOverride,
+   clearHookStdinOverride,
++  readFd0ToEnd,
+ } from "./hook_stdin.js";
+ import { emitFor, type Severity } from "./host_semantics.js";
+ import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
+@@ -665,6 +667,31 @@ function _resolve_tsx_invocation(
+  * fail-open; the latency budget gate (hook-latency-budget.json) is the
+  * standing regression net.
+  */
++/**
++ * ## Why this still re-serialises the envelope per concern (step 1.1, MEASURED NULL)
++ *
++ * `setHookStdinOverride` takes text, so every concern re-stringifies the whole
++ * envelope — tool result included. On `post_tool_use` with the claude chain
++ * bound that is eleven serialisations of the same payload per tool call, which
++ * `road-to-per-turn-hook-economy` D-2 named as a cost worth removing.
++ *
++ * It was removed, measured against a pre-registered bar, and **put back**. Two
++ * A/B runs on one machine, 2 MB payload, bundle arm, `post_tool_use` p50:
++ * 166 → 135 ms (−18.7 %) at n=15, then 139 → 143 ms (**+2.9 %**) at n=25. The
++ * runs disagree in SIGN, and the within-arm spread (p95 190–228 ms on the same
++ * arm) is larger than the effect. That is the pre-registration's kill outcome:
++ * under 5 %, publish the null and stop the phase.
++ *
++ * So the hoist is not here, deliberately, and this comment is the reason —
++ * without it the next reader re-derives an "obvious" optimisation that has
++ * already been tried and did not pay.
++ *
++ * One property to preserve if anyone re-attempts it: share the **serialised
++ * string**, never a parsed object. The per-concern re-serialisation is
++ * accidentally an isolation boundary (risk 1), and a string cannot be mutated by
++ * one concern for the next. Pinned by
++ * `tests/scripts/hooks/dispatch_envelope_isolation.test.ts`.
++ */
+ function _run_concern_inproc(
+   main_fn: ConcernMain,
+   concern: ConcernDef,
+@@ -1116,7 +1143,34 @@ export function main(argv?: string[]): number {
+     }
+   }
+ 
+-  const payload_text = process.stdin.isTTY ? "" : _readStdin();
++  // `tty.isatty(0)`, NOT `process.stdin.isTTY`: reading the latter constructs
++  // the stdin stream and puts fd 0 into non-blocking mode, after which the read
++  // below throws EAGAIN on any payload above the pipe buffer and silently
++  // yields an EMPTY envelope. That is a measured guard bypass, not a theory —
++  // see readFd0ToEnd's header in hooks/hook_stdin.ts.
++  const payload_text = tty.isatty(0) ? "" : _readStdin();
++  if (_stdin_read_failed !== null) {
++    // NEVER silent: an empty envelope reached from a failed read means every
++    // guard on this event evaluated nothing. The exit code is unchanged (see
++    // `_stdin_read_failed`), so this line and the dispatch issue are the only
++    // signal that the chain ran blind.
++    process.stderr.write(
++      `dispatch_hook: STDIN READ FAILED (${_stdin_read_failed}) — the concern ` +
++        `chain for '${args.event}' ran against an EMPTY payload and could not ` +
++        `evaluate anything. This is not an empty stdin.\n`,
++    );
++    try {
++      log_dispatch_issue(
++        process.cwd(),
++        "dispatcher",
++        "execution_failed",
++        `stdin read failed on ${args.event}: ${_stdin_read_failed} — chain ran with an empty payload`,
++        fix_hint(),
++      );
++    } catch {
++      // observability never breaks the hook
++    }
++  }
+   _maybe_capture_payload(args, payload_text);
+   const session_role = resolveSessionRole(process.env);
+   const refusal_retry = _is_refusal_retry(args.event, payload_text);
+@@ -1285,10 +1339,31 @@ function _sortedRepr(s: ReadonlySet<string>): string {
+   return `[${items.map((x) => `'${x}'`).join(", ")}]`;
+ }
+ 
++/**
++ * Set when the stdin read FAILED, as distinct from stdin being genuinely empty.
++ *
++ * The two were indistinguishable, and that was the second half of the bypass
++ * F-1 records: removing the EAGAIN *trigger* still left `catch { return "" }`
++ * converting any residual failure — an exhausted retry budget, `EIO`, `EBADF` —
++ * into "no input", after which the whole chain runs with no `tool_name` and the
++ * dispatcher exits 0. For a `fail_closed: true`, `severity: blocking` guard that
++ * is an allow, emitted silently. Found by the R2 review.
++ *
++ * The failure is now LOUD (stderr + a dispatch issue) while the allow/deny
++ * decision is unchanged. Turning a failed read into a DENY is a policy change on
++ * a security surface, so it is filed as `b-stdin-read-failure-policy` rather than
++ * improvised here: an unreadable payload on a block-capable event arguably must
++ * refuse, and that call is the maintainer's.
++ */
++let _stdin_read_failed: string | null = null;
++
+ function _readStdin(): string {
+   try {
+-    return fs.readFileSync(0, "utf-8");
+-  } catch {
++    // Reads to EOF and retries on EAGAIN rather than treating it as empty
++    // input; shared with the concern-side reader so both paths cannot drift.
++    return readFd0ToEnd();
++  } catch (exc) {
++    _stdin_read_failed = exc instanceof Error ? exc.message : String(exc);
+     return "";
+   }
+ }
+diff --git a/src/scripts/hooks/end_review_nudge_hook.ts b/src/scripts/hooks/end_review_nudge_hook.ts
+index 88afa1571b7ce5104874038e477e5dbe6d062e54..dd17ebb17a4c1e2cc80353d58fe35f9e29d87f22 100644
+--- a/src/scripts/hooks/end_review_nudge_hook.ts
++++ b/src/scripts/hooks/end_review_nudge_hook.ts
+@@ -25,8 +25,8 @@
+  *
+  * `git diff --numstat HEAD` at `workspace_root`: the working tree vs the
+  * last commit, TRACKED files only, PLUS every untracked non-doc file
+- * (`git ls-files --others --exclude-standard`, one `git diff --numstat
+- * --no-index /dev/null <file>` per file — see "Untracked files" below;
++ * (`git ls-files --others --exclude-standard`, each one READ from the
++ * filesystem rather than diffed in a subprocess — see "Untracked files" below;
+  * fixes a review finding, F6, that a brand-new file was previously invisible
+  * to this count entirely). Chosen over a session-start SHA/timestamp
+  * baseline because no such baseline exists anywhere a `stop` concern can
+@@ -52,10 +52,15 @@
+  * that authored a brand-new 300-line module was previously measured as a
+  * 0-line mutation. `untrackedNonDocFiles` lists the candidates
+  * (`git ls-files --others --exclude-standard`, filtered by the same
+- * `isDocPath` carve-out); `untrackedFileLineCount` sizes each one via
+- * `git diff --no-index /dev/null <file>` (the only way to diff a path git's
+- * index has never seen). Past `UNTRACKED_FILE_CAP` untracked non-doc files
+- * this hook refuses to spawn one subprocess per file — an unbounded loop is
++ * `isDocPath` carve-out); `untrackedFileLineCount` sizes each one by READING
++ * IT — an untracked file's diff against nothing is its own content, so the
++ * count needs no git. It used to spawn `git diff --no-index /dev/null <file>`
++ * per file, on the Stop slot; step 3.2 of `road-to-per-turn-hook-economy`
++ * removed that process and preserved both edges that could otherwise move a
++ * threshold decision silently (a binary file counts 0, an unterminated last
++ * line still counts). The CAP is unchanged and still the outer bound: past
++ * `UNTRACKED_FILE_CAP` untracked non-doc files
++ * this hook refuses to read them all — an unbounded loop is
+  * worse than an imprecise answer — and instead reports a line count
+  * GUARANTEED to be over `MUTATION_LINE_THRESHOLD`: "many new files this
+  * session" is itself sufficient signal to fire without the exact count.
+@@ -224,10 +229,14 @@ import { atomic_write_json, is_replay_mode } from './state_io.js';
+ export const MUTATION_LINE_THRESHOLD = 50;
+ 
+ /**
+- * Untracked non-doc files past which this hook refuses to spawn one
+- * `git diff --no-index` subprocess per file and instead reports the
+- * mutation as certainly over threshold (F6, review — see the file header's
+- * "Untracked files" section).
++ * Untracked non-doc files past which this hook refuses to size them at all and
++ * instead reports the mutation as certainly over threshold (F6, review — see the
++ * file header's "Untracked files" section).
++ *
++ * It bounds the file COUNT. The per-file byte bound is separate and lives in
++ * `untrackedFileLineCount`: since step 3.2 replaced the per-file subprocess with
++ * a read, an unbounded read would move an arbitrarily large file INTO this
++ * process, which the subprocess never did.
+  */
+ export const UNTRACKED_FILE_CAP = 20;
+ 
+@@ -366,21 +375,84 @@ export function untrackedNonDocFiles(cwd: string): string[] {
+ }
+ 
+ /**
+- * Added+deleted line count for ONE untracked file, via
+- * `git diff --numstat --no-index /dev/null <relPath>` — the only way to
+- * diff a path git's index has never seen. `--no-index` exits `1` whenever a
+- * diff exists (by design, unlike `gitNumstatRows`'s tracked-diff contract,
+- * where a nonzero status means failure) — only the parsed numstat rows
+- * matter here, never the exit code. Fails closed to `0`, never throws.
++ * Leading bytes probed for a NUL when deciding whether an untracked file is
++ * binary. git uses its own leading-block heuristic for the same call; the point
++ * of matching the size is that both agree on which files count as binary, not
++ * that either is exhaustive.
++ */
++export const BINARY_PROBE_BYTES = 8000;
++
++/**
++ * Per-file read ceiling for the untracked-file line count.
++ *
++ * `UNTRACKED_FILE_CAP` bounds how MANY files are sized; nothing bounded how
++ * LARGE one of them may be, and that gap arrived with step 3.2: the
++ * `git diff --no-index` subprocess it replaced never materialised file content in
++ * the hook process, while a `readFileSync` does. One untracked-but-not-ignored
++ * dataset or media file would then cost a full allocation plus an O(n) byte scan
++ * at every turn end, and past ~2 GiB the read throws and silently counts 0.
++ * Found by the R2 review.
++ *
++ * 8 MiB is far above any hand-written source file and far below a size worth
++ * allocating on the Stop path. A file over it is counted as
++ * `MUTATION_LINE_THRESHOLD + 1` rather than 0: "a huge new file appeared" is a
++ * mutation, and the old code's answer for an unreadable file — zero — is the
++ * direction that hides one.
++ */
++export const UNTRACKED_FILE_READ_CAP_BYTES = 8 * 1024 * 1024;
++
++/**
++ * Added line count for ONE untracked file, read from the filesystem.
++ *
++ * **No subprocess (road-to-per-turn-hook-economy step 3.2 / D-3).** This used to
++ * run `git diff --numstat --no-index /dev/null <relPath>`, one spawn per
++ * untracked non-doc file, on the Stop slot — so a workspace with nineteen new
++ * files paid nineteen `git` process starts at every turn end. An untracked
++ * file's diff against nothing is just its own content, so the count needs no
++ * git at all.
++ *
++ * Behaviour is preserved rather than improved, in both directions that could
++ * silently change a threshold decision: a binary file still counts 0 (numstat
++ * printed a dash per side and `parseNumstat` mapped that to 0), and a file whose
++ * last line lacks a trailing newline still counts that line.
++ *
++ * The remaining bound is unchanged and lives one level up:
++ * `totalNonDocMutatedLinesWithMeasure` still refuses to read more than
++ * `UNTRACKED_FILE_CAP` files and returns a labelled `capped_approximation`
++ * instead — "many new files this session" is signal enough without an exact
++ * count. What 3.2 removes is the per-file *process*, not the cap.
++ *
++ * Fails closed to `0` and never throws, exactly as the spawn version did.
+  */
+ export function untrackedFileLineCount(cwd: string, relPath: string): number {
+     try {
+-        const r = spawnSync('git', ['diff', '--numstat', '--no-index', '/dev/null', relPath], {
+-            cwd,
+-            encoding: 'utf8',
+-            maxBuffer: 16 * 1024 * 1024,
+-        });
+-        return parseNumstat(r.stdout ?? '').reduce((sum, row) => sum + row.added + row.deleted, 0);
++        const abs = path.resolve(cwd, relPath);
++        // Size before read: the point of the cap is not to allocate the file.
++        const size = fs.statSync(abs).size;
++        if (size === 0) return 0;
++        if (size > UNTRACKED_FILE_READ_CAP_BYTES) {
++            return MUTATION_LINE_THRESHOLD + 1;
++        }
++        const buf = fs.readFileSync(abs);
++        if (buf.length === 0) return 0;
++        // Binary detection, matching what this function replaced rather than
++        // improving on it: numstat prints a dash for each side of a binary file
++        // and `parseNumstat` maps a dash to 0, so a binary file contributed 0
++        // lines before and must contribute 0 now. Counting newline bytes in
++        // binary content would invent mutation volume out of image data. git's
++        // own heuristic is a NUL byte in the leading block, so the same block
++        // size is used here and the two agree on the same files.
++        const probe = buf.subarray(0, Math.min(buf.length, BINARY_PROBE_BYTES));
++        if (probe.includes(0)) return 0;
++        // The replaced spawn reported every line of the file as added, INCLUDING
++        // a final line with no trailing newline. Counting newline bytes alone
++        // would be one short on exactly the files an editor leaves unterminated.
++        let lines = 0;
++        for (const byte of buf) {
++            if (byte === 0x0a) lines += 1;
++        }
++        if (buf[buf.length - 1] !== 0x0a) lines += 1;
++        return lines;
+     } catch {
+         return 0;
+     }
+@@ -399,8 +471,9 @@ export interface MutationMeasurement {
+  * HEAD`) and untracked (`git ls-files --others --exclude-standard`) files —
+  * see the file header's "Untracked files (F6)" section for why both sources
+  * are required. Past `UNTRACKED_FILE_CAP` untracked non-doc files this
+- * function refuses to spawn one `git diff --no-index` subprocess per file
+- * (an unbounded loop) and instead returns a value GUARANTEED to be over
++ * function refuses to size them individually at all (what used to be an
++ * unbounded spawn loop, and is now an unbounded read loop) and instead returns a
++ * value GUARANTEED to be over
+  * `MUTATION_LINE_THRESHOLD` — "many new files this session" is itself
+  * sufficient signal, no exact count needed. `measure` records WHICH of
+  * those two shapes the returned `lines` value is, so a consumer (the
+diff --git a/src/scripts/hooks/hook_stdin.ts b/src/scripts/hooks/hook_stdin.ts
+index 665ad948b16731ee5804be51026ac0d474dd044a..b68bea166268fbbd8bee4b344c882bba3b0dd425 100644
+--- a/src/scripts/hooks/hook_stdin.ts
++++ b/src/scripts/hooks/hook_stdin.ts
+@@ -12,13 +12,17 @@
+  * Contract:
+  *   - Standalone invocation (a concern run directly as its own process —
+  *     the historical path, still supported): no override is set, and
+- *     `readHookStdin()` falls through to `fs.readFileSync(0, 'utf-8')`.
++ *     `readHookStdin()` falls through to a retrying fd-0 read (see
++ *     `readFd0ToEnd` — a plain `fs.readFileSync(0)` here was a measured guard
++ *     bypass on large payloads).
+  *   - In-process invocation: the dispatcher calls
+  *     `setHookStdinOverride(raw)` before the concern's `main()` and
+  *     `clearHookStdinOverride()` after. Nesting is not supported (concerns
+  *     never dispatch concerns).
+  */
+-import * as fs from 'node:fs';
++import * as tty from 'node:tty';
++
++import { readStdinText } from '../_lib/stdin.js';
+ 
+ let _override: string | null = null;
+ 
+@@ -30,12 +34,114 @@ export function clearHookStdinOverride(): void {
+     _override = null;
+ }
+ 
+-/** TTY-safe stdin read: injected override first, else fd 0, else "". */
++/**
++ * Read fd 0 to EOF, correctly, for a payload of any size.
++ *
++ * Delegates to `_lib/stdin.readStdinText`, which already carries this exact
++ * defect's history (EAGAIN on a pipe larger than its buffer, measured 2026-08-04
++ * on a CI diff), a bounded retry budget, and the contract that matters here:
++ * **it never substitutes an empty string for a failed read.** A second
++ * implementation in this file would have been a worse copy of an audited one.
++ *
++ * ## The hook-side half of the defect (measured 2026-08-18)
++ *
++ * Knowing the read is fragile was not enough, because the *trigger* lived
++ * somewhere else. `dispatch_hook` guarded the read with `process.stdin.isTTY`,
++ * and merely READING that property lazily constructs the stdin stream, which
++ * puts fd 0 into non-blocking mode. So the guard is what made its own read fail:
++ *
++ * 1. `process.stdin.isTTY` → fd 0 becomes non-blocking.
++ * 2. `fs.readFileSync(0)` → `EAGAIN` once the payload exceeds the pipe buffer.
++ * 3. `catch { return '' }` → "no input", and the dispatcher proceeds against an
++ *    EMPTY envelope and exits 0.
++ *
++ * Reproduced on the shipped bundle: a `PreToolUse` payload carrying
++ * `git commit --no-verify` was DENIED small and ALLOWED once padded to 300 KB,
++ * because `block-no-verify` never saw a command. Padding is not exotic — a
++ * `PostToolUse` `tool_response` holding a large file read reaches these sizes
++ * routinely.
++ *
++ * Hence both halves, since either alone is a single point of failure:
++ * **`tty.isatty(0)`** answers the TTY question without constructing the stream,
++ * and **the retrying reader** holds even if something else in the process touched
++ * `process.stdin` first. Pinned by
++ * `tests/scripts/hooks/dispatch_large_payload_guard.test.ts`, which fails on the
++ * pre-fix bundle.
++ */
++/**
++ * Wait for the FIRST byte, in ms, before concluding fd 0 is idle. See
++ * {@link readFd0ToEnd} for why an idle fd 0 must be cheap and a busy one must
++ * not be truncated.
++ */
++export const HOOK_FIRST_BYTE_TIMEOUT_MS = 25;
++
++/**
++ * Read fd 0 to EOF for a payload of any size, without stalling when there is no
++ * payload at all.
++ *
++ * ## Two coupled properties, and it took three attempts to see that they were coupled
++ *
++ * 1. **A large payload must not truncate.** `fs.readFileSync(0)` returned `''`
++ *    once the payload exceeded the pipe buffer, and the caller's
++ *    `catch { return '' }` made that indistinguishable from empty input. That is
++ *    the guard bypass F-1 records: a `PreToolUse` payload carrying
++ *    `git commit --no-verify` was DENIED small and ALLOWED once padded to 300 KB.
++ * 2. **An idle fd 0 must be cheap.** A concern also runs with fd 0 simply open
++ *    and never written — a child that inherits stdin, or a test that calls
++ *    `main()` in-process under vitest. A read that blocks there hangs the caller
++ *    outright.
++ *
++ * The old code satisfied (2) **by accident, through the very bug that broke (1)**:
++ * reading `process.stdin.isTTY` constructs the stdin stream, which puts fd 0 into
++ * non-blocking mode, so the following `readFileSync` failed fast with EAGAIN on an
++ * idle fd — and equally on a large one. Removing the probe fixed (1) and broke (2)
++ * in the worst way: `fs.readSync` on a blocking, open, unwritten fd does not
++ * return EAGAIN, it BLOCKS, so no retry budget can bound it. Measured: a whole
++ * test file that calls a concern in-process never finished, and three CI shards
++ * hung for over an hour.
++ *
++ * So the non-blocking mode is now **deliberate** rather than a side effect, and
++ * the retry loop is what makes it safe:
++ *
++ * - Touch `process.stdin` on purpose to put fd 0 in non-blocking mode, so a read
++ *   can never block. This is the one place in the tree that wants that effect;
++ *   everywhere else it is the hazard `dispatch_hook` documents.
++ * - Read through `_lib/stdin.readStdinText`, which retries on EAGAIN instead of
++ *   reporting it as empty input — that is what fixes (1).
++ * - Cap the wait for the FIRST byte, and cap it SHORT. The host writes the
++ *   payload before the child can run, so the first read either returns data or
++ *   means nothing is coming; the 25 ms exists only to absorb a scheduling race
++ *   between the parent's first write and the child's first read, not to wait for
++ *   a slow writer. It was 500 ms for one iteration and that was already too
++ *   expensive — 7 in-process concern calls in one test file paid 3.5 s of pure
++ *   waiting. Once any byte HAS arrived the full ~10 s budget applies, so a
++ *   multi-megabyte payload is unaffected.
++ *
++ * Both directions are pinned by
++ * `tests/scripts/hooks/dispatch_large_payload_guard.test.ts`, which fails on the
++ * pre-fix bundle for (1) and times out for (2) — fixing either alone reintroduces
++ * the other.
++ */
++export function readFd0ToEnd(): string {
++    // Deliberate: constructing the stream sets O_NONBLOCK on fd 0, which is the
++    // only portable way to guarantee the reads below cannot block. Node exposes
++    // no direct O_NONBLOCK call for an existing descriptor.
++    void process.stdin;
++    return readStdinText(0, { firstByteTimeoutMs: HOOK_FIRST_BYTE_TIMEOUT_MS });
++}
++
++/**
++ * TTY-safe stdin read: injected override first, else fd 0, else "".
++ *
++ * `tty.isatty(0)` rather than `process.stdin.isTTY`, and `readFd0ToEnd` rather
++ * than `fs.readFileSync(0)` — see `readFd0ToEnd`'s header for the silent
++ * large-payload truncation both halves prevent.
++ */
+ export function readHookStdin(): string {
+     if (_override !== null) return _override;
+     try {
+-        if (process.stdin.isTTY) return '';
+-        return fs.readFileSync(0, 'utf-8');
++        if (tty.isatty(0)) return '';
++        return readFd0ToEnd();
+     } catch {
+         return '';
+     }
+diff --git a/src/scripts/roadmap_progress_hook.ts b/src/scripts/roadmap_progress_hook.ts
+index 8de45d8affede4b68245e557006551dda97db7d0..f3473d82698ac92ca0964a3e28178d69034bc2fd 100644
+--- a/src/scripts/roadmap_progress_hook.ts
++++ b/src/scripts/roadmap_progress_hook.ts
+@@ -34,6 +34,7 @@
+  */
+ 
+ import { spawnSync } from "node:child_process";
++import * as crypto from "node:crypto";
+ import fs from "node:fs";
+ import path from "node:path";
+ import { fileURLToPath, pathToFileURL } from "node:url";
+@@ -41,9 +42,146 @@ import { fileURLToPath, pathToFileURL } from "node:url";
+ import { hardenedSpawnEnv } from "./_lib/spawn_env.js";
+ import { log_dispatch_issue } from "./hooks/dispatch_issues.js";
+ import { readHookStdin } from "./hooks/hook_stdin.js";
++import { atomic_write_json } from "./hooks/state_io.js";
+ 
+ export const REPLAY_ENV_VAR = "AGENT_CONFIG_REPLAY";
+ 
++/**
++ * Debounce ledger (road-to-per-turn-hook-economy step 3.1 / D-3).
++ *
++ * The hook used to re-shell the regenerator through tsx on EVERY roadmap write.
++ * A cold tsx start per write, in the roadmap-heavy workflow this repo runs, is
++ * the second of the two spawns that escape the in-process concern table.
++ *
++ * It now records the touched repo roots and regenerates ONCE at turn end.
++ * Two properties make that safe rather than merely cheaper:
++ *
++ * - **The ledger lives under `consumer_root`, not under the target root.** A
++ *   touched root may be a sibling worktree, and at `stop` the payload carries no
++ *   roadmap path — so a marker written beside the edited file would be
++ *   unfindable at flush time. `--project-dir` is the same value on both events,
++ *   which makes one ledger per consumer the only shape that closes.
++ * - **A ledger write that fails regenerates immediately instead.** Losing the
++ *   dashboard-stays-in-sync guarantee silently is worse than paying the spawn,
++ *   so the debounce degrades to the old behaviour rather than to a no-op.
++ *
++ * Flushed by `stop` AND `session_end`, so the worst case is a regeneration
++ * deferred to turn end (risk 4) and never a dropped one. The per-write guarantee
++ * was never a stated contract; session granularity is.
++ */
++export const DIRTY_LEDGER_REL = path.join(
++  "agents",
++  "runtime",
++  "state",
++  "roadmap-progress",
++  "dirty",
++);
++
++/** Events that flush the ledger rather than appending to it. */
++export const FLUSH_EVENTS: ReadonlySet<string> = new Set([
++  "stop",
++  "session_end",
++  // The dispatcher envelope carries the agent-config event id; a bare host
++  // payload carries the native name, and the hook accepts either shape on the
++  // write path already.
++  "Stop",
++  "SessionEnd",
++  "sessionEnd",
++  // Native aliases `hook_manifest.yaml` maps onto those two events. Missing them
++  // was a real gap rather than a completeness nit: the write path keys on
++  // `tool_name`, not on the event, so a host whose turn end arrives under one of
++  // these names accumulated dirty roots that nothing ever flushed. Found by the
++  // R2 review of the commit that introduced this ledger.
++  "TaskComplete",
++  "TaskCancel",
++  "AfterAgent",
++]);
++
++function _ledger_dir(consumer_root: string): string {
++  return path.join(consumer_root, DIRTY_LEDGER_REL);
++}
++
++/**
++ * One entry file per root, named from a hash of the root path.
++ *
++ * **This shape is the concurrency fix, not a style choice.** The first version
++ * kept a single JSON array and did a read-modify-write on it, which is a
++ * lost-update: two `post_tool_use` dispatches from parallel tool calls in one
++ * turn both read `[]`, the second write drops the first root, and `mark_dirty`
++ * still returns `true` — so the inline-regeneration fallback never fires and the
++ * dashboard goes silently stale, which is exactly what the debounce exists to
++ * prevent. Found by the R2 review of the commit that introduced it.
++ *
++ * Independent per-root files remove the race by construction rather than by
++ * holding a lock across a read and a write: concurrent dispatches touch
++ * different paths, and the same root twice is the same path — so N writes to one
++ * repo still leave ONE entry.
++ */
++function _entry_path(consumer_root: string, root: string): string {
++  const digest = crypto.createHash("sha256").update(root).digest("hex").slice(0, 16);
++  return path.join(_ledger_dir(consumer_root), `${digest}.json`);
++}
++
++/** Read the ledger; a missing directory or an unparseable entry reads as empty. */
++export function read_dirty_roots(consumer_root: string): string[] {
++  let names: string[];
++  try {
++    names = fs.readdirSync(_ledger_dir(consumer_root));
++  } catch {
++    return [];
++  }
++  const roots: string[] = [];
++  for (const name of names.sort()) {
++    if (!name.endsWith(".json")) continue;
++    try {
++      const raw = fs.readFileSync(path.join(_ledger_dir(consumer_root), name), "utf8");
++      const parsed = JSON.parse(raw) as unknown;
++      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) continue;
++      const root = (parsed as { root?: unknown }).root;
++      if (typeof root === "string" && root.trim() !== "") roots.push(root);
++    } catch {
++      // A torn or hand-edited entry is dropped, never fatal.
++    }
++  }
++  return Array.from(new Set(roots)).sort();
++}
++
++/**
++ * Record each root as its own entry. Returns false when any write failed — the
++ * caller then regenerates inline, so a broken state directory costs latency
++ * rather than a silently stale dashboard.
++ *
++ * Writes go through `atomic_write_json` (tmp → rename under the dispatcher
++ * lock), which `hook-architecture-v1` requires for everything written under
++ * `agents/runtime/state/`. That call is a no-op under `AGENT_CONFIG_REPLAY=1`,
++ * which is why the replay guard stays in the caller rather than relying on it.
++ */
++export function mark_dirty(consumer_root: string, roots: readonly string[]): boolean {
++  if (roots.length === 0) return true;
++  let wrote = 0;
++  for (const root of roots) {
++    try {
++      atomic_write_json(_entry_path(consumer_root, root), {
++        root,
++        marked_at: new Date().toISOString(),
++      });
++      wrote += 1;
++    } catch {
++      // A partial write still needs the caller's inline fallback.
++    }
++  }
++  return wrote === roots.length;
++}
++
++/** Drop every entry. A missing directory is success — flush is idempotent. */
++export function clear_dirty(consumer_root: string): void {
++  try {
++    fs.rmSync(_ledger_dir(consumer_root), { recursive: true, force: true });
++  } catch {
++    // observability never breaks the hook
++  }
++}
++
+ // Tools whose successful execution can write to a roadmap file. We keep
+ // the list explicit so an unknown tool name (e.g. a new MCP tool that
+ // happens to mention a roadmap path in its input) does not trigger a
+@@ -322,6 +460,59 @@ function _resolve_tsx_invocation(scriptPath: string): { command: string; args: s
+   return { command: "npx", args: ["tsx", scriptPath] };
+ }
+ 
++/**
++ * Run the regenerator once per root. Extracted by step 3.1 so the write path
++ * and the flush path share ONE implementation — a debounce whose flush
++ * regenerated differently from the per-write path would be a second code path
++ * nobody compares.
++ */
++function _regenerate(roots: Iterable<string>, verbose: boolean): void {
++  for (const root of roots) {
++    const script = _resolve_regenerator(root);
++    if (script === null) {
++      // Phase 1 of road-to-hooks-actually-fire-in-consumers: log dispatch
++      // issue directly (this hook runs as a subprocess from the universal
++      // dispatcher; routing through the dispatcher would add latency for
++      // no benefit).
++      try {
++        log_dispatch_issue(
++          root,
++          "roadmap-progress",
++          "prerequisite_missing",
++          "update_roadmap_progress.ts not found at any of: " +
++            ".augment/scripts/, dist/agent-src/scripts/, " +
++            "src/agent-src/scripts/",
++          "./agent-config hooks:install --regen " + "(or ./agent-config init)",
++        );
++      } catch {
++        // observability never breaks the hook
++      }
++      if (verbose) {
++        process.stderr.write(
++          `roadmap-progress-hook: regenerator not found for ${root}, skipping\n`,
++        );
++      }
++      continue;
++    }
++
++    try {
++      // The regenerator is a `.ts` script; run it through tsx (resolved from
++      // a node_modules/.bin found by walking up from the regenerator's dir,
++      // falling back to `npx tsx`), mirroring the dispatcher's `.ts` concerns.
++      // `--repo-root` + cwd pin the regeneration to the edited file's own repo.
++      const inv = _resolve_tsx_invocation(script);
++      spawnSync(inv.command, [...inv.args, "--repo-root", root], {
++        cwd: root,
++        stdio: ["ignore", "ignore", "ignore"],
++        timeout: 30000,
++        env: hardenedSpawnEnv(),
++      });
++    } catch {
++      // never propagate regenerator failures into the agent loop
++    }
++  }
++}
++
+ export function run(
+   stdin_text: string,
+   options: { consumer_root: string; verbose?: boolean },
+@@ -341,8 +532,18 @@ export function run(
+     }
+   }
+ 
+-  // Unwrap dispatcher envelope (Phase 7.3, hook-architecture-v1.md).
++  // Unwrap dispatcher envelope (Phase 7.3, hook-architecture-v1.md). The
++  // envelope's `event` is read BEFORE the unwrap and kept: step 3.1 needs it to
++  // tell a write (append to the ledger) from a turn end (flush it), and the
++  // inner payload does not carry it.
++  let envelope_event = "";
++  const raw_native = payload["hook_event_name"];
++  if (typeof raw_native === "string") {
++    envelope_event = raw_native;
++  }
+   if (["schema_version", "platform", "event", "payload"].every((k) => k in payload)) {
++    const raw_event = payload["event"];
++    envelope_event = typeof raw_event === "string" ? raw_event : envelope_event;
+     const inner = payload["payload"];
+     payload =
+       typeof inner === "object" && inner !== null && !Array.isArray(inner)
+@@ -350,6 +551,38 @@ export function run(
+         : {};
+   }
+ 
++  const replay = (process.env[REPLAY_ENV_VAR] ?? "").trim() === "1";
++
++  // Flush path (step 3.1): `stop` / `session_end` carry no roadmap path, so the
++  // roots come from the ledger the write path appended to. Nothing dirty → a
++  // read of one small file and exit, which is what makes this cheap enough to
++  // bind on a slot that already carries ten concerns.
++  if (FLUSH_EVENTS.has(envelope_event)) {
++    if (replay) {
++      if (verbose) {
++        process.stderr.write("roadmap-progress-hook: replay mode, skipping flush\n");
++      }
++      return 0;
++    }
++    const dirty = read_dirty_roots(consumer_root);
++    if (dirty.length === 0) {
++      return 0;
++    }
++    // Clear FIRST: a regenerator that hangs or throws must not leave a ledger
++    // that replays the same roots on every subsequent turn end. `_regenerate`
++    // already swallows its own failures, so a cleared ledger plus a failed
++    // regeneration degrades to "stale until the next roadmap write", which is
++    // the same worst case the debounce already accepts.
++    clear_dirty(consumer_root);
++    _regenerate(dirty, verbose);
++    if (verbose) {
++      process.stderr.write(
++        `roadmap-progress-hook: flushed ${dirty.length} dirty root(s) at ${envelope_event}\n`,
++      );
++    }
++    return 0;
++  }
++
+   const tool = payload["tool_name"] || payload["toolName"] || payload["tool"];
+   if (!(typeof tool === "string" && WRITE_TOOLS.has(tool))) {
+     return 0;
+@@ -369,59 +602,34 @@ export function run(
+     return 0;
+   }
+ 
+-  // Replay mode (`AGENT_CONFIG_REPLAY=1`) skips the regenerator subprocess
+-  // so fixture dispatches never rewrite agents/roadmaps-progress.md.
+-  if ((process.env[REPLAY_ENV_VAR] ?? "").trim() === "1") {
++  // Replay mode (`AGENT_CONFIG_REPLAY=1`) skips both the ledger write and the
++  // regenerator subprocess, so fixture dispatches leave no state and never
++  // rewrite agents/roadmaps-progress.md.
++  if (replay) {
+     if (verbose) {
+       process.stderr.write("roadmap-progress-hook: replay mode, skipping regenerator\n");
+     }
+     return 0;
+   }
+ 
+-  for (const root of targetRoots) {
+-    const script = _resolve_regenerator(root);
+-    if (script === null) {
+-      // Phase 1 of road-to-hooks-actually-fire-in-consumers: log dispatch
+-      // issue directly (this hook runs as a subprocess from the universal
+-      // dispatcher; routing through the dispatcher would add latency for
+-      // no benefit).
+-      try {
+-        log_dispatch_issue(
+-          root,
+-          "roadmap-progress",
+-          "prerequisite_missing",
+-          "update_roadmap_progress.ts not found at any of: " +
+-            ".augment/scripts/, dist/agent-src/scripts/, " +
+-            "src/agent-src/scripts/",
+-          "./agent-config hooks:install --regen " + "(or ./agent-config init)",
+-        );
+-      } catch {
+-        // observability never breaks the hook
+-      }
+-      if (verbose) {
+-        process.stderr.write(
+-          `roadmap-progress-hook: regenerator not found for ${root}, skipping\n`,
+-        );
+-      }
+-      continue;
+-    }
+-
+-    try {
+-      // The regenerator is a `.ts` script; run it through tsx (resolved from
+-      // a node_modules/.bin found by walking up from the regenerator's dir,
+-      // falling back to `npx tsx`), mirroring the dispatcher's `.ts` concerns.
+-      // `--repo-root` + cwd pin the regeneration to the edited file's own repo.
+-      const inv = _resolve_tsx_invocation(script);
+-      spawnSync(inv.command, [...inv.args, "--repo-root", root], {
+-        cwd: root,
+-        stdio: ["ignore", "ignore", "ignore"],
+-        timeout: 30000,
+-        env: hardenedSpawnEnv(),
+-      });
+-    } catch {
+-      // never propagate regenerator failures into the agent loop
++  // Write path (step 3.1): record and return. The spawn this used to pay per
++  // write now happens once, at turn end. A ledger that cannot be written falls
++  // back to regenerating inline — the debounce is an optimisation and must never
++  // be the reason a dashboard silently stops updating.
++  if (mark_dirty(consumer_root, Array.from(targetRoots))) {
++    if (verbose) {
++      process.stderr.write(
++        `roadmap-progress-hook: marked ${targetRoots.size} root(s) dirty for tool=${tool}\n`,
++      );
+     }
++    return 0;
++  }
++  if (verbose) {
++    process.stderr.write(
++      "roadmap-progress-hook: ledger unwritable, regenerating inline\n",
++    );
+   }
++  _regenerate(targetRoots, verbose);
+ 
+   if (verbose) {
+     process.stderr.write(`roadmap-progress-hook: regenerated for tool=${tool}\n`);
+diff --git a/tests/scripts/bench_hook_latency_composite.test.ts b/tests/scripts/bench_hook_latency_composite.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..cf325aa5d83c464c3ac06f7b6df71d3cf709abdd
+--- /dev/null
++++ b/tests/scripts/bench_hook_latency_composite.test.ts
+@@ -0,0 +1,80 @@
++/**
++ * Tests for the per-turn composite helper in
++ * `src/scripts/bench_hook_latency.ts` (road-to-per-turn-hook-economy step 4.1).
++ *
++ * The composite is the D-1 row: the number one agentic turn costs, which no
++ * per-slot budget can represent. Two properties matter and both are asserted
++ * here rather than left to the bench's own green run:
++ *
++ *  - the arithmetic follows the budget file's `definition` exactly, including
++ *    `tool_calls` coming from the file rather than from a constant;
++ *  - a partial run returns null instead of a number, because a composite
++ *    computed over a subset of the slots reads LOW, which is the direction that
++ *    makes a ceiling look met when it is not.
++ */
++import { describe, expect, it } from "vitest";
++
++import { perTurnComposite } from "../../src/scripts/bench_hook_latency.js";
++
++function row(event: string, p50: number) {
++  return { event, runs: 5, p50_ms: p50, p95_ms: p50, max_ms: p50 };
++}
++
++const full = [
++  row("pre_tool_use", 80),
++  row("post_tool_use", 90),
++  row("user_prompt_submit", 70),
++  row("stop", 120),
++  row("session_start", 85),
++  row("session_end", 75),
++];
++
++function without(event: string) {
++  return full.filter((r) => r.event !== event);
++}
++
++describe("perTurnComposite", () => {
++  it("applies (pre + post) * tool_calls + ups + stop", () => {
++    expect(perTurnComposite(full, 10)?.ms).toBe(1890);
++  });
++
++  it("reads tool_calls from its argument, not a hardcoded 10", () => {
++    expect(perTurnComposite(full, 3)?.ms).toBe(700);
++  });
++
++  it("reports the parts it summed, so a printed composite is auditable", () => {
++    expect(perTurnComposite(full, 10)?.parts).toEqual({
++      pre_tool_use: 80,
++      post_tool_use: 90,
++      user_prompt_submit: 70,
++      stop: 120,
++    });
++  });
++
++  it("ignores slots the definition does not name", () => {
++    const trimmed = full.filter(
++      (r) => r.event !== "session_start" && r.event !== "session_end",
++    );
++    expect(perTurnComposite(trimmed, 10)?.ms).toBe(perTurnComposite(full, 10)?.ms);
++  });
++
++  it("returns null when pre_tool_use is absent, never a low number", () => {
++    expect(perTurnComposite(without("pre_tool_use"), 10)).toBeNull();
++  });
++
++  it("returns null when post_tool_use is absent, never a low number", () => {
++    expect(perTurnComposite(without("post_tool_use"), 10)).toBeNull();
++  });
++
++  it("returns null when user_prompt_submit is absent, never a low number", () => {
++    expect(perTurnComposite(without("user_prompt_submit"), 10)).toBeNull();
++  });
++
++  it("returns null when stop is absent, never a low number", () => {
++    expect(perTurnComposite(without("stop"), 10)).toBeNull();
++  });
++
++  it("returns null on an empty run", () => {
++    expect(perTurnComposite([], 10)).toBeNull();
++  });
++});
+diff --git a/tests/scripts/end_review_nudge_hook.test.ts b/tests/scripts/end_review_nudge_hook.test.ts
+index 57aaa4789aaf939f265717ae8257457c99d20857..ff0ca3840524ac7864cd76a397691ac37f0164ef 100644
+--- a/tests/scripts/end_review_nudge_hook.test.ts
++++ b/tests/scripts/end_review_nudge_hook.test.ts
+@@ -35,6 +35,7 @@ import {
+     totalNonDocMutatedLinesWithMeasure,
+     TRANSCRIPT_SCAN_MAX_BYTES,
+     UNTRACKED_FILE_CAP,
++    BINARY_PROBE_BYTES,
+     untrackedFileLineCount,
+     untrackedNonDocFiles,
+ } from '../../src/scripts/hooks/end_review_nudge_hook.js';
+@@ -125,6 +126,64 @@ describe('untrackedNonDocFiles / untrackedFileLineCount / totalNonDocMutatedLine
+         expect(untrackedFileLineCount(dir, 'new-module.ts')).toBe(30);
+     });
+ 
++    // ── step 3.2: the count is a filesystem read, and must agree with the
++    // spawn it replaced on every edge that could move a threshold decision.
++
++    it('agrees with `git diff --numstat --no-index` on a text file', () => {
++        const dir = makeRepo();
++        const body = Array.from({ length: 42 }, (_v, i) => `export const l${i} = ${i};`);
++        fs.writeFileSync(path.join(dir, 'new-module.ts'), `${body.join('\n')}\n`);
++        const viaGit = spawnSync(
++            'git',
++            ['diff', '--numstat', '--no-index', '/dev/null', 'new-module.ts'],
++            { cwd: dir, encoding: 'utf8' },
++        );
++        const gitAdded = Number((viaGit.stdout ?? '').split('\t')[0]);
++        expect(gitAdded).toBe(42);
++        expect(untrackedFileLineCount(dir, 'new-module.ts')).toBe(gitAdded);
++    });
++
++    it('counts a final line with no trailing newline, as the spawn did', () => {
++        const dir = makeRepo();
++        fs.writeFileSync(path.join(dir, 'a.ts'), 'one\ntwo\nthree');
++        expect(untrackedFileLineCount(dir, 'a.ts')).toBe(3);
++    });
++
++    it('an empty file counts 0', () => {
++        const dir = makeRepo();
++        fs.writeFileSync(path.join(dir, 'empty.ts'), '');
++        expect(untrackedFileLineCount(dir, 'empty.ts')).toBe(0);
++    });
++
++    it('a binary file counts 0 — newline bytes in binary are not mutations', () => {
++        const dir = makeRepo();
++        // NUL in the leading block is git's own binary heuristic; the payload
++        // deliberately carries newline bytes so a naive counter would report 3.
++        fs.writeFileSync(
++            path.join(dir, 'blob.bin'),
++            Buffer.from([0x89, 0x00, 0x0a, 0x01, 0x0a, 0x02, 0x0a]),
++        );
++        expect(untrackedFileLineCount(dir, 'blob.bin')).toBe(0);
++    });
++
++    it('a NUL past the probe window is not treated as binary (bounded probe, stated)', () => {
++        const dir = makeRepo();
++        const head = Buffer.from(`${'x\n'.repeat(BINARY_PROBE_BYTES)}`);
++        fs.writeFileSync(path.join(dir, 'late-nul.ts'), Buffer.concat([head, Buffer.from([0x00])]));
++        expect(untrackedFileLineCount(dir, 'late-nul.ts')).toBeGreaterThan(0);
++    });
++
++    it('a missing path fails closed to 0 and never throws', () => {
++        const dir = makeRepo();
++        expect(untrackedFileLineCount(dir, 'nope.ts')).toBe(0);
++    });
++
++    it('a directory in place of a file fails closed to 0', () => {
++        const dir = makeRepo();
++        fs.mkdirSync(path.join(dir, 'a-dir.ts'));
++        expect(untrackedFileLineCount(dir, 'a-dir.ts')).toBe(0);
++    });
++
+     it('totalNonDocMutatedLines sums tracked + untracked non-doc lines', () => {
+         const dir = makeRepo();
+         mutateCodeFile(dir, 10); // tracked mutation
+diff --git a/tests/scripts/hooks/dispatch_envelope_isolation.test.ts b/tests/scripts/hooks/dispatch_envelope_isolation.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a843020f2018550744ae65e0862fd26ee2211127
+--- /dev/null
++++ b/tests/scripts/hooks/dispatch_envelope_isolation.test.ts
+@@ -0,0 +1,99 @@
++/**
++ * Cross-concern envelope isolation — road-to-per-turn-hook-economy risk 1.
++ *
++ * Step 1.1 proposed serialising the envelope once per event instead of once per
++ * concern. The risk the roadmap registered against it is explicit: *"the current
++ * per-concern re-serialisation is accidentally an isolation boundary; removing
++ * it makes cross-concern contamination possible, and such a bug would be
++ * intermittent and ordering-dependent."*
++ *
++ * **The hoist was measured and did not pay** (two A/B runs disagreeing in sign;
++ * see `_run_concern_inproc`'s header), so the tree still re-serialises per
++ * concern and the accidental boundary is still there. These cases keep it from
++ * being accidental: they pin the property a re-attempt must preserve — what a
++ * concern receives is TEXT, so nothing one concern touches can reach the next.
++ *
++ * A future change that shares a parsed object fails here, rather than in
++ * production as an ordering-dependent bug. That is worth having whether or not
++ * the optimisation ever lands.
++ *
++ * It deliberately tests the stdin surface the concerns actually read through,
++ * not the dispatcher's internals: what a concern can observe is exactly what
++ * `readHookStdin()` returns.
++ */
++import { describe, expect, it } from "vitest";
++
++import {
++  clearHookStdinOverride,
++  readHookStdin,
++  setHookStdinOverride,
++} from "../../../src/scripts/hooks/hook_stdin.js";
++
++/** What one concern does: read the shared stdin and parse its own view. */
++function concernParse(): Record<string, unknown> {
++  return JSON.parse(readHookStdin()) as Record<string, unknown>;
++}
++
++describe("dispatch — cross-concern envelope isolation (risk 1)", () => {
++  it("a concern mutating its parsed envelope cannot affect the next concern", () => {
++    const envelope = {
++      schema_version: 1,
++      platform: "claude",
++      event: "post_tool_use",
++      payload: { tool_name: "Read", tool_response: "original" },
++    };
++    setHookStdinOverride(JSON.stringify(envelope));
++    try {
++      // Concern A parses and mutates aggressively, the way a careless concern
++      // would: it rewrites the payload and drops a field.
++      const a = concernParse();
++      (a["payload"] as Record<string, unknown>)["tool_response"] = "CLOBBERED";
++      delete a["event"];
++      (a as Record<string, unknown>)["injected"] = true;
++
++      // Concern B must observe the envelope as it arrived.
++      const b = concernParse();
++      expect((b["payload"] as Record<string, unknown>)["tool_response"]).toBe("original");
++      expect(b["event"]).toBe("post_tool_use");
++      expect("injected" in b).toBe(false);
++    } finally {
++      clearHookStdinOverride();
++    }
++  });
++
++  it("each read returns an independent object, not a shared reference", () => {
++    setHookStdinOverride(JSON.stringify({ payload: { n: 1 } }));
++    try {
++      const a = concernParse();
++      const b = concernParse();
++      expect(a).not.toBe(b);
++      expect(a["payload"]).not.toBe(b["payload"]);
++    } finally {
++      clearHookStdinOverride();
++    }
++  });
++
++  it("the shared value is text, so there is nothing for a concern to mutate", () => {
++    // The load-bearing assertion: readHookStdin hands back a primitive. If a
++    // later change makes it hand back an object, this fails and the isolation
++    // argument above has to be re-made rather than silently assumed.
++    setHookStdinOverride(JSON.stringify({ payload: {} }));
++    try {
++      expect(typeof readHookStdin()).toBe("string");
++    } finally {
++      clearHookStdinOverride();
++    }
++  });
++
++  it("clearing the override is honoured, so state does not leak across events", () => {
++    setHookStdinOverride(JSON.stringify({ payload: { marker: "event-1" } }));
++    expect(concernParse()["payload"]).toEqual({ marker: "event-1" });
++    clearHookStdinOverride();
++    setHookStdinOverride(JSON.stringify({ payload: { marker: "event-2" } }));
++    try {
++      expect(concernParse()["payload"]).toEqual({ marker: "event-2" });
++    } finally {
++      clearHookStdinOverride();
++    }
++  });
++});
+diff --git a/tests/scripts/hooks/dispatch_large_payload_guard.test.ts b/tests/scripts/hooks/dispatch_large_payload_guard.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..7c9fb9a51331f79749ffef6da1e75bcbbeed11aa
+--- /dev/null
++++ b/tests/scripts/hooks/dispatch_large_payload_guard.test.ts
+@@ -0,0 +1,157 @@
++/**
++ * Large-payload guard integrity — the negative test for a MEASURED bypass.
++ *
++ * ## What went wrong
++ *
++ * `dispatch_hook` read `process.stdin.isTTY` before reading fd 0. Touching
++ * `process.stdin` lazily constructs the stream and puts fd 0 into non-blocking
++ * mode; `fs.readFileSync(0)` then throws `EAGAIN` as soon as the payload exceeds
++ * the pipe buffer, and the reader's `catch { return "" }` turned that into "no
++ * input". Every `PreToolUse` guard therefore saw an EMPTY envelope — no tool
++ * name, no command — and the dispatcher exited 0.
++ *
++ * Reproduced on the shipped bundle on 2026-08-18: `git commit --no-verify` was
++ * DENIED at a small payload size and ALLOWED once the same payload was padded to
++ * 300 KB. Not an exotic input either — a `PostToolUse` `tool_response` carrying
++ * a large file read or verbose command output reaches these sizes routinely.
++ *
++ * ## Why the test is shaped like this
++ *
++ * It drives the real bundle over a real pipe, because the defect lives in the
++ * interaction between the pipe's blocking mode and the read — a unit test
++ * against a string input cannot express it. `block-no-verify` is the probe
++ * because it is `severity: blocking` and `fail_closed: true`: it is the concern
++ * whose silence is least acceptable, so it is the one worth pinning.
++ *
++ * A regression here reads as "the guard stopped seeing large payloads", which is
++ * exactly the sentence the old code made unobservable.
++ */
++import { spawn, spawnSync } from "node:child_process";
++import * as fs from "node:fs";
++import * as path from "node:path";
++import { fileURLToPath } from "node:url";
++import * as os from "node:os";
++
++import { afterAll, describe, expect, it } from "vitest";
++
++const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), "..", "..", "..", "..");
++const BUNDLE = path.join(REPO_ROOT, "dist", "hooks", "dispatch.js");
++
++/** Pad sizes: below the pipe buffer, and two sizes measured to break it. */
++const PAD_SIZES = [0, 300_000, 2_000_000];
++
++/**
++ * A throwaway project dir, NOT the working repo.
++ *
++ * `--project-dir` is where the concern chain writes its state and where
++ * `ship-diff-volume` runs its git scans; pointing it at `REPO_ROOT` meant three
++ * real twelve-concern chains executed against the live checkout every time the
++ * suite ran. The property under test needs only the payload — the dispatcher
++ * resolves its manifest from the BUNDLE's own tree, not from here. Found by the
++ * R2 review.
++ */
++function makeProjectDir(): string {
++  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dispatch-large-payload-"));
++  projectDirs.push(dir);
++  return dir;
++}
++
++const projectDirs: string[] = [];
++afterAll(() => {
++  for (const d of projectDirs) fs.rmSync(d, { recursive: true, force: true });
++});
++
++function dispatchPreToolUse(padBytes: number): { status: number | null; stderr: string } {
++  const projectDir = makeProjectDir();
++  const toolInput: Record<string, unknown> = {
++    command: 'git commit --no-verify -m "bypass"',
++  };
++  if (padBytes > 0) toolInput["description"] = "x".repeat(padBytes);
++  const env: NodeJS.ProcessEnv = { ...process.env, CLAUDE_PROJECT_DIR: projectDir };
++  // NOT replay mode: replay short-circuits concerns, which would make this
++  // assert nothing at all.
++  delete env["AGENT_CONFIG_REPLAY"];
++  const proc = spawnSync(
++    process.execPath,
++    [BUNDLE, "--platform", "claude", "--event", "pre_tool_use", "--project-dir", projectDir],
++    {
++      input: JSON.stringify({
++        session_id: "dispatch-large-payload-guard-test",
++        cwd: projectDir,
++        hook_event_name: "PreToolUse",
++        tool_name: "Bash",
++        tool_input: toolInput,
++      }),
++      encoding: "utf-8",
++      env,
++      // Under the vitest testTimeout (10 s) and just over readStdinText's
++      // ~10 s EAGAIN budget, so a regression of the class this test exists to
++      // catch fails the assertion rather than timing the suite out. Found by
++      // the R2 review.
++      timeout: 8_000,
++    },
++  );
++  return { status: proc.status, stderr: proc.stderr ?? "" };
++}
++
++describe.skipIf(!fs.existsSync(BUNDLE))("dispatch — guards see the payload at any size", () => {
++  for (const pad of PAD_SIZES) {
++    it(`blocks --no-verify with ${pad} bytes of payload padding`, () => {
++      const { status, stderr } = dispatchPreToolUse(pad);
++      // Exit 2 + stderr is the documented way to make Claude Code refuse the
++      // action; a 0 here is the bypass.
++      expect(status).toBe(2);
++      expect(stderr).toContain("block-no-verify");
++    });
++  }
++
++  it("the padded payload really is over the pipe buffer", () => {
++    // Guards the guard: if a future edit shrinks PAD_SIZES below the threshold
++    // the cases above would pass while testing nothing.
++    expect(Math.max(...PAD_SIZES)).toBeGreaterThan(64 * 1024);
++  });
++});
++
++// ── the other direction: an fd 0 nobody writes to ────────────────────
++//
++// The retry loop that fixed the large-payload read made the OPPOSITE case
++// expensive, and it cost a CI hang to notice. A child that inherits an open but
++// unwritten stdin — what a caller gets when it spawns without piping stdin —
++// used to return immediately (`readFileSync(0)` threw EAGAIN, the catch returned
++// ""). With an uncapped retry budget it instead spent ~10 s spinning and returned
++// "" anyway: measured 12.4 s per invocation, and hundreds of them left three
++// Node-Tests shards in_progress for over an hour.
++//
++// `HOOK_FIRST_BYTE_TIMEOUT_MS` caps the wait for the FIRST byte only, so this
++// case is fast again while the large-payload cases above still get the full
++// budget once bytes are flowing. Both directions are asserted, because fixing
++// either one alone is what produced each of these two defects in turn.
++
++describe.skipIf(!fs.existsSync(BUNDLE))("dispatch — an idle stdin does not stall the hook", () => {
++  it("returns promptly when fd 0 is an open pipe nobody writes to", async () => {
++    const projectDir = makeProjectDir();
++    const started = Date.now();
++    const code = await new Promise<number | null>((resolve) => {
++      const child = spawn(
++        process.execPath,
++        [BUNDLE, "--platform", "claude", "--event", "stop", "--project-dir", projectDir],
++        {
++          // 'pipe' and then never write, never end() — the inherited-idle shape.
++          stdio: ["pipe", "ignore", "ignore"],
++          env: { ...process.env, AGENT_CONFIG_REPLAY: "1", CLAUDE_PROJECT_DIR: projectDir },
++        },
++      );
++      const killer = setTimeout(() => child.kill("SIGKILL"), 8_000);
++      child.on("exit", (c) => {
++        clearTimeout(killer);
++        resolve(c);
++      });
++    });
++    const elapsed = Date.now() - started;
++    expect(code).toBe(0);
++    // Generous against runner noise and still an order of magnitude under the
++    // ~10 s an uncapped read spent here, and two orders under the unbounded
++    // block a blocking fd produced. Measured 239 ms locally.
++    expect(elapsed).toBeLessThan(4_000);
++  });
++});
+diff --git a/tests/scripts/hooks/roadmap_progress_hook.test.ts b/tests/scripts/hooks/roadmap_progress_hook.test.ts
+index f2a6a4f403a4eae4a17227e4d36961fc013f37ca..71a70f10bfaf209a26961742c14d874dd209089b 100644
+--- a/tests/scripts/hooks/roadmap_progress_hook.test.ts
++++ b/tests/scripts/hooks/roadmap_progress_hook.test.ts
+@@ -13,6 +13,10 @@ import {
+     _relativize,
+     _resolve_regenerator,
+     _target_root,
++    clear_dirty,
++    DIRTY_LEDGER_REL,
++    mark_dirty,
++    read_dirty_roots,
+     run,
+ } from '../../../src/scripts/roadmap_progress_hook.js';
+ 
+@@ -81,6 +85,26 @@ function consumerRoot(): { root: string; marker: string } {
+     return made;
+ }
+ 
++// ── debounce helpers (step 3.1) ──────────────────────────────────────
++//
++// A roadmap write no longer regenerates inline; it appends the touched repo
++// roots to a ledger under --project-dir and `stop` / `session_end` regenerates
++// once. Every pre-existing run() test below asserted the per-write behaviour, so
++// each now drives write-then-flush through this helper: the property they were
++// written to protect ("does this write reach the regenerator for the RIGHT
++// repo?") is unchanged, only the moment it happens is.
++
++function flushStdin(event = 'Stop'): string {
++    return JSON.stringify({ hook_event_name: event });
++}
++
++/** Drive one write and then a turn end; returns both exit codes. */
++function writeThenFlush(stdin: string, consumer_root: string): [number, number] {
++    const wrote = run(stdin, { consumer_root });
++    const flushed = run(flushStdin(), { consumer_root });
++    return [wrote, flushed];
++}
++
+ // ── path filter ──────────────────────────────────────────────────────
+ 
+ describe('roadmap_progress — _is_roadmap_touch', () => {
+@@ -128,28 +152,28 @@ describe.skipIf(!tsx)('roadmap_progress — run()', () => {
+         const stdin = payload('str-replace-editor', {
+             file_changes: [{ path: 'agents/roadmaps/my-feature.md', changeType: 'edit' }],
+         });
+-        expect(run(stdin, { consumer_root: root })).toBe(0);
++        expect(writeThenFlush(stdin, root)).toEqual([0, 0]);
+         expect(fs.existsSync(marker)).toBe(true);
+     });
+ 
+     it('regenerates on save-file', () => {
+         const { root, marker } = consumerRoot();
+         const stdin = payload('save-file', { paths: ['agents/roadmaps/new.md'] });
+-        expect(run(stdin, { consumer_root: root })).toBe(0);
++        expect(writeThenFlush(stdin, root)).toEqual([0, 0]);
+         expect(fs.existsSync(marker)).toBe(true);
+     });
+ 
+     it('skips when tool is not a writer', () => {
+         const { root, marker } = consumerRoot();
+         const stdin = payload('view', { file_changes: [{ path: 'agents/roadmaps/x.md' }] });
+-        expect(run(stdin, { consumer_root: root })).toBe(0);
++        expect(writeThenFlush(stdin, root)).toEqual([0, 0]);
+         expect(fs.existsSync(marker)).toBe(false);
+     });
+ 
+     it('skips when path is outside roadmaps', () => {
+         const { root, marker } = consumerRoot();
+         const stdin = payload('save-file', { paths: ['src/foo.php'] });
+-        expect(run(stdin, { consumer_root: root })).toBe(0);
++        expect(writeThenFlush(stdin, root)).toEqual([0, 0]);
+         expect(fs.existsSync(marker)).toBe(false);
+     });
+ 
+@@ -158,14 +182,14 @@ describe.skipIf(!tsx)('roadmap_progress — run()', () => {
+         const stdin = payload('str-replace-editor', {
+             file_changes: [{ path: 'agents/roadmaps/archive/old.md' }],
+         });
+-        expect(run(stdin, { consumer_root: root })).toBe(0);
++        expect(writeThenFlush(stdin, root)).toEqual([0, 0]);
+         expect(fs.existsSync(marker)).toBe(false);
+     });
+ 
+     it('skips dashboard itself', () => {
+         const { root, marker } = consumerRoot();
+         const stdin = payload('save-file', { paths: ['agents/roadmaps-progress.md'] });
+-        expect(run(stdin, { consumer_root: root })).toBe(0);
++        expect(writeThenFlush(stdin, root)).toEqual([0, 0]);
+         expect(fs.existsSync(marker)).toBe(false);
+     });
+ 
+@@ -183,7 +207,9 @@ describe.skipIf(!tsx)('roadmap_progress — run()', () => {
+         fs.mkdirSync(emptyPkg);
+         _module._package_roots = () => [emptyPkg];
+         const stdin = payload('save-file', { paths: ['agents/roadmaps/x.md'] });
+-        expect(run(stdin, { consumer_root: root })).toBe(0);
++        // Write-then-flush: the resolve failure now happens at flush time, so a
++        // write-only call would exercise none of it.
++        expect(writeThenFlush(stdin, root)).toEqual([0, 0]);
+     });
+ 
+     it('regenerates from package root for global-only consumer', () => {
+@@ -212,7 +238,7 @@ describe.skipIf(!tsx)('roadmap_progress — run()', () => {
+                 tool_name: 'Edit',
+                 tool_input: { file_path: absPath },
+             });
+-            expect(run(stdin, { consumer_root: consumer })).toBe(0);
++            expect(writeThenFlush(stdin, consumer)).toEqual([0, 0]);
+             expect(fs.existsSync(marker)).toBe(true);
+         } finally {
+             if (prevEnv === undefined) delete process.env['AGENT_CONFIG_PACKAGE_ROOT'];
+@@ -224,7 +250,7 @@ describe.skipIf(!tsx)('roadmap_progress — run()', () => {
+         const { root, marker } = consumerRoot();
+         for (const p of ['./agents/roadmaps/x.md', 'agents\\roadmaps\\x.md']) {
+             if (fs.existsSync(marker)) fs.rmSync(marker);
+-            expect(run(payload('save-file', { paths: [p] }), { consumer_root: root })).toBe(0);
++            expect(writeThenFlush(payload('save-file', { paths: [p] }), root)).toEqual([0, 0]);
+             expect(fs.existsSync(marker)).toBe(true);
+         }
+     });
+@@ -237,7 +263,7 @@ describe.skipIf(!tsx)('roadmap_progress — run()', () => {
+             tool_name: 'Edit',
+             tool_input: { file_path: absPath },
+         });
+-        expect(run(stdin, { consumer_root: root })).toBe(0);
++        expect(writeThenFlush(stdin, root)).toEqual([0, 0]);
+         expect(fs.existsSync(marker)).toBe(true);
+     });
+ 
+@@ -254,7 +280,7 @@ describe.skipIf(!tsx)('roadmap_progress — run()', () => {
+             tool_name: 'Edit',
+             tool_input: { file_path: absInSibling },
+         });
+-        expect(run(stdin, { consumer_root: proj.root })).toBe(0);
++        expect(writeThenFlush(stdin, proj.root)).toEqual([0, 0]);
+         expect(fs.existsSync(sib.marker)).toBe(true); // sibling regenerated
+         expect(fs.existsSync(proj.marker)).toBe(false); // project-dir untouched
+     });
+@@ -328,3 +354,151 @@ describe('roadmap_progress — _relativize', () => {
+     });
+ });
+ 
++// ── the debounce contract (step 3.1 / D-3) ───────────────────────────
++//
++// The defect: the hook re-shelled the regenerator through tsx on EVERY roadmap
++// write. These cases pin the four properties that make deferring it safe rather
++// than merely cheaper.
++
++// `.skipIf(!tsx)` like the sibling run() block: five of these cases assert the
++// marker the tsx-run regenerator writes, so without a project-local tsx they
++// would fail — or fall through to a network `npx tsx`. Missed on the first pass
++// and caught by the R2 review.
++describe.skipIf(!tsx)('roadmap_progress — debounce ledger', () => {
++    it('a write records the root and does NOT regenerate', () => {
++        const { root, marker } = consumerRoot();
++        const stdin = payload('save-file', { paths: ['agents/roadmaps/x.md'] });
++        expect(run(stdin, { consumer_root: root })).toBe(0);
++        expect(fs.existsSync(marker)).toBe(false);
++        expect(read_dirty_roots(root)).toEqual([root]);
++    });
++
++    it('N writes to one repo produce ONE ledger entry', () => {
++        const { root } = consumerRoot();
++        for (const name of ['a.md', 'b.md', 'c.md', 'a.md']) {
++            expect(run(payload('save-file', { paths: [`agents/roadmaps/${name}`] }), {
++                consumer_root: root,
++            })).toBe(0);
++        }
++        expect(read_dirty_roots(root)).toEqual([root]);
++    });
++
++    it('flush regenerates and clears, and a second flush is a no-op', () => {
++        const { root, marker } = consumerRoot();
++        run(payload('save-file', { paths: ['agents/roadmaps/x.md'] }), { consumer_root: root });
++        expect(run(flushStdin(), { consumer_root: root })).toBe(0);
++        expect(fs.existsSync(marker)).toBe(true);
++        expect(read_dirty_roots(root)).toEqual([]);
++
++        fs.rmSync(marker);
++        expect(run(flushStdin(), { consumer_root: root })).toBe(0);
++        // Nothing dirty → no spawn. This is what keeps the extra stop binding
++        // cheap on a slot that already carries ten concerns.
++        expect(fs.existsSync(marker)).toBe(false);
++    });
++
++    it('session_end flushes too, so a session without a Stop is not lost', () => {
++        const { root, marker } = consumerRoot();
++        run(payload('save-file', { paths: ['agents/roadmaps/x.md'] }), { consumer_root: root });
++        expect(run(flushStdin('SessionEnd'), { consumer_root: root })).toBe(0);
++        expect(fs.existsSync(marker)).toBe(true);
++    });
++
++    it('accepts the dispatcher envelope spelling of the flush event', () => {
++        const { root, marker } = consumerRoot();
++        run(payload('save-file', { paths: ['agents/roadmaps/x.md'] }), { consumer_root: root });
++        const enveloped = JSON.stringify({
++            schema_version: 1,
++            platform: 'claude',
++            event: 'stop',
++            payload: {},
++        });
++        expect(run(enveloped, { consumer_root: root })).toBe(0);
++        expect(fs.existsSync(marker)).toBe(true);
++    });
++
++    it('flush drives EVERY dirty root, including a sibling worktree', () => {
++        const proj = consumerRoot();
++        const sib = consumerRoot();
++        run(payload('save-file', { paths: ['agents/roadmaps/here.md'] }), {
++            consumer_root: proj.root,
++        });
++        run(
++            JSON.stringify({
++                hook_event_name: 'PostToolUse',
++                tool_name: 'Edit',
++                tool_input: { file_path: path.join(sib.root, 'agents', 'roadmaps', 'there.md') },
++            }),
++            { consumer_root: proj.root },
++        );
++        expect(read_dirty_roots(proj.root).sort()).toEqual([proj.root, sib.root].sort());
++        expect(run(flushStdin(), { consumer_root: proj.root })).toBe(0);
++        expect(fs.existsSync(proj.marker)).toBe(true);
++        expect(fs.existsSync(sib.marker)).toBe(true);
++    });
++
++    it('an unwritable ledger regenerates INLINE instead of losing the update', () => {
++        // The debounce is an optimisation; it must never be the reason a
++        // dashboard silently stops updating. A FILE where the ledger DIRECTORY
++        // belongs makes every entry write fail, and the hook falls back to the
++        // old per-write path. (This was a directory-in-place-of-a-file before the
++        // ledger became one entry per root; the inversion is the point.)
++        const { root, marker } = consumerRoot();
++        fs.mkdirSync(path.dirname(path.join(root, DIRTY_LEDGER_REL)), { recursive: true });
++        fs.writeFileSync(path.join(root, DIRTY_LEDGER_REL), 'not a directory');
++        expect(run(payload('save-file', { paths: ['agents/roadmaps/x.md'] }), {
++            consumer_root: root,
++        })).toBe(0);
++        expect(fs.existsSync(marker)).toBe(true);
++    });
++
++    it('a corrupt entry is dropped rather than throwing', () => {
++        const { root } = consumerRoot();
++        const dir = path.join(root, DIRTY_LEDGER_REL);
++        fs.mkdirSync(dir, { recursive: true });
++        fs.writeFileSync(path.join(dir, 'deadbeefdeadbeef.json'), 'not json {');
++        expect(read_dirty_roots(root)).toEqual([]);
++        expect(run(flushStdin(), { consumer_root: root })).toBe(0);
++    });
++
++    it('a second root written concurrently is not lost (no read-modify-write)', () => {
++        // The defect this shape removes: a single JSON array meant two parallel
++        // post_tool_use dispatches both read [] and the second write dropped the
++        // first root. Independent per-root files cannot lose one, and the same
++        // root twice is still one entry.
++        const { root } = consumerRoot();
++        expect(mark_dirty(root, ['/repo/a'])).toBe(true);
++        expect(mark_dirty(root, ['/repo/b'])).toBe(true);
++        expect(mark_dirty(root, ['/repo/a'])).toBe(true);
++        expect(read_dirty_roots(root)).toEqual(['/repo/a', '/repo/b']);
++    });
++
++    it('mark_dirty / clear_dirty round-trip and clear is idempotent', () => {
++        const { root } = consumerRoot();
++        expect(mark_dirty(root, ['/a', '/b'])).toBe(true);
++        expect(read_dirty_roots(root)).toEqual(['/a', '/b']);
++        expect(mark_dirty(root, ['/b', '/c'])).toBe(true);
++        expect(read_dirty_roots(root)).toEqual(['/a', '/b', '/c']);
++        clear_dirty(root);
++        expect(read_dirty_roots(root)).toEqual([]);
++        clear_dirty(root);
++        expect(read_dirty_roots(root)).toEqual([]);
++    });
++
++    it('replay mode neither marks nor flushes', () => {
++        const { root, marker } = consumerRoot();
++        const prev = process.env['AGENT_CONFIG_REPLAY'];
++        process.env['AGENT_CONFIG_REPLAY'] = '1';
++        try {
++            expect(run(payload('save-file', { paths: ['agents/roadmaps/x.md'] }), {
++                consumer_root: root,
++            })).toBe(0);
++            expect(read_dirty_roots(root)).toEqual([]);
++            expect(run(flushStdin(), { consumer_root: root })).toBe(0);
++            expect(fs.existsSync(marker)).toBe(false);
++        } finally {
++            if (prev === undefined) delete process.env['AGENT_CONFIG_REPLAY'];
++            else process.env['AGENT_CONFIG_REPLAY'] = prev;
++        }
++    });
++});

@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **49** open blockers, **21** need you → `agent-config gates`
+> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **51** open blockers, **23** need you → `agent-config gates`
 
 ## Overall
 
 **291 / 578 steps done · 50%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   50%
+█████████████████████░░░░░░░░░░░░░░░░░░░   52%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -46,7 +46,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 20 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [1](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
 | 21 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 22 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ░░░░░░░░░░ 0% |
-| 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 16 | 1 | 1 | 0 | [1](#blockers-road-to-per-turn-hook-economy) | █░░░░░░░░░ 6% |
+| 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 6 | 9 | 1 | 2 | [3](#blockers-road-to-per-turn-hook-economy) | ██████░░░░ 60% |
 | 24 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
 | 25 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
 | 26 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
@@ -715,16 +715,16 @@ _1 blocker resolved._
 
 ### [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md)
 
-**Road to per-turn hook economy — the latency tax no registered budget can see** — 1 / 17 done (6%)
+**Road to per-turn hook economy — the latency tax no registered budget can see** — 9 / 15 done (60%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Falsify or localise the report | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
-| 5 | Host-native prefiltering (runs first, deliberately) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 1 | Serialize once (D-2) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 0 | Falsify or localise the report | 🟡 in progress | 3 | 3 | 0 | 0 | 50% |
+| 5 | Host-native prefiltering (runs first, deliberately) | 🟡 in progress | 1 | 1 | 0 | 1 | 50% |
+| 1 | Serialize once (D-2) | ✅ done | 0 | 1 | 0 | 1 | 100% |
 | 2 | Payload opt-in per concern (D-2, second lever) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Take the two spawns off the hot path (D-3) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 4 | Register the number the user feels (D-1) | ⬜ not started | 2 | 0 | 1 | 0 | 0% |
+| 3 | Take the two spawns off the hot path (D-3) | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 4 | Register the number the user feels (D-1) | ✅ done | 0 | 2 | 1 | 0 | 100% |
 
 <a id="blockers-road-to-per-turn-hook-economy"></a>
 **Blockers**
@@ -745,6 +745,39 @@ _1 blocker resolved._
     posture: an absolute cap plus a pathology net, not a tight creep window, because
     shared CI runners flap.
   - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — the row exists in `hook-latency-budget.json` with its bar or its observe-only marker.
+- **b-stdin-read-failure-policy** (owner: user) — blocks nothing — F-1's trigger is fixed and the residual failure is now loud. This records the half that is a policy call rather than a bug fix.
+  - **Recommendation:** **option (c).** The bypass F-1 records is only consequential where a guard can refuse, and `pre_tool_use` is the one block-capable slot on this host; denying there costs a retryable refusal on an I/O error the retry budget already survived ten seconds of, while denying on `stop` or `post_tool_use` would refuse nothing and could break a turn end. Option (b) is the status quo and leaves a documented allow-on-failure on a security path; option (a) is right in spirit and pays for it on slots where it buys nothing.
+  - **If you do nothing:** the residual failure stays an allow. It is no longer silent — that was the actual defect and it is fixed — but a reader of `hook-architecture-v1`'s fail-closed contract would still expect a refusal that does not happen, and nothing in the tree records the gap except this blocker.
+  - **What to do:**
+    decide what the dispatcher does when the stdin read **fails**,
+    as distinct from stdin being empty. Both `_readStdin` and `readHookStdin` still
+    convert any residual failure — an exhausted EAGAIN budget (~10 s), `EIO`,
+    `EBADF` — into an empty string, after which the whole chain runs with no
+    `tool_name` and the dispatcher exits 0. For a `fail_closed: true`,
+    `severity: blocking` guard that is an allow. Options: (a) **deny** on a failed
+    read for block-capable events that carry at least one fail-closed concern —
+    the honest reading of fail-closed, at the cost of refusing a tool call on a
+    transient I/O error; (b) keep allowing but treat the loud stderr line and the
+    dispatch issue that now ship as sufficient, which is the current state;
+    (c) deny only on the block-capable slot and allow elsewhere, which is (a)
+    narrowed to where a guard can actually refuse.
+  - **Resolved when:** one option is recorded at this blocker and, for (a) or (c), `_readStdin`'s failure path returns a deny for the named slots with a test that fails when it allows.
+- **b-guard-tool-partition** (owner: user) — blocks nothing in this roadmap — step 5.1 is cancelled and Phases 1-4 proceed without it. It records the one reachable form of 5.1's goal so a later attempt starts from the decision rather than re-deriving it.
+  - **Recommendation:** **option (c) — decline, and revisit only if Phase 4's registered composite exceeds its bar.** The gain is real but unmeasured, and the cost is a silently-skippable filter in front of the two guards that exist because a bypass must be impossible: `matcher` is a plain non-match, so unlike `if` it does not fail open, and a Claude tool-name addition (a renamed Bash variant, a new edit tool) would disable a guard with nothing in the tree noticing. Option (a) is the version worth having *after* the composite says the dispatch count is the binding cost; option (b) is strictly waste.
+  - **If you do nothing:** the dispatcher keeps firing on every tool call regardless of whether any concern can act, the in-process `tools:` filter keeps absorbing the per-concern half on all eight platforms, and Phase 4's composite row is what tells anyone whether the remaining per-turn cost is worth a security-surface decision at all.
+  - **What to do:**
+    decide whether the three blocking `pre_tool_use` guards
+    (`block-no-verify`, `block-kernel-rule-writes`, `block-config-weakening`) may
+    carry a **claude-only** host tool filter. Only that unlocks a zero-dispatch
+    path for tools no concern can act on — `WebFetch`, `WebSearch`, `TodoWrite`,
+    `Skill`, MCP tools — which is a large share of calls in an agentic turn.
+    Options: (a) partition the claude tool space into disjoint classes and assign
+    every concern, guards included, per class; (b) partition only the advisory
+    concerns and keep one unscoped group for the guards, which keeps the guards
+    safe and buys **nothing** (finding 2 of step 5.1 — the unscoped group still
+    fires on every call); (c) decline, and D-1 is addressed only by Phase 4's
+    measurement plus the in-process `tools:` filter that already ships.
+  - **Resolved when:** one option is recorded at this blocker, and — for (a) — the partition ships with a per-class absent-invocation proof and a test that fails when a claude tool name is added to no class.
 
 ### [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md)
 

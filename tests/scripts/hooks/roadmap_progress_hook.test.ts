@@ -13,6 +13,10 @@ import {
     _relativize,
     _resolve_regenerator,
     _target_root,
+    clear_dirty,
+    DIRTY_LEDGER_REL,
+    mark_dirty,
+    read_dirty_roots,
     run,
 } from '../../../src/scripts/roadmap_progress_hook.js';
 
@@ -81,6 +85,26 @@ function consumerRoot(): { root: string; marker: string } {
     return made;
 }
 
+// ── debounce helpers (step 3.1) ──────────────────────────────────────
+//
+// A roadmap write no longer regenerates inline; it appends the touched repo
+// roots to a ledger under --project-dir and `stop` / `session_end` regenerates
+// once. Every pre-existing run() test below asserted the per-write behaviour, so
+// each now drives write-then-flush through this helper: the property they were
+// written to protect ("does this write reach the regenerator for the RIGHT
+// repo?") is unchanged, only the moment it happens is.
+
+function flushStdin(event = 'Stop'): string {
+    return JSON.stringify({ hook_event_name: event });
+}
+
+/** Drive one write and then a turn end; returns both exit codes. */
+function writeThenFlush(stdin: string, consumer_root: string): [number, number] {
+    const wrote = run(stdin, { consumer_root });
+    const flushed = run(flushStdin(), { consumer_root });
+    return [wrote, flushed];
+}
+
 // ── path filter ──────────────────────────────────────────────────────
 
 describe('roadmap_progress — _is_roadmap_touch', () => {
@@ -128,28 +152,28 @@ describe.skipIf(!tsx)('roadmap_progress — run()', () => {
         const stdin = payload('str-replace-editor', {
             file_changes: [{ path: 'agents/roadmaps/my-feature.md', changeType: 'edit' }],
         });
-        expect(run(stdin, { consumer_root: root })).toBe(0);
+        expect(writeThenFlush(stdin, root)).toEqual([0, 0]);
         expect(fs.existsSync(marker)).toBe(true);
     });
 
     it('regenerates on save-file', () => {
         const { root, marker } = consumerRoot();
         const stdin = payload('save-file', { paths: ['agents/roadmaps/new.md'] });
-        expect(run(stdin, { consumer_root: root })).toBe(0);
+        expect(writeThenFlush(stdin, root)).toEqual([0, 0]);
         expect(fs.existsSync(marker)).toBe(true);
     });
 
     it('skips when tool is not a writer', () => {
         const { root, marker } = consumerRoot();
         const stdin = payload('view', { file_changes: [{ path: 'agents/roadmaps/x.md' }] });
-        expect(run(stdin, { consumer_root: root })).toBe(0);
+        expect(writeThenFlush(stdin, root)).toEqual([0, 0]);
         expect(fs.existsSync(marker)).toBe(false);
     });
 
     it('skips when path is outside roadmaps', () => {
         const { root, marker } = consumerRoot();
         const stdin = payload('save-file', { paths: ['src/foo.php'] });
-        expect(run(stdin, { consumer_root: root })).toBe(0);
+        expect(writeThenFlush(stdin, root)).toEqual([0, 0]);
         expect(fs.existsSync(marker)).toBe(false);
     });
 
@@ -158,14 +182,14 @@ describe.skipIf(!tsx)('roadmap_progress — run()', () => {
         const stdin = payload('str-replace-editor', {
             file_changes: [{ path: 'agents/roadmaps/archive/old.md' }],
         });
-        expect(run(stdin, { consumer_root: root })).toBe(0);
+        expect(writeThenFlush(stdin, root)).toEqual([0, 0]);
         expect(fs.existsSync(marker)).toBe(false);
     });
 
     it('skips dashboard itself', () => {
         const { root, marker } = consumerRoot();
         const stdin = payload('save-file', { paths: ['agents/roadmaps-progress.md'] });
-        expect(run(stdin, { consumer_root: root })).toBe(0);
+        expect(writeThenFlush(stdin, root)).toEqual([0, 0]);
         expect(fs.existsSync(marker)).toBe(false);
     });
 
@@ -183,7 +207,9 @@ describe.skipIf(!tsx)('roadmap_progress — run()', () => {
         fs.mkdirSync(emptyPkg);
         _module._package_roots = () => [emptyPkg];
         const stdin = payload('save-file', { paths: ['agents/roadmaps/x.md'] });
-        expect(run(stdin, { consumer_root: root })).toBe(0);
+        // Write-then-flush: the resolve failure now happens at flush time, so a
+        // write-only call would exercise none of it.
+        expect(writeThenFlush(stdin, root)).toEqual([0, 0]);
     });
 
     it('regenerates from package root for global-only consumer', () => {
@@ -212,7 +238,7 @@ describe.skipIf(!tsx)('roadmap_progress — run()', () => {
                 tool_name: 'Edit',
                 tool_input: { file_path: absPath },
             });
-            expect(run(stdin, { consumer_root: consumer })).toBe(0);
+            expect(writeThenFlush(stdin, consumer)).toEqual([0, 0]);
             expect(fs.existsSync(marker)).toBe(true);
         } finally {
             if (prevEnv === undefined) delete process.env['AGENT_CONFIG_PACKAGE_ROOT'];
@@ -224,7 +250,7 @@ describe.skipIf(!tsx)('roadmap_progress — run()', () => {
         const { root, marker } = consumerRoot();
         for (const p of ['./agents/roadmaps/x.md', 'agents\\roadmaps\\x.md']) {
             if (fs.existsSync(marker)) fs.rmSync(marker);
-            expect(run(payload('save-file', { paths: [p] }), { consumer_root: root })).toBe(0);
+            expect(writeThenFlush(payload('save-file', { paths: [p] }), root)).toEqual([0, 0]);
             expect(fs.existsSync(marker)).toBe(true);
         }
     });
@@ -237,7 +263,7 @@ describe.skipIf(!tsx)('roadmap_progress — run()', () => {
             tool_name: 'Edit',
             tool_input: { file_path: absPath },
         });
-        expect(run(stdin, { consumer_root: root })).toBe(0);
+        expect(writeThenFlush(stdin, root)).toEqual([0, 0]);
         expect(fs.existsSync(marker)).toBe(true);
     });
 
@@ -254,7 +280,7 @@ describe.skipIf(!tsx)('roadmap_progress — run()', () => {
             tool_name: 'Edit',
             tool_input: { file_path: absInSibling },
         });
-        expect(run(stdin, { consumer_root: proj.root })).toBe(0);
+        expect(writeThenFlush(stdin, proj.root)).toEqual([0, 0]);
         expect(fs.existsSync(sib.marker)).toBe(true); // sibling regenerated
         expect(fs.existsSync(proj.marker)).toBe(false); // project-dir untouched
     });
@@ -328,3 +354,151 @@ describe('roadmap_progress — _relativize', () => {
     });
 });
 
+// ── the debounce contract (step 3.1 / D-3) ───────────────────────────
+//
+// The defect: the hook re-shelled the regenerator through tsx on EVERY roadmap
+// write. These cases pin the four properties that make deferring it safe rather
+// than merely cheaper.
+
+// `.skipIf(!tsx)` like the sibling run() block: five of these cases assert the
+// marker the tsx-run regenerator writes, so without a project-local tsx they
+// would fail — or fall through to a network `npx tsx`. Missed on the first pass
+// and caught by the R2 review.
+describe.skipIf(!tsx)('roadmap_progress — debounce ledger', () => {
+    it('a write records the root and does NOT regenerate', () => {
+        const { root, marker } = consumerRoot();
+        const stdin = payload('save-file', { paths: ['agents/roadmaps/x.md'] });
+        expect(run(stdin, { consumer_root: root })).toBe(0);
+        expect(fs.existsSync(marker)).toBe(false);
+        expect(read_dirty_roots(root)).toEqual([root]);
+    });
+
+    it('N writes to one repo produce ONE ledger entry', () => {
+        const { root } = consumerRoot();
+        for (const name of ['a.md', 'b.md', 'c.md', 'a.md']) {
+            expect(run(payload('save-file', { paths: [`agents/roadmaps/${name}`] }), {
+                consumer_root: root,
+            })).toBe(0);
+        }
+        expect(read_dirty_roots(root)).toEqual([root]);
+    });
+
+    it('flush regenerates and clears, and a second flush is a no-op', () => {
+        const { root, marker } = consumerRoot();
+        run(payload('save-file', { paths: ['agents/roadmaps/x.md'] }), { consumer_root: root });
+        expect(run(flushStdin(), { consumer_root: root })).toBe(0);
+        expect(fs.existsSync(marker)).toBe(true);
+        expect(read_dirty_roots(root)).toEqual([]);
+
+        fs.rmSync(marker);
+        expect(run(flushStdin(), { consumer_root: root })).toBe(0);
+        // Nothing dirty → no spawn. This is what keeps the extra stop binding
+        // cheap on a slot that already carries ten concerns.
+        expect(fs.existsSync(marker)).toBe(false);
+    });
+
+    it('session_end flushes too, so a session without a Stop is not lost', () => {
+        const { root, marker } = consumerRoot();
+        run(payload('save-file', { paths: ['agents/roadmaps/x.md'] }), { consumer_root: root });
+        expect(run(flushStdin('SessionEnd'), { consumer_root: root })).toBe(0);
+        expect(fs.existsSync(marker)).toBe(true);
+    });
+
+    it('accepts the dispatcher envelope spelling of the flush event', () => {
+        const { root, marker } = consumerRoot();
+        run(payload('save-file', { paths: ['agents/roadmaps/x.md'] }), { consumer_root: root });
+        const enveloped = JSON.stringify({
+            schema_version: 1,
+            platform: 'claude',
+            event: 'stop',
+            payload: {},
+        });
+        expect(run(enveloped, { consumer_root: root })).toBe(0);
+        expect(fs.existsSync(marker)).toBe(true);
+    });
+
+    it('flush drives EVERY dirty root, including a sibling worktree', () => {
+        const proj = consumerRoot();
+        const sib = consumerRoot();
+        run(payload('save-file', { paths: ['agents/roadmaps/here.md'] }), {
+            consumer_root: proj.root,
+        });
+        run(
+            JSON.stringify({
+                hook_event_name: 'PostToolUse',
+                tool_name: 'Edit',
+                tool_input: { file_path: path.join(sib.root, 'agents', 'roadmaps', 'there.md') },
+            }),
+            { consumer_root: proj.root },
+        );
+        expect(read_dirty_roots(proj.root).sort()).toEqual([proj.root, sib.root].sort());
+        expect(run(flushStdin(), { consumer_root: proj.root })).toBe(0);
+        expect(fs.existsSync(proj.marker)).toBe(true);
+        expect(fs.existsSync(sib.marker)).toBe(true);
+    });
+
+    it('an unwritable ledger regenerates INLINE instead of losing the update', () => {
+        // The debounce is an optimisation; it must never be the reason a
+        // dashboard silently stops updating. A FILE where the ledger DIRECTORY
+        // belongs makes every entry write fail, and the hook falls back to the
+        // old per-write path. (This was a directory-in-place-of-a-file before the
+        // ledger became one entry per root; the inversion is the point.)
+        const { root, marker } = consumerRoot();
+        fs.mkdirSync(path.dirname(path.join(root, DIRTY_LEDGER_REL)), { recursive: true });
+        fs.writeFileSync(path.join(root, DIRTY_LEDGER_REL), 'not a directory');
+        expect(run(payload('save-file', { paths: ['agents/roadmaps/x.md'] }), {
+            consumer_root: root,
+        })).toBe(0);
+        expect(fs.existsSync(marker)).toBe(true);
+    });
+
+    it('a corrupt entry is dropped rather than throwing', () => {
+        const { root } = consumerRoot();
+        const dir = path.join(root, DIRTY_LEDGER_REL);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'deadbeefdeadbeef.json'), 'not json {');
+        expect(read_dirty_roots(root)).toEqual([]);
+        expect(run(flushStdin(), { consumer_root: root })).toBe(0);
+    });
+
+    it('a second root written concurrently is not lost (no read-modify-write)', () => {
+        // The defect this shape removes: a single JSON array meant two parallel
+        // post_tool_use dispatches both read [] and the second write dropped the
+        // first root. Independent per-root files cannot lose one, and the same
+        // root twice is still one entry.
+        const { root } = consumerRoot();
+        expect(mark_dirty(root, ['/repo/a'])).toBe(true);
+        expect(mark_dirty(root, ['/repo/b'])).toBe(true);
+        expect(mark_dirty(root, ['/repo/a'])).toBe(true);
+        expect(read_dirty_roots(root)).toEqual(['/repo/a', '/repo/b']);
+    });
+
+    it('mark_dirty / clear_dirty round-trip and clear is idempotent', () => {
+        const { root } = consumerRoot();
+        expect(mark_dirty(root, ['/a', '/b'])).toBe(true);
+        expect(read_dirty_roots(root)).toEqual(['/a', '/b']);
+        expect(mark_dirty(root, ['/b', '/c'])).toBe(true);
+        expect(read_dirty_roots(root)).toEqual(['/a', '/b', '/c']);
+        clear_dirty(root);
+        expect(read_dirty_roots(root)).toEqual([]);
+        clear_dirty(root);
+        expect(read_dirty_roots(root)).toEqual([]);
+    });
+
+    it('replay mode neither marks nor flushes', () => {
+        const { root, marker } = consumerRoot();
+        const prev = process.env['AGENT_CONFIG_REPLAY'];
+        process.env['AGENT_CONFIG_REPLAY'] = '1';
+        try {
+            expect(run(payload('save-file', { paths: ['agents/roadmaps/x.md'] }), {
+                consumer_root: root,
+            })).toBe(0);
+            expect(read_dirty_roots(root)).toEqual([]);
+            expect(run(flushStdin(), { consumer_root: root })).toBe(0);
+            expect(fs.existsSync(marker)).toBe(false);
+        } finally {
+            if (prev === undefined) delete process.env['AGENT_CONFIG_REPLAY'];
+            else process.env['AGENT_CONFIG_REPLAY'] = prev;
+        }
+    });
+});

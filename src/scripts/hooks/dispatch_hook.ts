@@ -32,6 +32,7 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import * as tty from "node:tty";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parse as parseYaml } from "yaml";
 
@@ -46,6 +47,7 @@ import { CONCERN_REGISTRY, type ConcernMain } from "./concern_registry.js";
 import {
   setHookStdinOverride,
   clearHookStdinOverride,
+  readFd0ToEnd,
 } from "./hook_stdin.js";
 import { emitFor, type Severity } from "./host_semantics.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
@@ -665,6 +667,31 @@ function _resolve_tsx_invocation(
  * fail-open; the latency budget gate (hook-latency-budget.json) is the
  * standing regression net.
  */
+/**
+ * ## Why this still re-serialises the envelope per concern (step 1.1, MEASURED NULL)
+ *
+ * `setHookStdinOverride` takes text, so every concern re-stringifies the whole
+ * envelope — tool result included. On `post_tool_use` with the claude chain
+ * bound that is eleven serialisations of the same payload per tool call, which
+ * `road-to-per-turn-hook-economy` D-2 named as a cost worth removing.
+ *
+ * It was removed, measured against a pre-registered bar, and **put back**. Two
+ * A/B runs on one machine, 2 MB payload, bundle arm, `post_tool_use` p50:
+ * 166 → 135 ms (−18.7 %) at n=15, then 139 → 143 ms (**+2.9 %**) at n=25. The
+ * runs disagree in SIGN, and the within-arm spread (p95 190–228 ms on the same
+ * arm) is larger than the effect. That is the pre-registration's kill outcome:
+ * under 5 %, publish the null and stop the phase.
+ *
+ * So the hoist is not here, deliberately, and this comment is the reason —
+ * without it the next reader re-derives an "obvious" optimisation that has
+ * already been tried and did not pay.
+ *
+ * One property to preserve if anyone re-attempts it: share the **serialised
+ * string**, never a parsed object. The per-concern re-serialisation is
+ * accidentally an isolation boundary (risk 1), and a string cannot be mutated by
+ * one concern for the next. Pinned by
+ * `tests/scripts/hooks/dispatch_envelope_isolation.test.ts`.
+ */
 function _run_concern_inproc(
   main_fn: ConcernMain,
   concern: ConcernDef,
@@ -1116,7 +1143,34 @@ export function main(argv?: string[]): number {
     }
   }
 
-  const payload_text = process.stdin.isTTY ? "" : _readStdin();
+  // `tty.isatty(0)`, NOT `process.stdin.isTTY`: reading the latter constructs
+  // the stdin stream and puts fd 0 into non-blocking mode, after which the read
+  // below throws EAGAIN on any payload above the pipe buffer and silently
+  // yields an EMPTY envelope. That is a measured guard bypass, not a theory —
+  // see readFd0ToEnd's header in hooks/hook_stdin.ts.
+  const payload_text = tty.isatty(0) ? "" : _readStdin();
+  if (_stdin_read_failed !== null) {
+    // NEVER silent: an empty envelope reached from a failed read means every
+    // guard on this event evaluated nothing. The exit code is unchanged (see
+    // `_stdin_read_failed`), so this line and the dispatch issue are the only
+    // signal that the chain ran blind.
+    process.stderr.write(
+      `dispatch_hook: STDIN READ FAILED (${_stdin_read_failed}) — the concern ` +
+        `chain for '${args.event}' ran against an EMPTY payload and could not ` +
+        `evaluate anything. This is not an empty stdin.\n`,
+    );
+    try {
+      log_dispatch_issue(
+        process.cwd(),
+        "dispatcher",
+        "execution_failed",
+        `stdin read failed on ${args.event}: ${_stdin_read_failed} — chain ran with an empty payload`,
+        fix_hint(),
+      );
+    } catch {
+      // observability never breaks the hook
+    }
+  }
   _maybe_capture_payload(args, payload_text);
   const session_role = resolveSessionRole(process.env);
   const refusal_retry = _is_refusal_retry(args.event, payload_text);
@@ -1285,10 +1339,31 @@ function _sortedRepr(s: ReadonlySet<string>): string {
   return `[${items.map((x) => `'${x}'`).join(", ")}]`;
 }
 
+/**
+ * Set when the stdin read FAILED, as distinct from stdin being genuinely empty.
+ *
+ * The two were indistinguishable, and that was the second half of the bypass
+ * F-1 records: removing the EAGAIN *trigger* still left `catch { return "" }`
+ * converting any residual failure — an exhausted retry budget, `EIO`, `EBADF` —
+ * into "no input", after which the whole chain runs with no `tool_name` and the
+ * dispatcher exits 0. For a `fail_closed: true`, `severity: blocking` guard that
+ * is an allow, emitted silently. Found by the R2 review.
+ *
+ * The failure is now LOUD (stderr + a dispatch issue) while the allow/deny
+ * decision is unchanged. Turning a failed read into a DENY is a policy change on
+ * a security surface, so it is filed as `b-stdin-read-failure-policy` rather than
+ * improvised here: an unreadable payload on a block-capable event arguably must
+ * refuse, and that call is the maintainer's.
+ */
+let _stdin_read_failed: string | null = null;
+
 function _readStdin(): string {
   try {
-    return fs.readFileSync(0, "utf-8");
-  } catch {
+    // Reads to EOF and retries on EAGAIN rather than treating it as empty
+    // input; shared with the concern-side reader so both paths cannot drift.
+    return readFd0ToEnd();
+  } catch (exc) {
+    _stdin_read_failed = exc instanceof Error ? exc.message : String(exc);
     return "";
   }
 }

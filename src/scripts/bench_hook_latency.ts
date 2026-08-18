@@ -57,6 +57,20 @@ import { build_claude_hook_matrix } from './_lib/claude_settings_hooks.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const BUNDLE = path.join(REPO_ROOT, 'dist', 'hooks', 'dispatch.js');
+/**
+ * Override the measured dispatcher bundle (`--bundle <path>`), so a
+ * two-version comparison on ONE machine is a flag rather than a throwaway
+ * script. Added for road-to-per-turn-hook-economy step 0.5, whose decisive
+ * probe is exactly that: the same events, the same method, two bundles built
+ * from two trees, same hardware. The measured process is the bundle itself —
+ * a bundle from another tree carries that tree's manifest resolution, so pass
+ * `--project-dir`-shaped state via the workspace as usual.
+ *
+ * Deliberately measurement-only: `--gate` and `--update` refuse an override,
+ * because a budget row and a regression baseline describe THIS tree's bundle
+ * and a foreign reading must never be written into either.
+ */
+let BUNDLE_OVERRIDE: string | null = null;
 const CLI_BIN = path.join(REPO_ROOT, 'dist', 'cli', 'agent-config.js');
 const SHIM = path.join(REPO_ROOT, 'agent-config');
 const MANIFEST_PATH = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
@@ -98,17 +112,55 @@ function percentile(sorted: number[], p: number): number {
     return sorted[Math.max(0, idx)] as number;
 }
 
+/**
+ * Size of the synthetic `tool_response` body, in characters (`--payload-bytes`).
+ *
+ * The default 0 keeps the historical minimal payload, so every recorded number
+ * and the CI gate stay comparable. A non-zero value is the **large-payload
+ * cell** of the § 2 matrix in `road-to-per-turn-hook-economy`: D-2 is that the
+ * dispatcher re-serialises the whole envelope — tool result included — once per
+ * concern, so the cost the payload adds is what step 1.2's A/B measures.
+ * Deliberately measurement-only, like `--bundle`: a padded payload must never
+ * write a budget row or a regression baseline.
+ */
+let PAYLOAD_BYTES = 0;
+
+/**
+ * Events a `tool_response` belongs on. The § 2 matrix pads a `PostToolUse` with
+ * a large tool response and a `Stop` with a large *transcript* — two different
+ * fixtures, not one field sprayed across every slot. Padding `stop` was tried
+ * and is wrong twice over: the shape does not occur, and `spawnSync` throws
+ * EPIPE because a dispatcher that never drains a body it has no reason to read
+ * exits while the parent is still writing. The transcript cell is a separate
+ * fixture and is not implemented here.
+ */
+const TOOL_EVENTS: ReadonlySet<string> = new Set(['pre_tool_use', 'post_tool_use']);
+
 function syntheticPayload(event: string, workspace: string): string {
     // Claude-shaped payload; concerns read tool_name/tool_input for
     // pre/post_tool_use. A plain Read is the common non-matching case —
     // the fast path consumers pay on every tool call.
-    return JSON.stringify({
+    const body: Record<string, unknown> = {
         session_id: 'bench-hook-latency',
         cwd: workspace,
         hook_event_name: event,
         tool_name: 'Read',
         tool_input: { file_path: path.join(workspace, 'README.md') },
-    });
+    };
+    if (PAYLOAD_BYTES > 0 && TOOL_EVENTS.has(event)) {
+        // Filler with no JSON metacharacters, so the cost measured is
+        // serialisation volume rather than escaping. The FIELD differs per slot
+        // and that matters: `tool_response` does not exist on a `PreToolUse`
+        // payload, so padding it there would measure a shape the host never
+        // sends — the same objection this file raises against padding `stop`.
+        const filler = 'x'.repeat(PAYLOAD_BYTES);
+        if (event === 'post_tool_use') {
+            body['tool_response'] = filler;
+        } else {
+            body['tool_input'] = { ...(body['tool_input'] as object), description: filler };
+        }
+    }
+    return JSON.stringify(body);
 }
 
 /**
@@ -144,7 +196,15 @@ export function benchEvent(
             ? ['bash', ['-c', hooksJsonCommand(event)]]
             : [
                   process.execPath,
-                  [BUNDLE, '--platform', 'claude', '--event', event, '--project-dir', workspace],
+                  [
+                      BUNDLE_OVERRIDE ?? BUNDLE,
+                      '--platform',
+                      'claude',
+                      '--event',
+                      event,
+                      '--project-dir',
+                      workspace,
+                  ],
               ];
     for (let i = 0; i < runs; i += 1) {
         const started = performance.now();
@@ -184,6 +244,47 @@ interface Budget {
         any_hook_event: { p95_ci: number };
     };
     regression_gate: { max_regression_pct: number };
+    per_turn_composite?: {
+        definition?: string;
+        aggregation?: string;
+        tool_calls?: number;
+        observe_only?: boolean;
+        p50_ci?: number | null;
+    };
+}
+
+/**
+ * The per-turn composite (D-1 / step 4.1): the number a user experiences on one
+ * agentic turn, which no per-slot budget can represent. A single tool call fires
+ * `pre_tool_use` AND `post_tool_use`, so ten tool calls pay twenty dispatches
+ * plus the prompt and stop slots.
+ *
+ * Derived, never separately measured — feeding it the same `results` the slot
+ * rows come from is what keeps the two from disagreeing. `tool_calls` is read
+ * from the budget file rather than hardcoded, so the definition lives with the
+ * row it gates.
+ *
+ * Returns null when a slot the definition needs is missing from `results` (a
+ * partial run), because a composite computed over a subset would silently read
+ * LOW — which is the direction that makes a cap look met.
+ */
+export function perTurnComposite(
+    results: readonly EventResult[],
+    tool_calls: number,
+): { ms: number; parts: Record<string, number> } | null {
+    const p50 = (event: string): number | null => {
+        const r = results.find((x) => x.event === event);
+        return r === undefined ? null : r.p50_ms;
+    };
+    const pre = p50('pre_tool_use');
+    const post = p50('post_tool_use');
+    const ups = p50('user_prompt_submit');
+    const stop = p50('stop');
+    if (pre === null || post === null || ups === null || stop === null) return null;
+    return {
+        ms: (pre + post) * tool_calls + ups + stop,
+        parts: { pre_tool_use: pre, post_tool_use: post, user_prompt_submit: ups, stop },
+    };
 }
 
 interface HistoryEntry {
@@ -205,6 +306,15 @@ interface ResultsDoc {
 }
 
 export function main(argv: string[] = process.argv.slice(2)): number {
+    // Reset the measurement-only globals per invocation. Their guard below is
+    // per-call, so leaving them set let a second `main()` in the same process —
+    // `main(['--bundle', …])` then `main(['--update'])` — write a foreign or
+    // padded reading into this tree's budget row and regression baseline, the
+    // exact outcome the guard's own message says must never happen. Found by
+    // the R2 review.
+    BUNDLE_OVERRIDE = null;
+    PAYLOAD_BYTES = 0;
+
     const gate = argv.includes('--gate');
     const update = argv.includes('--update');
     const viaCli = argv.includes('--via-cli');
@@ -218,9 +328,53 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const runsIdx = argv.indexOf('--runs');
     const runs = runsIdx >= 0 ? Number.parseInt(argv[runsIdx + 1] ?? '50', 10) : 50;
 
-    if (!fs.existsSync(BUNDLE)) {
+    const payloadIdx = argv.indexOf('--payload-bytes');
+    if (payloadIdx >= 0) {
+        const raw = argv[payloadIdx + 1];
+        const parsed = raw === undefined ? Number.NaN : Number.parseInt(raw, 10);
+        if (!Number.isFinite(parsed) || parsed < 0) {
+            process.stderr.write('bench_hook_latency: --payload-bytes requires a non-negative integer\n');
+            return 2;
+        }
+        if (gate || update || baselineIdx >= 0) {
+            process.stderr.write(
+                'bench_hook_latency: --payload-bytes is measurement-only — a padded payload must ' +
+                    "never write this tree's budget row or regression baseline\n",
+            );
+            return 2;
+        }
+        PAYLOAD_BYTES = parsed;
+    }
+
+    const bundleIdx = argv.indexOf('--bundle');
+    if (bundleIdx >= 0) {
+        const raw = argv[bundleIdx + 1];
+        if (raw === undefined || raw.startsWith('--')) {
+            process.stderr.write('bench_hook_latency: --bundle requires a path\n');
+            return 2;
+        }
+        if (gate || update || baselineIdx >= 0) {
+            process.stderr.write(
+                'bench_hook_latency: --bundle is measurement-only — it cannot be combined with ' +
+                    '--gate, --update or --baseline (a foreign bundle must never be written ' +
+                    "into this tree's budget or regression baseline)\n",
+            );
+            return 2;
+        }
+        if (viaCli) {
+            process.stderr.write(
+                'bench_hook_latency: --bundle overrides the bundle path, which the --via-cli ' +
+                    'path does not use (the shim resolves its own) — pick one\n',
+            );
+            return 2;
+        }
+        BUNDLE_OVERRIDE = path.resolve(raw);
+    }
+
+    const measured_bundle = BUNDLE_OVERRIDE ?? BUNDLE;
+    if (!fs.existsSync(measured_bundle)) {
         process.stderr.write(
-            `bench_hook_latency: bundle missing at ${BUNDLE} — run \`npm run build:hooks\` first\n`,
+            `bench_hook_latency: bundle missing at ${measured_bundle} — run \`npm run build:hooks\` first\n`,
         );
         return 2;
     }
@@ -264,7 +418,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             const r = benchEvent(event, runs, workspace, via);
             results.push(r);
             process.stdout.write(
-                `${event.padEnd(20)} p50 ${String(r.p50_ms).padStart(5)} ms · p95 ${String(r.p95_ms).padStart(5)} ms · max ${String(r.max_ms).padStart(5)} ms (n=${r.runs}, via ${via})\n`,
+                `${event.padEnd(20)} p50 ${String(r.p50_ms).padStart(5)} ms · p95 ${String(r.p95_ms).padStart(5)} ms · max ${String(r.max_ms).padStart(5)} ms (n=${r.runs}, via ${via}${PAYLOAD_BYTES > 0 ? `, payload ${PAYLOAD_BYTES}B` : ''}${BUNDLE_OVERRIDE === null ? '' : ` @ ${BUNDLE_OVERRIDE}`})\n`,
             );
         }
     } finally {
@@ -303,6 +457,44 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         );
     }
 
+    // Per-turn composite (D-1 / step 4.1). Printed on EVERY run, gate or not,
+    // because an observe-only row that only appears under --gate would leave
+    // the local reading and the CI reading incomparable.
+    const compositeCfg = budget.per_turn_composite;
+    const composite =
+        compositeCfg === undefined
+            ? null
+            : perTurnComposite(results, compositeCfg.tool_calls ?? 10);
+    if (compositeCfg !== undefined) {
+        const calls = compositeCfg.tool_calls ?? 10;
+        if (composite === null) {
+            process.stdout.write(
+                `ℹ️  per-turn composite not computed — a slot the definition needs is missing from this run\n`,
+            );
+        } else {
+            const ceiling = compositeCfg.p50_ci ?? null;
+            const observe = compositeCfg.observe_only !== false;
+            const label =
+                observe || ceiling === null ? 'observe-only' : `budget ${String(ceiling)} ms`;
+            process.stdout.write(
+                `per-turn composite  ${String(composite.ms).padStart(5)} ms ` +
+                    `= (pre ${composite.parts['pre_tool_use']} + post ${composite.parts['post_tool_use']}) × ${calls}` +
+                    ` + ups ${composite.parts['user_prompt_submit']} + stop ${composite.parts['stop']}` +
+                    ` (p50, ${label})\n`,
+            );
+            // observe_only is the arming switch for step 4.2 and is honoured
+            // even when a ceiling is present, so a number can be recorded for
+            // one release before it starts failing builds.
+            if (gate && !observe && ceiling !== null && composite.ms > ceiling) {
+                process.stderr.write(
+                    `❌  per-turn composite: ${composite.ms} ms exceeds the pre-registered ` +
+                        `budget (${ceiling} ms)\n`,
+                );
+                failed = true;
+            }
+        }
+    }
+
     if (update || baselineHardware !== null) {
         const existing = prior ?? ({ results: [] } as ResultsDoc);
         const history: HistoryEntry[] = existing.history ?? [];
@@ -329,6 +521,16 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                   invocation_path: via,
                   runs_per_event: runs,
                   results,
+                  ...(composite === null
+                      ? {}
+                      : {
+                            per_turn_composite: {
+                                ms: composite.ms,
+                                tool_calls: compositeCfg?.tool_calls ?? 10,
+                                aggregation: 'p50',
+                                parts: composite.parts,
+                            },
+                        }),
                   ...(history.length > 0 ? { history } : {}),
               }
             : { ...existing, history };

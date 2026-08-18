@@ -281,8 +281,41 @@ part 0's table.
       <!-- verify: ./scripts-run src/scripts/check_cli_registry_budget_sync --quiet -->
 - [ ] 4.3 Hook chain-length cap as a manifest lint: a new concern on a
       capped slot must name the concern it replaces or merges into. Measured
-      baseline: 9 concerns on `user_prompt_submit` for claude, 7–8 on other
-      hosts — the cap is per host because the chains are.
+      baseline: **refreshed 2026-08-18** by `road-to-per-turn-hook-economy` step
+      4.3, read straight off `src/scripts/hook_manifest.yaml`. The prior line
+      here said "9 concerns on `user_prompt_submit` for claude, 7–8 on other
+      hosts"; both halves had drifted, and a cap anchored on a stale census ages
+      in the one direction that matters — upward, so the cap admits growth it was
+      written to refuse.
+
+      | host | `user_prompt_submit` | `pre_tool_use` | `post_tool_use` | `stop` | `session_start` | `session_end` |
+      |---|---:|---:|---:|---:|---:|---:|
+      | augment | — | 11 | 10 | 6 | 13 | 4 |
+      | claude | **10** | **12** | **11** | **11** | 13 | 4 |
+      | cowork | 8 | 12 | 10 | 6 | 13 | 4 |
+      | cursor | 8 | — | 10 | 6 | 13 | 4 |
+      | cline | 8 | — | 10 | 6 | 13 | 4 |
+      | windsurf | 7 | — | — | 5 | 12 | — |
+      | gemini | 8 | — | 10 | 6 | 13 | 4 |
+      | copilot | — | — | — | — | — | — |
+
+      **Re-measured AFTER the flush bindings in the same PR, which the first pass
+      got wrong.** The table originally read `stop` 5/10 and `session_end` 3 — a
+      census taken before `road-to-per-turn-hook-economy` step 3.1 added
+      `roadmap-progress` to those two slots on six hosts, i.e. a baseline stale by
+      the very change the same PR made. `windsurf` keeps 5 and no `session_end`
+      because it has no `post_tool_use` surface, so it never marks the ledger and
+      received no flush binding. Caught by the R2 review; the lesson is the
+      cheap half — re-read the manifest AFTER your own edit, not before it.
+
+      A dash is **no binding on that slot for that host**, not a zero-length
+      chain — copilot is `fallback_only` and carries no hook surface at all,
+      while cursor / cline / windsurf / gemini alias a native pre-tool event that
+      nothing binds (the four states are tabulated in
+      [`hook-architecture-v1`](../../docs/contracts/hook-architecture-v1.md)).
+      The cap must not read a dash as headroom.
+      **claude is the binding host on every slot**, so a per-host cap set from
+      any other row is set from the wrong row.
       <!-- verify: task test -- --filter=hook_manifest -->
 - [ ] 4.4 Each of the two caps names the mechanism it removes or replaces,
       per `surface-consolidation-restraint.md`'s load-bearing rule that
