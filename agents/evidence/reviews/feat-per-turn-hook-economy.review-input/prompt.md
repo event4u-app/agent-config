@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head f8469f390b4eac90945582cffdcfed85b1433ca9, review
-  artefacts excluded), scope hash `1117a5cee995d4951947f4d679a6aaf4d578b724fab60354eac1503a0973bcea`
+- diff: `diff.patch` — the review scope (branch head 4ffee765d588b88fa50a221364840b06fdf10d19, review
+  artefacts excluded), scope hash `5461cd483a0d274787f9804e7c18ae801b78d604a5dc79b87f9a13339bcf07fa`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -32,6 +32,7 @@ Changed files:
 - agents/roadmaps/road-to-per-turn-hook-economy.md
 - docs/contracts/hook-architecture-v1.md
 - src/config/hook-latency-budget.json
+- src/scripts/_lib/stdin.ts
 - src/scripts/bench_hook_latency.ts
 - src/scripts/hook_manifest.yaml
 - src/scripts/hooks/dispatch_hook.ts
@@ -64,5 +65,5 @@ Fill the findings table in `feat-per-turn-hook-economy.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 1117a5cee995d4951947f4d679a6aaf4d578b724fab60354eac1503a0973bcea, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 5461cd483a0d274787f9804e7c18ae801b78d604a5dc79b87f9a13339bcf07fa, reviewed <YYYY-MM-DD>
 ```

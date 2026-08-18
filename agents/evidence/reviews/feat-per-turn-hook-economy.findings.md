@@ -1,17 +1,17 @@
 # Findings: feat-per-turn-hook-economy
-<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: 1117a5cee995d4951947f4d679a6aaf4d578b724fab60354eac1503a0973bcea | diff: f8469f390b4eac90945582cffdcfed85b1433ca9 | reviewer: r2-fresh-subagent-feat-per-turn-hook-economy | prompt_hash: 64566f062bc5adf48a0e079d0b29e7b745a3fecb62251b7b80c39827cb3db8a7 -->
+<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: 5461cd483a0d274787f9804e7c18ae801b78d604a5dc79b87f9a13339bcf07fa | diff: 4ffee765d588b88fa50a221364840b06fdf10d19 | reviewer: r2-fresh-subagent-feat-per-turn-hook-economy | prompt_hash: 98ca0d906502596c1cdcbba28ecdef282a4a42e2d51e76b7239683afc18c884a -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-18 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: f8469f390b4eac90945582cffdcfed85b1433ca9
-  scope_hash: 1117a5cee995d4951947f4d679a6aaf4d578b724fab60354eac1503a0973bcea
+  diff_sha: 4ffee765d588b88fa50a221364840b06fdf10d19
+  scope_hash: 5461cd483a0d274787f9804e7c18ae801b78d604a5dc79b87f9a13339bcf07fa
   roadmap: agents/roadmaps/road-to-per-turn-hook-economy.md
-  roadmap_hash: 366d2fa989b2fdae773658352ed34f3bf3fe18f4faf9c6776bc57ec8b557b4cc
+  roadmap_hash: f8a30788a713798e1833f2d69a34bcfab9246cfa3186e606ef8a0d093611d8fb
   ac_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-08-18T16:20:00Z
+dispatched: 2026-08-18T18:35:00Z
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |

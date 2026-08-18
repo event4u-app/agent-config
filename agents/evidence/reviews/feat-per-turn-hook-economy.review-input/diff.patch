@@ -141,7 +141,7 @@ index 0cf5c17e110e9987e089c4883813751a7a226f4c..9cd0241f18301b13f4fa938f1d715552
  - [ ] 4.4 Each of the two caps names the mechanism it removes or replaces,
        per `surface-consolidation-restraint.md`'s load-bearing rule that
 diff --git a/agents/roadmaps/road-to-per-turn-hook-economy.md b/agents/roadmaps/road-to-per-turn-hook-economy.md
-index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..601bd54828b3ec092b340b6b9f6797fa3051d1b7 100644
+index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..a547ecdee77111f2508d5d02e9bada242cf77978 100644
 --- a/agents/roadmaps/road-to-per-turn-hook-economy.md
 +++ b/agents/roadmaps/road-to-per-turn-hook-economy.md
 @@ -101,7 +101,7 @@ this file at all, it is the activation flip owned by
@@ -502,7 +502,7 @@ index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..601bd54828b3ec092b340b6b9f6797fa
        pre and post chains across a representative tool-call count plus the prompt
        and stop slots, benchmarked in CI. Register it **before** Phases 1–3 merge —
        the bar precedes the lever, which is this repo's own budget-ownership
-@@ -304,15 +552,119 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+@@ -304,15 +552,147 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
        implementable: two people would compute two different composites and both
        would call the row green.
        `verify:` the composite appears in the latency bench output and its CI gate.
@@ -609,6 +609,34 @@ index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..601bd54828b3ec092b340b6b9f6797fa
 +test fails on the pre-fix bundle at exactly the two padded sizes and passes on the
 +fixed one.
 +
++**The fix was worse than the defect for one turn, and CI is what said so.**
++Replacing `readFileSync(0)` with a retrying reader fixed the large-payload read
++and broke the opposite case: a child that inherits an OPEN but unwritten fd 0 —
++what any caller gets when it spawns without piping stdin — used to return
++immediately, because `readFileSync(0)` threw EAGAIN and the catch returned `""`.
++With an uncapped retry budget it instead spent the full ~10 s spinning and
++returned `""` anyway. **Measured 12.4 s per invocation against an immediate
++return**, and hundreds of them left three Node-Tests shards `in_progress` for
++over an hour while shard 3/4 finished in minutes.
++
++Two things about how it was found are worth more than the fix. First, the signal
++was already in front of me and I narrowed around it: a local
++`vitest run tests/scripts/hooks/` had timed out at 400 s earlier in the same
++session and I re-ran a narrower file set instead of asking why. Second, the
++generic diagnosis ("the shards are slow") would have been wrong — three shards
++hung while one passed, which is a stall, not slowness, and only the per-job
++`startedAt` made that visible.
++
++Fixed by capping the wait for the **first byte** only
++(`HOOK_FIRST_BYTE_TIMEOUT_MS`, 500 ms): a host writes its payload synchronously
++on spawn, so a byte that has not arrived by then means nobody will ever write.
++Once any byte HAS arrived the full budget applies, so the large-payload fix is
++untouched — verified in both directions, 785 ms on the idle pipe and still
++`BLOCKED` at 2 MB. The shared reader keeps its old behaviour by default, because
++a `gh pr diff` pipe genuinely can be slow to first byte; only the hook path opts
++in. Both directions now have a test, since fixing either alone is what produced
++each of these two defects in turn.
++
 +**Sibling search, reported with its count.** `process.stdin.isTTY`: **19**
 +occurrences outside the two hook files, all in interactive CLI paths that never
 +read fd 0 as data (`install`, `release`, `new_skill`, the RDP gates,
@@ -623,7 +651,7 @@ index ca2b3463327d3443aec9849958ffc79b7d3b9c7d..601bd54828b3ec092b340b6b9f6797fa
  ## Blockers
  
  ### blocker: b-per-turn-composite-bar
-@@ -347,6 +699,74 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
+@@ -347,6 +727,74 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
    the row exists in `hook-latency-budget.json` with its bar or its observe-only
    marker.
  
@@ -761,6 +789,77 @@ index 4475d8e765d87a380a6f8d5b8dabc5f1c850f6a5..113d938c047f9dacc0abea15bba57b28
      "regression_gate": {
          "max_regression_pct": 200,
          "_comment": "Pathology net only — the ABSOLUTE budgets above are the binding gate for wall-clock. The original 20% window was falsified by measured GitHub-runner variance: two CI runs of IDENTICAL code measured p95 77-89 ms and 92-103 ms (+23% run-to-run, 2026-07-27, runs 30303438480 / round-2 tests.yml). Same rationale as the regression_pct 200 override on the evaluator timing budgets: a tight creep rule on shared-runner wall-clock flaps; sizes/counts keep tight windows, timings get absolute caps."
+diff --git a/src/scripts/_lib/stdin.ts b/src/scripts/_lib/stdin.ts
+index 73b04031ccb9251f1b6c401e4d6c5fa405585ce5..778ed917a8f710a1a72d72e81703c23abffd9dbc 100644
+--- a/src/scripts/_lib/stdin.ts
++++ b/src/scripts/_lib/stdin.ts
+@@ -41,6 +41,31 @@ function _sleepSync(ms: number): void {
+     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+ }
+ 
++/** Options for {@link readStdinText}. */
++export interface ReadStdinOptions {
++    /**
++     * Give up and return `''` when the FIRST byte has not arrived within this
++     * many milliseconds. Undefined (the default) keeps the historical behaviour:
++     * the full {@link MAX_RETRIES} budget applies from the first read, which is
++     * what a `gh pr diff` pipe needs — its first byte can legitimately take a
++     * while, and reporting that as empty input is the defect this module exists
++     * to prevent.
++     *
++     * A HOOK is the opposite case, and it cost a CI hang to learn the difference.
++     * The host writes the payload synchronously on spawn, so a byte that has not
++     * arrived promptly is not a slow writer — it is an fd 0 nobody will ever
++     * write to, which is what a child inherits when a test spawns it without
++     * piping stdin. With no cap the dispatcher then span the full ~10 s budget on
++     * EVERY such invocation and returned "" anyway; measured 12.4 s per call
++     * against an immediate return before the retry loop existed. Hundreds of
++     * those hung three Node-Tests shards for over an hour.
++     *
++     * Once ANY byte has arrived the cap no longer applies: a writer demonstrably
++     * exists, so the full budget is right and the large-payload fix is intact.
++     */
++    firstByteTimeoutMs?: number;
++}
++
+ /**
+  * Read all of fd 0 as UTF-8.
+  *
+@@ -48,10 +73,13 @@ function _sleepSync(ms: number): void {
+  *         {@link MAX_RETRIES} consecutive EAGAINs — a caller must not be able to
+  *         mistake a failed read for empty input.
+  */
+-export function readStdinText(fd = 0): string {
++export function readStdinText(fd = 0, opts: ReadStdinOptions = {}): string {
+     const chunks: Buffer[] = [];
+     const buf = Buffer.alloc(CHUNK);
+     let retries = 0;
++    let got_any = false;
++    const first_byte_deadline =
++        opts.firstByteTimeoutMs === undefined ? null : Date.now() + opts.firstByteTimeoutMs;
+     for (;;) {
+         let read: number;
+         try {
+@@ -60,6 +88,11 @@ export function readStdinText(fd = 0): string {
+         } catch (exc) {
+             const code = (exc as NodeJS.ErrnoException).code;
+             if (code === 'EAGAIN') {
++                // An idle fd 0 is "no input", not a slow writer — but only
++                // before the first byte. See ReadStdinOptions.firstByteTimeoutMs.
++                if (!got_any && first_byte_deadline !== null && Date.now() >= first_byte_deadline) {
++                    return '';
++                }
+                 retries += 1;
+                 if (retries > MAX_RETRIES) {
+                     throw new Error(
+@@ -76,6 +109,7 @@ export function readStdinText(fd = 0): string {
+             throw exc;
+         }
+         if (read === 0) break;
++        got_any = true;
+         chunks.push(Buffer.from(buf.subarray(0, read)));
+     }
+     return Buffer.concat(chunks).toString('utf-8');
 diff --git a/src/scripts/bench_hook_latency.ts b/src/scripts/bench_hook_latency.ts
 index 8f79b837e0038bd8d145c9e4ad684f8adca36a16..989d3599ce1a917f06d354f9f9badd58093c6710 100644
 --- a/src/scripts/bench_hook_latency.ts
@@ -1438,7 +1537,7 @@ index 88afa1571b7ce5104874038e477e5dbe6d062e54..dd17ebb17a4c1e2cc80353d58fe35f9e
   * sufficient signal, no exact count needed. `measure` records WHICH of
   * those two shapes the returned `lines` value is, so a consumer (the
 diff --git a/src/scripts/hooks/hook_stdin.ts b/src/scripts/hooks/hook_stdin.ts
-index 665ad948b16731ee5804be51026ac0d474dd044a..d319589ab1a2acebae484c69dabb05bd4e1a8d09 100644
+index 665ad948b16731ee5804be51026ac0d474dd044a..2da94db76f7520d6c3ef474e388888144e117289 100644
 --- a/src/scripts/hooks/hook_stdin.ts
 +++ b/src/scripts/hooks/hook_stdin.ts
 @@ -12,13 +12,17 @@
@@ -1461,7 +1560,7 @@ index 665ad948b16731ee5804be51026ac0d474dd044a..d319589ab1a2acebae484c69dabb05bd
  
  let _override: string | null = null;
  
-@@ -30,12 +34,56 @@ export function clearHookStdinOverride(): void {
+@@ -30,12 +34,71 @@ export function clearHookStdinOverride(): void {
      _override = null;
  }
  
@@ -1500,8 +1599,23 @@ index 665ad948b16731ee5804be51026ac0d474dd044a..d319589ab1a2acebae484c69dabb05bd
 + * `tests/scripts/hooks/dispatch_large_payload_guard.test.ts`, which fails on the
 + * pre-fix bundle.
 + */
++export const HOOK_FIRST_BYTE_TIMEOUT_MS = 500;
++
 +export function readFd0ToEnd(): string {
-+    return readStdinText(0);
++    // The first-byte cap is what keeps the fix from being worse than the defect.
++    // A host writes the hook payload synchronously on spawn, so a byte that has
++    // not arrived within half a second means fd 0 is idle — which is exactly what
++    // a child inherits when a caller spawns it without piping stdin. Without the
++    // cap the shared reader spends its full ~10 s EAGAIN budget on every such
++    // invocation and returns '' anyway: measured 12.4 s per call, and hundreds of
++    // them hung three CI shards for over an hour before this was capped. The old
++    // `fs.readFileSync(0)` returned immediately in that case, so a cap is what
++    // preserves the behaviour that mattered while fixing the one that did not.
++    //
++    // Once any byte has arrived the cap stops applying, so a multi-megabyte
++    // payload still gets the full budget — the large-payload guard test covers
++    // that direction.
++    return readStdinText(0, { firstByteTimeoutMs: HOOK_FIRST_BYTE_TIMEOUT_MS });
 +}
 +
 +/**
@@ -2149,10 +2263,10 @@ index 0000000000000000000000000000000000000000..a843020f2018550744ae65e0862fd26e
 +});
 diff --git a/tests/scripts/hooks/dispatch_large_payload_guard.test.ts b/tests/scripts/hooks/dispatch_large_payload_guard.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..12e953f3c480e6a212d293957350abd3845b13d4
+index 0000000000000000000000000000000000000000..1741a75ba5ef16164cd059c8f64d382d548d4a50
 --- /dev/null
 +++ b/tests/scripts/hooks/dispatch_large_payload_guard.test.ts
-@@ -0,0 +1,113 @@
+@@ -0,0 +1,156 @@
 +/**
 + * Large-payload guard integrity — the negative test for a MEASURED bypass.
 + *
@@ -2181,7 +2295,7 @@ index 0000000000000000000000000000000000000000..12e953f3c480e6a212d293957350abd3
 + * A regression here reads as "the guard stopped seeing large payloads", which is
 + * exactly the sentence the old code made unobservable.
 + */
-+import { spawnSync } from "node:child_process";
++import { spawn, spawnSync } from "node:child_process";
 +import * as fs from "node:fs";
 +import * as path from "node:path";
 +import { fileURLToPath } from "node:url";
@@ -2264,6 +2378,49 @@ index 0000000000000000000000000000000000000000..12e953f3c480e6a212d293957350abd3
 +    // Guards the guard: if a future edit shrinks PAD_SIZES below the threshold
 +    // the cases above would pass while testing nothing.
 +    expect(Math.max(...PAD_SIZES)).toBeGreaterThan(64 * 1024);
++  });
++});
++
++// ── the other direction: an fd 0 nobody writes to ────────────────────
++//
++// The retry loop that fixed the large-payload read made the OPPOSITE case
++// expensive, and it cost a CI hang to notice. A child that inherits an open but
++// unwritten stdin — what a caller gets when it spawns without piping stdin —
++// used to return immediately (`readFileSync(0)` threw EAGAIN, the catch returned
++// ""). With an uncapped retry budget it instead spent ~10 s spinning and returned
++// "" anyway: measured 12.4 s per invocation, and hundreds of them left three
++// Node-Tests shards in_progress for over an hour.
++//
++// `HOOK_FIRST_BYTE_TIMEOUT_MS` caps the wait for the FIRST byte only, so this
++// case is fast again while the large-payload cases above still get the full
++// budget once bytes are flowing. Both directions are asserted, because fixing
++// either one alone is what produced each of these two defects in turn.
++
++describe.skipIf(!fs.existsSync(BUNDLE))("dispatch — an idle stdin does not stall the hook", () => {
++  it("returns promptly when fd 0 is an open pipe nobody writes to", async () => {
++    const projectDir = makeProjectDir();
++    const started = Date.now();
++    const code = await new Promise<number | null>((resolve) => {
++      const child = spawn(
++        process.execPath,
++        [BUNDLE, "--platform", "claude", "--event", "stop", "--project-dir", projectDir],
++        {
++          // 'pipe' and then never write, never end() — the inherited-idle shape.
++          stdio: ["pipe", "ignore", "ignore"],
++          env: { ...process.env, AGENT_CONFIG_REPLAY: "1", CLAUDE_PROJECT_DIR: projectDir },
++        },
++      );
++      const killer = setTimeout(() => child.kill("SIGKILL"), 8_000);
++      child.on("exit", (c) => {
++        clearTimeout(killer);
++        resolve(c);
++      });
++    });
++    const elapsed = Date.now() - started;
++    expect(code).toBe(0);
++    // Generous against runner noise and still an order of magnitude under the
++    // ~10 s budget an uncapped read would spend here.
++    expect(elapsed).toBeLessThan(4_000);
 +  });
 +});
 diff --git a/tests/scripts/hooks/roadmap_progress_hook.test.ts b/tests/scripts/hooks/roadmap_progress_hook.test.ts
