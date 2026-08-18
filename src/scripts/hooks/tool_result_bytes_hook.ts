@@ -38,6 +38,15 @@
  * The result is measured, never read: `_resultBytes` computes a length and
  * discards the value in the same expression.
  *
+ * payload-bodies-waiver: result — measured, never read. This concern
+ * deliberately declares NO `needs_payload_bodies` in `hook_manifest.yaml`: the
+ * dispatcher omits the body and passes its exact UTF-8 byte length in the stub,
+ * which is the only thing this file ever wanted. Declaring `result` here would
+ * silently restore the 2 MB payload for the one concern the omission was built
+ * for (`road-to-per-turn-hook-economy` step 2.2), and the census would look
+ * identical while the cost came back. The `RESULT_KEYS` literals below are the
+ * key NAMES this concern looks under, not a read of the body.
+ *
  * ── Always exit 0 ─────────────────────────────────────────────────────
  *
  * A `warn` (exit 2) is read as a hard BLOCK on this host, and this concern
@@ -62,6 +71,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { is_replay_mode } from './state_io.js';
 import { readHookStdin } from './hook_stdin.js';
+import { stubbedBytes } from './payload_stub.js';
 
 const EXIT_ALLOW = 0;
 
@@ -98,11 +108,28 @@ const RESULT_KEYS = ['tool_response', 'toolResponse', 'tool_result', 'toolUseRes
  *
  * Bytes, not characters: a multibyte result costs what it costs on the
  * wire, and `String.length` would under-report it.
+ *
+ * ## The dispatcher may omit the body, and then it passes the length instead
+ *
+ * `road-to-per-turn-hook-economy` step 2.2. This concern declares no
+ * `needs_payload_bodies` in `hook_manifest.yaml` — its own header says the
+ * result is "measured, never read", and that is exactly the concern the
+ * payload opt-in exists for. So the dispatcher replaces the body with a stub
+ * carrying its UTF-8 byte length, computed the same way this function
+ * computes it, and this function reads it back.
+ *
+ * Without the stub branch the census would keep filling — with the ~120-byte
+ * length of the STUB, silently, forever. An instrument that reports a wrong
+ * number is worse than one that reports none, which is why the branch is
+ * first and why `stubbedBytes` distinguishes "omitted, this many bytes" from
+ * "present, measure it".
  */
 export function _resultBytes(payload: JsonObject): number | null {
     for (const key of RESULT_KEYS) {
         const v = payload[key];
         if (v === undefined || v === null) continue;
+        const omitted = stubbedBytes(v);
+        if (omitted !== undefined) return omitted;
         if (typeof v === 'string') return Buffer.byteLength(v, 'utf8');
         try {
             return Buffer.byteLength(JSON.stringify(v), 'utf8');

@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **51** open blockers, **23** need you → `agent-config gates`
+> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **54** open blockers, **26** need you → `agent-config gates`
 
 ## Overall
 
-**303 / 578 steps done · 52%**
+**305 / 577 steps done · 53%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   52%
+█████████████████████░░░░░░░░░░░░░░░░░░░   53%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -46,7 +46,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 20 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [1](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
 | 21 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 22 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 26 | 23 | 3 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | █░░░░░░░░░ 12% |
-| 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 6 | 9 | 1 | 2 | [3](#blockers-road-to-per-turn-hook-economy) | ██████░░░░ 60% |
+| 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
 | 24 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
 | 25 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
 | 26 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
@@ -715,14 +715,14 @@ _1 blocker resolved._
 
 ### [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md)
 
-**Road to per-turn hook economy — the latency tax no registered budget can see** — 9 / 15 done (60%)
+**Road to per-turn hook economy — the latency tax no registered budget can see** — 11 / 14 done (79%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Falsify or localise the report | 🟡 in progress | 3 | 3 | 0 | 0 | 50% |
-| 5 | Host-native prefiltering (runs first, deliberately) | 🟡 in progress | 1 | 1 | 0 | 1 | 50% |
+| 5 | Host-native prefiltering (runs first, deliberately) | ✅ done | 0 | 1 | 1 | 1 | 100% |
 | 1 | Serialize once (D-2) | ✅ done | 0 | 1 | 0 | 1 | 100% |
-| 2 | Payload opt-in per concern (D-2, second lever) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | Payload opt-in per concern (D-2, second lever) | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 3 | Take the two spawns off the hot path (D-3) | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 4 | Register the number the user feels (D-1) | ✅ done | 0 | 2 | 1 | 0 | 100% |
 
@@ -778,6 +778,81 @@ _1 blocker resolved._
     fires on every call); (c) decline, and D-1 is addressed only by Phase 4's
     measurement plus the in-process `tools:` filter that already ships.
   - **Resolved when:** one option is recorded at this blocker, and — for (a) — the partition ships with a per-class absent-invocation proof and a test that fails when a claude tool name is added to no class.
+- **b-payload-read-parse-dominates** (owner: user) — blocks nothing — Phase 2 has landed and published its null. This records the finding that null produced, so the next attempt at D-2 starts from the measurement rather than from the roadmap's original attribution.
+  - **Recommendation:** **(a) first, and it is cheap.** The read-and-exit measurement is one small script plus one bench cell and it settles whether option (b) is a conclusion or a shrug. Without it "the host makes us pay this" is an assumption of exactly the kind Phase 1 and Phase 2 have each already falsified once in this file.
+  - **If you do nothing:** the large-payload cell stays roughly 60 % above the small one with no owner, and D-2's remaining cost keeps being attributed to per-concern churn in any future reading of § 0 — which is the specific error two phases of measurement have now refuted.
+  - **What to do:**
+    decide whether to open a step against the dispatcher's OWN
+    read + parse of the payload, which two independent measurements now name as the
+    dominant term of the large-payload cell. Phase 1 removed ten of eleven
+    stringifies and moved nothing; Phase 2 removed the body from six of eleven
+    concerns and moved nothing (82 ms small vs 130–143 ms large, and the two arm
+    pairs do not reproduce each other). What remains between the two cells happens ONCE per event, before any
+    concern runs: `readFd0ToEnd` reads the whole payload from the pipe and
+    `_build_envelope` `JSON.parse`s it. Options: (a) open a phase to measure that
+    step in isolation — a dispatcher that reads and immediately exits, against the
+    same fixture, which would say how much of the ~50 ms gap is unavoidable transport;
+    (b) accept the cell as host-imposed and close D-2 as mis-attributed, keeping
+    the two landed levers as the strictly-less-work outcome; (c) treat it as a
+    streaming/incremental-parse question, which is a much larger change than
+    anything this roadmap scoped.
+  - **Resolved when:** one option is recorded at this blocker and — for (a) — the read-and-exit cell exists on the § 2 matrix, so the unavoidable transport share of the large-payload cell is a number rather than an assumption.
+- **b-payload-mis-nested-readers** (owner: user) — blocks nothing in this roadmap. Phase 2's declarations are correct for the code as it stands, including for the two concerns below.
+  - **Recommendation:** **(a), as its own PR.** Both are one-line unwraps with a cheap negative test, and the pair is exactly the "one instance is a sample" case: the audit found two, and nothing has searched the remaining concerns for the same construct with a predicate other than the one that found these.
+  - **If you do nothing:** `ship-diff-volume` stays a concern that runs, costs a dispatch, and can never fire; and `injection-scan`'s coverage depends on a fallback that any future envelope change could remove without a test noticing.
+  - **What to do:**
+    decide whether to fix two concerns that read tool payload keys
+    at the WRONG nesting level — off the envelope root instead of `envelope.payload`
+    — found by Phase 2's audit and deliberately not touched by it.
+    · `injection_scan_hook.ts` reads its result keys off the root, so what it
+    actually scans in production is its whole-envelope-serialisation fallback. It
+    works by accident, and it declares `[input, result]` so Phase 2 keeps it
+    working. Fixing the unwrap changes what a security scanner sees, which is a
+    behaviour change on a security surface and not a drive-by edit.
+    · `ship_diff_volume_hook.ts` reads `tool_input` / `command` off the root and
+    therefore finds NOTHING under the real dispatcher envelope — it returns 0 on
+    every dispatcher-path invocation today. It declares `[input]`, which preserves
+    the status quo and bakes in nothing new.
+    Options: (a) fix both unwraps in one PR with a negative test per concern that
+    fails against the current code; (b) fix `ship-diff-volume` only, since it is
+    provably dead rather than accidentally-working; (c) leave both and record that
+    the scanner's coverage is fallback-dependent.
+  - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — each fixed concern carries a test that fails against the pre-fix unwrap, plus a reported count of the same construct across the remaining concerns.
+- **b-stop-async-split-prerequisites** (owner: user) — blocks step 5.3 only. Phases 1-4 are unaffected and Phase 2 has landed.
+  - **Recommendation:** **(a), and P3 before anything else.** P3 is a live data-integrity defect that does not need the split to matter: `dispatch-issues.jsonl` already has no lock today, and any second concurrent dispatcher — two platforms installed into one workspace, which the manifest supports — can truncate it. Fixing it is small, independently valuable, and turns the riskiest part of a future split into a non-issue. Option (b) is tempting and is the wrong first move: it pays P1's contract change for one concern while leaving the collisions in place. Option (c) is defensible only if Phase 4's composite says turn-end wall clock is not the binding cost.
+  - **If you do nothing:** turn-end wall clock keeps carrying eight concerns that cannot refuse anything, `dispatch-issues.jsonl` stays corruption-capable under any concurrent dispatch, and the classification above rots — it is pinned to `hook_manifest.yaml` as it stands today, and every added `stop` concern makes it less true.
+  - **What to do:**
+    decide whether to open the prerequisite work that makes 5.3
+    buildable. The classification it needed is DONE and is recorded at the step —
+    eleven concerns on claude's `stop`, three sync-required (`turn-end-gate`,
+    `end-review-nudge`, `session-eol`), eight async-capable. The host capability is
+    also settled: the installed binary carries `asyncRewake`. What is open is five
+    prerequisites, each verified against the tree:
+    · **(P1)** `build_claude_hook_matrix` returns ONE command per native event and
+    `claude_hook_matrix_parity.test.ts` asserts exactly one group with exactly one
+    command; a sync/async split needs two `Stop` entries, i.e. a deliberate change
+    to the type that carries the hook matrix into every claude consumer's settings.
+    · **(P2)** `turn_end_gate_hook` reads `agents/state/verify-before-complete.json`
+    and its producer is async-capable, so the split puts a refusal surface's input
+    behind a race whose losing branch makes the gate ALLOW.
+    · **(P3)** two parallel dispatches collide on `summary.json` (lossy overwrite),
+    `rule-trips.json` (lost update — the read is outside the lock), and
+    `dispatch-issues.jsonl` (**no lock, no tmp+rename — corruption-capable**, and
+    written precisely when something already went wrong).
+    · **(P4)** `state_io`'s lock names concurrent dispatcher invocations as the case
+    it guards and then `rmSync`s the other holder's sentinel after a 5000 ms
+    deadline, so under contention it stops guarding that case.
+    · **(P5)** the step's `verify:` — an artefact diff proving every async concern
+    still writes its artefact — is a claim about what the HOST does with
+    `async: true` and is not observable from this repository.
+    Options: (a) open a phase that lands P3 and P4 first (locking and per-invocation
+    discriminators are useful on their own, independent of any split), then P1 and P2
+    as one reviewed change, then the split behind P5's live check; (b) land ONLY
+    `roadmap-progress` async — the single best candidate, the only concern whose cost
+    is a `spawnSync` with a 30 s timeout the in-process runner cannot preempt — which
+    still needs P1 and P3 but not P2; (c) cancel 5.3 the way 5.1 was cancelled and
+    record that turn-end wall clock is addressed only by Phase 4's measurement.
+  - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — P3's three files are written under a lock with a tmp+rename and a test that fails against the current unlocked write, before any group split ships.
 
 ### [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md)
 
