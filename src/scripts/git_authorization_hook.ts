@@ -43,7 +43,101 @@ import { readHookStdin } from "./hooks/hook_stdin.js";
 
 const EXIT_ALLOW = 0;
 
+/**
+ * Legacy single-file ledger path — one file for the whole project root.
+ *
+ * Kept for direct invocations and for reading a ledger written by an older
+ * build, NOT as the write target when a session id is known. See
+ * `ledgerFileFor` for why one shared file was the defect.
+ */
 export const STATE_FILE = path.join("agents", "state", "git-authorization.json");
+
+/** Per-session ledger directory. */
+export const STATE_DIR = path.join("agents", "state", "git-authorization");
+
+/** Per-session pending-refusal directory. */
+export const PENDING_DIR = path.join("agents", "state", "git-authorization-pending");
+
+/**
+ * A session id reduced to a safe path component.
+ *
+ * The id reaches this from the host's envelope, so it is untrusted input on a
+ * path — `..` or a separator in it would place the ledger outside the state
+ * directory. Anything outside the allowed set collapses to `_`.
+ */
+export function sessionSlug(session_id: string): string {
+    return session_id.replace(/[^A-Za-z0-9._-]/gu, "_").slice(0, 80);
+}
+
+/**
+ * Where THIS session's ledger lives.
+ *
+ * MEASURED DEFECT (2026-08-18, during the 14.0.0 release): the ledger was a
+ * single file per project root, so every prompt from every concurrent session
+ * in the repo overwrote it. A second session typed an 11-character prompt
+ * between the user's `merge den pr` and the guard's read; the guard found a
+ * foreign session id, discarded the ledger as another conversation's consent,
+ * and refused. The refusal then said "no authorization in this turn's prompt",
+ * which was false and unfalsifiable from the message alone — the authorization
+ * had existed and been clobbered. Three consecutive refusals, and the user
+ * re-authorized each time.
+ *
+ * This repo runs dozens of worktrees against one root, so the race is not an
+ * edge case there; it is the normal condition. Scoping the file by session is
+ * what makes "this turn's prompt" mean this conversation's turn.
+ */
+export function ledgerFileFor(session_id: string): string {
+    if (!session_id) {
+        return STATE_FILE;
+    }
+    return path.join(STATE_DIR, `${sessionSlug(session_id)}.json`);
+}
+
+/** Where THIS session's refused-operation record lives. */
+export function pendingFileFor(session_id: string): string {
+    if (!session_id) {
+        return PENDING_FILE;
+    }
+    return path.join(PENDING_DIR, `${sessionSlug(session_id)}.json`);
+}
+
+/**
+ * One refused irreversible operation, waiting for the answer to the question
+ * the guard just told the agent to ask.
+ *
+ * WHY THIS FILE EXISTS — the measured deadlock (2026-08-18, 14.0.0 release):
+ * `user-interaction` requires a decision to be handed to the user as a
+ * NUMBERED-OPTIONS block, and the answer to one is a bare `1`. The classifier
+ * below reads the prompt in isolation, and `1` carries no operation, so the
+ * user's consent was real, visible, and unrecordable. The release deadlocked
+ * for three turns: the guard refused, the agent asked as instructed, the user
+ * answered, and the next attempt refused identically. Two mechanisms this repo
+ * mandates were structurally incompatible on exactly the irreversible subset.
+ *
+ * The fix is deliberately the narrowest thing that resolves it. Widening the
+ * prose list with bare affirmatives was rejected: `ja` would then authorize
+ * `npm publish` on any turn, which is reach, not severity. Instead the guard
+ * records WHICH op it refused, and only that one op can be confirmed, once, by
+ * the immediately following prompt. Everything the user is consenting to has
+ * already been named to them in the refusal they just read.
+ */
+export const PENDING_FILE = path.join("agents", "state", "git-authorization-pending.json");
+
+/** A refused operation carried to exactly one following prompt. */
+export interface PendingRefusal {
+    op: GitOp;
+    session_id: string;
+    refused_at: string;
+}
+
+/**
+ * The window in which a refusal is still the thing the user is answering.
+ *
+ * Short on purpose: this is "the user read the refusal and replied", not "the
+ * user said yes to something at some point today". A stale record expires into
+ * the same not-authorized state the guard starts from.
+ */
+export const PENDING_MAX_AGE_MS = 10 * 60 * 1000;
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };
@@ -140,6 +234,36 @@ export function isInterrogative(prose: string): boolean {
       t,
     )
   );
+}
+
+/**
+ * Is this prompt an ANSWER to the refusal the user was just shown?
+ *
+ * Accepts the two shapes a numbered-options block actually produces — a bare
+ * selection (`1`, `1.`, `Option 2`) and a bare affirmative (`ja`, `ok`, `mach`,
+ * `go`, `do it`) — and nothing else. The bar is that the prompt says yes and
+ * says NOTHING ELSE: a turn that also carries new instructions is a new turn,
+ * not an answer, and must name its operation like any other.
+ *
+ * That last clause is the whole safety argument, so it is enforced by length
+ * rather than by good intentions. `release und fixe auch den schess bug` reads
+ * as consent to a human and is correctly NOT an affirmative here — it opens new
+ * work, and the op it authorizes is the one it names.
+ */
+export function isAffirmative(prose: string): boolean {
+    const t = prose.trim().replace(/[.!]+$/u, "");
+    if (!t || t.length > 24) {
+        return false;
+    }
+    if (isInterrogative(t)) {
+        return false;
+    }
+    return (
+        /^(?:option\s*)?\d{1,2}[.)]?$/iu.test(t) ||
+        /^(ja|jo|jep|yes|yep|yeah|ok|okay|okey|klar|passt|gut|los|go|go ahead|mach|mach das|mach es|leg los|do it|proceed|bitte)$/iu.test(
+            t,
+        )
+    );
 }
 
 /** Executable commands a user may paste, mapped to the op they authorize. */
@@ -242,6 +366,55 @@ export function classifyAuthorization(prompt: string): {
   return { authorized: [...authorized], evidence };
 }
 
+/**
+ * Read the refused operation, and consume it in the same breath.
+ *
+ * Consuming unconditionally is the single-use guarantee: the record survives
+ * exactly one following prompt whether or not that prompt confirmed it, so a
+ * `ja` three turns later cannot reach back to a refusal the user has long
+ * stopped thinking about.
+ */
+export function takePending(
+    consumer_root: string,
+    session_id: string,
+    now: number,
+): PendingRefusal | null {
+    const file = path.join(consumer_root, pendingFileFor(session_id));
+    let raw: string;
+    try {
+        raw = fs.readFileSync(file, "utf8");
+    } catch {
+        return null;
+    }
+    try {
+        fs.rmSync(file, { force: true });
+    } catch {
+        /* consumed in memory either way — a stale file expires by age below */
+    }
+    try {
+        const decoded = JSON.parse(raw) as unknown;
+        if (!_isObject(decoded)) {
+            return null;
+        }
+        const op = decoded["op"];
+        if (typeof op !== "string" || !(ALL_OPS as readonly string[]).includes(op)) {
+            return null;
+        }
+        const recorded = typeof decoded["session_id"] === "string" ? decoded["session_id"] : "";
+        // A refusal from another conversation is another conversation's question.
+        if (session_id && recorded && recorded !== session_id) {
+            return null;
+        }
+        const at = Date.parse(String(decoded["refused_at"] ?? ""));
+        if (!Number.isFinite(at) || now - at > PENDING_MAX_AGE_MS) {
+            return null;
+        }
+        return { op: op as GitOp, session_id: recorded, refused_at: String(decoded["refused_at"]) };
+    } catch {
+        return null;
+    }
+}
+
 export function run(stdin_text: string, options: { consumer_root: string }): number {
   let envelope: JsonObject = {};
   if (stdin_text.trim()) {
@@ -269,6 +442,18 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
   }
 
   const { authorized, evidence } = classifyAuthorization(prompt);
+
+  // The answer to the guard's own question. Read (and consume) on EVERY prompt,
+  // so the record cannot outlive the turn it was raised in.
+  const session = typeof envelope["session_id"] === "string" ? envelope["session_id"] : "";
+  const pending = takePending(options.consumer_root, session, Date.now());
+  if (pending && !authorized.includes(pending.op) && isAffirmative(prompt)) {
+    authorized.push(pending.op);
+    evidence[pending.op] =
+      `confirmation of the refused \`${pending.op}\` (refused ${pending.refused_at}): ` +
+      `"${prompt.trim().slice(0, 40)}"`;
+  }
+
   const ledger: Ledger = {
     session_id: typeof envelope["session_id"] === "string" ? envelope["session_id"] : "",
     detected_at: new Date().toISOString(),
@@ -278,7 +463,7 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
   };
 
   try {
-    atomic_write_json(path.join(options.consumer_root, STATE_FILE), ledger);
+    atomic_write_json(path.join(options.consumer_root, ledgerFileFor(session)), ledger);
   } catch {
     // Observability only — a failed write degrades the gate to "no ledger",
     // which the pre_tool_use concern treats as "not authorized" for the

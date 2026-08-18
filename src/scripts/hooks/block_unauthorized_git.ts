@@ -61,7 +61,13 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { readHookStdin } from "./hook_stdin.js";
-import { STATE_FILE, type GitOp } from "../git_authorization_hook.js";
+import { atomic_write_json } from "./state_io.js";
+import {
+  ledgerFileFor,
+  pendingFileFor,
+  STATE_FILE,
+  type GitOp,
+} from "../git_authorization_hook.js";
 
 const EXIT_ALLOW = 0;
 // MUST equal dispatch_hook.EXIT_BLOCK. The dispatcher's internal ladder is
@@ -497,18 +503,45 @@ function _loadLedger(
   session_id: string,
   now: number,
 ): { authorized: Set<GitOp>; present: boolean } {
+  // This session's own ledger first; the flat legacy file only as a fallback,
+  // so a ledger written by an older build still counts. Reading the flat file
+  // FIRST was the defect: any concurrent session in the repo overwrites it, and
+  // the session check below then discarded a real authorization as foreign.
+  const candidates = [ledgerFileFor(session_id)];
+  if (!candidates.includes(STATE_FILE)) {
+    candidates.push(STATE_FILE);
+  }
+  for (const rel of candidates) {
+    const found = _readLedgerFile(path.join(consumer_root, rel), session_id, now);
+    if (found !== null) {
+      return found;
+    }
+  }
+  return { authorized: new Set<GitOp>(), present: false };
+}
+
+/**
+ * Read one ledger file. `null` means "this file does not answer the question" —
+ * absent, malformed, foreign session, or expired — so the caller may try the
+ * next candidate. A parsed, in-session, fresh ledger answers definitively.
+ */
+function _readLedgerFile(
+  file: string,
+  session_id: string,
+  now: number,
+): { authorized: Set<GitOp>; present: boolean } | null {
   try {
-    const raw = fs.readFileSync(path.join(consumer_root, STATE_FILE), "utf8");
+    const raw = fs.readFileSync(file, "utf8");
     const decoded = JSON.parse(raw) as unknown;
     if (_isObject(decoded) && Array.isArray(decoded["authorized"])) {
       const ledgerSession = typeof decoded["session_id"] === "string" ? decoded["session_id"] : "";
       // A ledger from a different session is another conversation's consent.
       if (session_id && ledgerSession && ledgerSession !== session_id) {
-        return { authorized: new Set<GitOp>(), present: false };
+        return null;
       }
       const at = Date.parse(String(decoded["detected_at"] ?? ""));
       if (Number.isFinite(at) && now - at > LEDGER_MAX_AGE_MS) {
-        return { authorized: new Set<GitOp>(), present: false };
+        return null;
       }
       return {
         authorized: new Set((decoded["authorized"] as string[]).filter(Boolean) as GitOp[]),
@@ -518,13 +551,21 @@ function _loadLedger(
   } catch {
     /* fall through */
   }
-  return { authorized: new Set<GitOp>(), present: false };
+  return null;
 }
 
 export interface Decision {
   exit: number;
   stdout: string;
   stderr: string;
+  /**
+   * The op this decision refused, when it refused one.
+   *
+   * `decide` stays pure; `run` turns this into the pending record that lets the
+   * user's answer to the refusal count as authorization for that one op. See
+   * `git_authorization_hook.PENDING_FILE` for why that record exists at all.
+   */
+  blockedOp?: GitOp;
 }
 
 export function decide(
@@ -547,7 +588,7 @@ export function decide(
       `This operation is irreversible and non-destructive-by-default already declares it ` +
       `never-autonomous. Command: ${shown}. ` +
       `Ask the user, in one numbered-options block, and run it only after they answer this turn.`;
-    return { exit: EXIT_BLOCK, stdout: "", stderr: `${reason}\n` };
+    return { exit: EXIT_BLOCK, stdout: "", stderr: `${reason}\n`, blockedOp: op };
   }
 
   if (WARN_OPS.has(op)) {
@@ -582,6 +623,21 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
     extractCommand(envelope),
     _loadLedger(options.consumer_root, session_id, Date.now()),
   );
+  if (decision.blockedOp) {
+    // Record WHAT was refused, so the user's answer to the question this
+    // refusal just told the agent to ask can authorize that one operation.
+    // Best-effort: a failed write degrades to the previous behaviour, where a
+    // numbered answer is unrecordable and the refusal simply repeats.
+    try {
+      atomic_write_json(path.join(options.consumer_root, pendingFileFor(session_id)), {
+        op: decision.blockedOp,
+        session_id,
+        refused_at: new Date().toISOString(),
+      });
+    } catch {
+      /* observability only — see above */
+    }
+  }
   if (decision.stdout) {
     process.stdout.write(decision.stdout);
   }
