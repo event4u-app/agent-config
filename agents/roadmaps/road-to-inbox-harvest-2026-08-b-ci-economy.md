@@ -553,9 +553,12 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
      ruleset write or a merge-queue enablement, and does not archive this roadmap.
      The roadmap stays active with two open, human-blocked steps.
 
-     Pre-existing and untouched, both noted rather than fixed here:
-     the `open_blockers 67 → 69` ratchet breach on `main` (an estate-budget
-     decision — one-in-one-out or a reasoned baseline raise), and
+     Pre-existing, noted rather than fixed here — and one of the two has since
+     been closed on the base, which is recorded so this note does not read as a
+     live breach it no longer is:
+     the `open_blockers 67 → 69` ratchet breach on `main` was **resolved by
+     PR #1423**, which raised the baseline to 69 with its own recorded reason; on
+     the merged base `check_estate_count` exits 0 at `+0`. Still open:
      `road-to-inbox-harvest-2026-08-d-top-band-model-economy` under the same
      Iron Law 3 (13/13 done · 1 deferred), a different roadmap's decision.
 
