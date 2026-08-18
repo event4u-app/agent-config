@@ -519,41 +519,53 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
      the blockers). What remains is a repo-admin write that is a
      `non-destructive-by-default` Hard-Floor action, so it waits on a human —
      which is exactly what a `[ ]` plus a recorded blocker already expresses, and
-     what every other blocker-gated step in this estate carries.
+     what every other blocker-gated step in this estate carries. Same correction
+     and reasoning as `road-to-stop-gate-honesty` step 2.1.
 
-     The correction is right independent of the gate, which is the test that keeps
+     The correction is right independent of any gate, which is the test that keeps
      it from being gate-driven: a step is marked by what is true of it. Closing 3.4
      is merely what made the glyph load-bearing — it drove `count_open` to 0 and
-     `roadmap:progress-check` to exit 1 (verified: 18/18 done · 2 deferred), a
-     repo-wide archive refusal for two steps that are plainly waiting rather than
-     abandoned. Identical correction, identical reasoning, taken once before on
-     `road-to-stop-gate-honesty` step 2.1.
+     put this file under Iron Law 3 at 18/18 done · 2 deferred.
 
-     **What this correction does NOT buy, checked rather than assumed, because the
-     tempting justification is false.** It does not keep a PR green.
-     `roadmap-progress-check` is registered in exactly one place — `task ci`
-     (`Taskfile.yml:358`, defined at `taskfiles/content.yml:246`) — no workflow
-     under `.github/workflows/` invokes `task ci` or the script, and the pre-push
-     hook runs `task consistency` + `task preflight`, neither of which reaches it
-     (`src/scripts/install-hooks.sh:24-140`). So the Iron-Law-3 breach was a
-     LOCAL-ONLY red the whole time. Recorded because "it would red the PR" is the
-     reason a reader would reconstruct for this edit, and it would be wrong — the
-     reason is accuracy, and the gate merely surfaced the inaccuracy.
+     **TWO mechanism claims were tempting here and BOTH are false. Measured, not
+     reasoned, and recorded because each would have justified the opposite edit.**
 
-     **Pre-existing, untouched:** `road-to-inbox-harvest-2026-08-d-top-band-model-economy`
-     is still listed by that gate (13/13 done · 1 deferred) and is a different
-     roadmap's Iron-Law-3 decision, so it is noted rather than fixed here. -->
-<!-- (continued)
+     1. *"Leaving them `[~]` reds the PR."* No. `roadmap-progress-check` is
+        registered in exactly one place — `task ci` (`Taskfile.yml:358`, defined at
+        `taskfiles/content.yml:246`). No workflow under `.github/workflows/`
+        invokes `task ci` or the script, and the pre-push hook runs
+        `task consistency` + `task preflight`, neither of which reaches it
+        (`src/scripts/install-hooks.sh:24-140`). An Iron-Law-3 breach is a
+        LOCAL-only red. This also refutes the "the real teeth are the CI backstop,
+        which reds the PR" reading that had been carried since 2026-08-11.
 
-     What this does NOT do: it does not touch either blocker, does not perform or
-     authorise a ruleset write or a merge-queue enablement, and does not archive
-     this roadmap. The roadmap stays active with two open, human-blocked steps.
+     2. *"Restoring them grows `open_blockers` and reds the estate ratchet."* Also
+        no, and this one was believed for a while because the ratchet DID go red on
+        PR #1425 at `open_blockers 67 → 69`. Measured both ways in the same
+        worktree: `check_estate_count` reports **69 with `[~]` and 69 with `[ ]`**.
+        The glyph does not move the metric. The +2 is **pre-existing on `main`** —
+        run 32173675188 at `851568b5c` fails with the identical number, before this
+        branch existed. A red that appears on your PR is not evidence your PR caused
+        it; diff the number against the base before attributing it.
+
+     So the restore costs nothing measurable and rests on accuracy alone. What it
+     does NOT do: it does not touch either blocker, does not perform or authorise a
+     ruleset write or a merge-queue enablement, and does not archive this roadmap.
+     The roadmap stays active with two open, human-blocked steps.
+
+     Pre-existing and untouched, both noted rather than fixed here:
+     the `open_blockers 67 → 69` ratchet breach on `main` (an estate-budget
+     decision — one-in-one-out or a reasoned baseline raise), and
+     `road-to-inbox-harvest-2026-08-d-top-band-model-economy` under the same
+     Iron Law 3 (13/13 done · 1 deferred), a different roadmap's decision.
 
      verify: `agent-config roadmap:progress-check` no longer lists THIS file under
-     Iron Law 3. Its exit code stays 1 for the pre-existing `-d-top-band-model-economy`
-     entry, so read the listing, not the code — measure `$?` directly if you do
-     (piping to `tail` reports `tail`'s status and reads as a false green).
-     verify: the dashboard reports 2 open and 0 deferred for this roadmap. -->
+     Iron Law 3. Its exit code stays 1 for the pre-existing `-d-top-band` entry, so
+     read the listing, not the code — and measure `$?` directly if you do (piping
+     to `tail` reports `tail`'s status and reads as a false green).
+     verify: the dashboard reports 2 open and 0 deferred for this roadmap.
+     verify: `./scripts-run src/scripts/check_estate_count` reports open_blockers
+     69 with these glyphs AND with `[~]` — the number is independent of the choice. -->
 
 
 ## Risk Register

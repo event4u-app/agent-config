@@ -48,13 +48,23 @@ was checked rather than asserted:
 - **The overhead figure is borrowed from this contract, not invented.** The
   ≈ 25 s per-job fixed cost is the number the file already derives in its
   build-artefact rejection; the arithmetic reuses it and says so.
-- **One claim was falsified during the work and removed rather than shipped.**
-  The first justification for restoring the two `[~]` glyphs was that leaving
-  them would red the PR. Checked: `roadmap-progress-check` is registered only in
-  `task ci` (`Taskfile.yml:358`), no workflow invokes it, and the pre-push hook
-  runs `task consistency` + `task preflight`, neither of which reaches it. The
-  breach was local-only, so the mechanism claim is stated as refuted inside the
-  roadmap and the correction rests on accuracy alone.
+- **Two mechanism claims were falsified during the work and are recorded as
+  refuted rather than quietly dropped.** Both concerned the glyph restore on 4.2
+  and 4.3, and each would have justified the opposite edit:
+  - *"Leaving them `[~]` reds the PR."* False. `roadmap-progress-check` is
+    registered only in `task ci` (`Taskfile.yml:358`), no workflow invokes it,
+    and the pre-push hook runs `task consistency` + `task preflight`, neither of
+    which reaches it. Local-only red. This also refutes a line carried in the
+    project's own notes since 2026-08-11.
+  - *"Restoring them grows `open_blockers` and reds the estate ratchet."* Also
+    false, and believed for several steps because the ratchet **did** go red on
+    this PR at `open_blockers 67 → 69`. Measured both ways in one worktree:
+    `check_estate_count` reports **69 with `[~]` and 69 with `[ ]`**. The +2 is
+    pre-existing on `main` — run 32173675188 at `851568b5c` fails with the
+    identical number before this branch existed. The lesson generalises: a red
+    that appears on your PR is not evidence your PR caused it.
+
+  The restore therefore rests on accuracy alone, which is where it started.
 - **The workflow comment's remaining claims were re-checked before the edit, so
   the correction is narrow.** The exclusion rationale (golden + workspace
   hash-clump) is about files that are still excluded and is untouched. Only the
@@ -65,6 +75,16 @@ Gates green on this branch: `task preflight` (exit 0), `lint_workflow_paths`,
 `lint_workflow_security`, `check_references`, `check_no_roadmap_refs`,
 `lint_roadmap_family_cap`, YAML parse of the edited workflow, and the three
 `verify:` annotations 3.4 ships with.
+
+**One check is red and it is inherited, not caused here.**
+`Sync + Generate Tools Consistency` — the single required check — fails on
+`check_estate_count` with `open_blockers 67 → 69`. The same step fails on `main`
+at `851568b5c` (run 32173675188, 2026-08-18 18:55), before this branch existed,
+and the number is identical with either glyph choice on 4.2/4.3. Clearing it is
+an estate-budget decision — one-in-one-out, or a reasoned baseline raise in
+`src/config/estate-count-budget.json` — so it is surfaced to the maintainer
+rather than absorbed here. Raising the baseline to make one PR green is exactly
+the move that ratchet exists to refuse.
 
 ## Standing caveat
 
