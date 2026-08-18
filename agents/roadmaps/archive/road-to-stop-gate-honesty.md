@@ -154,7 +154,7 @@ Nothing downstream of Phase 1 was built on the unstamped corpus.
 
 ### Phase 2 — Judge each detector on its measured rate against its measured benefit
 
-- [ ] **2.1** Pre-register the bar per detector **before looking at Phase 1 data**:
+- [x] **2.1** Pre-register the bar per detector **before looking at Phase 1 data**:
       a detector whose refusals are re-refused on the retry above some share — the
       model could not satisfy it — or whose median per-session count exceeds some
       threshold is demoted from blocking to advisory **for that detector only**, and
@@ -183,6 +183,52 @@ Nothing downstream of Phase 1 was built on the unstamped corpus.
       untouched. -->
       <!-- verify: the roadmap reports one open step and zero deferred, and
       `roadmap:progress-check` no longer lists this file under Iron Law 3. -->
+      <!-- done 2026-08-18: `docs/contracts/turn-end-detector-demotion.md`, the
+      per-detector standard, registered under option (a) of
+      `b-detector-demotion-bars` after an AI-council pass (2/2 seats present,
+      concluded — both chose (a) over a shared bar and over "no demotion
+      available"). Cross-linked from `concern-activation-policy` § Reverse trigger
+      as the worked example for a blocking concern that predates that policy, and
+      from the gate's own header.
+
+      THREE THINGS THE STEP'S OWN WORDING DID NOT SURVIVE, each found by
+      executing rather than by reading, and each recorded at the contract rather
+      than only here.
+
+      (a) **The re-refusal share is 0 BY CONSTRUCTION and is not measurable.**
+      The step names it as the primary quantity — "a detector whose refusals are
+      re-refused on the retry above some share". `main()` returns `EXIT_ALLOW`
+      before any detector runs on a retry, twice over: layer 1 on the host's
+      `stop_hook_active`, layer 2 on `alreadyRefusedTurn(…, turnOrdinal)`, and a
+      retry carries no new user prompt so the ordinal is unchanged. A turn is
+      refused at most once — the wedge the guard exists to prevent. This is
+      intended behaviour pinned by a committed test whose fixture is a retry that
+      STILL PROMISES and is asserted to pass ("LAYER 2: the turn marker alone
+      stops a second refusal, even on a NEW reply"). So the bar is registered
+      INERT, with the shadow `would_refuse_again` read named as the instrument
+      that makes it live. Neither council seat could reach this: both had the
+      mechanism description, not the guard's code.
+
+      (b) **"Median per session" had to become "median per AFFECTED session"**,
+      and that is a metric change rather than a clarification. Over all sessions,
+      a detector affecting fewer than half of them has a permanent median of
+      zero, so the bar could never fire — the gate-that-cannot-fire shape this
+      repository rejects elsewhere.
+
+      (c) **Crossing a bar authorises a staged study, NOT a demotion.** The step
+      reads as though the bar demotes the detector. Both seats independently
+      refused that on the round-5 asymmetry: friction and satisfiability measure
+      cost, neither measures the violations that return after a demotion, and a
+      high re-refusal share may be evidence the detector is load-bearing rather
+      than broken. Recorded as a narrowing with its reason, not absorbed.
+
+      What this does NOT do: it does not demote any detector, does not retire
+      dormant D (that needs an opportunity metric this pre-registration
+      excludes), and does not read Phase 1's distribution into the numbers — the
+      published reading carries neither bar quantity, and the contract states the
+      blindness check so a reader does not have to take it on trust. -->
+      <!-- verify: test -f docs/contracts/turn-end-detector-demotion.md, and the
+      contract names a bar for each of the four `DETECTOR_IDS`. -->
 - [x] **2.2** Detector C's verify allowlist decides what counts as verification.
       **Narrowed by claim 4:** the PHP toolchain the draft worried about is already
       matched, so this step is no longer "add phpunit and pest". What remains is a
@@ -229,9 +275,20 @@ Nothing downstream of Phase 1 was built on the unstamped corpus.
       must not be read as doing so. The pre-registration in
       `b-detector-demotion-bars` is untouched and still predates any read. -->
 
-**Phase status:** 2.2 is closed; **2.1 stays open on `b-detector-demotion-bars`**,
-so AC-2 ("no detector stays blocking without a number") is not yet satisfiable —
-the numbers now exist, the bar to judge them against is the maintainer's.
+**Phase status (2026-08-18):** both steps are closed. `b-detector-demotion-bars`
+is resolved and each of the four detectors now carries a registered bar at
+[`turn-end-detector-demotion`](../../../docs/contracts/turn-end-detector-demotion.md).
+
+**AC-2 is met in the sense it was written, and NOT in the sense a reader will
+want.** It asks that "no detector stays blocking without a number" — every
+detector now has one, which is exactly what this phase was opened to fix. What it
+does **not** yet have is a *verdict*: a bar may only be read after its own sample
+floor (100 eligible refusals · 50 affected sessions · 30 stable days), and the
+eligible corpus is empty because the 36 legacy records predate version stamping.
+So the phase closes on the standard, never on a green-or-demote reading, and the
+first reading belongs to whoever meets a floor. Stating the split rather than
+claiming the criterion outright is the point: a registered bar and a satisfied bar
+are different facts.
 - **AC-2:** each detector has either a green verdict — rate under its bar — or a
   demotion PR citing the distribution. **No detector stays blocking without a
   number.**
@@ -321,7 +378,29 @@ Stop-slot numbers, and is the honest reason this phase advances without closing.
 ## Blockers
 
 ### blocker: b-detector-demotion-bars
-- **Status:** open
+- **Status:** RESOLVED 2026-08-18 — **option (a), per-detector bars**, registered
+  at [`turn-end-detector-demotion`](../../../docs/contracts/turn-end-detector-demotion.md).
+  Resolved by AI council (2 of 2 seats present, concluded, `--prompt-mode design`)
+  rather than by the host: both seats chose (a) over (b) and over (c), and the
+  numbers are the convergence of their two proposals, taking the
+  demotion-resistant side wherever they differed. The question file carried no
+  host framing and no recommendation.
+
+  **Three corrections the council could not reach, made from the gate's code and
+  labelled own analysis at the contract:** the re-refusal share is 0 by
+  construction (two re-entrancy layers cap a turn at one refusal, pinned by a
+  committed test), so that bar ships INERT with its enabling instrument named;
+  "median per session" had to become "median per AFFECTED session" or the bar
+  could never fire; and a crossed bar authorises a staged-demotion study rather
+  than a demotion, which both seats reached independently and which NARROWS step
+  2.1's own wording.
+
+  **What was deliberately NOT decided here:** no detector is demoted, dormant D is
+  not retired (that needs an opportunity metric this pre-registration excludes),
+  and the staged study's own pre-registration is left to whoever runs it. The
+  counter-argument the entry asked to keep in view — round 5's blocking-carriers-
+  at-zero-violations result — is on the record at the contract and is the reason
+  the standard resists demotion rather than enabling it.
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** Phase 2 step 2.1, and therefore any demotion. Steps 1.x, 2.2 and 3.x
