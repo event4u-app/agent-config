@@ -256,23 +256,27 @@ index a6db0f5b70ad73224775210c3bcfa320e42512cd..5986ff8deed373526a92c01238b6b123
  - **Roadmap:** road-to-surface-consolidation.md
  - **Unblocks:** 1 open step(s) — lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
 diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
-index bf7382a88f94281085ec886c10d26236b0c7ad9b..e9b90430eb64f213254d487018f50b01f08a5adf 100644
+index 906a4a35a01f8ea13f4566253ccd3f0c843971c2..f67d6fccf77849a25e10de676fd689772900299f 100644
 --- a/agents/roadmaps-progress.md
 +++ b/agents/roadmaps-progress.md
-@@ -2,11 +2,11 @@
+@@ -2,14 +2,14 @@
  
  > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
  >
--> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **51** open blockers, **23** need you → `agent-config gates`
-+> 37 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **50** open blockers, **22** need you → `agent-config gates`
+-> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **54** open blockers, **26** need you → `agent-config gates`
++> 37 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **53** open blockers, **25** need you → `agent-config gates`
  
  ## Overall
  
--**303 / 578 steps done · 52%**
-+**297 / 571 steps done · 52%**
+-**305 / 577 steps done · 53%**
++**299 / 570 steps done · 52%**
  
  ```text
- █████████████████████░░░░░░░░░░░░░░░░░░░   52%
+-█████████████████████░░░░░░░░░░░░░░░░░░░   53%
++█████████████████████░░░░░░░░░░░░░░░░░░░   52%
+ ```
+ 
+ ## ⚠️ Iron Law 3 — unresolved deferred items
 @@ -56,12 +56,11 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
  | 30 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
  | 31 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
@@ -291,7 +295,7 @@ index bf7382a88f94281085ec886c10d26236b0c7ad9b..e9b90430eb64f213254d487018f50b01
  
  ---
  
-@@ -1040,36 +1039,6 @@ _1 blocker resolved._
+@@ -1115,36 +1114,6 @@ _1 blocker resolved._
      that `later/road-to-deferred-rule-retriever` pre-registered.
    - **Resolved when:** the metric reads against its bar and the fork resolves to (a) or (b), or the window is recorded as unfilled with a new date.
  
@@ -385,10 +389,10 @@ index 82b3c6e092e8ebbcc5fb896146d00366eab5db24..149b9bc2ddb0b899854adb42581aa658
        "title": "Road to Structural Linter Reform",
 diff --git a/agents/roadmaps/archive/road-to-stop-gate-honesty.md b/agents/roadmaps/archive/road-to-stop-gate-honesty.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..7e5ac2aaff470a6e1a97f2ae4070e95af185dd93
+index 0000000000000000000000000000000000000000..cefcf2ab39ac4f7f2fce0adf0f821060ee180724
 --- /dev/null
 +++ b/agents/roadmaps/archive/road-to-stop-gate-honesty.md
-@@ -0,0 +1,462 @@
+@@ -0,0 +1,478 @@
 +---
 +complexity: structural
 +execution:
@@ -542,6 +546,22 @@ index 0000000000000000000000000000000000000000..7e5ac2aaff470a6e1a97f2ae4070e95a
 +- **AC-1:** a per-detector refusal rate exists for the maintainer machine and at
 +  least one colleague machine, over a window long enough to be read as a rate
 +  rather than an anecdote.
++
++**AC-1 is UNMET at archival, and archiving removes its last tracked carrier.**
++Recorded here rather than left for a reader to infer from the archive row, which
++publishes this file as `completed`: the counters reached `count_open == 0` because
++every *step* closed, and AC-1 is an acceptance criterion waiting on data from a
++second machine, which no step could have produced. AC-3 is in the same state but
++has a real owner — it was delegated by name to an open roadmap. AC-1 has none.
++
++The carrier that remains is the `keep-beta-until` review marker on
++[`turn-end-detector-demotion`](../../../docs/contracts/turn-end-detector-demotion.md),
++which is enforced by `check_beta_review_markers` and forces that file to be
++re-read by its date. The same marker is the only schedule behind the two
++instruments that contract is waiting on. That is weaker than a roadmap step and
++stronger than nothing, and it is named at both ends so neither reader has to
++reconstruct it. Retention makes this sharper rather than softer: the 90-day TTL
++means a window left unaccumulated is not merely late, it is unrecoverable.
 +
 +### Phase 2 — Judge each detector on its measured rate against its measured benefit
 +
@@ -1241,10 +1261,10 @@ index ec4315a80b60525650994472cbea16cbd3b9c417..00000000000000000000000000000000
 -investigation returns fully to the activation flip, the context size and the
 -environment — which is itself a decidable and valuable answer.
 diff --git a/docs/contracts/concern-activation-policy.md b/docs/contracts/concern-activation-policy.md
-index 1c087c6267addc238c92f3249db91c58b303ecb0..b9d6421fdd3e5fa4f712df53bc80f9373f7fac9d 100644
+index 1c087c6267addc238c92f3249db91c58b303ecb0..46bf1045acccdd9a2e5a2e77594233c067b59ad8 100644
 --- a/docs/contracts/concern-activation-policy.md
 +++ b/docs/contracts/concern-activation-policy.md
-@@ -96,6 +96,16 @@ A blocking concern ships with its own removal condition, or it does not ship:
+@@ -96,6 +96,18 @@ A blocking concern ships with its own removal condition, or it does not ship:
  - **Review cadence: quarterly**, or on the first reverse-trigger hit, whichever
    is sooner.
  
@@ -1253,15 +1273,17 @@ index 1c087c6267addc238c92f3249db91c58b303ecb0..b9d6421fdd3e5fa4f712df53bc80f937
 +[`turn-end-detector-demotion`](turn-end-detector-demotion.md) is the worked
 +example: `turn-end-gate` is the only concern in this suite that can refuse a
 +turn-end, it predates this file, and its four detectors now carry a
-+pre-registered removal condition each. Read it before writing another one — it
-+records the two ways such a standard is born inert: a quantity the concern's own
-+safety design makes unobservable, and a friction metric whose denominator makes
-+the bar unfireable.
++pre-registered removal condition each. Read it before writing another one — one of
++its two quantities is **born inert**, because the concern's own safety design makes
++that quantity unobservable, and the file registers it saying so rather than
++deleting it or pretending it reads. It also names two hazards it avoided by
++definition and worth checking for in any new standard: a denominator that makes a
++bar unfireable, and a retention window shorter than the sample floor.
 +
  ## Where a threshold lives
  
  | Location | Cost | Use when |
-@@ -124,6 +134,7 @@ its declared posture by accident, only by declaring a different one.
+@@ -124,6 +136,7 @@ its declared posture by accident, only by declaring a different one.
  ## See also
  
  - [`hook-architecture-v1.md`](hook-architecture-v1.md) — the dispatcher contract this policy sits on top of.
@@ -1271,10 +1293,10 @@ index 1c087c6267addc238c92f3249db91c58b303ecb0..b9d6421fdd3e5fa4f712df53bc80f937
    under this policy, and the worked example of the shadow rung. Roadmaps cite
 diff --git a/docs/contracts/turn-end-detector-demotion.md b/docs/contracts/turn-end-detector-demotion.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..bc66b42e5da2382b11318b5848ebfab2c27f4538
+index 0000000000000000000000000000000000000000..4cb5d64d075671a217f478ce9edeb6bc23880fa6
 --- /dev/null
 +++ b/docs/contracts/turn-end-detector-demotion.md
-@@ -0,0 +1,252 @@
+@@ -0,0 +1,388 @@
 +---
 +stability: beta
 +keep-beta-until: 2026-11-17
@@ -1307,12 +1329,23 @@ index 0000000000000000000000000000000000000000..bc66b42e5da2382b11318b5848ebfab2
 +Read off `DetectorId` in `src/scripts/hooks/turn_end_gate_hook.ts`, never off
 +prose — the roadmap that opened this question named three, and the tree has four.
 +
-+| Id | Fires when | Protects |
-+|---|---|---|
-+| A `promissory` | the closing text promises work the turn did not do | the truthfulness of "done" |
-+| B `language` | the reply language differs from that turn's fresh pin | the user-facing contract |
-+| C `verification` | the turn changed a file and ran no verify-shaped command | engineering safety |
-+| D `completion` | a completion claim carries no fresh evidence | the truthfulness of "done" |
++| Id | Fires when | Protects | Runs |
++|---|---|---|---|
++| A `promissory` | the closing text promises work the turn did not do | the truthfulness of "done" | only when no dispatch is open |
++| B `language` | the reply language differs from that turn's fresh pin | the user-facing contract | every turn-end |
++| C `verification` | the turn changed a file and ran no verify-shaped command | engineering safety | every turn-end |
++| D `completion` | a completion claim carries no fresh evidence | the truthfulness of "done" | only when no dispatch is open |
++
++**Two of the four are conditional, and the fourth column is load-bearing.**
++`main()` runs A and D only when `dispatchOpen` is false — an open subagent
++dispatch excuses a promissory closing and an unsettled completion claim, and
++excuses nothing about B or C. So there are **three** allow paths, not two: the two
++re-entrancy layers below, plus this one. It suppresses A and D for a whole turn,
++and in a suite whose delegation policy dispatches by default that is not a rare
++branch.
++
++Every clause in this file that reads a zero, a denominator, or a dormancy has to
++survive that fact, and each says below where it does not.
 +
 +## The two quantities — and the one that cannot be measured
 +
@@ -1363,6 +1396,12 @@ index 0000000000000000000000000000000000000000..bc66b42e5da2382b11318b5848ebfab2
 +  `findings[0].detector` alone and a session refused nine times read as one.)
 +- A retry aborted for an unrelated reason is **censored**, not counted as a
 +  success.
++- **A turn that ran with a dispatch open is censored for A and D**, in both
++  quantities. Those two detectors did not run, so the turn is not an observation
++  of them not firing — counting it as one biases their Q2 denominators downward
++  and would read a configuration fact as an exposure fact. B and C are unaffected
++  and take that turn normally. A rollup that cannot tell a dispatch-suppressed
++  turn from a clean one may not report Q2 for A or D at all.
 +- A refusal is *eligible* only if it was recorded under a version that stamps
 +  `agent_config_version`. The 36 legacy records are `(unrecorded)` and are
 +  excluded from both quantities.
@@ -1378,28 +1417,57 @@ index 0000000000000000000000000000000000000000..bc66b42e5da2382b11318b5848ebfab2
 +
 +**These are policy choices, not findings, and they differ on purpose.**
 +
-+- **B is lowest.** A language mismatch is mechanically repairable, so repeated
-+  friction there is evidence the detector is wrong rather than evidence the task
-+  is hard.
-+- **C is highest.** It protects the practice most directly tied to a changed
-+  file, and it already carries the largest measured share of refusals — the
-+  detector doing the most work is the one to demote last.
-+- **A and D sit high.** Both protect the truthfulness of a completion claim,
-+  which is this suite's central promise, and demoting either silently restores
-+  unsupported "done". The supporting measurement is the *general* one — advisory
-+  carriers reached no measurable effect where blocking carriers reached zero
-+  violations — not a per-obligation reading of A or D, and it is stated at that
-+  strength rather than borrowed as if it had been measured on these two
-+  detectors specifically.
++Each row's reason has to produce that row, so they are given per detector rather
++than in groups — an earlier draft said "C is highest" while D tied it exactly, and
++grouped "A and D" across a 10-point split. A reader deriving the table from the
++prose would have got a different table, which is not acceptable in a document that
++calls its own numbers policy choices to be argued.
++
++- **B lowest, 20 % / 2.** A language mismatch is mechanically repairable, so
++  repeated friction there is evidence the detector is wrong rather than evidence
++  the task is hard. It is the one detector where a high share is more likely a
++  false positive than a hard problem.
++- **A at 30 % / 3.** It protects the truthfulness of a completion claim, which is
++  this suite's central promise, so demoting it silently restores unsupported
++  "done". It sits below C because a promissory closing is a *reply-shape* finding
++  the model can usually repair in one pass, unlike an actual missing verifier.
++- **C at 40 % / 3, and it is the last one to demote.** It protects the practice
++  most directly tied to a changed file, and it already carries the largest
++  measured share of refusals — the detector doing the most work has the most to
++  lose.
++- **D at 40 % / 3, for a different reason than C's — absence of evidence, not
++  weight of it.** D has never fired, so there is no measured cost to weigh
++  against its benefit, and a bar set low would demote a detector on a
++  distribution nobody has seen. It ties C by coincidence of caution, not because
++  it does comparable work.
++
++The supporting measurement behind A and D is the *general* one — advisory carriers
++reached no measurable effect where blocking carriers reached zero violations — not
++a per-obligation reading of either, and it is stated at that strength rather than
++borrowed as if it had been measured on these two detectors specifically.
 +
 +**The counter-argument, kept on the record rather than answered away:**
 +differentiated bars encode four unmeasured judgements about relative harm, and a
 +single shared bar would be methodologically cleaner on sparse data. It is
 +rejected because pretending the four protected harms are interchangeable would
-+hide those judgements rather than remove them. *Revisit-if:* the first qualifying
-+sample shows all four Q2 medians within ±1 and all four Q1 shares within ±10
-+points — then the data has refuted the architectural argument and the bars
-+collapse to one.
++hide those judgements rather than remove them.
++
++***Revisit-if*, split so that the reachable half can actually fire.** Drafted as
++one conjunctive clause over both quantities, it was unfalsifiable by
++construction — it required Q1 shares, which this file declares unmeasurable until
++an instrument that does not ship here lands, so the only escape from four bars
++to one could never open.
++
++- **On Q2 alone, and it stands today:** two or more detectors reach their floors
++  and their Q2 medians sit within ±1 of each other → the architectural argument is
++  refuted *for those detectors* and their bars merge. It does not need all four,
++  and it does not need D, whose floor is currently unreachable.
++- **On Q1, contingent:** once instrument 1 lands and Q1 becomes readable, all four
++  shares within ±10 points collapses the bars to one.
++
++Either half fires alone. Naming the contingency is the point: a revisit condition
++that silently depends on unbuilt instrumentation is an aspiration wearing a
++falsifier's clothes, which is the failure this whole file is written against.
 +
 +## Sample floor — per detector, not per gate
 +
@@ -1408,14 +1476,64 @@ index 0000000000000000000000000000000000000000..bc66b42e5da2382b11318b5848ebfab2
 +1. ≥ 100 eligible initial refusals;
 +2. ≥ 50 affected sessions;
 +3. ≥ 30 calendar days of observation;
-+4. no change to that detector's logic, or to the refusal instrumentation, inside
-+   the window. Any such change **resets** qualification for that detector alone.
++4. no change inside the window to **anything that alters that detector's
++   exposure or the recording of its refusals**. That is deliberately wider than
++   "the detector's logic": it includes the three allow paths (`stop_hook_active`,
++   `alreadyRefusedTurn`, and `dispatchOpen` together with `openRecordStats`' own
++   TTL filter), the session-key and turn-ordinal derivation whose documented
++   cross-session collision under-refuses, and `TRANSCRIPT_READ_MAX_BYTES` — every
++   one of which can invalidate a window without touching a detector. Any such
++   change **resets** qualification for that detector alone.
++   **Carve-out, or condition 4 eats its own enabler:** a change that only ADDS a
++   field or a counter, leaving every existing count and every allow path
++   untouched, does not reset. Without this, shipping instrument 1 would reset all
++   four windows — it writes `would_refuse_again` onto the session record, which is
++   the refusal instrumentation — and no window accumulated before it lands would
++   ever be readable. That would contradict this file's own claim that Q2 is
++   measurable today.
 +
 +At 100 observations a proportion near 30 % still carries roughly a ±9-point 95 %
 +interval, so this is a defensible minimum and not precision. Condition 4 replaces
 +the "spans two releases" formulation it was drafted as: release diversity mixes
 +implementations and confounds the distribution, while what the requirement was
 +actually reaching for is a stable window.
++
++### Retention caps the floor, and for two detectors it caps it below 100
++
++```
++THE FLOOR IS NOT REACHABLE FROM SESSION RECORDS ALONE.
++A CUMULATIVE PER-DETECTOR AGGREGATE THAT SURVIVES PRUNING IS PART OF INSTRUMENT 2,
++NOT AN OPTIMISATION OF IT.
++```
++
++The refusal state carries a **90-day TTL** (`pruneAgedRefusalState`, run at
++`session_start`), ageing each session record on its own `refused_at`. So the
++corpus reachable by counting records is never more than 90 days deep, and
++condition 1 asks for 100 eligible refusals **per detector**.
++
++The arithmetic decides it, and it decides against two detectors. On this
++branch's own published reading — promissory 5 refusals over a 5-day window, about
++1/day — detector A needs roughly 100 days to reach 100 and is pruned at 90.
++Dormant D needs unbounded time. Only C, at 22 over the same window, clears 100
++inside the retention window at all.
++
++Left there, this file would have reintroduced exactly the failure it rejects for
++Q2's denominator: a bar that cannot fire, arrived at through retention instead of
++through a metric definition. So the resolution is stated rather than left to be
++discovered:
++
++- **Instrument 2 must persist a cumulative per-detector count that pruning does
++  not touch.** The record may be deleted; the count it contributed may not be.
++  Counting live records is not an implementation of condition 1, it is a
++  different and smaller question.
++- **Until that aggregate exists, condition 1 is satisfiable only by a detector
++  firing ≥ 100 times within 90 days** — which is C, and no other. A and D are not
++  merely far from their floors; they cannot reach them. The file says so here
++  rather than letting a future reader conclude the bars were simply never
++  crossed.
++- The aggregate is a count, never a copy of the pruned record: retention exists
++  for a reason and this does not widen what is kept, only what is remembered
++  about it.
 +
 +## Crossing a bar authorises a study, not a demotion
 +
@@ -1448,8 +1566,19 @@ index 0000000000000000000000000000000000000000..bc66b42e5da2382b11318b5848ebfab2
 +## Detector D is dormant, not successful
 +
 +D has fired **zero** times. That is a third state — unexposed — and neither of
-+the two quantities can tell apart a detector waiting for a rare violation, one
-+subsumed by A or C, and unreachable dead code. So:
++the two quantities can tell apart **four** explanations:
++
++1. a valuable detector waiting for a rare violation;
++2. one subsumed by A or C;
++3. unreachable dead code;
++4. **a detector that was suppressed rather than unexposed** — D runs only when no
++   dispatch is open, and this suite delegates by default, so a zero may be
++   measuring the delegation rate rather than the violation rate.
++
++The fourth is the one a reader would miss and the code supplies, and it changes
++what a zero licenses: without separating it out, a *configuration* fact would be
++published as an *exposure* fact. Any rollup reporting D's zero must report the
++dispatch-suppressed turn count beside it, or the zero is uninterpretable. So:
 +
 +- D's bars stand, and are unreadable until D reaches the same sample floor.
 +- D is **not** retired for never firing under this standard. A retirement
@@ -1485,7 +1614,36 @@ index 0000000000000000000000000000000000000000..bc66b42e5da2382b11318b5848ebfab2
 +   before it. Without this, Q1 stays inert.
 +2. **A per-detector rollup over eligible records**, reporting Q2 with its
 +   affected-session denominator and its sample-floor status per detector, so a
-+   reading is a command's output rather than a hand count.
++   reading is a command's output rather than a hand count. It carries three
++   further obligations from the sections above, none of them optional: the
++   **cumulative count that survives pruning** (without it condition 1 is
++   unreachable for A and D), the **dispatch-suppressed turn count** beside any D
++   zero (without it that zero is uninterpretable), and A/D censoring for
++   dispatch-suppressed turns.
++
++### Who owns them — named, because the honest answer is nobody
++
++```
++NO ROADMAP OWNS THESE TWO INSTRUMENTS. THIS FILE'S OWN REVIEW DATE IS THE CARRIER.
++```
++
++The roadmap that commissioned this standard closed and archived in the same change
++that registered it, which removes the last tracked surface that could have
++scheduled either instrument. Two consequences are stated rather than left to be
++noticed at re-read time:
++
++- **The `keep-beta-until` marker in this file's frontmatter is the schedule.** It
++  forces a re-read by that date under `check_beta_review_markers`, which is a real
++  deterministic carrier — weaker than a roadmap step, and not nothing.
++- **The same applies to the archived roadmap's AC-1** (a refusal rate on a second
++  machine). Its AC-3 was delegated to a named open roadmap and has a real owner;
++  AC-1 has none, and the archive publishes the file as `completed` without that
++  qualification. The correction is recorded at the roadmap itself.
++
++Until an instrument lands, the honest description of this standard is: **bars
++registered, one quantity inert, one reachable for exactly one detector.** That is
++worth more than an unregistered gate, and it is less than a working kill standard.
++Both halves belong in any sentence that cites this file.
 +
 +## Was this pre-registration blind?
 +
@@ -1527,8 +1685,168 @@ index 0000000000000000000000000000000000000000..bc66b42e5da2382b11318b5848ebfab2
 +- `src/scripts/hooks/turn_end_gate_hook.ts` — the gate, its four detectors, and the two re-entrancy layers Q1 dies on.
 +- `src/scripts/_lib/turn_end_refusals.ts` — `DETECTOR_IDS`, `RefusalRecord`, and the counts Q2 is read from.
 +- [`condensation-default-kill-criterion`](condensation-default-kill-criterion.md) — the sibling shape: one feature's kill criterion, pre-registered with its decision table.
+diff --git a/src/config/estate-count-budget.json b/src/config/estate-count-budget.json
+index d6b7fe4cef9b6edfd1c592eeee472dae9bceea0e..715cf60da12309b6e33c116a7eb0380fb2cf1d8f 100644
+--- a/src/config/estate-count-budget.json
++++ b/src/config/estate-count-budget.json
+@@ -16,9 +16,9 @@
+         ]
+     },
+     "baseline": {
+-        "active_roadmaps": 38,
++        "active_roadmaps": 37,
+         "later_roadmaps": 43,
+-        "open_blockers": 72
++        "open_blockers": 71
+     },
+     "baseline_history": [
+         {
+@@ -48,6 +48,13 @@
+             "later_roadmaps": 43,
+             "open_blockers": 72,
+             "why": "RAISED by 3, on top of the 67 -> 69 correction above rather than beside it. All three are road-to-per-turn-hook-economy Phase 2, and each records a finding that would otherwise rot: b-payload-read-parse-dominates (two independent measurements now say D-2's cost is the dispatcher's own read+parse of the payload, once per event, not the per-concern churn the roadmap blamed — so the phase's AC is refuted and the null is published), b-payload-mis-nested-readers (two concerns read tool payload keys off the envelope root; one is a security scanner that works only via a whole-envelope fallback, the other returns 0 on every dispatcher-path call today), and b-stop-async-split-prerequisites (step 5.3 deferred, carrying the five prerequisites its classification surfaced). A blocker that puts a maintainer decision in front of the maintainer is the estate growing in the direction this ratchet exists FOR, which is why the raise is taken rather than the findings being dropped into prose where nothing tracks them. My first version of this entry claimed two of five as unattributed drift; the trunk's correction identified the same two and named their cause, so that half is withdrawn rather than restated."
++        },
++        {
++            "at": "2026-08-19",
++            "active_roadmaps": 37,
++            "later_roadmaps": 43,
++            "open_blockers": 71,
++            "why": "LOWERED by 1 on each gated metric, in the direction this ratchet exists for. road-to-stop-gate-honesty reached zero open steps and zero deferred items and was archived, which is a terminal disposition rather than a park; its `b-detector-demotion-bars` was resolved with the decision recorded at the entry, not moved elsewhere. Both numbers are therefore measurements of a smaller estate, not room bought by relocating work — later_roadmaps is unchanged at 43, which is the check that distinguishes the two. Walked down because the count gate reported both as free tightening and its unit test asserts the committed budget equals the live tree: a baseline left above a lower measurement is headroom a later change can spend without any gate objecting, which is the loose-ratchet failure the 67 -> 69 entry above records from the other direction."
+         }
+     ],
+     "target": {
+diff --git a/src/config/hook-latency-budget.json b/src/config/hook-latency-budget.json
+index 113d938c047f9dacc0abea15bba57b28e2f98e3c..2150dc2c7fe538a953da0000bb783c7ce62078e7 100644
+--- a/src/config/hook-latency-budget.json
++++ b/src/config/hook-latency-budget.json
+@@ -9,9 +9,24 @@
+         "floor": "1 vCPU reference container (documented ceiling, not CI-enforced)"
+     },
+     "budgets_ms": {
+-        "pre_tool_use": { "p95_ci": 150, "p95_1vcpu": 400 },
++        "pre_tool_use": { "p95_ci": 175, "p95_1vcpu": 400 },
+         "any_hook_event": { "p95_ci": 250 }
+     },
++    "pre_tool_use_cap_derivation": {
++        "_comment": "Why p95_ci is 175 and not the 150 registered on 2026-07-27. 150 was NOT bent around a red check — it was measured to sit INSIDE the legitimate distribution, which concern-activation-policy.md § Deriving a threshold names as a false-positive generator by construction: `a threshold inside the legitimate distribution`. The gate was flapping on IDENTICAL code, and the flap was already diagnosed in this tree by road-to-per-turn-hook-economy step 0.5 — it names three main runs at 151, 152 and 117 ms and concludes cross-runner variance after step 0.4 excluded the CLI wrapper (2 ms). What was missing was never the diagnosis; it was moving the cap.",
++        "re_derived_at": "2026-08-19",
++        "rule": "concern-activation-policy.md § Deriving a threshold — the observed legitimate distribution's p99, plus headroom. With n=10 the p99 is the max, so the cap is max + ~11%.",
++        "measured_failure_rate": "5 of 33 tests.yml runs on main (15%), 2026-08-16..18. Several of those runs carry a failure followed by a success for the same step, i.e. the standing workaround was re-running the job by hand.",
++        "observed_p95_ms_gated_cli_leg": {
++            "_comment": "One value per run, pre_tool_use, the `via cli` leg the gate actually compares. Every one is legitimate code — the reds differ from the greens only in which runner drew the job.",
++            "green": [115, 120, 146, 150, 150],
++            "red_on_the_old_cap": [151, 152, 152, 154],
++            "pr_run_comment_only_diff": [157],
++            "spread": "115-157 ms, i.e. 42 ms of run-to-run variance on unchanged code — 28% of the new cap and 37% of the old one"
++        },
++        "why_not_a_retry_or_best_of_n": "A second bench on the same job would not help: the spread is between runner classes (p50 111-148 ms), not transient noise within one machine, so a slow runner measures slow twice. Retry logic is the escalation if 175 flaps, not the first move.",
++        "revisit_if": "A GREEN run measures pre_tool_use p95 above 160 ms. That is no longer runner variance — it is the cost itself growing, and it belongs to the owning roadmap (road-to-per-turn-hook-economy, D-2: the dispatcher's own payload read+parse, once per event) rather than to a third cap raise. Raising this number again without a measured distribution beside it is the config-bending this block exists to make visible."
++    },
+     "per_turn_composite": {
+         "_comment": "D-1 of road-to-per-turn-hook-economy: the slot budgets above gate per EVENT, and a single tool call fires both pre_tool_use and post_tool_use with their full concern chains. A ten-tool-call turn therefore pays twenty dispatcher cold starts plus the prompt and stop slots while every individual slot stays green — the number the user experiences has no row. This row is that number. Registered by step 4.1; the CEILING is step 4.2 and is the maintainer's, so the row ships observe-only and CANNOT fail a build. Definition before bar, deliberately: two people computing two different composites would both call the row green.",
+         "definition": "(pre_tool_use + post_tool_use) * tool_calls + user_prompt_submit + stop",
+diff --git a/src/scripts/_lib/turn_end_refusals.ts b/src/scripts/_lib/turn_end_refusals.ts
+index 6135617adc7412d089d9c25c541033c7806195db..312aa54259e62467b0fa919be2d277817d3575e3 100644
+--- a/src/scripts/_lib/turn_end_refusals.ts
++++ b/src/scripts/_lib/turn_end_refusals.ts
+@@ -45,10 +45,18 @@ import { read_lockfile } from './installed_lock.js';
+  *
+  * The roadmap's § 0 names three (A promissory, B language, C verification).
+  * That was true of the draft and is not true of the tree: detector D
+- * (`completion`) landed under round 7 § Phase 1 and is in the same
+- * unconditional list as the other three. Counting three would silently drop a
+- * detector's refusals, so the set is read off `DetectorId` in the gate rather
+- * than off the prose.
++ * (`completion`) landed under round 7 § Phase 1 and runs in the same detector
++ * list as the other three. Counting three would silently drop a detector's
++ * refusals, so the set is read off `DetectorId` in the gate rather than off the
++ * prose.
++ *
++ * This said "the same UNCONDITIONAL list" until 2026-08-18, which was wrong and
++ * is worth naming rather than quietly rewording: `main()` runs A and D only when
++ * no subagent dispatch is open. It does not change this set — every detector
++ * that CAN fire needs a counter — but it does change what a reader may conclude
++ * from a zero here: A's and D's counts are censored by that third allow path,
++ * and `docs/contracts/turn-end-detector-demotion.md` is where that consequence
++ * is carried.
+  */
+ export const DETECTOR_IDS = [
+     'promissory',
+diff --git a/src/scripts/check_estate_count.ts b/src/scripts/check_estate_count.ts
+index f27ff7b41650f3df8b3841dca9581b8defad512a..d7115d8361f474e2fdd2d6a7bdb867d562e739a1 100644
+--- a/src/scripts/check_estate_count.ts
++++ b/src/scripts/check_estate_count.ts
+@@ -453,18 +453,47 @@ export function evaluate(
+         unpaid = Math.max(0, chargeable.length - offsets.offsets.length);
+     }
+ 
++    // A metric RAISED with a recorded reason in this same change is a deliberate
++    // ceiling, not an un-walked tightening, and must not be reported as one — the
++    // raise is the reviewed act the ratchet exists to permit. Without this filter
++    // the failure below would make a legal reasoned raise unsatisfiable: the raise
++    // puts the baseline above the live count by construction, which is exactly the
++    // shape the tightening rule bites on.
++    const reasonedRaise = new Set(raises.filter((r) => r.reason !== null).map((r) => r.metric));
++    const unwalked = tightened.filter((t) => !reasonedRaise.has(t.metric));
++
+     return {
+         counts,
+         baseline: budget.baseline,
+         growth,
+-        tightened,
++        tightened: unwalked,
+         raises,
+         raiseSkipReason,
+         offsets,
+         offsetSkipReason,
+         unpaid,
++        // `tightened` is a FAILURE, not an advisory, and this is the second thing
++        // it has been. Until 2026-08-19 it printed "free tightening" and left
++        // `withinBudget` true, while `check_estate_count.test.ts` asserted the
++        // committed budget equals the live tree — so the gate and its own test
++        // disagreed about the same state. The consequence was measured rather than
++        // theorised: a drawdown PR passed `task preflight` locally (this gate,
++        // exit 0) and reddened CI (that test, exit 1) every single time, and on
++        // 2026-08-18 it reddened `main` itself in run 32173675197, after which
++        // every subsequent PR failed on drift it had not caused. That is the
++        // permanently-red shape the budget file's own `67 -> 69` history entry
++        // describes from the other direction.
++        //
++        // Failing here is also the STRONGER reading of this gate's purpose: the
++        // file says in as many words that a lower measurement is the new ceiling
++        // and not headroom to spend later. A baseline left above the truth is
++        // exactly that headroom, and a gate that only warns about it is how the
++        // headroom survives to be spent.
+         withinBudget:
+-            growth.length === 0 && unpaid === 0 && raises.every((r) => r.reason !== null),
++            growth.length === 0 &&
++            unpaid === 0 &&
++            unwalked.length === 0 &&
++            raises.every((r) => r.reason !== null),
+     };
+ }
+ 
+@@ -744,10 +773,15 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+     }
+ 
+     for (const t of verdict.tightened) {
+-        process.stdout.write(
+-            `  ↓ free tightening: ${t.metric} measured ${String(t.live)} under a baseline of ${String(t.baseline)}.\n` +
++        process.stderr.write(
++            `❌  un-walked tightening: ${t.metric} measured ${String(t.live)} under a baseline of ${String(t.baseline)}.\n` +
+                 `    Walk the baseline down in ${BUDGET_REL} — a lower measurement is the new ceiling,\n` +
+-                '    not headroom to spend later.\n',
++                '    not headroom to spend later. This is a one-number edit plus one appended\n' +
++                '    `baseline_history` entry, and it belongs in the change that earned the lower\n' +
++                '    measurement. Failing here rather than warning is deliberate: this gate and\n' +
++                "    `check_estate_count.test.ts` used to disagree about this exact state, so a\n" +
++                '    drawdown passed preflight and reddened CI — and once it reached the trunk,\n' +
++                '    every later PR failed on drift it had not caused.\n',
+         );
+     }
+ 
 diff --git a/src/scripts/hooks/turn_end_gate_hook.ts b/src/scripts/hooks/turn_end_gate_hook.ts
-index c8a3609b8cf5a9666c416307d1ee75bd8d36d616..cb9082bb74b55a411f450d5162b2ac455c8166d1 100644
+index c8a3609b8cf5a9666c416307d1ee75bd8d36d616..adb8530ee0ed4b5a41004686265f8cde6616fda9 100644
 --- a/src/scripts/hooks/turn_end_gate_hook.ts
 +++ b/src/scripts/hooks/turn_end_gate_hook.ts
 @@ -9,7 +9,7 @@
@@ -1540,13 +1858,20 @@ index c8a3609b8cf5a9666c416307d1ee75bd8d36d616..cb9082bb74b55a411f450d5162b2ac45
   * is how a second detector becomes a second outage:
   *
   *   A — promissory closing  (FC-5, 20 measured occurrences)
-@@ -20,6 +20,26 @@
+@@ -20,6 +20,33 @@
   *                            prose, which is why `readTranscriptTail` collects
   *                            them: `_messageText` keeps `type === 'text'` blocks
   *                            only, so tool activity is invisible to A and B.)
 + *   D — completion claim    (a claim of done carrying no fresh evidence; landed
-+ *                            under conformance round 7 § Phase 1, in the same
-+ *                            unconditional list as the other three.)
++ *                            under conformance round 7 § Phase 1.)
++ *
++ * TWO of the four are CONDITIONAL, and saying "unconditional" here would be the
++ * same stale-header defect this block corrects below. A and D are the
++ * completion-adjacent pair an open subagent dispatch excuses, so `main()` runs
++ * them only when `dispatchOpen` is false; B and C run on every turn-end. That
++ * narrowing is deliberate (Phase 3 Step 2, narrowed again by R2 round 2) and is
++ * the third allow path, alongside the two re-entrancy layers — see the
++ * per-detector list in `main()`.
 + *
 + * This block said "Three" and listed A/B/C until 2026-08-18, while `DetectorId`
 + * below has carried four since round 7. `DETECTOR_IDS` in
@@ -1567,3 +1892,56 @@ index c8a3609b8cf5a9666c416307d1ee75bd8d36d616..cb9082bb74b55a411f450d5162b2ac45
   *
   * ## Re-entrancy — the shape, stated before registration
   *
+@@ -1009,8 +1036,11 @@ export function main(): number {
+         dispatchOpen ? null : detectPromissory(lastAssistant),
+         detectLanguage(lastAssistant, readLanguagePin(workspaceRoot)),
+         detectUnverifiedEdit(toolCalls),
+-        // Round 7 § Phase 1 — detector D, in the same unconditional list as the
+-        // other three. It shipped with its own settings flag one commit earlier
++        // Round 7 § Phase 1 — detector D. It is NOT unconditional, and this
++        // comment said it was while sitting one line above the `dispatchOpen`
++        // ternary that conditions it: A and D are both excused by an open
++        // dispatch, per the note at the top of this loop. Corrected 2026-08-18.
++        // It shipped with its own settings flag one commit earlier
+         // and that flag is gone: `hooks.turn_end_gate.*` was deleted on
+         // 2026-08-12 because a default-off safety gate is an absent one. Its
+         // gating is where the comment above says gating belongs — inside the
+diff --git a/tests/scripts/check_estate_count.test.ts b/tests/scripts/check_estate_count.test.ts
+index dec354afb6a61daee9f26016d40679fe79284be5..b7bf427c2e88de5eb9d723db0b8657ee99460e0d 100644
+--- a/tests/scripts/check_estate_count.test.ts
++++ b/tests/scripts/check_estate_count.test.ts
+@@ -171,13 +171,32 @@ describe('check_estate_count — the ratchet direction', () => {
+         expect(res.stderr).toContain('open_blockers 2 → 3');
+     });
+ 
+-    it('reports a count BELOW baseline as a free tightening and stays green', () => {
++    // Inverted 2026-08-19. This used to assert exit 0 on an un-walked tightening,
++    // which put the gate in direct contradiction with the `unit surface` case
++    // below ("the committed budget matches the live tree"): the same state was a
++    // pass here and a failure there. Measured consequence, not a tidiness
++    // argument — a drawdown change passed `task preflight` and reddened CI every
++    // time, and on 2026-08-18 it reddened `main` in run 32173675197, after which
++    // every later PR failed on drift it had not caused.
++    it('FAILS on a count below baseline until the baseline is walked down', () => {
+         const repo = initRepo(3);
+         fs.rmSync(path.join(repo, 'agents/roadmaps/road-to-2.md'));
+         commitAll(repo, 'archive one');
+         const res = run(repo, ['--base', 'main']);
++        expect(res.status, res.stdout).toBe(1);
++        expect(res.stderr).toContain('un-walked tightening: active_roadmaps measured 2 under a baseline of 3');
++    });
++
++    it('goes green once the walked baseline matches the tightened measurement', () => {
++        // The other half of the inversion: failing on tightening must be
++        // satisfiable by the one-number edit the message asks for, or it is a
++        // gate with no green path.
++        const repo = initRepo(3);
++        fs.rmSync(path.join(repo, 'agents/roadmaps/road-to-2.md'));
++        write(repo, 'src/config/estate-count-budget.json', budget({ active: 2, later: 0, blockers: 0 }));
++        commitAll(repo, 'archive one and walk the baseline in the same change');
++        const res = run(repo, ['--base', 'main']);
+         expect(res.status, res.stderr).toBe(0);
+-        expect(res.stdout).toContain('free tightening: active_roadmaps measured 2 under a baseline of 3');
+     });
+ 
+     it('exits 2, never 1, when the roadmap root is empty — a dead scope is not a pass', () => {

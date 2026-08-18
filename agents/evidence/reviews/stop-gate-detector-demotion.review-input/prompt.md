@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head ca1a1a957f1acbe5d1d34c6834e4e5d61ac3fc67, review
-  artefacts excluded), scope hash `0ee08c38f1c8679002c9caa5d98c6cc2ad646d364fa03aaff5141c808cd82841`
+- diff: `diff.patch` — the review scope (branch head 1b020ca38ecb860101b7661786513646b9e6a87f, review
+  artefacts excluded), scope hash `bf9a9f1890d1f8658a7dd97ff33a2f7c0fe06057eee2f4c69171fc2561422c7b`
 - roadmap under review: none (`acceptance-criteria.md` is empty)
 
 Changed files:
@@ -35,7 +35,12 @@ Changed files:
 - agents/roadmaps/road-to-stop-gate-honesty.md
 - docs/contracts/concern-activation-policy.md
 - docs/contracts/turn-end-detector-demotion.md
+- src/config/estate-count-budget.json
+- src/config/hook-latency-budget.json
+- src/scripts/_lib/turn_end_refusals.ts
+- src/scripts/check_estate_count.ts
 - src/scripts/hooks/turn_end_gate_hook.ts
+- tests/scripts/check_estate_count.test.ts
 
 ## Output format (contract §2.2)
 
@@ -57,5 +62,5 @@ Fill the findings table in `stop-gate-detector-demotion.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 0ee08c38f1c8679002c9caa5d98c6cc2ad646d364fa03aaff5141c808cd82841, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope bf9a9f1890d1f8658a7dd97ff33a2f7c0fe06057eee2f4c69171fc2561422c7b, reviewed <YYYY-MM-DD>
 ```
