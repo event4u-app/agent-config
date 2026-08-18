@@ -447,7 +447,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
 
 ### Phase 2 — Payload opt-in per concern (D-2, second lever)
 
-- [ ] **2.1** Add a manifest field declaring which concerns need the tool-response
+- [x] **2.1** Add a manifest field declaring which concerns need the tool-response
       body; absent means the envelope arrives **without** the result and input
       bodies, with a name-and-sizes stub in their place. Audit every post concern
       against its source before flipping, and record the per-concern verdict in the
@@ -461,12 +461,126 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       `verify:` a counter in the dispatcher records every stub served, so a concern
       that silently depended on the body shows up as a number rather than as a bug
       report.
-- [ ] **2.2** `tool-result-bytes` explicitly does not need content — its own header
+
+      **Landed 2026-08-18 — but the field declares CLASSES, not a boolean, and
+      the phase AC is refuted. Both changes are forced by evidence and are
+      recorded below rather than in a follow-up.**
+
+      **The audit refuted the step's own shape.** Drafted as one flag ("does this
+      concern need the tool-response body"). Read against source, only THREE of
+      the eleven `post_tool_use` concerns read no tool payload at all
+      (`context-hygiene`, `language-mirror`, and `spawn-guard-shadow` which binds
+      the pre slot) — a single flag would have bought almost nothing. Six read
+      `tool_input` (a path, a command, a range) while reading nothing from the
+      multi-megabyte `tool_response`. So `needs_payload_bodies` takes a list of
+      body classes — `[input]`, `[result]`, `[input, result]` — and the saving
+      lives in the six concerns that keep a small input and lose a large result.
+      The draft's own shortlist was wrong in both directions: `edit-shape` reads
+      only `tool_input.file_path` (the diff comes from git on disk), and
+      `injection-scan` needs the result and is the single most dangerous row.
+
+      | concern (claude `post_tool_use`) | declares | what it reads |
+      |---|---|---|
+      | `chat-history` | `[result]` | writes the result text into the history entry |
+      | `roadmap-progress` | `[input]` | `tool_input.{path,file_path,target_file}` |
+      | `context-hygiene` | — | `tool_name` only |
+      | `verify-before-complete` | `[input, result]` | classifies the command AND the full output |
+      | `minimal-safe-diff` | `[input]` | path set only |
+      | `injection-scan` | `[input, result]` | regex-scans the text — see the risk note |
+      | `pr-url-reminder` | `[input, result]` | extracts the PR URL from the result |
+      | `orchestration-record` | `[input, result]` | named metric fields + `JSON.stringify(result).length` |
+      | `tool-result-bytes` | — | a LENGTH, which the stub carries (step 2.2) |
+      | `edit-shape` | `[input]` | `tool_input.file_path`; the diff comes from git |
+      | `language-mirror` | — | touches no payload field on this slot |
+
+      All twelve `pre_tool_use` concerns declare `[input]` except
+      `spawn-guard-shadow`, which reads `tool_name` only. Full per-concern
+      evidence with `file:line` per read is in the PR.
+
+      **`injection-scan` is the row that would have failed silently and
+      dangerously.** It looks its result keys up at the WRONG nesting level
+      (`envelope[…]`, never unwrapping `payload`), so in production it is its
+      whole-envelope-serialisation fallback that actually carries the tool output.
+      A stub replaces exactly that text, and a security scanner would have become
+      a no-op with no error, no exit-code change and no log line. It declares
+      `[input, result]`; the mis-nesting is a PRE-EXISTING defect this diff does
+      NOT fix — see `b-payload-mis-nested-readers`.
+
+      **A guard can never be stubbed, structurally.** `fail_closed` or
+      `severity: blocking` keeps ALL classes regardless of the manifest
+      (`_concern_body_classes`), because `block-no-verify` reads
+      `tool_input.command` and a stub makes that `undefined`, after which the
+      guard has nothing to match and exits ALLOW. That is the same shape as the
+      fd-0 bypass Phase 1 fixed, and it must be unreachable by an omitted YAML
+      line rather than merely discouraged. `lint_hook_manifest` additionally
+      requires every tool-slot guard to declare `input` explicitly, scoped to the
+      two tool slots so `turn-end-gate` (blocking, `stop`-bound, no body to
+      receive) is not made to declare a need it cannot have.
+
+      **The counter is per concern and in the record.** Each feedback entry
+      carries `payload_bodies` (the kept classes) and `payload_stubs` (keys
+      omitted); the run summary carries `payload_stubs_served`. Two integers and a
+      class list — nothing that can hold the body they stand for.
+
+      **AC-2 is NOT MET, and the null is published rather than the AC claimed.**
+      Same instrument as Phase 1 (`bench_hook_latency --payload-bytes 2000000`,
+      bundle arm, one machine, one session), `post_tool_use` p50. Arm A is the
+      `origin/main` bundle built from a `git archive` of the trunk with the same
+      `node_modules`; arm B is this branch.
+
+      | cell | arm A (trunk) | arm B (this change) | delta |
+      |---|---:|---:|---:|
+      | 2 MB payload, n=15 | 123 ms | 112 ms | −8.9 % |
+      | 2 MB payload, n=25 | 141 ms | 143 ms | **+1.4 %** |
+      | small payload (0 B), n=15 | — | **88 ms** | — |
+
+      The two runs disagree in sign, exactly as Phase 1's did, and the large cell
+      (112–143 ms) is nowhere near the small cell (88 ms). AC-2's wording — "the
+      large-payload cell lands close to the small-payload cell" — is refuted on
+      this machine.
+
+      **What the measurement DID establish: where the cost actually is.** The
+      residual large-vs-small delta is the dispatcher's OWN single read + parse of
+      2 MB from fd 0, which happens once per event before any concern runs and
+      which a per-concern opt-in cannot touch by construction. D-2 attributed the
+      cost to per-concern churn; two independent measurements now say it is not
+      there. That is the finding this phase produced, and it is filed as
+      `b-payload-read-parse-dominates` rather than left as a sentence.
+
+      **Why it landed anyway, and the condition that removes it.** Unlike Phase
+      1's hoist — reverted because it *incurred* the cross-concern isolation risk
+      — this change incurs no correctness risk, is strictly less work on the hot
+      path, and hands six of eleven concerns a ~120-byte stub instead of file
+      contents, command output, or API responses they provably never read. The
+      cost is honest: one more manifest field that can be wrong, in a place where
+      being wrong is silent. It is bounded by the lint (guards), by the runtime
+      refusing to widen on a malformed value, and by the counter.
+      *Revisit-if, falsifiably:* **one recorded occurrence of a concern silently
+      losing a body it needed** replaces the whole declaration set with "all
+      classes for every concern" and deletes the field. Not "if nobody reads the
+      counter" — that is unfalsifiable by construction.
+
+      22 cases green in `tests/scripts/hooks/payload_optin.test.ts`, including the
+      end-to-end run that reads what a concern actually received on stdin, the
+      guard floor in both directions, no-content-leak, absent-vs-empty, and byte
+      fidelity across string / multibyte / object / array / unserialisable bodies.
+- [x] **2.2** `tool-result-bytes` explicitly does not need content — its own header
       says "measured, never read". It needs a length, which the dispatcher can pass
       precomputed.
       `verify:` its tests green against a stub envelope carrying only the length.
+      **Landed 2026-08-18.** The stub's `bytes` is computed the way `_resultBytes`
+      computes it — `Buffer.byteLength` of the string, else of `JSON.stringify`,
+      `null` when unserialisable — and `_resultBytes` reads it back through
+      `stubbedBytes`. Without that branch the census would have kept filling with
+      the ~120-byte length of the STUB: an instrument reporting a wrong number is
+      worse than one reporting none, which is why the branch is first in the loop.
+      A test asserts the concern stays UNDECLARED in the shipped manifest — a
+      later edit adding `[result]` here would make the census look identical while
+      the 2 MB payload flowed again.
 - **AC-2:** the large-payload cell lands close to the small-payload cell on the
-  § 2 matrix.
+  § 2 matrix. **NOT MET — null published in 2.1.** 88 ms small vs 112–143 ms
+  large, and the two arms disagree in sign. The dominant term is the dispatcher's
+  own read+parse, filed as `b-payload-read-parse-dominates`.
 
 ### Phase 3 — Take the two spawns off the hot path (D-3)
 
@@ -819,6 +933,73 @@ PR is already a performance change carrying one security fix.
 - **Resolved when:** one option is recorded at this blocker, and — for (a) — the
   partition ships with a per-class absent-invocation proof and a test that fails
   when a claude tool name is added to no class.
+
+### blocker: b-payload-read-parse-dominates
+- **Status:** open
+- **Owner:** user
+- **Class:** 2 — consent-once
+- **Blocks:** nothing — Phase 2 has landed and published its null. This records
+  the finding that null produced, so the next attempt at D-2 starts from the
+  measurement rather than from the roadmap's original attribution.
+- **What to do:** decide whether to open a step against the dispatcher's OWN
+  read + parse of the payload, which two independent measurements now name as the
+  dominant term of the large-payload cell. Phase 1 removed ten of eleven
+  stringifies and moved nothing; Phase 2 removed the body from six of eleven
+  concerns and moved nothing (88 ms small vs 112–143 ms large, arms disagreeing in
+  sign). What remains between the two cells happens ONCE per event, before any
+  concern runs: `readFd0ToEnd` reads the whole payload from the pipe and
+  `_build_envelope` `JSON.parse`s it. Options: (a) open a phase to measure that
+  step in isolation — a dispatcher that reads and immediately exits, against the
+  same fixture, which would say how much of the 24–55 ms is unavoidable transport;
+  (b) accept the cell as host-imposed and close D-2 as mis-attributed, keeping
+  the two landed levers as the strictly-less-work outcome; (c) treat it as a
+  streaming/incremental-parse question, which is a much larger change than
+  anything this roadmap scoped.
+- **Recommendation:** **(a) first, and it is cheap.** The read-and-exit
+  measurement is one small script plus one bench cell and it settles whether
+  option (b) is a conclusion or a shrug. Without it "the host makes us pay this"
+  is an assumption of exactly the kind Phase 1 and Phase 2 have each already
+  falsified once in this file.
+- **Resolved when:** one option is recorded at this blocker and — for (a) — the
+  read-and-exit cell exists on the § 2 matrix, so the unavoidable transport share
+  of the large-payload cell is a number rather than an assumption.
+- **If you do nothing:** the large-payload cell stays 25–60 % above the small one
+  with no owner, and D-2's remaining cost keeps being attributed to per-concern
+  churn in any future reading of § 0 — which is the specific error two phases of
+  measurement have now refuted.
+
+### blocker: b-payload-mis-nested-readers
+- **Status:** open
+- **Owner:** user
+- **Class:** 2 — consent-once
+- **Blocks:** nothing in this roadmap. Phase 2's declarations are correct for the
+  code as it stands, including for the two concerns below.
+- **What to do:** decide whether to fix two concerns that read tool payload keys
+  at the WRONG nesting level — off the envelope root instead of `envelope.payload`
+  — found by Phase 2's audit and deliberately not touched by it.
+  · `injection_scan_hook.ts` reads its result keys off the root, so what it
+  actually scans in production is its whole-envelope-serialisation fallback. It
+  works by accident, and it declares `[input, result]` so Phase 2 keeps it
+  working. Fixing the unwrap changes what a security scanner sees, which is a
+  behaviour change on a security surface and not a drive-by edit.
+  · `ship_diff_volume_hook.ts` reads `tool_input` / `command` off the root and
+  therefore finds NOTHING under the real dispatcher envelope — it returns 0 on
+  every dispatcher-path invocation today. It declares `[input]`, which preserves
+  the status quo and bakes in nothing new.
+  Options: (a) fix both unwraps in one PR with a negative test per concern that
+  fails against the current code; (b) fix `ship-diff-volume` only, since it is
+  provably dead rather than accidentally-working; (c) leave both and record that
+  the scanner's coverage is fallback-dependent.
+- **Recommendation:** **(a), as its own PR.** Both are one-line unwraps with a
+  cheap negative test, and the pair is exactly the "one instance is a sample"
+  case: the audit found two, and nothing has searched the remaining concerns for
+  the same construct with a predicate other than the one that found these.
+- **Resolved when:** one option is recorded at this blocker and — for (a) or (b) —
+  each fixed concern carries a test that fails against the pre-fix unwrap, plus a
+  reported count of the same construct across the remaining concerns.
+- **If you do nothing:** `ship-diff-volume` stays a concern that runs, costs a
+  dispatch, and can never fire; and `injection-scan`'s coverage depends on a
+  fallback that any future envelope change could remove without a test noticing.
 
 ## Risk Register
 
