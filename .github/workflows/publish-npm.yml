@@ -28,7 +28,25 @@ on:
         type: string
 
 concurrency:
-  group: publish-npm-${{ github.ref }}
+  # Keyed on the VERSION, never on `github.ref` — the two triggers for one
+  # release do not share a ref, so keying on the ref put them in two different
+  # groups and they raced.
+  #
+  # Measured on 14.0.0 (2026-08-18): release.ts dispatches this workflow with
+  # `--ref main` (so `github.ref` is `refs/heads/main`), while the PAT-pushed
+  # tag fires it natively with `refs/tags/14.0.0`. Both ran at 09:00, both
+  # passed the "Skip if already published" probe below because neither had
+  # published yet, both built, and the loser died on
+  # `E403 cannot publish over the previously published versions: 14.0.0`.
+  # The package shipped exactly once; the artefact was a red run on a green
+  # release, which is the kind of noise that trains people to ignore red.
+  #
+  # `github.ref_name` on a tag push is the bare version, and `inputs.tag` is
+  # the same string, so both triggers now land in one group. With
+  # cancel-in-progress false the second run waits and then finds the version
+  # on the registry — the idempotency probe becomes reachable instead of being
+  # raced past.
+  group: publish-npm-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 
