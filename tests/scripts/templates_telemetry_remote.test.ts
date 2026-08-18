@@ -170,9 +170,9 @@ describe('build_class_a_record', () => {
     };
 
     it('carries only structural fields, and no raw session id or login', () => {
-        const rec = build_class_a_record({ ...base, package_version: '14.1.0', rule_tier: 'balanced' });
+        const rec = build_class_a_record({ ...base, package_version: '14.1.0', discipline_profile: 'essential' });
         expect(Object.keys(rec).sort()).toEqual([
-            'host', 'org_id', 'package_version', 'record_class', 'rule_tier',
+            'discipline_profile', 'host', 'org_id', 'package_version', 'record_class',
             'schema_version', 'session_hash', 'skill', 'ts_bucket', 'user_hash',
         ]);
         const serialised = JSON.stringify(rec);
@@ -188,11 +188,28 @@ describe('build_class_a_record', () => {
     it('records an unknown package version and rule tier as null, never a guess', () => {
         const rec = build_class_a_record(base);
         expect(rec.package_version).toBeNull();
-        expect(rec.rule_tier).toBeNull();
+        expect(rec.discipline_profile).toBeNull();
     });
 
-    it('rejects a rule tier outside the settings enum', () => {
-        expect(() => build_class_a_record({ ...base, rule_tier: 'turbo' })).toThrow(ClassARecordError);
+    it('rejects a discipline profile outside the settings enum', () => {
+        expect(() => build_class_a_record({ ...base, discipline_profile: 'turbo' })).toThrow(ClassARecordError);
+        // The legacy tier vocabulary is NOT the profile vocabulary; recording
+        // one under the other is the high finding this rename repaired.
+        expect(() => build_class_a_record({ ...base, discipline_profile: 'balanced' })).toThrow(ClassARecordError);
+    });
+
+    it('rejects a record class outside the closed vocabulary', () => {
+        expect(() => build_class_a_record({ ...base, record_class: 'failure' })).toThrow(ClassARecordError);
+    });
+
+    it('records an absent host as null rather than a sentinel string', () => {
+        expect(build_class_a_record({ ...base, host: null }).host).toBeNull();
+    });
+
+    it('records an absent session id as null, never the empty-string digest', () => {
+        const rec = build_class_a_record({ ...base, session_id: '' });
+        expect(rec.session_hash).toBeNull();
+        expect(rec.user_hash).not.toBeNull();
     });
 });
 
@@ -218,8 +235,11 @@ describe('append_class_a_record', () => {
         expect(lines).toHaveLength(2);
         expect(JSON.parse(lines[0] as string)).toEqual(rec);
         // Sorted keys, compact separators — same convention as the
-        // engagement records already in this tree.
-        expect(lines[0]).toMatch(/^\{"host":/u);
+        // engagement records already in this tree. Asserted as the property
+        // rather than by pinning whichever key happens to sort first, which
+        // is a detail a field rename legitimately changes.
+        const keys = (lines[0] as string).match(/"([a-z_]+)":/gu) as string[];
+        expect(keys).toEqual([...keys].sort());
         expect(lines[0]).not.toContain(', ');
     });
 });

@@ -533,12 +533,23 @@ telemetry:
     org_id: ""
     # Org-pack secret. Salts the user and session hashes so a digest of a
     # login name is not reversible by dictionary. Never written into a
-    # record, never logged. Belongs in the machine-local override layer,
-    # never in a committed `.agent-settings.yml`.
+    # record, never logged.
+    #
+    # It must live in the SAME `.agent-settings.yml` the reader resolves —
+    # `read_remote_settings` opens one file and consults no override layer,
+    # so a salt placed in `.agent-settings.local.yml` leaves the install
+    # silently inactive. Keep that file out of version control, or supply it
+    # from the org pack at install time.
     salt: ""
     # `session-end` = flush at session end (Phase 2). `never` = keep records
     # local indefinitely, which is a legitimate way to run the local half
     # while the sink question is still open.
+    #
+    # The log is append-only with NO cap and NO pruning today, so `never` is
+    # an unbounded steady state — one line per skill invocation, forever.
+    # A retention policy is owed before this namespace is enabled anywhere
+    # broadly (see the roadmap Phase 2 note); until then, treat the file as
+    # something you rotate yourself.
     flush: session-end
     output:
       # Append-only JSONL log, relative to the project root. Gitignored.
@@ -641,7 +652,7 @@ the canonical narrative lives in
 | `telemetry.remote.enabled` | `true`, `false` | `false` | Opt-in for Class-A org usage records. **Not the switch on its own** — `endpoint`, `org_id`, and `salt` must all carry a value too, and none has a default, so a clone of the public repository cannot reach the write path. Not in the shipped template; a missing section means disabled. |
 | `telemetry.remote.endpoint` | URL | *(none)* | Where Phase 2 will flush records to. Recorded now; no outbound call exists in Phase 1. Empty ⇒ inactive. |
 | `telemetry.remote.org_id` | string | *(none)* | The org whose pack enabled this install; written into every record. Empty ⇒ inactive. |
-| `telemetry.remote.salt` | string | *(none)* | Org-pack secret salting the user and session hashes — without it a digest of a login name is dictionary-reversible. Never written into a record, never logged. Belongs in the machine-local override layer, never in a committed `.agent-settings.yml`. Empty ⇒ inactive. |
+| `telemetry.remote.salt` | string | *(none)* | Org-pack secret salting the user and session hashes — without it a digest of a login name is dictionary-reversible. Never written into a record, never logged. Must sit in the same `.agent-settings.yml` the reader resolves: it consults no override layer, so a salt in `.agent-settings.local.yml` leaves the install silently inactive. Empty ⇒ inactive. |
 | `telemetry.remote.flush` | `session-end`, `never` | `session-end` | When Phase 2 flushes. `never` keeps records local indefinitely — a legitimate way to run the local half while the sink question is open. |
 | `telemetry.remote.output.path` | path | `.agent-telemetry.jsonl` | Append-only JSONL log path, relative to the project root. Gitignored. |
 | `linked_projects` | list of `{path, include}` | `[]` | IDE-attached sibling repos in scope for proactive cross-repo awareness. **Belongs in `.agent-settings.local.yml` (in agents/settings/)** (per-machine, gitignored). See [cross-repo guide](../../docs/guides/cross-repo-linked-projects.md) + ADR-032. |

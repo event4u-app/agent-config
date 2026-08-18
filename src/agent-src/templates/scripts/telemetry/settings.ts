@@ -225,10 +225,11 @@ export const DEFAULT_REMOTE_FLUSH = 'session-end';
 export const ALLOWED_REMOTE_FLUSH = ['session-end', 'never'] as const;
 
 /**
- * The four fields that must ALL carry a value before a single record is
- * written. `endpoint` and `org_id` name where the data goes and on whose
- * authority; `salt` is the org-pack secret without which the user hash
- * would be a plain hash of a login name — i.e. reversible by dictionary.
+ * The three fields that must ALL carry a value — on top of `enabled` —
+ * before a single record is written. `endpoint` and `org_id` name where the
+ * data goes and on whose authority; `salt` is the org-pack secret without
+ * which the user hash would be a plain hash of a login name — i.e.
+ * reversible by dictionary.
  *
  * None of the four has a usable default, and that is the point: an
  * external clone of this repository carries the key NAMES and no values,

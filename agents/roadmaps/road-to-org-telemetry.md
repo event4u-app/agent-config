@@ -129,6 +129,7 @@ Recorded here so nobody re-derives it from the findings files.
 ## Phase 2 — Transport
 
 - [ ] Flush unsent records at session end as a batched outbound call per the second spike's result, with a timeout at or below one second, silent failure, and local retention for the next flush. <!-- verify: ./scripts-run src/scripts/test_telemetry_transport -->
+- [ ] Declare a retention policy for the local record log and enforce it. Phase 1 ships an append-only file with no cap and no pruning, and `flush: never` endorses that as an indefinite steady state — one line per skill invocation, forever. The R2 review of Phase 1 raised it; it is a `scale-discipline` R-A7 growth-budget obligation and it is owed before the namespace is enabled anywhere broadly. <!-- verify: grep -q retention src/agent-src/templates/scripts/telemetry/remote.ts -->
 - [ ] Stand up the sink as a minimal append-only ingest with no read API in this phase. <!-- blocked-by: sink-choice -->
 
 **Exit criteria:** records written on a second machine appear in the sink, and an endpoint outage is invisible to the session.

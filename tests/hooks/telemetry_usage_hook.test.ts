@@ -13,7 +13,8 @@ import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
-    extractRuleTier,
+    extractDisciplineProfile,
+    _resolveRoot,
     extractPackageVersion,
     extractSkillName,
     run,
@@ -54,7 +55,7 @@ telemetry:
     endpoint: "https://sink.example.invalid/ingest"
     org_id: "acme"
     salt: "org-pack-secret"
-rule_loading_tier: balanced
+discipline_profile: essential
 `;
 
 afterEach(() => {
@@ -108,7 +109,7 @@ describe('an active install records the invocation', () => {
         expect(rec['skill']).toBe('brand-identity');
         expect(rec['host']).toBe('claude');
         expect(rec['org_id']).toBe('acme');
-        expect(rec['rule_tier']).toBe('balanced');
+        expect(rec['discipline_profile']).toBe('essential');
         expect(rec['record_class']).toBe('usage');
     });
 
@@ -140,20 +141,52 @@ describe('an active install records the invocation', () => {
     });
 });
 
-describe('extractRuleTier', () => {
-    it('reads the enum value', () => {
-        expect(extractRuleTier('rule_loading_tier: full\n')).toBe('full');
-        expect(extractRuleTier('rule_loading_tier: "minimal"\n')).toBe('minimal');
+describe('extractDisciplineProfile', () => {
+    it('reads the explicit profile', () => {
+        expect(extractDisciplineProfile('discipline_profile: full\n')).toBe('full');
+        expect(extractDisciplineProfile('discipline_profile: "off"\n')).toBe('off');
     });
 
-    // The shipped template carries a placeholder until `install` fills it
-    // in; that is "not yet resolved", not a tier.
-    it('treats the unfilled template placeholder as unresolved', () => {
-        expect(extractRuleTier('rule_loading_tier: __RULE_LOADING_TIER__\n')).toBeNull();
+    // The settings template is comment-dense and its own opt-in example
+    // carries a trailing comment on this very key.
+    it('accepts a trailing inline comment', () => {
+        expect(extractDisciplineProfile('discipline_profile: essential      # ~3.3x kernel tokens\n'))
+            .toBe('essential');
     });
 
-    it('is null when the key is absent', () => {
-        expect(extractRuleTier('quality:\n  local_auto_run: false\n')).toBeNull();
+    // The high R2 finding: `rule_loading_tier` is the LEGACY knob and
+    // `discipline_profile` supersedes it, so the explicit key must win.
+    it('prefers the explicit profile over the legacy tier', () => {
+        expect(extractDisciplineProfile('discipline_profile: off\nrule_loading_tier: full\n')).toBe('off');
+    });
+
+    it('maps the legacy tier only when no profile is declared', () => {
+        expect(extractDisciplineProfile('rule_loading_tier: balanced\n')).toBe('essential');
+        expect(extractDisciplineProfile('rule_loading_tier: minimal\n')).toBe('off');
+        expect(extractDisciplineProfile('rule_loading_tier: full\n')).toBe('full');
+    });
+
+    // The shipped template carries placeholders until `install` fills them
+    // in; that is "not yet resolved", not a value.
+    it('treats the unfilled template placeholders as unresolved', () => {
+        expect(extractDisciplineProfile('discipline_profile: __DISCIPLINE_PROFILE__\n')).toBeNull();
+        expect(extractDisciplineProfile('rule_loading_tier: __RULE_LOADING_TIER__\n')).toBeNull();
+    });
+
+    // Never the resolver's both-absent default: a record must not claim a
+    // declaration the install never made.
+    it('is null when neither key is declared', () => {
+        expect(extractDisciplineProfile('quality:\n  local_auto_run: false\n')).toBeNull();
+    });
+});
+
+describe('_resolveRoot', () => {
+    it('prefers cwd, then the workspace keys, then the process cwd', () => {
+        expect(_resolveRoot({ cwd: '/a', workspace_root: '/b' })).toBe('/a');
+        expect(_resolveRoot({ workspace_root: '/b' })).toBe('/b');
+        expect(_resolveRoot({ project_root: '/c' })).toBe('/c');
+        expect(_resolveRoot({})).toBe(process.cwd());
+        expect(_resolveRoot('not an object')).toBe(process.cwd());
     });
 });
 

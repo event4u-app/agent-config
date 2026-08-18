@@ -49,6 +49,7 @@ import {
 import {
     append_class_a_record,
     build_class_a_record,
+    profile_from_legacy_tier,
 } from '../../agent-src/templates/scripts/telemetry/remote.js';
 import { is_replay_mode } from './state_io.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -113,27 +114,55 @@ export function extractSessionId(envelope: JsonObject, payload: JsonObject): str
 }
 
 /**
- * Active `rule_loading_tier`, read from the same settings file.
+ * Read one top-level scalar out of the settings text.
  *
  * Deliberately a raw line scan rather than a YAML parse: this runs on the
- * post-tool hot path, the value is a top-level scalar from a closed enum,
- * and `build_class_a_record` rejects anything outside that enum — so a
- * mis-parse produces a dropped field, never a wrong one. Unresolvable
- * reads `null`, which the record carries honestly rather than defaulting
- * to `balanced` and inventing a fact about the install.
+ * post-tool hot path, both values wanted here are top-level scalars from
+ * closed enums, and `build_class_a_record` rejects anything outside those
+ * enums — so a mis-parse produces a dropped field, never a wrong one.
+ *
+ * Accepts a trailing inline comment, which this file's own settings
+ * template uses heavily (`discipline_profile: essential  # ~3.3x kernel
+ * tokens`); rejecting it would have silently reported "not declared" for a
+ * perfectly ordinary line.
  */
-export function extractRuleTier(settingsText: string): string | null {
+function _scalar(settingsText: string, key: string): string | null {
+    const re = new RegExp(`^${key}:[ \\t]*([^#\\r\\n]+?)[ \\t]*(?:#.*)?$`, 'u');
     for (const line of settingsText.split('\n')) {
-        const m = /^rule_loading_tier:\s*(\S+)\s*$/u.exec(line);
+        const m = re.exec(line);
         if (m && m[1]) {
-            const value = m[1].replace(/^["']|["']$/gu, '');
-            // The shipped template ships a placeholder until `install` fills
-            // it in; that is "not yet resolved", not a tier.
+            const value = m[1].trim().replace(/^["']|["']$/gu, '');
+            if (!value) return null;
+            // The shipped template carries a placeholder until `install`
+            // fills it in; that is "not yet resolved", not a value.
             if (value.startsWith('__')) return null;
             return value;
         }
     }
     return null;
+}
+
+/**
+ * The DECLARED discipline profile — the knob that actually decides which
+ * rule surfaces load.
+ *
+ * The first version of this function read `rule_loading_tier`, and that was
+ * wrong: the settings template calls that key a "legacy knob — superseded by
+ * discipline_profile above", and `resolve_discipline_profile` confirms the
+ * precedence — explicit `discipline_profile` wins outright and the legacy
+ * key is consulted only in its absence. So a default install would have had
+ * a knob recorded that does not decide the thing the field implies.
+ *
+ * The fallback mirrors the resolver's own legacy mapping, which needs no
+ * model id and is therefore safe to reproduce here. What is NOT reproduced
+ * is the resolver's both-absent default (`essential`): recording it would
+ * claim a declaration the install never made. Absent stays `null`, and a
+ * reader applies the documented default themselves.
+ */
+export function extractDisciplineProfile(settingsText: string): string | null {
+    const explicit = _scalar(settingsText, 'discipline_profile');
+    if (explicit !== null) return explicit;
+    return profile_from_legacy_tier(_scalar(settingsText, 'rule_loading_tier'));
 }
 
 /**
@@ -194,14 +223,14 @@ function processEnvelope(envelope: JsonValue, consumer_root: string): number {
 
         const record = build_class_a_record({
             skill,
-            host: extractHost(envelope) ?? 'unknown',
+            host: extractHost(envelope),
             org_id: settings.org_id,
             salt: settings.salt,
             hostname: os.hostname(),
             username: os.userInfo().username,
             session_id: extractSessionId(envelope, payload),
             package_version: extractPackageVersion(process.env),
-            rule_tier: extractRuleTier(text),
+            discipline_profile: extractDisciplineProfile(text),
         });
 
         const logPath = path.isAbsolute(settings.log_path)
@@ -228,7 +257,7 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
     return processEnvelope(envelope, options.consumer_root);
 }
 
-function _resolveRoot(envelope: JsonValue): string {
+export function _resolveRoot(envelope: JsonValue): string {
     if (isObject(envelope)) {
         const cwd = envelope['cwd'];
         if (typeof cwd === 'string' && cwd) return cwd;
