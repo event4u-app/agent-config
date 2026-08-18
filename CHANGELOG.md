@@ -371,11 +371,11 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 ### Release highlights
 
 <!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
-- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 0518426, 2fcb2af, f001382, 1b224f1, ca25bc3.
+- **Behaviour changes:** the council quorum plumbing moved behind an extracted seam and the size ratchet dropped with it (`f001382`, breaking); a HIGH-tier command-suggestion match now routes directly instead of always emitting the options block (`2fcb2af`); the two path-dominant UI rules regained path scoping (`0518426`); review independence and the evaluator-output contract became declared, gated properties instead of conventions (`1b224f1`, `ca25bc3`).
 - **Default changes + migration:** _none_
-- **Security and correctness:** _auto-derived, rewrite before merge:_ security-scoped commits or fixes to executable surface in 3a517f3, 2c611bb, 6bcc273, 6efb8a7, 3b85af7, 718f543 +12 more.
-- **Honest nulls:** _auto-derived, rewrite before merge:_ commits recording a null, waived or falsified result in f29953f, fdc44de, ab5d2f7, a8c0edc, fe15fc5, 21c9865 +1 more.
-- **Known limitations:** _none_
+- **Security and correctness:** the release pipeline no longer dies with the PR body in a stack trace on a GitHub 5xx (`2c611bb`), and it bounds a changelog section at the era banner rather than only at the next version (`6bcc273`) — the second had already pushed 12 archived-era banners into this release's own first PR body; the bench spend cap reaches the task runner on paid targets (`6efb8a7`); 19 R2 review findings closed, one of them structural (`3b85af7`).
+- **Honest nulls:** two Phase-0 measurements were published against their own pre-registrations and falsified them (`f29953f`, `ab5d2f7`); the context-fidelity and user-out-of-the-loop baselines are pre-registered before anything is measured (`a8c0edc`, `fe15fc5`).
+- **Known limitations:** the CI-native release path merges and publishes unattended once checks go green — the "Approve workflows to run" checkpoint that `release.yml` documents for a repo without `RELEASE_PR_TOKEN` did not materialise here, so a dispatched release has to be cancelled by hand if a human gate before merge is wanted.
 
 ### BREAKING CHANGES
 
