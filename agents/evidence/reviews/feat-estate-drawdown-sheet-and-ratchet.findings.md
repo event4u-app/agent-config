@@ -1,14 +1,14 @@
 # Findings: feat-estate-drawdown-sheet-and-ratchet
-<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: 74bd76a3ec87093ed1379354f7c9c81ea6e2f44b1f5a0e19a2adf52bedfd450b | diff: 9c7e0cfc66e8c61639973b8ccf76d3c093d377e0 | reviewer: r2-fresh-subagent-feat-estate-drawdown-sheet-and-ratchet | prompt_hash: e109c88c3c1aac54cfb4b50d807ca34ab3c01de57d2d74cb67b2283d26e6231f -->
+<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: 693e5ebcf59815166ff0865f297096a9933cdcf24931594c4d741300b6cee84e | diff: 13f7aba784083dd0451d205a480874e97625f54c | reviewer: r2-fresh-subagent-feat-estate-drawdown-sheet-and-ratchet | prompt_hash: e109c88c3c1aac54cfb4b50d807ca34ab3c01de57d2d74cb67b2283d26e6231f -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-18 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 9c7e0cfc66e8c61639973b8ccf76d3c093d377e0
-  scope_hash: 74bd76a3ec87093ed1379354f7c9c81ea6e2f44b1f5a0e19a2adf52bedfd450b
+  diff_sha: 13f7aba784083dd0451d205a480874e97625f54c
+  scope_hash: 693e5ebcf59815166ff0865f297096a9933cdcf24931594c4d741300b6cee84e
   roadmap: agents/roadmaps/road-to-estate-drawdown.md
   roadmap_hash: 0f63f72e34b0abc0849059a2d49b761f171d65d95161598ecf98cdd3ebeeff4e
-  ac_hash: 1bf7e423b5e78fac305cf931b52c014e940bb4e3d946452dca60db10c3615ae0
+  ac_hash: 0308d5582ca2f060845f17b92dd930b0fe6865baf31272e8b3fad4c2880611bd
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-18T15:54:42Z
@@ -26,5 +26,5 @@ dispatched: 2026-08-18T15:54:42Z
 | 8 | low | src/agent-src/scripts/roadmap_gates.ts:476 | The sheet identifies a legacy blocked-until row by the parser's placeholder id — `## 8 · legacy` and a table cell reading `legacy` in the committed artefact — where the sibling `renderEntry` at :187 deliberately substitutes "blocked-until note" for exactly that id. Two legacy notes would render two rows both labelled `legacy`, separable only by the roadmap column. | fixed | 9c7e0cfc6 |
 | 9 | low | src/config/gate-coverage.yml:569 | `min_scanned: 50` over active-plus-later reds when the campaign succeeds: with `active_roadmaps` at the budget's registered `target` of 15, the floor trips as soon as `later/` falls below 35 — a 9-file drain from today's 44. The entry's own note argues the floor sits below 82 so it will not "red on the very change this gate exists to encourage", which is the failure this arithmetic reintroduces one drawdown later. | fixed | 9c7e0cfc6 |
 | 10 | low | .github/workflows/consistency.yml:285 | Exit 2 is documented as could-not-run (check_estate_count.ts:58) and `DeadScopeError` maps to it, but neither new call site tolerates 2: this step and taskfiles/ci-fast.yml:1029 fail the build on it, while sibling steps in both files explicitly downgrade 2 to a degraded advisory citing the exit-code contract. docs/contracts/plan-review-gates.md:828 states a dead scan scope is exit 1 "never an internal error", on the reasoning that callers warn-and-allow 2. Neither direction is documented here, so aligning these call sites with their neighbours later would silently disarm the dead-scope assertion. | fixed | 9c7e0cfc6 |
-| 11 | low | src/scripts/dispatch_r2_reviewer.ts:506 | The doc at :489 says a bullet ends "at a blank line followed by something that is not an indented continuation", but the code closes the bullet at ANY blank line, so a wrapped AC bullet whose continuation follows a blank line silently loses it; indented sub-bullets under an AC are dropped by the same branch. Behaviour and its stated contract disagree in a function whose purpose is to stop the reviewer receiving a partial AC list. | fixed | 9c7e0cfc6 |
+| 11 | low | src/scripts/dispatch_r2_reviewer.ts:506 | The doc at :489 says a bullet ends "at a blank line followed by something that is not an indented continuation", but the code closes the bullet at ANY blank line, so a wrapped AC bullet whose continuation follows a blank line silently loses it; indented sub-bullets under an AC are dropped by the same branch. Behaviour and its stated contract disagree in a function whose purpose is to stop the reviewer receiving a partial AC list. | fixed | 13f7aba78 — superseded on the trunk: origin/main shipped an equivalent inline-AC fix independently, and the merge resolution took its version, so this file left this diff. My repair is no longer the code that ships. |
 <!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->
