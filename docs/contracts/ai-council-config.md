@@ -533,10 +533,11 @@ quorum / absent-members fields above:
 ### Persistent events log (step-8 D3)
 
 The orchestrator appends one JSON line to `agents/runtime/council/events.log`
-on every necessity-gate decision (`proceed` / `skip_necessity`) and on
-every `cli_call_budget` block (`block_quota`). The log is gitignored
-by default — it is a local-only audit trail, never part of the
-repository contract.
+on every necessity-gate decision (`proceed` / `skip_necessity`), on
+every `cli_call_budget` block (`block_quota`), on each attendance reading
+(`quorum_result`), and on each mid-flight transport escalation
+(`transport_fallback`). The log is gitignored by default — it is a
+local-only audit trail, never part of the repository contract.
 
 Schema v1:
 
@@ -553,7 +554,16 @@ Schema v1:
 }
 ```
 
-- `action` ∈ `proceed | skip_necessity | block_quota`.
+- `action` ∈ `proceed | skip_necessity | block_quota | quorum_result | transport_fallback`.
+  (`quorum_result` was shipped and undocumented here until 2026-08-19;
+  it is listed now rather than left for the next reader to find in the
+  validator's error message.)
+- A `transport_fallback` line carries `provider`, `failure_class`,
+  `outcome` ∈ `retried | no_twin | cost_budget`, and `api_on_quota`. One
+  line per ESTABLISHING escalation, not per substituted call — the
+  substituted rounds are visible in the rendered artefact instead. Without
+  it, attendance analysis cannot separate a seat SAVED by the fallback from
+  a seat that was natively api, and only one of those spends unplanned USD.
 - `original_ask_hash` is `sha256(original_ask)[:12]`. The raw prompt
   is **never** written — privacy floor per
   [`agents/decisions/low-impact-decisions.md`](../../agents/decisions/low-impact-decisions.md).

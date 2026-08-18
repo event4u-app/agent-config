@@ -234,19 +234,27 @@ built rather than left implied.
 
 ### Phase 3 — Observability
 
-- [ ] **3.0** Emit a fallback event to `events_log` (member, failure class,
-      quota_source when applicable, gate outcome), so attendance analysis
-      can separate "seat saved by fallback" from "seat natively api".
-      `verify:` `npx vitest run tests/scripts/ai_council/orchestrator.test.ts`
-- [ ] **3.1** Session writer / `render()`: surface
-      `fallback_from`/`fallback_reason` in the member header line, so a
-      pass artefact shows WHICH transport answered without opening
-      metadata.
-      `verify:` `npx vitest run tests/scripts/council_cli.test.ts`
-- [ ] **3.2** Confirm `_postRunQuorum` counts a successful fallback seat as
-      present (it reads usability off `responses`, so it should — pin it
-      with a test rather than trusting the reading).
-      `verify:` `npx vitest run tests/scripts/ai_council/quorum_wiring.test.ts`
+- [x] **3.0** New `transport_fallback` action in `events_log`, carrying
+      provider, failure class, `outcome` ∈ `retried | no_twin |
+      cost_budget`, and the `api_on_quota` posture. One line per
+      ESTABLISHING escalation, not per substituted call. The sink is wired
+      in `council_cli.ts` via an `on_event` callback rather than by
+      importing `events_log` into the orchestrator — that module's header
+      declares it a pure library with no stdout and no disk, and this
+      would have been the first thing to break it.
+      `verify:` `npx vitest run tests/scripts/ai_council/orchestrator.test.ts` — 76 green.
+- [x] **3.1** `render()`'s member meta line names the transport that
+      actually answered, and distinguishes the escalating round ("fell
+      back from cli") from a reuse ("cli lost earlier this pass") so a
+      reader does not count two escalations from two rendered lines.
+      `verify:` `npx vitest run tests/scripts/ai_council/orchestrator.test.ts` — 76 green.
+- [x] **3.2** Pinned, in both directions: a seat answered by the twin
+      counts PRESENT, and a seat whose retry was refused by the budget
+      (`fallback_skipped: cost_budget`) still counts absent. The reading
+      was already correct; the test exists because nothing else in the
+      tree would fail if attendance started keying on the declared
+      member's transport instead of on the response.
+      `verify:` `npx vitest run tests/scripts/ai_council/council_cli.test.ts` — 51 green.
 
 ### Phase 4 — Falsifiability gate (blocker for default-on of anything)
 

@@ -921,6 +921,53 @@ describe('_postRunQuorum', () => {
         expect(absent).toEqual([{ member: 'openai', reason: 'quota', detail: 'cli_quota_exhausted' }]);
     });
 
+    // A seat saved by the mid-flight fallback must count as PRESENT. The
+    // reading should already give that — the twin's response replaces the seat
+    // index-aligned, so this function sees a non-empty, error-free answer and
+    // never learns which transport produced it. Pinned rather than trusted:
+    // the whole point of the fallback is not losing the seat, and nothing else
+    // in the tree would fail if a future edit started keying attendance on the
+    // declared member's transport instead of on the response.
+    it('a seat answered by the api twin counts as present, not absent', () => {
+        const twinAnswer = new CouncilResponse({
+            provider: 'anthropic',
+            model: 'claude-x',
+            text: 'answered over the api rung',
+            metadata: {
+                fallback_from: 'cli',
+                fallback_reason: 'auth_rejected',
+                fallback_original_error: 'auth_expired',
+                transport: 'api',
+            },
+        });
+        const members = [
+            new StubMember('anthropic', 'claude-x', twinAnswer),
+            new StubMember('openai', 'gpt-x', new CouncilResponse({ provider: 'openai', model: 'gpt-x', text: 'b' })),
+        ];
+        const responses = members.map((m) => m.ask());
+        const { quorum, absent } = _postRunQuorum(members, responses, {});
+        expect(quorum).toEqual({ status: 'concluded', threshold: 1, total: 2, present: 2 });
+        expect(absent).toEqual([]);
+    });
+
+    it('a fallback that was REFUSED by the retry budget still counts as absent', () => {
+        // The mirror case: `fallback_skipped: cost_budget` means the original
+        // failure stands, so the seat is lost. Metadata must not rescue it.
+        const members = [
+            new StubMember('anthropic', 'claude-x', new CouncilResponse({
+                provider: 'anthropic',
+                model: 'claude-x',
+                text: '',
+                error: 'auth_expired',
+                metadata: { fallback_skipped: 'cost_budget' },
+            })),
+        ];
+        const responses = members.map((m) => m.ask());
+        const { quorum, absent } = _postRunQuorum(members, responses, {});
+        expect(quorum).toEqual({ status: 'inconclusive', threshold: 1, total: 1, present: 0 });
+        expect(absent).toEqual([{ member: 'anthropic', reason: 'no_auth', detail: 'auth_expired' }]);
+    });
+
     it('a missing response entry (index past the end of `responses`) counts as absent, never as present', () => {
         const members = [new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: 'ok' }))];
         const { quorum, absent } = _postRunQuorum(members, [], {});

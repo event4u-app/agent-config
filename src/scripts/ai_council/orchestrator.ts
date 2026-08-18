@@ -93,6 +93,28 @@ export interface CliFallbackOptions {
     readonly construct: (provider: string) => ExternalAIClient | null;
     /** `ai_council.fallback.api_on_quota` — see `FallbackPolicy.apiOnQuota`. */
     readonly api_on_quota: boolean;
+    /**
+     * Called once per ESTABLISHING escalation — not per substituted call.
+     *
+     * The sink is the caller's, not this module's: the orchestrator is a pure
+     * library with no stdout and no disk (see the file header), and reaching
+     * for `events_log` here would be the first thing to break that. The CLI
+     * wires this to `appendEvent({ action: 'transport_fallback', … })`.
+     *
+     * `outcome` distinguishes the three ends the retry can reach, because a
+     * reader counting "fallbacks" needs to know which: `retried` — the twin
+     * answered or failed on its own terms; `no_twin` — the provider has no
+     * constructible api rung, so the original failure stands; `cost_budget` —
+     * the retry's own projected-spend gate refused it.
+     */
+    readonly on_event?:
+        | ((e: {
+              provider: string;
+              failure: string;
+              outcome: 'retried' | 'no_twin' | 'cost_budget';
+              api_on_quota: boolean;
+          }) => void)
+        | null;
 }
 import { CHAIRMAN_FIELDS_ADDENDUM, render_deanonymization_block } from './blind_review.js';
 import type { AbsentReason } from './transport_resolver.js';
@@ -837,6 +859,12 @@ function _run_round(
                         member = nb_twin;
                         escalated = true;
                     }
+                    nb_fallback.on_event?.({
+                        provider: member.name,
+                        failure: nb_failure,
+                        outcome: nb_twin !== null ? 'retried' : 'no_twin',
+                        api_on_quota: nb_fallback.api_on_quota,
+                    });
                 }
             }
             if (!escalated) {
@@ -1038,6 +1066,19 @@ function _run_round(
                             fallback_skipped: 'cost_budget',
                         };
                     }
+                    fallback.on_event?.({
+                        provider: member.name,
+                        failure,
+                        outcome: gate_ok ? 'retried' : 'cost_budget',
+                        api_on_quota: fallback.api_on_quota,
+                    });
+                } else {
+                    fallback.on_event?.({
+                        provider: member.name,
+                        failure,
+                        outcome: 'no_twin',
+                        api_on_quota: fallback.api_on_quota,
+                    });
                 }
             }
         }
@@ -2076,6 +2117,21 @@ function _render_response_meta(r: CouncilResponse): string {
         );
     }
     parts.push(`${r.latency_ms} ms`);
+    // A seat that answered over the api rung because its cli transport died
+    // says so in the artefact, not only in the metadata. Without this, the
+    // only visible difference between "saved by the fallback" and "was api
+    // all along" is a cost line — and the second one was planned.
+    const fallback_from = _metaGet(meta_dict, 'fallback_from', null);
+    if (typeof fallback_from === 'string' && fallback_from !== '') {
+        const reason = _metaGet(meta_dict, 'fallback_reason', null);
+        const sticky = _metaGet(meta_dict, 'fallback_sticky', false) === true;
+        const why = typeof reason === 'string' && reason !== '' ? `: ${reason}` : '';
+        parts.push(
+            sticky
+                ? `transport: api (${fallback_from} lost earlier this pass${why})`
+                : `transport: api (fell back from ${fallback_from}${why})`,
+        );
+    }
     return `*${parts.join(' · ')}*`;
 }
 

@@ -435,6 +435,82 @@ describe('orchestrator — fallback across rounds (sticky substitution)', () => 
     });
 });
 
+describe('orchestrator — fallback observability', () => {
+    const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'x' });
+    const deadCli = (error = 'auth_expired'): Mock =>
+        new Mock('anthropic', 'claude-sonnet-4-6', { error, transport: 'cli', billable: false });
+    type Ev = { provider: string; failure: string; outcome: string; api_on_quota: boolean };
+
+    it('emits one event per ESTABLISHING escalation, not per substituted call', () => {
+        const events: Ev[] = [];
+        consult([deadCli()], q, null, {
+            rounds: 3,
+            cli_fallback: {
+                api_on_quota: false,
+                construct: () => new Mock('anthropic', 'claude-sonnet-4-6', { text: 'ok' }),
+                on_event: (e) => events.push(e),
+            },
+        });
+        // Three rounds, one escalation: rounds 2 and 3 reuse the twin.
+        expect(events).toEqual([
+            { provider: 'anthropic', failure: 'auth_rejected', outcome: 'retried', api_on_quota: false },
+        ]);
+    });
+
+    it('a provider with no constructible api rung emits outcome no_twin', () => {
+        const events: Ev[] = [];
+        const res = consult([deadCli()], q, null, {
+            cli_fallback: { api_on_quota: false, construct: () => null, on_event: (e) => events.push(e) },
+        });
+        expect(events).toEqual([
+            { provider: 'anthropic', failure: 'auth_rejected', outcome: 'no_twin', api_on_quota: false },
+        ]);
+        // The original failure stands — no_twin is not a silent recovery.
+        expect(res[0]!.error).toBe('auth_expired');
+    });
+
+    it('an ineligible failure emits nothing — there was no escalation to report', () => {
+        const events: Ev[] = [];
+        consult([deadCli('timeout')], q, null, {
+            cli_fallback: {
+                api_on_quota: false,
+                construct: () => new Mock('anthropic', 'claude-sonnet-4-6', { text: 'ok' }),
+                on_event: (e) => events.push(e),
+            },
+        });
+        expect(events).toEqual([]);
+    });
+
+    it('the rendered member line names the transport that actually answered', () => {
+        const res = consult([deadCli()], q, null, {
+            rounds: 2,
+            cli_fallback: {
+                api_on_quota: false,
+                construct: () => new Mock('anthropic', 'claude-sonnet-4-6', { text: 'ok' }),
+            },
+        });
+        const out = render(res);
+        // The reuse round says the transport was lost EARLIER in the pass, so
+        // a reader does not count two escalations from two rendered lines.
+        expect(out).toContain('transport: api (cli lost earlier this pass: auth_rejected)');
+    });
+
+    it('the establishing round renders as a fall-back, not as a reuse', () => {
+        const res = consult([deadCli()], q, null, {
+            cli_fallback: {
+                api_on_quota: false,
+                construct: () => new Mock('anthropic', 'claude-sonnet-4-6', { text: 'ok' }),
+            },
+        });
+        expect(render(res)).toContain('transport: api (fell back from cli: auth_rejected)');
+    });
+
+    it('a pass with no fallback renders exactly as before', () => {
+        const res = consult([new Mock('anthropic', 'claude-x', { text: 'ok' })], q);
+        expect(render(res)).not.toContain('transport: api (');
+    });
+});
+
 describe('orchestrator — fallback on the debate path', () => {
     const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'x' });
     const deadCli = (): Mock =>

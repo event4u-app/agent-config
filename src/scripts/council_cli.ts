@@ -1016,6 +1016,20 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
         const fallback_cfg = _isDict(ai['fallback']) ? (ai['fallback'] as Dict) : {};
         fallback_out.options = {
             api_on_quota: _pyBool(fallback_cfg['api_on_quota']),
+            // The orchestrator is a pure library and holds no sink; this is
+            // it. One line per ESTABLISHING escalation, so attendance
+            // analysis can separate a seat saved by the fallback from a seat
+            // that was natively api — indistinguishable in the response set,
+            // and only one of the two spends money nobody planned.
+            on_event: (e): void => {
+                appendEvent({
+                    action: 'transport_fallback',
+                    provider: e.provider,
+                    failure_class: e.failure,
+                    outcome: e.outcome,
+                    api_on_quota: e.api_on_quota,
+                });
+            },
             construct: (provider: string): ExternalAIClient | null => {
                 if (!_API_PROVIDERS.has(provider)) return null;
                 const cfg = ((members_cfg[provider] as Dict) || {}) as Dict;
