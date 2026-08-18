@@ -177,6 +177,13 @@ export function extractPackageVersion(env: NodeJS.ProcessEnv): string | null {
 interface SettingsRead {
     settings: RemoteTelemetrySettings;
     text: string;
+    /**
+     * The directory the settings file was found in — the project root, and
+     * the base a relative `output.path` resolves against. NOT the session
+     * cwd: a session started in a subdirectory would otherwise scatter one
+     * log file per directory it happened to start in.
+     */
+    root: string;
 }
 
 /**
@@ -186,8 +193,33 @@ interface SettingsRead {
  */
 const _settingsCache = new Map<string, SettingsRead>();
 
+/**
+ * Walk up from `start` to the first directory holding a settings file.
+ *
+ * A host may report a session `cwd` inside a subdirectory of the project,
+ * and reading only that directory made the concern silently inactive on a
+ * legitimately enabled install — a failure with no message, which is the
+ * worst shape for a default-off surface. Bounded by the filesystem root, so
+ * it terminates on every path; no hit returns `start` unchanged, and the
+ * settings read then fails closed exactly as before.
+ */
+export function resolveSettingsPath(start: string): string {
+    let dir = path.resolve(start);
+    for (;;) {
+        const candidate = path.join(dir, SETTINGS_FILENAME);
+        try {
+            if (fs.statSync(candidate).isFile()) return candidate;
+        } catch {
+            // Not here — keep walking.
+        }
+        const parent = path.dirname(dir);
+        if (parent === dir) return path.join(path.resolve(start), SETTINGS_FILENAME);
+        dir = parent;
+    }
+}
+
 export function readSettingsFor(consumerRoot: string): SettingsRead {
-    const p = path.join(consumerRoot, SETTINGS_FILENAME);
+    const p = resolveSettingsPath(consumerRoot);
     const cached = _settingsCache.get(p);
     if (cached !== undefined) return cached;
 
@@ -197,7 +229,7 @@ export function readSettingsFor(consumerRoot: string): SettingsRead {
     } catch {
         text = '';
     }
-    const read: SettingsRead = { settings: read_remote_settings(p), text };
+    const read: SettingsRead = { settings: read_remote_settings(p), text, root: path.dirname(p) };
     _settingsCache.set(p, read);
     return read;
 }
@@ -214,7 +246,7 @@ function processEnvelope(envelope: JsonValue, consumer_root: string): number {
         const payload = unwrapPayload(envelope);
         if (extractToolName(payload) !== SKILL_TOOL_NAME) return EXIT_ALLOW;
 
-        const { settings, text } = readSettingsFor(consumer_root);
+        const { settings, text, root } = readSettingsFor(consumer_root);
         if (!settings.active) return EXIT_ALLOW;
         if (is_replay_mode()) return EXIT_ALLOW;
 
@@ -233,9 +265,12 @@ function processEnvelope(envelope: JsonValue, consumer_root: string): number {
             discipline_profile: extractDisciplineProfile(text),
         });
 
+        // Relative to the PROJECT root (the directory holding the settings
+        // file), never to the session cwd — otherwise a session started in a
+        // subdirectory writes its own stray log there.
         const logPath = path.isAbsolute(settings.log_path)
             ? settings.log_path
-            : path.join(consumer_root, settings.log_path);
+            : path.join(root, settings.log_path);
         append_class_a_record(logPath, record);
     } catch {
         // Malformed payload, unreadable disk, a rejected id — never block

@@ -15,6 +15,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
     extractDisciplineProfile,
     _resolveRoot,
+    resolveSettingsPath,
     extractPackageVersion,
     extractSkillName,
     run,
@@ -177,6 +178,33 @@ describe('extractDisciplineProfile', () => {
     // declaration the install never made.
     it('is null when neither key is declared', () => {
         expect(extractDisciplineProfile('quality:\n  local_auto_run: false\n')).toBeNull();
+    });
+});
+
+describe('resolveSettingsPath', () => {
+    it('finds the settings file from a subdirectory of the project', () => {
+        const root = makeRoot(ACTIVE);
+        const nested = path.join(root, 'src', 'deep');
+        fs.mkdirSync(nested, { recursive: true });
+        expect(resolveSettingsPath(nested)).toBe(path.join(root, '.agent-settings.yml'));
+    });
+
+    // Which is what production actually needs: a session started in a
+    // subdirectory used to read no settings and go silently inactive.
+    it('records the invocation when the envelope cwd is a subdirectory', () => {
+        const root = makeRoot(ACTIVE);
+        const nested = path.join(root, 'src', 'deep');
+        fs.mkdirSync(nested, { recursive: true });
+        expect(run(envelope('brand-identity'), { consumer_root: nested })).toBe(0);
+        // Beside the settings file, not in the subdirectory the session
+        // happened to start in.
+        expect(fs.existsSync(logPath(root))).toBe(true);
+        expect(fs.existsSync(path.join(nested, '.agent-telemetry.jsonl'))).toBe(false);
+    });
+
+    it('returns the start-relative path when no settings file exists anywhere above', () => {
+        const root = makeRoot(null);
+        expect(resolveSettingsPath(root)).toBe(path.join(root, '.agent-settings.yml'));
     });
 });
 
