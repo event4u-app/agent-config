@@ -88,18 +88,76 @@ resume gate on `later/road-to-token-saving`. Three roadmaps unblock from one run
 
 This phase unblocks everything else in the file, and it is repo work.
 
-- [ ] **1.1** The codex path is automatable — host-event, no transcription. Script a
+- [x] **1.1** The codex path is automatable — host-event, no transcription. Script a
       recurring capture on the maintainer machine against both hosts, appending to
       the JSONL. The claude side stays self-report; record it on a fixed cadence with
       the fixed prompt already in use, and **record the projection scope with every
       observation** so the series stays comparable when the scope changes (claim 7).
       `verify:` two consecutive captures land in the JSONL with their scope and host
       recorded, and the per-host verdicts stay separate rather than pooled.
-- [ ] **1.2** Add the host-truth versus disk-truth join for D-4: on each claude
+
+      **Landed 2026-08-18** as `capture_skill_catalogue --cadence` plus the
+      scope-recording fix underneath it. Three parts:
+
+      (a) **The scope gap was real and it was on the claude side.** The
+      self-report record builder took no `projectionMode` at all, while the two
+      host-event builders beside it did — so the ONE path that fills `bare_names`,
+      and therefore the only source step 1.2's join can read, could not record its
+      scope even when the operator knew it. `buildObservationRecord` now takes both
+      optional fields in the identical omit-rather-than-default shape, the CLI's
+      self-report `--record` passes them, and recording without a scope prints a
+      warning rather than a refusal — refusing would discard an observation to
+      protect a comparison.
+
+      (b) **`--cadence` is the recurring half**: per-host freshness against a
+      stated `OBSERVATION_CADENCE_DAYS = 7` (a stated default with a revisit-if,
+      not a measured optimum), the count of unscoped records per host, progress
+      against the ≥20-across-≥2-hosts bar **quoted** from the parent blocker, and
+      the exact next command per host. It records nothing itself: a mode that both
+      judged freshness and wrote records could refresh a series with a reading
+      nobody took.
+
+      (c) **The verify clause is met on host and on pooling, and NOT on scope —
+      because on this machine the scope is not determinable.** Two consecutive
+      codex captures landed (dropped 401 then 393, inside the known 393–401
+      spread), the corpus is at 7 observations across 2 hosts, and
+      `formatPerHostVerdicts` still reports the two truncation modes separately.
+      But `~/.codex` and `~/.claude` each hold **297 skills** against this tree's
+      scoped 219 and legacy-all 290 — both installed roots match neither count, so
+      both are stale installs rather than broken ones. `--cadence` therefore
+      *measures* the mode off the installed root and, on `indeterminate`, prints
+      **no** `--projection-mode` flag together with the reason, instead of the
+      `<scoped|legacy-all>` placeholder it first carried — a placeholder invites
+      the operator to pick, and either pick would be the relabelling the record
+      type forbids. The remaining half of the clause is a fact about this machine,
+      not about the mechanism: refresh a host root from this tree and the next
+      capture carries a measured scope.
+      <!-- verify: npx vitest run tests/scripts/catalogue_capture.test.ts -->
+- [x] **1.2** Add the host-truth versus disk-truth join for D-4: on each claude
       observation, intersect the bare names with the ranker's catalogue and publish
       the count of skills that are **pointable but bare**.
       `verify:` the join runs on the existing observations and reports a count,
       including zero as a legitimate answer.
+
+      **Landed 2026-08-18** as `capture_skill_catalogue --pointable-bare`, and it
+      returned a non-null result on the first run: **16 of 16** bare entries in the
+      2026-08-12 claude observation are still in the ranker's catalogue, so every
+      skill that host degraded is one `skill-route` can name while the model never
+      received its description. `unpointableBare` is 0.
+
+      **That number discharges Phase 3 Step 3.1's condition** — "if Phase 1's join
+      shows pointable-but-bare above zero in practice" — with a measurement rather
+      than an assumption. It does not authorise the step; it removes the
+      conditional's escape.
+
+      **Only `per-entry` records are joined, and the skip is load-bearing.** A
+      `budget-strip-and-drop` host enumerates nothing, so its empty `bare_names`
+      records that nothing was *counted*, not that nothing was bare — emitting a
+      row of 0 for it is the zero-inferred-from-silence failure this module's own
+      header forbids. Six such records are skipped and the count of skipped rows is
+      printed, so "nothing to join" and "joined and found zero" read differently in
+      the output and are pinned apart by a test.
+      <!-- verify: npx vitest run tests/scripts/catalogue_capture.test.ts -->
 - **AC-1:** the observation count crosses the parent blocker's threshold across at
   least two hosts, or the capture cadence is published as failed with the reason —
   a failed cadence honestly recorded is a result, an absent one is not.
