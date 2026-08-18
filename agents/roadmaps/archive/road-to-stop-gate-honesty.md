@@ -152,6 +152,22 @@ Nothing downstream of Phase 1 was built on the unstamped corpus.
   least one colleague machine, over a window long enough to be read as a rate
   rather than an anecdote.
 
+**AC-1 is UNMET at archival, and archiving removes its last tracked carrier.**
+Recorded here rather than left for a reader to infer from the archive row, which
+publishes this file as `completed`: the counters reached `count_open == 0` because
+every *step* closed, and AC-1 is an acceptance criterion waiting on data from a
+second machine, which no step could have produced. AC-3 is in the same state but
+has a real owner — it was delegated by name to an open roadmap. AC-1 has none.
+
+The carrier that remains is the `keep-beta-until` review marker on
+[`turn-end-detector-demotion`](../../../docs/contracts/turn-end-detector-demotion.md),
+which is enforced by `check_beta_review_markers` and forces that file to be
+re-read by its date. The same marker is the only schedule behind the two
+instruments that contract is waiting on. That is weaker than a roadmap step and
+stronger than nothing, and it is named at both ends so neither reader has to
+reconstruct it. Retention makes this sharper rather than softer: the 90-day TTL
+means a window left unaccumulated is not merely late, it is unrecoverable.
+
 ### Phase 2 — Judge each detector on its measured rate against its measured benefit
 
 - [x] **2.1** Pre-register the bar per detector **before looking at Phase 1 data**:

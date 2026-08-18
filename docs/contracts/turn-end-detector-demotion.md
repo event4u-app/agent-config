@@ -30,12 +30,23 @@ A BAR SET ON AN UNMEASURABLE QUANTITY IS INERT AND SAYS SO.
 Read off `DetectorId` in `src/scripts/hooks/turn_end_gate_hook.ts`, never off
 prose — the roadmap that opened this question named three, and the tree has four.
 
-| Id | Fires when | Protects |
-|---|---|---|
-| A `promissory` | the closing text promises work the turn did not do | the truthfulness of "done" |
-| B `language` | the reply language differs from that turn's fresh pin | the user-facing contract |
-| C `verification` | the turn changed a file and ran no verify-shaped command | engineering safety |
-| D `completion` | a completion claim carries no fresh evidence | the truthfulness of "done" |
+| Id | Fires when | Protects | Runs |
+|---|---|---|---|
+| A `promissory` | the closing text promises work the turn did not do | the truthfulness of "done" | only when no dispatch is open |
+| B `language` | the reply language differs from that turn's fresh pin | the user-facing contract | every turn-end |
+| C `verification` | the turn changed a file and ran no verify-shaped command | engineering safety | every turn-end |
+| D `completion` | a completion claim carries no fresh evidence | the truthfulness of "done" | only when no dispatch is open |
+
+**Two of the four are conditional, and the fourth column is load-bearing.**
+`main()` runs A and D only when `dispatchOpen` is false — an open subagent
+dispatch excuses a promissory closing and an unsettled completion claim, and
+excuses nothing about B or C. So there are **three** allow paths, not two: the two
+re-entrancy layers below, plus this one. It suppresses A and D for a whole turn,
+and in a suite whose delegation policy dispatches by default that is not a rare
+branch.
+
+Every clause in this file that reads a zero, a denominator, or a dormancy has to
+survive that fact, and each says below where it does not.
 
 ## The two quantities — and the one that cannot be measured
 
@@ -86,6 +97,12 @@ elsewhere. Q2 is measurable today from `RefusalRecord.counts`
   `findings[0].detector` alone and a session refused nine times read as one.)
 - A retry aborted for an unrelated reason is **censored**, not counted as a
   success.
+- **A turn that ran with a dispatch open is censored for A and D**, in both
+  quantities. Those two detectors did not run, so the turn is not an observation
+  of them not firing — counting it as one biases their Q2 denominators downward
+  and would read a configuration fact as an exposure fact. B and C are unaffected
+  and take that turn normally. A rollup that cannot tell a dispatch-suppressed
+  turn from a clean one may not report Q2 for A or D at all.
 - A refusal is *eligible* only if it was recorded under a version that stamps
   `agent_config_version`. The 36 legacy records are `(unrecorded)` and are
   excluded from both quantities.
@@ -101,28 +118,57 @@ elsewhere. Q2 is measurable today from `RefusalRecord.counts`
 
 **These are policy choices, not findings, and they differ on purpose.**
 
-- **B is lowest.** A language mismatch is mechanically repairable, so repeated
-  friction there is evidence the detector is wrong rather than evidence the task
-  is hard.
-- **C is highest.** It protects the practice most directly tied to a changed
-  file, and it already carries the largest measured share of refusals — the
-  detector doing the most work is the one to demote last.
-- **A and D sit high.** Both protect the truthfulness of a completion claim,
-  which is this suite's central promise, and demoting either silently restores
-  unsupported "done". The supporting measurement is the *general* one — advisory
-  carriers reached no measurable effect where blocking carriers reached zero
-  violations — not a per-obligation reading of A or D, and it is stated at that
-  strength rather than borrowed as if it had been measured on these two
-  detectors specifically.
+Each row's reason has to produce that row, so they are given per detector rather
+than in groups — an earlier draft said "C is highest" while D tied it exactly, and
+grouped "A and D" across a 10-point split. A reader deriving the table from the
+prose would have got a different table, which is not acceptable in a document that
+calls its own numbers policy choices to be argued.
+
+- **B lowest, 20 % / 2.** A language mismatch is mechanically repairable, so
+  repeated friction there is evidence the detector is wrong rather than evidence
+  the task is hard. It is the one detector where a high share is more likely a
+  false positive than a hard problem.
+- **A at 30 % / 3.** It protects the truthfulness of a completion claim, which is
+  this suite's central promise, so demoting it silently restores unsupported
+  "done". It sits below C because a promissory closing is a *reply-shape* finding
+  the model can usually repair in one pass, unlike an actual missing verifier.
+- **C at 40 % / 3, and it is the last one to demote.** It protects the practice
+  most directly tied to a changed file, and it already carries the largest
+  measured share of refusals — the detector doing the most work has the most to
+  lose.
+- **D at 40 % / 3, for a different reason than C's — absence of evidence, not
+  weight of it.** D has never fired, so there is no measured cost to weigh
+  against its benefit, and a bar set low would demote a detector on a
+  distribution nobody has seen. It ties C by coincidence of caution, not because
+  it does comparable work.
+
+The supporting measurement behind A and D is the *general* one — advisory carriers
+reached no measurable effect where blocking carriers reached zero violations — not
+a per-obligation reading of either, and it is stated at that strength rather than
+borrowed as if it had been measured on these two detectors specifically.
 
 **The counter-argument, kept on the record rather than answered away:**
 differentiated bars encode four unmeasured judgements about relative harm, and a
 single shared bar would be methodologically cleaner on sparse data. It is
 rejected because pretending the four protected harms are interchangeable would
-hide those judgements rather than remove them. *Revisit-if:* the first qualifying
-sample shows all four Q2 medians within ±1 and all four Q1 shares within ±10
-points — then the data has refuted the architectural argument and the bars
-collapse to one.
+hide those judgements rather than remove them.
+
+***Revisit-if*, split so that the reachable half can actually fire.** Drafted as
+one conjunctive clause over both quantities, it was unfalsifiable by
+construction — it required Q1 shares, which this file declares unmeasurable until
+an instrument that does not ship here lands, so the only escape from four bars
+to one could never open.
+
+- **On Q2 alone, and it stands today:** two or more detectors reach their floors
+  and their Q2 medians sit within ±1 of each other → the architectural argument is
+  refuted *for those detectors* and their bars merge. It does not need all four,
+  and it does not need D, whose floor is currently unreachable.
+- **On Q1, contingent:** once instrument 1 lands and Q1 becomes readable, all four
+  shares within ±10 points collapses the bars to one.
+
+Either half fires alone. Naming the contingency is the point: a revisit condition
+that silently depends on unbuilt instrumentation is an aspiration wearing a
+falsifier's clothes, which is the failure this whole file is written against.
 
 ## Sample floor — per detector, not per gate
 
@@ -131,14 +177,64 @@ A detector's bar may not be read until **all four** hold for that detector:
 1. ≥ 100 eligible initial refusals;
 2. ≥ 50 affected sessions;
 3. ≥ 30 calendar days of observation;
-4. no change to that detector's logic, or to the refusal instrumentation, inside
-   the window. Any such change **resets** qualification for that detector alone.
+4. no change inside the window to **anything that alters that detector's
+   exposure or the recording of its refusals**. That is deliberately wider than
+   "the detector's logic": it includes the three allow paths (`stop_hook_active`,
+   `alreadyRefusedTurn`, and `dispatchOpen` together with `openRecordStats`' own
+   TTL filter), the session-key and turn-ordinal derivation whose documented
+   cross-session collision under-refuses, and `TRANSCRIPT_READ_MAX_BYTES` — every
+   one of which can invalidate a window without touching a detector. Any such
+   change **resets** qualification for that detector alone.
+   **Carve-out, or condition 4 eats its own enabler:** a change that only ADDS a
+   field or a counter, leaving every existing count and every allow path
+   untouched, does not reset. Without this, shipping instrument 1 would reset all
+   four windows — it writes `would_refuse_again` onto the session record, which is
+   the refusal instrumentation — and no window accumulated before it lands would
+   ever be readable. That would contradict this file's own claim that Q2 is
+   measurable today.
 
 At 100 observations a proportion near 30 % still carries roughly a ±9-point 95 %
 interval, so this is a defensible minimum and not precision. Condition 4 replaces
 the "spans two releases" formulation it was drafted as: release diversity mixes
 implementations and confounds the distribution, while what the requirement was
 actually reaching for is a stable window.
+
+### Retention caps the floor, and for two detectors it caps it below 100
+
+```
+THE FLOOR IS NOT REACHABLE FROM SESSION RECORDS ALONE.
+A CUMULATIVE PER-DETECTOR AGGREGATE THAT SURVIVES PRUNING IS PART OF INSTRUMENT 2,
+NOT AN OPTIMISATION OF IT.
+```
+
+The refusal state carries a **90-day TTL** (`pruneAgedRefusalState`, run at
+`session_start`), ageing each session record on its own `refused_at`. So the
+corpus reachable by counting records is never more than 90 days deep, and
+condition 1 asks for 100 eligible refusals **per detector**.
+
+The arithmetic decides it, and it decides against two detectors. On this
+branch's own published reading — promissory 5 refusals over a 5-day window, about
+1/day — detector A needs roughly 100 days to reach 100 and is pruned at 90.
+Dormant D needs unbounded time. Only C, at 22 over the same window, clears 100
+inside the retention window at all.
+
+Left there, this file would have reintroduced exactly the failure it rejects for
+Q2's denominator: a bar that cannot fire, arrived at through retention instead of
+through a metric definition. So the resolution is stated rather than left to be
+discovered:
+
+- **Instrument 2 must persist a cumulative per-detector count that pruning does
+  not touch.** The record may be deleted; the count it contributed may not be.
+  Counting live records is not an implementation of condition 1, it is a
+  different and smaller question.
+- **Until that aggregate exists, condition 1 is satisfiable only by a detector
+  firing ≥ 100 times within 90 days** — which is C, and no other. A and D are not
+  merely far from their floors; they cannot reach them. The file says so here
+  rather than letting a future reader conclude the bars were simply never
+  crossed.
+- The aggregate is a count, never a copy of the pruned record: retention exists
+  for a reason and this does not widen what is kept, only what is remembered
+  about it.
 
 ## Crossing a bar authorises a study, not a demotion
 
@@ -171,8 +267,19 @@ measured asymmetry above.
 ## Detector D is dormant, not successful
 
 D has fired **zero** times. That is a third state — unexposed — and neither of
-the two quantities can tell apart a detector waiting for a rare violation, one
-subsumed by A or C, and unreachable dead code. So:
+the two quantities can tell apart **four** explanations:
+
+1. a valuable detector waiting for a rare violation;
+2. one subsumed by A or C;
+3. unreachable dead code;
+4. **a detector that was suppressed rather than unexposed** — D runs only when no
+   dispatch is open, and this suite delegates by default, so a zero may be
+   measuring the delegation rate rather than the violation rate.
+
+The fourth is the one a reader would miss and the code supplies, and it changes
+what a zero licenses: without separating it out, a *configuration* fact would be
+published as an *exposure* fact. Any rollup reporting D's zero must report the
+dispatch-suppressed turn count beside it, or the zero is uninterpretable. So:
 
 - D's bars stand, and are unreadable until D reaches the same sample floor.
 - D is **not** retired for never firing under this standard. A retirement
@@ -208,7 +315,36 @@ aspirational.
    before it. Without this, Q1 stays inert.
 2. **A per-detector rollup over eligible records**, reporting Q2 with its
    affected-session denominator and its sample-floor status per detector, so a
-   reading is a command's output rather than a hand count.
+   reading is a command's output rather than a hand count. It carries three
+   further obligations from the sections above, none of them optional: the
+   **cumulative count that survives pruning** (without it condition 1 is
+   unreachable for A and D), the **dispatch-suppressed turn count** beside any D
+   zero (without it that zero is uninterpretable), and A/D censoring for
+   dispatch-suppressed turns.
+
+### Who owns them — named, because the honest answer is nobody
+
+```
+NO ROADMAP OWNS THESE TWO INSTRUMENTS. THIS FILE'S OWN REVIEW DATE IS THE CARRIER.
+```
+
+The roadmap that commissioned this standard closed and archived in the same change
+that registered it, which removes the last tracked surface that could have
+scheduled either instrument. Two consequences are stated rather than left to be
+noticed at re-read time:
+
+- **The `keep-beta-until` marker in this file's frontmatter is the schedule.** It
+  forces a re-read by that date under `check_beta_review_markers`, which is a real
+  deterministic carrier — weaker than a roadmap step, and not nothing.
+- **The same applies to the archived roadmap's AC-1** (a refusal rate on a second
+  machine). Its AC-3 was delegated to a named open roadmap and has a real owner;
+  AC-1 has none, and the archive publishes the file as `completed` without that
+  qualification. The correction is recorded at the roadmap itself.
+
+Until an instrument lands, the honest description of this standard is: **bars
+registered, one quantity inert, one reachable for exactly one detector.** That is
+worth more than an unregistered gate, and it is less than a working kill standard.
+Both halves belong in any sentence that cites this file.
 
 ## Was this pre-registration blind?
 

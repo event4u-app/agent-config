@@ -101,10 +101,12 @@ carries several detectors the debt is owed per detector.
 [`turn-end-detector-demotion`](turn-end-detector-demotion.md) is the worked
 example: `turn-end-gate` is the only concern in this suite that can refuse a
 turn-end, it predates this file, and its four detectors now carry a
-pre-registered removal condition each. Read it before writing another one — it
-records the two ways such a standard is born inert: a quantity the concern's own
-safety design makes unobservable, and a friction metric whose denominator makes
-the bar unfireable.
+pre-registered removal condition each. Read it before writing another one — one of
+its two quantities is **born inert**, because the concern's own safety design makes
+that quantity unobservable, and the file registers it saying so rather than
+deleting it or pretending it reads. It also names two hazards it avoided by
+definition and worth checking for in any new standard: a denominator that makes a
+bar unfireable, and a retention window shorter than the sample floor.
 
 ## Where a threshold lives
 

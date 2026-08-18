@@ -21,8 +21,15 @@
  *                            them: `_messageText` keeps `type === 'text'` blocks
  *                            only, so tool activity is invisible to A and B.)
  *   D — completion claim    (a claim of done carrying no fresh evidence; landed
- *                            under conformance round 7 § Phase 1, in the same
- *                            unconditional list as the other three.)
+ *                            under conformance round 7 § Phase 1.)
+ *
+ * TWO of the four are CONDITIONAL, and saying "unconditional" here would be the
+ * same stale-header defect this block corrects below. A and D are the
+ * completion-adjacent pair an open subagent dispatch excuses, so `main()` runs
+ * them only when `dispatchOpen` is false; B and C run on every turn-end. That
+ * narrowing is deliberate (Phase 3 Step 2, narrowed again by R2 round 2) and is
+ * the third allow path, alongside the two re-entrancy layers — see the
+ * per-detector list in `main()`.
  *
  * This block said "Three" and listed A/B/C until 2026-08-18, while `DetectorId`
  * below has carried four since round 7. `DETECTOR_IDS` in
@@ -1029,8 +1036,11 @@ export function main(): number {
         dispatchOpen ? null : detectPromissory(lastAssistant),
         detectLanguage(lastAssistant, readLanguagePin(workspaceRoot)),
         detectUnverifiedEdit(toolCalls),
-        // Round 7 § Phase 1 — detector D, in the same unconditional list as the
-        // other three. It shipped with its own settings flag one commit earlier
+        // Round 7 § Phase 1 — detector D. It is NOT unconditional, and this
+        // comment said it was while sitting one line above the `dispatchOpen`
+        // ternary that conditions it: A and D are both excused by an open
+        // dispatch, per the note at the top of this loop. Corrected 2026-08-18.
+        // It shipped with its own settings flag one commit earlier
         // and that flag is gone: `hooks.turn_end_gate.*` was deleted on
         // 2026-08-12 because a default-off safety gate is an absent one. Its
         // gating is where the comment above says gating belongs — inside the
