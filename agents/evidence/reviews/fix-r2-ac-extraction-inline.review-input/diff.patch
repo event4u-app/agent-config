@@ -1,0 +1,340 @@
+diff --git a/docs/contracts/plan-review-gates.md b/docs/contracts/plan-review-gates.md
+index 5e0318a56468f9239b60611db93ab51ef895fd36..167f26daa0940fa5fa976840d66ab7ec4b2d301d 100644
+--- a/docs/contracts/plan-review-gates.md
++++ b/docs/contracts/plan-review-gates.md
+@@ -674,7 +674,7 @@ inputs:
+   scope_hash: <64-hex § 2.0 review-scope hash — compared>
+   roadmap: <path>
+   roadmap_hash: <sha256>
+-  ac_hash: <sha256 of the extracted Acceptance Criteria block>
++  ac_hash: <sha256 of the extracted acceptance criteria, or `none` when there are none>
+ excluded: [session-history, agents/runtime, implementation-context]
+ tools: [git-diff-branch-scoped, file-read-branch-paths]
+ dispatched: YYYY-MM-DDTHH:MM:SSZ
+@@ -691,6 +691,30 @@ dispatched: YYYY-MM-DDTHH:MM:SSZ
+   Exit `2` in `--verify` is reserved for genuine internal failures (the file
+   is missing or unreadable, git fails). A bare § 2.4 skip declaration
+   carries no reviewer dispatch and needs no manifest.
++- **Acceptance criteria are read in BOTH authored forms, and their absence is
++  said out loud.** The dispatcher extracts either a `## Acceptance Criteria`
++  section (heading form, 21 of the 44 active roadmaps as of 2026-08-18) or inline
++  `- **AC-n:**` bullets declared per phase (7 of 44); the heading form wins if a
++  file ever carries both. When neither is present, `ac_hash` is **`none`** and the
++  reviewer's prompt states that the roadmap declares no criteria — it does not
++  claim an extraction.
++
++  This is a repair, not a refinement. The extractor previously matched the heading
++  only, so an inline-only roadmap produced an empty extraction that was then
++  hashed: `ac_hash` recorded `e3b0c442…b855`, the SHA-256 of the empty string,
++  which looks like a real hash in the manifest and re-derives identically on
++  `--verify-current` — so this gate **confirmed a criteria set that was never
++  there**, while the reviewer was handed a 0-byte `acceptance-criteria.md` under a
++  prompt saying the criteria had been extracted. The R2 reviewer is the
++  independent check on AC conformance, so the effect was to blind that check while
++  the artefact read as though it had run.
++
++  **Historical artefacts are deliberately left alone.** 17 committed findings
++  files carry the empty-string `ac_hash`; only the handful whose roadmap is
++  inline-only were the defect, and `--verify-current` re-derives the *current*
++  PR's artefact only, so none of them go red. An artefact dispatched before this
++  change whose roadmap is inline-only will mismatch on its next re-derivation and
++  needs a re-bind (a hand-edit of `ac_hash`), exactly like any other moved input.
+ - **Compared set:** `scope_hash`, `roadmap_hash`, `ac_hash`. `diff_sha` is
+   provenance and is never compared, for the § 2.0 reasons. The manifest's
+   `scope_hash` must also agree with the header's `scope:`; a disagreement is
+diff --git a/src/scripts/dispatch_r2_reviewer.ts b/src/scripts/dispatch_r2_reviewer.ts
+index c72f599425048a3120bcd16a46abde6e373c076c..21896d0c62950058259df89bb5448cfee8053d29 100644
+--- a/src/scripts/dispatch_r2_reviewer.ts
++++ b/src/scripts/dispatch_r2_reviewer.ts
+@@ -426,13 +426,46 @@ export function expectedHashes(args: {
+     return {
+         scope_hash: sha256(args.scopeDiffText),
+         roadmap_hash: args.roadmapText == null ? 'none' : sha256(args.roadmapText),
+-        ac_hash: args.acText == null ? 'none' : sha256(args.acText),
++        // Falsy, not `== null`. An empty extraction used to hash to
++        // e3b0c44298fc…b855 — the SHA-256 of the empty string, which looks like
++        // a real hash in the manifest and re-derives identically on
++        // `--verify-current`, so the gate confirmed a criteria set that was
++        // never there. `'none'` is the value that already means "no input" for
++        // `roadmap_hash`; an absent AC block gets the same word.
++        ac_hash: args.acText ? sha256(args.acText) : 'none',
+     };
+ }
+ 
+ /**
+- * Extract the `## Acceptance Criteria` section — from that heading (inclusive)
+- * to the next `## ` heading or EOF. No section → empty string.
++ * Extract a roadmap's acceptance criteria in either form the tree uses.
++ *
++ * Two forms, because roadmap authors write both and the reviewer needs whichever
++ * one is present:
++ *
++ * 1. A `## Acceptance Criteria` section — from that heading (inclusive) to the
++ *    next `## ` heading or EOF.
++ * 2. Inline `- **AC-n:**` bullets, declared per phase with no section heading —
++ *    collected with their indented continuation lines.
++ *
++ * Neither form → empty string, and every caller must treat that as "no criteria"
++ * rather than as an extracted-and-empty block: see {@link expectedHashes} and the
++ * prompt's roadmap line.
++ *
++ * The heading form is tried first and wins outright when found. Measured
++ * 2026-08-18 over the 44 active roadmaps: 21 heading-only, 7 inline-only, 0
++ * carrying both, 16 carrying neither — so the two forms do not currently
++ * co-occur and a precedence rule is a guard against a future file rather than a
++ * choice between live populations.
++ *
++ * WHY THE INLINE FORM WAS MISSING, stated because this is the second instance of
++ * the same defect class in this one function. The first was case sensitivity
++ * (`## Acceptance criteria` extracted nothing, found by the zcs-close R2 review
++ * 2026-08-09). The second is this: an inline-only roadmap yielded `''`, nothing
++ * downstream noticed, and the reviewer was handed a 0-byte
++ * `acceptance-criteria.md` under a prompt that said the criteria had been
++ * extracted. The R2 reviewer is the independent check on AC conformance, so
++ * blinding it while the artefact reads as though it checked is the
++ * gate-that-scans-nothing-exits-green shape one layer up.
+  */
+ export function extractAcceptanceCriteria(roadmapText: string): string {
+     const lines = roadmapText.split('\n');
+@@ -446,15 +479,42 @@ export function extractAcceptanceCriteria(roadmapText: string): string {
+             break;
+         }
+     }
+-    if (start === -1) return '';
+-    let end = lines.length;
+-    for (let i = start + 1; i < lines.length; i++) {
+-        if (/^## /.test(lines[i] as string)) {
+-            end = i;
+-            break;
++    if (start !== -1) {
++        let end = lines.length;
++        for (let i = start + 1; i < lines.length; i++) {
++            if (/^## /.test(lines[i] as string)) {
++                end = i;
++                break;
++            }
++        }
++        return lines.slice(start, end).join('\n');
++    }
++    return extractInlineAcceptanceCriteria(lines);
++}
++
++/**
++ * Collect inline `- **AC-n:**` bullets and their continuation lines.
++ *
++ * A continuation line is indented and non-blank. The walk stops at the first
++ * blank or non-indented line, which is what separates one criterion from the
++ * prose or heading that follows it. Bullets are emitted in file order and
++ * separated by nothing but their own newline: each one is self-labelling
++ * (`AC-0`, `AC-1`, …), so a synthetic section heading would be text this
++ * function invented rather than text the roadmap declared.
++ */
++function extractInlineAcceptanceCriteria(lines: readonly string[]): string {
++    const out: string[] = [];
++    for (let i = 0; i < lines.length; i++) {
++        if (!/^- \*\*AC-/.test(lines[i] as string)) continue;
++        out.push(lines[i] as string);
++        for (let j = i + 1; j < lines.length; j++) {
++            const line = lines[j] as string;
++            if (!/^\s+\S/.test(line)) break;
++            out.push(line);
++            i = j;
+         }
+     }
+-    return lines.slice(start, end).join('\n');
++    return out.join('\n');
+ }
+ 
+ /**
+@@ -576,11 +636,20 @@ function reviewerPrompt(args: {
+     headSha: string;
+     scopeHash: string;
+     roadmapGiven: boolean;
++    acGiven: boolean;
+     changedFiles: readonly string[];
+ }): string {
+-    const roadmapLine = args.roadmapGiven
+-        ? '- roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)'
+-        : '- roadmap under review: none (`acceptance-criteria.md` is empty)';
++    // Three states, not two. Branching on `roadmapGiven` alone told the reviewer
++    // "Acceptance Criteria extracted" whenever a roadmap was supplied — including
++    // when the extraction returned nothing and the file beside it was 0 bytes. A
++    // reviewer told the criteria are in a file it finds empty has no way to tell
++    // an extraction failure from a roadmap that genuinely declares none, so it
++    // cannot report the gap. Say which of the two it is.
++    const roadmapLine = !args.roadmapGiven
++        ? '- roadmap under review: none (`acceptance-criteria.md` is empty)'
++        : args.acGiven
++          ? '- roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)'
++          : '- roadmap under review: `roadmap.md` — it declares NO acceptance criteria, so `acceptance-criteria.md` is empty. Review the diff on its own terms and say so if the roadmap should have carried criteria.';
+     return [
+         `# R2 completion review — ${args.slug}`,
+         '',
+@@ -1037,6 +1106,7 @@ function runDispatch(args: Args): number {
+         headSha,
+         scopeHash: hashes.scope_hash,
+         roadmapGiven: roadmapText !== null,
++        acGiven: acText !== null && acText !== '',
+         changedFiles,
+     });
+     const manifest = deriveManifest({
+diff --git a/tests/scripts/dispatch_r2_reviewer.test.ts b/tests/scripts/dispatch_r2_reviewer.test.ts
+index f447231d8f4a66ad74976acb5cf7a107862a7d33..4025fe59b0b78cb8d31f38e9148d25bdf7a90387 100644
+--- a/tests/scripts/dispatch_r2_reviewer.test.ts
++++ b/tests/scripts/dispatch_r2_reviewer.test.ts
+@@ -95,8 +95,35 @@ function scopeDiff(repo: string, base = 'main'): string {
+     return git(repo, ...reviewScopeDiffArgs(base));
+ }
+ 
++/**
++ * A roadmap declaring its criteria as inline `- **AC-n:**` bullets per phase,
++ * with no `## Acceptance Criteria` heading anywhere — the form 7 of the 44 active
++ * roadmaps use. Continuation lines are indented two spaces, and the trailing
++ * prose exists so a test can prove the collector stops rather than swallowing it.
++ */
++const ROADMAP_INLINE_AC = [
++    '# Road Y',
++    '',
++    '## Phase 1',
++    '- [ ] step',
++    '- **AC-0:** the first criterion holds, and this line wraps',
++    '  onto a continuation the collector must keep.',
++    '',
++    '## Phase 2',
++    '- [ ] other step',
++    '- **AC-1:** the second criterion holds.',
++    '',
++    'Trailing prose that is NOT a criterion and must not be collected.',
++    '',
++].join('\n');
++
++/** A roadmap that declares no acceptance criteria in either form. */
++const ROADMAP_NO_AC = ['# Road Z', '', '## Phase 1', '- [ ] step', '', '## Notes', '', 'tail', ''].join(
++    '\n',
++);
++
+ /** Fresh git repo: main with roadmap + a.txt, then a feature branch with one commit. */
+-function initRepo(opts: { branch?: boolean } = {}): string {
++function initRepo(opts: { branch?: boolean; roadmap?: string } = {}): string {
+     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'r2-dispatch-'));
+     tmpDirs.push(dir);
+     git(dir, 'init', '-q', '-b', 'main');
+@@ -104,7 +131,7 @@ function initRepo(opts: { branch?: boolean } = {}): string {
+     git(dir, 'config', 'user.name', 'r2');
+     git(dir, 'config', 'commit.gpgsign', 'false');
+     write(dir, 'a.txt', 'base\n');
+-    write(dir, 'agents/roadmaps/road-x.md', ROADMAP);
++    write(dir, 'agents/roadmaps/road-x.md', opts.roadmap ?? ROADMAP);
+     git(dir, 'add', '-A');
+     git(dir, 'commit', '-qm', 'init');
+     if (opts.branch !== false) {
+@@ -657,6 +684,109 @@ describe('dispatch_r2_reviewer — pure helpers', () => {
+         expect(extractAcceptanceCriteria(lower)).toContain('- crit A');
+     });
+ 
++    it('extractAcceptanceCriteria collects inline AC bullets with their continuation lines', () => {
++        // The second instance of the same defect class as the case-sensitivity
++        // bug above: an inline-only roadmap yielded '', the reviewer got a
++        // 0-byte acceptance-criteria.md, and the prompt said the criteria had
++        // been extracted. Measured 2026-08-18: 7 of 44 active roadmaps are
++        // inline-only, including the one the backlog named as the next pick.
++        const ac = extractAcceptanceCriteria(ROADMAP_INLINE_AC);
++        expect(ac).toBe(
++            [
++                '- **AC-0:** the first criterion holds, and this line wraps',
++                '  onto a continuation the collector must keep.',
++                '- **AC-1:** the second criterion holds.',
++            ].join('\n'),
++        );
++    });
++
++    it('extractAcceptanceCriteria stops at the first blank or non-indented line', () => {
++        // Over-collection is the failure that would look like success: a
++        // collector running to EOF would ship the whole roadmap tail as
++        // "criteria" and the positive test above would still pass.
++        //
++        // The first two assertions are this test's OWN vacuity guard, and they
++        // are not decoration — a mutation run proved the exclusions below pass
++        // over an empty string, i.e. the test would have gone green against the
++        // exact defect it exists to catch. Assert there is something to exclude
++        // FROM before excluding anything.
++        const ac = extractAcceptanceCriteria(ROADMAP_INLINE_AC);
++        expect(ac).not.toBe('');
++        expect(ac).toContain('- **AC-1:**');
++        expect(ac).not.toContain('Trailing prose');
++        expect(ac).not.toContain('## Phase 2');
++        expect(ac).not.toContain('- [ ] other step');
++    });
++
++    it('extractAcceptanceCriteria prefers the heading form when a roadmap carries both', () => {
++        // No roadmap in the tree carries both today (21 heading-only, 7
++        // inline-only, 0 both), so this pins a precedence rule against a future
++        // file rather than resolving a live ambiguity.
++        const both = [ROADMAP, '- **AC-9:** an inline bullet added later.', ''].join('\n');
++        const ac = extractAcceptanceCriteria(both);
++        expect(ac).toContain('- AC one');
++        expect(ac).not.toContain('AC-9');
++    });
++
++    it('extractAcceptanceCriteria returns empty string when neither form is present', () => {
++        expect(extractAcceptanceCriteria(ROADMAP_NO_AC)).toBe('');
++    });
++
++    it('expectedHashes maps an EMPTY extraction to none, not to the empty-string hash', () => {
++        // e3b0c442…b855 is sha256(''). It was recorded whenever extraction came
++        // back empty, looks like a real hash in the manifest, and re-derives
++        // identically on --verify-current — so the gate confirmed a criteria set
++        // that was never there. Named explicitly so a revert cannot pass.
++        const EMPTY_SHA = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
++        expect(sha256('')).toBe(EMPTY_SHA);
++        const h = expectedHashes({ scopeDiffText: 'd', roadmapText: 'r', acText: '' });
++        expect(h.ac_hash).toBe('none');
++        expect(h.ac_hash).not.toBe(EMPTY_SHA);
++        // A non-empty extraction still hashes.
++        expect(expectedHashes({ scopeDiffText: 'd', roadmapText: 'r', acText: 'x' }).ac_hash).toBe(
++            sha256('x'),
++        );
++    });
++
++    it('dispatch on an inline-AC roadmap writes real criteria and a prompt that claims extraction', () => {
++        const repo = initRepo({ roadmap: ROADMAP_INLINE_AC });
++        const res = run(dispatchArgs(repo, ['--format', 'json']));
++        expect(res.status, res.stderr).toBe(0);
++        const out = JSON.parse(res.stdout) as { hashes: { ac_hash: string } };
++
++        const inputDir = path.join(repo, OUT, `${SLUG}.review-input`);
++        const acFile = fs.readFileSync(path.join(inputDir, 'acceptance-criteria.md'), 'utf-8');
++        expect(acFile).toContain('- **AC-0:**');
++        expect(acFile).toContain('- **AC-1:**');
++        expect(out.hashes.ac_hash).toBe(sha256(extractAcceptanceCriteria(ROADMAP_INLINE_AC)));
++        expect(out.hashes.ac_hash).not.toBe('none');
++
++        // The vacuity guard for the next test: prove the "extracted" wording is
++        // what a criteria-carrying roadmap actually produces, so asserting its
++        // ABSENCE below is a real assertion rather than a tautology over prose
++        // that never appears.
++        const prompt = fs.readFileSync(path.join(inputDir, 'prompt.md'), 'utf-8');
++        expect(prompt).toContain('Acceptance Criteria extracted to `acceptance-criteria.md`');
++    });
++
++    it('dispatch on a roadmap with no criteria records none and tells the reviewer so', () => {
++        const repo = initRepo({ roadmap: ROADMAP_NO_AC });
++        const res = run(dispatchArgs(repo, ['--format', 'json']));
++        expect(res.status, res.stderr).toBe(0);
++        const out = JSON.parse(res.stdout) as { hashes: { roadmap_hash: string; ac_hash: string } };
++
++        // A roadmap WAS supplied — so this is the third state, distinct from
++        // "no roadmap", and the reviewer must be able to tell them apart.
++        expect(out.hashes.roadmap_hash).toBe(sha256(ROADMAP_NO_AC));
++        expect(out.hashes.ac_hash).toBe('none');
++
++        const inputDir = path.join(repo, OUT, `${SLUG}.review-input`);
++        expect(fs.readFileSync(path.join(inputDir, 'acceptance-criteria.md'), 'utf-8')).toBe('');
++        const prompt = fs.readFileSync(path.join(inputDir, 'prompt.md'), 'utf-8');
++        expect(prompt).toContain('it declares NO acceptance criteria');
++        expect(prompt).not.toContain('Acceptance Criteria extracted');
++    });
++
+     it('reviewScopeDiffArgs excludes every gate-owned evidence path from the reviewed scope', () => {
+         const argv = reviewScopeDiffArgs('origin/main');
+         // Asserted as structure, not as a frozen array: the byte-stability flag
