@@ -342,7 +342,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-08-17 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-18 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -353,6 +353,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
 | 5 | The composite budget flaps on shared CI runners | implementation | A per-turn composite sums many measurements, so it accumulates variance faster than any single slot and would produce red builds unrelated to any change | Same treatment the latency file already records for its slots: an absolute cap plus a pathology net rather than a tight creep window | Phase 4 — Register the number the user feels |
 | 6 | The container numbers are cited as repo facts | product | M-1 is environment-bound; quoting it as measured-here would be exactly the unbacked-number failure this repo gates against | M-1 carries its verdict in § 1 and § 2 states the shape-transfers-not-magnitudes rule; Phase 0.2 re-measures on target hardware before any citation | Measurement method |
 | 7 | The host's hook semantics change upstream | implementation | Claims 10–12 are external documentation read at one host version; a host bump could change matcher semantics or the fail-open direction | Each carrier records the host version it was verified on, and the fail-open direction is the safe one for advisory paths; no blocking behaviour rides on `if` | Phase 5 — Host-native prefiltering |
+| 8 | The 81 → 146 ms bundle delta is quoted as a measured regression | product | It is a CROSS-RUNNER comparison — a 2026-07-27 record against a 2026-08-18 CI job — and this roadmap's own § 2 refuses exactly that shape as a repo fact. It is persuasive because the wrapper has been excluded and nothing else explains `main` flapping on identical code, and persuasive-but-cross-runner is the easiest number in this file to cite carelessly. The same shape already produced one budget relaxation on PR #1410 before it was reverted | Step 0.5 carries the caveat in its own text and names the same-machine two-version run as the decisive probe; the number is stated as tension with this phase's opening line rather than as its refutation. Row 6's rule applies to it unchanged | Phase 0 — Falsify or localise |
 
 ## CUT list — do not re-litigate
 

@@ -70,12 +70,13 @@ Route (c) was run. Source: GitHub Actions run **32103306843**, job 95607853943,
 Static Checks, `ubuntu-latest` — all three numbers from ONE job on ONE runner, so
 the comparison between them carries no hardware term.
 
-| Path | `pre_tool_use` p95 | Provenance |
-|---|---|---|
-| bundle | **81 ms** | `docs/hook-latency.json`, recorded 2026-07-27 |
-| bundle | **146 ms** | run 32103306843, diagnostic step, warm |
-| cli | **148 ms** | run 32103306843, diagnostic step, warm |
-| cli | **150 ms** | run 32103306843, the gate itself, cold — passed by 0 ms |
+`pre_tool_use` p95, by path and provenance (a list rather than a table on
+purpose — this artefact's own linter reads every pipe row as a findings row):
+
+- **bundle, 81 ms** — `docs/hook-latency.json`, recorded 2026-07-27.
+- **bundle, 146 ms** — run 32103306843, diagnostic step, warm.
+- **cli, 148 ms** — run 32103306843, diagnostic step, warm.
+- **cli, 150 ms** — run 32103306843, the gate itself, cold; passed by 0 ms.
 
 Two readings, and the first is the one that matters:
 
