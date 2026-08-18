@@ -31,11 +31,13 @@ import {
     formatReport,
     joinPointableBare,
     knownHostLimits,
+    latestPointableBarePerHost,
     migrationEligibility,
     migrationPromptLines,
     observationSourceOf,
     parseHostBudgetEvent,
     readProjectedCatalogue,
+    scopeFlagDecision,
     truncationModeOf,
     type CatalogueEntry,
     type ObservationRecord,
@@ -384,7 +386,7 @@ describe('pointable-but-bare join (D-4)', () => {
     };
 
     it('counts the bare entries the ranker can still name', () => {
-        const rows = joinPointableBare([perEntry], ['on-disk-a', 'on-disk-b', 'unrelated']);
+        const { rows } = joinPointableBare([perEntry], ['on-disk-a', 'on-disk-b', 'unrelated']);
 
         expect(rows).toHaveLength(1);
         expect(rows[0]!.pointableBare).toBe(2);
@@ -398,27 +400,101 @@ describe('pointable-but-bare join (D-4)', () => {
     // row of 0 for it would be a zero inferred from silence — the one failure
     // this module's header forbids outright.
     it('SKIPS a host that publishes no per-entry list rather than scoring it 0', () => {
-        const rows = joinPointableBare([perEntry, stripAndDrop], ['on-disk-a']);
+        const join = joinPointableBare([perEntry, stripAndDrop], ['on-disk-a']);
 
-        expect(rows).toHaveLength(1);
-        expect(rows.map((r) => r.host)).toEqual(['claude']);
+        expect(join.rows).toHaveLength(1);
+        expect(join.rows.map((r) => r.host)).toEqual(['claude']);
+        expect(join.skippedNonPerEntry).toBe(1);
+    });
+
+    // R2 finding 5. `readObservationLog` builds records with an unchecked
+    // `JSON.parse … as` over an append-only log with more than one producer, so
+    // a line missing `bare_names` is a real state — and it used to take the
+    // whole mode down with a TypeError.
+    it('skips a malformed record instead of crashing, and counts it', () => {
+        const malformed = { ...perEntry, bare_names: undefined } as unknown as ObservationRecord;
+
+        const join = joinPointableBare([perEntry, malformed], ['on-disk-a']);
+
+        expect(join.rows).toHaveLength(1);
+        expect(join.skippedMalformed).toBe(1);
+        expect(formatPointableBare(join, 'src/skills', 2)).toContain('malformed log line(s)');
     });
 
     it('treats zero on a per-entry observation as a legitimate answer', () => {
-        const rows = joinPointableBare([perEntry], ['something', 'else']);
+        const join = joinPointableBare([perEntry], ['something', 'else']);
 
-        expect(rows).toHaveLength(1);
-        expect(rows[0]!.pointableBare).toBe(0);
-        expect(formatPointableBare(rows, 'src/skills', 2, 0)).toContain(
-            'D-4 divergence: 0 on every joined observation',
+        expect(join.rows).toHaveLength(1);
+        expect(join.rows[0]!.pointableBare).toBe(0);
+        expect(formatPointableBare(join, 'src/skills', 2)).toContain(
+            'claude (2026-08-12): 0 — the ranker points at nothing this host degraded.',
         );
     });
 
     it('distinguishes "nothing to join" from "joined and found zero"', () => {
-        const out = formatPointableBare([], 'src/skills', 2, 1);
+        const out = formatPointableBare(
+            { rows: [], skippedNonPerEntry: 1, skippedMalformed: 0 },
+            'src/skills',
+            2,
+        );
 
         expect(out).toContain('This is NOT a count of zero');
         expect(out).toContain('D-4 divergence: unmeasured.');
+    });
+
+    // R2 finding 4. A pooled `Math.max` across every host and every date let a
+    // superseded observation supply the headline while the current one read 0,
+    // with no host or date attached to the number — the same failure
+    // `_supersedes` and `formatPerHostVerdicts` exist to prevent.
+    it('states the headline per host off that host\'s latest row, never pooled', () => {
+        const stale = { ...perEntry, observed_at: '2026-01-01' };
+        const current = { ...perEntry, observed_at: '2026-08-12', bare_names: ['unrelated'] };
+
+        const join = joinPointableBare([stale, current], ['on-disk-a', 'on-disk-b']);
+        const out = formatPointableBare(join, 'src/skills', 2);
+
+        // The stale row scores 2 and the current one 0. A pooled max would
+        // headline 2; the per-host headline must quote the current row.
+        expect(out).toContain('claude (2026-08-12): 0');
+        expect(out).not.toContain('up to 2 skill(s)');
+        expect(latestPointableBarePerHost(join.rows).get('claude')!.observedAt).toBe('2026-08-12');
+    });
+});
+
+// R2 finding 8: this decision was module-private and untested, and it is the
+// one the roadmap's part (c) treats as load-bearing — a later edit could
+// regress it to a `<scoped|legacy-all>` placeholder with nothing objecting.
+describe('scope-flag decision', () => {
+    const row = (installedSkills: number, matches: 'scoped' | 'legacy-all' | 'indeterminate') => ({
+        host: 'codex',
+        root: '/root',
+        installedSkills,
+        matches,
+    });
+
+    it('names the mode when the installed root matches one', () => {
+        const decision = scopeFlagDecision('/root', true, row(219, 'scoped'));
+
+        expect(decision.mode).toBe('scoped');
+        expect(decision.reason).toContain('219 skills');
+    });
+
+    it('claims NO mode on an indeterminate root, and says why', () => {
+        const decision = scopeFlagDecision('/root', true, row(297, 'indeterminate'));
+
+        expect(decision.mode).toBeNull();
+        expect(decision.reason).toContain('matches neither projection count');
+        expect(decision.reason).toContain('label a reading nobody took');
+    });
+
+    // Same output, different fact. Collapsing the two would report "this
+    // install's scope is unmeasurable" for a host that is simply not installed.
+    it('claims NO mode when the root is absent, with a DIFFERENT reason', () => {
+        const decision = scopeFlagDecision('/root', false, null);
+
+        expect(decision.mode).toBeNull();
+        expect(decision.reason).toContain('not installed here');
+        expect(decision.reason).not.toContain('matches neither');
     });
 });
 

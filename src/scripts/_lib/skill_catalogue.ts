@@ -1281,6 +1281,55 @@ export function formatCadenceStatus(
     return lines.join('\n');
 }
 
+/** Whether a round may carry a `--projection-mode`, and why not when it may not. */
+export interface ScopeFlagDecision {
+    /** The measured mode, or `null` when none may be claimed. */
+    mode: ProjectionMode | null;
+    /** One line stating what was measured, or why no mode is claimable. */
+    reason: string;
+}
+
+/**
+ * Decide whether a capture round may name a projection mode.
+ *
+ * Exported and pure BECAUSE it is the load-bearing correction: the cadence
+ * output first printed `--projection-mode <scoped|legacy-all>` as a
+ * placeholder, and a placeholder invites the operator to pick — on a root
+ * matching neither count, either pick is the relabelling
+ * `ObservationRecord.projection_mode` forbids. A decision nothing pins is a
+ * decision a later edit regresses silently, so both omit-with-a-reason branches
+ * are fixtured.
+ *
+ * `rootExists: false` and `indeterminate` are deliberately distinct reasons.
+ * They produce the same output — no flag — from different facts, and collapsing
+ * them would report "this install's scope is unmeasurable" for a host that is
+ * simply not installed.
+ */
+export function scopeFlagDecision(
+    root: string,
+    rootExists: boolean,
+    row: HostProjectionRow | null,
+): ScopeFlagDecision {
+    if (!rootExists || row === null) {
+        return {
+            mode: null,
+            reason: `${root} is not installed here, so the scope of the observed install cannot be measured from this machine.`,
+        };
+    }
+    if (row.matches === 'indeterminate') {
+        return {
+            mode: null,
+            reason:
+                `${root} holds ${row.installedSkills} skills, which matches neither projection count — ` +
+                'another suite, a plugin, or a stale install all produce that. Recording a mode here would label a reading nobody took.',
+        };
+    }
+    return {
+        mode: row.matches,
+        reason: `scope measured off ${root} (${row.installedSkills} skills).`,
+    };
+}
+
 /* ------------------------------------------------------------------ *
  * D-4 — host truth against disk truth: pointable but bare.
  * ------------------------------------------------------------------ */
@@ -1317,14 +1366,40 @@ export interface PointableBareRow {
  * the host degraded is also absent from the ranker's tree, so the ranker cannot
  * point at one.
  */
+/** What one join pass produced, including what it refused to read. */
+export interface PointableBareJoin {
+    rows: PointableBareRow[];
+    /** Records skipped because their host publishes no per-entry list. */
+    skippedNonPerEntry: number;
+    /**
+     * Per-entry records skipped because `bare_names` was not an array.
+     *
+     * `readObservationLog` produces records by an unchecked `JSON.parse … as`,
+     * and the log is append-only with more than one producer, so a malformed
+     * line is a real state. Counting it separately keeps it from disappearing
+     * into the same silence as a legitimately empty join — the sibling reducer
+     * `knownHostLimits` guards its own field for the same reason.
+     */
+    skippedMalformed: number;
+}
+
 export function joinPointableBare(
     records: readonly ObservationRecord[],
     rankerCatalogueNames: readonly string[],
-): PointableBareRow[] {
+): PointableBareJoin {
     const rankable = new Set(rankerCatalogueNames);
     const rows: PointableBareRow[] = [];
+    let skippedNonPerEntry = 0;
+    let skippedMalformed = 0;
     for (const record of records) {
-        if (truncationModeOf(record) !== 'per-entry') continue;
+        if (truncationModeOf(record) !== 'per-entry') {
+            skippedNonPerEntry += 1;
+            continue;
+        }
+        if (!Array.isArray(record.bare_names)) {
+            skippedMalformed += 1;
+            continue;
+        }
         const pointable = record.bare_names.filter((name) => rankable.has(name));
         const unpointable = record.bare_names.filter((name) => !rankable.has(name));
         rows.push({
@@ -1337,16 +1412,38 @@ export function joinPointableBare(
             unpointableNames: unpointable,
         });
     }
-    return rows;
+    return { rows, skippedNonPerEntry, skippedMalformed };
+}
+
+/**
+ * The latest joined row per host, by `observedAt`.
+ *
+ * The headline is stated PER HOST and off the latest row, never as one maximum
+ * across the corpus. A pooled max lets a superseded observation supply the
+ * number while the current one reads 0, with no host or date attached to it —
+ * which is the exact failure `_supersedes` was introduced for (two reducers
+ * broke a same-date tie in opposite directions and printed two drop counts for
+ * one host on one day) and which `formatPerHostVerdicts` refuses on the stated
+ * grounds that two hosts truncate by different mechanisms.
+ */
+export function latestPointableBarePerHost(
+    rows: readonly PointableBareRow[],
+): Map<string, PointableBareRow> {
+    const out = new Map<string, PointableBareRow>();
+    for (const row of rows) {
+        const held = out.get(row.host);
+        if (held === undefined || row.observedAt >= held.observedAt) out.set(row.host, row);
+    }
+    return out;
 }
 
 /** The join as an operator report. Zero is printed as a result, not as absence. */
 export function formatPointableBare(
-    rows: readonly PointableBareRow[],
+    join: PointableBareJoin,
     catalogueRoot: string,
     catalogueSize: number,
-    skippedNonPerEntry: number,
 ): string {
+    const { rows, skippedNonPerEntry, skippedMalformed } = join;
     const lines: string[] = [];
     lines.push(`ranker catalogue: ${catalogueRoot} (${catalogueSize} entries)`);
     lines.push('');
@@ -1379,15 +1476,29 @@ export function formatPointableBare(
             'their empty `bare_names` records that nothing was enumerated, not that nothing was bare.',
         );
     }
+    if (skippedMalformed > 0) {
+        lines.push('');
+        lines.push(
+            `⚠️  skipped ${skippedMalformed} per-entry record(s) carrying no \`bare_names\` array —`,
+            'malformed log line(s). Reported rather than absorbed: a skipped record and a joined',
+            'record that found nothing must not look alike.',
+        );
+    }
 
-    const worst = rows.reduce((max, row) => Math.max(max, row.pointableBare), 0);
     lines.push('');
-    lines.push(
-        rows.length === 0
-            ? 'D-4 divergence: unmeasured.'
-            : worst > 0
-              ? `D-4 divergence: up to ${worst} skill(s) the ranker may point at while the model never received their description.`
-              : 'D-4 divergence: 0 on every joined observation — the ranker points at nothing the host degraded.',
-    );
+    if (rows.length === 0) {
+        lines.push('D-4 divergence: unmeasured.');
+        return lines.join('\n');
+    }
+    lines.push('D-4 divergence, per host, off that host\'s LATEST joined observation:');
+    for (const [host, row] of [...latestPointableBarePerHost(rows)].sort((a, b) =>
+        a[0].localeCompare(b[0]),
+    )) {
+        lines.push(
+            row.pointableBare > 0
+                ? `  ${host} (${row.observedAt}): ${row.pointableBare} skill(s) the ranker may point at while the model never received their description.`
+                : `  ${host} (${row.observedAt}): 0 — the ranker points at nothing this host degraded.`,
+        );
+    }
     return lines.join('\n');
 }
