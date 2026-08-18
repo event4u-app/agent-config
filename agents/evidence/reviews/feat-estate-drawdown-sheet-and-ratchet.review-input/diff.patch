@@ -1,0 +1,2604 @@
+diff --git a/.github/workflows/consistency.yml b/.github/workflows/consistency.yml
+index e8a2d975558979845790f0e3c5de9d43424c8d6d..b20cc84cf1488a6c244925203fea3709316dab82 100644
+--- a/.github/workflows/consistency.yml
++++ b/.github/workflows/consistency.yml
+@@ -282,6 +282,9 @@ jobs:
+       - name: Check Iron Law prominence
+         run: ./scripts-run src/scripts/check_iron_law_prominence
+ 
++      - name: Roadmap-estate ratchet + one-in-one-out (estate-drawdown T2/T3)
++        run: ./scripts-run src/scripts/check_estate_count
++
+       - name: Gate R1 — plan Risk Registers (plan-review-gates §1)
+         # Exit-code contract §6: 2 = internal error → degraded advisory
+         # (warn-and-allow — a broken gate never blocks its own fix).
+diff --git a/Taskfile.yml b/Taskfile.yml
+index 555b4f0b391ac7dceba226633a4761ac384693f8..16b9c9637e0727e9c76bcccde066026bd13784d9 100644
+--- a/Taskfile.yml
++++ b/Taskfile.yml
+@@ -194,6 +194,10 @@ tasks:
+       - task: check-completion-review
+       - task: check-review-prompt-binding
+       - task: check-r2-manifest
++      # The estate as a whole, which no other gate reads: the roadmap counts
++      # walk down only, and a new active roadmap pays for itself in the same
++      # change (road-to-estate-drawdown T2 + T3).
++      - task: check-estate-count
+       - task: lint-tickets
+       - task: lint-commit-subjects
+       - task: lint-discovery-vocab
+diff --git a/agents/decisions/consolidated-decision-sheet.md b/agents/decisions/consolidated-decision-sheet.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..34cb8ae77334c4c997b6b9310f03d5a247c6bdcd
+--- /dev/null
++++ b/agents/decisions/consolidated-decision-sheet.md
+@@ -0,0 +1,292 @@
++# Consolidated decision sheet — 21 decisions owned by you
++
++> Generated 2026-08-18 by `agent-config gates --sheet` over `agents/roadmaps/`.
++> Sorted by unblock count, descending. **Accept-all-defaults is a valid answer**
++> (`road-to-estate-drawdown` blocker `b-consolidated-decision-sheet`, option (a));
++> answering only the two largest-unblock items and deferring the rest is option (c),
++> which the roadmap itself recommends. Whichever you pick, the agent writes the answers
++> back into each roadmap at its own blocker — that is not your work.
++>
++> **Provenance of the 21 defaults: 14 maintainer-recorded ·
++> 6 `agent-drafted` · 0 with no recommendation at all ·
++> 1 legacy `> Blocked until …` note(s) that have no field to carry one.**
++> The distinction is in every row on purpose: an agent-drafted default is the
++> least-examined thing on this sheet, and accept-all-defaults would accept those too.
++>
++> This file is DERIVED — every line above and below comes from the roadmaps themselves,
++> so regenerating is deterministic and an answer written into this file would be lost.
++> Answers go back into each roadmap at its own blocker; the agent does that.
++
++| # | Decision | Roadmap | Unblocks | Default source |
++|---:|---|---|---:|---|
++| 1 | `skill-activation-window` | road-to-cost-parity-1-rule-payload-diet.md | 49 | `agent-drafted` |
++| 2 | `autonomy-defaults-sheet` | road-to-user-out-of-the-loop.md | 31 | maintainer-recorded |
++| 3 | `kernel-soak-window` | road-to-user-out-of-the-loop.md | 31 | maintainer-recorded |
++| 4 | `dpo-signoff` | road-to-org-telemetry.md | 26 | maintainer-recorded |
++| 5 | `sink-choice` | road-to-org-telemetry.md | 26 | maintainer-recorded |
++| 6 | `compaction-census-session` | road-to-context-fidelity.md | 19 | maintainer-recorded |
++| 7 | `b-per-turn-composite-bar` | road-to-per-turn-hook-economy.md | 16 | maintainer-recorded |
++| 8 | `legacy` | road-to-gated-reach-followup.md | 12 | none — legacy note |
++| 9 | `real-orchestration-usage` | road-to-orchestration-scope-decision.md | 6 | `agent-drafted` |
++| 10 | `telemetry-sample-size` | road-to-subagent-value-realization-followup.md | 6 | maintainer-recorded |
++| 11 | `human-gated-live-trigger-eval` | road-to-skill-description-measurement.md | 4 | `agent-drafted` |
++| 12 | `b-live-trigger-eval` | road-to-catalogue-host-fit.md | 3 | maintainer-recorded |
++| 13 | `b-consolidated-decision-sheet` | road-to-estate-drawdown.md | 3 | maintainer-recorded |
++| 14 | `b-convergence-machine` | road-to-carrier-layer-convergence.md | 2 | `agent-drafted` |
++| 15 | `maintainer-blind-ratings` | road-to-council-blind-review.md | 2 | `agent-drafted` |
++| 16 | `b-behavioural-bench-spend` | road-to-mixed-trigger-activation-cost.md | 2 | maintainer-recorded |
++| 17 | `manual-rubric-rater` | road-to-scale-history-bench-run.md | 2 | `agent-drafted` |
++| 18 | `b-delegate-gate-maintainer-profile` | road-to-gate-autonomy.md | 1 | maintainer-recorded |
++| 19 | `b-gate-budget-preauth` | road-to-gate-autonomy.md | 1 | maintainer-recorded |
++| 20 | `b-detector-demotion-bars` | road-to-stop-gate-honesty.md | 1 | maintainer-recorded |
++| 21 | `benchmark-spend` | road-to-surface-consolidation.md | 1 | maintainer-recorded |
++
++## 1 · `skill-activation-window`
++
++- **Roadmap:** road-to-cost-parity-1-rule-payload-diet.md
++- **Unblocks:** 49 open step(s) — Phase 1.3's skill-usage evidence column; Phase 2's trigger-accuracy bars
++- **Question** (derived from the first `What to do:` step)**:** `road-to-skill-description-measurement.md` is blocked on `human-gated-live-trigger-eval` with the same gap under a different name — its pre-registration (≥ 100 requests, ≥ 3 shapes, no skill degrading > 20 %) is the bar Phase 2 needs.
++- **Default:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Do NOT commission a second eval.
++- **Default source:** `agent-drafted` — written into the roadmap’s `Recommendation:` field and marked there, NOT a maintainer decision
++- **Recommendation (full):** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Do NOT commission a second eval. This entry is a pointer, and its own text says the sibling's pre-registration IS the bar Phase 2 needs — so adopt that pre-registration as this roadmap's window and resume when the sibling's predictions JSON exists. One human sitting then discharges two blockers instead of one, and a parallel window would produce a second number nobody can reconcile with the first.
++- **If you do nothing:** 49 steps stay open behind an instrument whose depth on this store is unverified, and Phase 1.3's evidence column stays a column with no evidence in it. The independently recorded facts — 6 of 288 skills ever invoked, 0 declaring a trigger, a host that truncates the catalogue — stay true and stay unmeasurable from transcripts.
++- **Done when:** the pilot tranche PR cites its activation baseline and the window it was measured over.
++- **Your answer:** _(accept default · override · defer)_
++
++## 2 · `autonomy-defaults-sheet`
++
++- **Roadmap:** road-to-user-out-of-the-loop.md
++- **Unblocks:** 31 open step(s) — Phase 1 (preselection), Phase 2 (lane cap), Phase 4 (late-artifact default), Phase 5 (policy breadth)
++- **Question** (recorded `Question:`)**:** Four preference settings that determine how aggressive the first iteration is; each has a conservative and a consequent option.
++- **Default:** Preselect `autonomous` at the contract screen, cap lanes at two, default late artifacts to `auto-research`, and keep the deferred policy limited to the follow-up-draft option.
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** Preselect `autonomous` at the contract screen, cap lanes at two, default late artifacts to `auto-research`, and keep the deferred policy limited to the follow-up-draft option. Rationale: each is reversible, each carries its own kill criterion in the phase text, and the conservative variant of all four together produces a plan that measures nothing because nothing changes.
++- **If you do nothing:** the phases can still be built with the conservative variant of each; the measurement in Phase 0 then compares a smaller delta and takes proportionally longer to reach significance.
++- **Done when:** the four values are named, and they are recorded in the decision sheet the Phase 1 contract screen renders.
++- **Your answer:** _(accept default · override · defer)_
++
++## 3 · `kernel-soak-window`
++
++- **Roadmap:** road-to-user-out-of-the-loop.md
++- **Unblocks:** 31 open step(s) — Phase 1 (batch elicitation carve-out — the only true kernel delta), Phase 2 (set-scoped autonomy form), Phase 4 (late-artifact policy), Phase 5 (deferred-policy delta)
++- **Question** (recorded `Question:`)**:** Is the ONE kernel delta (`ask-when-uncertain`) authorized to proceed as its own PR with the required soak window — and do you want the other three deltas, which are NOT kernel, done as ordinary rule edits or held with it?
++- **Default:** Authorize `ask-when-uncertain` on its own with the soak, and let the other three proceed as ordinary rule edits in the order 5-2, 4-4, 2-3 — the deferred-policy delta first because it is the smallest.
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** Authorize `ask-when-uncertain` on its own with the soak, and let the other three proceed as ordinary rule edits in the order 5-2, 4-4, 2-3 — the deferred-policy delta first because it is the smallest. Holding three non-kernel edits behind a soak window they do not need is the cost this blocker was accidentally imposing.
++- **If you do nothing:** Phases 1, 2, 4, and 5 each stop at their rule-delta step. Everything else in the plan still runs — the measurement foundation, the mode-derivation ladder, the decision sheet, the set command, stacking, the merge train, the memo channel, and the session work touch no kernel rule. The plan degrades to roughly two thirds of its scope rather than stalling.
++- **Done when:** the user authorizes or declines the `ask-when-uncertain` delta, and says whether the three non-kernel deltas proceed independently.
++- **Your answer:** _(accept default · override · defer)_
++
++## 4 · `dpo-signoff`
++
++- **Roadmap:** road-to-org-telemetry.md
++- **Unblocks:** 26 open step(s) — Phase 3 (org-wide enablement onward)
++- **Question** (recorded `Question:`)**:** Does the company data-protection process approve the Class-A field list and the disclosure text?
++- **Default:** run it as a written review of exactly two artefacts — the Class-A field list from Phase 1 and the one-line disclosure from Phase 3 — rather than of the roadmap.
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** run it as a written review of exactly two artefacts — the Class-A field list from Phase 1 and the one-line disclosure from Phase 3 — rather than of the roadmap. The design was built to make this review short: no content fields exist to argue about, and the pseudonymous hash is salted outside the public repository.
++- **If you do nothing:** every phase through 2 still runs, and a single-machine enablement remains legitimate for testing. Only enablement across colleagues waits. The measurement in Phase 4 needs at least three distinct users, so the null it publishes without this sign-off would be an artifact of the missing approval rather than a finding about adoption — which is worth knowing before reading that number.
++- **Done when:** a written internal sign-off exists and is referenced from the ADR.
++- **Your answer:** _(accept default · override · defer)_
++
++## 5 · `sink-choice`
++
++- **Roadmap:** road-to-org-telemetry.md
++- **Unblocks:** 26 open step(s) — Phase 2 (sink stand-up)
++- **Question** (recorded `Question:`)**:** Should the sink be a minimal ingest endpoint, or a private repository used as an append-only store?
++- **Default:** the private repository.
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** the private repository. The volume is small, the write path is an existing authenticated primitive rather than new infrastructure to operate, and the Phase 6 clustering runs offline over the file set. An ingest endpoint is the better answer only if the volume outgrows a repository, which the current zero makes unlikely in the measurement window this roadmap needs.
++- **If you do nothing:** Phases 0 and 1 still run in full — the spikes and the local emission need no sink. The plan stalls at the first outbound flush, which is also the first point at which any data would leave a machine, so the cost of the delay is bounded and the privacy posture is unaffected.
++- **Done when:** the sink and its location are named, and the identifier exists in the org pack rather than in this repository.
++- **Your answer:** _(accept default · override · defer)_
++
++## 6 · `compaction-census-session`
++
++- **Roadmap:** road-to-context-fidelity.md
++- **Unblocks:** 19 open step(s) — Phase 0 (cf01 compaction-survival census), and transitively all of Phase 1, whose build-or-close decision reads cf01's number
++- **Question** (recorded `Question:`)**:** cf01 needs an instrumented live session with a manual compaction, repeated across five sessions — and cf03 has since shown that no manual compaction has ever been recorded here.
++- **Default:** Establish manual detectability first, then decide.
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** Establish manual detectability first, then decide. **Corrected on R2 finding 6** — the earlier recommendation here said "re-specify cf01 against the automatic path" because "a manual-compaction census measures a path production never takes", and that overstated what cf03 can support. cf03 recorded 29 events across 473 sessions, all 29 tagged `auto` and none manual — but the detector is pinned to one OBSERVED auto event (`src/scripts/_lib/session_eol.ts:11-19`) and nothing establishes that a manual compaction writes a `compact_boundary` record at all. Zero manual is absence of a RECORD. So the cheap first move is a single manual compaction in one instrumented session to see whether it leaves a trace: if it does, cf01 runs as written; if it does not, cf01's null would be uninterpretable and the automatic path is the only measurable one. The automatic path needs no special session — probes placed in a session that is going to cross 1M tokens, which about half the recorded sessions do (239 of 473 end above 400k).
++- **If you do nothing:** Phase 1 stays unstarted, which is the correct state rather than a stall — it is exactly what a pre-registered honest-null threshold is for. Phase 2 is unaffected: its own gate now reads cf02, which is done. Phase 3 is withdrawn on its own grounds and does not wait on this. The plan degrades to its memory half, and the memory half is the one with a measured defect behind it.
++- **Done when:** a `context-fidelity-cf01.md` finding exists under `agents/evidence/eval-findings/` carrying a per-probe-class number and a host stamp, or the user records that the compaction-survival question is closed unmeasured and Phase 1 is cancelled. (The filename is deliberately not written as a full path here: `check_references` resolves a path in prose and the file does not exist yet, so a link would be a broken reference by construction. The step's own `verify:` probe holds the full path, which is where it belongs.)
++- **Your answer:** _(accept default · override · defer)_
++
++## 7 · `b-per-turn-composite-bar`
++
++- **Roadmap:** road-to-per-turn-hook-economy.md
++- **Unblocks:** 16 open step(s) — Phase 4 step 4.2 only. Step 4.1 registers the composite as a measured row and 4.3 refreshes the census; both proceed without the bar.
++- **Question** (derived from the first `What to do:` step)**:** pre-register the per-turn composite bar.
++- **Default:** **option (b) — register the row observe-only for one release.** No prior exists for a per-turn composite in this tree, so any number named today would be invented, and an invented bar on a summed metric is the flappiest possible gate.
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** **option (b) — register the row observe-only for one release.** No prior exists for a per-turn composite in this tree, so any number named today would be invented, and an invented bar on a summed metric is the flappiest possible gate. One release of observation produces the distribution the bar should come from. Option (a) is right afterwards, not now; option (c) leaves D-1 permanently unmeasurable, which is the defect itself.
++- **If you do nothing:** the per-turn cost stays structurally invisible — every slot green, the number the user feels unrepresented — and Phases 1, 2, 3 and 5 land with no bar to prove they helped. The budget-ownership discipline this repo follows says the bar precedes the lever, so the phases would be shipping against no registered target at all.
++- **Done when:** one option is recorded at this blocker and — for (a) or (b) — the row exists in `hook-latency-budget.json` with its bar or its observe-only marker.
++- **Your answer:** _(accept default · override · defer)_
++
++## 8 · `legacy`
++
++- **Roadmap:** road-to-gated-reach-followup.md
++- **Unblocks:** 12 open step(s) — entire roadmap
++- **Question** (derived from the first `What to do:` step)**:** `yt-dlp` and a JavaScript runtime are installed **by a human** on the machine that runs this.
++- **Default:** _this is a legacy `> Blocked until …` note, not a `### blocker:` entry, so it has no `Recommendation:` field to read. Converting it into a real blocker entry is what gives it a default._
++- **Default source:** none — legacy note
++- **Done when:** condition described above clears
++- **Your answer:** _(accept default · override · defer)_
++
++## 9 · `real-orchestration-usage`
++
++- **Roadmap:** road-to-orchestration-scope-decision.md
++- **Unblocks:** 6 open step(s) — Phase 2 (and thereby Phase 3's decision)
++- **Question** (derived from the first `What to do:` step)**:** the build work is done; only real delegable work produces the telemetry.
++- **Default:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Run the payload probe FIRST and treat its answer as the decision, rather than accumulating more usage.
++- **Default source:** `agent-drafted` — written into the roadmap’s `Recommendation:` field and marked there, NOT a maintainer decision
++- **Recommendation (full):** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Run the payload probe FIRST and treat its answer as the decision, rather than accumulating more usage. The entry's own re-measurement is decisive on this: at 367 orchestration lines the quality columns are `null` 367/367 and `spawn_count ≥ 2` is 0 of 367, so more of the same telemetry cannot populate the columns PROVE needs. If no hook slot sees the task-completion payload, Phase 3's verdict is an **honest null** and this roadmap terminates on that finding instead of waiting; only if a slot does see it is the ≥ 20-populated-line window worth opening.
++- **If you do nothing:** 6 steps wait on a window that the entry's own numbers suggest may never fill, and the roadmap keeps reading as resumable to every feasibility screen — the exact misreading the 2026-08-17 rewrite of the Resolved-when was written to stop. A blocker whose condition cannot be reached is a park or a null, not a wait.
++- **Done when:** a probe result records whether any hook slot sees the task-completion payload, and — if one does — the current-month audit log carries ≥ 20 orchestration lines whose **quality** columns are populated rather than `null`. **Rewritten 2026-08-17.** The bare line-count condition this field carried until today (*"the current-month audit log holds ≥20 orchestration lines"*) was satisfied at 99 lines when it was written and stands at **367** now, while the blocker never stopped being open — a resolution test that is already met cannot resolve anything, and every feasibility screen that trusted it read this roadmap as resumable. The sibling `road-to-subagent-value-realization-followup` had the identical defect repaired on 2026-08-16; this one was missed in the same pass.
++- **Your answer:** _(accept default · override · defer)_
++
++## 10 · `telemetry-sample-size`
++
++- **Roadmap:** road-to-subagent-value-realization-followup.md
++- **Unblocks:** 6 open step(s) — Phase 1 — Seed real telemetry
++- **Question** (derived from the first `What to do:` step)**:** 1.
++- **Default:** stop treating this as a usage-volume blocker and run the live-host semantics probe instead — does **any** hook slot receive the task-completion notification payload, and does that payload carry the usage fields a background dispatch withholds at `post_tool_use`?
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** stop treating this as a usage-volume blocker and run the live-host semantics probe instead — does **any** hook slot receive the task-completion notification payload, and does that payload carry the usage fields a background dispatch withholds at `post_tool_use`? Same shape as `background-continuation-probe`, not a code fix. It is the recommended option because it is the only one that can move the exit criterion: the line count is already met at 99, and the missing columns are documented behaviour of the slot, so more usage produces more of the same nulls.
++- **If you do nothing:** the log keeps growing and Phase 1 stays open forever — `≥ 20 **usable** dispatches` is unreachable at this slot regardless of volume, so the roadmap's last acceptance criterion (re-evaluating the ADR-117 `auto: on` default on real telemetry) never gets the evidence it names, and the default stands unexamined by default rather than by decision.
++- **Done when:** a probe result records whether any hook slot sees the task-completion payload, and — if one does — `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥ 20 orchestration lines whose quality columns are populated rather than `null`. The bare line-count condition this field carried until 2026-08-16 was already satisfied at 99 lines while the blocker stayed open, which made it unusable as a resolution test.
++- **Your answer:** _(accept default · override · defer)_
++
++## 11 · `human-gated-live-trigger-eval`
++
++- **Roadmap:** road-to-skill-description-measurement.md
++- **Unblocks:** 4 open step(s) — all of Phase 1 — 1.1 and 1.2 both need a live model run
++- **Question** (derived from the first `What to do:` step)**:** run the live trigger-eval to produce the predictions JSON for both tree states — `./scripts-run src/scripts/rule_trigger_eval` on the maintainer machine, once per tree state, same protocol both times.
++- **Default:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Run both tree states in ONE sitting under the same protocol, or park the roadmap in `later/` with exactly that as its resume condition.
++- **Default source:** `agent-drafted` — written into the roadmap’s `Recommendation:` field and marked there, NOT a maintainer decision
++- **Recommendation (full):** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Run both tree states in ONE sitting under the same protocol, or park the roadmap in `later/` with exactly that as its resume condition. Two sittings is the failure mode to avoid: the entry's Resolved-when requires both JSONs to come from the *same* protocol, and a protocol that drifted between runs produces two files that look comparable and are not. This blocker also gates `road-to-cost-parity-1-rule-payload-diet`'s `skill-activation-window`, so one sitting discharges two entries — which is why it outranks its own step count.
++- **If you do nothing:** all of Phase 1 stays open, and the description rewrite ships with no before/after activation reading — the claim it exists to test stays unmeasured while reading as ordinary open work.
++- **Done when:** a predictions JSON exists for the pre-rewrite and the post-rewrite tree state, produced by the same protocol.
++- **Your answer:** _(accept default · override · defer)_
++
++## 12 · `b-live-trigger-eval`
++
++- **Roadmap:** road-to-catalogue-host-fit.md
++- **Unblocks:** 3 open step(s) — Phase 0 only. Phases 1, 1b, 2 and 3 are repo work and proceed without it — Phase 0 sits first because of its cross-roadmap leverage, not because it gates this file.
++- **Question** (derived from the first `What to do:` step)**:** run the human-gated live trigger eval.
++- **Default:** **option (a) — run it now, in one sitting.** This is the highest-leverage human action in the estate and the arithmetic is not close: one run commits the selection-accuracy baseline, satisfies a resume condition on `road-to-cost-parity-1-rule-payload-diet`, and satisfies a resume gate on `later/road-to-token-saving`.
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** **option (a) — run it now, in one sitting.** This is the highest-leverage human action in the estate and the arithmetic is not close: one run commits the selection-accuracy baseline, satisfies a resume condition on `road-to-cost-parity-1-rule-payload-diet`, and satisfies a resume gate on `later/road-to-token-saving`. Option (b) is strictly slower for the same spend and makes three roadmaps wait on a mechanism that does not exist yet. Option (c) strands all three indefinitely.
++- **If you do nothing:** three roadmaps stay blocked on a command whose only human ingredients are one confirmation and a bounded amount of spend — the canonical runnable-but-waiting gate `road-to-gate-autonomy` § 0 uses as its own worked example. The skill-selection accuracy of the rewritten descriptions stays unmeasured, so nothing can say whether they helped.
++- **Done when:** the eval's baseline is committed, or option (b) or (c) is recorded at this blocker with its date.
++- **Your answer:** _(accept default · override · defer)_
++
++## 13 · `b-consolidated-decision-sheet`
++
++- **Roadmap:** road-to-estate-drawdown.md
++- **Unblocks:** 3 open step(s) — Phase 0 step 0.2, and through it the class-1 tranche in 1.2. Step 0.1 generates the sheet without it, and Phase 2's triage sweep proceeds independently.
++- **Question** (derived from the first `What to do:` step)**:** answer the consolidated decision sheet that step 0.1 produces — thirteen user-owned blockers, sorted by unblock count, each with a one-line question, a rendered or agent-drafted recommendation, and a default.
++- **Default:** **option (c) — answer the two largest-unblock items, defer the rest.** It discharges most of the blocked step count for a fraction of the reading, which is the whole point of sorting the sheet by unblock count.
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** **option (c) — answer the two largest-unblock items, defer the rest.** It discharges most of the blocked step count for a fraction of the reading, which is the whole point of sorting the sheet by unblock count. Option (a) is faster still but accept-all-defaults over thirteen items includes the agent-drafted defaults, and those are the ones risk 2 flags as least examined. Option (b) is the most careful and the most likely not to happen — this blocker exists because thirteen reading assignments already did not happen once.
++- **If you do nothing:** thirteen user-owned blockers stay open, the two largest unblocks keep holding their step counts, and the campaign starts from a count that rose rather than fell — 44 active after this cohort. Phase 2's triage sweep still runs, so verdicts land, but every DECISION-SHEET verdict routes back to this same unanswered sheet.
++- **Done when:** each of the thirteen carries either an answer or an explicit deferral recorded at its own blocker, and the sheet records which option was used.
++- **Your answer:** _(accept default · override · defer)_
++
++## 14 · `b-convergence-machine`
++
++- **Roadmap:** road-to-carrier-layer-convergence.md
++- **Unblocks:** 2 open step(s) — Phase 3 only (Phases 1-2 are repo work)
++- **Question** (derived from the first `What to do:` step)**:** Phase 3's before/after pair needs the maintainer machine, since the two-layer topology is a property of the install rather than of the repo.
++- **Default:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Take all three steps in ONE sitting — reading, `install --layer`, reading — and record both readings against a named commit in the same note.
++- **Default source:** `agent-drafted` — written into the roadmap’s `Recommendation:` field and marked there, NOT a maintainer decision
++- **Recommendation (full):** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Take all three steps in ONE sitting — reading, `install --layer`, reading — and record both readings against a named commit in the same note. Do not try to reproduce the two-layer topology in the repo: the entry already states that the topology is a property of the install, so a repo-side reconstruction would measure something else and read as the same number. Phases 1-2 are repo work and proceed meanwhile; only Phase 3 waits.
++- **If you do nothing:** Phases 1-2 land and Phase 3 stays open, which means the convergence claim ships with no before/after pair behind it — the shape where a number is published and the measurement that would falsify it was never taken.
++- **Done when:** both readings exist at a named commit.
++- **Your answer:** _(accept default · override · defer)_
++
++## 15 · `maintainer-blind-ratings`
++
++- **Roadmap:** road-to-council-blind-review.md
++- **Unblocks:** 2 open step(s) — Ü2 and Ü3 adoption (Phase 2 pre-registered decision rules) and the Ü2/Ü3 half of Phase 3's merge-or-null. **Ü1 is NOT blocked** — it is decided, adopted and merged (`blind_chairman` default true, opt-out flag, mandatory post-verdict de-anon map, 26/26 test-pinned).
++- **Question** (derived from the first `What to do:` step)**:** rate the prepared blind packet at `internal/bench/council-blind-review/blind-rating-packet.md`, blind to arms.
++- **Default:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Do R1 and R2 in one sitting against the prepared packet, and accept an **honest null** as a full outcome for either — the entry's own Resolved-when asks for adopt-or-honest-null and explicitly refuses a deferral, so "the preference was not majority" closes Ü2 exactly as cleanly as adoption does.
++- **Default source:** `agent-drafted` — written into the roadmap’s `Recommendation:` field and marked there, NOT a maintainer decision
++- **Recommendation (full):** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Do R1 and R2 in one sitting against the prepared packet, and accept an **honest null** as a full outcome for either — the entry's own Resolved-when asks for adopt-or-honest-null and explicitly refuses a deferral, so "the preference was not majority" closes Ü2 exactly as cleanly as adoption does. The sitting is bounded: the packet is already prepared, Ü1 is already adopted and out of scope, and the two readings have pre-registered decision rules rather than open-ended judgement.
++- **If you do nothing:** Ü2 and Ü3 stay undecided and Phase 3's merge-or-null cannot be written at all, so the roadmap cannot terminate in either direction. Ü1's shipped behaviour is unaffected, which is what makes this the cheapest kind of blocker to leave open and the easiest to forget.
++- **Done when:** both readings exist, and each of Ü2 / Ü3 carries an adopt-or-honest-null verdict rather than a deferral.
++- **Your answer:** _(accept default · override · defer)_
++
++## 16 · `b-behavioural-bench-spend`
++
++- **Roadmap:** road-to-mixed-trigger-activation-cost.md
++- **Unblocks:** 2 open step(s) — Phase 3 steps 3.1 and 3.2. Step 3.3's observer is repo work and proceeds without it.
++- **Question** (derived from the first `What to do:` step)**:** authorise the paired A/B run, which bills model tokens across 5–8 tasks in two arms.
++- **Default:** **defer it to the class-1 budget ledger** rather than naming a one-off budget now.
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** **defer it to the class-1 budget ledger** rather than naming a one-off budget now. The bench is the most expensive step in this roadmap and the least urgent: Phase 2's dispositions are justified by the token census on their own, and the bench decides only whether they are *mandatory* or merely *available*. Paying for it before the ledger exists spends the consent twice — once here, once again for the next bench — which is the exact couriering `road-to-gate-autonomy` was opened to end.
++- **If you do nothing:** the behavioural-regression claim stays an argument rather than a number. Phase 2 can still ship on the token census, but the roadmap loses its falsifiability spine — nothing would refute the premise if it were wrong, and the honest-null consequence below becomes unreachable.
++- **Done when:** a budget is named at this blocker, or the step is re-dated against the ledger mechanism with that dependency stated.
++- **Your answer:** _(accept default · override · defer)_
++
++## 17 · `manual-rubric-rater`
++
++- **Roadmap:** road-to-scale-history-bench-run.md
++- **Unblocks:** 2 open step(s) — Phase 1 step 1's scoring half, and thereby step 2's verdict
++- **Question** (derived from the first `What to do:` step)**:** score each produced artifact against `internal/bench/scale-history/rubric.md`, blind to arm, **before** any `score.ts` output is viewed.
++- **Default:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Score the artifacts in ONE sitting and do it before any `score.ts` output is on screen — the anti-anchor ordering is binding per the rubric's own first line, so a sitting split across days is the likeliest way to void the result without noticing.
++- **Default source:** `agent-drafted` — written into the roadmap’s `Recommendation:` field and marked there, NOT a maintainer decision
++- **Recommendation (full):** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Score the artifacts in ONE sitting and do it before any `score.ts` output is on screen — the anti-anchor ordering is binding per the rubric's own first line, so a sitting split across days is the likeliest way to void the result without noticing. If that sitting is not going to happen in the near term, the honest move is to park this roadmap in `later/` with the rubric pass as its probe-able resume condition, rather than leaving it in the active tree reading as ordinary open work.
++- **If you do nothing:** Phase 1 step 1's scoring half stays open and step 2 has no verdict, so the bench run produces only the SECONDARY `lint_persistence` count — a number the pre-registration explicitly does not accept as the defect count. The roadmap then reads as spend-blocked when it is in fact rater-blocked, which is the misreading its own Surfaced note records.
++- **Done when:** a human rubric score exists per artifact, recorded before the secondary `lint_persistence` pass for that artifact. - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was never written down, which is why this roadmap read as spend-blocked-only.
++- **Your answer:** _(accept default · override · defer)_
++
++## 18 · `b-delegate-gate-maintainer-profile`
++
++- **Roadmap:** road-to-gate-autonomy.md
++- **Unblocks:** 1 open step(s) — Phase 3 step 3.1 and therefore 3.2.
++- **Question** (derived from the first `What to do:` step)**:** decide whether to enable the team surface and `allow_delegate` in the maintainer profile only.
++- **Default:** **option (a) — enable both in the maintainer profile.** The blast-radius controls already exist and are unchanged by this: the per-day call cap, the code gate as the enforcement point, and the orchestration ledger as the audit trail.
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** **option (a) — enable both in the maintainer profile.** The blast-radius controls already exist and are unchanged by this: the per-day call cap, the code gate as the enforcement point, and the orchestration ledger as the audit trail. Option (b) permits consultation but not delegated writes, which leaves "a particular agent run" a human task — the exact class Phase 3 exists to remove. Note what makes (a) low-risk here specifically: it moves one profile's setting, not a shipped default, so no consumer install changes.
++- **If you do nothing:** class-1 entries whose `run:` is an agent run stay human-typed, so the acting half of the gate layer is missing precisely where the work is largest. `road-to-estate-drawdown`'s recurring pass (its Phase 4) has no delegate path to run on and cannot exist.
++- **Done when:** one option is recorded at this blocker, and for (a) or (b) the profile carries the setting with the cap named.
++- **Your answer:** _(accept default · override · defer)_
++
++## 19 · `b-gate-budget-preauth`
++
++- **Roadmap:** road-to-gate-autonomy.md
++- **Unblocks:** 1 open step(s) — Phase 2 step 2.3, and therefore every class-1 execution. Steps 2.1 and 2.2 ship the class-0 path and the render path without it. Also blocks the over-budget half of 2.1's `verify:` clause and AC-2's class-1 half: both need a budget to compare against, and this entry is where that budget is decided.
++- **Question** (derived from the first `What to do:` step)**:** decide the standing budget shape for class-1 gates.
++- **Default:** **option (a) — per-run and per-week caps with the receipt ledger.** It is the only option that actually removes the couriering while keeping a real spend bound: a per-run cap alone bounds one mistake, not a week of them.
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** **option (a) — per-run and per-week caps with the receipt ledger.** It is the only option that actually removes the couriering while keeping a real spend bound: a per-run cap alone bounds one mistake, not a week of them. Option (b) preserves today's friction for every billable gate, which leaves the defect in place while adding a ledger. Option (c) collapses class 1 into class 2 and makes the four-class taxonomy a three-class one — defensible, but it gives up the class where the mechanism has the most to offer.
++- **If you do nothing:** every billable gate keeps needing a keystroke, the live trigger eval keeps blocking three roadmaps, and class 1 exists on paper with no mechanism behind it. Phase 2 still ships the class-0 path, so the estate gets the free half of the acting layer and none of the paid half.
++- **Done when:** one option is recorded at this blocker and — for (a) or (b) — the settings keys and the ledger path exist.
++- **Your answer:** _(accept default · override · defer)_
++
++## 20 · `b-detector-demotion-bars`
++
++- **Roadmap:** road-to-stop-gate-honesty.md
++- **Unblocks:** 1 open step(s) — Phase 2 step 2.1, and therefore any demotion. Steps 1.x, 2.2 and 3.x are repo work and proceed without it.
++- **Question** (derived from the first `What to do:` step)**:** pre-register the demotion bar per detector, before reading Phase 1's data — pre-registration after the fact is not pre-registration.
++- **Default:** **option (a) — per-detector bars.** The three detectors have genuinely different legitimacy profiles: A fires on the agent's own promissory language, B on a language mismatch against a fresh pin, C on an edit with no verifier.
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** **option (a) — per-detector bars.** The three detectors have genuinely different legitimacy profiles: A fires on the agent's own promissory language, B on a language mismatch against a fresh pin, C on an edit with no verifier. A single shared bar (option b) would be set by whichever detector fires most and would either demote a detector that was working or protect one that was not. Option (c) is defensible on the round-5 evidence but forecloses the question permanently, and this roadmap's whole premise is that a blocking gate should carry a number.
++- **If you do nothing:** the gate keeps refusing turn-ends at an unmeasured rate, and the estate keeps a blocking concern with no registered kill standard while every advisory around it has one. Phase 1's counts would accumulate with nothing authorised to act on them — measurement without a decision rule, which is the shape this roadmap was opened to fix.
++- **Done when:** the bars, or option (c), are recorded at this blocker with their reasoning, and the record predates the first read of Phase 1 data.
++- **Your answer:** _(accept default · override · defer)_
++
++## 21 · `benchmark-spend`
++
++- **Roadmap:** road-to-surface-consolidation.md
++- **Unblocks:** 1 open step(s) — lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
++- **Question** (derived from the first `What to do:` step)**:** each is a spend-bearing (or corpus-gated) paid run, authorized per run and never as a bundle.
++- **Default:** (a) alone, if anything.
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** (a) alone, if anything. It is the only one of the three with a runner and a spend cap already in the tree, so it is the only one that can be authorized against a real estimate rather than a guess; (b) needs a runner named first, and until either verdict exists (c) is a decision about a question nobody has asked recently.
++- **If you do nothing:** nothing degrades and nothing is at risk — which is precisely why this has not moved. The cost is that the Unified Verification Router decision stays parked indefinitely while reading as pending, so the roadmap cannot close and a reader cannot tell a deferred decision from a forgotten one.
++- **Done when:** the maintainer authorizes the specific run with an estimate, or records (c).
++- **Your answer:** _(accept default · override · defer)_
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 6bb7f72e341ff4e1ce3810b95350d90dc6b534de..c8336b10ffdfc169fa94e5e2c481a950dc445110 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -6,7 +6,7 @@
+ 
+ ## Overall
+ 
+-**289 / 578 steps done · 50%**
++**291 / 578 steps done · 50%**
+ 
+ ```text
+ ████████████████████░░░░░░░░░░░░░░░░░░░░   50%
+@@ -32,7 +32,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ | 6 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
+ | 7 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
+ | 8 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
+-| 9 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 5 | 0 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ░░░░░░░░░░ 0% |
++| 9 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 2 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ████░░░░░░ 40% |
+ | 10 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
+ | 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
+ | 12 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+@@ -141,6 +141,8 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ **Blockers**
+ 
+ - **b-convergence-machine** (owner: user) — blocks Phase 3 only (Phases 1-2 are repo work)
++  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Take all three steps in ONE sitting — reading, `install --layer`, reading — and record both readings against a named commit in the same note. Do not try to reproduce the two-layer topology in the repo: the entry already states that the topology is a property of the install, so a repo-side reconstruction would measure something else and read as the same number. Phases 1-2 are repo work and proceed meanwhile; only Phase 3 waits.
++  - **If you do nothing:** Phases 1-2 land and Phase 3 stays open, which means the convergence claim ships with no before/after pair behind it — the shape where a number is published and the measurement that would falsify it was never taken.
+   - **What to do:**
+     Phase 3's before/after pair needs the maintainer machine,
+     since the two-layer topology is a property of the install rather than of the
+@@ -242,6 +244,8 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ **Blockers**
+ 
+ - **skill-activation-window** (owner: user) — blocks Phase 1.3's skill-usage evidence column; Phase 2's trigger-accuracy bars
++  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Do NOT commission a second eval. This entry is a pointer, and its own text says the sibling's pre-registration IS the bar Phase 2 needs — so adopt that pre-registration as this roadmap's window and resume when the sibling's predictions JSON exists. One human sitting then discharges two blockers instead of one, and a parallel window would produce a second number nobody can reconcile with the first.
++  - **If you do nothing:** 49 steps stay open behind an instrument whose depth on this store is unverified, and Phase 1.3's evidence column stays a column with no evidence in it. The independently recorded facts — 6 of 288 skills ever invoked, 0 declaring a trigger, a host that truncates the catalogue — stay true and stay unmeasurable from transcripts.
+   - **What to do:**
+     `road-to-skill-description-measurement.md` is blocked on
+     `human-gated-live-trigger-eval` with the same gap under a different name —
+@@ -276,6 +280,8 @@ _1 blocker resolved._
+ **Blockers**
+ 
+ - **maintainer-blind-ratings** (owner: user) — blocks Ü2 and Ü3 adoption (Phase 2 pre-registered decision rules) and the Ü2/Ü3 half of Phase 3's merge-or-null. **Ü1 is NOT blocked** — it is decided, adopted and merged (`blind_chairman` default true, opt-out flag, mandatory post-verdict de-anon map, 26/26 test-pinned).
++  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Do R1 and R2 in one sitting against the prepared packet, and accept an **honest null** as a full outcome for either — the entry's own Resolved-when asks for adopt-or-honest-null and explicitly refuses a deferral, so "the preference was not majority" closes Ü2 exactly as cleanly as adoption does. The sitting is bounded: the packet is already prepared, Ü1 is already adopted and out of scope, and the two readings have pre-registered decision rules rather than open-ended judgement.
++  - **If you do nothing:** Ü2 and Ü3 stay undecided and Phase 3's merge-or-null cannot be written at all, so the roadmap cannot terminate in either direction. Ü1's shipped behaviour is unaffected, which is what makes this the cheapest kind of blocker to leave open and the easiest to forget.
+   - **What to do:**
+     rate the prepared blind packet at
+     `internal/bench/council-blind-review/blind-rating-packet.md`, blind to arms.
+@@ -314,14 +320,14 @@ _1 blocker resolved._
+ 
+ ### [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md)
+ 
+-**Road to estate drawdown — an agent-run campaign that ends with fewer roadmaps, enforced** — 0 / 5 done (0%)
++**Road to estate drawdown — an agent-run campaign that ends with fewer roadmaps, enforced** — 2 / 5 done (40%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+-| 0 | One sitting, thirteen answers | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
++| 0 | One sitting, thirteen answers | ✅ done | 0 | 1 | 1 | 0 | 100% |
+ | 1 | Execute everything runnable | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
+ | 2 | Triage sweep over the whole estate, in batches, with terminal verdicts | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+-| 3 | The ratchet lands | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
++| 3 | The ratchet lands | ✅ done | 0 | 1 | 0 | 0 | 100% |
+ | 4 | The recurring agent pass, so this never regrows | ⏭️ skipped | 0 | 0 | 1 | 0 | 0% |
+ 
+ <a id="blockers-road-to-estate-drawdown"></a>
+@@ -632,6 +638,8 @@ _1 blocker resolved._
+ **Blockers**
+ 
+ - **real-orchestration-usage** (owner: user) — blocks Phase 2 (and thereby Phase 3's decision)
++  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Run the payload probe FIRST and treat its answer as the decision, rather than accumulating more usage. The entry's own re-measurement is decisive on this: at 367 orchestration lines the quality columns are `null` 367/367 and `spawn_count ≥ 2` is 0 of 367, so more of the same telemetry cannot populate the columns PROVE needs. If no hook slot sees the task-completion payload, Phase 3's verdict is an **honest null** and this roadmap terminates on that finding instead of waiting; only if a slot does see it is the ≥ 20-populated-line window worth opening.
++  - **If you do nothing:** 6 steps wait on a window that the entry's own numbers suggest may never fill, and the roadmap keeps reading as resumable to every feasibility screen — the exact misreading the 2026-08-17 rewrite of the Resolved-when was written to stop. A blocker whose condition cannot be reached is a park or a null, not a wait.
+   - **What to do:**
+     the build work is done; only real delegable work produces the
+     telemetry. Use the agent on genuinely parallel/ordered multi-file tasks under
+@@ -790,6 +798,8 @@ _1 blocker resolved._
+ **Blockers**
+ 
+ - **manual-rubric-rater** (owner: user) — blocks Phase 1 step 1's scoring half, and thereby step 2's verdict
++  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Score the artifacts in ONE sitting and do it before any `score.ts` output is on screen — the anti-anchor ordering is binding per the rubric's own first line, so a sitting split across days is the likeliest way to void the result without noticing. If that sitting is not going to happen in the near term, the honest move is to park this roadmap in `later/` with the rubric pass as its probe-able resume condition, rather than leaving it in the active tree reading as ordinary open work.
++  - **If you do nothing:** Phase 1 step 1's scoring half stays open and step 2 has no verdict, so the bench run produces only the SECONDARY `lint_persistence` count — a number the pre-registration explicitly does not accept as the defect count. The roadmap then reads as spend-blocked when it is in fact rater-blocked, which is the misreading its own Surfaced note records.
+   - **What to do:**
+     score each produced artifact against
+     `internal/bench/scale-history/rubric.md`, blind to arm, **before** any
+@@ -814,11 +824,15 @@ _2 blockers resolved._
+ **Blockers**
+ 
+ - **human-gated-live-trigger-eval** (owner: user) — blocks all of Phase 1 — 1.1 and 1.2 both need a live model run
++  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Run both tree states in ONE sitting under the same protocol, or park the roadmap in `later/` with exactly that as its resume condition. Two sittings is the failure mode to avoid: the entry's Resolved-when requires both JSONs to come from the *same* protocol, and a protocol that drifted between runs produces two files that look comparable and are not. This blocker also gates `road-to-cost-parity-1-rule-payload-diet`'s `skill-activation-window`, so one sitting discharges two entries — which is why it outranks its own step count.
++  - **If you do nothing:** all of Phase 1 stays open, and the description rewrite ships with no before/after activation reading — the claim it exists to test stays unmeasured while reading as ordinary open work.
+   - **What to do:**
+     run the live trigger-eval to produce the predictions JSON for
+-    both tree states. It hard-aborts under automation on purpose, so an agent
+-    cannot supply it and must not simulate it. Substituting an AI rater would
+-    break the pre-registration.
++    both tree states — `./scripts-run src/scripts/rule_trigger_eval` on the
++    maintainer machine, once per tree state, same protocol both times. It
++    hard-aborts under automation on purpose, so an agent cannot supply it and
++    must not simulate it. Substituting an AI rater would break the
++    pre-registration.
+   - **Resolved when:** a predictions JSON exists for the pre-rewrite and the post-rewrite tree state, produced by the same protocol.
+ 
+ ### [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md)
+diff --git a/agents/roadmaps/road-to-carrier-layer-convergence.md b/agents/roadmaps/road-to-carrier-layer-convergence.md
+index eea2ba7cc89f75c05e5ae8f84e052b39aa4217ab..7fba4e1cf77084a0e06cf08e3870b3633440a6b8 100644
+--- a/agents/roadmaps/road-to-carrier-layer-convergence.md
++++ b/agents/roadmaps/road-to-carrier-layer-convergence.md
+@@ -193,6 +193,19 @@ suppressed layer restores the prior state.
+ - **What to do:** Phase 3's before/after pair needs the maintainer machine,
+   since the two-layer topology is a property of the install rather than of the
+   repo. Run the reading, apply `install --layer`, run it again.
++- **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the
++  field; drafted from the roadmap's own text for the consolidated decision
++  sheet, not from a maintainer decision.)** Take all three steps in ONE
++  sitting — reading, `install --layer`, reading — and record both readings
++  against a named commit in the same note. Do not try to reproduce the
++  two-layer topology in the repo: the entry already states that the topology
++  is a property of the install, so a repo-side reconstruction would measure
++  something else and read as the same number. Phases 1-2 are repo work and
++  proceed meanwhile; only Phase 3 waits.
++- **If you do nothing:** Phases 1-2 land and Phase 3 stays open, which means
++  the convergence claim ships with no before/after pair behind it — the shape
++  where a number is published and the measurement that would falsify it was
++  never taken.
+ - **Resolved when:** both readings exist at a named commit.
+ 
+ ## Risk Register
+diff --git a/agents/roadmaps/road-to-cost-parity-1-rule-payload-diet.md b/agents/roadmaps/road-to-cost-parity-1-rule-payload-diet.md
+index 0cf5c17e110e9987e089c4883813751a7a226f4c..564a74edb7ac837c672059016a400122ac63b5d4 100644
+--- a/agents/roadmaps/road-to-cost-parity-1-rule-payload-diet.md
++++ b/agents/roadmaps/road-to-cost-parity-1-rule-payload-diet.md
+@@ -371,6 +371,20 @@ part 0's table.
+   injected catalogue, which is not measurable from transcripts. So the
+   activation instrument's depth on this store is unverified until that eval
+   runs.
++- **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the
++  field; drafted from the roadmap's own text for the consolidated decision
++  sheet, not from a maintainer decision.)** Do NOT commission a second eval.
++  This entry is a pointer, and its own text says the sibling's
++  pre-registration IS the bar Phase 2 needs — so adopt that pre-registration
++  as this roadmap's window and resume when the sibling's predictions JSON
++  exists. One human sitting then discharges two blockers instead of one, and
++  a parallel window would produce a second number nobody can reconcile with
++  the first.
++- **If you do nothing:** 49 steps stay open behind an instrument whose depth
++  on this store is unverified, and Phase 1.3's evidence column stays a column
++  with no evidence in it. The independently recorded facts — 6 of 288 skills
++  ever invoked, 0 declaring a trigger, a host that truncates the catalogue —
++  stay true and stay unmeasurable from transcripts.
+ - **Resolved when:** the pilot tranche PR cites its activation baseline and
+   the window it was measured over.
+ 
+diff --git a/agents/roadmaps/road-to-council-blind-review.md b/agents/roadmaps/road-to-council-blind-review.md
+index fda7ce8565500209aa9878bce3f8a6499645944c..ea16f1760a93051df422b72e12cfecb9be6b166c 100644
+--- a/agents/roadmaps/road-to-council-blind-review.md
++++ b/agents/roadmaps/road-to-council-blind-review.md
+@@ -227,6 +227,19 @@ production host mode; method in `internal/bench/council-blind-review/`.
+   as the rater. Substituting an AI rater would break the pre-registration and
+   would itself be the self-preference bias this roadmap exists to measure — the
+   one substitution that invalidates the result it produces.
++- **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the
++  field; drafted from the roadmap's own text for the consolidated decision
++  sheet, not from a maintainer decision.)** Do R1 and R2 in one sitting against
++  the prepared packet, and accept an **honest null** as a full outcome for
++  either — the entry's own Resolved-when asks for adopt-or-honest-null and
++  explicitly refuses a deferral, so "the preference was not majority" closes Ü2
++  exactly as cleanly as adoption does. The sitting is bounded: the packet is
++  already prepared, Ü1 is already adopted and out of scope, and the two
++  readings have pre-registered decision rules rather than open-ended judgement.
++- **If you do nothing:** Ü2 and Ü3 stay undecided and Phase 3's merge-or-null
++  cannot be written at all, so the roadmap cannot terminate in either
++  direction. Ü1's shipped behaviour is unaffected, which is what makes this
++  the cheapest kind of blocker to leave open and the easiest to forget.
+ - **Resolved when:** both readings exist, and each of Ü2 / Ü3 carries an
+   adopt-or-honest-null verdict rather than a deferral.
+ 
+diff --git a/agents/roadmaps/road-to-estate-drawdown.md b/agents/roadmaps/road-to-estate-drawdown.md
+index 11916302b2efea6db75ae2ef86f276b95e3cc6c8..0c0ac9fffbcd3d0669639ffbadf6edb2a7b79347 100644
+--- a/agents/roadmaps/road-to-estate-drawdown.md
++++ b/agents/roadmaps/road-to-estate-drawdown.md
+@@ -89,7 +89,7 @@ is the requirement.**
+ The human's entire contribution, front-loaded. **This phase needs nothing from the
+ sibling roadmap — it is runnable with today's tooling.**
+ 
+-- [ ] **0.1** Generate ONE consolidated decision sheet from the gate output,
++- [x] **0.1** Generate ONE consolidated decision sheet from the gate output,
+       `owner: user` only — thirteen items: per item the one-line question, the
+       rendered recommendation, a default, and what it unblocks, sorted by unblock
+       count descending. Items whose entry records no recommendation get one
+@@ -97,6 +97,35 @@ sibling roadmap — it is runnable with today's tooling.**
+       agent-drafted**, so the provenance of each default is visible.
+       `verify:` the sheet contains all thirteen, each with a question, a default and
+       its recommendation source labelled.
++      - **Done 2026-08-18.** `agent-config gates --sheet` is the generator;
++        `agents/decisions/consolidated-decision-sheet.md` is the artefact.
++        **The step says thirteen and the estate says 21** — the count grew between
++        drafting and execution, which is the arrival rate T3 exists to bound
++        rather than a mis-drafted step. The sheet is generated, so the number is
++        whatever `Owner: user` currently reports.
++      - **The agent-drafted defaults were written into the ROADMAPS, not into the
++        sheet**, and that is a deliberate departure from the literal reading. 7 of
++        the 21 entries recorded no `Recommendation:`; drafting into the sheet would
++        have made it a hand-edited generated file, so the next regeneration would
++        silently drop the drafts. Six were written into their own blocker's
++        `Recommendation:` field marked `(agent-drafted …)`, and the sheet READS that
++        marker — so provenance is visible per row, the sheet stays fully derived,
++        and `gates` / `--reply` gained the same recommendations.
++      - **The seventh has no field to carry one and the sheet says so.**
++        `road-to-gated-reach-followup` states its gate as a legacy
++        `> Blocked until …` note rather than a `### blocker:` entry, so it has no
++        `Recommendation:` slot. That row is labelled `none — legacy note` and names
++        the conversion as what would give it a default; converting another
++        roadmap's structure was left out of this change.
++      - **By-product:** the drain took `lint_roadmap_blockers:decidability` from a
++        **pre-existing red** (28 against a baseline of 26 on `origin/main`) to 22,
++        and the baseline was lowered to match. Second recorded instance of that
++        ratchet being red on main undetected — it runs in `task ci`, which no
++        workflow invokes.
++      - `verify:` `./scripts-run src/agent-src/scripts/roadmap_gates --sheet`
++        (21 rows, each with a question, a default or a stated reason it has none,
++        and a labelled source); 12 renderer cases in
++        `tests/scripts/roadmap_gates.test.ts`.
+ - [~] **0.2** The maintainer answers the sheet once. **Accept-all-defaults is a
+       valid answer.** The answers are then appended into each roadmap file at its
+       blocker as the decision record — by the agent, not by the human. Blocked on
+@@ -146,12 +175,38 @@ sibling roadmap — it is runnable with today's tooling.**
+ 
+ ### Phase 3 — The ratchet lands
+ 
+-- [ ] **3.1** An estate-count gate: read the dashboard, compare against the
++- [x] **3.1** An estate-count gate: read the dashboard, compare against the
+       committed baseline, red on growth, with the raise-reason discipline for any
+       increase. Plus the one-in-one-out lint per T3.
+       `verify:` the gate is green at the registered ceiling, and a fixture PR that
+       adds an active roadmap without an offset **fails**.
++      - **Done 2026-08-18.** `src/scripts/check_estate_count.ts` +
++        `src/config/estate-count-budget.json`. Both halves under one gate id, so
++        the registration surface is one row rather than two.
++      - **"Read the dashboard" is implemented as reading the dashboard's own
++        parser**, not as scraping its markdown: `collect()` from
++        `update_roadmap_progress`, imported. Verified that `collect().length` is 38
++        and its summed open blockers are 49 — exactly the two numbers the dashboard
++        header prints, so the gate cannot disagree with the page it is named after.
++        `later/` is counted from the filesystem because parked roadmaps are outside
++        that corpus by design.
++      - **No ceiling was invented.** T1's proposed 15 / 12 are recorded in the
++        budget under `target` and read by nothing, because this roadmap says both
++        the numbers and the window belong to the maintainer. T3's "while the active
++        count sits above target" therefore has no registered threshold, and
++        `one_in_one_out.applies_above_active: null` states that and applies the
++        lint. The baseline is the **measured** estate (38/44/49), not a target — a
++        hard 15-roadmap gate would be red the day it lands.
++      - `verify:` `./scripts-run src/scripts/check_estate_count` green at the
++        baseline; `--self-test` 5/5 (3 rejecting); 16 vitest cases over throwaway
++        git repos covering growth, the addition-without-offset fixture, the
++        paid-for-by-archive fixture, un-parking, the exemption tag, the registered
++        ceiling in both directions, and a dead scan root exiting 2 rather than 1;
++        `check_gate_coverage --canary` reports "caught the planted
++        contract-violation defect (exit 1)", so the gate is verified-not-blind.
+ - **AC-3:** both gates exist and are red/green against fixtures in both directions.
++  **Met 2026-08-18** — the two directions are the `--self-test` accept/reject pairs
++  and the vitest fixtures above; the canary proves it against the shipped CLI.
+ 
+ ### Phase 4 — The recurring agent pass, so this never regrows
+ 
+diff --git a/agents/roadmaps/road-to-orchestration-scope-decision.md b/agents/roadmaps/road-to-orchestration-scope-decision.md
+index 01f9c995cd9fdf7a556907d5df8f9e6d7bea9aaf..76f85d43a3d3fa01866a45beaee097466f83cd8c 100644
+--- a/agents/roadmaps/road-to-orchestration-scope-decision.md
++++ b/agents/roadmaps/road-to-orchestration-scope-decision.md
+@@ -251,6 +251,21 @@ proof surface.
+   exists; what is still missing is the counterfactual and the quality columns,
+   which is a narrower gap than the prose above describes. `spawn_count ≥ 2` is
+   still **0 of 367**, so the corpus has never produced a fan-out.
++- **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the
++  field; drafted from the roadmap's own text for the consolidated decision
++  sheet, not from a maintainer decision.)** Run the payload probe FIRST and
++  treat its answer as the decision, rather than accumulating more usage. The
++  entry's own re-measurement is decisive on this: at 367 orchestration lines
++  the quality columns are `null` 367/367 and `spawn_count ≥ 2` is 0 of 367, so
++  more of the same telemetry cannot populate the columns PROVE needs. If no
++  hook slot sees the task-completion payload, Phase 3's verdict is an **honest
++  null** and this roadmap terminates on that finding instead of waiting; only
++  if a slot does see it is the ≥ 20-populated-line window worth opening.
++- **If you do nothing:** 6 steps wait on a window that the entry's own numbers
++  suggest may never fill, and the roadmap keeps reading as resumable to every
++  feasibility screen — the exact misreading the 2026-08-17 rewrite of the
++  Resolved-when was written to stop. A blocker whose condition cannot be
++  reached is a park or a null, not a wait.
+ - **Resolved when:** a probe result records whether any hook slot sees the
+   task-completion payload, and — if one does — the current-month audit log
+   carries ≥ 20 orchestration lines whose **quality** columns are populated
+diff --git a/agents/roadmaps/road-to-scale-history-bench-run.md b/agents/roadmaps/road-to-scale-history-bench-run.md
+index 3c9e2e714a6d4b59b7275750625835c7144b5965..75475442925b27826cb2e67539a2aa905cf64110 100644
+--- a/agents/roadmaps/road-to-scale-history-bench-run.md
++++ b/agents/roadmaps/road-to-scale-history-bench-run.md
+@@ -145,6 +145,22 @@ POST-bench copy, never pre-bench).
+     for its own blind ratings, and the reason `evaluator-independence` exists.
+     Substituting an AI rater here would not be a weaker result; it would be an
+     uncitable one.
++- **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the
++  field; drafted from the roadmap's own text for the consolidated decision
++  sheet, not from a maintainer decision.)** Score the artifacts in ONE sitting
++  and do it before any `score.ts` output is on screen — the anti-anchor
++  ordering is binding per the rubric's own first line, so a sitting split
++  across days is the likeliest way to void the result without noticing. If
++  that sitting is not going to happen in the near term, the honest move is to
++  park this roadmap in `later/` with the rubric pass as its probe-able resume
++  condition, rather than leaving it in the active tree reading as ordinary
++  open work.
++- **If you do nothing:** Phase 1 step 1's scoring half stays open and step 2
++  has no verdict, so the bench run produces only the SECONDARY
++  `lint_persistence` count — a number the pre-registration explicitly does not
++  accept as the defect count. The roadmap then reads as spend-blocked when it
++  is in fact rater-blocked, which is the misreading its own Surfaced note
++  records.
+ - **Resolved when:** a human rubric score exists per artifact, recorded before
+   the secondary `lint_persistence` pass for that artifact.
+ - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was
+diff --git a/agents/roadmaps/road-to-skill-description-measurement.md b/agents/roadmaps/road-to-skill-description-measurement.md
+index b88e6830ce51bf4fcdb1f716e71c478fe9b91eca..30c82b7f66d3de23e8ba3231fe1d67e0d79aaeeb 100644
+--- a/agents/roadmaps/road-to-skill-description-measurement.md
++++ b/agents/roadmaps/road-to-skill-description-measurement.md
+@@ -99,9 +99,24 @@ renegotiated by the outcome.
+ - **Class:** 3 — human-only (hard-aborts under automation by design; simulating it breaks the prereg)
+ - **Blocks:** all of Phase 1 — 1.1 and 1.2 both need a live model run
+ - **What to do:** run the live trigger-eval to produce the predictions JSON for
+-  both tree states. It hard-aborts under automation on purpose, so an agent
+-  cannot supply it and must not simulate it. Substituting an AI rater would
+-  break the pre-registration.
++  both tree states — `./scripts-run src/scripts/rule_trigger_eval` on the
++  maintainer machine, once per tree state, same protocol both times. It
++  hard-aborts under automation on purpose, so an agent cannot supply it and
++  must not simulate it. Substituting an AI rater would break the
++  pre-registration.
++- **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the
++  field; drafted from the roadmap's own text for the consolidated decision
++  sheet, not from a maintainer decision.)** Run both tree states in ONE sitting
++  under the same protocol, or park the roadmap in `later/` with exactly that as
++  its resume condition. Two sittings is the failure mode to avoid: the entry's
++  Resolved-when requires both JSONs to come from the *same* protocol, and a
++  protocol that drifted between runs produces two files that look comparable
++  and are not. This blocker also gates
++  `road-to-cost-parity-1-rule-payload-diet`'s `skill-activation-window`, so one
++  sitting discharges two entries — which is why it outranks its own step count.
++- **If you do nothing:** all of Phase 1 stays open, and the description
++  rewrite ships with no before/after activation reading — the claim it exists
++  to test stays unmeasured while reading as ordinary open work.
+ - **Resolved when:** a predictions JSON exists for the pre-rewrite and the
+   post-rewrite tree state, produced by the same protocol.
+ 
+diff --git a/dist/agent-src/scripts/roadmap_gates.ts b/dist/agent-src/scripts/roadmap_gates.ts
+index 6ea9d155eb6e380eb591beb4e6865635e5b4f099..eeeef66ecf2fbc1a15ea1bc7a0176cfcc0ae2a23 100644
+--- a/dist/agent-src/scripts/roadmap_gates.ts
++++ b/dist/agent-src/scripts/roadmap_gates.ts
+@@ -342,6 +342,183 @@ function render(
+  * Returns '' when nothing is owned by the user, so the caller can append the
+  * result unconditionally and get silence when silence is correct.
+  */
++/**
++ * Whether a recorded recommendation was drafted by the agent rather than decided
++ * by the maintainer.
++ *
++ * Read from the field's own text, because that is where the claim has to live: a
++ * drafted recommendation is written INTO the roadmap so every consumer
++ * (`gates`, `--reply`, the sheet) sees the same string, and a marker held only
++ * in the sheet would be invisible to the other two. The convention is a leading
++ * `(agent-drafted …)` — matched loosely on purpose, since the parenthetical also
++ * carries a date and a sentence of provenance.
++ */
++export function isAgentDrafted(recommendation: string): boolean {
++    return /\(agent-drafted\b/i.test(recommendation);
++}
++
++/** First sentence of a passage, for the one-line `Default:` column. */
++function firstSentence(text: string): string {
++    const trimmed = text.trim();
++    if (trimmed === '') {
++        return '';
++    }
++    const m = /^(.+?[.!?])(\s|$)/.exec(trimmed.replace(/\s+/g, ' '));
++    return m === null ? trimmed.replace(/\s+/g, ' ') : (m[1] as string);
++}
++
++/**
++ * The one-line question a sheet row leads with.
++ *
++ * `Question:` is an optional field and only 5 of the 21 user-owned entries carry
++ * one (measured 2026-08-18), so a sheet that printed it and nothing else would
++ * be blank for three quarters of the estate. Falling back to the first step of
++ * `What to do:` and then to `Blocks:` is deterministic and derived from the
++ * blocker's own text — which is why the row LABELS which of the three it used
++ * rather than presenting all three as the same kind of statement.
++ */
++export function sheetQuestion(b: Blocker): { text: string; source: 'question' | 'todo' | 'blocks' } {
++    if (b.question.trim() !== '') {
++        return { text: firstSentence(b.question), source: 'question' };
++    }
++    const steps = regroupTodo(b.todo);
++    if (steps.length > 0 && (steps[0] as string).trim() !== '') {
++        return { text: firstSentence(steps[0] as string), source: 'todo' };
++    }
++    return { text: firstSentence(b.blocks), source: 'blocks' };
++}
++
++/**
++ * The consolidated decision sheet — every user-owned decision in ONE artefact.
++ *
++ * `road-to-estate-drawdown` Phase 0 exists because thirteen reading assignments
++ * spread across thirteen files did not happen once. The sheet is the whole of
++ * the human's contribution to that campaign, front-loaded: one document, sorted
++ * by how much each answer unblocks, with a default per item so that
++ * accept-all-defaults is a valid answer.
++ *
++ * This differs from `--all` in the two ways that matter for that job. `--all`
++ * renders every blocker grouped by owner and is a terminal view; the sheet is
++ * user-owned ONLY, and every row carries a `Default:` plus the PROVENANCE of
++ * that default. Provenance is the load-bearing column: 14 of the 21 live entries
++ * record a `Recommendation:` and 7 do not, and a sheet that presented an
++ * agent-drafted default beside a recorded one as the same thing would invite
++ * accept-all over exactly the items nobody has examined.
++ *
++ * Deterministic by construction — the generator never invents a default. Where
++ * none is recorded it says so and names what the reader must supply, so
++ * regenerating the sheet cannot silently overwrite an answer with a guess.
++ */
++function renderSheet(entries: readonly Entry[], now: Date): string {
++    const mine = entries.filter((e) => needsUser(e.blocker.owner));
++    const stamp = now.toISOString().slice(0, 10);
++    if (mine.length === 0) {
++        return (
++            `# Consolidated decision sheet — nothing owned by you (${stamp})\n\n` +
++            'No open blocker in the active roadmap tree carries `Owner: user`. Nothing to answer.\n'
++        );
++    }
++
++    const noRec = mine.filter((e) => e.blocker.recommendation.trim() === '');
++    const legacyNotes = noRec.filter((e) => isLegacy(e.blocker)).length;
++    const missing = noRec.length - legacyNotes;
++    const drafted = mine.filter((e) => isAgentDrafted(e.blocker.recommendation)).length;
++    const maintainerRecorded = mine.length - noRec.length - drafted;
++    const out: string[] = [
++        `# Consolidated decision sheet — ${String(mine.length)} decisions owned by you`,
++        '',
++        `> Generated ${stamp} by \`agent-config gates --sheet\` over \`agents/roadmaps/\`.`,
++        '> Sorted by unblock count, descending. **Accept-all-defaults is a valid answer**',
++        '> (`road-to-estate-drawdown` blocker `b-consolidated-decision-sheet`, option (a));',
++        '> answering only the two largest-unblock items and deferring the rest is option (c),',
++        '> which the roadmap itself recommends. Whichever you pick, the agent writes the answers',
++        '> back into each roadmap at its own blocker — that is not your work.',
++        '>',
++        `> **Provenance of the ${String(mine.length)} defaults: ${String(maintainerRecorded)} maintainer-recorded ·`,
++        `> ${String(drafted)} \`agent-drafted\` · ${String(missing)} with no recommendation at all ·`,
++        `> ${String(legacyNotes)} legacy \`> Blocked until …\` note(s) that have no field to carry one.**`,
++        '> The distinction is in every row on purpose: an agent-drafted default is the',
++        '> least-examined thing on this sheet, and accept-all-defaults would accept those too.',
++        '>',
++        '> This file is DERIVED — every line above and below comes from the roadmaps themselves,',
++        '> so regenerating is deterministic and an answer written into this file would be lost.',
++        '> Answers go back into each roadmap at its own blocker; the agent does that.',
++        '',
++        '| # | Decision | Roadmap | Unblocks | Default source |',
++        '|---:|---|---|---:|---|',
++    ];
++    mine.forEach((e, i) => {
++        const source =
++            e.blocker.recommendation.trim() !== ''
++                ? isAgentDrafted(e.blocker.recommendation)
++                    ? '`agent-drafted`'
++                    : 'maintainer-recorded'
++                : isLegacy(e.blocker)
++                  ? 'none — legacy note'
++                  : 'none recorded';
++        out.push(
++            `| ${String(i + 1)} | \`${e.blocker.id}\` | ${e.roadmapRel} | ` +
++                `${String(e.openSteps)} | ${source} |`,
++        );
++    });
++
++    mine.forEach((e, i) => {
++        const q = sheetQuestion(e.blocker);
++        const qLabel =
++            q.source === 'question'
++                ? 'recorded `Question:`'
++                : q.source === 'todo'
++                  ? 'derived from the first `What to do:` step'
++                  : 'derived from `Blocks:`';
++        const recorded = e.blocker.recommendation.trim();
++        out.push(
++            '',
++            `## ${String(i + 1)} · \`${e.blocker.id}\``,
++            '',
++            `- **Roadmap:** ${e.roadmapRel}`,
++            `- **Unblocks:** ${String(e.openSteps)} open step(s) — ${e.blocker.blocks || '(not recorded)'}`,
++            `- **Question** (${qLabel})**:** ${q.text || '(the blocker records no question, no steps and no Blocks: field)'}`,
++        );
++        if (recorded === '' && isLegacy(e.blocker)) {
++            // A legacy `> Blocked until …` note is not a `### blocker:` entry and
++            // has no field to carry a recommendation. Saying "agent-drafted, to
++            // be written in" would point at a slot that does not exist, so the
++            // row names the actual next action instead.
++            out.push(
++                '- **Default:** _this is a legacy `> Blocked until …` note, not a `### blocker:` entry,' +
++                    ' so it has no `Recommendation:` field to read. Converting it into a real blocker' +
++                    ' entry is what gives it a default._',
++                '- **Default source:** none — legacy note',
++            );
++        } else if (recorded === '') {
++            out.push(
++                '- **Default:** _none recorded — needs an agent-drafted default before this row can be' +
++                    ' answered by accepting it._',
++                '- **Default source:** `agent-drafted` (to be written in below, and marked as such)',
++            );
++        } else {
++            const drafted = isAgentDrafted(recorded);
++            out.push(
++                `- **Default:** ${firstSentence(recorded)}`,
++                drafted
++                    ? '- **Default source:** `agent-drafted` — written into the roadmap’s ' +
++                      '`Recommendation:` field and marked there, NOT a maintainer decision'
++                    : '- **Default source:** maintainer-recorded `Recommendation:` in the roadmap',
++                `- **Recommendation (full):** ${recorded.replace(/\s+/g, ' ')}`,
++            );
++        }
++        if (e.blocker.ifNothing.trim() !== '') {
++            out.push(`- **If you do nothing:** ${e.blocker.ifNothing.replace(/\s+/g, ' ')}`);
++        }
++        out.push(
++            `- **Done when:** ${e.blocker.resolvedWhen.replace(/\s+/g, ' ') || '(not recorded)'}`,
++            '- **Your answer:** _(accept default · override · defer)_',
++        );
++    });
++    out.push('');
++    return out.join('\n');
++}
++
+ function renderReply(entries: readonly Entry[]): string {
+     const mine = entries.filter((e) => needsUser(e.blocker.owner));
+     if (mine.length === 0) {
+@@ -564,6 +741,7 @@ function main(argv?: readonly string[]): number {
+     const json = args.includes('--json');
+     const reply = args.includes('--reply');
+     const pending = args.includes('--pending');
++    const sheet = args.includes('--sheet');
+ 
+     // `--execute <id>` is answered FIRST, and it is the only mode that writes.
+     // It used to sit after the `--pending` early return, so `--pending
+@@ -643,13 +821,20 @@ function main(argv?: readonly string[]): number {
+     // `--reply` deliberately does not carry the probe: ADR-222 fixes that form
+     // at exactly ONE decision rendered in full, and a fired resume condition is
+     // not a decision the reader owes anybody — it is a file that can move.
+-    const resumed = reply ? [] : probeLater(roadmapRoot);
++    // `--reply` and `--sheet` deliberately do not carry the probe: ADR-222 fixes
++    // the reply form at exactly ONE decision rendered in full, and a fired resume
++    // condition is not a decision the reader owes anybody — it is a file that can
++    // move. The sheet is the same argument for the same reason: it is the set of
++    // answers the user owes, and a movable file is not one of them.
++    const resumed = reply || sheet ? [] : probeLater(roadmapRoot);
+     process.stdout.write(
+-        reply
+-            ? renderReply(entries)
+-            : json
+-              ? renderJson(entries, all, resumed)
+-              : render(entries, all, resumed),
++        sheet
++            ? renderSheet(entries, new Date())
++            : reply
++              ? renderReply(entries)
++              : json
++                ? renderJson(entries, all, resumed)
++                : render(entries, all, resumed),
+     );
+     return 0;
+ }
+@@ -687,6 +872,7 @@ export {
+     renderJson,
+     renderReply,
+     renderResumed,
++    renderSheet,
+     renderPending,
+     renderPendingJson,
+ };
+diff --git a/src/agent-src/scripts/roadmap_gates.ts b/src/agent-src/scripts/roadmap_gates.ts
+index 6ea9d155eb6e380eb591beb4e6865635e5b4f099..eeeef66ecf2fbc1a15ea1bc7a0176cfcc0ae2a23 100644
+--- a/src/agent-src/scripts/roadmap_gates.ts
++++ b/src/agent-src/scripts/roadmap_gates.ts
+@@ -342,6 +342,183 @@ function render(
+  * Returns '' when nothing is owned by the user, so the caller can append the
+  * result unconditionally and get silence when silence is correct.
+  */
++/**
++ * Whether a recorded recommendation was drafted by the agent rather than decided
++ * by the maintainer.
++ *
++ * Read from the field's own text, because that is where the claim has to live: a
++ * drafted recommendation is written INTO the roadmap so every consumer
++ * (`gates`, `--reply`, the sheet) sees the same string, and a marker held only
++ * in the sheet would be invisible to the other two. The convention is a leading
++ * `(agent-drafted …)` — matched loosely on purpose, since the parenthetical also
++ * carries a date and a sentence of provenance.
++ */
++export function isAgentDrafted(recommendation: string): boolean {
++    return /\(agent-drafted\b/i.test(recommendation);
++}
++
++/** First sentence of a passage, for the one-line `Default:` column. */
++function firstSentence(text: string): string {
++    const trimmed = text.trim();
++    if (trimmed === '') {
++        return '';
++    }
++    const m = /^(.+?[.!?])(\s|$)/.exec(trimmed.replace(/\s+/g, ' '));
++    return m === null ? trimmed.replace(/\s+/g, ' ') : (m[1] as string);
++}
++
++/**
++ * The one-line question a sheet row leads with.
++ *
++ * `Question:` is an optional field and only 5 of the 21 user-owned entries carry
++ * one (measured 2026-08-18), so a sheet that printed it and nothing else would
++ * be blank for three quarters of the estate. Falling back to the first step of
++ * `What to do:` and then to `Blocks:` is deterministic and derived from the
++ * blocker's own text — which is why the row LABELS which of the three it used
++ * rather than presenting all three as the same kind of statement.
++ */
++export function sheetQuestion(b: Blocker): { text: string; source: 'question' | 'todo' | 'blocks' } {
++    if (b.question.trim() !== '') {
++        return { text: firstSentence(b.question), source: 'question' };
++    }
++    const steps = regroupTodo(b.todo);
++    if (steps.length > 0 && (steps[0] as string).trim() !== '') {
++        return { text: firstSentence(steps[0] as string), source: 'todo' };
++    }
++    return { text: firstSentence(b.blocks), source: 'blocks' };
++}
++
++/**
++ * The consolidated decision sheet — every user-owned decision in ONE artefact.
++ *
++ * `road-to-estate-drawdown` Phase 0 exists because thirteen reading assignments
++ * spread across thirteen files did not happen once. The sheet is the whole of
++ * the human's contribution to that campaign, front-loaded: one document, sorted
++ * by how much each answer unblocks, with a default per item so that
++ * accept-all-defaults is a valid answer.
++ *
++ * This differs from `--all` in the two ways that matter for that job. `--all`
++ * renders every blocker grouped by owner and is a terminal view; the sheet is
++ * user-owned ONLY, and every row carries a `Default:` plus the PROVENANCE of
++ * that default. Provenance is the load-bearing column: 14 of the 21 live entries
++ * record a `Recommendation:` and 7 do not, and a sheet that presented an
++ * agent-drafted default beside a recorded one as the same thing would invite
++ * accept-all over exactly the items nobody has examined.
++ *
++ * Deterministic by construction — the generator never invents a default. Where
++ * none is recorded it says so and names what the reader must supply, so
++ * regenerating the sheet cannot silently overwrite an answer with a guess.
++ */
++function renderSheet(entries: readonly Entry[], now: Date): string {
++    const mine = entries.filter((e) => needsUser(e.blocker.owner));
++    const stamp = now.toISOString().slice(0, 10);
++    if (mine.length === 0) {
++        return (
++            `# Consolidated decision sheet — nothing owned by you (${stamp})\n\n` +
++            'No open blocker in the active roadmap tree carries `Owner: user`. Nothing to answer.\n'
++        );
++    }
++
++    const noRec = mine.filter((e) => e.blocker.recommendation.trim() === '');
++    const legacyNotes = noRec.filter((e) => isLegacy(e.blocker)).length;
++    const missing = noRec.length - legacyNotes;
++    const drafted = mine.filter((e) => isAgentDrafted(e.blocker.recommendation)).length;
++    const maintainerRecorded = mine.length - noRec.length - drafted;
++    const out: string[] = [
++        `# Consolidated decision sheet — ${String(mine.length)} decisions owned by you`,
++        '',
++        `> Generated ${stamp} by \`agent-config gates --sheet\` over \`agents/roadmaps/\`.`,
++        '> Sorted by unblock count, descending. **Accept-all-defaults is a valid answer**',
++        '> (`road-to-estate-drawdown` blocker `b-consolidated-decision-sheet`, option (a));',
++        '> answering only the two largest-unblock items and deferring the rest is option (c),',
++        '> which the roadmap itself recommends. Whichever you pick, the agent writes the answers',
++        '> back into each roadmap at its own blocker — that is not your work.',
++        '>',
++        `> **Provenance of the ${String(mine.length)} defaults: ${String(maintainerRecorded)} maintainer-recorded ·`,
++        `> ${String(drafted)} \`agent-drafted\` · ${String(missing)} with no recommendation at all ·`,
++        `> ${String(legacyNotes)} legacy \`> Blocked until …\` note(s) that have no field to carry one.**`,
++        '> The distinction is in every row on purpose: an agent-drafted default is the',
++        '> least-examined thing on this sheet, and accept-all-defaults would accept those too.',
++        '>',
++        '> This file is DERIVED — every line above and below comes from the roadmaps themselves,',
++        '> so regenerating is deterministic and an answer written into this file would be lost.',
++        '> Answers go back into each roadmap at its own blocker; the agent does that.',
++        '',
++        '| # | Decision | Roadmap | Unblocks | Default source |',
++        '|---:|---|---|---:|---|',
++    ];
++    mine.forEach((e, i) => {
++        const source =
++            e.blocker.recommendation.trim() !== ''
++                ? isAgentDrafted(e.blocker.recommendation)
++                    ? '`agent-drafted`'
++                    : 'maintainer-recorded'
++                : isLegacy(e.blocker)
++                  ? 'none — legacy note'
++                  : 'none recorded';
++        out.push(
++            `| ${String(i + 1)} | \`${e.blocker.id}\` | ${e.roadmapRel} | ` +
++                `${String(e.openSteps)} | ${source} |`,
++        );
++    });
++
++    mine.forEach((e, i) => {
++        const q = sheetQuestion(e.blocker);
++        const qLabel =
++            q.source === 'question'
++                ? 'recorded `Question:`'
++                : q.source === 'todo'
++                  ? 'derived from the first `What to do:` step'
++                  : 'derived from `Blocks:`';
++        const recorded = e.blocker.recommendation.trim();
++        out.push(
++            '',
++            `## ${String(i + 1)} · \`${e.blocker.id}\``,
++            '',
++            `- **Roadmap:** ${e.roadmapRel}`,
++            `- **Unblocks:** ${String(e.openSteps)} open step(s) — ${e.blocker.blocks || '(not recorded)'}`,
++            `- **Question** (${qLabel})**:** ${q.text || '(the blocker records no question, no steps and no Blocks: field)'}`,
++        );
++        if (recorded === '' && isLegacy(e.blocker)) {
++            // A legacy `> Blocked until …` note is not a `### blocker:` entry and
++            // has no field to carry a recommendation. Saying "agent-drafted, to
++            // be written in" would point at a slot that does not exist, so the
++            // row names the actual next action instead.
++            out.push(
++                '- **Default:** _this is a legacy `> Blocked until …` note, not a `### blocker:` entry,' +
++                    ' so it has no `Recommendation:` field to read. Converting it into a real blocker' +
++                    ' entry is what gives it a default._',
++                '- **Default source:** none — legacy note',
++            );
++        } else if (recorded === '') {
++            out.push(
++                '- **Default:** _none recorded — needs an agent-drafted default before this row can be' +
++                    ' answered by accepting it._',
++                '- **Default source:** `agent-drafted` (to be written in below, and marked as such)',
++            );
++        } else {
++            const drafted = isAgentDrafted(recorded);
++            out.push(
++                `- **Default:** ${firstSentence(recorded)}`,
++                drafted
++                    ? '- **Default source:** `agent-drafted` — written into the roadmap’s ' +
++                      '`Recommendation:` field and marked there, NOT a maintainer decision'
++                    : '- **Default source:** maintainer-recorded `Recommendation:` in the roadmap',
++                `- **Recommendation (full):** ${recorded.replace(/\s+/g, ' ')}`,
++            );
++        }
++        if (e.blocker.ifNothing.trim() !== '') {
++            out.push(`- **If you do nothing:** ${e.blocker.ifNothing.replace(/\s+/g, ' ')}`);
++        }
++        out.push(
++            `- **Done when:** ${e.blocker.resolvedWhen.replace(/\s+/g, ' ') || '(not recorded)'}`,
++            '- **Your answer:** _(accept default · override · defer)_',
++        );
++    });
++    out.push('');
++    return out.join('\n');
++}
++
+ function renderReply(entries: readonly Entry[]): string {
+     const mine = entries.filter((e) => needsUser(e.blocker.owner));
+     if (mine.length === 0) {
+@@ -564,6 +741,7 @@ function main(argv?: readonly string[]): number {
+     const json = args.includes('--json');
+     const reply = args.includes('--reply');
+     const pending = args.includes('--pending');
++    const sheet = args.includes('--sheet');
+ 
+     // `--execute <id>` is answered FIRST, and it is the only mode that writes.
+     // It used to sit after the `--pending` early return, so `--pending
+@@ -643,13 +821,20 @@ function main(argv?: readonly string[]): number {
+     // `--reply` deliberately does not carry the probe: ADR-222 fixes that form
+     // at exactly ONE decision rendered in full, and a fired resume condition is
+     // not a decision the reader owes anybody — it is a file that can move.
+-    const resumed = reply ? [] : probeLater(roadmapRoot);
++    // `--reply` and `--sheet` deliberately do not carry the probe: ADR-222 fixes
++    // the reply form at exactly ONE decision rendered in full, and a fired resume
++    // condition is not a decision the reader owes anybody — it is a file that can
++    // move. The sheet is the same argument for the same reason: it is the set of
++    // answers the user owes, and a movable file is not one of them.
++    const resumed = reply || sheet ? [] : probeLater(roadmapRoot);
+     process.stdout.write(
+-        reply
+-            ? renderReply(entries)
+-            : json
+-              ? renderJson(entries, all, resumed)
+-              : render(entries, all, resumed),
++        sheet
++            ? renderSheet(entries, new Date())
++            : reply
++              ? renderReply(entries)
++              : json
++                ? renderJson(entries, all, resumed)
++                : render(entries, all, resumed),
+     );
+     return 0;
+ }
+@@ -687,6 +872,7 @@ export {
+     renderJson,
+     renderReply,
+     renderResumed,
++    renderSheet,
+     renderPending,
+     renderPendingJson,
+ };
+diff --git a/src/config/estate-count-budget.json b/src/config/estate-count-budget.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..ea96ead4cc4cbd8a843901dcda2bb21ea0d9e2ee
+--- /dev/null
++++ b/src/config/estate-count-budget.json
+@@ -0,0 +1,41 @@
++{
++    "_comment": "Roadmap-estate ratchet (road-to-estate-drawdown T2 + T3). The estate does not walk down by itself: new roadmaps arrive faster than old ones terminate, and until this file existed nothing in CI objected — lint_roadmap_family_cap bounds concurrency WITHIN one road-to-<family>-* family, and no gate read the estate as a whole. The baseline below is the MEASURED estate at registration, not a target: a hard target gate would be red on the day it lands and would teach the reader to ignore it. It fails on GROWTH instead, so the number can only walk down. T1's proposed ceilings are recorded under `target` and are explicitly NOT registered — they are the maintainer's to set.",
++    "schema_version": 1,
++    "registered_at": "2026-08-18",
++    "owner": "maintainer",
++    "metric": {
++        "basis": "src/scripts/check_estate_count.ts, using collect() from update_roadmap_progress — the same parser the dashboard is generated from, imported rather than re-implemented",
++        "active_roadmaps": "non-draft roadmap candidates at the top level of agents/roadmaps/, as collect() counts them. Verified 2026-08-18: this is exactly the number the dashboard header prints as 'N open roadmaps'.",
++        "later_roadmaps": "*.md files under agents/roadmaps/later/. Counted from the filesystem because parked roadmaps sit outside collect()'s corpus by design — they are estate all the same, and a drawdown that moved everything into later/ and called the number down would be the burial T1's quality anchor exists to prevent.",
++        "open_blockers": "open blockers summed over the active tree. Verified 2026-08-18: exactly the dashboard header's 'N open blockers'.",
++        "not_gated": [
++            "the needs-you subset of open blockers — it moves when a blocker changes OWNER, which is not estate growth, so gating it would red on a reclassification that changed nothing about the size of the estate",
++            "agents/roadmaps/skipped/ and archive/ — these are the destinations a drawdown sends files to; gating their growth would penalise the wanted direction"
++        ]
++    },
++    "baseline": {
++        "active_roadmaps": 38,
++        "later_roadmaps": 44,
++        "open_blockers": 49
++    },
++    "baseline_history": [
++        {
++            "at": "2026-08-18",
++            "active_roadmaps": 38,
++            "later_roadmaps": 44,
++            "open_blockers": 49,
++            "why": "registered with the gate, at the measured estate. Note the roadmap's own § 0 quotes 37 active / 44 later / 38 blockers against a mid-August pin; the estate moved between that draft and this registration, which is the arrival rate T3 exists to bound rather than a correction to the roadmap."
++        }
++    ],
++    "target": {
++        "_comment": "T1's proposed ceilings, kept as the destination. PROPOSALS, NOT REGISTERED: the roadmap says in as many words that both numbers and the window belong to the maintainer, and no date is pinned in this file. Nothing reads these values — `one_in_one_out.applies_above_active` is the only threshold the gate evaluates.",
++        "active_roadmaps": 15,
++        "open_blockers": 12,
++        "window": "roughly six weeks from campaign start (drafted; unregistered)"
++    },
++    "one_in_one_out": {
++        "_comment": "T3. `applies_above_active: null` means UNCONDITIONAL. T3 phrases the condition as 'while the active count sits above target', and T1 says the target belongs to the maintainer — so rather than inventing a ceiling so the condition could be evaluated, null states that no ceiling is registered and the lint therefore applies. Registering a number here is how it gets a threshold; registering one above the live count is how it is turned off.",
++        "applies_above_active": null,
++        "exemption": "estate_offset_exempt: <reason> in the added roadmap's own frontmatter. The key lives in the file rather than in this config for the reason RATCHET_RESET_KEY gives for living inside its baseline JSON: the claim shows up in the diff of the change that makes it."
++    }
++}
+diff --git a/src/config/gate-coverage.yml b/src/config/gate-coverage.yml
+index 4e5149d62f2d98e28adfa3d4b7b6c73e52e3272b..77ee89fa6e63badf71b9760d644963d8cbbe12f3 100644
+--- a/src/config/gate-coverage.yml
++++ b/src/config/gate-coverage.yml
+@@ -40,12 +40,12 @@
+ #                visible, or it repeats the sin it exists to catch.
+ #   canary       optional mutation recipe (Phase 7) — see CANARY below
+ #
+-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-17)
++# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-18)
+ # ----------------------------------------------------------
+-# 266 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
++# 267 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+ # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
+-# **41 of them emit the machine-readable `scanned: <N>` line under their
+-# CI-identical argv, and 40 of those 41 are listed below.** The manifest is
++# **42 of them emit the machine-readable `scanned: <N>` line under their
++# CI-identical argv, and 41 of those 42 are listed below.** The manifest is
+ # therefore complete with respect to its own contract for every gate that can
+ # carry a floor, and covers ~15 % of the population.
+ #
+@@ -564,6 +564,31 @@ gates:
+       reported, never silently skipped, so a collapse below the floor means
+       the roadmaps root moved, not that the corpus went clean.
+ 
++  - id: check_estate_count
++    argv: []
++    min_scanned: 50
++    corpus: "active + parked roadmap files (82 at baseline: 38 active, 44 in later/)"
++    status: enforced
++    canary:
++      class: contract-violation
++      path: "agents/roadmaps/road-to-canary-estate-count.md"
++      content: |
++        # Roadmap: canary
++
++        ## Phase 1
++
++        - [ ] **1.1** a step
++    note: >
++      road-to-estate-drawdown T2. Two halves, one floor: the count half walks the
++      committed baseline DOWN only and always has a corpus, so it can carry a
++      floor; the one-in-one-out half (T3) is diff-scoped and legitimately weighs
++      nothing on a branch that adds no roadmap, which is why the floor counts
++      roadmap FILES rather than diff entries. The floor sits well below 82 because
++      a drawdown campaign is supposed to shrink both numbers — a floor at today's
++      count would red on the very change this gate exists to encourage — and still
++      far above a collapse, where the roadmaps root moved and the gate's own
++      reportScanned fires first.
++
+   - id: check_completion_review
+     argv: ["--advisory", "--base", "origin/main"]
+     min_scanned: 1
+diff --git a/src/config/gate-violation-baselines.json b/src/config/gate-violation-baselines.json
+index 67dfd30d3b66e92d863a48ded4343eeae133d6bc..33bbd746c199198f5df12ead2e44bd4b3b976877 100644
+--- a/src/config/gate-violation-baselines.json
++++ b/src/config/gate-violation-baselines.json
+@@ -23,9 +23,9 @@
+       "note": "All 18 are `handoff_tier_mismatch`: a senior-tier skill links to a peer whose frontmatter carries no `tier` (reported as tier='unset') — e.g. build-buy-partner → adr-create, customer-research → po-discovery, gated-reach → threat-modeling. This is a tier-metadata backfill backlog on the LINKED-TO skills, not a broken link. The one genuinely dangling link revealed by the same repair (competitive-positioning → a non-existent ../analyze-reference-repo/SKILL.md; it is a command, not a skill) was FIXED in the repairing commit rather than baselined. Clearing this entry means backfilling `tier` on the linked-to skills, or deciding that `tier: unset` on a link target is not a violation and narrowing the rule."
+     },
+     "lint_roadmap_blockers:decidability": {
+-      "count": 26,
+-      "landed": "2026-08-16",
+-      "note": "Open blocker entries that are not yet DECIDABLE by the person who owns them — missing `Recommendation:` (which option and why), missing `If you do nothing:` (the cost of the non-decision), or a `What to do:` carrying no command, path or enumerated option set. Revealed by adding the decidability half to lint_roadmap_blockers, not created by it: the five original fields describe a situation and never made it actionable, so a blocker could pass the contract while handing the analysis back to the person least equipped to redo it. Measured at introduction: 36 open entries, ALL 36 undecidable, and 14 of the 46 total entries carry no command/path/option at all in `What to do`. Baselined rather than hard-failed because 36 findings nobody can clear in the change that reveals them is the gate-that-lands-as-N-instant-blockers failure this repository has refused before — the same reasoning as ci-parity:local-only above. First measured at 34 rather than 36 because the two blockers on the branch that introduced this (`ac3-false-positive-reading`, `publish-side-marker-invariant`) were rewritten to the new standard and then closed in the same change; a baseline above the truth silently permits new violations. Re-measured at 38 when the branch was re-pointed at current main, and the +4 is population growth rather than a loosening: main gained the four `road-to-inbox-harvest-2026-08-d-*` roadmaps (context-ledger, runtime-skill-routing, scheduled-deprecation, top-band-model-economy), each carrying one open blocker authored before this requirement existed. That is the honest number for the population this gate now scans — recording 34 against a 38-entry tree would have failed the gate on its own introducing commit and taught the next reader to distrust it. Lowering happens one blocker at a time, and every roadmap touched for other reasons is a chance to lower it. Lowered 38→37 by the scheduled-deprecation PR, which is exactly that shape: code-graph-removal-authorisation was rewritten to the new standard because the roadmap was being touched anyway. Its `If you do nothing:` was one of the few that was not the common no-cost answer — the release gate that PR ships would have refused the next major cut while the blocker stayed open. Recorded in the past tense because the maintainer then RESOLVED that blocker on the trunk by withdrawing the commitment, so nothing refuses a cut today. The lowering stands on the rewrite, not on the consequence, and the sentence is corrected rather than deleted because a baseline note arguing from a retracted state is how a ratchet's rationale rots. The 56-day expiry is the point, not a hazard: if this number has not moved in two months, the fields are not being written and the gate should fail until someone decides whether the requirement is real. Lowered 37→34 when the scheduled-deprecation branch merged current main: three blockers were resolved or rewritten on the trunk in the meantime, so the drop is a genuine drain plus a merge, not a loosening. Re-tightened here rather than left loose because a ratchet that lags its own tree permits violations back in silently. Lowered 34→29 on 2026-08-16 by rewriting six entries to the new standard (raw-capture-needs-host-env, telemetry-sample-size, repo-admin-and-usage, benchmark-spend, measurement-a-no-per-arm-builder-tier, measurement-b-no-renderable-lane-pair) in a PR whose only purpose was the drain — the first lowering not taken on the back of another change, which the note above says is the usual shape. Two findings from that pass are worth keeping. The tree measured 35 against a baseline of 34 BEFORE the drain, i.e. the ratchet was already red on main and nobody knew: this gate runs in `task ci`, no workflow invokes `task ci`, and the local run that would have shown it was read through a `tail`, which hid every row above the last six. And four of the six `If you do nothing:` answers are honestly that nothing degrades — that is the true answer for a held measurement, and writing it is what makes the entry decidable, so the field earns its place by being cheap to answer truthfully rather than by always carrying a cost. Lowered 29 → 27 on 2026-08-16 by the merge of this branch and the trunk drain above, and the arithmetic matters more than the delta: both sides rewrote entries from the same tree of 35 independently — the trunk six (recorded above), this branch two (deferred-finding-decision-reopen, spent-inbox-artifacts-await-deletion, rewritten because road-to-inbox-harvest-residuals was being touched anyway). The sets are disjoint, so the merged tree measures 27 and the gate itself reported the slack. Tightened rather than banked: 29 against a 27-entry tree would absorb the next two undecidable blockers without anything noticing, which is the lag this note has now corrected twice. Lowered 27 → 26 on 2026-08-16 by rewriting `picktier-wire-or-archive` (road-to-inbox-harvest-2026-08-d-top-band-model-economy), and this one is the usual shape the note describes rather than the dedicated-drain shape: the roadmap was being worked for its own Step 4.1 and the entry was rewritten because it was open on the desk. Worth recording for what writing the two fields SURFACED, which is the argument for the requirement: `Recommendation:` forced the question 'which option, and why' and the honest answer turned out not to be one of the three options at all — the entry defers to a converged council verdict, and the council cannot reach quorum (re-measured 0 of 2 the same day), so the actionable next step is a one-line fix to a user-global config file outside this repository. Five fields had described that situation accurately for two weeks without anyone noticing that the named blocker was infrastructure rather than judgement.",
++      "count": 22,
++      "landed": "2026-08-18",
++      "note": "Open blocker entries that are not yet DECIDABLE by the person who owns them — missing `Recommendation:` (which option and why), missing `If you do nothing:` (the cost of the non-decision), or a `What to do:` carrying no command, path or enumerated option set. Revealed by adding the decidability half to lint_roadmap_blockers, not created by it: the five original fields describe a situation and never made it actionable, so a blocker could pass the contract while handing the analysis back to the person least equipped to redo it. Measured at introduction: 36 open entries, ALL 36 undecidable, and 14 of the 46 total entries carry no command/path/option at all in `What to do`. Baselined rather than hard-failed because 36 findings nobody can clear in the change that reveals them is the gate-that-lands-as-N-instant-blockers failure this repository has refused before — the same reasoning as ci-parity:local-only above. First measured at 34 rather than 36 because the two blockers on the branch that introduced this (`ac3-false-positive-reading`, `publish-side-marker-invariant`) were rewritten to the new standard and then closed in the same change; a baseline above the truth silently permits new violations. Re-measured at 38 when the branch was re-pointed at current main, and the +4 is population growth rather than a loosening: main gained the four `road-to-inbox-harvest-2026-08-d-*` roadmaps (context-ledger, runtime-skill-routing, scheduled-deprecation, top-band-model-economy), each carrying one open blocker authored before this requirement existed. That is the honest number for the population this gate now scans — recording 34 against a 38-entry tree would have failed the gate on its own introducing commit and taught the next reader to distrust it. Lowering happens one blocker at a time, and every roadmap touched for other reasons is a chance to lower it. Lowered 38→37 by the scheduled-deprecation PR, which is exactly that shape: code-graph-removal-authorisation was rewritten to the new standard because the roadmap was being touched anyway. Its `If you do nothing:` was one of the few that was not the common no-cost answer — the release gate that PR ships would have refused the next major cut while the blocker stayed open. Recorded in the past tense because the maintainer then RESOLVED that blocker on the trunk by withdrawing the commitment, so nothing refuses a cut today. The lowering stands on the rewrite, not on the consequence, and the sentence is corrected rather than deleted because a baseline note arguing from a retracted state is how a ratchet's rationale rots. The 56-day expiry is the point, not a hazard: if this number has not moved in two months, the fields are not being written and the gate should fail until someone decides whether the requirement is real. Lowered 37→34 when the scheduled-deprecation branch merged current main: three blockers were resolved or rewritten on the trunk in the meantime, so the drop is a genuine drain plus a merge, not a loosening. Re-tightened here rather than left loose because a ratchet that lags its own tree permits violations back in silently. Lowered 34→29 on 2026-08-16 by rewriting six entries to the new standard (raw-capture-needs-host-env, telemetry-sample-size, repo-admin-and-usage, benchmark-spend, measurement-a-no-per-arm-builder-tier, measurement-b-no-renderable-lane-pair) in a PR whose only purpose was the drain — the first lowering not taken on the back of another change, which the note above says is the usual shape. Two findings from that pass are worth keeping. The tree measured 35 against a baseline of 34 BEFORE the drain, i.e. the ratchet was already red on main and nobody knew: this gate runs in `task ci`, no workflow invokes `task ci`, and the local run that would have shown it was read through a `tail`, which hid every row above the last six. And four of the six `If you do nothing:` answers are honestly that nothing degrades — that is the true answer for a held measurement, and writing it is what makes the entry decidable, so the field earns its place by being cheap to answer truthfully rather than by always carrying a cost. Lowered 29 → 27 on 2026-08-16 by the merge of this branch and the trunk drain above, and the arithmetic matters more than the delta: both sides rewrote entries from the same tree of 35 independently — the trunk six (recorded above), this branch two (deferred-finding-decision-reopen, spent-inbox-artifacts-await-deletion, rewritten because road-to-inbox-harvest-residuals was being touched anyway). The sets are disjoint, so the merged tree measures 27 and the gate itself reported the slack. Tightened rather than banked: 29 against a 27-entry tree would absorb the next two undecidable blockers without anything noticing, which is the lag this note has now corrected twice. Lowered 27 → 26 on 2026-08-16 by rewriting `picktier-wire-or-archive` (road-to-inbox-harvest-2026-08-d-top-band-model-economy), and this one is the usual shape the note describes rather than the dedicated-drain shape: the roadmap was being worked for its own Step 4.1 and the entry was rewritten because it was open on the desk. Worth recording for what writing the two fields SURFACED, which is the argument for the requirement: `Recommendation:` forced the question 'which option, and why' and the honest answer turned out not to be one of the three options at all — the entry defers to a converged council verdict, and the council cannot reach quorum (re-measured 0 of 2 the same day), so the actionable next step is a one-line fix to a user-global config file outside this repository. Five fields had described that situation accurately for two weeks without anyone noticing that the named blocker was infrastructure rather than judgement. Lowered 26 → 22 on 2026-08-18 by road-to-estate-drawdown Step 0.1, which needed the two fields for a different reason and therefore drained six entries as a by-product: the consolidated decision sheet renders a DEFAULT plus that default's provenance per user-owned decision, and 7 of the 21 live entries recorded no `Recommendation:` to derive one from. Six were rewritten to the new standard (skill-activation-window, b-convergence-machine, maintainer-blind-ratings, real-orchestration-usage, human-gated-live-trigger-eval, manual-rubric-rater), each marked `agent-drafted` in the field itself so the sheet can label the provenance rather than presenting a drafted default beside a maintainer-recorded one as the same kind of statement. The seventh, `road-to-gated-reach-followup`'s legacy `> Blocked until …` note, is NOT counted here and was not rewritten: it is a blocked-until note rather than a `### blocker:` entry, so it has no field to carry, and converting it is a roadmap restructure this change did not take. **The tree was RED at 28 against this baseline of 26 before the drain, and again nobody knew** — the same failure the 34→29 paragraph above records, one gate cycle later: two entries had been added on the trunk without the fields, and this gate runs in `task ci`, which no workflow invokes. That is the second recorded instance of this ratchet being red on main undetected, which is an argument about where it runs rather than about its number. `human-gated-live-trigger-eval` also gained a command in `What to do:` (`rule_trigger_eval`, verified to exist at src/scripts/) because the field carried a path-less instruction; the other five needed only the two decidability fields.",
+       "falsifier": "./scripts-run src/scripts/lint_roadmap_blockers --quiet"
+     },
+     "lint_pack_boundaries": {
+diff --git a/src/scripts/_dispatch.bash b/src/scripts/_dispatch.bash
+index fb912d26662caf4f6ed76c3cf36de49f1c73f7ba..bbb5bf867fe90f74f6559180fd0573101fa0a9b6 100755
+--- a/src/scripts/_dispatch.bash
++++ b/src/scripts/_dispatch.bash
+@@ -217,7 +217,11 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
+                              --json, --reply (reply-close form: the one blocking
+                              decision in full, the rest as a count; prints
+                              nothing when none are yours), --pending (staged
+-                             requires_confirmation actions awaiting you)
++                             requires_confirmation actions awaiting you),
++                             --sheet (ONE consolidated decision sheet: every
++                             user-owned decision, sorted by unblock count, each
++                             with a default and that default's provenance —
++                             accept-all-defaults is a valid answer)
+   capabilities:index         Regenerate CAPABILITIES.yaml — the package coverage index
+                              (capability area → coverage → backing skills/commands → gaps).
+                              Pass --check to fail if stale (for CI). Reads src/ (package repo).
+diff --git a/src/scripts/check_estate_count.ts b/src/scripts/check_estate_count.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..cd40d29e649530d61d4b32a52dec95cacc7fdb24
+--- /dev/null
++++ b/src/scripts/check_estate_count.ts
+@@ -0,0 +1,588 @@
++#!/usr/bin/env tsx
++/**
++ * `check_estate_count` — the roadmap estate walks DOWN, and a new roadmap pays
++ * for itself.
++ *
++ * WHY THIS EXISTS
++ * ---------------
++ * `road-to-estate-drawdown` § 0 states the defect: the estate carries dozens of
++ * active roadmaps and dozens of open blockers, and **the count does not go down
++ * by itself**. New roadmaps arrive faster than old ones terminate — the roadmap
++ * that registered this campaign was itself adopted in a sitting that added seven
++ * files at once, and records that as an instance of the defect rather than an
++ * exception to it.
++ *
++ * Nothing in this tree objected. `lint_roadmap_family_cap` bounds concurrency
++ * WITHIN one `road-to-<family>-*` family; `lint_empty_roadmaps` and
++ * `check_roadmap_trackable` police individual files. No gate reads the estate as
++ * a whole, so growth was invisible to CI and visible only to whoever happened to
++ * read the dashboard header.
++ *
++ * TWO CHECKS, ONE GATE
++ * --------------------
++ * **T2, the ratchet.** The committed baseline in
++ * `src/config/estate-count-budget.json` walks down only. Growth in any gated
++ * count is a policy failure (exit 1) that names the metric, the baseline and the
++ * live number. A count BELOW the baseline is green and prints the free
++ * tightening, in the shape `check_preamble_payload_budget` already uses: a lower
++ * measurement becomes the new ceiling rather than becoming unused headroom.
++ *
++ * **T3, one-in-one-out.** A change that adds an active roadmap archives, parks
++ * or merges one in the same change — or the added file carries an explicit
++ * `estate_offset_exempt:` reason in its frontmatter, which costs a visible line
++ * in the diff of the very commit that claims it. This half is diff-scoped: it
++ * reads `<base>...HEAD` over `agents/roadmaps/`, so on a branch that adds no
++ * roadmap it legitimately finds nothing to weigh.
++ *
++ * WHY THE COUNTS ARE READ FROM THE DASHBOARD'S OWN PARSER
++ * -------------------------------------------------------
++ * `collect()` from `update_roadmap_progress` is the function the dashboard is
++ * generated from, imported rather than re-implemented — the same discipline
++ * `roadmap_gates.ts` states for the blocker projection. Verified 2026-08-18:
++ * `collect().length` is 38 and its summed open blockers are 49, which are
++ * exactly the two numbers the dashboard header prints. A gate that re-derived
++ * them could disagree with the dashboard, and then the reader has to decide
++ * which one lied.
++ *
++ * `later/` is counted from the filesystem because parked roadmaps are
++ * deliberately outside `collect()`'s corpus — they are estate all the same, and
++ * a drawdown that moved everything into `later/` and called the number down
++ * would be the burial T1's quality anchor exists to prevent.
++ *
++ * Invocation (from project root):
++ *   ./scripts-run src/scripts/check_estate_count
++ *   ./scripts-run src/scripts/check_estate_count --json
++ *   ./scripts-run src/scripts/check_estate_count --base origin/main
++ *
++ * Exit codes: 0 within budget · 1 policy violation (growth, or an unpaid
++ * addition) · 2 could-not-run (unreadable budget, dead scan scope).
++ */
++
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { spawnSync } from 'node:child_process';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import {
++    collect,
++    is_roadmap_candidate as isRoadmapCandidate,
++    parse_frontmatter as parseFrontmatter,
++} from '../agent-src/scripts/update_roadmap_progress.js';
++import { reportScanned, DeadScopeError } from './_lib/scan_scope.js';
++import { GateLedger } from './_lib/gate_ledger.js';
++import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
++import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
++
++const GATE = 'check_estate_count';
++const BUDGET_REL = path.join('src', 'config', 'estate-count-budget.json');
++const ROADMAPS_REL = path.join('agents', 'roadmaps');
++
++/** The three gated counts. Each is a metric the budget file defines in prose. */
++export interface EstateCounts {
++    active_roadmaps: number;
++    later_roadmaps: number;
++    open_blockers: number;
++}
++
++export type MetricName = keyof EstateCounts;
++
++export const METRICS: readonly MetricName[] = ['active_roadmaps', 'later_roadmaps', 'open_blockers'];
++
++export interface EstateBudget {
++    baseline: EstateCounts;
++    /**
++     * `applies_above_active: null` ⇒ one-in-one-out is unconditional.
++     *
++     * T3 phrases the condition as "while the active count sits above target",
++     * and T1 says the target number belongs to the maintainer. Rather than
++     * inventing a ceiling so the condition can be evaluated, `null` states that
++     * no ceiling is registered and the lint therefore applies. Registering a
++     * number here is how it gets a threshold.
++     */
++    one_in_one_out: { applies_above_active: number | null };
++}
++
++/** One growth finding — a gated count that rose above its committed baseline. */
++export interface GrowthFinding {
++    metric: MetricName;
++    baseline: number;
++    live: number;
++}
++
++/** How a change touched the active roadmap tree, as git reports it. */
++export interface OffsetLedger {
++    /** Files that entered the active top level: new files, and un-parked ones. */
++    added: string[];
++    /** Files that left it: deleted, archived, parked or merged away. */
++    offsets: string[];
++    /** Added files carrying an `estate_offset_exempt:` reason, with the reason. */
++    exempt: Array<{ file: string; reason: string }>;
++}
++
++export interface EstateVerdict {
++    counts: EstateCounts;
++    baseline: EstateCounts;
++    growth: GrowthFinding[];
++    /** Counts strictly below their baseline — the walk-down the ratchet wants. */
++    tightened: GrowthFinding[];
++    /** `null` when the diff half could not run; the reason is printed either way. */
++    offsets: OffsetLedger | null;
++    offsetSkipReason: string | null;
++    unpaid: number;
++    withinBudget: boolean;
++}
++
++function repoRootFrom(start: string): string {
++    let dir = path.resolve(start);
++    for (;;) {
++        if (fs.existsSync(path.join(dir, ROADMAPS_REL))) {
++            return dir;
++        }
++        const up = path.dirname(dir);
++        if (up === dir) {
++            return path.resolve(start);
++        }
++        dir = up;
++    }
++}
++
++function git(args: readonly string[], cwd: string): { ok: boolean; stdout: string } {
++    const res = spawnSync('git', [...args], { cwd, encoding: 'utf-8', maxBuffer: 32 * 1024 * 1024 });
++    return { ok: res.status === 0, stdout: res.stdout ?? '' };
++}
++
++/**
++ * Count the estate, three ways.
++ *
++ * `active_roadmaps` and `open_blockers` come from `collect()` so they cannot
++ * disagree with the dashboard; `later_roadmaps` is a directory listing because
++ * parked files are outside that corpus by design.
++ */
++export function countEstate(repoRoot: string): EstateCounts {
++    const roadmapRoot = path.join(repoRoot, ROADMAPS_REL);
++    const stats = collect(roadmapRoot);
++    const laterDir = path.join(roadmapRoot, 'later');
++    let later = 0;
++    try {
++        later = fs.readdirSync(laterDir).filter((n) => n.endsWith('.md')).length;
++    } catch {
++        later = 0;
++    }
++    return {
++        active_roadmaps: stats.length,
++        later_roadmaps: later,
++        open_blockers: stats.reduce((n, r) => n + r.open_blockers.length, 0),
++    };
++}
++
++/** `agents/roadmaps/<name>.md` — the active top level, never a subdirectory. */
++function isActiveTopLevel(rel: string): boolean {
++    const norm = rel.split(path.sep).join('/');
++    if (!norm.startsWith('agents/roadmaps/') || !norm.endsWith('.md')) {
++        return false;
++    }
++    const tail = norm.slice('agents/roadmaps/'.length);
++    return !tail.includes('/') && isRoadmapCandidate(norm);
++}
++
++/** A disposition directory — where an offset sends a roadmap. */
++function isDisposed(rel: string): boolean {
++    const norm = rel.split(path.sep).join('/');
++    return /^agents\/roadmaps\/(archive|later|skipped)\//.test(norm);
++}
++
++/**
++ * Read the exemption reason a newly added roadmap declares, if any.
++ *
++ * The key lives in the file's own frontmatter rather than in a config or a
++ * commit trailer, for the reason `RATCHET_RESET_KEY` gives for living inside the
++ * baseline JSON: the claim then shows up in the diff of the change that makes
++ * it, and a reviewer sees it without being told to look.
++ */
++export function exemptionReason(text: string): string | null {
++    const fm = parseFrontmatter(text);
++    const raw = (fm as Record<string, unknown>)['estate_offset_exempt'];
++    if (typeof raw !== 'string') {
++        return null;
++    }
++    const reason = raw.trim().replace(/^["']|["']$/g, '').trim();
++    return reason === '' ? null : reason;
++}
++
++/**
++ * Classify the change's effect on the active roadmap tree.
++ *
++ * Renames carry information a name-only diff loses: `road-to-x.md` →
++ * `archive/road-to-x.md` is the wanted direction and counts as an offset, while
++ * `later/road-to-x.md` → `road-to-x.md` is an un-parking and counts as an
++ * addition. A top-level-to-top-level rename is neither.
++ */
++export function classifyDiff(nameStatus: string, readFile: (rel: string) => string | null): OffsetLedger {
++    const added: string[] = [];
++    const offsets: string[] = [];
++    const exempt: Array<{ file: string; reason: string }> = [];
++    for (const line of nameStatus.split('\n')) {
++        if (line.trim() === '') continue;
++        const cols = line.split('\t');
++        const status = (cols[0] ?? '').trim();
++        if (status.startsWith('R') || status.startsWith('C')) {
++            const from = cols[1] ?? '';
++            const to = cols[2] ?? '';
++            if (isActiveTopLevel(from) && isDisposed(to)) {
++                offsets.push(from);
++            } else if (isDisposed(from) && isActiveTopLevel(to)) {
++                added.push(to);
++            }
++            continue;
++        }
++        const file = cols[1] ?? '';
++        if (!isActiveTopLevel(file)) continue;
++        if (status === 'A') {
++            added.push(file);
++        } else if (status === 'D') {
++            offsets.push(file);
++        }
++    }
++    for (const file of added) {
++        const text = readFile(file);
++        if (text === null) continue;
++        const reason = exemptionReason(text);
++        if (reason !== null) {
++            exempt.push({ file, reason });
++        }
++    }
++    return { added, offsets, exempt };
++}
++
++export function evaluate(
++    repoRoot: string,
++    opts: { baseRef?: string | undefined } = {},
++): EstateVerdict {
++    const budgetPath = path.join(repoRoot, BUDGET_REL);
++    let budget: EstateBudget;
++    try {
++        budget = JSON.parse(fs.readFileSync(budgetPath, 'utf-8')) as EstateBudget;
++    } catch (err) {
++        throw new Error(`${BUDGET_REL} is unreadable: ${(err as Error).message}`);
++    }
++    if (budget.baseline === undefined) {
++        throw new Error(`${BUDGET_REL} carries no "baseline" object.`);
++    }
++
++    const counts = countEstate(repoRoot);
++    const growth: GrowthFinding[] = [];
++    const tightened: GrowthFinding[] = [];
++    for (const metric of METRICS) {
++        const baseline = budget.baseline[metric];
++        const live = counts[metric];
++        if (typeof baseline !== 'number') {
++            throw new Error(`${BUDGET_REL} baseline is missing the "${metric}" metric.`);
++        }
++        if (live > baseline) growth.push({ metric, baseline, live });
++        else if (live < baseline) tightened.push({ metric, baseline, live });
++    }
++
++    // The diff half. A missing base ref is REPORTED rather than assumed empty:
++    // guessing "nothing changed" is the same silent-pass this file's own header
++    // argues against, and the count half above still ran.
++    let offsets: OffsetLedger | null = null;
++    let offsetSkipReason: string | null = null;
++    const baseRef = opts.baseRef ?? resolveBaseRef(repoRoot);
++    if (baseRef === null || baseRef === undefined) {
++        offsetSkipReason = 'no base ref resolved (no origin/main, no merge-commit parent) — one-in-one-out not evaluated';
++    } else {
++        const diff = git(
++            ['diff', '--name-status', '--find-renames', `${baseRef}...HEAD`, '--', ROADMAPS_REL],
++            repoRoot,
++        );
++        if (!diff.ok) {
++            offsetSkipReason = `git diff against ${baseRef} failed — one-in-one-out not evaluated`;
++        } else {
++            offsets = classifyDiff(diff.stdout, (rel) => {
++                try {
++                    return fs.readFileSync(path.join(repoRoot, rel), 'utf-8');
++                } catch {
++                    return null;
++                }
++            });
++        }
++    }
++
++    const threshold = budget.one_in_one_out?.applies_above_active ?? null;
++    const lintApplies = threshold === null || counts.active_roadmaps > threshold;
++    let unpaid = 0;
++    if (offsets !== null && lintApplies) {
++        const exemptFiles = new Set(offsets.exempt.map((e) => e.file));
++        const chargeable = offsets.added.filter((f) => !exemptFiles.has(f));
++        unpaid = Math.max(0, chargeable.length - offsets.offsets.length);
++    }
++
++    return {
++        counts,
++        baseline: budget.baseline,
++        growth,
++        tightened,
++        offsets,
++        offsetSkipReason,
++        unpaid,
++        withinBudget: growth.length === 0 && unpaid === 0,
++    };
++}
++
++/** Floors for `--self-test`, declared here so a truncation is a visible diff. */
++const SELF_TEST_MIN_CASES = 5;
++const SELF_TEST_MIN_REJECT = 3;
++
++/**
++ * Prove, on demand, that this gate's rejections still fire against its own CLI.
++ *
++ * The vitest suite covers the same ground; this covers the binary a contributor
++ * runs — argv parsing, the entry guard, and the git invocation, which unit tests
++ * over imported functions cannot exercise. A ratchet whose detection silently
++ * stopped matching reports "estate within its ratchet" forever, and that green is
++ * believed precisely because a ratchet is expected to be quiet.
++ */
++function selfTest(): number {
++    const repo = repoRootFrom(process.cwd());
++    const script = path.join('src', 'scripts', 'check_estate_count.ts');
++    const roots: string[] = [];
++
++    const fixture = (opts: {
++        roadmaps: number;
++        baseline: { active: number; later: number };
++        after: (dir: string) => void;
++    }): number => {
++        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ec-selftest-'));
++        roots.push(dir);
++        const put = (rel: string, body: string): void => {
++            fs.mkdirSync(path.join(dir, path.dirname(rel)), { recursive: true });
++            fs.writeFileSync(path.join(dir, rel), body, 'utf-8');
++        };
++        const g = (...args: string[]): void => {
++            spawnSync('git', args, { cwd: dir, encoding: 'utf-8' });
++        };
++        g('init', '-q', '-b', 'main');
++        g('config', 'user.email', 'selftest@local');
++        g('config', 'user.name', 'selftest');
++        g('config', 'commit.gpgsign', 'false');
++        for (let i = 0; i < opts.roadmaps; i++) {
++            put(`agents/roadmaps/road-to-${String(i)}.md`, `# Roadmap: R${String(i)}\n\n## Phase 1\n\n- [ ] **1.1** s\n`);
++        }
++        put(
++            'src/config/estate-count-budget.json',
++            `${JSON.stringify(
++                {
++                    baseline: {
++                        active_roadmaps: opts.baseline.active,
++                        later_roadmaps: opts.baseline.later,
++                        open_blockers: 0,
++                    },
++                    one_in_one_out: { applies_above_active: null },
++                },
++                null,
++                4,
++            )}\n`,
++        );
++        g('add', '-A');
++        g('commit', '-qm', 'base');
++        g('checkout', '-qb', 'feat/x');
++        opts.after(dir);
++        g('add', '-A');
++        g('commit', '-qm', 'change');
++        return runGateCli(repo, script, ['--base', 'main'], dir);
++    };
++
++    const write = (dir: string, rel: string, body: string): void => {
++        fs.mkdirSync(path.join(dir, path.dirname(rel)), { recursive: true });
++        fs.writeFileSync(path.join(dir, rel), body, 'utf-8');
++    };
++
++    const cases: SelfTestCase[] = [
++        {
++            name: 'baseline match → accept',
++            expect: 'accept',
++            run: () => fixture({ roadmaps: 3, baseline: { active: 3, later: 0 }, after: () => undefined }),
++        },
++        {
++            name: 'active count grows past the baseline → reject',
++            expect: 'reject',
++            run: () =>
++                fixture({
++                    roadmaps: 3,
++                    baseline: { active: 3, later: 0 },
++                    after: (dir) => write(dir, 'agents/roadmaps/road-to-new.md', '# Roadmap: N\n\n## Phase 1\n\n- [ ] **1.1** s\n'),
++                }),
++        },
++        {
++            name: 'addition with no offset in the same change → reject',
++            expect: 'reject',
++            run: () =>
++                fixture({
++                    // Baseline raised to 4 so the ratchet half passes and only the
++                    // offset half can fail — otherwise this case would pass for
++                    // the other check's reason.
++                    roadmaps: 3,
++                    baseline: { active: 4, later: 0 },
++                    after: (dir) => write(dir, 'agents/roadmaps/road-to-new.md', '# Roadmap: N\n\n## Phase 1\n\n- [ ] **1.1** s\n'),
++                }),
++        },
++        {
++            name: 'addition paid for by an archive move → accept',
++            expect: 'accept',
++            run: () =>
++                fixture({
++                    roadmaps: 3,
++                    baseline: { active: 3, later: 0 },
++                    after: (dir) => {
++                        write(dir, 'agents/roadmaps/road-to-new.md', '# Roadmap: N\n\n## Phase 1\n\n- [ ] **1.1** s\n');
++                        fs.mkdirSync(path.join(dir, 'agents/roadmaps/archive'), { recursive: true });
++                        spawnSync('git', ['mv', 'agents/roadmaps/road-to-2.md', 'agents/roadmaps/archive/road-to-2.md'], {
++                            cwd: dir,
++                            encoding: 'utf-8',
++                        });
++                    },
++                }),
++        },
++        {
++            name: 'emptied roadmap root → reject (dead scope, not a pass)',
++            expect: 'reject',
++            run: () =>
++                fixture({
++                    roadmaps: 1,
++                    baseline: { active: 0, later: 0 },
++                    after: (dir) => fs.rmSync(path.join(dir, 'agents/roadmaps/road-to-0.md')),
++                }),
++        },
++    ];
++
++    try {
++        return runSelfTest({
++            gate: GATE,
++            cases,
++            minCases: SELF_TEST_MIN_CASES,
++            minRejectCases: SELF_TEST_MIN_REJECT,
++        });
++    } finally {
++        for (const dir of roots) {
++            fs.rmSync(dir, { recursive: true, force: true });
++        }
++    }
++}
++
++export function main(argv: string[] = process.argv.slice(2)): number {
++    if (argv.includes('--self-test')) return selfTest();
++    const json = argv.includes('--json') || argv.includes('--format=json');
++    const baseIdx = argv.indexOf('--base');
++    const baseRef = baseIdx === -1 ? undefined : argv[baseIdx + 1];
++    const repoRoot = repoRootFrom(process.cwd());
++
++    let verdict: EstateVerdict;
++    try {
++        verdict = evaluate(repoRoot, { baseRef });
++    } catch (err) {
++        process.stderr.write(`❌  ${GATE}: ${(err as Error).message}\n`);
++        return 2;
++    }
++
++    // A ratchet over an empty estate always passes. Move `agents/roadmaps/` and
++    // every count is 0, which is trivially under any baseline — exit 2 (could
++    // not run), never 1, which would assert the estate actually grew.
++    try {
++        reportScanned({
++            gate: GATE,
++            scanned: verdict.counts.active_roadmaps + verdict.counts.later_roadmaps,
++            units: 'roadmap file(s)',
++            roots: [ROADMAPS_REL, path.join(ROADMAPS_REL, 'later')],
++        });
++    } catch (err) {
++        if (err instanceof DeadScopeError) {
++            process.stderr.write(`❌  ${GATE}: ${err.message}\n`);
++            return 2;
++        }
++        throw err;
++    }
++
++    const ledger = new GateLedger(GATE);
++    ledger.plan([...METRICS, 'one_in_one_out']);
++    for (const metric of METRICS) {
++        const bad = verdict.growth.find((g) => g.metric === metric);
++        if (bad !== undefined) ledger.fail(metric, `${metric} grew ${bad.baseline} → ${bad.live}`);
++        else ledger.complete(metric);
++    }
++    if (verdict.offsets === null) ledger.skip('one_in_one_out', 'precondition_unmet');
++    else if (verdict.unpaid > 0) ledger.fail('one_in_one_out', `${String(verdict.unpaid)} unpaid addition(s)`);
++    else ledger.complete('one_in_one_out');
++
++    if (json) {
++        // The ledger goes to stderr here so stdout stays parseable after the
++        // mandatory `scanned:` line — a JSON mode whose stdout needs a second
++        // parser is not a machine-readable mode.
++        ledger.report((chunk) => process.stderr.write(chunk));
++        process.stdout.write(JSON.stringify(verdict, null, 2) + '\n');
++        return verdict.withinBudget ? 0 : 1;
++    }
++
++    for (const metric of METRICS) {
++        const live = verdict.counts[metric];
++        const base = verdict.baseline[metric];
++        const delta = live - base;
++        const sign = delta >= 0 ? '+' : '';
++        process.stdout.write(
++            `  ${metric.padEnd(18)} ${String(live).padStart(5)}  (baseline ${String(base)}, ${sign}${String(delta)})\n`,
++        );
++    }
++    if (verdict.offsets !== null) {
++        const o = verdict.offsets;
++        process.stdout.write(
++            `  ${'this change'.padEnd(18)}  +${String(o.added.length)} active / -${String(o.offsets.length)} disposed` +
++                `${o.exempt.length > 0 ? `, ${String(o.exempt.length)} exempt` : ''}\n`,
++        );
++    } else if (verdict.offsetSkipReason !== null) {
++        process.stdout.write(`  ⚠️  ${verdict.offsetSkipReason}\n`);
++    }
++
++    for (const t of verdict.tightened) {
++        process.stdout.write(
++            `  ↓ free tightening: ${t.metric} measured ${String(t.live)} under a baseline of ${String(t.baseline)}.\n` +
++                `    Walk the baseline down in ${BUDGET_REL} — a lower measurement is the new ceiling,\n` +
++                '    not headroom to spend later.\n',
++        );
++    }
++
++    for (const g of verdict.growth) {
++        process.stderr.write(
++            `❌  the roadmap estate grew: ${g.metric} ${String(g.baseline)} → ${String(g.live)}.\n` +
++                '    The estate does not walk down by itself, which is the defect this ratchet\n' +
++                `    exists for. Either close/park/archive enough to get back under the baseline, or\n` +
++                `    raise it in ${BUDGET_REL} with the reason written as a real sentence in the\n` +
++                '    same commit — a number change on its own is what a ratchet is built to refuse.\n',
++        );
++    }
++    if (verdict.unpaid > 0 && verdict.offsets !== null) {
++        process.stderr.write(
++            `❌  ${String(verdict.unpaid)} new active roadmap(s) with no offset in the same change.\n` +
++                `    added:    ${verdict.offsets.added.join(', ')}\n` +
++                `    disposed: ${verdict.offsets.offsets.length > 0 ? verdict.offsets.offsets.join(', ') : '(none)'}\n` +
++                '    One-in-one-out (estate-drawdown T3): a change that adds an active roadmap\n' +
++                '    archives, parks or merges one in the same change. If this addition genuinely\n' +
++                '    cannot be offset, add `estate_offset_exempt: <reason>` to its frontmatter —\n' +
++                '    that costs one reviewable line instead of a silent exception.\n',
++        );
++    }
++    ledger.report();
++    if (verdict.withinBudget) {
++        process.stdout.write(`✅  ${GATE}: estate within its ratchet.\n`);
++    }
++    return verdict.withinBudget ? 0 : 1;
++}
++
++function isCliEntry(): boolean {
++    const entry = process.argv[1];
++    if (entry === undefined) return false;
++    return pathToFileURL(path.resolve(entry)).href === pathToFileURL(fileURLToPath(import.meta.url)).href;
++}
++
++if (isCliEntry()) {
++    process.exit(main());
++}
+diff --git a/src/scripts/dispatch_r2_reviewer.ts b/src/scripts/dispatch_r2_reviewer.ts
+index c72f599425048a3120bcd16a46abde6e373c076c..bbd558326f48f9c667ff7eb0dd44673864362810 100644
+--- a/src/scripts/dispatch_r2_reviewer.ts
++++ b/src/scripts/dispatch_r2_reviewer.ts
+@@ -426,13 +426,34 @@ export function expectedHashes(args: {
+     return {
+         scope_hash: sha256(args.scopeDiffText),
+         roadmap_hash: args.roadmapText == null ? 'none' : sha256(args.roadmapText),
+-        ac_hash: args.acText == null ? 'none' : sha256(args.acText),
++        // Empty reads as 'none', not as the SHA-256 of the empty string. A
++        // roadmap whose criteria the extractor cannot see used to record
++        // `e3b0c442…` — a value that looks like a real hash, re-derives
++        // identically on `--verify-current`, and therefore let the manifest gate
++        // CONFIRM an AC binding over a 0-byte file.
++        ac_hash: args.acText == null || args.acText === '' ? 'none' : sha256(args.acText),
+     };
+ }
+ 
+ /**
+- * Extract the `## Acceptance Criteria` section — from that heading (inclusive)
+- * to the next `## ` heading or EOF. No section → empty string.
++ * Extract the acceptance criteria a roadmap declares, in either of the two forms
++ * the tree actually uses.
++ *
++ * 1. A `## Acceptance Criteria` section — from that heading (inclusive) to the
++ *    next `## ` heading or EOF.
++ * 2. Failing that, inline `- **AC-n:**` bullets declared per phase, collected
++ *    with their continuation lines in document order.
++ *
++ * Neither form present → empty string, and the callers treat that as "no ACs"
++ * rather than as an empty section (see {@link expectedHashes} and the prompt's
++ * roadmap line).
++ *
++ * Form 2 is not a nicety: measured 2026-08-18 over the active tree, roadmaps
++ * carried ACs as 21 heading-only and **7 inline-only**, and the inline set
++ * silently produced a 0-byte `acceptance-criteria.md` while the reviewer prompt
++ * said the criteria had been extracted. The R2 reviewer is the independent check
++ * on AC conformance, so an AC-blind reviewer whose artefact reads as though it
++ * checked them is the gate-that-scans-nothing shape one layer up.
+  */
+ export function extractAcceptanceCriteria(roadmapText: string): string {
+     const lines = roadmapText.split('\n');
+@@ -446,15 +467,52 @@ export function extractAcceptanceCriteria(roadmapText: string): string {
+             break;
+         }
+     }
+-    if (start === -1) return '';
+-    let end = lines.length;
+-    for (let i = start + 1; i < lines.length; i++) {
+-        if (/^## /.test(lines[i] as string)) {
+-            end = i;
+-            break;
++    if (start !== -1) {
++        let end = lines.length;
++        for (let i = start + 1; i < lines.length; i++) {
++            if (/^## /.test(lines[i] as string)) {
++                end = i;
++                break;
++            }
+         }
++        return lines.slice(start, end).join('\n');
+     }
+-    return lines.slice(start, end).join('\n');
++    return extractInlineAcceptanceCriteria(lines);
++}
++
++/** `- **AC-3:**` / `- **AC-3.1:**`, optionally indented — the inline declaration form. */
++const INLINE_AC_RE = /^\s*[-*+]\s+\*\*AC-[\w.]+:?\*\*/;
++
++/**
++ * Collect inline `- **AC-n:**` bullets plus their continuation lines.
++ *
++ * A bullet ends at the next bullet, at any heading, or at a blank line followed
++ * by something that is not an indented continuation. Continuations are kept
++ * because the criteria are prose and the second half of a wrapped sentence is
++ * as load-bearing as the first.
++ */
++function extractInlineAcceptanceCriteria(lines: readonly string[]): string {
++    const out: string[] = [];
++    let inBullet = false;
++    for (const line of lines) {
++        if (INLINE_AC_RE.test(line)) {
++            out.push(line.trim());
++            inBullet = true;
++            continue;
++        }
++        if (!inBullet) continue;
++        // A heading, a new non-AC bullet, or a blank line closes the bullet;
++        // an indented non-blank line continues it.
++        if (line.trim() === '' || /^#{1,6} /.test(line) || /^\s*[-*+]\s/.test(line) || /^\S/.test(line)) {
++            inBullet = false;
++            continue;
++        }
++        out[out.length - 1] = `${out[out.length - 1] as string} ${line.trim()}`;
++    }
++    if (out.length === 0) return '';
++    return ['## Acceptance Criteria (collected from the roadmap’s inline per-phase bullets)', '', ...out].join(
++        '\n',
++    );
+ }
+ 
+ /**
+@@ -576,11 +634,21 @@ function reviewerPrompt(args: {
+     headSha: string;
+     scopeHash: string;
+     roadmapGiven: boolean;
++    /**
++     * Whether the extraction actually produced criteria. Separate from
++     * `roadmapGiven` on purpose: the prompt used to claim "Acceptance Criteria
++     * extracted" on the strength of a roadmap being supplied, so a roadmap the
++     * extractor could not read handed the reviewer an empty file under a line
++     * saying the criteria were there.
++     */
++    acGiven: boolean;
+     changedFiles: readonly string[];
+ }): string {
+-    const roadmapLine = args.roadmapGiven
+-        ? '- roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)'
+-        : '- roadmap under review: none (`acceptance-criteria.md` is empty)';
++    const roadmapLine = !args.roadmapGiven
++        ? '- roadmap under review: none (`acceptance-criteria.md` is empty)'
++        : args.acGiven
++          ? '- roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)'
++          : '- roadmap under review: `roadmap.md` — it declares NO acceptance criteria this tool can extract, so `acceptance-criteria.md` is empty. Judge conformance against the roadmap body itself, and say in your findings that no AC list was supplied.';
+     return [
+         `# R2 completion review — ${args.slug}`,
+         '',
+@@ -1037,6 +1105,7 @@ function runDispatch(args: Args): number {
+         headSha,
+         scopeHash: hashes.scope_hash,
+         roadmapGiven: roadmapText !== null,
++        acGiven: acText !== null && acText !== '',
+         changedFiles,
+     });
+     const manifest = deriveManifest({
+diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
+index b6da6680c60552f8a2899af56d9f939dd65fc4c8..dd77cbf2a96b4cae7812d17b7dd6dfb7a917550c 100644
+--- a/taskfiles/ci-fast.yml
++++ b/taskfiles/ci-fast.yml
+@@ -1026,6 +1026,20 @@ tasks:
+         if [ "$rc" = "2" ]; then echo "⚠️  lint_evidence_artifacts: internal error — degraded advisory mode, allowing (exit-code contract §6)"; else exit "$rc"; fi;
+       }
+ 
++  check-estate-count:
++    silent: true
++    desc: |
++      Roadmap-estate ratchet (road-to-estate-drawdown T2) plus the
++      one-in-one-out lint (T3). The committed baseline in
++      src/config/estate-count-budget.json walks DOWN only — growth in the
++      active count, the later/ count or the open-blocker count is a policy
++      failure — and a change that adds an active roadmap archives, parks or
++      merges one in the same change unless the added file declares an
++      estate_offset_exempt reason. Nothing read the estate as a whole before
++      this gate: lint_roadmap_family_cap bounds one road-to-<family>-* family,
++      and the total was visible only to whoever read the dashboard header.
++    cmd: ./scripts-run src/scripts/check_estate_count
++
+   lint-plan-risk-register:
+     silent: true
+     desc: |
+diff --git a/tests/scripts/check_estate_count.test.ts b/tests/scripts/check_estate_count.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..ce46a86e00836f6c277021e86a46eb1973f440c4
+--- /dev/null
++++ b/tests/scripts/check_estate_count.test.ts
+@@ -0,0 +1,337 @@
++/**
++ * `check_estate_count` — the estate ratchet, proven in BOTH directions.
++ *
++ * `road-to-estate-drawdown` AC-3 asks for exactly that: "both gates exist and
++ * are red/green against fixtures in both directions". A ratchet that has only
++ * ever been observed green on the tree it was baselined against is
++ * indistinguishable from a ratchet that cannot fail, which is the
++ * gate-that-scans-nothing shape this repository has already recorded.
++ *
++ * Every case below runs the real script against a real throwaway git repo, so
++ * the diff half is exercised through `git diff` rather than through a stub.
++ */
++import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++import { afterAll, describe, expect, it } from 'vitest';
++
++import { classifyDiff, exemptionReason } from '../../src/scripts/check_estate_count.js';
++
++const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
++const SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_estate_count.ts');
++const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
++
++const tmpDirs: string[] = [];
++afterAll(() => {
++    for (const dir of tmpDirs) {
++        fs.rmSync(dir, { recursive: true, force: true });
++    }
++});
++
++function git(cwd: string, ...args: string[]): void {
++    const res = spawnSync('git', args, { cwd, encoding: 'utf-8' });
++    if (res.status !== 0) {
++        throw new Error(`git ${args.join(' ')} failed: ${res.stderr}`);
++    }
++}
++
++function write(root: string, rel: string, body: string): void {
++    const abs = path.join(root, rel);
++    fs.mkdirSync(path.dirname(abs), { recursive: true });
++    fs.writeFileSync(abs, body, 'utf-8');
++}
++
++function roadmap(title: string, opts: { blockers?: number | undefined; exempt?: string | undefined } = {}): string {
++    const fm = opts.exempt === undefined ? '' : `---\nestate_offset_exempt: ${opts.exempt}\n---\n\n`;
++    const blockers = Array.from({ length: opts.blockers ?? 0 }, (_unused, i) =>
++        [
++            '',
++            `### blocker: b-${String(i)}`,
++            '- **Status:** open',
++            '- **Owner:** user',
++            '- **Class:** 2',
++            '- **Blocks:** a step',
++            '- **Resolved when:** answered',
++        ].join('\n'),
++    ).join('\n');
++    return `${fm}# Roadmap: ${title}\n\n## Phase 1\n\n- [ ] **1.1** a step\n${blockers === '' ? '' : `\n## Blockers\n${blockers}\n`}`;
++}
++
++function budget(counts: { active: number; later: number; blockers: number }, above: number | null = null): string {
++    return `${JSON.stringify(
++        {
++            schema_version: 1,
++            baseline: {
++                active_roadmaps: counts.active,
++                later_roadmaps: counts.later,
++                open_blockers: counts.blockers,
++            },
++            one_in_one_out: { applies_above_active: above },
++        },
++        null,
++        4,
++    )}\n`;
++}
++
++/** A repo with `n` active roadmaps and a baseline that matches them exactly. */
++function initRepo(n = 3, opts: { later?: number; blockers?: number; above?: number | null } = {}): string {
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'estate-count-'));
++    tmpDirs.push(dir);
++    git(dir, 'init', '-q', '-b', 'main');
++    git(dir, 'config', 'user.email', 'estate@test.local');
++    git(dir, 'config', 'user.name', 'estate');
++    git(dir, 'config', 'commit.gpgsign', 'false');
++    for (let i = 0; i < n; i++) {
++        write(dir, `agents/roadmaps/road-to-${String(i)}.md`, roadmap(`R${String(i)}`, { blockers: opts.blockers }));
++    }
++    for (let i = 0; i < (opts.later ?? 0); i++) {
++        write(dir, `agents/roadmaps/later/parked-${String(i)}.md`, roadmap(`P${String(i)}`));
++    }
++    write(
++        dir,
++        'src/config/estate-count-budget.json',
++        budget(
++            { active: n, later: opts.later ?? 0, blockers: n * (opts.blockers ?? 0) },
++            opts.above ?? null,
++        ),
++    );
++    git(dir, 'add', '-A');
++    git(dir, 'commit', '-qm', 'base');
++    git(dir, 'checkout', '-qb', 'feat/change');
++    return dir;
++}
++
++function run(cwd: string, args: string[] = []): SpawnSyncReturns<string> {
++    return spawnSync(TSX_BIN, [SCRIPT, ...args], {
++        cwd,
++        encoding: 'utf8',
++        // The resolver's PR-merge branch keys on GITHUB_ACTIONS; a temp repo has
++        // no merge commit, and leaving the real CI value in place would make the
++        // test's base ref depend on where it runs.
++        env: { ...process.env, GITHUB_ACTIONS: '', GITHUB_BASE_REF: '', RATCHET_BASE_REF: '' },
++    });
++}
++
++function commitAll(dir: string, msg: string): void {
++    git(dir, 'add', '-A');
++    git(dir, 'commit', '-qm', msg);
++}
++
++describe('check_estate_count — the ratchet direction', () => {
++    it('is green when every count sits exactly at its baseline', () => {
++        const repo = initRepo(3);
++        const res = run(repo, ['--base', 'main']);
++        expect(res.status, res.stderr).toBe(0);
++        expect(res.stdout).toContain('scanned: 3');
++        expect(res.stdout).toContain('estate within its ratchet');
++    });
++
++    it('is RED when the active count grows above the baseline', () => {
++        const repo = initRepo(3);
++        // Adding a roadmap without touching the baseline is growth. This is the
++        // direction that had no gate at all before this file.
++        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New'));
++        commitAll(repo, 'add a roadmap');
++        const res = run(repo, ['--base', 'main']);
++        expect(res.status).toBe(1);
++        expect(res.stderr).toContain('the roadmap estate grew: active_roadmaps 3 → 4');
++        // The message names the two legal exits, not just the failure.
++        expect(res.stderr).toContain('raise it in src/config/estate-count-budget.json');
++    });
++
++    it('is RED when the open-blocker count grows, independently of the file count', () => {
++        const repo = initRepo(2, { blockers: 1 });
++        const text = fs.readFileSync(path.join(repo, 'agents/roadmaps/road-to-0.md'), 'utf-8');
++        write(
++            repo,
++            'agents/roadmaps/road-to-0.md',
++            `${text}\n### blocker: b-extra\n- **Status:** open\n- **Owner:** user\n- **Class:** 2\n- **Blocks:** x\n- **Resolved when:** answered\n`,
++        );
++        commitAll(repo, 'add a blocker');
++        const res = run(repo, ['--base', 'main']);
++        expect(res.status).toBe(1);
++        expect(res.stderr).toContain('open_blockers 2 → 3');
++    });
++
++    it('reports a count BELOW baseline as a free tightening and stays green', () => {
++        const repo = initRepo(3);
++        fs.rmSync(path.join(repo, 'agents/roadmaps/road-to-2.md'));
++        commitAll(repo, 'archive one');
++        const res = run(repo, ['--base', 'main']);
++        expect(res.status, res.stderr).toBe(0);
++        expect(res.stdout).toContain('free tightening: active_roadmaps measured 2 under a baseline of 3');
++    });
++
++    it('exits 2, never 1, when the roadmap root is empty — a dead scope is not a pass', () => {
++        // The failure this guards: move agents/roadmaps/ and every count is 0,
++        // which is trivially under any baseline. Exit 1 would assert the estate
++        // grew; exit 2 says the gate could not run.
++        const repo = initRepo(1);
++        fs.rmSync(path.join(repo, 'agents/roadmaps/road-to-0.md'));
++        write(repo, 'src/config/estate-count-budget.json', budget({ active: 0, later: 0, blockers: 0 }));
++        commitAll(repo, 'empty the estate');
++        const res = run(repo, ['--base', 'main']);
++        expect(res.status).toBe(2);
++        expect(res.stderr).toContain('scanned 0');
++    });
++
++    it('exits 2 when the budget file is unreadable', () => {
++        const repo = initRepo(2);
++        write(repo, 'src/config/estate-count-budget.json', '{ not json\n');
++        commitAll(repo, 'break the budget');
++        const res = run(repo, ['--base', 'main']);
++        expect(res.status).toBe(2);
++        expect(res.stderr).toContain('unreadable');
++    });
++});
++
++describe('check_estate_count — one-in-one-out', () => {
++    it('is RED on an addition with no offset in the same change', () => {
++        const repo = initRepo(3);
++        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New'));
++        // Raise the baseline so the ratchet half passes and the failure can only
++        // come from the offset half — otherwise this test would pass for the
++        // wrong reason.
++        write(repo, 'src/config/estate-count-budget.json', budget({ active: 4, later: 0, blockers: 0 }));
++        commitAll(repo, 'add a roadmap, raise the baseline');
++        const res = run(repo, ['--base', 'main']);
++        expect(res.status).toBe(1);
++        expect(res.stderr).not.toContain('the roadmap estate grew');
++        expect(res.stderr).toContain('1 new active roadmap(s) with no offset');
++        expect(res.stderr).toContain('road-to-new.md');
++    });
++
++    it('is GREEN when the addition is paid for by an archive move in the same change', () => {
++        const repo = initRepo(3);
++        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New'));
++        fs.mkdirSync(path.join(repo, 'agents/roadmaps/archive'), { recursive: true });
++        git(repo, 'mv', 'agents/roadmaps/road-to-2.md', 'agents/roadmaps/archive/road-to-2.md');
++        commitAll(repo, 'add one, archive one');
++        const res = run(repo, ['--base', 'main']);
++        expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
++        expect(res.stdout).toContain('+1 active / -1 disposed');
++    });
++
++    it('counts a park into later/ as an offset, and later/ growth is then the ratchet’s business', () => {
++        const repo = initRepo(3, { later: 1 });
++        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New'));
++        git(repo, 'mv', 'agents/roadmaps/road-to-2.md', 'agents/roadmaps/later/road-to-2.md');
++        // later/ goes 1 → 2, so the ratchet must be told; the offset half is
++        // satisfied either way. The two halves answer different questions and
++        // this fixture pins that they do not shadow each other.
++        write(repo, 'src/config/estate-count-budget.json', budget({ active: 3, later: 2, blockers: 0 }));
++        commitAll(repo, 'add one, park one');
++        const res = run(repo, ['--base', 'main']);
++        expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
++        expect(res.stdout).toContain('+1 active / -1 disposed');
++    });
++
++    it('treats un-parking a later/ roadmap as an addition, not as a neutral move', () => {
++        const repo = initRepo(3, { later: 1 });
++        git(repo, 'mv', 'agents/roadmaps/later/parked-0.md', 'agents/roadmaps/road-to-unparked.md');
++        write(repo, 'src/config/estate-count-budget.json', budget({ active: 4, later: 0, blockers: 0 }));
++        commitAll(repo, 'un-park one');
++        const res = run(repo, ['--base', 'main']);
++        expect(res.status).toBe(1);
++        expect(res.stderr).toContain('no offset');
++        expect(res.stderr).toContain('road-to-unparked.md');
++    });
++
++    it('accepts an addition carrying an estate_offset_exempt reason in its frontmatter', () => {
++        const repo = initRepo(3);
++        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New', { exempt: 'incident follow-up, nothing to trade' }));
++        write(repo, 'src/config/estate-count-budget.json', budget({ active: 4, later: 0, blockers: 0 }));
++        commitAll(repo, 'add an exempt roadmap');
++        const res = run(repo, ['--base', 'main']);
++        expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
++        expect(res.stdout).toContain('1 exempt');
++    });
++
++    it('is inert below a registered active ceiling, and live above it', () => {
++        // T3 applies "while the active count sits above target". With a ceiling
++        // registered ABOVE the live count the lint must not fire; the same
++        // change with the ceiling below it must.
++        const inert = initRepo(3, { above: 10 });
++        write(inert, 'agents/roadmaps/road-to-new.md', roadmap('New'));
++        write(
++            inert,
++            'src/config/estate-count-budget.json',
++            budget({ active: 4, later: 0, blockers: 0 }, 10),
++        );
++        commitAll(inert, 'add one under the ceiling');
++        expect(run(inert, ['--base', 'main']).status).toBe(0);
++
++        const live = initRepo(3, { above: 2 });
++        write(live, 'agents/roadmaps/road-to-new.md', roadmap('New'));
++        write(live, 'src/config/estate-count-budget.json', budget({ active: 4, later: 0, blockers: 0 }, 2));
++        commitAll(live, 'add one over the ceiling');
++        expect(run(live, ['--base', 'main']).status).toBe(1);
++    });
++
++    it('reports the diff half as skipped rather than passing when no base ref resolves', () => {
++        const repo = initRepo(2);
++        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New'));
++        write(repo, 'src/config/estate-count-budget.json', budget({ active: 3, later: 0, blockers: 0 }));
++        commitAll(repo, 'add one');
++        git(repo, 'branch', '-D', 'main');
++        const res = run(repo);
++        // Green on the count half, but the skip is PRINTED and ledgered — an
++        // unevaluated check that reports nothing is the silent pass this gate's
++        // own header argues against.
++        expect(res.status, res.stderr).toBe(0);
++        expect(res.stdout).toContain('one-in-one-out not evaluated');
++        expect(res.stdout).toContain('precondition_unmet');
++    });
++});
++
++describe('check_estate_count — unit surface', () => {
++    it('classifyDiff reads renames by direction, not as bare adds and deletes', () => {
++        const out = classifyDiff(
++            [
++                'A\tagents/roadmaps/road-to-a.md',
++                'D\tagents/roadmaps/road-to-b.md',
++                'R100\tagents/roadmaps/road-to-c.md\tagents/roadmaps/archive/road-to-c.md',
++                'R100\tagents/roadmaps/later/road-to-d.md\tagents/roadmaps/road-to-d.md',
++                'R100\tagents/roadmaps/road-to-e.md\tagents/roadmaps/road-to-e2.md',
++                'M\tagents/roadmaps/road-to-f.md',
++                'A\tagents/roadmaps/archive/road-to-g.md',
++                'A\tsrc/scripts/unrelated.ts',
++            ].join('\n'),
++            () => null,
++        );
++        expect(out.added.sort()).toEqual(['agents/roadmaps/road-to-a.md', 'agents/roadmaps/road-to-d.md']);
++        expect(out.offsets.sort()).toEqual(['agents/roadmaps/road-to-b.md', 'agents/roadmaps/road-to-c.md']);
++        // A top-level rename is neither an addition nor an offset, a modify is
++        // not an addition, and neither an archive-only add nor a non-roadmap
++        // path is in scope at all.
++        expect(out.added).not.toContain('agents/roadmaps/road-to-e2.md');
++        expect(out.added).not.toContain('agents/roadmaps/archive/road-to-g.md');
++    });
++
++    it('exemptionReason accepts a real reason and refuses an empty or absent one', () => {
++        expect(exemptionReason('---\nestate_offset_exempt: because X\n---\n# R\n')).toBe('because X');
++        expect(exemptionReason('---\nestate_offset_exempt: "quoted reason"\n---\n# R\n')).toBe('quoted reason');
++        // A bare key is not a reason. The exemption costs a sentence on purpose.
++        expect(exemptionReason('---\nestate_offset_exempt: ""\n---\n# R\n')).toBeNull();
++        expect(exemptionReason('---\nestate_offset_exempt:\n---\n# R\n')).toBeNull();
++        expect(exemptionReason('---\ncomplexity: lightweight\n---\n# R\n')).toBeNull();
++        expect(exemptionReason('# R\n')).toBeNull();
++    });
++
++    it('the committed budget matches the live tree, so the gate ships green', () => {
++        // Vacuity guard on the registration itself: a baseline that did not
++        // match the tree at registration would make the gate red on arrival,
++        // which teaches the reader to ignore it.
++        const res = run(REPO_ROOT, ['--json', '--base', 'origin/main']);
++        expect(res.status, res.stderr).toBe(0);
++        const v = JSON.parse(res.stdout.replace(/^scanned: \d+\n/, '')) as {
++            counts: Record<string, number>;
++            baseline: Record<string, number>;
++            growth: unknown[];
++        };
++        expect(v.growth).toEqual([]);
++        expect(v.counts['active_roadmaps']).toBe(v.baseline['active_roadmaps']);
++    });
++});
+diff --git a/tests/scripts/dispatch_r2_reviewer.test.ts b/tests/scripts/dispatch_r2_reviewer.test.ts
+index f447231d8f4a66ad74976acb5cf7a107862a7d33..23554aff5d894a8050fbcc8f92037cfe98738682 100644
+--- a/tests/scripts/dispatch_r2_reviewer.test.ts
++++ b/tests/scripts/dispatch_r2_reviewer.test.ts
+@@ -657,6 +657,93 @@ describe('dispatch_r2_reviewer — pure helpers', () => {
+         expect(extractAcceptanceCriteria(lower)).toContain('- crit A');
+     });
+ 
++    // The inline `- **AC-n:**` form. Measured 2026-08-18 over the active
++    // roadmap tree: 21 heading-only, **7 inline-only** — and the inline set
++    // produced a 0-byte acceptance-criteria.md under a prompt line saying the
++    // criteria had been extracted, with ac_hash stamped as the SHA-256 of ''.
++    const INLINE_ROADMAP = [
++        '# Roadmap: X',
++        '',
++        '## Phases',
++        '',
++        '### Phase 0',
++        '',
++        '- [ ] **0.1** do a thing',
++        '- **AC-0:** the sheet exists and carries every item,',
++        '      each with a labelled source.',
++        '',
++        '### Phase 3',
++        '',
++        '- [ ] **3.1** build the gate',
++        '- **AC-3:** both gates exist and are red/green against fixtures.',
++        '',
++        '## Blockers',
++        '',
++        '- **AC-4:** a criterion declared below the phase list is still a criterion.',
++        '',
++    ].join('\n');
++
++    it('extractAcceptanceCriteria collects inline AC bullets when no heading exists', () => {
++        const out = extractAcceptanceCriteria(INLINE_ROADMAP);
++        // Vacuity guard first: the heading-only path would return '' here, so
++        // assert non-empty before asserting content.
++        expect(out).not.toBe('');
++        expect(out).toContain('**AC-0:**');
++        expect(out).toContain('**AC-3:**');
++        // Continuation lines ride with their bullet rather than being dropped.
++        expect(out).toContain('each with a labelled source.');
++        // Position is deliberately NOT constrained: a criterion declared below
++        // the phase list is still a criterion, and constraining it would make
++        // the extractor's corpus depend on heading order.
++        expect(out).toContain('**AC-4:**');
++        // One line per criterion — the continuation was joined, not appended.
++        expect(out.split('\n').filter((l) => l.includes('**AC-')).length).toBe(3);
++    });
++
++    it('extractAcceptanceCriteria prefers the heading section over inline bullets', () => {
++        // A roadmap carrying BOTH must not have its section diluted by phase
++        // bullets; the heading is the declared list and wins.
++        const both = `${INLINE_ROADMAP}\n## Acceptance Criteria\n\n- the declared one\n`;
++        const out = extractAcceptanceCriteria(both);
++        expect(out).toContain('- the declared one');
++        expect(out).not.toContain('**AC-0:**');
++    });
++
++    it('extractAcceptanceCriteria still returns empty when neither form is present', () => {
++        expect(extractAcceptanceCriteria('# X\n\n## Phase 1\n\n- [ ] a\n')).toBe('');
++    });
++
++    it('expectedHashes maps an EMPTY AC string to none, not to the SHA of the empty string', () => {
++        // The defect this closes: '' took the `!= null` branch, so the manifest
++        // recorded e3b0c442… — a plausible-looking hash that re-derives
++        // identically on --verify-current, letting the gate confirm an AC
++        // binding over a 0-byte file.
++        const h = expectedHashes({ scopeDiffText: 'd', roadmapText: 'r', acText: '' });
++        expect(h.ac_hash).toBe('none');
++        expect(h.ac_hash).not.toBe(sha256(''));
++        expect(h.roadmap_hash).toBe(sha256('r'));
++    });
++
++    it('every active roadmap that declares criteria yields a non-empty extraction', () => {
++        // The population check, over the real tree rather than a fixture: no
++        // active roadmap may declare criteria in a form the extractor cannot
++        // read. This is the assertion that would have failed before the fix.
++        const dir = path.join(REPO_ROOT, 'agents', 'roadmaps');
++        const blind: string[] = [];
++        let declaring = 0;
++        for (const name of fs.readdirSync(dir)) {
++            if (!name.endsWith('.md')) continue;
++            const text = fs.readFileSync(path.join(dir, name), 'utf-8');
++            const declares = /^## acceptance criteria\s*$/im.test(text) || /^\s*[-*+]\s+\*\*AC-[\w.]+:?\*\*/m.test(text);
++            if (!declares) continue;
++            declaring += 1;
++            if (extractAcceptanceCriteria(text) === '') blind.push(name);
++        }
++        // Vacuity guard: a moved roadmaps root would make the loop assert nothing.
++        expect(declaring).toBeGreaterThan(10);
++        expect(blind).toEqual([]);
++    });
++
+     it('reviewScopeDiffArgs excludes every gate-owned evidence path from the reviewed scope', () => {
+         const argv = reviewScopeDiffArgs('origin/main');
+         // Asserted as structure, not as a frozen array: the byte-stability flag
+diff --git a/tests/scripts/roadmap_gates.test.ts b/tests/scripts/roadmap_gates.test.ts
+index 2fe50cd0014651b0b1d5c9f8fb368f260f72469b..0844afd1d3913fff6673756c6d67cdb70af4d072 100644
+--- a/tests/scripts/roadmap_gates.test.ts
++++ b/tests/scripts/roadmap_gates.test.ts
+@@ -20,6 +20,9 @@ import {
+     renderPending,
+     renderPendingJson,
+     renderReply,
++    renderSheet,
++    isAgentDrafted,
++    sheetQuestion,
+     type Entry,
+ } from '../../src/agent-src/scripts/roadmap_gates.js';
+ import {
+@@ -487,3 +490,120 @@ describe('renderPending — staged actions awaiting confirmation', () => {
+         expect(parsed.staged).toEqual([]);
+     });
+ });
++
++describe('--sheet — the consolidated decision sheet', () => {
++    // road-to-estate-drawdown Step 0.1. `verify:` the sheet contains every
++    // user-owned item, each with a question, a default and its recommendation
++    // source LABELLED — the last of the three is the load-bearing one, because a
++    // sheet whose whole point is accept-all-defaults must not present an
++    // agent-drafted default and a maintainer decision as the same statement.
++    const NOW = new Date('2026-08-18T00:00:00Z');
++
++    it('carries every user-owned item and no maintainer-owned one', () => {
++        const out = renderSheet(
++            [
++                entry('user', { id: 'mine-big', openSteps: 40 }),
++                entry('maintainer', { id: 'notmine' }),
++                entry('user', { id: 'mine-small', openSteps: 2 }),
++                entry('external', { id: 'alsonotmine' }),
++            ],
++            NOW,
++        );
++        expect(out).toContain('2 decisions owned by you');
++        expect(out).toContain('mine-big');
++        expect(out).toContain('mine-small');
++        expect(out).not.toContain('notmine');
++        expect(out).not.toContain('alsonotmine');
++    });
++
++    it('keeps the unblock-descending order collectEntries produced', () => {
++        const out = renderSheet(
++            [
++                entry('user', { id: 'first', openSteps: 40 }),
++                entry('user', { id: 'second', openSteps: 9 }),
++                entry('user', { id: 'third', openSteps: 1 }),
++            ],
++            NOW,
++        );
++        expect(out.indexOf('`first`')).toBeLessThan(out.indexOf('`second`'));
++        expect(out.indexOf('`second`')).toBeLessThan(out.indexOf('`third`'));
++    });
++
++    it('labels a maintainer-recorded default differently from an agent-drafted one', () => {
++        const out = renderSheet(
++            [
++                entry('user', { id: 'decided', recommendation: 'Take (b). It is reversible.' }),
++                entry('user', {
++                    id: 'drafted',
++                    recommendation: '**(agent-drafted 2026-08-18 — predates the field.)** Do the probe first.',
++                }),
++            ],
++            NOW,
++        );
++        expect(out).toContain('Provenance of the 2 defaults: 1 maintainer-recorded');
++        expect(out).toContain('1 `agent-drafted`');
++        expect(out).toContain('maintainer-recorded `Recommendation:` in the roadmap');
++        expect(out).toContain('NOT a maintainer decision');
++    });
++
++    it('says so when a blocker records no recommendation at all', () => {
++        // The honest branch: no invented default. A generator that filled this in
++        // would be indistinguishable from a maintainer decision on the row that
++        // needs the distinction most.
++        const out = renderSheet([entry('user', { id: 'bare' })], NOW);
++        expect(out).toContain('none recorded');
++        expect(out).toContain('needs an agent-drafted default');
++        expect(out).not.toContain('maintainer-recorded `Recommendation:`');
++    });
++
++    it('names a legacy blocked-until note as having no field, rather than as undrafted', () => {
++        // A legacy `> Blocked until …` note is not a `### blocker:` entry and has
++        // no Recommendation: slot, so "to be written in below" would point at a
++        // field that does not exist. `isLegacy` keys on the id the parser gives
++        // such a note.
++        const out = renderSheet([entry('user', { id: 'legacy' })], NOW);
++        expect(out).toContain('none — legacy note');
++        expect(out).toContain('Converting it into a real blocker');
++    });
++
++    it('gives every row a question, labelling which field it came from', () => {
++        const out = renderSheet(
++            [
++                entry('user', { id: 'has-q', question: 'Which sink?', openSteps: 9 }),
++                entry('user', { id: 'has-todo', todo: ['1. Run the probe on the host.'], openSteps: 8 }),
++                entry('user', { id: 'bare-blocks', todo: [], openSteps: 7 }),
++            ],
++            NOW,
++        );
++        expect(out).toContain('recorded `Question:`');
++        expect(out).toContain('derived from the first `What to do:` step');
++        expect(out).toContain('derived from `Blocks:`');
++        // Every rendered row carries one, so the sheet has no blank questions.
++        expect(out.split('\n').filter((l) => l.startsWith('- **Question**')).length).toBe(3);
++    });
++
++    it('is not silent when nothing is owned by the user', () => {
++        // `--reply` returns '' on purpose so it can be appended unconditionally.
++        // A sheet must NOT: an empty file reads as "the generator broke", where
++        // one sentence reads as "there is nothing to answer".
++        const out = renderSheet([entry('maintainer'), entry('external')], NOW);
++        expect(out).toContain('nothing owned by you');
++        expect(out).toContain('Nothing to answer');
++    });
++
++    it('sheetQuestion falls back in a fixed order and never returns a whole paragraph', () => {
++        expect(sheetQuestion(entry('user', { question: 'Which one? And why?' }).blocker)).toEqual({
++            text: 'Which one?',
++            source: 'question',
++        });
++        expect(sheetQuestion(entry('user', { todo: ['1. Do X. Then Y.'] }).blocker).source).toBe('todo');
++        expect(sheetQuestion(entry('user', { todo: [] }).blocker).source).toBe('blocks');
++    });
++
++    it('isAgentDrafted reads the marker out of the field text, not out of the sheet', () => {
++        expect(isAgentDrafted('**(agent-drafted 2026-08-18 — from the roadmap.)** Do X.')).toBe(true);
++        expect(isAgentDrafted('(Agent-Drafted) do X')).toBe(true);
++        expect(isAgentDrafted('Take (b) — the agent drafted nothing here')).toBe(false);
++        expect(isAgentDrafted('')).toBe(false);
++    });
++});
