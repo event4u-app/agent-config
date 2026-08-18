@@ -171,13 +171,32 @@ describe('check_estate_count — the ratchet direction', () => {
         expect(res.stderr).toContain('open_blockers 2 → 3');
     });
 
-    it('reports a count BELOW baseline as a free tightening and stays green', () => {
+    // Inverted 2026-08-19. This used to assert exit 0 on an un-walked tightening,
+    // which put the gate in direct contradiction with the `unit surface` case
+    // below ("the committed budget matches the live tree"): the same state was a
+    // pass here and a failure there. Measured consequence, not a tidiness
+    // argument — a drawdown change passed `task preflight` and reddened CI every
+    // time, and on 2026-08-18 it reddened `main` in run 32173675197, after which
+    // every later PR failed on drift it had not caused.
+    it('FAILS on a count below baseline until the baseline is walked down', () => {
         const repo = initRepo(3);
         fs.rmSync(path.join(repo, 'agents/roadmaps/road-to-2.md'));
         commitAll(repo, 'archive one');
         const res = run(repo, ['--base', 'main']);
+        expect(res.status, res.stdout).toBe(1);
+        expect(res.stderr).toContain('un-walked tightening: active_roadmaps measured 2 under a baseline of 3');
+    });
+
+    it('goes green once the walked baseline matches the tightened measurement', () => {
+        // The other half of the inversion: failing on tightening must be
+        // satisfiable by the one-number edit the message asks for, or it is a
+        // gate with no green path.
+        const repo = initRepo(3);
+        fs.rmSync(path.join(repo, 'agents/roadmaps/road-to-2.md'));
+        write(repo, 'src/config/estate-count-budget.json', budget({ active: 2, later: 0, blockers: 0 }));
+        commitAll(repo, 'archive one and walk the baseline in the same change');
+        const res = run(repo, ['--base', 'main']);
         expect(res.status, res.stderr).toBe(0);
-        expect(res.stdout).toContain('free tightening: active_roadmaps measured 2 under a baseline of 3');
     });
 
     it('exits 2, never 1, when the roadmap root is empty — a dead scope is not a pass', () => {

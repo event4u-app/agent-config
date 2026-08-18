@@ -453,18 +453,47 @@ export function evaluate(
         unpaid = Math.max(0, chargeable.length - offsets.offsets.length);
     }
 
+    // A metric RAISED with a recorded reason in this same change is a deliberate
+    // ceiling, not an un-walked tightening, and must not be reported as one — the
+    // raise is the reviewed act the ratchet exists to permit. Without this filter
+    // the failure below would make a legal reasoned raise unsatisfiable: the raise
+    // puts the baseline above the live count by construction, which is exactly the
+    // shape the tightening rule bites on.
+    const reasonedRaise = new Set(raises.filter((r) => r.reason !== null).map((r) => r.metric));
+    const unwalked = tightened.filter((t) => !reasonedRaise.has(t.metric));
+
     return {
         counts,
         baseline: budget.baseline,
         growth,
-        tightened,
+        tightened: unwalked,
         raises,
         raiseSkipReason,
         offsets,
         offsetSkipReason,
         unpaid,
+        // `tightened` is a FAILURE, not an advisory, and this is the second thing
+        // it has been. Until 2026-08-19 it printed "free tightening" and left
+        // `withinBudget` true, while `check_estate_count.test.ts` asserted the
+        // committed budget equals the live tree — so the gate and its own test
+        // disagreed about the same state. The consequence was measured rather than
+        // theorised: a drawdown PR passed `task preflight` locally (this gate,
+        // exit 0) and reddened CI (that test, exit 1) every single time, and on
+        // 2026-08-18 it reddened `main` itself in run 32173675197, after which
+        // every subsequent PR failed on drift it had not caused. That is the
+        // permanently-red shape the budget file's own `67 -> 69` history entry
+        // describes from the other direction.
+        //
+        // Failing here is also the STRONGER reading of this gate's purpose: the
+        // file says in as many words that a lower measurement is the new ceiling
+        // and not headroom to spend later. A baseline left above the truth is
+        // exactly that headroom, and a gate that only warns about it is how the
+        // headroom survives to be spent.
         withinBudget:
-            growth.length === 0 && unpaid === 0 && raises.every((r) => r.reason !== null),
+            growth.length === 0 &&
+            unpaid === 0 &&
+            unwalked.length === 0 &&
+            raises.every((r) => r.reason !== null),
     };
 }
 
@@ -744,10 +773,15 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     }
 
     for (const t of verdict.tightened) {
-        process.stdout.write(
-            `  ↓ free tightening: ${t.metric} measured ${String(t.live)} under a baseline of ${String(t.baseline)}.\n` +
+        process.stderr.write(
+            `❌  un-walked tightening: ${t.metric} measured ${String(t.live)} under a baseline of ${String(t.baseline)}.\n` +
                 `    Walk the baseline down in ${BUDGET_REL} — a lower measurement is the new ceiling,\n` +
-                '    not headroom to spend later.\n',
+                '    not headroom to spend later. This is a one-number edit plus one appended\n' +
+                '    `baseline_history` entry, and it belongs in the change that earned the lower\n' +
+                '    measurement. Failing here rather than warning is deliberate: this gate and\n' +
+                "    `check_estate_count.test.ts` used to disagree about this exact state, so a\n" +
+                '    drawdown passed preflight and reddened CI — and once it reached the trunk,\n' +
+                '    every later PR failed on drift it had not caused.\n',
         );
     }
 
