@@ -35,6 +35,12 @@ This is symptom (2) of the operator's report — *finished, but not returned* �
 and it is now a same-host, controlled observation rather than an upstream issue
 number.
 
+> **Numbering correction, 2026-08-18.** *finished, but not returned* is symptom
+> **(3)**, not (2); (2) is *endless subagent runs*. The roadmap's own header and
+> its symptom → defect map both number it that way. The observation above is
+> unaffected — only the label was wrong — and the original sentence stays so the
+> mistake remains auditable.
+
 The reproduction is a **lower bound on the cost**, not the cost: the work was
 paid for in full and discarded in full. Any dispatch shape that can end on a
 tool call carries this risk, which is exactly why Phase 2 Step 1's contract

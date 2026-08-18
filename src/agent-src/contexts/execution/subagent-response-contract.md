@@ -31,6 +31,48 @@ orchestrator synthesises and re-verifies.
   chars (~3k tokens against a measured ~251k spawn floor). Constants + checks:
   `src/scripts/_lib/subagent_response.ts`.
 
+## Durable copy — the envelope on disk before the message
+
+```
+THE FINAL MESSAGE IS A SINGLE TEXT-ONLY ENVELOPE. NEVER END ON A TOOL CALL.
+THE SAME ENVELOPE IS WRITTEN TO THE RUNTIME ARTIFACT DIR BEFORE IT IS EMITTED.
+DISK IS THE DURABLE CHANNEL. THE MESSAGE IS THE FAST CHANNEL.
+A RETURN THAT WAS PAID FOR AND NEVER DELIVERED IS THE FAILURE THIS PREVENTS.
+```
+
+The envelope reaches the orchestrator twice, and the two copies are not two
+result shapes:
+
+- **The message** — the worker's final assistant message, text only, carrying
+  the envelope verbatim. Fast, and the channel that can vanish.
+- **The file** — the same envelope written into the runtime artifact dir
+  (gitignored) as `response-envelope.json` *before* the final message is
+  emitted, so it exists even when the message never arrives.
+
+This does not weaken *the envelope is the ONLY return channel* above. That
+clause governs what the orchestrator may **ingest** — one envelope shape, never
+a wholesale transcript. The disk copy carries that same shape, so the
+orchestrator still reads exactly one; what changes is that it can still read it
+after a delivery failure.
+
+**Why the ordering is load-bearing.** A subagent whose last block is a
+`tool_use` delivers nothing to its parent on host 2.1.229 — measured with a
+matched control dispatched in the same turn: `(no output)` after 3 tool uses and
+18,242 tokens, against a control ending on assistant text that returned the
+complete report
+([`subagent-lifecycle-phase0-return-channel.md`](../../../../agents/evidence/investigations/subagent-lifecycle-phase0-return-channel.md)
+§ F1). The tokens were spent either way. Writing the envelope first is what
+turns a dropped message into a recoverable read instead of a paid-for discard.
+
+**Honest status — a convention, not a checked invariant.** Nothing in the tree
+writes, reads, or validates `response-envelope.json`: the filename is fixed here
+so that a durable channel is *findable* rather than nominal, and the clause
+travels in the dispatch prompt (spawn contract rule (f)), which is where a
+worker actually reads its duties. A `subagent_stop` concern that finds the file
+and injects its path when the message is empty is planned and **not shipped** —
+said plainly, because "the durable channel" must not be read as a recovery
+mechanism that already runs.
+
 ## Budget-hit partial result
 
 When the worker's `max_tokens_per_worker` stop-loss fires
