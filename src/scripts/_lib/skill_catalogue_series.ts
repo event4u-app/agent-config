@@ -455,22 +455,48 @@ export function formatPointableBare(
  * which is a filter that only ever narrows; the whole series is available to an
  * operator report, and a runtime filter wants the current reading.
  *
- * `bare_names` is guarded with `Array.isArray` because `readObservationLog`
- * produces records by an unchecked `JSON.parse … as` over an append-only log
- * with more than one producer — the same guard, for the same recorded reason,
- * that `joinPointableBare` and `knownHostLimits` carry.
+ * `bare_names` is guarded with `Array.isArray`, and `observed_at` with a
+ * `typeof` check, because `readObservationLog` produces records by an unchecked
+ * `JSON.parse … as` over an append-only log with more than one producer — the
+ * same guard, for the same recorded reason, that `joinPointableBare` and
+ * `knownHostLimits` carry. Both guards resolve to `null`, never to an older
+ * reading: a malformed LATEST record means the current state is unknown, and
+ * falling back to a superseded one would be the stale-suppression failure this
+ * function's own tie-break exists to prevent.
  */
 export function knownBareNames(
     records: readonly ObservationRecord[],
     host: string,
 ): Set<string> | null {
-    let latest: ObservationRecord | null = null;
-    for (const record of records) {
-        if (record.host !== host) continue;
-        if (truncationModeOf(record) !== 'per-entry') continue;
-        if (!Array.isArray(record.bare_names)) continue;
-        if (latest === null || record.observed_at >= latest.observed_at) latest = record;
-    }
-    if (latest === null) return null;
+    // The latest record for the host decides, and the mode is read OFF that
+    // record rather than used to select it. R2 finding 2: filtering `per-entry`
+    // first meant a NEWER `budget-strip-and-drop` record could never supersede
+    // an older `per-entry` one, so a host that changed truncation mode kept
+    // being filtered against a bare set from before the change — the precise
+    // failure the LATEST-WINS paragraph above claims to prevent.
+    //
+    // `headlineRecordPerHost` rather than a fourth inline tie-break (R2 finding
+    // 7): this module already imports it, already defines
+    // `latestPointableBarePerHost`, and its own comment cites `_supersedes` as
+    // the reason duplicate reducers are dangerous. Restating the rule here would
+    // have meant the runtime filter silently not inheriting any precedence the
+    // parent adds later.
+    //
+    // The `observed_at` pre-filter is R2 finding 6, and it is a pre-filter
+    // rather than a change to `_supersedes` because that reducer is shared.
+    // `_supersedes` compares dates with `!==` then `>`, and BOTH
+    // `undefined > "2026-08-12"` and `"2026-08-12" > undefined` are false — so a
+    // record with a missing or non-string date, once it becomes the incumbent,
+    // can never be displaced by a well-formed later one. One malformed line in
+    // an append-only log with two producers would pin the filter to it forever.
+    // Feeding the shared reducer only well-dated records avoids that without
+    // changing behaviour for its other callers.
+    const dated = records.filter(
+        (record) => record.host === host && typeof record.observed_at === 'string',
+    );
+    const latest = headlineRecordPerHost(dated).get(host);
+    if (latest === undefined) return null;
+    if (truncationModeOf(latest) !== 'per-entry') return null;
+    if (!Array.isArray(latest.bare_names)) return null;
     return new Set(latest.bare_names.filter((name): name is string => typeof name === 'string'));
 }

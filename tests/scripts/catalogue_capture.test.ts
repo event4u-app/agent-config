@@ -782,17 +782,53 @@ describe('knownBareNames — what the runtime router must not name', () => {
     // by an unchecked `JSON.parse … as` and has more than one producer, so a
     // line missing `bare_names` is a real state and must not take the filter
     // down with a TypeError.
+    // R2 finding 2 — the defect this test exists for. The `per-entry` check used
+    // to run BEFORE the latest-wins pick, so a NEWER non-per-entry record could
+    // never supersede an older per-entry one and a host that changed truncation
+    // mode kept being filtered against a bare set from before the change. The
+    // earlier fixture missed it by mixing two DIFFERENT hosts; this one is ONE
+    // host across a mode change, which is the only shape that catches it.
+    it('stops filtering when the host LATEST record changed truncation mode', () => {
+        const sameHostLater: ObservationRecord = {
+            ...codexStripAndDrop,
+            host: 'claude',
+            observed_at: '2026-08-20',
+        };
+        expect(knownBareNames([claudePerEntry, sameHostLater], 'claude')).toBeNull();
+        // Input order must not decide it, and the older reading must not survive.
+        expect(knownBareNames([sameHostLater, claudePerEntry], 'claude')).toBeNull();
+        // The reverse direction still filters: an OLDER strip-and-drop record
+        // does not stop a newer per-entry one from being read.
+        const olderStrip: ObservationRecord = { ...sameHostLater, observed_at: '2026-08-01' };
+        expect(knownBareNames([olderStrip, claudePerEntry], 'claude')?.size).toBe(2);
+    });
+
     it('skips a malformed record instead of crashing', () => {
         const malformed = {
             ...claudePerEntry,
             bare_names: undefined,
         } as unknown as ObservationRecord;
         expect(knownBareNames([malformed], 'claude')).toBeNull();
-        // A malformed LATEST record does not shadow a well-formed earlier one:
-        // the reducer never selects it, so the older reading still applies.
+        // A malformed LATEST record yields `null`, NOT the older reading. The
+        // current state is unknown, and falling back to a superseded record is
+        // the stale-suppression failure the tie-break exists to prevent — the
+        // same principle R2 finding 2 forced on the mode-change case above.
         const older: ObservationRecord = { ...claudePerEntry, observed_at: '2026-08-01' };
         const late = { ...malformed, observed_at: '2026-08-20' } as unknown as ObservationRecord;
-        expect(knownBareNames([older, late], 'claude')?.size).toBe(2);
+        expect(knownBareNames([older, late], 'claude')).toBeNull();
+    });
+
+    // R2 finding 6. `_supersedes` compares dates with `!==` then `>`, and BOTH
+    // `undefined > "2026-08-12"` and `"2026-08-12" > undefined` are false — so an
+    // undated record that became the incumbent could never be displaced, pinning
+    // the filter to it forever. The reducer pre-filters on a string date rather
+    // than changing the shared reducer, so an undated line is simply not a
+    // candidate and a well-formed record still wins.
+    it('ignores a record whose observed_at is not a string', () => {
+        const undated = { ...claudePerEntry, observed_at: undefined } as unknown as ObservationRecord;
+        expect(knownBareNames([undated], 'claude')).toBeNull();
+        expect(knownBareNames([undated, claudePerEntry], 'claude')?.size).toBe(2);
+        expect(knownBareNames([claudePerEntry, undated], 'claude')?.size).toBe(2);
     });
 
     it('drops a non-string entry rather than trusting the parse', () => {
