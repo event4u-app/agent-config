@@ -231,9 +231,18 @@ jobs:
         # quarter of the file set. The subprocess-heavy clusters (golden +
         # workspace) hash-clump into one over-budget shard regardless of shard
         # count, so they are excluded here and run in the dedicated
-        # `golden-tests` / `workspace-tests` jobs below → each node-tests shard
-        # stays light and balanced. (There has never been a `heavy-tests` job;
-        # the name this comment used to carry named nothing.)
+        # `golden-tests` / `workspace-tests` jobs below. (There has never been a
+        # `heavy-tests` job; the name this comment used to carry named nothing.)
+        #
+        # The exclusion does NOT make the shards balanced, and this comment used
+        # to claim it did. Measured over 50 successful `main` runs on 2026-08-18:
+        # shard 3/4 averages 357 s ubuntu / 516 s macOS against 147–164 s for its
+        # three siblings, so it is 2.3× the others and over the 5-min per-job
+        # ceiling. The driver is `tests/scripts/build_proof.test.ts`, which is
+        # NOT excluded here and spawns nothing — its cost is `render()` at ~54 s
+        # a call. Folding the two dedicated jobs back in was evaluated against
+        # these figures and rejected; the arithmetic and the revisit-if live in
+        # docs/contracts/ci-cost-budget.md § Fold-back decision, 2026-08-18.
         run: >-
           npm run test:ts --silent --
           --shard=${{ matrix.shard }}/4
