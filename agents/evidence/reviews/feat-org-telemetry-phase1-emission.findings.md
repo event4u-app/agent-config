@@ -1,13 +1,13 @@
 # Findings: feat-org-telemetry-phase1-emission
-<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: c19d835abef83958a62e85009085b130fa26b8e7885cbe978f0c7d392d95df21 | diff: 9159cdd05cc567547e371edf268b179357c8bffd | reviewer: r2-fresh-subagent-feat-org-telemetry-phase1-emission | prompt_hash: 0f5c59414b39bd005fe1cbe1f2375a5c40ed3329d6de5b0b73218ec8db2aa507 -->
+<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: 08e0d7835715b80ec99792cd2699b5e487f6c1e18953601a6b392b2e3f6b42ba | diff: 0fa5fb46fa1a7ce04b60f5001a09e3acc81b78dc | reviewer: r2-fresh-subagent-feat-org-telemetry-phase1-emission | prompt_hash: 0f5c59414b39bd005fe1cbe1f2375a5c40ed3329d6de5b0b73218ec8db2aa507 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-18 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 9159cdd05cc567547e371edf268b179357c8bffd
-  scope_hash: c19d835abef83958a62e85009085b130fa26b8e7885cbe978f0c7d392d95df21
+  diff_sha: 0fa5fb46fa1a7ce04b60f5001a09e3acc81b78dc
+  scope_hash: 08e0d7835715b80ec99792cd2699b5e487f6c1e18953601a6b392b2e3f6b42ba
   roadmap: agents/roadmaps/road-to-org-telemetry.md
-  roadmap_hash: 6cd49fa7dda1f43ef46cb649419045a42a45dc219bde31428fcecad7720b6858
+  roadmap_hash: 5aae2970114892c403c5810b63040adc9a42fb1f2e5ea87ec3dc3aa0b8699f20
   ac_hash: 62d3483b628c50db130545b5ffbacbfd2cbdc618a6f39774b7b6465d1176fc1a
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
