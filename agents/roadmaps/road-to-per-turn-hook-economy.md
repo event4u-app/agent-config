@@ -265,12 +265,13 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
          `matcher: Edit|Write` group and the group carrying the unscoped concerns
          pays **two** cold starts where it pays one today.
       2. **An unscoped group is mandatory on `pre_tool_use`, so nothing can be
-         skipped.** Eight of the twelve claude `pre_tool_use` concerns declare no
-         tool scope at all (`block-no-verify`, `block-unauthorized-git`,
+         skipped.** **Nine** of the twelve claude `pre_tool_use` concerns declare
+         no tool scope at all (`block-no-verify`, `block-unauthorized-git`,
          `evidence-independence`, `block-kernel-rule-writes`,
          `block-config-weakening`, `rtk-wrap`, `design-slop`, `ui-route-nudge`,
          `ship-diff-volume` — only `code-graph-nudge`, `reread-guard` and
-         `spawn-guard-shadow` carry `tools:`). Any payload must therefore reach a
+         `spawn-guard-shadow` carry `tools:`; the enumeration was right and the
+         count said eight, corrected after the R2 review). Any payload must therefore reach a
          group with no `matcher`, and a group with no matcher fires on every tool
          call. AC-5's *"a `PreToolUse` with a non-matching payload costs no
          dispatcher spawn at all"* cannot hold. The same is true of
@@ -568,6 +569,16 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       individual slot comfortably inside its own budget — which is D-1 stated as
       a number for the first time. It is ONE local reading, so it is an input to
       4.2 and explicitly not the bar.
+      **What the composite CANNOT see, stated because the R2 review found it and
+      the row would otherwise read as broader than it is:** `bench_hook_latency`
+      forces `AGENT_CONFIG_REPLAY=1` so a bench run leaves no session state, and
+      `roadmap_progress_hook` short-circuits on replay for **both** its write and
+      its flush path. So the composite is blind to step 3.1 in both directions —
+      it cannot show the removed `post_tool_use` spawn, nor the `stop`-slot flush
+      that replaced it. It measures the dispatcher and the concerns that run under
+      replay, which is what it was registered to bound (D-1 is dispatch count, not
+      one concern's spawn); a bench fixture that exercises the debounce needs a
+      throwaway workspace with a roadmap in it, and is not built here.
       `perTurnComposite` returns **null** rather than a number when a slot the
       definition needs is missing from a run: a composite over a subset reads
       low, and low is the direction that makes a ceiling look met. Pinned by
@@ -583,8 +594,12 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       `user_prompt_submit` for claude, 7–8 on other hosts". Fresh read of
       `hook_manifest.yaml`: claude carries **10**, and the other hosts carry
       7–8 only on that one slot — claude is the binding host on *every* slot
-      (`pre_tool_use` 12, `post_tool_use` 11, `stop` 10). The full per-host × slot
+      (`pre_tool_use` 12, `post_tool_use` 11, `stop` 11). The full per-host × slot
       table now sits in that step.
+      **Corrected once, after the R2 review, and the miss is worth naming:** the
+      first table was read BEFORE step 3.1 added `roadmap-progress` to `stop` and
+      `session_end` in the same PR, so a refresh whose whole point was a current
+      baseline shipped one stale by its own diff. Measure after your own edit.
       **One correction the refresh adds beyond the numbers:** four hosts show no
       `pre_tool_use` chain and copilot shows none anywhere, and those are **not**
       zero-length chains a cap could read as headroom — they are unbound slots and
@@ -683,6 +698,39 @@ PR is already a performance change carrying one security fix.
 - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) —
   the row exists in `hook-latency-budget.json` with its bar or its observe-only
   marker.
+
+### blocker: b-stdin-read-failure-policy
+- **Status:** open
+- **Owner:** user
+- **Class:** 2 — consent-once
+- **Blocks:** nothing — F-1's trigger is fixed and the residual failure is now
+  loud. This records the half that is a policy call rather than a bug fix.
+- **What to do:** decide what the dispatcher does when the stdin read **fails**,
+  as distinct from stdin being empty. Both `_readStdin` and `readHookStdin` still
+  convert any residual failure — an exhausted EAGAIN budget (~10 s), `EIO`,
+  `EBADF` — into an empty string, after which the whole chain runs with no
+  `tool_name` and the dispatcher exits 0. For a `fail_closed: true`,
+  `severity: blocking` guard that is an allow. Options: (a) **deny** on a failed
+  read for block-capable events that carry at least one fail-closed concern —
+  the honest reading of fail-closed, at the cost of refusing a tool call on a
+  transient I/O error; (b) keep allowing but treat the loud stderr line and the
+  dispatch issue that now ship as sufficient, which is the current state;
+  (c) deny only on the block-capable slot and allow elsewhere, which is (a)
+  narrowed to where a guard can actually refuse.
+- **Recommendation:** **option (c).** The bypass F-1 records is only consequential
+  where a guard can refuse, and `pre_tool_use` is the one block-capable slot on
+  this host; denying there costs a retryable refusal on an I/O error the retry
+  budget already survived ten seconds of, while denying on `stop` or
+  `post_tool_use` would refuse nothing and could break a turn end. Option (b) is
+  the status quo and leaves a documented allow-on-failure on a security path;
+  option (a) is right in spirit and pays for it on slots where it buys nothing.
+- **If you do nothing:** the residual failure stays an allow. It is no longer
+  silent — that was the actual defect and it is fixed — but a reader of
+  `hook-architecture-v1`'s fail-closed contract would still expect a refusal that
+  does not happen, and nothing in the tree records the gap except this blocker.
+- **Resolved when:** one option is recorded at this blocker and, for (a) or (c),
+  `_readStdin`'s failure path returns a deny for the named slots with a test that
+  fails when it allows.
 
 ### blocker: b-guard-tool-partition
 - **Status:** open

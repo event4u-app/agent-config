@@ -1149,6 +1149,28 @@ export function main(argv?: string[]): number {
   // yields an EMPTY envelope. That is a measured guard bypass, not a theory —
   // see readFd0ToEnd's header in hooks/hook_stdin.ts.
   const payload_text = tty.isatty(0) ? "" : _readStdin();
+  if (_stdin_read_failed !== null) {
+    // NEVER silent: an empty envelope reached from a failed read means every
+    // guard on this event evaluated nothing. The exit code is unchanged (see
+    // `_stdin_read_failed`), so this line and the dispatch issue are the only
+    // signal that the chain ran blind.
+    process.stderr.write(
+      `dispatch_hook: STDIN READ FAILED (${_stdin_read_failed}) — the concern ` +
+        `chain for '${args.event}' ran against an EMPTY payload and could not ` +
+        `evaluate anything. This is not an empty stdin.\n`,
+    );
+    try {
+      log_dispatch_issue(
+        process.cwd(),
+        "dispatcher",
+        "execution_failed",
+        `stdin read failed on ${args.event}: ${_stdin_read_failed} — chain ran with an empty payload`,
+        fix_hint(),
+      );
+    } catch {
+      // observability never breaks the hook
+    }
+  }
   _maybe_capture_payload(args, payload_text);
   const session_role = resolveSessionRole(process.env);
   const refusal_retry = _is_refusal_retry(args.event, payload_text);
@@ -1317,12 +1339,31 @@ function _sortedRepr(s: ReadonlySet<string>): string {
   return `[${items.map((x) => `'${x}'`).join(", ")}]`;
 }
 
+/**
+ * Set when the stdin read FAILED, as distinct from stdin being genuinely empty.
+ *
+ * The two were indistinguishable, and that was the second half of the bypass
+ * F-1 records: removing the EAGAIN *trigger* still left `catch { return "" }`
+ * converting any residual failure — an exhausted retry budget, `EIO`, `EBADF` —
+ * into "no input", after which the whole chain runs with no `tool_name` and the
+ * dispatcher exits 0. For a `fail_closed: true`, `severity: blocking` guard that
+ * is an allow, emitted silently. Found by the R2 review.
+ *
+ * The failure is now LOUD (stderr + a dispatch issue) while the allow/deny
+ * decision is unchanged. Turning a failed read into a DENY is a policy change on
+ * a security surface, so it is filed as `b-stdin-read-failure-policy` rather than
+ * improvised here: an unreadable payload on a block-capable event arguably must
+ * refuse, and that call is the maintainer's.
+ */
+let _stdin_read_failed: string | null = null;
+
 function _readStdin(): string {
   try {
     // Reads to EOF and retries on EAGAIN rather than treating it as empty
     // input; shared with the concern-side reader so both paths cannot drift.
     return readFd0ToEnd();
-  } catch {
+  } catch (exc) {
+    _stdin_read_failed = exc instanceof Error ? exc.message : String(exc);
     return "";
   }
 }

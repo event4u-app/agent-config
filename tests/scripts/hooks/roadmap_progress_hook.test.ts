@@ -360,7 +360,11 @@ describe('roadmap_progress — _relativize', () => {
 // write. These cases pin the four properties that make deferring it safe rather
 // than merely cheaper.
 
-describe('roadmap_progress — debounce ledger', () => {
+// `.skipIf(!tsx)` like the sibling run() block: five of these cases assert the
+// marker the tsx-run regenerator writes, so without a project-local tsx they
+// would fail — or fall through to a network `npx tsx`. Missed on the first pass
+// and caught by the R2 review.
+describe.skipIf(!tsx)('roadmap_progress — debounce ledger', () => {
     it('a write records the root and does NOT regenerate', () => {
         const { root, marker } = consumerRoot();
         const stdin = payload('save-file', { paths: ['agents/roadmaps/x.md'] });
@@ -435,23 +439,38 @@ describe('roadmap_progress — debounce ledger', () => {
 
     it('an unwritable ledger regenerates INLINE instead of losing the update', () => {
         // The debounce is an optimisation; it must never be the reason a
-        // dashboard silently stops updating. A directory where the ledger file
-        // belongs makes the write fail, and the hook falls back to the old path.
+        // dashboard silently stops updating. A FILE where the ledger DIRECTORY
+        // belongs makes every entry write fail, and the hook falls back to the
+        // old per-write path. (This was a directory-in-place-of-a-file before the
+        // ledger became one entry per root; the inversion is the point.)
         const { root, marker } = consumerRoot();
-        fs.mkdirSync(path.join(root, DIRTY_LEDGER_REL), { recursive: true });
+        fs.mkdirSync(path.dirname(path.join(root, DIRTY_LEDGER_REL)), { recursive: true });
+        fs.writeFileSync(path.join(root, DIRTY_LEDGER_REL), 'not a directory');
         expect(run(payload('save-file', { paths: ['agents/roadmaps/x.md'] }), {
             consumer_root: root,
         })).toBe(0);
         expect(fs.existsSync(marker)).toBe(true);
     });
 
-    it('a corrupt ledger reads as empty rather than throwing', () => {
+    it('a corrupt entry is dropped rather than throwing', () => {
         const { root } = consumerRoot();
-        const file = path.join(root, DIRTY_LEDGER_REL);
-        fs.mkdirSync(path.dirname(file), { recursive: true });
-        fs.writeFileSync(file, 'not json {');
+        const dir = path.join(root, DIRTY_LEDGER_REL);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'deadbeefdeadbeef.json'), 'not json {');
         expect(read_dirty_roots(root)).toEqual([]);
         expect(run(flushStdin(), { consumer_root: root })).toBe(0);
+    });
+
+    it('a second root written concurrently is not lost (no read-modify-write)', () => {
+        // The defect this shape removes: a single JSON array meant two parallel
+        // post_tool_use dispatches both read [] and the second write dropped the
+        // first root. Independent per-root files cannot lose one, and the same
+        // root twice is still one entry.
+        const { root } = consumerRoot();
+        expect(mark_dirty(root, ['/repo/a'])).toBe(true);
+        expect(mark_dirty(root, ['/repo/b'])).toBe(true);
+        expect(mark_dirty(root, ['/repo/a'])).toBe(true);
+        expect(read_dirty_roots(root)).toEqual(['/repo/a', '/repo/b']);
     });
 
     it('mark_dirty / clear_dirty round-trip and clear is idempotent', () => {

@@ -30,7 +30,9 @@ import { spawnSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import * as os from "node:os";
+
+import { afterAll, describe, expect, it } from "vitest";
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), "..", "..", "..", "..");
 const BUNDLE = path.join(REPO_ROOT, "dist", "hooks", "dispatch.js");
@@ -38,29 +40,55 @@ const BUNDLE = path.join(REPO_ROOT, "dist", "hooks", "dispatch.js");
 /** Pad sizes: below the pipe buffer, and two sizes measured to break it. */
 const PAD_SIZES = [0, 300_000, 2_000_000];
 
+/**
+ * A throwaway project dir, NOT the working repo.
+ *
+ * `--project-dir` is where the concern chain writes its state and where
+ * `ship-diff-volume` runs its git scans; pointing it at `REPO_ROOT` meant three
+ * real twelve-concern chains executed against the live checkout every time the
+ * suite ran. The property under test needs only the payload — the dispatcher
+ * resolves its manifest from the BUNDLE's own tree, not from here. Found by the
+ * R2 review.
+ */
+function makeProjectDir(): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dispatch-large-payload-"));
+  projectDirs.push(dir);
+  return dir;
+}
+
+const projectDirs: string[] = [];
+afterAll(() => {
+  for (const d of projectDirs) fs.rmSync(d, { recursive: true, force: true });
+});
+
 function dispatchPreToolUse(padBytes: number): { status: number | null; stderr: string } {
+  const projectDir = makeProjectDir();
   const toolInput: Record<string, unknown> = {
     command: 'git commit --no-verify -m "bypass"',
   };
   if (padBytes > 0) toolInput["description"] = "x".repeat(padBytes);
-  const env: NodeJS.ProcessEnv = { ...process.env, CLAUDE_PROJECT_DIR: REPO_ROOT };
+  const env: NodeJS.ProcessEnv = { ...process.env, CLAUDE_PROJECT_DIR: projectDir };
   // NOT replay mode: replay short-circuits concerns, which would make this
   // assert nothing at all.
   delete env["AGENT_CONFIG_REPLAY"];
   const proc = spawnSync(
     process.execPath,
-    [BUNDLE, "--platform", "claude", "--event", "pre_tool_use", "--project-dir", REPO_ROOT],
+    [BUNDLE, "--platform", "claude", "--event", "pre_tool_use", "--project-dir", projectDir],
     {
       input: JSON.stringify({
         session_id: "dispatch-large-payload-guard-test",
-        cwd: REPO_ROOT,
+        cwd: projectDir,
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
         tool_input: toolInput,
       }),
       encoding: "utf-8",
       env,
-      timeout: 120_000,
+      // Under the vitest testTimeout (10 s) and just over readStdinText's
+      // ~10 s EAGAIN budget, so a regression of the class this test exists to
+      // catch fails the assertion rather than timing the suite out. Found by
+      // the R2 review.
+      timeout: 8_000,
     },
   );
   return { status: proc.status, stderr: proc.stderr ?? "" };

@@ -16,10 +16,11 @@
         "_comment": "D-1 of road-to-per-turn-hook-economy: the slot budgets above gate per EVENT, and a single tool call fires both pre_tool_use and post_tool_use with their full concern chains. A ten-tool-call turn therefore pays twenty dispatcher cold starts plus the prompt and stop slots while every individual slot stays green — the number the user experiences has no row. This row is that number. Registered by step 4.1; the CEILING is step 4.2 and is the maintainer's, so the row ships observe-only and CANNOT fail a build. Definition before bar, deliberately: two people computing two different composites would both call the row green.",
         "definition": "(pre_tool_use + post_tool_use) * tool_calls + user_prompt_submit + stop",
         "aggregation": "p50",
+        "_aggregation_note": "Documentation of the code, not an input to it: the bench reads tool_calls from this file but hardcodes the p50 aggregation and re-implements the formula, so editing `aggregation` or `definition` changes nothing. Kept because a row whose meaning lives only in a TS file is unreadable here; corrected from silence to a stated non-binding after the R2 review flagged both keys as unread.",
         "tool_calls": 10,
         "observe_only": true,
         "p50_ci": null,
-        "_observe_only_note": "While observe_only is true the bench PRINTS the composite on every run, including the CI gate run, and never fails on it. Setting p50_ci to a number and observe_only to false is the whole of step 4.2 — no code change is needed to arm it. Do not arm it from a single run: the composite sums six measurements and therefore accumulates runner variance faster than any slot (risk 5), which is why the same absolute-cap-plus-pathology-net posture the slots use applies here too."
+        "_observe_only_note": "While observe_only is true the bench PRINTS the composite on every run, including the CI gate run, and never fails on it. Setting p50_ci to a number and observe_only to false is the whole of step 4.2 — no code change is needed to arm it. Do not arm it from a single run: the composite sums four slot measurements and multiplies two of them by tool_calls, so it accumulates runner variance faster than any single slot (risk 5), which is why the same absolute-cap-plus-pathology-net posture the slots use applies here too."
     },
     "regression_gate": {
         "max_regression_pct": 200,

@@ -25,8 +25,8 @@
  *
  * `git diff --numstat HEAD` at `workspace_root`: the working tree vs the
  * last commit, TRACKED files only, PLUS every untracked non-doc file
- * (`git ls-files --others --exclude-standard`, one `git diff --numstat
- * --no-index /dev/null <file>` per file — see "Untracked files" below;
+ * (`git ls-files --others --exclude-standard`, each one READ from the
+ * filesystem rather than diffed in a subprocess — see "Untracked files" below;
  * fixes a review finding, F6, that a brand-new file was previously invisible
  * to this count entirely). Chosen over a session-start SHA/timestamp
  * baseline because no such baseline exists anywhere a `stop` concern can
@@ -229,10 +229,14 @@ import { atomic_write_json, is_replay_mode } from './state_io.js';
 export const MUTATION_LINE_THRESHOLD = 50;
 
 /**
- * Untracked non-doc files past which this hook refuses to spawn one
- * `git diff --no-index` subprocess per file and instead reports the
- * mutation as certainly over threshold (F6, review — see the file header's
- * "Untracked files" section).
+ * Untracked non-doc files past which this hook refuses to size them at all and
+ * instead reports the mutation as certainly over threshold (F6, review — see the
+ * file header's "Untracked files" section).
+ *
+ * It bounds the file COUNT. The per-file byte bound is separate and lives in
+ * `untrackedFileLineCount`: since step 3.2 replaced the per-file subprocess with
+ * a read, an unbounded read would move an arbitrarily large file INTO this
+ * process, which the subprocess never did.
  */
 export const UNTRACKED_FILE_CAP = 20;
 
@@ -379,6 +383,25 @@ export function untrackedNonDocFiles(cwd: string): string[] {
 export const BINARY_PROBE_BYTES = 8000;
 
 /**
+ * Per-file read ceiling for the untracked-file line count.
+ *
+ * `UNTRACKED_FILE_CAP` bounds how MANY files are sized; nothing bounded how
+ * LARGE one of them may be, and that gap arrived with step 3.2: the
+ * `git diff --no-index` subprocess it replaced never materialised file content in
+ * the hook process, while a `readFileSync` does. One untracked-but-not-ignored
+ * dataset or media file would then cost a full allocation plus an O(n) byte scan
+ * at every turn end, and past ~2 GiB the read throws and silently counts 0.
+ * Found by the R2 review.
+ *
+ * 8 MiB is far above any hand-written source file and far below a size worth
+ * allocating on the Stop path. A file over it is counted as
+ * `MUTATION_LINE_THRESHOLD + 1` rather than 0: "a huge new file appeared" is a
+ * mutation, and the old code's answer for an unreadable file — zero — is the
+ * direction that hides one.
+ */
+export const UNTRACKED_FILE_READ_CAP_BYTES = 8 * 1024 * 1024;
+
+/**
  * Added line count for ONE untracked file, read from the filesystem.
  *
  * **No subprocess (road-to-per-turn-hook-economy step 3.2 / D-3).** This used to
@@ -403,7 +426,14 @@ export const BINARY_PROBE_BYTES = 8000;
  */
 export function untrackedFileLineCount(cwd: string, relPath: string): number {
     try {
-        const buf = fs.readFileSync(path.resolve(cwd, relPath));
+        const abs = path.resolve(cwd, relPath);
+        // Size before read: the point of the cap is not to allocate the file.
+        const size = fs.statSync(abs).size;
+        if (size === 0) return 0;
+        if (size > UNTRACKED_FILE_READ_CAP_BYTES) {
+            return MUTATION_LINE_THRESHOLD + 1;
+        }
+        const buf = fs.readFileSync(abs);
         if (buf.length === 0) return 0;
         // Binary detection, matching what this function replaced rather than
         // improving on it: numstat prints a dash for each side of a binary file
@@ -441,8 +471,9 @@ export interface MutationMeasurement {
  * HEAD`) and untracked (`git ls-files --others --exclude-standard`) files —
  * see the file header's "Untracked files (F6)" section for why both sources
  * are required. Past `UNTRACKED_FILE_CAP` untracked non-doc files this
- * function refuses to spawn one `git diff --no-index` subprocess per file
- * (an unbounded loop) and instead returns a value GUARANTEED to be over
+ * function refuses to size them individually at all (what used to be an
+ * unbounded spawn loop, and is now an unbounded read loop) and instead returns a
+ * value GUARANTEED to be over
  * `MUTATION_LINE_THRESHOLD` — "many new files this session" is itself
  * sufficient signal, no exact count needed. `measure` records WHICH of
  * those two shapes the returned `lines` value is, so a consumer (the

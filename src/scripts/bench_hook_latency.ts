@@ -149,8 +149,16 @@ function syntheticPayload(event: string, workspace: string): string {
     };
     if (PAYLOAD_BYTES > 0 && TOOL_EVENTS.has(event)) {
         // Filler with no JSON metacharacters, so the cost measured is
-        // serialisation volume rather than escaping.
-        body['tool_response'] = 'x'.repeat(PAYLOAD_BYTES);
+        // serialisation volume rather than escaping. The FIELD differs per slot
+        // and that matters: `tool_response` does not exist on a `PreToolUse`
+        // payload, so padding it there would measure a shape the host never
+        // sends — the same objection this file raises against padding `stop`.
+        const filler = 'x'.repeat(PAYLOAD_BYTES);
+        if (event === 'post_tool_use') {
+            body['tool_response'] = filler;
+        } else {
+            body['tool_input'] = { ...(body['tool_input'] as object), description: filler };
+        }
     }
     return JSON.stringify(body);
 }
@@ -298,6 +306,15 @@ interface ResultsDoc {
 }
 
 export function main(argv: string[] = process.argv.slice(2)): number {
+    // Reset the measurement-only globals per invocation. Their guard below is
+    // per-call, so leaving them set let a second `main()` in the same process —
+    // `main(['--bundle', …])` then `main(['--update'])` — write a foreign or
+    // padded reading into this tree's budget row and regression baseline, the
+    // exact outcome the guard's own message says must never happen. Found by
+    // the R2 review.
+    BUNDLE_OVERRIDE = null;
+    PAYLOAD_BYTES = 0;
+
     const gate = argv.includes('--gate');
     const update = argv.includes('--update');
     const viaCli = argv.includes('--via-cli');

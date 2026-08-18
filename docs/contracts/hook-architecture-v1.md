@@ -401,9 +401,10 @@ wrong:
 - **Group splitting costs processes, it does not save them.** Because every
   matching group fires, a split only avoids a dispatch for a payload that matches
   **no** group. On `pre_tool_use` that is unreachable while any concern is
-  unscoped — eight of the twelve claude concerns are, deliberately, per the
-  paragraph above — so a group with no `matcher` must exist and fires on every
-  tool call. `road-to-per-turn-hook-economy` step 5.1 was cancelled on exactly
+  unscoped — **nine** of the twelve claude concerns are, deliberately, per the
+  paragraph above; only `code-graph-nudge`, `reread-guard` and
+  `spawn-guard-shadow` declare `tools:` — so a group with no `matcher` must exist
+  and fires on every tool call. `road-to-per-turn-hook-economy` step 5.1 was cancelled on exactly
   this reading.
 
 ### Optional `roles:` axis — session-role chain thinning

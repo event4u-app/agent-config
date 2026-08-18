@@ -34,6 +34,7 @@
  */
 
 import { spawnSync } from "node:child_process";
+import * as crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -41,6 +42,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { hardenedSpawnEnv } from "./_lib/spawn_env.js";
 import { log_dispatch_issue } from "./hooks/dispatch_issues.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
+import { atomic_write_json } from "./hooks/state_io.js";
 
 export const REPLAY_ENV_VAR = "AGENT_CONFIG_REPLAY";
 
@@ -72,71 +74,109 @@ export const DIRTY_LEDGER_REL = path.join(
   "runtime",
   "state",
   "roadmap-progress",
-  "dirty-roots.json",
+  "dirty",
 );
 
-/**
- * Events that flush the ledger rather than appending to it — in BOTH spellings.
- * The dispatcher envelope carries the agent-config event id (`stop`), and a bare
- * host payload carries the native name (`Stop`). The hook accepts either shape
- * for the write path already, so accepting only one here would leave a host that
- * does not wrap marking a ledger nothing ever flushes.
- */
+/** Events that flush the ledger rather than appending to it. */
 export const FLUSH_EVENTS: ReadonlySet<string> = new Set([
   "stop",
   "session_end",
+  // The dispatcher envelope carries the agent-config event id; a bare host
+  // payload carries the native name, and the hook accepts either shape on the
+  // write path already.
   "Stop",
   "SessionEnd",
   "sessionEnd",
+  // Native aliases `hook_manifest.yaml` maps onto those two events. Missing them
+  // was a real gap rather than a completeness nit: the write path keys on
+  // `tool_name`, not on the event, so a host whose turn end arrives under one of
+  // these names accumulated dirty roots that nothing ever flushed. Found by the
+  // R2 review of the commit that introduced this ledger.
+  "TaskComplete",
+  "TaskCancel",
+  "AfterAgent",
 ]);
 
-interface DirtyLedger {
-  roots: string[];
-  marked_at: string;
-}
-
-function _ledger_path(consumer_root: string): string {
+function _ledger_dir(consumer_root: string): string {
   return path.join(consumer_root, DIRTY_LEDGER_REL);
 }
 
-/** Read the ledger; a missing or unparseable file reads as empty. */
+/**
+ * One entry file per root, named from a hash of the root path.
+ *
+ * **This shape is the concurrency fix, not a style choice.** The first version
+ * kept a single JSON array and did a read-modify-write on it, which is a
+ * lost-update: two `post_tool_use` dispatches from parallel tool calls in one
+ * turn both read `[]`, the second write drops the first root, and `mark_dirty`
+ * still returns `true` — so the inline-regeneration fallback never fires and the
+ * dashboard goes silently stale, which is exactly what the debounce exists to
+ * prevent. Found by the R2 review of the commit that introduced it.
+ *
+ * Independent per-root files remove the race by construction rather than by
+ * holding a lock across a read and a write: concurrent dispatches touch
+ * different paths, and the same root twice is the same path — so N writes to one
+ * repo still leave ONE entry.
+ */
+function _entry_path(consumer_root: string, root: string): string {
+  const digest = crypto.createHash("sha256").update(root).digest("hex").slice(0, 16);
+  return path.join(_ledger_dir(consumer_root), `${digest}.json`);
+}
+
+/** Read the ledger; a missing directory or an unparseable entry reads as empty. */
 export function read_dirty_roots(consumer_root: string): string[] {
+  let names: string[];
   try {
-    const raw = fs.readFileSync(_ledger_path(consumer_root), "utf8");
-    const parsed = JSON.parse(raw) as unknown;
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return [];
-    const roots = (parsed as DirtyLedger).roots;
-    if (!Array.isArray(roots)) return [];
-    return roots.filter((r): r is string => typeof r === "string" && r.trim() !== "");
+    names = fs.readdirSync(_ledger_dir(consumer_root));
   } catch {
     return [];
   }
+  const roots: string[] = [];
+  for (const name of names.sort()) {
+    if (!name.endsWith(".json")) continue;
+    try {
+      const raw = fs.readFileSync(path.join(_ledger_dir(consumer_root), name), "utf8");
+      const parsed = JSON.parse(raw) as unknown;
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) continue;
+      const root = (parsed as { root?: unknown }).root;
+      if (typeof root === "string" && root.trim() !== "") roots.push(root);
+    } catch {
+      // A torn or hand-edited entry is dropped, never fatal.
+    }
+  }
+  return Array.from(new Set(roots)).sort();
 }
 
 /**
- * Append roots to the ledger, deduped. Returns false when the ledger could not
- * be written — the caller then regenerates inline, so a broken state directory
- * costs latency rather than correctness.
+ * Record each root as its own entry. Returns false when any write failed — the
+ * caller then regenerates inline, so a broken state directory costs latency
+ * rather than a silently stale dashboard.
+ *
+ * Writes go through `atomic_write_json` (tmp → rename under the dispatcher
+ * lock), which `hook-architecture-v1` requires for everything written under
+ * `agents/runtime/state/`. That call is a no-op under `AGENT_CONFIG_REPLAY=1`,
+ * which is why the replay guard stays in the caller rather than relying on it.
  */
 export function mark_dirty(consumer_root: string, roots: readonly string[]): boolean {
-  try {
-    const merged = Array.from(new Set([...read_dirty_roots(consumer_root), ...roots])).sort();
-    const file = _ledger_path(consumer_root);
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(
-      file,
-      `${JSON.stringify({ roots: merged, marked_at: new Date().toISOString() }, null, 2)}\n`,
-    );
-    return true;
-  } catch {
-    return false;
+  if (roots.length === 0) return true;
+  let wrote = 0;
+  for (const root of roots) {
+    try {
+      atomic_write_json(_entry_path(consumer_root, root), {
+        root,
+        marked_at: new Date().toISOString(),
+      });
+      wrote += 1;
+    } catch {
+      // A partial write still needs the caller's inline fallback.
+    }
   }
+  return wrote === roots.length;
 }
 
-/** Drop the ledger. A missing file is success — flush is idempotent. */
+/** Drop every entry. A missing directory is success — flush is idempotent. */
 export function clear_dirty(consumer_root: string): void {
   try {
-    fs.rmSync(_ledger_path(consumer_root), { force: true });
+    fs.rmSync(_ledger_dir(consumer_root), { recursive: true, force: true });
   } catch {
     // observability never breaks the hook
   }

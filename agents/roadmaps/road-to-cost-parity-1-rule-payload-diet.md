@@ -290,14 +290,23 @@ part 0's table.
 
       | host | `user_prompt_submit` | `pre_tool_use` | `post_tool_use` | `stop` | `session_start` | `session_end` |
       |---|---:|---:|---:|---:|---:|---:|
-      | augment | — | 11 | 10 | 5 | 13 | 3 |
-      | claude | **10** | **12** | **11** | **10** | 13 | 3 |
-      | cowork | 8 | 12 | 10 | 5 | 13 | 3 |
-      | cursor | 8 | — | 10 | 5 | 13 | 3 |
-      | cline | 8 | — | 10 | 5 | 13 | 3 |
+      | augment | — | 11 | 10 | 6 | 13 | 4 |
+      | claude | **10** | **12** | **11** | **11** | 13 | 4 |
+      | cowork | 8 | 12 | 10 | 6 | 13 | 4 |
+      | cursor | 8 | — | 10 | 6 | 13 | 4 |
+      | cline | 8 | — | 10 | 6 | 13 | 4 |
       | windsurf | 7 | — | — | 5 | 12 | — |
-      | gemini | 8 | — | 10 | 5 | 13 | 3 |
+      | gemini | 8 | — | 10 | 6 | 13 | 4 |
       | copilot | — | — | — | — | — | — |
+
+      **Re-measured AFTER the flush bindings in the same PR, which the first pass
+      got wrong.** The table originally read `stop` 5/10 and `session_end` 3 — a
+      census taken before `road-to-per-turn-hook-economy` step 3.1 added
+      `roadmap-progress` to those two slots on six hosts, i.e. a baseline stale by
+      the very change the same PR made. `windsurf` keeps 5 and no `session_end`
+      because it has no `post_tool_use` surface, so it never marks the ledger and
+      received no flush binding. Caught by the R2 review; the lesson is the
+      cheap half — re-read the manifest AFTER your own edit, not before it.
 
       A dash is **no binding on that slot for that host**, not a zero-length
       chain — copilot is `fallback_only` and carries no hook surface at all,
