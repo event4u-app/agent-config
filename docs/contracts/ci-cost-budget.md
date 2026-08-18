@@ -15,14 +15,23 @@ keep-beta-until: 2026-09-04
 > [`release-pr-gating.md`](release-pr-gating.md) and
 > [`branch-protection-policy.md`](branch-protection-policy.md).
 
-## Baseline (re-measured 2026-08-11)
+## Baseline (re-measured 2026-08-11 · `tests.yml` rows re-measured 2026-08-18, post-fix)
 
 **Method.** Every row is a **per-job** duration from the GitHub Actions jobs
-API (`/actions/runs/<id>/jobs`) — `tests.yml` averaged over the three most
-recent **successful** main-branch runs, the other workflows from the most
+API (`/actions/runs/<id>/jobs`) — the non-`tests.yml` workflows from the most
 recent successful run. Recorded from CI, never from a developer machine — a
 locally captured baseline measures the environment offset instead of the
 regression (`docs/hook-latency.json:2`).
+
+The `tests.yml` rows are a **50-run average** as of 2026-08-18: the
+most-recent 50 **successful** `main` runs, all of them after the shard-3 fix
+merged (2026-08-11), aggregated per job name. Three runs was the 2026-08-11
+sample and it is not the sample this file's own ceiling clause asks for — the
+ceiling is defined "across the most-recent 50 main-branch runs", and the
+quarterly checklist prescribes the same jobs-API pass. Three runs also cannot
+separate a shard figure from runner variance, which the spread here makes
+concrete: shard 3/4 on ubuntu ranges 217–406 s across the 50, so a
+three-run sample could have reported anything from 1.0× to 1.4× the ceiling.
 
 A run-level figure (`gh run list … startedAt,updatedAt`) is **not**
 interchangeable with a job figure and is not used here. For a matrix workflow
@@ -36,13 +45,13 @@ lists each shard family once, with the per-shard average.
 
 | Workflow | Job | OS × variant | Avg duration | Trigger surface |
 |---|---|---|--:|---|
-| `tests.yml` | `install-tests` | 4 shards × 2 OS | 51 s ubuntu / 85 s macOS | `scripts/**`, `tests/**`, `src/**`, manifest pins |
-| `tests.yml` | `install-aux-tests` | 2 OS | 64 s ubuntu / 118 s macOS | same as above |
-| `tests.yml` | `node-tests` shards 1, 2, 4 | 2 OS × 3 shards | 125–152 s | same as above |
-| `tests.yml` | `node-tests` **shard 3/4** | 2 OS | **645 s ubuntu / 852 s macOS** | same as above — over ceiling, see below |
-| `tests.yml` | `static-checks` | ubuntu, no matrix | 131 s | same as above |
-| `tests.yml` | `golden-tests` | 2 OS | 132 s ubuntu / 138 s macOS | same as above |
-| `tests.yml` | `workspace-tests` | 2 OS | 98 s ubuntu / 85 s macOS | same as above |
+| `tests.yml` | `install-tests` | 4 shards × 2 OS | 49–59 s ubuntu / 83–98 s macOS | `scripts/**`, `tests/**`, `src/**`, manifest pins |
+| `tests.yml` | `install-aux-tests` | 2 OS | 62 s ubuntu / 108 s macOS | same as above |
+| `tests.yml` | `node-tests` shards 1, 2, 4 | 2 OS × 3 shards | 147–159 s ubuntu / 161–164 s macOS | same as above |
+| `tests.yml` | `node-tests` **shard 3/4** | 2 OS | **357 s ubuntu / 516 s macOS** | same as above — still over ceiling, see below |
+| `tests.yml` | `static-checks` | ubuntu, no matrix | 140 s | same as above |
+| `tests.yml` | `golden-tests` | 2 OS | 124 s ubuntu / 122 s macOS | same as above |
+| `tests.yml` | `workspace-tests` | 2 OS | 98 s ubuntu / 100 s macOS | same as above |
 | `smoke-public-install.yml` | per-OS × Node leg | 3 OS × 2 Node = 6 jobs | 24–30 s ubuntu / 39–47 s macOS / **159–169 s windows** | install paths + setup.sh + templates |
 | `consistency.yml` | `Sync + Generate Tools Consistency` | ubuntu, single job | 75 s | always-on (PR / push) |
 | `smoke.yml` | `smoke-kernel` · `smoke-router` · `smoke-schema` · `smoke-skills` | ubuntu, 4 jobs | 20–23 s each | `scripts/schemas/**` |
@@ -148,10 +157,17 @@ main-branch runs requires one of:
 3. An ADR superseding the ceiling for this specific job (e.g. integration
    smoke that proves a real consumer-visible promise).
 
-Current jobs above the ceiling (2026-08-11): **`tests.yml` `node-tests`
-shard 3/4**, at 645 s on ubuntu and 852 s on macOS — 2.2× and 2.8× the
-ceiling. Its sibling shards run 125–152 s, so this is not a whole-suite
-cost: `Vitest (shard 3/4)` alone accounts for 594 s of a 673 s job.
+Current jobs above the ceiling (**re-measured 2026-08-18**, 50 successful
+`main` runs): **`tests.yml` `node-tests` shard 3/4**, at **357 s on ubuntu and
+516 s on macOS** — 1.2× and 1.7× the ceiling. Its sibling shards run
+147–164 s, so this is not a whole-suite cost.
+
+The 2026-08-11 figures were 645 s / 852 s, measured **before** the
+`build_proof.test.ts` fix below landed. Post-fix the job is **−45 % on ubuntu
+and −39 % on macOS** and remains the only ceiling breach in the tree. Stated
+as a delta rather than a replacement because the pre-fix pair is what the
+fold-back decision below had to be taken against, and a reader who sees only
+the new numbers cannot tell whether 357 s is an improvement or a regression.
 
 **The cause is one test file, and it is not subprocess overhead.** A
 per-file duration pass over 977 files (local, `--reporter=json`; relative
@@ -169,6 +185,48 @@ attributes the clump to "subprocess-heavy clusters"; for the largest
 contributor that was not true, so re-check the attribution before acting on
 it. And the remaining ~103 s is dominated by `render()` itself at 54 s a
 call — the next lever on this file is that function, not the test.
+
+### Fold-back decision, 2026-08-18: `golden-tests` and `workspace-tests` stay dedicated
+
+The dedicated-runner layout was opened with a stated exit: if the shard-3 fix
+removed enough of the clump, both jobs fold back into the `node-tests` matrix
+and two runners per OS disappear. The decision input was a **post-merge**
+shard-3 duration on `main`, which could not exist inside the PR that shipped
+the fix. It exists now, and the answer is **no fold-back**.
+
+**Threshold read.** The condition was shard 3/4 landing under the 300 s
+ceiling. It does not: **357 s ubuntu / 516 s macOS** over 50 successful runs,
+1.2× and 1.7×. On ubuntu the *best* of the 50 runs (217 s) is under the
+ceiling and the average is not, which is the reading a smaller sample would
+have gotten wrong in whichever direction it happened to land.
+
+**Arithmetic read, because a threshold alone is a thin basis for keeping two
+jobs.** Folding back returns the excluded file-time to the matrix. Each
+dedicated job carries ≈ 25 s of fixed overhead (checkout · setup-node ·
+`npm ci` · build — the figure this file derives in the build-artefact
+rejection above), so the test-time to redistribute is ≈ 99 s from
+`golden-tests` and ≈ 73 s from `workspace-tests`, ≈ 172 s in total. Two
+bounds, and the decision does not depend on which one holds:
+
+- **Even split** (the optimistic bound, which vitest does not promise): +43 s
+  per shard → shard 3/4 ≈ **400 s** ubuntu, ≈ **559 s** macOS. Worse, and
+  still over.
+- **Clumped** (the documented behaviour — vitest shards by file **count**, not
+  duration, and these files are why the dedicated jobs exist): the whole
+  ≈ 172 s lands in one shard → ≈ **529 s** ubuntu, ≈ **688 s** macOS, i.e.
+  back to roughly the pre-fix breach the fix just removed.
+
+So the fold-back trades two runners for a worse ceiling breach on the critical
+path in both bounds. It is not reopened.
+
+**Next lever, named rather than left implicit:** `render()` at ~54 s a call,
+inside `tests/scripts/build_proof.test.ts` — not the job layout. Two calls
+remain and both are load-bearing for the determinism assertion, so the saving
+has to come from the function, not from further call elimination.
+
+**Revisit if** shard 3/4 averages under 300 s on ubuntu **and** macOS across
+50 successful `main` runs — at which point re-run the arithmetic above with
+fresh overhead figures rather than reusing these.
 
 `smoke-public-install.yml` was the previous entry here at 413 s and is no
 longer one. Both figures need their unit stated or the comparison is the
