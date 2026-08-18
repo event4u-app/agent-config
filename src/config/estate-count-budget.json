@@ -18,7 +18,7 @@
     "baseline": {
         "active_roadmaps": 38,
         "later_roadmaps": 43,
-        "open_blockers": 67
+        "open_blockers": 72
     },
     "baseline_history": [
         {
@@ -34,6 +34,13 @@
             "later_roadmaps": 43,
             "open_blockers": 67,
             "why": "Two metrics REDEFINED before the gate ever ran on a second commit, both on R2 findings against this same change, so these are re-measurements rather than raises. later_roadmaps 44 -> 43: the first count included later/README.md, which the active side's own name filter excludes — an off-by-one that made the baseline describe 43 roadmaps plus a README. open_blockers 49 -> 67: the first count spanned the active tree only, so PARKING a roadmap dropped the gated number without resolving anything and the ratchet printed 'free tightening' over a burial. It now spans active + later/ (49 + 18), which is why the number rose while the estate did not. The cost is stated rather than hidden: this metric no longer equals the dashboard header, and the first version claimed that parity as a virtue."
+        },
+        {
+            "at": "2026-08-18",
+            "active_roadmaps": 38,
+            "later_roadmaps": 43,
+            "open_blockers": 72,
+            "why": "RAISED by 5, and the split is MEASURED rather than asserted: origin/main sits at 69 against the 67 recorded above, so TWO of the five predate this branch and are drift the ratchet had not yet caught. The other THREE are added by road-to-per-turn-hook-economy Phase 2 and each records a finding that would otherwise rot: b-payload-read-parse-dominates (two independent measurements now say D-2's cost is the dispatcher's own read+parse, not the per-concern churn the roadmap blamed), b-payload-mis-nested-readers (two concerns read tool payload keys off the envelope root, one of them a security scanner that works only via a whole-envelope fallback), and b-stop-async-split-prerequisites (step 5.3 deferred, with the five prerequisites its classification surfaced). A blocker that puts a maintainer decision in front of the maintainer is the estate growing in the direction this ratchet exists FOR, which is why the raise is taken rather than the findings being dropped into prose where nothing tracks them. The pre-existing +2 is folded in rather than left to red the next unrelated PR, and it is named here so the fold is not silent."
         }
     ],
     "target": {
