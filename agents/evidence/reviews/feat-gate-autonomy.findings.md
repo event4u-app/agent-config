@@ -62,3 +62,27 @@ pre-registration commit verified to exist with sections 3 and 4 empty; the
 "HARD, not ratcheted" claim verified against the code path; `blocker_is_resolved`
 verified to match the lint's existing prefix semantics; src/dist parity verified
 blob-identical; the gate-execute fixtures counted.
+
+
+## Acceptance-criteria binding — this review was AC-BLIND
+
+Recorded 2026-08-18, after the fact.
+
+The manifest above carries `ac_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
+which is the SHA-256 of the **empty string** rather than of any criteria. This
+review was dispatched against `agents/roadmaps/road-to-gate-autonomy.md`,
+which declares its criteria as inline `- **AC-n:**` bullets per phase and
+carries no `## Acceptance Criteria` heading at all, while the extractor of the
+day matched the heading form and nothing else. The reviewer therefore received a **0-byte** `acceptance-criteria.md`
+under a prompt stating that the acceptance criteria had been extracted for it.
+
+**So the findings above review the DIFF, and nothing in them was checked against
+the acceptance criteria** — the criteria were not in the reviewer context at all.
+The same roadmap yields 27 lines of criteria under the extractor as it stands
+today. The extractor learned the inline form in PR #1419 (2026-08-18).
+
+The manifest is deliberately left unchanged. `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+is the honest record of the input this review actually received, and rewriting it
+to today's value would assert a binding that never existed — the precise failure
+this note exists to prevent. The artefact binds a scope that no longer exists, so
+no gate re-derives it and nothing here is stale.
