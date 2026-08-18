@@ -404,6 +404,20 @@ part 0's table.
   injected catalogue, which is not measurable from transcripts. So the
   activation instrument's depth on this store is unverified until that eval
   runs.
+- **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the
+  field; drafted from the roadmap's own text for the consolidated decision
+  sheet, not from a maintainer decision.)** Do NOT commission a second eval.
+  This entry is a pointer, and its own text says the sibling's
+  pre-registration IS the bar Phase 2 needs — so adopt that pre-registration
+  as this roadmap's window and resume when the sibling's predictions JSON
+  exists. One human sitting then discharges two blockers instead of one, and
+  a parallel window would produce a second number nobody can reconcile with
+  the first.
+- **If you do nothing:** 49 steps stay open behind an instrument whose depth
+  on this store is unverified, and Phase 1.3's evidence column stays a column
+  with no evidence in it. The independently recorded facts — 6 of 288 skills
+  ever invoked, 0 declaring a trigger, a host that truncates the catalogue —
+  stay true and stay unmeasurable from transcripts.
 - **Resolved when:** the pilot tranche PR cites its activation baseline and
   the window it was measured over.
 

@@ -40,12 +40,12 @@
 #                visible, or it repeats the sin it exists to catch.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-17)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-18)
 # ----------------------------------------------------------
-# 266 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 267 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
-# **41 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 40 of those 41 are listed below.** The manifest is
+# **42 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 41 of those 42 are listed below.** The manifest is
 # therefore complete with respect to its own contract for every gate that can
 # carry a floor, and covers ~15 % of the population.
 #
@@ -563,6 +563,34 @@ gates:
       FILES INSPECTED incl. grandfathered/draft-exempt ones — exemptions are
       reported, never silently skipped, so a collapse below the floor means
       the roadmaps root moved, not that the corpus went clean.
+
+  - id: check_estate_count
+    argv: []
+    min_scanned: 20
+    corpus: "active + parked roadmap files (81 at baseline: 38 active, 43 in later/)"
+    status: enforced
+    canary:
+      class: contract-violation
+      path: "agents/roadmaps/road-to-canary-estate-count.md"
+      content: |
+        # Roadmap: canary
+
+        ## Phase 1
+
+        - [ ] **1.1** a step
+    note: >
+      road-to-estate-drawdown T2. Two halves, one floor: the count half walks the
+      committed baseline DOWN only and always has a corpus, so it can carry a
+      floor; the one-in-one-out half (T3) is diff-scoped and legitimately weighs
+      nothing on a branch that adds no roadmap, which is why the floor counts
+      roadmap FILES rather than diff entries.
+      The floor is 20 rather than something near today's 81 because THIS gate's
+      corpus is the thing it exists to shrink: T1's proposed ceiling is 15 active,
+      and a successful campaign would land near 15 + a drained `later/` — a floor
+      of 50 would have failed on the day the drawdown worked, which is the exact
+      failure this file's own § 3 warns about, pointed the wrong way. 20 still
+      cannot survive a collapse: at that point the gate's own `reportScanned`
+      fires first. (Set to 50 in the first version, corrected on an R2 finding.)
 
   - id: check_completion_review
     argv: ["--advisory", "--base", "origin/main"]
