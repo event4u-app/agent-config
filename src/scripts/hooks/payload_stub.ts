@@ -164,12 +164,21 @@ export function bodyBytes(value: JsonValue): number | null {
  * per dispatch and threaded through, and `stubPayloadBodies` REQUIRES the map
  * rather than accepting an optional one — an optional parameter is how the
  * per-stub re-serialisation would silently come back.
+ *
+ * `only` narrows it further, to the classes some concern on this slot actually
+ * loses. A body every concern declares is never stubbed, so measuring it is
+ * pure waste: on claude's `pre_tool_use` all twelve concerns declare `input`,
+ * which makes the whole measurement step disappear rather than merely shrink.
  */
-export function measureBodies(envelope: JsonObject): Map<string, number | null> {
+export function measureBodies(
+  envelope: JsonObject,
+  only?: ReadonlySet<BodyClass>,
+): Map<string, number | null> {
   const measured = new Map<string, number | null>();
   const payload = envelope["payload"];
   if (!isObject(payload)) return measured;
   for (const cls of BODY_CLASSES) {
+    if (only !== undefined && !only.has(cls)) continue;
     for (const key of BODY_KEYS[cls]) {
       const v = payload[key];
       if (v === undefined || v === null) continue;

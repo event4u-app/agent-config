@@ -1272,10 +1272,27 @@ export function main(argv?: string[]): number {
   // `present` is the set of body classes this event actually carries — empty on
   // every non-tool event, which is why those pay nothing at all.
   const present = presentBodyClasses(envelope);
-  // Measured ONCE per dispatch, never per stub: `bodyBytes` serialises what it
-  // measures, so a per-stub call re-serialised the same 2 MB result once per
-  // keep-set. Empty map on a body-less event, so `stop` and friends pay nothing.
-  const measured_bodies = present.size > 0 ? measureBodies(envelope) : new Map();
+  // Resolve each concern's keep-set once — the loop below reads it, and so does
+  // the measurement scope directly under this.
+  const keep_by_concern = concerns.map(
+    (c) => [c, _concern_body_classes(c)] as const,
+  );
+  // Measured ONCE per dispatch and ONLY for classes some concern on this slot
+  // actually loses. `bodyBytes` serialises what it measures, so a per-stub call
+  // re-serialised the same 2 MB result once per keep-set; and a class every
+  // concern declares is never stubbed, so measuring it is pure waste. On
+  // claude's `pre_tool_use` all twelve concerns declare `input`, which makes
+  // this step vanish rather than shrink — a body-less event pays nothing either.
+  const stubbed_somewhere = new Set<BodyClass>();
+  for (const [, keep] of keep_by_concern) {
+    for (const cls of present) {
+      if (!keep.has(cls)) stubbed_somewhere.add(cls);
+    }
+  }
+  const measured_bodies =
+    stubbed_somewhere.size > 0
+      ? measureBodies(envelope, stubbed_somewhere)
+      : new Map<string, number | null>();
   const shaped = new Map<string, JsonObject>();
   const shapeFor = (keep: ReadonlySet<BodyClass>): JsonObject => {
     if (present.size === 0) return envelope;
@@ -1286,11 +1303,10 @@ export function main(argv?: string[]): number {
     shaped.set(cacheKey, built);
     return built;
   };
-  for (const concern of concerns) {
+  for (const [concern, keep_classes] of keep_by_concern) {
     if (!_concern_matches_tool(concern, tool_name)) {
       continue;
     }
-    const keep_classes = _concern_body_classes(concern);
     const concern_envelope = shapeFor(keep_classes);
     const stubs_served = countStubbedKeys(envelope, keep_classes);
     // What was actually SERVED, not what was declared. Recording the
