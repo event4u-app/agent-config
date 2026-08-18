@@ -21,7 +21,7 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head fd3c01086a7e1be66093dc48d49a3799967a20dd, review
+- diff: `diff.patch` — the review scope (branch head d94e923cd34e71d9c0d26234e7c688c10f15daf7, review
   artefacts excluded), scope hash `addbf73f799289da37c8a892345e50c247b3a2832a717336302bf3a915093d72`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
