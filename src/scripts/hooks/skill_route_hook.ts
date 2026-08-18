@@ -64,11 +64,26 @@
  * missing data is worse than the divergence it treats — the roadmap's own words,
  * and the reason fail-open is a construction here rather than a convention.
  *
- * IT COSTS ZERO ON THE PATH THE HEADER ABOVE PROMISES IS FREE. The log read is
- * passed in as a thunk, not a value, and `routePointers` calls it only after the
- * term floor AND the rank both pass. A prompt below `MIN_TASK_TERMS` therefore
- * still reads no files at all, which is the claim the 0 ms paragraph makes and
- * an eagerly-read log would have quietly falsified.
+ * IT COSTS ZERO ON THE PATH THE HEADER ABOVE PROMISES IS FREE, AND 0.015 ms ON
+ * THE ONE THAT PAYS. The log read is passed in as a thunk, not a value, and
+ * `routePointers` calls it only after the term floor AND the rank both pass. A
+ * prompt below `MIN_TASK_TERMS` therefore still reads no files at all, which is
+ * the claim the 0 ms paragraph makes and an eagerly-read log would have quietly
+ * falsified.
+ *
+ * The FIRING path was measured rather than assumed, because R2 finding 10 is
+ * right that the paragraph above describes a path this branch changed. Measured
+ * 2026-08-18 on this tree, same method as the 12.3 ms figure: `knownBareForHost`
+ * alone is **0.015 ms median / 0.022 ms p95** (n=2000, warm) against a ranked
+ * pass of 8.3 ms median — three orders of magnitude below the ranker it rides
+ * on, and under 0.01 % of the slot's 250 ms p95 budget. The log is seven lines;
+ * a cache would need an invalidation story and 0.015 ms does not buy one, which
+ * is the same reasoning the ranker's own no-cache decision records.
+ *
+ * Note what the existing bench does NOT cover, so nobody reads it as coverage:
+ * `bench_hook_latency`'s synthetic payload carries neither `prompt` nor
+ * `platform`, so this concern returns before the ranker on every bench
+ * iteration. The figures above come from a direct probe, not from that harness.
  *
  * THE FLOOR APPLIES TO WHAT IS DELIVERED, NOT TO WHAT WAS RANKED. Filtering
  * happens BEFORE `MIN_TOP_SCORE` and before the `TOP_K` slice, so the confidence
@@ -208,7 +223,17 @@ export function filterKnownBare(
 /** What one routing pass decided, including what it refused to name. */
 export interface RouteDecision {
   rows: RankRow[];
-  /** Ranked rows dropped as known-bare. The suppression metric's numerator. */
+  /**
+   * Would-be POINTERS dropped as known-bare — the suppression metric's numerator.
+   *
+   * Scoped to the pointer window (`TOP_K` of the unfiltered ranking), not to the
+   * whole ranked list. R2 finding 1: `rank` returns every non-zero-scoring skill
+   * and this catalogue has hundreds, so counting drops across all of them would
+   * let a bare name at rank 40 — never pointable, never a loss — bump the count
+   * on almost every fire. The registered metric defines this as skills the
+   * ranker wanted to POINT AT, and its upper falsifier would otherwise fire on a
+   * perfectly healthy join.
+   */
   suppressed: number;
 }
 
@@ -254,7 +279,9 @@ export function routeDecision(
     }
   }
   const deliverable = filterKnownBare(rows, bare);
-  const suppressed = rows.length - deliverable.length;
+  // The pointer WINDOW, not the ranked list — see `RouteDecision.suppressed`.
+  const suppressed =
+    bare === null ? 0 : rows.slice(0, TOP_K).filter(([name]) => bare.has(name)).length;
   // The floor asks its question of the best DELIVERABLE pointer, not of a
   // pointer the model cannot use. See the header's one-rule-one-order note.
   const top = deliverable[0];
