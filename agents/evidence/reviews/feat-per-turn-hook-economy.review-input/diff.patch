@@ -1,5 +1,5 @@
 diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
-index 92e13d254c0fdfa5399662813ff3821606355bef..0f9eeff8a3523dedba98778c7250e2ddd83bc9fc 100644
+index 6bb7f72e341ff4e1ce3810b95350d90dc6b534de..ff0d1960c7ef5526abc1416d531e7790cc49b492 100644
 --- a/agents/roadmaps-progress.md
 +++ b/agents/roadmaps-progress.md
 @@ -2,14 +2,14 @@
@@ -7,16 +7,16 @@ index 92e13d254c0fdfa5399662813ff3821606355bef..0f9eeff8a3523dedba98778c7250e2dd
  > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
  >
 -> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **49** open blockers, **21** need you → `agent-config gates`
-+> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **50** open blockers, **22** need you → `agent-config gates`
++> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **51** open blockers, **23** need you → `agent-config gates`
  
  ## Overall
  
--**287 / 578 steps done · 50%**
-+**295 / 576 steps done · 51%**
+-**289 / 578 steps done · 50%**
++**297 / 576 steps done · 52%**
  
  ```text
 -████████████████████░░░░░░░░░░░░░░░░░░░░   50%
-+████████████████████░░░░░░░░░░░░░░░░░░░░   51%
++█████████████████████░░░░░░░░░░░░░░░░░░░   52%
  ```
  
  ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -25,7 +25,7 @@ index 92e13d254c0fdfa5399662813ff3821606355bef..0f9eeff8a3523dedba98778c7250e2dd
  | 21 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
  | 22 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ░░░░░░░░░░ 0% |
 -| 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 16 | 1 | 1 | 0 | [1](#blockers-road-to-per-turn-hook-economy) | █░░░░░░░░░ 6% |
-+| 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 6 | 9 | 1 | 2 | [2](#blockers-road-to-per-turn-hook-economy) | ██████░░░░ 60% |
++| 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 6 | 9 | 1 | 2 | [3](#blockers-road-to-per-turn-hook-economy) | ██████░░░░ 60% |
  | 24 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
  | 25 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
  | 26 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
@@ -52,10 +52,27 @@ index 92e13d254c0fdfa5399662813ff3821606355bef..0f9eeff8a3523dedba98778c7250e2dd
  
  <a id="blockers-road-to-per-turn-hook-economy"></a>
  **Blockers**
-@@ -737,6 +737,22 @@ _1 blocker resolved._
+@@ -737,6 +737,39 @@ _1 blocker resolved._
      posture: an absolute cap plus a pathology net, not a tight creep window, because
      shared CI runners flap.
    - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — the row exists in `hook-latency-budget.json` with its bar or its observe-only marker.
++- **b-stdin-read-failure-policy** (owner: user) — blocks nothing — F-1's trigger is fixed and the residual failure is now loud. This records the half that is a policy call rather than a bug fix.
++  - **Recommendation:** **option (c).** The bypass F-1 records is only consequential where a guard can refuse, and `pre_tool_use` is the one block-capable slot on this host; denying there costs a retryable refusal on an I/O error the retry budget already survived ten seconds of, while denying on `stop` or `post_tool_use` would refuse nothing and could break a turn end. Option (b) is the status quo and leaves a documented allow-on-failure on a security path; option (a) is right in spirit and pays for it on slots where it buys nothing.
++  - **If you do nothing:** the residual failure stays an allow. It is no longer silent — that was the actual defect and it is fixed — but a reader of `hook-architecture-v1`'s fail-closed contract would still expect a refusal that does not happen, and nothing in the tree records the gap except this blocker.
++  - **What to do:**
++    decide what the dispatcher does when the stdin read **fails**,
++    as distinct from stdin being empty. Both `_readStdin` and `readHookStdin` still
++    convert any residual failure — an exhausted EAGAIN budget (~10 s), `EIO`,
++    `EBADF` — into an empty string, after which the whole chain runs with no
++    `tool_name` and the dispatcher exits 0. For a `fail_closed: true`,
++    `severity: blocking` guard that is an allow. Options: (a) **deny** on a failed
++    read for block-capable events that carry at least one fail-closed concern —
++    the honest reading of fail-closed, at the cost of refusing a tool call on a
++    transient I/O error; (b) keep allowing but treat the loud stderr line and the
++    dispatch issue that now ship as sufficient, which is the current state;
++    (c) deny only on the block-capable slot and allow elsewhere, which is (a)
++    narrowed to where a guard can actually refuse.
++  - **Resolved when:** one option is recorded at this blocker and, for (a) or (c), `_readStdin`'s failure path returns a deny for the named slots with a test that fails when it allows.
 +- **b-guard-tool-partition** (owner: user) — blocks nothing in this roadmap — step 5.1 is cancelled and Phases 1-4 proceed without it. It records the one reachable form of 5.1's goal so a later attempt starts from the decision rather than re-deriving it.
 +  - **Recommendation:** **option (c) — decline, and revisit only if Phase 4's registered composite exceeds its bar.** The gain is real but unmeasured, and the cost is a silently-skippable filter in front of the two guards that exist because a bypass must be impossible: `matcher` is a plain non-match, so unlike `if` it does not fail open, and a Claude tool-name addition (a renamed Bash variant, a new edit tool) would disable a guard with nothing in the tree noticing. Option (a) is the version worth having *after* the composite says the dispatch count is the binding cost; option (b) is strictly waste.
 +  - **If you do nothing:** the dispatcher keeps firing on every tool call regardless of whether any concern can act, the in-process `tools:` filter keeps absorbing the per-concern half on all eight platforms, and Phase 4's composite row is what tells anyone whether the remaining per-turn cost is worth a security-surface decision at all.
