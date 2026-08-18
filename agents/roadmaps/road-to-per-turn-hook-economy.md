@@ -164,6 +164,13 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       cli arm buys nothing here.
       `verify:` bundle-path p95 per event at the installed version and at
       11.0.0, same machine, at least three runs per cell.
+      **Replication, so this is not read off one job:** run **32119695614**
+      repeats 0.4's split independently — `pre_tool_use` p95 141 ms via bundle
+      against 142 ms via cli, a **1 ms** wrapper cost beside 0.4's 2 ms and a
+      local 4 ms. The wrapper exclusion is therefore n=3 across two runners. The
+      bundle-vs-record gap is n=2 (146 and 141 against a recorded 81), which
+      makes "a faster runner generation in July" thinner but does not exclude
+      it — only the same-machine two-version run above can.
 - **AC-0:** a one-page evidence note naming which of {env flag, hardware, version
   jump larger than one major, stop-gate refusals, activation flip, none}
   reproduced, with the matrix numbers inline.
