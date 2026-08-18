@@ -150,7 +150,8 @@ describe.skipIf(!fs.existsSync(BUNDLE))("dispatch — an idle stdin does not sta
     const elapsed = Date.now() - started;
     expect(code).toBe(0);
     // Generous against runner noise and still an order of magnitude under the
-    // ~10 s budget an uncapped read would spend here.
+    // ~10 s an uncapped read spent here, and two orders under the unbounded
+    // block a blocking fd produced. Measured 239 ms locally.
     expect(elapsed).toBeLessThan(4_000);
   });
 });
