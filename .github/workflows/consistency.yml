@@ -283,6 +283,10 @@ jobs:
         run: ./scripts-run src/scripts/check_iron_law_prominence
 
       - name: Roadmap-estate ratchet + one-in-one-out (estate-drawdown T2/T3)
+        # No exit-2 warn-and-allow wrapper, unlike the R1/R2 steps below: exit 2
+        # here means the estate could not be counted, and a ratchet that passes
+        # when it could not read its corpus is the false green this repo's
+        # gate-coverage manifest exists to prevent.
         run: ./scripts-run src/scripts/check_estate_count
 
       - name: Gate R1 — plan Risk Registers (plan-review-gates §1)

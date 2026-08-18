@@ -66,8 +66,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
     collect,
+    is_draft as isDraft,
     is_roadmap_candidate as isRoadmapCandidate,
     parse_frontmatter as parseFrontmatter,
+    parse_roadmap as parseRoadmap,
 } from '../agent-src/scripts/update_roadmap_progress.js';
 import { reportScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { GateLedger } from './_lib/gate_ledger.js';
@@ -91,6 +93,12 @@ export const METRICS: readonly MetricName[] = ['active_roadmaps', 'later_roadmap
 
 export interface EstateBudget {
     baseline: EstateCounts;
+    /**
+     * The audit trail a raise is read from. Each entry records the metrics it set
+     * and WHY in a real sentence; a raise whose newest entry carries no `why`, or
+     * whose `why` does not name the metric's new value, is refused.
+     */
+    baseline_history?: Array<Partial<EstateCounts> & { at?: string; why?: string }>;
     /**
      * `applies_above_active: null` ⇒ one-in-one-out is unconditional.
      *
@@ -120,12 +128,33 @@ export interface OffsetLedger {
     exempt: Array<{ file: string; reason: string }>;
 }
 
+/**
+ * A baseline number this change RAISED, and whether it carries its reason.
+ *
+ * The whole point of a ratchet is that the change under review cannot silence it
+ * by editing the number, so the "before" side is read from the base ref with
+ * `git show <baseRef>:<path>` — the one reading of the baseline this commit
+ * cannot rewrite. Same argument `_lib/ratchet_base_ref`'s header makes for entry
+ * sets, applied to a count.
+ */
+export interface RaiseFinding {
+    metric: MetricName;
+    from: number;
+    to: number;
+    /** A raise WITH a reason is legal and reported; without one it fails. */
+    reason: string | null;
+}
+
 export interface EstateVerdict {
     counts: EstateCounts;
     baseline: EstateCounts;
     growth: GrowthFinding[];
     /** Counts strictly below their baseline — the walk-down the ratchet wants. */
     tightened: GrowthFinding[];
+    /** Baselines raised against the base ref, each with its reason or `null`. */
+    raises: RaiseFinding[];
+    /** `null` when the raise check could not run; the reason is printed either way. */
+    raiseSkipReason: string | null;
     /** `null` when the diff half could not run; the reason is printed either way. */
     offsets: OffsetLedger | null;
     offsetSkipReason: string | null;
@@ -153,26 +182,78 @@ function git(args: readonly string[], cwd: string): { ok: boolean; stdout: strin
 }
 
 /**
+ * Roadmap-shaped `.md` files directly inside `<roadmaps>/<sub>`.
+ *
+ * The predicate is fed the BARE FILENAME, never the path: `is_roadmap_candidate`
+ * excludes any path with an `archive`/`skipped`/`stubs`/`later` component, which
+ * is correct for the active walk and would make every file in a disposition
+ * directory invisible here. Passing the name keeps the parts that apply —
+ * `README.md`, `template.md`, `open-questions*` are not roadmaps in any
+ * directory. (First version passed the path and counted 0 of 44.)
+ */
+function countIn(roadmapRoot: string, sub: string): number {
+    try {
+        return fs
+            .readdirSync(path.join(roadmapRoot, sub))
+            .filter((n) => n.endsWith('.md') && isRoadmapCandidate(n)).length;
+    } catch {
+        return 0;
+    }
+}
+
+/** Non-draft roadmaps parked in `later/`, parsed for their blockers. */
+function laterRoadmaps(roadmapRoot: string): Array<{ open_blockers: readonly unknown[] }> {
+    const dir = path.join(roadmapRoot, 'later');
+    let names: string[];
+    try {
+        names = fs.readdirSync(dir);
+    } catch {
+        return [];
+    }
+    const out: Array<{ open_blockers: readonly unknown[] }> = [];
+    for (const name of names) {
+        if (!name.endsWith('.md') || !isRoadmapCandidate(name)) continue;
+        const abs = path.join(dir, name);
+        // `collect()` cannot be reused here: it filters through the same
+        // path-based predicate and would reject its own root.
+        const text = fs.readFileSync(abs, 'utf-8');
+        if (isDraft(parseFrontmatter(text))) continue;
+        const stats = parseRoadmap(abs, dir);
+        if (stats !== null) out.push(stats as unknown as { open_blockers: readonly unknown[] });
+    }
+    return out;
+}
+
+/**
  * Count the estate, three ways.
  *
- * `active_roadmaps` and `open_blockers` come from `collect()` so they cannot
- * disagree with the dashboard; `later_roadmaps` is a directory listing because
- * parked files are outside that corpus by design.
+ * `active_roadmaps` comes from `collect()` so it cannot disagree with the
+ * dashboard. `later_roadmaps` is a directory listing because parked files are
+ * outside that corpus by design — filtered through the same `is_roadmap_candidate`
+ * predicate as the active side, so `later/README.md` is not a roadmap here either.
+ *
+ * `open_blockers` spans the active tree AND `later/`, which is a correction to the
+ * first version of this gate: counting it over the active tree alone meant
+ * **parking a roadmap dropped the gated blocker count without resolving
+ * anything**, and the ratchet then printed "free tightening" over a burial and
+ * invited a permanent baseline drop. AC-1 is phrased on this metric, so the metric
+ * has to survive a move that resolves nothing. `skipped/` and `archive/` stay out:
+ * those are terminal, and a blocker in a skipped roadmap is not open work.
+ *
+ * **So this metric deliberately does NOT equal the dashboard header's blocker
+ * count, which is active-only.** The first version claimed parity with it as a
+ * virtue; burial-resistance is worth more here, and claiming both would be the
+ * claim that broke. `active_roadmaps` keeps the parity.
  */
 export function countEstate(repoRoot: string): EstateCounts {
     const roadmapRoot = path.join(repoRoot, ROADMAPS_REL);
     const stats = collect(roadmapRoot);
-    const laterDir = path.join(roadmapRoot, 'later');
-    let later = 0;
-    try {
-        later = fs.readdirSync(laterDir).filter((n) => n.endsWith('.md')).length;
-    } catch {
-        later = 0;
-    }
+    const openOf = (rows: readonly { open_blockers: readonly unknown[] }[]): number =>
+        rows.reduce((n, r) => n + r.open_blockers.length, 0);
     return {
         active_roadmaps: stats.length,
-        later_roadmaps: later,
-        open_blockers: stats.reduce((n, r) => n + r.open_blockers.length, 0),
+        later_roadmaps: countIn(roadmapRoot, 'later'),
+        open_blockers: openOf(stats) + openOf(laterRoadmaps(roadmapRoot)),
     };
 }
 
@@ -186,10 +267,18 @@ function isActiveTopLevel(rel: string): boolean {
     return !tail.includes('/') && isRoadmapCandidate(norm);
 }
 
-/** A disposition directory — where an offset sends a roadmap. */
+/**
+ * A disposition directory — where an offset sends a roadmap.
+ *
+ * `stubs/` is in the set, and it was missing from the first version. Un-stubbing
+ * is the documented promotion path, so a stub moved to the top level is an
+ * ADDITION that T3 must charge, and a roadmap demoted to a stub is an offset.
+ * With `stubs/` unrecognised, a promotion was classified as neither and the lint
+ * could never charge it — the one hole that let an active roadmap arrive for free.
+ */
 function isDisposed(rel: string): boolean {
     const norm = rel.split(path.sep).join('/');
-    return /^agents\/roadmaps\/(archive|later|skipped)\//.test(norm);
+    return /^agents\/roadmaps\/(archive|later|skipped|stubs)\//.test(norm);
 }
 
 /**
@@ -283,12 +372,58 @@ export function evaluate(
         else if (live < baseline) tightened.push({ metric, baseline, live });
     }
 
+    const baseRef = opts.baseRef ?? resolveBaseRef(repoRoot);
+
+    // The RAISE check — the half that makes this a ratchet rather than a number.
+    //
+    // Comparing the live count against a baseline the same commit may edit is not
+    // a ratchet: the cheapest way past the growth check above is to type a bigger
+    // number. So the "before" side is read from the base ref, which is the one
+    // reading of the baseline this change cannot rewrite, and a raise is legal
+    // only when the newest `baseline_history` entry carries a real reason AND
+    // records the metric at its new value.
+    const raises: RaiseFinding[] = [];
+    let raiseSkipReason: string | null = null;
+    if (baseRef === null || baseRef === undefined) {
+        raiseSkipReason = 'no base ref resolved — a baseline raise cannot be detected, so the ratchet half is unproven on this run';
+    } else {
+        const show = git(['show', `${baseRef}:${BUDGET_REL.split(path.sep).join('/')}`], repoRoot);
+        if (!show.ok) {
+            // Absent at base and mistyped-path look identical, so this is stated
+            // rather than assumed either way. On the commit that INTRODUCES the
+            // budget this is the correct and expected reading.
+            raiseSkipReason = `${BUDGET_REL} does not exist at ${baseRef} — treated as the introducing change, so no raise is possible`;
+        } else {
+            let baseBudget: EstateBudget | null = null;
+            try {
+                baseBudget = JSON.parse(show.stdout) as EstateBudget;
+            } catch {
+                baseBudget = null;
+            }
+            if (baseBudget === null || baseBudget.baseline === undefined) {
+                raiseSkipReason = `${BUDGET_REL} at ${baseRef} is unparseable — raise undetectable`;
+            } else {
+                const newest = (budget.baseline_history ?? []).at(-1) ?? {};
+                for (const metric of METRICS) {
+                    const before = baseBudget.baseline[metric];
+                    const after = budget.baseline[metric];
+                    if (typeof before !== 'number' || after <= before) continue;
+                    const why = typeof newest.why === 'string' ? newest.why.trim() : '';
+                    // The reason must belong to THIS raise: an entry that records a
+                    // different number is an older reason being reused, which is the
+                    // silent-reset shape RATCHET_RESET_KEY's header warns about.
+                    const namesMetric = newest[metric] === after;
+                    raises.push({ metric, from: before, to: after, reason: why !== '' && namesMetric ? why : null });
+                }
+            }
+        }
+    }
+
     // The diff half. A missing base ref is REPORTED rather than assumed empty:
     // guessing "nothing changed" is the same silent-pass this file's own header
     // argues against, and the count half above still ran.
     let offsets: OffsetLedger | null = null;
     let offsetSkipReason: string | null = null;
-    const baseRef = opts.baseRef ?? resolveBaseRef(repoRoot);
     if (baseRef === null || baseRef === undefined) {
         offsetSkipReason = 'no base ref resolved (no origin/main, no merge-commit parent) — one-in-one-out not evaluated';
     } else {
@@ -323,16 +458,19 @@ export function evaluate(
         baseline: budget.baseline,
         growth,
         tightened,
+        raises,
+        raiseSkipReason,
         offsets,
         offsetSkipReason,
         unpaid,
-        withinBudget: growth.length === 0 && unpaid === 0,
+        withinBudget:
+            growth.length === 0 && unpaid === 0 && raises.every((r) => r.reason !== null),
     };
 }
 
 /** Floors for `--self-test`, declared here so a truncation is a visible diff. */
-const SELF_TEST_MIN_CASES = 5;
-const SELF_TEST_MIN_REJECT = 3;
+const SELF_TEST_MIN_CASES = 7;
+const SELF_TEST_MIN_REJECT = 4;
 
 /**
  * Prove, on demand, that this gate's rejections still fire against its own CLI.
@@ -347,6 +485,20 @@ function selfTest(): number {
     const repo = repoRootFrom(process.cwd());
     const script = path.join('src', 'scripts', 'check_estate_count.ts');
     const roots: string[] = [];
+
+    /** A budget body; `why` is what makes a raise against the base ref legal. */
+    const budgetJson = (active: number, later: number, why?: string): string => {
+        const baseline = { active_roadmaps: active, later_roadmaps: later, open_blockers: 0 };
+        return `${JSON.stringify(
+            {
+                baseline,
+                ...(why === undefined ? {} : { baseline_history: [{ at: 'fixture', ...baseline, why }] }),
+                one_in_one_out: { applies_above_active: null },
+            },
+            null,
+            4,
+        )}\n`;
+    };
 
     const fixture = (opts: {
         roadmaps: number;
@@ -369,21 +521,7 @@ function selfTest(): number {
         for (let i = 0; i < opts.roadmaps; i++) {
             put(`agents/roadmaps/road-to-${String(i)}.md`, `# Roadmap: R${String(i)}\n\n## Phase 1\n\n- [ ] **1.1** s\n`);
         }
-        put(
-            'src/config/estate-count-budget.json',
-            `${JSON.stringify(
-                {
-                    baseline: {
-                        active_roadmaps: opts.baseline.active,
-                        later_roadmaps: opts.baseline.later,
-                        open_blockers: 0,
-                    },
-                    one_in_one_out: { applies_above_active: null },
-                },
-                null,
-                4,
-            )}\n`,
-        );
+        put('src/config/estate-count-budget.json', budgetJson(opts.baseline.active, opts.baseline.later));
         g('add', '-A');
         g('commit', '-qm', 'base');
         g('checkout', '-qb', 'feat/x');
@@ -419,12 +557,42 @@ function selfTest(): number {
             expect: 'reject',
             run: () =>
                 fixture({
-                    // Baseline raised to 4 so the ratchet half passes and only the
-                    // offset half can fail — otherwise this case would pass for
-                    // the other check's reason.
+                    // Baseline is 4 AT THE BASE COMMIT, not raised on the branch, so
+                    // the ratchet and raise halves both pass and only the offset
+                    // half can fail — otherwise this case would pass for another
+                    // check's reason.
                     roadmaps: 3,
                     baseline: { active: 4, later: 0 },
                     after: (dir) => write(dir, 'agents/roadmaps/road-to-new.md', '# Roadmap: N\n\n## Phase 1\n\n- [ ] **1.1** s\n'),
+                }),
+        },
+        {
+            // The bypass an R2 review found in the first version: the estate is
+            // untouched and only the NUMBER moves, which satisfies the growth half
+            // by construction. Proven at the CLI, because the working-tree read
+            // that allowed it was in the CLI's own evaluate().
+            name: 'baseline raised with no recorded reason → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    baseline: { active: 3, later: 0 },
+                    after: (dir) => write(dir, 'src/config/estate-count-budget.json', budgetJson(9, 9)),
+                }),
+        },
+        {
+            name: 'same raise WITH a recorded reason → accept',
+            expect: 'accept',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    baseline: { active: 3, later: 0 },
+                    after: (dir) =>
+                        write(
+                            dir,
+                            'src/config/estate-count-budget.json',
+                            budgetJson(9, 9, 'fixture: a deliberate re-baseline, recorded so the ratchet can see it'),
+                        ),
                 }),
         },
         {
@@ -474,7 +642,17 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     if (argv.includes('--self-test')) return selfTest();
     const json = argv.includes('--json') || argv.includes('--format=json');
     const baseIdx = argv.indexOf('--base');
-    const baseRef = baseIdx === -1 ? undefined : argv[baseIdx + 1];
+    let baseRef: string | undefined;
+    if (baseIdx !== -1) {
+        const next = argv[baseIdx + 1];
+        // `--base --json` used to take `--json` as the ref, which then failed as
+        // a git revision and silently downgraded both halves to "unproven".
+        if (next === undefined || next.startsWith('-')) {
+            process.stderr.write('usage: check_estate_count [--base <ref>] [--json] [--self-test]\n');
+            return 2;
+        }
+        baseRef = next;
+    }
     const repoRoot = repoRootFrom(process.cwd());
 
     let verdict: EstateVerdict;
@@ -489,12 +667,21 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     // every count is 0, which is trivially under any baseline — exit 2 (could
     // not run), never 1, which would assert the estate actually grew.
     try {
-        reportScanned({
-            gate: GATE,
-            scanned: verdict.counts.active_roadmaps + verdict.counts.later_roadmaps,
-            units: 'roadmap file(s)',
-            roots: [ROADMAPS_REL, path.join(ROADMAPS_REL, 'later')],
-        });
+        reportScanned(
+            {
+                gate: GATE,
+                scanned: verdict.counts.active_roadmaps + verdict.counts.later_roadmaps,
+                units: 'roadmap file(s)',
+                roots: [ROADMAPS_REL, path.join(ROADMAPS_REL, 'later')],
+            },
+            // In `--json` the line goes to stderr, so stdout really is one JSON
+            // document. `reportScanned` defaults to stdout because CI passes
+            // `--quiet` to most gates and a count only visible without it is not
+            // a count; this gate's CI argv carries no `--json`, so the default
+            // path is unaffected. Same override, same reason, as
+            // check_review_prompt_binding.
+            json ? (chunk: string) => process.stderr.write(chunk) : undefined,
+        );
     } catch (err) {
         if (err instanceof DeadScopeError) {
             process.stderr.write(`❌  ${GATE}: ${err.message}\n`);
@@ -504,12 +691,17 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     }
 
     const ledger = new GateLedger(GATE);
-    ledger.plan([...METRICS, 'one_in_one_out']);
+    ledger.plan([...METRICS, 'baseline_raise', 'one_in_one_out']);
     for (const metric of METRICS) {
         const bad = verdict.growth.find((g) => g.metric === metric);
         if (bad !== undefined) ledger.fail(metric, `${metric} grew ${bad.baseline} → ${bad.live}`);
         else ledger.complete(metric);
     }
+    const unreasoned = verdict.raises.filter((r) => r.reason === null);
+    if (verdict.raiseSkipReason !== null) ledger.skip('baseline_raise', 'precondition_unmet');
+    else if (unreasoned.length > 0)
+        ledger.fail('baseline_raise', `${String(unreasoned.length)} raise(s) with no recorded reason`);
+    else ledger.complete('baseline_raise');
     if (verdict.offsets === null) ledger.skip('one_in_one_out', 'precondition_unmet');
     else if (verdict.unpaid > 0) ledger.fail('one_in_one_out', `${String(verdict.unpaid)} unpaid addition(s)`);
     else ledger.complete('one_in_one_out');
@@ -541,6 +733,15 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     } else if (verdict.offsetSkipReason !== null) {
         process.stdout.write(`  ⚠️  ${verdict.offsetSkipReason}\n`);
     }
+    if (verdict.raiseSkipReason !== null) {
+        process.stdout.write(`  ⚠️  ${verdict.raiseSkipReason}\n`);
+    }
+    for (const r of verdict.raises.filter((x) => x.reason !== null)) {
+        process.stdout.write(
+            `  ↑ baseline raised with a recorded reason: ${r.metric} ${String(r.from)} → ${String(r.to)}\n` +
+                `    ${(r.reason as string).slice(0, 120)}\n`,
+        );
+    }
 
     for (const t of verdict.tightened) {
         process.stdout.write(
@@ -557,6 +758,15 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                 `    exists for. Either close/park/archive enough to get back under the baseline, or\n` +
                 `    raise it in ${BUDGET_REL} with the reason written as a real sentence in the\n` +
                 '    same commit — a number change on its own is what a ratchet is built to refuse.\n',
+        );
+    }
+    for (const r of unreasoned) {
+        process.stderr.write(
+            `❌  baseline raised with no recorded reason: ${r.metric} ${String(r.from)} → ${String(r.to)}.\n` +
+                `    Read from the base ref, so editing the number in this commit cannot hide it —\n` +
+                '    which is the whole difference between a ratchet and a number. A raise is legal,\n' +
+                `    and it costs one appended \`baseline_history\` entry in ${BUDGET_REL} carrying\n` +
+                `    \`"${r.metric}": ${String(r.to)}\` and a \`why\` written as a real sentence.\n`,
         );
     }
     if (verdict.unpaid > 0 && verdict.offsets !== null) {

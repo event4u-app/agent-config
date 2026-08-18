@@ -713,6 +713,36 @@ describe('dispatch_r2_reviewer — pure helpers', () => {
         expect(extractAcceptanceCriteria('# X\n\n## Phase 1\n\n- [ ] a\n')).toBe('');
     });
 
+    it('keeps an indented sub-bullet and a continuation across a blank line', () => {
+        // Both shapes were dropped by the first version, which closed a bullet at
+        // ANY blank line and at ANY bullet including an indented one — contradicting
+        // its own docstring (found by the R2 review of the change that added it).
+        const withSubBullets = [
+            '# R',
+            '',
+            '### Phase 2',
+            '',
+            '- **AC-2:** the verdict rows exist,',
+            '      one per file, and:',
+            '  - no file leaves a batch without one',
+            '',
+            '      and the batch order is recorded',
+            '',
+            '## Blockers',
+            '',
+            'unrelated prose at column 0',
+            '',
+        ].join('\n');
+        const out = extractAcceptanceCriteria(withSubBullets);
+        expect(out).toContain('one per file, and:');
+        expect(out).toContain('no file leaves a batch without one');
+        expect(out).toContain('and the batch order is recorded');
+        // The section boundary still holds — prose at column 0 closes the bullet.
+        expect(out).not.toContain('unrelated prose');
+        // Still exactly one criterion, not one per continuation line.
+        expect(out.split('\n').filter((l) => l.includes('**AC-')).length).toBe(1);
+    });
+
     it('expectedHashes maps an EMPTY AC string to none, not to the SHA of the empty string', () => {
         // The defect this closes: '' took the `!= null` branch, so the manifest
         // recorded e3b0c442… — a plausible-looking hash that re-derives

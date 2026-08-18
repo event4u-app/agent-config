@@ -1038,6 +1038,14 @@ tasks:
       estate_offset_exempt reason. Nothing read the estate as a whole before
       this gate: lint_roadmap_family_cap bounds one road-to-<family>-* family,
       and the total was visible only to whoever read the dashboard header.
+      Exit-code contract: 0 pass, 1 policy violation, **2 blocks as well** — and
+      that is a deliberate divergence from the R1/R2 steps beside it, which
+      degrade exit 2 to warn-and-allow. Exit 2 here means the estate could not be
+      counted (roadmap root moved, budget unreadable), and a ratchet that passes
+      when it could not read its corpus is the false green the whole
+      gate-coverage manifest exists to prevent. The warn-and-allow carve-out is
+      for gates whose own fix they would otherwise block; this one has no such
+      bootstrap.
     cmd: ./scripts-run src/scripts/check_estate_count
 
   lint-plan-risk-register:

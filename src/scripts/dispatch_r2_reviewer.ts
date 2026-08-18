@@ -486,24 +486,40 @@ const INLINE_AC_RE = /^\s*[-*+]\s+\*\*AC-[\w.]+:?\*\*/;
 /**
  * Collect inline `- **AC-n:**` bullets plus their continuation lines.
  *
- * A bullet ends at the next bullet, at any heading, or at a blank line followed
- * by something that is not an indented continuation. Continuations are kept
+ * A bullet ends at a heading, at a non-indented line, or at a blank line whose
+ * next non-blank line is not an indented continuation. Continuations are kept
  * because the criteria are prose and the second half of a wrapped sentence is
- * as load-bearing as the first.
+ * as load-bearing as the first — and an INDENTED sub-bullet is a continuation
+ * too, since roadmaps qualify a criterion that way.
+ *
+ * The first version closed the bullet at any blank line and at any bullet
+ * including an indented one, which contradicted this paragraph and silently
+ * dropped both shapes (R2 finding). Blank-line handling needs the lookahead, so
+ * this is an index loop rather than a for-of.
  */
 function extractInlineAcceptanceCriteria(lines: readonly string[]): string {
     const out: string[] = [];
     let inBullet = false;
-    for (const line of lines) {
+    const isIndented = (s: string): boolean => s.trim() !== '' && /^\s/.test(s);
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i] as string;
         if (INLINE_AC_RE.test(line)) {
             out.push(line.trim());
             inBullet = true;
             continue;
         }
         if (!inBullet) continue;
-        // A heading, a new non-AC bullet, or a blank line closes the bullet;
-        // an indented non-blank line continues it.
-        if (line.trim() === '' || /^#{1,6} /.test(line) || /^\s*[-*+]\s/.test(line) || /^\S/.test(line)) {
+        if (line.trim() === '') {
+            // Look past the blank run: an indented line after it continues the
+            // bullet, anything else closes it.
+            let j = i + 1;
+            while (j < lines.length && (lines[j] as string).trim() === '') j++;
+            if (j >= lines.length || !isIndented(lines[j] as string)) inBullet = false;
+            continue;
+        }
+        // A heading closes it; so does a line starting at column 0, which is the
+        // next section's prose. An indented line — bullet or not — continues.
+        if (/^#{1,6} /.test(line) || /^\S/.test(line)) {
             inBullet = false;
             continue;
         }

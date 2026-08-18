@@ -357,6 +357,18 @@ export function isAgentDrafted(recommendation: string): boolean {
     return /\(agent-drafted\b/i.test(recommendation);
 }
 
+/**
+ * How a row names its decision.
+ *
+ * `legacy` is the parser's PLACEHOLDER id for a `> Blocked until …` note, not an
+ * identifier anyone wrote — `renderEntry` already substitutes "blocked-until
+ * note" for exactly that reason, and the sheet printing the raw placeholder made
+ * the two views disagree about the same row.
+ */
+export function sheetLabel(b: Blocker): string {
+    return isLegacy(b) ? 'blocked-until note' : `\`${b.id}\``;
+}
+
 /** First sentence of a passage, for the one-line `Default:` column. */
 function firstSentence(text: string): string {
     const trimmed = text.trim();
@@ -400,10 +412,16 @@ export function sheetQuestion(b: Blocker): { text: string; source: 'question' | 
  * This differs from `--all` in the two ways that matter for that job. `--all`
  * renders every blocker grouped by owner and is a terminal view; the sheet is
  * user-owned ONLY, and every row carries a `Default:` plus the PROVENANCE of
- * that default. Provenance is the load-bearing column: 14 of the 21 live entries
- * record a `Recommendation:` and 7 do not, and a sheet that presented an
- * agent-drafted default beside a recorded one as the same thing would invite
- * accept-all over exactly the items nobody has examined.
+ * that default. Provenance is the load-bearing column: a sheet that presented an
+ * agent-drafted default beside a maintainer-recorded one as the same thing would
+ * invite accept-all over exactly the items nobody has examined.
+ *
+ * No population figure is quoted here on purpose. The first version cited
+ * "14 of 21 record a `Recommendation:`, 7 do not" as the justification, and the
+ * change that added this renderer then drafted six of those seven — so the
+ * docstring was contradicted by the sheet committed beside it (R2 finding).
+ * The split is rendered in the sheet's own header from the live tree, which is
+ * the only place it cannot go stale.
  *
  * Deterministic by construction — the generator never invents a default. Where
  * none is recorded it says so and names what the reader must supply, so
@@ -457,7 +475,7 @@ function renderSheet(entries: readonly Entry[], now: Date): string {
                   ? 'none — legacy note'
                   : 'none recorded';
         out.push(
-            `| ${String(i + 1)} | \`${e.blocker.id}\` | ${e.roadmapRel} | ` +
+            `| ${String(i + 1)} | ${sheetLabel(e.blocker)} | ${e.roadmapRel} | ` +
                 `${String(e.openSteps)} | ${source} |`,
         );
     });
@@ -473,7 +491,7 @@ function renderSheet(entries: readonly Entry[], now: Date): string {
         const recorded = e.blocker.recommendation.trim();
         out.push(
             '',
-            `## ${String(i + 1)} · \`${e.blocker.id}\``,
+            `## ${String(i + 1)} · ${sheetLabel(e.blocker)}`,
             '',
             `- **Roadmap:** ${e.roadmapRel}`,
             `- **Unblocks:** ${String(e.openSteps)} open step(s) — ${e.blocker.blocks || '(not recorded)'}`,

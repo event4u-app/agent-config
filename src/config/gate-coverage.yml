@@ -566,8 +566,8 @@ gates:
 
   - id: check_estate_count
     argv: []
-    min_scanned: 50
-    corpus: "active + parked roadmap files (82 at baseline: 38 active, 44 in later/)"
+    min_scanned: 20
+    corpus: "active + parked roadmap files (81 at baseline: 38 active, 43 in later/)"
     status: enforced
     canary:
       class: contract-violation
@@ -583,11 +583,14 @@ gates:
       committed baseline DOWN only and always has a corpus, so it can carry a
       floor; the one-in-one-out half (T3) is diff-scoped and legitimately weighs
       nothing on a branch that adds no roadmap, which is why the floor counts
-      roadmap FILES rather than diff entries. The floor sits well below 82 because
-      a drawdown campaign is supposed to shrink both numbers — a floor at today's
-      count would red on the very change this gate exists to encourage — and still
-      far above a collapse, where the roadmaps root moved and the gate's own
-      reportScanned fires first.
+      roadmap FILES rather than diff entries.
+      The floor is 20 rather than something near today's 81 because THIS gate's
+      corpus is the thing it exists to shrink: T1's proposed ceiling is 15 active,
+      and a successful campaign would land near 15 + a drained `later/` — a floor
+      of 50 would have failed on the day the drawdown worked, which is the exact
+      failure this file's own § 3 warns about, pointed the wrong way. 20 still
+      cannot survive a collapse: at that point the gate's own `reportScanned`
+      fires first. (Set to 50 in the first version, corrected on an R2 finding.)
 
   - id: check_completion_review
     argv: ["--advisory", "--base", "origin/main"]

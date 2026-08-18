@@ -26,7 +26,7 @@
 | 5 | `sink-choice` | road-to-org-telemetry.md | 26 | maintainer-recorded |
 | 6 | `compaction-census-session` | road-to-context-fidelity.md | 19 | maintainer-recorded |
 | 7 | `b-per-turn-composite-bar` | road-to-per-turn-hook-economy.md | 16 | maintainer-recorded |
-| 8 | `legacy` | road-to-gated-reach-followup.md | 12 | none — legacy note |
+| 8 | blocked-until note | road-to-gated-reach-followup.md | 12 | none — legacy note |
 | 9 | `real-orchestration-usage` | road-to-orchestration-scope-decision.md | 6 | `agent-drafted` |
 | 10 | `telemetry-sample-size` | road-to-subagent-value-realization-followup.md | 6 | maintainer-recorded |
 | 11 | `human-gated-live-trigger-eval` | road-to-skill-description-measurement.md | 4 | `agent-drafted` |
@@ -125,7 +125,7 @@
 - **Done when:** one option is recorded at this blocker and — for (a) or (b) — the row exists in `hook-latency-budget.json` with its bar or its observe-only marker.
 - **Your answer:** _(accept default · override · defer)_
 
-## 8 · `legacy`
+## 8 · blocked-until note
 
 - **Roadmap:** road-to-gated-reach-followup.md
 - **Unblocks:** 12 open step(s) — entire roadmap

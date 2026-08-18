@@ -564,6 +564,11 @@ describe('--sheet — the consolidated decision sheet', () => {
         const out = renderSheet([entry('user', { id: 'legacy' })], NOW);
         expect(out).toContain('none — legacy note');
         expect(out).toContain('Converting it into a real blocker');
+        // And it is NAMED the way the sibling renderer names it. `legacy` is the
+        // parser's placeholder, not an identifier anyone wrote, so printing it
+        // made the two views disagree about the same row (R2 finding).
+        expect(out).toContain('blocked-until note');
+        expect(out).not.toContain('`legacy`');
     });
 
     it('gives every row a question, labelling which field it came from', () => {
