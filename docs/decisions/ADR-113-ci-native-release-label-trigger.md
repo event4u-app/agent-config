@@ -91,6 +91,22 @@ in the PR's merge box. This is a deliberate GitHub security control
 (distinct from, but related to, the fork-first-time-contributor approval
 gate), not a bug in this design.
 
+**Correction (2026-08-18) — the finding above did not hold on this repo, and the
+decision must not lean on it.** During the 14.0.0 release, with no
+`RELEASE_PR_TOKEN` configured, the release PR's checks started immediately: no
+approval was requested, nothing sat in an approval-required state, and the
+dispatched run would have merged to `main`, tagged and published to npm without
+a human touching it. It was cancelled by hand to stop before the merge.
+
+The original finding is left standing as written because it records what GitHub's
+changelog documents and what was believed at decision time. What is corrected is
+the **consequence** drawn from it: the approval click is a repository /
+organisation Actions setting, not a property of this workflow, so it is not a
+checkpoint this design may assume. Treat a dispatched release as unattended
+end-to-end unless the gate has been verified on the repo in question. A
+dependable human gate before a release merge comes from the branch-protection
+ruleset or from cancelling the run.
+
 This repo's branch-protection ruleset (verified live via `gh api
 repos/event4u-app/agent-config/rulesets/17749383`) requires
 **zero** approving reviews (`required_approving_review_count: 0`) and

@@ -31,7 +31,7 @@ bump + tag + GitHub Release); they gate the **downstream** publish/deploy legs.
 
 | Secret | Gates | Missing → |
 |---|---|---|
-| `RELEASE_PR_TOKEN` (optional PAT / App token, `contents:write` + `pull-requests:write`) | Unattended release PR checks in [`release.yml`](../.github/workflows/release.yml) | One manual **"Approve workflows to run"** click per release (deliberate checkpoint, not a failure). |
+| `RELEASE_PR_TOKEN` (optional PAT / App token, `contents:write` + `pull-requests:write`) | Unattended release PR checks in [`release.yml`](../.github/workflows/release.yml) | Possibly one manual **"Approve workflows to run"** click per release — **but do not rely on it as a gate.** Measured on 14.0.0 (2026-08-18) with the secret absent: checks started immediately, no approval was asked, and the run would have merged, tagged and published unattended. Whether the safeguard applies is a repo/org Actions setting. |
 | — (none: **npm OIDC Trusted Publishing**) | `publish-npm.yml` — uses `id-token: write`, no stored npm token | If OIDC trust is misconfigured on npmjs, npm publish fails; fix the trusted-publisher config on the npm package, not a secret. |
 | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_WORKER_SUBDOMAIN`, `MCP_SMOKE_TOKEN` | `deploy-mcp-worker.yml` (MCP worker deploy + smoke) | MCP worker deploy skips/fails; core release unaffected. |
 | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY` | `cross-model-canary.yml` + any AI-council / self-review automation | Canary + council automation skip; core release unaffected. |
@@ -48,7 +48,10 @@ grep -rhoE "secrets\.[A-Z_]+" .github/workflows/ | sort -u
 ## Operator-gated steps (need a human with credentials)
 
 - **Release-PR workflow approval** — the "Approve workflows to run" click when
-  `RELEASE_PR_TOKEN` is absent (see the runbook § 3.A).
+  `RELEASE_PR_TOKEN` is absent (see the runbook § 3.A). **Not a dependable
+  checkpoint:** it did not appear on 14.0.0 (2026-08-18) and the release ran
+  through to publish unattended. A human gate before a release merge has to come
+  from branch protection or from cancelling the run.
 - **Branch-protection ruleset** — applied in GitHub → Settings → Rules UI;
   source of truth mirrored in [`branch-protection-policy.md`](contracts/branch-protection-policy.md).
   Not in code; a successor edits it in the UI.
