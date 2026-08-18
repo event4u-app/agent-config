@@ -99,9 +99,24 @@ renegotiated by the outcome.
 - **Class:** 3 — human-only (hard-aborts under automation by design; simulating it breaks the prereg)
 - **Blocks:** all of Phase 1 — 1.1 and 1.2 both need a live model run
 - **What to do:** run the live trigger-eval to produce the predictions JSON for
-  both tree states. It hard-aborts under automation on purpose, so an agent
-  cannot supply it and must not simulate it. Substituting an AI rater would
-  break the pre-registration.
+  both tree states — `./scripts-run src/scripts/rule_trigger_eval` on the
+  maintainer machine, once per tree state, same protocol both times. It
+  hard-aborts under automation on purpose, so an agent cannot supply it and
+  must not simulate it. Substituting an AI rater would break the
+  pre-registration.
+- **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the
+  field; drafted from the roadmap's own text for the consolidated decision
+  sheet, not from a maintainer decision.)** Run both tree states in ONE sitting
+  under the same protocol, or park the roadmap in `later/` with exactly that as
+  its resume condition. Two sittings is the failure mode to avoid: the entry's
+  Resolved-when requires both JSONs to come from the *same* protocol, and a
+  protocol that drifted between runs produces two files that look comparable
+  and are not. This blocker also gates
+  `road-to-cost-parity-1-rule-payload-diet`'s `skill-activation-window`, so one
+  sitting discharges two entries — which is why it outranks its own step count.
+- **If you do nothing:** all of Phase 1 stays open, and the description
+  rewrite ships with no before/after activation reading — the claim it exists
+  to test stays unmeasured while reading as ordinary open work.
 - **Resolved when:** a predictions JSON exists for the pre-rewrite and the
   post-rewrite tree state, produced by the same protocol.
 

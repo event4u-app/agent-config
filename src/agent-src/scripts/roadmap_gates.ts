@@ -342,6 +342,201 @@ function render(
  * Returns '' when nothing is owned by the user, so the caller can append the
  * result unconditionally and get silence when silence is correct.
  */
+/**
+ * Whether a recorded recommendation was drafted by the agent rather than decided
+ * by the maintainer.
+ *
+ * Read from the field's own text, because that is where the claim has to live: a
+ * drafted recommendation is written INTO the roadmap so every consumer
+ * (`gates`, `--reply`, the sheet) sees the same string, and a marker held only
+ * in the sheet would be invisible to the other two. The convention is a leading
+ * `(agent-drafted …)` — matched loosely on purpose, since the parenthetical also
+ * carries a date and a sentence of provenance.
+ */
+export function isAgentDrafted(recommendation: string): boolean {
+    return /\(agent-drafted\b/i.test(recommendation);
+}
+
+/**
+ * How a row names its decision.
+ *
+ * `legacy` is the parser's PLACEHOLDER id for a `> Blocked until …` note, not an
+ * identifier anyone wrote — `renderEntry` already substitutes "blocked-until
+ * note" for exactly that reason, and the sheet printing the raw placeholder made
+ * the two views disagree about the same row.
+ */
+export function sheetLabel(b: Blocker): string {
+    return isLegacy(b) ? 'blocked-until note' : `\`${b.id}\``;
+}
+
+/** First sentence of a passage, for the one-line `Default:` column. */
+function firstSentence(text: string): string {
+    const trimmed = text.trim();
+    if (trimmed === '') {
+        return '';
+    }
+    const m = /^(.+?[.!?])(\s|$)/.exec(trimmed.replace(/\s+/g, ' '));
+    return m === null ? trimmed.replace(/\s+/g, ' ') : (m[1] as string);
+}
+
+/**
+ * The one-line question a sheet row leads with.
+ *
+ * `Question:` is an optional field and only 5 of the 21 user-owned entries carry
+ * one (measured 2026-08-18), so a sheet that printed it and nothing else would
+ * be blank for three quarters of the estate. Falling back to the first step of
+ * `What to do:` and then to `Blocks:` is deterministic and derived from the
+ * blocker's own text — which is why the row LABELS which of the three it used
+ * rather than presenting all three as the same kind of statement.
+ */
+export function sheetQuestion(b: Blocker): { text: string; source: 'question' | 'todo' | 'blocks' } {
+    if (b.question.trim() !== '') {
+        return { text: firstSentence(b.question), source: 'question' };
+    }
+    const steps = regroupTodo(b.todo);
+    if (steps.length > 0 && (steps[0] as string).trim() !== '') {
+        return { text: firstSentence(steps[0] as string), source: 'todo' };
+    }
+    return { text: firstSentence(b.blocks), source: 'blocks' };
+}
+
+/**
+ * The consolidated decision sheet — every user-owned decision in ONE artefact.
+ *
+ * `road-to-estate-drawdown` Phase 0 exists because thirteen reading assignments
+ * spread across thirteen files did not happen once. The sheet is the whole of
+ * the human's contribution to that campaign, front-loaded: one document, sorted
+ * by how much each answer unblocks, with a default per item so that
+ * accept-all-defaults is a valid answer.
+ *
+ * This differs from `--all` in the two ways that matter for that job. `--all`
+ * renders every blocker grouped by owner and is a terminal view; the sheet is
+ * user-owned ONLY, and every row carries a `Default:` plus the PROVENANCE of
+ * that default. Provenance is the load-bearing column: a sheet that presented an
+ * agent-drafted default beside a maintainer-recorded one as the same thing would
+ * invite accept-all over exactly the items nobody has examined.
+ *
+ * No population figure is quoted here on purpose. The first version cited
+ * "14 of 21 record a `Recommendation:`, 7 do not" as the justification, and the
+ * change that added this renderer then drafted six of those seven — so the
+ * docstring was contradicted by the sheet committed beside it (R2 finding).
+ * The split is rendered in the sheet's own header from the live tree, which is
+ * the only place it cannot go stale.
+ *
+ * Deterministic by construction — the generator never invents a default. Where
+ * none is recorded it says so and names what the reader must supply, so
+ * regenerating the sheet cannot silently overwrite an answer with a guess.
+ */
+function renderSheet(entries: readonly Entry[], now: Date): string {
+    const mine = entries.filter((e) => needsUser(e.blocker.owner));
+    const stamp = now.toISOString().slice(0, 10);
+    if (mine.length === 0) {
+        return (
+            `# Consolidated decision sheet — nothing owned by you (${stamp})\n\n` +
+            'No open blocker in the active roadmap tree carries `Owner: user`. Nothing to answer.\n'
+        );
+    }
+
+    const noRec = mine.filter((e) => e.blocker.recommendation.trim() === '');
+    const legacyNotes = noRec.filter((e) => isLegacy(e.blocker)).length;
+    const missing = noRec.length - legacyNotes;
+    const drafted = mine.filter((e) => isAgentDrafted(e.blocker.recommendation)).length;
+    const maintainerRecorded = mine.length - noRec.length - drafted;
+    const out: string[] = [
+        `# Consolidated decision sheet — ${String(mine.length)} decisions owned by you`,
+        '',
+        `> Generated ${stamp} by \`agent-config gates --sheet\` over \`agents/roadmaps/\`.`,
+        '> Sorted by unblock count, descending. **Accept-all-defaults is a valid answer**',
+        '> (`road-to-estate-drawdown` blocker `b-consolidated-decision-sheet`, option (a));',
+        '> answering only the two largest-unblock items and deferring the rest is option (c),',
+        '> which the roadmap itself recommends. Whichever you pick, the agent writes the answers',
+        '> back into each roadmap at its own blocker — that is not your work.',
+        '>',
+        `> **Provenance of the ${String(mine.length)} defaults: ${String(maintainerRecorded)} maintainer-recorded ·`,
+        `> ${String(drafted)} \`agent-drafted\` · ${String(missing)} with no recommendation at all ·`,
+        `> ${String(legacyNotes)} legacy \`> Blocked until …\` note(s) that have no field to carry one.**`,
+        '> The distinction is in every row on purpose: an agent-drafted default is the',
+        '> least-examined thing on this sheet, and accept-all-defaults would accept those too.',
+        '>',
+        '> This file is DERIVED — every line above and below comes from the roadmaps themselves,',
+        '> so regenerating is deterministic and an answer written into this file would be lost.',
+        '> Answers go back into each roadmap at its own blocker; the agent does that.',
+        '',
+        '| # | Decision | Roadmap | Unblocks | Default source |',
+        '|---:|---|---|---:|---|',
+    ];
+    mine.forEach((e, i) => {
+        const source =
+            e.blocker.recommendation.trim() !== ''
+                ? isAgentDrafted(e.blocker.recommendation)
+                    ? '`agent-drafted`'
+                    : 'maintainer-recorded'
+                : isLegacy(e.blocker)
+                  ? 'none — legacy note'
+                  : 'none recorded';
+        out.push(
+            `| ${String(i + 1)} | ${sheetLabel(e.blocker)} | ${e.roadmapRel} | ` +
+                `${String(e.openSteps)} | ${source} |`,
+        );
+    });
+
+    mine.forEach((e, i) => {
+        const q = sheetQuestion(e.blocker);
+        const qLabel =
+            q.source === 'question'
+                ? 'recorded `Question:`'
+                : q.source === 'todo'
+                  ? 'derived from the first `What to do:` step'
+                  : 'derived from `Blocks:`';
+        const recorded = e.blocker.recommendation.trim();
+        out.push(
+            '',
+            `## ${String(i + 1)} · ${sheetLabel(e.blocker)}`,
+            '',
+            `- **Roadmap:** ${e.roadmapRel}`,
+            `- **Unblocks:** ${String(e.openSteps)} open step(s) — ${e.blocker.blocks || '(not recorded)'}`,
+            `- **Question** (${qLabel})**:** ${q.text || '(the blocker records no question, no steps and no Blocks: field)'}`,
+        );
+        if (recorded === '' && isLegacy(e.blocker)) {
+            // A legacy `> Blocked until …` note is not a `### blocker:` entry and
+            // has no field to carry a recommendation. Saying "agent-drafted, to
+            // be written in" would point at a slot that does not exist, so the
+            // row names the actual next action instead.
+            out.push(
+                '- **Default:** _this is a legacy `> Blocked until …` note, not a `### blocker:` entry,' +
+                    ' so it has no `Recommendation:` field to read. Converting it into a real blocker' +
+                    ' entry is what gives it a default._',
+                '- **Default source:** none — legacy note',
+            );
+        } else if (recorded === '') {
+            out.push(
+                '- **Default:** _none recorded — needs an agent-drafted default before this row can be' +
+                    ' answered by accepting it._',
+                '- **Default source:** `agent-drafted` (to be written in below, and marked as such)',
+            );
+        } else {
+            const drafted = isAgentDrafted(recorded);
+            out.push(
+                `- **Default:** ${firstSentence(recorded)}`,
+                drafted
+                    ? '- **Default source:** `agent-drafted` — written into the roadmap’s ' +
+                      '`Recommendation:` field and marked there, NOT a maintainer decision'
+                    : '- **Default source:** maintainer-recorded `Recommendation:` in the roadmap',
+                `- **Recommendation (full):** ${recorded.replace(/\s+/g, ' ')}`,
+            );
+        }
+        if (e.blocker.ifNothing.trim() !== '') {
+            out.push(`- **If you do nothing:** ${e.blocker.ifNothing.replace(/\s+/g, ' ')}`);
+        }
+        out.push(
+            `- **Done when:** ${e.blocker.resolvedWhen.replace(/\s+/g, ' ') || '(not recorded)'}`,
+            '- **Your answer:** _(accept default · override · defer)_',
+        );
+    });
+    out.push('');
+    return out.join('\n');
+}
+
 function renderReply(entries: readonly Entry[]): string {
     const mine = entries.filter((e) => needsUser(e.blocker.owner));
     if (mine.length === 0) {
@@ -564,6 +759,7 @@ function main(argv?: readonly string[]): number {
     const json = args.includes('--json');
     const reply = args.includes('--reply');
     const pending = args.includes('--pending');
+    const sheet = args.includes('--sheet');
 
     // `--execute <id>` is answered FIRST, and it is the only mode that writes.
     // It used to sit after the `--pending` early return, so `--pending
@@ -643,13 +839,20 @@ function main(argv?: readonly string[]): number {
     // `--reply` deliberately does not carry the probe: ADR-222 fixes that form
     // at exactly ONE decision rendered in full, and a fired resume condition is
     // not a decision the reader owes anybody — it is a file that can move.
-    const resumed = reply ? [] : probeLater(roadmapRoot);
+    // `--reply` and `--sheet` deliberately do not carry the probe: ADR-222 fixes
+    // the reply form at exactly ONE decision rendered in full, and a fired resume
+    // condition is not a decision the reader owes anybody — it is a file that can
+    // move. The sheet is the same argument for the same reason: it is the set of
+    // answers the user owes, and a movable file is not one of them.
+    const resumed = reply || sheet ? [] : probeLater(roadmapRoot);
     process.stdout.write(
-        reply
-            ? renderReply(entries)
-            : json
-              ? renderJson(entries, all, resumed)
-              : render(entries, all, resumed),
+        sheet
+            ? renderSheet(entries, new Date())
+            : reply
+              ? renderReply(entries)
+              : json
+                ? renderJson(entries, all, resumed)
+                : render(entries, all, resumed),
     );
     return 0;
 }
@@ -687,6 +890,7 @@ export {
     renderJson,
     renderReply,
     renderResumed,
+    renderSheet,
     renderPending,
     renderPendingJson,
 };

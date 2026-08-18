@@ -145,6 +145,22 @@ POST-bench copy, never pre-bench).
     for its own blind ratings, and the reason `evaluator-independence` exists.
     Substituting an AI rater here would not be a weaker result; it would be an
     uncitable one.
+- **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the
+  field; drafted from the roadmap's own text for the consolidated decision
+  sheet, not from a maintainer decision.)** Score the artifacts in ONE sitting
+  and do it before any `score.ts` output is on screen — the anti-anchor
+  ordering is binding per the rubric's own first line, so a sitting split
+  across days is the likeliest way to void the result without noticing. If
+  that sitting is not going to happen in the near term, the honest move is to
+  park this roadmap in `later/` with the rubric pass as its probe-able resume
+  condition, rather than leaving it in the active tree reading as ordinary
+  open work.
+- **If you do nothing:** Phase 1 step 1's scoring half stays open and step 2
+  has no verdict, so the bench run produces only the SECONDARY
+  `lint_persistence` count — a number the pre-registration explicitly does not
+  accept as the defect count. The roadmap then reads as spend-blocked when it
+  is in fact rater-blocked, which is the misreading its own Surfaced note
+  records.
 - **Resolved when:** a human rubric score exists per artifact, recorded before
   the secondary `lint_persistence` pass for that artifact.
 - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was

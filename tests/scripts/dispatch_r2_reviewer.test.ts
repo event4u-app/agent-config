@@ -1163,3 +1163,37 @@ describe('dispatch_r2_reviewer — a leftover artefact is classified, never sile
         expect(again.stderr).toContain('cannot be identified as superseded');
     });
 });
+
+describe('extractAcceptanceCriteria — over the REAL active tree, not a fixture', () => {
+    it('leaves no active roadmap that declares criteria with an empty extraction', () => {
+        // The regression net this function has needed three times now: case
+        // sensitivity (2026-08-09), the inline form, and a heading carrying a
+        // trailing qualifier — each found only after an artefact had already
+        // shipped claiming an extraction it did not have. Every fixture in this
+        // file tests a shape someone thought of; this one tests the shapes
+        // actually in the tree, so the NEXT unrecognised form fails here instead
+        // of silently blinding a reviewer.
+        //
+        // Deliberately not a count: a count would need updating on every roadmap
+        // added, and would then be edited rather than read. The invariant is
+        // "declares ⇒ extracts", which holds at any population size.
+        const dir = path.join(REPO_ROOT, 'agents', 'roadmaps');
+        const blind: string[] = [];
+        let declaring = 0;
+        for (const name of fs.readdirSync(dir)) {
+            if (!name.endsWith('.md')) continue;
+            const text = fs.readFileSync(path.join(dir, name), 'utf-8');
+            // Detected independently of the extractor, so this cannot pass by the
+            // extractor and the detector sharing a blind spot — the failure mode
+            // the trailing-qualifier heading demonstrated, where the census that
+            // motivated the fix had counted the misses as "declares none".
+            const declares = /^##\s+acceptance criteria\b/im.test(text) || /^\s*[-*]\s+\*\*AC-/m.test(text);
+            if (!declares) continue;
+            declaring += 1;
+            if (!hasAcceptanceCriteria(extractAcceptanceCriteria(text))) blind.push(name);
+        }
+        // Vacuity guard: a moved roadmaps root would make the loop assert nothing.
+        expect(declaring).toBeGreaterThan(10);
+        expect(blind).toEqual([]);
+    });
+});
