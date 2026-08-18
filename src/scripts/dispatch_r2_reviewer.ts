@@ -426,13 +426,46 @@ export function expectedHashes(args: {
     return {
         scope_hash: sha256(args.scopeDiffText),
         roadmap_hash: args.roadmapText == null ? 'none' : sha256(args.roadmapText),
-        ac_hash: args.acText == null ? 'none' : sha256(args.acText),
+        // Falsy, not `== null`. An empty extraction used to hash to
+        // e3b0c44298fc…b855 — the SHA-256 of the empty string, which looks like
+        // a real hash in the manifest and re-derives identically on
+        // `--verify-current`, so the gate confirmed a criteria set that was
+        // never there. `'none'` is the value that already means "no input" for
+        // `roadmap_hash`; an absent AC block gets the same word.
+        ac_hash: args.acText ? sha256(args.acText) : 'none',
     };
 }
 
 /**
- * Extract the `## Acceptance Criteria` section — from that heading (inclusive)
- * to the next `## ` heading or EOF. No section → empty string.
+ * Extract a roadmap's acceptance criteria in either form the tree uses.
+ *
+ * Two forms, because roadmap authors write both and the reviewer needs whichever
+ * one is present:
+ *
+ * 1. A `## Acceptance Criteria` section — from that heading (inclusive) to the
+ *    next `## ` heading or EOF.
+ * 2. Inline `- **AC-n:**` bullets, declared per phase with no section heading —
+ *    collected with their indented continuation lines.
+ *
+ * Neither form → empty string, and every caller must treat that as "no criteria"
+ * rather than as an extracted-and-empty block: see {@link expectedHashes} and the
+ * prompt's roadmap line.
+ *
+ * The heading form is tried first and wins outright when found. Measured
+ * 2026-08-18 over the 44 active roadmaps: 21 heading-only, 7 inline-only, 0
+ * carrying both, 16 carrying neither — so the two forms do not currently
+ * co-occur and a precedence rule is a guard against a future file rather than a
+ * choice between live populations.
+ *
+ * WHY THE INLINE FORM WAS MISSING, stated because this is the second instance of
+ * the same defect class in this one function. The first was case sensitivity
+ * (`## Acceptance criteria` extracted nothing, found by the zcs-close R2 review
+ * 2026-08-09). The second is this: an inline-only roadmap yielded `''`, nothing
+ * downstream noticed, and the reviewer was handed a 0-byte
+ * `acceptance-criteria.md` under a prompt that said the criteria had been
+ * extracted. The R2 reviewer is the independent check on AC conformance, so
+ * blinding it while the artefact reads as though it checked is the
+ * gate-that-scans-nothing-exits-green shape one layer up.
  */
 export function extractAcceptanceCriteria(roadmapText: string): string {
     const lines = roadmapText.split('\n');
@@ -446,15 +479,42 @@ export function extractAcceptanceCriteria(roadmapText: string): string {
             break;
         }
     }
-    if (start === -1) return '';
-    let end = lines.length;
-    for (let i = start + 1; i < lines.length; i++) {
-        if (/^## /.test(lines[i] as string)) {
-            end = i;
-            break;
+    if (start !== -1) {
+        let end = lines.length;
+        for (let i = start + 1; i < lines.length; i++) {
+            if (/^## /.test(lines[i] as string)) {
+                end = i;
+                break;
+            }
+        }
+        return lines.slice(start, end).join('\n');
+    }
+    return extractInlineAcceptanceCriteria(lines);
+}
+
+/**
+ * Collect inline `- **AC-n:**` bullets and their continuation lines.
+ *
+ * A continuation line is indented and non-blank. The walk stops at the first
+ * blank or non-indented line, which is what separates one criterion from the
+ * prose or heading that follows it. Bullets are emitted in file order and
+ * separated by nothing but their own newline: each one is self-labelling
+ * (`AC-0`, `AC-1`, …), so a synthetic section heading would be text this
+ * function invented rather than text the roadmap declared.
+ */
+function extractInlineAcceptanceCriteria(lines: readonly string[]): string {
+    const out: string[] = [];
+    for (let i = 0; i < lines.length; i++) {
+        if (!/^- \*\*AC-/.test(lines[i] as string)) continue;
+        out.push(lines[i] as string);
+        for (let j = i + 1; j < lines.length; j++) {
+            const line = lines[j] as string;
+            if (!/^\s+\S/.test(line)) break;
+            out.push(line);
+            i = j;
         }
     }
-    return lines.slice(start, end).join('\n');
+    return out.join('\n');
 }
 
 /**
@@ -576,11 +636,20 @@ function reviewerPrompt(args: {
     headSha: string;
     scopeHash: string;
     roadmapGiven: boolean;
+    acGiven: boolean;
     changedFiles: readonly string[];
 }): string {
-    const roadmapLine = args.roadmapGiven
-        ? '- roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)'
-        : '- roadmap under review: none (`acceptance-criteria.md` is empty)';
+    // Three states, not two. Branching on `roadmapGiven` alone told the reviewer
+    // "Acceptance Criteria extracted" whenever a roadmap was supplied — including
+    // when the extraction returned nothing and the file beside it was 0 bytes. A
+    // reviewer told the criteria are in a file it finds empty has no way to tell
+    // an extraction failure from a roadmap that genuinely declares none, so it
+    // cannot report the gap. Say which of the two it is.
+    const roadmapLine = !args.roadmapGiven
+        ? '- roadmap under review: none (`acceptance-criteria.md` is empty)'
+        : args.acGiven
+          ? '- roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)'
+          : '- roadmap under review: `roadmap.md` — it declares NO acceptance criteria, so `acceptance-criteria.md` is empty. Review the diff on its own terms and say so if the roadmap should have carried criteria.';
     return [
         `# R2 completion review — ${args.slug}`,
         '',
@@ -1037,6 +1106,7 @@ function runDispatch(args: Args): number {
         headSha,
         scopeHash: hashes.scope_hash,
         roadmapGiven: roadmapText !== null,
+        acGiven: acText !== null && acText !== '',
         changedFiles,
     });
     const manifest = deriveManifest({

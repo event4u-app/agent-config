@@ -674,7 +674,7 @@ inputs:
   scope_hash: <64-hex § 2.0 review-scope hash — compared>
   roadmap: <path>
   roadmap_hash: <sha256>
-  ac_hash: <sha256 of the extracted Acceptance Criteria block>
+  ac_hash: <sha256 of the extracted acceptance criteria, or `none` when there are none>
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: YYYY-MM-DDTHH:MM:SSZ
@@ -691,6 +691,30 @@ dispatched: YYYY-MM-DDTHH:MM:SSZ
   Exit `2` in `--verify` is reserved for genuine internal failures (the file
   is missing or unreadable, git fails). A bare § 2.4 skip declaration
   carries no reviewer dispatch and needs no manifest.
+- **Acceptance criteria are read in BOTH authored forms, and their absence is
+  said out loud.** The dispatcher extracts either a `## Acceptance Criteria`
+  section (heading form, 21 of the 44 active roadmaps as of 2026-08-18) or inline
+  `- **AC-n:**` bullets declared per phase (7 of 44); the heading form wins if a
+  file ever carries both. When neither is present, `ac_hash` is **`none`** and the
+  reviewer's prompt states that the roadmap declares no criteria — it does not
+  claim an extraction.
+
+  This is a repair, not a refinement. The extractor previously matched the heading
+  only, so an inline-only roadmap produced an empty extraction that was then
+  hashed: `ac_hash` recorded `e3b0c442…b855`, the SHA-256 of the empty string,
+  which looks like a real hash in the manifest and re-derives identically on
+  `--verify-current` — so this gate **confirmed a criteria set that was never
+  there**, while the reviewer was handed a 0-byte `acceptance-criteria.md` under a
+  prompt saying the criteria had been extracted. The R2 reviewer is the
+  independent check on AC conformance, so the effect was to blind that check while
+  the artefact read as though it had run.
+
+  **Historical artefacts are deliberately left alone.** 17 committed findings
+  files carry the empty-string `ac_hash`; only the handful whose roadmap is
+  inline-only were the defect, and `--verify-current` re-derives the *current*
+  PR's artefact only, so none of them go red. An artefact dispatched before this
+  change whose roadmap is inline-only will mismatch on its next re-derivation and
+  needs a re-bind (a hand-edit of `ac_hash`), exactly like any other moved input.
 - **Compared set:** `scope_hash`, `roadmap_hash`, `ac_hash`. `diff_sha` is
   provenance and is never compared, for the § 2.0 reasons. The manifest's
   `scope_hash` must also agree with the header's `scope:`; a disagreement is
