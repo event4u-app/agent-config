@@ -155,6 +155,133 @@ describe('orchestrator — consult basics', () => {
         const budget = new CostBudget({ max_calls: 1 });
         expect(() => consult(members, q, budget)).toThrow(/budget caps at 1 calls/);
     });
+});
+
+// ── mid-flight cli→api fallback (transport_resolver.MidFlightFallback,
+//    consumed here for the first time — ai-council-config.md § failure-
+//    class-gated) ──────────────────────────────────────────────────────────
+
+describe('orchestrator — mid-flight cli→api fallback', () => {
+    const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'x' });
+    const cliSeat = (error: string): Mock =>
+        new Mock('anthropic', 'claude-sonnet-4-6', { error, transport: 'cli', billable: true });
+    const apiTwin = (): Mock => new Mock('anthropic', 'claude-sonnet-4-6', { text: 'via api' });
+
+    it('an eligible cli failure is retried on the api twin; the twin response replaces the seat', () => {
+        const constructed: string[] = [];
+        const res = consult([cliSeat('auth_expired')], q, null, {
+            cli_fallback: {
+                api_on_quota: false,
+                construct: (p) => {
+                    constructed.push(p);
+                    return apiTwin();
+                },
+            },
+        });
+        expect(constructed).toEqual(['anthropic']);
+        expect(res).toHaveLength(1); // index alignment: still one response per member
+        expect(res[0]!.error).toBeNull();
+        expect(res[0]!.text).toBe('via api');
+        expect(res[0]!.metadata['fallback_from']).toBe('cli');
+        expect(res[0]!.metadata['fallback_reason']).toBe('auth_rejected');
+        expect(res[0]!.metadata['fallback_original_error']).toBe('auth_expired');
+        // The stamp reflects the member that ANSWERED, not the one that failed.
+        expect(res[0]!.metadata['transport']).toBe('api');
+    });
+
+    it('quota exhaustion does NOT retry without the opt-in — the cap surfaces unchanged', () => {
+        const constructed: string[] = [];
+        const res = consult([cliSeat('cli_quota_exhausted')], q, null, {
+            cli_fallback: {
+                api_on_quota: false,
+                construct: (p) => {
+                    constructed.push(p);
+                    return apiTwin();
+                },
+            },
+        });
+        expect(constructed).toEqual([]);
+        expect(res[0]!.error).toBe('cli_quota_exhausted');
+        expect(res[0]!.metadata['transport']).toBe('cli');
+    });
+
+    it('quota exhaustion DOES retry under api_on_quota: true', () => {
+        const res = consult([cliSeat('cli_quota_exhausted')], q, null, {
+            cli_fallback: { api_on_quota: true, construct: () => apiTwin() },
+        });
+        expect(res[0]!.error).toBeNull();
+        expect(res[0]!.text).toBe('via api');
+        expect(res[0]!.metadata['fallback_reason']).toBe('quota_exhausted');
+    });
+
+    it('a timeout never retries, opt-in or not — the call may have half-completed', () => {
+        const constructed: string[] = [];
+        const res = consult([cliSeat('timeout')], q, null, {
+            cli_fallback: {
+                api_on_quota: true,
+                construct: (p) => {
+                    constructed.push(p);
+                    return apiTwin();
+                },
+            },
+        });
+        expect(constructed).toEqual([]);
+        expect(res[0]!.error).toBe('timeout');
+    });
+
+    it('construct → null (strict api_key_ref contract refused) surfaces the original failure', () => {
+        const res = consult([cliSeat('auth_expired')], q, null, {
+            cli_fallback: { api_on_quota: false, construct: () => null },
+        });
+        expect(res[0]!.error).toBe('auth_expired');
+        expect(res[0]!.metadata['transport']).toBe('cli');
+    });
+
+    it('at most one retry per provider across ALL rounds of one invocation', () => {
+        let constructions = 0;
+        consult([cliSeat('auth_expired')], q, null, {
+            rounds: 3,
+            cli_fallback: {
+                api_on_quota: false,
+                construct: () => {
+                    constructions += 1;
+                    // The twin itself keeps failing so every round re-enters
+                    // the failure path — only the ledger stops round 2 and 3.
+                    return new Mock('anthropic', 'claude-sonnet-4-6', {
+                        error: 'unauthorized',
+                    });
+                },
+            },
+        });
+        expect(constructions).toBe(1);
+    });
+
+    it('an api member failing is never retried — the fallback is cli-scoped', () => {
+        const constructed: string[] = [];
+        const res = consult(
+            [new Mock('openai', 'gpt-5.2', { error: 'auth_rejected', transport: 'api' })],
+            q,
+            null,
+            {
+                cli_fallback: {
+                    api_on_quota: false,
+                    construct: (p) => {
+                        constructed.push(p);
+                        return apiTwin();
+                    },
+                },
+            },
+        );
+        expect(constructed).toEqual([]);
+        expect(res[0]!.error).toBe('auth_rejected');
+    });
+
+    it('no cli_fallback opts → byte-identical to today (failure surfaces, no metadata)', () => {
+        const res = consult([cliSeat('auth_expired')], q);
+        expect(res[0]!.error).toBe('auth_expired');
+        expect(res[0]!.metadata['fallback_from']).toBeUndefined();
+        expect(res[0]!.metadata['fallback_skipped']).toBeUndefined();
+    });
 
     it('non-billable members skip cost gate but track tokens + stamp subscription', () => {
         const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'x' });

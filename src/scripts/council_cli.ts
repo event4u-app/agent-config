@@ -110,6 +110,7 @@ import type {
     DebateCheckpoint,
     RenderAbsentMember} from './ai_council/orchestrator.js';
 import {
+    type CliFallbackOptions,
     ConsensusResult,
     CostBudget,
     CouncilQuestion,
@@ -634,6 +635,17 @@ interface BuildMembersOptions {
      * caller that passed no store means "not evaluated" — NOT "all qualified".
      */
     qualification_out?: MemberQualification[] | null;
+    /**
+     * Out-param: mid-flight cli→api fallback wiring for `consult()`. Mutated
+     * in place (same convention as `quorum_out`). `.options` is populated with
+     * a lazy api-twin factory over this call's `members_cfg` — the factory
+     * enforces the SAME strict `api_key_ref` construction contract the api
+     * branch below does (`_construct_api_member` throwing
+     * `CouncilDisabledError` ⇒ `null`, no fallback for that provider) — plus
+     * the `ai_council.fallback.api_on_quota` policy read. Stays `null` when
+     * the caller passes no ref.
+     */
+    fallback_out?: { options: CliFallbackOptions | null } | null;
 }
 
 /**
@@ -666,6 +678,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
     const quorum_out = opts.quorum_out ?? null;
     const probe_store = opts.probe_store ?? null;
     const qualification_out = opts.qualification_out ?? null;
+    const fallback_out = opts.fallback_out ?? null;
     const qualifications: MemberQualification[] = [];
     // Read-only, per-process-memoised (`detectEnvironment` caches the
     // no-argument call) — cheap to call once per `build_members` invocation.
@@ -986,6 +999,44 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                 'never the project tree, ADR-104). `agent-config council:status` ' +
                 'prints the resolved path.',
         );
+    }
+    if (fallback_out !== null) {
+        // Read leniently off the raw dict, mirroring how this function reads
+        // `cli_call_budget` above — an absent/malformed block means `false`,
+        // never a throw. The key is `ai_council.fallback.api_on_quota`; see
+        // `FallbackPolicy.apiOnQuota` (transport_resolver.ts) for why quota
+        // fall-through is opt-in while the no-double-charge classes are not.
+        const fallback_cfg = _isDict(ai['fallback']) ? (ai['fallback'] as Dict) : {};
+        fallback_out.options = {
+            api_on_quota: _pyBool(fallback_cfg['api_on_quota']),
+            construct: (provider: string): ExternalAIClient | null => {
+                if (!_API_PROVIDERS.has(provider)) return null;
+                const cfg = ((members_cfg[provider] as Dict) || {}) as Dict;
+                // Same model resolution the cli member itself got — override,
+                // then config, then the api constructor's own default.
+                const model =
+                    (overrides[provider] as string | undefined) ||
+                    (cfg['model'] as string | undefined) ||
+                    null;
+                try {
+                    return _construct_api_member(provider, model, {
+                        api_key_ref: (cfg['api_key_ref'] as string | null) ?? null,
+                        enable_prompt_cache: cfg['prompt_cache'] !== false,
+                        prompt_cache_ttl:
+                            (cfg['prompt_cache_ttl'] as '5m' | '1h' | undefined) ?? undefined,
+                    });
+                } catch (exc) {
+                    // The strict api construction contract refusing (no
+                    // explicit `api_key_ref` for gemini/xai/perplexity, key
+                    // unresolvable, …) means "no api rung for this provider" —
+                    // the failure surfaces unchanged, it does not escalate.
+                    if (exc instanceof CouncilDisabledError || exc instanceof CliClientError) {
+                        return null;
+                    }
+                    throw exc;
+                }
+            },
+        };
     }
     return members;
 }
@@ -2483,6 +2534,7 @@ function cmd_run(
     const explicit_overrides = _parse_model_overrides(_getattr<string[] | null>(args, 'model', null));
     const skipped: Dict[] = [];
     const quorum_out: { result: QuorumResult | null } = { result: null };
+    const fallback_out: { options: CliFallbackOptions | null } = { options: null };
     if (members === null) {
         members = build_members(settings, {
             invocation_mode: args.mode_override,
@@ -2491,6 +2543,7 @@ function cmd_run(
             skipped,
             quorum_out,
             probe_store: readProbeStore(REPO_ROOT),
+            fallback_out,
         });
     }
     // Measured, never assumed: `_apply_solo_dispatch` escalates back to the
@@ -2672,6 +2725,10 @@ function cmd_run(
         stance_tally: stance_tally_on,
         member_prompt_suffix,
         no_project_context_members,
+        // Mid-flight cli→api fallback (ai-council-config.md § failure-class-
+        // gated). `null` when the caller injected `members` directly — a
+        // pre-built roster carries no config to derive the factory from.
+        cli_fallback: fallback_out.options,
         // Interactive one-line confirm (cmd_run has no --auto-continue); the
         // repaired-call cost is collected so cost_usd_actual stays honest.
         on_stance_repair: stance_tally_on

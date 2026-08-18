@@ -70,6 +70,30 @@ import {
 } from './prompts.js';
 import { count_dissenters, dissent_quota_met, is_near_duplicate } from './debate_gates.js';
 import { parse_stance_line, render_vote_tally, tally_stances } from './stance_tally.js';
+import {
+    classifyCliFailure,
+    isFallbackEligibleUnder,
+    MidFlightFallback,
+    type FallbackPolicy,
+} from './transport_resolver.js';
+
+/**
+ * Mid-flight cli→api fallback wiring (docs/contracts/ai-council-config.md
+ * § "Mid-flight fallback is failure-class-gated"). Previously the resolver
+ * shipped `MidFlightFallback` with zero call sites — the contract described
+ * a behaviour no path performed. This is the consuming path.
+ */
+export interface CliFallbackOptions {
+    /**
+     * Build the api twin for `provider`, or `null` when it cannot be built
+     * (provider has no api constructor, or its strict `api_key_ref` contract
+     * refuses — the same rules `build_members`' own api branch enforces).
+     * Called lazily, at most once per provider per invocation.
+     */
+    readonly construct: (provider: string) => ExternalAIClient | null;
+    /** `ai_council.fallback.api_on_quota` — see `FallbackPolicy.apiOnQuota`. */
+    readonly api_on_quota: boolean;
+}
 import { CHAIRMAN_FIELDS_ADDENDUM, render_deanonymization_block } from './blind_review.js';
 import type { AbsentReason } from './transport_resolver.js';
 import { isSoloConcluded, type QuorumResult } from './quorum.js';
@@ -449,6 +473,14 @@ export interface ConsultOptions {
      * context). Default `null` → byte-identical to today.
      */
     no_project_context_members?: ReadonlySet<string> | null;
+    /**
+     * Mid-flight cli→api fallback. Absent/`null` → no retry, byte-identical
+     * to today. The once-per-provider ledger spans ALL rounds of one
+     * `consult()` invocation ("within one invocation an `auto` (or `cli`)
+     * member may fall through at most once" — the contract's unit is the
+     * invocation, not the round).
+     */
+    cli_fallback?: CliFallbackOptions | null;
 }
 
 /**
@@ -504,6 +536,10 @@ export function consult(
     }
 
     const spent: Spent = { input: 0, output: 0, usd: 0.0 };
+    // One ledger per invocation, shared across rounds — the double-spend
+    // guard's unit (see `ConsultOptions.cli_fallback`).
+    const cli_fallback = opts.cli_fallback ?? null;
+    const fallback_ledger = cli_fallback !== null ? new MidFlightFallback() : null;
     let last_results: CouncilResponse[] = [];
     // A3 read unlock: the stable prefix is ALWAYS the original user prompt;
     // per-round critiques + the STANCE contract ride in a volatile suffix so
@@ -535,6 +571,8 @@ export function consult(
             project,
             original_ask,
             advisor_plans,
+            cli_fallback,
+            fallback_ledger,
             member_prompt_suffix: opts.member_prompt_suffix ?? null,
             no_project_context_members: opts.no_project_context_members ?? null,
             split: suffix_for_round
@@ -616,6 +654,9 @@ interface RunRoundOptions {
     member_prompt_suffix?: Map<string, string> | null;
     /** Ü2 — see `ConsultOptions.no_project_context_members`. */
     no_project_context_members?: ReadonlySet<string> | null;
+    /** See `ConsultOptions.cli_fallback`. Both set together, or neither. */
+    cli_fallback?: CliFallbackOptions | null;
+    fallback_ledger?: MidFlightFallback | null;
 }
 
 /** Run a single round; mutate `spent` with cumulative totals. */
@@ -780,6 +821,102 @@ function _run_round(
                 error: _excTag(exc),
             });
         }
+
+        // ── mid-flight cli→api fallback ──────────────────────────────
+        // Consumes `MidFlightFallback` (transport_resolver.ts) — the contract
+        // section this implements is ai-council-config.md § "Mid-flight
+        // fallback is failure-class-gated". Realized-cost accounting and the
+        // transport stamp below run on `effective`, so a retried seat is
+        // billed and rendered as the api member that actually answered.
+        let effective: ExternalAIClient = member;
+        const fallback = opts.cli_fallback ?? null;
+        const ledger = opts.fallback_ledger ?? null;
+        if (
+            fallback !== null &&
+            ledger !== null &&
+            response.error !== null &&
+            String(response.error) !== '' &&
+            (_getattr(member, 'transport', 'api') as string) === 'cli'
+        ) {
+            const failure = classifyCliFailure(String(response.error));
+            const policy: FallbackPolicy = { apiOnQuota: fallback.api_on_quota };
+            if (
+                isFallbackEligibleUnder(failure, policy) &&
+                ledger.attempt(member.name, failure, policy) === 'api'
+            ) {
+                const twin = fallback.construct(member.name);
+                if (twin !== null) {
+                    // The retry is metered even when the failed cli call was
+                    // not — it gets its OWN projected-spend gate against the
+                    // running totals, exactly the check the loop head ran for
+                    // this seat's original transport.
+                    let gate_ok = true;
+                    let twin_usd = 0.0;
+                    if (table !== null) {
+                        const twin_est = estimate(question, [twin], table, {
+                            project,
+                            original_ask,
+                            advisor_plans: opts.advisor_plans ?? null,
+                        })[0] as CostEstimate;
+                        twin_usd = _total_usd(twin_est);
+                        const breaches_retry_tokens =
+                            spent.input + twin_est.input_tokens > budget.max_input_tokens ||
+                            spent.output + twin_est.output_tokens > budget.max_output_tokens;
+                        const breaches_retry_usd =
+                            budget.max_total_usd > 0 &&
+                            spent.usd + twin_usd > budget.max_total_usd;
+                        const breaches_retry_daily =
+                            budget.daily_limit_usd > 0 &&
+                            _would_exceed_daily(budget.daily_limit_usd, twin_usd);
+                        gate_ok = !(
+                            breaches_retry_tokens ||
+                            breaches_retry_usd ||
+                            breaches_retry_daily
+                        );
+                    }
+                    if (gate_ok) {
+                        const original_error = String(response.error);
+                        let twin_response: CouncilResponse;
+                        try {
+                            twin_response = opts.split
+                                ? twin.ask_split(
+                                      _system_prompt_for_member(twin),
+                                      opts.split.stable,
+                                      opts.split.suffix,
+                                      question.max_tokens,
+                                  )
+                                : twin.ask(
+                                      _system_prompt_for_member(twin),
+                                      question.user_prompt,
+                                      question.max_tokens,
+                                  );
+                        } catch (exc) {
+                            twin_response = new CouncilResponse({
+                                provider: twin.name,
+                                model: twin.model,
+                                text: '',
+                                error: _excTag(exc),
+                            });
+                        }
+                        twin_response.metadata = {
+                            ...(twin_response.metadata ?? {}),
+                            fallback_from: 'cli',
+                            fallback_reason: failure,
+                            fallback_original_error: original_error,
+                        };
+                        response = twin_response;
+                        effective = twin;
+                    } else {
+                        // Failure surfaces unchanged; the skip is named so a
+                        // reader can tell "not retried" from "retry refused".
+                        response.metadata = {
+                            ...(response.metadata ?? {}),
+                            fallback_skipped: 'cost_budget',
+                        };
+                    }
+                }
+            }
+        }
         results.push(response);
         spent.input += response.input_tokens;
         spent.output += response.output_tokens;
@@ -792,8 +929,8 @@ function _run_round(
             // ttl is '5m': the request builder emits `cache_control:
             // {type:'ephemeral'}` with no explicit ttl, i.e. the 5-min default.
             const actual = reprice_with_cache(
-                member.name,
-                member.model,
+                effective.name,
+                effective.model,
                 {
                     input_tokens: response.input_tokens,
                     cache_read_input_tokens: response.cache_read_input_tokens,
@@ -808,14 +945,14 @@ function _run_round(
             // Persist to the rolling 24h ledger when the daily cap is
             // active. Errors are swallowed inside record_spend.
             if (budget.daily_limit_usd > 0 && !response.error) {
-                _record_daily_spend(_total_usd(actual), member.name, member.model, {
+                _record_daily_spend(_total_usd(actual), effective.name, effective.model, {
                     cache_read_input_tokens: response.cache_read_input_tokens,
                     cache_creation_input_tokens: response.cache_creation_input_tokens,
                     cache_ttl: '5m',
                 });
             }
         }
-        _stamp_transport_metadata(response, member, actual_usd);
+        _stamp_transport_metadata(response, effective, actual_usd);
     }
 
     return results;

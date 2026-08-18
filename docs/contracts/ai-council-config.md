@@ -175,11 +175,35 @@ read-only environment report from `src/scripts/_lib/environment_detector.ts`.
   `auto`.
 - **Mid-flight fallback is failure-class-gated.** Within one invocation an
   `auto` (or `cli`) member may fall through to the `api` rung **at most once**,
-  and only for `binary_missing`, `auth_rejected`, or `cli_unsupported` — the
-  three classes where the CLI provably never reached the provider. A `timeout`,
-  a 5xx, or an exhausted `cli_call_budget` does **not** fall through: a
-  half-completed call must never be paid for twice, and a quota cap the user set
-  is not a fault to route around.
+  and only for `binary_missing`, `auth_rejected`, `cli_unsupported`, or
+  `model_unservable` — the classes where the CLI provably never reached the
+  provider (or was rejected at the request boundary with no generation
+  performed). A `timeout` or a 5xx does **not** fall through under any
+  configuration: a half-completed call must never be paid for twice.
+  Consumed by `orchestrator.ts::_run_round` via `ConsultOptions.cli_fallback`;
+  `council_cli.ts::build_members` supplies the api-twin factory (out-param
+  `fallback_out`), which enforces the same strict `api_key_ref` construction
+  contract as the api branch — a provider whose api rung cannot construct
+  simply surfaces the original failure. The retried call runs its **own**
+  projected-spend gate (it is metered even when the failed cli call was not);
+  a budget breach surfaces the original failure with
+  `metadata.fallback_skipped: cost_budget`. A retried seat carries
+  `metadata.fallback_from / fallback_reason / fallback_original_error` and is
+  stamped, billed, and daily-ledgered as the api member that answered.
+- **Quota fall-through is opt-in: `fallback.api_on_quota` (default `false`).**
+  Both quota shapes — the local `cli_call_budget` refusal (pre-spawn, nothing
+  sent) and the provider-side plan-quota reject (request boundary) — satisfy
+  the no-double-charge property, so the gate here is not double-spend but
+  **billing class**: a vendor CLI under a subscription is unmetered, its api
+  twin is metered USD, and converting exhausted plan quota into API spend is a
+  decision the operator states, never one `auto` infers. With the key set, the
+  retry still passes the ordinary `cost_budget` gates.
+
+  ```yaml
+  ai_council:
+    fallback:
+      api_on_quota: true   # default false
+  ```
 - **`cli_call_budget` ships populated**, because `auto` prefers the rung it
   guards.
 
