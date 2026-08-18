@@ -237,8 +237,39 @@ This phase unblocks everything else in the file, and it is repo work.
       `_lib/skill_catalogue_series.ts` — beside the other observation reducers
       rather than inside the hook, because every guard it needs is already argued
       in that module's prose and a second reducer over one log is how two readers
-      start breaking the same tie in opposite directions. `skill_route_hook`
-      consumes it through `knownBareForHost` + `filterKnownBare`.
+      start breaking the same tie in opposite directions. It delegates the
+      tie-break to the module's existing `headlineRecordPerHost` rather than
+      restating it, so any precedence the parent adds later is inherited.
+      `skill_route_hook` consumes it through `knownBareForHost` +
+      `filterKnownBare`.
+
+      **The R2 review found 11 defects in the first cut of this step — 3 high —
+      and four of them were in prose this note had already written confidently.**
+      The artefact is committed before the fixes, at
+      `agents/evidence/reviews/catalogue-host-fit-phase3.findings.md`. What
+      changed as a result:
+
+      - **The mode check ran before the latest-wins pick**, so a NEWER
+        `budget-strip-and-drop` record could never supersede an older `per-entry`
+        one: a host that changed truncation mode would have been filtered against
+        a bare set from before the change, forever. That is the invariant the
+        paragraph below claims to enforce, and the original fixture missed it by
+        mixing two *different* hosts instead of one host across a mode change.
+      - **`observed_at` had no type guard.** `_supersedes` compares dates with
+        `!==` then `>`, and both `undefined > "2026-08-12"` and its reverse are
+        false, so an undated record that became the incumbent could never be
+        displaced — one malformed line would pin the filter to it permanently.
+      - **The suppression counter measured the whole ranked list**, not the
+        pointer window, so a bare name at rank 40 that was never pointable bumped
+        the numerator the metric defines as *skills the ranker wanted to point at*.
+      - **The AC-3 fixture asserted the defect still exists**, requiring the live
+        claude observation to carry bare entries — so Phase 2's own AC-2 ("the
+        capture records no bare entries") succeeding would have redded it with
+        nothing wrong. The clean log is now a legitimate branch.
+
+      A malformed **latest** record now resolves to `null` rather than falling back
+      to an older reading: the current state is unknown, and a superseded reading
+      is exactly the stale suppression the tie-break exists to prevent.
 
       **The reducer returns three states and the middle one is the point.**
       `null` = nothing was enumerated → no filtering; an **empty set** = measured
@@ -263,7 +294,27 @@ This phase unblocks everything else in the file, and it is repo work.
       next entry at 23 against a floor of 31: suppress the top-1 and the line goes
       silent instead of promoting a 23/100 pointer. That is the intended reading of
       a confidence floor, and `suppressed` is what distinguishes that silence from
-      an unranked prompt. Both cases are pinned against the real corpus.
+      an unranked prompt — at the API boundary. The test asserts the *property*
+      (every pointer above the floor suppressed ⇒ empty) rather than those two
+      literal scores, which would red on any catalogue edit that reshuffled them.
+
+      **The production wiring is pinned, because it was the one link that could
+      have made this phase inert.** The host is read from `env["platform"]` and
+      matched by exact string equality against the log's own `host` labels, so a
+      wrong key, an absent field, or a label drift all collapse to no filtering —
+      indistinguishable from "no observation", with every pure-function fixture
+      still green. Three tests now drive `main()` over a real envelope, and one of
+      them reads the label vocabulary out of the log rather than hardcoding it.
+      Direct probes on this tree: `platform: claude` → 9 suppressed; `platform`
+      absent → no filtering; `platform: codex` → no filtering, because its
+      `budget-strip-and-drop` record enumerates nothing.
+
+      **Cost, measured rather than inherited.** The added read is 0.015 ms median
+      / 0.022 ms p95 (n=2000, warm) against an 8.3 ms ranked pass — under 0.01 % of
+      the slot's 250 ms p95 budget. Stated because the hook's existing 12.3 ms
+      figure describes a path this step changed, and because `bench_hook_latency`
+      cannot see it: its synthetic payload carries neither `prompt` nor `platform`,
+      so the concern returns before the ranker on every bench iteration.
       <!-- verify: npx vitest run tests/hooks/skill_route_hook.test.ts tests/scripts/catalogue_capture.test.ts -->
 - [x] **3.2** Register the corresponding outcome metric next to the existing
       pointer-rate metric with the same owner, review and kill discipline. **No
@@ -282,12 +333,27 @@ This phase unblocks everything else in the file, and it is repo work.
       retain the warn reason, so the hook appends `, N suppressed as host-bare` to
       its reason — only when non-zero, so the common line keeps its shape — and
       the registration says the numerator is log-carried, not counter-carried.
-      Two falsifiers are named for the filter half rather than for the outcome: a
-      live rate of 0 on a host that *has* a per-entry observation falsifies the
-      join; a rate far above the observed 16/338 share means the ranker
-      preferentially ranks what the host degrades, which is a Phase 2 finding.
-      <!-- verify: agent-config settings dump is not the instrument — read src/config/hook-token-budget.json -->
-- [x] **AC-3:** the fixture passes in both directions — filtered when an observation
+      **A second gap, and the R2 review is why it is written down rather than
+      glossed:** total suppression is invisible to this instrument by
+      construction. When the filter empties the pointer set the concern returns
+      before writing stdout, so the one case this phase calls load-bearing emits
+      no reason line at all. A rate of 0 therefore does NOT mean the ranker and
+      the host bare set fail to intersect — that reading was in the first draft of
+      the registration and was wrong. `capture_skill_catalogue --pointable-bare`
+      is the instrument that separates the two, and the row now says so.
+
+      **The upper falsifier needed its denominator named, because three were in
+      play.** The first draft cited "the 16/338 share of the observed catalogue",
+      which conflated the 2026-08-12 claude observation's `entries_total` (336),
+      the entries it actually enumerated (35 — 16 bare plus 19 described), and the
+      ranker catalogue size at probe time (338). The comparable share is 16 of the
+      **35 enumerated**; the other two ratios describe different populations and
+      neither is this metric's denominator.
+
+      **The instrument is the config file, not a settings dump** — `settings:get`
+      resolves the settings cascade and knows nothing about this registry.
+      <!-- verify: node -e "const r=require('./src/config/hook-token-budget.json').advisory_adoption_metrics.skill_route_bare_suppression_rate; if(!r||!r.threshold.startsWith('none committed')||!r.falsifiers) process.exit(1)" -->
+- **AC-3:** the fixture passes in both directions — filtered when an observation
   exists, unchanged when none does. **Met.** The filtered direction runs
   end-to-end against the committed log (`knownBareForHost('.', 'claude')`) and
   carries a vacuity guard first — it asserts the *unfiltered* line named a
