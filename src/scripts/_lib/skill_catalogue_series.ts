@@ -409,3 +409,68 @@ export function formatPointableBare(
     }
     return lines.join('\n');
 }
+
+/* ------------------------------------------------------------------ *
+ * The delivery filter — what the runtime router must not name.
+ * ------------------------------------------------------------------ */
+
+/**
+ * The bare names one host is KNOWN to have delivered, or `null` when nothing
+ * about that host's per-entry delivery was ever enumerated.
+ *
+ * `joinPointableBare` above answers "how large is the D-4 divergence" for an
+ * operator report. This answers the runtime question the same log can settle:
+ * given this host, which skill names must a pointer line not name? It is the
+ * reducer `skill_route_hook` consumes, and it lives here rather than in that
+ * hook for one reason — every guard below is already argued in this module's
+ * prose, and a second reducer over the same log is how two readers start
+ * breaking the same tie in opposite directions (`_supersedes`, in the parent
+ * module, exists because that happened once and printed two drop counts for one
+ * host on one day).
+ *
+ * THE THREE-WAY DISTINCTION IS THE WHOLE POINT, and collapsing any two of them
+ * is the failure:
+ *
+ *   - **`null` — nothing was enumerated.** No record for this host, or none of
+ *     its records is a `per-entry` observation, or the latest one carries no
+ *     `bare_names` array. The consumer must fail OPEN: filtering on this would
+ *     be a zero inferred from silence, and a filter that quietly narrows on
+ *     missing data is worse than the divergence it treats.
+ *   - **An EMPTY set — enumerated, and nothing was bare.** A legitimate answer,
+ *     and behaviourally identical to `null` at today's only consumer. It is
+ *     still returned distinctly, because "measured clean" and "never measured"
+ *     are different facts and this module refuses to let them look alike.
+ *   - **A NON-EMPTY set — these names went dark.** The pointer must not name
+ *     them.
+ *
+ * A `budget-strip-and-drop` host is therefore always `null` here, never an
+ * empty set: it publishes no per-entry list at all, so its empty `bare_names`
+ * records that nothing was counted. That is the same skip `joinPointableBare`
+ * makes, for the same reason, and it is why a codex install gets no filtering
+ * rather than a filter that believes nothing was degraded.
+ *
+ * LATEST WINS, per host, by `observed_at` — the `latestPointableBarePerHost`
+ * tie-break rather than a union across the series. A union would let a
+ * superseded observation keep suppressing a skill the host now delivers fine,
+ * which is a filter that only ever narrows; the whole series is available to an
+ * operator report, and a runtime filter wants the current reading.
+ *
+ * `bare_names` is guarded with `Array.isArray` because `readObservationLog`
+ * produces records by an unchecked `JSON.parse … as` over an append-only log
+ * with more than one producer — the same guard, for the same recorded reason,
+ * that `joinPointableBare` and `knownHostLimits` carry.
+ */
+export function knownBareNames(
+    records: readonly ObservationRecord[],
+    host: string,
+): Set<string> | null {
+    let latest: ObservationRecord | null = null;
+    for (const record of records) {
+        if (record.host !== host) continue;
+        if (truncationModeOf(record) !== 'per-entry') continue;
+        if (!Array.isArray(record.bare_names)) continue;
+        if (latest === null || record.observed_at >= latest.observed_at) latest = record;
+    }
+    if (latest === null) return null;
+    return new Set(latest.bare_names.filter((name): name is string => typeof name === 'string'));
+}
