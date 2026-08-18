@@ -50,11 +50,7 @@ import {
   readFd0ToEnd,
 } from "./hook_stdin.js";
 import { emitFor, type Severity } from "./host_semantics.js";
-import {
-  _concern_body_classes,
-  planPayloadShapes,
-  type BodyClass,
-} from "./payload_stub.js";
+import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
 
 // Free-form JSON values flow through every helper here; a documented
