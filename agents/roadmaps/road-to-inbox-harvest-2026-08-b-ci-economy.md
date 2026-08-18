@@ -383,9 +383,51 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
       the node-vitest subprocess-vs-in-process axis gives it a second stack peer,
       which also moves it toward the multi-stack shape
       `framework-neutrality-in-generic-skills` asks of a generically named artefact.
-- [ ] **3.4 Retire the `heavy-tests` framing if the clumping cause is gone.**
-      **Stays OPEN, not deferred — its decision input does not exist yet, and
-      cannot until this PR lands.** `[ ]` rather than `[~]` on purpose: this is
+- [x] **3.4 Retire the `heavy-tests` framing if the clumping cause is gone.**
+      **Closed 2026-08-18 on the post-merge measurement the step was waiting
+      for. The framing STAYS — the clumping cause is not gone — and the step's
+      real deliverable turned out to be a falsified sentence in the workflow
+      comment rather than the retirement it is named after.**
+
+      The firing condition below (*"shard 3/4 has a post-merge duration on
+      `main`"`*) had been satisfiable since 2026-08-11, when PR #1271 merged;
+      two backlog screens excluded this roadmap on the stale reason *"a
+      post-merge measurement that cannot exist in its own PR"* after it could.
+      Recorded because the exclusion outlived its cause by a week: a resume-when
+      condition needs re-probing, not re-reading.
+
+      **Measured**, per this file's own method (`ci-cost-budget.md` quarterly
+      checklist item 1 — per-job via `/actions/runs/<id>/jobs`, never run-level),
+      over the **50** most recent successful `main` runs, all post-fix:
+      shard 3/4 = **357 s ubuntu / 516 s macOS** against 147–164 s for its three
+      siblings. Pre-fix was 645 s / 852 s, so 3.2 bought **−45 % / −39 %** — and
+      the job is **still over** the 300 s ceiling at 1.2× / 1.7×. Sample size is
+      part of the result: ubuntu ranges 217–406 s across the 50, so the
+      three-run sample the 2026-08-11 baseline used could have reported anything
+      from under the ceiling to 1.4× it.
+
+      **Decision: no fold-back**, and it does not rest on the threshold alone.
+      Returning the excluded file-time (≈ 99 s golden + ≈ 73 s workspace, net of
+      the ≈ 25 s fixed per-job overhead this file derives elsewhere) puts shard
+      3/4 at ≈ 400 s / 559 s on an even split and ≈ 529 s / 688 s if it clumps —
+      and clumping is the documented behaviour, since vitest shards by file
+      **count** and these files are why the dedicated jobs exist. Both bounds are
+      worse; the arithmetic and a falsifiable revisit-if are in
+      `ci-cost-budget.md` § Fold-back decision, 2026-08-18.
+
+      **One sentence in `tests.yml` was false and is now corrected** — the
+      exclusion comment claimed the shards therefore "stay light and balanced".
+      They do not: shard 3/4 is 2.3× its siblings and over the ceiling, because
+      the driver (`build_proof.test.ts`) is **not** one of the excluded files. The
+      exclusion rationale itself is untouched and still true. **Next lever named:**
+      `render()` at ~54 s a call, not the job layout.
+      <!-- verify: grep -n 'hash-clump' .github/workflows/tests.yml  # exclusion rationale still present -->
+      <!-- verify: grep -n 'Fold-back decision' docs/contracts/ci-cost-budget.md -->
+      <!-- verify: grep -c 'light and balanced' .github/workflows/tests.yml  # expect 0 -->
+
+      Original framing, kept for the trail:
+      **Stayed OPEN, not deferred — its decision input did not exist yet, and
+      could not until that PR landed.** `[ ]` rather than `[~]` on purpose: this is
       real work with a firing condition, so it belongs in the open count and on
       the dashboard. Marking it `[~]` would drive `count_open` to 0 beside the
       two maintainer-gated deferrals and fire Iron Law 3 — a repo-wide archive
@@ -458,13 +500,61 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
            sed -n '/^## Blockers/,$p' agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md | grep -c 'ADR-222'  # expect 0.
            Step 4.1 itself mentions ADR-222 several times on purpose: it is the
            document that took the number, and naming it is the whole explanation. -->
-- [~] **4.2 Demote the macOS leg and/or the `npm audit` PR gate.** Deferred behind
+- [ ] **4.2 Demote the macOS leg and/or the `npm audit` PR gate.** Open behind
       `blocker: required-check-set-change`. Touches ruleset `17749383` plus
       `docs/contracts/branch-protection-policy.md`, `ci-green-floor.md` and
       `release-pr-gating.md` in the same change.
-- [~] **4.3 Enable a GitHub merge queue.** Deferred behind
+- [ ] **4.3 Enable a GitHub merge queue.** Open behind
       `blocker: merge-queue-enablement`. `merge_group` appears zero times in
       `.github/`, so nothing in-tree is wired for it either way.
+
+<!-- Glyph correction 2026-08-18, `[~]` → `[ ]` on both, applied as the Iron-Law-3
+     resolution outcome 4 (`roadmap-management § 4b` — "restore selected items to
+     [ ]"). Surfaced to the maintainer in the same reply and reversible in one edit.
+
+     The two glyphs are not synonyms: `[~]` is DEFERRED — work consciously moved
+     OUT of this plan — and `[ ]` is OPEN. Neither step was moved out. Phase 4's
+     own heading says what they are: "authored here, applied by the maintainer".
+     The authoring shipped (4.1 = ADR-223, plus both step-by-step procedures inside
+     the blockers). What remains is a repo-admin write that is a
+     `non-destructive-by-default` Hard-Floor action, so it waits on a human —
+     which is exactly what a `[ ]` plus a recorded blocker already expresses, and
+     what every other blocker-gated step in this estate carries.
+
+     The correction is right independent of the gate, which is the test that keeps
+     it from being gate-driven: a step is marked by what is true of it. Closing 3.4
+     is merely what made the glyph load-bearing — it drove `count_open` to 0 and
+     `roadmap:progress-check` to exit 1 (verified: 18/18 done · 2 deferred), a
+     repo-wide archive refusal for two steps that are plainly waiting rather than
+     abandoned. Identical correction, identical reasoning, taken once before on
+     `road-to-stop-gate-honesty` step 2.1.
+
+     **What this correction does NOT buy, checked rather than assumed, because the
+     tempting justification is false.** It does not keep a PR green.
+     `roadmap-progress-check` is registered in exactly one place — `task ci`
+     (`Taskfile.yml:358`, defined at `taskfiles/content.yml:246`) — no workflow
+     under `.github/workflows/` invokes `task ci` or the script, and the pre-push
+     hook runs `task consistency` + `task preflight`, neither of which reaches it
+     (`src/scripts/install-hooks.sh:24-140`). So the Iron-Law-3 breach was a
+     LOCAL-ONLY red the whole time. Recorded because "it would red the PR" is the
+     reason a reader would reconstruct for this edit, and it would be wrong — the
+     reason is accuracy, and the gate merely surfaced the inaccuracy.
+
+     **Pre-existing, untouched:** `road-to-inbox-harvest-2026-08-d-top-band-model-economy`
+     is still listed by that gate (13/13 done · 1 deferred) and is a different
+     roadmap's Iron-Law-3 decision, so it is noted rather than fixed here. -->
+<!-- (continued)
+
+     What this does NOT do: it does not touch either blocker, does not perform or
+     authorise a ruleset write or a merge-queue enablement, and does not archive
+     this roadmap. The roadmap stays active with two open, human-blocked steps.
+
+     verify: `agent-config roadmap:progress-check` no longer lists THIS file under
+     Iron Law 3. Its exit code stays 1 for the pre-existing `-d-top-band-model-economy`
+     entry, so read the listing, not the code — measure `$?` directly if you do
+     (piping to `tail` reports `tail`'s status and reads as a false green).
+     verify: the dashboard reports 2 open and 0 deferred for this roadmap. -->
+
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-11 | reviewer: claude/host -->

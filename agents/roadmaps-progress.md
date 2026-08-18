@@ -6,7 +6,7 @@
 
 ## Overall
 
-**291 / 578 steps done · 50%**
+**300 / 578 steps done · 52%**
 
 ```text
 █████████████████████░░░░░░░░░░░░░░░░░░░   52%
@@ -36,7 +36,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 10 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
 | 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
 | 12 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 13 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
+| 13 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 2 | 18 | 0 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 90% |
 | 14 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
 | 15 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
 | 16 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 0 | 13 | 1 | 0 | 0 | ██████████ 100% |
@@ -447,15 +447,15 @@ _1 blocker resolved._
 
 ### [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md)
 
-**Road to CI Economy — cut the redundant full builds and re-anchor the cost artefacts to CI-recorded data** — 17 / 18 done (94%)
+**Road to CI Economy — cut the redundant full builds and re-anchor the cost artefacts to CI-recorded data** — 18 / 20 done (90%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Re-anchor the two existing cost artefacts to CI-recorded data | ✅ done | 0 | 4 | 0 | 1 | 100% |
 | 1 | Free hygiene: dead filters, missing concurrency, stale comments, caches | ✅ done | 0 | 7 | 0 | 0 | 100% |
 | 2 | The build fan-out: stop rebuilding the same 6 targets 13 times | ✅ done | 0 | 2 | 0 | 3 | 100% |
-| 3 | The subprocess lever: extend in-process running, do not add a skill | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
-| 4 | Required-check-set changes (authored here, applied by the maintainer) | ✅ done | 0 | 1 | 2 | 0 | 100% |
+| 3 | The subprocess lever: extend in-process running, do not add a skill | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 4 | Required-check-set changes (authored here, applied by the maintainer) | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
 
 <a id="blockers-road-to-inbox-harvest-2026-08-b-ci-economy"></a>
 **Blockers**
