@@ -9,7 +9,7 @@
  * is deliberately not another reminder. It is a check at the point of
  * delivery that can say no.
  *
- * Three detectors ride on one guard, because building the unsafe part twice
+ * FOUR detectors ride on one guard, because building the unsafe part twice
  * is how a second detector becomes a second outage:
  *
  *   A — promissory closing  (FC-5, 20 measured occurrences)
@@ -20,6 +20,26 @@
  *                            prose, which is why `readTranscriptTail` collects
  *                            them: `_messageText` keeps `type === 'text'` blocks
  *                            only, so tool activity is invisible to A and B.)
+ *   D — completion claim    (a claim of done carrying no fresh evidence; landed
+ *                            under conformance round 7 § Phase 1, in the same
+ *                            unconditional list as the other three.)
+ *
+ * This block said "Three" and listed A/B/C until 2026-08-18, while `DetectorId`
+ * below has carried four since round 7. `DETECTOR_IDS` in
+ * `_lib/turn_end_refusals.ts` is read off that union rather than off this
+ * comment for exactly that reason, and the count is corrected here rather than
+ * left as a stale header the next reader has to disbelieve.
+ *
+ * ## Removal condition
+ *
+ * This is a BLOCKING concern, so it owes one — see
+ * `docs/contracts/turn-end-detector-demotion.md` for the pre-registered
+ * per-detector bars, their sample floors, and the reason a crossed bar
+ * authorises a staged study rather than a demotion. Two things that contract
+ * says about the guard below are worth meeting here: the re-entrancy layers cap
+ * a turn at ONE refusal, which makes a re-refusal share unobservable and the
+ * three-strikes non-termination valve unreachable. Both are properties of this
+ * design, not gaps in the counters.
  *
  * ## Re-entrancy — the shape, stated before registration
  *
