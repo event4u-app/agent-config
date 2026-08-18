@@ -1,6 +1,6 @@
 # Completion review — ci-economy shard fold-back decision
 
-**Skipped:** no code surface for this completion — the diff is one contract document, one comment-only hunk in a workflow, one roadmap file and its generated dashboard, and the gate itself measures zero code paths of four changed files, scope b8b76958a29d655782102e606c96bc70e256025622abb383dbb8373298b474d7, declared 2026-08-18
+**Skipped:** no code surface for this completion — the diff is one contract document, one comment-only hunk in a workflow, one roadmap file and its generated dashboard, and the gate itself measures zero code paths of four changed files, scope e1fc0e64afe880efc4c4c60aa57b83f877614bc412c80c008458f96341798e1b, declared 2026-08-18
 
 ## Why a skip rather than a review
 
