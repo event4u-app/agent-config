@@ -19,6 +19,7 @@ concerns:
     args: [hook-dispatch]
     fail_closed: false
     severity: advisory
+    needs_payload_bodies: [result]
   # Hot-context working-memory cache (road-to-second-brain Phase 1).
   # stop: deterministic, redacted 400-word overwrite of
   # agents/runtime/state/hot-context.md from the chat-history JSONL.
@@ -66,6 +67,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    needs_payload_bodies: [input]
   onboarding-gate:
     script: src/scripts/onboarding_gate_hook.ts
     args: []
@@ -89,6 +91,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    needs_payload_bodies: [input, result]
   # Phase 5 — Tier-1 hook for the minimal-safe-diff rule. Counts unique
   # files touched per turn into agents/runtime/state/minimal-safe-diff.json and
   # flips warning=true past hooks.minimal_safe_diff.threshold.
@@ -107,11 +110,13 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    needs_payload_bodies: [input]
   minimal-safe-diff:
     script: src/scripts/minimal_safe_diff_hook.ts
     args: []
     fail_closed: false
     severity: advisory
+    needs_payload_bodies: [input]
   # road-to-security-pillar.md P3.2 — PostToolUse prompt-injection scanner.
   # Warn-in-context (exit 2), never blocks. Default-OFF: no-ops unless
   # hooks.injection_scan.enabled is true in .agent-settings.yml. The runtime
@@ -121,6 +126,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    needs_payload_bodies: [input, result]
   # road-to-security-hardening Phase 3 — PreToolUse guard turning the
   # git-history-discipline Iron Law into a deterministic gate. Blocks
   # `git … --no-verify` / `-n` and `git -c core.hooksPath=…` (which would
@@ -133,6 +139,7 @@ concerns:
     args: []
     fail_closed: true
     severity: blocking
+    needs_payload_bodies: [input]
   # road-to-ai-employee-borrowings Phase 1 — kernel immutability Layer 1.
   # PreToolUse guard: DENIES Write/Edit/NotebookEdit (and cross-platform
   # equivalents) whose target path is a kernel rule file — the source tree
@@ -149,6 +156,7 @@ concerns:
     args: []
     fail_closed: true
     severity: blocking
+    needs_payload_bodies: [input]
   # road-to-renewal-leverage Phase 2 — "fix the code, not the config".
   # PreToolUse guard over the recorded allowlist-growth antipattern
   # (autonomous-execution § Antipattern): warns as an allowlist grows within a
@@ -164,6 +172,7 @@ concerns:
     args: []
     fail_closed: false
     severity: blocking
+    needs_payload_bodies: [input]
   # token-saving Phase 3 — PreToolUse RTK-wrap nudge. DETERMINISTIC: keys off a
   # live `which rtk` probe (not the self-reported flag). When rtk is installed
   # and the agent is about to run a single verbose CLI command that is NOT
@@ -177,6 +186,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    needs_payload_bodies: [input]
   # road-to-anti-slop-detector Phase 3 — OPTIONAL PreToolUse anti-slop nudge.
   # Runs the lint_design_slop registry against about-to-be-written UI content
   # and WARNS (exit 2) on P0/P1 aesthetic tells. Never blocks (flags, not
@@ -189,6 +199,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    needs_payload_bodies: [input]
   # road-to-frontend-skill-application Phase 4 — OPTIONAL PreToolUse UI-route
   # nudge. On a Write/Edit to a UI surface with no design consultation latched
   # this session, WARNS (exit 2) naming the route; a read or search touching a
@@ -204,6 +215,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    needs_payload_bodies: [input]
   # ADR-124 Phase 4 — OPTIONAL PreToolUse code-graph nudge. When a code-graph
   # source is present and the agent is about to search/read source, WARNS
   # (exit 2) once per session to query the graph first (or rebuild if stale,
@@ -234,6 +246,7 @@ concerns:
     # correct is the right trade, and the cheap filter is reserved for advisory
     # concerns whose set is provable from their own source.
     tools: [Grep, Glob, Read]
+    needs_payload_bodies: [input]
   # road-to-reachable-code-memory Phase 4 — session_end learning-sidecar
   # aggregation. Joins the EXISTING session_end concern set (no new platform
   # wiring). Aggregates agents/memory/intake/*.jsonl through the learning
@@ -311,6 +324,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    needs_payload_bodies: [input, result]
   # Language-mirror pin — carries the ONE fact the transcript cannot express:
   # which language the human actually typed. 47 skill/slash-command bodies were
   # measured arriving in the `user` role across 21 of 30 audited sessions, and
@@ -339,6 +353,7 @@ concerns:
     args: []
     fail_closed: true
     severity: blocking
+    needs_payload_bodies: [input]
   # Evaluator independence. Gates EVALUATION dispatches only. Two branches with
   # DIFFERENT severities, per the tier rule in
   # docs/contracts/hook-architecture-v1.md (§ What a concern may block on):
@@ -361,6 +376,7 @@ concerns:
     args: []
     fail_closed: false
     severity: blocking
+    needs_payload_bodies: [input]
   # Canary injection — deterministic carrier for the
   # session-canary rule (greet-by-name at task start + reply-close markers
   # as a user-observable context-degradation signal). Gated on
@@ -450,6 +466,7 @@ concerns:
     fail_closed: false
     severity: advisory
     tools: [Agent, Task]
+    needs_payload_bodies: [input, result]
   # road-to-orchestrator-discipline-carriers Phase 4 (F3-lite) — conditional
   # delegation nudge. Extracts cheap structural signals from the SUBMITTED
   # prompt (enumerated file lists, "for each"/"alle …" shapes, explicit slice
@@ -563,6 +580,7 @@ concerns:
     # `toolName !== 'Write'` — same cheap-filter discipline as
     # `orchestration-record`'s [Agent, Task].
     tools: [Write]
+    needs_payload_bodies: [input]
   # road-to-token-economy-cache Phase 6.1/6.2 — re-read guard + post-edit
   # scope hint. PreToolUse, ADVISORY ONLY (never exit 1 — a stale-ledger
   # false positive on a block would corrupt work): a full-file Read of a
@@ -581,6 +599,7 @@ concerns:
     severity: advisory
     # Provable from the hook's own source: READ_TOOLS ∪ WRITE_TOOLS.
     tools: [Read, Edit, Write]
+    needs_payload_bodies: [input]
   # road-to-token-economy-recycling Phases 1.1 / 3.2 / 4.2 — session
   # end-of-life instrument + recycle advisory. Every Stop, incrementally
   # folds the transcript's newly appended lines (payload `transcript_path`,
