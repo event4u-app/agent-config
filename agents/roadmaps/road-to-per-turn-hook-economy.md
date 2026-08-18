@@ -237,7 +237,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
 > cheapen the events that remain. Because Phase 5 changes the denominator every
 > later benchmark divides by, it lands first and pre-registers its own A/B.
 
-- [ ] **5.1** Split the monolithic per-event registration into matcher groups:
+- [-] **5.1** Split the monolithic per-event registration into matcher groups:
       pre/post concerns that only care about one tool family get a `matcher`, and
       command-shaped guards additionally get an `if` prefilter. The dispatcher
       contract is unchanged — the same bundle runs, it just runs on fewer events.
@@ -253,12 +253,76 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       so its matcher is a post-slot matcher. Treat this as the input to 5.1, not
       its output — each row still needs its own absent-invocation proof. -->
 
-- [ ] **5.2** Safety invariant, stated because claim 11 demands it: `if` is a
+      **CANCELLED 2026-08-18 — as written this step makes the common case worse,
+      and AC-5 is unreachable while three blocking guards stay unscoped.** Three
+      findings, each verified rather than reasoned:
+
+      1. **The host runs every matching group, in parallel.** Fetched from
+         `code.claude.com/docs/en/hooks` on 2026-08-18 (§ "Hook handler fields"):
+         *"All matching hooks run in parallel."* So a group split does not move a
+         payload from one group to another — it adds one dispatcher process per
+         additional matching group. An `Edit` payload that matches both a
+         `matcher: Edit|Write` group and the group carrying the unscoped concerns
+         pays **two** cold starts where it pays one today.
+      2. **An unscoped group is mandatory on `pre_tool_use`, so nothing can be
+         skipped.** Eight of the twelve claude `pre_tool_use` concerns declare no
+         tool scope at all (`block-no-verify`, `block-unauthorized-git`,
+         `evidence-independence`, `block-kernel-rule-writes`,
+         `block-config-weakening`, `rtk-wrap`, `design-slop`, `ui-route-nudge`,
+         `ship-diff-volume` — only `code-graph-nudge`, `reread-guard` and
+         `spawn-guard-shadow` carry `tools:`). Any payload must therefore reach a
+         group with no `matcher`, and a group with no matcher fires on every tool
+         call. AC-5's *"a `PreToolUse` with a non-matching payload costs no
+         dispatcher spawn at all"* cannot hold. The same is true of
+         `post_tool_use`, where `chat-history` records every call.
+      3. **Closing that gap means tool-scoping the blocking guards, which the
+         architecture contract refuses on a stated reason.**
+         [`hook-architecture-v1 § Optional per-concern tools: filter`](../../docs/contracts/hook-architecture-v1.md)
+         ends: *"The filter is deliberately absent from the blocking PreToolUse
+         guards, whose tool sets span host naming variants … a list that misses
+         one variant silently disables a guard on that host."* A host `matcher`
+         inherits that hazard exactly, and adds a second: `matcher` is a plain
+         non-match, so a missed variant does not fail open the way `if` does on an
+         unparseable command.
+
+      **What is genuinely reachable, and is NOT taken here.** A claude-only
+      partition of the *tool space* into disjoint classes, with every concern —
+      guards included — assigned per class, would skip the dispatcher for a tool
+      no concern can act on (`WebFetch`, `WebSearch`, `TodoWrite`, MCP tools,
+      `Skill`) at one spawn for every tool that is covered. That is a real win on
+      a real share of calls. It also puts a silently-skippable filter in front of
+      `block-no-verify` and `block-kernel-rule-writes`, which is a
+      security-surface decision and not the agent's to take: filed as
+      `b-guard-tool-partition` below. `5.2`'s invariant is what keeps a future
+      attempt honest about it.
+
+      **The cheap half already ships.** The per-concern `tools:` filter skips a
+      concern in-process on all eight platforms, where a `matcher` would help the
+      two that support one. What it does not do — and what this step wanted — is
+      avoid the spawn; finding 2 is why nothing can.
+
+- [x] **5.2** Safety invariant, stated because claim 11 demands it: `if` is a
       **prefilter, never the enforcement**. It fails open on unparseable commands —
       which is exactly right for fail-closed guards, because unparseable means the
       hook runs and the hook decides — and wrong as a replacement for the in-hook
       check. **No guard's own detection logic is removed in this phase.**
       `verify:` each fail-closed guard's own test suite is untouched and green.
+      **Landed 2026-08-18 as a contract paragraph rather than as code, because
+      5.1 was cancelled and there is no `if` in the tree to constrain.** The
+      invariant is now stated in
+      [`hook-architecture-v1`](../../docs/contracts/hook-architecture-v1.md)
+      beside the `tools:` filter it will be confused with, carrying the host
+      version it was verified at. No guard's detection logic was touched — the
+      diff adds no code, so every fail-closed guard's suite is untouched by
+      construction.
+      **Claim 11 is now first-hand and sharper than "fails open".** Same fetch:
+      `if` is *"Only evaluated on tool events: `PreToolUse`, `PostToolUse`,
+      `PostToolUseFailure`, `PermissionRequest`, and `PermissionDenied`. On other
+      events, a hook with `if` set never runs."* That second sentence is the more
+      dangerous half and this roadmap did not have it: an `if` typed onto a
+      `stop` or `session_start` handler silently disables that handler
+      completely. It fails open only on an unparseable **Bash** command, which is
+      a narrower guarantee than the roadmap's unqualified wording implied.
 - [ ] **5.3** Move the non-gating Stop concerns to the host's async handler form,
       so turn-end wall clock carries only the concerns that can actually refuse.
       `end-review-nudge` needs its stdout to reach the model, so it stays
@@ -402,6 +466,41 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
 - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) —
   the row exists in `hook-latency-budget.json` with its bar or its observe-only
   marker.
+
+### blocker: b-guard-tool-partition
+- **Status:** open
+- **Owner:** user
+- **Class:** 2 — consent-once
+- **Blocks:** nothing in this roadmap — step 5.1 is cancelled and Phases 1-4
+  proceed without it. It records the one reachable form of 5.1's goal so a later
+  attempt starts from the decision rather than re-deriving it.
+- **What to do:** decide whether the three blocking `pre_tool_use` guards
+  (`block-no-verify`, `block-kernel-rule-writes`, `block-config-weakening`) may
+  carry a **claude-only** host tool filter. Only that unlocks a zero-dispatch
+  path for tools no concern can act on — `WebFetch`, `WebSearch`, `TodoWrite`,
+  `Skill`, MCP tools — which is a large share of calls in an agentic turn.
+  Options: (a) partition the claude tool space into disjoint classes and assign
+  every concern, guards included, per class; (b) partition only the advisory
+  concerns and keep one unscoped group for the guards, which keeps the guards
+  safe and buys **nothing** (finding 2 of step 5.1 — the unscoped group still
+  fires on every call); (c) decline, and D-1 is addressed only by Phase 4's
+  measurement plus the in-process `tools:` filter that already ships.
+- **Recommendation:** **option (c) — decline, and revisit only if Phase 4's
+  registered composite exceeds its bar.** The gain is real but unmeasured, and
+  the cost is a silently-skippable filter in front of the two guards that exist
+  because a bypass must be impossible: `matcher` is a plain non-match, so unlike
+  `if` it does not fail open, and a Claude tool-name addition (a renamed Bash
+  variant, a new edit tool) would disable a guard with nothing in the tree
+  noticing. Option (a) is the version worth having *after* the composite says the
+  dispatch count is the binding cost; option (b) is strictly waste.
+- **If you do nothing:** the dispatcher keeps firing on every tool call
+  regardless of whether any concern can act, the in-process `tools:` filter keeps
+  absorbing the per-concern half on all eight platforms, and Phase 4's composite
+  row is what tells anyone whether the remaining per-turn cost is worth a
+  security-surface decision at all.
+- **Resolved when:** one option is recorded at this blocker, and — for (a) — the
+  partition ships with a per-class absent-invocation proof and a test that fails
+  when a claude tool name is added to no class.
 
 ## Risk Register
 
