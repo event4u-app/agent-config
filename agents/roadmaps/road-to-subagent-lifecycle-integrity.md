@@ -308,7 +308,7 @@ lines already written stay as data.
 Gated on Phase 1 baseline showing parse-failure or absence at a rate worth a
 mechanism (pre-register the threshold before reading the number).
 
-- [ ] **Step 1:** Worker-prompt contract addendum (dispatch-prompt-carried, per
+- [x] **Step 1:** Worker-prompt contract addendum (dispatch-prompt-carried, per
       the claudefa.st 0/2-vs-1/1 finding and this tree's own contract
       placement): (a) the final message is a single **text-only** envelope —
       never end on a tool call (#58109 mitigation); (b) the same envelope is
@@ -319,6 +319,41 @@ mechanism (pre-register the threshold before reading the number).
       X1): the async design-verifier `road-to-source-first-frontend` leans on is
       itself a subagent on this return channel — a verifier that screenshots,
       grades and never delivers is both operator symptoms in one run.
+
+      **Landed 2026-08-18.** Rule **(f)** in `subagent-spawn-contract.md`
+      § Worker-prompt rules (both clauses plus the no-carve-out-for-verifiers
+      paragraph, since the worker reads its duties from the dispatch prompt) and
+      a new § *Durable copy — the envelope on disk before the message* in
+      `subagent-response-contract.md`.
+
+      **This step is NOT gated on the Phase-1 baseline, and the phase header's
+      gate is about Step 2, not this one.** The header reads "gated on Phase 1
+      baseline showing parse-failure or absence at a rate worth a mechanism" —
+      a rate justifies a *mechanism*, and Step 1 ships no mechanism. Its premise
+      is Phase 0 Step 3's controlled same-host reproduction (`(no output)` after
+      3 tool uses and 18,242 tokens, matched control returning the full report),
+      which the evidence file itself names as "the measurement Phase 2 Step 1's
+      never-end-on-a-tool-call clause was missing". A baseline rate could not
+      strengthen a clause whose failure is already observed at n=1 with a
+      control — and per Phase 1 Step 4 (a) that column does not yet measure
+      envelope return at all, so waiting for it would have gated a text change
+      on a number known to be wrong.
+
+      **Two things the step's text does not name, both decided here.**
+      (i) The durable copy needs a **findable** path or it is nominal, so the
+      filename `response-envelope.json` is fixed in the response contract —
+      declared as a convention, with the fact that nothing writes, reads, or
+      validates it stated in the same paragraph. (ii) Both contract sections
+      carry an explicit honest-scope note: rule (f) is prompt-carried and
+      therefore unenforced, and the `subagent_stop` concern that would read the
+      disk copy is named as planned-and-not-shipped. Without that note the
+      addendum reads as a recovery mechanism that runs, which is the
+      buildable-on-paper failure Phase 0 exists to stop.
+      <!-- verify: ./scripts-run src/scripts/check_references -->
+
+      **Does not close Phase 2.** Steps 2 and 3 stay open and stay gated: the
+      concern needs the three-way `no_message` / `no_envelope` / `ok` verdict
+      split, and that split needs the Phase-1 baseline this step does not.
 - [ ] **Step 2:** `subagent-return-gate` concern on `subagent_stop` *(proposal)*,
       **command type only** (#20221 excludes prompt-type): parse
       `last_assistant_message` with `validateResponse`; on failure, look for
