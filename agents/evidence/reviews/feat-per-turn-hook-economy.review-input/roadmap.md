@@ -656,33 +656,58 @@ because either alone is a single point of failure. Verified by mutation: the new
 test fails on the pre-fix bundle at exactly the two padded sizes and passes on the
 fixed one.
 
-**The fix was worse than the defect for one turn, and CI is what said so.**
-Replacing `readFileSync(0)` with a retrying reader fixed the large-payload read
-and broke the opposite case: a child that inherits an OPEN but unwritten fd 0 —
-what any caller gets when it spawns without piping stdin — used to return
-immediately, because `readFileSync(0)` threw EAGAIN and the catch returned `""`.
-With an uncapped retry budget it instead spent the full ~10 s spinning and
-returned `""` anyway. **Measured 12.4 s per invocation against an immediate
-return**, and hundreds of them left three Node-Tests shards `in_progress` for
-over an hour while shard 3/4 finished in minutes.
+**The fix was worse than the defect for two turns, and the interesting part is
+WHY the first version looked correct.** The two properties are coupled, and the
+old code satisfied one of them *through* the bug that broke the other:
 
-Two things about how it was found are worth more than the fix. First, the signal
-was already in front of me and I narrowed around it: a local
-`vitest run tests/scripts/hooks/` had timed out at 400 s earlier in the same
-session and I re-ran a narrower file set instead of asking why. Second, the
-generic diagnosis ("the shards are slow") would have been wrong — three shards
-hung while one passed, which is a stall, not slowness, and only the per-job
-`startedAt` made that visible.
+- **A large payload must not truncate** — the bypass above.
+- **An idle fd 0 must be cheap.** A concern also runs with fd 0 merely open and
+  never written: a child that inherits stdin, or a test calling `main()`
+  in-process. A read that blocks there hangs the caller outright.
 
-Fixed by capping the wait for the **first byte** only
-(`HOOK_FIRST_BYTE_TIMEOUT_MS`, 500 ms): a host writes its payload synchronously
-on spawn, so a byte that has not arrived by then means nobody will ever write.
-Once any byte HAS arrived the full budget applies, so the large-payload fix is
-untouched — verified in both directions, 785 ms on the idle pipe and still
-`BLOCKED` at 2 MB. The shared reader keeps its old behaviour by default, because
-a `gh pr diff` pipe genuinely can be slow to first byte; only the hook path opts
-in. Both directions now have a test, since fixing either alone is what produced
-each of these two defects in turn.
+Reading `process.stdin.isTTY` put fd 0 into **non-blocking** mode, so the
+following `readFileSync` failed fast with EAGAIN on an idle fd — and, identically,
+on a large one. One property was bought with the other. Removing the probe fixed
+the large read and broke the idle case in the worst available way: `fs.readSync`
+on a **blocking**, open, unwritten fd does not return EAGAIN, it BLOCKS, so no
+retry budget can bound it. Measured 12.4 s per invocation, and it left three
+Node-Tests shards `in_progress` for over an hour while shard 3/4 finished in
+minutes; the whole Tests workflow was then cancelled on timeout, which reads as
+23 "failed" checks that were nothing of the kind.
+
+**A second attempt fixed the wrong layer.** Capping the first-byte wait removed
+the *infinite* stall but not the cost, because the fd was still blocking: the cap
+could only fire after the read returned, which it never did. Then the same cap at
+500 ms with the non-blocking mode restored turned a 416 ms test file into a 5.0 s
+one — bounded, and still a 12× regression paid on every in-process concern call.
+
+**The shipped shape makes the coupling deliberate instead of accidental.** fd 0 is
+put into non-blocking mode ON PURPOSE (so a read can never block), the read goes
+through the retrying `readStdinText` (so EAGAIN mid-stream is retried rather than
+reported as empty), and the first-byte wait is capped at **25 ms** — enough to
+absorb a scheduling race between the parent's first write and the child's first
+read, and nothing more, because the host writes its payload before the child can
+run. Once any byte has arrived the full budget applies.
+
+Verified in all three directions rather than the one that was being fixed:
+`BLOCKED` at 0 / 300 KB / 2 MB, **239 ms** on the idle pipe (from 12,373 ms), and
+`tests/scripts/hooks/` at **26 files / 392 tests / 6.3 s** where it previously
+never finished. The shared reader keeps its old behaviour by default — a
+`gh pr diff` pipe genuinely can be slow to first byte, and calling that empty
+input is the defect `_lib/stdin.ts` exists to prevent — so only the hook path
+opts in.
+
+Three process notes, which are the transferable part:
+
+- **The signal was in front of me and I narrowed around it.** A local
+  `vitest run tests/scripts/hooks/` had timed out at 400 s earlier in the same
+  session; I re-ran a smaller file set instead of asking why.
+- **"The shards are slow" would have been the wrong diagnosis.** Three hung while
+  one passed, which is a stall, not slowness — only the per-job `startedAt`
+  showed it, and only `bucket` distinguished the 23 cancellations from failures.
+- **Pristine-main comparison settled authorship in one step.** Restoring the two
+  stdin files from `origin/main` in place made the hanging test pass in 416 ms,
+  which is what turned "probably mine" into "mine, in these two files".
 
 **Sibling search, reported with its count.** `process.stdin.isTTY`: **19**
 occurrences outside the two hook files, all in interactive CLI paths that never
