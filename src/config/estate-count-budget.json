@@ -3,6 +3,7 @@
     "schema_version": 1,
     "registered_at": "2026-08-18",
     "owner": "maintainer",
+    "review_by": "2027-08-18",
     "metric": {
         "basis": "src/scripts/check_estate_count.ts, using collect() from update_roadmap_progress — the same parser the dashboard is generated from, imported rather than re-implemented",
         "active_roadmaps": "non-draft roadmap candidates at the top level of agents/roadmaps/, as collect() counts them. Verified 2026-08-18: this is exactly the number the dashboard header prints as 'N open roadmaps'.",
