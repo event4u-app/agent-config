@@ -362,6 +362,31 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       churn was then not where the model said it was.
       `verify:` the benchmark table in the PR, both cells, at least three runs,
       same machine.
+
+      **PRE-REGISTRATION — committed 2026-08-18 with the result section EMPTY,
+      before the 1.1 change was written.** That ordering is the only part of a
+      pre-registration a later reader can check, so it is the part that is done
+      first.
+
+      *Instrument:* `bench_hook_latency --runs 15 --payload-bytes 2000000`,
+      bundle arm, one machine, one session. The pre-change arm is the bundle
+      built at this commit and kept aside; the post-change arm is the rebuilt
+      bundle. Same fixture on both, per § 2's shape-transfers rule.
+      *Cell:* `post_tool_use` p50 — the slot that carries eleven concerns on
+      claude and therefore eleven serialisations of the same payload.
+      *Reasoning behind the bars, stated so they are not arbitrary:* the
+      mechanism removes ten of eleven stringifies of a 2 MB envelope. If
+      stringify volume is the dominant cost of that cell, the saving should be
+      large and obvious; if it is not, the cell is dominated by something else and
+      D-2 is mis-attributed.
+
+      | outcome | bar | consequence |
+      |---|---|---|
+      | success | ≥ **20 %** p50 reduction on the cell | the mechanism is where the cost was; Phase 1's AC is met |
+      | inconclusive | **5–20 %** | land it anyway (strictly less work, and risk 1 is not incurred — see 1.1), but do NOT claim the AC, and record that serialisation is not the dominant cost |
+      | kill | < **5 %** | publish the null here and in the benchmark doc, and STOP Phase 1 — the churn was not where the model said it was |
+
+      **RESULT:** _(empty until the run — do not fill this in from a prediction)_
 - **AC-1:** the table exists and the pre-registered bar is met or the null is
   published.
 

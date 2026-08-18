@@ -112,17 +112,36 @@ function percentile(sorted: number[], p: number): number {
     return sorted[Math.max(0, idx)] as number;
 }
 
+/**
+ * Size of the synthetic `tool_response` body, in characters (`--payload-bytes`).
+ *
+ * The default 0 keeps the historical minimal payload, so every recorded number
+ * and the CI gate stay comparable. A non-zero value is the **large-payload
+ * cell** of the § 2 matrix in `road-to-per-turn-hook-economy`: D-2 is that the
+ * dispatcher re-serialises the whole envelope — tool result included — once per
+ * concern, so the cost the payload adds is what step 1.2's A/B measures.
+ * Deliberately measurement-only, like `--bundle`: a padded payload must never
+ * write a budget row or a regression baseline.
+ */
+let PAYLOAD_BYTES = 0;
+
 function syntheticPayload(event: string, workspace: string): string {
     // Claude-shaped payload; concerns read tool_name/tool_input for
     // pre/post_tool_use. A plain Read is the common non-matching case —
     // the fast path consumers pay on every tool call.
-    return JSON.stringify({
+    const body: Record<string, unknown> = {
         session_id: 'bench-hook-latency',
         cwd: workspace,
         hook_event_name: event,
         tool_name: 'Read',
         tool_input: { file_path: path.join(workspace, 'README.md') },
-    });
+    };
+    if (PAYLOAD_BYTES > 0) {
+        // Incompressible-ish filler with no JSON metacharacters, so the cost
+        // measured is serialisation volume rather than escaping.
+        body['tool_response'] = 'x'.repeat(PAYLOAD_BYTES);
+    }
+    return JSON.stringify(body);
 }
 
 /**
@@ -281,6 +300,24 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const runsIdx = argv.indexOf('--runs');
     const runs = runsIdx >= 0 ? Number.parseInt(argv[runsIdx + 1] ?? '50', 10) : 50;
 
+    const payloadIdx = argv.indexOf('--payload-bytes');
+    if (payloadIdx >= 0) {
+        const raw = argv[payloadIdx + 1];
+        const parsed = raw === undefined ? Number.NaN : Number.parseInt(raw, 10);
+        if (!Number.isFinite(parsed) || parsed < 0) {
+            process.stderr.write('bench_hook_latency: --payload-bytes requires a non-negative integer\n');
+            return 2;
+        }
+        if (gate || update || baselineIdx >= 0) {
+            process.stderr.write(
+                'bench_hook_latency: --payload-bytes is measurement-only — a padded payload must ' +
+                    "never write this tree's budget row or regression baseline\n",
+            );
+            return 2;
+        }
+        PAYLOAD_BYTES = parsed;
+    }
+
     const bundleIdx = argv.indexOf('--bundle');
     if (bundleIdx >= 0) {
         const raw = argv[bundleIdx + 1];
@@ -353,7 +390,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             const r = benchEvent(event, runs, workspace, via);
             results.push(r);
             process.stdout.write(
-                `${event.padEnd(20)} p50 ${String(r.p50_ms).padStart(5)} ms · p95 ${String(r.p95_ms).padStart(5)} ms · max ${String(r.max_ms).padStart(5)} ms (n=${r.runs}, via ${via}${BUNDLE_OVERRIDE === null ? '' : ` @ ${BUNDLE_OVERRIDE}`})\n`,
+                `${event.padEnd(20)} p50 ${String(r.p50_ms).padStart(5)} ms · p95 ${String(r.p95_ms).padStart(5)} ms · max ${String(r.max_ms).padStart(5)} ms (n=${r.runs}, via ${via}${PAYLOAD_BYTES > 0 ? `, payload ${PAYLOAD_BYTES}B` : ''}${BUNDLE_OVERRIDE === null ? '' : ` @ ${BUNDLE_OVERRIDE}`})\n`,
             );
         }
     } finally {
