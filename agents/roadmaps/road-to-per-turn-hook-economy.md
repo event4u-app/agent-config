@@ -413,7 +413,7 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
 > refresh with it — that step's recorded baseline is stale in the *growing*
 > direction, which is the worst direction for a cap's own census to age in.
 
-- [ ] **4.1** Add a per-turn row to the latency budget: the derived composite of
+- [x] **4.1** Add a per-turn row to the latency budget: the derived composite of
       pre and post chains across a representative tool-call count plus the prompt
       and stop slots, benchmarked in CI. Register it **before** Phases 1–3 merge —
       the bar precedes the lever, which is this repo's own budget-ownership
@@ -424,12 +424,46 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
       implementable: two people would compute two different composites and both
       would call the row green.
       `verify:` the composite appears in the latency bench output and its CI gate.
+      **Landed 2026-08-18.** `per_turn_composite` in
+      `src/config/hook-latency-budget.json` carries the definition, the
+      `tool_calls: 10`, `aggregation: p50` and `observe_only: true`;
+      `bench_hook_latency` derives it from the same `results` the slot rows come
+      from and prints it on **every** run, so the local reading and the CI gate
+      run (`--gate --via-cli`, `tests.yml`) are the same number. It is written
+      into `docs/hook-latency.json` under `--update`.
+      **Arming it is a config edit, not a code change** — set `p50_ci` and flip
+      `observe_only` to false. `observe_only` is honoured even when a ceiling is
+      present, which is what lets 4.2 record a number for one release before it
+      starts failing builds (the blocker's recommended option (b)).
+      **First observation, and it is not small: 1,864 ms** on this machine
+      (pre 83 + post 82) × 10 + ups 84 + stop 130. That is already **above** the
+      source draft's candidate p50 ≤ 1.5 s, on hardware that measures every
+      individual slot comfortably inside its own budget — which is D-1 stated as
+      a number for the first time. It is ONE local reading, so it is an input to
+      4.2 and explicitly not the bar.
+      `perTurnComposite` returns **null** rather than a number when a slot the
+      definition needs is missing from a run: a composite over a subset reads
+      low, and low is the direction that makes a ceiling look met. Pinned by
+      `tests/scripts/bench_hook_latency_composite.test.ts` (9 cases).
 - [~] **4.2** The bar itself is the maintainer's to pre-register, not this
       document's. Blocked on `b-per-turn-composite-bar`.
-- [ ] **4.3** Refresh the stale chain-length census in cost-parity-1 step 4.3 in the
+- [x] **4.3** Refresh the stale chain-length census in cost-parity-1 step 4.3 in the
       same PR, so the cap is measured against the live chain rather than an older
       one.
       `verify:` the recorded counts match a fresh read of the manifest.
+      **Landed 2026-08-18 in the same PR, and BOTH halves of the old baseline
+      were wrong.** cost-parity-1 step 4.3 read "9 concerns on
+      `user_prompt_submit` for claude, 7–8 on other hosts". Fresh read of
+      `hook_manifest.yaml`: claude carries **10**, and the other hosts carry
+      7–8 only on that one slot — claude is the binding host on *every* slot
+      (`pre_tool_use` 12, `post_tool_use` 11, `stop` 10). The full per-host × slot
+      table now sits in that step.
+      **One correction the refresh adds beyond the numbers:** four hosts show no
+      `pre_tool_use` chain and copilot shows none anywhere, and those are **not**
+      zero-length chains a cap could read as headroom — they are unbound slots and
+      a `fallback_only` platform. A cap that treats a missing binding as a count
+      of zero would license unlimited growth on exactly the hosts it cannot
+      measure.
 - **AC-4:** the composite is registered and gated, and the census it shares with
   the chain cap is current as of that PR.
 

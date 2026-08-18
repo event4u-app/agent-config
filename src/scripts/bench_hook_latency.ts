@@ -206,6 +206,47 @@ interface Budget {
         any_hook_event: { p95_ci: number };
     };
     regression_gate: { max_regression_pct: number };
+    per_turn_composite?: {
+        definition?: string;
+        aggregation?: string;
+        tool_calls?: number;
+        observe_only?: boolean;
+        p50_ci?: number | null;
+    };
+}
+
+/**
+ * The per-turn composite (D-1 / step 4.1): the number a user experiences on one
+ * agentic turn, which no per-slot budget can represent. A single tool call fires
+ * `pre_tool_use` AND `post_tool_use`, so ten tool calls pay twenty dispatches
+ * plus the prompt and stop slots.
+ *
+ * Derived, never separately measured — feeding it the same `results` the slot
+ * rows come from is what keeps the two from disagreeing. `tool_calls` is read
+ * from the budget file rather than hardcoded, so the definition lives with the
+ * row it gates.
+ *
+ * Returns null when a slot the definition needs is missing from `results` (a
+ * partial run), because a composite computed over a subset would silently read
+ * LOW — which is the direction that makes a cap look met.
+ */
+export function perTurnComposite(
+    results: readonly EventResult[],
+    tool_calls: number,
+): { ms: number; parts: Record<string, number> } | null {
+    const p50 = (event: string): number | null => {
+        const r = results.find((x) => x.event === event);
+        return r === undefined ? null : r.p50_ms;
+    };
+    const pre = p50('pre_tool_use');
+    const post = p50('post_tool_use');
+    const ups = p50('user_prompt_submit');
+    const stop = p50('stop');
+    if (pre === null || post === null || ups === null || stop === null) return null;
+    return {
+        ms: (pre + post) * tool_calls + ups + stop,
+        parts: { pre_tool_use: pre, post_tool_use: post, user_prompt_submit: ups, stop },
+    };
 }
 
 interface HistoryEntry {
@@ -351,6 +392,44 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         );
     }
 
+    // Per-turn composite (D-1 / step 4.1). Printed on EVERY run, gate or not,
+    // because an observe-only row that only appears under --gate would leave
+    // the local reading and the CI reading incomparable.
+    const compositeCfg = budget.per_turn_composite;
+    const composite =
+        compositeCfg === undefined
+            ? null
+            : perTurnComposite(results, compositeCfg.tool_calls ?? 10);
+    if (compositeCfg !== undefined) {
+        const calls = compositeCfg.tool_calls ?? 10;
+        if (composite === null) {
+            process.stdout.write(
+                `ℹ️  per-turn composite not computed — a slot the definition needs is missing from this run\n`,
+            );
+        } else {
+            const ceiling = compositeCfg.p50_ci ?? null;
+            const observe = compositeCfg.observe_only !== false;
+            const label =
+                observe || ceiling === null ? 'observe-only' : `budget ${String(ceiling)} ms`;
+            process.stdout.write(
+                `per-turn composite  ${String(composite.ms).padStart(5)} ms ` +
+                    `= (pre ${composite.parts['pre_tool_use']} + post ${composite.parts['post_tool_use']}) × ${calls}` +
+                    ` + ups ${composite.parts['user_prompt_submit']} + stop ${composite.parts['stop']}` +
+                    ` (p50, ${label})\n`,
+            );
+            // observe_only is the arming switch for step 4.2 and is honoured
+            // even when a ceiling is present, so a number can be recorded for
+            // one release before it starts failing builds.
+            if (gate && !observe && ceiling !== null && composite.ms > ceiling) {
+                process.stderr.write(
+                    `❌  per-turn composite: ${composite.ms} ms exceeds the pre-registered ` +
+                        `budget (${ceiling} ms)\n`,
+                );
+                failed = true;
+            }
+        }
+    }
+
     if (update || baselineHardware !== null) {
         const existing = prior ?? ({ results: [] } as ResultsDoc);
         const history: HistoryEntry[] = existing.history ?? [];
@@ -377,6 +456,16 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                   invocation_path: via,
                   runs_per_event: runs,
                   results,
+                  ...(composite === null
+                      ? {}
+                      : {
+                            per_turn_composite: {
+                                ms: composite.ms,
+                                tool_calls: compositeCfg?.tool_calls ?? 10,
+                                aggregation: 'p50',
+                                parts: composite.parts,
+                            },
+                        }),
                   ...(history.length > 0 ? { history } : {}),
               }
             : { ...existing, history };
