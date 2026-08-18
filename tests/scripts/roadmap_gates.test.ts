@@ -20,6 +20,9 @@ import {
     renderPending,
     renderPendingJson,
     renderReply,
+    renderSheet,
+    isAgentDrafted,
+    sheetQuestion,
     type Entry,
 } from '../../src/agent-src/scripts/roadmap_gates.js';
 import {
@@ -485,5 +488,122 @@ describe('renderPending — staged actions awaiting confirmation', () => {
     it('--json on an empty store is still valid JSON', () => {
         const parsed = JSON.parse(renderPendingJson(root, T0)) as { staged: unknown[] };
         expect(parsed.staged).toEqual([]);
+    });
+});
+
+describe('--sheet — the consolidated decision sheet', () => {
+    // road-to-estate-drawdown Step 0.1. `verify:` the sheet contains every
+    // user-owned item, each with a question, a default and its recommendation
+    // source LABELLED — the last of the three is the load-bearing one, because a
+    // sheet whose whole point is accept-all-defaults must not present an
+    // agent-drafted default and a maintainer decision as the same statement.
+    const NOW = new Date('2026-08-18T00:00:00Z');
+
+    it('carries every user-owned item and no maintainer-owned one', () => {
+        const out = renderSheet(
+            [
+                entry('user', { id: 'mine-big', openSteps: 40 }),
+                entry('maintainer', { id: 'notmine' }),
+                entry('user', { id: 'mine-small', openSteps: 2 }),
+                entry('external', { id: 'alsonotmine' }),
+            ],
+            NOW,
+        );
+        expect(out).toContain('2 decisions owned by you');
+        expect(out).toContain('mine-big');
+        expect(out).toContain('mine-small');
+        expect(out).not.toContain('notmine');
+        expect(out).not.toContain('alsonotmine');
+    });
+
+    it('keeps the unblock-descending order collectEntries produced', () => {
+        const out = renderSheet(
+            [
+                entry('user', { id: 'first', openSteps: 40 }),
+                entry('user', { id: 'second', openSteps: 9 }),
+                entry('user', { id: 'third', openSteps: 1 }),
+            ],
+            NOW,
+        );
+        expect(out.indexOf('`first`')).toBeLessThan(out.indexOf('`second`'));
+        expect(out.indexOf('`second`')).toBeLessThan(out.indexOf('`third`'));
+    });
+
+    it('labels a maintainer-recorded default differently from an agent-drafted one', () => {
+        const out = renderSheet(
+            [
+                entry('user', { id: 'decided', recommendation: 'Take (b). It is reversible.' }),
+                entry('user', {
+                    id: 'drafted',
+                    recommendation: '**(agent-drafted 2026-08-18 — predates the field.)** Do the probe first.',
+                }),
+            ],
+            NOW,
+        );
+        expect(out).toContain('Provenance of the 2 defaults: 1 maintainer-recorded');
+        expect(out).toContain('1 `agent-drafted`');
+        expect(out).toContain('maintainer-recorded `Recommendation:` in the roadmap');
+        expect(out).toContain('NOT a maintainer decision');
+    });
+
+    it('says so when a blocker records no recommendation at all', () => {
+        // The honest branch: no invented default. A generator that filled this in
+        // would be indistinguishable from a maintainer decision on the row that
+        // needs the distinction most.
+        const out = renderSheet([entry('user', { id: 'bare' })], NOW);
+        expect(out).toContain('none recorded');
+        expect(out).toContain('needs an agent-drafted default');
+        expect(out).not.toContain('maintainer-recorded `Recommendation:`');
+    });
+
+    it('names a legacy blocked-until note as having no field, rather than as undrafted', () => {
+        // A legacy `> Blocked until …` note is not a `### blocker:` entry and has
+        // no Recommendation: slot, so "to be written in below" would point at a
+        // field that does not exist. `isLegacy` keys on the id the parser gives
+        // such a note.
+        const out = renderSheet([entry('user', { id: 'legacy' })], NOW);
+        expect(out).toContain('none — legacy note');
+        expect(out).toContain('Converting it into a real blocker');
+    });
+
+    it('gives every row a question, labelling which field it came from', () => {
+        const out = renderSheet(
+            [
+                entry('user', { id: 'has-q', question: 'Which sink?', openSteps: 9 }),
+                entry('user', { id: 'has-todo', todo: ['1. Run the probe on the host.'], openSteps: 8 }),
+                entry('user', { id: 'bare-blocks', todo: [], openSteps: 7 }),
+            ],
+            NOW,
+        );
+        expect(out).toContain('recorded `Question:`');
+        expect(out).toContain('derived from the first `What to do:` step');
+        expect(out).toContain('derived from `Blocks:`');
+        // Every rendered row carries one, so the sheet has no blank questions.
+        expect(out.split('\n').filter((l) => l.startsWith('- **Question**')).length).toBe(3);
+    });
+
+    it('is not silent when nothing is owned by the user', () => {
+        // `--reply` returns '' on purpose so it can be appended unconditionally.
+        // A sheet must NOT: an empty file reads as "the generator broke", where
+        // one sentence reads as "there is nothing to answer".
+        const out = renderSheet([entry('maintainer'), entry('external')], NOW);
+        expect(out).toContain('nothing owned by you');
+        expect(out).toContain('Nothing to answer');
+    });
+
+    it('sheetQuestion falls back in a fixed order and never returns a whole paragraph', () => {
+        expect(sheetQuestion(entry('user', { question: 'Which one? And why?' }).blocker)).toEqual({
+            text: 'Which one?',
+            source: 'question',
+        });
+        expect(sheetQuestion(entry('user', { todo: ['1. Do X. Then Y.'] }).blocker).source).toBe('todo');
+        expect(sheetQuestion(entry('user', { todo: [] }).blocker).source).toBe('blocks');
+    });
+
+    it('isAgentDrafted reads the marker out of the field text, not out of the sheet', () => {
+        expect(isAgentDrafted('**(agent-drafted 2026-08-18 — from the roadmap.)** Do X.')).toBe(true);
+        expect(isAgentDrafted('(Agent-Drafted) do X')).toBe(true);
+        expect(isAgentDrafted('Take (b) — the agent drafted nothing here')).toBe(false);
+        expect(isAgentDrafted('')).toBe(false);
     });
 });

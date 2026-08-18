@@ -217,7 +217,11 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              --json, --reply (reply-close form: the one blocking
                              decision in full, the rest as a count; prints
                              nothing when none are yours), --pending (staged
-                             requires_confirmation actions awaiting you)
+                             requires_confirmation actions awaiting you),
+                             --sheet (ONE consolidated decision sheet: every
+                             user-owned decision, sorted by unblock count, each
+                             with a default and that default's provenance —
+                             accept-all-defaults is a valid answer)
   capabilities:index         Regenerate CAPABILITIES.yaml — the package coverage index
                              (capability area → coverage → backing skills/commands → gaps).
                              Pass --check to fail if stale (for CI). Reads src/ (package repo).
