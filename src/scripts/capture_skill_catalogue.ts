@@ -77,15 +77,21 @@ import {
     buildHostEventRecord,
     buildNoTruncationRecord,
     buildObservationRecord,
+    cadenceStatus,
     classifyHostProjection,
+    formatCadenceStatus,
     formatPerHostVerdicts,
+    formatPointableBare,
     formatProjectionModes,
     formatReport,
+    joinPointableBare,
     knownHostLimits,
     measureCatalogueVolume,
     parseHostBudgetEvent,
     readObservationLog,
     readProjectedCatalogue,
+    resolveSkillsRoot,
+    truncationModeOf,
     type HostProjectionRow,
     type ProjectionMode,
     type ProjectionModeCounts,
@@ -151,6 +157,160 @@ function expandHome(p: string): string {
     return p.startsWith('~/') ? path.join(os.homedir(), p.slice(2)) : p;
 }
 
+/** `--today <ISO>` for a deterministic run, else the machine's own date. */
+function argToday(): string {
+    const explicit = argValue('--today');
+    if (explicit) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(explicit)) {
+            throw new Error(`--today must be an ISO date (YYYY-MM-DD), got: ${explicit}`);
+        }
+        return explicit;
+    }
+    return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * `--cadence` — is an observation due on any host, and how far is the corpus?
+ *
+ * The recurring half of the capture. It reports and prints the next command; it
+ * never records anything itself. Two reasons, both deliberate: recording is what
+ * `--host-event --record` and `--observed --record` already do, and a mode that
+ * both decides freshness AND writes a record could refresh a series with a
+ * reading nobody took.
+ *
+ * The asymmetry between the hosts is printed rather than smoothed over. The
+ * codex round is one shell pipeline and can be scheduled; the claude round needs
+ * an agent to read its own delivered context, which no scheduler can do.
+ */
+function runCadenceMode(): number {
+    const today = argToday();
+    const records = readObservationLog(path.join(REPO, OBSERVATION_LOG));
+    const rows = cadenceStatus(records, today);
+
+    if (process.argv.includes('--json')) {
+        process.stdout.write(`${JSON.stringify({ today, hosts: rows }, null, 2)}\n`);
+        return 0;
+    }
+
+    process.stdout.write(`${formatCadenceStatus(rows, today)}\n`);
+
+    const due = rows.filter((row) => row.due);
+    if (due.length === 0 && rows.length > 0) return 0;
+
+    process.stdout.write('\nnext round — run what is due:\n\n');
+    for (const row of due) {
+        const scopeFlag = projectionModeFlagFor(row.host);
+        if (row.source === 'host-event') {
+            process.stdout.write(
+                `  # ${row.host} — deterministic, read off the host's own JSON channel\n` +
+                    `  codex exec --json --skip-git-repo-check "reply with exactly: OK" \\\n` +
+                    `    | agent-config exec capture_skill_catalogue \\\n` +
+                    `        --host-event - --host ${row.host} --host-root ~/.${row.host} \\\n` +
+                    `        ${scopeFlag.flag}--record --observed-at ${today}\n` +
+                    `${scopeFlag.note}\n`,
+            );
+            continue;
+        }
+        process.stdout.write(
+            `  # ${row.host} — self-report; only an agent reading its own context can produce it.\n` +
+                `  # Write the entries seen bare and the ones seen described, one name per line, to\n` +
+                `  #   agents/evidence/metrics/skill-catalogue/${today}-${row.host}-{bare,described}.txt\n` +
+                `  agent-config exec capture_skill_catalogue \\\n` +
+                `      --observed agents/evidence/metrics/skill-catalogue/${today}-${row.host}-bare.txt \\\n` +
+                `      --described agents/evidence/metrics/skill-catalogue/${today}-${row.host}-described.txt \\\n` +
+                `      --host ${row.host} ${scopeFlag.flag}--record --observed-at ${today}\n` +
+                `${scopeFlag.note}\n`,
+        );
+    }
+    return 0;
+}
+
+/**
+ * The `--projection-mode` flag for one host's round, MEASURED off its installed
+ * root — or omitted, with the reason, when the root carries neither mode count.
+ *
+ * Printing `--projection-mode <scoped|legacy-all>` as a placeholder invites the
+ * operator to pick one, and on an `indeterminate` root either pick is a label
+ * nobody measured. Measured 2026-08-18 on this machine: `~/.codex` holds 297
+ * skills against a scoped projection of 219 and a legacy-all of 290 — it matches
+ * neither, because it is a stale install rather than a broken one. So the honest
+ * output for that root is no flag and a stated reason, which keeps the record's
+ * absent-scope field meaning "not determinable" instead of "not asked".
+ */
+function projectionModeFlagFor(host: string): { flag: string; note: string } {
+    const root = expandHome(`~/.${host}`);
+    if (!fs.existsSync(root)) {
+        return {
+            flag: '',
+            note:
+                `  #   no --projection-mode: ~/.${host} is not installed here, so the scope of the\n` +
+                '  #   observed install cannot be measured from this machine.\n',
+        };
+    }
+    const row = classifyHostProjection(
+        measureCatalogueVolume(host, root),
+        projectionModeCounts(),
+    );
+    if (row.matches === 'indeterminate') {
+        return {
+            flag: '',
+            note:
+                `  #   no --projection-mode: ${root} holds ${row.installedSkills} skills, which matches\n` +
+                '  #   neither projection count — another suite, a plugin, or a stale install all\n' +
+                '  #   produce that. Recording a mode here would label a reading nobody took.\n',
+        };
+    }
+    return {
+        flag: `--projection-mode ${row.matches} `,
+        note: `  #   scope measured off ${root} (${row.installedSkills} skills).\n`,
+    };
+}
+
+/**
+ * `--pointable-bare` — the D-4 join: host truth against disk truth.
+ *
+ * Intersects the bare names of every per-entry observation with the catalogue
+ * the runtime ranker reads, and publishes how many skills the ranker can name
+ * while the model never received their description.
+ */
+function runPointableBareMode(): number {
+    const rankerRoot = resolveSkillsRoot(REPO);
+    if (rankerRoot === null) {
+        process.stderr.write(
+            '❌  no catalogue root resolved for the ranker — tried ' +
+                `${DEFAULT_CATALOGUE_ROOTS.join(', ')} under ${REPO}.\n` +
+                '    An empty catalogue is never a clean join: it would report 0 pointable\n' +
+                '    entries because nothing was read, not because nothing diverged.\n',
+        );
+        return 1;
+    }
+    const catalogueNames = readProjectedCatalogue(rankerRoot).map((entry) => entry.name);
+    const records = readObservationLog(path.join(REPO, OBSERVATION_LOG));
+    const rows = joinPointableBare(records, catalogueNames);
+    const skipped = records.filter((r) => truncationModeOf(r) !== 'per-entry').length;
+
+    if (process.argv.includes('--json')) {
+        process.stdout.write(
+            `${JSON.stringify(
+                {
+                    ranker_catalogue_root: path.relative(REPO, rankerRoot) || rankerRoot,
+                    ranker_catalogue_entries: catalogueNames.length,
+                    skipped_non_per_entry: skipped,
+                    observations: rows,
+                },
+                null,
+                2,
+            )}\n`,
+        );
+        return 0;
+    }
+
+    process.stdout.write(
+        `${formatPointableBare(rows, path.relative(REPO, rankerRoot) || rankerRoot, catalogueNames.length, skipped)}\n`,
+    );
+    return 0;
+}
+
 /**
  * `--limits` — publish the per-host picture: what each host was measured to
  * deliver, and whether the observed hosts truncate the same way.
@@ -196,14 +356,19 @@ function runLimitsMode(): number {
  * same pair of numbers in one run. Each host is reported on its own row: no
  * host's count is ever used to say anything about another's.
  */
-function runProjectionModesMode(): number {
+/** The package's two projection-mode counts, one walk. Shared by both modes. */
+function projectionModeCounts(): ProjectionModeCounts {
     const stats = scoped_projection_stats(REPO, iter_skills());
-    const counts: ProjectionModeCounts = {
+    return {
         scoped: stats.projected,
         legacyAll: stats.total,
         prunedUnderScoped: stats.pruned,
         activePacks: stats.active_packs,
     };
+}
+
+function runProjectionModesMode(): number {
+    const counts = projectionModeCounts();
 
     const rows: HostProjectionRow[] = [];
     for (const rootArg of argValues('--host-root')) {
@@ -350,6 +515,8 @@ function runHostEventMode(source: string): number {
 }
 
 function main(): number {
+    if (process.argv.includes('--cadence')) return runCadenceMode();
+    if (process.argv.includes('--pointable-bare')) return runPointableBareMode();
     if (process.argv.includes('--limits')) return runLimitsMode();
     if (process.argv.includes('--projection-modes')) return runProjectionModesMode();
 
@@ -425,9 +592,27 @@ function main(): number {
         }
         const logPath = path.join(REPO, OBSERVATION_LOG);
         fs.mkdirSync(path.dirname(logPath), { recursive: true });
+        const projectionMode = argProjectionMode();
+        if (projectionMode === undefined) {
+            // A WARNING, not a refusal. Recording without the scope is a
+            // legitimate reading — the record type says absence is not
+            // `legacy-all` and a consumer comparing modes skips it — so
+            // rejecting it would refuse an observation to protect a
+            // comparison. But an unscoped record is silently incomparable,
+            // which is the failure this line exists to make loud.
+            process.stdout.write(
+                '\n⚠️  no --projection-mode given: this record will carry no projection scope.\n' +
+                    '    Absence is NOT `legacy-all` — a mode comparison skips a record that\n' +
+                    '    carries none, so the observation stays outside that series. Pass\n' +
+                    '    --projection-mode <scoped|legacy-all> to keep it comparable.\n',
+            );
+        }
         fs.appendFileSync(
             logPath,
-            `${JSON.stringify(buildObservationRecord(report, host, stampedAt))}\n`,
+            // The catalogue root IS the skill tree, so every projected entry is
+            // a skill: the count is file-measured, not derived from the
+            // artefact total the way a host root's would be.
+            `${JSON.stringify(buildObservationRecord(report, host, stampedAt, projected.length, projectionMode))}\n`,
         );
         process.stdout.write(`\nrecorded → ${OBSERVATION_LOG}\n`);
     }

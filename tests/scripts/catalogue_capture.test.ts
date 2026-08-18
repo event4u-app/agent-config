@@ -18,12 +18,18 @@ import * as path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import {
+    OBSERVATION_HOST_BAR,
+    OBSERVATION_VOLUME_BAR,
     analyzeSelector,
     buildHostEventRecord,
     buildObservationRecord,
+    cadenceStatus,
     catalogueLimitWarning,
+    formatCadenceStatus,
     formatPerHostVerdicts,
+    formatPointableBare,
     formatReport,
+    joinPointableBare,
     knownHostLimits,
     migrationEligibility,
     migrationPromptLines,
@@ -247,6 +253,172 @@ describe('observation record', () => {
             const values = Array.isArray(value) ? value : [value];
             for (const v of values) expect(typeof v).not.toBe('object');
         }
+    });
+
+    // The self-report path is the ONLY one that fills `bare_names`, so it is
+    // the only source the pointable-but-bare join can read — and until
+    // 2026-08-18 it could not record its projection scope at all, while the
+    // host-event records beside it could.
+    it('records the projection scope on a self-report observation', () => {
+        const projected = [entry({ name: 'a', position: 1 }), entry({ name: 'b', position: 2 })];
+        const report = { catalogueRoot: 'src/skills', ...analyzeSelector(projected, ['b']) };
+
+        const record = buildObservationRecord(report, 'claude', '2026-08-18', 2, 'scoped');
+
+        expect(record.projection_mode).toBe('scoped');
+        expect(record.projected_skill_count).toBe(2);
+    });
+
+    it('omits the scope rather than defaulting it — absence is not `legacy-all`', () => {
+        const projected = [entry({ name: 'a', position: 1 }), entry({ name: 'b', position: 2 })];
+        const report = { catalogueRoot: 'src/skills', ...analyzeSelector(projected, ['b']) };
+
+        const record = buildObservationRecord(report, 'claude', '2026-08-18');
+
+        expect('projection_mode' in record).toBe(false);
+        expect('projected_skill_count' in record).toBe(false);
+    });
+});
+
+describe('cadence', () => {
+    const claude: ObservationRecord = {
+        schema: 1,
+        observed_at: '2026-08-01',
+        host: 'claude',
+        entries_total: 300,
+        bare_count: 2,
+        described_count: 5,
+        bare_names: ['alpha', 'beta'],
+        verdict: 'no-selector',
+        separating_candidates: [],
+        truncation_mode: 'per-entry',
+        observation_source: 'self-report',
+    };
+    const codex: ObservationRecord = {
+        schema: 1,
+        observed_at: '2026-08-17',
+        host: 'codex',
+        entries_total: 497,
+        bare_count: 0,
+        described_count: 0,
+        bare_names: [],
+        verdict: 'insufficient-observation',
+        separating_candidates: [],
+        truncation_mode: 'budget-strip-and-drop',
+        observation_source: 'host-event',
+        projection_mode: 'scoped',
+    };
+
+    it('reports per host and never pools them into one freshness verdict', () => {
+        const rows = cadenceStatus([claude, codex], '2026-08-18');
+
+        expect(rows.map((r) => r.host)).toEqual(['claude', 'codex']);
+        // 17 days vs 1 day: one host is stale while the other is current, and a
+        // pooled answer would describe neither.
+        expect(rows[0]!.due).toBe(true);
+        expect(rows[0]!.daysSince).toBe(17);
+        expect(rows[1]!.due).toBe(false);
+        expect(rows[1]!.daysSince).toBe(1);
+    });
+
+    it('counts observations carrying no projection scope instead of hiding them', () => {
+        const rows = cadenceStatus([claude, codex], '2026-08-18');
+
+        expect(rows[0]!.unscoped).toBe(1);
+        expect(rows[1]!.unscoped).toBe(0);
+    });
+
+    it('reads an unparseable stamp as DUE, never as fresh', () => {
+        const broken = { ...claude, observed_at: 'not-a-date' };
+
+        const rows = cadenceStatus([broken], '2026-08-18');
+
+        expect(Number.isNaN(rows[0]!.daysSince)).toBe(true);
+        // A broken date and a current one must not look alike — the same law
+        // the host-event parser follows when it refuses to record a zero.
+        expect(rows[0]!.due).toBe(true);
+    });
+
+    it('states the volume bar as quoted, and never invents a different one', () => {
+        expect(OBSERVATION_VOLUME_BAR).toBe(20);
+        expect(OBSERVATION_HOST_BAR).toBe(2);
+
+        const out = formatCadenceStatus(cadenceStatus([claude, codex], '2026-08-18'), '2026-08-18');
+
+        expect(out).toContain('2/20 observation(s) across 2/2 host(s)');
+    });
+
+    it('says every host is due when the corpus is empty', () => {
+        expect(cadenceStatus([], '2026-08-18')).toEqual([]);
+        expect(formatCadenceStatus([], '2026-08-18')).toContain('every host is due');
+    });
+});
+
+describe('pointable-but-bare join (D-4)', () => {
+    const perEntry: ObservationRecord = {
+        schema: 1,
+        observed_at: '2026-08-12',
+        host: 'claude',
+        entries_total: 300,
+        bare_count: 3,
+        described_count: 9,
+        bare_names: ['on-disk-a', 'on-disk-b', 'gone-from-disk'],
+        verdict: 'no-selector',
+        separating_candidates: [],
+        truncation_mode: 'per-entry',
+        observation_source: 'self-report',
+    };
+    const stripAndDrop: ObservationRecord = {
+        schema: 1,
+        observed_at: '2026-08-16',
+        host: 'codex',
+        entries_total: 497,
+        bare_count: 0,
+        described_count: 0,
+        bare_names: [],
+        verdict: 'insufficient-observation',
+        separating_candidates: [],
+        truncation_mode: 'budget-strip-and-drop',
+        observation_source: 'host-event',
+        dropped_count: 402,
+    };
+
+    it('counts the bare entries the ranker can still name', () => {
+        const rows = joinPointableBare([perEntry], ['on-disk-a', 'on-disk-b', 'unrelated']);
+
+        expect(rows).toHaveLength(1);
+        expect(rows[0]!.pointableBare).toBe(2);
+        expect(rows[0]!.pointableNames).toEqual(['on-disk-a', 'on-disk-b']);
+        expect(rows[0]!.unpointableBare).toBe(1);
+        expect(rows[0]!.unpointableNames).toEqual(['gone-from-disk']);
+    });
+
+    // The load-bearing test. A strip-and-drop host enumerates nothing, so its
+    // empty `bare_names` means "not counted", not "none were bare". Emitting a
+    // row of 0 for it would be a zero inferred from silence — the one failure
+    // this module's header forbids outright.
+    it('SKIPS a host that publishes no per-entry list rather than scoring it 0', () => {
+        const rows = joinPointableBare([perEntry, stripAndDrop], ['on-disk-a']);
+
+        expect(rows).toHaveLength(1);
+        expect(rows.map((r) => r.host)).toEqual(['claude']);
+    });
+
+    it('treats zero on a per-entry observation as a legitimate answer', () => {
+        const rows = joinPointableBare([perEntry], ['something', 'else']);
+
+        expect(rows).toHaveLength(1);
+        expect(rows[0]!.pointableBare).toBe(0);
+        expect(formatPointableBare(rows, 'src/skills', 2, 0)).toContain(
+            'D-4 divergence: 0 on every joined observation',
+        );
+    });
+
+    it('distinguishes "nothing to join" from "joined and found zero"', () => {
+        const out = formatPointableBare([], 'src/skills', 2, 1);
+
+        expect(out).toContain('This is NOT a count of zero');
+        expect(out).toContain('D-4 divergence: unmeasured.');
     });
 });
 

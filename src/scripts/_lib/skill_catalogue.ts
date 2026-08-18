@@ -454,10 +454,27 @@ export function observationSourceOf(record: ObservationRecord): ObservationSourc
     return record.observation_source ?? 'self-report';
 }
 
+/**
+ * The self-report path's record.
+ *
+ * `projectedSkillCount` and `projectionMode` are optional in the SAME shape the
+ * two host-event builders use — omitted rather than defaulted, because absence
+ * is not `legacy-all` and never was (see `ObservationRecord.projection_mode`).
+ *
+ * They were missing here until 2026-08-18, and the omission was load-bearing in
+ * one direction: the self-report path is the ONLY one that fills `bare_names`,
+ * so it is the only source the pointable-but-bare join below can read — and
+ * every claude observation in the corpus therefore carried no scope at all,
+ * while the codex records beside them did. A series that changes scope
+ * mid-flight without recording it is not comparable, which is exactly what
+ * claim 7 of the roadmap that asked for the field says.
+ */
 export function buildObservationRecord(
     report: SelectorReport,
     host: string,
     observedAt: string,
+    projectedSkillCount?: number,
+    projectionMode?: ProjectionMode,
 ): ObservationRecord {
     return {
         schema: 1,
@@ -471,6 +488,8 @@ export function buildObservationRecord(
         separating_candidates: report.candidates.filter((c) => c.separates).map((c) => c.id),
         truncation_mode: 'per-entry',
         observation_source: 'self-report',
+        ...(projectedSkillCount === undefined ? {} : { projected_skill_count: projectedSkillCount }),
+        ...(projectionMode === undefined ? {} : { projection_mode: projectionMode }),
     };
 }
 
@@ -1110,6 +1129,265 @@ export function formatReport(report: SelectorReport): string {
         report.verdict === 'selector-found'
             ? 'verdict: selector-found — a delivery fix can act on the separating property above.'
             : 'verdict: no-selector — no measured property separates the groups; the selector is host-internal on this evidence. Publish the null rather than guessing a fix.',
+    );
+    return lines.join('\n');
+}
+
+/* ------------------------------------------------------------------ *
+ * The cadence — is an observation due, and how far is the corpus?
+ * ------------------------------------------------------------------ */
+
+/**
+ * Days after which one host's series is stale and an observation is due.
+ *
+ * A **stated default, not a measured optimum** — said plainly rather than
+ * implying a derivation it does not have. Nothing in the corpus measures how
+ * fast a host's truncation behaviour changes; what is known is that it changes
+ * at all (the codex drop moved 393 → 401 → 402 → 330 across four readings, the
+ * last of them because OUR projection scope changed, not the host).
+ *
+ * *Revisit-if:* two consecutive rounds a week apart record identical figures on
+ * every host (too frequent — widen it), or a host limit is observed to move
+ * inside one interval (too slow — narrow it). Either falsifies the number, not
+ * the obligation to keep the series current.
+ */
+export const OBSERVATION_CADENCE_DAYS = 7;
+
+/**
+ * The volume and host bars the corpus is filling toward.
+ *
+ * **Quoted, never invented here.** Both come from the parent blocker's own
+ * wording — "≥ 20 observations across ≥ 2 hosts" — recorded in
+ * `agents/evidence/investigations/skill-catalogue-codex-truncation.md` § 1 and
+ * § 5 and in the blocker that still carries it. This module reports progress
+ * against them; it does not get to move them.
+ */
+export const OBSERVATION_VOLUME_BAR = 20;
+export const OBSERVATION_HOST_BAR = 2;
+
+/** Whole days from `fromISO` to `toISO`; negative when `toISO` is earlier. */
+function wholeDaysBetween(fromISO: string, toISO: string): number {
+    const from = Date.parse(`${fromISO}T00:00:00Z`);
+    const to = Date.parse(`${toISO}T00:00:00Z`);
+    if (Number.isNaN(from) || Number.isNaN(to)) return Number.NaN;
+    return Math.round((to - from) / 86_400_000);
+}
+
+/** One host's standing in the series. Counts only; no free-form field. */
+export interface CadenceRow {
+    host: string;
+    /** The source the host's own latest record came from. */
+    source: ObservationSource;
+    observations: number;
+    lastObservedAt: string;
+    /** Whole days since that record; `NaN` when its stamp is unparseable. */
+    daysSince: number;
+    due: boolean;
+    /**
+     * Observations of this host carrying NO `projection_mode`. Not a defect to
+     * backfill — those readings were taken without asking, and relabelling one
+     * afterwards would invent a measurement. They are simply not comparable
+     * across modes, so the count is published rather than hidden.
+     */
+    unscoped: number;
+}
+
+/**
+ * Per-host cadence, never pooled — the same reason `formatPerHostVerdicts`
+ * refuses to pool: two hosts truncate by different mechanisms, so "the corpus
+ * is fresh" is not a statement either host makes on its own.
+ *
+ * A host with no record at all cannot appear here: this reads the log, and a
+ * host that was never observed has nothing to be stale. The volume bar below
+ * is what surfaces that gap.
+ */
+export function cadenceStatus(
+    records: readonly ObservationRecord[],
+    todayISO: string,
+): CadenceRow[] {
+    const byHost = new Map<string, ObservationRecord[]>();
+    for (const record of records) {
+        const bucket = byHost.get(record.host) ?? [];
+        bucket.push(record);
+        byHost.set(record.host, bucket);
+    }
+    const headline = headlineRecordPerHost(records);
+
+    const rows: CadenceRow[] = [];
+    for (const host of [...byHost.keys()].sort()) {
+        const bucket = byHost.get(host)!;
+        const latest = headline.get(host)!;
+        const daysSince = wholeDaysBetween(latest.observed_at, todayISO);
+        rows.push({
+            host,
+            source: observationSourceOf(latest),
+            observations: bucket.length,
+            lastObservedAt: latest.observed_at,
+            daysSince,
+            // An unparseable stamp reads as DUE, never as fresh: a broken date
+            // and a current one must not look alike, which is the same
+            // zero-from-silence law the host-event parser follows.
+            due: Number.isNaN(daysSince) || daysSince >= OBSERVATION_CADENCE_DAYS,
+            unscoped: bucket.filter((r) => r.projection_mode === undefined).length,
+        });
+    }
+    return rows;
+}
+
+/**
+ * The cadence as an operator report: who is due, and how far the corpus is from
+ * the bar it is filling toward.
+ *
+ * Prints the exact next command per host rather than describing it. The codex
+ * side is deterministic and scriptable; the claude side is self-report and only
+ * an agent reading its own context can produce it — the asymmetry is stated
+ * here because a report that hid it would read as "both are automatable".
+ */
+export function formatCadenceStatus(
+    rows: readonly CadenceRow[],
+    todayISO: string,
+): string {
+    const lines: string[] = [];
+    lines.push(`cadence: one observation per host every ${OBSERVATION_CADENCE_DAYS} day(s) · today ${todayISO}`);
+    lines.push('');
+
+    if (rows.length === 0) {
+        lines.push('no observations recorded yet — every host is due.');
+    }
+
+    for (const row of rows) {
+        const age = Number.isNaN(row.daysSince)
+            ? `stamp unparseable (${row.lastObservedAt})`
+            : `${row.daysSince} day(s) ago`;
+        lines.push(
+            `${row.due ? '⚠️ ' : '✅'} ${row.host}: ${row.observations} observation(s) · ` +
+                `latest ${row.lastObservedAt} (${age}) · source ${row.source}`,
+        );
+        if (row.unscoped > 0) {
+            lines.push(
+                `     ${row.unscoped} of them carry no projection scope — not comparable across modes, and not backfillable.`,
+            );
+        }
+    }
+
+    const total = rows.reduce((sum, row) => sum + row.observations, 0);
+    lines.push('');
+    lines.push(
+        `volume: ${total}/${OBSERVATION_VOLUME_BAR} observation(s) across ${rows.length}/${OBSERVATION_HOST_BAR} host(s) — ` +
+            (total >= OBSERVATION_VOLUME_BAR && rows.length >= OBSERVATION_HOST_BAR
+                ? 'both bars met.'
+                : 'the bar the parent blocker states, quoted not invented.'),
+    );
+    return lines.join('\n');
+}
+
+/* ------------------------------------------------------------------ *
+ * D-4 — host truth against disk truth: pointable but bare.
+ * ------------------------------------------------------------------ */
+
+/** One per-entry observation joined against the ranker's on-disk catalogue. */
+export interface PointableBareRow {
+    host: string;
+    observedAt: string;
+    bareTotal: number;
+    /** Bare entries the ranker can still name — the D-4 divergence. */
+    pointableBare: number;
+    /** Bare entries absent from the ranker's catalogue; it cannot name them. */
+    unpointableBare: number;
+    pointableNames: string[];
+    unpointableNames: string[];
+}
+
+/**
+ * Intersect the bare names of every per-entry observation with the catalogue the
+ * runtime ranker reads.
+ *
+ * The defect this counts (D-4): `skill-route` ranks the on-disk tree, so a skill
+ * the host truncated is still rankable and still pointable — and the pointer
+ * then names a skill whose description the model never received. That is worse
+ * than silence, because the pointer reads as a delivered capability.
+ *
+ * **Only `per-entry` records are joined, and skipping the others is the point.**
+ * A `budget-strip-and-drop` host publishes no per-entry list at all, so its
+ * `bare_names` is empty because nothing was enumerated — not because nothing was
+ * bare. Emitting a row of 0 for it would be a zero inferred from silence, which
+ * this module's header forbids in the one place it would be easiest to do.
+ *
+ * A row of 0 on a per-entry record IS a legitimate answer: it means every entry
+ * the host degraded is also absent from the ranker's tree, so the ranker cannot
+ * point at one.
+ */
+export function joinPointableBare(
+    records: readonly ObservationRecord[],
+    rankerCatalogueNames: readonly string[],
+): PointableBareRow[] {
+    const rankable = new Set(rankerCatalogueNames);
+    const rows: PointableBareRow[] = [];
+    for (const record of records) {
+        if (truncationModeOf(record) !== 'per-entry') continue;
+        const pointable = record.bare_names.filter((name) => rankable.has(name));
+        const unpointable = record.bare_names.filter((name) => !rankable.has(name));
+        rows.push({
+            host: record.host,
+            observedAt: record.observed_at,
+            bareTotal: record.bare_names.length,
+            pointableBare: pointable.length,
+            unpointableBare: unpointable.length,
+            pointableNames: pointable,
+            unpointableNames: unpointable,
+        });
+    }
+    return rows;
+}
+
+/** The join as an operator report. Zero is printed as a result, not as absence. */
+export function formatPointableBare(
+    rows: readonly PointableBareRow[],
+    catalogueRoot: string,
+    catalogueSize: number,
+    skippedNonPerEntry: number,
+): string {
+    const lines: string[] = [];
+    lines.push(`ranker catalogue: ${catalogueRoot} (${catalogueSize} entries)`);
+    lines.push('');
+
+    if (rows.length === 0) {
+        lines.push(
+            'no per-entry observation to join. This is NOT a count of zero: only a host that',
+            'enumerates which entries arrived bare can be joined, and none has been recorded.',
+        );
+    }
+
+    for (const row of rows) {
+        lines.push(
+            `${row.host} ${row.observedAt}: ${row.pointableBare} pointable-but-bare of ${row.bareTotal} bare`,
+        );
+        if (row.pointableBare > 0) {
+            lines.push(`   the ranker can name: ${row.pointableNames.join(', ')}`);
+        }
+        if (row.unpointableBare > 0) {
+            lines.push(
+                `   bare and NOT in the ranker's catalogue (${row.unpointableBare}): ${row.unpointableNames.join(', ')}`,
+            );
+        }
+    }
+
+    if (skippedNonPerEntry > 0) {
+        lines.push('');
+        lines.push(
+            `skipped ${skippedNonPerEntry} observation(s) whose host publishes no per-entry list —`,
+            'their empty `bare_names` records that nothing was enumerated, not that nothing was bare.',
+        );
+    }
+
+    const worst = rows.reduce((max, row) => Math.max(max, row.pointableBare), 0);
+    lines.push('');
+    lines.push(
+        rows.length === 0
+            ? 'D-4 divergence: unmeasured.'
+            : worst > 0
+              ? `D-4 divergence: up to ${worst} skill(s) the ranker may point at while the model never received their description.`
+              : 'D-4 divergence: 0 on every joined observation — the ranker points at nothing the host degraded.',
     );
     return lines.join('\n');
 }
