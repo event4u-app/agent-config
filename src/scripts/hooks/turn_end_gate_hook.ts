@@ -1024,10 +1024,18 @@ export function main(): number {
     );
     if (alreadyRefusedTurn(workspaceRoot, sessionKey, turnOrdinal)) return EXIT_ALLOW;
 
-    // Every detector runs on every turn-end. The gating is INSIDE each one —
-    // no promise, no pin mismatch, no unverified edit ⇒ no finding ⇒ the turn
-    // ends. That is the whole of "fires when it is warranted"; there is no
-    // second, configurable notion of warranted layered on top of it.
+    // B and C run on every turn-end; A and D run only when no dispatch is open
+    // (the ternaries below). For the detectors that DO run, the gating is INSIDE
+    // each one — no promise, no pin mismatch, no unverified edit, no unsettled
+    // completion claim ⇒ no finding ⇒ the turn ends. That is the whole of "fires
+    // when it is warranted"; there is no second, configurable notion of warranted
+    // layered on top of it.
+    //
+    // This said "Every detector runs on every turn-end" and enumerated three of
+    // four, three lines above the two `dispatchOpen` ternaries that refute it.
+    // Corrected 2026-08-19 with the header block at the top of this file: a reader
+    // arriving here met the false claim first, and the D comment below deferred to
+    // "the note at the top of this loop" — which was this sentence.
     const findings: Finding[] = [];
     for (const f of [
         // A and D are the completion-adjacent pair a pending dispatch excuses

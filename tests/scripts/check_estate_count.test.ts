@@ -187,6 +187,20 @@ describe('check_estate_count — the ratchet direction', () => {
         expect(res.stderr).toContain('un-walked tightening: active_roadmaps measured 2 under a baseline of 3');
     });
 
+    it('does NOT convict on tightening when the raise half could not run', () => {
+        // Round 2 finding 4: the exemption is derived from the raise half, so when
+        // that half skips there is no way to tell a deliberate ceiling from
+        // forgotten headroom. Convicting anyway would refuse a legal reasoned raise
+        // with no green path, and would read one missing fact two opposite ways
+        // inside one gate — the raise half skips permissively on exactly this input.
+        const repo = initRepo(3);
+        fs.rmSync(path.join(repo, 'agents/roadmaps/road-to-2.md'));
+        commitAll(repo, 'archive one');
+        const res = run(repo, ['--base', 'does-not-exist']);
+        expect(res.status, res.stderr).toBe(0);
+        expect(res.stderr).not.toContain('un-walked tightening');
+    });
+
     it('goes green once the walked baseline matches the tightened measurement', () => {
         // The other half of the inversion: failing on tightening must be
         // satisfiable by the one-number edit the message asks for, or it is a
@@ -401,13 +415,34 @@ describe('check_estate_count — the raise check (R2 finding 1, high)', () => {
         expect(res.stderr).toContain('baseline_history');
     });
 
-    it('accepts a raise whose newest history entry carries a reason AND the new number', () => {
+    // Round 2 finding 1 inverted this: it expected exit 0 for a raise to 5 against
+    // a live count of 3, which pinned +2 of banked headroom as legal. A reason
+    // makes a raise REVIEWABLE; it does not make headroom safe, and the headroom is
+    // inherited by the next change, where nobody can act on it — the same
+    // permanently-red trunk this gate change exists to close.
+    it('REFUSES a raise that carries a reason but overshoots the live measurement', () => {
         const repo = initRepo(3);
         write(repo, 'src/config/estate-count-budget.json', budget({ active: 5, later: 0, blockers: 0 }, null, RAISE_REASON));
-        commitAll(repo, 'raise with a reason');
+        commitAll(repo, 'raise with a reason, past the measurement');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status, res.stdout).toBe(1);
+        expect(res.stderr).toContain('un-walked tightening: active_roadmaps measured 3 under a baseline of 5');
+    });
+
+    it('accepts a raise whose reason is recorded AND whose new baseline is the live count', () => {
+        // The green path the bound has to leave open. The addition carries
+        // `estate_offset_exempt` so one-in-one-out cannot be why this passes.
+        const repo = initRepo(3);
+        write(
+            repo,
+            'agents/roadmaps/road-to-new.md',
+            '---\nestate_offset_exempt: fixture — isolates the raise half\n---\n\n# Roadmap: N\n\n## Phase 1\n\n- [ ] **1.1** s\n',
+        );
+        write(repo, 'src/config/estate-count-budget.json', budget({ active: 4, later: 0, blockers: 0 }, null, RAISE_REASON));
+        commitAll(repo, 'grow by one and raise onto the measurement');
         const res = run(repo, ['--base', 'main']);
         expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
-        expect(res.stdout).toContain('baseline raised with a recorded reason: active_roadmaps 3 → 5');
+        expect(res.stdout).toContain('baseline raised with a recorded reason: active_roadmaps 3 → 4');
     });
 
     it('REFUSES a raise whose reason records a different number — a reused older entry', () => {

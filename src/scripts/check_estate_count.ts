@@ -23,9 +23,18 @@
  * **T2, the ratchet.** The committed baseline in
  * `src/config/estate-count-budget.json` walks down only. Growth in any gated
  * count is a policy failure (exit 1) that names the metric, the baseline and the
- * live number. A count BELOW the baseline is green and prints the free
- * tightening, in the shape `check_preamble_payload_budget` already uses: a lower
- * measurement becomes the new ceiling rather than becoming unused headroom.
+ * live number. A count BELOW the baseline is ALSO a failure (exit 1) — an
+ * un-walked tightening — because a lower measurement becomes the new ceiling
+ * rather than becoming unused headroom, and a gate that only warned about it is
+ * how the headroom survived to be spent. The one exemption is a metric raised in
+ * the same change with a recorded reason AND a new baseline equal to the live
+ * count; an over-raise fails here rather than in the next change.
+ *
+ * Corrected 2026-08-19. This paragraph documented the below-baseline case as
+ * green and pointed at `check_preamble_payload_budget` for the shape, while
+ * `check_estate_count.test.ts` asserted the committed budget EQUALS the live
+ * tree — so the gate, its own test, and this header described three positions on
+ * one state.
  *
  * **T3, one-in-one-out.** A change that adds an active roadmap archives, parks
  * or merges one in the same change — or the added file carries an explicit
@@ -149,8 +158,17 @@ export interface EstateVerdict {
     counts: EstateCounts;
     baseline: EstateCounts;
     growth: GrowthFinding[];
-    /** Counts strictly below their baseline — the walk-down the ratchet wants. */
+    /**
+     * Counts strictly below their baseline — every one of them, exempt or not.
+     * Kept whole so a `--json` consumer can still tell "nothing is below
+     * baseline" from "something is, and a bounded reasoned raise exempted it".
+     */
     tightened: GrowthFinding[];
+    /**
+     * The subset of `tightened` that FAILS: below baseline with no bounded
+     * reasoned raise covering it. This is what `withinBudget` reads.
+     */
+    unwalked: GrowthFinding[];
     /** Baselines raised against the base ref, each with its reason or `null`. */
     raises: RaiseFinding[];
     /** `null` when the raise check could not run; the reason is printed either way. */
@@ -453,20 +471,44 @@ export function evaluate(
         unpaid = Math.max(0, chargeable.length - offsets.offsets.length);
     }
 
-    // A metric RAISED with a recorded reason in this same change is a deliberate
-    // ceiling, not an un-walked tightening, and must not be reported as one — the
-    // raise is the reviewed act the ratchet exists to permit. Without this filter
-    // the failure below would make a legal reasoned raise unsatisfiable: the raise
-    // puts the baseline above the live count by construction, which is exactly the
-    // shape the tightening rule bites on.
-    const reasonedRaise = new Set(raises.filter((r) => r.reason !== null).map((r) => r.metric));
-    const unwalked = tightened.filter((t) => !reasonedRaise.has(t.metric));
+    // A metric RAISED in this same change with a recorded reason is a deliberate
+    // ceiling rather than an un-walked tightening — the raise is the reviewed act
+    // the ratchet exists to permit, and without an exemption the failure below
+    // would make a legal raise unsatisfiable, since a raise puts the baseline
+    // above the live count by construction.
+    //
+    // BOUNDED at `to === live`, and the bound is the whole of it. Round 2 finding
+    // 1: unbounded, the exemption re-opened the defect this change exists to
+    // close, one commit later. A raise could bank arbitrary headroom and exit 0;
+    // the NEXT change carries no raise, so nothing exempts the still-below-
+    // baseline metric, and that change plus main fail on drift they did not
+    // cause. Requiring the raise to land ON the measurement means every legal
+    // state leaves `baseline == live`, so a later change cannot inherit the debt —
+    // and an over-raise fails in the change that types it, which is the only
+    // place anyone can act on it.
+    //
+    // A raise recorded WITHOUT a reason is not exempt at all; it already fails on
+    // its own account below, and exempting it here would let the reason
+    // requirement be skipped by overshooting.
+    const boundedRaise = new Set(
+        raises.filter((r) => r.reason !== null && r.to === counts[r.metric]).map((r) => r.metric),
+    );
+
+    // When the raise half could not run, the information that separates a
+    // deliberate ceiling from forgotten headroom is ABSENT, so this check reports
+    // rather than convicts — the same permissive reading the raise half itself
+    // takes on the same missing input (round 2 finding 4). Failing here while the
+    // raise half skips would refuse a legal reasoned raise with no green path,
+    // and would treat one missing fact two opposite ways inside one gate.
+    const tighteningProvable = raiseSkipReason === null;
+    const unwalked = tighteningProvable ? tightened.filter((t) => !boundedRaise.has(t.metric)) : [];
 
     return {
         counts,
         baseline: budget.baseline,
         growth,
-        tightened: unwalked,
+        tightened,
+        unwalked,
         raises,
         raiseSkipReason,
         offsets,
@@ -498,8 +540,8 @@ export function evaluate(
 }
 
 /** Floors for `--self-test`, declared here so a truncation is a visible diff. */
-const SELF_TEST_MIN_CASES = 7;
-const SELF_TEST_MIN_REJECT = 4;
+const SELF_TEST_MIN_CASES = 9;
+const SELF_TEST_MIN_REJECT = 6;
 
 /**
  * Prove, on demand, that this gate's rejections still fire against its own CLI.
@@ -610,8 +652,12 @@ function selfTest(): number {
                 }),
         },
         {
-            name: 'same raise WITH a recorded reason → accept',
-            expect: 'accept',
+            // Round 2 finding 1: this case used to expect ACCEPT, which pinned an
+            // over-raise of +6 as legal. A reason makes a raise reviewable; it does
+            // not make banked headroom safe, and the banked headroom is inherited by
+            // the next change, where nobody can act on it.
+            name: 'raise WITH a reason but overshooting the measurement → reject',
+            expect: 'reject',
             run: () =>
                 fixture({
                     roadmaps: 3,
@@ -622,6 +668,44 @@ function selfTest(): number {
                             'src/config/estate-count-budget.json',
                             budgetJson(9, 9, 'fixture: a deliberate re-baseline, recorded so the ratchet can see it'),
                         ),
+                }),
+        },
+        {
+            // The green path the bound must leave open, or the exemption would be
+            // unsatisfiable and a legal raise impossible. The addition carries
+            // `estate_offset_exempt` so the one-in-one-out half cannot be the reason
+            // this case passes or fails.
+            name: 'raise WITH a reason landing ON the measurement → accept',
+            expect: 'accept',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    baseline: { active: 3, later: 0 },
+                    after: (dir) => {
+                        write(
+                            dir,
+                            'agents/roadmaps/road-to-new.md',
+                            '---\nestate_offset_exempt: fixture — isolates the raise half from one-in-one-out\n---\n\n# Roadmap: N\n\n## Phase 1\n\n- [ ] **1.1** s\n',
+                        );
+                        write(
+                            dir,
+                            'src/config/estate-count-budget.json',
+                            budgetJson(4, 0, 'fixture: raised to the measurement, which is what a bounded raise looks like'),
+                        );
+                    },
+                }),
+        },
+        {
+            // Round 2 finding 11: the rejection class this change adds had no
+            // contributor-facing case, so the truncation floor could not notice it
+            // going missing — which is the whole job of this self-test.
+            name: 'count below baseline with no raise → reject (un-walked tightening)',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    baseline: { active: 3, later: 0 },
+                    after: (dir) => fs.rmSync(path.join(dir, 'agents/roadmaps/road-to-2.md')),
                 }),
         },
         {
@@ -723,7 +807,15 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     ledger.plan([...METRICS, 'baseline_raise', 'one_in_one_out']);
     for (const metric of METRICS) {
         const bad = verdict.growth.find((g) => g.metric === metric);
+        // Round 2 finding 3: the un-walked-tightening class exited 1 while this
+        // loop reported every metric complete, so the ledger — the stderr audit
+        // surface, and the only one `--json` carries — showed a fully green
+        // completeness record beside a red exit. A metric is recorded once, here,
+        // for whichever way it actually failed.
+        const stale = verdict.unwalked.find((t) => t.metric === metric);
         if (bad !== undefined) ledger.fail(metric, `${metric} grew ${bad.baseline} → ${bad.live}`);
+        else if (stale !== undefined)
+            ledger.fail(metric, `${metric} un-walked: ${stale.live} under a baseline of ${stale.baseline}`);
         else ledger.complete(metric);
     }
     const unreasoned = verdict.raises.filter((r) => r.reason === null);
@@ -772,7 +864,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         );
     }
 
-    for (const t of verdict.tightened) {
+    for (const t of verdict.unwalked) {
         process.stderr.write(
             `❌  un-walked tightening: ${t.metric} measured ${String(t.live)} under a baseline of ${String(t.baseline)}.\n` +
                 `    Walk the baseline down in ${BUDGET_REL} — a lower measurement is the new ceiling,\n` +
