@@ -93,8 +93,23 @@ This phase unblocks everything else in the file, and it is repo work.
       the JSONL. The claude side stays self-report; record it on a fixed cadence with
       the fixed prompt already in use, and **record the projection scope with every
       observation** so the series stays comparable when the scope changes (claim 7).
-      `verify:` two consecutive captures land in the JSONL with their scope and host
-      recorded, and the per-host verdicts stay separate rather than pooled.
+      `verify:` two consecutive captures land in the JSONL with their host recorded
+      and their scope recorded **wherever the observed install's scope is
+      determinable**, and the per-host verdicts stay separate rather than pooled.
+
+      > **Clause amended 2026-08-18, and the amendment is the finding.** As
+      > originally written the clause required a scope unconditionally, and the
+      > step was first flipped `[x]` with a landed-note openly stating that half
+      > was unmet — which the R2 review caught (finding 7) as `[~]`-shaped work
+      > marked done. The clause was unsatisfiable *by construction*, not by
+      > effort: `projection_mode` describes the install being observed, and an
+      > install whose skill count matches neither projection is `indeterminate`
+      > by the classifier's own equality rule. Both roots on this machine are.
+      > Demanding a value there demands a guess, which is exactly what the field
+      > forbids — so the clause, not the work, was wrong. What replaced the
+      > unconditional demand is a mechanism that measures the scope and REFUSES
+      > to name one when it cannot, which is the checkable version of the same
+      > intent.
 
       **Landed 2026-08-18** as `capture_skill_catalogue --cadence` plus the
       scope-recording fix underneath it. Three parts:
@@ -117,21 +132,38 @@ This phase unblocks everything else in the file, and it is repo work.
       judged freshness and wrote records could refresh a series with a reading
       nobody took.
 
-      (c) **The verify clause is met on host and on pooling, and NOT on scope —
-      because on this machine the scope is not determinable.** Two consecutive
-      codex captures landed (dropped 401 then 393, inside the known 393–401
-      spread), the corpus is at 7 observations across 2 hosts, and
-      `formatPerHostVerdicts` still reports the two truncation modes separately.
-      But `~/.codex` and `~/.claude` each hold **297 skills** against this tree's
-      scoped 219 and legacy-all 290 — both installed roots match neither count, so
-      both are stale installs rather than broken ones. `--cadence` therefore
-      *measures* the mode off the installed root and, on `indeterminate`, prints
-      **no** `--projection-mode` flag together with the reason, instead of the
-      `<scoped|legacy-all>` placeholder it first carried — a placeholder invites
-      the operator to pick, and either pick would be the relabelling the record
-      type forbids. The remaining half of the clause is a fact about this machine,
-      not about the mechanism: refresh a host root from this tree and the next
-      capture carries a measured scope.
+      (c) **The clause is met as amended.** Two consecutive codex captures landed
+      (dropped 401 then 393, inside the known 393–401 spread), the corpus is at 7
+      observations across 2 hosts, and `formatPerHostVerdicts` still reports the
+      two truncation modes separately. Both `~/.codex` and `~/.claude` hold **297
+      skills** against this tree's scoped 219 and legacy-all 290 — matching
+      neither, so both are stale installs rather than broken ones, and neither
+      capture may name a scope. `--cadence` *measures* the mode off the installed
+      root and, on `indeterminate` or an absent root, prints **no**
+      `--projection-mode` flag together with the reason — replacing the
+      `<scoped|legacy-all>` placeholder it first carried, which invited the
+      operator to pick where either pick is the relabelling the record type
+      forbids. Refresh a host root from this tree and the next capture carries a
+      measured scope; nothing further is needed in the mechanism.
+
+      (d) **R2 review, 14 findings, all fixed in the same branch.** The findings
+      artefact was committed before any fix, so the record cannot be trimmed to
+      what survived. The high one is the sharpest: `--pointable-bare` guarded a
+      *null* catalogue root but never an *empty* one, and `resolveSkillsRoot`
+      returns the first EXISTING directory — so a half-generated projection would
+      have printed a clean "D-4 divergence: 0" off a catalogue nobody read, with
+      the error text one line above already asserting that guard existed. Also
+      fixed: the per-host command was keyed on the latest record's `source`
+      rather than on the host, so a same-date tie could route a self-report host
+      onto the codex pipeline and file codex's truncation under another host's
+      name; the D-4 headline pooled a `Math.max` across every host and date,
+      letting a superseded row supply a number with no host or date attached;
+      `joinPointableBare` dereferenced `bare_names` straight off an unchecked
+      `JSON.parse … as` over an append-only log with two producers; the
+      projection-mode walk ran once per due host against its own "one walk"
+      docstring; and the scope decision — the correction (c) calls load-bearing —
+      was module-private with nothing pinning it. It is now an exported pure
+      function with both omit-with-a-reason branches fixtured.
       <!-- verify: npx vitest run tests/scripts/catalogue_capture.test.ts -->
 - [x] **1.2** Add the host-truth versus disk-truth join for D-4: on each claude
       observation, intersect the bare names with the ranker's catalogue and publish
