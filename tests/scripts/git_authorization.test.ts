@@ -536,7 +536,7 @@ describe("concurrent sessions", () => {
   // — but that the id can never become more than ONE path component.
   it("a session id cannot escape the state directory", () => {
     const stateDir = path.resolve(tmp, "agents", "state");
-    for (const hostile of ["../../../etc/passwd", "a/b", "..", "x y", "/abs/path"]) {
+    for (const hostile of ["../../../etc/passwd", "a/b", "..", "x y", "/abs/path"]) {
       for (const rel of [ledgerFileFor(hostile), pendingFileFor(hostile)]) {
         const resolved = path.resolve(tmp, rel);
         expect(resolved.startsWith(`${stateDir}${path.sep}`), `${hostile} → ${rel}`).toBe(true);
