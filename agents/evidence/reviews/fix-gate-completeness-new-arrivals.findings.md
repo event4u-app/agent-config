@@ -50,7 +50,7 @@ at 165 ms before the Phase-2 levers turned it green at cli p95 84 ms).
 | 13 | medium | `tests/scripts/check_gate_coverage.test.ts` | Neither new ledger adoption is tested. The whole justification for withdrawing the exemption is the dropped-row path, and nothing pins `droppedRows`, the mapping, or finding 4. | fixed | Three new cases pin `rowsWereEvaluated` (incl. the pre-push normal state), two pin the `crashed`/`estate_invalid` split and the exhaustiveness throw. |
 | 14 | low | `src/scripts/build_archive_index.ts:336` | `archiveFiles(dir)` is walked a *second* time after `buildIndex` already walked it, so the plan comes from a later enumeration than the results; nothing checks `produced ⊄ planned`. | fixed | One walk feeds both, via a new `buildIndexFrom(dir, names)`; `buildIndex` delegates so its signature is unchanged. A produced-but-unplanned entry now throws. |
 | 15 | low | `src/scripts/build_archive_index.ts:337-341` | The skip branch is unreachable — `buildIndex` maps 1:1 over `archiveFiles`, and a read error throws before the ledger. Verified `planned=506 skipped=0`. | fixed | Reachable by construction now that the builder consumes the planned list: a future per-file `continue` drops out of `entries` while staying in the plan. |
-| 16 | low | `src/scripts/bench_hook_latency.ts:33-41` | The Gate-semantics header still states the `p95_ci` rule, false under `--via-cli` once a path-aware cap exists; only the inline comment was updated. | fixed | Falls with the revert — the header is accurate again. |
+| 16 | low | `src/scripts/bench_hook_latency.ts:33-41` | The Gate-semantics header still names the budget key `p95_ci` as the binding cap, false under `--via-cli` once a path-aware cap exists; only the inline comment was updated. | fixed | Falls with the revert — the header is accurate again. |
 | 17 | low | `src/scripts/check_gate_coverage.ts:191-192` | The `classify` docstring is orphaned above `ledgerOutcomeFor`; `classify` has lost its documentation. | fixed | Docstring returned to `classify`. |
 | 18 | low | `src/config/hook-latency-budget.json:23` | Nested `review_by: 2026-11-18` is invisible to `lint_budget_ownership.ts:169`, which reads only top-level `review_by`. | fixed | Falls with the revert. |
 | 19 | low | `src/config/hook-latency-budget.json:20` | "stays well below the 250 ms any_hook_event ceiling so a pathology is still caught" — `bench_hook_latency.ts:295` selects one budget object, so 250 is never applied to `pre_tool_use`. | fixed | Falls with the revert. |
@@ -77,6 +77,11 @@ purpose — this artefact's own linter reads every pipe row as a findings row):
 - **bundle, 146 ms** — run 32103306843, diagnostic step, warm.
 - **cli, 148 ms** — run 32103306843, diagnostic step, warm.
 - **cli, 150 ms** — run 32103306843, the gate itself, cold; passed by 0 ms.
+
+Replicated on a second run, because n=1 is the error round 2 caught in the first
+place. Run **32119695614**: bundle 141 ms, cli 142 ms, gate leg 145 ms. The
+wrapper exclusion now rests on three measurements across two runners (2 ms, 1 ms,
+and 4 ms locally); the bundle-vs-record gap rests on two (146 and 141 against 81).
 
 Two readings, and the first is the one that matters:
 
