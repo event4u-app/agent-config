@@ -605,6 +605,63 @@ describe('_synthesize_ai_council_block — quorum', () => {
         const synthesized = _synthesize_ai_council_block(cfg);
         expect(synthesized['quorum_min_present']).toBe(2);
     });
+
+    // Third instance of the same defect, and the one with money attached:
+    // `build_members` reads `ai_council.fallback.api_on_quota` off THIS block,
+    // so a dropped key means no config file can ever turn quota fall-through
+    // on — while the contract, the template and the unit tests all say it can.
+    it('forwards fallback.api_on_quota into the synthesized block', () => {
+        const dir = mkTmp();
+        const yamlPath = path.join(dir, '.ai-council.yml');
+        fs.writeFileSync(
+            yamlPath,
+            [
+                'enabled: true',
+                'defaults:',
+                '  mode: api',
+                'cost_budget:',
+                '  max_total_usd: 20.0',
+                'fallback:',
+                '  api_on_quota: true',
+                'members:',
+                '  anthropic:',
+                '    enabled: true',
+                '    model: claude-x',
+                '    api_key_ref: env:ANTHROPIC_KEY',
+                '',
+            ].join('\n'),
+            'utf-8',
+        );
+        const cfg = load_council_config(yamlPath);
+        expect(cfg.fallback.api_on_quota).toBe(true);
+        const synthesized = _synthesize_ai_council_block(cfg);
+        expect((synthesized['fallback'] as Record<string, unknown>)['api_on_quota']).toBe(true);
+    });
+
+    it('forwards the spend-safe default when the config omits the block', () => {
+        const dir = mkTmp();
+        const yamlPath = path.join(dir, '.ai-council.yml');
+        fs.writeFileSync(
+            yamlPath,
+            [
+                'enabled: true',
+                'defaults:',
+                '  mode: api',
+                'cost_budget:',
+                '  max_total_usd: 20.0',
+                'members:',
+                '  anthropic:',
+                '    enabled: true',
+                '    model: claude-x',
+                '    api_key_ref: env:ANTHROPIC_KEY',
+                '',
+            ].join('\n'),
+            'utf-8',
+        );
+        const cfg = load_council_config(yamlPath);
+        const synthesized = _synthesize_ai_council_block(cfg);
+        expect((synthesized['fallback'] as Record<string, unknown>)['api_on_quota']).toBe(false);
+    });
 });
 
 // ── cmd_render — handoff round-trip (road-to-always-on-orchestration Phase 4.1) ──

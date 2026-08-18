@@ -985,6 +985,68 @@ describe('resolve_cli_call_caps — the single cap authority', () => {
     });
 });
 
+// === the fallback block the strict loader does not model ====================
+//
+// `ai_council.fallback.api_on_quota` is read leniently off the raw settings
+// dict by `council_cli.ts::build_members`, not through this loader's typed
+// model. That is only safe if the strict loader TOLERATES the block — a
+// consumer sets one key and every command that loads the file must still
+// work. The loader rejects unknown keys in exactly two places
+// (`members.<name>` and `cli_call_budget.max_calls_per_day.<provider>`) and
+// nowhere at the top level, so it does. This pins that, because the leniency
+// is load-bearing and invisible: nothing else in the tree would fail if a
+// future top-level allowlist were added.
+// === `fallback` is MODELLED, and it has to be =============================
+//
+// `council_cli.ts::load_settings` does not hand `build_members` the config
+// file — it hands it a block SYNTHESIZED from `CouncilConfig`. So a key this
+// loader does not model cannot reach the runtime, whatever the operator wrote.
+// That defect shipped twice already (`quorum`, `quorum_min_present`, both
+// commented at the synthesizer) and a third time for this key: the contract
+// section, the template and the tests all described a switch production could
+// not flip. These tests pin the model, not just the tolerance.
+describe('config — fallback.api_on_quota', () => {
+    it('defaults to false when the block is absent — the only spend-safe default', () => {
+        const tmp = make_tmp();
+        const c = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID));
+        expect(c.fallback.api_on_quota).toBe(false);
+    });
+
+    it('true is honoured', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}\nfallback:\n  api_on_quota: true\n`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.fallback.api_on_quota).toBe(true);
+    });
+
+    it('the block does not disturb any other modelled field', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}\nfallback:\n  api_on_quota: true\n`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.enabled).toBe(true);
+        expect(c.defaults.mode).toBe('auto');
+        expect(c.members.get('anthropic')?.model).toBe('claude-x');
+    });
+
+    it('a non-boolean VALUE is rejected — an operator authorising spend gets an error, not a silent no', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}\nfallback:\n  api_on_quota: "yes"\n`;
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(
+            /fallback\.api_on_quota/,
+        );
+    });
+
+    it('a malformed BLOCK reads as off rather than refusing the whole file', () => {
+        // Asymmetric on purpose: the key exists to WITHHOLD spend, so a
+        // garbled container degrading to "off" is safe, while a garbled value
+        // is an instruction nobody should guess at.
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}\nfallback: "yes"\n`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.fallback.api_on_quota).toBe(false);
+    });
+});
+
 // === the SHIPPED template must survive the real loader ======================
 //
 // Nothing asserted this before 2026-08-15: the template was referenced by an

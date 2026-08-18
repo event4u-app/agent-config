@@ -328,6 +328,14 @@ interface CouncilConfigView {
     // Mode per decision class (trivial/low_impact/medium_impact); matches the
     // SPA `AiCouncilState.decision` + the POST payload `decision` field.
     decision: Record<string, string>;
+    /**
+     * `fallback.api_on_quota` — whether an exhausted CLI quota may fall
+     * through to the metered api rung. Surfaced because the gate is a
+     * BILLING-CLASS decision, not a fault-class one: a vendor CLI under a
+     * subscription is unmetered and its api twin is not, so turning this on
+     * converts exhausted plan quota into USD spend. Default `false`.
+     */
+    fallback: { api_on_quota: boolean };
 }
 
 /** Pull the wizard-controlled scalar subset out of a parsed council config. */
@@ -339,6 +347,7 @@ function extractCouncilConfig(body: string): CouncilConfigView {
     const membersRaw = obj(doc['members']);
     const dr = obj(doc['decision_resolution']);
     const classes = obj(dr['classes']);
+    const fallbackCfg = obj(doc['fallback']);
     const members: Record<string, CouncilMemberView> = {};
     for (const p of AI_COUNCIL_PROVIDERS) {
         const m = obj(membersRaw[p]);
@@ -367,6 +376,10 @@ function extractCouncilConfig(body: string): CouncilConfigView {
         },
         members,
         decision,
+        // Absent, malformed, or anything other than a literal `true` reads as
+        // off — the same conservative shape the CLI reader uses, so the GUI
+        // and the run path never disagree about whether spend is authorised.
+        fallback: { api_on_quota: fallbackCfg['api_on_quota'] === true },
     };
 }
 
@@ -691,6 +704,23 @@ const aiCouncilPayloadSchema = z.object({
     })).optional(),
     // keys ∈ {trivial, low_impact, medium_impact} — others ignored.
     decision: z.record(z.enum(['agent', 'council', 'user'])).optional(),
+    /**
+     * `fallback.api_on_quota` — when a CLI transport is refused for
+     * exhausted quota, may the seat retry on the metered api rung?
+     *
+     * This is declared here so the operator can flip it without hand-editing.
+     * **It is NOT declared to stop the GUI stripping it** — the write path is
+     * comment-preserving `replaceScalar` against the existing body, never a
+     * full dump, so an unmodelled block was never at risk. The real gap was
+     * that the one billing-class decision in the fallback design was
+     * hand-edit-only while every fault-class rule around it was automatic.
+     *
+     * Both quota shapes satisfy no-double-charge (local cap refuses
+     * pre-spawn; provider quota rejects at the request boundary), so the gate
+     * is billing class: an unmetered subscription becomes USD. Default
+     * `false`, and the retry still passes the ordinary `cost_budget` gates.
+     */
+    fallbackApiOnQuota: z.boolean().optional(),
 }).strict();
 
 // road-to-reciprocal-ecosystem § Phase 1 — the closed set of dismissible
@@ -908,6 +938,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 for (const cls of ['trivial', 'low_impact', 'medium_impact']) {
                     set(['decision_resolution', 'classes', cls, 'mode'], p.decision?.[cls]);
                 }
+                set(['fallback', 'api_on_quota'], p.fallbackApiOnQuota);
                 const target = join(opts.writeRoot, AI_COUNCIL_REL);
                 await fs.mkdir(dirname(target), { recursive: true });
                 await writeAtomic(target, body, { mode: 0o600 });

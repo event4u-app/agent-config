@@ -545,6 +545,13 @@ function _synthesize_ai_council_block(cfg: CouncilConfig): Dict {
         // already; repeating it for the shadow floor would silently pin every
         // `floor_would_hold` to the default no matter what the operator set.
         quorum_min_present: cfg.quorum_min_present,
+        // Third instance of the same defect the two comments above describe,
+        // and the most expensive of the three: `build_members` reads
+        // `ai_council.fallback.api_on_quota` off THIS block, so before the key
+        // was forwarded no config file could turn quota fall-through on. The
+        // documentation, the contract section and the tests all described a
+        // switch that production could not flip.
+        fallback: { api_on_quota: cfg.fallback.api_on_quota },
         necessity_classifier: {
             enabled: cfg.necessity_classifier.enabled,
             mode: cfg.necessity_classifier.mode,
@@ -2371,6 +2378,64 @@ function _resolvedTransportFor(
     });
 }
 
+/**
+ * Would this member have an api rung to fall back to, if its cli transport
+ * died mid-pass?
+ *
+ * Answered from the same two facts the twin factory in `build_members` uses —
+ * the provider has an api constructor, and its `api_key_ref` resolves — so the
+ * posture printed here and the retry that actually happens cannot disagree.
+ * It deliberately does NOT construct the client: `council:status` is the one
+ * command that must stay free of side effects.
+ *
+ * `'n/a'` for a member that is not on the cli rung: there is nothing to fall
+ * back FROM. Reporting `'none'` there would read as a missing capability
+ * rather than an inapplicable question.
+ */
+function _fallbackPostureFor(
+    name: string,
+    member: { readonly binary: string | null; readonly api_key_ref: string | null },
+): 'api' | 'none' | 'n/a' {
+    const t = _resolvedTransportFor(name, member);
+    if (!t.available || t.transport !== 'cli') {
+        return 'n/a';
+    }
+    if (!_API_PROVIDERS.has(name)) {
+        return 'none';
+    }
+    if (member.api_key_ref !== null) {
+        return _member_api_key_present({ api_key_ref: member.api_key_ref }) === true
+            ? 'api'
+            : 'none';
+    }
+    // No explicit ref: only anthropic and openai have a keyless path, and
+    // even there the generic loader can come up empty — so probe it rather
+    // than report `'api'` on the strength of the provider name. The strict
+    // constructors (gemini, xai, perplexity) refuse without an explicit ref,
+    // which is exactly the case the twin factory catches and reports as "no
+    // api rung for this provider".
+    const keyless = _API_KEYLESS_LOADERS[name];
+    if (keyless === undefined) {
+        return 'none';
+    }
+    try {
+        return keyless() ? 'api' : 'none';
+    } catch {
+        return 'none';
+    }
+}
+
+/**
+ * The keyless key loaders `_construct_api_member` falls back to when a member
+ * sets no `api_key_ref`. Only these two providers have one; the other three
+ * throw `CouncilDisabledError` instead. Both sides must stay in sync, and the
+ * posture line above is the reader that notices when they drift.
+ */
+const _API_KEYLESS_LOADERS: Readonly<Record<string, () => boolean>> = {
+    anthropic: () => Boolean(load_anthropic_key()),
+    openai: () => Boolean(load_openai_key()),
+};
+
 export function cmd_status(args: Args, opts: { env?: Record<string, string | undefined> } = {}): number {
     const env = opts.env ?? process.env;
     const override = env[COUNCIL_CONFIG_ENV];
@@ -2428,6 +2493,12 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
                         ];
                     }),
                 ),
+                fallback: {
+                    api_on_quota: cfg?.fallback.api_on_quota ?? false,
+                    posture: Object.fromEntries(
+                        enabledMembers.map(([n, m]) => [n, _fallbackPostureFor(n, m)]),
+                    ),
+                },
                 ignored_transport_keys: cfg?.ignored_transport_keys ?? [],
                 qualification: qualificationJson(qualifications),
                 qualified_members: countableSeats(qualifications),
@@ -2465,6 +2536,30 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
             const billing = t.available ? ` · ${t.billing}` : '';
             const detail = t.available ? t.transport : `unavailable — ${t.reason ?? 'no usable transport'}`;
             _stdout(`  transport        ${name}: ${detail}${billing}\n`);
+        }
+        // Mid-flight fallback posture, one line per cli seat. A seat that is
+        // not on the cli rung has nothing to fall back FROM and is skipped
+        // rather than printed as `none`, which would read as a missing
+        // capability instead of an inapplicable question.
+        const postures = enabledMembers
+            .map(([n, m]) => [n, _fallbackPostureFor(n, m)] as const)
+            .filter(([, p]) => p !== 'n/a');
+        if (postures.length > 0) {
+            for (const [name, posture] of postures) {
+                const detail =
+                    posture === 'api'
+                        ? 'would fall back to api'
+                        : 'no api rung — a lost cli transport loses the seat';
+                _stdout(`  fallback         ${name}: ${detail}\n`);
+            }
+            // Named separately from the per-seat lines because it is not a
+            // per-seat property: it is the one billing-class decision, and it
+            // governs every seat above at once.
+            _stdout(
+                `  fallback quota   api_on_quota: ${cfg.fallback.api_on_quota ? 'on' : 'off'}` +
+                    ` — an exhausted cli quota ${cfg.fallback.api_on_quota ? 'MAY' : 'may not'}` +
+                    ` retry on the metered rung\n`,
+            );
         }
         // The four-value verdict per seat, then the advice — TWO warnings, so
         // an `unavailable` seat is not told to re-run (R2 finding 12).

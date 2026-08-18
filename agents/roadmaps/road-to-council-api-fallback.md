@@ -187,19 +187,50 @@ Both were discovered by writing the multi-round test the roadmap's own
 
 ### Phase 2 — Config as a first-class key
 
-- [ ] **2.0** Verify the strict council-config loader
-      (`ai_council/config.ts`) tolerates an unknown `fallback` block at
-      every command that loads the file; if any path throws on unknown
-      keys, add the block to the strict builder in the same PR.
-      `verify:` `npx vitest run tests/scripts/ai_council/config.test.ts`
-- [ ] **2.1** Declare `fallback.api_on_quota` in the server settings schema
-      (`src/server/schemas/settings.ts`) with the billing-class rationale in
-      the describe-string, so the GUI neither strips nor flags it.
-      `verify:` `npm run typecheck`
-- [ ] **2.2** `council:status` prints the resolved fallback posture per
-      member (would-fall-back-to: api / none, quota opt-in on/off) — the
-      same one-line honesty the absent reasons already get.
-      `verify:` `npx vitest run tests/scripts/council_cli.test.ts`
+- [x] **2.0** The loader tolerates the block (it rejects unknown keys in
+      exactly two places, neither top-level) — but tolerance was the wrong
+      question, and asking only it would have shipped **F-3**: the key is
+      now MODELLED (`FallbackConfig`, `_build_fallback`) because the
+      runtime never sees the file. A malformed block reads as off; a
+      malformed `api_on_quota` VALUE is refused, because that is an
+      operator authorising spend and neither reading may be guessed.
+      `verify:` `npx vitest run tests/scripts/ai_council/config.test.ts` — 91 green.
+- [x] **2.1** Declared in the wizard's council payload schema
+      (`src/server/routes/wizard.ts` — the actual GUI surface;
+      `src/server/schemas/settings.ts` carries no council block), read back
+      by `extractCouncilConfig`, with the billing-class rationale in the
+      docblock. Required adding the block to the shipped template too:
+      `replaceScalar` returns the body unchanged when the path is absent,
+      so a key the template omits is silently unwritable.
+      **The roadmap's stated reason for this step is refuted** — the GUI
+      could not have stripped the key, because the write path is a
+      comment-preserving surgical edit and never a full dump. The real gap
+      was that the one billing-class decision was hand-edit-only.
+      `verify:` `npx vitest run tests/server/wizard.aiCouncil.test.ts` — 4 green.
+- [x] **2.2** `council:status` prints one line per cli seat (would fall
+      back to api / no api rung) plus one line for the quota opt-in, in
+      both the text and `--json` surfaces. A seat not on the cli rung is
+      skipped rather than printed as `none`: it has nothing to fall back
+      FROM, and `none` would read as a missing capability. The posture is
+      derived from the same two facts the twin factory uses, so the line
+      and the retry cannot disagree.
+      `verify:` `npx vitest run tests/scripts/council_cli.test.ts` — 26 green.
+
+#### F-3 — the third dropped key, and the one with money attached
+
+`council_cli.ts::load_settings` does not hand `build_members` the config
+file; it hands it a block **synthesized** from `CouncilConfig`. The lenient
+read added in Phase 0 therefore read a key that block never carried, so
+**no config file could turn `api_on_quota` on** — while the contract
+section, the roadmap, and the unit tests all described a switch that
+worked. Fixed by modelling the key and forwarding it.
+
+Two comments already standing at that synthesizer describe the identical
+defect for `quorum` and `quorum_min_present`. This is its third instance,
+which makes it a defect of the SHAPE rather than three accidents: any key
+validated by the loader and absent from the synthesizer is enforced at load
+and invisible at runtime. Worth a lint; not built here, and named as not
+built rather than left implied.
 
 ### Phase 3 — Observability
 

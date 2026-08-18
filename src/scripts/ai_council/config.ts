@@ -617,6 +617,27 @@ export type QuorumSetting = 'majority' | number;
  */
 export type QuorumMinPresent = number;
 
+/**
+ * `fallback.*` — the mid-flight cli→api retry's one configurable knob.
+ *
+ * It is modelled here rather than read leniently off the raw dict for a
+ * mechanical reason: `council_cli.ts::load_settings` does not hand callers the
+ * file, it hands them a block SYNTHESIZED from this type. A key this type does
+ * not carry cannot reach `build_members`, whatever the operator wrote — the
+ * same defect `quorum` and `quorum_min_present` each shipped once already, and
+ * their comments in that synthesizer say so.
+ */
+export interface FallbackConfig {
+    /**
+     * May an exhausted CLI quota retry on the metered api rung? Default
+     * `false`. The no-double-charge classes (`binary_missing`,
+     * `auth_rejected`, `cli_unsupported`, `model_unservable`) never consult
+     * this — they are always eligible. `timeout` / 5xx are never eligible
+     * under any value, and no key exists to change that.
+     */
+    readonly api_on_quota: boolean;
+}
+
 export interface CouncilConfig {
     readonly enabled: boolean;
     readonly defaults: DefaultsConfig;
@@ -627,6 +648,7 @@ export interface CouncilConfig {
     readonly cli_call_budget: CliCallBudgetConfig;
     readonly quorum: QuorumSetting;
     readonly quorum_min_present: QuorumMinPresent;
+    readonly fallback: FallbackConfig;
     readonly necessity_classifier: NecessityClassifierConfig;
     readonly model_downgrade: ModelDowngradeConfig;
     readonly debate: DebateConfig;
@@ -881,6 +903,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
     const quorum_min_present = _build_quorum_min_present(
         _get(raw, 'quorum_min_present', SOLO_FLOOR_MIN_PRESENT),
     );
+    const fallback = _build_fallback(_get(raw, 'fallback', {}));
     const necessity_classifier = _build_necessity_classifier(
         _asDict(_getOr(raw, 'necessity_classifier', {})),
     );
@@ -931,6 +954,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         cli_call_budget,
         quorum,
         quorum_min_present,
+        fallback,
         necessity_classifier,
         model_downgrade,
         debate,
@@ -2030,6 +2054,35 @@ function _build_quorum_min_present(raw: Json): QuorumMinPresent {
         `\`quorum_min_present\`=${_pyRepr(raw)} must be an integer >= 1 ` +
             `(got ${_pyTypeName(raw)}).`,
     );
+}
+
+/**
+ * Validate the `fallback` block. Absent → the safe default (`false`), which
+ * is the only value that cannot surprise an operator with USD spend.
+ *
+ * A malformed BLOCK (a string, a list) is tolerated as absent rather than
+ * refused: the key's whole job is to withhold spend, and a config that fails
+ * to load is a worse outcome than one that reads a garbled block as "off".
+ * A malformed `api_on_quota` VALUE is a different matter and is rejected —
+ * `api_on_quota: "yes"` is an operator trying to authorise spend, and
+ * silently reading that as `false` would be as wrong as silently reading it
+ * as `true`.
+ */
+function _build_fallback(raw: Json): FallbackConfig {
+    if (!_isDict(raw)) {
+        return { api_on_quota: false };
+    }
+    const v = (raw as Dict)['api_on_quota'];
+    if (v === undefined) {
+        return { api_on_quota: false };
+    }
+    if (!_isBool(v)) {
+        throw new CouncilConfigError(
+            `\`fallback.api_on_quota\`=${_pyRepr(v)} must be a boolean ` +
+                `(got ${_pyTypeName(v)}).`,
+        );
+    }
+    return { api_on_quota: v as boolean };
 }
 
 function _build_advisor(name: string, cfg: Dict): AdvisorConfig {
