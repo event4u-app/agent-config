@@ -52,10 +52,15 @@
  * that authored a brand-new 300-line module was previously measured as a
  * 0-line mutation. `untrackedNonDocFiles` lists the candidates
  * (`git ls-files --others --exclude-standard`, filtered by the same
- * `isDocPath` carve-out); `untrackedFileLineCount` sizes each one via
- * `git diff --no-index /dev/null <file>` (the only way to diff a path git's
- * index has never seen). Past `UNTRACKED_FILE_CAP` untracked non-doc files
- * this hook refuses to spawn one subprocess per file — an unbounded loop is
+ * `isDocPath` carve-out); `untrackedFileLineCount` sizes each one by READING
+ * IT — an untracked file's diff against nothing is its own content, so the
+ * count needs no git. It used to spawn `git diff --no-index /dev/null <file>`
+ * per file, on the Stop slot; step 3.2 of `road-to-per-turn-hook-economy`
+ * removed that process and preserved both edges that could otherwise move a
+ * threshold decision silently (a binary file counts 0, an unterminated last
+ * line still counts). The CAP is unchanged and still the outer bound: past
+ * `UNTRACKED_FILE_CAP` untracked non-doc files
+ * this hook refuses to read them all — an unbounded loop is
  * worse than an imprecise answer — and instead reports a line count
  * GUARANTEED to be over `MUTATION_LINE_THRESHOLD`: "many new files this
  * session" is itself sufficient signal to fire without the exact count.
@@ -366,21 +371,58 @@ export function untrackedNonDocFiles(cwd: string): string[] {
 }
 
 /**
- * Added+deleted line count for ONE untracked file, via
- * `git diff --numstat --no-index /dev/null <relPath>` — the only way to
- * diff a path git's index has never seen. `--no-index` exits `1` whenever a
- * diff exists (by design, unlike `gitNumstatRows`'s tracked-diff contract,
- * where a nonzero status means failure) — only the parsed numstat rows
- * matter here, never the exit code. Fails closed to `0`, never throws.
+ * Leading bytes probed for a NUL when deciding whether an untracked file is
+ * binary. git uses its own leading-block heuristic for the same call; the point
+ * of matching the size is that both agree on which files count as binary, not
+ * that either is exhaustive.
+ */
+export const BINARY_PROBE_BYTES = 8000;
+
+/**
+ * Added line count for ONE untracked file, read from the filesystem.
+ *
+ * **No subprocess (road-to-per-turn-hook-economy step 3.2 / D-3).** This used to
+ * run `git diff --numstat --no-index /dev/null <relPath>`, one spawn per
+ * untracked non-doc file, on the Stop slot — so a workspace with nineteen new
+ * files paid nineteen `git` process starts at every turn end. An untracked
+ * file's diff against nothing is just its own content, so the count needs no
+ * git at all.
+ *
+ * Behaviour is preserved rather than improved, in both directions that could
+ * silently change a threshold decision: a binary file still counts 0 (numstat
+ * printed a dash per side and `parseNumstat` mapped that to 0), and a file whose
+ * last line lacks a trailing newline still counts that line.
+ *
+ * The remaining bound is unchanged and lives one level up:
+ * `totalNonDocMutatedLinesWithMeasure` still refuses to read more than
+ * `UNTRACKED_FILE_CAP` files and returns a labelled `capped_approximation`
+ * instead — "many new files this session" is signal enough without an exact
+ * count. What 3.2 removes is the per-file *process*, not the cap.
+ *
+ * Fails closed to `0` and never throws, exactly as the spawn version did.
  */
 export function untrackedFileLineCount(cwd: string, relPath: string): number {
     try {
-        const r = spawnSync('git', ['diff', '--numstat', '--no-index', '/dev/null', relPath], {
-            cwd,
-            encoding: 'utf8',
-            maxBuffer: 16 * 1024 * 1024,
-        });
-        return parseNumstat(r.stdout ?? '').reduce((sum, row) => sum + row.added + row.deleted, 0);
+        const buf = fs.readFileSync(path.resolve(cwd, relPath));
+        if (buf.length === 0) return 0;
+        // Binary detection, matching what this function replaced rather than
+        // improving on it: numstat prints a dash for each side of a binary file
+        // and `parseNumstat` maps a dash to 0, so a binary file contributed 0
+        // lines before and must contribute 0 now. Counting newline bytes in
+        // binary content would invent mutation volume out of image data. git's
+        // own heuristic is a NUL byte in the leading block, so the same block
+        // size is used here and the two agree on the same files.
+        const probe = buf.subarray(0, Math.min(buf.length, BINARY_PROBE_BYTES));
+        if (probe.includes(0)) return 0;
+        // The replaced spawn reported every line of the file as added, INCLUDING
+        // a final line with no trailing newline. Counting newline bytes alone
+        // would be one short on exactly the files an editor leaves unterminated.
+        let lines = 0;
+        for (const byte of buf) {
+            if (byte === 0x0a) lines += 1;
+        }
+        if (buf[buf.length - 1] !== 0x0a) lines += 1;
+        return lines;
     } catch {
         return 0;
     }

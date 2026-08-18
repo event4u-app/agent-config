@@ -390,18 +390,66 @@ This phase is a blocker on citing "a 12.1 latency regression" anywhere.
 
 ### Phase 3 — Take the two spawns off the hot path (D-3)
 
-- [ ] **3.1** `roadmap-progress`: debounce. Write a cheap dirty marker on
+- [x] **3.1** `roadmap-progress`: debounce. Write a cheap dirty marker on
       `PostToolUse`, regenerate once at Stop rather than per write. This preserves
       the "dashboard stays in sync without agent self-discipline" guarantee at
       session granularity; the per-write guarantee was never a stated contract.
       Both Stop and session end flush the marker.
       `verify:` a session with several roadmap writes produces one regeneration and
       a dashboard identical to the per-write result.
-- [ ] **3.2** `end-review-nudge`: batch untracked files through a single diff
+      **Landed 2026-08-18.** `post_tool_use` appends the touched repo roots to
+      `agents/runtime/state/roadmap-progress/dirty-roots.json`; `stop` and
+      `session_end` regenerate once and clear it. Bound on all six hosts that
+      carry `roadmap-progress` on `post_tool_use` — windsurf has no such surface,
+      so nothing there ever marks the ledger and no flush binding was added.
+      **Three decisions the step did not specify, each forced by something that
+      would otherwise have broken it:**
+      · **The ledger lives under `--project-dir`, not beside the edited file.** A
+      touched root may be a sibling worktree, and `stop` carries no roadmap path —
+      a marker written at the target would be unfindable at flush time. This
+      hook's existing sibling-worktree test is what made that visible.
+      · **A ledger that cannot be written regenerates inline.** The debounce is an
+      optimisation and must never be the reason a dashboard silently stops
+      updating; pinned by a test that puts a directory where the ledger file
+      belongs.
+      · **The flush clears BEFORE it regenerates.** A regenerator that hangs must
+      not leave a ledger that replays the same roots at every later turn end.
+      **Both paths share one implementation** (`_regenerate`), so the flush cannot
+      regenerate differently from the write path — which is the "dashboard
+      identical to the per-write result" half of the verify, by construction
+      rather than by comparison. Empirically re-checked in the same session: a
+      flush-driven regeneration produced a byte-identical
+      `agents/roadmaps-progress.md` to a direct `roadmap:progress` run.
+      41 cases green in `tests/scripts/hooks/roadmap_progress_hook.test.ts`,
+      including N-writes→one-entry, second-flush-is-a-no-op, both event
+      spellings, and replay mode marking nothing.
+      **The pre-existing tests were the real cost.** Nine of them asserted the
+      per-write regeneration; each now drives write-then-flush through one
+      helper, so the property they protected ("does this write reach the
+      regenerator for the RIGHT repo?") is unchanged and only the moment moved.
+- [x] **3.2** `end-review-nudge`: batch untracked files through a single diff
       invocation or a pure-filesystem line count, and cap the untracked scan with an
       honest "scan truncated" note in the state record rather than unbounded spawns.
       `verify:` Stop on a workspace with many untracked files costs approximately
       the same as Stop on a clean one.
+      **Landed 2026-08-18, and the shape is better than the step asked for: not
+      one batched diff, but no subprocess at all.** An untracked file's diff
+      against nothing is its own content, so `untrackedFileLineCount` now reads
+      the file. Nineteen new files used to cost nineteen `git` process starts at
+      every turn end; they now cost nineteen `readFileSync` calls.
+      **Behaviour is preserved rather than improved, in both directions that could
+      move a threshold decision without anyone noticing:** a binary file still
+      counts 0 (numstat printed a dash per side and `parseNumstat` mapped that to
+      0, so counting newline bytes in image data would have invented mutation
+      volume), and a final line with no trailing newline still counts, which a
+      plain newline count would have under-reported by one. Both are pinned,
+      and one test asserts equality against a real
+      `git diff --numstat --no-index` run rather than against my reading of it.
+      **The step's "unbounded spawns" premise was already half-fixed and its
+      correction survives**: `UNTRACKED_FILE_CAP = 20` and the labelled
+      `capped_approximation` already shipped. 3.2 removes the per-file *process*
+      below the cap; the cap itself is untouched and still the outer bound.
+      54 cases green in `tests/scripts/end_review_nudge_hook.test.ts` (+7).
 - **AC-3:** the Stop cell on a heavily-untracked workspace lands within a declared
   band of the clean-workspace cell.
 

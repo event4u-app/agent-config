@@ -35,6 +35,7 @@ import {
     totalNonDocMutatedLinesWithMeasure,
     TRANSCRIPT_SCAN_MAX_BYTES,
     UNTRACKED_FILE_CAP,
+    BINARY_PROBE_BYTES,
     untrackedFileLineCount,
     untrackedNonDocFiles,
 } from '../../src/scripts/hooks/end_review_nudge_hook.js';
@@ -123,6 +124,64 @@ describe('untrackedNonDocFiles / untrackedFileLineCount / totalNonDocMutatedLine
         fs.writeFileSync(path.join(dir, 'new-module.ts'), `${lines.join('\n')}\n`);
         expect(nonDocMutatedLines(gitNumstatRows(dir))).toBe(0);
         expect(untrackedFileLineCount(dir, 'new-module.ts')).toBe(30);
+    });
+
+    // ── step 3.2: the count is a filesystem read, and must agree with the
+    // spawn it replaced on every edge that could move a threshold decision.
+
+    it('agrees with `git diff --numstat --no-index` on a text file', () => {
+        const dir = makeRepo();
+        const body = Array.from({ length: 42 }, (_v, i) => `export const l${i} = ${i};`);
+        fs.writeFileSync(path.join(dir, 'new-module.ts'), `${body.join('\n')}\n`);
+        const viaGit = spawnSync(
+            'git',
+            ['diff', '--numstat', '--no-index', '/dev/null', 'new-module.ts'],
+            { cwd: dir, encoding: 'utf8' },
+        );
+        const gitAdded = Number((viaGit.stdout ?? '').split('\t')[0]);
+        expect(gitAdded).toBe(42);
+        expect(untrackedFileLineCount(dir, 'new-module.ts')).toBe(gitAdded);
+    });
+
+    it('counts a final line with no trailing newline, as the spawn did', () => {
+        const dir = makeRepo();
+        fs.writeFileSync(path.join(dir, 'a.ts'), 'one\ntwo\nthree');
+        expect(untrackedFileLineCount(dir, 'a.ts')).toBe(3);
+    });
+
+    it('an empty file counts 0', () => {
+        const dir = makeRepo();
+        fs.writeFileSync(path.join(dir, 'empty.ts'), '');
+        expect(untrackedFileLineCount(dir, 'empty.ts')).toBe(0);
+    });
+
+    it('a binary file counts 0 — newline bytes in binary are not mutations', () => {
+        const dir = makeRepo();
+        // NUL in the leading block is git's own binary heuristic; the payload
+        // deliberately carries newline bytes so a naive counter would report 3.
+        fs.writeFileSync(
+            path.join(dir, 'blob.bin'),
+            Buffer.from([0x89, 0x00, 0x0a, 0x01, 0x0a, 0x02, 0x0a]),
+        );
+        expect(untrackedFileLineCount(dir, 'blob.bin')).toBe(0);
+    });
+
+    it('a NUL past the probe window is not treated as binary (bounded probe, stated)', () => {
+        const dir = makeRepo();
+        const head = Buffer.from(`${'x\n'.repeat(BINARY_PROBE_BYTES)}`);
+        fs.writeFileSync(path.join(dir, 'late-nul.ts'), Buffer.concat([head, Buffer.from([0x00])]));
+        expect(untrackedFileLineCount(dir, 'late-nul.ts')).toBeGreaterThan(0);
+    });
+
+    it('a missing path fails closed to 0 and never throws', () => {
+        const dir = makeRepo();
+        expect(untrackedFileLineCount(dir, 'nope.ts')).toBe(0);
+    });
+
+    it('a directory in place of a file fails closed to 0', () => {
+        const dir = makeRepo();
+        fs.mkdirSync(path.join(dir, 'a-dir.ts'));
+        expect(untrackedFileLineCount(dir, 'a-dir.ts')).toBe(0);
     });
 
     it('totalNonDocMutatedLines sums tracked + untracked non-doc lines', () => {
