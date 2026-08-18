@@ -51,12 +51,8 @@ import {
 } from "./hook_stdin.js";
 import { emitFor, type Severity } from "./host_semantics.js";
 import {
-  allBodyClasses,
-  countStubbedKeys,
-  measureBodies,
-  parseBodyClasses,
-  presentBodyClasses,
-  stubPayloadBodies,
+  _concern_body_classes,
+  planPayloadShapes,
   type BodyClass,
 } from "./payload_stub.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
@@ -324,40 +320,6 @@ export function _concern_matches_tool(concern: JsonObject, tool_name: string): b
     return true;
   }
   return names.includes(tool_name);
-}
-
-/**
- * The payload-body classes a concern receives in full; every other class
- * arrives as a stub (`road-to-per-turn-hook-economy` Phase 2, step 2.1).
- *
- * The default is EMPTY, deliberately: a concern that reads a body says so,
- * rather than every concern paying for the bodies because one of them might.
- * The audit that assigned the declarations is in the PR that added the field;
- * the dispatcher's stub counter is what catches an assignment that was wrong.
- *
- * ## Why a blocking or fail-closed concern can never be stubbed
- *
- * For an advisory concern a missing declaration costs a finding: it reads
- * `undefined` where it expected a body and stays quiet. For a guard it costs
- * an ALLOW — `block-no-verify` reads `tool_input.command`, and a stub makes
- * that `undefined`, after which the guard has nothing to match and exits 0.
- * That is the identical shape as the measured stdin bypass this same roadmap
- * fixed in Phase 1 (an empty payload silently disarming every guard on the
- * event), and it would be re-introduced by a single omitted YAML line.
- *
- * So the declaration is not the only path to the bodies: `fail_closed` or
- * `severity: blocking` keeps ALL classes, structurally, regardless of what the
- * manifest says. The lint additionally requires those concerns to declare
- * their classes explicitly so a reader of the manifest sees the truth — but
- * the dispatcher does not depend on the lint having run. The cost of the floor
- * is zero on the one blocking concern that reads no body: `turn-end-gate`
- * binds `stop`, which carries no tool bodies to stub.
- */
-export function _concern_body_classes(concern: JsonObject): Set<BodyClass> {
-  if (concern["fail_closed"] === true || concern["severity"] === "blocking") {
-    return allBodyClasses();
-  }
-  return parseBodyClasses(concern["needs_payload_bodies"]);
 }
 
 /**
@@ -1271,50 +1233,29 @@ export function main(argv?: string[]): number {
   // one per concern would re-pay the allocation the stub exists to avoid.
   // `present` is the set of body classes this event actually carries — empty on
   // every non-tool event, which is why those pay nothing at all.
-  const present = presentBodyClasses(envelope);
-  // Resolve each concern's keep-set once — the loop below reads it, and so does
-  // the measurement scope directly under this.
+  // Payload opt-in (step 2.1). One planner owns the whole decision — which
+  // classes are present, which any concern loses, the single measurement pass,
+  // and the at-most-four envelope shapes — so the loop below reads a shape
+  // rather than re-deriving one. Rationale and cost model: payload_stub.ts.
   const keep_by_concern = concerns.map(
     (c) => [c, _concern_body_classes(c)] as const,
   );
-  // Measured ONCE per dispatch and ONLY for classes some concern on this slot
-  // actually loses. `bodyBytes` serialises what it measures, so a per-stub call
-  // re-serialised the same 2 MB result once per keep-set; and a class every
-  // concern declares is never stubbed, so measuring it is pure waste. On
-  // claude's `pre_tool_use` all twelve concerns declare `input`, which makes
-  // this step vanish rather than shrink — a body-less event pays nothing either.
-  const stubbed_somewhere = new Set<BodyClass>();
-  for (const [, keep] of keep_by_concern) {
-    for (const cls of present) {
-      if (!keep.has(cls)) stubbed_somewhere.add(cls);
-    }
-  }
-  const measured_bodies =
-    stubbed_somewhere.size > 0
-      ? measureBodies(envelope, stubbed_somewhere)
-      : new Map<string, number | null>();
-  const shaped = new Map<string, JsonObject>();
-  const shapeFor = (keep: ReadonlySet<BodyClass>): JsonObject => {
-    if (present.size === 0) return envelope;
-    const cacheKey = [...keep].sort().join(",");
-    const hit = shaped.get(cacheKey);
-    if (hit !== undefined) return hit;
-    const built = stubPayloadBodies(envelope, keep, measured_bodies);
-    shaped.set(cacheKey, built);
-    return built;
-  };
+  const shapes = planPayloadShapes(
+    envelope,
+    keep_by_concern.map(([, keep]) => keep),
+  );
   for (const [concern, keep_classes] of keep_by_concern) {
     if (!_concern_matches_tool(concern, tool_name)) {
       continue;
     }
-    const concern_envelope = shapeFor(keep_classes);
-    const stubs_served = countStubbedKeys(envelope, keep_classes);
+    const concern_envelope = shapes.shapeFor(keep_classes);
+    const stubs_served = shapes.stubsFor(keep_classes);
     // What was actually SERVED, not what was declared. Recording the
     // declaration made the record wrong in both directions on a body-less
     // event: a blocking `stop` concern read "input,result" for bodies it can
     // never receive, and an advisory one read "none" while the full envelope
     // went to it untouched.
-    const served_classes = [...keep_classes].filter((c) => present.has(c)).sort();
+    const served_classes = shapes.servedBy(keep_classes);
     const concern_started = _now_iso();
     const { rc: rawRcResult, stderr: stderr_text, stdout: stdout_text, duration_ms } =
       _run_concern(concern, concern_envelope);

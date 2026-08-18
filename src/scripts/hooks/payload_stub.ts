@@ -343,3 +343,104 @@ export function parseBodyClasses(raw: unknown): Set<BodyClass> {
 export function allBodyClasses(): Set<BodyClass> {
   return new Set<BodyClass>(BODY_CLASSES);
 }
+
+/**
+ * The payload-body classes a concern receives in full; every other class
+ * arrives as a stub (`road-to-per-turn-hook-economy` Phase 2, step 2.1).
+ *
+ * The default is EMPTY, deliberately: a concern that reads a body says so,
+ * rather than every concern paying for the bodies because one of them might.
+ * The audit that assigned the declarations is in the PR that added the field;
+ * the dispatcher's stub counter is what catches an assignment that was wrong.
+ *
+ * ## Why a blocking or fail-closed concern can never be stubbed
+ *
+ * For an advisory concern a missing declaration costs a finding: it reads
+ * `undefined` where it expected a body and stays quiet. For a guard it costs
+ * an ALLOW — `block-no-verify` reads `tool_input.command`, and a stub makes
+ * that `undefined`, after which the guard has nothing to match and exits 0.
+ * That is the identical shape as the measured stdin bypass this same roadmap
+ * fixed in Phase 1 (an empty payload silently disarming every guard on the
+ * event), and it would be re-introduced by a single omitted YAML line.
+ *
+ * So the declaration is not the only path to the bodies: `fail_closed` or
+ * `severity: blocking` keeps ALL classes, structurally, regardless of what the
+ * manifest says. The lint additionally requires those concerns to declare
+ * their classes explicitly so a reader of the manifest sees the truth — but
+ * the dispatcher does not depend on the lint having run. The cost of the floor
+ * is zero on the one blocking concern that reads no body: `turn-end-gate`
+ * binds `stop`, which carries no tool bodies to stub.
+ */
+export function _concern_body_classes(concern: JsonObject): Set<BodyClass> {
+  if (concern["fail_closed"] === true || concern["severity"] === "blocking") {
+    return allBodyClasses();
+  }
+  return parseBodyClasses(concern["needs_payload_bodies"]);
+}
+
+/** The per-dispatch shaping plan. Built once, read per concern. */
+export interface PayloadShapePlan {
+  /** The envelope a concern with this keep-set receives. */
+  shapeFor(keep: ReadonlySet<BodyClass>): JsonObject;
+  /** How many payload keys were omitted for that concern. */
+  stubsFor(keep: ReadonlySet<BodyClass>): number;
+  /** The classes actually SERVED — declared AND present. Sorted. */
+  servedBy(keep: ReadonlySet<BodyClass>): string[];
+}
+
+/**
+ * Plan every envelope shape this dispatch needs, in one pass.
+ *
+ * There are at most FOUR distinct shapes per event (keep neither / input /
+ * result / both), so they are memoised by keep-set: concerns sharing a
+ * declaration share one clone, and building one per concern would re-pay the
+ * allocation the stub exists to avoid.
+ *
+ * The measurement is scoped twice over, because both scopes matter:
+ * — to the classes the event actually CARRIES (`present`), so a body-less
+ *   event such as `stop` or `user_prompt_submit` costs one property read;
+ * — to the classes at least one concern LOSES, because a class every concern
+ *   declares is never stubbed and measuring it is pure waste. On claude's
+ *   `pre_tool_use` all twelve concerns declare `input`, which makes the
+ *   measurement pass vanish rather than merely shrink.
+ *
+ * Extracted from the dispatcher loop rather than inlined there: the decision
+ * has four moving parts that are only correct together, and the source-size
+ * ratchet was right to object to a dispatcher carrying them.
+ */
+export function planPayloadShapes(
+  envelope: JsonObject,
+  keepSets: Iterable<ReadonlySet<BodyClass>>,
+): PayloadShapePlan {
+  const present = presentBodyClasses(envelope);
+  const stubbedSomewhere = new Set<BodyClass>();
+  for (const keep of keepSets) {
+    for (const cls of present) {
+      if (!keep.has(cls)) stubbedSomewhere.add(cls);
+    }
+  }
+  const measured =
+    stubbedSomewhere.size > 0
+      ? measureBodies(envelope, stubbedSomewhere)
+      : new Map<string, number | null>();
+  const shaped = new Map<string, JsonObject>();
+  const cacheKey = (keep: ReadonlySet<BodyClass>): string =>
+    [...keep].sort().join(",");
+  return {
+    shapeFor(keep) {
+      if (present.size === 0) return envelope;
+      const key = cacheKey(keep);
+      const hit = shaped.get(key);
+      if (hit !== undefined) return hit;
+      const built = stubPayloadBodies(envelope, keep, measured);
+      shaped.set(key, built);
+      return built;
+    },
+    stubsFor(keep) {
+      return countStubbedKeys(envelope, keep);
+    },
+    servedBy(keep) {
+      return [...keep].filter((c) => present.has(c)).sort();
+    },
+  };
+}

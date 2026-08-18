@@ -29,12 +29,9 @@ import { fileURLToPath } from "node:url";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { EXIT_ALLOW, _load_yaml } from "../../../src/scripts/hooks/dispatch_hook.js";
 import {
-  EXIT_ALLOW,
   _concern_body_classes,
-  _load_yaml,
-} from "../../../src/scripts/hooks/dispatch_hook.js";
-import {
   allBodyClasses,
   countStubbedKeys,
   isPayloadStub,
