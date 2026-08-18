@@ -1026,6 +1026,20 @@ tasks:
         if [ "$rc" = "2" ]; then echo "⚠️  lint_evidence_artifacts: internal error — degraded advisory mode, allowing (exit-code contract §6)"; else exit "$rc"; fi;
       }
 
+  check-estate-count:
+    silent: true
+    desc: |
+      Roadmap-estate ratchet (road-to-estate-drawdown T2) plus the
+      one-in-one-out lint (T3). The committed baseline in
+      src/config/estate-count-budget.json walks DOWN only — growth in the
+      active count, the later/ count or the open-blocker count is a policy
+      failure — and a change that adds an active roadmap archives, parks or
+      merges one in the same change unless the added file declares an
+      estate_offset_exempt reason. Nothing read the estate as a whole before
+      this gate: lint_roadmap_family_cap bounds one road-to-<family>-* family,
+      and the total was visible only to whoever read the dashboard header.
+    cmd: ./scripts-run src/scripts/check_estate_count
+
   lint-plan-risk-register:
     silent: true
     desc: |

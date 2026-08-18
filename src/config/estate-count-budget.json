@@ -1,0 +1,41 @@
+{
+    "_comment": "Roadmap-estate ratchet (road-to-estate-drawdown T2 + T3). The estate does not walk down by itself: new roadmaps arrive faster than old ones terminate, and until this file existed nothing in CI objected — lint_roadmap_family_cap bounds concurrency WITHIN one road-to-<family>-* family, and no gate read the estate as a whole. The baseline below is the MEASURED estate at registration, not a target: a hard target gate would be red on the day it lands and would teach the reader to ignore it. It fails on GROWTH instead, so the number can only walk down. T1's proposed ceilings are recorded under `target` and are explicitly NOT registered — they are the maintainer's to set.",
+    "schema_version": 1,
+    "registered_at": "2026-08-18",
+    "owner": "maintainer",
+    "metric": {
+        "basis": "src/scripts/check_estate_count.ts, using collect() from update_roadmap_progress — the same parser the dashboard is generated from, imported rather than re-implemented",
+        "active_roadmaps": "non-draft roadmap candidates at the top level of agents/roadmaps/, as collect() counts them. Verified 2026-08-18: this is exactly the number the dashboard header prints as 'N open roadmaps'.",
+        "later_roadmaps": "*.md files under agents/roadmaps/later/. Counted from the filesystem because parked roadmaps sit outside collect()'s corpus by design — they are estate all the same, and a drawdown that moved everything into later/ and called the number down would be the burial T1's quality anchor exists to prevent.",
+        "open_blockers": "open blockers summed over the active tree. Verified 2026-08-18: exactly the dashboard header's 'N open blockers'.",
+        "not_gated": [
+            "the needs-you subset of open blockers — it moves when a blocker changes OWNER, which is not estate growth, so gating it would red on a reclassification that changed nothing about the size of the estate",
+            "agents/roadmaps/skipped/ and archive/ — these are the destinations a drawdown sends files to; gating their growth would penalise the wanted direction"
+        ]
+    },
+    "baseline": {
+        "active_roadmaps": 38,
+        "later_roadmaps": 44,
+        "open_blockers": 49
+    },
+    "baseline_history": [
+        {
+            "at": "2026-08-18",
+            "active_roadmaps": 38,
+            "later_roadmaps": 44,
+            "open_blockers": 49,
+            "why": "registered with the gate, at the measured estate. Note the roadmap's own § 0 quotes 37 active / 44 later / 38 blockers against a mid-August pin; the estate moved between that draft and this registration, which is the arrival rate T3 exists to bound rather than a correction to the roadmap."
+        }
+    ],
+    "target": {
+        "_comment": "T1's proposed ceilings, kept as the destination. PROPOSALS, NOT REGISTERED: the roadmap says in as many words that both numbers and the window belong to the maintainer, and no date is pinned in this file. Nothing reads these values — `one_in_one_out.applies_above_active` is the only threshold the gate evaluates.",
+        "active_roadmaps": 15,
+        "open_blockers": 12,
+        "window": "roughly six weeks from campaign start (drafted; unregistered)"
+    },
+    "one_in_one_out": {
+        "_comment": "T3. `applies_above_active: null` means UNCONDITIONAL. T3 phrases the condition as 'while the active count sits above target', and T1 says the target belongs to the maintainer — so rather than inventing a ceiling so the condition could be evaluated, null states that no ceiling is registered and the lint therefore applies. Registering a number here is how it gets a threshold; registering one above the live count is how it is turned off.",
+        "applies_above_active": null,
+        "exemption": "estate_offset_exempt: <reason> in the added roadmap's own frontmatter. The key lives in the file rather than in this config for the reason RATCHET_RESET_KEY gives for living inside its baseline JSON: the claim shows up in the diff of the change that makes it."
+    }
+}

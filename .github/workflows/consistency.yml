@@ -282,6 +282,9 @@ jobs:
       - name: Check Iron Law prominence
         run: ./scripts-run src/scripts/check_iron_law_prominence
 
+      - name: Roadmap-estate ratchet + one-in-one-out (estate-drawdown T2/T3)
+        run: ./scripts-run src/scripts/check_estate_count
+
       - name: Gate R1 — plan Risk Registers (plan-review-gates §1)
         # Exit-code contract §6: 2 = internal error → degraded advisory
         # (warn-and-allow — a broken gate never blocks its own fix).

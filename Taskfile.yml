@@ -194,6 +194,10 @@ tasks:
       - task: check-completion-review
       - task: check-review-prompt-binding
       - task: check-r2-manifest
+      # The estate as a whole, which no other gate reads: the roadmap counts
+      # walk down only, and a new active roadmap pays for itself in the same
+      # change (road-to-estate-drawdown T2 + T3).
+      - task: check-estate-count
       - task: lint-tickets
       - task: lint-commit-subjects
       - task: lint-discovery-vocab
