@@ -691,13 +691,26 @@ dispatched: YYYY-MM-DDTHH:MM:SSZ
   Exit `2` in `--verify` is reserved for genuine internal failures (the file
   is missing or unreadable, git fails). A bare § 2.4 skip declaration
   carries no reviewer dispatch and needs no manifest.
-- **Acceptance criteria are read in BOTH authored forms, and their absence is
-  said out loud.** The dispatcher extracts either a `## Acceptance Criteria`
-  section (heading form, 21 of the 44 active roadmaps as of 2026-08-18) or inline
-  `- **AC-n:**` bullets declared per phase (7 of 44); the heading form wins if a
-  file ever carries both. When neither is present, `ac_hash` is **`none`** and the
-  reviewer's prompt states that the roadmap declares no criteria — it does not
-  claim an extraction.
+- **Acceptance criteria are read in BOTH authored forms, and a failed extraction
+  is said out loud.** The dispatcher extracts either a `## Acceptance criteria`
+  section — heading form, case-insensitive and tolerant of trailing qualifier text
+  such as `(per phase)`, 23 of the 44 active roadmaps as of 2026-08-18 — or inline
+  `- **AC-n:**` bullets declared per phase (7 of 44), at any indent and with
+  either bullet marker, including their loose-list continuation paragraphs. The
+  heading form wins if a file ever carries both. The remaining 14 roadmaps declare
+  no criteria in either form.
+
+  When the extraction comes back empty, `ac_hash` is **`none`** and the reviewer's
+  prompt says that no criteria could be **extracted** — naming both possible
+  causes, a roadmap that declares none and a roadmap that declares them in an
+  unrecognised shape, because the dispatcher cannot distinguish them. It must not
+  assert the first: an affirmative "this roadmap declares no criteria" is strictly
+  worse than silence, since silence invites the reviewer to look and a false
+  assertion forecloses it.
+
+  One predicate decides "are there criteria" for both the manifest and the prompt
+  (`hasAcceptanceCriteria`, whitespace-only counts as absent). Encoding it twice
+  is how the manifest and the prompt come to disagree about the same fact.
 
   This is a repair, not a refinement. The extractor previously matched the heading
   only, so an inline-only roadmap produced an empty extraction that was then
@@ -709,12 +722,22 @@ dispatched: YYYY-MM-DDTHH:MM:SSZ
   independent check on AC conformance, so the effect was to blind that check while
   the artefact read as though it had run.
 
-  **Historical artefacts are deliberately left alone.** 17 committed findings
-  files carry the empty-string `ac_hash`; only the handful whose roadmap is
-  inline-only were the defect, and `--verify-current` re-derives the *current*
-  PR's artefact only, so none of them go red. An artefact dispatched before this
-  change whose roadmap is inline-only will mismatch on its next re-derivation and
-  needs a re-bind (a hand-edit of `ac_hash`), exactly like any other moved input.
+  **Historical artefacts are deliberately left alone, for two independent
+  reasons — and only the second covers every entry point.** 17 committed findings
+  files carry the empty-string `ac_hash`; only the few whose roadmap declares
+  criteria in a now-recognised form were ever the defect. First, `--verify-current`
+  selects by review scope and re-derives the *current* PR's artefact alone, so a
+  corpus of foreign artefacts is never re-derived at all. Second — and this is the
+  reason that also holds for the single-artefact `--verify <path>`, which has no
+  such selection — a foreign artefact already diverges on `scope_hash`, so it
+  never reaches the `ac_hash` comparison on a semantics change. Do not read the
+  first reason as the whole guarantee: a caller that walks the committed corpus
+  with `--verify` inherits the semantics change and is protected only by the
+  second.
+
+  An artefact dispatched before this change whose roadmap does carry criteria in a
+  newly recognised form will mismatch on its next re-derivation and needs a
+  re-bind (a hand-edit of `ac_hash`), exactly like any other moved input.
 - **Compared set:** `scope_hash`, `roadmap_hash`, `ac_hash`. `diff_sha` is
   provenance and is never compared, for the § 2.0 reasons. The manifest's
   `scope_hash` must also agree with the header's `scope:`; a disagreement is

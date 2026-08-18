@@ -426,14 +426,35 @@ export function expectedHashes(args: {
     return {
         scope_hash: sha256(args.scopeDiffText),
         roadmap_hash: args.roadmapText == null ? 'none' : sha256(args.roadmapText),
-        // Falsy, not `== null`. An empty extraction used to hash to
-        // e3b0c44298fc…b855 — the SHA-256 of the empty string, which looks like
-        // a real hash in the manifest and re-derives identically on
-        // `--verify-current`, so the gate confirmed a criteria set that was
-        // never there. `'none'` is the value that already means "no input" for
-        // `roadmap_hash`; an absent AC block gets the same word.
-        ac_hash: args.acText ? sha256(args.acText) : 'none',
+        // ONE predicate, shared with the prompt builder. An empty extraction
+        // used to hash to e3b0c44298fc…b855 — the SHA-256 of the empty string,
+        // which looks like a real hash in the manifest and re-derives
+        // identically on `--verify-current`, so the gate confirmed a criteria
+        // set that was never there. `'none'` is the value that already means
+        // "no input" for `roadmap_hash`; an absent AC block gets the same word.
+        ac_hash: hasAcceptanceCriteria(args.acText) ? sha256(args.acText as string) : 'none',
     };
+}
+
+/**
+ * Does an extraction carry acceptance criteria?
+ *
+ * The single predicate behind BOTH the manifest's `ac_hash` and the reviewer
+ * prompt's roadmap line. It exists because the first version of this fix encoded
+ * the same question twice — truthiness in {@link expectedHashes}, an explicit
+ * `!== null && !== ''` at the call site — and the two agreed only for as long as
+ * `''` stayed the sole reachable falsy value. Refining one alone (this `.trim()`,
+ * for instance) would then have made the manifest record a hash while the prompt
+ * told the reviewer there were no criteria: the same two-places-disagree failure
+ * this module was being repaired for, one level up. Caught by the R2 review of
+ * that very fix.
+ *
+ * Whitespace-only counts as absent. The inline collector can emit blank lines
+ * between a criterion and its loose-list continuation, so a result that is
+ * structurally non-empty and semantically empty is reachable.
+ */
+export function hasAcceptanceCriteria(acText: string | null | undefined): boolean {
+    return typeof acText === 'string' && acText.trim() !== '';
 }
 
 /**
@@ -471,10 +492,20 @@ export function extractAcceptanceCriteria(roadmapText: string): string {
     const lines = roadmapText.split('\n');
     let start = -1;
     for (let i = 0; i < lines.length; i++) {
-        // Case-insensitive: the tree carries both `## Acceptance Criteria` and
+        // Case-insensitive, and NOT anchored at the end of the line.
+        //
+        // Case first: the tree carries both `## Acceptance Criteria` and
         // `## Acceptance criteria`; a case-sensitive match silently extracted
         // nothing for the latter (found by the zcs-close R2 review, 2026-08-09).
-        if (/^## acceptance criteria\s*$/i.test(lines[i] as string)) {
+        //
+        // The end-anchor was the same defect wearing a different mask, and it was
+        // LIVE: `\s*$` rejected a heading carrying a qualifier, so
+        // `## Acceptance criteria (per phase, on promotion to ready)` and
+        // `## Acceptance criteria (anti-dump — the review-s own rule)` extracted
+        // nothing. Two roadmaps, measured 2026-08-18 — and they had been counted
+        // as "declares no criteria" by the very census that motivated this fix,
+        // which is how a matcher tuned to its own measurement hides its misses.
+        if (/^##\s+acceptance criteria\b/i.test(lines[i] as string)) {
             start = i;
             break;
         }
@@ -493,26 +524,70 @@ export function extractAcceptanceCriteria(roadmapText: string): string {
 }
 
 /**
+ * An inline criterion bullet, at any indent and with either bullet marker.
+ *
+ * Indent-tolerant so a nested criterion is emitted as its own row rather than
+ * folded into its parent as a continuation line — folding made the extraction
+ * shape, and therefore `ac_hash`, a function of indentation depth. Neither the
+ * `*` marker nor a nested criterion occurs in the tree today (measured
+ * 2026-08-18 across all 44 active roadmaps: zero of each), so this is a guard
+ * against a future file, not a fix for a live population.
+ */
+const AC_BULLET_RE = /^\s*[-*]\s+\*\*AC-/;
+
+/**
  * Collect inline `- **AC-n:**` bullets and their continuation lines.
  *
- * A continuation line is indented and non-blank. The walk stops at the first
- * blank or non-indented line, which is what separates one criterion from the
- * prose or heading that follows it. Bullets are emitted in file order and
- * separated by nothing but their own newline: each one is self-labelling
- * (`AC-0`, `AC-1`, …), so a synthetic section heading would be text this
- * function invented rather than text the roadmap declared.
+ * A continuation line is indented and non-blank. Bullets are emitted in file
+ * order and separated by nothing but their own newline: each one is
+ * self-labelling (`AC-0`, `AC-1`, …), so a synthetic section heading would be
+ * text this function invented rather than text the roadmap declared.
+ *
+ * Two stopping rules, and the second is the subtle one:
+ *
+ * - another criterion bullet ends the current one, at any indent — see
+ *   {@link AC_BULLET_RE};
+ * - a blank line ends it ONLY when the next non-blank line is not an indented
+ *   continuation. Markdown loose lists separate a bullet from its second
+ *   paragraph with exactly that blank line, so breaking on the blank
+ *   unconditionally truncated the criterion and emitted a PARTIAL extraction —
+ *   which then hashed to a real value and read as complete. That is the
+ *   looks-like-success shape this whole function exists to remove, relocated
+ *   from "empty but claimed" to "half but claimed"; caught by the R2 review of
+ *   the first version. No roadmap uses a loose continuation today (measured
+ *   2026-08-18: zero across all 44), so this is latent-defect removal.
  */
 function extractInlineAcceptanceCriteria(lines: readonly string[]): string {
     const out: string[] = [];
     for (let i = 0; i < lines.length; i++) {
-        if (!/^- \*\*AC-/.test(lines[i] as string)) continue;
+        if (!AC_BULLET_RE.test(lines[i] as string)) continue;
         out.push(lines[i] as string);
-        for (let j = i + 1; j < lines.length; j++) {
+        let j = i + 1;
+        while (j < lines.length) {
             const line = lines[j] as string;
-            if (!/^\s+\S/.test(line)) break;
-            out.push(line);
-            i = j;
+            // A sibling or nested criterion owns itself; hand it back to the
+            // outer loop rather than absorbing it.
+            if (AC_BULLET_RE.test(line)) break;
+            if (/^\s+\S/.test(line)) {
+                out.push(line);
+                j++;
+                continue;
+            }
+            if (line.trim() !== '') break;
+            // Blank: look past the run of blanks for an indented continuation.
+            let k = j;
+            while (k < lines.length && (lines[k] as string).trim() === '') k++;
+            const resumes =
+                k < lines.length &&
+                /^\s+\S/.test(lines[k] as string) &&
+                !AC_BULLET_RE.test(lines[k] as string);
+            if (!resumes) break;
+            for (let b = j; b < k; b++) out.push(lines[b] as string);
+            j = k;
         }
+        // Resume the outer scan AT the line that stopped the walk, so a
+        // criterion bullet that ended this one is still matched.
+        i = j - 1;
     }
     return out.join('\n');
 }
@@ -644,12 +719,21 @@ function reviewerPrompt(args: {
     // when the extraction returned nothing and the file beside it was 0 bytes. A
     // reviewer told the criteria are in a file it finds empty has no way to tell
     // an extraction failure from a roadmap that genuinely declares none, so it
-    // cannot report the gap. Say which of the two it is.
+    // cannot report the gap.
+    //
+    // The empty branch reports the EXTRACTION, never the roadmap. Its first
+    // version said "it declares NO acceptance criteria" — a claim the extractor
+    // cannot establish, since an unrecognised shape produces the identical empty
+    // result. That turned a silent failure into an affirmative false statement
+    // handed to the one independent check on AC conformance, which is strictly
+    // worse: silence invites a look, a false assertion forecloses it. Caught by
+    // the R2 review of the first version, and it was not hypothetical — the
+    // trailing-text heading it names was live in two roadmaps.
     const roadmapLine = !args.roadmapGiven
         ? '- roadmap under review: none (`acceptance-criteria.md` is empty)'
         : args.acGiven
           ? '- roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)'
-          : '- roadmap under review: `roadmap.md` — it declares NO acceptance criteria, so `acceptance-criteria.md` is empty. Review the diff on its own terms and say so if the roadmap should have carried criteria.';
+          : '- roadmap under review: `roadmap.md` — NO acceptance criteria could be EXTRACTED from it, in either recognised form (an `## Acceptance criteria` heading, or inline `- **AC-n:**` bullets), so `acceptance-criteria.md` is empty. Two different things produce that result and the dispatcher cannot tell them apart: the roadmap declares none, or it declares them in a shape the extractor does not recognise. Open `roadmap.md`, decide which, and report a finding if the criteria are there.';
     return [
         `# R2 completion review — ${args.slug}`,
         '',
@@ -1106,7 +1190,7 @@ function runDispatch(args: Args): number {
         headSha,
         scopeHash: hashes.scope_hash,
         roadmapGiven: roadmapText !== null,
-        acGiven: acText !== null && acText !== '',
+        acGiven: hasAcceptanceCriteria(acText),
         changedFiles,
     });
     const manifest = deriveManifest({

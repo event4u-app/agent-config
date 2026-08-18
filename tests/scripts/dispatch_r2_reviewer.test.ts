@@ -28,6 +28,7 @@ import {
     deriveSlug,
     expectedHashes,
     extractAcceptanceCriteria,
+    hasAcceptanceCriteria,
     isEmptyScope,
     parseManifest,
     reviewScopeDiffArgs,
@@ -115,6 +116,20 @@ const ROADMAP_INLINE_AC = [
     '',
     'Trailing prose that is NOT a criterion and must not be collected.',
     '',
+].join('\n');
+
+/**
+ * What `ROADMAP_INLINE_AC` must extract to, written out as a literal.
+ *
+ * Deliberately NOT computed by calling the extractor: an expectation derived from
+ * the function under test cannot fail on an extraction defect, it only pins "the
+ * dispatcher hashed whatever came back". The R2 review of the first version of
+ * this fix caught exactly that in the end-to-end hash assertion below.
+ */
+const ROADMAP_INLINE_AC_EXPECTED = [
+    '- **AC-0:** the first criterion holds, and this line wraps',
+    '  onto a continuation the collector must keep.',
+    '- **AC-1:** the second criterion holds.',
 ].join('\n');
 
 /** A roadmap that declares no acceptance criteria in either form. */
@@ -690,14 +705,7 @@ describe('dispatch_r2_reviewer — pure helpers', () => {
         // 0-byte acceptance-criteria.md, and the prompt said the criteria had
         // been extracted. Measured 2026-08-18: 7 of 44 active roadmaps are
         // inline-only, including the one the backlog named as the next pick.
-        const ac = extractAcceptanceCriteria(ROADMAP_INLINE_AC);
-        expect(ac).toBe(
-            [
-                '- **AC-0:** the first criterion holds, and this line wraps',
-                '  onto a continuation the collector must keep.',
-                '- **AC-1:** the second criterion holds.',
-            ].join('\n'),
-        );
+        expect(extractAcceptanceCriteria(ROADMAP_INLINE_AC)).toBe(ROADMAP_INLINE_AC_EXPECTED);
     });
 
     it('extractAcceptanceCriteria stops at the first blank or non-indented line', () => {
@@ -732,6 +740,75 @@ describe('dispatch_r2_reviewer — pure helpers', () => {
         expect(extractAcceptanceCriteria(ROADMAP_NO_AC)).toBe('');
     });
 
+    it('extractAcceptanceCriteria accepts a heading that carries trailing qualifier text', () => {
+        // LIVE defect, not a hypothetical: the end-anchored `\s*$` rejected
+        // `## Acceptance criteria (per phase, on promotion to ready)` and
+        // `## Acceptance criteria (anti-dump — …)`, two real roadmaps that the
+        // census behind this fix had therefore counted as declaring none. Found
+        // by the R2 review of the first version.
+        const qualified = [
+            '# X',
+            '',
+            '## Acceptance criteria (per phase, on promotion to ready)',
+            '',
+            '- crit A',
+            '',
+            '## Next',
+            '',
+        ].join('\n');
+        const ac = extractAcceptanceCriteria(qualified);
+        expect(ac).toContain('- crit A');
+        expect(ac).not.toContain('## Next');
+    });
+
+    it('extractAcceptanceCriteria keeps a loose-list continuation separated by a blank line', () => {
+        // Markdown loose lists put a blank line between a bullet and its second
+        // paragraph. Breaking on the blank truncated the criterion and produced a
+        // PARTIAL extraction that hashed to a real value and read as complete —
+        // the same looks-like-success shape, relocated from "empty but claimed"
+        // to "half but claimed".
+        const loose = [
+            '## Phase 1',
+            '- **AC-0:** first paragraph of the criterion.',
+            '',
+            '  second paragraph, still part of AC-0.',
+            '',
+            'Unindented prose that ends it.',
+            '',
+        ].join('\n');
+        const ac = extractAcceptanceCriteria(loose);
+        expect(ac).toContain('first paragraph');
+        expect(ac).toContain('second paragraph, still part of AC-0.');
+        expect(ac).not.toContain('Unindented prose');
+    });
+
+    it('extractAcceptanceCriteria emits a nested AC bullet as its own criterion', () => {
+        // Indent-folding made the extraction shape — and therefore ac_hash — a
+        // function of indentation depth, and the skip was permanent because the
+        // outer scan resumed past the folded line.
+        const nested = ['## Phase 1', '- **AC-0:** parent.', '  - **AC-1:** nested child.', ''].join(
+            '\n',
+        );
+        const ac = extractAcceptanceCriteria(nested);
+        expect(ac.split('\n')).toEqual(['- **AC-0:** parent.', '  - **AC-1:** nested child.']);
+    });
+
+    it('hasAcceptanceCriteria is the single predicate behind ac_hash and the prompt', () => {
+        // The pair used to be encoded twice with two different tests, agreeing
+        // only while '' stayed the sole reachable falsy value. Pinned as parity so
+        // refining the predicate cannot desynchronise the manifest from the prompt.
+        expect(hasAcceptanceCriteria(null)).toBe(false);
+        expect(hasAcceptanceCriteria(undefined)).toBe(false);
+        expect(hasAcceptanceCriteria('')).toBe(false);
+        expect(hasAcceptanceCriteria('   \n\n  ')).toBe(false);
+        expect(hasAcceptanceCriteria('- **AC-0:** x')).toBe(true);
+        // Parity: whatever the predicate says, ac_hash agrees.
+        for (const ac of [null, '', '   \n ', '- **AC-0:** x']) {
+            const h = expectedHashes({ scopeDiffText: 'd', roadmapText: 'r', acText: ac }).ac_hash;
+            expect(h === 'none').toBe(!hasAcceptanceCriteria(ac));
+        }
+    });
+
     it('expectedHashes maps an EMPTY extraction to none, not to the empty-string hash', () => {
         // e3b0c442…b855 is sha256(''). It was recorded whenever extraction came
         // back empty, looks like a real hash in the manifest, and re-derives
@@ -758,7 +835,10 @@ describe('dispatch_r2_reviewer — pure helpers', () => {
         const acFile = fs.readFileSync(path.join(inputDir, 'acceptance-criteria.md'), 'utf-8');
         expect(acFile).toContain('- **AC-0:**');
         expect(acFile).toContain('- **AC-1:**');
-        expect(out.hashes.ac_hash).toBe(sha256(extractAcceptanceCriteria(ROADMAP_INLINE_AC)));
+        // Literal expectation, not `sha256(extractAcceptanceCriteria(...))` —
+        // see ROADMAP_INLINE_AC_EXPECTED for why that form proves nothing.
+        expect(acFile).toBe(ROADMAP_INLINE_AC_EXPECTED);
+        expect(out.hashes.ac_hash).toBe(sha256(ROADMAP_INLINE_AC_EXPECTED));
         expect(out.hashes.ac_hash).not.toBe('none');
 
         // The vacuity guard for the next test: prove the "extracted" wording is
@@ -783,8 +863,12 @@ describe('dispatch_r2_reviewer — pure helpers', () => {
         const inputDir = path.join(repo, OUT, `${SLUG}.review-input`);
         expect(fs.readFileSync(path.join(inputDir, 'acceptance-criteria.md'), 'utf-8')).toBe('');
         const prompt = fs.readFileSync(path.join(inputDir, 'prompt.md'), 'utf-8');
-        expect(prompt).toContain('it declares NO acceptance criteria');
-        expect(prompt).not.toContain('Acceptance Criteria extracted');
+        // The line reports the EXTRACTION, never the roadmap: an unrecognised
+        // shape yields the identical empty result, so asserting the roadmap
+        // "declares none" would be a claim the dispatcher cannot establish.
+        expect(prompt).toContain('NO acceptance criteria could be EXTRACTED from it');
+        expect(prompt).toContain('the extractor does not recognise');
+        expect(prompt).not.toContain('Acceptance Criteria extracted to');
     });
 
     it('reviewScopeDiffArgs excludes every gate-owned evidence path from the reviewed scope', () => {
