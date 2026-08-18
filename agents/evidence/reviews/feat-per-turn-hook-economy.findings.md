@@ -1,17 +1,17 @@
 # Findings: feat-per-turn-hook-economy
-<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: 5461cd483a0d274787f9804e7c18ae801b78d604a5dc79b87f9a13339bcf07fa | diff: 98756efff570a539ee4c2bf1f4f6106034bc4d7d | reviewer: r2-fresh-subagent-feat-per-turn-hook-economy | prompt_hash: 7c63256aa9348b25571bf6336272bd16aa785d490c0efd1ec9aa97c0a8264afb -->
+<!-- completion-review: v1 | reviewed: 2026-08-18 | scope: 5461cd483a0d274787f9804e7c18ae801b78d604a5dc79b87f9a13339bcf07fa | diff: 28866865cf23faab04e3c64e29bf06f5feef72ff | reviewer: r2-fresh-subagent-feat-per-turn-hook-economy | prompt_hash: 029a222fa024d4e0ddbb93871923359ddbc17c1f3e970a7802ef544e36f42a31 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-18 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 98756efff570a539ee4c2bf1f4f6106034bc4d7d
+  diff_sha: 28866865cf23faab04e3c64e29bf06f5feef72ff
   scope_hash: 5461cd483a0d274787f9804e7c18ae801b78d604a5dc79b87f9a13339bcf07fa
   roadmap: agents/roadmaps/road-to-per-turn-hook-economy.md
   roadmap_hash: f8a30788a713798e1833f2d69a34bcfab9246cfa3186e606ef8a0d093611d8fb
   ac_hash: e2024c1786cce1263c46df6184edd473cda7307782b8515b1f59e7953a09fd17
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-08-18T18:40:00Z
+dispatched: 2026-08-18T18:45:00Z
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
