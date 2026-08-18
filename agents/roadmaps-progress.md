@@ -6,7 +6,7 @@
 
 ## Overall
 
-**289 / 578 steps done · 50%**
+**291 / 578 steps done · 50%**
 
 ```text
 ████████████████████░░░░░░░░░░░░░░░░░░░░   50%
@@ -32,7 +32,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 6 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
 | 8 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 5 | 0 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ░░░░░░░░░░ 0% |
+| 9 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 2 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ████░░░░░░ 40% |
 | 10 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
 | 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
 | 12 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
@@ -141,6 +141,8 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 **Blockers**
 
 - **b-convergence-machine** (owner: user) — blocks Phase 3 only (Phases 1-2 are repo work)
+  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Take all three steps in ONE sitting — reading, `install --layer`, reading — and record both readings against a named commit in the same note. Do not try to reproduce the two-layer topology in the repo: the entry already states that the topology is a property of the install, so a repo-side reconstruction would measure something else and read as the same number. Phases 1-2 are repo work and proceed meanwhile; only Phase 3 waits.
+  - **If you do nothing:** Phases 1-2 land and Phase 3 stays open, which means the convergence claim ships with no before/after pair behind it — the shape where a number is published and the measurement that would falsify it was never taken.
   - **What to do:**
     Phase 3's before/after pair needs the maintainer machine,
     since the two-layer topology is a property of the install rather than of the
@@ -242,6 +244,8 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 **Blockers**
 
 - **skill-activation-window** (owner: user) — blocks Phase 1.3's skill-usage evidence column; Phase 2's trigger-accuracy bars
+  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Do NOT commission a second eval. This entry is a pointer, and its own text says the sibling's pre-registration IS the bar Phase 2 needs — so adopt that pre-registration as this roadmap's window and resume when the sibling's predictions JSON exists. One human sitting then discharges two blockers instead of one, and a parallel window would produce a second number nobody can reconcile with the first.
+  - **If you do nothing:** 49 steps stay open behind an instrument whose depth on this store is unverified, and Phase 1.3's evidence column stays a column with no evidence in it. The independently recorded facts — 6 of 288 skills ever invoked, 0 declaring a trigger, a host that truncates the catalogue — stay true and stay unmeasurable from transcripts.
   - **What to do:**
     `road-to-skill-description-measurement.md` is blocked on
     `human-gated-live-trigger-eval` with the same gap under a different name —
@@ -276,6 +280,8 @@ _1 blocker resolved._
 **Blockers**
 
 - **maintainer-blind-ratings** (owner: user) — blocks Ü2 and Ü3 adoption (Phase 2 pre-registered decision rules) and the Ü2/Ü3 half of Phase 3's merge-or-null. **Ü1 is NOT blocked** — it is decided, adopted and merged (`blind_chairman` default true, opt-out flag, mandatory post-verdict de-anon map, 26/26 test-pinned).
+  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Do R1 and R2 in one sitting against the prepared packet, and accept an **honest null** as a full outcome for either — the entry's own Resolved-when asks for adopt-or-honest-null and explicitly refuses a deferral, so "the preference was not majority" closes Ü2 exactly as cleanly as adoption does. The sitting is bounded: the packet is already prepared, Ü1 is already adopted and out of scope, and the two readings have pre-registered decision rules rather than open-ended judgement.
+  - **If you do nothing:** Ü2 and Ü3 stay undecided and Phase 3's merge-or-null cannot be written at all, so the roadmap cannot terminate in either direction. Ü1's shipped behaviour is unaffected, which is what makes this the cheapest kind of blocker to leave open and the easiest to forget.
   - **What to do:**
     rate the prepared blind packet at
     `internal/bench/council-blind-review/blind-rating-packet.md`, blind to arms.
@@ -314,14 +320,14 @@ _1 blocker resolved._
 
 ### [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md)
 
-**Road to estate drawdown — an agent-run campaign that ends with fewer roadmaps, enforced** — 0 / 5 done (0%)
+**Road to estate drawdown — an agent-run campaign that ends with fewer roadmaps, enforced** — 2 / 5 done (40%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | One sitting, thirteen answers | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
+| 0 | One sitting, thirteen answers | ✅ done | 0 | 1 | 1 | 0 | 100% |
 | 1 | Execute everything runnable | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
 | 2 | Triage sweep over the whole estate, in batches, with terminal verdicts | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | The ratchet lands | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 3 | The ratchet lands | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 4 | The recurring agent pass, so this never regrows | ⏭️ skipped | 0 | 0 | 1 | 0 | 0% |
 
 <a id="blockers-road-to-estate-drawdown"></a>
@@ -632,6 +638,8 @@ _1 blocker resolved._
 **Blockers**
 
 - **real-orchestration-usage** (owner: user) — blocks Phase 2 (and thereby Phase 3's decision)
+  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Run the payload probe FIRST and treat its answer as the decision, rather than accumulating more usage. The entry's own re-measurement is decisive on this: at 367 orchestration lines the quality columns are `null` 367/367 and `spawn_count ≥ 2` is 0 of 367, so more of the same telemetry cannot populate the columns PROVE needs. If no hook slot sees the task-completion payload, Phase 3's verdict is an **honest null** and this roadmap terminates on that finding instead of waiting; only if a slot does see it is the ≥ 20-populated-line window worth opening.
+  - **If you do nothing:** 6 steps wait on a window that the entry's own numbers suggest may never fill, and the roadmap keeps reading as resumable to every feasibility screen — the exact misreading the 2026-08-17 rewrite of the Resolved-when was written to stop. A blocker whose condition cannot be reached is a park or a null, not a wait.
   - **What to do:**
     the build work is done; only real delegable work produces the
     telemetry. Use the agent on genuinely parallel/ordered multi-file tasks under
@@ -790,6 +798,8 @@ _1 blocker resolved._
 **Blockers**
 
 - **manual-rubric-rater** (owner: user) — blocks Phase 1 step 1's scoring half, and thereby step 2's verdict
+  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Score the artifacts in ONE sitting and do it before any `score.ts` output is on screen — the anti-anchor ordering is binding per the rubric's own first line, so a sitting split across days is the likeliest way to void the result without noticing. If that sitting is not going to happen in the near term, the honest move is to park this roadmap in `later/` with the rubric pass as its probe-able resume condition, rather than leaving it in the active tree reading as ordinary open work.
+  - **If you do nothing:** Phase 1 step 1's scoring half stays open and step 2 has no verdict, so the bench run produces only the SECONDARY `lint_persistence` count — a number the pre-registration explicitly does not accept as the defect count. The roadmap then reads as spend-blocked when it is in fact rater-blocked, which is the misreading its own Surfaced note records.
   - **What to do:**
     score each produced artifact against
     `internal/bench/scale-history/rubric.md`, blind to arm, **before** any
@@ -814,11 +824,15 @@ _2 blockers resolved._
 **Blockers**
 
 - **human-gated-live-trigger-eval** (owner: user) — blocks all of Phase 1 — 1.1 and 1.2 both need a live model run
+  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Run both tree states in ONE sitting under the same protocol, or park the roadmap in `later/` with exactly that as its resume condition. Two sittings is the failure mode to avoid: the entry's Resolved-when requires both JSONs to come from the *same* protocol, and a protocol that drifted between runs produces two files that look comparable and are not. This blocker also gates `road-to-cost-parity-1-rule-payload-diet`'s `skill-activation-window`, so one sitting discharges two entries — which is why it outranks its own step count.
+  - **If you do nothing:** all of Phase 1 stays open, and the description rewrite ships with no before/after activation reading — the claim it exists to test stays unmeasured while reading as ordinary open work.
   - **What to do:**
     run the live trigger-eval to produce the predictions JSON for
-    both tree states. It hard-aborts under automation on purpose, so an agent
-    cannot supply it and must not simulate it. Substituting an AI rater would
-    break the pre-registration.
+    both tree states — `./scripts-run src/scripts/rule_trigger_eval` on the
+    maintainer machine, once per tree state, same protocol both times. It
+    hard-aborts under automation on purpose, so an agent cannot supply it and
+    must not simulate it. Substituting an AI rater would break the
+    pre-registration.
   - **Resolved when:** a predictions JSON exists for the pre-rewrite and the post-rewrite tree state, produced by the same protocol.
 
 ### [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md)

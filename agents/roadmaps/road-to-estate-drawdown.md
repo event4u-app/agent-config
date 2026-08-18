@@ -89,7 +89,7 @@ is the requirement.**
 The human's entire contribution, front-loaded. **This phase needs nothing from the
 sibling roadmap — it is runnable with today's tooling.**
 
-- [ ] **0.1** Generate ONE consolidated decision sheet from the gate output,
+- [x] **0.1** Generate ONE consolidated decision sheet from the gate output,
       `owner: user` only — thirteen items: per item the one-line question, the
       rendered recommendation, a default, and what it unblocks, sorted by unblock
       count descending. Items whose entry records no recommendation get one
@@ -97,6 +97,35 @@ sibling roadmap — it is runnable with today's tooling.**
       agent-drafted**, so the provenance of each default is visible.
       `verify:` the sheet contains all thirteen, each with a question, a default and
       its recommendation source labelled.
+      - **Done 2026-08-18.** `agent-config gates --sheet` is the generator;
+        `agents/decisions/consolidated-decision-sheet.md` is the artefact.
+        **The step says thirteen and the estate says 21** — the count grew between
+        drafting and execution, which is the arrival rate T3 exists to bound
+        rather than a mis-drafted step. The sheet is generated, so the number is
+        whatever `Owner: user` currently reports.
+      - **The agent-drafted defaults were written into the ROADMAPS, not into the
+        sheet**, and that is a deliberate departure from the literal reading. 7 of
+        the 21 entries recorded no `Recommendation:`; drafting into the sheet would
+        have made it a hand-edited generated file, so the next regeneration would
+        silently drop the drafts. Six were written into their own blocker's
+        `Recommendation:` field marked `(agent-drafted …)`, and the sheet READS that
+        marker — so provenance is visible per row, the sheet stays fully derived,
+        and `gates` / `--reply` gained the same recommendations.
+      - **The seventh has no field to carry one and the sheet says so.**
+        `road-to-gated-reach-followup` states its gate as a legacy
+        `> Blocked until …` note rather than a `### blocker:` entry, so it has no
+        `Recommendation:` slot. That row is labelled `none — legacy note` and names
+        the conversion as what would give it a default; converting another
+        roadmap's structure was left out of this change.
+      - **By-product:** the drain took `lint_roadmap_blockers:decidability` from a
+        **pre-existing red** (28 against a baseline of 26 on `origin/main`) to 22,
+        and the baseline was lowered to match. Second recorded instance of that
+        ratchet being red on main undetected — it runs in `task ci`, which no
+        workflow invokes.
+      - `verify:` `./scripts-run src/agent-src/scripts/roadmap_gates --sheet`
+        (21 rows, each with a question, a default or a stated reason it has none,
+        and a labelled source); 12 renderer cases in
+        `tests/scripts/roadmap_gates.test.ts`.
 - [~] **0.2** The maintainer answers the sheet once. **Accept-all-defaults is a
       valid answer.** The answers are then appended into each roadmap file at its
       blocker as the decision record — by the agent, not by the human. Blocked on
@@ -146,12 +175,38 @@ sibling roadmap — it is runnable with today's tooling.**
 
 ### Phase 3 — The ratchet lands
 
-- [ ] **3.1** An estate-count gate: read the dashboard, compare against the
+- [x] **3.1** An estate-count gate: read the dashboard, compare against the
       committed baseline, red on growth, with the raise-reason discipline for any
       increase. Plus the one-in-one-out lint per T3.
       `verify:` the gate is green at the registered ceiling, and a fixture PR that
       adds an active roadmap without an offset **fails**.
+      - **Done 2026-08-18.** `src/scripts/check_estate_count.ts` +
+        `src/config/estate-count-budget.json`. Both halves under one gate id, so
+        the registration surface is one row rather than two.
+      - **"Read the dashboard" is implemented as reading the dashboard's own
+        parser**, not as scraping its markdown: `collect()` from
+        `update_roadmap_progress`, imported. Verified that `collect().length` is 38
+        and its summed open blockers are 49 — exactly the two numbers the dashboard
+        header prints, so the gate cannot disagree with the page it is named after.
+        `later/` is counted from the filesystem because parked roadmaps are outside
+        that corpus by design.
+      - **No ceiling was invented.** T1's proposed 15 / 12 are recorded in the
+        budget under `target` and read by nothing, because this roadmap says both
+        the numbers and the window belong to the maintainer. T3's "while the active
+        count sits above target" therefore has no registered threshold, and
+        `one_in_one_out.applies_above_active: null` states that and applies the
+        lint. The baseline is the **measured** estate (38/44/49), not a target — a
+        hard 15-roadmap gate would be red the day it lands.
+      - `verify:` `./scripts-run src/scripts/check_estate_count` green at the
+        baseline; `--self-test` 5/5 (3 rejecting); 16 vitest cases over throwaway
+        git repos covering growth, the addition-without-offset fixture, the
+        paid-for-by-archive fixture, un-parking, the exemption tag, the registered
+        ceiling in both directions, and a dead scan root exiting 2 rather than 1;
+        `check_gate_coverage --canary` reports "caught the planted
+        contract-violation defect (exit 1)", so the gate is verified-not-blind.
 - **AC-3:** both gates exist and are red/green against fixtures in both directions.
+  **Met 2026-08-18** — the two directions are the `--self-test` accept/reject pairs
+  and the vitest fixtures above; the canary proves it against the shipped CLI.
 
 ### Phase 4 — The recurring agent pass, so this never regrows
 
