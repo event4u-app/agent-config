@@ -1,0 +1,971 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 3da64741fabf2b7d09febe9c8a3811a6358231a3..8faa6290217dcefba52f3d154f6d52a6675144e4 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **49** open blockers, **21** need you → `agent-config gates`
++> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **51** open blockers, **23** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**284 / 576 steps done · 49%**
++**286 / 576 steps done · 50%**
+ 
+ ```text
+-████████████████████░░░░░░░░░░░░░░░░░░░░   49%
++████████████████████░░░░░░░░░░░░░░░░░░░░   50%
+ ```
+ 
+ ## ⚠️ Iron Law 3 — unresolved deferred items
+@@ -26,7 +26,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ |---|---|---:|---:|---:|---:|---:|---:|---:|---|
+ | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
+ | 2 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
+-| 3 | [road-to-catalogue-host-fit.md](roadmaps/road-to-catalogue-host-fit.md) | 4 | 8 | 7 | 0 | 1 | 0 | [1](#blockers-road-to-catalogue-host-fit) | ░░░░░░░░░░ 0% |
++| 3 | [road-to-catalogue-host-fit.md](roadmaps/road-to-catalogue-host-fit.md) | 4 | 8 | 5 | 2 | 1 | 0 | [1](#blockers-road-to-catalogue-host-fit) | ███░░░░░░░ 29% |
+ | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+ | 5 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 19 | 4 | 0 | 1 | [3](#blockers-road-to-context-fidelity) | ██░░░░░░░░ 17% |
+ | 6 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
+@@ -34,7 +34,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ | 8 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
+ | 9 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 5 | 0 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ░░░░░░░░░░ 0% |
+ | 10 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
+-| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
++| 11 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [3](#blockers-road-to-gate-autonomy) | █████████░ 86% |
+ | 12 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+ | 13 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
+ | 14 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 1 | 14 | 0 | 6 | 0 | █████████░ 93% |
+@@ -43,7 +43,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ | 17 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 2 | 2 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | █████░░░░░ 50% |
+ | 18 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+ | 19 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
+-| 20 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [1](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
++| 20 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [2](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
+ | 21 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+ | 22 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ░░░░░░░░░░ 0% |
+ | 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 16 | 15 | 0 | 1 | 0 | [1](#blockers-road-to-per-turn-hook-economy) | ░░░░░░░░░░ 0% |
+@@ -149,12 +149,12 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ 
+ ### [road-to-catalogue-host-fit.md](roadmaps/road-to-catalogue-host-fit.md)
+ 
+-**Road to catalogue host fit — a truncated entry is a skill that cannot route** — 0 / 7 done (0%)
++**Road to catalogue host fit — a truncated entry is a skill that cannot route** — 2 / 7 done (29%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+ | 0 | Run the live trigger eval | ⏭️ skipped | 0 | 0 | 1 | 0 | 0% |
+-| 1 | Fill the observation corpus | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
++| 1 | Fill the observation corpus | ✅ done | 0 | 2 | 0 | 0 | 100% |
+ | 2 | Project a host-fitting catalogue by default | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+ | 3 | Make `skill-route` host-honest | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+ 
+@@ -363,6 +363,7 @@ _1 blocker resolved._
+     3. Progress is `wc -l agents/evidence/metrics/skill-catalogue.jsonl` — one line per observation, currently 1.
+     4. Vary the host and the session shape: a selector that only shows up on one host is exactly what the current `no-selector` verdict cannot distinguish from no selector at all.
+     5. **Correction (2026-08-17) — the progress figure in item 3 is stale and one half of the resolution condition is already met.** `skill-catalogue.jsonl` holds **5** observations, not 1, and they span **2 hosts** (`claude` ×1, `codex` ×4) — so the "across ≥ 2 hosts" half of *Resolved when* is satisfied and only the count half (5 of 20) is outstanding. Item 4's framing is stale too: the standing verdict is **not** a uniform `no-selector`. One observation reads `no-selector` (claude); the other four read **`insufficient-observation`** (codex), which is a different state and must not be aggregated with it. Those four also carry a field set this blocker predates — `observation_source: "host-event"` with `truncation_mode: "budget-strip-and-drop"` and `dropped_count` 330–402 — i.e. the host now publishes its own truncation, which is mechanism evidence the "selector is unknowable" framing above does not account for.
++    6. **Correction (2026-08-18) — item 2's command is incomplete, and item 3's counter has a better instrument.** The command as written records an observation carrying **no projection scope**, which `road-to-catalogue-host-fit` step 1.1 closed: pass `--projection-mode <scoped|legacy-all>` as well, or the record stays outside every mode comparison (absence is NOT `legacy-all` — a comparison skips it). Do not guess the value: run `capture_skill_catalogue --cadence`, which measures the mode off the installed host root and prints the exact command, omitting the flag with a stated reason when the root matches neither count. Measured 2026-08-18, both `~/.codex` and `~/.claude` hold 297 skills against this tree's scoped 219 / legacy-all 290, so on this machine the honest value today is *no flag*. Item 3's `wc -l` still works but `--cadence` publishes the same count against the bar plus per-host freshness; the corpus now holds **7** observations across 2 hosts.
+   - **Resolved when:** `skill-catalogue.jsonl` holds ≥ 20 observations across ≥ 2 hosts, and `capture_skill_catalogue` reports either a `selector-found` verdict or a `no-selector` that has stopped moving.
+ - **ui-corpus-has-no-ui** (owner: maintainer) — blocks Phase 4 — Step 5 · Phase 5 — Reach and enforcement
+   - **What to do:**
+@@ -419,8 +420,26 @@ _1 blocker resolved._
+     in scope for any option — the settings schema's own describe text states the
+     two-gate contract, and this decision moves one profile, not a default.
+   - **Resolved when:** one option is recorded at this blocker, and for (a) or (b) the profile carries the setting with the cap named.
+-
+-_1 blocker resolved._
++- **b-estate-prose-pass-from-1-3** (owner: user) — blocks nothing in this roadmap — every step here is closed or spend-gated. It exists because step 1.3 surfaced three estate-level findings that this branch deliberately did not act on, and R2 finding 4 is right that a paragraph in an evidence file is a note rather than a discharge: without an entry here, nothing renders them in `agent-config gates` and nothing counts them.
++  - **Recommendation:** **(a) as its own change, (b) reclassify, (c) accept for now.** (a) is a one-line spend-safety fix on a cost-bearing path and should not ride in a documentation PR where a reviewer would skim it. (b) because a field that contradicts its own evidence table is the exact half-truth this roadmap exists to remove — and reclassifying *down* to 3 is the safe direction, never up. (c) last, because it is prose in eleven other roadmaps, the notice is advisory, and the overflow predates this work; it is a real reading-load defect but the cheapest of the three to defer.
++  - **If you do nothing:** the spend cap stays silently wrong, so an operator who names a budget gets a different one on a paid path. Twelve entries keep declaring a class their text cannot support, which is the shape `gates --execute` was built to stop. And the class-2 half keeps rendering paragraphs where the taxonomy promises one line, so the reading-load defect § 0 set out to remove survives inside the class meant to absorb it.
++  - **What to do:**
++    decide each of the three independently. (a) **The dropped spend
++    cap** — `taskfiles/bench-ab.yml` runs `bench_ab_task_runner` for `bench:ab:live`
++    with no `{{.CLI_ARGS}}`, unlike its sibling one target up, so the
++    `task bench:ab:live -- --budget <N>` that `road-to-surface-consolidation`'s
++    `benchmark-spend` entry authorises silently falls back to the parser default of
++    `2.0` (`src/scripts/bench_ab_task_runner.ts:911`). Fix is one interpolation;
++    the decision is whether it lands here, on `road-to-surface-consolidation`, or as
++    its own change. (b) **The twelve class-0/1 entries** — their swept verdict is not
++    materialisable (sweep § 4c), so they sit at the absent-field default of 3 while
++    the table says 0 or 1. Either reclassify them in the tree to match what their
++    entries can actually run, or leave the default standing and let § 4c carry the
++    discrepancy. (c) **The eleven over-length class-2 recommendations** — each
++    exceeds the renderer's own 156-char consent bar, whose remedy is reclassification
++    to 3 rather than a longer line. Either rewrite the eleven to one line, reclassify
++    them, or accept the overflow as advisory.
++  - **Resolved when:** each of (a), (b) and (c) carries a recorded decision at this blocker — a fix, a deferral with a reason, or an explicit accept.
+ 
+ ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
+ 
+@@ -603,6 +622,18 @@ _1 blocker resolved._
+ <a id="blockers-road-to-mixed-trigger-activation-cost"></a>
+ **Blockers**
+ 
++- **b-matrix-semantics-amendment** (owner: user) — blocks Phase 2 (step 2.1 and everything downstream of it). Phases 1 and 4 are repo work and proceed without it.
++  - **Recommendation:** **option (b) — adopt it narrowed to the enumerated per-edit subset.** Option (a) is the cleaner rule but it grants the amendment to rules nobody has examined, which is how the original silent narrowing happened: a general emitter decision applied to a set with mixed obligations. Option (c) keeps the current state, whose cost is measured and whose benefit — pre-contact routing for obligations that bind at contact — is the thing no evidence supports. (b) buys the same relief as (a) for the eleven rules where the argument is concrete, and leaves the rest to a second pass with their matrices in hand.
++  - **If you do nothing:** the seventeen stay unconditional, the standing-token cost stays on every session for every consumer, and Phase 2 cannot start — which also strands Phase 3's bench, because there is no second arm to compare against. Phases 1 and 4 still land, so the estate keeps the two new matrices and the census ratchet but none of the payload relief.
++  - **What to do:**
++    decide whether a routing-matrix positive may be satisfied
++    `by-first-file-contact` for rules whose obligation binds at file contact.
++    Three options: (a) adopt the amendment as written, with gates and per-turn rules
++    excluded by construction; (b) adopt it narrowed to an enumerated subset of the
++    11 per-edit rules, naming which; (c) reject it, in which case the 17 keep their
++    current pre-contact positives and Phase 2 closes as a null with that reason.
++    The amendment text and the excluded set are in Phase 2's preamble.
++  - **Resolved when:** one of the three options is recorded at this blocker, and — for (a) or (b) — the matrix-semantics documentation carries the amendment.
+ - **b-behavioural-bench-spend** (owner: user) — blocks Phase 3 steps 3.1 and 3.2. Step 3.3's observer is repo work and proceeds without it.
+   - **Recommendation:** **defer it to the class-1 budget ledger** rather than naming a one-off budget now. The bench is the most expensive step in this roadmap and the least urgent: Phase 2's dispositions are justified by the token census on their own, and the bench decides only whether they are *mandatory* or merely *available*. Paying for it before the ledger exists spends the consent twice — once here, once again for the next bench — which is the exact couriering `road-to-gate-autonomy` was opened to end.
+   - **If you do nothing:** the behavioural-regression claim stays an argument rather than a number. Phase 2 can still ship on the token census, but the roadmap loses its falsifiability spine — nothing would refute the premise if it were wrong, and the honest-null consequence below becomes unreachable.
+@@ -614,8 +645,6 @@ _1 blocker resolved._
+     be recorded before the first run, not after.
+   - **Resolved when:** a budget is named at this blocker, or the step is re-dated against the ledger mechanism with that dependency stated.
+ 
+-_1 blocker resolved._
+-
+ ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
+ 
+ **Road to orchestration scope decision — one falsifiable minimal claim, or an honest exit from the front** — 4 / 10 done (40%)
+diff --git a/agents/roadmaps/road-to-catalogue-host-fit.md b/agents/roadmaps/road-to-catalogue-host-fit.md
+index f9c6000253b9013861bef5c3f1dd52f65eb5d625..1a9d15df30d97e7dab9396f986a7418a4d2bf8df 100644
+--- a/agents/roadmaps/road-to-catalogue-host-fit.md
++++ b/agents/roadmaps/road-to-catalogue-host-fit.md
+@@ -88,18 +88,76 @@ resume gate on `later/road-to-token-saving`. Three roadmaps unblock from one run
+ 
+ This phase unblocks everything else in the file, and it is repo work.
+ 
+-- [ ] **1.1** The codex path is automatable — host-event, no transcription. Script a
++- [x] **1.1** The codex path is automatable — host-event, no transcription. Script a
+       recurring capture on the maintainer machine against both hosts, appending to
+       the JSONL. The claude side stays self-report; record it on a fixed cadence with
+       the fixed prompt already in use, and **record the projection scope with every
+       observation** so the series stays comparable when the scope changes (claim 7).
+       `verify:` two consecutive captures land in the JSONL with their scope and host
+       recorded, and the per-host verdicts stay separate rather than pooled.
+-- [ ] **1.2** Add the host-truth versus disk-truth join for D-4: on each claude
++
++      **Landed 2026-08-18** as `capture_skill_catalogue --cadence` plus the
++      scope-recording fix underneath it. Three parts:
++
++      (a) **The scope gap was real and it was on the claude side.** The
++      self-report record builder took no `projectionMode` at all, while the two
++      host-event builders beside it did — so the ONE path that fills `bare_names`,
++      and therefore the only source step 1.2's join can read, could not record its
++      scope even when the operator knew it. `buildObservationRecord` now takes both
++      optional fields in the identical omit-rather-than-default shape, the CLI's
++      self-report `--record` passes them, and recording without a scope prints a
++      warning rather than a refusal — refusing would discard an observation to
++      protect a comparison.
++
++      (b) **`--cadence` is the recurring half**: per-host freshness against a
++      stated `OBSERVATION_CADENCE_DAYS = 7` (a stated default with a revisit-if,
++      not a measured optimum), the count of unscoped records per host, progress
++      against the ≥20-across-≥2-hosts bar **quoted** from the parent blocker, and
++      the exact next command per host. It records nothing itself: a mode that both
++      judged freshness and wrote records could refresh a series with a reading
++      nobody took.
++
++      (c) **The verify clause is met on host and on pooling, and NOT on scope —
++      because on this machine the scope is not determinable.** Two consecutive
++      codex captures landed (dropped 401 then 393, inside the known 393–401
++      spread), the corpus is at 7 observations across 2 hosts, and
++      `formatPerHostVerdicts` still reports the two truncation modes separately.
++      But `~/.codex` and `~/.claude` each hold **297 skills** against this tree's
++      scoped 219 and legacy-all 290 — both installed roots match neither count, so
++      both are stale installs rather than broken ones. `--cadence` therefore
++      *measures* the mode off the installed root and, on `indeterminate`, prints
++      **no** `--projection-mode` flag together with the reason, instead of the
++      `<scoped|legacy-all>` placeholder it first carried — a placeholder invites
++      the operator to pick, and either pick would be the relabelling the record
++      type forbids. The remaining half of the clause is a fact about this machine,
++      not about the mechanism: refresh a host root from this tree and the next
++      capture carries a measured scope.
++      <!-- verify: npx vitest run tests/scripts/catalogue_capture.test.ts -->
++- [x] **1.2** Add the host-truth versus disk-truth join for D-4: on each claude
+       observation, intersect the bare names with the ranker's catalogue and publish
+       the count of skills that are **pointable but bare**.
+       `verify:` the join runs on the existing observations and reports a count,
+       including zero as a legitimate answer.
++
++      **Landed 2026-08-18** as `capture_skill_catalogue --pointable-bare`, and it
++      returned a non-null result on the first run: **16 of 16** bare entries in the
++      2026-08-12 claude observation are still in the ranker's catalogue, so every
++      skill that host degraded is one `skill-route` can name while the model never
++      received its description. `unpointableBare` is 0.
++
++      **That number discharges Phase 3 Step 3.1's condition** — "if Phase 1's join
++      shows pointable-but-bare above zero in practice" — with a measurement rather
++      than an assumption. It does not authorise the step; it removes the
++      conditional's escape.
++
++      **Only `per-entry` records are joined, and the skip is load-bearing.** A
++      `budget-strip-and-drop` host enumerates nothing, so its empty `bare_names`
++      records that nothing was *counted*, not that nothing was bare — emitting a
++      row of 0 for it is the zero-inferred-from-silence failure this module's own
++      header forbids. Six such records are skipped and the count of skipped rows is
++      printed, so "nothing to join" and "joined and found zero" read differently in
++      the output and are pinned apart by a test.
++      <!-- verify: npx vitest run tests/scripts/catalogue_capture.test.ts -->
+ - **AC-1:** the observation count crosses the parent blocker's threshold across at
+   least two hosts, or the capture cadence is published as failed with the reason —
+   a failed cadence honestly recorded is a result, an absent one is not.
+diff --git a/agents/roadmaps/road-to-frontend-skill-application.md b/agents/roadmaps/road-to-frontend-skill-application.md
+index 0222760236fc6ea65d288ad8ac2de0830d4dfcdc..3f186afbd00e4004a7b7babcbe9c22cf6edf5e01 100644
+--- a/agents/roadmaps/road-to-frontend-skill-application.md
++++ b/agents/roadmaps/road-to-frontend-skill-application.md
+@@ -153,6 +153,7 @@ Enforcement moves only where the tree can verify it; `enforced_by:` changes beca
+   3. Progress is `wc -l agents/evidence/metrics/skill-catalogue.jsonl` — one line per observation, currently 1.
+   4. Vary the host and the session shape: a selector that only shows up on one host is exactly what the current `no-selector` verdict cannot distinguish from no selector at all.
+   5. **Correction (2026-08-17) — the progress figure in item 3 is stale and one half of the resolution condition is already met.** `skill-catalogue.jsonl` holds **5** observations, not 1, and they span **2 hosts** (`claude` ×1, `codex` ×4) — so the "across ≥ 2 hosts" half of *Resolved when* is satisfied and only the count half (5 of 20) is outstanding. Item 4's framing is stale too: the standing verdict is **not** a uniform `no-selector`. One observation reads `no-selector` (claude); the other four read **`insufficient-observation`** (codex), which is a different state and must not be aggregated with it. Those four also carry a field set this blocker predates — `observation_source: "host-event"` with `truncation_mode: "budget-strip-and-drop"` and `dropped_count` 330–402 — i.e. the host now publishes its own truncation, which is mechanism evidence the "selector is unknowable" framing above does not account for.
++  6. **Correction (2026-08-18) — item 2's command is incomplete, and item 3's counter has a better instrument.** The command as written records an observation carrying **no projection scope**, which `road-to-catalogue-host-fit` step 1.1 closed: pass `--projection-mode <scoped|legacy-all>` as well, or the record stays outside every mode comparison (absence is NOT `legacy-all` — a comparison skips it). Do not guess the value: run `capture_skill_catalogue --cadence`, which measures the mode off the installed host root and prints the exact command, omitting the flag with a stated reason when the root matches neither count. Measured 2026-08-18, both `~/.codex` and `~/.claude` hold 297 skills against this tree's scoped 219 / legacy-all 290, so on this machine the honest value today is *no flag*. Item 3's `wc -l` still works but `--cadence` publishes the same count against the bar plus per-host freshness; the corpus now holds **7** observations across 2 hosts.
+ - **Resolved when:** `skill-catalogue.jsonl` holds ≥ 20 observations across ≥ 2 hosts, and `capture_skill_catalogue` reports either a `selector-found` verdict or a `no-selector` that has stopped moving.
+ 
+ ### blocker: consultation-rate-instrument
+diff --git a/src/scripts/_lib/skill_catalogue.ts b/src/scripts/_lib/skill_catalogue.ts
+index 10d86d06ecebff197536d7b3904036cc1547fc4f..48d435012519a308271e106b27364c8ca9dc7495 100644
+--- a/src/scripts/_lib/skill_catalogue.ts
++++ b/src/scripts/_lib/skill_catalogue.ts
+@@ -454,10 +454,27 @@ export function observationSourceOf(record: ObservationRecord): ObservationSourc
+     return record.observation_source ?? 'self-report';
+ }
+ 
++/**
++ * The self-report path's record.
++ *
++ * `projectedSkillCount` and `projectionMode` are optional in the SAME shape the
++ * two host-event builders use — omitted rather than defaulted, because absence
++ * is not `legacy-all` and never was (see `ObservationRecord.projection_mode`).
++ *
++ * They were missing here until 2026-08-18, and the omission was load-bearing in
++ * one direction: the self-report path is the ONLY one that fills `bare_names`,
++ * so it is the only source the pointable-but-bare join below can read — and
++ * every claude observation in the corpus therefore carried no scope at all,
++ * while the codex records beside them did. A series that changes scope
++ * mid-flight without recording it is not comparable, which is exactly what
++ * claim 7 of the roadmap that asked for the field says.
++ */
+ export function buildObservationRecord(
+     report: SelectorReport,
+     host: string,
+     observedAt: string,
++    projectedSkillCount?: number,
++    projectionMode?: ProjectionMode,
+ ): ObservationRecord {
+     return {
+         schema: 1,
+@@ -471,6 +488,8 @@ export function buildObservationRecord(
+         separating_candidates: report.candidates.filter((c) => c.separates).map((c) => c.id),
+         truncation_mode: 'per-entry',
+         observation_source: 'self-report',
++        ...(projectedSkillCount === undefined ? {} : { projected_skill_count: projectedSkillCount }),
++        ...(projectionMode === undefined ? {} : { projection_mode: projectionMode }),
+     };
+ }
+ 
+@@ -1113,3 +1132,262 @@ export function formatReport(report: SelectorReport): string {
+     );
+     return lines.join('\n');
+ }
++
++/* ------------------------------------------------------------------ *
++ * The cadence — is an observation due, and how far is the corpus?
++ * ------------------------------------------------------------------ */
++
++/**
++ * Days after which one host's series is stale and an observation is due.
++ *
++ * A **stated default, not a measured optimum** — said plainly rather than
++ * implying a derivation it does not have. Nothing in the corpus measures how
++ * fast a host's truncation behaviour changes; what is known is that it changes
++ * at all (the codex drop moved 393 → 401 → 402 → 330 across four readings, the
++ * last of them because OUR projection scope changed, not the host).
++ *
++ * *Revisit-if:* two consecutive rounds a week apart record identical figures on
++ * every host (too frequent — widen it), or a host limit is observed to move
++ * inside one interval (too slow — narrow it). Either falsifies the number, not
++ * the obligation to keep the series current.
++ */
++export const OBSERVATION_CADENCE_DAYS = 7;
++
++/**
++ * The volume and host bars the corpus is filling toward.
++ *
++ * **Quoted, never invented here.** Both come from the parent blocker's own
++ * wording — "≥ 20 observations across ≥ 2 hosts" — recorded in
++ * `agents/evidence/investigations/skill-catalogue-codex-truncation.md` § 1 and
++ * § 5 and in the blocker that still carries it. This module reports progress
++ * against them; it does not get to move them.
++ */
++export const OBSERVATION_VOLUME_BAR = 20;
++export const OBSERVATION_HOST_BAR = 2;
++
++/** Whole days from `fromISO` to `toISO`; negative when `toISO` is earlier. */
++function wholeDaysBetween(fromISO: string, toISO: string): number {
++    const from = Date.parse(`${fromISO}T00:00:00Z`);
++    const to = Date.parse(`${toISO}T00:00:00Z`);
++    if (Number.isNaN(from) || Number.isNaN(to)) return Number.NaN;
++    return Math.round((to - from) / 86_400_000);
++}
++
++/** One host's standing in the series. Counts only; no free-form field. */
++export interface CadenceRow {
++    host: string;
++    /** The source the host's own latest record came from. */
++    source: ObservationSource;
++    observations: number;
++    lastObservedAt: string;
++    /** Whole days since that record; `NaN` when its stamp is unparseable. */
++    daysSince: number;
++    due: boolean;
++    /**
++     * Observations of this host carrying NO `projection_mode`. Not a defect to
++     * backfill — those readings were taken without asking, and relabelling one
++     * afterwards would invent a measurement. They are simply not comparable
++     * across modes, so the count is published rather than hidden.
++     */
++    unscoped: number;
++}
++
++/**
++ * Per-host cadence, never pooled — the same reason `formatPerHostVerdicts`
++ * refuses to pool: two hosts truncate by different mechanisms, so "the corpus
++ * is fresh" is not a statement either host makes on its own.
++ *
++ * A host with no record at all cannot appear here: this reads the log, and a
++ * host that was never observed has nothing to be stale. The volume bar below
++ * is what surfaces that gap.
++ */
++export function cadenceStatus(
++    records: readonly ObservationRecord[],
++    todayISO: string,
++): CadenceRow[] {
++    const byHost = new Map<string, ObservationRecord[]>();
++    for (const record of records) {
++        const bucket = byHost.get(record.host) ?? [];
++        bucket.push(record);
++        byHost.set(record.host, bucket);
++    }
++    const headline = headlineRecordPerHost(records);
++
++    const rows: CadenceRow[] = [];
++    for (const host of [...byHost.keys()].sort()) {
++        const bucket = byHost.get(host)!;
++        const latest = headline.get(host)!;
++        const daysSince = wholeDaysBetween(latest.observed_at, todayISO);
++        rows.push({
++            host,
++            source: observationSourceOf(latest),
++            observations: bucket.length,
++            lastObservedAt: latest.observed_at,
++            daysSince,
++            // An unparseable stamp reads as DUE, never as fresh: a broken date
++            // and a current one must not look alike, which is the same
++            // zero-from-silence law the host-event parser follows.
++            due: Number.isNaN(daysSince) || daysSince >= OBSERVATION_CADENCE_DAYS,
++            unscoped: bucket.filter((r) => r.projection_mode === undefined).length,
++        });
++    }
++    return rows;
++}
++
++/**
++ * The cadence as an operator report: who is due, and how far the corpus is from
++ * the bar it is filling toward.
++ *
++ * Prints the exact next command per host rather than describing it. The codex
++ * side is deterministic and scriptable; the claude side is self-report and only
++ * an agent reading its own context can produce it — the asymmetry is stated
++ * here because a report that hid it would read as "both are automatable".
++ */
++export function formatCadenceStatus(
++    rows: readonly CadenceRow[],
++    todayISO: string,
++): string {
++    const lines: string[] = [];
++    lines.push(`cadence: one observation per host every ${OBSERVATION_CADENCE_DAYS} day(s) · today ${todayISO}`);
++    lines.push('');
++
++    if (rows.length === 0) {
++        lines.push('no observations recorded yet — every host is due.');
++    }
++
++    for (const row of rows) {
++        const age = Number.isNaN(row.daysSince)
++            ? `stamp unparseable (${row.lastObservedAt})`
++            : `${row.daysSince} day(s) ago`;
++        lines.push(
++            `${row.due ? '⚠️ ' : '✅'} ${row.host}: ${row.observations} observation(s) · ` +
++                `latest ${row.lastObservedAt} (${age}) · source ${row.source}`,
++        );
++        if (row.unscoped > 0) {
++            lines.push(
++                `     ${row.unscoped} of them carry no projection scope — not comparable across modes, and not backfillable.`,
++            );
++        }
++    }
++
++    const total = rows.reduce((sum, row) => sum + row.observations, 0);
++    lines.push('');
++    lines.push(
++        `volume: ${total}/${OBSERVATION_VOLUME_BAR} observation(s) across ${rows.length}/${OBSERVATION_HOST_BAR} host(s) — ` +
++            (total >= OBSERVATION_VOLUME_BAR && rows.length >= OBSERVATION_HOST_BAR
++                ? 'both bars met.'
++                : 'the bar the parent blocker states, quoted not invented.'),
++    );
++    return lines.join('\n');
++}
++
++/* ------------------------------------------------------------------ *
++ * D-4 — host truth against disk truth: pointable but bare.
++ * ------------------------------------------------------------------ */
++
++/** One per-entry observation joined against the ranker's on-disk catalogue. */
++export interface PointableBareRow {
++    host: string;
++    observedAt: string;
++    bareTotal: number;
++    /** Bare entries the ranker can still name — the D-4 divergence. */
++    pointableBare: number;
++    /** Bare entries absent from the ranker's catalogue; it cannot name them. */
++    unpointableBare: number;
++    pointableNames: string[];
++    unpointableNames: string[];
++}
++
++/**
++ * Intersect the bare names of every per-entry observation with the catalogue the
++ * runtime ranker reads.
++ *
++ * The defect this counts (D-4): `skill-route` ranks the on-disk tree, so a skill
++ * the host truncated is still rankable and still pointable — and the pointer
++ * then names a skill whose description the model never received. That is worse
++ * than silence, because the pointer reads as a delivered capability.
++ *
++ * **Only `per-entry` records are joined, and skipping the others is the point.**
++ * A `budget-strip-and-drop` host publishes no per-entry list at all, so its
++ * `bare_names` is empty because nothing was enumerated — not because nothing was
++ * bare. Emitting a row of 0 for it would be a zero inferred from silence, which
++ * this module's header forbids in the one place it would be easiest to do.
++ *
++ * A row of 0 on a per-entry record IS a legitimate answer: it means every entry
++ * the host degraded is also absent from the ranker's tree, so the ranker cannot
++ * point at one.
++ */
++export function joinPointableBare(
++    records: readonly ObservationRecord[],
++    rankerCatalogueNames: readonly string[],
++): PointableBareRow[] {
++    const rankable = new Set(rankerCatalogueNames);
++    const rows: PointableBareRow[] = [];
++    for (const record of records) {
++        if (truncationModeOf(record) !== 'per-entry') continue;
++        const pointable = record.bare_names.filter((name) => rankable.has(name));
++        const unpointable = record.bare_names.filter((name) => !rankable.has(name));
++        rows.push({
++            host: record.host,
++            observedAt: record.observed_at,
++            bareTotal: record.bare_names.length,
++            pointableBare: pointable.length,
++            unpointableBare: unpointable.length,
++            pointableNames: pointable,
++            unpointableNames: unpointable,
++        });
++    }
++    return rows;
++}
++
++/** The join as an operator report. Zero is printed as a result, not as absence. */
++export function formatPointableBare(
++    rows: readonly PointableBareRow[],
++    catalogueRoot: string,
++    catalogueSize: number,
++    skippedNonPerEntry: number,
++): string {
++    const lines: string[] = [];
++    lines.push(`ranker catalogue: ${catalogueRoot} (${catalogueSize} entries)`);
++    lines.push('');
++
++    if (rows.length === 0) {
++        lines.push(
++            'no per-entry observation to join. This is NOT a count of zero: only a host that',
++            'enumerates which entries arrived bare can be joined, and none has been recorded.',
++        );
++    }
++
++    for (const row of rows) {
++        lines.push(
++            `${row.host} ${row.observedAt}: ${row.pointableBare} pointable-but-bare of ${row.bareTotal} bare`,
++        );
++        if (row.pointableBare > 0) {
++            lines.push(`   the ranker can name: ${row.pointableNames.join(', ')}`);
++        }
++        if (row.unpointableBare > 0) {
++            lines.push(
++                `   bare and NOT in the ranker's catalogue (${row.unpointableBare}): ${row.unpointableNames.join(', ')}`,
++            );
++        }
++    }
++
++    if (skippedNonPerEntry > 0) {
++        lines.push('');
++        lines.push(
++            `skipped ${skippedNonPerEntry} observation(s) whose host publishes no per-entry list —`,
++            'their empty `bare_names` records that nothing was enumerated, not that nothing was bare.',
++        );
++    }
++
++    const worst = rows.reduce((max, row) => Math.max(max, row.pointableBare), 0);
++    lines.push('');
++    lines.push(
++        rows.length === 0
++            ? 'D-4 divergence: unmeasured.'
++            : worst > 0
++              ? `D-4 divergence: up to ${worst} skill(s) the ranker may point at while the model never received their description.`
++              : 'D-4 divergence: 0 on every joined observation — the ranker points at nothing the host degraded.',
++    );
++    return lines.join('\n');
++}
+diff --git a/src/scripts/capture_skill_catalogue.ts b/src/scripts/capture_skill_catalogue.ts
+index b80a3719644075a99e9f03130ac1cb88535e49e7..e3bce6b0da1993f25480c94d2fe9e8653aef4862 100644
+--- a/src/scripts/capture_skill_catalogue.ts
++++ b/src/scripts/capture_skill_catalogue.ts
+@@ -77,15 +77,21 @@ import {
+     buildHostEventRecord,
+     buildNoTruncationRecord,
+     buildObservationRecord,
++    cadenceStatus,
+     classifyHostProjection,
++    formatCadenceStatus,
+     formatPerHostVerdicts,
++    formatPointableBare,
+     formatProjectionModes,
+     formatReport,
++    joinPointableBare,
+     knownHostLimits,
+     measureCatalogueVolume,
+     parseHostBudgetEvent,
+     readObservationLog,
+     readProjectedCatalogue,
++    resolveSkillsRoot,
++    truncationModeOf,
+     type HostProjectionRow,
+     type ProjectionMode,
+     type ProjectionModeCounts,
+@@ -151,6 +157,160 @@ function expandHome(p: string): string {
+     return p.startsWith('~/') ? path.join(os.homedir(), p.slice(2)) : p;
+ }
+ 
++/** `--today <ISO>` for a deterministic run, else the machine's own date. */
++function argToday(): string {
++    const explicit = argValue('--today');
++    if (explicit) {
++        if (!/^\d{4}-\d{2}-\d{2}$/.test(explicit)) {
++            throw new Error(`--today must be an ISO date (YYYY-MM-DD), got: ${explicit}`);
++        }
++        return explicit;
++    }
++    return new Date().toISOString().slice(0, 10);
++}
++
++/**
++ * `--cadence` — is an observation due on any host, and how far is the corpus?
++ *
++ * The recurring half of the capture. It reports and prints the next command; it
++ * never records anything itself. Two reasons, both deliberate: recording is what
++ * `--host-event --record` and `--observed --record` already do, and a mode that
++ * both decides freshness AND writes a record could refresh a series with a
++ * reading nobody took.
++ *
++ * The asymmetry between the hosts is printed rather than smoothed over. The
++ * codex round is one shell pipeline and can be scheduled; the claude round needs
++ * an agent to read its own delivered context, which no scheduler can do.
++ */
++function runCadenceMode(): number {
++    const today = argToday();
++    const records = readObservationLog(path.join(REPO, OBSERVATION_LOG));
++    const rows = cadenceStatus(records, today);
++
++    if (process.argv.includes('--json')) {
++        process.stdout.write(`${JSON.stringify({ today, hosts: rows }, null, 2)}\n`);
++        return 0;
++    }
++
++    process.stdout.write(`${formatCadenceStatus(rows, today)}\n`);
++
++    const due = rows.filter((row) => row.due);
++    if (due.length === 0 && rows.length > 0) return 0;
++
++    process.stdout.write('\nnext round — run what is due:\n\n');
++    for (const row of due) {
++        const scopeFlag = projectionModeFlagFor(row.host);
++        if (row.source === 'host-event') {
++            process.stdout.write(
++                `  # ${row.host} — deterministic, read off the host's own JSON channel\n` +
++                    `  codex exec --json --skip-git-repo-check "reply with exactly: OK" \\\n` +
++                    `    | agent-config exec capture_skill_catalogue \\\n` +
++                    `        --host-event - --host ${row.host} --host-root ~/.${row.host} \\\n` +
++                    `        ${scopeFlag.flag}--record --observed-at ${today}\n` +
++                    `${scopeFlag.note}\n`,
++            );
++            continue;
++        }
++        process.stdout.write(
++            `  # ${row.host} — self-report; only an agent reading its own context can produce it.\n` +
++                `  # Write the entries seen bare and the ones seen described, one name per line, to\n` +
++                `  #   agents/evidence/metrics/skill-catalogue/${today}-${row.host}-{bare,described}.txt\n` +
++                `  agent-config exec capture_skill_catalogue \\\n` +
++                `      --observed agents/evidence/metrics/skill-catalogue/${today}-${row.host}-bare.txt \\\n` +
++                `      --described agents/evidence/metrics/skill-catalogue/${today}-${row.host}-described.txt \\\n` +
++                `      --host ${row.host} ${scopeFlag.flag}--record --observed-at ${today}\n` +
++                `${scopeFlag.note}\n`,
++        );
++    }
++    return 0;
++}
++
++/**
++ * The `--projection-mode` flag for one host's round, MEASURED off its installed
++ * root — or omitted, with the reason, when the root carries neither mode count.
++ *
++ * Printing `--projection-mode <scoped|legacy-all>` as a placeholder invites the
++ * operator to pick one, and on an `indeterminate` root either pick is a label
++ * nobody measured. Measured 2026-08-18 on this machine: `~/.codex` holds 297
++ * skills against a scoped projection of 219 and a legacy-all of 290 — it matches
++ * neither, because it is a stale install rather than a broken one. So the honest
++ * output for that root is no flag and a stated reason, which keeps the record's
++ * absent-scope field meaning "not determinable" instead of "not asked".
++ */
++function projectionModeFlagFor(host: string): { flag: string; note: string } {
++    const root = expandHome(`~/.${host}`);
++    if (!fs.existsSync(root)) {
++        return {
++            flag: '',
++            note:
++                `  #   no --projection-mode: ~/.${host} is not installed here, so the scope of the\n` +
++                '  #   observed install cannot be measured from this machine.\n',
++        };
++    }
++    const row = classifyHostProjection(
++        measureCatalogueVolume(host, root),
++        projectionModeCounts(),
++    );
++    if (row.matches === 'indeterminate') {
++        return {
++            flag: '',
++            note:
++                `  #   no --projection-mode: ${root} holds ${row.installedSkills} skills, which matches\n` +
++                '  #   neither projection count — another suite, a plugin, or a stale install all\n' +
++                '  #   produce that. Recording a mode here would label a reading nobody took.\n',
++        };
++    }
++    return {
++        flag: `--projection-mode ${row.matches} `,
++        note: `  #   scope measured off ${root} (${row.installedSkills} skills).\n`,
++    };
++}
++
++/**
++ * `--pointable-bare` — the D-4 join: host truth against disk truth.
++ *
++ * Intersects the bare names of every per-entry observation with the catalogue
++ * the runtime ranker reads, and publishes how many skills the ranker can name
++ * while the model never received their description.
++ */
++function runPointableBareMode(): number {
++    const rankerRoot = resolveSkillsRoot(REPO);
++    if (rankerRoot === null) {
++        process.stderr.write(
++            '❌  no catalogue root resolved for the ranker — tried ' +
++                `${DEFAULT_CATALOGUE_ROOTS.join(', ')} under ${REPO}.\n` +
++                '    An empty catalogue is never a clean join: it would report 0 pointable\n' +
++                '    entries because nothing was read, not because nothing diverged.\n',
++        );
++        return 1;
++    }
++    const catalogueNames = readProjectedCatalogue(rankerRoot).map((entry) => entry.name);
++    const records = readObservationLog(path.join(REPO, OBSERVATION_LOG));
++    const rows = joinPointableBare(records, catalogueNames);
++    const skipped = records.filter((r) => truncationModeOf(r) !== 'per-entry').length;
++
++    if (process.argv.includes('--json')) {
++        process.stdout.write(
++            `${JSON.stringify(
++                {
++                    ranker_catalogue_root: path.relative(REPO, rankerRoot) || rankerRoot,
++                    ranker_catalogue_entries: catalogueNames.length,
++                    skipped_non_per_entry: skipped,
++                    observations: rows,
++                },
++                null,
++                2,
++            )}\n`,
++        );
++        return 0;
++    }
++
++    process.stdout.write(
++        `${formatPointableBare(rows, path.relative(REPO, rankerRoot) || rankerRoot, catalogueNames.length, skipped)}\n`,
++    );
++    return 0;
++}
++
+ /**
+  * `--limits` — publish the per-host picture: what each host was measured to
+  * deliver, and whether the observed hosts truncate the same way.
+@@ -196,14 +356,19 @@ function runLimitsMode(): number {
+  * same pair of numbers in one run. Each host is reported on its own row: no
+  * host's count is ever used to say anything about another's.
+  */
+-function runProjectionModesMode(): number {
++/** The package's two projection-mode counts, one walk. Shared by both modes. */
++function projectionModeCounts(): ProjectionModeCounts {
+     const stats = scoped_projection_stats(REPO, iter_skills());
+-    const counts: ProjectionModeCounts = {
++    return {
+         scoped: stats.projected,
+         legacyAll: stats.total,
+         prunedUnderScoped: stats.pruned,
+         activePacks: stats.active_packs,
+     };
++}
++
++function runProjectionModesMode(): number {
++    const counts = projectionModeCounts();
+ 
+     const rows: HostProjectionRow[] = [];
+     for (const rootArg of argValues('--host-root')) {
+@@ -350,6 +515,8 @@ function runHostEventMode(source: string): number {
+ }
+ 
+ function main(): number {
++    if (process.argv.includes('--cadence')) return runCadenceMode();
++    if (process.argv.includes('--pointable-bare')) return runPointableBareMode();
+     if (process.argv.includes('--limits')) return runLimitsMode();
+     if (process.argv.includes('--projection-modes')) return runProjectionModesMode();
+ 
+@@ -425,9 +592,27 @@ function main(): number {
+         }
+         const logPath = path.join(REPO, OBSERVATION_LOG);
+         fs.mkdirSync(path.dirname(logPath), { recursive: true });
++        const projectionMode = argProjectionMode();
++        if (projectionMode === undefined) {
++            // A WARNING, not a refusal. Recording without the scope is a
++            // legitimate reading — the record type says absence is not
++            // `legacy-all` and a consumer comparing modes skips it — so
++            // rejecting it would refuse an observation to protect a
++            // comparison. But an unscoped record is silently incomparable,
++            // which is the failure this line exists to make loud.
++            process.stdout.write(
++                '\n⚠️  no --projection-mode given: this record will carry no projection scope.\n' +
++                    '    Absence is NOT `legacy-all` — a mode comparison skips a record that\n' +
++                    '    carries none, so the observation stays outside that series. Pass\n' +
++                    '    --projection-mode <scoped|legacy-all> to keep it comparable.\n',
++            );
++        }
+         fs.appendFileSync(
+             logPath,
+-            `${JSON.stringify(buildObservationRecord(report, host, stampedAt))}\n`,
++            // The catalogue root IS the skill tree, so every projected entry is
++            // a skill: the count is file-measured, not derived from the
++            // artefact total the way a host root's would be.
++            `${JSON.stringify(buildObservationRecord(report, host, stampedAt, projected.length, projectionMode))}\n`,
+         );
+         process.stdout.write(`\nrecorded → ${OBSERVATION_LOG}\n`);
+     }
+diff --git a/tests/scripts/catalogue_capture.test.ts b/tests/scripts/catalogue_capture.test.ts
+index cc0a63dead86d70938b51019c15cf57ede4a55b7..7e137d535f21687be431844629f9c312d6dcfd8f 100644
+--- a/tests/scripts/catalogue_capture.test.ts
++++ b/tests/scripts/catalogue_capture.test.ts
+@@ -18,12 +18,18 @@ import * as path from 'node:path';
+ import { afterAll, describe, expect, it } from 'vitest';
+ 
+ import {
++    OBSERVATION_HOST_BAR,
++    OBSERVATION_VOLUME_BAR,
+     analyzeSelector,
+     buildHostEventRecord,
+     buildObservationRecord,
++    cadenceStatus,
+     catalogueLimitWarning,
++    formatCadenceStatus,
+     formatPerHostVerdicts,
++    formatPointableBare,
+     formatReport,
++    joinPointableBare,
+     knownHostLimits,
+     migrationEligibility,
+     migrationPromptLines,
+@@ -248,6 +254,172 @@ describe('observation record', () => {
+             for (const v of values) expect(typeof v).not.toBe('object');
+         }
+     });
++
++    // The self-report path is the ONLY one that fills `bare_names`, so it is
++    // the only source the pointable-but-bare join can read — and until
++    // 2026-08-18 it could not record its projection scope at all, while the
++    // host-event records beside it could.
++    it('records the projection scope on a self-report observation', () => {
++        const projected = [entry({ name: 'a', position: 1 }), entry({ name: 'b', position: 2 })];
++        const report = { catalogueRoot: 'src/skills', ...analyzeSelector(projected, ['b']) };
++
++        const record = buildObservationRecord(report, 'claude', '2026-08-18', 2, 'scoped');
++
++        expect(record.projection_mode).toBe('scoped');
++        expect(record.projected_skill_count).toBe(2);
++    });
++
++    it('omits the scope rather than defaulting it — absence is not `legacy-all`', () => {
++        const projected = [entry({ name: 'a', position: 1 }), entry({ name: 'b', position: 2 })];
++        const report = { catalogueRoot: 'src/skills', ...analyzeSelector(projected, ['b']) };
++
++        const record = buildObservationRecord(report, 'claude', '2026-08-18');
++
++        expect('projection_mode' in record).toBe(false);
++        expect('projected_skill_count' in record).toBe(false);
++    });
++});
++
++describe('cadence', () => {
++    const claude: ObservationRecord = {
++        schema: 1,
++        observed_at: '2026-08-01',
++        host: 'claude',
++        entries_total: 300,
++        bare_count: 2,
++        described_count: 5,
++        bare_names: ['alpha', 'beta'],
++        verdict: 'no-selector',
++        separating_candidates: [],
++        truncation_mode: 'per-entry',
++        observation_source: 'self-report',
++    };
++    const codex: ObservationRecord = {
++        schema: 1,
++        observed_at: '2026-08-17',
++        host: 'codex',
++        entries_total: 497,
++        bare_count: 0,
++        described_count: 0,
++        bare_names: [],
++        verdict: 'insufficient-observation',
++        separating_candidates: [],
++        truncation_mode: 'budget-strip-and-drop',
++        observation_source: 'host-event',
++        projection_mode: 'scoped',
++    };
++
++    it('reports per host and never pools them into one freshness verdict', () => {
++        const rows = cadenceStatus([claude, codex], '2026-08-18');
++
++        expect(rows.map((r) => r.host)).toEqual(['claude', 'codex']);
++        // 17 days vs 1 day: one host is stale while the other is current, and a
++        // pooled answer would describe neither.
++        expect(rows[0]!.due).toBe(true);
++        expect(rows[0]!.daysSince).toBe(17);
++        expect(rows[1]!.due).toBe(false);
++        expect(rows[1]!.daysSince).toBe(1);
++    });
++
++    it('counts observations carrying no projection scope instead of hiding them', () => {
++        const rows = cadenceStatus([claude, codex], '2026-08-18');
++
++        expect(rows[0]!.unscoped).toBe(1);
++        expect(rows[1]!.unscoped).toBe(0);
++    });
++
++    it('reads an unparseable stamp as DUE, never as fresh', () => {
++        const broken = { ...claude, observed_at: 'not-a-date' };
++
++        const rows = cadenceStatus([broken], '2026-08-18');
++
++        expect(Number.isNaN(rows[0]!.daysSince)).toBe(true);
++        // A broken date and a current one must not look alike — the same law
++        // the host-event parser follows when it refuses to record a zero.
++        expect(rows[0]!.due).toBe(true);
++    });
++
++    it('states the volume bar as quoted, and never invents a different one', () => {
++        expect(OBSERVATION_VOLUME_BAR).toBe(20);
++        expect(OBSERVATION_HOST_BAR).toBe(2);
++
++        const out = formatCadenceStatus(cadenceStatus([claude, codex], '2026-08-18'), '2026-08-18');
++
++        expect(out).toContain('2/20 observation(s) across 2/2 host(s)');
++    });
++
++    it('says every host is due when the corpus is empty', () => {
++        expect(cadenceStatus([], '2026-08-18')).toEqual([]);
++        expect(formatCadenceStatus([], '2026-08-18')).toContain('every host is due');
++    });
++});
++
++describe('pointable-but-bare join (D-4)', () => {
++    const perEntry: ObservationRecord = {
++        schema: 1,
++        observed_at: '2026-08-12',
++        host: 'claude',
++        entries_total: 300,
++        bare_count: 3,
++        described_count: 9,
++        bare_names: ['on-disk-a', 'on-disk-b', 'gone-from-disk'],
++        verdict: 'no-selector',
++        separating_candidates: [],
++        truncation_mode: 'per-entry',
++        observation_source: 'self-report',
++    };
++    const stripAndDrop: ObservationRecord = {
++        schema: 1,
++        observed_at: '2026-08-16',
++        host: 'codex',
++        entries_total: 497,
++        bare_count: 0,
++        described_count: 0,
++        bare_names: [],
++        verdict: 'insufficient-observation',
++        separating_candidates: [],
++        truncation_mode: 'budget-strip-and-drop',
++        observation_source: 'host-event',
++        dropped_count: 402,
++    };
++
++    it('counts the bare entries the ranker can still name', () => {
++        const rows = joinPointableBare([perEntry], ['on-disk-a', 'on-disk-b', 'unrelated']);
++
++        expect(rows).toHaveLength(1);
++        expect(rows[0]!.pointableBare).toBe(2);
++        expect(rows[0]!.pointableNames).toEqual(['on-disk-a', 'on-disk-b']);
++        expect(rows[0]!.unpointableBare).toBe(1);
++        expect(rows[0]!.unpointableNames).toEqual(['gone-from-disk']);
++    });
++
++    // The load-bearing test. A strip-and-drop host enumerates nothing, so its
++    // empty `bare_names` means "not counted", not "none were bare". Emitting a
++    // row of 0 for it would be a zero inferred from silence — the one failure
++    // this module's header forbids outright.
++    it('SKIPS a host that publishes no per-entry list rather than scoring it 0', () => {
++        const rows = joinPointableBare([perEntry, stripAndDrop], ['on-disk-a']);
++
++        expect(rows).toHaveLength(1);
++        expect(rows.map((r) => r.host)).toEqual(['claude']);
++    });
++
++    it('treats zero on a per-entry observation as a legitimate answer', () => {
++        const rows = joinPointableBare([perEntry], ['something', 'else']);
++
++        expect(rows).toHaveLength(1);
++        expect(rows[0]!.pointableBare).toBe(0);
++        expect(formatPointableBare(rows, 'src/skills', 2, 0)).toContain(
++            'D-4 divergence: 0 on every joined observation',
++        );
++    });
++
++    it('distinguishes "nothing to join" from "joined and found zero"', () => {
++        const out = formatPointableBare([], 'src/skills', 2, 1);
++
++        expect(out).toContain('This is NOT a count of zero');
++        expect(out).toContain('D-4 divergence: unmeasured.');
++    });
+ });
+ 
+ describe('host budget event', () => {
