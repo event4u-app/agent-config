@@ -227,6 +227,19 @@ production host mode; method in `internal/bench/council-blind-review/`.
   as the rater. Substituting an AI rater would break the pre-registration and
   would itself be the self-preference bias this roadmap exists to measure — the
   one substitution that invalidates the result it produces.
+- **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the
+  field; drafted from the roadmap's own text for the consolidated decision
+  sheet, not from a maintainer decision.)** Do R1 and R2 in one sitting against
+  the prepared packet, and accept an **honest null** as a full outcome for
+  either — the entry's own Resolved-when asks for adopt-or-honest-null and
+  explicitly refuses a deferral, so "the preference was not majority" closes Ü2
+  exactly as cleanly as adoption does. The sitting is bounded: the packet is
+  already prepared, Ü1 is already adopted and out of scope, and the two
+  readings have pre-registered decision rules rather than open-ended judgement.
+- **If you do nothing:** Ü2 and Ü3 stay undecided and Phase 3's merge-or-null
+  cannot be written at all, so the roadmap cannot terminate in either
+  direction. Ü1's shipped behaviour is unaffected, which is what makes this
+  the cheapest kind of blocker to leave open and the easiest to forget.
 - **Resolved when:** both readings exist, and each of Ü2 / Ü3 carries an
   adopt-or-honest-null verdict rather than a deferral.
 

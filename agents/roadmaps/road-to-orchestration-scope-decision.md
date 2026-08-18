@@ -251,6 +251,21 @@ proof surface.
   exists; what is still missing is the counterfactual and the quality columns,
   which is a narrower gap than the prose above describes. `spawn_count ≥ 2` is
   still **0 of 367**, so the corpus has never produced a fan-out.
+- **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the
+  field; drafted from the roadmap's own text for the consolidated decision
+  sheet, not from a maintainer decision.)** Run the payload probe FIRST and
+  treat its answer as the decision, rather than accumulating more usage. The
+  entry's own re-measurement is decisive on this: at 367 orchestration lines
+  the quality columns are `null` 367/367 and `spawn_count ≥ 2` is 0 of 367, so
+  more of the same telemetry cannot populate the columns PROVE needs. If no
+  hook slot sees the task-completion payload, Phase 3's verdict is an **honest
+  null** and this roadmap terminates on that finding instead of waiting; only
+  if a slot does see it is the ≥ 20-populated-line window worth opening.
+- **If you do nothing:** 6 steps wait on a window that the entry's own numbers
+  suggest may never fill, and the roadmap keeps reading as resumable to every
+  feasibility screen — the exact misreading the 2026-08-17 rewrite of the
+  Resolved-when was written to stop. A blocker whose condition cannot be
+  reached is a park or a null, not a wait.
 - **Resolved when:** a probe result records whether any hook slot sees the
   task-completion payload, and — if one does — the current-month audit log
   carries ≥ 20 orchestration lines whose **quality** columns are populated

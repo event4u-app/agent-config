@@ -193,6 +193,19 @@ suppressed layer restores the prior state.
 - **What to do:** Phase 3's before/after pair needs the maintainer machine,
   since the two-layer topology is a property of the install rather than of the
   repo. Run the reading, apply `install --layer`, run it again.
+- **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the
+  field; drafted from the roadmap's own text for the consolidated decision
+  sheet, not from a maintainer decision.)** Take all three steps in ONE
+  sitting — reading, `install --layer`, reading — and record both readings
+  against a named commit in the same note. Do not try to reproduce the
+  two-layer topology in the repo: the entry already states that the topology
+  is a property of the install, so a repo-side reconstruction would measure
+  something else and read as the same number. Phases 1-2 are repo work and
+  proceed meanwhile; only Phase 3 waits.
+- **If you do nothing:** Phases 1-2 land and Phase 3 stays open, which means
+  the convergence claim ships with no before/after pair behind it — the shape
+  where a number is published and the measurement that would falsify it was
+  never taken.
 - **Resolved when:** both readings exist at a named commit.
 
 ## Risk Register
