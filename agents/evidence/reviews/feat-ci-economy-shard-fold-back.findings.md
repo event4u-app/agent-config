@@ -1,6 +1,6 @@
 # Completion review — ci-economy shard fold-back decision
 
-**Skipped:** no code surface for this completion — the diff is one contract document, one comment-only hunk in a workflow, one roadmap file and its generated dashboard, and the gate itself measures zero code paths of four changed files, scope e1fc0e64afe880efc4c4c60aa57b83f877614bc412c80c008458f96341798e1b, declared 2026-08-18
+**Skipped:** no code surface for this completion — the diff is one contract document, one comment-only hunk in a workflow, one roadmap file and its generated dashboard, and the gate itself measures zero code paths of four changed files, scope 6ccc0caa10ee765e76bff68cedb22508e93393f8603f0cb5a3615d803ce52ae2, declared 2026-08-18
 
 ## Why a skip rather than a review
 
@@ -76,15 +76,29 @@ Gates green on this branch: `task preflight` (exit 0), `lint_workflow_paths`,
 `lint_roadmap_family_cap`, YAML parse of the edited workflow, and the three
 `verify:` annotations 3.4 ships with.
 
-**One check is red and it is inherited, not caused here.**
-`Sync + Generate Tools Consistency` — the single required check — fails on
-`check_estate_count` with `open_blockers 67 → 69`. The same step fails on `main`
-at `851568b5c` (run 32173675188, 2026-08-18 18:55), before this branch existed,
-and the number is identical with either glyph choice on 4.2/4.3. Clearing it is
-an estate-budget decision — one-in-one-out, or a reasoned baseline raise in
-`src/config/estate-count-budget.json` — so it is surfaced to the maintainer
-rather than absorbed here. Raising the baseline to make one PR green is exactly
-the move that ratchet exists to refuse.
+**Three checks were red on the first push and none was caused here. One has since
+been fixed on the base; two remain inherited.**
+
+- **`Sync + Generate Tools Consistency` — RESOLVED on the base, not by this
+  branch.** It failed on `check_estate_count` at `open_blockers 67 → 69`, and the
+  same step failed on `main` at `851568b5c` (run 32173675188) before this branch
+  existed. PR #1423 then merged and raised the baseline to 69 with its own
+  recorded reason; after merging that base in, `check_estate_count` exits 0 at
+  `open_blockers 69 (baseline 69, +0)`. Stated as a base fix rather than quietly
+  dropped, because the earlier version of this section named it a live breach and
+  a reader comparing the two would otherwise not know which is true.
+- **`Node Tests` shard 1/4, ubuntu and macOS — inherited.** Same failing step
+  (`Vitest (shard 1/4, heavy suites excluded)`, step 7) on `main` run 32173675197
+  at `851568b5c`. No test file, config or exclusion changed here; the shard-1 file
+  set is untouched by this diff.
+- **`Static Checks` — a known runner-variance flake, and not on a path this diff
+  touches.** The failing step is 12, `hook-latency bench gate (pre-registered
+  budget, real path)`. No hook, manifest or concern changed here. `prepack` and
+  `typecheck` both exit 0 locally on this tree.
+
+Nothing here absorbs an inherited red into this change, and no baseline was
+raised to make this PR green — that is the move the ratchet exists to refuse, and
+the raise that did happen was another PR's, with its own reason.
 
 ## Standing caveat
 
