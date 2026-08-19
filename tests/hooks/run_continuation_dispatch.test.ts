@@ -131,6 +131,15 @@ function git(cwd: string, ...args: string[]): void {
     delete env['GIT_WORK_TREE'];
     delete env['GIT_INDEX_FILE'];
     delete env['GIT_COMMON_DIR'];
+    // Round 3 finding 7: stripping the four pointers closed the ENV axis and
+    // left the CONFIG axis open. A maintainer with a global `core.hooksPath`
+    // had their real hook set run against the fixture repo on `commit`, and a
+    // global `commit.gpgsign = true` without an available key made the fixture
+    // commit throw — reding three cases for a reason unrelated to the concern.
+    // Pointing both config scopes at /dev/null is the documented way to run git
+    // against nothing but the repository-local config.
+    env['GIT_CONFIG_GLOBAL'] = '/dev/null';
+    env['GIT_CONFIG_SYSTEM'] = '/dev/null';
     const r = spawnSync('git', args, { cwd, encoding: 'utf-8', env });
     if ((r.status ?? -1) !== 0) {
         throw new Error(`git ${args.join(' ')} failed: ${r.stderr}`);

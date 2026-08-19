@@ -397,8 +397,15 @@ function readState(file: string): RunState | null {
 }
 
 /**
- * The five fields that make an event's two-tree property checkable by a third
+ * The six fields that make an event's two-tree property checkable by a third
  * party holding nothing but the ledger line.
+ *
+ * Keep this count in step with the file header and the call-site comment. Round 2
+ * finding 4 caught the header saying four where the function emitted five; the
+ * edit that fixed it added `session_cwd` and left THIS heading saying five, which
+ * round 3 finding 3 then caught. Two rounds, same drift, opposite direction — the
+ * count is load-bearing because it is what a later edit dropping a field would
+ * have to contradict.
  *
  * The defect this concern shipped with was a writer and a reader resolving
  * DIFFERENT trees: `sessions:claim` wrote under `process.cwd()` (the operator's
@@ -535,7 +542,15 @@ export function provenance(
         // from a `cwd` that failed resolution — the first says the host is
         // silent, the second says the session sat somewhere `session_checkout`
         // would not trust. Both are readable; neither is guessed.
-        session_cwd: sessionCwd === '' ? '' : normalizeDir(sessionCwd),
+        //
+        // Trimmed with the SAME rule `session_checkout` applies to the same
+        // string (round 3 finding 6). Without it a whitespace-padded value
+        // validated fine there and was `path.resolve`d here against the reader's
+        // cwd, fabricating a path that is neither `session_root` nor under it —
+        // precisely the shape the docblock above says no healthy resolution
+        // produces, so a healthy line read as degraded. A whitespace-only value
+        // now reads as host silence, which is what it is.
+        session_cwd: sessionCwd.trim() === '' ? '' : normalizeDir(sessionCwd.trim()),
         git_dir: git_dir(writer) ?? '',
         git_common_dir: git_common_dir(writer) ?? '',
         claim_path: normalizeFile(claimPath),
@@ -650,9 +665,18 @@ export function main(): number {
     // then observed the same argument applied only half way: three transcript
     // early-returns still sat below it, so an autonomous session whose
     // transcript is over `TRANSCRIPT_READ_MAX_BYTES` kept paying it for
-    // nothing. It now sits below every early return and above every
-    // `appendEvent`, which is the only position where the cost is paid exactly
-    // when a line is written.
+    // nothing. It now sits below every one of those.
+    //
+    // It is NOT true that nothing below writes no line, and round 3 finding 5
+    // caught the previous comment claiming exactly that. Two branches below
+    // still return without an `appendEvent`: the duplicate-stop-fire guard and
+    // the failed-state-write path. Duplicate fires are routine for this
+    // concern, so the resolution is genuinely paid on a no-line path. That is
+    // stated rather than fixed, because the remaining fix is to thread the value
+    // lazily through five call sites to save four syscalls on a path that has
+    // already read a roadmap file and a transcript tail — and an over-claiming
+    // comment is the worse defect of the two, since it is the thing a later
+    // reader would trust.
     //
     // The git resolution here duplicates the one `session_checkout` does to
     // validate the cwd, and that duplication is ACCEPTED rather than removed

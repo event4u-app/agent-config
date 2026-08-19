@@ -97,9 +97,14 @@ engages and leaves the event behind.
      validity is that of a production smoke probe, not of ordinary
      autonomous work.
   2. *The provenance fields are test-verified, not self-verified.* The
-     same change adds `workspace_root` / `session_root` / `git_dir` /
-     `git_common_dir` / `claim_path` to every event, so a future line
-     carries the two-tree fact itself instead of needing this table.
+     same change adds `workspace_root` / `session_root` / `session_cwd` /
+     `git_dir` / `git_common_dir` / `claim_path` — six fields — to every
+     event, so a future line carries the two-tree fact itself instead of
+     needing this table. Round 3 finding 4 caught this enumeration listing
+     five while the same bullet said six forty lines down, which would have
+     had a reader auditing a real ledger line conclude either that an
+     undocumented field was present or that `session_cwd` was not part of
+     the contract.
      `session_root` is the field R2 finding 1 added after the fact: the
      first version derived both git fields from the READER's root, where
      they are equal in exactly the arrangement documented above, so the
@@ -108,7 +113,12 @@ engages and leaves the event behind.
      and the enrichment was built in the worktree. Verified by
      `tests/hooks/run_continuation_dispatch.test.ts` over a real
      `git worktree add` fixture — which reds against the un-enriched
-     event while the other eight cases stay green.
+     event while the other cases stay green. **Counts corrected on round 3
+     finding 8:** that file now holds twelve cases, not nine, and THREE of
+     them assert the provenance rather than one. The stale figure mattered
+     more here than it would elsewhere — this bullet exists so a reader can
+     check the artefact against a falsifiable number, and the number was
+     wrong.
 
      **Superseded 2026-08-19 by a live event, and the live event refuted
      the fields.** The enrichment merged, `dist/` was rebuilt, and the
