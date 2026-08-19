@@ -52,7 +52,7 @@ import {
     ttl_is_measured,
     ttl_seconds_for,
 } from './_lib/session_register.js';
-import { claim_is_stale, roadmap_claim_rel } from './session_register_hook.js';
+import { claim_file, claim_is_stale, claim_read_paths } from './session_register_hook.js';
 
 function usage(): number {
     process.stderr.write(
@@ -401,17 +401,29 @@ export function claim_conflicts(
 
 function cmd_claim(argv: string[], root: string): number {
     const sid = env_session_id();
-    const target = path.join(root, roadmap_claim_rel(sid));
+    // The claim lives in the git COMMON dir, so the writer here and the stop-slot
+    // reader agree on one tree even when they start from different ones. Before
+    // this, the CLI joined against `process.cwd()` (the operator's worktree) and
+    // the hook against `--project-dir` (the parent checkout) — in a worktree,
+    // two different files, and `run-continuation` silently never engaged. See
+    // `claim_dir` in session_register_hook.ts for the full account.
+    const target = claim_file(root, sid);
     if (argv.includes('--release')) {
         // Release only what this session could have written. An identified session
         // never writes the legacy file, so unlinking it would delete a PEER's claim
         // in a mixed-host checkout and leave that peer reporting nothing, with no
         // notice to either side (R2 finding 10). An unidentified session shares that
         // file by construction and releasing it is the only release available.
-        try {
-            fs.unlinkSync(target);
-        } catch {
-            /* nothing to release */
+        //
+        // Both locations — the shared dir and the pre-fix per-tree path — because
+        // a release that clears one and leaves the other readable does not release.
+        for (const p of claim_read_paths(root, sid)) {
+            if (path.basename(p) !== path.basename(target)) continue;
+            try {
+                fs.unlinkSync(p);
+            } catch {
+                /* nothing to release */
+            }
         }
         process.stdout.write(
             sid === null

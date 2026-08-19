@@ -121,6 +121,89 @@ export function roadmap_claim_rel(session_id: string | null | undefined): string
     return norm;
 }
 
+/** Claim directory name, beside the session register in the git common dir. */
+export const CLAIM_DIRNAME = 'agent-claims';
+
+/**
+ * Where a roadmap claim lives: the git COMMON dir, which every worktree shares.
+ *
+ * ## The defect this fixes, measured 2026-08-19
+ *
+ * The run contract had two halves that resolved DIFFERENT roots.
+ * `sessions_cli.cmd_claim` joined the relative path below against
+ * `process.cwd()` — the worktree the operator stands in. The stop-slot concern
+ * joined it against `envelope.workspace_root`, which the dispatcher sets from
+ * `--project-dir`, i.e. the host's `CLAUDE_PROJECT_DIR` — the parent checkout.
+ * In a worktree those are different trees, so the concern found no contract,
+ * took its `contract absent -> no-op` rung, and wrote NO event.
+ *
+ * That last part is why it went unnoticed for a release: the ledger built to
+ * make `run-continuation` auditable is empty exactly when it never ran, and
+ * empty is also what a healthy idle run looks like. The dispatch integration
+ * test could not see it either — it passes the same root to writer and reader,
+ * the one arrangement in which the two agree. Two independent symptoms pointed
+ * at it: `run-continuation.jsonl` never appeared, and `run:supervise` listed a
+ * session as `roadmap=-` minutes after that session had claimed.
+ *
+ * ## Why the common dir, and not "make the hook resolve the worktree"
+ *
+ * A roadmap claim is repo-global BY INTENT — `sessions:claim` tells the
+ * operator it "becomes visible to other sessions", and the whole point is that
+ * a peer in another worktree sees it. `register_dir` already puts the session
+ * register in the common dir for exactly that reason, and the claim is the
+ * register's other half. The alternative — teaching every concern to distrust
+ * `--project-dir` — is a change to every concern rather than to one path.
+ *
+ * `null` when git cannot be read at all; the caller then falls back to the
+ * per-tree path, which is the pre-fix behaviour rather than a new failure.
+ */
+export function claim_dir(workspace_root: string): string | null {
+    const common = git_common_dir(workspace_root);
+    return common === null ? null : path.join(common, CLAIM_DIRNAME);
+}
+
+/**
+ * Absolute path this session's claim is WRITTEN to.
+ *
+ * Shared-dir when git resolves, per-tree otherwise. One function for both
+ * halves of the contract — the writer and the reader call this, so they cannot
+ * disagree about the tree again.
+ */
+export function claim_file(workspace_root: string, session_id: string | null | undefined): string {
+    const dir = claim_dir(workspace_root);
+    const rel = roadmap_claim_rel(session_id);
+    if (dir === null) return path.join(workspace_root, rel);
+    return path.join(dir, path.basename(rel));
+}
+
+/**
+ * Every path a claim may be READ from, newest convention first.
+ *
+ * The per-tree paths stay readable so a claim written before this change is
+ * not lost — measured at 17 such files in the main checkout on the day of the
+ * fix. A read-only fallback, never a write target: writing both would recreate
+ * the two-trees problem with extra steps.
+ */
+export function claim_read_paths(
+    workspace_root: string,
+    session_id: string | null | undefined,
+): string[] {
+    const rel = roadmap_claim_rel(session_id);
+    const dir = claim_dir(workspace_root);
+    const out: string[] = [];
+    if (dir !== null) {
+        out.push(path.join(dir, path.basename(rel)));
+        if (rel !== ROADMAP_CLAIM_REL) {
+            out.push(path.join(dir, path.basename(ROADMAP_CLAIM_REL)));
+        }
+    }
+    out.push(path.join(workspace_root, rel));
+    if (rel !== ROADMAP_CLAIM_REL) {
+        out.push(path.join(workspace_root, ROADMAP_CLAIM_REL));
+    }
+    return out;
+}
+
 /** The shape `sessions:claim` writes. `session_id` is absent on legacy files. */
 export interface RoadmapClaim {
     slug: string;
@@ -173,12 +256,23 @@ export function read_claimed_slug(
 ): string | null {
     const own = roadmap_claim_rel(session_id);
     if (own !== ROADMAP_CLAIM_REL) {
-        const mine = _read_claim_file(path.join(workspace_root, own));
-        if (mine !== null) {
-            return mine.slug;
+        // Per-session, shared dir first, then the pre-fix per-tree path. The
+        // ORDER carries the migration: a session that has re-claimed since the
+        // fix wins over its own stale per-tree file.
+        for (const p of claim_read_paths(workspace_root, session_id)) {
+            if (path.basename(p) === path.basename(ROADMAP_CLAIM_REL)) continue;
+            const mine = _read_claim_file(p);
+            if (mine !== null) return mine.slug;
         }
     }
-    const legacy = _read_claim_file(path.join(workspace_root, ROADMAP_CLAIM_REL));
+    // The legacy per-WORKTREE file, in the same two locations. Unchanged in
+    // meaning: it is a claim on the checkout, not on a session.
+    let legacy: RoadmapClaim | null = null;
+    for (const p of claim_read_paths(workspace_root, session_id)) {
+        if (path.basename(p) !== path.basename(ROADMAP_CLAIM_REL)) continue;
+        legacy = _read_claim_file(p);
+        if (legacy !== null) break;
+    }
     if (legacy === null) {
         return null;
     }
@@ -578,10 +672,16 @@ export function main(): number {
             // upgrade, unbounded. An id-less session owns that file by construction,
             // so its end is the honest moment to drop it. An identified session still
             // leaves it alone: it may be a peer's.
-            try {
-                fs.unlinkSync(path.join(root, roadmap_claim_rel(session_id)));
-            } catch {
-                /* absent or unwritable — a leftover claim expires with its record */
+            // Both locations: the shared dir a claim is written to now, and the
+            // per-tree path a pre-fix claim still sits at. Dropping only one
+            // would leave the other readable and reinstate the claim.
+            for (const p of claim_read_paths(root, session_id)) {
+                if (path.basename(p) !== path.basename(roadmap_claim_rel(session_id))) continue;
+                try {
+                    fs.unlinkSync(p);
+                } catch {
+                    /* absent or unwritable — a leftover claim expires with its record */
+                }
             }
             return 0;
         }
