@@ -838,7 +838,7 @@ _2 blockers resolved._
     today's behaviour and only a machine with both gets the partition. Probe the
     current state with
     `ls ~/.claude/rules | wc -l` and `agent-config routing:doctor` before choosing.
-  - **Resolved when:** the option is recorded in ADR-235 or an amendment to it, and 2.0's verify can be run against it.
+  - **Resolved when:** the option is recorded in ADR-236 or an amendment to it, and 2.0's verify can be run against it.
 - **compact-survival-of-package-only-rules** (owner: maintainer) — blocks Phase 5 step 5.1 only. Phases 0-4 measure, decide the topology and ship the partition; 4.1 deliberately counts scope defeat separately so this decision has a number.
   - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement, not a maintainer decision.)** Option (a). ADR-227 already found `paths:` saturated as a corpus lever, so the scoping buys little, while an Iron Law vanishing after a compact is a silent correctness failure. (a) also keeps the partition exact, where (c) puts a permanent exception into an invariant Phase 4 has to check.
   - **If you do nothing:** Phase 2 ships and those four silently lose compaction survival — the worst of the three outcomes, because it is the one nobody chose.
