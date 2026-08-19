@@ -336,7 +336,7 @@ own verify, pre-window deletions are forbidden.
 - **Status:** resolved
 - **Owner:** user
 - **Blocks:** the product half of the review (post the drafted launch, distribute the wedge, run a first external session)
-- **What to do:** RESOLVED AS OUT OF SCOPE, 2026-08-05, per [`ADR-216`](../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md). Owner decision: external adoption is not a project goal, so posting a launch and running an external session are not work this project will do. The blocker is kept rather than deleted so the disposition is visible in history — it was never going to resolve, and leaving it open would have read as pending.
+- **What to do:** RESOLVED AS OUT OF SCOPE, 2026-08-05, per [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md). Owner decision: external adoption is not a project goal, so posting a launch and running an external session are not work this project will do. The blocker is kept rather than deleted so the disposition is visible in history — it was never going to resolve, and leaving it open would have read as pending.
 - **Resolved when:** resolved by the ADR-216 scope decision. The adoption-facing half of this review is closed as out of scope, not as done.
 
 ### blocker: repo-admin-and-usage

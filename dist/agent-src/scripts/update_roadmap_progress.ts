@@ -759,6 +759,10 @@ interface ParkedRoadmap {
     resume: string | null;
     /** Only the linter's looser marker matched — CI passes, the cell cannot quote. */
     unlabelled: boolean;
+    /** Open blockers still carried by the parked file. */
+    open_blockers: number;
+    /** Of those, the ones whose owner is the user. */
+    needs_user: number;
 }
 
 /**
@@ -822,7 +826,16 @@ function collect_parked(roadmap_root: string): ParkedRoadmap[] {
             continue;
         }
         const cell = resume_cell(text);
-        out.push({ rel: name, resume: cell.stated, unlabelled: cell.unlabelled });
+        // Parked blockers are still open blockers. Counting them here is what stops
+        // this section from being the surface where a park reads as a resolution.
+        const open = parse_blockers(text).filter((b) => !blocker_is_resolved(b));
+        out.push({
+            rel: name,
+            resume: cell.stated,
+            unlabelled: cell.unlabelled,
+            open_blockers: open.length,
+            needs_user: open.filter((b) => blocker_needs_user(b.owner)).length,
+        });
     }
     return out;
 }
@@ -830,30 +843,67 @@ function collect_parked(roadmap_root: string): ParkedRoadmap[] {
 /**
  * What brings a parked roadmap back, as one table cell.
  *
- * `stated` carries the line when the file makes the statement explicitly;
- * `unlabelled` means only the linter's looser marker is present. Both false means
- * the file records nothing — reported as such rather than left blank, because an
- * empty cell reads as "nothing to wait for".
+ * `stated` carries the statement when the file makes one explicitly; `unlabelled`
+ * means only the linter's looser marker is present. Both false means the file
+ * records nothing — reported as such rather than left blank, because an empty cell
+ * reads as "nothing to wait for".
+ *
+ * The whole PARAGRAPH is joined, not the matched line. Roadmap prose is hard
+ * wrapped at roughly 80 columns, so a single line ended 39 of 52 cells mid-clause
+ * on the first measurement — a cell that stops at "the before/after delivered-token
+ * pair for" is not shorter than the sentence, it is a different claim.
+ *
+ * The two tiers are tested over the SAME lines. Testing the loose marker against
+ * the whole document while the strict one ran per line made `unlabelled` fire on
+ * any file that used the word "trigger" anywhere, which is most of them.
  */
 function resume_cell(text: string): { stated: string | null; unlabelled: boolean } {
-    for (const raw of text.split('\n')) {
+    const lines = text.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+        const raw = lines[i] as string;
         if (!RESUME_STATEMENT.test(raw)) {
             continue;
         }
-        const line = raw
-            .replace(/^\s*>\s?/, '')
-            .replace(/\*\*/g, '')
-            .replace(/\|/g, '\\|')
-            .trim();
-        if (line === '') {
+        const parts: string[] = [raw];
+        // Continuation lines of the same paragraph: non-blank, and not the start of
+        // a new block (list item, heading, fence, table row).
+        for (let j = i + 1; j < lines.length; j++) {
+            const next = (lines[j] as string).replace(/^\s*>\s?/, '').trim();
+            if (next === '' || /^([-*+]\s|#{1,6}\s|```|\||>\s*$)/.test(next)) {
+                break;
+            }
+            parts.push(next);
+        }
+        const joined = cell_text(parts.join(' '));
+        if (joined === '') {
             continue;
         }
-        return {
-            stated: line.length > 200 ? `${line.slice(0, 197)}...` : line,
-            unlabelled: false,
-        };
+        return { stated: joined, unlabelled: false };
     }
-    return { stated: null, unlabelled: RESUME_LOOSE.test(text) };
+    return { stated: null, unlabelled: lines.some((l) => RESUME_LOOSE.test(l)) };
+}
+
+/**
+ * One roadmap sentence, safe to put between two pipes.
+ *
+ * Order is load-bearing and was wrong once: truncation runs BEFORE pipe-escaping,
+ * because cutting an already-escaped string can sever a `\|` and leave a dangling
+ * backslash. HTML comments are removed rather than escaped — a `<!--` reaching a
+ * cell comments out the remainder of the generated document, and one already did
+ * (`<!-- ref-ignore -->`, carried in a roadmap's own prose).
+ */
+function cell_text(raw: string): string {
+    let out = raw
+        .replace(/^\s*>\s?/, '')
+        .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/<!--|-->/g, '')
+        .replace(/\*\*/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    if (out.length > 200) {
+        out = `${out.slice(0, 197).trimEnd()}...`;
+    }
+    return out.replace(/\|/g, '\\|');
 }
 
 function unarchived_complete(roadmaps: RoadmapStats[]): RoadmapStats[] {
@@ -927,11 +977,7 @@ function collect_bundles(repo_root: string): Bundle[] {
     return out;
 }
 
-function render(
-    roadmaps: RoadmapStats[],
-    bundles: Bundle[] | null = null,
-    roadmap_root: string | null = null,
-): string {
+function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root: string): string {
     const total_done = roadmaps.reduce((s, r) => s + r.done, 0);
     const total_active = roadmaps.reduce((s, r) => s + r.total_active, 0);
     const overall_pct = total_active ? _pyRound((total_done * 100) / total_active) : 0;
@@ -955,6 +1001,7 @@ function render(
         '[skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)' +
         (total_open_blockers > 0
             ? ` · **${total_open_blockers}** open blocker${total_open_blockers !== 1 ? 's' : ''}` +
+              ' in the active tree' +
               (user_open_blockers > 0
                   ? `, **${user_open_blockers}** need you → \`agent-config gates\``
                   : '')
@@ -1062,9 +1109,7 @@ function render(
     // Parked work, listed right under the active table so the two are read
     // together. A parked roadmap is not backlog and carries no counts here — the
     // one thing a reader needs is what brings it back.
-    // Null when a caller renders without a root (the unit tests do); the section
-    // is then absent rather than guessed at.
-    const parked = roadmap_root === null ? [] : collect_parked(roadmap_root);
+    const parked = collect_parked(roadmap_root);
     if (parked.length > 0) {
         lines.push(
             `## Parked — \`later/\` (${parked.length} roadmap` +
@@ -1075,15 +1120,30 @@ function render(
                 'design. Listed here so a resume condition is visible without ' +
                 'opening the file.\n',
         );
-        lines.push('| Roadmap | Resume when |');
-        lines.push('|---|---|');
+        const parked_open = parked.reduce((n, r) => n + r.open_blockers, 0);
+        const parked_user = parked.reduce((n, r) => n + r.needs_user, 0);
+        if (parked_open > 0) {
+            lines.push(
+                `> Carrying **${parked_open}** open blocker` +
+                    `${parked_open !== 1 ? 's' : ''}` +
+                    (parked_user > 0 ? `, **${parked_user}** owned by you` : '') +
+                    ' — parking resolves nothing, so these are NOT in the ' +
+                    'active-tree count above.\n',
+            );
+        }
+        lines.push('| Roadmap | Open blockers | Resume when |');
+        lines.push('|---|---:|---|');
         for (const r of parked) {
             const cell =
                 r.resume ??
                 (r.unlabelled
                     ? '_condition present but unlabelled — see file_'
                     : '_no resume line recorded_');
-            lines.push(`| [${r.rel}](roadmaps/later/${r.rel}) | ${cell} |`);
+            const blockers =
+                r.open_blockers === 0
+                    ? '0'
+                    : `${r.open_blockers}${r.needs_user > 0 ? ` (${r.needs_user} you)` : ''}`;
+            lines.push(`| [${r.rel}](roadmaps/later/${r.rel}) | ${blockers} | ${cell} |`);
         }
         lines.push('');
         lines.push('---\n');

@@ -44,7 +44,7 @@ parent_roadmap: road-to-feedback-9-29
 > rule differ there is no defined answer to which text binds.
 
 > Source: the loaded-token measurement in
-> [`agents/evidence/analysis/loaded-rule-token-distribution.md`](../evidence/analysis/loaded-rule-token-distribution.md),
+> [`agents/evidence/analysis/loaded-rule-token-distribution.md`](../../evidence/analysis/loaded-rule-token-distribution.md),
 > produced by the parent roadmap and deliberately routed out of its blockers:
 > the parent treated it as evidence-deciding-nothing, which is right for a diet
 > verdict and wrong for a delivery defect.
@@ -65,7 +65,7 @@ parent_roadmap: road-to-feedback-9-29
 > consumer-visible behaviour question and is NOT decided here.
 >
 > **Decided elsewhere, 2026-08-13 —
-> [`ADR-228`](../../docs/decisions/ADR-228-global-install-does-not-emit-paths.md):
+> [`ADR-228`](../../../docs/decisions/ADR-228-global-install-does-not-emit-paths.md):
 > the global install does not emit `paths:`, and the 24 stay as accepted
 > over-delivery.** Not on cost: at least six of the 24 are safety or governance
 > floors carrying an Iron Law, and `ADR-227` records that path-scoped rules are
@@ -79,7 +79,7 @@ parent_roadmap: road-to-feedback-9-29
 > act on — and both are repaired under Phase 2. Classification, the cited
 > precedence answer, and the explanation of why two earlier readings of one commit
 > disagreed:
-> [`agents/evidence/analysis/carrier-layer-divergence-classification.md`](../evidence/analysis/carrier-layer-divergence-classification.md).
+> [`agents/evidence/analysis/carrier-layer-divergence-classification.md`](../../evidence/analysis/carrier-layer-divergence-classification.md).
 > The original claim is kept above rather than rewritten, so the trail from
 > premise to falsification stays readable.
 

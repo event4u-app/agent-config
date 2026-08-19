@@ -611,6 +611,137 @@ describe('parked inventory — later/ is listed, never counted', () => {
         expect(dashboard).toContain('_no resume line recorded_');
     });
 
+    it('joins the hard-wrapped paragraph instead of stopping at the line break', () => {
+        // Roadmap prose wraps at ~80 columns, so quoting the matched LINE ended 39
+        // of 52 live cells mid-clause. A cell that stops at "the pair for" is not a
+        // shorter version of the sentence, it is a different claim.
+        mk('road-to-active.md', ['# Active', '', '## Phase 1 — Go', '- [ ] open one', ''].join('\n'));
+        mk(
+            path.join('later', 'road-to-wrapped.md'),
+            [
+                '# Wrapped',
+                '',
+                '> **Parked. Resume when** the maintainer takes the before/after',
+                '> reading on their own machine and records both against one commit.',
+                '',
+                '## Phase 1 — Waits',
+                '- [ ] q',
+                '',
+            ].join('\n'),
+        );
+        const { dashboard } = regen();
+        expect(dashboard).toContain(
+            'Resume when the maintainer takes the before/after reading on their own machine and records both against one commit.',
+        );
+    });
+
+    it('stops joining at a blank line, a list item or a heading', () => {
+        mk('road-to-active.md', ['# Active', '', '## Phase 1 — Go', '- [ ] open one', ''].join('\n'));
+        mk(
+            path.join('later', 'road-to-bounded.md'),
+            [
+                '# Bounded',
+                '',
+                '> Resume when the window elapses.',
+                '- this list item must not be swallowed',
+                '',
+                '## Phase 1 — Waits',
+                '- [ ] q',
+                '',
+            ].join('\n'),
+        );
+        const { dashboard } = regen();
+        expect(dashboard).toContain('Resume when the window elapses.');
+        expect(dashboard).not.toContain('must not be swallowed');
+    });
+
+    it('strips an HTML comment out of the cell rather than escaping it', () => {
+        // A `<!--` reaching a cell comments out the remainder of the generated
+        // document. One already did: `<!-- ref-ignore -->`, carried in a roadmap's
+        // own prose.
+        mk('road-to-active.md', ['# Active', '', '## Phase 1 — Go', '- [ ] open one', ''].join('\n'));
+        mk(
+            path.join('later', 'road-to-commented.md'),
+            ['# Commented', '', '> Resume when `x.md` <!-- ref-ignore --> exists.', ''].join('\n'),
+        );
+        const { dashboard } = regen();
+        expect(dashboard).toContain('## Per-roadmap phase breakdown');
+        expect(dashboard).not.toContain('ref-ignore');
+        expect(dashboard).not.toContain('<!--\n');
+    });
+
+    it('counts the blockers a parked roadmap still carries, and says parking resolved nothing', () => {
+        // The failure this pins: the header count is active-tree only, so parking
+        // three blockered roadmaps dropped it by 3 and the dashboard printed a
+        // reduction nobody earned — the free tightening the estate metric spans
+        // later/ specifically to prevent, reappearing one surface over.
+        // The active roadmap carries a blocker too, so the header count exists and
+        // its active-tree qualifier is pinned alongside the parked notice.
+        mk(
+            'road-to-active.md',
+            [
+                '# Active',
+                '',
+                '## Phase 1 — Go',
+                '- [ ] open one',
+                '',
+                '## Blockers',
+                '',
+                '### blocker: active-side',
+                '- **Status:** open',
+                '- **Owner:** user',
+                '- **Class:** 3',
+                '- **Blocks:** Phase 1',
+                '- **What to do:** decide',
+                '- **Resolved when:** decided',
+                '',
+            ].join('\n'),
+        );
+        mk(
+            path.join('later', 'road-to-blocked.md'),
+            [
+                '# Blocked',
+                '',
+                '> Resume when the machine reading exists.',
+                '',
+                '## Phase 1 — Waits',
+                '- [ ] q',
+                '',
+                '## Blockers',
+                '',
+                '### blocker: needs-a-human',
+                '- **Status:** open',
+                '- **Owner:** user',
+                '- **Class:** 3',
+                '- **Blocks:** Phase 1',
+                '- **What to do:** take the reading',
+                '- **Resolved when:** it exists',
+                '',
+            ].join('\n'),
+        );
+        const { dashboard } = regen();
+        expect(dashboard).toContain('open blocker in the active tree');
+        expect(dashboard).toContain('parking resolves nothing');
+        expect(dashboard).toContain('| Roadmap | Open blockers | Resume when |');
+        expect(dashboard).toContain('| 1 (1 you) |');
+    });
+
+    it('truncates before escaping, so a pipe escape is never severed', () => {
+        // `slice()` after escaping can cut between the backslash and the pipe and
+        // emit a dangling backslash into the table.
+        mk('road-to-active.md', ['# Active', '', '## Phase 1 — Go', '- [ ] open one', ''].join('\n'));
+        const long = `Resume when ${'a'.repeat(190)} | ${'b'.repeat(40)}`;
+        mk(path.join('later', 'road-to-long.md'), ['# Long', '', `> ${long}`, ''].join('\n'));
+        const { dashboard } = regen();
+        const row = dashboard
+            .split('\n')
+            .find((l) => l.includes('roadmaps/later/road-to-long.md')) as string;
+        expect(row).toBeDefined();
+        expect(row.endsWith('...  |') || row.includes('... |')).toBe(true);
+        // No lone backslash immediately before a cell boundary.
+        expect(row).not.toMatch(/\\ \|/);
+    });
+
     it('omits the section entirely when later/ holds no roadmaps', () => {
         mk('road-to-active.md', ['# Active', '', '## Phase 1 — Go', '- [ ] open one', ''].join('\n'));
         const { dashboard } = regen();
