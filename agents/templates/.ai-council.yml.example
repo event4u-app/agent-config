@@ -207,6 +207,23 @@ cli_call_budget:
   # Warn once usage crosses this fraction of a cap (0..1).
   warn_at: 0.8
 
+# Mid-flight cli -> api fallback. When a CLI call fails partway through a
+# pass, the seat can retry once on that provider's metered api rung instead
+# of being lost. The classes where the CLI provably never reached the
+# provider (missing binary, rejected auth, unsupported CLI, unservable
+# model) fall through unconditionally; a timeout or a 5xx NEVER does, under
+# any setting, because a half-completed call must not be paid for twice.
+#
+# `api_on_quota` is the one BILLING-CLASS decision in that design, which is
+# why it is a key and not a rule. Both quota shapes are safe to retry — the
+# local `cli_call_budget` cap refuses before anything is sent, and a
+# provider plan quota is rejected at the request boundary — so the question
+# is not double spend, it is that an unmetered subscription call becomes a
+# USD one. Off by default; the retry still passes the `cost_budget` gates
+# above. Turn it on if you would rather keep the seat than keep the $0.
+fallback:
+  api_on_quota: false
+
 # Quorum for a council pass to CONCLUDE (road-to-always-on-orchestration
 # Phase 3.3). Default "majority" resolves to ceil(n / 2) enabled members —
 # a SIMPLE majority, deliberately not "more than half": at n=2 that is
@@ -499,6 +516,23 @@ necessity_classifier:
 #
 # See docs/contracts/ai-council-config.md for the trigger lists and the
 # Iron-Law clause.
+# `second_model` — the OPTIONAL local rung between the agent and the
+# council (UOTL Phase 4.1). It exists because the council used to be the
+# only rung before a halt: a medium-impact question stopped the run
+# whenever no council was configured or its quota was gone.
+#
+# Name a provider whose LOCAL CLI runs under subscription auth —
+# anthropic, openai or gemini. That set is narrower than the five
+# providers `members:` accepts, on purpose: xai and perplexity ship
+# community CLI wrappers that consume an API key, so routing a
+# resolution there would spend USD on the rung whose whole point is not
+# to. The rung MUST book against the same `cli_call_budget` counter above
+# — one subscription, one counter. That is an obligation on the rung, not
+# a guard that already exists: nothing reads this key at runtime yet, so
+# setting it declares intent rather than activating a bounded mechanism.
+#
+# The key is REFUSED on high_impact and user_required, not ignored. Those
+# classes reach you, and a silently-dropped key would read as configured.
 decision_resolution:
   enabled: true
   classes:
@@ -511,6 +545,7 @@ decision_resolution:
     medium_impact:
       mode: council
       confidence_threshold: 0.6
+      # second_model: gemini   # uncomment to add the local rung
     high_impact:
       mode: user            # LOCKED — Iron Law
       confidence_threshold: 0.6

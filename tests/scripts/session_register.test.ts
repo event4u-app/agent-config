@@ -21,6 +21,7 @@ import {
     DEREGISTER_ON_STOP_PLATFORMS,
     HEARTBEAT_REACHABLE_PLATFORMS,
     type SessionRecord,
+    PRUNE_GRACE_MS,
     TTL_DEFAULT_SECONDS,
     TTL_MEASURED_SECONDS,
     classify_collisions,
@@ -174,9 +175,46 @@ describe('acceptance — liveness: both halves hold simultaneously', () => {
     it('pruning unlinks the expired file, so the register cannot grow without bound', () => {
         const { main } = make_repo();
         const dir = register_dir(main)!;
-        const stale = new Date(Date.now() - (TTL_DEFAULT_SECONDS + 60) * 1000);
+        // Expired AND past the grace window — the register still cannot grow
+        // without bound, it just does not shed a record the watcher may still
+        // need. See `ReadLiveOptions.prune_grace_ms`.
+        const stale = new Date(Date.now() - (TTL_DEFAULT_SECONDS * 1000 + PRUNE_GRACE_MS + 60_000));
         write_record(dir, rec({ session_id: 'ghost', platform: 'unknown-host', last_seen: iso_now(stale) }));
         expect(fs.readdirSync(dir)).toHaveLength(1);
+        read_live_records(dir, { prune: true });
+        expect(fs.readdirSync(dir)).toHaveLength(0);
+    });
+
+    it('a JUST-expired record survives the prune — the watcher still needs it', () => {
+        // R2 round 4, finding 5. `run:supervise` exists entirely to classify
+        // expired records, and two routine read paths pruned with
+        // `prune: true` — `sessions:list` and the session-start hook, which
+        // fires on every start. The watcher's whole input was being deleted
+        // between one morning digest and the next.
+        const { main } = make_repo();
+        const dir = register_dir(main)!;
+        const stale = new Date(Date.now() - (TTL_DEFAULT_SECONDS + 60) * 1000);
+        write_record(dir, rec({ session_id: 'ghost', platform: 'unknown-host', last_seen: iso_now(stale) }));
+        // Not live any more...
+        expect(read_live_records(dir, { prune: true })).toEqual([]);
+        // ...but still on disk, which is what the watcher reads.
+        expect(fs.readdirSync(dir)).toHaveLength(1);
+    });
+
+    it('grace 0 restores delete-on-sight for a caller that wants it', () => {
+        const { main } = make_repo();
+        const dir = register_dir(main)!;
+        const stale = new Date(Date.now() - (TTL_DEFAULT_SECONDS + 60) * 1000);
+        write_record(dir, rec({ session_id: 'ghost', platform: 'unknown-host', last_seen: iso_now(stale) }));
+        read_live_records(dir, { prune: true, prune_grace_ms: 0 });
+        expect(fs.readdirSync(dir)).toHaveLength(0);
+    });
+
+    it('an unparseable file is deleted immediately — no run can need it', () => {
+        const { main } = make_repo();
+        const dir = register_dir(main)!;
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'broken.json'), '{ not json', 'utf-8');
         read_live_records(dir, { prune: true });
         expect(fs.readdirSync(dir)).toHaveLength(0);
     });

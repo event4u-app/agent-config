@@ -985,6 +985,155 @@ describe('resolve_cli_call_caps — the single cap authority', () => {
     });
 });
 
+// === the fallback block the strict loader does not model ====================
+//
+// `ai_council.fallback.api_on_quota` is read leniently off the raw settings
+// dict by `council_cli.ts::build_members`, not through this loader's typed
+// model. That is only safe if the strict loader TOLERATES the block — a
+// consumer sets one key and every command that loads the file must still
+// work. The loader rejects unknown keys in exactly two places
+// (`members.<name>` and `cli_call_budget.max_calls_per_day.<provider>`) and
+// nowhere at the top level, so it does. This pins that, because the leniency
+// is load-bearing and invisible: nothing else in the tree would fail if a
+// future top-level allowlist were added.
+// === `fallback` is MODELLED, and it has to be =============================
+//
+// `council_cli.ts::load_settings` does not hand `build_members` the config
+// file — it hands it a block SYNTHESIZED from `CouncilConfig`. So a key this
+// loader does not model cannot reach the runtime, whatever the operator wrote.
+// That defect shipped twice already (`quorum`, `quorum_min_present`, both
+// commented at the synthesizer) and a third time for this key: the contract
+// section, the template and the tests all described a switch production could
+// not flip. These tests pin the model, not just the tolerance.
+describe('config — fallback.api_on_quota', () => {
+    it('defaults to false when the block is absent — the only spend-safe default', () => {
+        const tmp = make_tmp();
+        const c = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID));
+        expect(c.fallback.api_on_quota).toBe(false);
+    });
+
+    it('true is honoured', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}\nfallback:\n  api_on_quota: true\n`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.fallback.api_on_quota).toBe(true);
+    });
+
+    it('the block does not disturb any other modelled field', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}\nfallback:\n  api_on_quota: true\n`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.enabled).toBe(true);
+        expect(c.defaults.mode).toBe('auto');
+        expect(c.members.get('anthropic')?.model).toBe('claude-x');
+    });
+
+    it('a non-boolean VALUE is rejected — an operator authorising spend gets an error, not a silent no', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}\nfallback:\n  api_on_quota: "yes"\n`;
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(
+            /fallback\.api_on_quota/,
+        );
+    });
+
+    it('a malformed BLOCK reads as off rather than refusing the whole file', () => {
+        // Asymmetric on purpose: the key exists to WITHHOLD spend, so a
+        // garbled container degrading to "off" is safe, while a garbled value
+        // is an instruction nobody should guess at.
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}\nfallback: "yes"\n`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.fallback.api_on_quota).toBe(false);
+    });
+});
+
+// === the second-model rung (UOTL Phase 4.1) =================================
+//
+// The council was the only rung between the agent and a halt, so a question
+// below `high_impact` still stopped the run whenever no council was configured
+// or its quota was gone. This adds one optional rung — and the schema is where
+// it lives, because no TypeScript path reads `decision_resolution.classes[*]`
+// at runtime: the routing is agent-carried, and the loader is the only thing
+// that can refuse an illegal route before a model ever sees it.
+describe('config — decision_resolution second_model rung', () => {
+    const withClass = (cls: string, body: string[]): string =>
+        [MINIMAL_VALID, 'decision_resolution:', '  classes:', `    ${cls}:`, ...body, ''].join('\n');
+
+    it('absent on every class by default — the ladder is unchanged', () => {
+        const tmp = make_tmp();
+        const c = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID));
+        for (const cls of ['trivial', 'low_impact', 'medium_impact', 'high_impact', 'user_required']) {
+            expect(c.decision_resolution.classes.get(cls)?.second_model).toBeNull();
+        }
+    });
+
+    it('a vendor-CLI provider is accepted on medium_impact', () => {
+        const tmp = make_tmp();
+        const payload = withClass('medium_impact', ['      mode: council', '      second_model: gemini']);
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.decision_resolution.classes.get('medium_impact')?.second_model).toBe('gemini');
+    });
+
+    it('an explicit null is the same as absent', () => {
+        const tmp = make_tmp();
+        const payload = withClass('medium_impact', ['      second_model: null']);
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.decision_resolution.classes.get('medium_impact')?.second_model).toBeNull();
+    });
+
+    it('a community-CLI provider is REFUSED — the rung must be USD-neutral', () => {
+        // xai and perplexity ship CLI wrappers that consume an API key and are
+        // `billable = true`. Allowing them would spend USD on the rung whose
+        // entire purpose is not to.
+        for (const provider of ['xai', 'perplexity']) {
+            const tmp = make_tmp();
+            const payload = withClass('medium_impact', [`      second_model: ${provider}`]);
+            expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(
+                /second_model/,
+            );
+        }
+    });
+
+    it('an unknown provider is refused and the error names the allowed set', () => {
+        const tmp = make_tmp();
+        const payload = withClass('medium_impact', ['      second_model: llama']);
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(
+            /'anthropic', 'gemini', 'openai'/,
+        );
+    });
+
+    it('REFUSED on high_impact — not ignored, refused', () => {
+        // The Iron Law is that these classes reach the user. A key that were
+        // merely dropped would read to its author as "configured", which is the
+        // worst of the three possible behaviours.
+        const tmp = make_tmp();
+        const payload = withClass('high_impact', ['      second_model: anthropic']);
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(/LOCKED/);
+    });
+
+    it('REFUSED on user_required, including an explicit null', () => {
+        const tmp = make_tmp();
+        expect(() =>
+            cfg.load_council_config(
+                write_yaml(tmp, withClass('user_required', ['      second_model: openai'])),
+            ),
+        ).toThrow(/LOCKED/);
+        // Even `null` is refused: the class does not HAVE this dimension, and
+        // accepting the key at one value teaches the author it exists.
+        expect(() =>
+            cfg.load_council_config(
+                write_yaml(make_tmp(), withClass('user_required', ['      second_model: null'])),
+            ),
+        ).toThrow(/LOCKED/);
+    });
+
+    it('the mode lock is untouched — high_impact still cannot be anything but user', () => {
+        const tmp = make_tmp();
+        const payload = withClass('high_impact', ['      mode: council']);
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(/LOCKED/);
+    });
+});
+
 // === the SHIPPED template must survive the real loader ======================
 //
 // Nothing asserted this before 2026-08-15: the template was referenced by an

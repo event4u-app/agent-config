@@ -65,6 +65,37 @@ const BLOCKING_ALLOWLIST = new Set([
     // closing a turn (verify-before-complete § turn-completion) and a reply
     // in the wrong language (language-and-tone Iron Law).
     'turn-end-gate',
+    // road-to-long-horizon-execution Phase 1, and it declares `blocking`
+    // because `advisory` made it INERT — the R2 review's critical finding.
+    // The dispatcher enforces advisory as a ceiling (`_is_advisory` downgrades
+    // EXIT_BLOCK to EXIT_WARN) and `host_semantics.emitFor` maps stop+warn to
+    // exit 0, so the concern ran, logged `engage`, injected its continuation as
+    // passive context, and let the turn end. Every other assertion about it
+    // passed the whole time.
+    //
+    // The second turn-END refusal after `turn-end-gate`, so the same three
+    // questions, answered on this concern's own terms rather than by analogy:
+    //
+    //   · SCOPE, not a settings flag. It refuses only a session that made a
+    //     `sessions:claim` on a roadmap whose frontmatter declares
+    //     `execution.mode: autonomous` and still carries an open phase step.
+    //     A session that claimed nothing is untouched — which is most of them,
+    //     and is why this needs no soak switch to be narrow. Kill switch:
+    //     `AGENT_CONFIG_NO_RUN_CONTINUATION=1`.
+    //   · `fail_closed: false`, so a crash lets the turn END. A continuation
+    //     that fails closed does not degrade the session, it wedges it.
+    //   · TERMINATION is the property that makes a blocking loop safe, and it
+    //     is three independent rungs — 25 iterations, a 4 h wall clock, and a
+    //     3-engagement stall — each of which now STAMPS the state instead of
+    //     deleting it. Deleting was the same defect one layer down: the next
+    //     Stop read a fresh budget and re-armed the loop the rungs had just
+    //     ended.
+    //
+    // It defers to `turn-end-gate` by chain order — concerns run sequentially
+    // and this one is registered last, so a quality-gate refusal for this turn
+    // is on disk before this concern reads it. Quality gates outrank
+    // continuation, always.
+    'run-continuation',
 ]);
 
 interface Concern {

@@ -16,6 +16,7 @@ import {
     absentReasonFromCliFailure,
     classifyCliFailure,
     isFallbackEligible,
+    isFallbackEligibleUnder,
     resolveMemberTransport,
     resolveTransport,
     type AbsentReason,
@@ -392,6 +393,46 @@ describe('mid-flight fallback — both directions pinned', () => {
     });
 });
 
+describe('fallback policy — api_on_quota opt-in', () => {
+    it('quota is eligible ONLY under the opt-in policy', () => {
+        expect(isFallbackEligibleUnder('quota_exhausted', { apiOnQuota: false })).toBe(false);
+        expect(isFallbackEligibleUnder('quota_exhausted', { apiOnQuota: true })).toBe(true);
+        // Both raw shapes classify into the one class the policy gates —
+        // the local `cli_call_budget` refusal and the provider-side reject.
+        expect(
+            isFallbackEligibleUnder(classifyCliFailure('cli_quota_exhausted'), { apiOnQuota: true }),
+        ).toBe(true);
+    });
+
+    it('the opt-in widens quota only — timeout and 5xx stay ineligible under every policy', () => {
+        expect(isFallbackEligibleUnder('timeout', { apiOnQuota: true })).toBe(false);
+        expect(isFallbackEligibleUnder('server_error', { apiOnQuota: true })).toBe(false);
+        expect(isFallbackEligibleUnder('other', { apiOnQuota: true })).toBe(false);
+    });
+
+    it('the base classes stay eligible regardless of the quota flag', () => {
+        for (const f of ['binary_missing', 'auth_rejected', 'cli_unsupported'] as const) {
+            expect(isFallbackEligibleUnder(f, { apiOnQuota: false })).toBe(true);
+        }
+    });
+
+    it('the ledger honours the policy: quota consumes the one retry only when opted in', () => {
+        const ledger = new MidFlightFallback();
+        expect(ledger.attempt('anthropic', 'quota_exhausted')).toBe('stop');
+        expect(ledger.attempt('anthropic', 'quota_exhausted', { apiOnQuota: false })).toBe('stop');
+        expect(ledger.spent()).toEqual([]);
+        expect(ledger.attempt('anthropic', 'quota_exhausted', { apiOnQuota: true })).toBe('api');
+        // Once spent, spent — the flag does not grant a second retry.
+        expect(ledger.attempt('anthropic', 'quota_exhausted', { apiOnQuota: true })).toBe('stop');
+        expect(ledger.spent()).toEqual(['anthropic']);
+    });
+
+    it('the default-policy wrapper stays byte-identical to the base set', () => {
+        expect(isFallbackEligible('quota_exhausted')).toBe(false);
+        expect(isFallbackEligible('model_unservable')).toBe(true);
+    });
+});
+
 // ── road-to-always-on-orchestration Phase 3.2 — graded degradation ──────
 
 describe('absentReason — static auto-chain classification', () => {
@@ -515,5 +556,30 @@ describe('resolveMemberTransport — the reconciled entry point', () => {
         expect(() =>
             resolveMemberTransport({ provider: 'anthropic', report: BARE, globalMode: 'bogus' }),
         ).toThrow(/expected one of/);
+    });
+});
+
+describe('classifyCliFailure — the token the producers actually write', () => {
+    // R2 round 6, finding 4. `model_unservable` is one of the four
+    // fallback-eligible classes, and the classifier matched a token no
+    // producer emits: `clients.ts` writes `model_unsupported_on_transport` at
+    // both sites and puts the vendor sentence in `metadata.detail`, never in
+    // `error`. The contract's fourth eligible class was dead.
+    it('model_unsupported_on_transport classifies as model_unservable', () => {
+        expect(classifyCliFailure('model_unsupported_on_transport')).toBe('model_unservable');
+    });
+
+    it('and is therefore fallback-eligible end to end', () => {
+        expect(isFallbackEligible(classifyCliFailure('model_unsupported_on_transport'))).toBe(true);
+    });
+
+    it('the original token and the vendor sentence still classify', () => {
+        expect(classifyCliFailure('model_unservable')).toBe('model_unservable');
+        expect(classifyCliFailure('o3 is not supported when using codex')).toBe('model_unservable');
+    });
+
+    it('an unrelated token is unaffected', () => {
+        expect(classifyCliFailure('timeout')).toBe('timeout');
+        expect(classifyCliFailure('something_else')).toBe('other');
     });
 });
