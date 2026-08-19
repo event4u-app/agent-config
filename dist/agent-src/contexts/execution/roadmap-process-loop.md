@@ -502,10 +502,17 @@ The loop MUST:
    five choices: follow-up (draft), follow-up (ready + blocked),
    keep-in-archive (intentional drop), restore to `[ ]`, convert
    to `[-]` cancelled.
-3. Wait for the user. The autonomous mandate (`/work`,
-   `/roadmap:process-full`, "decide for me") does **not** lift this
-   gate — Iron Law 3 calls it "the canonical lost-information failure
-   mode this rule exists to prevent."
+3. **Route by the preservation test**, per
+   [`roadmap-progress-sync § Who resolves it`](../../rules/roadmap-progress-sync.md):
+   a disposition that keeps the criterion ALIVE in the active estate
+   (fix now · carry item + blocker into a follow-up created in the SAME
+   change · merge into existing active work · restore to `[ ]`) may be
+   resolved by the council, recorded at the item. A disposition that
+   drops, weakens or permanently accepts the loss of it — cancel to
+   `[-]`, keep-in-archive, scope cut — reaches the **user**, and the
+   autonomous mandate (`/work`, `/roadmap:process-full`, "decide for
+   me") does **not** lift that half. In doubt: user. A council verdict
+   naming a follow-up that does not exist yet fails closed to the user.
 4. On picks 1 / 2 → run the "Spawn follow-up from deferred items"
    procedure in [`roadmap-management`](../../skills/roadmap-management/SKILL.md).
    On picks 3 / 4 / 5 → apply the change, re-evaluate the decision

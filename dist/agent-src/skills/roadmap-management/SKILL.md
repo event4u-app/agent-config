@@ -293,8 +293,8 @@ After the last step of a roadmap is done, check completion status:
    |---|---|---|---|---|
    | ≥ 1 | 0 | 0 | 0 | **Auto-archive** (silent) — pure completion |
    | ≥ 1 | 0 | 0 | ≥ 1 | **Auto-archive** (silent) — done with explicit drops |
-   | ≥ 1 | 0 | ≥ 1 | ≥ 0 | **STOP — Iron Law 3 flow.** Surface deferred items, present follow-up options, wait. See step 4b. |
-   | 0 | 0 | ≥ 1 | ≥ 0 | **STOP — Iron Law 3 flow.** Was this a scope-drop or deferred-to-later? Same options as 4b. |
+   | ≥ 1 | 0 | ≥ 1 | ≥ 0 | **STOP — Iron Law 3 flow.** Surface deferred items, present the options, resolve by the preservation test (council where the item survives, user where it does not). See step 4b. |
+   | 0 | 0 | ≥ 1 | ≥ 0 | **STOP — Iron Law 3 flow.** Was this a scope-drop or deferred-to-later? Same options and same routing as 4b. |
    | 0 | 0 | 0 | ≥ 1 | **Auto-skip** (silent) — no work, all cancelled |
    | ≥ 0 | ≥ 1 | ≥ 0 | ≥ 0 | **Ask the user** — open work remains (step 4a) |
 
@@ -343,8 +343,18 @@ After the last step of a roadmap is done, check completion status:
    the active tree.
 
 4b. **Deferred items present (`count_deferred ≥ 1`, `count_open == 0`)** — Iron Law 3 flow.
-   The archive is **blocked** until the user resolves the deferrals. Surface
-   the plan and ask:
+   The archive is **blocked** until the deferrals are resolved. WHO resolves
+   them is decided by the preservation test in
+   [`roadmap-progress-sync § Who resolves it`](../../rules/roadmap-progress-sync.md),
+   not by the mode: options **1, 2 and 4 keep the criterion alive** in the
+   active estate and may be resolved by the council, recorded at the item;
+   options **3 and 5 drop or weaken it** and reach the user, always. Option 2's
+   follow-up counts only if it is created in the SAME change and passes the
+   estate ratchet — a verdict naming a roadmap that does not exist yet fails
+   closed to the user. In doubt: user.
+
+   Surface the plan either way — the menu is the same, only the resolver
+   differs:
 
    ```
    📋 Roadmap closure check — deferred items must resolve before archive:
