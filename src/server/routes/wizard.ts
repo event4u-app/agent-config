@@ -33,6 +33,7 @@ import {
     readPath,
     renderSparseSettings,
     replaceScalar,
+    upsertScalar,
     substituteTemplatePlaceholders,
     writePath,
 } from '../io/yamlIO.js';
@@ -328,6 +329,8 @@ interface CouncilConfigView {
     // Mode per decision class (trivial/low_impact/medium_impact); matches the
     // SPA `AiCouncilState.decision` + the POST payload `decision` field.
     decision: Record<string, string>;
+    /** `fallback.api_on_quota` — the one billing-class decision. Default off. */
+    fallback: { api_on_quota: boolean };
 }
 
 /** Pull the wizard-controlled scalar subset out of a parsed council config. */
@@ -339,6 +342,7 @@ function extractCouncilConfig(body: string): CouncilConfigView {
     const membersRaw = obj(doc['members']);
     const dr = obj(doc['decision_resolution']);
     const classes = obj(dr['classes']);
+    const fallbackCfg = obj(doc['fallback']);
     const members: Record<string, CouncilMemberView> = {};
     for (const p of AI_COUNCIL_PROVIDERS) {
         const m = obj(membersRaw[p]);
@@ -367,6 +371,9 @@ function extractCouncilConfig(body: string): CouncilConfigView {
         },
         members,
         decision,
+        // Anything but a literal `true` reads as off — the same shape the
+        // CLI reader uses, so the two never disagree about spend.
+        fallback: { api_on_quota: fallbackCfg['api_on_quota'] === true },
     };
 }
 
@@ -691,6 +698,13 @@ const aiCouncilPayloadSchema = z.object({
     })).optional(),
     // keys ∈ {trivial, low_impact, medium_impact} — others ignored.
     decision: z.record(z.enum(['agent', 'council', 'user'])).optional(),
+    /**
+     * Declared so the operator can flip the one BILLING-CLASS decision in the
+     * fallback design without hand-editing — NOT to stop the GUI stripping it:
+     * the write path is a comment-preserving `replaceScalar`, so an unmodelled
+     * block was never at risk. Contract: ai-council-config.md.
+     */
+    fallbackApiOnQuota: z.boolean().optional(),
 }).strict();
 
 // road-to-reciprocal-ecosystem § Phase 1 — the closed set of dismissible
@@ -907,6 +921,14 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 }
                 for (const cls of ['trivial', 'low_impact', 'medium_impact']) {
                     set(['decision_resolution', 'classes', cls, 'mode'], p.decision?.[cls]);
+                }
+                // UPSERT, not set. R2 round 2, finding 6: `replaceScalar`
+                // no-ops on an absent path, so on every `.ai-council.yml`
+                // written before this key existed the toggle returned 200 and
+                // wrote nothing. It is the one key here that a pre-existing
+                // file is guaranteed NOT to carry.
+                if (p.fallbackApiOnQuota !== undefined) {
+                    body = upsertScalar(body, ['fallback', 'api_on_quota'], p.fallbackApiOnQuota);
                 }
                 const target = join(opts.writeRoot, AI_COUNCIL_REL);
                 await fs.mkdir(dirname(target), { recursive: true });

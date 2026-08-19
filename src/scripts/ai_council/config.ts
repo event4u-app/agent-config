@@ -94,6 +94,16 @@ const _VALID_PROVIDERS: ReadonlySet<string> = new Set([
 ]);
 const _VALID_MODES: ReadonlySet<string> = new Set(['api', 'manual', 'cli', 'auto']);
 
+// The fallback/second-model surfaces live in `fallback_config.ts` — this file
+// is far over the source ceiling and the documented fix is extraction.
+const _FALLBACK_DEPS = {
+    isDict: _isDict as (v: unknown) => v is Dict,
+    isBool: _isBool as (v: unknown) => v is boolean,
+    isStr: _isStr as (v: unknown) => v is string,
+    repr: _pyRepr, typeName: _pyTypeName, sortedListRepr: _sortedListRepr,
+    error: (msg: string): Error => new CouncilConfigError(msg),
+};
+
 /**
  * Prefixes that signal "this is a raw API key" so we refuse it loudly
  * even when the user accidentally inlined it in `api_key_ref`.
@@ -537,6 +547,12 @@ const _VALID_CHAIRMAN_MODES: ReadonlySet<string> = new Set(['host', 'member', 'a
 export interface DecisionResolutionEntry {
     readonly mode: string;
     readonly confidence_threshold: number;
+    /**
+     * OPTIONAL local second-model rung — UOTL Phase 4.1. Absent (`null`) →
+     * the ladder is unchanged. Provider set, quota binding and the locked-class
+     * refusal live in `fallback_config.ts::buildSecondModel`.
+     */
+    readonly second_model: string | null;
 }
 
 /** Opt-in fuzzy matching for the corpus-aware classifier (step-9 P5). */
@@ -617,6 +633,9 @@ export type QuorumSetting = 'majority' | number;
  */
 export type QuorumMinPresent = number;
 
+export type { FallbackConfig } from './fallback_config.js';
+import { buildFallback, buildSecondModel, type FallbackConfig as _FallbackConfig } from './fallback_config.js';
+
 export interface CouncilConfig {
     readonly enabled: boolean;
     readonly defaults: DefaultsConfig;
@@ -627,6 +646,7 @@ export interface CouncilConfig {
     readonly cli_call_budget: CliCallBudgetConfig;
     readonly quorum: QuorumSetting;
     readonly quorum_min_present: QuorumMinPresent;
+    readonly fallback: _FallbackConfig;
     readonly necessity_classifier: NecessityClassifierConfig;
     readonly model_downgrade: ModelDowngradeConfig;
     readonly debate: DebateConfig;
@@ -881,6 +901,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
     const quorum_min_present = _build_quorum_min_present(
         _get(raw, 'quorum_min_present', SOLO_FLOOR_MIN_PRESENT),
     );
+    const fallback = buildFallback(_get(raw, 'fallback', {}), _FALLBACK_DEPS);
     const necessity_classifier = _build_necessity_classifier(
         _asDict(_getOr(raw, 'necessity_classifier', {})),
     );
@@ -931,6 +952,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         cli_call_budget,
         quorum,
         quorum_min_present,
+        fallback,
         necessity_classifier,
         model_downgrade,
         debate,
@@ -1309,7 +1331,11 @@ function _build_decision_resolution(d: Dict): DecisionResolutionConfig {
                     `must be in [0.0, 1.0] (got ${_pyRepr(_f(threshold))}).`,
             );
         }
-        classes.set(cls, { mode, confidence_threshold: threshold });
+        // UOTL Phase 4.1 — the optional local rung, REFUSED on a locked
+        // class rather than ignored: a dropped key reads as configured.
+            const second_model = buildSecondModel(
+            entry_raw as Record<string, unknown>, cls, _LOCKED_IMPACT_CLASSES, _FALLBACK_DEPS);
+        classes.set(cls, { mode, confidence_threshold: threshold, second_model });
     }
     const fast_path_raw = _getOr(d, 'fast_path', {});
     if (!_isDict(fast_path_raw)) {

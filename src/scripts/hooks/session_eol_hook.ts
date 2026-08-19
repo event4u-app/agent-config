@@ -54,6 +54,8 @@ import {
     scanEolSlice,
     type EolCounters,
 } from '../_lib/session_eol.js';
+import { buildCheckpoint, writeCheckpoint } from '../_lib/run_checkpoint.js';
+import { read_claimed_slug } from '../session_register_hook.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json, is_replay_mode } from './state_io.js';
@@ -105,6 +107,23 @@ export function deriveSessionKey(envelope: JsonObject, payload: JsonObject): str
         str(envelope['session_id'] as JsonValue | undefined) ||
             str((payload['transcript_path'] ?? payload['transcriptPath']) as JsonValue | undefined),
     );
+}
+
+/**
+ * The RAW session id, not the hashed key.
+ *
+ * `read_claimed_slug` keys the per-session claim file off the id the host
+ * exported, so handing it `deriveSessionKey`'s hash would look up a file that
+ * cannot exist and silently report "no contract" for every claimed run.
+ * Falls back to the envelope, which is where the dispatcher puts it, and
+ * deliberately does NOT fall back to the transcript path: that is a filename,
+ * not an identity, and `sessions:claim` never wrote a claim under one.
+ */
+export function payloadSessionId(payload: JsonObject, envelope: JsonObject): string {
+    return (
+        str(payload['session_id'] as JsonValue | undefined) ||
+        str(envelope['session_id'] as JsonValue | undefined)
+    ).trim();
 }
 
 /** Load prior per-session state; any read/shape error reads as "fresh session". */
@@ -336,6 +355,39 @@ export function main(): number {
     }
 
     writeContextFill(workspaceRoot, tokens, threshold, now);
+
+    // ── UOTL Phase 6.1 — the deterministic half of the handoff ───────
+    //
+    // Above the threshold AND inside a running contract, leave a derived
+    // checkpoint behind. Two properties the advisory alone cannot give:
+    //
+    //   · It costs no judgement. Every field is recomputed from the
+    //     roadmap on disk, so a dying session produces it correctly even
+    //     when it has no context left to summarise anything.
+    //   · It is re-verifiable. A resumed run recomputes the same fields
+    //     and can name WHICH claim went stale rather than trusting the
+    //     record, which is the deliberate departure from resuming by
+    //     bookkeeping (Phase 3.2).
+    //
+    // "Inside a running contract" is the same carrier `run-continuation`
+    // uses — a `sessions:claim` for this session — and no second one is
+    // invented. Outside a contract this is silent: a checkpoint for a
+    // conversational session names work nobody is executing.
+    //
+    // Best-effort throughout. A checkpoint is a recovery aid, and a
+    // recovery aid that can fail a Stop is a liability.
+    const checkpointRunId = payloadSessionId(payload, envelope);
+    if (shouldAdvise && checkpointRunId !== '') {
+        try {
+            const slug = read_claimed_slug(workspaceRoot, checkpointRunId);
+            if (slug !== null) {
+                const cp = buildCheckpoint(workspaceRoot, eolSessionKey(checkpointRunId), slug);
+                if (cp !== null) writeCheckpoint(workspaceRoot, cp);
+            }
+        } catch {
+            // never block the Stop path
+        }
+    }
 
     if (shouldAdvise && threshold !== null && tokens !== null) {
         process.stdout.write(

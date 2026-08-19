@@ -170,6 +170,18 @@ Tier 1 — power-user (release shape, audit, migration):
                              pushed, else an issue. Running it is your Hard-Floor
                              confirmation.
                              Usage: self-repair:release <fingerprint> [--dry-run]
+  decision:memo              Record or list a question the run resolved without
+                             asking you, so it stays reviewable afterwards.
+                             Local-only (gitignored); the locked decision
+                             classes are refused at the config schema, not here.
+                             Usage: decision:memo write --run <id> --question <q>
+                             --chosen <c> --reasoning <r> --resolver <who>
+                             --confidence <high|medium|low>
+                                    decision:memo list --run <id>
+  run:supervise              Report runs whose session died with open steps
+                             left. Report-only; --relaunch is the acting path.
+                             NEVER merges, pushes, or closes anything.
+                             Usage: run:supervise --once [--root PATH]
 EOF
   fi
 
@@ -1178,6 +1190,29 @@ cmd_self_repair() {
   exec_ts "$script" "$sub" "$@"
 }
 
+# `decision:memo {write,list}` — the decision-memo channel (UOTL Phase 4.3).
+# A question resolved without contacting the user is only legitimate if the
+# resolution is reviewable afterwards; this is where that record goes. Writes
+# under agents/runtime/state/decisions/<run>/, which is gitignored, so a memo
+# never reaches a commit unless a human copies it out.
+cmd_decision_memo() {
+  local sub="$1"; shift || true
+  local script
+  script="$(resolve_script "src/scripts/decision_memo.ts")" || return 1
+  exec_ts "$script" "$sub" "$@"
+}
+
+# `run:supervise` — the out-of-process watcher for runs whose session died
+# with open steps left. Report-only by default; the acting path is behind
+# --relaunch because starting a session spends tokens with nobody watching.
+# It NEVER merges, pushes, or closes anything — the auto-merge the reference
+# design carries is a named rejection, not an unbuilt feature.
+cmd_run_supervise() {
+  local script
+  script="$(resolve_script "src/scripts/run_supervise.ts")" || return 1
+  exec_ts "$script" "$@"
+}
+
 # `use --profile=<id>` — switch the active experience/profile. Writes
 # profile.id into the canonical .agent-settings.yml; the explicit
 # profile-switch seam named by ADR-040 (road-to-6.0.0-a Step 8).
@@ -1453,6 +1488,8 @@ main() {
     council:quota)           cmd_council quota "$@" ;;
     self-repair:status)      cmd_self_repair status "$@" ;;
     self-repair:release)     cmd_self_repair release "$@" ;;
+    decision:memo)           cmd_decision_memo "$@" ;;
+    run:supervise)           cmd_run_supervise "$@" ;;
     update)                  cmd_update "$@" ;;
     upgrade)                 cmd_upgrade "$@" ;;
     refresh)                 cmd_refresh "$@" ;;

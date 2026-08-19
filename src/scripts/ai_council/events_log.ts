@@ -66,13 +66,24 @@ import type { AbsentReason } from './transport_resolver.js';
  */
 export const SCHEMA_VERSION = 4;
 
-export type EventAction = 'proceed' | 'skip_necessity' | 'block_quota' | 'quorum_result';
+export type EventAction =
+    | 'proceed'
+    | 'skip_necessity'
+    | 'block_quota'
+    | 'quorum_result'
+    | 'transport_fallback';
 
 const _VALID_ACTIONS: ReadonlySet<string> = new Set([
     'proceed',
     'skip_necessity',
     'block_quota',
     'quorum_result',
+    // A seat lost its cli transport mid-pass and was retried on the metered
+    // api rung. Without this action, attendance analysis cannot tell a seat
+    // SAVED by the fallback from a seat that was natively api all along — the
+    // two are indistinguishable in the response set, and only one of them
+    // costs money that the operator did not plan.
+    'transport_fallback',
 ]);
 
 /**

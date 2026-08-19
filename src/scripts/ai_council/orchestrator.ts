@@ -70,70 +70,60 @@ import {
 } from './prompts.js';
 import { count_dissenters, dissent_quota_met, is_near_duplicate } from './debate_gates.js';
 import { parse_stance_line, render_vote_tally, tally_stances } from './stance_tally.js';
+import { MidFlightFallback } from './transport_resolver.js';
+import {
+    emitOutcome,
+    escalateUnmetered,
+    refuseUnmeteredEscalation,
+    establishTwin,
+    isFailedCliCall,
+    runGatedRetry,
+    stampFallback,
+    type CliFallbackOptions,
+    type EstablishedTwin,
+    type TwinMap,
+} from './mid_flight_fallback.js';
+
+export type { CliFallbackOptions, EstablishedTwin } from './mid_flight_fallback.js';
+
+// The spend gate, extracted whole. Re-exported so every existing importer of
+// `CostBudget` / `OverrunEvent` from this module keeps working unchanged.
+export {
+    CostBudget,
+    OverrunEvent,
+    _breach,
+    _total_usd,
+    type BreachKind,
+    type Spent,
+} from './spend_gate.js';
+import {
+    CostBudget,
+    OverrunEvent,
+    _breach,
+    _total_usd,
+    type Spent,
+} from './spend_gate.js';
+import { callMember, renderResponseMeta } from './response_render.js';
+import {
+    _excTag,
+    _metaGet,
+    _pyFixed,
+    _pyInt,
+    _pyLStrip,
+    _pyLen,
+    _pyReprInt,
+    _pyRStrip,
+    _pySlice,
+    _pySplitWhitespace,
+    _pyStrip,
+    _setdefault,
+} from './py_parity.js';
+
 import { CHAIRMAN_FIELDS_ADDENDUM, render_deanonymization_block } from './blind_review.js';
 import type { AbsentReason } from './transport_resolver.js';
 import { isSoloConcluded, type QuorumResult } from './quorum.js';
 import { isEmptyHandoff, type HandoffEnvelope } from './handoff.js';
 
-// ── Python-format / stdlib parity helpers ────────────────────────────────
-//
-// The orchestrator formats USD / scores / strengths via Python f-string
-// specs (`:.4f`, `:.2f`, `:.1f`) which round half-to-even on the decimal
-// representation. JS `toFixed` rounds half away from zero, so the spec
-// formatting is reimplemented to stay byte-exact with the retired Python implementation.
-
-/**
- * Format `x` to `ndigits` decimals using round-half-to-even, matching
- * CPython's `format(x, ".<ndigits>f")`.
- */
-function _pyFixed(x: number, ndigits: number): string {
-    if (!Number.isFinite(x)) {
-        return String(x);
-    }
-    const neg = x < 0 || Object.is(x, -0);
-    const abs = Math.abs(x);
-    const factor = Math.pow(10, ndigits);
-    const scaled = abs * factor;
-    const floor = Math.floor(scaled);
-    const frac = scaled - floor;
-    const tol = Math.max(Math.abs(scaled), 1) * 2 ** -40;
-    let rounded: number;
-    if (Math.abs(frac - 0.5) <= tol) {
-        rounded = floor % 2 === 0 ? floor : floor + 1;
-    } else {
-        rounded = Math.round(scaled);
-    }
-    let intStr = String(rounded);
-    let result: string;
-    if (ndigits === 0) {
-        result = intStr;
-    } else {
-        if (intStr.length <= ndigits) {
-            intStr = '0'.repeat(ndigits - intStr.length + 1) + intStr;
-        }
-        const whole = intStr.slice(0, intStr.length - ndigits);
-        const dec = intStr.slice(intStr.length - ndigits);
-        result = `${whole}.${dec}`;
-    }
-    return neg ? `-${result}` : result;
-}
-
-/** Mirror Python `str.strip()` (no-arg). Sibling-twin convention uses trim(). */
-function _pyStrip(s: string): string {
-    return s.trim();
-}
-
-/**
- * Mirror Python `str.split()` (no separator) — split on runs of whitespace,
- * dropping leading / trailing whitespace (no empty tokens).
- */
-function _pySplitWhitespace(s: string): string[] {
-    const trimmed = s.trim();
-    if (trimmed === '') {
-        return [];
-    }
-    return trimmed.split(/\s+/);
-}
 
 /**
  * Mirror Python `getattr(obj, name, fallback)` for the duck-typed member
@@ -160,30 +150,6 @@ function _label(idx: number): string {
 
 // ── dataclasses ───────────────────────────────────────────────────────
 
-export class CostBudget {
-    max_input_tokens: number;
-    max_output_tokens: number;
-    max_calls: number;
-    max_total_usd: number; // 0 = USD ceiling disabled (token caps still apply)
-    daily_limit_usd: number; // 0 = rolling 24h cap disabled (D3)
-
-    constructor(
-        args: {
-            max_input_tokens?: number;
-            max_output_tokens?: number;
-            max_calls?: number;
-            max_total_usd?: number;
-            daily_limit_usd?: number;
-        } = {},
-    ) {
-        this.max_input_tokens = args.max_input_tokens ?? 50_000;
-        this.max_output_tokens = args.max_output_tokens ?? 20_000;
-        this.max_calls = args.max_calls ?? 10;
-        this.max_total_usd = args.max_total_usd ?? 0.0;
-        this.daily_limit_usd = args.daily_limit_usd ?? 0.0;
-    }
-}
-
 export class CouncilQuestion {
     mode: string; // one of: prompt, roadmap, diff, files
     user_prompt: string; // bundled artefact text
@@ -193,44 +159,6 @@ export class CouncilQuestion {
         this.mode = args.mode;
         this.user_prompt = args.user_prompt;
         this.max_tokens = args.max_tokens ?? DEFAULT_MAX_TOKENS;
-    }
-}
-
-/** Passed to `on_overrun` when projected spend exceeds the budget. */
-export class OverrunEvent {
-    member_index: number;
-    member: ExternalAIClient;
-    next_estimate: CostEstimate; // this member's projected cost
-    spent_input_tokens: number; // already-billed totals BEFORE this member
-    spent_output_tokens: number;
-    spent_usd: number;
-    projected_total_usd: number; // spent_usd + next_estimate.total_usd
-    daily_spent_usd: number; // rolling 24h spend BEFORE this member (D3)
-    daily_limit_usd: number; // the configured daily cap (0 = disabled)
-    breach_kind: string; // "session" | "daily" | "tokens"
-
-    constructor(args: {
-        member_index: number;
-        member: ExternalAIClient;
-        next_estimate: CostEstimate;
-        spent_input_tokens: number;
-        spent_output_tokens: number;
-        spent_usd: number;
-        projected_total_usd: number;
-        daily_spent_usd?: number;
-        daily_limit_usd?: number;
-        breach_kind?: string;
-    }) {
-        this.member_index = args.member_index;
-        this.member = args.member;
-        this.next_estimate = args.next_estimate;
-        this.spent_input_tokens = args.spent_input_tokens;
-        this.spent_output_tokens = args.spent_output_tokens;
-        this.spent_usd = args.spent_usd;
-        this.projected_total_usd = args.projected_total_usd;
-        this.daily_spent_usd = args.daily_spent_usd ?? 0.0;
-        this.daily_limit_usd = args.daily_limit_usd ?? 0.0;
-        this.breach_kind = args.breach_kind ?? 'session';
     }
 }
 
@@ -360,10 +288,6 @@ export function estimate_debate_cost(
     });
 }
 
-/** Mirror the Python `CostEstimate.total_usd` property. */
-function _total_usd(e: CostEstimate): number {
-    return e.input_usd + e.output_usd;
-}
 
 /**
  * Return a pre-call cost estimate per member, in input order.
@@ -449,6 +373,8 @@ export interface ConsultOptions {
      * context). Default `null` → byte-identical to today.
      */
     no_project_context_members?: ReadonlySet<string> | null;
+    /** Mid-flight cli→api fallback; absent → no retry. See `mid_flight_fallback`. */
+    cli_fallback?: CliFallbackOptions | null;
 }
 
 /**
@@ -504,6 +430,11 @@ export function consult(
     }
 
     const spent: Spent = { input: 0, output: 0, usd: 0.0 };
+    // One ledger + one twin map per invocation — the double-spend unit.
+    const cli_fallback = opts.cli_fallback ?? null;
+    const fallback_ledger = cli_fallback !== null ? new MidFlightFallback() : null;
+    const fallback_twins =
+        cli_fallback !== null ? new Map<string, EstablishedTwin>() : null;
     let last_results: CouncilResponse[] = [];
     // A3 read unlock: the stable prefix is ALWAYS the original user prompt;
     // per-round critiques + the STANCE contract ride in a volatile suffix so
@@ -535,6 +466,9 @@ export function consult(
             project,
             original_ask,
             advisor_plans,
+            cli_fallback,
+            fallback_ledger,
+            fallback_twins,
             member_prompt_suffix: opts.member_prompt_suffix ?? null,
             no_project_context_members: opts.no_project_context_members ?? null,
             split: suffix_for_round
@@ -572,12 +506,19 @@ export function consult(
                     `Reply with ONLY that single line for your final position.\n\n${STANCE_LINE_CONTRACT}`,
                 max_tokens: question.max_tokens,
             });
+            // Stance repair shares the invocation-wide ledger: transport
+            // health and structural validity are INDEPENDENT failure modes,
+            // so refusing the retry would discard salvageable work for an
+            // unrelated reason. Bounded by the retry's own spend gate.
             const rr = _run_round([member], repairQ, resolvedBudget, spent, {
                 table,
                 on_overrun,
                 project,
                 original_ask,
                 advisor_plans,
+                cli_fallback,
+                fallback_ledger,
+                fallback_twins,
             });
             const rep = rr[0];
             if (rep !== undefined) {
@@ -592,12 +533,8 @@ export function consult(
     return last_results;
 }
 
-interface Spent {
-    input: number;
-    output: number;
-    usd: number;
-}
 
+/** Which cap a projected call breaches, or `null` when it fits. */
 interface RunRoundOptions {
     table: PriceTable | null;
     on_overrun: OnOverrunCallback | null;
@@ -616,6 +553,11 @@ interface RunRoundOptions {
     member_prompt_suffix?: Map<string, string> | null;
     /** Ü2 — see `ConsultOptions.no_project_context_members`. */
     no_project_context_members?: ReadonlySet<string> | null;
+    /** See `ConsultOptions.cli_fallback`. Both set together, or neither. */
+    cli_fallback?: CliFallbackOptions | null;
+    fallback_ledger?: MidFlightFallback | null;
+    /** Invocation-wide substitution map — see `mid_flight_fallback.TwinMap`. */
+    fallback_twins?: TwinMap | null;
 }
 
 /** Run a single round; mutate `spent` with cumulative totals. */
@@ -668,77 +610,111 @@ function _run_round(
               })
             : null;
 
+    const twins = opts.fallback_twins ?? null;
     for (let idx = 0; idx < members.length; idx++) {
-        const member = members[idx] as ExternalAIClient;
+        const declared = members[idx] as ExternalAIClient;
+        // Sticky substitution: a provider that fell back earlier is
+        // replaced BEFORE the call, so the dead binary is spawned once.
+        let established = twins?.get(declared.name) ?? null;
+        const substituted_on_entry = established !== null;
+        let member = established !== null ? established.client : declared;
+        // Set only when THIS iteration escalated an unmetered seat; read by
+        // the breach handler below so a refusal degrades that one seat instead
+        // of the round. See the `unmetered_original !== null` branch there.
+        let unmetered_original: CouncilResponse | null = null;
+        let unmetered_twin: EstablishedTwin | null = null;
         // ── non-billable members skip the cost gate entirely ─────────
         // ManualClient (and future PlaywrightClient) cost us $0; their
         // token counts are still tracked from the response below for
         // observability, but no projection / budget breach can apply.
         if (!(_getattr(member, 'billable', true) as boolean)) {
-            let response: CouncilResponse;
-            try {
-                response = opts.split
-                    ? member.ask_split(
-                          _system_prompt_for_member(member),
-                          opts.split.stable,
-                          opts.split.suffix,
-                          question.max_tokens,
-                      )
-                    : member.ask(
-                          _system_prompt_for_member(member),
-                          question.user_prompt,
-                          question.max_tokens,
-                      );
-            } catch (exc) {
-                response = new CouncilResponse({
-                    provider: member.name,
-                    model: member.model,
-                    text: '',
-                    error: _excTag(exc),
-                });
+            let response = callMember(member, question, opts, _system_prompt_for_member, _excTag);
+            // ── the fallback's REAL entry point ──────────────────────
+            // On an escalation the loop deliberately does NOT `continue`: it
+            // falls through to the metered path with `member` swapped for the
+            // twin. Why this branch and not the retry block below:
+            // `mid_flight_fallback.escalateUnmetered`.
+            const nb_twin = escalateUnmetered(
+                member,
+                response,
+                _getattr(member, 'transport', 'api') as string,
+                opts.cli_fallback ?? null,
+                opts.fallback_ledger ?? null,
+            );
+            const escalated = nb_twin !== null;
+            if (nb_twin !== null) {
+                established = nb_twin;
+                twins?.set(member.name, nb_twin);
+                member = nb_twin.client;
+                // Kept so a budget refusal below can return the ORIGINAL cli
+                // failure rather than aborting the seat as its twin.
+                unmetered_original = response;
+                unmetered_twin = nb_twin;
             }
-            _stamp_transport_metadata(response, member);
-            results.push(response);
-            spent.input += response.input_tokens;
-            spent.output += response.output_tokens;
-            continue;
+            if (!escalated) {
+                _stamp_transport_metadata(response, member);
+                results.push(response);
+                spent.input += response.input_tokens;
+                spent.output += response.output_tokens;
+                continue;
+            }
         }
 
         // ── projected spend check ────────────────────────────────────
-        const est = estimates ? (estimates[idx] as CostEstimate) : null;
-        const proj_input = spent.input + (est ? est.input_tokens : 0);
-        const proj_output = spent.output + (est ? est.output_tokens : 0);
-        const proj_usd = spent.usd + (est ? _total_usd(est) : 0.0);
-        const next_call_usd = est ? _total_usd(est) : 0.0;
-
-        const breaches_tokens =
-            proj_input > budget.max_input_tokens ||
-            proj_output > budget.max_output_tokens;
-        const breaches_usd =
-            budget.max_total_usd > 0 && proj_usd > budget.max_total_usd;
-        const breaches_daily =
-            budget.daily_limit_usd > 0 &&
-            _would_exceed_daily(budget.daily_limit_usd, next_call_usd);
-
-        if (breaches_tokens || breaches_usd || breaches_daily) {
-            const breach_kind = breaches_tokens
-                ? 'tokens'
-                : breaches_daily
-                  ? 'daily'
-                  : 'session';
+        // A substituted twin is priced as ITSELF — the pre-loop estimate row
+        // belongs to an unmetered seat and would gate a metered call at $0.
+        const est =
+            established !== null && table !== null
+                ? (estimate(question, [member], table, {
+                      project,
+                      original_ask,
+                      advisor_plans: opts.advisor_plans ?? null,
+                  })[0] as CostEstimate)
+                : estimates
+                  ? (estimates[idx] as CostEstimate)
+                  : null;
+        const breach = _breach(est, spent, budget);
+        if (breach !== null) {
+            const breach_kind = breach;
             const error_tag =
                 breach_kind === 'daily'
                     ? 'daily_budget_exceeded'
                     : 'cost_budget_exceeded';
+            // A seat that arrived here by escalating from an UNMETERED cli
+            // call degrades to its own original failure — never to an abort,
+            // and never to the round-wide short-circuit below. The reasoning,
+            // and the rollback of both the twin map and the ledger claim, live
+            // in `refuseUnmeteredEscalation`.
+            if (unmetered_original !== null && unmetered_twin !== null) {
+                const refused = refuseUnmeteredEscalation({
+                    original: unmetered_original,
+                    declared,
+                    twin: unmetered_twin,
+                    fallback: opts.cli_fallback ?? null,
+                    ledger: opts.fallback_ledger ?? null,
+                    twins,
+                });
+                _stamp_transport_metadata(refused, declared);
+                results.push(refused);
+                spent.input += refused.input_tokens;
+                spent.output += refused.output_tokens;
+                continue;
+            }
             if (on_overrun !== null && estimates !== null) {
                 const event = new OverrunEvent({
                     member_index: idx,
                     member,
-                    next_estimate: estimates[idx] as CostEstimate,
+                    // `est`, not `estimates[idx]`. The breach decision two
+                    // lines up was already re-priced for a substituted twin;
+                    // the event that ASKS the operator to approve it showed
+                    // the pre-loop row for the unmetered DECLARED seat, i.e. a
+                    // ~$0 next-call estimate for the very call the gate just
+                    // refused as over budget. R2 review, finding 8.
+                    next_estimate: (est ?? estimates[idx]) as CostEstimate,
                     spent_input_tokens: _pyInt(spent.input),
                     spent_output_tokens: _pyInt(spent.output),
                     spent_usd: spent.usd,
-                    projected_total_usd: proj_usd,
+                    projected_total_usd: spent.usd + (est ? _total_usd(est) : 0.0),
                     daily_spent_usd:
                         budget.daily_limit_usd > 0 ? _today_spend_usd() : 0.0,
                     daily_limit_usd: budget.daily_limit_usd,
@@ -757,29 +733,62 @@ function _run_round(
             }
         }
 
-        // ── actual call ──────────────────────────────────────────────
-        let response: CouncilResponse;
-        try {
-            response = opts.split
-                ? member.ask_split(
-                      _system_prompt_for_member(member),
-                      opts.split.stable,
-                      opts.split.suffix,
-                      question.max_tokens,
-                  )
-                : member.ask(
-                      _system_prompt_for_member(member),
-                      question.user_prompt,
-                      question.max_tokens,
-                  );
-        } catch (exc) {
-            response = new CouncilResponse({
-                provider: member.name,
-                model: member.model,
-                text: '',
-                error: _excTag(exc),
-            });
+        // An escalated unmetered seat clears the gate: NOW the escalation is
+        // real, so `retried` is emitted here rather than at establishment.
+        // `escalateUnmetered` used to emit it the moment the twin was built,
+        // which put a "seat saved" line in the log for escalations the budget
+        // then refused — R2 round 2, finding 4.
+        if (unmetered_twin !== null) {
+            const fb = opts.cli_fallback ?? null;
+            if (fb !== null) emitOutcome(fb, declared.name, unmetered_twin, 'retried');
         }
+
+        // ── actual call ──────────────────────────────────────────────
+        let response = callMember(member, question, opts, _system_prompt_for_member, _excTag);
+
+        // ── mid-flight cli→api fallback, billable-cli path ───────────
+        // The community CLI wrappers reach the fallback here; the
+        // vendor-official ones took the non-billable branch above. Realized
+        // cost and the transport stamp below run on `effective`.
+        let effective: ExternalAIClient = member;
+        const fallback = opts.cli_fallback ?? null;
+        const ledger = opts.fallback_ledger ?? null;
+        if (
+            fallback !== null &&
+            ledger !== null &&
+            isFailedCliCall(member, response.error, _getattr(member, 'transport', 'api') as string)
+        ) {
+            const twin = establishTwin({
+                member,
+                error: String(response.error),
+                fallback,
+                ledger,
+            });
+            if (twin !== null) {
+                const out = runGatedRetry(response, member, twin, fallback, {
+                    gate: (client) =>
+                        table === null ||
+                        _breach(
+                            estimate(question, [client], table, {
+                                project,
+                                original_ask,
+                                advisor_plans: opts.advisor_plans ?? null,
+                            })[0] as CostEstimate,
+                            spent,
+                            budget,
+                        ) === null,
+                    call: (client) => callMember(client, question, opts, _system_prompt_for_member, _excTag),
+                }, ledger);
+                response = out.response;
+                effective = out.effective;
+                // Established for the rest of the invocation, so later rounds
+                // do not re-spawn the dead binary.
+                if (out.retried) twins?.set(member.name, twin);
+            }
+        }
+        // No round is silent about which transport answered; `sticky`
+        // marks the reuses (see `stampFallback`).
+        if (established !== null) stampFallback(response, established, substituted_on_entry);
         results.push(response);
         spent.input += response.input_tokens;
         spent.output += response.output_tokens;
@@ -792,8 +801,8 @@ function _run_round(
             // ttl is '5m': the request builder emits `cache_control:
             // {type:'ephemeral'}` with no explicit ttl, i.e. the 5-min default.
             const actual = reprice_with_cache(
-                member.name,
-                member.model,
+                effective.name,
+                effective.model,
                 {
                     input_tokens: response.input_tokens,
                     cache_read_input_tokens: response.cache_read_input_tokens,
@@ -808,14 +817,14 @@ function _run_round(
             // Persist to the rolling 24h ledger when the daily cap is
             // active. Errors are swallowed inside record_spend.
             if (budget.daily_limit_usd > 0 && !response.error) {
-                _record_daily_spend(_total_usd(actual), member.name, member.model, {
+                _record_daily_spend(_total_usd(actual), effective.name, effective.model, {
                     cache_read_input_tokens: response.cache_read_input_tokens,
                     cache_creation_input_tokens: response.cache_creation_input_tokens,
                     cache_ttl: '5m',
                 });
             }
         }
-        _stamp_transport_metadata(response, member, actual_usd);
+        _stamp_transport_metadata(response, effective, actual_usd);
     }
 
     return results;
@@ -1067,6 +1076,10 @@ function _run_debate_gate_repairs(
         project: ProjectContext | null;
         original_ask: string;
         advisor_plans: Map<string, AdvisorPlan> | null;
+        /** Threaded from `run_debate`; ledger and twins are invocation-wide. */
+        cli_fallback?: CliFallbackOptions | null;
+        fallback_ledger?: MidFlightFallback | null;
+        fallback_twins?: Map<string, EstablishedTwin> | null;
     },
     on_repair: ((member: string, reason: string) => boolean) | null,
 ): CouncilResponse[] {
@@ -1182,6 +1195,18 @@ export interface RunDebateOptions {
     restate?: boolean;
     /** Receives the restate responses (rendering, divergence flags, cost). */
     on_restate?: ((responses: CouncilResponse[]) => void) | null;
+    /**
+     * Mid-flight cli→api fallback for every call this debate makes — the
+     * restate pass, each round, and the gate-repair re-prompts. Absent →
+     * byte-identical to today.
+     *
+     * ONE ledger and one twin map span the whole invocation, never one per
+     * round: the eligible classes are overwhelmingly DURABLE, so a per-round
+     * ledger would re-spawn and re-fail the dead CLI once per round. Why that
+     * scope needs the twin map to be coherent at all, and what it costs a
+     * transient failure: `mid_flight_fallback.TwinMap`.
+     */
+    cli_fallback?: CliFallbackOptions | null;
 }
 
 /**
@@ -1241,6 +1266,11 @@ export function run_debate(
     }
 
     const spent: Spent = { input: 0, output: 0, usd: 0.0 };
+    // One per invocation: restate pass, rounds, and gate repairs share it.
+    const cli_fallback = opts.cli_fallback ?? null;
+    const fallback_ledger = cli_fallback !== null ? new MidFlightFallback() : null;
+    const fallback_twins =
+        cli_fallback !== null ? new Map<string, EstablishedTwin>() : null;
     const all_rounds: CouncilResponse[][] = [];
     // A3 read unlock (debate twin): stable prefix = the original prompt; the
     // per-round positions block rides in a volatile suffix (see consult loop).
@@ -1267,6 +1297,9 @@ export function run_debate(
             project,
             original_ask,
             advisor_plans,
+            cli_fallback,
+            fallback_ledger,
+            fallback_twins,
         });
         opts.on_restate?.(restated);
     }
@@ -1296,6 +1329,9 @@ export function run_debate(
                 project,
                 original_ask,
                 advisor_plans,
+                cli_fallback,
+                fallback_ledger,
+                fallback_twins,
                 split: current_suffix
                     ? { stable: question.user_prompt, suffix: current_suffix }
                     : null,
@@ -1315,7 +1351,16 @@ export function run_debate(
                 }),
                 budget,
                 spent,
-                { table, on_overrun, project, original_ask, advisor_plans },
+                {
+                    table,
+                    on_overrun,
+                    project,
+                    original_ask,
+                    advisor_plans,
+                    cli_fallback,
+                    fallback_ledger,
+                    fallback_twins,
+                },
                 opts.on_repair ?? null,
             );
         }
@@ -1731,28 +1776,6 @@ export function run_consensus_scoring(
  * Tokens marked `estimated=True` get a `~` prefix so the audit
  * trail flags heuristic counts.
  */
-function _render_response_meta(r: CouncilResponse): string {
-    const meta_dict: Record<string, unknown> = r.metadata ?? {};
-    const billable = Boolean(_metaGet(meta_dict, 'billable', true));
-    const estimated = Boolean(_metaGet(meta_dict, 'tokens_estimated', false));
-    const parts: string[] = [];
-    if (!billable) {
-        const label = (_metaGet(meta_dict, 'subscription_label', null) ||
-            'flat-rate') as string;
-        parts.push(`cost: subscription (${label})`);
-    } else {
-        const cost_usd = _metaGet(meta_dict, 'cost_usd', undefined);
-        if (typeof cost_usd === 'number' && !(typeof cost_usd === 'boolean')) {
-            parts.push(`cost: $${_pyFixed(cost_usd, 4)}`);
-        }
-        const prefix = estimated ? '~' : '';
-        parts.push(
-            `tokens: ${prefix}${r.input_tokens} in / ${prefix}${r.output_tokens} out`,
-        );
-    }
-    parts.push(`${r.latency_ms} ms`);
-    return `*${parts.join(' · ')}*`;
-}
 
 // Lens defaults for the Phase 9 confidence-explanation badge. The PR
 // lens stays terse so the existing "Must-fix / Nice-to-have" structure
@@ -1906,7 +1929,7 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
             blocks.push(`${header}\n\n*ERROR:* \`${r.error}\``);
             continue;
         }
-        const meta = _render_response_meta(r);
+        const meta = renderResponseMeta(r, { pyFixed: _pyFixed });
         blocks.push(`${header}\n\n${meta}\n\n${r.text}`);
     }
     if (peer_review !== null && peer_review.responses.length > 0) {
@@ -2204,68 +2227,4 @@ function _render_bucket(
         lines.push(block);
     }
     return lines.join('\n');
-}
-
-// ── small stdlib parity helpers ───────────────────────────────────────
-
-/** Mirror Python `int(x)` truncation-toward-zero on a float total. */
-function _pyInt(x: number): number {
-    return Math.trunc(x);
-}
-
-/** Mirror Python `repr(int)` for the error message in estimate_debate_cost. */
-function _pyReprInt(x: number): string {
-    return String(x);
-}
-
-/** Mirror `type(exc).__name__ + ": " + str(exc)`. */
-function _excTag(exc: unknown): string {
-    if (exc instanceof Error) {
-        return `${exc.name}: ${exc.message}`;
-    }
-    return `Error: ${String(exc)}`;
-}
-
-/** dict.setdefault(key, value) — only set when key absent. */
-function _setdefault(
-    obj: Record<string, unknown>,
-    key: string,
-    value: unknown,
-): void {
-    if (!(key in obj)) {
-        obj[key] = value;
-    }
-}
-
-/** dict.get(key, default). */
-function _metaGet(
-    obj: Record<string, unknown>,
-    key: string,
-    fallback: unknown,
-): unknown {
-    return key in obj ? obj[key] : fallback;
-}
-
-/** Python `str.lstrip()` (no-arg) — strip leading whitespace. */
-function _pyLStrip(s: string): string {
-    return s.replace(/^\s+/, '');
-}
-
-/** Python `str.rstrip()` (no-arg) — strip trailing whitespace. */
-function _pyRStrip(s: string): string {
-    return s.replace(/\s+$/, '');
-}
-
-/** Python `len(str)` — code-point count, not UTF-16 unit count. */
-function _pyLen(s: string): number {
-    let n = 0;
-    for (const _ of s) {
-        n += 1;
-    }
-    return n;
-}
-
-/** Python `s[start:end]` — code-point slicing. */
-function _pySlice(s: string, start: number, end: number): string {
-    return [...s].slice(start, end).join('');
 }

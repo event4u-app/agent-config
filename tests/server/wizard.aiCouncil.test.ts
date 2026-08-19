@@ -22,6 +22,7 @@ interface CouncilGet {
         cost_budget: { max_total_usd: number };
         members: Record<string, { enabled: boolean; participate_low_impact: boolean }>;
         decision: Record<string, string>;
+        fallback: { api_on_quota: boolean };
     };
     providers: string[];
     keyPresence: Record<string, boolean>;
@@ -81,6 +82,33 @@ describe('wizard ai-council (Phase 8)', () => {
         expect(get.config.cost_budget.max_total_usd).toBe(7.5);
         expect(get.config.members.anthropic.enabled).toBe(false);
         expect(get.config.decision.medium_impact).toBe('agent');
+    });
+
+    it('fallback.api_on_quota reads off by default and round-trips through POST', async () => {
+        ctx = await bootTestApp({ port: PORT + 3, extendedSteps: true });
+        const before = (await ctx.app.inject({
+            method: 'GET', url: '/api/v1/wizard/ai-council', headers: authHeaders(ctx.token, ctx.host),
+        })).json() as CouncilGet;
+        // The one billing-class decision in the fallback design: absent means
+        // off, because turning it on converts unmetered subscription usage
+        // into USD.
+        expect(before.config.fallback.api_on_quota).toBe(false);
+
+        const post = await ctx.app.inject({
+            method: 'POST',
+            url: '/api/v1/wizard/ai-council',
+            headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
+            payload: { fallbackApiOnQuota: true },
+        });
+        expect(post.statusCode).toBe(200);
+
+        const after = (await ctx.app.inject({
+            method: 'GET', url: '/api/v1/wizard/ai-council', headers: authHeaders(ctx.token, ctx.host),
+        })).json() as CouncilGet;
+        expect(after.config.fallback.api_on_quota).toBe(true);
+        // The surgical write must not have flattened the hand-tuned file.
+        const written = readFileSync(join(ctx.projectRoot, 'settings', '.ai-council.yml'), 'utf8');
+        expect(written).toMatch(/LOCKED/);
     });
 
     it('404 when extended-mode is off', async () => {
