@@ -91,19 +91,13 @@ export function correctedVolume(numstat: string): { volume: number; excluded: nu
 }
 
 /**
- * Tools that carry a shell command.
+ * Tools that carry a shell command. Mirrors `block_unauthorized_git`'s set.
  *
- * Without this gate the concern reads `tool_input.command` from every tool that
- * happens to carry one, and `SHIP_PATTERNS` are unanchored — so a `grep` for the
- * string `git push`, or a heredoc writing this very file, would spawn two `git`
- * subprocesses on a blocking slot. Mirrors `COMMAND_TOOLS` in
- * `block_unauthorized_git.ts`, the sibling guard on the same slot.
- *
- * The set is an ALLOW-list: a named tool outside it is declined, so a host whose
- * shell tool is not listed here goes dark until it is added. That is the same
- * trade `block_unauthorized_git` already makes while BLOCKING, so an advisory
- * concern can hardly demand more. A payload naming no tool at all still reads —
- * that is the bare-host and legacy shape, where there is nothing to gate on.
+ * `SHIP_PATTERNS` are unanchored, so without this gate a `grep` for the string
+ * `git push` spawns two `git` subprocesses on a blocking slot. ALLOW-list: a
+ * named tool outside it is declined, so an unlisted host shell goes dark until
+ * added — the trade that sibling already makes while BLOCKING. A payload naming
+ * no tool still reads; that is the bare-host shape, with nothing to gate on.
  */
 const COMMAND_TOOLS: ReadonlySet<string> = new Set([
     'launch-process',
@@ -125,17 +119,15 @@ function isObj(v: unknown): v is Record<string, unknown> {
  * Descend to the platform payload.
  *
  * The dispatcher nests the host-shaped tool fields under `payload`
- * (`_build_envelope` in `dispatch_hook.ts`); a bare host invocation puts them at
- * the top level. This concern shipped reading the top level ONLY, so under the
- * real dispatcher it found nothing and returned `''` on every invocation — it
- * ran, cost a dispatch, and could never fire.
+ * (`_build_envelope`); a bare host invocation puts them at the top level. This
+ * concern shipped reading the top level ONLY, so under the real dispatcher it
+ * found nothing and returned `''` every time — it ran, cost a dispatch, and
+ * could never fire.
  *
- * Deliberately NOT `envelope.ts`'s shared `unwrap`: that one descends only when
- * all four `ENVELOPE_KEYS` are present, so a producer emitting a partial
- * envelope would return this concern to exactly its pre-fix dead state with no
- * test noticing. `design-slop` and `ui-route-nudge` each carry their own local
- * descent for the same reason; this is the third instance of that shape, not an
- * adoption of a shared accessor.
+ * Deliberately NOT `envelope.ts`'s shared `unwrap`, which descends only when all
+ * four `ENVELOPE_KEYS` are present: a partial envelope would return this concern
+ * to its pre-fix dead state with no test noticing. `design-slop` and
+ * `ui-route-nudge` each carry their own local descent for the same reason.
  */
 function payloadOf(root: Record<string, unknown>): Record<string, unknown> {
     const inner = root['payload'];
@@ -149,9 +141,8 @@ function shipCommandFrom(payload: Record<string, unknown>): string {
 
     const ti = payload['tool_input'] ?? payload['toolInput'];
     if (isPayloadStub(ti)) {
-        // The dispatcher omitted the body this concern declares it needs
-        // (`needs_payload_bodies: [input]`). Returning '' here is indistinguishable
-        // from "no ship verb", which is precisely the silent death this file was
+        // Body omitted despite `needs_payload_bodies: [input]`. A bare '' here is
+        // indistinguishable from "no ship verb" — the silent death this file was
         // fixed to remove — so say so instead of dying quietly again.
         process.stderr.write(
             'ship-diff-volume: tool_input arrived stubbed; the concern declares ' +
@@ -168,11 +159,8 @@ function shipCommandFrom(payload: Record<string, unknown>): string {
 }
 
 /**
- * The stdin boundary itself: raw concern stdin → the ship command.
- *
- * Exported so a regression can drive the boundary rather than the extractor.
- * Never throws — a concern that crashes in the agent loop is worse than one
- * that declines.
+ * The stdin boundary: raw concern stdin → the ship command. Exported so a
+ * regression drives the boundary rather than the extractor. Never throws.
  */
 export function commandFromStdin(raw: string): string {
     if (!raw.trim()) return '';
