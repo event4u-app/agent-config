@@ -372,8 +372,13 @@ binds. Only a third detector is missing, and the soak stays.
       **What shipped:** the shape, not the guard. `isPathRef` (whitespace is the
       discriminator, and the only one) plus `checkPathRefList` in
       `_lib/subagent_capsule.ts`, applied to `do_not_touch` only, naming the
-      offending entries in the error. 14 new specs. The field's TSDoc now says the
-      shape is enforced rather than merely described.
+      offending entries in the error. **9 new spec blocks expanding to 21 executed
+      cases** — both numbers, because the two counts differ under `it.each` and the
+      first version of this line said "14 new specs", which is neither: it summed
+      only the two parameterised tables and silently omitted the six specs
+      carrying the validator behaviour the step actually shipped. Caught by the R2
+      review of this change. The field's TSDoc now says the shape is enforced
+      rather than merely described, and states that the predicate is not a matcher.
 
       **What did NOT ship, and where it lives now:** the guard itself, relocated
       intact to `road-to-subagent-lifecycle-integrity` Phase 4 Step 4 — blocked on

@@ -322,13 +322,17 @@ describe('do_not_touch — a checkable off-limits list', () => {
         expect(errors.join('\n')).toContain('prose, not path refs');
     });
 
-    it('names the offending entry, so the error is actionable', () => {
+    // The valid entry is deliberately NOT one of the paths the advisory text
+    // hardcodes: asserting `not.toContain` against `src/generated/api.ts` would
+    // pass only via the JSON quote characters, i.e. it would assert a quoting
+    // artefact and flip the moment the example path or the quoting changes.
+    it('names the offending entry and leaves the valid one out', () => {
         const errors = validateRecycleEnvelope({
             ...base(),
-            do_not_touch: ['src/generated/api.ts', 'leave the other worktree alone'],
+            do_not_touch: ['src/scripts/_lib/keep.ts', 'leave the other worktree alone'],
         });
         expect(errors.join('\n')).toContain('"leave the other worktree alone"');
-        expect(errors.join('\n')).not.toContain('"src/generated/api.ts"');
+        expect(errors.join('\n')).not.toContain('keep.ts');
     });
 
     it('reports at most three offenders and elides the rest', () => {
@@ -343,6 +347,18 @@ describe('do_not_touch — a checkable off-limits list', () => {
     it('does not double-report an entry that already failed the budget', () => {
         const errors = validateRecycleEnvelope({ ...base(), do_not_touch: ['x '.repeat(4096)] });
         expect(errors.filter((e) => e.includes('do_not_touch'))).toHaveLength(1);
+    });
+
+    // The entry-COUNT error is orthogonal to the shape, so it must not swallow
+    // it: otherwise the author trims to 40, re-validates, and only then learns
+    // the entries were prose all along.
+    it('reports the shape alongside the entry-count error, not after it', () => {
+        const joined = validateRecycleEnvelope({
+            ...base(),
+            do_not_touch: Array.from({ length: 41 }, (_, i) => `do not edit file number ${i}`),
+        }).join('\n');
+        expect(joined).toContain('max 40');
+        expect(joined).toContain('prose, not path refs');
     });
 
     it('accepts an empty list — an empty list is not a claim that everything is writable', () => {

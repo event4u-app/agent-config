@@ -520,38 +520,9 @@ infrastructure).
 - [ ] **Step 3:** Keep the invariant: `pre_tool_use` concerns are never
       droppable by role (the resolver already refuses this; add the payload
       path to the existing test).
-- [ ] **Step 4:** `do_not_touch` write-guard — a `pre_tool_use` concern
-      (advisory, `fail_closed: false`, modelled on `block-kernel-rule-writes`
-      and `reread-guard`) that warns when a write targets a path the current
-      recycle envelope listed under `do_not_touch`. Match on
-      `isPathRef`-shaped entries via the exported predicate, never a second
-      definition of "path ref".
-      **Relocated intact from `road-to-inbox-harvest-2026-08-b-dispatch-safety`
-      § 3.4** (2026-08-19, blind 2/2 council, `agents/settings/contexts/do-not-touch-guard-disposition.md`).
-      It is here rather than in `road-to-per-turn-hook-economy` because the
-      unblocker is lifecycle-owned — the field contract and its producers — while
-      hook cost is an acceptance condition on shipping, not the thing that is
-      missing.
-      **Blocked on two conditions, both now measurable rather than permanent:**
-      (a) at least one real envelope carries a non-empty, path-shaped
-      `do_not_touch` — the shape is enforced as of the relocation, so the count
-      is a fact about producers instead of an artefact of an unchecked field;
-      and (b) a per-turn cost decision, since the `pre_tool_use` chain already
-      runs eleven concerns (`hook_manifest.yaml:889`; twelve on the two rows
-      carrying `spawn-guard-shadow`) and this would be the twelfth — prefer
-      reusing the envelope read the handoff consumer already performs over a
-      fresh unconditional file read.
-      **Do not ship it on zero producers.** That is the
-      build-the-mechanism-before-measuring-the-premise pattern this package has
-      recorded three times, and it was the source step's own reason for staying
-      open.
-      <!-- verify: grep -rn 'do_not_touch' src/scripts/hooks/concern_registry.ts -->
-
 **Falsifier.** Phase-0 Step 4 shows no `agent_id` on tool events for in-process
 subagents on the installed host → the blocker stands as written; this phase is
-cancelled and the comment gains the version-gated evidence instead. Step 4 is
-independent of that falsifier: it carries its own two conditions and survives a
-cancelled role axis.
+cancelled and the comment gains the version-gated evidence instead.
 
 **Rollback.** Resolver change is one function; revert restores env-only.
 
@@ -613,6 +584,63 @@ is fully closed**, correcting the draft's "open Phases 2–5".
 **Falsifier.** Owned by the destination roadmap's own falsifiers; these steps
 inherit them.
 
+## Phase 7: The `do_not_touch` write-guard — relocated, and deliberately its own phase
+
+> **Its own phase on purpose.** The first placement put this step inside Phase 4,
+> whose falsifier cancels that phase outright when `agent_id` is absent from tool
+> events — so a mechanical phase-level cancellation, or a reader applying the
+> falsifier as written, would have swept away the very item the relocation
+> existed to preserve. That is this file's own Risk 6 reproduced one level down,
+> inside the mitigation, and a prose exemption is not a structure. The R2 review
+> of the relocating change caught it; the fix is the anchor, not another sentence.
+
+**Relocated intact from `road-to-inbox-harvest-2026-08-b-dispatch-safety` § 3.4**
+(2026-08-19, blind 2/2 council). Full disposition incl. the rejected variants:
+`agents/settings/contexts/do-not-touch-guard-disposition.md`. It is here rather
+than in `road-to-per-turn-hook-economy` because the unblocker is lifecycle-owned
+— the field contract and its producers — while hook cost is an acceptance
+condition on shipping, not the thing that is missing.
+
+- [ ] **Step 1:** `do_not_touch` write-guard — a `pre_tool_use` concern
+      (advisory, `fail_closed: false`, modelled on `block-kernel-rule-writes`
+      and `reread-guard`) that warns when a write targets a path the current
+      recycle envelope listed under `do_not_touch`.
+      **Blocked on three conditions**, the first two measurable rather than
+      permanent and the third an open design question this step must answer
+      rather than inherit:
+      (a) at least one real envelope carries a non-empty, path-shaped
+      `do_not_touch` — the shape is enforced as of the relocation, so the count
+      is a fact about producers instead of an artefact of an unchecked field;
+      (b) a per-turn cost decision, since the `pre_tool_use` chain already runs
+      eleven concerns (`hook_manifest.yaml:889`; twelve on the two rows carrying
+      `spawn-guard-shadow`) and this would be the twelfth — prefer reusing the
+      envelope read the handoff consumer already performs over a fresh
+      unconditional file read;
+      (c) **the matching semantics, which nothing has decided yet.** `isPathRef`
+      is a SHAPE predicate — it answers "is this one token", never "does this
+      entry cover that write target". It admits a bare directory (`docs`), a
+      trailing-slash relative ref (`../other-worktree/`), a glob (`src/**/*.ts`)
+      and a `file:line` ref, and normalisation, directory-prefix matching and
+      glob matching are specified nowhere. Reuse the predicate for what
+      **validates**, and decide separately what **matches**; an entry that
+      validates and then silently matches nothing is the same class of defect as
+      the unchecked field this step's own source closed. Recorded because the R2
+      review found the earlier wording ("match on `isPathRef`-shaped entries via
+      the exported predicate") presented that decision as already settled.
+      **Do not ship it on zero producers.** That is the
+      build-the-mechanism-before-measuring-the-premise pattern this package has
+      recorded three times, and it was the source step's own reason for staying
+      open.
+      <!-- verify: grep -rn 'do_not_touch' src/scripts/hooks/concern_registry.ts -->
+
+**Falsifier.** Condition (a) is still unmet after a full measurement window in
+which envelopes were written and none carried a `do_not_touch` entry → the field
+is unused rather than unenforced, and the guard is cancelled with that count
+published, rather than waiting indefinitely on a producer nobody wants.
+
+**Rollback.** One manifest line and one concern file; the field contract and its
+shape check stand on their own and are unaffected.
+
 ## Blockers
 
 ### blocker: raw-capture-needs-host-env
@@ -665,7 +693,7 @@ inherit them.
 | 3 | Spawn caps picked from no data | implementation | N=2 depth and M=4 concurrency are stated as start values with no measurement behind them. Caps set too low refuse legitimate fan-out — this estate's own analysis runs routinely dispatch more than four readers at once — and a refusal is invisible to the user as anything but a broken turn | The guard ships warn-first for a full window and only flips to deny on evidence; the numbers are refined from Phase-1 telemetry before the flip; the falsifier records a null and leaves the guard warn-only if zero would-have-fired events occur over ≥20 dispatches | Phase 3 Step 1 |
 | 4 | The Phase-0 spikes cannot run, and the plan proceeds anyway | implementation | Every mechanism in Phases 2 and 4 rests on payload fields (`last_assistant_message`, `agent_id`, `agent_type`) documented for a host version that is not the installed one, plus an upstream truncation bug whose current reproduction status is unknown. Building against documentation is the failure the source-discovery gate exists to stop | Phase 0 is scratch-project only and its falsifier re-scopes Phases 2 and 4 to what the payload actually carries before any code is written; Phase 4 is cancelled outright if `agent_id` is absent, with the stale blocker comment gaining version-gated evidence instead | Phase 0 |
 | 5 | The ledger becomes unbounded runtime state | implementation | An open-dispatch record per spawn, appended for every session, is append-only state with no stated retention — the exact growth-budget failure the persistence discipline names for audit tables. A ledger that grows without a prune path is a new maintenance surface, not an instrument | The ledger lives in gitignored runtime state and is scoped to open dispatches, closed on `subagent_stop`; retention is declared in the same change that introduces it, and the rollback removes the concern while leaving already-written audit lines as data | Phase 1 Step 2 |
-| 6 | The relocated `do_not_touch` guard becomes an indefinite deferral | product | A step carried in from another roadmap arrives with a blocker rather than with effort behind it, and the roadmap that owned it has archived — so nothing re-raises it. That is the failure mode the relocation was chosen to avoid, reproduced one file later, and the council that decided the relocation named it as the residual risk it could not close | Both conditions are now MEASURABLE rather than permanent: the producer count is a `grep` over envelopes whose shape is enforced, and the cost decision is a stated question rather than a standing objection. The condition that made the source step undischargeable — an unchecked field guaranteeing a zero count — is fixed in the same change as the relocation, so a re-read can produce a different answer than last time | Phase 4 Step 4 |
+| 6 | The relocated `do_not_touch` guard becomes an indefinite deferral | product | A step carried in from another roadmap arrives with a blocker rather than with effort behind it, and the roadmap that owned it has archived — so nothing re-raises it. That is the failure mode the relocation was chosen to avoid, reproduced one file later, and the council that decided the relocation named it as the residual risk it could not close | Both conditions are now MEASURABLE rather than permanent: the producer count is a `grep` over envelopes whose shape is enforced, and the cost decision is a stated question rather than a standing objection. The condition that made the source step undischargeable — an unchecked field guaranteeing a zero count — is fixed in the same change as the relocation, so a re-read can produce a different answer than last time. It is anchored in its OWN phase with its own falsifier, after the R2 review found the first placement parked it under a falsifier that cancels its host phase — this risk reproduced inside its own mitigation | Phase 7 |
 
 ## Non-goals
 

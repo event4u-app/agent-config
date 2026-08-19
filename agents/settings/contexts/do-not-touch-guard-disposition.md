@@ -90,3 +90,19 @@ containing a space, so extending the rule there needs its own verification rathe
 than a copy of this one. `suggested_skills` (:664) is not in the set at all — it
 carries skill names, not paths — and `assumptions.basis` is explicitly "file:line,
 id, path, **or command**", where a command with spaces is legal.
+
+A **second** asymmetry, surfaced by the R2 review of this change and recorded
+here because the note above scoped only the path-shape construct: the new check
+names its offending entries on the argument that a bare count is not actionable,
+while `checkList` — which it wraps, and which runs first on the same field —
+still reports its own bad entries as an unnamed count. So an over-budget or
+multi-line `do_not_touch` entry is still reported without being named.
+
+Deliberately not fixed here, for a reason that is the mirror image of the one
+above: `checkList` is shared by roughly a dozen fields across both capsule
+variants, several of them prose fields where an entry is a whole sentence and
+naming three of them in an error message would print a paragraph. Changing its
+message shape is a contract change with its own spec surface, and doing it as a
+by-product of a `do_not_touch` fix is exactly the drive-by this repository's diff
+discipline refuses. It is a real inconsistency, it is written down, and it is
+somebody's next change rather than a silent one.

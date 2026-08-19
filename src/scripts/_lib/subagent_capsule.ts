@@ -135,6 +135,14 @@ function isShortLine(value: unknown, max: number): value is string {
  * which is correct: the failure this closes is a field whose own documentation
  * says "a list of path refs" silently accepting full sentences.
  *
+ * **It is not a matcher, and a consumer must not mistake it for one.** It
+ * answers "is this one token", never "does this entry cover that write target".
+ * It admits a bare directory, a trailing-slash relative ref, a glob and a
+ * `file:line` ref; normalisation, directory-prefix matching and glob matching
+ * are deliberately unspecified here, because they are a separate decision that
+ * belongs to whatever ships the comparison. Reuse this for what VALIDATES;
+ * decide separately what MATCHES.
+ *
  * **Stated default, not a measured optimum:** zero tracked paths in this repo
  * contain whitespace, so the rule costs nothing here. *Revisit-if* a consumer
  * legitimately needs a path containing a space — that needs a quoting
@@ -148,6 +156,14 @@ export function isPathRef(value: unknown): value is string {
  * `checkList` plus the path-ref shape, for a field whose own documentation
  * calls its entries path refs. Names the offending entries: "one of your
  * twelve entries is wrong" is not an actionable error.
+ *
+ * The shape report is suppressed for exactly one reason — the same entries
+ * already failed the per-entry budget, where reporting both says the same thing
+ * twice. It is deliberately NOT suppressed by the entry-COUNT error, which is
+ * orthogonal: a 41-entry list of prose sentences must report both problems in
+ * one pass, or the author trims to 40, re-validates, and only then learns the
+ * entries were prose — an extra refuse-and-repair round-trip on the write path
+ * this contract points at as the repair mechanism.
  */
 function checkPathRefList(
     errors: string[],
@@ -156,9 +172,11 @@ function checkPathRefList(
     max: number,
     required: boolean,
 ): void {
-    const before = errors.length;
     checkList(errors, field, value, max, required);
-    if (errors.length !== before || !Array.isArray(value)) return;
+    if (!Array.isArray(value)) return;
+    // Same-entry duplicate only: an entry that failed the budget is already
+    // reported, and its shape adds nothing a reader can act on separately.
+    if (value.some((x) => !isShortLine(x, max))) return;
 
     const bad = value.filter((x) => !isPathRef(x));
     if (bad.length === 0) return;
