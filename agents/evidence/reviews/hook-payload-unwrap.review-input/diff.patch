@@ -1,0 +1,319 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 01cbb56d8d77046602656c94d330d6deb66fa7ab..ba68a12a796271fe3ad7d43004618fe5d46939d5 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -643,27 +643,29 @@ _1 blocker resolved._
+     streaming/incremental-parse question, which is a much larger change than
+     anything this roadmap scoped.
+   - **Resolved when:** one option is recorded at this blocker and — for (a) — the read-and-exit cell exists on the § 2 matrix, so the unavoidable transport share of the large-payload cell is a number rather than an assumption.
+-- **b-payload-mis-nested-readers** (owner: user) — blocks nothing in this roadmap. Phase 2's declarations are correct for the code as it stands, including for the two concerns below.
+-  - **Recommendation:** **(a), as its own PR.** Both are one-line unwraps with a cheap negative test, and the pair is exactly the "one instance is a sample" case: the audit found two, and nothing has searched the remaining concerns for the same construct with a predicate other than the one that found these.
+-  - **If you do nothing:** `ship-diff-volume` stays a concern that runs, costs a dispatch, and can never fire; and `injection-scan`'s coverage depends on a fallback that any future envelope change could remove without a test noticing.
++- **b-injection-scan-unwrap-security** (owner: user) — blocks nothing in this roadmap. It is the half of `b-payload-mis-nested-readers` that option (b) deliberately did not ship, kept as a blocker rather than a prose note so it stays visible to the estate's own blocker count.
++  - **Recommendation:** **(a), as its own PR.** The fixtures are the deliverable, not the one-line change — without them the fix is a coverage change nobody can review, which is exactly the reason the council split it out of the `ship-diff-volume` PR rather than shipping the pair.
++  - **If you do nothing:** the scanner's production coverage stays a property of its fallback rather than of its contract, and the next envelope change can remove it with every test still green.
+   - **What to do:**
+-    decide whether to fix two concerns that read tool payload keys
+-    at the WRONG nesting level — off the envelope root instead of `envelope.payload`
+-    — found by Phase 2's audit and deliberately not touched by it.
+-    · `injection_scan_hook.ts` reads its result keys off the root, so what it
+-    actually scans in production is its whole-envelope-serialisation fallback. It
+-    works by accident, and it declares `[input, result]` so Phase 2 keeps it
+-    working. Fixing the unwrap changes what a security scanner sees, which is a
+-    behaviour change on a security surface and not a drive-by edit.
+-    · `ship_diff_volume_hook.ts` reads `tool_input` / `command` off the root and
+-    therefore finds NOTHING under the real dispatcher envelope — it returns 0 on
+-    every dispatcher-path invocation today. It declares `[input]`, which preserves
+-    the status quo and bakes in nothing new.
+-    Options: (a) fix both unwraps in one PR with a negative test per concern that
+-    fails against the current code; (b) fix `ship-diff-volume` only, since it is
+-    provably dead rather than accidentally-working; (c) leave both and record that
+-    the scanner's coverage is fallback-dependent.
+-  - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — each fixed concern carries a test that fails against the pre-fix unwrap, plus a reported count of the same construct across the remaining concerns.
++    decide whether to fix `injection_scan_hook.ts`'s unwrap.
++    `_tool_output` reads `tool_response` / `tool_result` / `toolResponse` /
++    `output` / `result` off the envelope ROOT, where the dispatcher never puts
++    them, and then falls through to serialising the WHOLE envelope. So the scanner
++    does run and does see the tool output today — inside a serialisation of
++    everything else as well. It works by accident, and nothing tests the accident.
++    **Why this is not a drive-by edit.** Fixing the unwrap NARROWS what the
++    scanner reads, on a security surface. The current fallback is a superset: it
++    can raise a hit on text that is not tool output at all (a false positive that
++    currently costs a warning), and the narrowed version could drop a host shape
++    nobody enumerated (a false negative that costs coverage). Neither direction is
++    decidable without first writing down what the scanner is contractually
++    supposed to read.
++    Options: (a) establish the intended output-envelope contract with fixtures for
++    the valid, missing and malformed payload shapes, then fix the unwrap against
++    it; (b) fix the unwrap and keep the whole-envelope serialisation as an
++    explicit second pass, trading precision for coverage; (c) leave it and record
++    in the concern itself that its production coverage is fallback-dependent.
++  - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — `injection-scan` carries a test that fails against the pre-fix unwrap, with the valid / missing / malformed payload shapes named.
+ - **b-stop-async-split-prerequisites** (owner: user) — blocks step 5.3 only. Phases 1-4 are unaffected and Phase 2 has landed.
+   - **Recommendation:** **(a), and P3 before anything else.** P3 is a live data-integrity defect that does not need the split to matter: `dispatch-issues.jsonl` already has no lock today, and any second concurrent dispatcher — two platforms installed into one workspace, which the manifest supports — can truncate it. Fixing it is small, independently valuable, and turns the riskiest part of a future split into a non-issue. Option (b) is tempting and is the wrong first move: it pays P1's contract change for one concern while leaving the collisions in place. Option (c) is defensible only if Phase 4's composite says turn-end wall clock is not the binding cost.
+   - **If you do nothing:** turn-end wall clock keeps carrying eight concerns that cannot refuse anything, `dispatch-issues.jsonl` stays corruption-capable under any concurrent dispatch, and the classification above rots — it is pinned to `hook_manifest.yaml` as it stands today, and every added `stop` concern makes it less true.
+@@ -700,7 +702,7 @@ _1 blocker resolved._
+     record that turn-end wall clock is addressed only by Phase 4's measurement.
+   - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — P3's three files are written under a lock with a tmp+rename and a test that fails against the current unlocked write, before any group split ships.
+ 
+-_1 blocker resolved._
++_2 blockers resolved._
+ 
+ ### [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md)
+ 
+diff --git a/agents/roadmaps/road-to-per-turn-hook-economy.md b/agents/roadmaps/road-to-per-turn-hook-economy.md
+index 823da4dd7ad85411e15fc0adb99d4ea88b3a5298..022653746c05a0dfabe533e24da7004fa27217f3 100644
+--- a/agents/roadmaps/road-to-per-turn-hook-economy.md
++++ b/agents/roadmaps/road-to-per-turn-hook-economy.md
+@@ -1079,7 +1079,7 @@ PR is already a performance change carrying one security fix.
+   measurement have now refuted.
+ 
+ ### blocker: b-payload-mis-nested-readers
+-- **Status:** open
++- **Status:** resolved
+ - **Owner:** user
+ - **Class:** 2 — consent-once
+ - **Blocks:** nothing in this roadmap. Phase 2's declarations are correct for the
+@@ -1111,6 +1111,84 @@ PR is already a performance change carrying one security fix.
+   dispatch, and can never fire; and `injection-scan`'s coverage depends on a
+   fallback that any future envelope change could remove without a test noticing.
+ 
++- **Resolution (2026-08-20): option (b) recorded — `ship-diff-volume` fixed here,
++  `injection-scan` split to its own blocker.** Decided by council, 2/2 quorum
++  (anthropic + openai, $0.0289, subscription transport). Both seats rejected (a)
++  on the same ground and it is worth keeping: the two halves have **different
++  contracts and different risk profiles**, so shipping them together buys one
++  review for two questions. `ship-diff-volume` is provably dead and its fix is
++  verifiable from the envelope contract alone; `injection-scan` works by accident
++  and changing its unwrap changes what a security scanner sees in production,
++  which needs its own review against fixtures for the valid, missing and
++  malformed payload shapes. Both seats also required the regression to sit at the
++  dispatcher boundary rather than on the extractor.
++
++  **What landed.** `extractCommand` now reads the platform payload via the shared
++  `unwrap` from `hooks/envelope.js` — the same accessor `design-slop` adopted for
++  the identical defect — and the hand-rolled `JSON.parse` in `main` is gone with
++  it. `commandFromStdin` is exported so the test can drive the raw stdin text.
++
++  **The regression fails against the pre-fix code, verified by restoring it.**
++  Against the exact pre-fix extraction, two of the five new cases fail — the
++  dispatcher-envelope case and the payload-carries-`command` case — while the
++  bare-host-payload case stays green, which is correct: that path worked before
++  and still works. The envelope under test is built by the dispatcher's OWN
++  `_build_envelope`, so a hand-written fixture cannot drift into agreeing with
++  the bug.
++
++  **Construct count across the remaining concerns — 2 of 47, and the count took
++  three predicates.** A literal-key grep for envelope-root reads found 8 of the
++  47 registered concerns; 6 of those descend into `payload` first with the root
++  only as a fallback (`block-config-weakening`, `block-kernel-rule-writes`,
++  `code-graph-nudge`, `rtk-wrap`, `tool-result-bytes`, and both
++  `design-slop`/`ui-route-nudge` via their own `unwrap`), which is correct. That
++  predicate **missed `injection-scan`, which reads through a loop variable** — so
++  a second predicate asked which concerns never mention `payload` at all (14),
++  and a third checked which of those read a key the dispatcher places only under
++  `payload`. Result: exactly **two** carried the defect —
++  `ship_diff_volume_hook.ts` and `injection_scan_hook.ts`. The other twelve read
++  genuine root keys (`event`, `session_id`, `workspace_root`, `cwd`) and are
++  right as they stand. The first predicate alone would have reported one.
++
++### blocker: b-injection-scan-unwrap-security
++- **Status:** open
++- **Owner:** user
++- **Class:** 2 — consent-once
++- **Blocks:** nothing in this roadmap. It is the half of
++  `b-payload-mis-nested-readers` that option (b) deliberately did not ship, kept
++  as a blocker rather than a prose note so it stays visible to the estate's own
++  blocker count.
++- **What to do:** decide whether to fix `injection_scan_hook.ts`'s unwrap.
++  `_tool_output` reads `tool_response` / `tool_result` / `toolResponse` /
++  `output` / `result` off the envelope ROOT, where the dispatcher never puts
++  them, and then falls through to serialising the WHOLE envelope. So the scanner
++  does run and does see the tool output today — inside a serialisation of
++  everything else as well. It works by accident, and nothing tests the accident.
++
++  **Why this is not a drive-by edit.** Fixing the unwrap NARROWS what the
++  scanner reads, on a security surface. The current fallback is a superset: it
++  can raise a hit on text that is not tool output at all (a false positive that
++  currently costs a warning), and the narrowed version could drop a host shape
++  nobody enumerated (a false negative that costs coverage). Neither direction is
++  decidable without first writing down what the scanner is contractually
++  supposed to read.
++
++  Options: (a) establish the intended output-envelope contract with fixtures for
++  the valid, missing and malformed payload shapes, then fix the unwrap against
++  it; (b) fix the unwrap and keep the whole-envelope serialisation as an
++  explicit second pass, trading precision for coverage; (c) leave it and record
++  in the concern itself that its production coverage is fallback-dependent.
++- **Recommendation:** **(a), as its own PR.** The fixtures are the deliverable,
++  not the one-line change — without them the fix is a coverage change nobody can
++  review, which is exactly the reason the council split it out of the
++  `ship-diff-volume` PR rather than shipping the pair.
++- **Resolved when:** one option is recorded at this blocker and — for (a) or
++  (b) — `injection-scan` carries a test that fails against the pre-fix unwrap,
++  with the valid / missing / malformed payload shapes named.
++- **If you do nothing:** the scanner's production coverage stays a property of
++  its fallback rather than of its contract, and the next envelope change can
++  remove it with every test still green.
++
+ ### blocker: b-stop-async-split-prerequisites
+ - **Status:** open
+ - **Owner:** user
+diff --git a/src/scripts/hooks/ship_diff_volume_hook.ts b/src/scripts/hooks/ship_diff_volume_hook.ts
+index bd727ac7a71f85e6d71f444ecfb97d550d593175..788fbd3a7d5a7a69bdee6058d713b79746f9c5ca 100644
+--- a/src/scripts/hooks/ship_diff_volume_hook.ts
++++ b/src/scripts/hooks/ship_diff_volume_hook.ts
+@@ -32,6 +32,7 @@ import fs from 'node:fs';
+ import path from 'node:path';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
++import { unwrap } from './envelope.js';
+ import { readHookStdin } from './hook_stdin.js';
+ import { atomic_write_json } from './state_io.js';
+ 
+@@ -89,31 +90,44 @@ export function correctedVolume(numstat: string): { volume: number; excluded: nu
+     return { volume, excluded, files };
+ }
+ 
+-function extractCommand(envelope: Record<string, unknown>): string {
+-    const ti = envelope['tool_input'];
++/**
++ * The tool command, read off the PLATFORM PAYLOAD — never off the envelope root.
++ *
++ * The dispatcher nests the host-shaped tool fields under `payload`
++ * (`_build_envelope` in `dispatch_hook.ts`); only a bare host invocation puts
++ * them at the top level. This concern shipped reading the top level only, so
++ * under the real dispatcher it found nothing and returned `''` on every
++ * invocation — it ran, cost a dispatch, and could never fire. Same defect the
++ * `design-slop` concern already carries a note about; `unwrap` is the shared
++ * accessor that makes both shapes read alike.
++ */
++export function extractCommand(payload: Record<string, unknown>): string {
++    const ti = payload['tool_input'];
+     if (ti !== null && typeof ti === 'object') {
+         const c = (ti as Record<string, unknown>)['command'];
+         if (typeof c === 'string') return c;
+     }
+-    const c = envelope['command'];
++    const c = payload['command'];
+     return typeof c === 'string' ? c : '';
+ }
+ 
++/**
++ * The stdin boundary itself: raw dispatcher stdin → the ship command.
++ *
++ * Exported so a regression can exercise the same text the dispatcher writes,
++ * rather than a hand-built fixture that could agree with the bug.
++ */
++export function commandFromStdin(raw: string): string {
++    const [, payload] = unwrap(raw);
++    return extractCommand(payload);
++}
++
+ export function main(argv?: string[]): number {
+     const args = argv ?? process.argv.slice(2);
+     const idx = args.indexOf('--command');
+     let cmd = idx >= 0 && args[idx + 1] !== undefined ? args[idx + 1]! : '';
+     if (!cmd) {
+-        const raw = readHookStdin();
+-        let envelope: Record<string, unknown> = {};
+-        if (raw.trim()) {
+-            try {
+-                envelope = JSON.parse(raw) as Record<string, unknown>;
+-            } catch {
+-                envelope = {};
+-            }
+-        }
+-        cmd = extractCommand(envelope);
++        cmd = commandFromStdin(readHookStdin());
+     }
+     if (!isShipCommand(cmd)) return 0;
+ 
+diff --git a/tests/hooks/ship_diff_volume.test.ts b/tests/hooks/ship_diff_volume.test.ts
+index 5abb9ddb67c7a2b729e5b8fc90c9770d04bcb6c5..f9f0bece2e97d08396e623858b35d69c98040481 100644
+--- a/tests/hooks/ship_diff_volume.test.ts
++++ b/tests/hooks/ship_diff_volume.test.ts
+@@ -1,12 +1,30 @@
+ import { describe, expect, it } from 'vitest';
+ 
++import { _build_envelope } from '../../src/scripts/hooks/dispatch_hook.js';
+ import {
++    commandFromStdin,
+     correctedVolume,
+     isExcluded,
+     isShipCommand,
+     DEFAULT_THRESHOLD,
+ } from '../../src/scripts/hooks/ship_diff_volume_hook.js';
+ 
++/** The dispatcher's own argument shape, so the envelope under test is the real one. */
++const DISPATCH_ARGS = {
++    platform: 'claude',
++    event: 'pre_tool_use',
++    native_event: 'PreToolUse',
++    manifest: '',
++    dry_run: false,
++    project_dir: '',
++    min_version: 1,
++};
++
++/** Exactly the text the dispatcher writes to a concern's stdin. */
++function dispatcherStdin(hostPayload: unknown): string {
++    return JSON.stringify(_build_envelope(DISPATCH_ARGS, JSON.stringify(hostPayload)));
++}
++
+ describe('ship-diff-volume', () => {
+     it('fires only on ship verbs', () => {
+         for (const cmd of ['git push', 'git push --force-with-lease origin x', 'gh pr create --fill']) {
+@@ -53,4 +71,52 @@ describe('ship-diff-volume', () => {
+     it('pins the threshold to the derived p90, so a silent retune is a visible diff', () => {
+         expect(DEFAULT_THRESHOLD).toBe(1695);
+     });
++
++    // The defect this concern shipped with: it read `tool_input` off the
++    // ENVELOPE ROOT, one level above where the dispatcher puts it. Under the
++    // real dispatcher it therefore found nothing and returned '' on every
++    // invocation — a concern that ran, cost a dispatch, and could never fire.
++    // These build their input with the dispatcher's OWN `_build_envelope`, so a
++    // fixture cannot drift into agreeing with the bug.
++    describe('the dispatcher stdin boundary', () => {
++        it('finds the ship verb in a dispatcher envelope, where the tool fields are under payload', () => {
++            const stdin = dispatcherStdin({
++                session_id: 'boundary-test',
++                hook_event_name: 'PreToolUse',
++                tool_name: 'Bash',
++                tool_input: { command: 'git push --force-with-lease origin x' },
++            });
++            // Pre-fix this read the envelope root and returned ''.
++            expect(commandFromStdin(stdin)).toBe('git push --force-with-lease origin x');
++            expect(isShipCommand(commandFromStdin(stdin))).toBe(true);
++        });
++
++        it('keeps reading a bare host payload, the direct-invocation shape', () => {
++            const raw = JSON.stringify({
++                hook_event_name: 'PreToolUse',
++                tool_name: 'Bash',
++                tool_input: { command: 'gh pr create --fill' },
++            });
++            expect(commandFromStdin(raw)).toBe('gh pr create --fill');
++        });
++
++        it('reads a payload that carries the command without a tool_input wrapper', () => {
++            const stdin = dispatcherStdin({ command: 'git push' });
++            expect(commandFromStdin(stdin)).toBe('git push');
++        });
++
++        it('stays silent on a non-ship tool call rather than guessing', () => {
++            const stdin = dispatcherStdin({
++                tool_name: 'Bash',
++                tool_input: { command: 'git status --short' },
++            });
++            expect(isShipCommand(commandFromStdin(stdin))).toBe(false);
++        });
++
++        it('returns empty on empty, non-JSON, and payload-less stdin instead of throwing', () => {
++            expect(commandFromStdin('')).toBe('');
++            expect(commandFromStdin('not json {')).toBe('');
++            expect(commandFromStdin(dispatcherStdin({}))).toBe('');
++        });
++    });
+ });
