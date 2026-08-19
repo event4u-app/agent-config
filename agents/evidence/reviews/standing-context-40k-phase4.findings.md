@@ -1,11 +1,11 @@
 # Findings: standing-context-40k-phase4
-<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 81f9ca8aea66364a3cbbe1d039037fe2c5e51266b9c646756a7dce6e1127d03b | diff: 016cd6232719792909e66c21019878efca69f5eb | reviewer: r2-fresh-subagent-standing-context-40k-phase4 | prompt_hash: 8320fa4731a9312a494e76f7fbf4bb5901ac3f3c008f38ac6eea18c197c7023c -->
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: bb06cc99f65e168e9295268bf09e712c8f1a882847df535654a392b7e151a98b | diff: df02ed29f1c6f9b879ed0f0c35b50eb3813aa520 | reviewer: r2-fresh-subagent-standing-context-40k-phase4 | prompt_hash: 8320fa4731a9312a494e76f7fbf4bb5901ac3f3c008f38ac6eea18c197c7023c -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 016cd6232719792909e66c21019878efca69f5eb
-  scope_hash: 81f9ca8aea66364a3cbbe1d039037fe2c5e51266b9c646756a7dce6e1127d03b
+  diff_sha: df02ed29f1c6f9b879ed0f0c35b50eb3813aa520
+  scope_hash: bb06cc99f65e168e9295268bf09e712c8f1a882847df535654a392b7e151a98b
   roadmap: agents/roadmaps/road-to-standing-context-40k.md
   roadmap_hash: 425882734a4d2f592dad8547d0bd655197e662dc4008f468f199f4cc065b2a45
   ac_hash: 59f47cf4c6dc28cfbcf68350c5ef223a056bd45105fe2bd7560bb8db7891f7c4
