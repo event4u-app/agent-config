@@ -104,11 +104,28 @@ export interface RunReport {
     memos: number;
 }
 
+/**
+ * Runs required before either pre-registered claim may be compared.
+ *
+ * Fixed BEFORE any data by `user-out-of-loop-baseline` and
+ * `roadmap-wall-clock-baseline` in `docs/CLAIMS.md`, both falsification
+ * criterion (3): "≥ 20 recorded runs before any comparison, else
+ * UNDERPOWERED". Named here so the report states the floor it is judging
+ * itself against rather than leaving a reader to look it up.
+ */
+export const POWER_FLOOR_RUNS = 20;
+
 export interface Report {
     window_requested: number;
     sessions_found: number;
     window_short: boolean;
     synthetic_user_turns_excluded: number;
+    /** Runs carrying a contact count — the CONTACT axis's own denominator. */
+    contact_axis_runs: number;
+    /** Runs carrying timing — the WALL-CLOCK axis's own, much smaller, denominator. */
+    wall_clock_axis_runs: number;
+    /** The pre-registered floor both claims fix before any comparison. */
+    power_floor_runs: number;
     runs: RunReport[];
     median_contacts_per_run: number | null;
     median_user_wait_minutes: number | null;
@@ -490,6 +507,17 @@ export function buildReport(root: string, windowRequested: number): Report {
         sessions_found: bySession.size,
         window_short: bySession.size < windowRequested,
         synthetic_user_turns_excluded: synthetic,
+        // Per-axis N against the pre-registered ≥ 20-run floor. The two axes
+        // read DIFFERENT sources — the ledger is a committed append-only file,
+        // the chat history is a rolling buffer — so their effective N diverges
+        // hard, and one banner over both cannot say which is underpowered.
+        // Measured 2026-08-19: 21 runs carried contacts and 4 carried timing,
+        // i.e. the contact axis had cleared its own floor while the wall-clock
+        // axis was at a fifth of it, under a single ⚠️ SHORT WINDOW line that
+        // named neither.
+        contact_axis_runs: runs.filter((r) => r.contacts !== null).length,
+        wall_clock_axis_runs: runs.filter((r) => r.elapsed_minutes !== null).length,
+        power_floor_runs: POWER_FLOOR_RUNS,
         runs,
         notes,
         median_contacts_per_run: median(
@@ -520,6 +548,20 @@ function fmt(v: number | null, unit = ''): string {
     return v === null ? 'n/a' : `${Math.round(v * 10) / 10}${unit}`;
 }
 
+/**
+ * The power verdict for ONE axis, printed on that axis's own header.
+ *
+ * `UNDERPOWERED` is the word the claims themselves use, so the reader meets
+ * the same term the falsification criterion is written in. The count is always
+ * shown, including when the floor is cleared — a bare "OK" would leave a
+ * reader unable to tell 20 from 200.
+ */
+function power(n: number, floor: number): string {
+    return n >= floor
+        ? `  ·  n=${n} runs (≥ ${floor} floor cleared)`
+        : `  ·  n=${n} runs — ⚠️  UNDERPOWERED, floor is ${floor}`;
+}
+
 export function renderText(report: Report): string {
     const lines: string[] = [];
     lines.push('interruption_report — road-to-user-out-of-the-loop Phase 0');
@@ -530,11 +572,11 @@ export function renderText(report: Report): string {
     );
     lines.push(`synthetic user turns excluded: ${report.synthetic_user_turns_excluded}`);
     lines.push('');
-    lines.push('CONTACT AXIS');
+    lines.push(`CONTACT AXIS${power(report.contact_axis_runs, report.power_floor_runs)}`);
     lines.push(`  median contacts per run:   ${fmt(report.median_contacts_per_run)}`);
     lines.push(`  median user wait:          ${fmt(report.median_user_wait_minutes, ' min')}`);
     lines.push('');
-    lines.push('WALL-CLOCK AXIS');
+    lines.push(`WALL-CLOCK AXIS${power(report.wall_clock_axis_runs, report.power_floor_runs)}`);
     lines.push(`  median elapsed per run:    ${fmt(report.median_elapsed_minutes, ' min')}`);
     lines.push(`  median agent working time: ${fmt(report.median_working_minutes, ' min')}`);
     lines.push('');
