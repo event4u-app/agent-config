@@ -1,11 +1,11 @@
 # Findings: dispatch-safety-do-not-touch
-<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 410bb253a496788e55824b93a96fc3beeb41e337a9e263c7d55d3982ea764d65 | diff: 58ddc415b9d7f8e07814926fb1fce90e2a7728c5 | reviewer: r2-fresh-subagent-dispatch-safety-do-not-touch | prompt_hash: 592cdda3719972bd6b72463412bcec734f2a4a310a088b27a09fa3a549aeead9 -->
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 71b3a097c968b41ca3e719063b7bae72c434777cf9cc81328ff160705be9e16f | diff: 5586c26124e488badc93e0db856ad54f08753c32 | reviewer: r2-fresh-subagent-dispatch-safety-do-not-touch | prompt_hash: 592cdda3719972bd6b72463412bcec734f2a4a310a088b27a09fa3a549aeead9 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 58ddc415b9d7f8e07814926fb1fce90e2a7728c5
-  scope_hash: 410bb253a496788e55824b93a96fc3beeb41e337a9e263c7d55d3982ea764d65
+  diff_sha: 5586c26124e488badc93e0db856ad54f08753c32
+  scope_hash: 71b3a097c968b41ca3e719063b7bae72c434777cf9cc81328ff160705be9e16f
   roadmap: agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-dispatch-safety.md
   roadmap_hash: 2cbf4223c5d2161b164d7462118396617d5e0978b2b5ef4cf1725bd24d69037f
   ac_hash: none
