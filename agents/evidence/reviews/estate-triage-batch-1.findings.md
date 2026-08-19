@@ -1,11 +1,11 @@
 # Findings: estate-triage-batch-1
-<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 39dc1de16566d59e351d330c119f0669d7de7fe97ea05f23c7957b34e59d7905 | diff: ca2219b7fad22d6339ca69f8b655c0df6ac29843 | reviewer: r2-fresh-subagent-estate-triage-batch-1 | prompt_hash: 633ded9cda53546685013141e649e1c4910067ca94ac321d409791374f26a43a -->
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: e9bcf11c50ec135a1574472ecfdb43f5e2c805eda39989317cc13bf8f019a17c | diff: ef5467fd2b64d984c0465964525fde86139dea03 | reviewer: r2-fresh-subagent-estate-triage-batch-1 | prompt_hash: 633ded9cda53546685013141e649e1c4910067ca94ac321d409791374f26a43a -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: ca2219b7fad22d6339ca69f8b655c0df6ac29843
-  scope_hash: 39dc1de16566d59e351d330c119f0669d7de7fe97ea05f23c7957b34e59d7905
+  diff_sha: ef5467fd2b64d984c0465964525fde86139dea03
+  scope_hash: e9bcf11c50ec135a1574472ecfdb43f5e2c805eda39989317cc13bf8f019a17c
   roadmap: agents/roadmaps/road-to-estate-drawdown.md
   roadmap_hash: 5883d8364e88ab95c2f8768899cd3edfc4b929a582f0494da529e274f2031f3f
   ac_hash: 0308d5582ca2f060845f17b92dd930b0fe6865baf31272e8b3fad4c2880611bd
