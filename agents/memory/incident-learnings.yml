@@ -7,7 +7,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: adr number collision on parallel prs
     body: "Two open PRs both claim the next ADR-NNN; first merge wins, second must
       renumber — including the adr: frontmatter field, not just the filename.
@@ -18,24 +21,6 @@ entries:
       1. `git mv docs/decisions/ADR-067-foo.md docs/decisions/ADR-068-foo.md` 2.
       **The `adr:` frontmatter field** inside the file (`adr: 067` → `adr:
       068`). `src/scripts/adr/re"
-  - id: agent-config-hooks-need-global-binary
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: agent config hooks need global binary
-    body: agent-config Claude-plugin hooks resolve the GLOBAL agent-config binary on
-      PATH; removing the global install silently breaks roadmap-progress + all
-      PostToolUse hooks. In `@event4u/agent-config`, the Claude marketplace
-      plugin's hooks (`hooks/hooks.json`, all 5 events) resolve
-      `$CLAUDE_PROJECT_DIR/agent-config` (in-project wrapper) **then** fall back
-      to a bare `agent-config` on PATH (the **global** install). There is **no
-      npx fallback** in the hook command. If neither resolves → exit 127 → every
-      concern (roadmap-progress dashboard regen, context-hygiene,
-      verify-before-complete, …) silently no-op
   - id: auto-commit-empties-roadmaps
     status: active
     confidence: high
@@ -43,7 +28,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: unverifiable
+    semantic_verdict_at: 2026-08-17
     key: auto commit empties roadmaps
     body: 'A "chore: add uncomitted roadmaps" auto-commit on main commits roadmap
       files as 0-byte empties and can drop uncommitted working-tree edits; how
@@ -62,7 +50,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: unverifiable
+    semantic_verdict_at: 2026-08-17
     key: commit relocates into per branch worktree
     body: In agent-config, committing a feature branch in the MAIN checkout triggers
       automation that relocates the work into a per-branch worktree and resets
@@ -80,7 +71,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council curl timeout fix
     body: 'The recurring "Anthropic council member timed out" is a 120s curl
       timeout, not a broken path — fixed 2026-06-24 (raised to 300s +
@@ -99,7 +93,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council install path convergence
     body: "2026-07-07 council — Q1 SPLIT resolved as bootstrap-shim-now +
       delist-checkpoint-later; converged on converge-command consent model,
@@ -117,7 +114,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council removal depth principle
     body: "2026-06-14 council — agent-memory removal strip-depth principle:
       deep-strip Layer-2-only dead seams (operational/provider/shadow), simplify
@@ -129,24 +129,6 @@ entries:
       the generic
       `operational_provider`/`OperationalProvider`/`Shadow`/`with_shadows`/conf\
       lict-rule-operatio"
-  - id: discovery-strict-frontmatterless-template
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: discovery strict frontmatterless template
-    body: 'A new frontmatter-less template breaks the strict discovery build in CI
-      (Node+Python tests) — quarantine it in unassigned-artefacts.yml. A NEW
-      template/scaffold `.md` with **no YAML frontmatter** (e.g.
-      `src/agent-src/templates/tickets.md`, PR #573) makes
-      `src/scripts/build_discovery_manifest.py --strict` exit 1 ("N unassigned
-      artefact(s); reason: missing or unparseable frontmatter"). Local `--write`
-      (non-strict) exits 0, so it passes locally and **only fails in CI** —
-      surfaces as fast (~20–60s) **Node Tests + Python Tests** failures
-      (`test_projection_scoped` shells out to the builder), not an '
   - id: enforcement-projection-honest-null
     status: active
     confidence: high
@@ -154,7 +136,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: enforcement projection honest null
     body: "2026-06-25 compile-time governance-enforcement (hardened-block injection)
       measured HONEST-NULL at discipline ceiling on trapD/trapE — condense.ts
@@ -172,7 +157,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: feedback locks never permanent
     body: "Past decisions (honest-nulls, don't-relitigate locks, token-budget canon)
       must never silently veto a beneficial change — surface the conflict, offer
@@ -183,24 +171,6 @@ entries:
       and drop/park the improvement. Surface the conflict and ask the user
       whether to re-evaluate the contested point in the AI council; if the
       verdict flips, harden th"
-  - id: fresh-worktree-gate-quirks
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: fresh worktree gate quirks
-    body: "agent-config fresh worktrees — which local gates false-fail (pre-commit
-      .augment lookup, augment-budget needs --project-augment) and the recurring
-      stale-condensation-hash drift on main. Working in fresh `git worktree`s
-      off main in the agent-config repo (the standard pattern for parallel issue
-      PRs), three environment quirks cost time (learned 2026-06-09, 7-issue PR
-      run): 1. **Pre-commit hook false-fails on roadmap touches.** The hook
-      shells to `python3 .augment/scripts/update_roadmap_progress.py`, but
-      `.augment/` is a gitignored local projection that does not exist in a
-      fresh worktree. Fix: reg"
   - id: git-stash-probe-conflict-hazard
     status: active
     confidence: high
@@ -208,7 +178,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: unverifiable
+    semantic_verdict_at: 2026-08-17
     key: git stash probe conflict hazard
     body: "Never use git stash as a read-only probe in this shared working tree — it
       sweeps up concurrent sessions' dirty files and a suppressed pop-conflict
@@ -226,7 +199,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: unverifiable
+    semantic_verdict_at: 2026-08-17
     key: github pr head sync glitch
     body: "GitHub PR-head can lag the branch ref → new commit's pull_request CI
       never fires; close/reopen or empty-commit nudges, and a merge can land
@@ -244,7 +220,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: glama sync break src move
     body: glama.ai sync hangs trace to the 2026-06-04 scripts/->src/scripts move
       breaking glama's stored build/CMD paths; fix lives in internal/glama/ +
@@ -262,7 +241,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: unverifiable
+    semantic_verdict_at: 2026-08-17
     key: py2ts bundle macos symlink and tmpdir traps
     body: "Two macOS-only py2ts regressions behind the. The 3 macOS-only failures on
       #613 (`python2ts → main`) were two py2ts regressions, both invisible on
@@ -280,7 +262,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: py2ts parallel snapshot clobber
     body: "Parallel subagents capturing into the shared parity-snapshot tree clobber
       each other's UNCOMMITTED goldens — commit between batches or capture
@@ -298,7 +283,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: roadmap archival vs inbound refs
     body: "Completing a roadmap to 100% forces archival (pre-commit hook), which
       breaks inbound ADR/report refs — keep it 1 criterion shy until the closing

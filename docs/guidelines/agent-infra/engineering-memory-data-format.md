@@ -44,6 +44,29 @@ rejects entries missing any required field.
 | `review_after_days` | yes | integer | triggers staleness warning |
 | `priority` | no | `critical` \| `normal` \| `low` | tier-0 surfacing; defaults to `normal` |
 | `ts_week` | no | ISO-week string `YYYY-Www` | promotion week stamp; convention, not enforced |
+| `verified_at_commit` | no | 7-40 char lowercase hex | the tree revision the entry was **semantically verified against** — not the commit that last edited the YAML |
+| `semantic_verdict` | no | `still-true` \| `stale` \| `unverifiable` | a recorded **human** reading of the entry against that tree |
+| `semantic_verdict_at` | no | ISO date | when that reading was taken |
+
+### Verification stamps (`verified_at_commit` / `semantic_verdict`)
+
+A date alone cannot be tied to a tree state, and that gap is not theoretical:
+spike cf02 measured the curated store at **21.5 % stale against the tree** while
+the shipped instrument reported **0.0 %**, because all 107 entries carried one
+`last_validated` and one 365-day window, so the check could not fire before
+2027. `verified_at_commit` is what makes a stamp falsifiable — with it, a reader
+can ask whether anything the entry cites has changed since it was last read.
+
+`semantic_verdict` records the outcome of that read. It is **human-written**,
+deliberately: no mechanical signal predicts it. Pointer liveness was built and
+measured for exactly this job and came in at 0.00x lift over the base rate
+(cf04) — a dead citation is documentation debt, not a false claim.
+
+A `stale` verdict demotes the entry immediately, regardless of age
+(`memory_eviction.ts`, "contradiction outranks retention"). An `unverifiable`
+entry — one about an external system, a past event, or a recorded preference —
+is surfaced on age but never quarantined on it, because the tree can never
+discharge the reason.
 
 ### Priority semantics (`critical` / `normal` / `low`)
 
@@ -142,6 +165,32 @@ path if the guardrail is absent.
 `check_memory.ts` runs weekly (not per-PR). It reports entries where
 `(today - last_validated) > review_after_days`. Stale entries stay
 active — the report is informational, not a gate.
+
+**The window is per store, and the numbers are derived rather than chosen.**
+cf02 measured decay over the same 39-day span in three stores:
+`historical-patterns` 45.8 %, `incident-learnings` 17.6 %, `product-rules`
+13.6 % — a 3.4× spread that one uniform window cannot serve. Extrapolated
+linearly, the days each store needs to reach the 10 % threshold are 9, 22 and
+29. The shipped windows are **30 / 90 / 90**: the same ratio, rounded to
+operational units, because cf02 also showed decay arrives in *batches* (two
+upstream changes caused 11 of 22 stale entries), which makes a linear day count
+the wrong shape for a deadline even though it is the right shape for a ratio.
+
+## Eviction ladder
+
+`memory_eviction.ts` acts on two signals and no others:
+
+| State | Trigger | Effect |
+|---|---|---|
+| `due` | past `last_validated + review_after_days` | surfaced, stays in the store |
+| `quarantine` | `semantic_verdict: stale`, **or** past two windows unverified | moved to `agents/memory-quarantine/<type>.yml`, no longer injected, still readable |
+| `delete` | three windows while in quarantine | removed |
+
+Quarantine is a **move between tracked files**, never an in-place status flip:
+an entry has to leave the injected store to stop being read as fact, and it has
+to stay readable to be appealable. Re-verify an entry and it returns.
+
+Dry-run by default; `--apply` is the only path that writes.
 
 ## Anti-patterns
 

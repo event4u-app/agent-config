@@ -1,0 +1,68 @@
+# Quarantined curated-memory entries — demoted by memory_eviction.ts.
+# Kept readable on purpose: a demotion is appealable, and an entry
+# re-verified against the tree returns to the curated store.
+version: 1
+entries:
+  - id: agent-config-hooks-need-global-binary
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: stale
+    semantic_verdict_at: 2026-08-17
+    key: agent config hooks need global binary
+    body: agent-config Claude-plugin hooks resolve the GLOBAL agent-config binary on
+      PATH; removing the global install silently breaks roadmap-progress + all
+      PostToolUse hooks. In `@event4u/agent-config`, the Claude marketplace
+      plugin's hooks (`hooks/hooks.json`, all 5 events) resolve
+      `$CLAUDE_PROJECT_DIR/agent-config` (in-project wrapper) **then** fall back
+      to a bare `agent-config` on PATH (the **global** install). There is **no
+      npx fallback** in the hook command. If neither resolves → exit 127 → every
+      concern (roadmap-progress dashboard regen, context-hygiene,
+      verify-before-complete, …) silently no-op
+  - id: discovery-strict-frontmatterless-template
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: stale
+    semantic_verdict_at: 2026-08-17
+    key: discovery strict frontmatterless template
+    body: 'A new frontmatter-less template breaks the strict discovery build in CI
+      (Node+Python tests) — quarantine it in unassigned-artefacts.yml. A NEW
+      template/scaffold `.md` with **no YAML frontmatter** (e.g.
+      `src/agent-src/templates/tickets.md`, PR #573) makes
+      `src/scripts/build_discovery_manifest.py --strict` exit 1 ("N unassigned
+      artefact(s); reason: missing or unparseable frontmatter"). Local `--write`
+      (non-strict) exits 0, so it passes locally and **only fails in CI** —
+      surfaces as fast (~20–60s) **Node Tests + Python Tests** failures
+      (`test_projection_scoped` shells out to the builder), not an '
+  - id: fresh-worktree-gate-quirks
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: stale
+    semantic_verdict_at: 2026-08-17
+    key: fresh worktree gate quirks
+    body: "agent-config fresh worktrees — which local gates false-fail (pre-commit
+      .augment lookup, augment-budget needs --project-augment) and the recurring
+      stale-condensation-hash drift on main. Working in fresh `git worktree`s
+      off main in the agent-config repo (the standard pattern for parallel issue
+      PRs), three environment quirks cost time (learned 2026-06-09, 7-issue PR
+      run): 1. **Pre-commit hook false-fails on roadmap touches.** The hook
+      shells to `python3 .augment/scripts/update_roadmap_progress.py`, but
+      `.augment/` is a gitignored local projection that does not exist in a
+      fresh worktree. Fix: reg"
