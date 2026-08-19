@@ -41,13 +41,26 @@
  * `fail_closed`. Neither policy can therefore silence a safety-relevant warning
  * — the failure that would make this module worse than the problem it solves.
  * When the exempt set alone exceeds the ceiling, the ceiling is reported as
- * exceeded and nothing is dropped: an honest overflow beats a quiet one.
+ * exceeded and nothing is dropped: an honest overflow beats a quiet one, and
+ * deleting advisories that cannot bring the total under the cap costs the model
+ * every one of them for no benefit. That futility check is asserted, not merely
+ * documented — the first version of this module omitted it and one of its own
+ * tests pinned the omission, so the doc and the code disagreed until the R2
+ * completion review caught it (2026-08-19).
  *
  * WHAT IS NOT CLAIMED. Dropping an advisory does not make the turn cheaper by
  * the dropped byte count in any measured sense — nothing in this tree observes
  * what the host does with an injected block. The claim is exactly the bounded
  * one: what the dispatcher WRITES per turn now has a ceiling and a recorded
  * reason for every line that did not survive it.
+ *
+ * WHAT THE CALLER MUST GUARANTEE, because this module cannot check it. The
+ * candidate list must be the set that would ACTUALLY be emitted, not every
+ * message collected during the dispatch. `keptBytes` becomes the persisted turn
+ * spend, so feeding in messages the dispatcher never writes makes the ceiling
+ * govern a quantity that was never injected — and can log a drop for a line that
+ * was never going out. `dispatch_hook` filters by the deciding severity BEFORE
+ * calling in; that filter is part of this contract, not a caller detail.
  */
 
 import * as fs from "node:fs";
@@ -85,6 +98,16 @@ export interface EmissionDrop {
     readonly detail: string;
 }
 
+/**
+ * Why the ceiling is over, when it is. Kept as a discriminated value rather
+ * than a boolean because the two causes want different operator messages and
+ * point at different fixes: `exempt-floor` is a budget-row question, and
+ * `carried-spend` is a question about what earlier dispatches in this turn
+ * already emitted. A single boolean made the dispatcher blame the exempt set
+ * for an overflow that was pure accumulation.
+ */
+export type CeilingCause = "exempt-floor" | "carried-spend";
+
 export interface ShapeResult {
     /** Concern names that survive, in the input order. */
     readonly kept: readonly string[];
@@ -92,10 +115,12 @@ export interface ShapeResult {
     /** Bytes the surviving set contributes. */
     readonly keptBytes: number;
     /**
-     * True when the ceiling is still exceeded after every droppable candidate
-     * was dropped — i.e. the exempt set alone is over. Never silent.
+     * True when the ceiling is over after shaping. See `ceilingCause` for which
+     * of the two reasons applies. Never silent.
      */
     readonly ceilingExceeded: boolean;
+    /** Set exactly when `ceilingExceeded` is true. */
+    readonly ceilingCause: CeilingCause | null;
 }
 
 export interface ShapeOptions {
@@ -153,11 +178,17 @@ export function evictionOrder(
  */
 function _selectNudge(
     candidates: readonly EmissionCandidate[],
-): { winner: string | null; losers: EmissionCandidate[] } {
+): { winner: string | null; winnerRank: number | null; losers: EmissionCandidate[] } {
     const nudges = candidates.filter(
         (c) => c.nudgeRank !== null && !isExempt(c),
     );
-    if (nudges.length <= 1) return { winner: nudges[0]?.concern ?? null, losers: [] };
+    if (nudges.length <= 1) {
+        return {
+            winner: nudges[0]?.concern ?? null,
+            winnerRank: nudges[0]?.nudgeRank ?? null,
+            losers: [],
+        };
+    }
     const sorted = [...nudges].sort((a, b) => {
         const ra = a.nudgeRank as number;
         const rb = b.nudgeRank as number;
@@ -165,7 +196,7 @@ function _selectNudge(
         return a.concern < b.concern ? -1 : a.concern > b.concern ? 1 : 0;
     });
     const winner = sorted[0] as EmissionCandidate;
-    return { winner: winner.concern, losers: sorted.slice(1) };
+    return { winner: winner.concern, winnerRank: winner.nudgeRank, losers: sorted.slice(1) };
 }
 
 /**
@@ -182,7 +213,7 @@ export function shapeEmissions(
     const droppedNames = new Set<string>();
 
     // ── Policy 1: nudge exclusivity ──────────────────────────────────────────
-    const { winner, losers } = _selectNudge(candidates);
+    const { winner, winnerRank, losers } = _selectNudge(candidates);
     for (const l of losers) {
         droppedNames.add(l.concern);
         dropped.push({
@@ -191,7 +222,7 @@ export function shapeEmissions(
             reason: "nudge_interference",
             detail:
                 `nudge-class advisory suppressed: '${String(winner)}' carries the lower ` +
-                `nudge_rank on this slot (${String(l.nudgeRank)} vs the winner's)`,
+                `nudge_rank on this slot (${String(winnerRank)} beats ${String(l.nudgeRank)})`,
         });
     }
 
@@ -202,23 +233,53 @@ export function shapeEmissions(
     // ── Policy 2: byte budget ────────────────────────────────────────────────
     const spent = opts.spentBytes ?? 0;
     let ceilingExceeded = false;
+    let ceilingCause: CeilingCause | null = null;
     if (opts.capBytes !== null) {
         const cap = opts.capBytes;
         const droppable = survivors.filter((c) => !isExempt(c)).sort(evictionOrder);
-        for (const victim of droppable) {
-            if (spent + total(survivors) <= cap) break;
-            droppedNames.add(victim.concern);
-            dropped.push({
-                concern: victim.concern,
-                bytes: victim.bytes,
-                reason: "injection_budget",
-                detail:
-                    `advisory dropped to hold the per-turn injection ceiling ` +
-                    `(${String(cap)} B): ${String(spent + total(survivors))} B would have been emitted this turn`,
-            });
-            survivors = survivors.filter((c) => c.concern !== victim.concern);
+        // THE IRREDUCIBLE FLOOR — what the turn costs even after every droppable
+        // advisory is gone: the spend already carried in, plus this dispatch's
+        // exempt concerns.
+        const floor = spent + total(survivors.filter(isExempt));
+
+        // FUTILITY CHECK, and it is the whole point of this block. Dropping is
+        // only justified when it can actually bring the total under the cap. If
+        // the floor is already over, no sequence of drops helps, and deleting
+        // advisories anyway costs the model every one of them and buys nothing —
+        // while the header promises "nothing dropped". The first version of this
+        // function had no such check and one of its own tests pinned the wrong
+        // behaviour, so the doc and the code disagreed; found by the R2
+        // completion review, 2026-08-19.
+        if (floor > cap) {
+            ceilingExceeded = true;
+            // Attribute to whichever component is on its own responsible. The
+            // two point at different fixes — a budget-row question vs a question
+            // about what this turn already emitted — so a single label would
+            // misdirect exactly one of them.
+            ceilingCause = spent > cap ? "carried-spend" : "exempt-floor";
+        } else {
+            for (const victim of droppable) {
+                if (spent + total(survivors) <= cap) break;
+                droppedNames.add(victim.concern);
+                dropped.push({
+                    concern: victim.concern,
+                    bytes: victim.bytes,
+                    reason: "injection_budget",
+                    detail:
+                        `advisory dropped to hold the per-turn injection ceiling ` +
+                        `(${String(cap)} B): ${String(spent + total(survivors))} B would have been emitted this turn`,
+                });
+                survivors = survivors.filter((c) => c.concern !== victim.concern);
+            }
+            if (spent + total(survivors) > cap) {
+                // Defensive: the floor check above proves a full sweep of the
+                // droppable set gets under the cap, so this is unreachable. Kept
+                // because "unreachable" is an argument, and a silent overflow is
+                // the one outcome this module must never produce.
+                ceilingExceeded = true;
+                ceilingCause = spent > cap ? "carried-spend" : "exempt-floor";
+            }
         }
-        ceilingExceeded = spent + total(survivors) > cap;
     }
 
     return {
@@ -226,6 +287,7 @@ export function shapeEmissions(
         dropped,
         keptBytes: total(survivors),
         ceilingExceeded,
+        ceilingCause,
     };
 }
 

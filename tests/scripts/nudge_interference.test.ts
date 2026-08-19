@@ -7,6 +7,7 @@
 // leaves. The corpus additionally pins the pre-policy fire set, so a trigger
 // change shows up as a corpus failure rather than being absorbed by the fix.
 import * as fs from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -14,7 +15,7 @@ import { parse as parseYaml } from "yaml";
 
 import { classifyPrompt } from "../../src/scripts/hooks/delegation_nudge_hook.js";
 import {
-  RC_ALLOW,
+  RC_WARN,
   shapeEmissions,
   type EmissionCandidate,
 } from "../../src/scripts/hooks/injection_budget.js";
@@ -23,7 +24,45 @@ import { routePointers } from "../../src/scripts/hooks/skill_route_hook.js";
 const REPO_ROOT = path.resolve(__dirname, "..", "..");
 const FIXTURE = path.join(REPO_ROOT, "tests", "eval", "nudge-interference", "prompts.yaml");
 const MANIFEST = path.join(REPO_ROOT, "src", "scripts", "hook_manifest.yaml");
-const SKILLS_DIR = path.join(REPO_ROOT, "src", "skills");
+
+/**
+ * A two-entry temp catalogue, not the live `src/skills` tree.
+ *
+ * The first version ranked against the shipped catalogue, so an unrelated
+ * SKILL.md description edit could flip a near-miss row's `fires` set and red
+ * this file with a nudge-interference message — and the sibling end-to-end
+ * fixture already used a temp catalogue for exactly that reason, so the two
+ * files disagreed about the hazard. (R2 review, 2026-08-19.)
+ *
+ * The description is ONE physical line: the catalogue loader reads a folded
+ * multi-line value as its first line only, which halves the ranker's score and
+ * silently removes the co-fire this corpus exists to pin.
+ */
+let SKILLS_DIR = "";
+let skillsTmp = "";
+
+function buildCatalogue(): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "nudge-corpus-"));
+  const skills = path.join(dir, ".claude", "skills");
+  fs.mkdirSync(path.join(skills, "using-git-worktrees"), { recursive: true });
+  fs.writeFileSync(
+    path.join(skills, "using-git-worktrees", "SKILL.md"),
+    [
+      "---",
+      "name: using-git-worktrees",
+      "description: Use when starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'.",
+      "---",
+      "",
+    ].join("\n"),
+  );
+  fs.mkdirSync(path.join(skills, "docx-authoring"), { recursive: true });
+  fs.writeFileSync(
+    path.join(skills, "docx-authoring", "SKILL.md"),
+    ["---", "name: docx-authoring", "description: Author Word documents.", "---", ""].join("\n"),
+  );
+  skillsTmp = dir;
+  return skills;
+}
 
 interface Row {
   name: string;
@@ -61,7 +100,11 @@ function asCandidates(
     concern,
     severity: "advisory",
     failClosed: false,
-    rc: RC_ALLOW,
+    // `RC_WARN` because that is what both hooks actually return in production
+    // (`delegation_nudge_hook`, `skill_route_hook` both exit WARN). The corpus
+    // used `RC_ALLOW`, an rc the dispatcher never produces for these two, so it
+    // exercised `evictionOrder` at the wrong severity. (R2 review, 2026-08-19.)
+    rc: RC_WARN,
     // A representative advisory line; the policy under test here is
     // exclusivity, and the byte cap is switched off below so size is inert.
     bytes: 400,
@@ -74,6 +117,7 @@ const ranks = manifestRanks();
 
 let savedRole: string | undefined;
 beforeAll(() => {
+  SKILLS_DIR = buildCatalogue();
   // `delegation_nudge_hook` silences itself inside a worker/reviewer session.
   // A suite inheriting that marker would measure silence and call it a
   // near-miss, so the variable is cleared for the duration of this file.
@@ -83,6 +127,7 @@ beforeAll(() => {
 afterAll(() => {
   if (savedRole === undefined) delete process.env["AGENT_CONFIG_SESSION_ROLE"];
   else process.env["AGENT_CONFIG_SESSION_ROLE"] = savedRole;
+  if (skillsTmp) fs.rmSync(skillsTmp, { recursive: true, force: true });
 });
 
 describe("nudge-interference corpus", () => {
