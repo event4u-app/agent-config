@@ -112,6 +112,47 @@ engages and leaves the event behind.
      `git worktree add` fixture — which reds against the un-enriched
      event while the other eight cases stay green.
 
+     **Superseded 2026-08-19 by a live event, and the live event refuted
+     the fields.** The enrichment merged, `dist/` was rebuilt, and the
+     concern fired again from a worktree session at
+     `2026-08-19T17:18:12.843Z` (run `e9bcaa908c103495bd817f4217a03316`).
+     That line carries the four fields — and reads:
+
+     | Field | Value |
+     |---|---|
+     | `workspace_root` | `<parent checkout>` |
+     | `git_dir` | `<parent checkout>/.git` |
+     | `git_common_dir` | `<parent checkout>/.git` |
+     | `claim_path` | `<parent checkout>/.git/agent-claims/roadmap-claim-<session>.json` |
+
+     The two git paths are **identical**, on a run that genuinely started
+     from `.claude/worktrees/long-horizon`. So the discriminator this note
+     promised — `git_dir !== git_common_dir` → linked worktree — reads
+     FALSE for exactly the case it was built to detect, and
+     `claim_path ⊂ git_common_dir` holds in a plain checkout too and
+     cannot disambiguate. The two-tree fact is not recoverable from the
+     line at all.
+
+     R2 finding 1 predicted this from the code before the line existed;
+     the line is the production confirmation, not a second opinion. The
+     fix derives both git fields from `session_root` — the session's own
+     checkout, resolved through the register's `session_checkout` guard —
+     and ships `session_root` plus `session_cwd`, taking the line to six
+     fields, so writer-vs-reader divergence is itself readable per event.
+     On the line above, `session_root` would have been the worktree and
+     `workspace_root` the parent: different, which is the fact.
+
+     `session_cwd` came out of round 2 finding 1, and it is worth naming
+     because it bounds the fix rather than extending it. `session_checkout`
+     requires the reported directory to BE a checkout root, so a session
+     started from a SUBDIRECTORY of a worktree still collapses
+     `session_root` onto the reader's root and both path discriminators
+     still read FALSE. The guard's conditions belong to the register and
+     loosening them is a different change; carrying the raw `cwd` makes
+     that case *distinguishable* instead of silent — a path that is
+     neither `session_root` nor under it, which no healthy resolution
+     produces.
+
 - [ ] **0.1** The parent criterion closes on that evidence: *"a
       `process-full` contract run finishes a 3-phase roadmap with zero
       synchronous contacts, re-engaging across turns, and opens the

@@ -39,10 +39,10 @@ index 14bbcfcb56fb4e8de79867ab1fba63d7d7f3821b..557532289606776a01d9e1dc839d75bb
  <a id="blockers-road-to-run-continuation-observation"></a>
  **Blockers**
 diff --git a/agents/roadmaps/road-to-run-continuation-observation.md b/agents/roadmaps/road-to-run-continuation-observation.md
-index 4a4d1c840935bfc5e67640ad3c674d28dbc6b5d5..74ae040b20a501d8e0c5bca932edf467f1694dd7 100644
+index 4a4d1c840935bfc5e67640ad3c674d28dbc6b5d5..0571fb9ad6819b7a45a8d4829fc338718fe7b1cb 100644
 --- a/agents/roadmaps/road-to-run-continuation-observation.md
 +++ b/agents/roadmaps/road-to-run-continuation-observation.md
-@@ -97,9 +97,13 @@ engages and leaves the event behind.
+@@ -97,15 +97,60 @@ engages and leaves the event behind.
       validity is that of a production smoke probe, not of ordinary
       autonomous work.
    2. *The provenance fields are test-verified, not self-verified.* The
@@ -59,7 +59,54 @@ index 4a4d1c840935bfc5e67640ad3c674d28dbc6b5d5..74ae040b20a501d8e0c5bca932edf467
       carry them: the live hook is the parent checkout's `dist/` build,
       and the enrichment was built in the worktree. Verified by
       `tests/hooks/run_continuation_dispatch.test.ts` over a real
-@@ -128,19 +132,36 @@ engages and leaves the event behind.
+      `git worktree add` fixture — which reds against the un-enriched
+      event while the other eight cases stay green.
+ 
++     **Superseded 2026-08-19 by a live event, and the live event refuted
++     the fields.** The enrichment merged, `dist/` was rebuilt, and the
++     concern fired again from a worktree session at
++     `2026-08-19T17:18:12.843Z` (run `e9bcaa908c103495bd817f4217a03316`).
++     That line carries the four fields — and reads:
++
++     | Field | Value |
++     |---|---|
++     | `workspace_root` | `<parent checkout>` |
++     | `git_dir` | `<parent checkout>/.git` |
++     | `git_common_dir` | `<parent checkout>/.git` |
++     | `claim_path` | `<parent checkout>/.git/agent-claims/roadmap-claim-<session>.json` |
++
++     The two git paths are **identical**, on a run that genuinely started
++     from `.claude/worktrees/long-horizon`. So the discriminator this note
++     promised — `git_dir !== git_common_dir` → linked worktree — reads
++     FALSE for exactly the case it was built to detect, and
++     `claim_path ⊂ git_common_dir` holds in a plain checkout too and
++     cannot disambiguate. The two-tree fact is not recoverable from the
++     line at all.
++
++     R2 finding 1 predicted this from the code before the line existed;
++     the line is the production confirmation, not a second opinion. The
++     fix derives both git fields from `session_root` — the session's own
++     checkout, resolved through the register's `session_checkout` guard —
++     and ships `session_root` plus `session_cwd`, taking the line to six
++     fields, so writer-vs-reader divergence is itself readable per event.
++     On the line above, `session_root` would have been the worktree and
++     `workspace_root` the parent: different, which is the fact.
++
++     `session_cwd` came out of round 2 finding 1, and it is worth naming
++     because it bounds the fix rather than extending it. `session_checkout`
++     requires the reported directory to BE a checkout root, so a session
++     started from a SUBDIRECTORY of a worktree still collapses
++     `session_root` onto the reader's root and both path discriminators
++     still read FALSE. The guard's conditions belong to the register and
++     loosening them is a different change; carrying the raw `cwd` makes
++     that case *distinguishable* instead of silent — a path that is
++     neither `session_root` nor under it, which no healthy resolution
++     produces.
++
+ - [ ] **0.1** The parent criterion closes on that evidence: *"a
+       `process-full` contract run finishes a 3-phase roadmap with zero
+       synchronous contacts, re-engaging across turns, and opens the
+@@ -128,19 +173,36 @@ engages and leaves the event behind.
  - [x] `run-continuation.jsonl` holds at least one `engage` event from a
        worktree-started run, with the run id recorded here.
        Run id `12653f90d7cb4243821392afd5d8c4db`, recorded in step 0.0.
@@ -106,10 +153,30 @@ index 4a4d1c840935bfc5e67640ad3c674d28dbc6b5d5..74ae040b20a501d8e0c5bca932edf467
  ## Blockers
  
 diff --git a/src/scripts/hooks/run_continuation_hook.ts b/src/scripts/hooks/run_continuation_hook.ts
-index 00c56abab92153551ac63a9b057777b1b6df04fe..de10d2b4e5d3a1375fe51b0f8cddf047031ccc59 100644
+index 00c56abab92153551ac63a9b057777b1b6df04fe..04b7d128d1baca20cda76e7da81e1763b2ffe1a2 100644
 --- a/src/scripts/hooks/run_continuation_hook.ts
 +++ b/src/scripts/hooks/run_continuation_hook.ts
-@@ -94,7 +94,7 @@ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
+@@ -51,11 +51,14 @@
+  *   checkbox delta)            → allow            (event: halt-stall)
+  *   otherwise                  → BLOCK + continue (event: engage)
+  *
+- * Every event this concern writes carries `workspace_root`, `git_dir`,
+- * `git_common_dir` and `claim_path` — the two-tree provenance, per
+- * `provenance()` below. Without them the ledger records that an engagement
+- * happened but not that it crossed the tree boundary the fix was about, and
+- * crossing it is the whole claim.
++ * Every event this concern writes carries `workspace_root`, `session_root`,
++ * `session_cwd`, `git_dir`, `git_common_dir` and `claim_path` — the two-tree
++ * provenance, per `provenance()` below. Without them the ledger records that an
++ * engagement happened but not that it crossed the tree boundary the fix was
++ * about, and crossing it is the whole claim. This list is the file's canonical
++ * statement of the contract: R2 round 2 finding 4 caught it enumerating four
++ * fields while the function emitted five, which would have let a later edit drop
++ * one without contradicting any documented promise.
+  *
+  * Stall counts CONSECUTIVE ENGAGEMENTS whose open-step count did not move.
+  * The upstream stalls on 5-of-5 completed-count readings; AC's checkbox
+@@ -94,7 +97,7 @@ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
  import { readHookStdin } from './hook_stdin.js';
  import { is_replay_mode } from './state_io.js';
  import { readTranscriptTail } from './turn_end_gate_hook.js';
@@ -118,7 +185,7 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..de10d2b4e5d3a1375fe51b0f8cddf047
  import { git_common_dir, git_dir } from '../_lib/git_common_dir.js';
  import {
      deriveSessionKey,
-@@ -394,7 +394,7 @@ function readState(file: string): RunState | null {
+@@ -394,7 +397,7 @@ function readState(file: string): RunState | null {
  }
  
  /**
@@ -127,21 +194,64 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..de10d2b4e5d3a1375fe51b0f8cddf047
   * party holding nothing but the ledger line.
   *
   * The defect this concern shipped with was a writer and a reader resolving
-@@ -410,28 +410,84 @@ function readState(file: string): RunState | null {
+@@ -410,28 +413,132 @@ function readState(file: string): RunState | null {
   * observation rather than a check on it; the falsifiable facts are concrete
   * (AI council 2026-08-19, 2/2 convergent):
   *
 - *   `git_dir !== git_common_dir`        → this IS a linked worktree
 + *   `session_root !== workspace_root`   → writer and reader resolved different
-+ *                                         trees, which IS the shipped defect
-+ *                                         condition, now visible per event
++ *                                         trees. After the fix this is the
++ *                                         NORMAL healthy two-tree arrangement,
++ *                                         not a defect: the claim now lives in
++ *                                         the shared root, so the line existing
++ *                                         at all with the two roots differing is
++ *                                         the fix working. Round 2 finding 7
++ *                                         caught the previous wording calling it
++ *                                         "the shipped defect condition", which
++ *                                         made a healthy engagement line read as
++ *                                         evidence of the bug
 + *   `git_dir !== git_common_dir`        → the session's own tree IS a linked
-+ *                                         worktree
++ *                                         worktree. Only meaningful when both
++ *                                         are non-empty — see the degenerate
++ *                                         reading below
   *   `claim_path` under `git_common_dir` → the contract crossed into the shared
-  *                                         root, which is the fix working
+- *                                         root, which is the fix working
++ *                                         root. Also gated on a non-empty
++ *                                         `git_common_dir`: round 2 finding 2
++ *                                         measured that on a non-repo line both
++ *                                         git fields are `''` and every absolute
++ *                                         path satisfies `startsWith('')`, so a
++ *                                         reader applying the rule unguarded
++ *                                         concludes the contract crossed a
++ *                                         boundary the line says nothing about
++ *   `session_cwd`                       → the raw directory the session reported
++ *                                         before any resolution, so a reader can
++ *                                         tell "same tree" from "could not
++ *                                         resolve"
   *
 - * `process.cwd()` is deliberately NOT among them. The dispatcher chdirs into
 - * `--project-dir` before the chain runs, so at concern time cwd equals
++ * ## The degenerate reading, stated so it cannot be mistaken for a negative
++ *
++ * Two of the three path relations above are only interpretable on a line whose
++ * git fields are non-empty. Empty means git could not be read from the session's
++ * root at all — a plain temp directory, a broken checkout — and that is an
++ * ABSENCE of evidence rather than evidence of a same-root run. A reader must
++ * check `git_common_dir !== ''` before applying either relation.
++ *
++ * `session_cwd` exists for the same reason, and it is a fact rather than an
++ * assertion. `session_checkout` degrades to `workspace_root` on any of its three
++ * guard failures, and one of them is ordinary: a session started from a
++ * SUBDIRECTORY of a worktree (`cd <worktree>/src && claude`) fails the
++ * checkout-root condition, so `session_root` collapses onto the reader's root
++ * and BOTH discriminators above read FALSE for a genuine two-tree run — the
++ * round-1 false negative, re-entering through the degradation path. Round 2
++ * finding 1 measured it. Carrying the raw `cwd` makes that case distinguishable
++ * from a real same-tree run: `session_cwd` is then a path that is neither
++ * `session_root` nor under it, which no healthy resolution produces. A boolean
++ * `resolved: false` would have been the system under observation asserting its
++ * own health; the raw path is checkable.
++ *
 + * ## Both git fields come from `session_root`, not from `workspace_root`
 + *
 + * The first shipped version of this function derived both of them from the
@@ -208,6 +318,7 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..de10d2b4e5d3a1375fe51b0f8cddf047
 +    workspaceRoot: string,
 +    claimPath: string,
 +    sessionRoot: string,
++    sessionCwd: string,
 +): JsonObject {
 +    const reader = normalizeDir(workspaceRoot);
 +    const writer = normalizeDir(sessionRoot);
@@ -218,13 +329,18 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..de10d2b4e5d3a1375fe51b0f8cddf047
 -        claim_path: claimPath,
 +        workspace_root: reader,
 +        session_root: writer,
++        // Empty when the host sent no `cwd` at all, which is a different fact
++        // from a `cwd` that failed resolution — the first says the host is
++        // silent, the second says the session sat somewhere `session_checkout`
++        // would not trust. Both are readable; neither is guessed.
++        session_cwd: sessionCwd === '' ? '' : normalizeDir(sessionCwd),
 +        git_dir: git_dir(writer) ?? '',
 +        git_common_dir: git_common_dir(writer) ?? '',
 +        claim_path: normalizeFile(claimPath),
      };
  }
  
-@@ -490,9 +546,6 @@ export function main(): number {
+@@ -490,9 +597,6 @@ export function main(): number {
      const claim = resolve_claim(workspaceRoot, sessionId || null);
      if (claim === null) return EXIT_ALLOW;
      const slug = claim.slug;
@@ -234,30 +350,44 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..de10d2b4e5d3a1375fe51b0f8cddf047
  
      const roadmapPath = path.join(workspaceRoot, 'agents', 'roadmaps', `${slug}.md`);
      let roadmapText: string;
-@@ -505,6 +558,21 @@ export function main(): number {
-     }
-     if (parseExecutionMode(roadmapText) !== 'autonomous') return EXIT_ALLOW;
+@@ -536,6 +640,35 @@ export function main(): number {
+ 
+     const runId = deriveSessionKey(sessionId || 'unknown-session');
  
 +    // The two-tree provenance, carried on every event this run emits. See
-+    // `provenance()` for why these five fields and not a boolean.
++    // `provenance()` for the six fields and why none of them is a boolean.
 +    //
-+    // Built AFTER the mode gate, not before it (R2 finding 6): a session
-+    // holding a claim on a `phase-checkpoints` roadmap makes this concern a
-+    // no-op, and the first version paid two `statSync` plus two `realpathSync`
-+    // — more in a worktree — on every `stop` fire of such a session to build a
-+    // value the next line discarded. Every path that can still emit an event
-+    // is below this line.
++    // Position is deliberate and was moved twice. Round 1 finding 6 moved it
++    // below the execution-mode gate, because a session holding a claim on a
++    // `phase-checkpoints` roadmap makes this concern a no-op and was paying the
++    // resolution on every stop fire for a discarded value. Round 2 finding 6
++    // then observed the same argument applied only half way: three transcript
++    // early-returns still sat below it, so an autonomous session whose
++    // transcript is over `TRANSCRIPT_READ_MAX_BYTES` kept paying it for
++    // nothing. It now sits below every early return and above every
++    // `appendEvent`, which is the only position where the cost is paid exactly
++    // when a line is written.
++    //
++    // The git resolution here duplicates the one `session_checkout` does to
++    // validate the cwd, and that duplication is ACCEPTED rather than removed
++    // (round 2 finding 5): collapsing it means widening a register API that
++    // other callers use, to save six syscalls on a path that has already read a
++    // roadmap file and a transcript tail. The two resolutions also answer
++    // different questions — the guard asks whether the cwd belongs to this
++    // repository, this asks what the session's own tree is.
++    const sessionCwd = str(payload['cwd'] as JsonValue | undefined);
 +    const roots = provenance(
 +        workspaceRoot,
 +        claim.path,
-+        session_checkout(workspaceRoot, str(payload['cwd'] as JsonValue | undefined)),
++        session_checkout(workspaceRoot, sessionCwd),
++        sessionCwd,
 +    );
 +
-     // ── turn identity ────────────────────────────────────────────────
-     const transcriptPath = str(
-         (payload['transcript_path'] ?? payload['transcriptPath']) as JsonValue | undefined,
+     // ── defer to the quality gate ────────────────────────────────────
+     if (refusedThisTurn(workspaceRoot, sessionId, turnOrdinal)) {
+         appendEvent(workspaceRoot, {
 diff --git a/tests/hooks/run_continuation_dispatch.test.ts b/tests/hooks/run_continuation_dispatch.test.ts
-index 4837ca02e528a2ab55336c30368f36c29324712a..b605048c63d18c657c1e1d365f964326c9225d3d 100644
+index 4837ca02e528a2ab55336c30368f36c29324712a..417228b603d380b9ca551df24e0728e935fae64b 100644
 --- a/tests/hooks/run_continuation_dispatch.test.ts
 +++ b/tests/hooks/run_continuation_dispatch.test.ts
 @@ -83,25 +83,12 @@ function writeWorkspace(): string {
@@ -379,7 +509,7 @@ index 4837ca02e528a2ab55336c30368f36c29324712a..b605048c63d18c657c1e1d365f964326
          const gitDir = ev['git_dir'] as string;
          const commonDir = ev['git_common_dir'] as string;
          expect(gitDir).not.toBe('');
-@@ -326,6 +349,55 @@ describe('run-continuation — driven through the live dispatcher', () => {
+@@ -326,6 +349,114 @@ describe('run-continuation — driven through the live dispatcher', () => {
          expect(claimPath.startsWith(`${real(worktree)}${path.sep}`)).toBe(false);
      });
  
@@ -412,6 +542,14 @@ index 4837ca02e528a2ab55336c30368f36c29324712a..b605048c63d18c657c1e1d365f964326
 +        expect(real(ev['session_root'])).toBe(real(worktree));
 +        expect(ev['workspace_root']).not.toBe(ev['session_root']);
 +
++        // Round 2 finding 3: every `session_root` assertion wrapped BOTH sides
++        // in `real()`, so dropping `normalizeDir` from that branch — passing the
++        // envelope value verbatim, the precise regression finding 3 fixed —
++        // stayed green on macOS, where `/var` resolves to `/private/var`. Pinned
++        // as an exact string, the way the two sibling fields already were.
++        expect(ev['session_root']).toBe(real(worktree));
++        expect(ev['session_cwd']).toBe(real(worktree));
++
 +        // The discriminator now holds where it has to: derived from the
 +        // session's tree, these differ. Derived from the reader's tree — the
 +        // shipped behaviour this replaces — they would be equal.
@@ -432,10 +570,61 @@ index 4837ca02e528a2ab55336c30368f36c29324712a..b605048c63d18c657c1e1d365f964326
 +        expect(claimPath.startsWith(`${real(commonDir)}${path.sep}`)).toBe(true);
 +    });
 +
++    it('keeps the degraded resolution distinguishable — cwd inside a worktree subdirectory', () => {
++        // Round 2 finding 1. `session_checkout` requires the cwd to BE a
++        // checkout root, and a session started with `cd <worktree>/src` is not:
++        // `session_root` therefore collapses onto the reader's root and BOTH
++        // path discriminators read FALSE for a genuine two-tree run — the
++        // round-1 false negative re-entering through the degradation path.
++        //
++        // The fields cannot prevent the degradation (the guard's three
++        // conditions are the register's, and loosening them is a change to the
++        // register). What they must do is make it VISIBLE, which is what
++        // `session_cwd` is for: a raw path that is neither `session_root` nor
++        // under it, a shape no healthy resolution produces.
++        const { main, worktree } = writeWorktreePair();
++        const sub = path.join(worktree, 'src');
++        fs.mkdirSync(sub, { recursive: true });
++        const transcript = writeTranscript(3);
++        dispatchStop(main, transcript, sub);
++
++        const engaged = events(main).filter((e) => e['event'] === 'engage');
++        expect(engaged.length).toBe(1);
++        const ev = engaged[0] as Record<string, unknown>;
++        const real = (p: unknown): string => fs.realpathSync(p as string);
++
++        // The degradation itself, pinned as the honest current behaviour rather
++        // than asserted away.
++        expect(ev['session_root']).toBe(real(main));
++        expect(ev['session_root']).toBe(ev['workspace_root']);
++
++        // And the fact that makes it readable: the raw cwd is the subdirectory,
++        // which is NOT under the resolved session root. A reader comparing the
++        // two can tell this line apart from a genuine same-tree run, where the
++        // cwd would sit under `session_root`.
++        expect(ev['session_cwd']).toBe(real(sub));
++        expect(
++            (ev['session_cwd'] as string).startsWith(`${ev['session_root'] as string}${path.sep}`),
++        ).toBe(false);
++    });
++
++    it('reports an empty session_cwd when the host sends no cwd at all', () => {
++        // The other half of finding 1: host silence and a failed resolution are
++        // different facts, and a reader must not have to guess which one a line
++        // records. Every other case in this file dispatches without a `cwd`, so
++        // this pins what those lines say about it.
++        const root = writeWorkspace();
++        const transcript = writeTranscript(3);
++        dispatchStop(root, transcript);
++        const engaged = events(root).filter((e) => e['event'] === 'engage');
++        expect(engaged.length).toBe(1);
++        expect(engaged[0]?.['session_cwd']).toBe('');
++    });
++
      it('records the provenance on a non-engage event too — the defer branch', () => {
          const root = writeWorkspace();
          const transcript = writeTranscript(3);
-@@ -350,7 +422,18 @@ describe('run-continuation — driven through the live dispatcher', () => {
+@@ -350,7 +481,18 @@ describe('run-continuation — driven through the live dispatcher', () => {
          expect(fs.realpathSync(deferred[0]?.['workspace_root'] as string)).toBe(
              fs.realpathSync(root),
          );
