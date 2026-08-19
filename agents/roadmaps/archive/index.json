@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 508,
+  "count": 510,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -2076,6 +2076,20 @@
       "status": "ready"
     },
     {
+      "slug": "road-to-council-api-fallback",
+      "title": "Road to council api fallback — the contract promised a retry no path performed",
+      "disposition": "closed-with-cancellations",
+      "phases": 6,
+      "steps": {
+        "open": 0,
+        "done": 16,
+        "deferred": 0,
+        "cancelled": 1
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
       "slug": "road-to-council-modes",
       "title": "Road to Council Modes",
       "disposition": "closed-with-cancellations",
@@ -3723,6 +3737,20 @@
         "done": 10,
         "deferred": 0,
         "cancelled": 0
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
+      "slug": "road-to-inbox-harvest-2026-08-d-top-band-model-economy",
+      "title": "Road to at most one top-band context per task",
+      "disposition": "closed-with-cancellations",
+      "phases": 4,
+      "steps": {
+        "open": 0,
+        "done": 13,
+        "deferred": 0,
+        "cancelled": 1
       },
       "verdict": null,
       "status": "ready"
