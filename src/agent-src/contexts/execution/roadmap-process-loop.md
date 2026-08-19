@@ -277,11 +277,33 @@ For each open step in the working set (scope-bound — see wrapper):
      summary named the members). `high_impact` / `user_required`
      classifications still escalate to the user per
      [`ask-when-uncertain`](../../rules/ask-when-uncertain.md).
+   - **Second-model rung, when the class declares one**
+     (`decision_resolution.classes.<cls>.second_model`, UOTL Phase 4.1)
+     → one local vendor-CLI pass under subscription auth, bounded by the
+     same `cli_call_budget` counter the council books against. Available
+     to `trivial` / `low_impact` / `medium_impact` only; the config
+     schema REFUSES the key on `high_impact` and `user_required`, so no
+     locked question can reach it.
    - **Council off / not configured** → halt, surface once, wait.
      Resume on next turn. An execution contract cannot enable a
      council that has no configured members — the contract summary
      says so upfront, and in-run ambiguity halts (never silent
      guessing).
+   - **No self-adversarial fallback.** With neither a council nor a
+     second-model rung available, the ambiguity halt STANDS. The gap is
+     never filled by the agent arguing both sides of the question to
+     itself: a monologue produces a verdict with no independent
+     observer, which is the failure
+     [`evaluator-independence`](../../rules/evaluator-independence.md)
+     exists over, and reads as convergence to whoever finds it later.
+     Halting costs one turn; a manufactured verdict costs the trust in
+     every other verdict the run produced.
+   - **A resolution taken WITHOUT contacting the user is recorded** —
+     `agent-config decision:memo write --run <id> …` (question, chosen
+     option, reasoning, resolver, confidence). The run's PR description
+     links the directory. Not a gate: the memo is what makes an
+     autonomous resolution reviewable after the fact, which is the
+     condition under which it is legitimate at all.
 5. **Atomic flip — same reply, every step.**
    Flip the checkbox in `agents/roadmaps/<file>.md`: `[x]` done ·
    `[~]` partial · `[-]` skipped. **Non-skippable, non-batchable**
@@ -351,14 +373,17 @@ For each open step in the working set (scope-bound — see wrapper):
 - Security-sensitive path ([`security-sensitive-stop`](../../rules/security-sensitive-stop.md))
 - Step reveals work outside the roadmap's scope
 - Test failure or quality red on `per_step`
-- Council off + true ambiguity — under an **accepted execution
-  contract** ([§ 3](#3-pre-scan--execution-contract-or-commit-step-ask))
-  this halt exists only when no council is configured: the contract
-  auto-enables council for the run, so in-run open questions resolve
-  silently (`high_impact` / `user_required` classifications still
-  escalate per [`ask-when-uncertain`](../../rules/ask-when-uncertain.md));
-  with no council configured, true ambiguity halts — never silent
-  guessing.
+- Council off, no second-model rung, and true ambiguity — under an
+  **accepted execution contract**
+  ([§ 3](#3-pre-scan--execution-contract-or-commit-step-ask)) this halt
+  exists only when neither rung is available: the contract auto-enables
+  council for the run, so in-run open questions resolve silently
+  (`high_impact` / `user_required` classifications still escalate per
+  [`ask-when-uncertain`](../../rules/ask-when-uncertain.md)); with a
+  class-declared `second_model` the local rung runs first. With neither,
+  true ambiguity halts — never silent guessing, and never a
+  self-adversarial monologue in place of the missing observer (the
+  open-question handling in § 5 states that rung by rung).
 
 An accepted execution contract **never lifts a Hard Floor** or any of
 the other halts above — it removes redundant *asks* (git shape,

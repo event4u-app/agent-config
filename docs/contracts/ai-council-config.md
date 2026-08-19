@@ -896,6 +896,41 @@ threshold, the configured mode is upgraded one rung
 (`agent` → `council` → `user`) so low-certainty calls escalate rather
 than silently auto-resolve.
 
+**Optional second-model rung — `second_model`.** Absent by default. It
+exists because the council was the ONLY rung between the agent and a
+halt: a question below `high_impact` still stopped the run whenever no
+council was configured or its quota was gone. One local pass fills that
+gap without touching the locked classes.
+
+Three constraints, each with its own reason:
+
+- **The provider set is `anthropic | openai | gemini`** — narrower than
+  the five `members:` accepts. `xai` and `perplexity` ship COMMUNITY CLI
+  wrappers that consume an API key and are `billable = true`, so routing
+  a resolution there would spend USD on the rung whose entire purpose is
+  to be USD-neutral. The discriminator is `billable === false`, not "has
+  a cli subclass".
+- **Quota-bounded by the same `cli_call_budget` counter** the council's
+  own cli transport books against. One subscription, one counter — a
+  parallel count is how a plan quota gets spent twice.
+- **Rejected on `high_impact` / `user_required`**, not ignored, and even
+  an explicit `null` is refused there. Same treatment `dispatch` gets on
+  those classes, for the same reason: a key that is silently dropped
+  reads to its author as configured, and this one would read as
+  "high-impact questions may resolve without me".
+
+**No self-adversarial fallback.** With neither a council nor a
+second-model rung, the ambiguity halt stands. The gap is never filled by
+the agent arguing both sides to itself — that produces a verdict with no
+independent observer, which is the failure `evaluator-independence`
+exists over, and it reads as convergence to whoever finds it later.
+
+**Where the routing is enforced.** In this schema, and only here: no
+TypeScript path reads `decision_resolution.classes[*]` at runtime — the
+routing is agent-carried, and the loader is the one thing that can refuse
+an illegal route before a model ever sees it. Stated so a reader does not
+go looking for a resolver that does not exist.
+
 ```yaml
 decision_resolution:
   enabled: true
@@ -909,13 +944,25 @@ decision_resolution:
     medium_impact:
       mode: council
       confidence_threshold: 0.6
+      second_model: gemini  # optional local rung; USD-neutral
     high_impact:
       mode: user            # LOCKED — Iron Law
       confidence_threshold: 0.6
+      # second_model here is a hard schema error, not a no-op
     user_required:
       mode: user            # LOCKED — Iron Law
       confidence_threshold: 0.6
 ```
+
+**A resolution taken without contacting the user is recorded.**
+`agent-config decision:memo write --run <id> --question … --chosen …
+--reasoning … --resolver … --confidence high|medium|low` writes
+`agents/runtime/state/decisions/<run>/NNN.md`. Local-only (the whole
+`agents/runtime/` tree is gitignored), monotonic index per run, and the
+writer refuses a memo missing any of the five fields — a record with no
+reasoning is a log line pretending to be a decision record. It gates
+nothing: the memo is what makes an autonomous resolution reviewable
+afterwards, which is the condition under which it is legitimate at all.
 
 ### Prior negative result in the wild — and what would falsify OUR design
 

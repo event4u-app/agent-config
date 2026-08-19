@@ -516,6 +516,21 @@ necessity_classifier:
 #
 # See docs/contracts/ai-council-config.md for the trigger lists and the
 # Iron-Law clause.
+# `second_model` — the OPTIONAL local rung between the agent and the
+# council (UOTL Phase 4.1). It exists because the council used to be the
+# only rung before a halt: a medium-impact question stopped the run
+# whenever no council was configured or its quota was gone.
+#
+# Name a provider whose LOCAL CLI runs under subscription auth —
+# anthropic, openai or gemini. That set is narrower than the five
+# providers `members:` accepts, on purpose: xai and perplexity ship
+# community CLI wrappers that consume an API key, so routing a
+# resolution there would spend USD on the rung whose whole point is not
+# to. The rung books against the same `cli_call_budget` counter above —
+# one subscription, one counter.
+#
+# The key is REFUSED on high_impact and user_required, not ignored. Those
+# classes reach you, and a silently-dropped key would read as configured.
 decision_resolution:
   enabled: true
   classes:
@@ -528,6 +543,7 @@ decision_resolution:
     medium_impact:
       mode: council
       confidence_threshold: 0.6
+      # second_model: gemini   # uncomment to add the local rung
     high_impact:
       mode: user            # LOCKED — Iron Law
       confidence_threshold: 0.6

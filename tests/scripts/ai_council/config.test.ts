@@ -1047,6 +1047,93 @@ describe('config — fallback.api_on_quota', () => {
     });
 });
 
+// === the second-model rung (UOTL Phase 4.1) =================================
+//
+// The council was the only rung between the agent and a halt, so a question
+// below `high_impact` still stopped the run whenever no council was configured
+// or its quota was gone. This adds one optional rung — and the schema is where
+// it lives, because no TypeScript path reads `decision_resolution.classes[*]`
+// at runtime: the routing is agent-carried, and the loader is the only thing
+// that can refuse an illegal route before a model ever sees it.
+describe('config — decision_resolution second_model rung', () => {
+    const withClass = (cls: string, body: string[]): string =>
+        [MINIMAL_VALID, 'decision_resolution:', '  classes:', `    ${cls}:`, ...body, ''].join('\n');
+
+    it('absent on every class by default — the ladder is unchanged', () => {
+        const tmp = make_tmp();
+        const c = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID));
+        for (const cls of ['trivial', 'low_impact', 'medium_impact', 'high_impact', 'user_required']) {
+            expect(c.decision_resolution.classes.get(cls)?.second_model).toBeNull();
+        }
+    });
+
+    it('a vendor-CLI provider is accepted on medium_impact', () => {
+        const tmp = make_tmp();
+        const payload = withClass('medium_impact', ['      mode: council', '      second_model: gemini']);
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.decision_resolution.classes.get('medium_impact')?.second_model).toBe('gemini');
+    });
+
+    it('an explicit null is the same as absent', () => {
+        const tmp = make_tmp();
+        const payload = withClass('medium_impact', ['      second_model: null']);
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.decision_resolution.classes.get('medium_impact')?.second_model).toBeNull();
+    });
+
+    it('a community-CLI provider is REFUSED — the rung must be USD-neutral', () => {
+        // xai and perplexity ship CLI wrappers that consume an API key and are
+        // `billable = true`. Allowing them would spend USD on the rung whose
+        // entire purpose is not to.
+        for (const provider of ['xai', 'perplexity']) {
+            const tmp = make_tmp();
+            const payload = withClass('medium_impact', [`      second_model: ${provider}`]);
+            expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(
+                /second_model/,
+            );
+        }
+    });
+
+    it('an unknown provider is refused and the error names the allowed set', () => {
+        const tmp = make_tmp();
+        const payload = withClass('medium_impact', ['      second_model: llama']);
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(
+            /'anthropic', 'gemini', 'openai'/,
+        );
+    });
+
+    it('REFUSED on high_impact — not ignored, refused', () => {
+        // The Iron Law is that these classes reach the user. A key that were
+        // merely dropped would read to its author as "configured", which is the
+        // worst of the three possible behaviours.
+        const tmp = make_tmp();
+        const payload = withClass('high_impact', ['      second_model: anthropic']);
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(/LOCKED/);
+    });
+
+    it('REFUSED on user_required, including an explicit null', () => {
+        const tmp = make_tmp();
+        expect(() =>
+            cfg.load_council_config(
+                write_yaml(make_tmp(), withClass('user_required', ['      second_model: openai'])),
+            ),
+        ).toThrow(/LOCKED/);
+        // Even `null` is refused: the class does not HAVE this dimension, and
+        // accepting the key at one value teaches the author it exists.
+        expect(() =>
+            cfg.load_council_config(
+                write_yaml(make_tmp(), withClass('user_required', ['      second_model: null'])),
+            ),
+        ).toThrow(/LOCKED/);
+    });
+
+    it('the mode lock is untouched — high_impact still cannot be anything but user', () => {
+        const tmp = make_tmp();
+        const payload = withClass('high_impact', ['      mode: council']);
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(/LOCKED/);
+    });
+});
+
 // === the SHIPPED template must survive the real loader ======================
 //
 // Nothing asserted this before 2026-08-15: the template was referenced by an

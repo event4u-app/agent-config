@@ -95,6 +95,26 @@ const _VALID_PROVIDERS: ReadonlySet<string> = new Set([
 const _VALID_MODES: ReadonlySet<string> = new Set(['api', 'manual', 'cli', 'auto']);
 
 /**
+ * Providers with a wired `mode=cli` subclass — the only ones a
+ * `second_model` rung may name (see `DecisionResolutionEntry.second_model`
+ * for why the rung must be USD-neutral).
+ *
+ * Deliberately a SUBSET of both `_VALID_PROVIDERS` and
+ * `council_cli.ts::_CLI_PROVIDERS`, which each carry all five: `xai` and
+ * `perplexity` ship COMMUNITY CLI wrappers that consume an API key and set
+ * `billable = true` (`clients.ts` header, and `XAICliClient` /
+ * `PerplexityCliClient` themselves). Routing a resolution there would spend
+ * USD on the rung whose entire purpose is not to. So the discriminator is
+ * `billable === false`, not "has a cli subclass" — the wider set would have
+ * been the easy read and the wrong one.
+ */
+const _SECOND_MODEL_PROVIDERS: ReadonlySet<string> = new Set([
+    'anthropic',
+    'openai',
+    'gemini',
+]);
+
+/**
  * Prefixes that signal "this is a raw API key" so we refuse it loudly
  * even when the user accidentally inlined it in `api_key_ref`.
  */
@@ -537,6 +557,34 @@ const _VALID_CHAIRMAN_MODES: ReadonlySet<string> = new Set(['host', 'member', 'a
 export interface DecisionResolutionEntry {
     readonly mode: string;
     readonly confidence_threshold: number;
+    /**
+     * OPTIONAL local second-model rung for this class — UOTL Phase 4.1.
+     *
+     * The ladder for an open question is: agent → this rung → council →
+     * decision memo → user. This rung exists because the council was the
+     * ONLY rung between the agent and a halt, so a question below
+     * `high_impact` still stopped the run whenever no council was configured
+     * or its quota was gone. One additional rung softens that without
+     * touching the locked classes.
+     *
+     * Constraints the schema enforces, each for its own reason:
+     *
+     * - **A provider with a wired CLI subclass, never an api provider.**
+     *   The rung has to be USD-neutral: it rides a local binary under
+     *   subscription auth, so reaching for it can never turn a resolution
+     *   into metered spend. An api rung here would make the cheap path the
+     *   expensive one.
+     * - **Quota-bounded by the same `cli_call_budget` counter** the council's
+     *   own cli transport books against. One subscription, one counter — a
+     *   parallel count is how a plan quota gets spent twice.
+     * - **Rejected outright on `high_impact` / `user_required`.** Not merely
+     *   ignored: a key that is silently dropped reads to its author as
+     *   configured. Same treatment `dispatch` already gets on those classes.
+     *
+     * `null` (the default, and the shape when the key is absent) → the class
+     * has no second rung and the ladder is exactly what it was.
+     */
+    readonly second_model: string | null;
 }
 
 /** Opt-in fuzzy matching for the corpus-aware classifier (step-9 P5). */
@@ -1275,6 +1323,43 @@ const _DEFAULT_RESOLUTION_MODES: Readonly<Record<string, string>> = {
     user_required: 'user',
 };
 
+/**
+ * Validate one class's optional `second_model` rung.
+ *
+ * Absent → `null`, and the ladder is unchanged. Present on a locked class →
+ * hard error. Present with a provider that has no USD-neutral local CLI →
+ * hard error naming the allowed set, because the failure this rung exists to
+ * prevent is a halt, and silently disabling it would reintroduce exactly that
+ * halt at the moment it is needed.
+ */
+function _build_second_model(entry_raw: Dict, cls: string): string | null {
+    if (!('second_model' in entry_raw)) {
+        return null;
+    }
+    if (_LOCKED_IMPACT_CLASSES.has(cls)) {
+        throw new CouncilConfigError(
+            `decision_resolution.classes.${cls}.second_model=` +
+                `${_pyRepr(entry_raw['second_model'])}: a second-model rung is ` +
+                `not configurable for high-impact / user-required decisions — ` +
+                `those classes are LOCKED to \`user\` (Iron Law) and never ` +
+                `resolve on a model of any kind.`,
+        );
+    }
+    const raw = entry_raw['second_model'];
+    if (raw === null) {
+        return null;
+    }
+    if (!(_isStr(raw) && _SECOND_MODEL_PROVIDERS.has(raw))) {
+        throw new CouncilConfigError(
+            `decision_resolution.classes.${cls}.second_model=${_pyRepr(raw)} ` +
+                `not in ${_sortedListRepr(_SECOND_MODEL_PROVIDERS)} — the rung ` +
+                `must be a provider whose local CLI runs under subscription ` +
+                `auth, so a resolution can never become metered USD spend.`,
+        );
+    }
+    return raw as string;
+}
+
 function _build_decision_resolution(d: Dict): DecisionResolutionConfig {
     if (!_isDict(d)) {
         throw new CouncilConfigError('`decision_resolution` must be a mapping.');
@@ -1333,7 +1418,13 @@ function _build_decision_resolution(d: Dict): DecisionResolutionConfig {
                     `must be in [0.0, 1.0] (got ${_pyRepr(_f(threshold))}).`,
             );
         }
-        classes.set(cls, { mode, confidence_threshold: threshold });
+        // UOTL Phase 4.1 — the optional local second-model rung. Rejected
+        // on a locked class rather than ignored, for the same reason
+        // `dispatch` is: a silently dropped key reads to its author as
+        // configured, and this one would read as "high-impact questions may
+        // resolve without me".
+        const second_model = _build_second_model(entry_raw, cls);
+        classes.set(cls, { mode, confidence_threshold: threshold, second_model });
     }
     const fast_path_raw = _getOr(d, 'fast_path', {});
     if (!_isDict(fast_path_raw)) {

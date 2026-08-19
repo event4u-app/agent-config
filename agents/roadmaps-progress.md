@@ -6,10 +6,10 @@
 
 ## Overall
 
-**326 / 614 steps done · 53%**
+**330 / 614 steps done · 54%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   53%
+██████████████████████░░░░░░░░░░░░░░░░░░   54%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -43,7 +43,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 17 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 0 | 13 | 1 | 0 | 0 | ██████████ 100% |
 | 18 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 2 | 2 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | █████░░░░░ 50% |
 | 19 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 20 | [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md) | 6 | 24 | 15 | 6 | 3 | 0 | [1](#blockers-road-to-long-horizon-execution) | ███░░░░░░░ 29% |
+| 20 | [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md) | 6 | 24 | 11 | 10 | 3 | 0 | [1](#blockers-road-to-long-horizon-execution) | █████░░░░░ 48% |
 | 21 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
 | 22 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [1](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
 | 23 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
@@ -602,13 +602,13 @@ _1 blocker resolved._
 
 ### [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md)
 
-**Road to long-horizon execution — the agent stops when the roadmap doesn't** — 6 / 21 done (29%)
+**Road to long-horizon execution — the agent stops when the roadmap doesn't** — 10 / 21 done (48%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Baseline before behaviour | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 1 | Re-engagement concern | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | Question ladder closure | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Question ladder closure | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Session immortality | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | Unattended backlog | ⬜ not started | 3 | 0 | 1 | 0 | 0% |
 | 5 | Standing measurement | ⬜ not started | 5 | 0 | 2 | 0 | 0% |

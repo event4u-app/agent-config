@@ -253,20 +253,47 @@ questions, never safeguards.
 
 ### Phase 2 — Question ladder closure
 
-- [ ] **2.0** Land `road-to-council-api-fallback.md` Phases 1–3 (transport
-      resilience is a precondition for "council as reliable resolver").
-      `verify:` `npx vitest run tests/scripts/ai_council/orchestrator.test.ts`
-- [ ] **2.1** UOTL Phase 4.1 verbatim: schema-gated `medium_impact` route
-      to a second-model rung; `high_impact`/`user_required` remain
-      schema-rejected for anything but `user`.
-      `verify:` `npm run typecheck`
-- [ ] **2.2** Decision-memo channel (UOTL Phase 4.3 verbatim): resolutions
-      below the locked classes write memos; the PR links the directory.
-      `verify:` `npm run typecheck`
-- [ ] **2.3** Confirm in the ladder text: no self-adversarial fallback —
-      without council AND second rung, the ambiguity halt stands (UOTL
-      Phase 4.5 verbatim; a naked "continue working" imperative is the
-      anti-pattern this line exists against).
+- [x] **2.0** `road-to-council-api-fallback.md` Phases 1–3 landed in this
+      same change-set, plus its Phase 4 gate. Four defects surfaced on the
+      way, two of which meant the mechanism could not fire at all in
+      production — so "council as a reliable resolver" was a weaker
+      precondition than it read.
+      `verify:` `npx vitest run tests/scripts/ai_council/orchestrator.test.ts` — 76 green.
+- [x] **2.1** `decision_resolution.classes.<cls>.second_model` — optional,
+      absent by default, `anthropic | openai | gemini` only. That set is
+      narrower than the five `members:` accepts on purpose: xai and
+      perplexity ship community CLI wrappers that consume an API key and
+      are `billable = true`, so the discriminator is `billable === false`,
+      not "has a cli subclass". Refused outright on the locked classes,
+      including an explicit `null`. The mode lock is untouched.
+      `verify:` `npx vitest run tests/scripts/ai_council/config.test.ts` — 99 green.
+- [x] **2.2** `agent-config decision:memo {write,list}` +
+      `src/scripts/decision_memo.ts`. One file per resolution under
+      `agents/runtime/state/decisions/<run>/NNN.md`, monotonic and gap-free
+      per run, refusing any memo missing one of the five fields. Local-only
+      — the whole `agents/runtime/` tree is gitignored. It gates nothing;
+      the locked classes are refused at the schema, and a second check in
+      the ledger would read as the enforcement point and put the real one
+      out of mind.
+      `verify:` `npx vitest run tests/scripts/decision_memo.test.ts` — 18 green.
+- [x] **2.3** The ladder text now states all four rungs in
+      `roadmap-process-loop.md` § 5 step 4 and repeats the conclusion in the
+      halt list: with neither a council nor a second-model rung, the
+      ambiguity halt STANDS, and the gap is never filled by the agent
+      arguing both sides to itself — that produces a verdict with no
+      independent observer, which is what `evaluator-independence` exists
+      over and what reads as convergence to whoever finds it later.
+      `verify:` `grep -q "self-adversarial" src/agent-src/contexts/execution/roadmap-process-loop.md`
+
+#### What Phase 2 cost, stated because the roadmap did not price it
+
+Registering one CLI verb is five surfaces, not one: `src/cli/registry.ts`,
+the `_dispatch.bash` case arm, its help block, the
+`cli_help_command_count` budget (max + last_measured + dated note), and
+the regenerated `evaluator-measurements.json`. `check_cli_registry_budget_sync`
+refuses the PR until all five agree, and its own contract says the moving
+PR is where they move. Named here so the next phase that adds a verb
+budgets for it rather than discovering it at preflight.
 
 ### Phase 3 — Session immortality
 
