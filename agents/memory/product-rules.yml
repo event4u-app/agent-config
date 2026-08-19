@@ -7,7 +7,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: a3 production validator honest null
     body: "A3 Gate-A eval of the production-validator subagent came back honest-null
       (no verdict lift); stays default-off; feeds D3. A3 Gate-A eval
@@ -25,7 +28,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: capability matrix coverage guard
     body: "A new generate_* export in condense.ts must be registered in _FN_SPEC or
       generate_capability_matrix's empty-guard test fails CI. Adding a new
@@ -43,7 +49,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council a1 subagent contract
     body: "2026-07-04 A1 keystone — subagent-v1 contract ratified by council →
       ADR-109; PR. Track A / A1 of
@@ -62,7 +71,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council access control and remediation
     body: "2026-07-09 council + web-research decision on
       access-control/tenant-isolation hardening + a general active-remediation
@@ -80,7 +92,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council agent memory sunset
     body: "2026-06-14 council-locked verdict — sunset agent-memory Layer 2
       (pgvector/MCP/decay/cross-project), keep Layer 1 (file-first); don't
@@ -98,7 +113,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council ai failure mode prevention
     body: '2026-07-09 council + web-research decision on encoding "prevent typical
       AI dev mistakes" as a package golden rule (not testing-only). 2026-07-09 —
@@ -116,7 +134,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council analysis workbench
     body: 2026-06-15 council-locked design for the analysis/RCA/post-mortem pack
       (road-to-analysis-workbench.md) — build the loop, not the dump. 2026-06-15
@@ -135,7 +156,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council chat history consolidation
     body: "2026-06-14 council-locked — KEEP chat-history JSONL log + import
       (universal cross-host capture; mine-session is claude-code-only), merge
@@ -153,7 +177,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council claude code single surface
     body: "2026-07-07 council verdict — Option B projection-primary, marketplace
       plugin retired, hooks via managed settings.json block; Phase-0 parity gate
@@ -171,7 +198,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council command cluster phase4
     body: "2026-07-08 Phase-4 command-cluster consolidation shipped (PR. 2026-07-08
       council (sonnet-4-5 + gpt-4o, 2 rounds) + ADR-115, shipped in PR #788 (ADR
@@ -190,7 +220,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council contract integrity
     body: 2026-06-16 council-locked disposition of the v6.1.0 product-review
       findings F1–F7 → road-to-contract-integrity; Phase 0+1 shipped in PR.
@@ -208,7 +241,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: unverifiable
+    semantic_verdict_at: 2026-08-17
     key: council decisions workspace phases
     body: "Two AI-council verdicts on the employee-product roadmap (encrypt-at-rest
       deferral, pandoc-CI) — don't relitigate. Two design decisions on
@@ -226,7 +262,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council design antislop harvest
     body: "2026-06-28 council on harvesting 5 external anti-slop/taste/design
       references; converged on hybrid detector-as-code architecture + axis
@@ -244,7 +283,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council design exploration skills
     body: "2026-07-06 council verdict on adopting external design-collaborator gaps
       — 3 new skills, deck starter asset, CP5 emoji rule; don't relitigate.
@@ -262,7 +304,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council discipline axis benchmark
     body: "2026-06-14 two-session council on the bench:ab benchmark — scrap the
       binary frame, rebuild around a discipline axis (roadmap
@@ -280,7 +325,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council ecc harvest
     body: "2026-06-15 council-locked ECC competitive-harvest plan — roadmap split,
       mission-mode shape, REJECT boundary; don't relitigate. ECC (anonymized
@@ -291,23 +339,6 @@ entries:
       Most was ALREADY-in-AC (often stronger) or REJECTED. **Roadmap split
       (council order, user chose \"Security first\"):** 1.
       **road-to-security-hardening** (FIRST, hard depend"
-  - id: council-ecc-parity-positioning
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: council ecc parity positioning
-    body: '2026-06-25 council on AC-vs-operator-runtime-suite (ECC) comparison — gap
-      is positioning not capability; universal enforcement lever is compile-time
-      frontmatter, runtime hooks Tier-2 MCP-only; do-not-cross list. 2026-06-25
-      council (claude-sonnet-4-5 + gpt-4o, 2 rounds, $0.14) on how AC should
-      respond to an external operator-runtime reference suite ("Suite R"). Verified counts: AC 258 skills / 93 rules / 162 commands /
-      26 personas; Suite R 271 skills / 114 rules / 92 commands / 67 subagents /
-      47 hook scripts. External GPT review undersold AC (read "162" command
-      count as the '
   - id: council-fable-feedback-3-disposition
     status: active
     confidence: high
@@ -315,7 +346,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council fable feedback 3 disposition
     body: "2026-06-14 council disposition of fable-feedback-3 (Sonnet→Fable via
       skills/memory/orchestration) — skill-DAG killed, capabilities:index as
@@ -333,7 +367,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council fable feedback 4 composition ratchet
     body: "2026-07-08 council disposition of analyst feedback #4 (composition
       dilution + adoption sequencing) — presence ratchet only, skill-DAG lock
@@ -351,7 +388,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council fable5 and thinking models
     body: "How to run the AI council with a fable5 member + the extended-thinking
       parser fix the council client needed. **Running the council with
@@ -369,7 +409,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council fieldauthz depupdate kernel
     body: "2026-07-09 council on role/field-level API authz + malicious
       dependency-update detection + the through-line kernel-vs-auto decision.
@@ -387,7 +430,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council final state gaphunt 2026 07 04
     body: 2026-07-04 gap-hunt council on the final-state+market-readiness roadmap —
       split not converged; 6 net-new items kept (A6/A7/B6-B9), 4
@@ -405,7 +451,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council final state market readiness
     body: "2026-06-30 council synthesized the 6 Source-A analysis drafts into one
       master roadmap — parallel Track A (capability, gated) + Track B (adoption,
@@ -423,7 +472,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council flow learnings
     body: "2026-07-07 council verdict on the flow-learnings adoption roadmap
       (external orchestration-suite harvest) — final 4-phase cut, MCP retrieval
@@ -441,7 +493,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council frontier prompt harvest
     body: "2026-07-08 PR. 2026-07-08 (PR #795, branch
       `feat/frontier-prompt-harvest`, worktree): harvested transplantable
@@ -461,7 +516,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council g0dm0d3 defensive harvest
     body: "2026-06-27 council on harvesting an external LLM-robustness framework
       into AC — B-first pressure-corpus, reject the stats harness. **STATUS
@@ -479,7 +537,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council image brand typography
     body: "Council verdicts behind road-to-image-brand-typography.md — don't
       relitigate sequencing/typography/greenfield.
@@ -490,24 +551,6 @@ entries:
       → B → D.** A (pack-ai-image, independent + provides the logo path) → C
       (typography/icons Reference + style path) → B (pack-brand corpus +
       brand→token + typography grounding upgrade + greenfield in"
-  - id: council-judge-harness-2026-06-26
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: council judge harness 2026 06 26
-    body: "Council verdict on token-saving Phase 0 length-controlled paired judge —
-      promptfoo vs hand-roll. 2026-06-26 council (claude-sonnet-4-5 + gpt-4o, 2
-      rounds, $0.14; gemini member skipped — its client needs a `google-genai`
-      python pkg not installed here) on the token-saving Phase 0
-      **length-controlled paired judge** harness: adopt `promptfoo` (Option A)
-      or hand-roll on the existing `bench_ab_v2_stats.ts` Wilcoxon/McNemar layer
-      (Option B). **Both members landed Option A (promptfoo) — but heavily
-      CONDITIONED**, not a clean mandate: - The required bias controls
-      (randomised order, **swap-and-recheck /"
   - id: council-knowledge-wiki-selflearning
     status: active
     confidence: high
@@ -515,7 +558,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council knowledge wiki selflearning
     body: 2026-07-05 council on knowledge-management + self-learning system —
       verdict Option C (extend agents/knowledge/ in place, NO separate
@@ -533,7 +579,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council legal pack
     body: "2026-06-24 council-locked legal-pack design + roadmap
       (road-to-legal-pack); narrow MVP, safety-floor-first, harden
@@ -544,60 +593,6 @@ entries:
       master-claude-for-legal) and council-locked the disposition behind
       `agents/roadmaps/road-to-legal-pack.md`. **Council was single-voice**
       (anthropic CLI `curl ETIMEDOUT` again; gpt-4o answered all 7, host c"
-  - id: council-memory-knowledge-validation-tests
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: council memory knowledge validation tests
-    body: "2026-07-08 council on validation tests for the memory/knowledge/context
-      substrate — NO new roadmap; shared Phase 0-pre in the two owning roadmaps;
-      deterministic-only; no task test-memory. Council (claude-sonnet-4-5 +
-      gpt-4o, 2026-07-08, 2 rounds, $0.12) on \"how to validate the
-      learning/memory/context/project-knowledge substrate with tests\". GPT-4o
-      initially wanted a dedicated `road-to-memory-knowledge-validation.md`;
-      converged after rebuttal on Sonnet's position: - **NO new roadmap.**
-      Validation foundations land as a shared **Phase 0-pre** embedded in the
-      two owning roadmaps ([[council-tmp-inb"
-  - id: council-memory-tripwire-engine
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: council memory tripwire engine
-    body: "2026-07-08 councils on round-2 Obsidian-review feedback — tripwire engine
-      unified on node:sqlite FTS5 (ADR-116), amendments not a new roadmap,
-      harness + next-step field rejected; don't relitigate. Two councils
-      (claude-sonnet-4-5 + gpt-4o, 2026-07-08, disposition 2 rounds $0.10 +
-      engine tie-break 2 rounds $0.04) on the round-2 external
-      Obsidian-comparison feedback: - **Three-way pre-decided-path conflict was
-      real**: verdict Q4 said \"minisearch-class BM25\", retrieval-economy Phase
-      6 said \"SQLite FTS5\", ADR-061 bans engine forks (in-house
-      `bm25_search.ts` exists). A fourth straggler sat in `road-"
-  - id: council-orchestration-flip-honest-null
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: council orchestration flip honest null
-    body: "2026-06-26 auto-subagent default-flip resolved HONEST-NULL — keep
-      subagents.auto:ask; headless bench can't measure real orchestration;
-      re-gate flip on real orchestration-telemetry.
-      `road-to-auto-subagent-orchestration-followup` (flip `subagents.auto`
-      ask→on iff a bench shows net token/time win at held quality) resolved
-      **honest-null**: keep `ask`, do NOT flip. **Why (verified at HEAD +
-      AI-council 2026-06-26, claude-sonnet-4-5 + gpt-4o, 2 rounds, $0.09):** a
-      credible orchestrated-vs-single-agent benchmark is **not producible in the
-      headless `bench:ab` harness** — it re-invokes `claude --print` "
   - id: council-rdp-frontier-reasoning
     status: active
     confidence: high
@@ -605,7 +600,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council rdp frontier reasoning
     body: "2026-06-14 council-locked design of the Reasoning Discipline Protocol
       (RDP) — transplant frontier reasoning *discipline* not capability; don't
@@ -623,7 +621,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council reminder injection build to measure
     body: "RESOLVED 2026-07-06 — build-to-measure ran, pilot A/B showed Δ=0 on BOTH
       hosts (incl. haiku), pre-committed teardown executed; third null in the
@@ -641,7 +642,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council retrieval substrate design
     body: "2026-07-09 council verdicts on the 4 retrieval-substrate-hardening design
       questions; PR. Council pass (claude-sonnet-4-5 + gpt-4o, 2 rounds, ~$0.07)
@@ -659,7 +663,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council roadmap pr gate
     body: "2026-06-14 council-locked — replace roadmap merge-gate with a
       deterministic PR-gate; /create-pr archives completed roadmaps in-PR
@@ -677,7 +684,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council routing vs governance moat
     body: "2026-06-25 council REJECTED the per-skill capability registry + public
       routing benchmark (measurement theater / wrong-thing-measured); redirect
@@ -695,7 +705,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council second brain delta
     body: "2026-07-07 council on the second-brain competitive delta vs
       claude-obsidian — ADOPT hot-context cache (deterministic, dispatcher-wide)
@@ -713,7 +726,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council security pillar
     body: 2026-06-13 council-locked design behind road-to-security-pillar.md
       (security as a first-class pillar, inspired by a competitor's
@@ -731,7 +747,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council setup experience redesign
     body: "2026-07-08 council + synthesis on config command, wizard IA, styling,
       tiers, packs removal — shipped PR. 2026-07-08 council debate
@@ -743,60 +762,6 @@ entries:
       - **Q1 command surface**: hybrid A+C — native `config` (GUI, global
       default; `--project` → project surface), `settings` = alias, `init
       --project` = pro"
-  - id: council-subagent-auto-cost-downshift
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: council subagent auto cost downshift
-    body: 2026-07-08 council on flipping subagents.auto default on a COST basis (not
-      the settled quality-null); trigger = reasoning≪execution not "small";
-      session on, template default stays ask (telemetry-gated). Council
-      2026-07-08 (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2 rounds, $0.08)
-      on whether `subagents.auto` should flip from `ask` → `on` driven by **cost
-      on expensive hosts** (Opus/Fable). This is a distinct mechanism from the
-      prior orchestration honest-null (which tested **quality-lift on strong
-      hosts** → null), so `decision-revisit-gate` mechanism-match cleared it as
-      a valid re-eval. **Con
-  - id: council-subagent-default-flip-revisit
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: council subagent default flip revisit
-    body: '2026-07-08 deep council (4 rounds) re-evaluating the subagents.auto
-      ask→on flip; verdict = validate-before-flip via the NOW-runnable
-      paired-delegation probe, NOT flip-first; classifier cost-correctness
-      agreed as precondition. Deep council 2026-07-08
-      (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 4 rounds, $0.30)
-      re-evaluating whether to flip `subagents.auto` shipped default `ask → on`,
-      superseding the 2026-06-26 honest-null verdict. Re-eval justified by
-      `decision-revisit-gate`: three conditions changed — (1) new COST mechanism
-      vs the old quality-null, (2) the `bench:ab` "not producible" blocker'
-  - id: council-team-shared-memory
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: council team shared memory
-    body: "2026-06-14 council — team-shared committed memory idea is mostly
-      redundant with git+AGENTS.md+ADRs; gitignore intake, NO personal layer,
-      narrow types, manual size-bounding; open question = markdown vs YML layer;
-      don't relitigate the skeptical verdict. AI council (claude-sonnet-4-5 +
-      gpt-4o, 2026-06-14, debate 2 rounds) on \"team-shared project memory via
-      committed agents/memory — sensible? global/team/personal split? size
-      bounding?\". Both members converged SKEPTICAL in round 2 (gpt-4o switched
-      to Anthropic's side): **The idea is only partly right — and much of it
-      already exists.** Committed fil"
   - id: council-ticket-bundle-system
     status: active
     confidence: high
@@ -804,7 +769,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council ticket bundle system
     body: "2026-06-15 council-locked design for roadmap→importable ticket-bundle
       system (road-to-ticket-bundles). 2026-06-15 AI-council (claude-sonnet-4-5
@@ -822,7 +790,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council tmp inbox roadmap consolidation
     body: 2026-07-08 council resolved the agents/tmp inbox into 8 new + 1 extended
       roadmap; non-claude-lift-replication dropped as obsolete; don't relitigate
@@ -840,7 +811,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council token program integration
     body: "2026-07-07 council verdict integrating the external token roadmaps with
       the discipline-profile verdict — parallel-now composition, thin deferred,
@@ -859,7 +833,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council token saving rebuild
     body: 2026-06-18 council-locked token-saving rebuild verdicts (D1–D7) behind
       road-to-token-saving.md; measure-first, thin-projection is the big lever
@@ -877,7 +854,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council v2 pilot complexity stratified
     body: 2026-06-14 council on the bench:ab v2 pilot — discipline axis needs
       complexity-stratified fixtures; budget-raise alone insufficient. The v2
@@ -895,7 +875,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: council weak host lift tiering
     body: '2026-07-07 council verdict: discipline_profile enum
       (auto|off|essential|full), essential(~3x)=kernel+downstream-changes,
@@ -913,7 +896,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: evidence v2 accumulation killed
     body: Evidence v2 accumulation layer KILLED 2026-06-16 (shipped base only) via
       the silent-conventions eval — structural-scarcity finding. The Evidence v2
@@ -931,7 +917,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: feedback end of reply summary and pr link
     body: How to close a reply — one summary at the very end, and the created PR's
       GitHub link as the literal last line. Close every substantial work-reply
@@ -949,7 +938,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: feedback no proactive quality tools
     body: "Never run the full quality pipeline (phpstan, rector, ecs, full test
       suites, task ci) proactively — act only on concrete CI failure or explicit
@@ -967,7 +959,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: unverifiable
+    semantic_verdict_at: 2026-08-17
     key: gstack adoption disposition
     body: 'What to adopt/reject from gstack (garrytan) — analysis + council
       disposition + the harvest roadmap. 2026-06-23: Deep-dived **gstack**
@@ -985,7 +980,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: unverifiable
+    semantic_verdict_at: 2026-08-17
     key: local ci hygiene shipped
     body: "2026-07-06 PR #748: 22 of 23 local-only task-ci reds fixed; the one
       remainder is the kernel augment-budget gate (needs −4,450 chars) — own
@@ -1003,7 +1001,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: media sync from actual audio
     body: For audio-synced video (lip-sync, beat-cuts, music video) the ground truth
       is the real audio (transcribe it), never a creative/planning doc or a
@@ -1021,7 +1022,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: never drop inherited commits
     body: Never exclude/reset-away/rebase-out/force-push-over commits you didn't
       author this session without asking the user first — parallel work /
@@ -1039,7 +1043,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: no cheap sequencing questions
     body: "Don't ask cheap commit/push/PR/next-step questions once the user has
       signaled the endpoint or one option dominates — execute the prereq chain..
@@ -1057,7 +1064,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: prefer browser wizard for setup
     body: 'User ALWAYS wants the browser GUI wizard for any
       setup/install/upgrade/onboarding flow — never a terminal tool-picker
@@ -1076,7 +1086,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: recursive verification honest null
     body: "Recursion/self-correction as a capability lever is empirically dead for
       this package — redundant with the always-on rules; council-confirmed
@@ -1095,7 +1108,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: roadmap gated items closed by decision
     body: 'B9 + D1–D4 were closed by maintainer decision (not evidence-verified) —
       do not treat the D-track as evidence-backed. 2026-07-05, maintainer
@@ -1113,7 +1129,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: roadmap later disposition
     body: "later/ is now a first-class enforced roadmap disposition for
       blocked-for-later work; plus the condensation-gate cascade when editing
@@ -1131,7 +1150,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: unverifiable
+    semantic_verdict_at: 2026-08-17
     key: route design decisions to ai council
     body: In the agent-config package, route product/design decisions to the AI
       council rather than asking the user to choose. When a non-trivial
@@ -1149,7 +1171,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: unverifiable
+    semantic_verdict_at: 2026-08-17
     key: source a deep dive subagent reframe
     body: 2026-06-29 Source A deep-dive — its "swarm" is weaker than ours;
       parity = downgrade; real lever = wire our inert design + capture
@@ -1167,7 +1192,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: source of truth reframe
     body: "src/ is the canonical source of truth (not .agent-src.uncondensed); the
       augment-source-of-truth rule was renamed to source-of-truth. **`src/` is
@@ -1185,7 +1213,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: token saving autonomous track shipped
     body: "token-saving roadmap — the autonomous track is built/shipped; the rest is
       validation-gated (don't re-build, run the measurement). 2026-06-26:

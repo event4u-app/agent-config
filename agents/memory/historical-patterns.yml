@@ -7,7 +7,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 30
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: a1 crosshost subagent degradation
     body: "A1 keystone complete — subagents project natively to Claude Code and as
       passive-reference context files to Cursor/Windsurf/Cline. A1 keystone
@@ -18,43 +21,6 @@ entries:
       `generate_subagent_host_contexts()` (condense.ts, wired into
       generate-tools) → passive-reference context files, NO faked `@`-dispatch:
       - Cursor → `.cursor/subagents/<name>.md`, Windsurf → `.windsurf/subagen"
-  - id: adding-a-plain-skill-downstream-surface
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: adding a plain skill downstream surface
-    body: "The CI/generated surface a NEW plain skill (not a command-cluster) trips
-      in agent-config. Adding a new plain skill under `src/skills/<name>/` (PR
-      #567, verify-repair-loop) trips a smaller surface than a command-cluster
-      ([[command-cluster-ci-surface]]), but one step is **hand-maintained and
-      easy to miss**: - **`task consistency-fix` auto-handles most of it**:
-      condensation (write the dist `SKILL.md` yourself via the /condense flow +
-      `condense.sh --mark-done`), skill **count** (README +
-      docs/architecture.md, via counts-update), **pack** README/`pack.yaml` (the
-      skill's `packs:` entry), **discovery"
-  - id: adding-a-standalone-command-downstream-surface
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: adding a standalone command downstream surface
-    body: "Full downstream surface for adding a standalone command
-      (src/domains/<pack>/<name>/command.md) — condense manually, plugin symlink
-      + marketplace, triggers.json, surface-map, count badges,
-      index/capabilities regen. Adding a standalone command
-      `src/domains/<pack>/<name>/command.md` (learned 2026-07-07 building
-      `/optimize-project`): 1. `task sync` updates counts + pack
-      README/pack.yaml but does NOT condense commands — write
-      `dist/agent-src/commands/<name>.md` via the `/condense` flow (links in
-      bodies target the DIST layout: sibling commands flat `optimize.md`, subs
-      `analyze/decision.md`, rules `."
   - id: ai-council-cli-repo-local-only
     status: active
     confidence: high
@@ -62,7 +28,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 30
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: ai council cli repo local only
     body: "How to actually run the AI council in the agent-config repo — repo-local
       CLI entry + user-global config resolution. How to actually run the AI
@@ -80,7 +49,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 30
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: bench ab cost and activation mechanics
     body: "Why the 3-condition value benchmark (bench:ab:value) trips quota / reads
       flat, and the fixes that make it completable. The `bench:ab` value
@@ -91,24 +63,6 @@ entries:
       is a GLOBAL Claude Code plugin (`enabledPlugins` in
       `~/.claude/settings.json`), so plain `claude --print` runs it on every arm
       → flat results (the first run came back 84.6%"
-  - id: claude-plugin-local-install-via-worktree
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: claude plugin local install via worktree
-    body: "How to install the agent-config Claude Code plugin locally lean + the
-      install gotchas (raw copy, npm install, gitignore ignored). Installing the
-      `agent-config@event4u-agent-config` Claude Code plugin **from the live
-      working tree** copies ~1.5 GB (untracked `.venv`, `node_modules`,
-      `internal/bench/ab/clones`). Decided 2026-06-12 (ADR-089, branch
-      `fix/slim-plugin-marketplace-source`): install from a **dedicated git
-      worktree** instead → ~224 MB. ```bash git worktree add <path> main claude
-      plugin marketplace add <path> claude plugin install
-      agent-config@event4u-agent-config # test local changes: c"
   - id: command-cluster-ci-surface
     status: active
     confidence: high
@@ -116,7 +70,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 30
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: command cluster ci surface
     body: "Downstream CI surface when adding a NEW pack + command cluster + skills
       (analysis-workbench, PR. Adding a new **pack + command cluster + skills**
@@ -127,42 +84,6 @@ entries:
       **discovery-manifest.schema.json pack-id enum** (hardcoded list, NOT
       dynamic — missing it = `lint_discovery_manifest` schema error). -
       **command-as-skill projections**: every command in the c"
-  - id: deleting-a-command-downstream-surface
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: deleting a command downstream surface
-    body: "Full downstream surface when deleting/merging a command in agent-config
-      (dist condensation, plugin symlinks, discovery, marketplace). Deleting or
-      merging a command in this package (e.g. folding `fix:pr-bot-comments` +
-      `fix:pr-developer-comments` into `fix:pr-comments`, 2026-06-13) has a
-      **larger downstream surface than `task sync` regenerates**: - **`task
-      sync` does NOT re-condense changed commands** — it propagates deletions to
-      `dist/agent-src/commands/` but leaves a *modified* command's dist copy
-      stale. `condense.sh --changed` only **lists** changed files; condensation
-      is the `/condense` age"
-  - id: gh-pr-diff-patch-per-commit-series
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: gh pr diff patch per commit series
-    body: 'check_no_new_legacy_path (Sync-consistency CI) reads `gh pr diff --patch`
-      = per-commit series, so an add-then-fix across two commits still fails —
-      needs clean history. The `check-no-new-legacy-path` guard inside the
-      **Sync + Generate Tools Consistency** CI workflow pipes `gh pr diff "<n>"
-      --patch` into `check_no_new_legacy_path.py --stdin`. `gh pr diff --patch`
-      is the **per-commit patch series** (format-patch style), NOT a net tree
-      diff. The checker counts every `+` line containing
-      `.agent-src.uncondensed/` and does **not** net `+`/`-` pairs. Consequence:
-      if you add a forbidden `.agent-src.unc'
   - id: live-trigger-eval-human-gate
     status: active
     confidence: high
@@ -170,7 +91,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 30
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: live trigger eval human gate
     body: 'the live trigger-eval (test-triggers-live) is a hard /dev/tty human-gate
       the agent cannot run; eval:record + the dead default triggers path. The
@@ -181,43 +105,6 @@ entries:
       run under automation"). The agent cannot run it even with token-spend
       authorization — hand the command to the user to run in a real terminal.
       `--dry-run` (MockRouter, no API) th'
-  - id: local-task-ci-tools-empty-tension
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: local task ci tools empty tension
-    body: "Why `task ci` can't go fully green locally in this repo (tools:[]
-      disables .claude/skills that several checks expect). In
-      `event4u/agent-config`, `agents/.agent-tools.yml` is set to `tools: []`
-      (untracked file) to avoid duplicating the globally installed `~/.claude`.
-      Consequence: `task generate-tools` is a local no-op, so `.claude/skills/`
-      is never built locally. Several `task ci` checks expect that generated
-      tree and fail locally even on a clean tree — e.g.
-      `check-token-optimizer-freshness` (`target missing:
-      .claude/skills/agent-handoff/SKILL.md`). Remote CI passes them because
-      `.github/workf"
-  - id: media-substrate-extraction-a1
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: media substrate extraction a1
-    body: 'road-to-image-brand-typography A.1 shipped — shared adapter substrate
-      moved to scripts/media/lib (Option B), with the coupling gotchas the move
-      exposed. PR #585 (`feat/pack-ai-image`, 2026-06-16) shipped **A.1** of
-      [[council-image-brand-typography]] `road-to-image-brand-typography` — the
-      load-bearing substrate refactor only. The roadmap stays open (Phase A
-      1/14; A.2/A.3/A.4 + C/B/D are follow-up PRs). **Scope decided by AI
-      council (3 design rounds, sonnet-4-5 + gpt-4o), not the user:** 47-step
-      roadmap → Phase A only → A.1 alone → **Option B (behavior-preserving
-      relocate)**. "All 47 in one PR i'
   - id: node-modules-symlink-committed
     status: active
     confidence: high
@@ -225,7 +112,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 30
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: node modules symlink committed
     body: "node_modules got committed as a self-referential symlink (mode 120000) →
       ERR_MODULE_NOT_FOUND 'commander' on local/direct node runs; gitignore
@@ -243,7 +133,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 30
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: pr gate roadmap archival
     body: "PR-gate replaced merge-gate — completed roadmaps archive
       deterministically in their own PR via archive_completed_roadmaps.py, not
@@ -254,24 +147,6 @@ entries:
       post-merge `git mv` kept getting forgotten → finished roadmaps rotted
       unarchived in `main`. New mechanism: -
       `src/agent-src/scripts/archive_completed_roadmaps.py` — archives every "
-  - id: project-single-install-source-of-truth
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: project single install source of truth
-    body: Design decisions for the road-to-single-install-source-of-truth roadmap
-      (install.py --apply-payload real-apply, retiring the TS apply mirror).
-      Roadmap `agents/roadmaps/road-to-single-install-source-of-truth.md`
-      finishes the `install.py --apply-payload` real-apply bridge so ALL GUI
-      installs route through the single Python installer, retiring the parallel
-      TS apply engine. **Why:** close the parity gap (TS mirror missed
-      `installed-tools.lock`, `event4u-bridge`, augment/gemini hooks). Extends
-      locked D12 / ADR-020 (GUI = selection front-end; `install.py` = single
-      installer). **How to apply (AI-coun
   - id: py2ts-mcp-serving-and-teardown-pr
     status: active
     confidence: high
@@ -279,7 +154,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 30
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: py2ts mcp serving and teardown pr
     body: "MCP stdio server fully ported to TS (council Option 2) + the atomic
       Python-teardown PR. 2026-06-18: the py2ts teardown's final deletion landed
@@ -297,7 +175,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 30
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: roadmap dashboard phase heading gotcha
     body: "A ready roadmap is invisible on the dashboard if it has no `## Phase N`
       heading — the parser skips it entirely. `update_roadmap_progress.py`
@@ -315,7 +196,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 30
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: roadmap dashboard regen script mismatch
     body: "Dashboard regen — always use the canonical ./agent-config
       roadmap:progress, never a hand-picked .augment projection script. The old
@@ -326,24 +210,6 @@ entries:
       runs) NEVER hand-pick a projection script (`.augment/scripts/...`,
       `dist/agent-src/scripts/...`). In this repo `src/` is the source of truth
       and `.augment/` + `dist/` are generated projections (see [[source-"
-  - id: roadmap-progress-regen-side-effects
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: roadmap progress regen side effects
-    body: "./agent-config roadmap:progress auto-archives now-complete roadmaps (git
-      mv) and entangles the global dashboard with any foreign uncommitted
-      roadmap-flips in the tree. Running `./agent-config roadmap:progress`
-      (dashboard regen) against a working tree that already holds **foreign
-      uncommitted roadmap changes** has two non-obvious side effects: 1.
-      **Auto-archive.** Any roadmap whose checkboxes are all-done in the working
-      tree gets `git mv`'d into `agents/roadmaps/archive/` — even if those
-      done-flips came from someone else's uncommitted work, not yours. (Bit me
-      2026-06-10: a video roadmap got arch"
   - id: settings-schema-downstream-install-bundle
     status: active
     confidence: high
@@ -351,7 +217,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 30
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: settings schema downstream install bundle
     body: "Editing src/server/schemas/settings.ts requires rebuilding the TRACKED
       dist/install/install.mjs bundle or CI's Install-Aux rebuild-and-diff gate
@@ -369,7 +238,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 30
+    verified_at_commit: 9beeb0662
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-08-17
     key: source confidentiality sweep
     body: "Repo-wide sweep (2026-06-13) removing readable external
       inspiration-source names/links from the tracked tree; what stays, what's
@@ -380,43 +252,6 @@ entries:
       published), so `git log` / old blobs still record sources —
       tree-cleanliness only. **What was removed/changed:** - `agents/`:
       comparison/harvest evidence (`evidence/analysis/compare-*.md`), the `evi"
-  - id: typecheck-use-task-not-bare-tsc
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: typecheck use task not bare tsc
-    body: 'Verify types with `task typecheck-ts` (npm run typecheck), never bare
-      `npx tsc --noEmit` — the latter misses test files. The CI "Static Checks"
-      typecheck runs `npm run typecheck` (= `task typecheck-ts`, `tsc --noEmit`
-      over the whole-tree `tsconfig.json` which INCLUDES `tests/`). A bare `npx
-      tsc --noEmit` in a worktree resolves a different/default config that
-      EXCLUDES tests, so it reports clean while CI fails. Combined with
-      `noUncheckedIndexedAccess: true`, this bites test files that index
-      `Record<string, T>` returns: `obj.field` becomes `T | undefined` and fails
-      TS2345 when passed to `.toBeLes'
-  - id: video-strategy-2026-06
-    status: active
-    confidence: high
-    source:
-      - maintainer-memory-index
-    owner: maintainer
-    last_validated: 2026-07-09
-    review_after_days: 365
-    key: video strategy 2026 06
-    body: "AI-video/music-video improvement strategy decided 2026-06-06 via AI
-      council; 4 roadmaps generated, validation-first sequencing. Video
-      improvement strategy for the package, decided 2026-06-06 via AI council
-      (claude-sonnet-4-5 + gpt-4o, design mode,
-      `agents/runtime/council/responses/video-strategy.json`). Grounded in
-      deep-dive of ComfyUI, fal, Replicate, LTX-2, Wan2.2, Hunyuan, music2video,
-      allin1, WhisperX, sync.so/MuseTalk, CrewAI/AutoGen/VGTeam. Converged
-      decisions (both members agreed, no tie-break needed): -
-      **Validation-first, NOT feature-first.** All 5 shipped adapters are
-      `experimental` "
   - id: zed-agents-skills-dir
     status: active
     confidence: high
@@ -424,7 +259,10 @@ entries:
       - maintainer-memory-index
     owner: maintainer
     last_validated: 2026-07-09
-    review_after_days: 365
+    review_after_days: 30
+    verified_at_commit: 9beeb0662
+    semantic_verdict: unverifiable
+    semantic_verdict_at: 2026-08-17
     key: zed agents skills dir
     body: Zed reads ~/.agents/skills (shared with Antigravity deploy target) and
       strictly validates name==dir + ^[a-z0-9-]+$; installer never reaps stale
