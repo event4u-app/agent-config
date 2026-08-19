@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 34,
+    "active_roadmaps": 35,
     "later_roadmaps": 49,
-    "open_blockers": 70
+    "open_blockers": 73
   },
   "baseline_history": [
     {
@@ -118,6 +118,13 @@
       "later_roadmaps": 49,
       "open_blockers": 71,
       "why": "An UN-PARK, which is the one estate move this gate had no shape for. active_roadmaps 33 -> 34 is RAISED and later_roadmaps 50 -> 49 is WALKED DOWN, by the same single file moving in the same commit: later/road-to-request-scoped-rule-load.md returns to the active tree. Net estate is zero, and the two numbers move in opposite directions for that reason rather than by coincidence. Read the raise together with the walk-down or it reads as growth, which it is not: no roadmap was created, no work was added, and open_blockers is UNCHANGED at 71 because open_blockers already spans active plus later/ and therefore cannot notice a move between them. That invariance is the check that this is a disposition change and not a park wearing a tightening's clothes, in the exact mirror of the test the 2026-08-19 batch-1 entry above applies in the parking direction. WHY THE FILE MOVES: its resume condition, restated 2026-08-08 and owned by the maintainer, was 'Resume when P2.1 of road-to-rule-delivery-integrity closes'. P2.1's own completion marker in the archived parent reads done 2026-08-08, the parent archived 2026-08-09 at 259039157, and git log over the parked file since 2026-08-08 returns ZERO commits. So the condition has been satisfied for eleven days with nothing acting on it and nothing recording a decision not to, while three consecutive /roadmap:next screens logged the FIRED probe as a by-product finding and each correctly declined the work behind it as maintainer-owned. Declining the work and leaving the file parked are different acts, and only the first was ever decided. THE RAISE IS NOT UNDERWRITTEN BY FUTURE WORK, which distinguishes it from every prior raise in this history: nothing is promised, and it does not walk back down on a measurement. It walks down when Phase 4 terminates in either direction, and Phase 4 stays council-parked by the 2026-07-07 verdict with its design locked and both steps still open. The file carries estate_offset_exempt so the one-in-one-out half passes on its own terms; what fires is the raw COUNT half, which is diff-blind by design and cannot see that the offset it wants is the later/ decrement recorded on the very same line. The alternative was archiving an unrelated roadmap to buy the number back, which moves the count without moving the estate and is what this ratchet's own history repeatedly refuses. Left unrecorded, the shape has a worse cost than one raise: an un-park would be permanently unrepresentable, later/ would be a one-way door, and burial would be the cheapest disposition available - which is precisely the failure the later_roadmaps metric was added to prevent."
+    },
+    {
+      "at": "2026-08-19",
+      "active_roadmaps": 35,
+      "later_roadmaps": 49,
+      "open_blockers": 73,
+      "why": "RAISED by 1 active and 3 blockers for road-to-single-delivery, adopted from a four-draft inbox reconciliation. Direction stated plainly because the config-weakening guard asks for it: this is growth, not a tightening, and it is taken rather than offset because the only offset available would be archiving an unrelated roadmap to buy the number back - which moves the count without moving the estate and is what this history repeatedly refuses. later_roadmaps is UNCHANGED at 49, the check that says nothing was relocated to pay for this. WHAT THE +1 BUYS: the inbox held FOUR parallel drafts of one defect plus a cross-review, and adopting more than one would have put three roadmaps on a single subject. One arrives, four are consumed into agents/tmp.old/, and the four-way ambiguity leaves the estate - which is a net reduction in planning surface that this metric cannot see, since a draft in agents/tmp/ was never counted. WHAT THE +3 BUYS: each blocker routes a decision an agent must not take. compact-survival-of-package-only-rules is the sharpest - four package-only rules carry paths:, and once the partition removes their unscoped global twin they stop surviving /compact per ADR-227:79-80, while three of the four carry Iron Laws; the entry carries three enumerated options and a recommendation rather than a flag. host-skill-suppression-capability is a host probe whose negative answer closes it. overlap-check-binding-surface exists because TWO gates in this exact area already report to nobody - check_standing_rule_delivery sits in ci-fast which no workflow invokes, and check_rule_projection_integrity is inert when .agent-tools.yml selects zero tools. Putting a decision in front of the maintainer is the direction this ratchet exists FOR. The measured defect underwriting all of it: 110 rules and 290 skills delivered twice, 203,873 tok against a 110,000 cap on a freshly regenerated tree."
     }
   ],
   "target": {

@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **48** open blockers, **23** need you → `agent-config gates`
+> 35 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **51** open blockers, **23** need you → `agent-config gates`
 
 ## Overall
 
-**322 / 559 steps done · 58%**
+**322 / 577 steps done · 56%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   58%
+██████████████████████░░░░░░░░░░░░░░░░░░   56%
 ```
 
 ## Open roadmaps
@@ -40,16 +40,17 @@
 | 22 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
 | 23 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 1 | 3 | 0 | 0 | [1](#blockers-road-to-run-continuation-observation) | ████████░░ 75% |
 | 24 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 25 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
-| 26 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 27 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
-| 28 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
-| 29 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
-| 30 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 8 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 58% |
-| 31 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 32 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 33 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 34 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+| 25 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 20 | 18 | 0 | 2 | 0 | [3](#blockers-road-to-single-delivery) | ░░░░░░░░░░ 0% |
+| 26 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+| 27 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 28 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
+| 29 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
+| 30 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
+| 31 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 8 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 58% |
+| 32 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 33 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 34 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 35 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 
 ---
 
@@ -820,6 +821,55 @@ _1 blocker resolved._
   - **Resolved when:** a human rubric score exists per artifact, recorded before the secondary `lint_persistence` pass for that artifact. - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was never written down, which is why this roadmap read as spend-blocked-only.
 
 _2 blockers resolved._
+
+### [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md)
+
+**Road to single delivery — one artefact, one layer, no duplicates** — 0 / 18 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Pin the measurement so no fifth draft repeats the fourth's error | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 1 | Replace ADR-226 | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 2 | Make the producers write disjoint layers | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Stop the two surfaces that call duplication free | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 4 | One producer-agnostic invariant check | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | The residue the partition does not resolve | ⬜ not started | 7 | 0 | 2 | 0 | 0% |
+
+<a id="blockers-road-to-single-delivery"></a>
+**Blockers**
+
+- **compact-survival-of-package-only-rules** (owner: maintainer) — blocks Phase 5 step 5.1 only. Phases 0-4 measure, decide the topology and ship the partition; 4.1 deliberately counts scope defeat separately so this decision has a number.
+  - **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement, not a maintainer decision.)** Option (a). ADR-227 already found `paths:` saturated as a corpus lever, so the scoping buys little, while an Iron Law vanishing after a compact is a silent correctness failure. (a) also keeps the partition exact, where (c) puts a permanent exception into an invariant Phase 4 has to check.
+  - **If you do nothing:** Phase 2 ships and those four silently lose compaction survival — the worst of the three outcomes, because it is the one nobody chose.
+  - **What to do:**
+    run
+    `grep -l '^paths:' src/rules/{no-roadmap-references,rule-type-governance,skill-quality,source-confidentiality}.md`
+    to confirm the set, then pick one of three enumerated options and record it:
+    **(a)** delete the `paths:` key from those four in `src/rules/` so they load
+    unconditionally in the project layer; **(b)** keep `paths:` and accept that they
+    do not survive compaction; **(c)** grant those four a documented exception to
+    the partition and keep an unscoped global copy.
+  - **Resolved when:** the option is recorded in the successor ADR or an amendment to ADR-227.
+- **host-skill-suppression-capability** (owner: maintainer) — blocks Phase 5 step 5.2 only. The partition removes the duplicate skills at the producer, so nothing in Phases 0-4 waits on this; it matters for a consumer who legitimately holds both layers.
+  - **Recommendation:** **(agent-drafted 2026-08-19.)** Probe before designing. If the key does not reach the catalogue, the producer-side partition this roadmap ships is the only available lever and 5.2 closes as a recorded null rather than as work.
+  - **If you do nothing:** consumers who hold both layers keep paying duplicate catalogue entries, and this roadmap's win stays maintainer-local.
+  - **What to do:**
+    on a machine holding both layers, add
+    `"claudeMdExcludes": ["<abs>/.claude/skills/**"]` to `~/.claude/settings.json`,
+    start a session, and run the `capture_skill_catalogue` probe
+    (`./scripts-run src/scripts/capture_skill_catalogue`) to see whether the
+    excluded entries are absent from the delivered catalogue. Record the host
+    version with the result. Either outcome closes this.
+  - **Resolved when:** the capability is recorded with its host version and source.
+- **overlap-check-binding-surface** (owner: maintainer) — blocks Phase 4 step 4.3 only. 4.1 and 4.2 land without it.
+  - **Recommendation:** **(agent-drafted 2026-08-19.)** Preflight. The overlap is a property of the developer machine rather than of the branch, so CI would measure a topology no contributor has and be green while every local session pays. Two gates in this area are already unreachable where it matters, so a third unbound one would read as coverage while adding none.
+  - **If you do nothing:** Phase 4 ships a check with the same reach as the two that already exist, and a re-created overlap goes unnoticed.
+  - **What to do:**
+    pick one and register the check there — `task preflight` via
+    `taskfiles/`, a `session_start` concern in `src/scripts/hook_manifest.yaml`, or
+    a workflow under `.github/workflows/`. Then confirm a deliberately-created
+    overlap surfaces on the chosen one.
+  - **Resolved when:** the surface is named and 4.3's verify runs against it.
 
 ### [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md)
 
