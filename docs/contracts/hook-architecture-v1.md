@@ -217,6 +217,66 @@ runs them **sequentially** in manifest order and reduces:
 in manifest order. Concerns are never run in parallel — concurrency
 guarantees rely on serial state writes.
 
+## Emission shaping — what leaves is a subset of what was produced
+
+Reduction decides the *verdict*. A second pass decides which of the collected
+messages are actually emitted, because two independently-correct advisory
+concerns can both fire on one event and nothing used to arbitrate between them.
+Both policies live in `src/scripts/hooks/injection_budget.ts` and run after
+reduction, in this order:
+
+1. **Nudge exclusivity.** A concern may declare `nudge_rank: <n>` in the
+   manifest. At most one ranked concern's message leaves per event: the lowest
+   rank wins, the rest are suppressed. A concern without the field is not
+   nudge-class and this policy never touches it.
+2. **Per-turn byte ceiling.** `src/config/hook-token-budget.json §
+   per_turn_aggregate_bytes` registers the bytes a representative turn may
+   inject. When the running total would exceed it, advisory messages are dropped
+   lowest-severity-first (`allow` before `warn`, then largest first) until it
+   fits. The events named in that row's `excluded_slots` — `session_start` above
+   all — are not shaped by volume at all.
+
+**Neither policy can drop a `severity: blocking` or `fail_closed` concern.** That
+exemption is by construction, not by configuration: a shaping layer able to
+silence a safety warning would be worse than the stacking it was added to fix.
+
+**Dropping only happens when it can help.** The irreducible floor of a turn is
+the spend already carried in plus this dispatch's exempt concerns. When that
+floor is already over the ceiling, no sequence of drops gets under it, so nothing
+is dropped and the dispatcher reports the overflow on stderr naming which
+component is responsible — `exempt-floor` (a question about the budget row) or
+`carried-spend` (a question about what this turn already emitted).
+
+**The candidate set is what would actually be emitted**, not every message
+collected: only messages at the deciding severity reach the host, so shaping the
+full set would make the ceiling govern bytes the dispatcher never writes.
+
+**Three preconditions gate the volume policy**, because without them a per-turn
+ceiling silently becomes something else: the platform's emission must carry
+reasons at all (an unverified platform emits nothing, so there is nothing to
+shape), a real `session_id` must have arrived (the synthetic fallback is unique
+per invocation, so the counter could never be read back), and the platform must
+bind the turn-start event (otherwise the counter only grows and every droppable
+advisory is suppressed for the rest of the session). Any one missing → the volume
+policy is off, which is the fail-open direction.
+
+Every suppression is recorded as one `dispatch-issues.jsonl` line, so a reader
+who expected a hook effect and did not see it can find out why. The two codes
+are `nudge_interference_drop` and `injection_budget_drop`; unlike the four
+concern-failure codes, they mean the concern ran correctly and the dispatcher
+chose not to emit it. They are exported as `POLICY_OUTCOME_ISSUES` and
+`hooks:doctor` filters them out of its "hooks tried to fire but couldn't" view —
+that view's call to action is a reinstall, which fixes nothing here, and routine
+policy traffic would otherwise push a real `script_not_found` out of its
+last-20 window.
+
+The running total lives in `agents/runtime/state/injection-turn.json` — one
+session id and one integer, with no field capable of holding a prompt or an
+emitted line — and is reset on `user_prompt_submit`, the event that starts a
+turn. It is not written under replay, per § Replay mode. An unreadable or
+missing counter reads as zero: an accounting failure must never be the reason an
+advisory disappears.
+
 ## Feedback channel — `agents/runtime/state/.dispatcher/<session_id>/`
 
 Exit-code reduction collapses the severity ladder to a single

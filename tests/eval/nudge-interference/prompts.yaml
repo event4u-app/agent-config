@@ -1,0 +1,70 @@
+# Nudge-interference matrix (road-to-standing-context-40k Phase 4 step 4.2).
+#
+# Same discipline as tests/eval/orchestration-matrix/ and tests/eval/routing-matrix/:
+# positives AND pinned near-misses, executed against the REAL predicates —
+# `delegation_nudge_hook.classifyPrompt` and `skill_route_hook.routePointers` —
+# and then through the real `shapeEmissions` policy with the ranks read live
+# from `src/scripts/hook_manifest.yaml`.
+#
+# The ranker runs against a TWO-ENTRY TEMP CATALOGUE built by the runner, not the
+# live `src/skills` tree. The scores below are therefore a property of this file:
+# an unrelated SKILL.md description edit cannot flip a row and red this corpus
+# with a nudge-interference message it has nothing to do with. (The first version
+# ranked against the shipped catalogue; the R2 review caught that the sibling
+# end-to-end fixture had already made the opposite choice for this exact reason.)
+#
+# Each row carries TWO expectations and both matter:
+#
+#   `fires`   — which nudges WOULD fire on this prompt, before any policy. This
+#               is the measurement, and it is pinned so the corpus records the
+#               overlap rather than hiding it behind the fix. A row whose `fires`
+#               shrinks to one is a trigger change, which is a finding about the
+#               triggers and must not be absorbed silently by this file.
+#   `emitted` — which nudges leave after shaping. At most one, always. That is
+#               the assertion the step asks for.
+#
+# The `overlap: true` row is the paired negative in the sense the verify line
+# means: with the exclusivity policy removed it emits two, so it is the case that
+# forces a second nudge and fails.
+
+rows:
+  - name: overlap — worktree skill vocabulary PLUS four enumerated slices
+    # Measured 2026-08-19 before the policy existed: this exact prompt fires both.
+    # The first clause is `using-git-worktrees`' own description (ranker top-1 58,
+    # over the 31 floor); the trailing clause supplies four file tokens, over
+    # delegation-nudge's FILE_SIGNAL_FLOOR of 3.
+    prompt: >-
+      Use when starting parallel work in isolation from the current branch —
+      spawn a git worktree with ignore-safety checks and a clean test baseline
+      for src/a.ts, src/b.ts, src/c.ts and src/d.ts, each independently.
+    overlap: true
+    fires: [delegation-nudge, skill-route]
+    emitted: [delegation-nudge]
+
+  - name: near-miss — skill vocabulary alone carries no delegation signal
+    prompt: >-
+      Use when starting parallel work in isolation from the current branch —
+      spawn a git worktree with ignore-safety checks and a clean test baseline
+    overlap: false
+    fires: [skill-route]
+    emitted: [skill-route]
+
+  - name: near-miss — four slices whose vocabulary never clears the ranker floor
+    prompt: >-
+      Refactor src/a.ts, src/b.ts, src/c.ts and src/d.ts to use the new logger,
+      each file independently.
+    overlap: false
+    fires: [delegation-nudge]
+    emitted: [delegation-nudge]
+
+  - name: near-miss — a trivial prompt fires neither
+    prompt: fix typo
+    overlap: false
+    fires: []
+    emitted: []
+
+  - name: near-miss — a bounded question fires neither carrier
+    prompt: Why does the council report a quorum it never reached?
+    overlap: false
+    fires: []
+    emitted: []

@@ -43,6 +43,7 @@ import {
   is_replay_mode,
 } from "./state_io.js";
 import { log_dispatch_issue, fix_hint } from "./dispatch_issues.js";
+import { shapeAndRecord, type ConcernMessage } from "./injection_budget.js";
 import { CONCERN_REGISTRY, type ConcernMain } from "./concern_registry.js";
 import {
   setHookStdinOverride,
@@ -1269,7 +1270,7 @@ export function main(argv?: string[]): number {
   // feedback_entries on purpose: that record is written to disk with a
   // fixed-field schema (PII-exclusion-by-construction), and a concern's raw
   // stderr is free-form content. This array is in-memory only.
-  const concern_messages: Array<{ rc: number; text: string }> = [];
+  const concern_messages: ConcernMessage[] = [];
   // Per-concern `tools:` filter (see _concern_matches_tool). Applied here so it
   // is one place, after the envelope exists and before any concern is spawned.
   const tool_name = _payload_tool_name(envelope);
@@ -1355,7 +1356,7 @@ export function main(argv?: string[]): number {
         : "";
     const message = [stated, extra].filter(Boolean).join("\n\n");
     if (message) {
-      concern_messages.push({ rc, text: message });
+      concern_messages.push({ rc, text: message, def: concern });
     }
     if (
       args.event === "session_start" &&
@@ -1400,9 +1401,13 @@ export function main(argv?: string[]): number {
   // disagree: on Claude Code exit 1 does not block and exit 2 does, which
   // inverted every verdict (see host_semantics.ts for the documented mapping).
   // Unverified platforms keep the legacy pass-through byte-for-byte.
-  const decidingReasons = concern_messages
-    .filter((m) => m.rc === final_rc)
-    .map((m) => m.text);
+  // Emission shaping (nudge exclusivity + per-turn byte ceiling) also owns the
+  // deciding-severity filter this line used to apply. See injection_budget.ts.
+  const decidingReasons = shapeAndRecord(
+    { packageRoot: REPO_ROOT, envelope, platform: args.platform, event: args.event },
+    concern_messages,
+    final_rc,
+  );
   const emission = emitFor(
     args.platform,
     args.event,
