@@ -1,0 +1,77 @@
+# Findings: org-telemetry-retention
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 986d9e83ca7eb8d5cc08b084fbeb0378f0a53627c8e8637c646646ebf0f0731b | diff: 322bad99084a73c928ead674bbd94daf7e43aa25 | reviewer: r2-fresh-subagent-org-telemetry-retention | prompt_hash: 46332c88f6b56a4e5f6b1aff542397b2669cbc88fed900e761e2baaff80827c7 -->
+<!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
+
+<!-- context-manifest: v1
+inputs:
+  diff_sha: 322bad99084a73c928ead674bbd94daf7e43aa25
+  scope_hash: 986d9e83ca7eb8d5cc08b084fbeb0378f0a53627c8e8637c646646ebf0f0731b
+  roadmap: agents/roadmaps/road-to-org-telemetry.md
+  roadmap_hash: 9fca6dff92e1aff95af0ee16fe8ea779c842c496b76ea8dad581888778111464
+  ac_hash: 62d3483b628c50db130545b5ffbacbfd2cbdc618a6f39774b7b6465d1176fc1a
+excluded: [session-history, agents/runtime, implementation-context]
+tools: [git-diff-branch-scoped, file-read-branch-paths]
+dispatched: 2026-08-19T04:06:37Z
+-->
+
+| # | Severity | File:Line | Finding | Status | Reason/Ref |
+|---|----------|-----------|---------|--------|------------|
+| 1 | high | src/scripts/telemetry_disclosure_hook.ts:75 | `disclosureKey` embeds a **raw NUL byte (0x00)** directly in the template literal (`` `${facts.org_id}\0${facts.endpoint}` `` written as a literal control character, byte offset 3470). Git therefore classifies the file as binary: this branch's own diff carries only `Binary files /dev/null and b/src/scripts/telemetry_disclosure_hook.ts differ`, so the entire 214-line new concern — the compensating control ADR-233 §D5 calls load-bearing — was invisible to the completion review that is supposed to gate it, and every future `git diff` / `git blame` / patch review of this file is equally opaque. The same feature already has the correct form 100 lines away: `remote.ts:187` joins hash parts with the `'\u0000'` **escape**. Fix is one character class: `\0` or `\u0000`. | fixed | a0d06a7a0 |
+| 2 | high | src/scripts/telemetry_disclosure_hook.ts:163 | The disclosure concern resolves its settings file as `path.join(root, '.agent-settings.yml')` — the envelope root only, no walk-up. Its sibling in the same feature does the opposite on purpose: `telemetry_usage_hook.ts:196-219` (`resolveSettingsPath`) walks up to the first directory holding a settings file, with the rationale recorded in its own doc block — *"A host may report a session `cwd` inside a subdirectory of the project, and reading only that directory made the concern silently inactive on a legitimately enabled install — a failure with no message, which is the worst shape for a default-off surface."* On exactly that observed shape the two concerns now disagree: the usage hook finds the settings and **writes records**, while the disclosure hook reads no settings, sees `active === false`, and **silently prints nothing** — telemetry collecting with the consent disclosure suppressed, which is the one failure mode ADR-233 §D5 and this file's own header ("the failure mode is a repeated line rather than a suppressed one") declare unacceptable. `root` is also the base for `DISCLOSURE_STATE_REL`, so a subdirectory session additionally creates a stray `agents/runtime/state/` tree there. | fixed | a0d06a7a0 |
+| 3 | medium | src/shared/settingsConsent.ts:129 | `handEdited === true` returns `granted` **before** the new `org-pack` branch at :135, so the ADR-233 §D2 namespace scope is bypassed for the exact deployment shape it was written for. `handEdited` is documented at :105-111 as true when the value came from "a project-local `.agent-settings.yml`" — which is precisely the file the org pack must populate (`read_remote_settings` is called on `<root>/.agent-settings.yml`). An org pack that ships that file therefore grants **every** B-class key in it, not only `telemetry.remote.*`, and `withheld-org-pack-out-of-scope` becomes reachable only for values that did *not* come from a project-local file. ADR-233's Alternatives section identifies the `handEdited` collapse as the reason the class exists but never notes that `handEdited` still short-circuits the scope check the class is built on. | fixed | a0d06a7a0 |
+| 4 | medium | src/agent-src/templates/scripts/telemetry/remote.ts:556-565 | One undatable line at the head of the log **permanently disables the age policy**. `retention_due` answers the whole age question from `_read_first_line`; `record_line_ms` returns `null` for an unparseable line and the function then returns `false`. `enforce_retention` deliberately *keeps* undatable lines (a `null` timestamp passes its age filter unconditionally) and preserves order, so a corrupt first line stays first forever and no age-triggered prune can ever run again. The comment at :580-585 offers the byte cap as the mitigation — "evicted from the oldest end eventually" — but at the file's own measured 6.6 records/day × ~270 B that is >3 years, so a single torn write silently converts the declared 90-day TTL into a multi-year one. The behaviour is pinned by a test ("does not fire on age it cannot read") without the consequence being acknowledged anywhere. | fixed | a0d06a7a0 |
+| 5 | medium | SECURITY.md:38-40 | The published claim — "The file is bounded by `telemetry.remote.retention` — 90 days and 2 MiB by default, oldest records dropped first — so it neither grows without limit nor **retains history indefinitely**" — is not held by the code. `enforce_retention` is reachable only from inside `append_class_a_record` (`remote.ts:661-663`), by design ("there is no sweep a caller can forget to run"). An install that flips `enabled: false`, loses one of the required fields, or simply stops invoking skills never prunes again and keeps up to 90 days / 2 MiB of pseudonymous usage records forever. The write-triggered design is defensible under acceptance criterion 1 (a disabled install must perform zero telemetry file operations); the SECURITY.md sentence is the part that overstates it and should be qualified rather than the code changed. | fixed | a0d06a7a0 |
+| 6 | medium | src/agent-src/templates/scripts/telemetry/remote.ts:596-634 | `enforce_retention` is an unlocked read-modify-write over a file whose writer fires on **every** `Skill` tool use, and the temp path is a fixed sibling `${log_path}.retention.tmp`. Two concurrent sessions rooted at the same project (an ordinary shape — the same `.agent-telemetry.jsonl`, two agent processes) lose every record appended between `readFileSync` at :597 and `renameSync` at :634, and two simultaneous prunes interleave writes into one shared temp file before racing to rename it. The comment at :587-588 justifies the temp+rename as crash safety, which it provides; it does not provide concurrency safety, and nothing else does either. A same-directory `O_EXCL` lock, a pid/random temp suffix, or a single-writer assertion would close it. | fixed | a0d06a7a0 |
+| 7 | medium | src/agent-src/templates/scripts/telemetry/settings.ts:339-347 | `_coerce_positive_int` rejects `0` and negatives with an explicit rationale — "neither is a growth budget an operator should be able to set by typing one character" — but applies no floor, so `max_bytes: 1` (or any value under one record line, ~290 B) is accepted and is strictly worse than the case the guard refuses: `retention_due` sees `size > max_bytes` on the first append, `enforce_retention` computes `budget = floor(1 * 0.75) = 0`, the newest-suffix loop breaks on its first iteration, and the log is truncated to empty after every single write. The install then reports as active and silently records nothing. The floor should be at least one maximal record line, or the byte pass should refuse to drop the newest record. | fixed | a0d06a7a0 |
+| 8 | low | src/agent-src/templates/scripts/telemetry/remote.ts:439-441 | The retention comment's own arithmetic contradicts itself: it states the observed machine "writes ≈ 637 KiB per year" at :431, then claims 2 MiB "is reached … in **eight years** at 1×". 2 MiB ÷ 637 KiB/yr ≈ 3.2 years (equivalently 2,097,152 B ÷ (6.6/day × 270 B) ≈ 1,177 days). The "100× → eleven days" figure in the same sentence checks out; only the 1× figure is wrong, by ~2.5×. It carries no behavioural weight, but it sits inside the block whose whole claim is "THE NUMBERS ARE MEASURED, NOT GUESSED". | fixed | a0d06a7a0 |
+| 9 | low | src/scripts/telemetry_disclosure_hook.ts:132 | Root resolution diverges between the two concerns of one feature, in both key set and precedence: `_workspaceRoot` tries `project_dir`, `projectDir`, `cwd`, `workspace_root` (cwd third), while `telemetry_usage_hook.ts:302-310` (`_resolveRoot`) tries `cwd` first, then `workspace_root`, then `project_root` — a key the disclosure hook does not know, against `project_dir`/`projectDir`, which the usage hook does not know. On any envelope carrying two of these pointing at different directories the two hooks operate on different projects. | fixed | a0d06a7a0 |
+| 10 | low | src/scripts/telemetry_disclosure_hook.ts:171-191 | No `is_replay_mode()` guard, unlike the sibling that gates on it at `telemetry_usage_hook.ts:251`. A replayed or benchmarked `session_start` envelope against an active install emits the disclosure line and writes `agents/runtime/state/telemetry-disclosure.json` into the target root — a state mutation during replay, and a first real disclosure consumed by a replay rather than by the user. | fixed | a0d06a7a0 |
+| 11 | low | src/scripts/telemetry_disclosure_hook.ts:115-128 | `buildDisclosure` interpolates `org_id`, the endpoint host and `log_path` with no length bound (`org_id` twice, counting the `reason` field), while the per-concern injection budget is 1024 bytes. The fixture emits ~600 bytes with a 4-character org, so the "fits the per-concern injection budget with headroom" test proves headroom for that fixture only; ~400 bytes of org id + endpoint + path silently overruns the cap. `check_id_redaction` bounds `org_id` on the record path (`build_class_a_record`), never on this one. | fixed | a0d06a7a0 |
+| 12 | low | src/agent-src/templates/scripts/telemetry/remote.ts:505-526 | `_read_first_line` reads a fixed 4096-byte window and, when that window contains no newline, returns the **truncated** chunk as if it were the line. `record_line_ms` then fails to parse it and `retention_due` reports "not due" on age. Bounded in practice by record size, but it turns a long or torn first line into the silent age-policy stall of finding 4 rather than into an error. | fixed | a0d06a7a0 |
+| 13 | low | src/scripts/telemetry_disclosure_hook.ts:156-160 | `slot` defaults to `'session_start'` when `event` is absent or empty, so a well-formed envelope that simply carries no `event` key is treated as a session start on whatever slot invoked it — it discloses and writes the state note. The sibling concern takes the opposite default and gates on a positively-matched `tool_name`. Fail-open on an unidentified slot is the wrong default for a once-per-install side effect. | fixed | a0d06a7a0 |
+| 14 | low | tests/scripts/telemetry_disclosure_hook.test.ts:1335-1338 | Tautological test: `expect(buildDisclosure(facts)).toBe(buildDisclosure({ ...facts }))` compares a pure, deterministic, I/O-free function to itself over a shallow copy of the same object. No implementation of `buildDisclosure` can fail it, so it asserts nothing about the "stable block" property it names — pinning the actual emitted text (or its byte length) would. | fixed | a0d06a7a0 |
+
+## What changed after the review, and why it was not re-dispatched
+
+The scope hash moved twice more after the fixes landed, and both moves are
+recorded here rather than absorbed by a silent re-bind.
+
+1. **`origin/main` was merged in** (11 commits, at the maintainer's request).
+   One conflict, in `agents/roadmaps-progress.md`, a generated file — resolved
+   by regenerating it, never by mixing hunks.
+2. **`src/scripts/hook_manifest.json` was recompiled.** main introduced a
+   precompiled manifest while this branch was adding a `session_start` concern
+   to the YAML source. The merge took main's JSON, compiled before this branch
+   existed, so `telemetry-disclosure` stood 8 times in the YAML and **zero
+   times** in the compiled table the dispatcher reads on its fast path.
+   `tests/hooks/hook_manifest_compiled.test.ts` was red on two assertions and
+   is green after the recompile.
+
+Neither adds a design the reviewer did not see: the JSON is a mechanical
+projection of the YAML that was in the reviewed diff, and the dashboard is a
+regenerated artefact. So the findings above stand unchanged and no second
+review was dispatched — but a reader comparing the reviewed head
+(`ffb9dbacc`) with the current one deserves to know what sits between them
+without having to diff for it.
+
+3. **`origin/main` was merged a second time** (29 commits), which brought PR
+   #1432 and its own new `stop` concern, `run-continuation`. Two conflicts:
+   `agents/roadmaps-progress.md` again, and `src/scripts/hook_manifest.json`.
+   The YAML source merged cleanly and carries **both** concerns — mine 8 times,
+   `run-continuation` 3 times — so the JSON was recompiled from that merged
+   YAML rather than hunk-merged. Worth noting for the next person:
+   `sync_pr_branch` classifies `hook_manifest.json` as **AUTHORED**, i.e. "a
+   human decision, read both sides". It is not; it is a generated projection of
+   the YAML, and mixing its hunks would be the one resolution that can produce
+   a table matching neither branch.
+
+Measured rather than asserted for both merges: `git diff <reviewed-head> HEAD --
+<the feature files>` is **empty**. Every byte the reviewer read is unchanged;
+only generated artefacts moved.
+
+**Worth carrying:** neither `task sync` nor `task generate-tools` writes
+`hook_manifest.json`, so both reported no drift while the compiled table was
+stale. The runtime mtime guard would have fallen back to the YAML on this
+machine (the YAML was newer), but mtime survives neither a clone nor an
+install, so on a consumer the choice between the two tables is undefined. The
+test is the backstop, not the regen path.

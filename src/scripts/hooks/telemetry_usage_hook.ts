@@ -271,7 +271,14 @@ function processEnvelope(envelope: JsonValue, consumer_root: string): number {
         const logPath = path.isAbsolute(settings.log_path)
             ? settings.log_path
             : path.join(root, settings.log_path);
-        append_class_a_record(logPath, record);
+        // The growth budget travels from the settings the install actually
+        // declared, not from the appender's own defaults — a retention key
+        // the write path never reads would be a setting that decorates
+        // rather than decides.
+        append_class_a_record(logPath, record, {
+            max_age_days: settings.retention_max_age_days,
+            max_bytes: settings.retention_max_bytes,
+        });
     } catch {
         // Malformed payload, unreadable disk, a rejected id — never block
         // the tool call, and never write a degraded record.
