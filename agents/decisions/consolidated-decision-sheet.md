@@ -1,4 +1,4 @@
-# Consolidated decision sheet — 21 decisions owned by you
+# Consolidated decision sheet — 22 decisions owned by you
 
 > Generated 2026-08-18 by `agent-config gates --sheet` over `agents/roadmaps/`.
 > Sorted by unblock count, descending. **Accept-all-defaults is a valid answer**
@@ -7,7 +7,7 @@
 > which the roadmap itself recommends. Whichever you pick, the agent writes the answers
 > back into each roadmap at its own blocker — that is not your work.
 >
-> **Provenance of the 21 defaults: 14 maintainer-recorded ·
+> **Provenance of the 22 defaults: 15 maintainer-recorded ·
 > 6 `agent-drafted` · 0 with no recommendation at all ·
 > 1 legacy `> Blocked until …` note(s) that have no field to carry one.**
 > The distinction is in every row on purpose: an agent-drafted default is the
@@ -22,24 +22,25 @@
 | 1 | `skill-activation-window` | road-to-cost-parity-1-rule-payload-diet.md | 49 | `agent-drafted` |
 | 2 | `autonomy-defaults-sheet` | road-to-user-out-of-the-loop.md | 31 | maintainer-recorded |
 | 3 | `kernel-soak-window` | road-to-user-out-of-the-loop.md | 31 | maintainer-recorded |
-| 4 | `dpo-signoff` | road-to-org-telemetry.md | 26 | maintainer-recorded |
-| 5 | `sink-choice` | road-to-org-telemetry.md | 26 | maintainer-recorded |
+| 4 | `dpo-signoff` | road-to-org-telemetry.md | 23 | maintainer-recorded |
+| 5 | `sink-choice` | road-to-org-telemetry.md | 23 | maintainer-recorded |
 | 6 | `compaction-census-session` | road-to-context-fidelity.md | 19 | maintainer-recorded |
-| 7 | `b-per-turn-composite-bar` | road-to-per-turn-hook-economy.md | 16 | maintainer-recorded |
-| 8 | blocked-until note | road-to-gated-reach-followup.md | 12 | none — legacy note |
-| 9 | `real-orchestration-usage` | road-to-orchestration-scope-decision.md | 6 | `agent-drafted` |
-| 10 | `telemetry-sample-size` | road-to-subagent-value-realization-followup.md | 6 | maintainer-recorded |
-| 11 | `human-gated-live-trigger-eval` | road-to-skill-description-measurement.md | 4 | `agent-drafted` |
-| 12 | `b-live-trigger-eval` | road-to-catalogue-host-fit.md | 3 | maintainer-recorded |
-| 13 | `b-consolidated-decision-sheet` | road-to-estate-drawdown.md | 3 | maintainer-recorded |
-| 14 | `b-convergence-machine` | road-to-carrier-layer-convergence.md | 2 | `agent-drafted` |
-| 15 | `maintainer-blind-ratings` | road-to-council-blind-review.md | 2 | `agent-drafted` |
-| 16 | `b-behavioural-bench-spend` | road-to-mixed-trigger-activation-cost.md | 2 | maintainer-recorded |
-| 17 | `manual-rubric-rater` | road-to-scale-history-bench-run.md | 2 | `agent-drafted` |
-| 18 | `b-delegate-gate-maintainer-profile` | road-to-gate-autonomy.md | 1 | maintainer-recorded |
-| 19 | `b-gate-budget-preauth` | road-to-gate-autonomy.md | 1 | maintainer-recorded |
-| 20 | `b-detector-demotion-bars` | road-to-stop-gate-honesty.md | 1 | maintainer-recorded |
-| 21 | `benchmark-spend` | road-to-surface-consolidation.md | 1 | maintainer-recorded |
+| 7 | blocked-until note | road-to-gated-reach-followup.md | 12 | none — legacy note |
+| 8 | `real-orchestration-usage` | road-to-orchestration-scope-decision.md | 6 | `agent-drafted` |
+| 9 | `b-guard-tool-partition` | road-to-per-turn-hook-economy.md | 6 | maintainer-recorded |
+| 10 | `b-per-turn-composite-bar` | road-to-per-turn-hook-economy.md | 6 | maintainer-recorded |
+| 11 | `b-stdin-read-failure-policy` | road-to-per-turn-hook-economy.md | 6 | maintainer-recorded |
+| 12 | `telemetry-sample-size` | road-to-subagent-value-realization-followup.md | 6 | maintainer-recorded |
+| 13 | `human-gated-live-trigger-eval` | road-to-skill-description-measurement.md | 4 | `agent-drafted` |
+| 14 | `b-live-trigger-eval` | road-to-catalogue-host-fit.md | 3 | maintainer-recorded |
+| 15 | `b-consolidated-decision-sheet` | road-to-estate-drawdown.md | 3 | maintainer-recorded |
+| 16 | `b-convergence-machine` | road-to-carrier-layer-convergence.md | 2 | `agent-drafted` |
+| 17 | `maintainer-blind-ratings` | road-to-council-blind-review.md | 2 | `agent-drafted` |
+| 18 | `b-behavioural-bench-spend` | road-to-mixed-trigger-activation-cost.md | 2 | maintainer-recorded |
+| 19 | `manual-rubric-rater` | road-to-scale-history-bench-run.md | 2 | `agent-drafted` |
+| 20 | `b-delegate-gate-maintainer-profile` | road-to-gate-autonomy.md | 1 | maintainer-recorded |
+| 21 | `b-gate-budget-preauth` | road-to-gate-autonomy.md | 1 | maintainer-recorded |
+| 22 | `benchmark-spend` | road-to-surface-consolidation.md | 1 | maintainer-recorded |
 
 ## 1 · `skill-activation-window`
 
@@ -80,7 +81,7 @@
 ## 4 · `dpo-signoff`
 
 - **Roadmap:** road-to-org-telemetry.md
-- **Unblocks:** 26 open step(s) — Phase 3 (org-wide enablement onward)
+- **Unblocks:** 23 open step(s) — Phase 3 (org-wide enablement onward)
 - **Question** (recorded `Question:`)**:** Does the company data-protection process approve the Class-A field list and the disclosure text?
 - **Default:** run it as a written review of exactly two artefacts — the Class-A field list from Phase 1 and the one-line disclosure from Phase 3 — rather than of the roadmap.
 - **Default source:** maintainer-recorded `Recommendation:` in the roadmap
@@ -92,7 +93,7 @@
 ## 5 · `sink-choice`
 
 - **Roadmap:** road-to-org-telemetry.md
-- **Unblocks:** 26 open step(s) — Phase 2 (sink stand-up)
+- **Unblocks:** 23 open step(s) — Phase 2 (sink stand-up)
 - **Question** (recorded `Question:`)**:** Should the sink be a minimal ingest endpoint, or a private repository used as an append-only store?
 - **Default:** the private repository.
 - **Default source:** maintainer-recorded `Recommendation:` in the roadmap
@@ -113,19 +114,7 @@
 - **Done when:** a `context-fidelity-cf01.md` finding exists under `agents/evidence/eval-findings/` carrying a per-probe-class number and a host stamp, or the user records that the compaction-survival question is closed unmeasured and Phase 1 is cancelled. (The filename is deliberately not written as a full path here: `check_references` resolves a path in prose and the file does not exist yet, so a link would be a broken reference by construction. The step's own `verify:` probe holds the full path, which is where it belongs.)
 - **Your answer:** _(accept default · override · defer)_
 
-## 7 · `b-per-turn-composite-bar`
-
-- **Roadmap:** road-to-per-turn-hook-economy.md
-- **Unblocks:** 16 open step(s) — Phase 4 step 4.2 only. Step 4.1 registers the composite as a measured row and 4.3 refreshes the census; both proceed without the bar.
-- **Question** (derived from the first `What to do:` step)**:** pre-register the per-turn composite bar.
-- **Default:** **option (b) — register the row observe-only for one release.** No prior exists for a per-turn composite in this tree, so any number named today would be invented, and an invented bar on a summed metric is the flappiest possible gate.
-- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
-- **Recommendation (full):** **option (b) — register the row observe-only for one release.** No prior exists for a per-turn composite in this tree, so any number named today would be invented, and an invented bar on a summed metric is the flappiest possible gate. One release of observation produces the distribution the bar should come from. Option (a) is right afterwards, not now; option (c) leaves D-1 permanently unmeasurable, which is the defect itself.
-- **If you do nothing:** the per-turn cost stays structurally invisible — every slot green, the number the user feels unrepresented — and Phases 1, 2, 3 and 5 land with no bar to prove they helped. The budget-ownership discipline this repo follows says the bar precedes the lever, so the phases would be shipping against no registered target at all.
-- **Done when:** one option is recorded at this blocker and — for (a) or (b) — the row exists in `hook-latency-budget.json` with its bar or its observe-only marker.
-- **Your answer:** _(accept default · override · defer)_
-
-## 8 · blocked-until note
+## 7 · blocked-until note
 
 - **Roadmap:** road-to-gated-reach-followup.md
 - **Unblocks:** 12 open step(s) — entire roadmap
@@ -135,7 +124,7 @@
 - **Done when:** condition described above clears
 - **Your answer:** _(accept default · override · defer)_
 
-## 9 · `real-orchestration-usage`
+## 8 · `real-orchestration-usage`
 
 - **Roadmap:** road-to-orchestration-scope-decision.md
 - **Unblocks:** 6 open step(s) — Phase 2 (and thereby Phase 3's decision)
@@ -147,7 +136,43 @@
 - **Done when:** a probe result records whether any hook slot sees the task-completion payload, and — if one does — the current-month audit log carries ≥ 20 orchestration lines whose **quality** columns are populated rather than `null`. **Rewritten 2026-08-17.** The bare line-count condition this field carried until today (*"the current-month audit log holds ≥20 orchestration lines"*) was satisfied at 99 lines when it was written and stands at **367** now, while the blocker never stopped being open — a resolution test that is already met cannot resolve anything, and every feasibility screen that trusted it read this roadmap as resumable. The sibling `road-to-subagent-value-realization-followup` had the identical defect repaired on 2026-08-16; this one was missed in the same pass.
 - **Your answer:** _(accept default · override · defer)_
 
-## 10 · `telemetry-sample-size`
+## 9 · `b-guard-tool-partition`
+
+- **Roadmap:** road-to-per-turn-hook-economy.md
+- **Unblocks:** 6 open step(s) — nothing in this roadmap — step 5.1 is cancelled and Phases 1-4 proceed without it. It records the one reachable form of 5.1's goal so a later attempt starts from the decision rather than re-deriving it.
+- **Question** (derived from the first `What to do:` step)**:** decide whether the three blocking `pre_tool_use` guards (`block-no-verify`, `block-kernel-rule-writes`, `block-config-weakening`) may carry a **claude-only** host tool filter.
+- **Default:** **option (c) — decline, and revisit only if Phase 4's registered composite exceeds its bar.** The gain is real but unmeasured, and the cost is a silently-skippable filter in front of the two guards that exist because a bypass must be impossible: `matcher` is a plain non-match, so unlike `if` it does not fail open, and a Claude tool-name addition (a renamed Bash variant, a new edit tool) would disable a guard with nothing in the tree noticing.
+- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
+- **Recommendation (full):** **option (c) — decline, and revisit only if Phase 4's registered composite exceeds its bar.** The gain is real but unmeasured, and the cost is a silently-skippable filter in front of the two guards that exist because a bypass must be impossible: `matcher` is a plain non-match, so unlike `if` it does not fail open, and a Claude tool-name addition (a renamed Bash variant, a new edit tool) would disable a guard with nothing in the tree noticing. Option (a) is the version worth having *after* the composite says the dispatch count is the binding cost; option (b) is strictly waste.
+- **If you do nothing:** the dispatcher keeps firing on every tool call regardless of whether any concern can act, the in-process `tools:` filter keeps absorbing the per-concern half on all eight platforms, and Phase 4's composite row is what tells anyone whether the remaining per-turn cost is worth a security-surface decision at all.
+- **Done when:** one option is recorded at this blocker, and — for (a) — the partition ships with a per-class absent-invocation proof and a test that fails when a claude tool name is added to no class.
+- **Your answer:** _(accept default · override · defer)_
+
+## 10 · `b-per-turn-composite-bar`
+
+- **Roadmap:** road-to-per-turn-hook-economy.md
+- **Unblocks:** 6 open step(s) — Phase 4 step 4.2 only. Step 4.1 registers the composite as a measured row and 4.3 refreshes the census; both proceed without the bar.
+- **Question** (derived from the first `What to do:` step)**:** pre-register the per-turn composite bar.
+- **Default:** **option (b) — register the row observe-only for one release.** No prior exists for a per-turn composite in this tree, so any number named today would be invented, and an invented bar on a summed metric is the flappiest possible gate.
+- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
+- **Recommendation (full):** **option (b) — register the row observe-only for one release.** No prior exists for a per-turn composite in this tree, so any number named today would be invented, and an invented bar on a summed metric is the flappiest possible gate. One release of observation produces the distribution the bar should come from. Option (a) is right afterwards, not now; option (c) leaves D-1 permanently unmeasurable, which is the defect itself.
+- **If you do nothing:** the per-turn cost stays structurally invisible — every slot green, the number the user feels unrepresented — and Phases 1, 2, 3 and 5 land with no bar to prove they helped. The budget-ownership discipline this repo follows says the bar precedes the lever, so the phases would be shipping against no registered target at all.
+- **Done when:** one option is recorded at this blocker and — for (a) or (b) — the row exists in `hook-latency-budget.json` with its bar or its observe-only marker.
+- **Your answer:** _(accept default · override · defer)_
+
+## 11 · `b-stdin-read-failure-policy`
+
+- **Roadmap:** road-to-per-turn-hook-economy.md
+- **Unblocks:** 6 open step(s) — nothing — F-1's trigger is fixed and the residual failure is now loud. This records the half that is a policy call rather than a bug fix.
+- **Question** (derived from the first `What to do:` step)**:** decide what the dispatcher does when the stdin read **fails**, as distinct from stdin being empty.
+- **Default:** **option (c).** The bypass F-1 records is only consequential where a guard can refuse, and `pre_tool_use` is the one block-capable slot on this host; denying there costs a retryable refusal on an I/O error the retry budget already survived ten seconds of, while denying on `stop` or `post_tool_use` would refuse nothing and could break a turn end.
+- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
+- **Recommendation (full):** **option (c).** The bypass F-1 records is only consequential where a guard can refuse, and `pre_tool_use` is the one block-capable slot on this host; denying there costs a retryable refusal on an I/O error the retry budget already survived ten seconds of, while denying on `stop` or `post_tool_use` would refuse nothing and could break a turn end. Option (b) is the status quo and leaves a documented allow-on-failure on a security path; option (a) is right in spirit and pays for it on slots where it buys nothing.
+- **If you do nothing:** the residual failure stays an allow. It is no longer silent — that was the actual defect and it is fixed — but a reader of `hook-architecture-v1`'s fail-closed contract would still expect a refusal that does not happen, and nothing in the tree records the gap except this blocker.
+- **Done when:** one option is recorded at this blocker and, for (a) or (c), `_readStdin`'s failure path returns a deny for the named slots with a test that fails when it allows.
+- **Your answer:** _(accept default · override · defer)_
+
+## 12 · `telemetry-sample-size`
 
 - **Roadmap:** road-to-subagent-value-realization-followup.md
 - **Unblocks:** 6 open step(s) — Phase 1 — Seed real telemetry
@@ -159,7 +184,7 @@
 - **Done when:** a probe result records whether any hook slot sees the task-completion payload, and — if one does — `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥ 20 orchestration lines whose quality columns are populated rather than `null`. The bare line-count condition this field carried until 2026-08-16 was already satisfied at 99 lines while the blocker stayed open, which made it unusable as a resolution test.
 - **Your answer:** _(accept default · override · defer)_
 
-## 11 · `human-gated-live-trigger-eval`
+## 13 · `human-gated-live-trigger-eval`
 
 - **Roadmap:** road-to-skill-description-measurement.md
 - **Unblocks:** 4 open step(s) — all of Phase 1 — 1.1 and 1.2 both need a live model run
@@ -171,7 +196,7 @@
 - **Done when:** a predictions JSON exists for the pre-rewrite and the post-rewrite tree state, produced by the same protocol.
 - **Your answer:** _(accept default · override · defer)_
 
-## 12 · `b-live-trigger-eval`
+## 14 · `b-live-trigger-eval`
 
 - **Roadmap:** road-to-catalogue-host-fit.md
 - **Unblocks:** 3 open step(s) — Phase 0 only. Phases 1, 1b, 2 and 3 are repo work and proceed without it — Phase 0 sits first because of its cross-roadmap leverage, not because it gates this file.
@@ -183,7 +208,7 @@
 - **Done when:** the eval's baseline is committed, or option (b) or (c) is recorded at this blocker with its date.
 - **Your answer:** _(accept default · override · defer)_
 
-## 13 · `b-consolidated-decision-sheet`
+## 15 · `b-consolidated-decision-sheet`
 
 - **Roadmap:** road-to-estate-drawdown.md
 - **Unblocks:** 3 open step(s) — Phase 0 step 0.2, and through it the class-1 tranche in 1.2. Step 0.1 generates the sheet without it, and Phase 2's triage sweep proceeds independently.
@@ -195,7 +220,7 @@
 - **Done when:** each of the thirteen carries either an answer or an explicit deferral recorded at its own blocker, and the sheet records which option was used.
 - **Your answer:** _(accept default · override · defer)_
 
-## 14 · `b-convergence-machine`
+## 16 · `b-convergence-machine`
 
 - **Roadmap:** road-to-carrier-layer-convergence.md
 - **Unblocks:** 2 open step(s) — Phase 3 only (Phases 1-2 are repo work)
@@ -207,7 +232,7 @@
 - **Done when:** both readings exist at a named commit.
 - **Your answer:** _(accept default · override · defer)_
 
-## 15 · `maintainer-blind-ratings`
+## 17 · `maintainer-blind-ratings`
 
 - **Roadmap:** road-to-council-blind-review.md
 - **Unblocks:** 2 open step(s) — Ü2 and Ü3 adoption (Phase 2 pre-registered decision rules) and the Ü2/Ü3 half of Phase 3's merge-or-null. **Ü1 is NOT blocked** — it is decided, adopted and merged (`blind_chairman` default true, opt-out flag, mandatory post-verdict de-anon map, 26/26 test-pinned).
@@ -219,7 +244,7 @@
 - **Done when:** both readings exist, and each of Ü2 / Ü3 carries an adopt-or-honest-null verdict rather than a deferral.
 - **Your answer:** _(accept default · override · defer)_
 
-## 16 · `b-behavioural-bench-spend`
+## 18 · `b-behavioural-bench-spend`
 
 - **Roadmap:** road-to-mixed-trigger-activation-cost.md
 - **Unblocks:** 2 open step(s) — Phase 3 steps 3.1 and 3.2. Step 3.3's observer is repo work and proceeds without it.
@@ -231,7 +256,7 @@
 - **Done when:** a budget is named at this blocker, or the step is re-dated against the ledger mechanism with that dependency stated.
 - **Your answer:** _(accept default · override · defer)_
 
-## 17 · `manual-rubric-rater`
+## 19 · `manual-rubric-rater`
 
 - **Roadmap:** road-to-scale-history-bench-run.md
 - **Unblocks:** 2 open step(s) — Phase 1 step 1's scoring half, and thereby step 2's verdict
@@ -243,7 +268,7 @@
 - **Done when:** a human rubric score exists per artifact, recorded before the secondary `lint_persistence` pass for that artifact. - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was never written down, which is why this roadmap read as spend-blocked-only.
 - **Your answer:** _(accept default · override · defer)_
 
-## 18 · `b-delegate-gate-maintainer-profile`
+## 20 · `b-delegate-gate-maintainer-profile`
 
 - **Roadmap:** road-to-gate-autonomy.md
 - **Unblocks:** 1 open step(s) — Phase 3 step 3.1 and therefore 3.2.
@@ -255,7 +280,7 @@
 - **Done when:** one option is recorded at this blocker, and for (a) or (b) the profile carries the setting with the cap named.
 - **Your answer:** _(accept default · override · defer)_
 
-## 19 · `b-gate-budget-preauth`
+## 21 · `b-gate-budget-preauth`
 
 - **Roadmap:** road-to-gate-autonomy.md
 - **Unblocks:** 1 open step(s) — Phase 2 step 2.3, and therefore every class-1 execution. Steps 2.1 and 2.2 ship the class-0 path and the render path without it. Also blocks the over-budget half of 2.1's `verify:` clause and AC-2's class-1 half: both need a budget to compare against, and this entry is where that budget is decided.
@@ -267,19 +292,7 @@
 - **Done when:** one option is recorded at this blocker and — for (a) or (b) — the settings keys and the ledger path exist.
 - **Your answer:** _(accept default · override · defer)_
 
-## 20 · `b-detector-demotion-bars`
-
-- **Roadmap:** road-to-stop-gate-honesty.md
-- **Unblocks:** 1 open step(s) — Phase 2 step 2.1, and therefore any demotion. Steps 1.x, 2.2 and 3.x are repo work and proceed without it.
-- **Question** (derived from the first `What to do:` step)**:** pre-register the demotion bar per detector, before reading Phase 1's data — pre-registration after the fact is not pre-registration.
-- **Default:** **option (a) — per-detector bars.** The three detectors have genuinely different legitimacy profiles: A fires on the agent's own promissory language, B on a language mismatch against a fresh pin, C on an edit with no verifier.
-- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
-- **Recommendation (full):** **option (a) — per-detector bars.** The three detectors have genuinely different legitimacy profiles: A fires on the agent's own promissory language, B on a language mismatch against a fresh pin, C on an edit with no verifier. A single shared bar (option b) would be set by whichever detector fires most and would either demote a detector that was working or protect one that was not. Option (c) is defensible on the round-5 evidence but forecloses the question permanently, and this roadmap's whole premise is that a blocking gate should carry a number.
-- **If you do nothing:** the gate keeps refusing turn-ends at an unmeasured rate, and the estate keeps a blocking concern with no registered kill standard while every advisory around it has one. Phase 1's counts would accumulate with nothing authorised to act on them — measurement without a decision rule, which is the shape this roadmap was opened to fix.
-- **Done when:** the bars, or option (c), are recorded at this blocker with their reasoning, and the record predates the first read of Phase 1 data.
-- **Your answer:** _(accept default · override · defer)_
-
-## 21 · `benchmark-spend`
+## 22 · `benchmark-spend`
 
 - **Roadmap:** road-to-surface-consolidation.md
 - **Unblocks:** 1 open step(s) — lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)

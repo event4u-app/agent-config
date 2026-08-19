@@ -96,6 +96,18 @@ A blocking concern ships with its own removal condition, or it does not ship:
 - **Review cadence: quarterly**, or on the first reverse-trigger hit, whichever
   is sooner.
 
+**A concern that shipped before this policy still owes one**, and where a concern
+carries several detectors the debt is owed per detector.
+[`turn-end-detector-demotion`](turn-end-detector-demotion.md) is the worked
+example: `turn-end-gate` is the only concern in this suite that can refuse a
+turn-end, it predates this file, and its four detectors now carry a
+pre-registered removal condition each. Read it before writing another one — one of
+its two quantities is **born inert**, because the concern's own safety design makes
+that quantity unobservable, and the file registers it saying so rather than
+deleting it or pretending it reads. It also names two hazards it avoided by
+definition and worth checking for in any new standard: a denominator that makes a
+bar unfireable, and a retention window shorter than the sample floor.
+
 ## Where a threshold lives
 
 | Location | Cost | Use when |
@@ -124,6 +136,7 @@ its declared posture by accident, only by declaring a different one.
 ## See also
 
 - [`hook-architecture-v1.md`](hook-architecture-v1.md) — the dispatcher contract this policy sits on top of.
+- [`turn-end-detector-demotion.md`](turn-end-detector-demotion.md) — the per-detector reverse trigger for the one blocking concern that predates this policy.
 - `src/rules/session-canary.md` — the measured advisory null this ladder is built around.
 - `src/scripts/hooks/spawn_guard_shadow_hook.ts` — the first concern shipped
   under this policy, and the worked example of the shadow rung. Roadmaps cite

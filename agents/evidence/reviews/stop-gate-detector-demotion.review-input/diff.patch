@@ -1,0 +1,1947 @@
+diff --git a/agents/decisions/consolidated-decision-sheet.md b/agents/decisions/consolidated-decision-sheet.md
+index a6db0f5b70ad73224775210c3bcfa320e42512cd..5986ff8deed373526a92c01238b6b1236b7bc228 100644
+--- a/agents/decisions/consolidated-decision-sheet.md
++++ b/agents/decisions/consolidated-decision-sheet.md
+@@ -1,4 +1,4 @@
+-# Consolidated decision sheet — 21 decisions owned by you
++# Consolidated decision sheet — 22 decisions owned by you
+ 
+ > Generated 2026-08-18 by `agent-config gates --sheet` over `agents/roadmaps/`.
+ > Sorted by unblock count, descending. **Accept-all-defaults is a valid answer**
+@@ -7,7 +7,7 @@
+ > which the roadmap itself recommends. Whichever you pick, the agent writes the answers
+ > back into each roadmap at its own blocker — that is not your work.
+ >
+-> **Provenance of the 21 defaults: 14 maintainer-recorded ·
++> **Provenance of the 22 defaults: 15 maintainer-recorded ·
+ > 6 `agent-drafted` · 0 with no recommendation at all ·
+ > 1 legacy `> Blocked until …` note(s) that have no field to carry one.**
+ > The distinction is in every row on purpose: an agent-drafted default is the
+@@ -22,24 +22,25 @@
+ | 1 | `skill-activation-window` | road-to-cost-parity-1-rule-payload-diet.md | 49 | `agent-drafted` |
+ | 2 | `autonomy-defaults-sheet` | road-to-user-out-of-the-loop.md | 31 | maintainer-recorded |
+ | 3 | `kernel-soak-window` | road-to-user-out-of-the-loop.md | 31 | maintainer-recorded |
+-| 4 | `dpo-signoff` | road-to-org-telemetry.md | 26 | maintainer-recorded |
+-| 5 | `sink-choice` | road-to-org-telemetry.md | 26 | maintainer-recorded |
++| 4 | `dpo-signoff` | road-to-org-telemetry.md | 23 | maintainer-recorded |
++| 5 | `sink-choice` | road-to-org-telemetry.md | 23 | maintainer-recorded |
+ | 6 | `compaction-census-session` | road-to-context-fidelity.md | 19 | maintainer-recorded |
+-| 7 | `b-per-turn-composite-bar` | road-to-per-turn-hook-economy.md | 16 | maintainer-recorded |
+-| 8 | blocked-until note | road-to-gated-reach-followup.md | 12 | none — legacy note |
+-| 9 | `real-orchestration-usage` | road-to-orchestration-scope-decision.md | 6 | `agent-drafted` |
+-| 10 | `telemetry-sample-size` | road-to-subagent-value-realization-followup.md | 6 | maintainer-recorded |
+-| 11 | `human-gated-live-trigger-eval` | road-to-skill-description-measurement.md | 4 | `agent-drafted` |
+-| 12 | `b-live-trigger-eval` | road-to-catalogue-host-fit.md | 3 | maintainer-recorded |
+-| 13 | `b-consolidated-decision-sheet` | road-to-estate-drawdown.md | 3 | maintainer-recorded |
+-| 14 | `b-convergence-machine` | road-to-carrier-layer-convergence.md | 2 | `agent-drafted` |
+-| 15 | `maintainer-blind-ratings` | road-to-council-blind-review.md | 2 | `agent-drafted` |
+-| 16 | `b-behavioural-bench-spend` | road-to-mixed-trigger-activation-cost.md | 2 | maintainer-recorded |
+-| 17 | `manual-rubric-rater` | road-to-scale-history-bench-run.md | 2 | `agent-drafted` |
+-| 18 | `b-delegate-gate-maintainer-profile` | road-to-gate-autonomy.md | 1 | maintainer-recorded |
+-| 19 | `b-gate-budget-preauth` | road-to-gate-autonomy.md | 1 | maintainer-recorded |
+-| 20 | `b-detector-demotion-bars` | road-to-stop-gate-honesty.md | 1 | maintainer-recorded |
+-| 21 | `benchmark-spend` | road-to-surface-consolidation.md | 1 | maintainer-recorded |
++| 7 | blocked-until note | road-to-gated-reach-followup.md | 12 | none — legacy note |
++| 8 | `real-orchestration-usage` | road-to-orchestration-scope-decision.md | 6 | `agent-drafted` |
++| 9 | `b-guard-tool-partition` | road-to-per-turn-hook-economy.md | 6 | maintainer-recorded |
++| 10 | `b-per-turn-composite-bar` | road-to-per-turn-hook-economy.md | 6 | maintainer-recorded |
++| 11 | `b-stdin-read-failure-policy` | road-to-per-turn-hook-economy.md | 6 | maintainer-recorded |
++| 12 | `telemetry-sample-size` | road-to-subagent-value-realization-followup.md | 6 | maintainer-recorded |
++| 13 | `human-gated-live-trigger-eval` | road-to-skill-description-measurement.md | 4 | `agent-drafted` |
++| 14 | `b-live-trigger-eval` | road-to-catalogue-host-fit.md | 3 | maintainer-recorded |
++| 15 | `b-consolidated-decision-sheet` | road-to-estate-drawdown.md | 3 | maintainer-recorded |
++| 16 | `b-convergence-machine` | road-to-carrier-layer-convergence.md | 2 | `agent-drafted` |
++| 17 | `maintainer-blind-ratings` | road-to-council-blind-review.md | 2 | `agent-drafted` |
++| 18 | `b-behavioural-bench-spend` | road-to-mixed-trigger-activation-cost.md | 2 | maintainer-recorded |
++| 19 | `manual-rubric-rater` | road-to-scale-history-bench-run.md | 2 | `agent-drafted` |
++| 20 | `b-delegate-gate-maintainer-profile` | road-to-gate-autonomy.md | 1 | maintainer-recorded |
++| 21 | `b-gate-budget-preauth` | road-to-gate-autonomy.md | 1 | maintainer-recorded |
++| 22 | `benchmark-spend` | road-to-surface-consolidation.md | 1 | maintainer-recorded |
+ 
+ ## 1 · `skill-activation-window`
+ 
+@@ -80,7 +81,7 @@
+ ## 4 · `dpo-signoff`
+ 
+ - **Roadmap:** road-to-org-telemetry.md
+-- **Unblocks:** 26 open step(s) — Phase 3 (org-wide enablement onward)
++- **Unblocks:** 23 open step(s) — Phase 3 (org-wide enablement onward)
+ - **Question** (recorded `Question:`)**:** Does the company data-protection process approve the Class-A field list and the disclosure text?
+ - **Default:** run it as a written review of exactly two artefacts — the Class-A field list from Phase 1 and the one-line disclosure from Phase 3 — rather than of the roadmap.
+ - **Default source:** maintainer-recorded `Recommendation:` in the roadmap
+@@ -92,7 +93,7 @@
+ ## 5 · `sink-choice`
+ 
+ - **Roadmap:** road-to-org-telemetry.md
+-- **Unblocks:** 26 open step(s) — Phase 2 (sink stand-up)
++- **Unblocks:** 23 open step(s) — Phase 2 (sink stand-up)
+ - **Question** (recorded `Question:`)**:** Should the sink be a minimal ingest endpoint, or a private repository used as an append-only store?
+ - **Default:** the private repository.
+ - **Default source:** maintainer-recorded `Recommendation:` in the roadmap
+@@ -113,19 +114,7 @@
+ - **Done when:** a `context-fidelity-cf01.md` finding exists under `agents/evidence/eval-findings/` carrying a per-probe-class number and a host stamp, or the user records that the compaction-survival question is closed unmeasured and Phase 1 is cancelled. (The filename is deliberately not written as a full path here: `check_references` resolves a path in prose and the file does not exist yet, so a link would be a broken reference by construction. The step's own `verify:` probe holds the full path, which is where it belongs.)
+ - **Your answer:** _(accept default · override · defer)_
+ 
+-## 7 · `b-per-turn-composite-bar`
+-
+-- **Roadmap:** road-to-per-turn-hook-economy.md
+-- **Unblocks:** 16 open step(s) — Phase 4 step 4.2 only. Step 4.1 registers the composite as a measured row and 4.3 refreshes the census; both proceed without the bar.
+-- **Question** (derived from the first `What to do:` step)**:** pre-register the per-turn composite bar.
+-- **Default:** **option (b) — register the row observe-only for one release.** No prior exists for a per-turn composite in this tree, so any number named today would be invented, and an invented bar on a summed metric is the flappiest possible gate.
+-- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
+-- **Recommendation (full):** **option (b) — register the row observe-only for one release.** No prior exists for a per-turn composite in this tree, so any number named today would be invented, and an invented bar on a summed metric is the flappiest possible gate. One release of observation produces the distribution the bar should come from. Option (a) is right afterwards, not now; option (c) leaves D-1 permanently unmeasurable, which is the defect itself.
+-- **If you do nothing:** the per-turn cost stays structurally invisible — every slot green, the number the user feels unrepresented — and Phases 1, 2, 3 and 5 land with no bar to prove they helped. The budget-ownership discipline this repo follows says the bar precedes the lever, so the phases would be shipping against no registered target at all.
+-- **Done when:** one option is recorded at this blocker and — for (a) or (b) — the row exists in `hook-latency-budget.json` with its bar or its observe-only marker.
+-- **Your answer:** _(accept default · override · defer)_
+-
+-## 8 · blocked-until note
++## 7 · blocked-until note
+ 
+ - **Roadmap:** road-to-gated-reach-followup.md
+ - **Unblocks:** 12 open step(s) — entire roadmap
+@@ -135,7 +124,7 @@
+ - **Done when:** condition described above clears
+ - **Your answer:** _(accept default · override · defer)_
+ 
+-## 9 · `real-orchestration-usage`
++## 8 · `real-orchestration-usage`
+ 
+ - **Roadmap:** road-to-orchestration-scope-decision.md
+ - **Unblocks:** 6 open step(s) — Phase 2 (and thereby Phase 3's decision)
+@@ -147,7 +136,43 @@
+ - **Done when:** a probe result records whether any hook slot sees the task-completion payload, and — if one does — the current-month audit log carries ≥ 20 orchestration lines whose **quality** columns are populated rather than `null`. **Rewritten 2026-08-17.** The bare line-count condition this field carried until today (*"the current-month audit log holds ≥20 orchestration lines"*) was satisfied at 99 lines when it was written and stands at **367** now, while the blocker never stopped being open — a resolution test that is already met cannot resolve anything, and every feasibility screen that trusted it read this roadmap as resumable. The sibling `road-to-subagent-value-realization-followup` had the identical defect repaired on 2026-08-16; this one was missed in the same pass.
+ - **Your answer:** _(accept default · override · defer)_
+ 
+-## 10 · `telemetry-sample-size`
++## 9 · `b-guard-tool-partition`
++
++- **Roadmap:** road-to-per-turn-hook-economy.md
++- **Unblocks:** 6 open step(s) — nothing in this roadmap — step 5.1 is cancelled and Phases 1-4 proceed without it. It records the one reachable form of 5.1's goal so a later attempt starts from the decision rather than re-deriving it.
++- **Question** (derived from the first `What to do:` step)**:** decide whether the three blocking `pre_tool_use` guards (`block-no-verify`, `block-kernel-rule-writes`, `block-config-weakening`) may carry a **claude-only** host tool filter.
++- **Default:** **option (c) — decline, and revisit only if Phase 4's registered composite exceeds its bar.** The gain is real but unmeasured, and the cost is a silently-skippable filter in front of the two guards that exist because a bypass must be impossible: `matcher` is a plain non-match, so unlike `if` it does not fail open, and a Claude tool-name addition (a renamed Bash variant, a new edit tool) would disable a guard with nothing in the tree noticing.
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** **option (c) — decline, and revisit only if Phase 4's registered composite exceeds its bar.** The gain is real but unmeasured, and the cost is a silently-skippable filter in front of the two guards that exist because a bypass must be impossible: `matcher` is a plain non-match, so unlike `if` it does not fail open, and a Claude tool-name addition (a renamed Bash variant, a new edit tool) would disable a guard with nothing in the tree noticing. Option (a) is the version worth having *after* the composite says the dispatch count is the binding cost; option (b) is strictly waste.
++- **If you do nothing:** the dispatcher keeps firing on every tool call regardless of whether any concern can act, the in-process `tools:` filter keeps absorbing the per-concern half on all eight platforms, and Phase 4's composite row is what tells anyone whether the remaining per-turn cost is worth a security-surface decision at all.
++- **Done when:** one option is recorded at this blocker, and — for (a) — the partition ships with a per-class absent-invocation proof and a test that fails when a claude tool name is added to no class.
++- **Your answer:** _(accept default · override · defer)_
++
++## 10 · `b-per-turn-composite-bar`
++
++- **Roadmap:** road-to-per-turn-hook-economy.md
++- **Unblocks:** 6 open step(s) — Phase 4 step 4.2 only. Step 4.1 registers the composite as a measured row and 4.3 refreshes the census; both proceed without the bar.
++- **Question** (derived from the first `What to do:` step)**:** pre-register the per-turn composite bar.
++- **Default:** **option (b) — register the row observe-only for one release.** No prior exists for a per-turn composite in this tree, so any number named today would be invented, and an invented bar on a summed metric is the flappiest possible gate.
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** **option (b) — register the row observe-only for one release.** No prior exists for a per-turn composite in this tree, so any number named today would be invented, and an invented bar on a summed metric is the flappiest possible gate. One release of observation produces the distribution the bar should come from. Option (a) is right afterwards, not now; option (c) leaves D-1 permanently unmeasurable, which is the defect itself.
++- **If you do nothing:** the per-turn cost stays structurally invisible — every slot green, the number the user feels unrepresented — and Phases 1, 2, 3 and 5 land with no bar to prove they helped. The budget-ownership discipline this repo follows says the bar precedes the lever, so the phases would be shipping against no registered target at all.
++- **Done when:** one option is recorded at this blocker and — for (a) or (b) — the row exists in `hook-latency-budget.json` with its bar or its observe-only marker.
++- **Your answer:** _(accept default · override · defer)_
++
++## 11 · `b-stdin-read-failure-policy`
++
++- **Roadmap:** road-to-per-turn-hook-economy.md
++- **Unblocks:** 6 open step(s) — nothing — F-1's trigger is fixed and the residual failure is now loud. This records the half that is a policy call rather than a bug fix.
++- **Question** (derived from the first `What to do:` step)**:** decide what the dispatcher does when the stdin read **fails**, as distinct from stdin being empty.
++- **Default:** **option (c).** The bypass F-1 records is only consequential where a guard can refuse, and `pre_tool_use` is the one block-capable slot on this host; denying there costs a retryable refusal on an I/O error the retry budget already survived ten seconds of, while denying on `stop` or `post_tool_use` would refuse nothing and could break a turn end.
++- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
++- **Recommendation (full):** **option (c).** The bypass F-1 records is only consequential where a guard can refuse, and `pre_tool_use` is the one block-capable slot on this host; denying there costs a retryable refusal on an I/O error the retry budget already survived ten seconds of, while denying on `stop` or `post_tool_use` would refuse nothing and could break a turn end. Option (b) is the status quo and leaves a documented allow-on-failure on a security path; option (a) is right in spirit and pays for it on slots where it buys nothing.
++- **If you do nothing:** the residual failure stays an allow. It is no longer silent — that was the actual defect and it is fixed — but a reader of `hook-architecture-v1`'s fail-closed contract would still expect a refusal that does not happen, and nothing in the tree records the gap except this blocker.
++- **Done when:** one option is recorded at this blocker and, for (a) or (c), `_readStdin`'s failure path returns a deny for the named slots with a test that fails when it allows.
++- **Your answer:** _(accept default · override · defer)_
++
++## 12 · `telemetry-sample-size`
+ 
+ - **Roadmap:** road-to-subagent-value-realization-followup.md
+ - **Unblocks:** 6 open step(s) — Phase 1 — Seed real telemetry
+@@ -159,7 +184,7 @@
+ - **Done when:** a probe result records whether any hook slot sees the task-completion payload, and — if one does — `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥ 20 orchestration lines whose quality columns are populated rather than `null`. The bare line-count condition this field carried until 2026-08-16 was already satisfied at 99 lines while the blocker stayed open, which made it unusable as a resolution test.
+ - **Your answer:** _(accept default · override · defer)_
+ 
+-## 11 · `human-gated-live-trigger-eval`
++## 13 · `human-gated-live-trigger-eval`
+ 
+ - **Roadmap:** road-to-skill-description-measurement.md
+ - **Unblocks:** 4 open step(s) — all of Phase 1 — 1.1 and 1.2 both need a live model run
+@@ -171,7 +196,7 @@
+ - **Done when:** a predictions JSON exists for the pre-rewrite and the post-rewrite tree state, produced by the same protocol.
+ - **Your answer:** _(accept default · override · defer)_
+ 
+-## 12 · `b-live-trigger-eval`
++## 14 · `b-live-trigger-eval`
+ 
+ - **Roadmap:** road-to-catalogue-host-fit.md
+ - **Unblocks:** 3 open step(s) — Phase 0 only. Phases 1, 1b, 2 and 3 are repo work and proceed without it — Phase 0 sits first because of its cross-roadmap leverage, not because it gates this file.
+@@ -183,7 +208,7 @@
+ - **Done when:** the eval's baseline is committed, or option (b) or (c) is recorded at this blocker with its date.
+ - **Your answer:** _(accept default · override · defer)_
+ 
+-## 13 · `b-consolidated-decision-sheet`
++## 15 · `b-consolidated-decision-sheet`
+ 
+ - **Roadmap:** road-to-estate-drawdown.md
+ - **Unblocks:** 3 open step(s) — Phase 0 step 0.2, and through it the class-1 tranche in 1.2. Step 0.1 generates the sheet without it, and Phase 2's triage sweep proceeds independently.
+@@ -195,7 +220,7 @@
+ - **Done when:** each of the thirteen carries either an answer or an explicit deferral recorded at its own blocker, and the sheet records which option was used.
+ - **Your answer:** _(accept default · override · defer)_
+ 
+-## 14 · `b-convergence-machine`
++## 16 · `b-convergence-machine`
+ 
+ - **Roadmap:** road-to-carrier-layer-convergence.md
+ - **Unblocks:** 2 open step(s) — Phase 3 only (Phases 1-2 are repo work)
+@@ -207,7 +232,7 @@
+ - **Done when:** both readings exist at a named commit.
+ - **Your answer:** _(accept default · override · defer)_
+ 
+-## 15 · `maintainer-blind-ratings`
++## 17 · `maintainer-blind-ratings`
+ 
+ - **Roadmap:** road-to-council-blind-review.md
+ - **Unblocks:** 2 open step(s) — Ü2 and Ü3 adoption (Phase 2 pre-registered decision rules) and the Ü2/Ü3 half of Phase 3's merge-or-null. **Ü1 is NOT blocked** — it is decided, adopted and merged (`blind_chairman` default true, opt-out flag, mandatory post-verdict de-anon map, 26/26 test-pinned).
+@@ -219,7 +244,7 @@
+ - **Done when:** both readings exist, and each of Ü2 / Ü3 carries an adopt-or-honest-null verdict rather than a deferral.
+ - **Your answer:** _(accept default · override · defer)_
+ 
+-## 16 · `b-behavioural-bench-spend`
++## 18 · `b-behavioural-bench-spend`
+ 
+ - **Roadmap:** road-to-mixed-trigger-activation-cost.md
+ - **Unblocks:** 2 open step(s) — Phase 3 steps 3.1 and 3.2. Step 3.3's observer is repo work and proceeds without it.
+@@ -231,7 +256,7 @@
+ - **Done when:** a budget is named at this blocker, or the step is re-dated against the ledger mechanism with that dependency stated.
+ - **Your answer:** _(accept default · override · defer)_
+ 
+-## 17 · `manual-rubric-rater`
++## 19 · `manual-rubric-rater`
+ 
+ - **Roadmap:** road-to-scale-history-bench-run.md
+ - **Unblocks:** 2 open step(s) — Phase 1 step 1's scoring half, and thereby step 2's verdict
+@@ -243,7 +268,7 @@
+ - **Done when:** a human rubric score exists per artifact, recorded before the secondary `lint_persistence` pass for that artifact. - **Surfaced 2026-08-14** by the continuation sweep. It was always true and was never written down, which is why this roadmap read as spend-blocked-only.
+ - **Your answer:** _(accept default · override · defer)_
+ 
+-## 18 · `b-delegate-gate-maintainer-profile`
++## 20 · `b-delegate-gate-maintainer-profile`
+ 
+ - **Roadmap:** road-to-gate-autonomy.md
+ - **Unblocks:** 1 open step(s) — Phase 3 step 3.1 and therefore 3.2.
+@@ -255,7 +280,7 @@
+ - **Done when:** one option is recorded at this blocker, and for (a) or (b) the profile carries the setting with the cap named.
+ - **Your answer:** _(accept default · override · defer)_
+ 
+-## 19 · `b-gate-budget-preauth`
++## 21 · `b-gate-budget-preauth`
+ 
+ - **Roadmap:** road-to-gate-autonomy.md
+ - **Unblocks:** 1 open step(s) — Phase 2 step 2.3, and therefore every class-1 execution. Steps 2.1 and 2.2 ship the class-0 path and the render path without it. Also blocks the over-budget half of 2.1's `verify:` clause and AC-2's class-1 half: both need a budget to compare against, and this entry is where that budget is decided.
+@@ -267,19 +292,7 @@
+ - **Done when:** one option is recorded at this blocker and — for (a) or (b) — the settings keys and the ledger path exist.
+ - **Your answer:** _(accept default · override · defer)_
+ 
+-## 20 · `b-detector-demotion-bars`
+-
+-- **Roadmap:** road-to-stop-gate-honesty.md
+-- **Unblocks:** 1 open step(s) — Phase 2 step 2.1, and therefore any demotion. Steps 1.x, 2.2 and 3.x are repo work and proceed without it.
+-- **Question** (derived from the first `What to do:` step)**:** pre-register the demotion bar per detector, before reading Phase 1's data — pre-registration after the fact is not pre-registration.
+-- **Default:** **option (a) — per-detector bars.** The three detectors have genuinely different legitimacy profiles: A fires on the agent's own promissory language, B on a language mismatch against a fresh pin, C on an edit with no verifier.
+-- **Default source:** maintainer-recorded `Recommendation:` in the roadmap
+-- **Recommendation (full):** **option (a) — per-detector bars.** The three detectors have genuinely different legitimacy profiles: A fires on the agent's own promissory language, B on a language mismatch against a fresh pin, C on an edit with no verifier. A single shared bar (option b) would be set by whichever detector fires most and would either demote a detector that was working or protect one that was not. Option (c) is defensible on the round-5 evidence but forecloses the question permanently, and this roadmap's whole premise is that a blocking gate should carry a number.
+-- **If you do nothing:** the gate keeps refusing turn-ends at an unmeasured rate, and the estate keeps a blocking concern with no registered kill standard while every advisory around it has one. Phase 1's counts would accumulate with nothing authorised to act on them — measurement without a decision rule, which is the shape this roadmap was opened to fix.
+-- **Done when:** the bars, or option (c), are recorded at this blocker with their reasoning, and the record predates the first read of Phase 1 data.
+-- **Your answer:** _(accept default · override · defer)_
+-
+-## 21 · `benchmark-spend`
++## 22 · `benchmark-spend`
+ 
+ - **Roadmap:** road-to-surface-consolidation.md
+ - **Unblocks:** 1 open step(s) — lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 906a4a35a01f8ea13f4566253ccd3f0c843971c2..f67d6fccf77849a25e10de676fd689772900299f 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **54** open blockers, **26** need you → `agent-config gates`
++> 37 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **53** open blockers, **25** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**305 / 577 steps done · 53%**
++**299 / 570 steps done · 52%**
+ 
+ ```text
+-█████████████████████░░░░░░░░░░░░░░░░░░░   53%
++█████████████████████░░░░░░░░░░░░░░░░░░░   52%
+ ```
+ 
+ ## ⚠️ Iron Law 3 — unresolved deferred items
+@@ -56,12 +56,11 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ | 30 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
+ | 31 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
+ | 32 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 8 | 0 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ░░░░░░░░░░ 0% |
+-| 33 | [road-to-stop-gate-honesty.md](roadmaps/road-to-stop-gate-honesty.md) | 3 | 7 | 1 | 6 | 0 | 0 | [1](#blockers-road-to-stop-gate-honesty) | █████████░ 86% |
+-| 34 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 8 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 58% |
+-| 35 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+-| 36 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+-| 37 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+-| 38 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
++| 33 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 8 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 58% |
++| 34 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
++| 35 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
++| 36 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 37 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+ 
+ ---
+ 
+@@ -1115,36 +1114,6 @@ _1 blocker resolved._
+     that `later/road-to-deferred-rule-retriever` pre-registered.
+   - **Resolved when:** the metric reads against its bar and the fork resolves to (a) or (b), or the window is recorded as unfilled with a new date.
+ 
+-### [road-to-stop-gate-honesty.md](roadmaps/road-to-stop-gate-honesty.md)
+-
+-**Road to stop-gate honesty — a blocking gate earns a number** — 6 / 7 done (86%)
+-
+-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+-|---|---|---|---:|---:|---:|---:|---:|
+-| 1 | Count before judging | ✅ done | 0 | 3 | 0 | 0 | 100% |
+-| 2 | Judge each detector on its measured rate against its measured benefit | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+-| 3 | Make refusals cheap when they happen | ✅ done | 0 | 2 | 0 | 0 | 100% |
+-
+-<a id="blockers-road-to-stop-gate-honesty"></a>
+-**Blockers**
+-
+-- **b-detector-demotion-bars** (owner: user) — blocks Phase 2 step 2.1, and therefore any demotion. Steps 1.x, 2.2 and 3.x are repo work and proceed without it.
+-  - **Recommendation:** **option (a) — per-detector bars.** The three detectors have genuinely different legitimacy profiles: A fires on the agent's own promissory language, B on a language mismatch against a fresh pin, C on an edit with no verifier. A single shared bar (option b) would be set by whichever detector fires most and would either demote a detector that was working or protect one that was not. Option (c) is defensible on the round-5 evidence but forecloses the question permanently, and this roadmap's whole premise is that a blocking gate should carry a number.
+-  - **If you do nothing:** the gate keeps refusing turn-ends at an unmeasured rate, and the estate keeps a blocking concern with no registered kill standard while every advisory around it has one. Phase 1's counts would accumulate with nothing authorised to act on them — measurement without a decision rule, which is the shape this roadmap was opened to fix.
+-  - **What to do:**
+-    pre-register the demotion bar per detector, before reading Phase
+-    1's data — pre-registration after the fact is not pre-registration. Options:
+-    (a) name a re-refusal share and a per-session median for each of A, B and C
+-    separately; (b) name one bar shared by all three, accepting that it will fit the
+-    most-firing detector worst; (c) declare that no demotion is available and the
+-    gate stays blocking regardless of rate, in which case Phase 2 closes with that
+-    recorded and Phase 1's numbers become monitoring rather than a decision input.
+-    The counter-argument to keep in view: the round-5 measurement — blocking
+-    carriers at zero violations, advisory carriers not — is the strongest single
+-    result in the enforcement estate, so a demotion trades a measured win for a
+-    measured cost and both numbers should be on the table.
+-  - **Resolved when:** the bars, or option (c), are recorded at this blocker with their reasoning, and the record predates the first read of Phase 1 data.
+-
+ ### [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md)
+ 
+ **Road to subagent lifecycle integrity — turn three production symptoms into deterministic guards** — 11 / 19 done (58%)
+diff --git a/agents/roadmaps/archive/INDEX.md b/agents/roadmaps/archive/INDEX.md
+index fba9cdcac377eaf4a7c5eaf7605df85817a93fe1..fdaa961fea296808e982928479a468b6d86357f0 100644
+--- a/agents/roadmaps/archive/INDEX.md
++++ b/agents/roadmaps/archive/INDEX.md
+@@ -5,7 +5,7 @@
+ > history, not in this file (a clock here would make every drift check a
+ > false red).
+ 
+-**506 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 167 · completed 248 · completed-with-deferrals 25 · not-extractable 34
++**507 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 167 · completed 249 · completed-with-deferrals 25 · not-extractable 34
+ 
+ Every column is extracted deterministically from the file itself. No
+ summary here is model-written: a verdict the frontmatter does not carry
+@@ -442,6 +442,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
+ | [`road-to-spawn-env-completion`](road-to-spawn-env-completion.md) | Road to spawn-env completion — close the GIT_CONFIG RCE residual, classify every spawn site | completed | 2 | 9/9 | _not extractable_ |
+ | [`road-to-stable-chat-history`](road-to-stable-chat-history.md) | Roadmap: Stable Chat History via Platform Hooks | archived-with-open-steps | 5 | 28/31 | _not extractable_ |
+ | [`road-to-starlight-project-docs`](road-to-starlight-project-docs.md) | Roadmap: Starlight project documentation | archived-with-open-steps | 9 | 31/38 | _not extractable_ |
++| [`road-to-stop-gate-honesty`](road-to-stop-gate-honesty.md) | Road to stop-gate honesty — a blocking gate earns a number | completed | 3 | 7/7 | _not extractable_ |
+ | [`road-to-structural-linter-reform`](road-to-structural-linter-reform.md) | Road to Structural Linter Reform | completed | 4 | 14/14 | _not extractable_ |
+ | [`road-to-structural-optimization`](road-to-structural-optimization.md) | Road to Structural Optimization | closed-with-cancellations | 7 | 43/60 | _not extractable_ |
+ | [`road-to-structure-grounding-v2`](road-to-structure-grounding-v2.md) | Roadmap: Structure-grounding v2 — global cross-project card sharing | completed | 6 | 17/17 | _not extractable_ |
+diff --git a/agents/roadmaps/archive/index.json b/agents/roadmaps/archive/index.json
+index 82b3c6e092e8ebbcc5fb896146d00366eab5db24..149b9bc2ddb0b899854adb42581aa65843be4a02 100644
+--- a/agents/roadmaps/archive/index.json
++++ b/agents/roadmaps/archive/index.json
+@@ -1,7 +1,7 @@
+ {
+   "generated_by": "src/scripts/build_archive_index.ts",
+   "source": "agents/roadmaps/archive",
+-  "count": 506,
++  "count": 507,
+   "entries": [
+     {
+       "slug": "00-overview-and-ordering",
+@@ -5855,6 +5855,20 @@
+       "verdict": null,
+       "status": "active"
+     },
++    {
++      "slug": "road-to-stop-gate-honesty",
++      "title": "Road to stop-gate honesty — a blocking gate earns a number",
++      "disposition": "completed",
++      "phases": 3,
++      "steps": {
++        "open": 0,
++        "done": 7,
++        "deferred": 0,
++        "cancelled": 0
++      },
++      "verdict": null,
++      "status": null
++    },
+     {
+       "slug": "road-to-structural-linter-reform",
+       "title": "Road to Structural Linter Reform",
+diff --git a/agents/roadmaps/archive/road-to-stop-gate-honesty.md b/agents/roadmaps/archive/road-to-stop-gate-honesty.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..cefcf2ab39ac4f7f2fce0adf0f821060ee180724
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-stop-gate-honesty.md
+@@ -0,0 +1,478 @@
++---
++complexity: structural
++execution:
++  mode: phase-checkpoints
++---
++
++# Road to stop-gate honesty — a blocking gate earns a number
++
++> **Source:** `agents/tmp.old/mixed-trigger-cleanup/road-to-stop-gate-honesty.md`
++> — external analysis session, 2026-08-17, drafted against `de76c38b932d1612d36cfc85d6b9fbaff4832350`.
++> Adopted 2026-08-17 via `/analyze:inbox` after per-claim verification against
++> `origin/main` @ `097ab6549`. One of the draft's phases is materially narrowed by
++> that verification — see claim 4 and step 2.2.
++
++---
++
++## 0. The defect, stated first
++
++**The suite refuses turn-ends, and a refused turn-end is at least one extra model
++turn the user experiences as slowness and as the agent fighting them — with no
++per-session visibility into how often it happens.**
++
++No infinite loop exists: the re-entrancy guard is two-layered and sound. The cost
++is per-refusal, and it is unmeasured in the field.
++
++### D-1 — The gate is always armed, with three detectors
++
++Armed unconditionally since the settings switch was removed, which shipped
++**inside** the "before 12 it was good" window the report names — itself evidence
++that the report's version attribution needs Phase 0 of
++`road-to-per-turn-hook-economy` before anything is attributed to 12.1. The
++detectors are (A) promissory closing, (B) language mismatch against a fresh pin,
++and (C) unverified edit — a turn that changed a file and ran no verify-shaped
++command is refused at Stop. For a German-speaking team, B fires on English replies
++under a German pin; for quick-edit workflows, C converts every "fix this one line"
++turn into "fix it and run a verifier, or be refused".
++
++### D-2 — Refusal frequency is invisible
++
++Per-session ordinal state exists — one small file per session, and its own header
++admits there is no TTL — but nothing aggregates refusals into a rate anyone
++reviews. A gate that blocks unobserved is exactly the shape this estate's own
++advisory-kill discipline exists to prevent: advisories here carry registered kill
++standards, and this **blocking** concern carries none.
++
++### D-3 — Stop is the heaviest slot and the least elastic
++
++Stop binds the largest concern chain on claude, including a large transcript read,
++a JSONL rebuild, and git scans. **Every refused Stop runs the whole slot again on
++the retry.**
++
++## 1. Verified provenance
++
++Verified 2026-08-17 against `origin/main` @ `097ab6549`.
++
++| # | Claim | Verdict | Evidence |
++|---|---|---|---|
++| 1 | The gate refuses turn-ends; three detectors A/B/C | **still-true** | `src/scripts/hooks/turn_end_gate_hook.ts` header |
++| 2 | Two-layer re-entrancy guard; a wedge rather than a loop is the named failure | **still-true** | same header, re-entrancy section; the `stop_hook_active` check |
++| 3 | Always armed; the settings switch was removed | **still-true** | header's always-armed section; the commit is contained in tags from 10.0.0 onward, i.e. before the window the report blames |
++| 4 | `_VERIFY_RE` may not recognise the team's PHP toolchain, producing false refusals | **OVERTAKEN — the named toolchain is already covered** | `_VERIFY_RE` matches bare `phpunit` and `pest` in its first alternation, and `composer` / `php artisan` followed by a verify-shaped subcommand in its second. So `vendor/bin/phpunit`, `pest`, `composer test` and `php artisan test` all register as verification today. Step 2.2 is narrowed accordingly: the audit is still worth running, but not on the examples the draft named |
++| 5 | Session state files accumulate with no TTL | **still-true** | stated explicitly in the hook header |
++| 6 | Stop binds the largest chain on claude | **still-true** | `src/scripts/hook_manifest.yaml` claude block |
++| 7 | A large transcript read cap per Stop | **still-true** | the read cap in `turn_end_gate_hook.ts` |
++| 8 | Measured origin: language violations survived a fresh pin, and advisory carriers hit zero effect | **still-true** | the round-5 audit citation in the hook header. This is the strongest single result in the enforcement estate and is why this roadmap tunes rather than repeals |
++| 9 | The team operates German-language sessions, so detector-B exposure is real rather than hypothetical | **still-true** | `agents/roadmaps/road-to-conformance-round7-followup.md` corpus quotes |
++| 10 | Refusal rates are expected to correlate with the local 12.1 install date | **prediction, not a claim** | derived from `road-to-mixed-trigger-activation-cost` § 0 — per-edit obligations multiplied by detector C. Phase 1 tests it; nothing downstream assumes it |
++
++## Phases
++
++### Phase 1 — Count before judging
++
++- [x] **1.1** Aggregate refusals: a small reader over the per-session ordinal files
++      plus a refusals counter in the session-register record, reported by the hooks
++      doctor and rolled up per period — **per detector separately**, because A, B
++      and C have different legitimacy profiles and a pooled rate would hide which
++      one is firing. The counter rides the existing session-register write, so it
++      adds no spawn.
++      `verify:` the doctor prints per-detector counts on this machine, and a fixture
++      session with a known refusal is counted once.
++      <!-- done 2026-08-17: `_lib/turn_end_refusals.ts` is the reader;
++      `hooks_doctor` prints it; `SessionRecord.turn_end_refusals` is the
++      per-session half, read from the record the gate already maintains, so the
++      heartbeat gains no spawn.
++
++      TWO PREMISE CORRECTIONS, both found by executing rather than by reading.
++
++      (a) **The gate has FOUR detectors, not three.** § 0 names A/B/C; detector D
++      (`completion`) landed under round 7 § Phase 1 and runs in the same
++      unconditional list. A counter built to the prose would have silently
++      dropped one detector's refusals, so `DETECTOR_IDS` is read off the gate's
++      own `DetectorId` union and a test pins all four.
++
++      (b) **The defect was in the WRITER too, not only in the missing reader.**
++      `markRefusedTurn` overwrote its record on every refusal and stored
++      `findings[0].detector` alone — so a session refused nine times looked
++      exactly like a session refused once, and a turn tripping B and C at once
++      counted as one B. D-2's "refusal frequency is invisible" was therefore true
++      of the state file as well as of the absent rollup, and a reader alone would
++      have aggregated a corpus that had already thrown the numbers away.
++      Mutation-verified: reverting the call site to `[findings[0]!.detector]`
++      fails the new end-to-end case, restoring it passes.
++
++      HONEST DENOMINATOR. A record exists only for a session that was refused, so
++      the reader reports refusals per *refused* session and says so in the output.
++      A per-session rate over all sessions would need a write on every session on
++      the hot Stop path, which this step's own "adds no spawn" forbids.
++
++      FIRST READING, against the 36 field records (2026-08-12 … 2026-08-17):
++      verification 22 (61%), language 9 (25%), promissory 5 (14%), completion 0.
++      A floor, not an exact count — every one of those records predates counting
++      and contributes one refusal each. Detector C dominating is D-1's own
++      prediction for quick-edit workflows, now measured. -->
++- [x] **1.2** Add the TTL the header admits is missing: prune ordinal files past a
++      declared age at session start. Cheap and bounded.
++      `verify:` a fixture directory with aged and fresh files keeps exactly the
++      fresh ones.
++      <!-- done 2026-08-17: `pruneAgedRefusalState`, 90 days, run at
++      `session_start` by the `session-register` concern — the one slot that
++      already prunes, so the step costs one directory scan and no new spawn.
++      Ages on the record's OWN `refused_at`, never the filesystem mtime, which a
++      checkout or an rsync rewrites; an unparseable record is KEPT rather than
++      deleted. The gate header's "No TTL ships here" was corrected in place
++      rather than left as a stale admission. 90 is a stated default with a
++      revisit-if, not a measured optimum, and says so at the constant. -->
++- [x] **1.3** Split the counts before and after the local 12.1 install date per
++      machine, to test claim 10's prediction rather than assume it.
++      `verify:` the split appears in the rollup, with the install date recorded per
++      machine.
++      <!-- done 2026-08-17, and the step's own mechanism was WEAKER than what
++      shipped, which is worth stating because it changes what the split proves.
++
++      `installed.lock` records the version that performed the MOST RECENT install
++      and when — not the date any particular version arrived. This machine reads
++      `13.0.0 at 2026-08-17`, so a before/after split on that date would say
++      nothing about 12.1 and would look like it did. So the refusal record now
++      carries `agent_config_version` AT REFUSAL TIME and the primary split is by
++      RECORDED version; the lockfile boundary is still printed, because it is the
++      only thing that dates the pre-stamping corpus.
++
++      Consequence, stated rather than buried: all 36 existing records are
++      `(unrecorded)` and the rollup labels them so. Claim 10 cannot be tested
++      until refusals accumulate under a stamped version — which is the honest
++      answer, and strictly better than attributing them to whatever is installed
++      today. -->
++
++**Interlock:** AC-1 asks for a rate over a window on at least two machines. The
++instrument now exists and the maintainer machine's window is open; a colleague
++machine contributes as soon as one runs a version that stamps its refusals.
++Nothing downstream of Phase 1 was built on the unstamped corpus.
++- **AC-1:** a per-detector refusal rate exists for the maintainer machine and at
++  least one colleague machine, over a window long enough to be read as a rate
++  rather than an anecdote.
++
++**AC-1 is UNMET at archival, and archiving removes its last tracked carrier.**
++Recorded here rather than left for a reader to infer from the archive row, which
++publishes this file as `completed`: the counters reached `count_open == 0` because
++every *step* closed, and AC-1 is an acceptance criterion waiting on data from a
++second machine, which no step could have produced. AC-3 is in the same state but
++has a real owner — it was delegated by name to an open roadmap. AC-1 has none.
++
++The carrier that remains is the `keep-beta-until` review marker on
++[`turn-end-detector-demotion`](../../../docs/contracts/turn-end-detector-demotion.md),
++which is enforced by `check_beta_review_markers` and forces that file to be
++re-read by its date. The same marker is the only schedule behind the two
++instruments that contract is waiting on. That is weaker than a roadmap step and
++stronger than nothing, and it is named at both ends so neither reader has to
++reconstruct it. Retention makes this sharper rather than softer: the 90-day TTL
++means a window left unaccumulated is not merely late, it is unrecoverable.
++
++### Phase 2 — Judge each detector on its measured rate against its measured benefit
++
++- [x] **2.1** Pre-register the bar per detector **before looking at Phase 1 data**:
++      a detector whose refusals are re-refused on the retry above some share — the
++      model could not satisfy it — or whose median per-session count exceeds some
++      threshold is demoted from blocking to advisory **for that detector only**, and
++      the demotion is published with the distribution. The numbers are the
++      maintainer's; the shape is the requirement. Blocked on
++      `b-detector-demotion-bars`.
++      <!-- glyph corrected 2026-08-17 `[~]` → `[ ]`, maintainer decision, under
++      the Iron-Law-3 resolution menu (`roadmap-management § 4b`, outcome
++      "restore"). The two glyphs are not synonyms: `[~]` is DEFERRED — work
++      consciously moved out of this plan — and `[ ]` is OPEN. This step is
++      neither postponed nor cancelled; it is waiting on `b-detector-demotion-bars`
++      exactly as every other blocker-gated step in the estate waits, and its own
++      blocker entry says so ("Blocks: Phase 2 step 2.1").
++
++      It shipped as `[~]` from the inbox adoption and nothing re-examined the
++      choice. Closing Phase 1 moved the file to `count_open == 0` with one
++      deferred item, which is the state Iron Law 3 refuses to let archive
++      silently — so the glyph had to be decided rather than inherited, and the
++      accurate reading is the one that also clears the gate. The gate was NOT the
++      reason: a step is marked by what is true of it, and this correction would
++      be right with no gate at all.
++
++      What this does NOT do: it does not touch the blocker, does not pre-register
++      any bar, and does not read Phase 1's distribution into a decision. The
++      pre-registration must predate the first read and remains the maintainer's,
++      untouched. -->
++      <!-- verify: the roadmap reports one open step and zero deferred, and
++      `roadmap:progress-check` no longer lists this file under Iron Law 3. -->
++      <!-- done 2026-08-18: `docs/contracts/turn-end-detector-demotion.md`, the
++      per-detector standard, registered under option (a) of
++      `b-detector-demotion-bars` after an AI-council pass (2/2 seats present,
++      concluded — both chose (a) over a shared bar and over "no demotion
++      available"). Cross-linked from `concern-activation-policy` § Reverse trigger
++      as the worked example for a blocking concern that predates that policy, and
++      from the gate's own header.
++
++      THREE THINGS THE STEP'S OWN WORDING DID NOT SURVIVE, each found by
++      executing rather than by reading, and each recorded at the contract rather
++      than only here.
++
++      (a) **The re-refusal share is 0 BY CONSTRUCTION and is not measurable.**
++      The step names it as the primary quantity — "a detector whose refusals are
++      re-refused on the retry above some share". `main()` returns `EXIT_ALLOW`
++      before any detector runs on a retry, twice over: layer 1 on the host's
++      `stop_hook_active`, layer 2 on `alreadyRefusedTurn(…, turnOrdinal)`, and a
++      retry carries no new user prompt so the ordinal is unchanged. A turn is
++      refused at most once — the wedge the guard exists to prevent. This is
++      intended behaviour pinned by a committed test whose fixture is a retry that
++      STILL PROMISES and is asserted to pass ("LAYER 2: the turn marker alone
++      stops a second refusal, even on a NEW reply"). So the bar is registered
++      INERT, with the shadow `would_refuse_again` read named as the instrument
++      that makes it live. Neither council seat could reach this: both had the
++      mechanism description, not the guard's code.
++
++      (b) **"Median per session" had to become "median per AFFECTED session"**,
++      and that is a metric change rather than a clarification. Over all sessions,
++      a detector affecting fewer than half of them has a permanent median of
++      zero, so the bar could never fire — the gate-that-cannot-fire shape this
++      repository rejects elsewhere.
++
++      (c) **Crossing a bar authorises a staged study, NOT a demotion.** The step
++      reads as though the bar demotes the detector. Both seats independently
++      refused that on the round-5 asymmetry: friction and satisfiability measure
++      cost, neither measures the violations that return after a demotion, and a
++      high re-refusal share may be evidence the detector is load-bearing rather
++      than broken. Recorded as a narrowing with its reason, not absorbed.
++
++      What this does NOT do: it does not demote any detector, does not retire
++      dormant D (that needs an opportunity metric this pre-registration
++      excludes), and does not read Phase 1's distribution into the numbers — the
++      published reading carries neither bar quantity, and the contract states the
++      blindness check so a reader does not have to take it on trust. -->
++      <!-- verify: test -f docs/contracts/turn-end-detector-demotion.md, and the
++      contract names a bar for each of the four `DETECTOR_IDS`. -->
++- [x] **2.2** Detector C's verify allowlist decides what counts as verification.
++      **Narrowed by claim 4:** the PHP toolchain the draft worried about is already
++      matched, so this step is no longer "add phpunit and pest". What remains is a
++      real audit with a smaller surface — enumerate the verify-shaped commands the
++      team actually runs, test each against `isVerificationCommand`, and record the
++      misses. Any addition ships with a fixture mapping command string to
++      recognised, the same as every allowlist in this tree.
++      `verify:` a fixture table of real commands with their recognition verdict;
++      every addition has its own row.
++      <!-- done 2026-08-17: 56-row table in
++      `tests/scripts/turn_end_verify_allowlist.test.ts`, built from this
++      project's real surface — its `package.json` scripts, its `Taskfile`
++      targets, `./scripts-run`, `./agent-config`, and the PHP / Python / Go /
++      Rust toolchains.
++
++      CLAIM 4 RE-VERIFIED, not taken on trust: `vendor/bin/phpunit`, `pest`,
++      `composer test` and `php artisan test` all matched BEFORE this change. The
++      draft's expected work was genuinely already done.
++
++      TWO REAL MISSES, both added:
++        · `phpstan` — a static analyser of exactly the class already listed
++          (`mypy`, `pyright`, `clippy`).
++        · `lint` followed by a WORD character. `\blint\b` needs a boundary and
++          `_` is a word character, so EVERY `lint_*` script in `src/scripts/` was
++          unrecognised — `lint_persistence`, `lint_provenance`, and the rest.
++          `lint[-_:a-z]*` is the exact mirror of the `check[-_:a-z]*` this list
++          already carried, which is why it is the narrow fix and not a new idea.
++
++      FOUR MISSES DELIBERATELY NOT ADDED, because Risk 2 says every addition is a
++      way to satisfy the gate without verifying anything: `npm run prepack` (a
++      per-project lifecycle hook — a build step elsewhere), `task sync` /
++      `task generate-tools` / `agent-config roadmap:progress` (GENERATORS — they
++      rewrite the tree and check nothing, which is the rubber stamp in its purest
++      form), `agent-config gates --all` (enumerates, runs nothing), and
++      `vendor/bin/rector process --dry-run` (a refactorer; its dry run prints a
++      diff and asserts nothing). `psalm` is `phpstan`'s obvious sibling and is
++      also not added: nothing in the audited surface runs it, and "the team
++      actually runs" is this step's own standard.
++
++      The `false` rows are pinned as tests, not merely recorded — if a later
++      widening makes `task sync` or `ls -la` clear an unverified edit, the
++      fixture fails and the change has to be argued rather than slipped in. -->
++      <!-- open note for 2.1: this audit does NOT read Phase 1's distribution and
++      must not be read as doing so. The pre-registration in
++      `b-detector-demotion-bars` is untouched and still predates any read. -->
++
++**Phase status (2026-08-18):** both steps are closed. `b-detector-demotion-bars`
++is resolved and each of the four detectors now carries a registered bar at
++[`turn-end-detector-demotion`](../../../docs/contracts/turn-end-detector-demotion.md).
++
++**AC-2 is met in the sense it was written, and NOT in the sense a reader will
++want.** It asks that "no detector stays blocking without a number" — every
++detector now has one, which is exactly what this phase was opened to fix. What it
++does **not** yet have is a *verdict*: a bar may only be read after its own sample
++floor (100 eligible refusals · 50 affected sessions · 30 stable days), and the
++eligible corpus is empty because the 36 legacy records predate version stamping.
++So the phase closes on the standard, never on a green-or-demote reading, and the
++first reading belongs to whoever meets a floor. Stating the split rather than
++claiming the criterion outright is the point: a registered bar and a satisfied bar
++are different facts.
++- **AC-2:** each detector has either a green verdict — rate under its bar — or a
++  demotion PR citing the distribution. **No detector stays blocking without a
++  number.**
++
++### Phase 3 — Make refusals cheap when they happen
++
++- [x] **3.1** On a refusal retry, skip the non-gate Stop concerns: chat history has
++      already written, and re-running the context rebuild, the end-review scan and
++      the self-repair detector on the retry is pure duplicate cost. Manifest-level,
++      one opt-in flag per concern, default off, flipped only with a per-concern
++      argument in the PR — never a blanket skip. Verify per concern that its dedup
++      is idempotent before flagging it.
++      `verify:` a fixture retry runs only the refusal-capable concerns, and each
++      skipped concern's artefact is identical to the non-retry run.
++      <!-- done 2026-08-17: `skip_on_refusal_retry` in `hook_manifest.yaml`,
++      honoured by `_resolve_concerns` when `_is_refusal_retry` reads the host's
++      own `stop_hook_active` — the same field the gate uses as its layer-1 guard,
++      so the retry is the host's answer and not our inference. Anything
++      unparseable yields the FULL chain: running twice costs duplicate work,
++      skipping wrongly loses a write.
++
++      Measured end to end: the claude stop chain is 10 concerns, 8 on a retry.
++
++      THE STEP'S OWN PREMISE IS PARTLY REFUTED, and the audit it demanded is what
++      refuted it. "Chat history has already written, and re-running the context
++      rebuild, the end-review scan and the self-repair detector is pure duplicate
++      cost" holds for ONE of those four. Between the refusal and the retry the
++      model DOES more work — that is the point of refusing — so the transcript
++      has grown and every concern reading it has a changed input:
++        · `chat-history` — would LOSE the work done between the two Stops.
++        · `hot-context` — rebuilds from a tree the retry just edited.
++        · `self-repair` — a detector over a turn that changed.
++        · `session-eol` — reads only the bytes appended since the last scan, so
++          skipping the final Stop drops the tail.
++      Flagging those four would be Risk 3 exactly: "a concern skipped on the
++      retry might have been the one that needed the second pass, and the loss
++      would be silent."
++
++      TWO CONCERNS PASS, each on its OWN dedup rather than on our reading:
++        · `interruption-ledger` — dedupes on `(run_id, turn)`, and a refusal
++          retry is the same turn by construction. It already writes nothing. What
++          it does not already avoid is the COST: `main()` calls
++          `readTranscriptTail` (up to 8 MB, walking the whole file) BEFORE
++          reaching `alreadyRecorded`, so today every refused Stop pays a full
++          transcript walk and discards it. This is the flag with the real saving,
++          and D-3's "pure duplicate cost" located in the source.
++        · `end-review-nudge` — its F2 once-per-session marker returns "without
++          re-running the transcript scan", so the artefact is identical by the
++          concern's own construction. The saving is the module load, which is
++          smaller, and the manifest says so rather than overselling it.
++
++      `turn-end-gate` is asserted to survive the retry: skipping the
++      refusal-capable concern would leave the second attempt unguarded, which is
++      the inverse of the intent. A test pins it, and another pins that every
++      flagged concern carries a written ARGUMENT beside its flag — a flag with no
++      argument is the blanket skip wearing a per-concern shape. -->
++- [x] **3.2** Complementary lever, recorded here so the two files cannot drift:
++      moving the non-gating Stop concerns to the host's async handler form is owned
++      by `road-to-per-turn-hook-economy` step 5.3. This roadmap records only the
++      split — gates synchronous, recorders async — and defers the mechanism and its
++      acceptance criterion to that file.
++      `verify:` this step needs no code; it is closed by that file's 5.3 landing, or
++      by recording that it did not.
++      <!-- done 2026-08-17 by the second branch: 5.3 has NOT landed — read at
++      `86cdbf652`, `road-to-per-turn-hook-economy` step 5.3 is open. Recorded
++      here as that file's work, with the split stated: gates synchronous
++      (`turn-end-gate`, `team-review-gate`), recorders async.
++
++      One interlock the two files must not lose, because they now touch the same
++      concerns from opposite directions: 5.3 states that `end-review-nudge`
++      "needs its stdout to reach the model, so it stays synchronous until
++      measured otherwise". That is about the ASYNC axis and does not conflict
++      with 3.1's retry skip — on a retry its stdout was already delivered, or
++      already suppressed, on the first Stop. A future 5.3 may make it async or
++      leave it synchronous; either way the retry flag is orthogonal and neither
++      decision constrains the other. -->
++
++**AC-3 is NOT satisfied by this branch and is not claimed to be.** It asks that a
++refused-turn retry cost "materially less than a full Stop in the bench, measured
++rather than asserted". What shipped is the mechanism and its correctness proof —
++the chain is provably shorter and the skipped artefacts provably identical. The
++*measurement* belongs to `road-to-per-turn-hook-economy`'s bench, which owns the
++Stop-slot numbers, and is the honest reason this phase advances without closing.
++- **AC-3:** a refused-turn retry costs materially less than a full Stop in the
++  bench, measured rather than asserted.
++
++## Blockers
++
++### blocker: b-detector-demotion-bars
++- **Status:** RESOLVED 2026-08-18 — **option (a), per-detector bars**, registered
++  at [`turn-end-detector-demotion`](../../../docs/contracts/turn-end-detector-demotion.md).
++  Resolved by AI council (2 of 2 seats present, concluded, `--prompt-mode design`)
++  rather than by the host: both seats chose (a) over (b) and over (c), and the
++  numbers are the convergence of their two proposals, taking the
++  demotion-resistant side wherever they differed. The question file carried no
++  host framing and no recommendation.
++
++  **Three corrections the council could not reach, made from the gate's code and
++  labelled own analysis at the contract:** the re-refusal share is 0 by
++  construction (two re-entrancy layers cap a turn at one refusal, pinned by a
++  committed test), so that bar ships INERT with its enabling instrument named;
++  "median per session" had to become "median per AFFECTED session" or the bar
++  could never fire; and a crossed bar authorises a staged-demotion study rather
++  than a demotion, which both seats reached independently and which NARROWS step
++  2.1's own wording.
++
++  **What was deliberately NOT decided here:** no detector is demoted, dormant D is
++  not retired (that needs an opportunity metric this pre-registration excludes),
++  and the staged study's own pre-registration is left to whoever runs it. The
++  counter-argument the entry asked to keep in view — round 5's blocking-carriers-
++  at-zero-violations result — is on the record at the contract and is the reason
++  the standard resists demotion rather than enabling it.
++- **Owner:** user
++- **Class:** 2 — consent-once
++- **Blocks:** Phase 2 step 2.1, and therefore any demotion. Steps 1.x, 2.2 and 3.x
++  are repo work and proceed without it.
++- **What to do:** pre-register the demotion bar per detector, before reading Phase
++  1's data — pre-registration after the fact is not pre-registration. Options:
++  (a) name a re-refusal share and a per-session median for each of A, B and C
++  separately; (b) name one bar shared by all three, accepting that it will fit the
++  most-firing detector worst; (c) declare that no demotion is available and the
++  gate stays blocking regardless of rate, in which case Phase 2 closes with that
++  recorded and Phase 1's numbers become monitoring rather than a decision input.
++  The counter-argument to keep in view: the round-5 measurement — blocking
++  carriers at zero violations, advisory carriers not — is the strongest single
++  result in the enforcement estate, so a demotion trades a measured win for a
++  measured cost and both numbers should be on the table.
++- **Recommendation:** **option (a) — per-detector bars.** The three detectors have
++  genuinely different legitimacy profiles: A fires on the agent's own promissory
++  language, B on a language mismatch against a fresh pin, C on an edit with no
++  verifier. A single shared bar (option b) would be set by whichever detector fires
++  most and would either demote a detector that was working or protect one that was
++  not. Option (c) is defensible on the round-5 evidence but forecloses the question
++  permanently, and this roadmap's whole premise is that a blocking gate should carry
++  a number.
++- **If you do nothing:** the gate keeps refusing turn-ends at an unmeasured rate,
++  and the estate keeps a blocking concern with no registered kill standard while
++  every advisory around it has one. Phase 1's counts would accumulate with nothing
++  authorised to act on them — measurement without a decision rule, which is the
++  shape this roadmap was opened to fix.
++- **Resolved when:** the bars, or option (c), are recorded at this blocker with
++  their reasoning, and the record predates the first read of Phase 1 data.
++
++## Risk Register
++
++<!-- risk-review: v1 | reviewed: 2026-08-17 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | Demoting a detector reintroduces the violations it closed | product | The measured origin of this gate is that advisory carriers achieved zero effect on exactly these violations while blocking carriers eliminated them; a demotion could re-open a class the estate already paid to close | Demotion is per-detector, evidence-cited and reversible; the round-5 numbers stay the baseline the advisory form is measured against, so a failed demotion is detectable rather than invisible | Phase 2 — Judge each detector |
++| 2 | Widening the verify allowlist turns detector C into a rubber stamp | product | Every command added is a way to satisfy the gate without verifying anything; enough additions and the detector stops detecting | Each addition ships a fixture mapping command to verdict, and claim 4 already removed the pressure to add the obvious PHP commands because they match today | Phase 2 |
++| 3 | Skipping concerns on retry loses a legitimate second-chance write | implementation | A concern skipped on the retry might have been the one that needed the second pass, and the loss would be silent | Per-concern opt-in with a stated argument, never a blanket skip; idempotence is verified per concern before its flag is flipped, and the artefact diff is the check | Phase 3 |
++| 4 | The refusal counter's own cost lands on the slot it measures | implementation | Stop is already the heaviest slot; instrumenting it could make the thing it measures worse | The counter rides the existing session-register write and adds no spawn, which is why 1.1 specifies that carrier rather than a new one | Phase 1 — Count before judging |
++| 5 | Pre-registration is quietly done after the data is seen | product | The bar is only meaningful if it predates the distribution; a bar chosen after looking is a description dressed as a decision | The blocker's resolution condition requires the record to predate the first read, and Phase 1 and the blocker are deliberately separable so the data can accumulate while the bar is being decided | Phase 2 |
++| 6 | Attributing the refusals to 12.1 when the gate predates it | product | The gate was armed before the window the report blames, so a correlation with the install date could be read as causation and mis-route the whole investigation | Claim 10 is labelled a prediction rather than a claim, step 1.3 tests it as a split, and D-1 states the arming date's position relative to the window up front | Phase 1 |
++
++## CUT list — do not re-litigate
++
++- **Removing the gate.** The round-5 measurement is the strongest single result in
++  the enforcement estate. This roadmap tunes; it does not repeal. Cut.
++- **A settings kill-switch.** The argument that removed it stands: a default-off
++  safety gate soaks nothing. Per-detector demotion by evidence replaces it. Cut.
++- **Keying refusal state on prompt text.** Already tried and found wrong in three
++  directions. The ordinal stays. Cut.
++
++## Honest-null consequence
++
++If Phase 1 shows refusal rates are negligible across all three detectors, this
++roadmap closes as a null with the numbers published, and the "slow since 12.1"
++investigation returns fully to the activation flip, the context size and the
++environment — which is itself a decidable and valuable answer.
+diff --git a/agents/roadmaps/road-to-stop-gate-honesty.md b/agents/roadmaps/road-to-stop-gate-honesty.md
+deleted file mode 100644
+index ec4315a80b60525650994472cbea16cbd3b9c417..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-stop-gate-honesty.md
++++ /dev/null
+@@ -1,383 +0,0 @@
+----
+-complexity: structural
+-execution:
+-  mode: phase-checkpoints
+----
+-
+-# Road to stop-gate honesty — a blocking gate earns a number
+-
+-> **Source:** `agents/tmp.old/mixed-trigger-cleanup/road-to-stop-gate-honesty.md`
+-> — external analysis session, 2026-08-17, drafted against `de76c38b932d1612d36cfc85d6b9fbaff4832350`.
+-> Adopted 2026-08-17 via `/analyze:inbox` after per-claim verification against
+-> `origin/main` @ `097ab6549`. One of the draft's phases is materially narrowed by
+-> that verification — see claim 4 and step 2.2.
+-
+----
+-
+-## 0. The defect, stated first
+-
+-**The suite refuses turn-ends, and a refused turn-end is at least one extra model
+-turn the user experiences as slowness and as the agent fighting them — with no
+-per-session visibility into how often it happens.**
+-
+-No infinite loop exists: the re-entrancy guard is two-layered and sound. The cost
+-is per-refusal, and it is unmeasured in the field.
+-
+-### D-1 — The gate is always armed, with three detectors
+-
+-Armed unconditionally since the settings switch was removed, which shipped
+-**inside** the "before 12 it was good" window the report names — itself evidence
+-that the report's version attribution needs Phase 0 of
+-`road-to-per-turn-hook-economy` before anything is attributed to 12.1. The
+-detectors are (A) promissory closing, (B) language mismatch against a fresh pin,
+-and (C) unverified edit — a turn that changed a file and ran no verify-shaped
+-command is refused at Stop. For a German-speaking team, B fires on English replies
+-under a German pin; for quick-edit workflows, C converts every "fix this one line"
+-turn into "fix it and run a verifier, or be refused".
+-
+-### D-2 — Refusal frequency is invisible
+-
+-Per-session ordinal state exists — one small file per session, and its own header
+-admits there is no TTL — but nothing aggregates refusals into a rate anyone
+-reviews. A gate that blocks unobserved is exactly the shape this estate's own
+-advisory-kill discipline exists to prevent: advisories here carry registered kill
+-standards, and this **blocking** concern carries none.
+-
+-### D-3 — Stop is the heaviest slot and the least elastic
+-
+-Stop binds the largest concern chain on claude, including a large transcript read,
+-a JSONL rebuild, and git scans. **Every refused Stop runs the whole slot again on
+-the retry.**
+-
+-## 1. Verified provenance
+-
+-Verified 2026-08-17 against `origin/main` @ `097ab6549`.
+-
+-| # | Claim | Verdict | Evidence |
+-|---|---|---|---|
+-| 1 | The gate refuses turn-ends; three detectors A/B/C | **still-true** | `src/scripts/hooks/turn_end_gate_hook.ts` header |
+-| 2 | Two-layer re-entrancy guard; a wedge rather than a loop is the named failure | **still-true** | same header, re-entrancy section; the `stop_hook_active` check |
+-| 3 | Always armed; the settings switch was removed | **still-true** | header's always-armed section; the commit is contained in tags from 10.0.0 onward, i.e. before the window the report blames |
+-| 4 | `_VERIFY_RE` may not recognise the team's PHP toolchain, producing false refusals | **OVERTAKEN — the named toolchain is already covered** | `_VERIFY_RE` matches bare `phpunit` and `pest` in its first alternation, and `composer` / `php artisan` followed by a verify-shaped subcommand in its second. So `vendor/bin/phpunit`, `pest`, `composer test` and `php artisan test` all register as verification today. Step 2.2 is narrowed accordingly: the audit is still worth running, but not on the examples the draft named |
+-| 5 | Session state files accumulate with no TTL | **still-true** | stated explicitly in the hook header |
+-| 6 | Stop binds the largest chain on claude | **still-true** | `src/scripts/hook_manifest.yaml` claude block |
+-| 7 | A large transcript read cap per Stop | **still-true** | the read cap in `turn_end_gate_hook.ts` |
+-| 8 | Measured origin: language violations survived a fresh pin, and advisory carriers hit zero effect | **still-true** | the round-5 audit citation in the hook header. This is the strongest single result in the enforcement estate and is why this roadmap tunes rather than repeals |
+-| 9 | The team operates German-language sessions, so detector-B exposure is real rather than hypothetical | **still-true** | `agents/roadmaps/road-to-conformance-round7-followup.md` corpus quotes |
+-| 10 | Refusal rates are expected to correlate with the local 12.1 install date | **prediction, not a claim** | derived from `road-to-mixed-trigger-activation-cost` § 0 — per-edit obligations multiplied by detector C. Phase 1 tests it; nothing downstream assumes it |
+-
+-## Phases
+-
+-### Phase 1 — Count before judging
+-
+-- [x] **1.1** Aggregate refusals: a small reader over the per-session ordinal files
+-      plus a refusals counter in the session-register record, reported by the hooks
+-      doctor and rolled up per period — **per detector separately**, because A, B
+-      and C have different legitimacy profiles and a pooled rate would hide which
+-      one is firing. The counter rides the existing session-register write, so it
+-      adds no spawn.
+-      `verify:` the doctor prints per-detector counts on this machine, and a fixture
+-      session with a known refusal is counted once.
+-      <!-- done 2026-08-17: `_lib/turn_end_refusals.ts` is the reader;
+-      `hooks_doctor` prints it; `SessionRecord.turn_end_refusals` is the
+-      per-session half, read from the record the gate already maintains, so the
+-      heartbeat gains no spawn.
+-
+-      TWO PREMISE CORRECTIONS, both found by executing rather than by reading.
+-
+-      (a) **The gate has FOUR detectors, not three.** § 0 names A/B/C; detector D
+-      (`completion`) landed under round 7 § Phase 1 and runs in the same
+-      unconditional list. A counter built to the prose would have silently
+-      dropped one detector's refusals, so `DETECTOR_IDS` is read off the gate's
+-      own `DetectorId` union and a test pins all four.
+-
+-      (b) **The defect was in the WRITER too, not only in the missing reader.**
+-      `markRefusedTurn` overwrote its record on every refusal and stored
+-      `findings[0].detector` alone — so a session refused nine times looked
+-      exactly like a session refused once, and a turn tripping B and C at once
+-      counted as one B. D-2's "refusal frequency is invisible" was therefore true
+-      of the state file as well as of the absent rollup, and a reader alone would
+-      have aggregated a corpus that had already thrown the numbers away.
+-      Mutation-verified: reverting the call site to `[findings[0]!.detector]`
+-      fails the new end-to-end case, restoring it passes.
+-
+-      HONEST DENOMINATOR. A record exists only for a session that was refused, so
+-      the reader reports refusals per *refused* session and says so in the output.
+-      A per-session rate over all sessions would need a write on every session on
+-      the hot Stop path, which this step's own "adds no spawn" forbids.
+-
+-      FIRST READING, against the 36 field records (2026-08-12 … 2026-08-17):
+-      verification 22 (61%), language 9 (25%), promissory 5 (14%), completion 0.
+-      A floor, not an exact count — every one of those records predates counting
+-      and contributes one refusal each. Detector C dominating is D-1's own
+-      prediction for quick-edit workflows, now measured. -->
+-- [x] **1.2** Add the TTL the header admits is missing: prune ordinal files past a
+-      declared age at session start. Cheap and bounded.
+-      `verify:` a fixture directory with aged and fresh files keeps exactly the
+-      fresh ones.
+-      <!-- done 2026-08-17: `pruneAgedRefusalState`, 90 days, run at
+-      `session_start` by the `session-register` concern — the one slot that
+-      already prunes, so the step costs one directory scan and no new spawn.
+-      Ages on the record's OWN `refused_at`, never the filesystem mtime, which a
+-      checkout or an rsync rewrites; an unparseable record is KEPT rather than
+-      deleted. The gate header's "No TTL ships here" was corrected in place
+-      rather than left as a stale admission. 90 is a stated default with a
+-      revisit-if, not a measured optimum, and says so at the constant. -->
+-- [x] **1.3** Split the counts before and after the local 12.1 install date per
+-      machine, to test claim 10's prediction rather than assume it.
+-      `verify:` the split appears in the rollup, with the install date recorded per
+-      machine.
+-      <!-- done 2026-08-17, and the step's own mechanism was WEAKER than what
+-      shipped, which is worth stating because it changes what the split proves.
+-
+-      `installed.lock` records the version that performed the MOST RECENT install
+-      and when — not the date any particular version arrived. This machine reads
+-      `13.0.0 at 2026-08-17`, so a before/after split on that date would say
+-      nothing about 12.1 and would look like it did. So the refusal record now
+-      carries `agent_config_version` AT REFUSAL TIME and the primary split is by
+-      RECORDED version; the lockfile boundary is still printed, because it is the
+-      only thing that dates the pre-stamping corpus.
+-
+-      Consequence, stated rather than buried: all 36 existing records are
+-      `(unrecorded)` and the rollup labels them so. Claim 10 cannot be tested
+-      until refusals accumulate under a stamped version — which is the honest
+-      answer, and strictly better than attributing them to whatever is installed
+-      today. -->
+-
+-**Interlock:** AC-1 asks for a rate over a window on at least two machines. The
+-instrument now exists and the maintainer machine's window is open; a colleague
+-machine contributes as soon as one runs a version that stamps its refusals.
+-Nothing downstream of Phase 1 was built on the unstamped corpus.
+-- **AC-1:** a per-detector refusal rate exists for the maintainer machine and at
+-  least one colleague machine, over a window long enough to be read as a rate
+-  rather than an anecdote.
+-
+-### Phase 2 — Judge each detector on its measured rate against its measured benefit
+-
+-- [ ] **2.1** Pre-register the bar per detector **before looking at Phase 1 data**:
+-      a detector whose refusals are re-refused on the retry above some share — the
+-      model could not satisfy it — or whose median per-session count exceeds some
+-      threshold is demoted from blocking to advisory **for that detector only**, and
+-      the demotion is published with the distribution. The numbers are the
+-      maintainer's; the shape is the requirement. Blocked on
+-      `b-detector-demotion-bars`.
+-      <!-- glyph corrected 2026-08-17 `[~]` → `[ ]`, maintainer decision, under
+-      the Iron-Law-3 resolution menu (`roadmap-management § 4b`, outcome
+-      "restore"). The two glyphs are not synonyms: `[~]` is DEFERRED — work
+-      consciously moved out of this plan — and `[ ]` is OPEN. This step is
+-      neither postponed nor cancelled; it is waiting on `b-detector-demotion-bars`
+-      exactly as every other blocker-gated step in the estate waits, and its own
+-      blocker entry says so ("Blocks: Phase 2 step 2.1").
+-
+-      It shipped as `[~]` from the inbox adoption and nothing re-examined the
+-      choice. Closing Phase 1 moved the file to `count_open == 0` with one
+-      deferred item, which is the state Iron Law 3 refuses to let archive
+-      silently — so the glyph had to be decided rather than inherited, and the
+-      accurate reading is the one that also clears the gate. The gate was NOT the
+-      reason: a step is marked by what is true of it, and this correction would
+-      be right with no gate at all.
+-
+-      What this does NOT do: it does not touch the blocker, does not pre-register
+-      any bar, and does not read Phase 1's distribution into a decision. The
+-      pre-registration must predate the first read and remains the maintainer's,
+-      untouched. -->
+-      <!-- verify: the roadmap reports one open step and zero deferred, and
+-      `roadmap:progress-check` no longer lists this file under Iron Law 3. -->
+-- [x] **2.2** Detector C's verify allowlist decides what counts as verification.
+-      **Narrowed by claim 4:** the PHP toolchain the draft worried about is already
+-      matched, so this step is no longer "add phpunit and pest". What remains is a
+-      real audit with a smaller surface — enumerate the verify-shaped commands the
+-      team actually runs, test each against `isVerificationCommand`, and record the
+-      misses. Any addition ships with a fixture mapping command string to
+-      recognised, the same as every allowlist in this tree.
+-      `verify:` a fixture table of real commands with their recognition verdict;
+-      every addition has its own row.
+-      <!-- done 2026-08-17: 56-row table in
+-      `tests/scripts/turn_end_verify_allowlist.test.ts`, built from this
+-      project's real surface — its `package.json` scripts, its `Taskfile`
+-      targets, `./scripts-run`, `./agent-config`, and the PHP / Python / Go /
+-      Rust toolchains.
+-
+-      CLAIM 4 RE-VERIFIED, not taken on trust: `vendor/bin/phpunit`, `pest`,
+-      `composer test` and `php artisan test` all matched BEFORE this change. The
+-      draft's expected work was genuinely already done.
+-
+-      TWO REAL MISSES, both added:
+-        · `phpstan` — a static analyser of exactly the class already listed
+-          (`mypy`, `pyright`, `clippy`).
+-        · `lint` followed by a WORD character. `\blint\b` needs a boundary and
+-          `_` is a word character, so EVERY `lint_*` script in `src/scripts/` was
+-          unrecognised — `lint_persistence`, `lint_provenance`, and the rest.
+-          `lint[-_:a-z]*` is the exact mirror of the `check[-_:a-z]*` this list
+-          already carried, which is why it is the narrow fix and not a new idea.
+-
+-      FOUR MISSES DELIBERATELY NOT ADDED, because Risk 2 says every addition is a
+-      way to satisfy the gate without verifying anything: `npm run prepack` (a
+-      per-project lifecycle hook — a build step elsewhere), `task sync` /
+-      `task generate-tools` / `agent-config roadmap:progress` (GENERATORS — they
+-      rewrite the tree and check nothing, which is the rubber stamp in its purest
+-      form), `agent-config gates --all` (enumerates, runs nothing), and
+-      `vendor/bin/rector process --dry-run` (a refactorer; its dry run prints a
+-      diff and asserts nothing). `psalm` is `phpstan`'s obvious sibling and is
+-      also not added: nothing in the audited surface runs it, and "the team
+-      actually runs" is this step's own standard.
+-
+-      The `false` rows are pinned as tests, not merely recorded — if a later
+-      widening makes `task sync` or `ls -la` clear an unverified edit, the
+-      fixture fails and the change has to be argued rather than slipped in. -->
+-      <!-- open note for 2.1: this audit does NOT read Phase 1's distribution and
+-      must not be read as doing so. The pre-registration in
+-      `b-detector-demotion-bars` is untouched and still predates any read. -->
+-
+-**Phase status:** 2.2 is closed; **2.1 stays open on `b-detector-demotion-bars`**,
+-so AC-2 ("no detector stays blocking without a number") is not yet satisfiable —
+-the numbers now exist, the bar to judge them against is the maintainer's.
+-- **AC-2:** each detector has either a green verdict — rate under its bar — or a
+-  demotion PR citing the distribution. **No detector stays blocking without a
+-  number.**
+-
+-### Phase 3 — Make refusals cheap when they happen
+-
+-- [x] **3.1** On a refusal retry, skip the non-gate Stop concerns: chat history has
+-      already written, and re-running the context rebuild, the end-review scan and
+-      the self-repair detector on the retry is pure duplicate cost. Manifest-level,
+-      one opt-in flag per concern, default off, flipped only with a per-concern
+-      argument in the PR — never a blanket skip. Verify per concern that its dedup
+-      is idempotent before flagging it.
+-      `verify:` a fixture retry runs only the refusal-capable concerns, and each
+-      skipped concern's artefact is identical to the non-retry run.
+-      <!-- done 2026-08-17: `skip_on_refusal_retry` in `hook_manifest.yaml`,
+-      honoured by `_resolve_concerns` when `_is_refusal_retry` reads the host's
+-      own `stop_hook_active` — the same field the gate uses as its layer-1 guard,
+-      so the retry is the host's answer and not our inference. Anything
+-      unparseable yields the FULL chain: running twice costs duplicate work,
+-      skipping wrongly loses a write.
+-
+-      Measured end to end: the claude stop chain is 10 concerns, 8 on a retry.
+-
+-      THE STEP'S OWN PREMISE IS PARTLY REFUTED, and the audit it demanded is what
+-      refuted it. "Chat history has already written, and re-running the context
+-      rebuild, the end-review scan and the self-repair detector is pure duplicate
+-      cost" holds for ONE of those four. Between the refusal and the retry the
+-      model DOES more work — that is the point of refusing — so the transcript
+-      has grown and every concern reading it has a changed input:
+-        · `chat-history` — would LOSE the work done between the two Stops.
+-        · `hot-context` — rebuilds from a tree the retry just edited.
+-        · `self-repair` — a detector over a turn that changed.
+-        · `session-eol` — reads only the bytes appended since the last scan, so
+-          skipping the final Stop drops the tail.
+-      Flagging those four would be Risk 3 exactly: "a concern skipped on the
+-      retry might have been the one that needed the second pass, and the loss
+-      would be silent."
+-
+-      TWO CONCERNS PASS, each on its OWN dedup rather than on our reading:
+-        · `interruption-ledger` — dedupes on `(run_id, turn)`, and a refusal
+-          retry is the same turn by construction. It already writes nothing. What
+-          it does not already avoid is the COST: `main()` calls
+-          `readTranscriptTail` (up to 8 MB, walking the whole file) BEFORE
+-          reaching `alreadyRecorded`, so today every refused Stop pays a full
+-          transcript walk and discards it. This is the flag with the real saving,
+-          and D-3's "pure duplicate cost" located in the source.
+-        · `end-review-nudge` — its F2 once-per-session marker returns "without
+-          re-running the transcript scan", so the artefact is identical by the
+-          concern's own construction. The saving is the module load, which is
+-          smaller, and the manifest says so rather than overselling it.
+-
+-      `turn-end-gate` is asserted to survive the retry: skipping the
+-      refusal-capable concern would leave the second attempt unguarded, which is
+-      the inverse of the intent. A test pins it, and another pins that every
+-      flagged concern carries a written ARGUMENT beside its flag — a flag with no
+-      argument is the blanket skip wearing a per-concern shape. -->
+-- [x] **3.2** Complementary lever, recorded here so the two files cannot drift:
+-      moving the non-gating Stop concerns to the host's async handler form is owned
+-      by `road-to-per-turn-hook-economy` step 5.3. This roadmap records only the
+-      split — gates synchronous, recorders async — and defers the mechanism and its
+-      acceptance criterion to that file.
+-      `verify:` this step needs no code; it is closed by that file's 5.3 landing, or
+-      by recording that it did not.
+-      <!-- done 2026-08-17 by the second branch: 5.3 has NOT landed — read at
+-      `86cdbf652`, `road-to-per-turn-hook-economy` step 5.3 is open. Recorded
+-      here as that file's work, with the split stated: gates synchronous
+-      (`turn-end-gate`, `team-review-gate`), recorders async.
+-
+-      One interlock the two files must not lose, because they now touch the same
+-      concerns from opposite directions: 5.3 states that `end-review-nudge`
+-      "needs its stdout to reach the model, so it stays synchronous until
+-      measured otherwise". That is about the ASYNC axis and does not conflict
+-      with 3.1's retry skip — on a retry its stdout was already delivered, or
+-      already suppressed, on the first Stop. A future 5.3 may make it async or
+-      leave it synchronous; either way the retry flag is orthogonal and neither
+-      decision constrains the other. -->
+-
+-**AC-3 is NOT satisfied by this branch and is not claimed to be.** It asks that a
+-refused-turn retry cost "materially less than a full Stop in the bench, measured
+-rather than asserted". What shipped is the mechanism and its correctness proof —
+-the chain is provably shorter and the skipped artefacts provably identical. The
+-*measurement* belongs to `road-to-per-turn-hook-economy`'s bench, which owns the
+-Stop-slot numbers, and is the honest reason this phase advances without closing.
+-- **AC-3:** a refused-turn retry costs materially less than a full Stop in the
+-  bench, measured rather than asserted.
+-
+-## Blockers
+-
+-### blocker: b-detector-demotion-bars
+-- **Status:** open
+-- **Owner:** user
+-- **Class:** 2 — consent-once
+-- **Blocks:** Phase 2 step 2.1, and therefore any demotion. Steps 1.x, 2.2 and 3.x
+-  are repo work and proceed without it.
+-- **What to do:** pre-register the demotion bar per detector, before reading Phase
+-  1's data — pre-registration after the fact is not pre-registration. Options:
+-  (a) name a re-refusal share and a per-session median for each of A, B and C
+-  separately; (b) name one bar shared by all three, accepting that it will fit the
+-  most-firing detector worst; (c) declare that no demotion is available and the
+-  gate stays blocking regardless of rate, in which case Phase 2 closes with that
+-  recorded and Phase 1's numbers become monitoring rather than a decision input.
+-  The counter-argument to keep in view: the round-5 measurement — blocking
+-  carriers at zero violations, advisory carriers not — is the strongest single
+-  result in the enforcement estate, so a demotion trades a measured win for a
+-  measured cost and both numbers should be on the table.
+-- **Recommendation:** **option (a) — per-detector bars.** The three detectors have
+-  genuinely different legitimacy profiles: A fires on the agent's own promissory
+-  language, B on a language mismatch against a fresh pin, C on an edit with no
+-  verifier. A single shared bar (option b) would be set by whichever detector fires
+-  most and would either demote a detector that was working or protect one that was
+-  not. Option (c) is defensible on the round-5 evidence but forecloses the question
+-  permanently, and this roadmap's whole premise is that a blocking gate should carry
+-  a number.
+-- **If you do nothing:** the gate keeps refusing turn-ends at an unmeasured rate,
+-  and the estate keeps a blocking concern with no registered kill standard while
+-  every advisory around it has one. Phase 1's counts would accumulate with nothing
+-  authorised to act on them — measurement without a decision rule, which is the
+-  shape this roadmap was opened to fix.
+-- **Resolved when:** the bars, or option (c), are recorded at this blocker with
+-  their reasoning, and the record predates the first read of Phase 1 data.
+-
+-## Risk Register
+-
+-<!-- risk-review: v1 | reviewed: 2026-08-17 | reviewer: claude/host -->
+-
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | Demoting a detector reintroduces the violations it closed | product | The measured origin of this gate is that advisory carriers achieved zero effect on exactly these violations while blocking carriers eliminated them; a demotion could re-open a class the estate already paid to close | Demotion is per-detector, evidence-cited and reversible; the round-5 numbers stay the baseline the advisory form is measured against, so a failed demotion is detectable rather than invisible | Phase 2 — Judge each detector |
+-| 2 | Widening the verify allowlist turns detector C into a rubber stamp | product | Every command added is a way to satisfy the gate without verifying anything; enough additions and the detector stops detecting | Each addition ships a fixture mapping command to verdict, and claim 4 already removed the pressure to add the obvious PHP commands because they match today | Phase 2 |
+-| 3 | Skipping concerns on retry loses a legitimate second-chance write | implementation | A concern skipped on the retry might have been the one that needed the second pass, and the loss would be silent | Per-concern opt-in with a stated argument, never a blanket skip; idempotence is verified per concern before its flag is flipped, and the artefact diff is the check | Phase 3 |
+-| 4 | The refusal counter's own cost lands on the slot it measures | implementation | Stop is already the heaviest slot; instrumenting it could make the thing it measures worse | The counter rides the existing session-register write and adds no spawn, which is why 1.1 specifies that carrier rather than a new one | Phase 1 — Count before judging |
+-| 5 | Pre-registration is quietly done after the data is seen | product | The bar is only meaningful if it predates the distribution; a bar chosen after looking is a description dressed as a decision | The blocker's resolution condition requires the record to predate the first read, and Phase 1 and the blocker are deliberately separable so the data can accumulate while the bar is being decided | Phase 2 |
+-| 6 | Attributing the refusals to 12.1 when the gate predates it | product | The gate was armed before the window the report blames, so a correlation with the install date could be read as causation and mis-route the whole investigation | Claim 10 is labelled a prediction rather than a claim, step 1.3 tests it as a split, and D-1 states the arming date's position relative to the window up front | Phase 1 |
+-
+-## CUT list — do not re-litigate
+-
+-- **Removing the gate.** The round-5 measurement is the strongest single result in
+-  the enforcement estate. This roadmap tunes; it does not repeal. Cut.
+-- **A settings kill-switch.** The argument that removed it stands: a default-off
+-  safety gate soaks nothing. Per-detector demotion by evidence replaces it. Cut.
+-- **Keying refusal state on prompt text.** Already tried and found wrong in three
+-  directions. The ordinal stays. Cut.
+-
+-## Honest-null consequence
+-
+-If Phase 1 shows refusal rates are negligible across all three detectors, this
+-roadmap closes as a null with the numbers published, and the "slow since 12.1"
+-investigation returns fully to the activation flip, the context size and the
+-environment — which is itself a decidable and valuable answer.
+diff --git a/docs/contracts/concern-activation-policy.md b/docs/contracts/concern-activation-policy.md
+index 1c087c6267addc238c92f3249db91c58b303ecb0..46bf1045acccdd9a2e5a2e77594233c067b59ad8 100644
+--- a/docs/contracts/concern-activation-policy.md
++++ b/docs/contracts/concern-activation-policy.md
+@@ -96,6 +96,18 @@ A blocking concern ships with its own removal condition, or it does not ship:
+ - **Review cadence: quarterly**, or on the first reverse-trigger hit, whichever
+   is sooner.
+ 
++**A concern that shipped before this policy still owes one**, and where a concern
++carries several detectors the debt is owed per detector.
++[`turn-end-detector-demotion`](turn-end-detector-demotion.md) is the worked
++example: `turn-end-gate` is the only concern in this suite that can refuse a
++turn-end, it predates this file, and its four detectors now carry a
++pre-registered removal condition each. Read it before writing another one — one of
++its two quantities is **born inert**, because the concern's own safety design makes
++that quantity unobservable, and the file registers it saying so rather than
++deleting it or pretending it reads. It also names two hazards it avoided by
++definition and worth checking for in any new standard: a denominator that makes a
++bar unfireable, and a retention window shorter than the sample floor.
++
+ ## Where a threshold lives
+ 
+ | Location | Cost | Use when |
+@@ -124,6 +136,7 @@ its declared posture by accident, only by declaring a different one.
+ ## See also
+ 
+ - [`hook-architecture-v1.md`](hook-architecture-v1.md) — the dispatcher contract this policy sits on top of.
++- [`turn-end-detector-demotion.md`](turn-end-detector-demotion.md) — the per-detector reverse trigger for the one blocking concern that predates this policy.
+ - `src/rules/session-canary.md` — the measured advisory null this ladder is built around.
+ - `src/scripts/hooks/spawn_guard_shadow_hook.ts` — the first concern shipped
+   under this policy, and the worked example of the shadow rung. Roadmaps cite
+diff --git a/docs/contracts/turn-end-detector-demotion.md b/docs/contracts/turn-end-detector-demotion.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..4cb5d64d075671a217f478ce9edeb6bc23880fa6
+--- /dev/null
++++ b/docs/contracts/turn-end-detector-demotion.md
+@@ -0,0 +1,388 @@
++---
++stability: beta
++keep-beta-until: 2026-11-17
++---
++
++# Turn-end detector demotion — the pre-registered standard
++
++**Purpose.** `turn-end-gate` is the suite's only concern that can refuse a
++turn-end, and it shipped before
++[`concern-activation-policy`](concern-activation-policy.md) existed — so it
++carries none of the removal conditions that policy makes mandatory from day one.
++This file is that missing reverse trigger, registered **per detector**, and it is
++registered **before** the data it will judge exists so a later reading cannot be
++fitted to a conclusion.
++
++**Scope.** Demotion of one detector from blocking to advisory. The gate as a
++whole is not in question, and no clause here removes a detector.
++
++## The rule
++
++```
++EACH DETECTOR CARRIES ITS OWN BAR. A BAR IS READ ONLY AFTER THAT DETECTOR'S
++SAMPLE FLOOR IS MET. CROSSING A BAR AUTHORISES A STAGED-DEMOTION STUDY —
++NEVER A DEMOTION. FRICTION ALONE NEVER DEMOTES A DETECTOR.
++A BAR SET ON AN UNMEASURABLE QUANTITY IS INERT AND SAYS SO.
++```
++
++## The four detectors
++
++Read off `DetectorId` in `src/scripts/hooks/turn_end_gate_hook.ts`, never off
++prose — the roadmap that opened this question named three, and the tree has four.
++
++| Id | Fires when | Protects | Runs |
++|---|---|---|---|
++| A `promissory` | the closing text promises work the turn did not do | the truthfulness of "done" | only when no dispatch is open |
++| B `language` | the reply language differs from that turn's fresh pin | the user-facing contract | every turn-end |
++| C `verification` | the turn changed a file and ran no verify-shaped command | engineering safety | every turn-end |
++| D `completion` | a completion claim carries no fresh evidence | the truthfulness of "done" | only when no dispatch is open |
++
++**Two of the four are conditional, and the fourth column is load-bearing.**
++`main()` runs A and D only when `dispatchOpen` is false — an open subagent
++dispatch excuses a promissory closing and an unsettled completion claim, and
++excuses nothing about B or C. So there are **three** allow paths, not two: the two
++re-entrancy layers below, plus this one. It suppresses A and D for a whole turn,
++and in a suite whose delegation policy dispatches by default that is not a rare
++branch.
++
++Every clause in this file that reads a zero, a denominator, or a dormancy has to
++survive that fact, and each says below where it does not.
++
++## The two quantities — and the one that cannot be measured
++
++**Q1 — re-refusal share.** Of a detector's eligible initial refusals, the share
++whose immediate retry is refused again *by the same detector*. It is the
++satisfiability signal: a high share means the model could not satisfy the
++detector.
++
++```
++Q1 IS ZERO BY CONSTRUCTION AND IS NOT MEASURABLE ON TODAY'S GATE.
++```
++
++Verified in `turn_end_gate_hook.ts main()`: two independent layers return
++`EXIT_ALLOW` before any detector runs on a retry — layer 1 on the host's
++`stop_hook_active`, layer 2 on `alreadyRefusedTurn(…, turnOrdinal)`, and a retry
++carries no new user prompt so its ordinal is unchanged. A turn is therefore
++refused **at most once**, by design: the wedge that guard prevents is a turn that
++can never end.
++
++This is not a gap in the instrumentation. It is pinned as intended behaviour by a
++committed test — `turn_end_gate_hook.test.ts`, *"LAYER 2: the turn marker alone
++stops a second refusal, even on a NEW reply"*, whose fixture is a retry that
++**still promises** and is asserted to pass. A genuine re-refusal is proven
++allowed.
++
++So Q1's bars below are registered and **inert**. They become readable only when
++the instrument named in *The two instruments* ships. Registering an inert bar
++rather than deleting it is deliberate: the satisfiability question is the one
++that decides whether a high-friction detector is broken or load-bearing, and
++dropping it would leave the standard resting on friction alone — which the rule
++above forbids.
++
++**Q2 — median refusals per affected session.** The median taken across sessions
++**in which that detector fired at least once**, never across all sessions. The
++naming matters and the metric changes with it: over all sessions, any detector
++affecting fewer than half of them has a permanent median of zero, which makes the
++bar unfireable — the gate-that-cannot-fire shape this repository rejects
++elsewhere. Q2 is measurable today from `RefusalRecord.counts`
++(`src/scripts/_lib/turn_end_refusals.ts`).
++
++### Attribution, registered now so it is not decided at reading time
++
++- A retry firing several detectors counts once **for each** detector.
++- Retry lineage survives an intervening detector: a refusal chain
++  C → A → C contributes to C's Q1, not only to A's.
++- Simultaneous firings are recorded separately, never collapsed to a first
++  detector. (The writer already does this; before 2026-08-17 it stored
++  `findings[0].detector` alone and a session refused nine times read as one.)
++- A retry aborted for an unrelated reason is **censored**, not counted as a
++  success.
++- **A turn that ran with a dispatch open is censored for A and D**, in both
++  quantities. Those two detectors did not run, so the turn is not an observation
++  of them not firing — counting it as one biases their Q2 denominators downward
++  and would read a configuration fact as an exposure fact. B and C are unaffected
++  and take that turn normally. A rollup that cannot tell a dispatch-suppressed
++  turn from a clean one may not report Q2 for A or D at all.
++- A refusal is *eligible* only if it was recorded under a version that stamps
++  `agent_config_version`. The 36 legacy records are `(unrecorded)` and are
++  excluded from both quantities.
++
++## The bars
++
++| Detector | Q1 re-refusal share (inert) | Q2 median per affected session |
++|---|---:|---:|
++| A `promissory` | ≥ 30 % | ≥ 3 |
++| B `language` | ≥ 20 % | ≥ 2 |
++| C `verification` | ≥ 40 % | ≥ 3 |
++| D `completion` | ≥ 40 % | ≥ 3 |
++
++**These are policy choices, not findings, and they differ on purpose.**
++
++Each row's reason has to produce that row, so they are given per detector rather
++than in groups — an earlier draft said "C is highest" while D tied it exactly, and
++grouped "A and D" across a 10-point split. A reader deriving the table from the
++prose would have got a different table, which is not acceptable in a document that
++calls its own numbers policy choices to be argued.
++
++- **B lowest, 20 % / 2.** A language mismatch is mechanically repairable, so
++  repeated friction there is evidence the detector is wrong rather than evidence
++  the task is hard. It is the one detector where a high share is more likely a
++  false positive than a hard problem.
++- **A at 30 % / 3.** It protects the truthfulness of a completion claim, which is
++  this suite's central promise, so demoting it silently restores unsupported
++  "done". It sits below C because a promissory closing is a *reply-shape* finding
++  the model can usually repair in one pass, unlike an actual missing verifier.
++- **C at 40 % / 3, and it is the last one to demote.** It protects the practice
++  most directly tied to a changed file, and it already carries the largest
++  measured share of refusals — the detector doing the most work has the most to
++  lose.
++- **D at 40 % / 3, for a different reason than C's — absence of evidence, not
++  weight of it.** D has never fired, so there is no measured cost to weigh
++  against its benefit, and a bar set low would demote a detector on a
++  distribution nobody has seen. It ties C by coincidence of caution, not because
++  it does comparable work.
++
++The supporting measurement behind A and D is the *general* one — advisory carriers
++reached no measurable effect where blocking carriers reached zero violations — not
++a per-obligation reading of either, and it is stated at that strength rather than
++borrowed as if it had been measured on these two detectors specifically.
++
++**The counter-argument, kept on the record rather than answered away:**
++differentiated bars encode four unmeasured judgements about relative harm, and a
++single shared bar would be methodologically cleaner on sparse data. It is
++rejected because pretending the four protected harms are interchangeable would
++hide those judgements rather than remove them.
++
++***Revisit-if*, split so that the reachable half can actually fire.** Drafted as
++one conjunctive clause over both quantities, it was unfalsifiable by
++construction — it required Q1 shares, which this file declares unmeasurable until
++an instrument that does not ship here lands, so the only escape from four bars
++to one could never open.
++
++- **On Q2 alone, and it stands today:** two or more detectors reach their floors
++  and their Q2 medians sit within ±1 of each other → the architectural argument is
++  refuted *for those detectors* and their bars merge. It does not need all four,
++  and it does not need D, whose floor is currently unreachable.
++- **On Q1, contingent:** once instrument 1 lands and Q1 becomes readable, all four
++  shares within ±10 points collapses the bars to one.
++
++Either half fires alone. Naming the contingency is the point: a revisit condition
++that silently depends on unbuilt instrumentation is an aspiration wearing a
++falsifier's clothes, which is the failure this whole file is written against.
++
++## Sample floor — per detector, not per gate
++
++A detector's bar may not be read until **all four** hold for that detector:
++
++1. ≥ 100 eligible initial refusals;
++2. ≥ 50 affected sessions;
++3. ≥ 30 calendar days of observation;
++4. no change inside the window to **anything that alters that detector's
++   exposure or the recording of its refusals**. That is deliberately wider than
++   "the detector's logic": it includes the three allow paths (`stop_hook_active`,
++   `alreadyRefusedTurn`, and `dispatchOpen` together with `openRecordStats`' own
++   TTL filter), the session-key and turn-ordinal derivation whose documented
++   cross-session collision under-refuses, and `TRANSCRIPT_READ_MAX_BYTES` — every
++   one of which can invalidate a window without touching a detector. Any such
++   change **resets** qualification for that detector alone.
++   **Carve-out, or condition 4 eats its own enabler:** a change that only ADDS a
++   field or a counter, leaving every existing count and every allow path
++   untouched, does not reset. Without this, shipping instrument 1 would reset all
++   four windows — it writes `would_refuse_again` onto the session record, which is
++   the refusal instrumentation — and no window accumulated before it lands would
++   ever be readable. That would contradict this file's own claim that Q2 is
++   measurable today.
++
++At 100 observations a proportion near 30 % still carries roughly a ±9-point 95 %
++interval, so this is a defensible minimum and not precision. Condition 4 replaces
++the "spans two releases" formulation it was drafted as: release diversity mixes
++implementations and confounds the distribution, while what the requirement was
++actually reaching for is a stable window.
++
++### Retention caps the floor, and for two detectors it caps it below 100
++
++```
++THE FLOOR IS NOT REACHABLE FROM SESSION RECORDS ALONE.
++A CUMULATIVE PER-DETECTOR AGGREGATE THAT SURVIVES PRUNING IS PART OF INSTRUMENT 2,
++NOT AN OPTIMISATION OF IT.
++```
++
++The refusal state carries a **90-day TTL** (`pruneAgedRefusalState`, run at
++`session_start`), ageing each session record on its own `refused_at`. So the
++corpus reachable by counting records is never more than 90 days deep, and
++condition 1 asks for 100 eligible refusals **per detector**.
++
++The arithmetic decides it, and it decides against two detectors. On this
++branch's own published reading — promissory 5 refusals over a 5-day window, about
++1/day — detector A needs roughly 100 days to reach 100 and is pruned at 90.
++Dormant D needs unbounded time. Only C, at 22 over the same window, clears 100
++inside the retention window at all.
++
++Left there, this file would have reintroduced exactly the failure it rejects for
++Q2's denominator: a bar that cannot fire, arrived at through retention instead of
++through a metric definition. So the resolution is stated rather than left to be
++discovered:
++
++- **Instrument 2 must persist a cumulative per-detector count that pruning does
++  not touch.** The record may be deleted; the count it contributed may not be.
++  Counting live records is not an implementation of condition 1, it is a
++  different and smaller question.
++- **Until that aggregate exists, condition 1 is satisfiable only by a detector
++  firing ≥ 100 times within 90 days** — which is C, and no other. A and D are not
++  merely far from their floors; they cannot reach them. The file says so here
++  rather than letting a future reader conclude the bars were simply never
++  crossed.
++- The aggregate is a count, never a copy of the pruned record: retention exists
++  for a reason and this does not widen what is kept, only what is remembered
++  about it.
++
++## Crossing a bar authorises a study, not a demotion
++
++```
++NO DETECTOR IS DEMOTED ON Q1 OR Q2 ALONE.
++```
++
++Q1 and Q2 measure cost and satisfiability. Neither measures the violations that
++return after a demotion, and the strongest evidence in this estate points the
++other way: in a 30-session conformance audit the blocking carriers reached zero
++violations while the advisory carriers reached none of the effect. A detector
++with a high re-refusal share may be catching real problems the model struggles to
++fix — which is a reason to keep it blocking, not to demote it.
++
++So a crossed bar produces exactly three things:
++
++1. the distribution, published with the sample it came from;
++2. a **staged-demotion study** for that detector, pre-registered separately —
++   the detector runs advisory for a declared arm and blocking for the other, and
++   the study reads the violation delta, not the friction;
++3. a demotion **only** if that study shows the violation rate does not materially
++   rise. Re-promotion is part of the study's own pre-registration; it is not
++   improvised at reading time.
++
++This narrows the wording of the roadmap step that commissioned this file, which
++read as though crossing the bar demoted the detector. The narrowing is the point:
++both council seats reached it independently, from opposite directions, on the
++measured asymmetry above.
++
++## Detector D is dormant, not successful
++
++D has fired **zero** times. That is a third state — unexposed — and neither of
++the two quantities can tell apart **four** explanations:
++
++1. a valuable detector waiting for a rare violation;
++2. one subsumed by A or C;
++3. unreachable dead code;
++4. **a detector that was suppressed rather than unexposed** — D runs only when no
++   dispatch is open, and this suite delegates by default, so a zero may be
++   measuring the delegation rate rather than the violation rate.
++
++The fourth is the one a reader would miss and the code supplies, and it changes
++what a zero licenses: without separating it out, a *configuration* fact would be
++published as an *exposure* fact. Any rollup reporting D's zero must report the
++dispatch-suppressed turn count beside it, or the zero is uninterpretable. So:
++
++- D's bars stand, and are unreadable until D reaches the same sample floor.
++- D is **not** retired for never firing under this standard. A retirement
++  decision needs an opportunity or shadow-fire metric this pre-registration
++  deliberately excludes, and it cannot be smuggled in through a friction bar.
++- The generic *no fires in 8 weeks → evaluate removal* trigger in
++  [`concern-activation-policy`](concern-activation-policy.md) still applies to D
++  and is the right place for that question. Evaluate is not remove.
++
++## The non-termination escape is independent of all of this
++
++Registered here because it is the safety valve the bars are not: after **three
++consecutive refusals from the same detector on one turn**, allow the turn to end,
++record a detector-fault record, and keep the other detectors armed. It does not
++demote the detector and contributes nothing to Q1 or Q2.
++
++On today's gate this valve is unreachable for the same reason Q1 is — the
++re-entrancy layers cap a turn at one refusal — so it is registered against the
++instrumented gate the next clause describes, and is stated as unreachable rather
++than implied to be live.
++
++## The two instruments this standard is waiting on
++
++Neither ships here; both are named so the standard is falsifiable rather than
++aspirational.
++
++1. **A shadow read on the allow path.** On layers 1 and 2, run the detectors
++   without acting on them and record which *would* have fired again, as
++   `would_refuse_again` counts on the session record. The verdict stays
++   `EXIT_ALLOW`, so it cannot wedge a turn — this is the `would_fire` shadow
++   mechanism [`concern-activation-policy`](concern-activation-policy.md)
++   § *Deriving a threshold* already prescribes, applied to a gate that shipped
++   before it. Without this, Q1 stays inert.
++2. **A per-detector rollup over eligible records**, reporting Q2 with its
++   affected-session denominator and its sample-floor status per detector, so a
++   reading is a command's output rather than a hand count. It carries three
++   further obligations from the sections above, none of them optional: the
++   **cumulative count that survives pruning** (without it condition 1 is
++   unreachable for A and D), the **dispatch-suppressed turn count** beside any D
++   zero (without it that zero is uninterpretable), and A/D censoring for
++   dispatch-suppressed turns.
++
++### Who owns them — named, because the honest answer is nobody
++
++```
++NO ROADMAP OWNS THESE TWO INSTRUMENTS. THIS FILE'S OWN REVIEW DATE IS THE CARRIER.
++```
++
++The roadmap that commissioned this standard closed and archived in the same change
++that registered it, which removes the last tracked surface that could have
++scheduled either instrument. Two consequences are stated rather than left to be
++noticed at re-read time:
++
++- **The `keep-beta-until` marker in this file's frontmatter is the schedule.** It
++  forces a re-read by that date under `check_beta_review_markers`, which is a real
++  deterministic carrier — weaker than a roadmap step, and not nothing.
++- **The same applies to the archived roadmap's AC-1** (a refusal rate on a second
++  machine). Its AC-3 was delegated to a named open roadmap and has a real owner;
++  AC-1 has none, and the archive publishes the file as `completed` without that
++  qualification. The correction is recorded at the roadmap itself.
++
++Until an instrument lands, the honest description of this standard is: **bars
++registered, one quantity inert, one reachable for exactly one detector.** That is
++worth more than an unregistered gate, and it is less than a working kill standard.
++Both halves belong in any sentence that cites this file.
++
++## Was this pre-registration blind?
++
++Yes, on both quantities, and the check is worth stating because a reader would
++reasonably doubt it. One distribution was already published when these bars were
++set — a per-detector count over the 36 legacy records
++(verification 22 · language 9 · promissory 5 · completion 0). It contains
++**neither** bar quantity: Q1 is unmeasurable there as everywhere, and every
++legacy record carries exactly one refusal by construction, so the corpus holds no
++per-session distribution at all. The bars were set on the architectural
++harm-ordering argued above and on the measured blocking-vs-advisory asymmetry —
++not on that reading.
++
++## Honest enforcement — `enforced_by: none`
++
++No gate reads this file. Whether a bar was read after its sample floor, whether a
++study preceded a demotion, and whether an attribution rule was honoured are
++authoring decisions visible only in review. Saying so is the point: this file
++exists because a *blocking* concern carried no registered removal condition while
++every advisory around it did, and replacing that gap with a document that
++overstates its own force would repeat the defect at one remove.
++
++## Provenance
++
++Registered 2026-08-18. Option (a) — per-detector bars — was resolved by an AI
++council pass (2 of 2 seats present, concluded); both seats chose (a) over a
++shared bar and over "no demotion available", and both independently raised the
++staged-study requirement now in *Crossing a bar authorises a study*. The numbers
++above are the convergence of their two proposals, taking the demotion-resistant
++side wherever they differed. Two findings are **own analysis**, reached from the
++gate's code rather than from either seat: that Q1 is unmeasurable by
++construction, and that the non-termination escape is unreachable for the same
++reason.
++
++## See also
++
++- [`concern-activation-policy`](concern-activation-policy.md) — the ladder, the generic reverse triggers, and the `would_fire` shadow mechanism instrument 1 applies.
++- [`hook-architecture-v1`](hook-architecture-v1.md) — the dispatcher contract, and which hosts carry a `stop` slot at all.
++- `src/scripts/hooks/turn_end_gate_hook.ts` — the gate, its four detectors, and the two re-entrancy layers Q1 dies on.
++- `src/scripts/_lib/turn_end_refusals.ts` — `DETECTOR_IDS`, `RefusalRecord`, and the counts Q2 is read from.
++- [`condensation-default-kill-criterion`](condensation-default-kill-criterion.md) — the sibling shape: one feature's kill criterion, pre-registered with its decision table.
+diff --git a/src/config/estate-count-budget.json b/src/config/estate-count-budget.json
+index d6b7fe4cef9b6edfd1c592eeee472dae9bceea0e..715cf60da12309b6e33c116a7eb0380fb2cf1d8f 100644
+--- a/src/config/estate-count-budget.json
++++ b/src/config/estate-count-budget.json
+@@ -16,9 +16,9 @@
+         ]
+     },
+     "baseline": {
+-        "active_roadmaps": 38,
++        "active_roadmaps": 37,
+         "later_roadmaps": 43,
+-        "open_blockers": 72
++        "open_blockers": 71
+     },
+     "baseline_history": [
+         {
+@@ -48,6 +48,13 @@
+             "later_roadmaps": 43,
+             "open_blockers": 72,
+             "why": "RAISED by 3, on top of the 67 -> 69 correction above rather than beside it. All three are road-to-per-turn-hook-economy Phase 2, and each records a finding that would otherwise rot: b-payload-read-parse-dominates (two independent measurements now say D-2's cost is the dispatcher's own read+parse of the payload, once per event, not the per-concern churn the roadmap blamed — so the phase's AC is refuted and the null is published), b-payload-mis-nested-readers (two concerns read tool payload keys off the envelope root; one is a security scanner that works only via a whole-envelope fallback, the other returns 0 on every dispatcher-path call today), and b-stop-async-split-prerequisites (step 5.3 deferred, carrying the five prerequisites its classification surfaced). A blocker that puts a maintainer decision in front of the maintainer is the estate growing in the direction this ratchet exists FOR, which is why the raise is taken rather than the findings being dropped into prose where nothing tracks them. My first version of this entry claimed two of five as unattributed drift; the trunk's correction identified the same two and named their cause, so that half is withdrawn rather than restated."
++        },
++        {
++            "at": "2026-08-19",
++            "active_roadmaps": 37,
++            "later_roadmaps": 43,
++            "open_blockers": 71,
++            "why": "LOWERED by 1 on each gated metric, in the direction this ratchet exists for. road-to-stop-gate-honesty reached zero open steps and zero deferred items and was archived, which is a terminal disposition rather than a park; its `b-detector-demotion-bars` was resolved with the decision recorded at the entry, not moved elsewhere. Both numbers are therefore measurements of a smaller estate, not room bought by relocating work — later_roadmaps is unchanged at 43, which is the check that distinguishes the two. Walked down because the count gate reported both as free tightening and its unit test asserts the committed budget equals the live tree: a baseline left above a lower measurement is headroom a later change can spend without any gate objecting, which is the loose-ratchet failure the 67 -> 69 entry above records from the other direction."
+         }
+     ],
+     "target": {
+diff --git a/src/config/hook-latency-budget.json b/src/config/hook-latency-budget.json
+index 113d938c047f9dacc0abea15bba57b28e2f98e3c..2150dc2c7fe538a953da0000bb783c7ce62078e7 100644
+--- a/src/config/hook-latency-budget.json
++++ b/src/config/hook-latency-budget.json
+@@ -9,9 +9,24 @@
+         "floor": "1 vCPU reference container (documented ceiling, not CI-enforced)"
+     },
+     "budgets_ms": {
+-        "pre_tool_use": { "p95_ci": 150, "p95_1vcpu": 400 },
++        "pre_tool_use": { "p95_ci": 175, "p95_1vcpu": 400 },
+         "any_hook_event": { "p95_ci": 250 }
+     },
++    "pre_tool_use_cap_derivation": {
++        "_comment": "Why p95_ci is 175 and not the 150 registered on 2026-07-27. 150 was NOT bent around a red check — it was measured to sit INSIDE the legitimate distribution, which concern-activation-policy.md § Deriving a threshold names as a false-positive generator by construction: `a threshold inside the legitimate distribution`. The gate was flapping on IDENTICAL code, and the flap was already diagnosed in this tree by road-to-per-turn-hook-economy step 0.5 — it names three main runs at 151, 152 and 117 ms and concludes cross-runner variance after step 0.4 excluded the CLI wrapper (2 ms). What was missing was never the diagnosis; it was moving the cap.",
++        "re_derived_at": "2026-08-19",
++        "rule": "concern-activation-policy.md § Deriving a threshold — the observed legitimate distribution's p99, plus headroom. With n=10 the p99 is the max, so the cap is max + ~11%.",
++        "measured_failure_rate": "5 of 33 tests.yml runs on main (15%), 2026-08-16..18. Several of those runs carry a failure followed by a success for the same step, i.e. the standing workaround was re-running the job by hand.",
++        "observed_p95_ms_gated_cli_leg": {
++            "_comment": "One value per run, pre_tool_use, the `via cli` leg the gate actually compares. Every one is legitimate code — the reds differ from the greens only in which runner drew the job.",
++            "green": [115, 120, 146, 150, 150],
++            "red_on_the_old_cap": [151, 152, 152, 154],
++            "pr_run_comment_only_diff": [157],
++            "spread": "115-157 ms, i.e. 42 ms of run-to-run variance on unchanged code — 28% of the new cap and 37% of the old one"
++        },
++        "why_not_a_retry_or_best_of_n": "A second bench on the same job would not help: the spread is between runner classes (p50 111-148 ms), not transient noise within one machine, so a slow runner measures slow twice. Retry logic is the escalation if 175 flaps, not the first move.",
++        "revisit_if": "A GREEN run measures pre_tool_use p95 above 160 ms. That is no longer runner variance — it is the cost itself growing, and it belongs to the owning roadmap (road-to-per-turn-hook-economy, D-2: the dispatcher's own payload read+parse, once per event) rather than to a third cap raise. Raising this number again without a measured distribution beside it is the config-bending this block exists to make visible."
++    },
+     "per_turn_composite": {
+         "_comment": "D-1 of road-to-per-turn-hook-economy: the slot budgets above gate per EVENT, and a single tool call fires both pre_tool_use and post_tool_use with their full concern chains. A ten-tool-call turn therefore pays twenty dispatcher cold starts plus the prompt and stop slots while every individual slot stays green — the number the user experiences has no row. This row is that number. Registered by step 4.1; the CEILING is step 4.2 and is the maintainer's, so the row ships observe-only and CANNOT fail a build. Definition before bar, deliberately: two people computing two different composites would both call the row green.",
+         "definition": "(pre_tool_use + post_tool_use) * tool_calls + user_prompt_submit + stop",
+diff --git a/src/scripts/_lib/turn_end_refusals.ts b/src/scripts/_lib/turn_end_refusals.ts
+index 6135617adc7412d089d9c25c541033c7806195db..312aa54259e62467b0fa919be2d277817d3575e3 100644
+--- a/src/scripts/_lib/turn_end_refusals.ts
++++ b/src/scripts/_lib/turn_end_refusals.ts
+@@ -45,10 +45,18 @@ import { read_lockfile } from './installed_lock.js';
+  *
+  * The roadmap's § 0 names three (A promissory, B language, C verification).
+  * That was true of the draft and is not true of the tree: detector D
+- * (`completion`) landed under round 7 § Phase 1 and is in the same
+- * unconditional list as the other three. Counting three would silently drop a
+- * detector's refusals, so the set is read off `DetectorId` in the gate rather
+- * than off the prose.
++ * (`completion`) landed under round 7 § Phase 1 and runs in the same detector
++ * list as the other three. Counting three would silently drop a detector's
++ * refusals, so the set is read off `DetectorId` in the gate rather than off the
++ * prose.
++ *
++ * This said "the same UNCONDITIONAL list" until 2026-08-18, which was wrong and
++ * is worth naming rather than quietly rewording: `main()` runs A and D only when
++ * no subagent dispatch is open. It does not change this set — every detector
++ * that CAN fire needs a counter — but it does change what a reader may conclude
++ * from a zero here: A's and D's counts are censored by that third allow path,
++ * and `docs/contracts/turn-end-detector-demotion.md` is where that consequence
++ * is carried.
+  */
+ export const DETECTOR_IDS = [
+     'promissory',
+diff --git a/src/scripts/check_estate_count.ts b/src/scripts/check_estate_count.ts
+index f27ff7b41650f3df8b3841dca9581b8defad512a..d7115d8361f474e2fdd2d6a7bdb867d562e739a1 100644
+--- a/src/scripts/check_estate_count.ts
++++ b/src/scripts/check_estate_count.ts
+@@ -453,18 +453,47 @@ export function evaluate(
+         unpaid = Math.max(0, chargeable.length - offsets.offsets.length);
+     }
+ 
++    // A metric RAISED with a recorded reason in this same change is a deliberate
++    // ceiling, not an un-walked tightening, and must not be reported as one — the
++    // raise is the reviewed act the ratchet exists to permit. Without this filter
++    // the failure below would make a legal reasoned raise unsatisfiable: the raise
++    // puts the baseline above the live count by construction, which is exactly the
++    // shape the tightening rule bites on.
++    const reasonedRaise = new Set(raises.filter((r) => r.reason !== null).map((r) => r.metric));
++    const unwalked = tightened.filter((t) => !reasonedRaise.has(t.metric));
++
+     return {
+         counts,
+         baseline: budget.baseline,
+         growth,
+-        tightened,
++        tightened: unwalked,
+         raises,
+         raiseSkipReason,
+         offsets,
+         offsetSkipReason,
+         unpaid,
++        // `tightened` is a FAILURE, not an advisory, and this is the second thing
++        // it has been. Until 2026-08-19 it printed "free tightening" and left
++        // `withinBudget` true, while `check_estate_count.test.ts` asserted the
++        // committed budget equals the live tree — so the gate and its own test
++        // disagreed about the same state. The consequence was measured rather than
++        // theorised: a drawdown PR passed `task preflight` locally (this gate,
++        // exit 0) and reddened CI (that test, exit 1) every single time, and on
++        // 2026-08-18 it reddened `main` itself in run 32173675197, after which
++        // every subsequent PR failed on drift it had not caused. That is the
++        // permanently-red shape the budget file's own `67 -> 69` history entry
++        // describes from the other direction.
++        //
++        // Failing here is also the STRONGER reading of this gate's purpose: the
++        // file says in as many words that a lower measurement is the new ceiling
++        // and not headroom to spend later. A baseline left above the truth is
++        // exactly that headroom, and a gate that only warns about it is how the
++        // headroom survives to be spent.
+         withinBudget:
+-            growth.length === 0 && unpaid === 0 && raises.every((r) => r.reason !== null),
++            growth.length === 0 &&
++            unpaid === 0 &&
++            unwalked.length === 0 &&
++            raises.every((r) => r.reason !== null),
+     };
+ }
+ 
+@@ -744,10 +773,15 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+     }
+ 
+     for (const t of verdict.tightened) {
+-        process.stdout.write(
+-            `  ↓ free tightening: ${t.metric} measured ${String(t.live)} under a baseline of ${String(t.baseline)}.\n` +
++        process.stderr.write(
++            `❌  un-walked tightening: ${t.metric} measured ${String(t.live)} under a baseline of ${String(t.baseline)}.\n` +
+                 `    Walk the baseline down in ${BUDGET_REL} — a lower measurement is the new ceiling,\n` +
+-                '    not headroom to spend later.\n',
++                '    not headroom to spend later. This is a one-number edit plus one appended\n' +
++                '    `baseline_history` entry, and it belongs in the change that earned the lower\n' +
++                '    measurement. Failing here rather than warning is deliberate: this gate and\n' +
++                "    `check_estate_count.test.ts` used to disagree about this exact state, so a\n" +
++                '    drawdown passed preflight and reddened CI — and once it reached the trunk,\n' +
++                '    every later PR failed on drift it had not caused.\n',
+         );
+     }
+ 
+diff --git a/src/scripts/hooks/turn_end_gate_hook.ts b/src/scripts/hooks/turn_end_gate_hook.ts
+index c8a3609b8cf5a9666c416307d1ee75bd8d36d616..adb8530ee0ed4b5a41004686265f8cde6616fda9 100644
+--- a/src/scripts/hooks/turn_end_gate_hook.ts
++++ b/src/scripts/hooks/turn_end_gate_hook.ts
+@@ -9,7 +9,7 @@
+  * is deliberately not another reminder. It is a check at the point of
+  * delivery that can say no.
+  *
+- * Three detectors ride on one guard, because building the unsafe part twice
++ * FOUR detectors ride on one guard, because building the unsafe part twice
+  * is how a second detector becomes a second outage:
+  *
+  *   A — promissory closing  (FC-5, 20 measured occurrences)
+@@ -20,6 +20,33 @@
+  *                            prose, which is why `readTranscriptTail` collects
+  *                            them: `_messageText` keeps `type === 'text'` blocks
+  *                            only, so tool activity is invisible to A and B.)
++ *   D — completion claim    (a claim of done carrying no fresh evidence; landed
++ *                            under conformance round 7 § Phase 1.)
++ *
++ * TWO of the four are CONDITIONAL, and saying "unconditional" here would be the
++ * same stale-header defect this block corrects below. A and D are the
++ * completion-adjacent pair an open subagent dispatch excuses, so `main()` runs
++ * them only when `dispatchOpen` is false; B and C run on every turn-end. That
++ * narrowing is deliberate (Phase 3 Step 2, narrowed again by R2 round 2) and is
++ * the third allow path, alongside the two re-entrancy layers — see the
++ * per-detector list in `main()`.
++ *
++ * This block said "Three" and listed A/B/C until 2026-08-18, while `DetectorId`
++ * below has carried four since round 7. `DETECTOR_IDS` in
++ * `_lib/turn_end_refusals.ts` is read off that union rather than off this
++ * comment for exactly that reason, and the count is corrected here rather than
++ * left as a stale header the next reader has to disbelieve.
++ *
++ * ## Removal condition
++ *
++ * This is a BLOCKING concern, so it owes one — see
++ * `docs/contracts/turn-end-detector-demotion.md` for the pre-registered
++ * per-detector bars, their sample floors, and the reason a crossed bar
++ * authorises a staged study rather than a demotion. Two things that contract
++ * says about the guard below are worth meeting here: the re-entrancy layers cap
++ * a turn at ONE refusal, which makes a re-refusal share unobservable and the
++ * three-strikes non-termination valve unreachable. Both are properties of this
++ * design, not gaps in the counters.
+  *
+  * ## Re-entrancy — the shape, stated before registration
+  *
+@@ -1009,8 +1036,11 @@ export function main(): number {
+         dispatchOpen ? null : detectPromissory(lastAssistant),
+         detectLanguage(lastAssistant, readLanguagePin(workspaceRoot)),
+         detectUnverifiedEdit(toolCalls),
+-        // Round 7 § Phase 1 — detector D, in the same unconditional list as the
+-        // other three. It shipped with its own settings flag one commit earlier
++        // Round 7 § Phase 1 — detector D. It is NOT unconditional, and this
++        // comment said it was while sitting one line above the `dispatchOpen`
++        // ternary that conditions it: A and D are both excused by an open
++        // dispatch, per the note at the top of this loop. Corrected 2026-08-18.
++        // It shipped with its own settings flag one commit earlier
+         // and that flag is gone: `hooks.turn_end_gate.*` was deleted on
+         // 2026-08-12 because a default-off safety gate is an absent one. Its
+         // gating is where the comment above says gating belongs — inside the
+diff --git a/tests/scripts/check_estate_count.test.ts b/tests/scripts/check_estate_count.test.ts
+index dec354afb6a61daee9f26016d40679fe79284be5..b7bf427c2e88de5eb9d723db0b8657ee99460e0d 100644
+--- a/tests/scripts/check_estate_count.test.ts
++++ b/tests/scripts/check_estate_count.test.ts
+@@ -171,13 +171,32 @@ describe('check_estate_count — the ratchet direction', () => {
+         expect(res.stderr).toContain('open_blockers 2 → 3');
+     });
+ 
+-    it('reports a count BELOW baseline as a free tightening and stays green', () => {
++    // Inverted 2026-08-19. This used to assert exit 0 on an un-walked tightening,
++    // which put the gate in direct contradiction with the `unit surface` case
++    // below ("the committed budget matches the live tree"): the same state was a
++    // pass here and a failure there. Measured consequence, not a tidiness
++    // argument — a drawdown change passed `task preflight` and reddened CI every
++    // time, and on 2026-08-18 it reddened `main` in run 32173675197, after which
++    // every later PR failed on drift it had not caused.
++    it('FAILS on a count below baseline until the baseline is walked down', () => {
+         const repo = initRepo(3);
+         fs.rmSync(path.join(repo, 'agents/roadmaps/road-to-2.md'));
+         commitAll(repo, 'archive one');
+         const res = run(repo, ['--base', 'main']);
++        expect(res.status, res.stdout).toBe(1);
++        expect(res.stderr).toContain('un-walked tightening: active_roadmaps measured 2 under a baseline of 3');
++    });
++
++    it('goes green once the walked baseline matches the tightened measurement', () => {
++        // The other half of the inversion: failing on tightening must be
++        // satisfiable by the one-number edit the message asks for, or it is a
++        // gate with no green path.
++        const repo = initRepo(3);
++        fs.rmSync(path.join(repo, 'agents/roadmaps/road-to-2.md'));
++        write(repo, 'src/config/estate-count-budget.json', budget({ active: 2, later: 0, blockers: 0 }));
++        commitAll(repo, 'archive one and walk the baseline in the same change');
++        const res = run(repo, ['--base', 'main']);
+         expect(res.status, res.stderr).toBe(0);
+-        expect(res.stdout).toContain('free tightening: active_roadmaps measured 2 under a baseline of 3');
+     });
+ 
+     it('exits 2, never 1, when the roadmap root is empty — a dead scope is not a pass', () => {

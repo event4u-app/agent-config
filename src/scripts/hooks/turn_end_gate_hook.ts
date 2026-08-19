@@ -9,7 +9,7 @@
  * is deliberately not another reminder. It is a check at the point of
  * delivery that can say no.
  *
- * Three detectors ride on one guard, because building the unsafe part twice
+ * FOUR detectors ride on one guard, because building the unsafe part twice
  * is how a second detector becomes a second outage:
  *
  *   A — promissory closing  (FC-5, 20 measured occurrences)
@@ -20,6 +20,33 @@
  *                            prose, which is why `readTranscriptTail` collects
  *                            them: `_messageText` keeps `type === 'text'` blocks
  *                            only, so tool activity is invisible to A and B.)
+ *   D — completion claim    (a claim of done carrying no fresh evidence; landed
+ *                            under conformance round 7 § Phase 1.)
+ *
+ * TWO of the four are CONDITIONAL, and saying "unconditional" here would be the
+ * same stale-header defect this block corrects below. A and D are the
+ * completion-adjacent pair an open subagent dispatch excuses, so `main()` runs
+ * them only when `dispatchOpen` is false; B and C run on every turn-end. That
+ * narrowing is deliberate (Phase 3 Step 2, narrowed again by R2 round 2) and is
+ * the third allow path, alongside the two re-entrancy layers — see the
+ * per-detector list in `main()`.
+ *
+ * This block said "Three" and listed A/B/C until 2026-08-18, while `DetectorId`
+ * below has carried four since round 7. `DETECTOR_IDS` in
+ * `_lib/turn_end_refusals.ts` is read off that union rather than off this
+ * comment for exactly that reason, and the count is corrected here rather than
+ * left as a stale header the next reader has to disbelieve.
+ *
+ * ## Removal condition
+ *
+ * This is a BLOCKING concern, so it owes one — see
+ * `docs/contracts/turn-end-detector-demotion.md` for the pre-registered
+ * per-detector bars, their sample floors, and the reason a crossed bar
+ * authorises a staged study rather than a demotion. Two things that contract
+ * says about the guard below are worth meeting here: the re-entrancy layers cap
+ * a turn at ONE refusal, which makes a re-refusal share unobservable and the
+ * three-strikes non-termination valve unreachable. Both are properties of this
+ * design, not gaps in the counters.
  *
  * ## Re-entrancy — the shape, stated before registration
  *
@@ -997,10 +1024,18 @@ export function main(): number {
     );
     if (alreadyRefusedTurn(workspaceRoot, sessionKey, turnOrdinal)) return EXIT_ALLOW;
 
-    // Every detector runs on every turn-end. The gating is INSIDE each one —
-    // no promise, no pin mismatch, no unverified edit ⇒ no finding ⇒ the turn
-    // ends. That is the whole of "fires when it is warranted"; there is no
-    // second, configurable notion of warranted layered on top of it.
+    // B and C run on every turn-end; A and D run only when no dispatch is open
+    // (the ternaries below). For the detectors that DO run, the gating is INSIDE
+    // each one — no promise, no pin mismatch, no unverified edit, no unsettled
+    // completion claim ⇒ no finding ⇒ the turn ends. That is the whole of "fires
+    // when it is warranted"; there is no second, configurable notion of warranted
+    // layered on top of it.
+    //
+    // This said "Every detector runs on every turn-end" and enumerated three of
+    // four, three lines above the two `dispatchOpen` ternaries that refute it.
+    // Corrected 2026-08-19 with the header block at the top of this file: a reader
+    // arriving here met the false claim first, and the D comment below deferred to
+    // "the note at the top of this loop" — which was this sentence.
     const findings: Finding[] = [];
     for (const f of [
         // A and D are the completion-adjacent pair a pending dispatch excuses
@@ -1009,8 +1044,11 @@ export function main(): number {
         dispatchOpen ? null : detectPromissory(lastAssistant),
         detectLanguage(lastAssistant, readLanguagePin(workspaceRoot)),
         detectUnverifiedEdit(toolCalls),
-        // Round 7 § Phase 1 — detector D, in the same unconditional list as the
-        // other three. It shipped with its own settings flag one commit earlier
+        // Round 7 § Phase 1 — detector D. It is NOT unconditional, and this
+        // comment said it was while sitting one line above the `dispatchOpen`
+        // ternary that conditions it: A and D are both excused by an open
+        // dispatch, per the note at the top of this loop. Corrected 2026-08-18.
+        // It shipped with its own settings flag one commit earlier
         // and that flag is gone: `hooks.turn_end_gate.*` was deleted on
         // 2026-08-12 because a default-off safety gate is an absent one. Its
         // gating is where the comment above says gating belongs — inside the
