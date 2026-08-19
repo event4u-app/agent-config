@@ -319,7 +319,7 @@ binds. Only a third detector is missing, and the soak stays.
       Doc-Impact: `/agent-handoff`s template and its validation sentence now
       state the shape, since the artefact contract they describe got stricter.
       <!-- verify: npx vitest run tests/scripts/lint_handoffs_artifact.test.ts -->
-- [ ] **3.4 Warn on a write against a `do_not_touch` path.** **Left open with a
+- [x] **3.4 Warn on a write against a `do_not_touch` path.** **Left open with a
       measurement, not with an omission.** Its stated precondition is met — 3.1
       shipped the field — but the field has **zero producers** today: the
       `--template` skeleton offers it empty, and no envelope in the tree carries
@@ -350,7 +350,58 @@ binds. Only a third detector is missing, and the soak stays.
       register in `src/scripts/hooks/concern_registry.ts:98-108`, advisory and
       `fail_closed: false`. The `pre_tool_use` chain already runs nine concerns
       (`hook_manifest.yaml:531`) — a tenth pays latency on every tool call.
-      <!-- verify: grep -rn 'do_not_touch' src/scripts/hooks/concern_registry.ts -->
+
+      **Closed 2026-08-19 — the deferral's own premise was false, and that is the
+      finding.** The step deferred on "no envelope carries an entry a path guard
+      could match", read as a fact about producers. It was a fact about the
+      **validator**: `validateRecycleEnvelope` applied the ref CHARACTER BUDGET to
+      `do_not_touch` and no shape rule whatsoever (`checkList` asserts only "array
+      of single lines within a budget"), so the field documented as "a list of path
+      refs" accepted arbitrary prose — and the one real non-empty instance duly was
+      prose. Nothing in the tree made the data path-shaped, so the count would have
+      stayed 0 indefinitely. **A blocker nobody can discharge is a cancellation
+      wearing a deferral's clothes**, which is why this step could not simply be
+      re-deferred.
+      Two other numbers here were stale in the deferral's favour and are corrected
+      rather than quietly inherited: the `pre_tool_use` chain runs **eleven**
+      concerns (`hook_manifest.yaml:889`), twelve on the two rows carrying
+      `spawn-guard-shadow` — so the guard would be a twelfth, not a tenth; and the
+      cited registry range `concern_registry.ts:98-108` no longer names what the
+      step assumed.
+
+      **What shipped:** the shape, not the guard. `isPathRef` (whitespace is the
+      discriminator, and the only one) plus `checkPathRefList` in
+      `_lib/subagent_capsule.ts`, applied to `do_not_touch` only, naming the
+      offending entries in the error. 14 new specs. The field's TSDoc now says the
+      shape is enforced rather than merely described.
+
+      **What did NOT ship, and where it lives now:** the guard itself, relocated
+      intact to `road-to-subagent-lifecycle-integrity` Phase 4 Step 4 — blocked on
+      a real producer emitting non-empty path-shaped entries AND a per-turn cost
+      decision for the twelfth concern. Preserved, not dropped: no human-owner
+      escalation was required, per `roadmap-progress-sync`'s preservation test.
+
+      **Decided by a blind two-member council** (2/2 concluded, unanimous on shape).
+      Both members hedged the hard error with a migration worry; **the tree
+      overruled both hedges** and the disposition record says so — the envelope
+      expires at `RECYCLE_MAX_AGE_HOURS = 48`, the write path refuses with an
+      itemised list rather than corrupting anything, and this module already
+      licensed a strictly harder break with "an envelope is consume-once and
+      expires in hours, so the migration window is a session, not a release".
+      Full record incl. the rejected staged-enforcement variant and the rejected
+      narrower grammar: `agents/settings/contexts/do-not-touch-guard-disposition.md`.
+
+      **Sibling search — the exact construct, counted:** a list field whose own
+      TSDoc calls its entries paths, validated by `checkList` + `MAX_REF_CHARS`
+      with no shape rule. **4 further sites**, all in `subagent_capsule.ts`:
+      `touched_files` (:227), `open_worker_envelopes` (:662), `artifact_paths`
+      (:663), `uncommitted_paths` (:689). Left alone deliberately —
+      `uncommitted_paths` is machine-generated from git status, which QUOTES a path
+      containing a space, so extending the rule there needs its own verification
+      rather than a copy of this one. `suggested_skills` (:664) is not in the set
+      (skill names, not paths) and `assumptions.basis` is explicitly
+      "file:line, id, path, **or command**", where whitespace is legal.
+      <!-- verify: npx vitest run tests/scripts/session_recycle.test.ts -->
 
 ## Phase 4 — Roles, lifecycles, and the two residues
 

@@ -520,10 +520,38 @@ infrastructure).
 - [ ] **Step 3:** Keep the invariant: `pre_tool_use` concerns are never
       droppable by role (the resolver already refuses this; add the payload
       path to the existing test).
+- [ ] **Step 4:** `do_not_touch` write-guard — a `pre_tool_use` concern
+      (advisory, `fail_closed: false`, modelled on `block-kernel-rule-writes`
+      and `reread-guard`) that warns when a write targets a path the current
+      recycle envelope listed under `do_not_touch`. Match on
+      `isPathRef`-shaped entries via the exported predicate, never a second
+      definition of "path ref".
+      **Relocated intact from `road-to-inbox-harvest-2026-08-b-dispatch-safety`
+      § 3.4** (2026-08-19, blind 2/2 council, `agents/settings/contexts/do-not-touch-guard-disposition.md`).
+      It is here rather than in `road-to-per-turn-hook-economy` because the
+      unblocker is lifecycle-owned — the field contract and its producers — while
+      hook cost is an acceptance condition on shipping, not the thing that is
+      missing.
+      **Blocked on two conditions, both now measurable rather than permanent:**
+      (a) at least one real envelope carries a non-empty, path-shaped
+      `do_not_touch` — the shape is enforced as of the relocation, so the count
+      is a fact about producers instead of an artefact of an unchecked field;
+      and (b) a per-turn cost decision, since the `pre_tool_use` chain already
+      runs eleven concerns (`hook_manifest.yaml:889`; twelve on the two rows
+      carrying `spawn-guard-shadow`) and this would be the twelfth — prefer
+      reusing the envelope read the handoff consumer already performs over a
+      fresh unconditional file read.
+      **Do not ship it on zero producers.** That is the
+      build-the-mechanism-before-measuring-the-premise pattern this package has
+      recorded three times, and it was the source step's own reason for staying
+      open.
+      <!-- verify: grep -rn 'do_not_touch' src/scripts/hooks/concern_registry.ts -->
 
 **Falsifier.** Phase-0 Step 4 shows no `agent_id` on tool events for in-process
 subagents on the installed host → the blocker stands as written; this phase is
-cancelled and the comment gains the version-gated evidence instead.
+cancelled and the comment gains the version-gated evidence instead. Step 4 is
+independent of that falsifier: it carries its own two conditions and survives a
+cancelled role axis.
 
 **Rollback.** Resolver change is one function; revert restores env-only.
 
