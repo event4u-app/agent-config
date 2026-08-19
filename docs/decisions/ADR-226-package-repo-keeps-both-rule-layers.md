@@ -1,10 +1,10 @@
 ---
 adr: 226
-status: accepted
+status: superseded
 date: 2026-08-13
 decision: package-repo-keeps-both-rule-layers
 supersedes: —
-superseded_by: —
+superseded_by: ADR-235
 phase: —
 type: structural
 review_trigger: >-
@@ -24,7 +24,31 @@ review_trigger: >-
 
 ## Status
 
-**Accepted** · 2026-08-13. Records why the standing-rule-delivery remedy the
+**Superseded** · by [ADR-235](ADR-235-one-artefact-one-layer.md), 2026-08-19.
+Accepted 2026-08-13.
+
+**What replaced it, and what did not.** ADR-235 partitions the two layers — every
+artefact is delivered from exactly one, chosen by `workspaces:` — so the question
+this record answered ("which layer wins") no longer arises. That is an owner
+decision about delivery topology, **not** a refutation of the reasoning below:
+both halves were re-verified on a freshly regenerated tree and both hold.
+`source-of-truth.md` is still the only project-only rule, and ADR-235 keeps it in
+the project layer, which is what this record was protecting. The structural
+generated-vs-installed divergence is confirmed and larger — 2 rules then, **110**
+now.
+
+**Two figures here have expired; do not re-derive them from this file.**
+`--layer=project` is recorded below as costing 22 rules — on a fresh tree it costs
+**5**. And the "two shared rules already differ in body" reason is now **0** prose
+divergence; the gate still refuses a suppression, but over frontmatter rather than
+prose. Neither moved the conclusion at the time, and neither survives as a number.
+
+Read together with
+[`single-delivery-partition-census.md`](../../agents/evidence/analysis/single-delivery-partition-census.md),
+whose mandatory projection-shape field exists because a stale reading of these same
+two layers produced two refuted analyses.
+
+Original status note, kept: records why the standing-rule-delivery remedy the
 tooling recommends is declined *in this repository specifically*, so the next
 session that reads the warning does not re-derive the answer or apply it and
 lose a rule.

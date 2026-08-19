@@ -201,13 +201,22 @@ taken on a stale or a fresh projection.
 
 ## Phase 1 — Replace ADR-226
 
-- [ ] **1.1** Write the successor ADR recording the partition decision, its
+- [x] **1.1** Write the successor ADR recording the partition decision, its
       owner, and its reasoning; mark ADR-226 `superseded_by` it and state in
       ADR-226 what changed (the operator's topology decision, not a refuted
       measurement — its `source-of-truth.md` asymmetry was confirmed, and the
       partition keeps that rule in the project layer where ADR-226 wanted it).
-      `verify:` `./scripts-run src/scripts/adr_regenerate_index` leaves the index
-      consistent and `check_references` is green on both records.
+      `verify:` the ADR index regenerates consistently and `check_references` is
+      green on both records.
+      **DONE 2026-08-19:**
+      [`ADR-235`](../../docs/decisions/ADR-235-one-artefact-one-layer.md) accepted,
+      `supersedes: ADR-226`; ADR-226 flipped to `status: superseded` with
+      `superseded_by: ADR-235` and a Status section stating which of its arguments
+      were re-verified (both) and which two figures expired (22 → 5 rules, and
+      prose divergence 2 → 0). Index regenerated with
+      `adr/regenerate_index --dir docs/decisions` — note the flag: the script
+      defaults to `docs/adr/` and prints `adr-dir not found` on this repo's legacy
+      layout, which reads like a failure and is an argument error.
 
 **AC-1:** ADR-226 is not silently bypassed; the tree records which decision is
 live and why the earlier one was replaced.
