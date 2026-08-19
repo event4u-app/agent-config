@@ -41,7 +41,12 @@
  * `agents/runtime/state/run-continuation.jsonl`:
  *   contract absent            → no-op (no event; the common case is silent)
  *   roadmap unreadable from the
- *   authoritative tree         → allow  (event: halt-roadmap-absent, ONCE, and
+ *   authoritative tree         → allow  (event: halt-roadmap-absent, ONCE PER
+ *                                ABSENCE EPISODE with a readable state and ONCE PER
+ *                                RUN without one — the two guards have different
+ *                                carriers: `absent_fires` resets on a successful
+ *                                read, the ledger guard cannot forget. So a second
+ *                                episode on an unparseable state is SILENT,
  *                                only for a run this concern had already engaged
  *                                on THIS roadmap — the keyed state is the
  *                                discriminator. State absent stays silent,
@@ -68,12 +73,11 @@
  *   scope complete (0 open,
  *   none blocked)              → allow            (event: complete; state cleared)
  *   runnable work exhausted
- *   (0 open, ≥1 blocked)       → allow  (event: blocked, ONCE per run via
- *                                `blocked_reported`. ADR-235's terminal outcome:
- *                                NOT a sixth halt condition and NOT in
- *                                `HALT_ACTIONS`, and the state is neither stamped
- *                                `halted` nor cleared. Reporting this as
- *                                `complete` is what round 8 finding 3 caught)
+ *   (0 open, ≥1 blocked)       → allow  (event: blocked, ONCE per run, guarded by
+ *                                the LEDGER: the state is cleared like `complete`,
+ *                                so no field there outlives the event. ADR-235's
+ *                                terminal outcome — not a sixth halt, never in
+ *                                `HALT_ACTIONS`, never stamped into `halted`)
  *   iterations ≥ MAX (25)      → allow            (event: halt-max-iterations)
  *   wall clock ≥ cap (4 h)     → allow            (event: halt-wall-clock)
  *   stall (3 engagements, no
@@ -165,11 +169,14 @@ import { TRANSCRIPT_READ_MAX_BYTES } from './turn_end_gate_hook.js';
 export { TRANSCRIPT_READ_MAX_BYTES };
 
 /**
- * How far back `absentAlreadyLogged` reads. The ledger is append-only and the
- * line it looks for belongs to the CURRENT run, so it is always within a few
- * lines of the end; the cap bounds the read on a long-lived ledger rather than
- * expressing a belief about where the line is.
+ * The blocked-step marker, as § 3c of the process loop documents it. Anchored on
+ * the comment form with the id REQUIRED: this decides a terminal outcome and
+ * whether a budget is cleared, so prose merely mentioning the words must not
+ * remove a step from the open count.
  */
+const BLOCKED_BY_MARKER = /<!--\s*blocked-by:\s*\S[^>]*-->/;
+
+/** Tail bound for `eventAlreadyLogged` — the line it seeks is near the end. */
 const LEDGER_TAIL_MAX_BYTES = 512 * 1024;
 
 export const EVENTS_RELPATH = path.join(
@@ -209,22 +216,10 @@ export interface RunState {
      */
     inert_reported?: boolean;
     /**
-     * Set once the `blocked` terminal has reported this run.
-     *
-     * `blocked` is a terminal outcome and not a halt (ADR-235), so it must not be
-     * stamped into `halted` -- `HALT_ACTIONS` is the set `parseRecord` validates
-     * that field against, and widening it would let a cleared budget also carry a
-     * halt stamp. This field gives the once-per-run guarantee without that, the
-     * same way `inert_reported` does for the over-cap rung.
-     */
-    blocked_reported?: boolean;
-    /**
-     * Consecutive stop fires on which the roadmap was unreadable.
-     *
-     * Reset by any successful read (the engage/halt paths never carry it forward),
-     * so it counts a run of absences rather than a total. At
-     * `ABSENT_CONFIRM_FIRES` the budget is reclaimed; below it the state is left
-     * alone. See the absent-roadmap branch for why one fire is not enough.
+     * CONSECUTIVE stop fires on which the roadmap was unreadable — a run of
+     * absences, not a total, which is why the main path deletes it on a successful
+     * read. At `ABSENT_CONFIRM_FIRES` the budget is reclaimed; below it the state
+     * is left alone. The absent branch says why one fire is not enough.
      */
     absent_fires?: number;
     /**
@@ -415,7 +410,7 @@ export function scanOpenSteps(text: string): ScanResult {
         }
         const full = step.join('\n');
         const body = m[1] as string;
-        if (body.includes('blocked-by:')) {
+        if (BLOCKED_BY_MARKER.test(body)) {
             blocked += 1;
             continue;
         }
@@ -472,7 +467,9 @@ export function ladder(
     state: RunState,
     openCount: number,
     nowMs: number,
-    blockedCount = 0,
+    // No default: `= 0` would silently restore the complete-instead-of-blocked
+    // behaviour for any caller that omitted it.
+    blockedCount: number,
     caps: { maxIterations: number; wallClockMs: number; stallWindow: number } = {
         maxIterations: MAX_ITERATIONS,
         wallClockMs: WALL_CLOCK_CAP_MS,
@@ -483,14 +480,9 @@ export function ladder(
     // halted run whose roadmap later reads zero-open does not report a
     // completion it never reached.
     if (state.halted) return state.halted;
-    // Round 8 finding 3: this returned `complete` on `openCount === 0` alone,
-    // while `scanOpenSteps` had already EXCLUDED every step carrying a
-    // `blocked-by:` marker from that count. So the one state ADR-235 defines as
-    // its own terminal outcome was reported as a completion, and cleared the
-    // budget with it. `blocked` is deliberately not a sixth halt condition -- the
-    // ADR is explicit that the five halts interrupt runnable work while this is
-    // exhaustion OF runnable work -- so it stays out of `HALT_ACTIONS` and is
-    // stamped through `blocked_reported` instead.
+    // `scanOpenSteps` EXCLUDES `blocked-by:` steps from `openCount`, so zero-open
+    // with blocked steps left is exhaustion of runnable work, not completion —
+    // ADR-235's own terminal outcome, and never a sixth halt.
     if (openCount === 0) return blockedCount > 0 ? 'blocked' : 'complete';
     if (state.iterations >= caps.maxIterations) return 'halt-max-iterations';
     const started = Date.parse(state.started_at);
@@ -572,17 +564,12 @@ export function readRunState(
 }
 
 /**
- * The only writer of a run-state file. Never throws: the state is a budget, and
- * losing a write costs at most one iteration of accounting, while throwing here
- * would turn an observability concern into a turn-end failure.
+ * The only writer of a run-state file. Never throws — the state is a budget, and
+ * throwing here would turn an observability concern into a turn-end failure.
  *
- * Returns whether the write landed. Round 8 finding 2: this used to swallow the
- * error and return `void`, which made the engage path's own
- * `catch { return EXIT_ALLOW }` unreachable -- the guard against an unbounded
- * BLOCK loop on an unpersistable counter was gone while the comment explaining
- * it stayed. Every other caller ignores the result on purpose (fail-open); the
- * engage path is the one branch where a lost write means an unbounded
- * re-engagement rather than a missed one.
+ * RETURNS whether the write landed, and the return is load-bearing exactly once:
+ * the engage path must not BLOCK on a counter it could not persist, because there
+ * the ladder cannot bound the loop. Every other caller ignores it (fail-open).
  */
 function writeState(file: string, state: RunState): boolean {
     try {
@@ -595,34 +582,34 @@ function writeState(file: string, state: RunState): boolean {
 }
 
 /**
- * Clear a run's budget: the keyed file, plus the legacy per-session file when
- * that file is adoptable by THIS slug.
+ * Clear a run's budget: the keyed file, and the legacy per-session file ONLY when
+ * this read adopted it. Both halves are load-bearing.
  *
- * Round 8 finding 4: `readRunState` ADOPTS the legacy file for a migrated run,
- * and both clear sites removed only the keyed one -- so on a migrated run every
- * clear was a no-op. The next read adopted the same stale budget again, which
- * made `complete` resumable and turned the absent-confirm clear into a cycle
- * that repeated every `ABSENT_CONFIRM_FIRES` fires. Another roadmap's legacy
- * file is still not ours to delete, so the adoption condition is reused
- * verbatim rather than restated loosely.
+ * Touching the legacy file at all: `readRunState` adopts it for a migrated run, so
+ * clearing only the keyed one made every clear a no-op there — `complete` stayed
+ * resumable and the absent-confirm clear became a repeating cycle.
+ *
+ * Gating on `adoptedLegacy` rather than on the adoption predicate: adoption and
+ * deletion want OPPOSITE defaults. A pre-round-7 file carries no `roadmap` field
+ * and is therefore adoptable by every slug — right for adopting, catastrophic for
+ * deleting, where one slug's clear would take another slug's live budget or halt
+ * stamp with it. Adoption is a fact this read already established; it is passed in
+ * rather than re-derived from a condition that cannot express it.
  */
 function clearRunState(
     workspaceRoot: string,
     runId: string,
-    slug: string,
     keyedFile: string,
+    adoptedLegacy: boolean,
 ): void {
     try {
         fs.rmSync(keyedFile, { force: true });
     } catch {
         /* fail-open */
     }
-    const legacyFile = path.join(workspaceRoot, legacyStateRelPath(runId));
-    const legacy = readState(legacyFile);
-    if (legacy === null) return;
-    if (legacy.roadmap !== undefined && legacy.roadmap !== slug) return;
+    if (!adoptedLegacy) return;
     try {
-        fs.rmSync(legacyFile, { force: true });
+        fs.rmSync(path.join(workspaceRoot, legacyStateRelPath(runId)), { force: true });
     } catch {
         /* fail-open */
     }
@@ -670,11 +657,6 @@ function readState(file: string): RunState | null {
         }
         if (o['inert_reported'] === true) {
             rec.inert_reported = true;
-        }
-        // Round-tripped for the same reason as `inert_reported`: dropping it would
-        // re-emit the `blocked` terminal on every later stop fire of the run.
-        if (o['blocked_reported'] === true) {
-            rec.blocked_reported = true;
         }
         // Validated against the halt set rather than accepted as any string:
         // an unrecognised value would be returned verbatim by `ladder` and
@@ -945,18 +927,17 @@ function isDirectory(p: string): boolean {
 }
 
 /**
- * True when a `halt-roadmap-absent` line for this run and roadmap is already in
- * the ledger.
- *
- * Round 8 finding 5: the ONCE guarantee was carried by `absent_fires` in the
- * state file, which is exactly the thing that does not exist in the case the
- * branch itself calls out -- a state file present but unparseable, or absent.
- * There `absentFires` recomputed to 1 on every fire and the line was re-emitted
- * every stop. The ledger is the one durable record available on that path, so it
- * is the guard. Read from the tail: the file is append-only and the answer is
- * always near the end.
+ * True when a line with this event name, run id and roadmap is already in the
+ * ledger — the durable once-guard for the two rungs that cannot keep one in the
+ * state file: `halt-roadmap-absent` fires precisely when the state is absent or
+ * unparseable, and `blocked` CLEARS the state.
  */
-function absentAlreadyLogged(workspaceRoot: string, runId: string, slug: string): boolean {
+function eventAlreadyLogged(
+    workspaceRoot: string,
+    runId: string,
+    slug: string,
+    event: string,
+): boolean {
     try {
         const file = path.join(workspaceRoot, EVENTS_RELPATH);
         const size = fs.statSync(file).size;
@@ -965,8 +946,11 @@ function absentAlreadyLogged(workspaceRoot: string, runId: string, slug: string)
         let text: string;
         try {
             const buf = Buffer.alloc(size - start);
-            fs.readSync(fd, buf, 0, buf.length, start);
-            text = buf.toString('utf8');
+            // The byte count is honoured: a short read, or a truncation between the
+            // `statSync` and here, would otherwise decode NUL padding into lines that
+            // fail `JSON.parse` and become a false negative.
+            const read = fs.readSync(fd, buf, 0, buf.length, start);
+            text = buf.subarray(0, read).toString('utf8');
         } finally {
             fs.closeSync(fd);
         }
@@ -981,19 +965,15 @@ function absentAlreadyLogged(workspaceRoot: string, runId: string, slug: string)
             }
             if (rec === null || typeof rec !== 'object') continue;
             const o = rec as Record<string, unknown>;
-            if (
-                o['event'] === 'halt-roadmap-absent' &&
-                o['run_id'] === runId &&
-                o['roadmap'] === slug
-            ) {
+            if (o['event'] === event && o['run_id'] === runId && o['roadmap'] === slug) {
                 return true;
             }
         }
         return false;
     } catch {
         // No ledger, or unreadable: nothing proves the line was written, and
-        // emitting once more is the lesser failure than going silent on the rung
-        // this whole file exists to make visible.
+        // emitting once more is the lesser failure than going silent on a rung this
+        // whole file exists to make visible.
         return false;
     }
 }
@@ -1180,11 +1160,12 @@ export function main(): number {
         // could not read would erase an interrupted halt stamp — the exact leak the
         // presence check was added to close. The next healthy write supersedes it.
         const absentFires = (driven?.absent_fires ?? 0) + 1;
-        // With a readable state the counter itself is the durable once-guard. With
-        // `driven === null` it has nowhere to live and recomputed to 1 every fire,
-        // so the ledger answers instead (round 8 finding 5).
+        // A readable state carries the counter; without one it has nowhere to live
+        // and would recompute to 1 every fire, so the ledger answers instead.
         const firstAbsence =
-            driven === null ? !absentAlreadyLogged(workspaceRoot, runId, slug) : absentFires === 1;
+            driven === null
+                ? !eventAlreadyLogged(workspaceRoot, runId, slug, 'halt-roadmap-absent')
+                : absentFires === 1;
         if (firstAbsence) {
             appendEvent(workspaceRoot, {
                 event: 'halt-roadmap-absent',
@@ -1205,12 +1186,9 @@ export function main(): number {
             writeState(runState.keyedFile, driven);
             return EXIT_ALLOW;
         }
-        // Confirmed. The keyed file goes, and so does a legacy per-session file
-        // that is adoptable by this slug -- leaving it made this clear a no-op on a
-        // migrated run and the absence then repeated as a cycle (round 8 finding
-        // 4). Another roadmap's legacy file is still never this branch's to delete,
-        // which `clearRunState` enforces with the adoption condition itself.
-        clearRunState(workspaceRoot, runId, slug, runState.keyedFile);
+        // Confirmed — see `clearRunState` for why the legacy file is in scope and
+        // why only an adopted one is.
+        clearRunState(workspaceRoot, runId, runState.keyedFile, runState.from === 'legacy');
         return EXIT_ALLOW;
     }
     if (parseExecutionMode(roadmapText) !== 'autonomous') return EXIT_ALLOW;
@@ -1245,11 +1223,9 @@ export function main(): number {
             // run to report on — the same silence the contract-absent rung takes.
             const inert = readRunState(workspaceRoot, runId, slug);
             if (inert.state !== null && inert.state.inert_reported !== true) {
-                // Round 8 finding 6: this line shipped without the seven
-                // provenance fields the header declares mandatory for EVERY event,
-                // while every value was already in scope. A rung that exists to be
-                // distinguishable in the ledger is the last one that should be
-                // missing the fields a reader distinguishes runs by.
+                // The header declares the provenance mandatory for EVERY event, and
+                // a rung that exists to be distinguishable in the ledger is the last
+                // one that should lack the fields a reader distinguishes runs by.
                 const inertRoots = provenance(
                     workspaceRoot,
                     claim.path,
@@ -1365,13 +1341,10 @@ export function main(): number {
     // Stamped on an inherited state too, so the field fills in on first contact
     // rather than staying absent for the life of the run.
     state.roadmap = slug;
-    // Round 8 finding 1: the field's own docblock promised "reset by any
-    // successful read", and nothing reset it -- the engage and halt paths write
-    // THIS object straight back, so it accumulated as a lifetime total. Two
-    // absences separated by healthy fires then reclaimed a live budget, and the
-    // second reclaim wrote no ledger line because the once-guard had already
-    // fired on the first. Reaching this line means the roadmap read succeeded:
-    // the absent branch returns above it.
+    // The reset the field's docblock promises. Reaching this line means the
+    // roadmap read succeeded (the absent branch returns above), and the engage and
+    // halt paths write THIS object back — so without the delete the counter is a
+    // lifetime total and two separated absences reclaim a live budget.
     delete state.absent_fires;
 
     const scan = scanOpenSteps(roadmapText);
@@ -1410,9 +1383,10 @@ export function main(): number {
         // criteria's counts are derived from. The FIRST halt is the event; the rest
         // are the same fact re-stated.
         const alreadyStamped = prev?.halted !== undefined;
-        // `blocked` cannot use `halted` as its once-guard: it is not in
-        // `HALT_ACTIONS`, by ADR-235's own framing (round 8 finding 3).
-        const alreadyBlocked = action === 'blocked' && prev?.blocked_reported === true;
+        // `blocked` can use neither `halted` (not in `HALT_ACTIONS`, by ADR-235) nor
+        // a state field (the state is cleared below). The ledger survives both.
+        const alreadyBlocked =
+            action === 'blocked' && eventAlreadyLogged(workspaceRoot, runId, slug, 'blocked');
         if (!alreadyStamped && !alreadyBlocked) {
             appendEvent(workspaceRoot, {
                 event: action,
@@ -1430,20 +1404,20 @@ export function main(): number {
             // Only a COMPLETION clears the state, so a later run on the same
             // roadmap (post-merge follow-up, re-claim) starts a fresh budget.
             // A halt must NOT clear it — see `RunState.halted`.
-            clearRunState(workspaceRoot, runId, slug, stateFile);
+            clearRunState(workspaceRoot, runId, stateFile, mainState.from === 'legacy');
             return EXIT_ALLOW;
         }
         if (action === 'blocked') {
-            // Recorded in place and NOT cleared. Clearing would make the next stop
-            // fire read no state, build a fresh one, reach `blocked` again and
-            // re-emit -- the duplicate-line shape round 6 finding 6 closed for
-            // halts. The budget is not reclaimed either: the run is over, and a
-            // later run carries a different run id and therefore a different keyed
-            // state file, so there is nothing to reclaim it FOR.
-            if (state.blocked_reported !== true) {
-                state.blocked_reported = true;
-                writeState(stateFile, state);
-            }
+            // CLEARED, like `complete`, and `runId` is why: it is
+            // `deriveSessionKey(sessionId)` — a SESSION hash — so this same session
+            // re-claiming this same roadmap reuses this same keyed file. Keeping the
+            // state would hand the next run a spent budget, and since the ladder
+            // tests `blocked` BEFORE the iteration cap, an unblocked roadmap could go
+            // straight to `halt-max-iterations` without ever engaging.
+            //
+            // Safe only because the once-guard is the LEDGER: the next fire builds a
+            // fresh state, reaches `blocked`, finds the line and stays silent.
+            clearRunState(workspaceRoot, runId, stateFile, mainState.from === 'legacy');
             return EXIT_ALLOW;
         }
         // A halt is recorded in place. A failed write is fail-open in the safe
@@ -1465,10 +1439,6 @@ export function main(): number {
         // so the loop must not run. Allowing here is the fail-open posture
         // applied to the ONE branch where a lost write means an unbounded
         // re-engagement rather than a missed one.
-        //
-        // Round 8 finding 2: this was a `try/catch` around a `writeState` that
-        // swallowed every error itself, so the branch was unreachable and the
-        // guard the comment describes did not exist. `writeState` reports now.
         return EXIT_ALLOW;
     }
 
