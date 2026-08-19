@@ -1051,7 +1051,21 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                     // explicit `api_key_ref` for gemini/xai/perplexity, key
                     // unresolvable, …) means "no api rung for this provider" —
                     // the failure surfaces unchanged, it does not escalate.
-                    if (exc instanceof CouncilDisabledError || exc instanceof CliClientError) {
+                    //
+                    // `CouncilConfigError` belongs in this set and was missing
+                    // from it: that is what `resolve_api_key` throws when a
+                    // referenced env var is unset or a key file has gone away.
+                    // A key rotated between construction and the retry is the
+                    // ordinary case, and it was escaping this factory into
+                    // `_run_round`, out of `consult`, and taking down the pass
+                    // the fallback exists to rescue. A mechanism that turns a
+                    // recoverable seat loss into a total loss is worse than no
+                    // mechanism.
+                    if (
+                        exc instanceof CouncilDisabledError ||
+                        exc instanceof CliClientError ||
+                        exc instanceof CouncilConfigError
+                    ) {
                         return null;
                     }
                     throw exc;

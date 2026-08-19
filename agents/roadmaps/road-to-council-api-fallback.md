@@ -258,17 +258,35 @@ built rather than left implied.
 
 ### Phase 4 — Falsifiability gate (blocker for default-on of anything)
 
-- [ ] **4.0** Fixture-driven end-to-end through the wired path with an
-      injected environment report and a fake CLI failure carrying a quota
-      stderr: assert config → build_members → fallback_out → consult →
-      api twin → recorded artefact.
-      `verify:` `npx vitest run tests/scripts/council_cli.test.ts`
-- [ ] **4.1** Register the claim ("an eligible cli failure with a
-      constructible api twin loses zero seats") in CLAIMS.md with the
-      fixture as the re-derivable evidence; `api_on_quota` STAYS
-      default-off — flipping the default is out of scope of this roadmap
-      and would need its own cost-impact evidence.
-      `verify:` `./scripts-run src/scripts/check_claims`
+- [x] **4.0** End-to-end from a real config file: loader →
+      `_synthesize_ai_council_block` → `build_members(fallback_out)` →
+      `consult` → api twin → rendered artefact, with a dead cli seat shaped
+      like the real thing (`billable: false`, `transport: 'cli'`). Both
+      quota directions, the base auth class with the opt-in OFF, a
+      provider with no api rung, and a key rotated between construction
+      and retry.
+      The transport is stubbed AFTER the real factory has built and been
+      asserted on — the first draft called the real client and came back
+      with a 401 from Anthropic. A unit test that reaches the network is a
+      flake, not a gate.
+      `verify:` `npx vitest run tests/scripts/ai_council/council_cli.test.ts` — 56 green.
+- [x] **4.1** `claim: council-fallback-loses-zero-seats` registered in
+      CLAIMS.md, `status: backed`, evidence in `exec:` form so the suite
+      re-derives it rather than an existence check resolving forever.
+      `api_on_quota` STAYS default-off — flipping it is out of scope here
+      and needs its own cost-impact evidence.
+      `verify:` `./scripts-run src/scripts/check_claims` — green, ledger 48 backed.
+
+#### F-4 — the gate paid for itself on its first run
+
+Writing 4.0 surfaced a fourth defect: the twin factory caught
+`CouncilDisabledError` and `CliClientError` but not `CouncilConfigError` —
+which is precisely what `resolve_api_key` throws when a referenced env var
+is unset or a key file has moved. A key rotated between construction and
+the retry therefore threw out of the factory, out of `_run_round`, out of
+`consult`, and took down the whole pass. A mechanism that converts a
+recoverable seat loss into a total loss is worse than no mechanism. Now
+caught, and pinned by the rotated-key case.
 
 ### Phase 5 — Optional refinement (proposal, not committed)
 
