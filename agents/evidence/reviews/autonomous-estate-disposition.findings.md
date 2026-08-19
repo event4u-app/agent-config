@@ -1,11 +1,11 @@
 # Findings: autonomous-estate-disposition
-<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 6080a5289f20f1edb0a448a95c3871c9b2b142397c335fd6f4ffd9e43b5fe25b | diff: df83cccf46d8f927231437892589c53f9871af50 | reviewer: r2-fresh-subagent-autonomous-estate-disposition | prompt_hash: 26ec3f5556c8f623f7879ca59847ace182839328f928641baf2abc96c6eb17d8 -->
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 9fd8b0802f8315b1cf3ff890f2bd0badd6d933e427e8ebc39c087bd77efaff3b | diff: a4824b9ad5870b6b24eca78ee64a3afdb9bae3df | reviewer: r2-fresh-subagent-autonomous-estate-disposition | prompt_hash: 26ec3f5556c8f623f7879ca59847ace182839328f928641baf2abc96c6eb17d8 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: df83cccf46d8f927231437892589c53f9871af50
-  scope_hash: 6080a5289f20f1edb0a448a95c3871c9b2b142397c335fd6f4ffd9e43b5fe25b
+  diff_sha: a4824b9ad5870b6b24eca78ee64a3afdb9bae3df
+  scope_hash: 9fd8b0802f8315b1cf3ff890f2bd0badd6d933e427e8ebc39c087bd77efaff3b
   roadmap: agents/roadmaps/later/road-to-surface-consolidation.md
   roadmap_hash: 910c33257055c138481b70841fc3e1479d50d48b136058edf6d28d063381e380
   ac_hash: 92bc7ed0761690c0a8e42cad7a4a0561dba938492856e1d5b93029f71e61ca70
