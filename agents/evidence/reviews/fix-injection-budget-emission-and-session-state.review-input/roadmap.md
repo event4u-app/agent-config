@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 execution:
@@ -341,21 +343,10 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
       description must be ONE physical line.
       `verify:` `npx vitest run tests/scripts/nudge_interference.test.ts`
 - **AC-4:** the aggregate appears in the bench output and the overlap fixture is
-  green. **Met 2026-08-19** — the bench prints its own
-  `per-turn aggregate … B (ceiling 47104 B, reported, not gated)` line, and the
-  overlap fixture is green; 50 tests across four files, including the end-to-end
-  proof that the shaping is *wired* and not merely defined.
-  <!-- The byte figure this note used to quote (1140 B) was removed 2026-08-19.
-  `end-review-nudge` decides whether to fire from the LIVE working-tree diff plus
-  a once-per-session latch, so the reading is a property of the checkout at the
-  moment of the run: the same commit gives 1140 B with uncommitted changes present
-  and 922 B without them. What AC-4 actually asks is that the line EXISTS and the
-  fixture is green, and both are stable; the ceiling itself lives in the config
-  row. Found while hardening this phase, and `bench_hook_injection`'s header
-  carries the same correction — it was the file claiming the fixture path is
-  "deterministic, CI-reproducible". Leaving the figure here while that header
-  said no reading may be pinned as acceptance evidence was a contradiction an R2
-  review caught within this branch. -->
+  green. **Met 2026-08-19** — `per-turn aggregate 1140 B (ceiling 47104 B,
+  reported, not gated)` on the bench's own output line; 50 tests across four
+  files, including the end-to-end proof that the shaping is *wired* and not
+  merely defined.
 
 ## Blockers
 

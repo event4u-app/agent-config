@@ -1,0 +1,42 @@
+# Findings: fix-injection-budget-emission-and-session-state
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: ba9f9b9961a3ef0cc94ec634d1a37a13ac93ab906e47dfa84335088c48dd4bc8 | diff: 1c031f0a3f51c7a9adbad19fb79dffdebb0212ce | reviewer: r2-fresh-subagent-fix-injection-budget-emission-and-session-state | prompt_hash: d4172e1167e0bd1b0545a2df21f4a3ccd05d0193648d6c430c73f2109521e2e5 -->
+<!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
+
+<!-- context-manifest: v1
+inputs:
+  diff_sha: 1c031f0a3f51c7a9adbad19fb79dffdebb0212ce
+  scope_hash: ba9f9b9961a3ef0cc94ec634d1a37a13ac93ab906e47dfa84335088c48dd4bc8
+  roadmap: agents/roadmaps/road-to-standing-context-40k.md
+  roadmap_hash: f628b5ae6dcea5f4de7168df76942a3f514d3d85e9ad7fbf6899bfd64813996a
+  ac_hash: 4fd135d9b339abde40f3c3c7bd3ec3bdca6d89bfa4dbb64ed42970a1dbb0f7df
+excluded: [session-history, agents/runtime, implementation-context]
+tools: [git-diff-branch-scoped, file-read-branch-paths]
+dispatched: 2026-08-19T14:17:12Z
+-->
+
+| # | Severity | File:Line | Finding | Status | Reason/Ref |
+|---|----------|-----------|---------|--------|------------|
+| 1 | high | src/scripts/hooks/injection_budget.ts:661 | The new ALLOW early return returns before `recordTurnSpend` (:707), so a turn-start dispatch reducing to ALLOW no longer resets the counter. `_reduce([])` is `EXIT_ALLOW` and `shapeAndRecord` is called unconditionally on every dispatch, so any quiet `user_prompt_submit` where no concern fires — the common case for conditional-silence concerns — leaves the PREVIOUS turn's total on disk. Later `pre/post_tool_use` dispatches in the new turn then read that stale spend as `spentBefore`, drop droppable advisories for bytes belonging to an earlier turn, and once carried spend passes the cap write the "per-turn injection ceiling exceeded" stderr line on every qualifying dispatch for the rest of the session. Pre-diff the guard was platform-only, so the reset ran on every verified-platform turn-start; this is a regression. The charge-skip is right, its placement is not: the reset (and only the charge) needs to be outside the carries-reasons branch. | fixed | 1b787fea1 |
+| 2 | medium | src/scripts/bench_hook_injection.ts:20-31 | The new paragraph states a single bench reading "must never be pinned as acceptance evidence (a roadmap note tried, and had to be corrected)", but AC-4 of the roadmap under review still records **Met 2026-08-19** on exactly `per-turn aggregate 1140 B`, and this diff touches no roadmap file. One of the two is wrong on this branch: either the AC's Met-evidence is invalid by the diff's own new standard, or the claimed correction did not land here. Also internal: the paragraph asserts "three different values appeared in one session on one commit" while naming only two (1,140 B and 922 B), and the roadmap note it points at names the same two — an unbacked count in the sentence that exists to replace an unbacked determinism claim. | fixed | 1b787fea1 |
+| 3 | low | src/scripts/hooks/host_semantics.ts:115 | `emissionCarriesReasons` is documented as mirroring `emitFor` ("TWO branches of `emitFor` below emit nothing at all"), but there are three: `severity === "warn"` with an empty joined reason also returns `{exit: 0, stdout: "", stderr: ""}` (:158-160). The predicate returns `true` there, so a WARN dispatch whose deciding texts are empty or whitespace-only is charged for bytes the host never receives — the same over-charge class the diff removes, in the one function whose stated reason for living next to `emitFor` is that it must not drift from it. Bounded in practice (whitespace-only advisory text), but the count in the doc is simply wrong. | fixed | 1b787fea1 |
+| 4 | low | src/scripts/hooks/injection_budget.ts:346-368 | `turnSpendKey`'s doc asserts "two different ids can never collide onto one counter". The key is a 96-char sanitised prefix plus a 32-bit FNV-1a digest, so a collision is improbable, not impossible, and on collision the pair reproduces exactly the shared-file defect this change fixes: `readTurnSpend`'s session check makes the foreign read return 0, then `recordTurnSpend` overwrites the other session's counter. Also the hash mixes `charCodeAt` UTF-16 code units rather than the id's bytes, so it is not FNV-1a over the encoded id — harmless, but the doc names the algorithm. The paired test only pins two hand-picked ids, which cannot support an absolute. | fixed | 1b787fea1 |
+| 5 | low | src/scripts/hooks/injection_budget.ts:338 | `TURN_SPEND_BASENAME` is an own-orphan after this diff: the old `turnSpendPath` was its last reader, and a grep over `src/` and `tests/` now finds the declaration and nothing else. Its value is also actively misleading — `injection-turn.json` is no longer a path any code produces, while `injection-turn` is now a directory holding `<key>.json` members. Related: an install carrying the old `agents/runtime/state/injection-turn.json` keeps a stale file that nothing reads and the new prune (which filters that directory only) never removes. | fixed | 1b787fea1 |
+| 6 | low | src/scripts/hooks/injection_budget.ts:396 | `_pruneTurnSpend` filters `n.endsWith(".json")`, but the temp file is `<target>.json.<pid>.tmp` (:468), so a temp leaked by a crash between `writeFileSync` and `renameSync` is never pruned — unbounded file growth in the directory the cap exists to bound, and the only test for it (tests/scripts/hooks/injection_budget.test.ts:464) covers the happy path only. Separately, the prune runs inside every `recordTurnSpend`, i.e. a `readdirSync` plus up to `TURN_SPEND_MAX_FILES + n` `statSync` calls on every charged dispatch, when the turn-start reset would be a sufficient and far cheaper trigger on a latency-gated path. | fixed | 1b787fea1 |
+| 7 | low | src/scripts/hooks/injection_budget.ts:446-453 | The docblock claims the temp-plus-rename makes a lost update "avoidable and this makes it so". It does not: `renameSync` prevents a TORN file, but the read-modify-write spanning `readTurnSpend` (:462) and the write is still unserialised, so two interleaved same-session dispatches — the exact scenario the paragraph names — still lose an update. The mechanism described and the mechanism shipped disagree; the correct claim is the narrower one (no torn reads, lost updates still possible and still under-counting). | fixed | 1b787fea1 |
+<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->
+
+## Re-bind note
+
+The reviewer read this branch at head `7f656558c` / scope `6ccd3bc389`. Both
+moved afterwards, twice and for two different reasons: the fixes that close the
+findings above, and an `origin/main` merge that landed a release. The manifest is
+re-derived because the contract's §5 gate requires it to match current inputs;
+this note keeps the sequence legible — findings first, fixes second, re-bind last.
+
+The findings rows and the `prompt_hash` are untouched, so what was asked and what
+was answered stay auditable independently of the pins.
+
+One disclosure the reviewer made and this artefact keeps: to establish finding 1's
+reachability rather than assert it, the reviewer read four narrow ranges of
+`dispatch_hook.ts` outside the branch-touched set, and the third of those reads is
+what RULED OUT a stronger version of the claim.

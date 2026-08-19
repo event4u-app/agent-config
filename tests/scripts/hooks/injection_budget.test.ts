@@ -19,10 +19,17 @@ import {
   readTurnSpend,
   recordTurnSpend,
   resolveVolumeCap,
+  shapeAndRecord,
   shapeEmissions,
   turnSpendPath,
+  turnSpendKey,
+  TURN_SPEND_DIR_REL,
+  TURN_SPEND_MAX_FILES,
   type EmissionCandidate,
 } from "../../../src/scripts/hooks/injection_budget.js";
+
+/** Package root — the shipped budget row lives under it. */
+const REPO_ROOT = path.resolve(__dirname, "..", "..", "..");
 
 function candidate(over: Partial<EmissionCandidate> = {}): EmissionCandidate {
   return {
@@ -309,6 +316,100 @@ describe("resolveVolumeCap — the three preconditions", () => {
   });
 });
 
+describe("shapeAndRecord — only charges bytes the host receives", () => {
+  // The module already skipped an unverified platform, whose `emitFor` returns
+  // empty stdout AND stderr. It did NOT skip a reduced verdict of ALLOW, whose
+  // `emitFor` returns exactly the same empty emission on the verified platform
+  // too — so the turn was charged for output nobody got, and a LATER dispatch
+  // whose advisory would have been delivered got dropped for it.
+  //
+  // Measured against this module before the fix: a 9,000-byte rc-0 message
+  // emitted 0 bytes and charged 9,000 against a 47,104-byte ceiling.
+  let root: string;
+  beforeEach(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), "shape-and-record-"));
+    delete process.env["AGENT_CONFIG_REPLAY"];
+  });
+  afterEach(() => {
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  const SESSION = "shape-and-record-session";
+  function ctxAt(event: string) {
+    return {
+      packageRoot: REPO_ROOT,
+      envelope: { workspace_root: root, session_id: SESSION } as Record<string, unknown>,
+      platform: "claude",
+      event,
+    };
+  }
+  function message(bytes: number, rc: number) {
+    return { rc, text: "x".repeat(bytes), def: { name: "noisy-advisory", severity: "advisory" } };
+  }
+
+  it("charges nothing when the reduced verdict is ALLOW", () => {
+    const kept = shapeAndRecord(ctxAt("post_tool_use"), [message(9000, RC_ALLOW)], RC_ALLOW);
+    expect(kept).toHaveLength(1); // nothing shaped away
+    expect(readTurnSpend(root, SESSION)).toBe(0);
+  });
+
+  it("charges nothing for an ALLOW verdict on the turn-start slot either", () => {
+    const kept = shapeAndRecord(ctxAt("user_prompt_submit"), [message(9000, RC_ALLOW)], RC_ALLOW);
+    expect(kept).toHaveLength(1);
+    expect(readTurnSpend(root, SESSION)).toBe(0);
+  });
+
+  it("DOES charge a WARN verdict, which the host does emit", () => {
+    const kept = shapeAndRecord(ctxAt("post_tool_use"), [message(600, RC_WARN)], RC_WARN);
+    expect(kept).toHaveLength(1);
+    expect(readTurnSpend(root, SESSION)).toBe(600);
+  });
+
+  it("a crashed concern cannot eat the turn ceiling", () => {
+    // The dispatcher fail-opens a non-fail_closed crash to ALLOW and its stderr
+    // becomes the deciding message — usually the largest candidate in the set.
+    // Five of these used to exhaust the ceiling on text nobody received.
+    for (let i = 0; i < 6; i += 1) {
+      shapeAndRecord(ctxAt("post_tool_use"), [message(9000, RC_ALLOW)], RC_ALLOW);
+    }
+    expect(readTurnSpend(root, SESSION)).toBe(0);
+
+    // …and a real, deliverable advisory afterwards is still eligible in full.
+    const kept = shapeAndRecord(ctxAt("post_tool_use"), [message(600, RC_WARN)], RC_WARN);
+    expect(kept).toHaveLength(1);
+    expect(readTurnSpend(root, SESSION)).toBe(600);
+  });
+
+  // REGRESSION. The first version of the ALLOW skip returned BEFORE
+  // recordTurnSpend, so a quiet user_prompt_submit — which reduces to ALLOW
+  // whenever no concern fires — stopped resetting the counter and the previous
+  // turn's total survived into the next one. My own two tests were blind to it:
+  // one ran on a fresh tmp root where a missing reset and a working one both read
+  // 0, the other used a prompt that reduces to WARN. This one seeds the counter
+  // first, which is what makes the reset observable.
+  it("a quiet ALLOW turn-start still RESETS the previous turn's total", () => {
+    recordTurnSpend(root, SESSION, 30_000);
+    expect(readTurnSpend(root, SESSION)).toBe(30_000);
+
+    // No deciding message at all: exactly the shape `_reduce([])` produces.
+    shapeAndRecord(ctxAt("user_prompt_submit"), [], RC_ALLOW);
+    expect(readTurnSpend(root, SESSION)).toBe(0);
+  });
+
+  it("a quiet ALLOW mid-turn slot leaves the carried total alone", () => {
+    recordTurnSpend(root, SESSION, 5_000);
+    shapeAndRecord(ctxAt("post_tool_use"), [], RC_ALLOW);
+    // Not a boundary, so nothing to reset — and nothing charged either.
+    expect(readTurnSpend(root, SESSION)).toBe(5_000);
+  });
+
+  it("records no drop for an emission that never left", () => {
+    shapeAndRecord(ctxAt("post_tool_use"), [message(90_000, RC_ALLOW)], RC_ALLOW);
+    const log = path.join(root, "agents", "runtime", "state", "dispatch-issues.jsonl");
+    expect(fs.existsSync(log)).toBe(false);
+  });
+});
+
 describe("turn spend accounting", () => {
   let root: string;
   const session = "sess-1";
@@ -339,29 +440,79 @@ describe("turn spend accounting", () => {
     expect(readTurnSpend(root, "other-session")).toBe(0);
   });
 
+  // Strengthened with the per-session store. The assertion above is satisfied
+  // by a SHARED file too — a foreign id reads 0 because the record was
+  // clobbered, which is exactly the defect it failed to detect. These two pin
+  // the isolation itself: both counts survive, and the paths differ.
+  it("isolates two concurrent sessions instead of letting them clobber", () => {
+    recordTurnSpend(root, session, 400);
+    recordTurnSpend(root, "other-session", 90);
+    expect(readTurnSpend(root, session)).toBe(400);
+    expect(readTurnSpend(root, "other-session")).toBe(90);
+    expect(turnSpendPath(root, session)).not.toBe(turnSpendPath(root, "other-session"));
+  });
+
+  it("keeps a hostile session id inside the counter directory", () => {
+    const nasty = "../../../etc/passwd";
+    expect(path.dirname(turnSpendPath(root, nasty))).toBe(
+      path.join(root, TURN_SPEND_DIR_REL),
+    );
+    recordTurnSpend(root, nasty, 10);
+    expect(readTurnSpend(root, nasty)).toBe(10);
+  });
+
+  it("never collides two different ids onto one counter", () => {
+    // Both sanitise to the same characters; only the digest separates them.
+    const a = "sess/one";
+    const b = "sess:one";
+    expect(turnSpendKey(a)).not.toBe(turnSpendKey(b));
+    recordTurnSpend(root, a, 30);
+    recordTurnSpend(root, b, 70);
+    expect(readTurnSpend(root, a)).toBe(30);
+    expect(readTurnSpend(root, b)).toBe(70);
+  });
+
+  it("bounds the counter directory rather than growing without limit", () => {
+    for (let i = 0; i < TURN_SPEND_MAX_FILES + 12; i += 1) {
+      recordTurnSpend(root, `session-${String(i)}`, 5);
+    }
+    const kept = fs
+      .readdirSync(path.join(root, TURN_SPEND_DIR_REL))
+      .filter((n) => n.endsWith(".json"));
+    expect(kept.length).toBeLessThanOrEqual(TURN_SPEND_MAX_FILES);
+  });
+
+  it("leaves no temp file behind after an atomic write", () => {
+    recordTurnSpend(root, session, 42);
+    const leftovers = fs
+      .readdirSync(path.join(root, TURN_SPEND_DIR_REL))
+      .filter((n) => n.endsWith(".tmp"));
+    expect(leftovers).toEqual([]);
+  });
+
   it("returns 0 for a malformed file rather than throwing", () => {
-    fs.mkdirSync(path.dirname(turnSpendPath(root)), { recursive: true });
-    fs.writeFileSync(turnSpendPath(root), "not json at all");
+    fs.mkdirSync(path.dirname(turnSpendPath(root, session)), { recursive: true });
+    fs.writeFileSync(turnSpendPath(root, session), "not json at all");
     expect(readTurnSpend(root, session)).toBe(0);
   });
 
   it("returns 0 for a negative or non-numeric byte count", () => {
-    fs.mkdirSync(path.dirname(turnSpendPath(root)), { recursive: true });
-    fs.writeFileSync(turnSpendPath(root), JSON.stringify({ session, bytes: -5 }));
+    fs.mkdirSync(path.dirname(turnSpendPath(root, session)), { recursive: true });
+    fs.writeFileSync(turnSpendPath(root, session), JSON.stringify({ session, bytes: -5 }));
     expect(readTurnSpend(root, session)).toBe(0);
-    fs.writeFileSync(turnSpendPath(root), JSON.stringify({ session, bytes: "40" }));
+    fs.writeFileSync(turnSpendPath(root, session), JSON.stringify({ session, bytes: "40" }));
     expect(readTurnSpend(root, session)).toBe(0);
   });
 
   it("writes nothing under replay — fixture runs never mutate state", () => {
     process.env["AGENT_CONFIG_REPLAY"] = "1";
     recordTurnSpend(root, session, 500);
-    expect(fs.existsSync(turnSpendPath(root))).toBe(false);
+    expect(fs.existsSync(turnSpendPath(root, session))).toBe(false);
   });
 
   it("carries no field capable of holding content", () => {
     recordTurnSpend(root, session, 120);
-    const parsed = JSON.parse(fs.readFileSync(turnSpendPath(root), "utf-8")) as Record<
+    const parsed = JSON.parse(fs.readFileSync(turnSpendPath(root, session), "utf-8")) as Record<
       string,
       unknown
     >;
