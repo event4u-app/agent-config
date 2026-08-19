@@ -27,6 +27,11 @@ import * as path from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
+import { turnSpendPath } from "../../src/scripts/hooks/injection_budget.js";
+
+/** The session id the fixture envelope below carries. */
+const SESSION = "injection-budget-dispatch-test";
+
 const REPO_ROOT = path.resolve(__dirname, "..", "..");
 const ENTRY = path.join(REPO_ROOT, "src", "scripts", "hooks", "dispatch_entry.ts");
 const TSX_BIN = path.join(
@@ -78,7 +83,7 @@ function workspace(): string {
 
 function dispatchPrompt(ws: string, prompt: string): { status: number | null; stdout: string; stderr: string } {
     const payload = JSON.stringify({
-        session_id: "injection-budget-dispatch-test",
+        session_id: SESSION,
         cwd: ws,
         hook_event_name: "UserPromptSubmit",
         prompt,
@@ -164,12 +169,9 @@ describe("emission shaping through the real dispatcher", () => {
         // assert the opening nudge survives anyway — on the slot that begins a
         // turn, the carried total is zero by definition.
         const ws = workspace();
-        const stateDir = path.join(ws, "agents", "runtime", "state");
-        fs.mkdirSync(stateDir, { recursive: true });
-        fs.writeFileSync(
-            path.join(stateDir, "injection-turn.json"),
-            JSON.stringify({ session: "injection-budget-dispatch-test", bytes: 47_104 }),
-        );
+        const counter = turnSpendPath(ws, SESSION);
+        fs.mkdirSync(path.dirname(counter), { recursive: true });
+        fs.writeFileSync(counter, JSON.stringify({ session: SESSION, bytes: 47_104 }));
 
         const r = dispatchPrompt(ws, CO_FIRE_PROMPT);
         expect(r.status).toBe(0);
@@ -178,16 +180,14 @@ describe("emission shaping through the real dispatcher", () => {
             dispatchIssues(ws).filter((e) => e["issue"] === "injection_budget_drop"),
         ).toEqual([]);
         // And the counter is now this turn's own spend, not the seeded total.
-        const after = JSON.parse(
-            fs.readFileSync(path.join(stateDir, "injection-turn.json"), "utf-8"),
-        ) as Record<string, unknown>;
+        const after = JSON.parse(fs.readFileSync(counter, "utf-8")) as Record<string, unknown>;
         expect(after["bytes"] as number).toBeLessThan(47_104);
     });
 
     it("writes a counts-only turn counter and resets it on the turn-start slot", () => {
         const ws = workspace();
         dispatchPrompt(ws, CO_FIRE_PROMPT);
-        const counter = path.join(ws, "agents", "runtime", "state", "injection-turn.json");
+        const counter = turnSpendPath(ws, SESSION);
         expect(fs.existsSync(counter)).toBe(true);
         const parsed = JSON.parse(fs.readFileSync(counter, "utf-8")) as Record<string, unknown>;
         expect(Object.keys(parsed).sort()).toEqual(["bytes", "session"]);

@@ -17,10 +17,27 @@
  *     the fix is a registered decision, not a silent default bump
  *   - per-slot SUM over all bound concerns > the slot cap → RED
  *
+ * NOT FULLY DETERMINISTIC — this paragraph replaces a claim that said it was.
+ * The fixture path was described as "deterministic, CI-reproducible". For most
+ * concerns it is; they read only the committed envelope. But `end-review-nudge`
+ * decides whether to fire from the LIVE working-tree diff plus a once-per-session
+ * latch, so one commit reads 1,140 B with uncommitted changes present and 922 B
+ * without them. Two values, observed three times in one session as the tree went
+ * dirty, clean and dirty again — the earlier wording here said "three different
+ * values", which counted the readings and not the values, and an R2 review was
+ * right to call that an unbacked number inside the paragraph that exists to
+ * replace an unbacked claim.
+ * Two consequences. A single run is a reading of THIS checkout right now, so its
+ * number must never be pinned as acceptance evidence (a roadmap note tried, and
+ * had to be corrected). And the BREACH verdict is unaffected regardless, because
+ * a state-dependent concern can only push the sum UP: a green run is still a
+ * green run. Documented rather than fixed, because making this hermetic means
+ * changing what the concern reads — a change to the concern, not to its bench.
+ *
  * HONEST SCOPE, stated up front: concerns are conditional-silence by design —
  * a generic fixture triggers few of them, so most measure 0 bytes here. The
  * gate therefore enforces the cap on whatever DOES fire under the committed
- * fixtures (deterministic, CI-reproducible), while the census mode
+ * fixtures, while the census mode
  * (`--record`) measures REAL sessions: it appends counts-only lines
  * ({ts, slot, concern, bytes}) to agents/runtime/state/injection-census.jsonl
  * — the repeat-injection-census blocker's instrument. Claiming the fixture
