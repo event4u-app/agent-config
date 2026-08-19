@@ -21,9 +21,9 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head f631031b7748e016df070f8bf2a01060779dfe93, review
-  artefacts excluded), scope hash `cfe2ad720bdc641950609441409050f1e621644810dc2d7f166c18a818a3d0dc`
-- roadmap under review: `roadmap.md` — NO acceptance criteria could be EXTRACTED from it, in either recognised form (an `## Acceptance criteria` heading, or inline `- **AC-n:**` bullets), so `acceptance-criteria.md` is empty. Two different things produce that result and the dispatcher cannot tell them apart: the roadmap declares none, or it declares them in a shape the extractor does not recognise. Open `roadmap.md`, decide which, and report a finding if the criteria are there.
+- diff: `diff.patch` — the review scope (branch head 8c9041488ae67aa58d90fbd85fef39866bb2e921, review
+  artefacts excluded), scope hash `4292e4a7f3a36b0daa59776f857d398d672b4429453dea3c087aa78d39ebe845`
+- roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
 
@@ -46,6 +46,7 @@ Changed files:
 - src/scripts/_lib/council_fallback_wiring.ts
 - src/scripts/_lib/council_settings_block.ts
 - src/scripts/_lib/map_to_object.ts
+- src/scripts/_lib/roadmap_checkboxes.ts
 - src/scripts/_lib/run_checkpoint.ts
 - src/scripts/_lib/unattended_guard.ts
 - src/scripts/ai_council/config.ts
@@ -100,5 +101,5 @@ Fill the findings table in `worktree-long-horizon.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope cfe2ad720bdc641950609441409050f1e621644810dc2d7f166c18a818a3d0dc, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 4292e4a7f3a36b0daa59776f857d398d672b4429453dea3c087aa78d39ebe845, reviewed <YYYY-MM-DD>
 ```

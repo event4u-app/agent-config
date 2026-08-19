@@ -482,7 +482,7 @@ index 0000000000000000000000000000000000000000..17a0685c83479dd67a8bb3f8b885ad50
 +| 6 | A fallback seat reads as a native api seat in analysis | product | Without an event, attendance analysis cannot separate "saved by fallback" from "always was api", which makes the mechanism's value unmeasurable. | Phase 3 emits the event and surfaces the transport in the rendered artefact before any default is reconsidered. | Phase 3 |
 diff --git a/agents/roadmaps/road-to-long-horizon-execution.md b/agents/roadmaps/road-to-long-horizon-execution.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..e1e005347b6f0f3fa054711e505a3abcae000a96
+index 0000000000000000000000000000000000000000..55c680f6599e7ad2a03087f0406e55faba097a96
 --- /dev/null
 +++ b/agents/roadmaps/road-to-long-horizon-execution.md
 @@ -0,0 +1,491 @@
@@ -933,7 +933,7 @@ index 0000000000000000000000000000000000000000..e1e005347b6f0f3fa054711e505a3abc
 +- **Resolved when:** Phase 4 step `4.3` carries either a benchmark verdict
 +  with its run date and cost, or a published null naming option (b).
 +
-+## Done means
++## Acceptance criteria
 +
 +- [~] A `process-full` contract run finishes a 3-phase roadmap with zero
 +      synchronous contacts, re-engaging across turns, and opens the PR.
@@ -974,7 +974,7 @@ index 0000000000000000000000000000000000000000..e1e005347b6f0f3fa054711e505a3abc
 +| 2 | The agent loops forever on a roadmap it cannot finish | implementation | Without a termination ladder a stuck run burns budget indefinitely. | Six rungs, each an event: max-iterations 25, wall-clock 4h, stall at 3 engagements with no checkbox delta, plus an environment kill switch. | Phase 1 |
 +| 3 | A supervisor that relaunches sessions merges work nobody reviewed | product | The external reference this design borrows from auto-merges ready worktrees; inheriting that would break the merge-stays-human anti-goal. | The auto-merge is a named rejection in H-2, restated in 3.1; the supervisor may open a PR and never merges one. | Phase 3 |
 +| 4 | Unattended runs spend without a ceiling | implementation | A headless primitive with no budget file converts a scheduling mistake into unbounded cost. | 4.0 carries the global budget file and a job-dedup key as part of the primitive rather than as a follow-up; 4.2 pre-registers the demotion threshold before the first unattended run. | Phase 4 |
-+| 5 | A relaunched session trusts a checkpoint that no longer describes the tree | implementation | Resuming by bookkeeping alone re-enters a run on stale claimed state. | 3.2 makes re-verification against the worktree the relaunched session's first act, which is the deliberate departure from the borrowed shape. | Phase 3 |
++| 5 | A relaunched session trusts a checkpoint that no longer describes the tree | implementation | Resuming by bookkeeping alone re-enters a run on stale claimed state. | 3.2 makes re-verification against the worktree the relaunched session's first act, which is the deliberate departure from the borrowed shape. The R2 completion review found the mitigation UNREACHABLE as first shipped — the checkpoint was keyed on the dying session's run id, which a relaunched session cannot derive — and it is reachable now via `latestCheckpointFor(repoRoot, slug)`, the slug being the one key a resume holds by definition. | Phase 3 |
 +| 6 | The benchmark stays pending forever and the gate is neither open nor honestly closed | product | D-5 is exactly this shape already; a second indefinite pending would reproduce the defect the roadmap names. | The gate is a declared blocker with two mutually exclusive resolutions, one of which is a published null. | Phase 4 |
 +| 7 | A continuation prompt that names no next step degrades into "keep going" | product | A bare imperative is the anti-pattern the harvest section rejects by name, and it produces work with no verifiable target. | The continuation must name the next unchecked step AND its `verify:` line; 2.3 restates the no-self-adversarial-fallback rule in the ladder text. | Phase 1 |
 diff --git a/agents/templates/.ai-council.yml.example b/agents/templates/.ai-council.yml.example
@@ -1404,7 +1404,7 @@ index f01b9a7bc7775c40d89aded552973f1d2cd1bc52..0ddef27c825164abe39c128b98732e73
    "exec_feasible": 10,
    "delta_pp": 38.5,
 diff --git a/src/agent-src/contexts/execution/roadmap-process-loop.md b/src/agent-src/contexts/execution/roadmap-process-loop.md
-index 400eb7885024531bb301ba286bcf370daaedcc1e..a9b3bb8210a74adc910ee7df5c7df831465caa11 100644
+index 400eb7885024531bb301ba286bcf370daaedcc1e..c09c790885ae7a9f32f5e5b88239825facf6177c 100644
 --- a/src/agent-src/contexts/execution/roadmap-process-loop.md
 +++ b/src/agent-src/contexts/execution/roadmap-process-loop.md
 @@ -277,11 +277,33 @@ For each open step in the working set (scope-bound — see wrapper):
@@ -1441,7 +1441,7 @@ index 400eb7885024531bb301ba286bcf370daaedcc1e..a9b3bb8210a74adc910ee7df5c7df831
  5. **Atomic flip — same reply, every step.**
     Flip the checkbox in `agents/roadmaps/<file>.md`: `[x]` done ·
     `[~]` partial · `[-]` skipped. **Non-skippable, non-batchable**
-@@ -345,20 +367,49 @@ For each open step in the working set (scope-bound — see wrapper):
+@@ -345,20 +367,56 @@ For each open step in the working set (scope-bound — see wrapper):
     file is the source of truth between regens.
  7. Run quality pipeline if cadence is `per_step`.
  
@@ -1459,8 +1459,15 @@ index 400eb7885024531bb301ba286bcf370daaedcc1e..a9b3bb8210a74adc910ee7df5c7df831
 +RESUME BY EVIDENCE, NEVER BY BOOKKEEPING.
 +```
 +
-+The first act of a resumed run is `verifyCheckpoint` against the current
-+tree — the per-field report names WHICH claim went stale, which is what a bare
++The first act of a resumed run is to look its checkpoint up **by roadmap slug**
++— `latestCheckpointFor(repoRoot, slug)` — and then `verifyCheckpoint` it against
++the current tree. The slug, not the run id: a relaunched session has a NEW
++session id, so the run-id-keyed `readCheckpoint` cannot find the checkpoint the
++DYING session wrote, and this instruction named an unreachable path until the
++R2 review's finding 7. The slug is the one key a resumed run holds by
++definition, because claiming the same roadmap is what makes it a resume.
++
++The per-field report then names WHICH claim went stale, which is what a bare
 +"stale/fresh" verdict cannot. **A disagreement is not an error**: work landing
 +between the checkpoint and the resume is the normal case (a human committed, a
 +sibling worktree moved, the dying session finished a step it never recorded),
@@ -2015,12 +2022,83 @@ index 0000000000000000000000000000000000000000..c90f467e6dc90053bb6408a604b885c7
 +}
 +
 +export { _mapToObject as mapToObject };
+diff --git a/src/scripts/_lib/roadmap_checkboxes.ts b/src/scripts/_lib/roadmap_checkboxes.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..23de7e0f53b8ce6072e38e261873f2a4934a4ba8
+--- /dev/null
++++ b/src/scripts/_lib/roadmap_checkboxes.ts
+@@ -0,0 +1,65 @@
++/**
++ * The checkbox vocabulary and the phase-span rule, in one place.
++ *
++ * R2 review, findings 11 and 15. Two scanners on the autonomous-run path —
++ * `run_checkpoint.countRoadmap` and `run_continuation_hook.scanOpenSteps` —
++ * each carried their own narrower regex and each scanned the WHOLE file, while
++ * both docblocks claimed the dashboard's vocabulary. Two consequences, and
++ * they pull in opposite directions:
++ *
++ *   - NARROWER VOCABULARY under-counts. Only `-` bullets and a lowercase `x`
++ *     matched, so a roadmap authored with `*` bullets or `[X]` read
++ *     `open === 0` and `run_supervise.classify` reported disposition
++ *     `complete` — "the run finished, the session just never said so" — for a
++ *     run with real open work. That is the exact confusion the watcher exists
++ *     to remove.
++ *   - WHOLE-FILE SCANNING over-counts. The dashboard attributes checkboxes to
++ *     `## Phase` spans; these did not. On the very roadmap under review every
++ *     phase step is closed and the only `- [ ]` sits under `## Acceptance criteria`, so
++ *     the continuation would have named "A killed session resumes via the
++ *     watcher…" as the next step — an observation of a live multi-day run, not
++ *     an executable step, and by construction with no `verify:` line. Steps
++ *     under `## Blockers` and `## Risk Register` are the same shape.
++ *
++ * The vocabulary is deliberately the dashboard's, character for character:
++ * where an autonomous run and the dashboard disagree about whether a roadmap
++ * is finished, the disagreement is the defect.
++ */
++
++/** Bullet `-` or `*`, mark ` `, `x`, `X`, `~` or `-`; body captured. */
++export const CHECKBOX_LINE = /^[ \t]*[-*][ \t]+\[([ xX~-])\][ \t]+(.*)$/;
++
++/** H2/H3 heading, its text captured. */
++const HEADING = /^(#{2,3})[ \t]+(.*?)[ \t]*$/;
++
++/** An H2/H3 that opens a phase span, matching the dashboard's PHASE_RE shape. */
++const PHASE_HEADING = /^Phase[ \t]+(?:\d+(?:\.\d+)*[a-z]?|[IVX]+|[A-Z](?:\d+)?)\b/;
++
++/**
++ * The lines of `text` that sit inside a `## Phase …` span.
++ *
++ * A phase span runs from its heading to the next H2/H3 of any kind, so
++ * `## Blockers`, `## Acceptance criteria` and `## Risk Register` close it rather than
++ * being absorbed into the phase above them.
++ *
++ * A roadmap with NO phase heading at all yields every line. That is the
++ * deliberate choice and it is the safe direction: an unphased roadmap is a
++ * legitimate shape, and returning nothing for it would make every such run
++ * read as `complete`, which is the more dangerous of the two errors.
++ */
++export function phaseLines(text: string): string[] {
++    const lines = text.split('\n');
++    const out: string[] = [];
++    let inPhase = false;
++    let sawPhase = false;
++    for (const line of lines) {
++        const h = HEADING.exec(line);
++        if (h !== null) {
++            inPhase = PHASE_HEADING.test(h[2] ?? '');
++            if (inPhase) sawPhase = true;
++            continue;
++        }
++        if (inPhase) out.push(line);
++    }
++    return sawPhase ? out : lines;
++}
 diff --git a/src/scripts/_lib/run_checkpoint.ts b/src/scripts/_lib/run_checkpoint.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..5afad1eb50255911e1a415d7ff17904e3b7979d9
+index 0000000000000000000000000000000000000000..b248cd9b08045cda8d7b5742f650563b4e79e32f
 --- /dev/null
 +++ b/src/scripts/_lib/run_checkpoint.ts
-@@ -0,0 +1,229 @@
+@@ -0,0 +1,286 @@
 +/**
 + * run_checkpoint — the deterministic checkpoint a dying run leaves behind,
 + * and the re-verification a resumed run owes before trusting it.
@@ -2053,6 +2131,8 @@ index 0000000000000000000000000000000000000000..5afad1eb50255911e1a415d7ff17904e
 +
 +import * as fs from 'node:fs';
 +import * as path from 'node:path';
++
++import { CHECKBOX_LINE, phaseLines } from './roadmap_checkboxes.js';
 +
 +export const CHECKPOINT_DIR_REL = path.join('agents', 'runtime', 'state', 'checkpoints');
 +
@@ -2098,11 +2178,13 @@ index 0000000000000000000000000000000000000000..5afad1eb50255911e1a415d7ff17904e
 + */
 +export function countRoadmap(text: string): RoadmapCounts {
 +    const counts: RoadmapCounts = { open: 0, done: 0, parked: 0, next: null };
-+    for (const raw of text.split('\n')) {
-+        const m = /^\s*-\s*\[([ x~-])\]\s*(.*)$/.exec(raw);
++    // Phase spans only, and the dashboard's own vocabulary — see
++    // `_lib/roadmap_checkboxes.ts` for what each half was getting wrong.
++    for (const raw of phaseLines(text)) {
++        const m = CHECKBOX_LINE.exec(raw);
 +        if (m === null) continue;
 +        const mark = m[1];
-+        if (mark === 'x') {
++        if (mark === 'x' || mark === 'X') {
 +            counts.done += 1;
 +        } else if (mark === '~' || mark === '-') {
 +            counts.parked += 1;
@@ -2186,6 +2268,59 @@ index 0000000000000000000000000000000000000000..5afad1eb50255911e1a415d7ff17904e
 +    }
 +}
 +
++/**
++ * The most recent checkpoint for a ROADMAP, across every run id.
++ *
++ * R2 review, finding 7. `readCheckpoint` keys on the run id, which is derived
++ * from the session id of the session that DIED — so a relaunched session, which
++ * by definition has a new id and no index from slug to old id, could not reach
++ * its own checkpoint through any path in the tree. `verifyCheckpoint` and
++ * `renderVerification` had zero production call sites, and the loop contract
++ * nonetheless instructed a resumed run that "the first act is verifyCheckpoint".
++ * The mitigation Risk 5 names was unreachable as shipped.
++ *
++ * The roadmap slug is the one key a relaunched run genuinely holds: it claims
++ * the same roadmap, which is what makes it a resume rather than a new run.
++ *
++ * Ties are broken by `written_at` descending, then by filename, so the result
++ * is deterministic when two checkpoints share a timestamp. A malformed or
++ * unreadable file is skipped rather than failing the lookup — a resume that
++ * refuses to start because one stale JSON file is corrupt is worse than a
++ * resume that verifies against the newest readable one.
++ */
++export function latestCheckpointFor(repoRoot: string, roadmap: string): RunCheckpoint | null {
++    const dir = path.join(repoRoot, CHECKPOINT_DIR_REL);
++    let names: string[];
++    try {
++        names = fs.readdirSync(dir).filter((n) => n.endsWith('.json'));
++    } catch {
++        return null;
++    }
++    const found: RunCheckpoint[] = [];
++    for (const name of names.sort()) {
++        let parsed: unknown;
++        try {
++            parsed = JSON.parse(fs.readFileSync(path.join(dir, name), 'utf-8'));
++        } catch {
++            continue;
++        }
++        if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) continue;
++        const o = parsed as Record<string, unknown>;
++        if (o['roadmap'] !== roadmap) continue;
++        if (typeof o['run_id'] !== 'string') continue;
++        if (typeof o['open_steps'] !== 'number' || typeof o['done_steps'] !== 'number') continue;
++        found.push(parsed as RunCheckpoint);
++    }
++    if (found.length === 0) return null;
++    found.sort((a, b) => {
++        const at = String(a.written_at ?? '');
++        const bt = String(b.written_at ?? '');
++        if (at !== bt) return at < bt ? 1 : -1;
++        return a.run_id < b.run_id ? 1 : -1;
++    });
++    return found[0] ?? null;
++}
++
 +/** One claim's verdict — the field, what was claimed, what is true now. */
 +export interface FieldVerdict {
 +    readonly field: string;
@@ -2252,10 +2387,10 @@ index 0000000000000000000000000000000000000000..5afad1eb50255911e1a415d7ff17904e
 +}
 diff --git a/src/scripts/_lib/unattended_guard.ts b/src/scripts/_lib/unattended_guard.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..80cc445ac5982b0d9d3051941085e3b7626730f5
+index 0000000000000000000000000000000000000000..93a02b7b5fd09a6e7513fb9c7f83fd44d55412ef
 --- /dev/null
 +++ b/src/scripts/_lib/unattended_guard.ts
-@@ -0,0 +1,307 @@
+@@ -0,0 +1,344 @@
 +/**
 + * unattended_guard — the three preconditions an unattended run must clear
 + * before anything spawns, and the ledger that bounds it once it has.
@@ -2458,10 +2593,32 @@ index 0000000000000000000000000000000000000000..80cc445ac5982b0d9d3051941085e3b7
 +                'disables unattended runs rather than permitting unbounded ones',
 +        };
 +    }
++    // Each ceiling is checked INDEPENDENTLY, and a 0 on either dimension
++    // refuses any consumption of it rather than skipping the check.
++    //
++    // R2 review, finding 5. The guarded form was `max_tokens > 0 && …`, so an
++    // operator writing `{max_usd: 5, max_tokens: 0}` — following the field's
++    // own "`0` disables" — got an UNBOUNDED token allowance, and `digest()`
++    // then printed `N/0 tokens`, which reads as an exhausted cap while runs
++    // were being permitted. The whole point of this module's zero-default is
++    // that a missing number never means unlimited; a zero written on purpose
++    // must mean the same thing as a zero left unset.
++    if (b.max_usd <= 0 && usd > 0) {
++        return {
++            allowed: false,
++            reason: `USD ceiling is 0 (disabled) and ${usd} was projected`,
++        };
++    }
 +    if (b.max_usd > 0 && b.spent_usd + usd > b.max_usd) {
 +        return {
 +            allowed: false,
 +            reason: `USD ceiling: ${b.spent_usd} spent + ${usd} projected > ${b.max_usd}`,
++        };
++    }
++    if (b.max_tokens <= 0 && tokens > 0) {
++        return {
++            allowed: false,
++            reason: `token ceiling is 0 (disabled) and ${tokens} was projected`,
 +        };
 +    }
 +    if (b.max_tokens > 0 && b.spent_tokens + tokens > b.max_tokens) {
@@ -2541,6 +2698,21 @@ index 0000000000000000000000000000000000000000..80cc445ac5982b0d9d3051941085e3b7
 + * Returns every refusal rather than short-circuiting: an operator fixing one
 + * precondition at a time round-trips N times, and the whole point of a
 + * preflight is that it answers in one pass.
++ *
++ * THE DEDUP PRECONDITION CANNOT FIRE TODAY, and that is stated here rather
++ * than implied by a passing read. It queries the job ledger correctly, but
++ * nothing in the tree WRITES that ledger: `writeJobs`, `bookSpend` and
++ * `writeBudget` have no production caller, so two callers racing the same
++ * `roadmap@head` both receive `ok: true`. R2 review, finding 13 — the module
++ * previously listed dedup among its three preconditions with no note, which
++ * describes a control that is not there.
++ *
++ * The write half belongs to the spawn, which Phase 4.0 deliberately does not
++ * build. The claim-and-release lifecycle is the spawn's to own: a claim
++ * written by a checker that never learns whether the job started would strand
++ * the key on every crash and turn the dedup into a permanent refusal. Until
++ * the spawn exists, treat this as a read that is ready for a writer, never as
++ * a live guarantee.
 + */
 +export function preflight(input: PreflightInput): PreflightVerdict {
 +    const refusals: string[] = [];
@@ -3042,15 +3214,16 @@ index 0000000000000000000000000000000000000000..6c1fff6361bf3fc15009ed9487f81c0c
 +    return twin;
 +}
 diff --git a/src/scripts/ai_council/orchestrator.ts b/src/scripts/ai_council/orchestrator.ts
-index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a19a796211 100644
+index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a68e668cb6 100644
 --- a/src/scripts/ai_council/orchestrator.ts
 +++ b/src/scripts/ai_council/orchestrator.ts
-@@ -70,70 +70,40 @@ import {
+@@ -70,70 +70,41 @@ import {
  } from './prompts.js';
  import { count_dissenters, dissent_quota_met, is_near_duplicate } from './debate_gates.js';
  import { parse_stance_line, render_vote_tally, tally_stances } from './stance_tally.js';
 +import { MidFlightFallback } from './transport_resolver.js';
 +import {
++    emitOutcome,
 +    escalateUnmetered,
 +    establishTwin,
 +    isFailedCliCall,
@@ -3145,7 +3318,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
  
  /**
   * Mirror Python `getattr(obj, name, fallback)` for the duck-typed member
-@@ -449,6 +419,8 @@ export interface ConsultOptions {
+@@ -449,6 +420,8 @@ export interface ConsultOptions {
       * context). Default `null` → byte-identical to today.
       */
      no_project_context_members?: ReadonlySet<string> | null;
@@ -3154,7 +3327,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
  }
  
  /**
-@@ -504,6 +476,11 @@ export function consult(
+@@ -504,6 +477,11 @@ export function consult(
      }
  
      const spent: Spent = { input: 0, output: 0, usd: 0.0 };
@@ -3166,7 +3339,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
      let last_results: CouncilResponse[] = [];
      // A3 read unlock: the stable prefix is ALWAYS the original user prompt;
      // per-round critiques + the STANCE contract ride in a volatile suffix so
-@@ -535,6 +512,9 @@ export function consult(
+@@ -535,6 +513,9 @@ export function consult(
              project,
              original_ask,
              advisor_plans,
@@ -3176,7 +3349,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
              member_prompt_suffix: opts.member_prompt_suffix ?? null,
              no_project_context_members: opts.no_project_context_members ?? null,
              split: suffix_for_round
-@@ -572,12 +552,19 @@ export function consult(
+@@ -572,12 +553,19 @@ export function consult(
                      `Reply with ONLY that single line for your final position.\n\n${STANCE_LINE_CONTRACT}`,
                  max_tokens: question.max_tokens,
              });
@@ -3196,7 +3369,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
              });
              const rep = rr[0];
              if (rep !== undefined) {
-@@ -592,6 +579,34 @@ export function consult(
+@@ -592,6 +580,34 @@ export function consult(
      return last_results;
  }
  
@@ -3231,7 +3404,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
  interface Spent {
      input: number;
      output: number;
-@@ -616,6 +631,11 @@ interface RunRoundOptions {
+@@ -616,6 +632,11 @@ interface RunRoundOptions {
      member_prompt_suffix?: Map<string, string> | null;
      /** Ü2 — see `ConsultOptions.no_project_context_members`. */
      no_project_context_members?: ReadonlySet<string> | null;
@@ -3243,7 +3416,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
  }
  
  /** Run a single round; mutate `spent` with cumulative totals. */
-@@ -668,64 +688,63 @@ function _run_round(
+@@ -668,77 +689,127 @@ function _run_round(
                })
              : null;
  
@@ -3256,6 +3429,11 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
 +        let established = twins?.get(declared.name) ?? null;
 +        const substituted_on_entry = established !== null;
 +        let member = established !== null ? established.client : declared;
++        // Set only when THIS iteration escalated an unmetered seat; read by
++        // the breach handler below so a refusal degrades that one seat instead
++        // of the round. See the `unmetered_original !== null` branch there.
++        let unmetered_original: CouncilResponse | null = null;
++        let unmetered_twin: EstablishedTwin | null = null;
          // ── non-billable members skip the cost gate entirely ─────────
          // ManualClient (and future PlaywrightClient) cost us $0; their
          // token counts are still tracked from the response below for
@@ -3300,6 +3478,10 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
 +                established = nb_twin;
 +                twins?.set(member.name, nb_twin);
 +                member = nb_twin.client;
++                // Kept so a budget refusal below can return the ORIGINAL cli
++                // failure rather than aborting the seat as its twin.
++                unmetered_original = response;
++                unmetered_twin = nb_twin;
 +            }
 +            if (!escalated) {
 +                _stamp_transport_metadata(response, member);
@@ -3355,7 +3537,55 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
              const error_tag =
                  breach_kind === 'daily'
                      ? 'daily_budget_exceeded'
-@@ -738,7 +757,7 @@ function _run_round(
+                     : 'cost_budget_exceeded';
++            // A seat that arrived here by escalating from an UNMETERED cli
++            // call degrades to its own original failure — never to an abort,
++            // and never to the round-wide short-circuit below.
++            //
++            // The R2 review's finding 3. Before the escalation existed, a
++            // `billable: false` member `continue`d above and could not reach
++            // this gate at all, so a dead free CLI cost its own seat and
++            // nothing else. Falling through priced as the metered twin put it
++            // one branch away from `_aborted(left, …)` for EVERY remaining
++            // member — a missing vendor binary near a `max_total_usd` could
++            // terminate the round, which is precisely what the shipped claim
++            // `council-fallback-loses-zero-seats` says cannot happen.
++            //
++            // The shape matches `runGatedRetry`'s refusal path exactly: the
++            // original response, `fallback_skipped: cost_budget` so a reader
++            // can tell "not retried" from "retry refused", and the outcome on
++            // the event log.
++            if (unmetered_original !== null && unmetered_twin !== null) {
++                unmetered_original.metadata = {
++                    ...(unmetered_original.metadata ?? {}),
++                    fallback_skipped: 'cost_budget',
++                };
++                const fb = opts.cli_fallback ?? null;
++                if (fb !== null) {
++                    emitOutcome(fb, declared.name, unmetered_twin, 'cost_budget');
++                }
++                _stamp_transport_metadata(unmetered_original, declared);
++                results.push(unmetered_original);
++                spent.input += unmetered_original.input_tokens;
++                spent.output += unmetered_original.output_tokens;
++                // The sticky map is rolled back: the twin was never called, so
++                // a later round must re-decide rather than inherit a
++                // substitution that never happened.
++                twins?.delete(declared.name);
++                continue;
++            }
+             if (on_overrun !== null && estimates !== null) {
+                 const event = new OverrunEvent({
+                     member_index: idx,
+                     member,
+-                    next_estimate: estimates[idx] as CostEstimate,
++                    // `est`, not `estimates[idx]`. The breach decision two
++                    // lines up was already re-priced for a substituted twin;
++                    // the event that ASKS the operator to approve it showed
++                    // the pre-loop row for the unmetered DECLARED seat, i.e. a
++                    // ~$0 next-call estimate for the very call the gate just
++                    // refused as over budget. R2 review, finding 8.
++                    next_estimate: (est ?? estimates[idx]) as CostEstimate,
                      spent_input_tokens: _pyInt(spent.input),
                      spent_output_tokens: _pyInt(spent.output),
                      spent_usd: spent.usd,
@@ -3364,7 +3594,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
                      daily_spent_usd:
                          budget.daily_limit_usd > 0 ? _today_spend_usd() : 0.0,
                      daily_limit_usd: budget.daily_limit_usd,
-@@ -758,28 +777,51 @@ function _run_round(
+@@ -758,28 +829,51 @@ function _run_round(
          }
  
          // ── actual call ──────────────────────────────────────────────
@@ -3436,7 +3666,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
          results.push(response);
          spent.input += response.input_tokens;
          spent.output += response.output_tokens;
-@@ -792,8 +834,8 @@ function _run_round(
+@@ -792,8 +886,8 @@ function _run_round(
              // ttl is '5m': the request builder emits `cache_control:
              // {type:'ephemeral'}` with no explicit ttl, i.e. the 5-min default.
              const actual = reprice_with_cache(
@@ -3447,7 +3677,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
                  {
                      input_tokens: response.input_tokens,
                      cache_read_input_tokens: response.cache_read_input_tokens,
-@@ -808,14 +850,14 @@ function _run_round(
+@@ -808,14 +902,14 @@ function _run_round(
              // Persist to the rolling 24h ledger when the daily cap is
              // active. Errors are swallowed inside record_spend.
              if (budget.daily_limit_usd > 0 && !response.error) {
@@ -3464,7 +3694,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
      }
  
      return results;
-@@ -1067,6 +1109,10 @@ function _run_debate_gate_repairs(
+@@ -1067,6 +1161,10 @@ function _run_debate_gate_repairs(
          project: ProjectContext | null;
          original_ask: string;
          advisor_plans: Map<string, AdvisorPlan> | null;
@@ -3475,7 +3705,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
      },
      on_repair: ((member: string, reason: string) => boolean) | null,
  ): CouncilResponse[] {
-@@ -1182,6 +1228,18 @@ export interface RunDebateOptions {
+@@ -1182,6 +1280,18 @@ export interface RunDebateOptions {
      restate?: boolean;
      /** Receives the restate responses (rendering, divergence flags, cost). */
      on_restate?: ((responses: CouncilResponse[]) => void) | null;
@@ -3494,7 +3724,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
  }
  
  /**
-@@ -1241,6 +1299,11 @@ export function run_debate(
+@@ -1241,6 +1351,11 @@ export function run_debate(
      }
  
      const spent: Spent = { input: 0, output: 0, usd: 0.0 };
@@ -3506,7 +3736,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
      const all_rounds: CouncilResponse[][] = [];
      // A3 read unlock (debate twin): stable prefix = the original prompt; the
      // per-round positions block rides in a volatile suffix (see consult loop).
-@@ -1267,6 +1330,9 @@ export function run_debate(
+@@ -1267,6 +1382,9 @@ export function run_debate(
              project,
              original_ask,
              advisor_plans,
@@ -3516,7 +3746,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
          });
          opts.on_restate?.(restated);
      }
-@@ -1296,6 +1362,9 @@ export function run_debate(
+@@ -1296,6 +1414,9 @@ export function run_debate(
                  project,
                  original_ask,
                  advisor_plans,
@@ -3526,7 +3756,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
                  split: current_suffix
                      ? { stable: question.user_prompt, suffix: current_suffix }
                      : null,
-@@ -1315,7 +1384,16 @@ export function run_debate(
+@@ -1315,7 +1436,16 @@ export function run_debate(
                  }),
                  budget,
                  spent,
@@ -3544,7 +3774,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
                  opts.on_repair ?? null,
              );
          }
-@@ -1731,28 +1809,6 @@ export function run_consensus_scoring(
+@@ -1731,28 +1861,6 @@ export function run_consensus_scoring(
   * Tokens marked `estimated=True` get a `~` prefix so the audit
   * trail flags heuristic counts.
   */
@@ -3573,7 +3803,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
  
  // Lens defaults for the Phase 9 confidence-explanation badge. The PR
  // lens stays terse so the existing "Must-fix / Nice-to-have" structure
-@@ -1906,7 +1962,7 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}):
+@@ -1906,7 +2014,7 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}):
              blocks.push(`${header}\n\n*ERROR:* \`${r.error}\``);
              continue;
          }
@@ -3582,7 +3812,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..a3ad91657eaa03d465b4df18f7f079a1
          blocks.push(`${header}\n\n${meta}\n\n${r.text}`);
      }
      if (peer_review !== null && peer_review.responses.length > 0) {
-@@ -2205,67 +2261,3 @@ function _render_bucket(
+@@ -2205,67 +2313,3 @@ function _render_bucket(
      }
      return lines.join('\n');
  }
@@ -3797,10 +4027,10 @@ index 0000000000000000000000000000000000000000..829a2767548572cb65b037d46483a73c
 +}
 diff --git a/src/scripts/ai_council/response_render.ts b/src/scripts/ai_council/response_render.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..b15bcc9b48977a2984f8fea9a51c6fdd1dda4dea
+index 0000000000000000000000000000000000000000..08911f454cb288715c258701f7268566ea523567
 --- /dev/null
 +++ b/src/scripts/ai_council/response_render.ts
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,99 @@
 +/**
 + * response_render — the per-member meta line, and the one-call helper.
 + *
@@ -3812,6 +4042,7 @@ index 0000000000000000000000000000000000000000..b15bcc9b48977a2984f8fea9a51c6fdd
 + */
 +
 +import { CouncilResponse, type ExternalAIClient } from './clients.js';
++import { _metaGet } from './py_parity.js';
 +
 +/**
 + * The shape `callMember` reads off a question. Structural rather than an
@@ -3821,11 +4052,6 @@ index 0000000000000000000000000000000000000000..b15bcc9b48977a2984f8fea9a51c6fdd
 +interface QuestionShape {
 +    readonly user_prompt: string;
 +    readonly max_tokens: number;
-+}
-+
-+function _metaGet(d: Record<string, unknown>, k: string, dflt: unknown): unknown {
-+    const v = d[k];
-+    return v === undefined ? dflt : v;
 +}
 +
 +/** Round half-to-even to `n` decimals, matching CPython's `format(x, ".nf")`. */
@@ -4361,10 +4587,10 @@ index 8c5f0b97f20e3284ed6ccba06eca0d1ca66a2275..93f1bb82597b2cfbf8fbad1d18d4cde0
          if (exc instanceof DebateCapExceeded) {
 diff --git a/src/scripts/decision_memo.ts b/src/scripts/decision_memo.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..ff1a38b677808cb961dd4a77832223f65d262991
+index 0000000000000000000000000000000000000000..0912f00f6e15859e2ed281349afb9ab67b83b25b
 --- /dev/null
 +++ b/src/scripts/decision_memo.ts
-@@ -0,0 +1,285 @@
+@@ -0,0 +1,313 @@
 +/**
 + * decision_memo — the decision-memo channel (UOTL Phase 4.3, sequenced by
 + * road-to-long-horizon-execution Phase 2.2).
@@ -4533,11 +4759,39 @@ index 0000000000000000000000000000000000000000..ff1a38b677808cb961dd4a77832223f6
 +    }
 +    const dir = runDir(repoRoot, runId);
 +    fs.mkdirSync(dir, { recursive: true });
-+    const index = nextIndex(dir);
-+    const file = path.join(dir, `${String(index).padStart(3, '0')}.md`);
 +    const stamp = (opts.now ?? ((): Date => new Date()))().toISOString();
-+    fs.writeFileSync(file, render(memo, index, stamp), 'utf-8');
-+    return { path: file, index };
++    // Claim the slot with `wx` and retry on collision, rather than
++    // read-then-write.
++    //
++    // R2 review, finding 10. `nextIndex` followed by a plain `writeFileSync`
++    // is a read-then-write with no lock: two memos written for the same run
++    // concurrently — the unattended or parallel lane this module exists for,
++    // or simply two shell calls — compute the same index and the second
++    // silently overwrites the first. That breaks the exact property the header
++    // sells as this module's reason to exist ("monotonic and gap-free per run,
++    // so a reader can tell a pruned memo from an unwritten one"), because a
++    // LOST memo leaves no gap at all.
++    //
++    // The bound is generous and finite: a loop that cannot fail would hide a
++    // permission error as a hang.
++    const MAX_ATTEMPTS = 64;
++    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
++        const index = nextIndex(dir);
++        const file = path.join(dir, `${String(index).padStart(3, '0')}.md`);
++        try {
++            fs.writeFileSync(file, render(memo, index, stamp), { encoding: 'utf-8', flag: 'wx' });
++            return { path: file, index };
++        } catch (err) {
++            // EEXIST means another writer took this index between the read and
++            // the write — re-read and take the next one. Anything else (EACCES,
++            // ENOSPC) is a real failure and must not be retried into a hang.
++            if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
++        }
++    }
++    throw new Error(
++        `decision_memo: could not claim an index for run ${JSON.stringify(runId)} ` +
++            `after ${MAX_ATTEMPTS} attempts — another writer is taking every slot`,
++    );
 +}
 +
 +/** Every memo of one run, in index order. */
@@ -4651,10 +4905,10 @@ index 0000000000000000000000000000000000000000..ff1a38b677808cb961dd4a77832223f6
 +    process.exit(main());
 +}
 diff --git a/src/scripts/hook_manifest.yaml b/src/scripts/hook_manifest.yaml
-index cd4c78a2e28301d89023c5cb9dba2276b1c1a0c8..486da10537d4c972083724ad2ce171a4682524a4 100644
+index cd4c78a2e28301d89023c5cb9dba2276b1c1a0c8..b1792e377227bb87d2c495f2073c87c91e9a1174 100644
 --- a/src/scripts/hook_manifest.yaml
 +++ b/src/scripts/hook_manifest.yaml
-@@ -669,6 +669,23 @@ concerns:
+@@ -669,6 +669,31 @@ concerns:
      args: []
      fail_closed: false
      severity: advisory
@@ -4674,11 +4928,19 @@ index cd4c78a2e28301d89023c5cb9dba2276b1c1a0c8..486da10537d4c972083724ad2ce171a4
 +    script: src/scripts/hooks/run_continuation_hook.ts
 +    args: []
 +    fail_closed: false
-+    severity: advisory
++    # `blocking`, and the R2 review is why. The concern shipped `advisory`,
++    # which the dispatcher enforces as a CEILING: `_is_advisory` downgrades any
++    # EXIT_BLOCK to EXIT_WARN, and `host_semantics.emitFor` maps stop+warn to
++    # exit 0 + additionalContext. The concern's `return EXIT_BLOCK`, this
++    # comment block's "BLOCKS the stop", and the hook's own docblock therefore
++    # all described behaviour the declaration forbade — the whole re-engagement
++    # mechanism was inert on the one verified host. `turn-end-gate` above sits
++    # on the same slot and declares `blocking` for exactly this reason.
++    severity: blocking
    # road-to-user-out-of-the-loop Phase 0 Step 1 — the interruption ledger.
    # Every Stop, classifies whether the turn that just ended put a synchronous
    # contact to the user and appends one `{run_id, turn, kind, class, roadmap}`
-@@ -832,7 +849,7 @@ platforms:
+@@ -832,7 +857,7 @@ platforms:
    claude:
      session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
      session_end:      [chat-history, memory-learn, session-register, roadmap-progress]
@@ -4707,10 +4969,10 @@ index 0d5fc721318babaa8629a009d5b7dcbbe72887d9..7e1afba83e0154c46c983143f0e45928
  };
 diff --git a/src/scripts/hooks/run_continuation_hook.ts b/src/scripts/hooks/run_continuation_hook.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..504a8127c99b267172191a6a5ea05ec749123609
+index 0000000000000000000000000000000000000000..34aa790033959a8ea1912b677e9ef52e422502ba
 --- /dev/null
 +++ b/src/scripts/hooks/run_continuation_hook.ts
-@@ -0,0 +1,480 @@
+@@ -0,0 +1,539 @@
 +/**
 + * run_continuation — road-to-long-horizon-execution Phase 1 (H-1).
 + *
@@ -4798,6 +5060,7 @@ index 0000000000000000000000000000000000000000..504a8127c99b267172191a6a5ea05ec7
 +    parseRecord,
 +    sessionRefusalFile,
 +} from '../_lib/turn_end_refusals.js';
++import { phaseLines } from '../_lib/roadmap_checkboxes.js';
 +
 +const EXIT_ALLOW = 0;
 +/** Dispatcher-internal block code; the dispatcher maps stop-slot 1 → host 2. */
@@ -4827,6 +5090,17 @@ index 0000000000000000000000000000000000000000..504a8127c99b267172191a6a5ea05ec7
 +    history: number[];
 +    /** ISO stamp of the most recent engagement — half of the duplicate key. */
 +    last_engaged_at?: string;
++    /**
++     * Which halt rung ended this run's budget, if one did. Set instead of
++     * deleting the state file, and the difference is the whole point: a host
++     * may fire `stop` several times for one reply, and a deleted state makes
++     * the next fire read `prev === null`, build `iterations: 0` with a fresh
++     * `started_at`, and engage again — so the 25-iteration cap bounded a
++     * 25-block and the 4 h clock restarted on every halt. The R2 review found
++     * this; the roadmap's Risk 2 ("the agent loops forever on a roadmap it
++     * cannot finish") named these rungs as its mitigation.
++     */
++    halted?: LadderAction;
 +}
 +
 +/**
@@ -4875,6 +5149,13 @@ index 0000000000000000000000000000000000000000..504a8127c99b267172191a6a5ea05ec7
 +    | 'halt-wall-clock'
 +    | 'halt-stall';
 +
++/** The terminal rungs — the set `RunState.halted` may hold. */
++export const HALT_ACTIONS: readonly LadderAction[] = [
++    'halt-max-iterations',
++    'halt-wall-clock',
++    'halt-stall',
++];
++
 +/**
 + * Frontmatter `execution.mode`, or null. Line-oriented on purpose: the
 + * frontmatter this repo writes is two levels deep at most, and a YAML parser
@@ -4890,7 +5171,13 @@ index 0000000000000000000000000000000000000000..504a8127c99b267172191a6a5ea05ec7
 +    return m ? m[1]! : null;
 +}
 +
-+const OPEN_BOX = /^[ \t]*-\s\[ \]\s+(.*)$/;
++/**
++ * An OPEN step. The mark set is the dashboard's, narrowed to the one mark that
++ * means "not done": `[~]` and `[-]` are parked by a human decision, and `[x]`
++ * is finished. The BULLET set is the dashboard's in full, because a `*` bullet
++ * is a legitimate authoring shape that used to read as zero open steps.
++ */
++const OPEN_BOX = /^[ \t]*[-*][ \t]+\[ \][ \t]+(.*)$/;
 +
 +/**
 + * Count open steps and pick the next one. `[~]` / `[-]` never match the open
@@ -4901,7 +5188,11 @@ index 0000000000000000000000000000000000000000..504a8127c99b267172191a6a5ea05ec7
 +    let open = 0;
 +    let blocked = 0;
 +    let next: NextStep | null = null;
-+    for (const line of text.split('\n')) {
++    // Phase spans only. A `- [ ]` under `## Done means`, `## Blockers` or
++    // `## Risk Register` is an acceptance criterion, a gate or a risk row —
++    // never an executable step, and re-engaging on one is a guaranteed stall.
++    // See `_lib/roadmap_checkboxes.ts`.
++    for (const line of phaseLines(text)) {
 +        const m = OPEN_BOX.exec(line);
 +        if (!m) continue;
 +        const body = m[1]!;
@@ -4939,6 +5230,10 @@ index 0000000000000000000000000000000000000000..504a8127c99b267172191a6a5ea05ec7
 +        stallWindow: STALL_WINDOW,
 +    },
 +): LadderAction {
++    // A halt is terminal for this run id. Checked BEFORE `complete` so a
++    // halted run whose roadmap later reads zero-open does not report a
++    // completion it never reached.
++    if (state.halted) return state.halted;
 +    if (openCount === 0) return 'complete';
 +    if (state.iterations >= caps.maxIterations) return 'halt-max-iterations';
 +    const started = Date.parse(state.started_at);
@@ -4976,6 +5271,16 @@ index 0000000000000000000000000000000000000000..504a8127c99b267172191a6a5ea05ec7
 +        };
 +        if (typeof o['last_engaged_at'] === 'string') {
 +            rec.last_engaged_at = o['last_engaged_at'];
++        }
++        // Validated against the halt set rather than accepted as any string:
++        // an unrecognised value would be returned verbatim by `ladder` and
++        // become an action no branch below handles.
++        const halted = o['halted'];
++        if (
++            typeof halted === 'string' &&
++            (HALT_ACTIONS as readonly string[]).includes(halted)
++        ) {
++            rec.halted = halted as LadderAction;
 +        }
 +        return rec;
 +    } catch {
@@ -5112,12 +5417,28 @@ index 0000000000000000000000000000000000000000..504a8127c99b267172191a6a5ea05ec7
 +            blocked: scan.blocked,
 +            at: new Date().toISOString(),
 +        });
-+        // A finished ladder clears its state so a later run on the same
-+        // roadmap (post-merge follow-up, re-claim) starts a fresh budget.
-+        try {
-+            fs.rmSync(stateFile, { force: true });
-+        } catch {
-+            /* fail-open */
++        if (action === 'complete') {
++            // Only a COMPLETION clears the state, so a later run on the same
++            // roadmap (post-merge follow-up, re-claim) starts a fresh budget.
++            // A halt must NOT clear it — see `RunState.halted`.
++            try {
++                fs.rmSync(stateFile, { force: true });
++            } catch {
++                /* fail-open */
++            }
++            return EXIT_ALLOW;
++        }
++        // A halt is recorded in place. A failed write is fail-open in the safe
++        // direction here: the rung already decided to allow this stop, and the
++        // worst case of a lost stamp is the pre-fix behaviour, never a block.
++        if (!state.halted) {
++            state.halted = action;
++            try {
++                fs.mkdirSync(path.dirname(stateFile), { recursive: true });
++                fs.writeFileSync(stateFile, `${JSON.stringify(state)}\n`, 'utf8');
++            } catch {
++                /* fail-open */
++            }
 +        }
 +        return EXIT_ALLOW;
 +    }
@@ -5269,10 +5590,19 @@ index 82f722c60109e8aebde00912f34fbd06d5d9fd4c..74db279bd86565f1c82fb2cd70991a59
          process.stdout.write(
              `${JSON.stringify({
 diff --git a/src/scripts/interruption_report.ts b/src/scripts/interruption_report.ts
-index 48f3284352a0367fe7247a24fb0ff2b42ab2390e..968b50fead643541551eabb5e3280fdbfdde81b2 100644
+index 48f3284352a0367fe7247a24fb0ff2b42ab2390e..30e83f8e378a14731e0c73b8799906f7a4c14dfd 100644
 --- a/src/scripts/interruption_report.ts
 +++ b/src/scripts/interruption_report.ts
-@@ -77,6 +77,14 @@ export interface RunReport {
+@@ -49,6 +49,8 @@ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
++import { SESSION_ID_LEN, derive_session_tag } from './chat_history.js';
++
+ export const DEFAULT_WINDOW = 30;
+ 
+ export interface LedgerRow {
+@@ -77,6 +79,14 @@ export interface RunReport {
      elapsed_minutes: number | null;
      waiting_minutes: number | null;
      working_minutes: number | null;
@@ -5287,7 +5617,7 @@ index 48f3284352a0367fe7247a24fb0ff2b42ab2390e..968b50fead643541551eabb5e3280fdb
  }
  
  export interface Report {
-@@ -89,6 +97,12 @@ export interface Report {
+@@ -89,6 +99,12 @@ export interface Report {
      median_user_wait_minutes: number | null;
      median_elapsed_minutes: number | null;
      median_working_minutes: number | null;
@@ -5300,10 +5630,62 @@ index 48f3284352a0367fe7247a24fb0ff2b42ab2390e..968b50fead643541551eabb5e3280fdb
      notes: string[];
  }
  
-@@ -107,6 +121,88 @@ export function isSyntheticUserText(text: string): boolean {
+@@ -107,6 +123,140 @@ export function isSyntheticUserText(text: string): boolean {
      return SYNTHETIC_MARKERS.some((m) => text.includes(m));
  }
  
++/**
++ * Look one run's value up in a source keyed differently from the ledger.
++ *
++ * R2 review, finding 2. Three producers write three key spaces for the same
++ * run and the report joined them with exact lookups, so `reengagements`,
++ * `stall_halts`, `stall_halt_rate` and `relaunches` read 0 / 0 % for every
++ * real run while the data sat on disk:
++ *
++ *   - the interruption ledger  `derive_session_tag(id)`  = 16 hex
++ *   - run-continuation.jsonl   `deriveSessionKey(id)`    = 32 hex
++ *   - supervise-relaunches     the RAW `session_id`
++ *
++ * A zero meaning "no instrument" and a zero meaning "the key did not match"
++ * are indistinguishable in the output, and this report prints an explicit
++ * NO INSTRUMENT for two other axes precisely to avoid the first — so a silent
++ * second kind was the worse failure.
++ *
++ * Resolution is EXACT-FIRST and lives here rather than in the readers: a
++ * reader that rewrote its own keys would have to guess what an unrecognised
++ * string means, and guessing "hash it" turns a would-have-matched key into a
++ * guaranteed miss. The readers keep reporting what is on disk; the join owns
++ * the reconciliation, because only the join knows the ledger id it is
++ * looking for.
++ *
++ * The 32-hex key is a prefix-extension of the 16-hex tag ONLY because a
++ * session id carries no whitespace for `fingerprint` to normalise away.
++ * `interruption_report.test.ts` pins that equivalence rather than assuming it.
++ */
++export function lookupByRunId<T>(
++    source: ReadonlyMap<string, T> | Readonly<Record<string, T>>,
++    runId: string,
++): T | undefined {
++    const get = (k: string): T | undefined =>
++        source instanceof Map ? source.get(k) : (source as Record<string, T>)[k];
++    // 1. The key as the ledger spells it. Covers a source that already agrees,
++    //    and every fixture that writes one id everywhere.
++    const exact = get(runId);
++    if (exact !== undefined) return exact;
++    // 2. A 32-hex continuation key whose first SESSION_ID_LEN chars are this tag.
++    const keys: string[] = source instanceof Map ? [...source.keys()] : Object.keys(source);
++    for (const k of keys) {
++        if (k.length === 32 && /^[0-9a-f]+$/.test(k) && k.slice(0, SESSION_ID_LEN) === runId) {
++            return get(k);
++        }
++    }
++    // 3. A raw session id that hashes to this tag.
++    for (const k of keys) {
++        if (derive_session_tag(k) === runId) return get(k);
++    }
++    return undefined;
++}
++
 +/**
 + * Phase 5.0 — the autonomy axis, from three runtime sources.
 + *
@@ -5389,7 +5771,7 @@ index 48f3284352a0367fe7247a24fb0ff2b42ab2390e..968b50fead643541551eabb5e3280fdb
  export function median(values: readonly number[]): number | null {
      if (values.length === 0) return null;
      const sorted = [...values].sort((a, b) => a - b);
-@@ -237,6 +333,13 @@ export function buildReport(root: string, windowRequested: number): Report {
+@@ -237,6 +387,13 @@ export function buildReport(root: string, windowRequested: number): Report {
      // null wall clock rather than disappearing from the denominator.
      for (const id of ledgerRuns) if (!windowedIds.has(id)) runIds.add(id);
  
@@ -5403,26 +5785,26 @@ index 48f3284352a0367fe7247a24fb0ff2b42ab2390e..968b50fead643541551eabb5e3280fdb
      const allGaps: number[] = [];
      const runs: RunReport[] = [];
  
-@@ -265,6 +368,7 @@ export function buildReport(root: string, windowRequested: number): Report {
+@@ -265,6 +422,7 @@ export function buildReport(root: string, windowRequested: number): Report {
              if (elapsed !== null) working = Math.max(0, elapsed - waiting);
          }
  
-+        const cont = continuation.get(runId) ?? { engage: 0, stall: 0 };
++        const cont = lookupByRunId(continuation, runId) ?? { engage: 0, stall: 0 };
          runs.push({
              run_id: runId,
              roadmap: rows.find((r) => r.roadmap !== null)?.roadmap ?? null,
-@@ -275,6 +379,10 @@ export function buildReport(root: string, windowRequested: number): Report {
+@@ -275,6 +433,10 @@ export function buildReport(root: string, windowRequested: number): Report {
              elapsed_minutes: elapsed,
              waiting_minutes: waiting,
              working_minutes: working,
 +            reengagements: cont.engage,
 +            stall_halts: cont.stall,
-+            relaunches: relaunches[runId] ?? 0,
-+            memos: memosByRun[runId] ?? 0,
++            relaunches: lookupByRunId(relaunches, runId) ?? 0,
++            memos: lookupByRunId(memosByRun, runId) ?? 0,
          });
      }
  
-@@ -315,6 +423,14 @@ export function buildReport(root: string, windowRequested: number): Report {
+@@ -315,6 +477,14 @@ export function buildReport(root: string, windowRequested: number): Report {
          median_working_minutes: median(
              runs.map((r) => r.working_minutes).filter((v): v is number => v !== null),
          ),
@@ -5437,7 +5819,7 @@ index 48f3284352a0367fe7247a24fb0ff2b42ab2390e..968b50fead643541551eabb5e3280fdb
      };
  }
  
-@@ -340,11 +456,33 @@ export function renderText(report: Report): string {
+@@ -340,11 +510,33 @@ export function renderText(report: Report): string {
      lines.push(`  median elapsed per run:    ${fmt(report.median_elapsed_minutes, ' min')}`);
      lines.push(`  median agent working time: ${fmt(report.median_working_minutes, ' min')}`);
      lines.push('');
@@ -5473,10 +5855,10 @@ index 48f3284352a0367fe7247a24fb0ff2b42ab2390e..968b50fead643541551eabb5e3280fdb
      }
 diff --git a/src/scripts/run_supervise.ts b/src/scripts/run_supervise.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..b64992cee483b322ca3e2c97278aeddf59132596
+index 0000000000000000000000000000000000000000..4276c57e0cb2ba1cd71c6cd432e9542991369921
 --- /dev/null
 +++ b/src/scripts/run_supervise.ts
-@@ -0,0 +1,400 @@
+@@ -0,0 +1,438 @@
 +/**
 + * run_supervise — the out-of-process watcher for runs whose session died.
 + *
@@ -5522,7 +5904,12 @@ index 0000000000000000000000000000000000000000..b64992cee483b322ca3e2c97278aeddf
 +import { fileURLToPath, pathToFileURL } from 'node:url';
 +
 +import { is_expired, register_dir, type SessionRecord } from './_lib/session_register.js';
-+import { countRoadmap, readCheckpoint, roadmapPath } from './_lib/run_checkpoint.js';
++import {
++    countRoadmap,
++    latestCheckpointFor,
++    readCheckpoint,
++    roadmapPath,
++} from './_lib/run_checkpoint.js';
 +import { readBudget } from './_lib/unattended_guard.js';
 +
 +/** UOTL 6.2 verbatim: at most three relaunches per run. */
@@ -5582,8 +5969,15 @@ index 0000000000000000000000000000000000000000..b64992cee483b322ca3e2c97278aeddf
 +        fs.mkdirSync(path.dirname(file), { recursive: true });
 +        fs.writeFileSync(file, `${JSON.stringify(ledger, null, 2)}\n`, 'utf-8');
 +    } catch {
-+        // The ledger bounds relaunches; a failed write must not silently
-+        // UNBOUND them, so the caller treats a write failure as a stop below.
++        // Swallowed, and the honest reason is that there is NO CALLER — the
++        // only thing that would relaunch is the spawn Phase 4.0 deliberately
++        // does not build, so `writeLedger` is a writer waiting for one.
++        //
++        // R2 review, finding 13: this comment used to assert that "the caller
++        // treats a write failure as a stop below", which describes a control
++        // that does not exist. When the spawn lands, the swallow becomes the
++        // wrong shape and must be replaced by a thrown error the spawn catches
++        // — a ledger that bounds relaunches cannot fail open.
 +    }
 +}
 +
@@ -5761,8 +6155,20 @@ index 0000000000000000000000000000000000000000..b64992cee483b322ca3e2c97278aeddf
 +    const memoRoot = path.join(repoRoot, 'agents', 'runtime', 'state', 'decisions');
 +    let memoCount = 0;
 +    let memoRuns = 0;
++    let entries: string[] = [];
 +    try {
-+        for (const run of fs.readdirSync(memoRoot)) {
++        entries = fs.readdirSync(memoRoot);
++    } catch {
++        // no memos yet — reported as zero below, which is a real answer
++    }
++    for (const run of entries) {
++        // The try is INSIDE the loop. R2 review, finding 6: with it outside,
++        // one non-directory entry under decisions/ — a .DS_Store, a stray
++        // note — threw ENOTDIR, aborted the whole walk and reported whatever
++        // partial count had been reached, which is 0 when the bad entry sorts
++        // first. `interruption_report.readMemoCounts` walks the same tree with
++        // the try inside, so the two disagreed on identical data.
++        try {
 +            const files = fs
 +                .readdirSync(path.join(memoRoot, run))
 +                .filter((n) => /^\d{3}\.md$/.test(n));
@@ -5770,9 +6176,9 @@ index 0000000000000000000000000000000000000000..b64992cee483b322ca3e2c97278aeddf
 +                memoRuns += 1;
 +                memoCount += files.length;
 +            }
++        } catch {
++            // a file where a directory was expected — not a run
 +        }
-+    } catch {
-+        // no memos yet — reported as zero below, which is a real answer
 +    }
 +    lines.push(`  decisions: ${memoCount} memo(s) across ${memoRuns} run(s)`);
 +
@@ -5793,11 +6199,18 @@ index 0000000000000000000000000000000000000000..b64992cee483b322ca3e2c97278aeddf
 +Watches the session register for runs whose session died with open steps left.
 +
 +  --root PATH        repository root (default: cwd)
-+  --once             one scan, then exit (default: loop)
++  --once             one scan, then exit. REQUIRED today: looping is not
++                     implemented, so omitting this exits 2 with that message.
 +  --digest           the morning report instead of the per-session list:
 +                     dead runs, decision memos written, budget consumed.
 +                     Reports state; schedules nothing, starts nothing.
-+  --interval SECONDS seconds between scans when looping (default: 60)
++  --interval SECONDS accepted and IGNORED — reserved for the loop driver that
++                     lands with the Phase 4.0 primitive. Listed rather than
++                     hidden so the flag is not silently dropped, and marked
++                     rather than documented with a default (R2 review, finding
++                     14: it advertised "default: 60" and was read by nothing,
++                     so an operator following this help got exit 2 and no
++                     watcher).
 +  --relaunch         ACT: start a fresh session per relaunchable run, up to
 +                     ${MAX_RELAUNCHES_PER_RUN} per run. Default is report-only —
 +                     a relaunch spends tokens with nobody watching.
@@ -5875,8 +6288,15 @@ index 0000000000000000000000000000000000000000..b64992cee483b322ca3e2c97278aeddf
 +    process.exit(main());
 +}
 +
-+/** Re-exported so a resumed run can read its own checkpoint through one path. */
-+export { readCheckpoint };
++/**
++ * Re-exported so a resumed run reaches its checkpoint through one path.
++ *
++ * `latestCheckpointFor` is the one a RELAUNCHED session can actually use: it
++ * keys on the roadmap slug, which such a session holds by definition, whereas
++ * `readCheckpoint` keys on the run id derived from the session that died.
++ * R2 review, finding 7 — the checkpoint was write-only until this existed.
++ */
++export { latestCheckpointFor, readCheckpoint };
 diff --git a/src/server/routes/wizard.ts b/src/server/routes/wizard.ts
 index f5d6bcb14487f5b2d11ec5a3bff0e958df0f1cc7..d40023e65bfa96315564a715267a3497212efe91 100644
 --- a/src/server/routes/wizard.ts
@@ -5932,10 +6352,10 @@ index f5d6bcb14487f5b2d11ec5a3bff0e958df0f1cc7..d40023e65bfa96315564a715267a3497
                  await writeAtomic(target, body, { mode: 0o600 });
 diff --git a/tests/hooks/run_continuation_dispatch.test.ts b/tests/hooks/run_continuation_dispatch.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..16288ace5458b4ea8262a7aa72ae9d1d5e95c776
+index 0000000000000000000000000000000000000000..06d16fa86abd3a593f48b2fb4aa68c3e87c44e65
 --- /dev/null
 +++ b/tests/hooks/run_continuation_dispatch.test.ts
-@@ -0,0 +1,286 @@
+@@ -0,0 +1,298 @@
 +/**
 + * run_continuation through the LIVE dispatcher — road-to-long-horizon-execution
 + * Phase 1.2, the half its unit suite could not cover.
@@ -6118,10 +6538,17 @@ index 0000000000000000000000000000000000000000..16288ace5458b4ea8262a7aa72ae9d1d
 +        const transcript = writeTranscript(3);
 +        const res = dispatchStop(root, transcript);
 +        const log = events(root);
-+        // The event log is the assertion, not the exit code: the dispatcher maps
-+        // its internal ladder onto each host's own contract, and pinning a host
-+        // exit code here would make this test a claim about Claude's protocol
-+        // rather than about this concern being reached and deciding.
++        // Two assertions, and the second one exists because its absence hid a
++        // critical defect. The event log proves the concern was REACHED and
++        // decided; the exit code proves the decision REACHED THE HOST. The
++        // original version of this test asserted only the first and said so
++        // deliberately — that pinning an exit code would make it "a claim about
++        // Claude's protocol". It is exactly that claim, and it is the one worth
++        // making: the concern shipped `severity: advisory`, the dispatcher's
++        // severity ceiling downgraded its EXIT_BLOCK to WARN, and stop+warn maps
++        // to exit 0. The concern ran, logged `engage`, injected its text as
++        // context — and did not stop the stop. Every assertion below passed the
++        // whole time.
 +        expect(log.length).toBeGreaterThan(0);
 +        const engaged = log.filter((e) => e['event'] === 'engage');
 +        expect(engaged.length).toBe(1);
@@ -6140,6 +6567,11 @@ index 0000000000000000000000000000000000000000..16288ace5458b4ea8262a7aa72ae9d1d
 +        expect(seen).toContain('0.1');
 +        expect(seen).toContain('lint_hook_manifest');
 +        expect(res.code).not.toBe(-1);
++        // exit 2 is the ONLY value that makes Claude Code refuse the Stop and
++        // feed the reason back to the model (`host_semantics.emitFor`, stop is
++        // block-capable). exit 0 here means the continuation was delivered as
++        // passive context on a turn that ended anyway — the inert shape.
++        expect(res.code).toBe(2);
 +    });
 +
 +    it('DEFERS when turn-end-gate refused this turn — the quality gate always wins', () => {
@@ -6755,9 +7187,18 @@ index 1ac6603d8150ff18f5580d3dd9c939b1de6464a2..b87965bc30ff918d9fa81d83f4ef12ab
      });
  
 diff --git a/tests/scripts/ai_council/orchestrator.test.ts b/tests/scripts/ai_council/orchestrator.test.ts
-index cf4b65aba2236e9532274400d8527a35d125a758..c2f72abc068a18fd1df58d4433e7decac8fbdc41 100644
+index cf4b65aba2236e9532274400d8527a35d125a758..822b8ba32a7952c104d4b1eed1e4f7ba61356636 100644
 --- a/tests/scripts/ai_council/orchestrator.test.ts
 +++ b/tests/scripts/ai_council/orchestrator.test.ts
+@@ -34,7 +34,7 @@ import {
+     run_debate,
+     run_peer_review,
+ } from '../../../src/scripts/ai_council/orchestrator.js';
+-import { load_prices } from '../../../src/scripts/ai_council/pricing.js';
++import { load_prices, type CostEstimate } from '../../../src/scripts/ai_council/pricing.js';
+ import { ANTI_CONFORMITY_DIRECTIVE } from '../../../src/scripts/ai_council/prompts.js';
+ import { EMPTY_HANDOFF } from '../../../src/scripts/ai_council/handoff.js';
+ 
 @@ -155,6 +155,133 @@ describe('orchestrator — consult basics', () => {
          const budget = new CostBudget({ max_calls: 1 });
          expect(() => consult(members, q, budget)).toThrow(/budget caps at 1 calls/);
@@ -7170,6 +7611,75 @@ index cf4b65aba2236e9532274400d8527a35d125a758..c2f72abc068a18fd1df58d4433e7deca
  describe('orchestrator — cost gating', () => {
      // Token-cap breach with no on_overrun → short-circuits remaining members.
      it('token breach short-circuits remaining members (v1)', () => {
+@@ -191,6 +589,68 @@ describe('orchestrator — cost gating', () => {
+         ]);
+     });
+ 
++    // R2 review, finding 3. Before the unmetered escalation existed, a
++    // `billable: false` member returned before this gate and could not reach
++    // it; after it, a dead FREE cli seat arrives priced as its metered twin,
++    // one branch away from aborting every remaining member of the round. The
++    // shipped claim `council-fallback-loses-zero-seats` says that cannot
++    // happen, so this pins it from both sides.
++    it('a dead FREE cli seat refused by the budget costs its own seat, never the round', () => {
++        const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'x'.repeat(40) });
++        const table = load_prices();
++        const members = [
++            new Mock('anthropic', 'claude-sonnet-4-5', {
++                error: 'auth_expired',
++                transport: 'cli',
++                billable: false,
++            }),
++            new Mock('openai', 'gpt-4o', { text: 'second seat answered', it: 1, ot: 1 }),
++        ];
++        // A USD ceiling, DERIVED, and both halves matter. A token cap tight
++        // enough to breach the twin also breaches seat 1 on its own merits, so
++        // the round would end aborted either way and the assertion could not
++        // tell the fix from the defect. And a hand-picked USD number is the
++        // same trap one layer down — too low breaches everyone, too high
++        // breaches no one, and either reads as a passing test. So the ceiling
++        // is read off the real price table, strictly between the two seats.
++        const twinEst = estimate(
++            q,
++            [new Mock('anthropic', 'claude-sonnet-4-5')],
++            table,
++        )[0] as CostEstimate;
++        const cheapEst = estimate(q, [members[1] as Mock], table)[0] as CostEstimate;
++        const twinUsd = twinEst.input_usd + twinEst.output_usd;
++        const cheapUsd = cheapEst.input_usd + cheapEst.output_usd;
++        // If this ever stops holding the test is measuring nothing, so it
++        // fails loudly here rather than passing for the wrong reason.
++        expect(cheapUsd).toBeLessThan(twinUsd);
++        const budget = new CostBudget({
++            max_input_tokens: 50_000,
++            max_output_tokens: 20_000,
++            max_total_usd: (cheapUsd + twinUsd) / 2,
++        });
++        const res = consult(members, q, budget, {
++            table,
++            cli_fallback: {
++                api_on_quota: false,
++                construct: () =>
++                    new Mock('anthropic', 'claude-sonnet-4-5', { text: 'via api' }),
++            },
++        });
++        // Seat 0 degrades to its OWN original cli failure — not to
++        // `cost_budget_exceeded`, which would report the twin's abort as the
++        // seat's outcome and discard why the cli died.
++        expect(res[0]!.error).toBe('auth_expired');
++        // Named, so a reader can tell "not retried" from "retry refused" —
++        // the same marker `runGatedRetry` sets on the billable path.
++        expect(res[0]!.metadata['fallback_skipped']).toBe('cost_budget');
++        expect(res[0]!.metadata['fallback_from']).toBeUndefined();
++        // The round survives. This is the assertion the claim rests on.
++        expect(res).toHaveLength(2);
++        expect(res[1]!.error).toBeNull();
++        expect(res[1]!.text).toBe('second seat answered');
++    });
++
+     it('on_overrun(false) skips the breaching member only', () => {
+         const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'x'.repeat(40) });
+         const table = load_prices();
 diff --git a/tests/scripts/ai_council/transport_resolver.test.ts b/tests/scripts/ai_council/transport_resolver.test.ts
 index bc3ebb14f44c0feb6699913174defa9e9659dea7..f851a3f6dd307396d4f483c4bf0513231f52d36b 100644
 --- a/tests/scripts/ai_council/transport_resolver.test.ts
@@ -7231,10 +7741,10 @@ index bc3ebb14f44c0feb6699913174defa9e9659dea7..f851a3f6dd307396d4f483c4bf051323
  describe('absentReason — static auto-chain classification', () => {
 diff --git a/tests/scripts/decision_memo.test.ts b/tests/scripts/decision_memo.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..e30f8802dee5700f36d9bf876a111b65c75ed49c
+index 0000000000000000000000000000000000000000..7dc19668744b8ccb88334645beaab84539db4212
 --- /dev/null
 +++ b/tests/scripts/decision_memo.test.ts
-@@ -0,0 +1,233 @@
+@@ -0,0 +1,265 @@
 +/**
 + * decision_memo — the memo channel's shape and index contract.
 + *
@@ -7468,12 +7978,44 @@ index 0000000000000000000000000000000000000000..e30f8802dee5700f36d9bf876a111b65
 +        }
 +    });
 +});
++
++describe('writeMemo — a concurrent writer never overwrites a memo', () => {
++    // R2 review, finding 10. The claim this module makes is that the index is
++    // monotonic and gap-free, so a reader can tell a PRUNED memo from an
++    // UNWRITTEN one. A lost write leaves no gap, so it defeats exactly that.
++    it('two writers racing the same index each get their own file', () => {
++        const root = tmpRoot();
++        const run = 'race-run';
++        const dir = runDir(root, run);
++        fs.mkdirSync(dir, { recursive: true });
++        // Simulate the loser of the race: 001 already exists by the time this
++        // writer's `wx` lands, which is precisely the window the old
++        // read-then-write ignored.
++        fs.writeFileSync(path.join(dir, '001.md'), 'written by the other caller', 'utf-8');
++        const res = writeMemo(root, run, MEMO);
++        expect(res.index).toBe(2);
++        expect(fs.readFileSync(path.join(dir, '001.md'), 'utf-8')).toBe(
++            'written by the other caller',
++        );
++        expect(listMemos(root, run)).toHaveLength(2);
++    });
++
++    it('a non-EEXIST failure is raised, never retried into a hang', () => {
++        const root = tmpRoot();
++        // A FILE where the run directory must go: mkdirSync throws EEXIST on
++        // the directory itself, before any slot is claimed.
++        const dir = runDir(root, 'not-a-dir');
++        fs.mkdirSync(path.dirname(dir), { recursive: true });
++        fs.writeFileSync(dir, 'x', 'utf-8');
++        expect(() => writeMemo(root, 'not-a-dir', MEMO)).toThrow();
++    });
++});
 diff --git a/tests/scripts/hooks/run_continuation.test.ts b/tests/scripts/hooks/run_continuation.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..cb5d56bad0c1e0f47e6fd207371f63c118acf233
+index 0000000000000000000000000000000000000000..437130a85f3c8ed228e0d2d86078c4451e6d4e4f
 --- /dev/null
 +++ b/tests/scripts/hooks/run_continuation.test.ts
-@@ -0,0 +1,239 @@
+@@ -0,0 +1,313 @@
 +/**
 + * run_continuation — road-to-long-horizon-execution Phase 1.2 (partial: the
 + * pure surface; the end-to-end eval with a live dispatcher is 1.2's open half).
@@ -7498,6 +8040,7 @@ index 0000000000000000000000000000000000000000..cb5d56bad0c1e0f47e6fd207371f63c1
 +
 +import {
 +    DUPLICATE_WINDOW_MS,
++    HALT_ACTIONS,
 +    MAX_ITERATIONS,
 +    STALL_WINDOW,
 +    WALL_CLOCK_CAP_MS,
@@ -7639,6 +8182,40 @@ index 0000000000000000000000000000000000000000..cb5d56bad0c1e0f47e6fd207371f63c1
 +    });
 +});
 +
++describe('ladder — a halt is terminal, and outranks every other rung', () => {
++    const base = (over: Partial<RunState> = {}): RunState => ({
++        started_at: new Date().toISOString(),
++        iterations: 0,
++        last_turn: -1,
++        history: [],
++        ...over,
++    });
++
++    // The R2 review's finding 4. Every non-engage rung used to DELETE the
++    // state file, so the next Stop — and a host may fire `stop` several times
++    // for one reply — read `prev === null`, built `iterations: 0` with a fresh
++    // `started_at`, and engaged again. The cap bounded a 25-block, not a run.
++    for (const rung of HALT_ACTIONS) {
++        it(`${rung} stays ${rung} on a later stop with a healthy-looking state`, () => {
++            // Everything else about this state says "engage": no iterations
++            // spent, started now, no stall history. Only the stamp halts it.
++            expect(ladder(base({ halted: rung }), 5, Date.now())).toBe(rung);
++        });
++    }
++
++    it('a halted run does not report `complete` when the roadmap later reads zero-open', () => {
++        // Checked before the openCount rung on purpose: a run that was halted
++        // for exhausting its budget never reached a completion, and recording
++        // one would tell the digest the opposite of what happened.
++        expect(ladder(base({ halted: 'halt-stall' }), 0, Date.now())).toBe('halt-stall');
++    });
++
++    it('an un-halted state is unaffected — the stamp is the only new input', () => {
++        expect(ladder(base(), 5, Date.now())).toBe('engage');
++        expect(ladder(base(), 0, Date.now())).toBe('complete');
++    });
++});
++
 +describe('refusedThisTurn — the quality-gate defer', () => {
 +    const write = (sessionId: string, turn: number): void => {
 +        const file = sessionRefusalFile(tmp, deriveSessionKey(sessionId));
@@ -7713,11 +8290,60 @@ index 0000000000000000000000000000000000000000..cb5d56bad0c1e0f47e6fd207371f63c1
 +        expect(isDuplicateFire(legacy, 3, 2, now)).toBe(false);
 +    });
 +});
++
++describe('scanOpenSteps — phase spans only, dashboard bullets', () => {
++    // R2 review, finding 15. On the roadmap this review was run against every
++    // phase step is closed and the only `- [ ]` sits under `## Acceptance criteria`, so
++    // the continuation would have named "A killed session resumes via the
++    // watcher…" as the next step — an observation of a live multi-day run, and
++    // by construction with no `verify:` line. That is a guaranteed stall of
++    // the kind the `blocked-by:` exclusion was added to avoid.
++    it('does not re-engage on an acceptance criterion or a blocker row', () => {
++        const md = [
++            '## Phase 4 — unattended backlog',
++            '',
++            '- [x] **4.1** the digest',
++            '',
++            '## Acceptance criteria',
++            '',
++            '- [ ] A killed session resumes via the watcher and completes',
++            '',
++            '## Blockers',
++            '',
++            '- [ ] someone decides whether to fund the benchmark',
++        ].join('\n');
++        const scan = scanOpenSteps(md);
++        expect(scan.open).toBe(0);
++        expect(scan.next).toBeNull();
++    });
++
++    it('a `*` bullet inside a phase is a real open step', () => {
++        // The narrower bullet set read this as zero open work, and
++        // `run_supervise.classify` then reports `complete`.
++        const scan = scanOpenSteps('## Phase 1\n\n* [ ] **1.0** do the thing\n');
++        expect(scan.open).toBe(1);
++        expect(scan.next?.text).toContain('do the thing');
++    });
++
++    it('an unphased roadmap still yields its steps', () => {
++        expect(scanOpenSteps('- [ ] **0.1** a step\n').open).toBe(1);
++    });
++});
 diff --git a/tests/scripts/interruption_report.test.ts b/tests/scripts/interruption_report.test.ts
-index 898f1205a60ab722f06f8123e429c267b5bf0301..eaa8b62ae242962613fa0b832bf5381485c64429 100644
+index 898f1205a60ab722f06f8123e429c267b5bf0301..0b4c0a5610221154fc1fd7b2671721cd9ce63c5a 100644
 --- a/tests/scripts/interruption_report.test.ts
 +++ b/tests/scripts/interruption_report.test.ts
-@@ -290,3 +290,98 @@ describe('main — the CLI contract', () => {
+@@ -14,6 +14,9 @@ import * as path from 'node:path';
+ 
+ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+ 
++import { SESSION_ID_LEN, derive_session_tag } from '../../src/scripts/chat_history.js';
++import { deriveSessionKey } from '../../src/scripts/_lib/turn_end_refusals.js';
++
+ import {
+     DEFAULT_WINDOW,
+     buildReport,
+@@ -290,3 +293,147 @@ describe('main — the CLI contract', () => {
          expect(rendered).toContain('WALL-CLOCK AXIS');
      });
  });
@@ -7740,7 +8366,56 @@ index 898f1205a60ab722f06f8123e429c267b5bf0301..eaa8b62ae242962613fa0b832bf53814
 +    );
 +}
 +
-+describe('buildReport — the autonomy axis', () => {
++describe('buildReport — the autonomy axis joins the PRODUCERS\' real keys', () => {
++    // R2 review, finding 2, and the reason it survived the original suite:
++    // every autonomy test hand-wrote `r1` into all three sources, so it
++    // verified the READER and could not see that the three WRITERS emit three
++    // different key spaces for one run. These tests derive each key the way
++    // its producer does, so a future divergence fails here instead of quietly
++    // printing 0.
++    const SESSION = 'b7c1f2a4-0d3e-4f56-9a8b-1c2d3e4f5061';
++
++    it('a run whose three sources use three producer keys joins into one row', () => {
++        const tag = derive_session_tag(SESSION); // the interruption ledger
++        const key = deriveSessionKey(SESSION); // run-continuation.jsonl
++        // The keys really are different — if this ever stops holding, the
++        // test below would pass for the wrong reason.
++        expect(key).not.toBe(tag);
++        expect(SESSION).not.toBe(tag);
++
++        writeLedger([{ run_id: tag, turn: 1, kind: 'none', class: 'none', roadmap: null }]);
++        writeContinuation([
++            { run_id: key, event: 'engage' },
++            { run_id: key, event: 'engage' },
++            { run_id: key, event: 'halt-stall' },
++        ]);
++        const state = path.join(root, 'agents', 'runtime', 'state');
++        fs.mkdirSync(path.join(state, 'decisions', SESSION), { recursive: true });
++        fs.writeFileSync(path.join(state, 'decisions', SESSION, '001.md'), 'x', 'utf8');
++        // run_supervise keys its ledger on the RAW session id.
++        fs.writeFileSync(
++            path.join(state, 'supervise-relaunches.json'),
++            JSON.stringify({ [SESSION]: 2 }),
++            'utf8',
++        );
++
++        const run = buildReport(root, DEFAULT_WINDOW).runs.find((x) => x.run_id === tag);
++        expect(run?.reengagements).toBe(2);
++        expect(run?.stall_halts).toBe(1);
++        expect(run?.relaunches).toBe(2);
++        expect(run?.memos).toBe(1);
++    });
++
++    it('the 16-hex tag is the 32-hex key truncated — pinned, not assumed', () => {
++        // `toLedgerRunId` re-derives a raw id rather than truncating it,
++        // because `fingerprint` normalises whitespace and `deriveSessionKey`
++        // does not. For an id without whitespace the two agree, and that
++        // agreement is what lets the continuation key be truncated at all.
++        expect(deriveSessionKey(SESSION).slice(0, SESSION_ID_LEN)).toBe(
++            derive_session_tag(SESSION),
++        );
++    });
++
 +    it('counts engage and halt-stall events per run', () => {
 +        writeLedger([{ run_id: 'r1', turn: 1, kind: 'none', class: 'none', roadmap: null }]);
 +        writeContinuation([
@@ -7818,10 +8493,10 @@ index 898f1205a60ab722f06f8123e429c267b5bf0301..eaa8b62ae242962613fa0b832bf53814
 +});
 diff --git a/tests/scripts/run_checkpoint.test.ts b/tests/scripts/run_checkpoint.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..7fe9865f7e5b7582e2e38c1b72741e6541dd63b9
+index 0000000000000000000000000000000000000000..9385cf11e4a009b5d0d71ace55f602169e6e65d8
 --- /dev/null
 +++ b/tests/scripts/run_checkpoint.test.ts
-@@ -0,0 +1,216 @@
+@@ -0,0 +1,340 @@
 +/**
 + * run_checkpoint — the derived checkpoint and its re-verification.
 + *
@@ -7844,9 +8519,11 @@ index 0000000000000000000000000000000000000000..7fe9865f7e5b7582e2e38c1b72741e65
 +import { afterEach, describe, expect, it } from 'vitest';
 +
 +import {
++    CHECKPOINT_DIR_REL,
 +    buildCheckpoint,
 +    checkpointFile,
 +    countRoadmap,
++    latestCheckpointFor,
 +    readCheckpoint,
 +    renderVerification,
 +    verifyCheckpoint,
@@ -8036,6 +8713,128 @@ index 0000000000000000000000000000000000000000..7fe9865f7e5b7582e2e38c1b72741e65
 +        const cp = buildCheckpoint(r, 'run1', 'road-to-x') as RunCheckpoint;
 +        fs.rmSync(path.join(r, 'agents', 'roadmaps', 'road-to-x.md'));
 +        expect(renderVerification(cp, verifyCheckpoint(r, cp))).toContain('may be assumed');
++    });
++});
++
++describe('countRoadmap — the dashboard vocabulary and the phase span', () => {
++    // R2 review, findings 11 and 15. Both directions matter and they pull
++    // opposite ways: a narrow vocabulary under-counts open work (a run reads
++    // `complete` while work remains), a whole-file scan over-counts it (a
++    // an acceptance criterion is named as the next executable step).
++
++    it('a `*` bullet and an uppercase [X] are read, not skipped', () => {
++        const md = [
++            '## Phase 1 — work',
++            '',
++            '* [X] done with a star bullet and a capital mark',
++            '* [ ] open with a star bullet',
++        ].join('\n');
++        const c = countRoadmap(md);
++        expect(c.done).toBe(1);
++        expect(c.open).toBe(1);
++    });
++
++    it('checkboxes outside a phase span are not counted', () => {
++        // The shape of the roadmap this review was run against: every phase
++        // step closed, and the only open box an acceptance criterion.
++        const md = [
++            '## Phase 1 — work',
++            '',
++            '- [x] the real step',
++            '',
++            '## Acceptance criteria',
++            '',
++            '- [ ] a killed session resumes via the watcher',
++            '',
++            '## Blockers',
++            '',
++            '- [ ] someone funds the benchmark',
++        ].join('\n');
++        const c = countRoadmap(md);
++        expect(c.open).toBe(0);
++        expect(c.done).toBe(1);
++        expect(c.next).toBeNull();
++    });
++
++    it('a roadmap with NO phase heading counts every line — the safe direction', () => {
++        // Returning nothing here would make every unphased roadmap read as
++        // `complete`, which is the more dangerous of the two errors.
++        const c = countRoadmap('- [ ] a step\n- [x] another\n');
++        expect(c.open).toBe(1);
++        expect(c.done).toBe(1);
++    });
++
++    it('a phase span ends at the next H2, not at the end of the file', () => {
++        const md = [
++            '## Phase 1',
++            '- [ ] inside',
++            '## Notes',
++            '- [ ] outside',
++            '### Phase 2',
++            '- [ ] inside again',
++        ].join('\n');
++        expect(countRoadmap(md).open).toBe(2);
++    });
++});
++
++describe('latestCheckpointFor — the lookup a RELAUNCHED session can perform', () => {
++    // R2 review, finding 7. `readCheckpoint` keys on the run id derived from
++    // the session that DIED; a relaunched session has a new id and no index
++    // from slug to old id, so the checkpoint was write-only in practice while
++    // the loop contract instructed a resumed run to verify against it.
++    const write = (root: string, cp: Record<string, unknown>): void => {
++        const dir = path.join(root, CHECKPOINT_DIR_REL);
++        fs.mkdirSync(dir, { recursive: true });
++        fs.writeFileSync(path.join(dir, `${String(cp['run_id'])}.json`), JSON.stringify(cp), 'utf-8');
++    };
++    const cp = (over: Record<string, unknown>): Record<string, unknown> => ({
++        schema_version: 1,
++        run_id: 'r-old',
++        roadmap: 'road-to-thing',
++        open_steps: 2,
++        done_steps: 3,
++        parked_steps: 0,
++        next_step: 'do the next thing',
++        head: 'abc',
++        written_at: '2026-08-19T01:00:00Z',
++        ...over,
++    });
++
++    it('finds the dying run\'s checkpoint from the roadmap slug alone', () => {
++        const repoRoot = root();
++        write(repoRoot, cp({}));
++        const found = latestCheckpointFor(repoRoot, 'road-to-thing');
++        expect(found?.run_id).toBe('r-old');
++        expect(found?.next_step).toBe('do the next thing');
++    });
++
++    it('picks the NEWEST when a roadmap has several runs behind it', () => {
++        const repoRoot = root();
++        write(repoRoot, cp({ run_id: 'r-a', written_at: '2026-08-19T01:00:00Z' }));
++        write(repoRoot, cp({ run_id: 'r-b', written_at: '2026-08-19T05:00:00Z' }));
++        write(repoRoot, cp({ run_id: 'r-c', written_at: '2026-08-19T03:00:00Z' }));
++        expect(latestCheckpointFor(repoRoot, 'road-to-thing')?.run_id).toBe('r-b');
++    });
++
++    it('ignores other roadmaps, and returns null when none matches', () => {
++        const repoRoot = root();
++        write(repoRoot, cp({ run_id: 'r-other', roadmap: 'road-to-something-else' }));
++        expect(latestCheckpointFor(repoRoot, 'road-to-thing')).toBeNull();
++    });
++
++    it('skips a corrupt file instead of failing the whole lookup', () => {
++        // A resume that refuses to start because one stale JSON is unparseable
++        // is worse than one that verifies against the newest readable record.
++        const repoRoot = root();
++        const dir = path.join(repoRoot, CHECKPOINT_DIR_REL);
++        fs.mkdirSync(dir, { recursive: true });
++        fs.writeFileSync(path.join(dir, 'aaa-broken.json'), '{ not json', 'utf-8');
++        write(repoRoot, cp({ run_id: 'zzz-good' }));
++        expect(latestCheckpointFor(repoRoot, 'road-to-thing')?.run_id).toBe('zzz-good');
++    });
++
++    it('returns null when no checkpoint directory exists at all', () => {
++        expect(latestCheckpointFor(root(), 'road-to-thing')).toBeNull();
 +    });
 +});
 diff --git a/tests/scripts/run_supervise.test.ts b/tests/scripts/run_supervise.test.ts
@@ -8430,10 +9229,10 @@ index 418ebd2d054f29ea1a0564f776d5f2f5b921381f..0caddb83f5f6c226406d2a0132d71181
 +});
 diff --git a/tests/scripts/unattended_guard.test.ts b/tests/scripts/unattended_guard.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..fa10f92f5c68d1ad62dc50ba68ac576a764e8aa9
+index 0000000000000000000000000000000000000000..110de8c170a6d8544d05ffc4305d575ec41457d1
 --- /dev/null
 +++ b/tests/scripts/unattended_guard.test.ts
-@@ -0,0 +1,253 @@
+@@ -0,0 +1,286 @@
 +/**
 + * unattended_guard — the three preconditions, and the defaults that decide
 + * what happens when a config is missing.
@@ -8465,6 +9264,7 @@ index 0000000000000000000000000000000000000000..fa10f92f5c68d1ad62dc50ba68ac576a
 +    utcDay,
 +    writeBudget,
 +    writeJobs,
++    type UnattendedBudget,
 +} from '../../src/scripts/_lib/unattended_guard.js';
 +
 +const dirs: string[] = [];
@@ -8685,6 +9485,38 @@ index 0000000000000000000000000000000000000000..fa10f92f5c68d1ad62dc50ba68ac576a
 +        expect(v.ok).toBe(true);
 +        expect(v.refusals).toEqual([]);
 +        expect(v.jobKey).toBe('road-to-x@abcdef123456');
++    });
++});
++
++describe('checkBudget — a ceiling written as 0 disables its dimension', () => {
++    // R2 review, finding 5. `0` is documented as "disables" on BOTH fields,
++    // and the guard read it as "skip this check" on the token side.
++    const at = (over: Partial<UnattendedBudget>): UnattendedBudget => ({
++        ...emptyBudget('2026-08-19'),
++        ...over,
++    });
++
++    it('max_tokens: 0 refuses token spend even when the USD ceiling has room', () => {
++        const v = checkBudget(at({ max_usd: 5 }), 0.01, 1000);
++        expect(v.allowed).toBe(false);
++        expect(v.reason).toContain('token ceiling is 0');
++    });
++
++    it('max_usd: 0 refuses USD spend even when the token ceiling has room', () => {
++        const v = checkBudget(at({ max_tokens: 10_000 }), 0.01, 100);
++        expect(v.allowed).toBe(false);
++        expect(v.reason).toContain('USD ceiling is 0');
++    });
++
++    it('a disabled dimension still permits a run that consumes none of it', () => {
++        // The refusal is on CONSUMPTION, not on the dimension existing — a
++        // token-only run under a token ceiling is a legitimate shape.
++        expect(checkBudget(at({ max_tokens: 10_000 }), 0, 100).allowed).toBe(true);
++    });
++
++    it('both ceilings set behave exactly as before', () => {
++        expect(checkBudget(at({ max_usd: 5, max_tokens: 10_000 }), 1, 100).allowed).toBe(true);
++        expect(checkBudget(at({ max_usd: 5, max_tokens: 10_000 }), 9, 100).allowed).toBe(false);
 +    });
 +});
 diff --git a/tests/server/wizard.aiCouncil.test.ts b/tests/server/wizard.aiCouncil.test.ts
