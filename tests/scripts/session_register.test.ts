@@ -524,6 +524,27 @@ describe('a stale slug is not a claim', () => {
         expect(claim_is_stale(main, 'road-to-open.md')).toBe(false);
     });
 
+    it('a legal slug containing a double dot is live, not stale', () => {
+        // Round 6 finding 3. Round 5 finding 10 replaced the `..` substring test with
+        // a structural check in `resolveRoadmap` and NOT here, so the two functions
+        // disagreed about one claim string in the opposite direction: this side
+        // called a live claim stale — dropping it from the collision set and
+        // disabling the duplicate-work warning — while the hook resolved it and
+        // engaged on it. Round 5's own new case pinned that green because it only
+        // exercised the hook side, which is the argument for pinning both.
+        const { main } = make_repo();
+        fs.mkdirSync(path.join(main, 'agents', 'roadmaps'), { recursive: true });
+        fs.writeFileSync(path.join(main, 'agents', 'roadmaps', 'road-to-a..b.md'), '#');
+        expect(claim_is_stale(main, 'road-to-a..b')).toBe(false);
+    });
+
+    it('a slug that would escape the roadmaps directory still reads as stale', () => {
+        // The direction the structural check must NOT loosen.
+        const { main } = make_repo();
+        expect(claim_is_stale(main, '../../etc/passwd')).toBe(true);
+        expect(claim_is_stale(main, '/etc/passwd')).toBe(true);
+    });
+
     it('null is not stale — absence is a state, not a defect', () => {
         const { main } = make_repo();
         expect(claim_is_stale(main, null)).toBe(false);

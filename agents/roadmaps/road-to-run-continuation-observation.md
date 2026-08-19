@@ -23,9 +23,10 @@ estate_offset_exempt: >-
 
 `run-continuation` is the stop-slot concern that re-engages a run while
 its claimed roadmap still has open steps. It shipped, it is unit-tested
-(21 cases), it is integration-tested against the real dispatcher (22
-cases at the close of this branch, 7 when this roadmap was written) — and
-it had **never fired once** outside a test.
+(21 cases), it is integration-tested against the real dispatcher (7 cases
+when this roadmap was written; the file holds 25 at the close of this
+branch, of which 23 drive the dispatcher and 2 only read the hook
+manifest) — and it had **never fired once** outside a test.
 
 The cause was a defect, not a missing step, and it is fixed: the run
 contract had two halves resolving different roots. `sessions:claim`
@@ -130,14 +131,20 @@ engages and leaves the event behind.
      finding 4 caught that — along with the `## Context` line above still
      saying 7.
 
-     So the numbers are stated once, at the close, and the reason for
-     pinning them is stated with them: **22 integration cases, 15 of which
-     exercise the two-tree resolution or the ledger fields.** A bullet whose
-     whole purpose is to let a reader check the artefact against a
-     falsifiable number is worse than useless when the number is wrong, and
-     a per-round correction is a number that will be wrong again by the next
-     round. Anyone extending that file should either update this line or
-     delete it rather than leave a stale figure standing.
+     Then round 6 finding 7 caught it a THIRD time, in the revision that
+     corrected the second: "22 cases against the real dispatcher" counted
+     every `it(` in the file, and two of them only parse the hook manifest
+     and never call `dispatchStop`.
+
+     **At three misses the number is the defect, so it is now stated with
+     the distinction that kept breaking it: 25 cases in the file, 23 of
+     which drive the dispatcher, 2 of which read only the manifest.** A
+     bullet whose whole purpose is to let a reader check the artefact
+     against a falsifiable number is worse than useless when the number is
+     wrong — and a per-round correction is a number that will be wrong again
+     by the next round. Anyone extending that file updates this line or
+     deletes it; leaving a stale figure standing is the one option that has
+     already failed three times.
 
      **Superseded 2026-08-19 by a live event, and the live event refuted
      the fields.** The enrichment merged, `dist/` was rebuilt, and the

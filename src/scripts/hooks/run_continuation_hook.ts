@@ -40,10 +40,20 @@
  * TERMINATION LADDER (Phase 1.1) — every rung a named event in
  * `agents/runtime/state/run-continuation.jsonl`:
  *   contract absent            → no-op (no event; the common case is silent)
+ *   roadmap unreadable from the
+ *   authoritative tree         → allow  (event: halt-roadmap-absent, and ONLY
+ *                                for a run this concern had already engaged —
+ *                                state present is the discriminator. State
+ *                                absent stays silent, because nothing was ever
+ *                                driven. Deliberately NOT in `HALT_ACTIONS`:
+ *                                it clears the budget rather than stamping
+ *                                `halted`, and the two are exclusive)
  *   quality-gate refusal       → defer            (event: deferred-quality-gate)
  *   duplicate stop fire        → repeat the BLOCK, no count (event: none —
  *                                an allow here would END the reply the block
- *                                one event earlier exists to continue)
+ *                                one event earlier exists to continue). A fire
+ *                                whose roadmap SOURCE changed is never a
+ *                                duplicate, whatever the counts say.
  *   scope complete (0 open)    → allow            (event: complete; state cleared)
  *   iterations ≥ MAX (25)      → allow            (event: halt-max-iterations)
  *   wall clock ≥ cap (4 h)     → allow            (event: halt-wall-clock)
@@ -154,6 +164,24 @@ export interface RunState {
     last_turn: number;
     /** Open-step count recorded at each engagement, newest last. */
     history: number[];
+    /**
+     * The roadmap slug this state belongs to.
+     *
+     * Round 6 finding 2: the state is keyed on the session id alone, and one
+     * session may re-claim a different roadmap. A halt stamp is never cleared —
+     * only `complete` unlinks — so a later legitimate claim of roadmap B inherited
+     * A's stamp, emitted a halt line naming B without ever engaging, and reported
+     * A's iteration count under B's slug.
+     *
+     * Keying the FILE on the slug would have orphaned every state file in
+     * existence; recording the slug inside it does the same work and degrades
+     * cleanly. A mismatch is read as a fresh run, which is what it is.
+     *
+     * Optional so a state file written before this field parses unchanged; absent
+     * means "unknown roadmap" and is trusted, because the alternative is
+     * discarding a live budget on an upgrade.
+     */
+    roadmap?: string;
     /**
      * The roadmap file the counts in `history` were read from.
      *
@@ -423,6 +451,9 @@ function readState(file: string): RunState | null {
         // silently disable the stall detector the field was added to protect.
         if (typeof o['history_source'] === 'string') {
             rec.history_source = o['history_source'];
+        }
+        if (typeof o['roadmap'] === 'string') {
+            rec.roadmap = o['roadmap'];
         }
         // Validated against the halt set rather than accepted as any string:
         // an unrecognised value would be returned verbatim by `ladder` and
@@ -829,8 +860,32 @@ export function main(): number {
         // `resolveRoadmap` used to assert the archival reading, and finding 5 was
         // right that it conflated the two — so the reading is now carried by the
         // state file, which actually knows.
+        // File PRESENCE, not parseability (round 6 finding 5): `readState` returns
+        // null for a state file that exists but is truncated or malformed — which
+        // is exactly the interrupted-write case — so keying the branch on a
+        // successful parse left the very leak it was added to close in place.
+        let stateExists = false;
+        try {
+            stateExists = fs.statSync(stateFile).isFile();
+        } catch {
+            stateExists = false;
+        }
+        if (!stateExists) return EXIT_ALLOW;
         const driven = readState(stateFile);
-        if (driven === null) return EXIT_ALLOW;
+
+        // A HALT STAMP IS NEVER ERASED HERE (round 6 finding 1, high).
+        //
+        // Clearing unconditionally meant one transient read failure of the roadmap
+        // — an unlink-then-write by any tool, a `git checkout`/`stash`/`mv`
+        // mid-run, an EACCES — erased the stamp AND the budget. The next fire then
+        // read no state, started at iteration 0 with a fresh wall clock, and
+        // re-engaged with the full cap: the unbounded loop `RunState.halted` exists
+        // to prevent, restored by the branch meant to close a leak.
+        //
+        // A halted run has already recorded its own end, so there is nothing to
+        // announce and nothing to reclaim. Silence and no write is the whole
+        // correct action.
+        if (driven?.halted !== undefined) return EXIT_ALLOW;
         const absenceRoots = provenance(
             workspaceRoot,
             claim.path,
@@ -845,7 +900,10 @@ export function main(): number {
             event: 'halt-roadmap-absent',
             run_id: runId,
             roadmap: slug,
-            iterations: driven.iterations,
+            // `null` when the state file exists but could not be parsed — the
+            // interrupted-write case above. Reported as null rather than as 0,
+            // which would claim a fact the file no longer carries.
+            iterations: driven?.iterations ?? null,
             at: new Date().toISOString(),
             ...absenceRoots,
         });
@@ -943,13 +1001,29 @@ export function main(): number {
     }
 
     // ── state + duplicate-fire detection ─────────────────────────────
-    const prev = readState(stateFile);
+    //
+    // A state file recorded against a DIFFERENT roadmap is not this run's state —
+    // round 6 finding 2. The file is keyed on the session id alone and one session
+    // may re-claim, so a halt stamped on roadmap A (never cleared: only `complete`
+    // unlinks) was inherited by a later claim of roadmap B, which then emitted a
+    // halt line naming B without ever engaging and reported A's iteration count
+    // under B's slug. An absent `roadmap` field is trusted rather than discarded:
+    // it means the state predates this field, and dropping a live budget on an
+    // upgrade would be the worse error.
+    const onDisk = readState(stateFile);
+    const prev = onDisk !== null && onDisk.roadmap !== undefined && onDisk.roadmap !== slug
+        ? null
+        : onDisk;
     const state: RunState = prev ?? {
         started_at: new Date().toISOString(),
         iterations: 0,
         last_turn: -1,
         history: [],
+        roadmap: slug,
     };
+    // Stamped on an inherited state too, so the field fills in on first contact
+    // rather than staying absent for the life of the run.
+    state.roadmap = slug;
 
     const scan = scanOpenSteps(roadmapText);
 
@@ -979,17 +1053,27 @@ export function main(): number {
     const action = ladder(state, scan.open, Date.now());
 
     if (action !== 'engage') {
-        appendEvent(workspaceRoot, {
-            event: action,
-            run_id: runId,
-            roadmap: slug,
-            turn: turnOrdinal,
-            iterations: state.iterations,
-            open: scan.open,
-            blocked: scan.blocked,
-            at: new Date().toISOString(),
-            ...roots,
-        });
+        // A run that is ALREADY stamped emits nothing further — round 6 finding 6.
+        // Once `halted` is set the state file is immortal for the session (only
+        // `complete` unlinks it), so every later stop fire re-entered this branch
+        // and appended another line with the same `run_id` and `iterations`: an
+        // unbounded number of duplicate halt records in the ledger the acceptance
+        // criteria's counts are derived from. The FIRST halt is the event; the rest
+        // are the same fact re-stated.
+        const alreadyStamped = prev?.halted !== undefined;
+        if (!alreadyStamped) {
+            appendEvent(workspaceRoot, {
+                event: action,
+                run_id: runId,
+                roadmap: slug,
+                turn: turnOrdinal,
+                iterations: state.iterations,
+                open: scan.open,
+                blocked: scan.blocked,
+                at: new Date().toISOString(),
+                ...roots,
+            });
+        }
         if (action === 'complete') {
             // Only a COMPLETION clears the state, so a later run on the same
             // roadmap (post-merge follow-up, re-claim) starts a fresh budget.

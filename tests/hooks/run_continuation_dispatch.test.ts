@@ -817,6 +817,105 @@ describe('run-continuation — driven through the live dispatcher', () => {
         expect(engaged[0]?.['roadmap']).toBe(oddSlug);
     });
 
+    it('never erases a halt stamp when the roadmap goes absent', () => {
+        // Round 6 finding 1, high. The absent rung cleared the state file
+        // unconditionally, so one transient read failure of the roadmap — an
+        // unlink-then-write by any tool, a git checkout or stash mid-run, an EACCES
+        // — erased the halt stamp AND the budget. The next fire read no state,
+        // started at iteration 0 with a fresh wall clock, and re-engaged with the
+        // full 25-iteration cap: the unbounded loop `RunState.halted` exists to
+        // prevent, restored by the branch meant to close a leak.
+        const { main, worktree, sub } = writeNestedWorktreePair();
+        const stateFile = path.join(main, stateRelPath(deriveSessionKey(SESSION)));
+        fs.mkdirSync(path.dirname(stateFile), { recursive: true });
+        fs.writeFileSync(
+            stateFile,
+            JSON.stringify({
+                started_at: '2026-08-19T00:00:00.000Z',
+                iterations: 25,
+                last_turn: 9,
+                history: [1, 1, 1],
+                roadmap: SLUG,
+                halted: 'halt-max-iterations',
+            }),
+            'utf-8',
+        );
+        // The roadmap disappears from the session tree — archived, or mid-rewrite.
+        fs.rmSync(path.join(worktree, 'agents', 'roadmaps', `${SLUG}.md`));
+
+        const res = dispatchStop(main, writeTranscript(3), sub);
+        expect(res.code).toBe(0);
+        // No line: a halted run has already recorded its own end.
+        expect(events(main).length).toBe(0);
+        // And the stamp survives, which is the half that bounds the loop.
+        expect(fs.existsSync(stateFile)).toBe(true);
+        const kept = JSON.parse(fs.readFileSync(stateFile, 'utf-8')) as Record<string, unknown>;
+        expect(kept['halted']).toBe('halt-max-iterations');
+        expect(kept['iterations']).toBe(25);
+    });
+
+    it('does not inherit a halt stamped on a DIFFERENT roadmap', () => {
+        // Round 6 finding 2: the state is keyed on the session id alone and one
+        // session may re-claim. A halt stamped on roadmap A is never cleared — only
+        // `complete` unlinks — so a later legitimate claim of roadmap B inherited
+        // it, emitted a halt line naming B without ever engaging, and reported A's
+        // iteration count under B's slug.
+        const root = writeWorkspace();
+        const stateFile = path.join(root, stateRelPath(deriveSessionKey(SESSION)));
+        fs.mkdirSync(path.dirname(stateFile), { recursive: true });
+        fs.writeFileSync(
+            stateFile,
+            JSON.stringify({
+                started_at: '2026-08-19T00:00:00.000Z',
+                iterations: 25,
+                last_turn: 9,
+                history: [7, 7, 7],
+                roadmap: 'road-to-some-other-thing',
+                halted: 'halt-max-iterations',
+            }),
+            'utf-8',
+        );
+
+        const res = dispatchStop(root, writeTranscript(3));
+        expect(res.code).toBe(2);
+        const log = events(root);
+        expect(log.filter((e) => e['event'] === 'engage').length).toBe(1);
+        expect(log.filter((e) => String(e['event']).startsWith('halt-')).length).toBe(0);
+        // A fresh budget, not the other roadmap's spent one.
+        const now = JSON.parse(fs.readFileSync(stateFile, 'utf-8')) as Record<string, unknown>;
+        expect(now['iterations']).toBe(1);
+        expect(now['roadmap']).toBe(SLUG);
+    });
+
+    it('writes ONE halt line, not one per subsequent stop fire', () => {
+        // Round 6 finding 6: once `halted` is stamped the state file is immortal for
+        // the session, so every later stop fire re-entered the non-engage branch and
+        // appended another record with the same run_id and iterations — an unbounded
+        // number of duplicates in the ledger the acceptance criteria count from.
+        const root = writeWorkspace();
+        const stateFile = path.join(root, stateRelPath(deriveSessionKey(SESSION)));
+        fs.mkdirSync(path.dirname(stateFile), { recursive: true });
+        fs.writeFileSync(
+            stateFile,
+            JSON.stringify({
+                started_at: '2026-08-19T00:00:00.000Z',
+                iterations: 25,
+                last_turn: 9,
+                history: [1],
+                roadmap: SLUG,
+            }),
+            'utf-8',
+        );
+
+        // First fire crosses the cap and stamps.
+        dispatchStop(root, writeTranscript(3));
+        expect(events(root).filter((e) => e['event'] === 'halt-max-iterations').length).toBe(1);
+        // Two more fires say nothing new.
+        dispatchStop(root, writeTranscript(4));
+        dispatchStop(root, writeTranscript(5));
+        expect(events(root).filter((e) => e['event'] === 'halt-max-iterations').length).toBe(1);
+    });
+
     it('records the provenance on a non-engage event too — the defer branch', () => {
         const root = writeWorkspace();
         const transcript = writeTranscript(3);

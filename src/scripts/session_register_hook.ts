@@ -354,8 +354,17 @@ export function claim_is_stale(
     // roadmaps directory" — and it is the same check for a traversal, an absolute
     // path, and an encoding nobody enumerated. A slug that fails it is reported
     // stale rather than resolved, so no read happens at all.
+    // Structural, not textual. Round 6 finding 3: the previous form ANDed a
+    // `!rel.includes('..')` substring test onto the prefix check, and round 5
+    // finding 10 removed exactly that test from `resolveRoadmap` — one-sided. The
+    // two functions then disagreed about one claim string in the opposite
+    // direction: for a legal slug like `road-to-a..b` the register rendered a live
+    // claim as stale (dropping it from the collision set and disabling the
+    // duplicate-work warning) while the hook resolved it and engaged. `path.dirname`
+    // asks the only question that matters — is the result a file directly inside the
+    // roadmaps directory — and is the same check both sides now make.
     const rel = path.normalize(path.join('agents', 'roadmaps', `${base}.md`));
-    const inside = rel.startsWith(`agents${path.sep}roadmaps${path.sep}`) && !rel.includes('..');
+    const inside = path.dirname(rel) === path.join('agents', 'roadmaps');
     if (!inside || path.isAbsolute(base)) {
         return true; // not a slug this repo can hold; never render it as live work
     }
