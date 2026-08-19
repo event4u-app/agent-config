@@ -35,22 +35,23 @@ index 1e8752700c21889fd793054195965372d4a55ebd..23a30ee0b6bd77b97fa14c6122937d96
  <a id="blockers-road-to-run-continuation-observation"></a>
  **Blockers**
 diff --git a/agents/roadmaps/road-to-run-continuation-observation.md b/agents/roadmaps/road-to-run-continuation-observation.md
-index 4a4d1c840935bfc5e67640ad3c674d28dbc6b5d5..29a67c0b774d714c3c7dd5f4cc4b6c6df31678a6 100644
+index 4a4d1c840935bfc5e67640ad3c674d28dbc6b5d5..485b4f1a95f5f6175f05af1d25b9c8f5b7750466 100644
 --- a/agents/roadmaps/road-to-run-continuation-observation.md
 +++ b/agents/roadmaps/road-to-run-continuation-observation.md
-@@ -23,8 +23,9 @@ estate_offset_exempt: >-
+@@ -23,8 +23,10 @@ estate_offset_exempt: >-
  
  `run-continuation` is the stop-slot concern that re-engages a run while
  its claimed roadmap still has open steps. It shipped, it is unit-tested
 -(21 cases), it is integration-tested against the real dispatcher (7
 -cases) — and it had **never fired once** outside a test.
-+(21 cases), it is integration-tested against the real dispatcher (22
-+cases at the close of this branch, 7 when this roadmap was written) — and
-+it had **never fired once** outside a test.
++(21 cases), it is integration-tested against the real dispatcher (7 cases
++when this roadmap was written; the file holds 25 at the close of this
++branch, of which 23 drive the dispatcher and 2 only read the hook
++manifest) — and it had **never fired once** outside a test.
  
  The cause was a defect, not a missing step, and it is fixed: the run
  contract had two halves resolving different roots. `sessions:claim`
-@@ -97,14 +98,124 @@ engages and leaves the event behind.
+@@ -97,14 +99,130 @@ engages and leaves the event behind.
       validity is that of a production smoke probe, not of ordinary
       autonomous work.
    2. *The provenance fields are test-verified, not self-verified.* The
@@ -90,14 +91,20 @@ index 4a4d1c840935bfc5e67640ad3c674d28dbc6b5d5..29a67c0b774d714c3c7dd5f4cc4b6c6d
 +     finding 4 caught that — along with the `## Context` line above still
 +     saying 7.
 +
-+     So the numbers are stated once, at the close, and the reason for
-+     pinning them is stated with them: **22 integration cases, 15 of which
-+     exercise the two-tree resolution or the ledger fields.** A bullet whose
-+     whole purpose is to let a reader check the artefact against a
-+     falsifiable number is worse than useless when the number is wrong, and
-+     a per-round correction is a number that will be wrong again by the next
-+     round. Anyone extending that file should either update this line or
-+     delete it rather than leave a stale figure standing.
++     Then round 6 finding 7 caught it a THIRD time, in the revision that
++     corrected the second: "22 cases against the real dispatcher" counted
++     every `it(` in the file, and two of them only parse the hook manifest
++     and never call `dispatchStop`.
++
++     **At three misses the number is the defect, so it is now stated with
++     the distinction that kept breaking it: 25 cases in the file, 23 of
++     which drive the dispatcher, 2 of which read only the manifest.** A
++     bullet whose whole purpose is to let a reader check the artefact
++     against a falsifiable number is worse than useless when the number is
++     wrong — and a per-round correction is a number that will be wrong again
++     by the next round. Anyone extending that file updates this line or
++     deletes it; leaving a stale figure standing is the one option that has
++     already failed three times.
 +
 +     **Superseded 2026-08-19 by a live event, and the live event refuted
 +     the fields.** The enrichment merged, `dist/` was rebuilt, and the
@@ -179,7 +186,7 @@ index 4a4d1c840935bfc5e67640ad3c674d28dbc6b5d5..29a67c0b774d714c3c7dd5f4cc4b6c6d
  
  - [ ] **0.1** The parent criterion closes on that evidence: *"a
        `process-full` contract run finishes a 3-phase roadmap with zero
-@@ -123,24 +234,71 @@ engages and leaves the event behind.
+@@ -123,24 +241,71 @@ engages and leaves the event behind.
        would be exactly the attribution error its own text warns about,
        one layer up. See `### blocker: three-phase-contract-run`.
  
@@ -261,10 +268,32 @@ index 4a4d1c840935bfc5e67640ad3c674d28dbc6b5d5..29a67c0b774d714c3c7dd5f4cc4b6c6d
  ## Blockers
  
 diff --git a/src/scripts/hooks/run_continuation_hook.ts b/src/scripts/hooks/run_continuation_hook.ts
-index 00c56abab92153551ac63a9b057777b1b6df04fe..3f52ee02fa97ddcac427d048414b3e100e795156 100644
+index 00c56abab92153551ac63a9b057777b1b6df04fe..1c7426476e0398d1c1652f59e0f3246a502e0901 100644
 --- a/src/scripts/hooks/run_continuation_hook.ts
 +++ b/src/scripts/hooks/run_continuation_hook.ts
-@@ -51,11 +51,17 @@
+@@ -40,10 +40,20 @@
+  * TERMINATION LADDER (Phase 1.1) — every rung a named event in
+  * `agents/runtime/state/run-continuation.jsonl`:
+  *   contract absent            → no-op (no event; the common case is silent)
++ *   roadmap unreadable from the
++ *   authoritative tree         → allow  (event: halt-roadmap-absent, and ONLY
++ *                                for a run this concern had already engaged —
++ *                                state present is the discriminator. State
++ *                                absent stays silent, because nothing was ever
++ *                                driven. Deliberately NOT in `HALT_ACTIONS`:
++ *                                it clears the budget rather than stamping
++ *                                `halted`, and the two are exclusive)
+  *   quality-gate refusal       → defer            (event: deferred-quality-gate)
+  *   duplicate stop fire        → repeat the BLOCK, no count (event: none —
+  *                                an allow here would END the reply the block
+- *                                one event earlier exists to continue)
++ *                                one event earlier exists to continue). A fire
++ *                                whose roadmap SOURCE changed is never a
++ *                                duplicate, whatever the counts say.
+  *   scope complete (0 open)    → allow            (event: complete; state cleared)
+  *   iterations ≥ MAX (25)      → allow            (event: halt-max-iterations)
+  *   wall clock ≥ cap (4 h)     → allow            (event: halt-wall-clock)
+@@ -51,11 +61,17 @@
   *   checkbox delta)            → allow            (event: halt-stall)
   *   otherwise                  → BLOCK + continue (event: engage)
   *
@@ -287,7 +316,7 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..3f52ee02fa97ddcac427d048414b3e10
   *
   * Stall counts CONSECUTIVE ENGAGEMENTS whose open-step count did not move.
   * The upstream stalls on 5-of-5 completed-count readings; AC's checkbox
-@@ -94,7 +100,7 @@ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
+@@ -94,7 +110,7 @@ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
  import { readHookStdin } from './hook_stdin.js';
  import { is_replay_mode } from './state_io.js';
  import { readTranscriptTail } from './turn_end_gate_hook.js';
@@ -296,10 +325,28 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..3f52ee02fa97ddcac427d048414b3e10
  import { git_common_dir, git_dir } from '../_lib/git_common_dir.js';
  import {
      deriveSessionKey,
-@@ -148,6 +154,22 @@ export interface RunState {
+@@ -148,6 +164,40 @@ export interface RunState {
      last_turn: number;
      /** Open-step count recorded at each engagement, newest last. */
      history: number[];
++    /**
++     * The roadmap slug this state belongs to.
++     *
++     * Round 6 finding 2: the state is keyed on the session id alone, and one
++     * session may re-claim a different roadmap. A halt stamp is never cleared —
++     * only `complete` unlinks — so a later legitimate claim of roadmap B inherited
++     * A's stamp, emitted a halt line naming B without ever engaging, and reported
++     * A's iteration count under B's slug.
++     *
++     * Keying the FILE on the slug would have orphaned every state file in
++     * existence; recording the slug inside it does the same work and degrades
++     * cleanly. A mismatch is read as a fresh run, which is what it is.
++     *
++     * Optional so a state file written before this field parses unchanged; absent
++     * means "unknown roadmap" and is trusted, because the alternative is
++     * discarding a live budget on an upgrade.
++     */
++    roadmap?: string;
 +    /**
 +     * The roadmap file the counts in `history` were read from.
 +     *
@@ -319,7 +366,7 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..3f52ee02fa97ddcac427d048414b3e10
      /** ISO stamp of the most recent engagement — half of the duplicate key. */
      last_engaged_at?: string;
      /**
-@@ -177,9 +199,20 @@ export function isDuplicateFire(
+@@ -177,9 +227,20 @@ export function isDuplicateFire(
      turnOrdinal: number,
      openCount: number,
      nowMs: number,
@@ -340,7 +387,7 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..3f52ee02fa97ddcac427d048414b3e10
      if (state.history.length === 0 || state.history[state.history.length - 1] !== openCount) {
          return false;
      }
-@@ -210,6 +243,14 @@ export type LadderAction =
+@@ -210,6 +271,14 @@ export type LadderAction =
      | 'halt-stall';
  
  /** The terminal rungs — the set `RunState.halted` may hold. */
@@ -355,7 +402,7 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..3f52ee02fa97ddcac427d048414b3e10
  export const HALT_ACTIONS: readonly LadderAction[] = [
      'halt-max-iterations',
      'halt-wall-clock',
-@@ -377,6 +418,12 @@ function readState(file: string): RunState | null {
+@@ -377,6 +446,15 @@ function readState(file: string): RunState | null {
          if (typeof o['last_engaged_at'] === 'string') {
              rec.last_engaged_at = o['last_engaged_at'];
          }
@@ -365,10 +412,13 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..3f52ee02fa97ddcac427d048414b3e10
 +        if (typeof o['history_source'] === 'string') {
 +            rec.history_source = o['history_source'];
 +        }
++        if (typeof o['roadmap'] === 'string') {
++            rec.roadmap = o['roadmap'];
++        }
          // Validated against the halt set rather than accepted as any string:
          // an unrecognised value would be returned verbatim by `ladder` and
          // become an action no branch below handles.
-@@ -394,8 +441,16 @@ function readState(file: string): RunState | null {
+@@ -394,8 +472,16 @@ function readState(file: string): RunState | null {
  }
  
  /**
@@ -387,7 +437,7 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..3f52ee02fa97ddcac427d048414b3e10
   *
   * The defect this concern shipped with was a writer and a reader resolving
   * DIFFERENT trees: `sessions:claim` wrote under `process.cwd()` (the operator's
-@@ -410,31 +465,233 @@ function readState(file: string): RunState | null {
+@@ -410,31 +496,233 @@ function readState(file: string): RunState | null {
   * observation rather than a check on it; the falsifiable facts are concrete
   * (AI council 2026-08-19, 2/2 convergent):
   *
@@ -421,11 +471,11 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..3f52ee02fa97ddcac427d048414b3e10
 + *                                         before any resolution, so a reader can
 + *                                         tell "same tree" from "could not
 + *                                         resolve"
-+ *
-+ * ## The degenerate reading, stated so it cannot be mistaken for a negative
   *
 - * `process.cwd()` is deliberately NOT among them. The dispatcher chdirs into
 - * `--project-dir` before the chain runs, so at concern time cwd equals
++ * ## The degenerate reading, stated so it cannot be mistaken for a negative
++ *
 + * Two of the three path relations above are only interpretable on a line whose
 + * git fields are non-empty. Empty means git could not be read from the session's
 + * root at all — a plain temp directory, a broken checkout — and that is an
@@ -634,7 +684,7 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..3f52ee02fa97ddcac427d048414b3e10
  function appendEvent(workspaceRoot: string, record: JsonObject): void {
      try {
          const file = path.join(workspaceRoot, EVENTS_RELPATH);
-@@ -490,17 +747,113 @@ export function main(): number {
+@@ -490,17 +778,140 @@ export function main(): number {
      const claim = resolve_claim(workspaceRoot, sessionId || null);
      if (claim === null) return EXIT_ALLOW;
      const slug = claim.slug;
@@ -730,8 +780,32 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..3f52ee02fa97ddcac427d048414b3e10
 +        // `resolveRoadmap` used to assert the archival reading, and finding 5 was
 +        // right that it conflated the two — so the reading is now carried by the
 +        // state file, which actually knows.
++        // File PRESENCE, not parseability (round 6 finding 5): `readState` returns
++        // null for a state file that exists but is truncated or malformed — which
++        // is exactly the interrupted-write case — so keying the branch on a
++        // successful parse left the very leak it was added to close in place.
++        let stateExists = false;
++        try {
++            stateExists = fs.statSync(stateFile).isFile();
++        } catch {
++            stateExists = false;
++        }
++        if (!stateExists) return EXIT_ALLOW;
 +        const driven = readState(stateFile);
-+        if (driven === null) return EXIT_ALLOW;
++
++        // A HALT STAMP IS NEVER ERASED HERE (round 6 finding 1, high).
++        //
++        // Clearing unconditionally meant one transient read failure of the roadmap
++        // — an unlink-then-write by any tool, a `git checkout`/`stash`/`mv`
++        // mid-run, an EACCES — erased the stamp AND the budget. The next fire then
++        // read no state, started at iteration 0 with a fresh wall clock, and
++        // re-engaged with the full cap: the unbounded loop `RunState.halted` exists
++        // to prevent, restored by the branch meant to close a leak.
++        //
++        // A halted run has already recorded its own end, so there is nothing to
++        // announce and nothing to reclaim. Silence and no write is the whole
++        // correct action.
++        if (driven?.halted !== undefined) return EXIT_ALLOW;
 +        const absenceRoots = provenance(
 +            workspaceRoot,
 +            claim.path,
@@ -746,7 +820,10 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..3f52ee02fa97ddcac427d048414b3e10
 +            event: 'halt-roadmap-absent',
 +            run_id: runId,
 +            roadmap: slug,
-+            iterations: driven.iterations,
++            // `null` when the state file exists but could not be parsed — the
++            // interrupted-write case above. Reported as null rather than as 0,
++            // which would claim a fact the file no longer carries.
++            iterations: driven?.iterations ?? null,
 +            at: new Date().toISOString(),
 +            ...absenceRoots,
 +        });
@@ -758,7 +835,7 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..3f52ee02fa97ddcac427d048414b3e10
          return EXIT_ALLOW;
      }
      if (parseExecutionMode(roadmapText) !== 'autonomous') return EXIT_ALLOW;
-@@ -534,7 +887,47 @@ export function main(): number {
+@@ -534,7 +945,47 @@ export function main(): number {
          return EXIT_ALLOW;
      }
  
@@ -807,15 +884,39 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..3f52ee02fa97ddcac427d048414b3e10
  
      // ── defer to the quality gate ────────────────────────────────────
      if (refusedThisTurn(workspaceRoot, sessionId, turnOrdinal)) {
-@@ -550,7 +943,6 @@ export function main(): number {
+@@ -550,14 +1001,29 @@ export function main(): number {
      }
  
      // ── state + duplicate-fire detection ─────────────────────────────
 -    const stateFile = path.join(workspaceRoot, stateRelPath(runId));
-     const prev = readState(stateFile);
+-    const prev = readState(stateFile);
++    //
++    // A state file recorded against a DIFFERENT roadmap is not this run's state —
++    // round 6 finding 2. The file is keyed on the session id alone and one session
++    // may re-claim, so a halt stamped on roadmap A (never cleared: only `complete`
++    // unlinks) was inherited by a later claim of roadmap B, which then emitted a
++    // halt line naming B without ever engaging and reported A's iteration count
++    // under B's slug. An absent `roadmap` field is trusted rather than discarded:
++    // it means the state predates this field, and dropping a live budget on an
++    // upgrade would be the worse error.
++    const onDisk = readState(stateFile);
++    const prev = onDisk !== null && onDisk.roadmap !== undefined && onDisk.roadmap !== slug
++        ? null
++        : onDisk;
      const state: RunState = prev ?? {
          started_at: new Date().toISOString(),
-@@ -566,11 +958,24 @@ export function main(): number {
+         iterations: 0,
+         last_turn: -1,
+         history: [],
++        roadmap: slug,
+     };
++    // Stamped on an inherited state too, so the field fills in on first contact
++    // rather than staying absent for the life of the run.
++    state.roadmap = slug;
+ 
+     const scan = scanOpenSteps(roadmapText);
+ 
+@@ -566,25 +1032,48 @@ export function main(): number {
      // very stop, and an allow on the re-fire would end the reply the block
      // exists to continue. (An earlier draft allowed here — the smoke run
      // caught it ending the run it had re-engaged one event earlier.)
@@ -841,11 +942,65 @@ index 00c56abab92153551ac63a9b057777b1b6df04fe..3f52ee02fa97ddcac427d048414b3e10
      const action = ladder(state, scan.open, Date.now());
  
      if (action !== 'engage') {
+-        appendEvent(workspaceRoot, {
+-            event: action,
+-            run_id: runId,
+-            roadmap: slug,
+-            turn: turnOrdinal,
+-            iterations: state.iterations,
+-            open: scan.open,
+-            blocked: scan.blocked,
+-            at: new Date().toISOString(),
+-            ...roots,
+-        });
++        // A run that is ALREADY stamped emits nothing further — round 6 finding 6.
++        // Once `halted` is set the state file is immortal for the session (only
++        // `complete` unlinks it), so every later stop fire re-entered this branch
++        // and appended another line with the same `run_id` and `iterations`: an
++        // unbounded number of duplicate halt records in the ledger the acceptance
++        // criteria's counts are derived from. The FIRST halt is the event; the rest
++        // are the same fact re-stated.
++        const alreadyStamped = prev?.halted !== undefined;
++        if (!alreadyStamped) {
++            appendEvent(workspaceRoot, {
++                event: action,
++                run_id: runId,
++                roadmap: slug,
++                turn: turnOrdinal,
++                iterations: state.iterations,
++                open: scan.open,
++                blocked: scan.blocked,
++                at: new Date().toISOString(),
++                ...roots,
++            });
++        }
+         if (action === 'complete') {
+             // Only a COMPLETION clears the state, so a later run on the same
+             // roadmap (post-merge follow-up, re-claim) starts a fresh budget.
 diff --git a/src/scripts/session_register_hook.ts b/src/scripts/session_register_hook.ts
-index d99af09c3b8326cb6b3b7d6a42a74a61a69ba311..a18fbfd84a3182b7787c2d92300932409f868e04 100644
+index d99af09c3b8326cb6b3b7d6a42a74a61a69ba311..6545333e28c03036c0f8f8422fcb4b6bebfb543e 100644
 --- a/src/scripts/session_register_hook.ts
 +++ b/src/scripts/session_register_hook.ts
-@@ -409,29 +409,98 @@ export function claim_is_stale(
+@@ -354,8 +354,17 @@ export function claim_is_stale(
+     // roadmaps directory" — and it is the same check for a traversal, an absolute
+     // path, and an encoding nobody enumerated. A slug that fails it is reported
+     // stale rather than resolved, so no read happens at all.
++    // Structural, not textual. Round 6 finding 3: the previous form ANDed a
++    // `!rel.includes('..')` substring test onto the prefix check, and round 5
++    // finding 10 removed exactly that test from `resolveRoadmap` — one-sided. The
++    // two functions then disagreed about one claim string in the opposite
++    // direction: for a legal slug like `road-to-a..b` the register rendered a live
++    // claim as stale (dropping it from the collision set and disabling the
++    // duplicate-work warning) while the hook resolved it and engaged. `path.dirname`
++    // asks the only question that matters — is the result a file directly inside the
++    // roadmaps directory — and is the same check both sides now make.
+     const rel = path.normalize(path.join('agents', 'roadmaps', `${base}.md`));
+-    const inside = rel.startsWith(`agents${path.sep}roadmaps${path.sep}`) && !rel.includes('..');
++    const inside = path.dirname(rel) === path.join('agents', 'roadmaps');
+     if (!inside || path.isAbsolute(base)) {
+         return true; // not a slug this repo can hold; never render it as live work
+     }
+@@ -409,29 +418,98 @@ export function claim_is_stale(
   * conditions, because a wrong anchor is worse than the fallback:
   *
   * 1. it is an existing directory;
@@ -956,7 +1111,7 @@ index d99af09c3b8326cb6b3b7d6a42a74a61a69ba311..a18fbfd84a3182b7787c2d9230093240
  }
  
  /**
-@@ -619,8 +688,19 @@ export function foreign_sessions_block(
+@@ -619,8 +697,19 @@ export function foreign_sessions_block(
      // `session_checkout`. Before that every record claimed the main checkout, so
      // every collision looked like the dangerous one.
      if (branch_hit !== null) {
@@ -979,7 +1134,7 @@ index d99af09c3b8326cb6b3b7d6a42a74a61a69ba311..a18fbfd84a3182b7787c2d9230093240
              parts.push(
                  '',
 diff --git a/tests/hooks/run_continuation_dispatch.test.ts b/tests/hooks/run_continuation_dispatch.test.ts
-index 4837ca02e528a2ab55336c30368f36c29324712a..d2d470309b1787db3ab1bec67ffa1e37ed1472ef 100644
+index 4837ca02e528a2ab55336c30368f36c29324712a..82a5dbf90ec4f5ddbbfd8b0d53d58499723474c6 100644
 --- a/tests/hooks/run_continuation_dispatch.test.ts
 +++ b/tests/hooks/run_continuation_dispatch.test.ts
 @@ -40,6 +40,7 @@ import { parse as parseYaml } from 'yaml';
@@ -1202,7 +1357,7 @@ index 4837ca02e528a2ab55336c30368f36c29324712a..d2d470309b1787db3ab1bec67ffa1e37
          const gitDir = ev['git_dir'] as string;
          const commonDir = ev['git_common_dir'] as string;
          expect(gitDir).not.toBe('');
-@@ -326,6 +439,384 @@ describe('run-continuation — driven through the live dispatcher', () => {
+@@ -326,6 +439,483 @@ describe('run-continuation — driven through the live dispatcher', () => {
          expect(claimPath.startsWith(`${real(worktree)}${path.sep}`)).toBe(false);
      });
  
@@ -1584,10 +1739,109 @@ index 4837ca02e528a2ab55336c30368f36c29324712a..d2d470309b1787db3ab1bec67ffa1e37
 +        expect(engaged[0]?.['roadmap']).toBe(oddSlug);
 +    });
 +
++    it('never erases a halt stamp when the roadmap goes absent', () => {
++        // Round 6 finding 1, high. The absent rung cleared the state file
++        // unconditionally, so one transient read failure of the roadmap — an
++        // unlink-then-write by any tool, a git checkout or stash mid-run, an EACCES
++        // — erased the halt stamp AND the budget. The next fire read no state,
++        // started at iteration 0 with a fresh wall clock, and re-engaged with the
++        // full 25-iteration cap: the unbounded loop `RunState.halted` exists to
++        // prevent, restored by the branch meant to close a leak.
++        const { main, worktree, sub } = writeNestedWorktreePair();
++        const stateFile = path.join(main, stateRelPath(deriveSessionKey(SESSION)));
++        fs.mkdirSync(path.dirname(stateFile), { recursive: true });
++        fs.writeFileSync(
++            stateFile,
++            JSON.stringify({
++                started_at: '2026-08-19T00:00:00.000Z',
++                iterations: 25,
++                last_turn: 9,
++                history: [1, 1, 1],
++                roadmap: SLUG,
++                halted: 'halt-max-iterations',
++            }),
++            'utf-8',
++        );
++        // The roadmap disappears from the session tree — archived, or mid-rewrite.
++        fs.rmSync(path.join(worktree, 'agents', 'roadmaps', `${SLUG}.md`));
++
++        const res = dispatchStop(main, writeTranscript(3), sub);
++        expect(res.code).toBe(0);
++        // No line: a halted run has already recorded its own end.
++        expect(events(main).length).toBe(0);
++        // And the stamp survives, which is the half that bounds the loop.
++        expect(fs.existsSync(stateFile)).toBe(true);
++        const kept = JSON.parse(fs.readFileSync(stateFile, 'utf-8')) as Record<string, unknown>;
++        expect(kept['halted']).toBe('halt-max-iterations');
++        expect(kept['iterations']).toBe(25);
++    });
++
++    it('does not inherit a halt stamped on a DIFFERENT roadmap', () => {
++        // Round 6 finding 2: the state is keyed on the session id alone and one
++        // session may re-claim. A halt stamped on roadmap A is never cleared — only
++        // `complete` unlinks — so a later legitimate claim of roadmap B inherited
++        // it, emitted a halt line naming B without ever engaging, and reported A's
++        // iteration count under B's slug.
++        const root = writeWorkspace();
++        const stateFile = path.join(root, stateRelPath(deriveSessionKey(SESSION)));
++        fs.mkdirSync(path.dirname(stateFile), { recursive: true });
++        fs.writeFileSync(
++            stateFile,
++            JSON.stringify({
++                started_at: '2026-08-19T00:00:00.000Z',
++                iterations: 25,
++                last_turn: 9,
++                history: [7, 7, 7],
++                roadmap: 'road-to-some-other-thing',
++                halted: 'halt-max-iterations',
++            }),
++            'utf-8',
++        );
++
++        const res = dispatchStop(root, writeTranscript(3));
++        expect(res.code).toBe(2);
++        const log = events(root);
++        expect(log.filter((e) => e['event'] === 'engage').length).toBe(1);
++        expect(log.filter((e) => String(e['event']).startsWith('halt-')).length).toBe(0);
++        // A fresh budget, not the other roadmap's spent one.
++        const now = JSON.parse(fs.readFileSync(stateFile, 'utf-8')) as Record<string, unknown>;
++        expect(now['iterations']).toBe(1);
++        expect(now['roadmap']).toBe(SLUG);
++    });
++
++    it('writes ONE halt line, not one per subsequent stop fire', () => {
++        // Round 6 finding 6: once `halted` is stamped the state file is immortal for
++        // the session, so every later stop fire re-entered the non-engage branch and
++        // appended another record with the same run_id and iterations — an unbounded
++        // number of duplicates in the ledger the acceptance criteria count from.
++        const root = writeWorkspace();
++        const stateFile = path.join(root, stateRelPath(deriveSessionKey(SESSION)));
++        fs.mkdirSync(path.dirname(stateFile), { recursive: true });
++        fs.writeFileSync(
++            stateFile,
++            JSON.stringify({
++                started_at: '2026-08-19T00:00:00.000Z',
++                iterations: 25,
++                last_turn: 9,
++                history: [1],
++                roadmap: SLUG,
++            }),
++            'utf-8',
++        );
++
++        // First fire crosses the cap and stamps.
++        dispatchStop(root, writeTranscript(3));
++        expect(events(root).filter((e) => e['event'] === 'halt-max-iterations').length).toBe(1);
++        // Two more fires say nothing new.
++        dispatchStop(root, writeTranscript(4));
++        dispatchStop(root, writeTranscript(5));
++        expect(events(root).filter((e) => e['event'] === 'halt-max-iterations').length).toBe(1);
++    });
++
      it('records the provenance on a non-engage event too — the defer branch', () => {
          const root = writeWorkspace();
          const transcript = writeTranscript(3);
-@@ -350,7 +841,18 @@ describe('run-continuation — driven through the live dispatcher', () => {
+@@ -350,7 +940,18 @@ describe('run-continuation — driven through the live dispatcher', () => {
          expect(fs.realpathSync(deferred[0]?.['workspace_root'] as string)).toBe(
              fs.realpathSync(root),
          );
@@ -1608,7 +1862,7 @@ index 4837ca02e528a2ab55336c30368f36c29324712a..d2d470309b1787db3ab1bec67ffa1e37
          // fields are empty, and that is the honest degenerate reading rather
          // than a gap. Pinned so a future change cannot start emitting a guessed
 diff --git a/tests/scripts/session_register.test.ts b/tests/scripts/session_register.test.ts
-index eb81a88a215e94fa8ec71d4fca7984e4bc9d27de..589873a0b882af0770b43298e606bee85207ac95 100644
+index eb81a88a215e94fa8ec71d4fca7984e4bc9d27de..6397b4a3371de861b900253ac821fcd8976b6c71 100644
 --- a/tests/scripts/session_register.test.ts
 +++ b/tests/scripts/session_register.test.ts
 @@ -59,8 +59,27 @@ import {
@@ -1640,7 +1894,35 @@ index eb81a88a215e94fa8ec71d4fca7984e4bc9d27de..589873a0b882af0770b43298e606bee8
  }
  
  /** A repo with a linked worktree — the shape the whole design rests on. */
-@@ -834,19 +853,47 @@ describe('the record describes THIS session checkout, not the chdir target', ()
+@@ -505,6 +524,27 @@ describe('a stale slug is not a claim', () => {
+         expect(claim_is_stale(main, 'road-to-open.md')).toBe(false);
+     });
+ 
++    it('a legal slug containing a double dot is live, not stale', () => {
++        // Round 6 finding 3. Round 5 finding 10 replaced the `..` substring test with
++        // a structural check in `resolveRoadmap` and NOT here, so the two functions
++        // disagreed about one claim string in the opposite direction: this side
++        // called a live claim stale — dropping it from the collision set and
++        // disabling the duplicate-work warning — while the hook resolved it and
++        // engaged on it. Round 5's own new case pinned that green because it only
++        // exercised the hook side, which is the argument for pinning both.
++        const { main } = make_repo();
++        fs.mkdirSync(path.join(main, 'agents', 'roadmaps'), { recursive: true });
++        fs.writeFileSync(path.join(main, 'agents', 'roadmaps', 'road-to-a..b.md'), '#');
++        expect(claim_is_stale(main, 'road-to-a..b')).toBe(false);
++    });
++
++    it('a slug that would escape the roadmaps directory still reads as stale', () => {
++        // The direction the structural check must NOT loosen.
++        const { main } = make_repo();
++        expect(claim_is_stale(main, '../../etc/passwd')).toBe(true);
++        expect(claim_is_stale(main, '/etc/passwd')).toBe(true);
++    });
++
+     it('null is not stale — absence is a state, not a defect', () => {
+         const { main } = make_repo();
+         expect(claim_is_stale(main, null)).toBe(false);
+@@ -834,19 +874,47 @@ describe('the record describes THIS session checkout, not the chdir target', ()
  
      it('falls back to workspace_root when the cwd is absent, empty, or not a directory', () => {
          const { main } = make_repo();
@@ -1696,7 +1978,7 @@ index eb81a88a215e94fa8ec71d4fca7984e4bc9d27de..589873a0b882af0770b43298e606bee8
      });
  
      it('refuses a cwd in a DIFFERENT repository — the register is shared per repo', () => {
-@@ -854,7 +901,7 @@ describe('the record describes THIS session checkout, not the chdir target', ()
+@@ -854,7 +922,7 @@ describe('the record describes THIS session checkout, not the chdir target', ()
          const other = path.join(tmp, 'other-repo');
          fs.mkdirSync(other, { recursive: true });
          git(other, 'init', '-q', '-b', 'main');
