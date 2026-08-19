@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 34 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **52** open blockers, **23** need you → `agent-config gates`
+> 33 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **51** open blockers, **23** need you → `agent-config gates`
 
 ## Overall
 
-**319 / 560 steps done · 57%**
+**317 / 557 steps done · 57%**
 
 ```text
 ███████████████████████░░░░░░░░░░░░░░░░░   57%
@@ -37,19 +37,18 @@
 | 19 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
 | 20 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | 0 | █████████░ 94% |
 | 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
-| 22 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 1 | 2 | 1 | 0 | [1](#blockers-road-to-run-continuation-observation) | ███████░░░ 67% |
-| 23 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 24 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 21 | 4 | 12 | 5 | 0 | [4](#blockers-road-to-single-delivery) | ████████░░ 75% |
-| 25 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
-| 26 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 27 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
-| 28 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
-| 29 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
-| 30 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
-| 31 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 32 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 33 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 34 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+| 22 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 23 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 21 | 4 | 12 | 5 | 0 | [4](#blockers-road-to-single-delivery) | ████████░░ 75% |
+| 24 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+| 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
+| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
+| 28 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
+| 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
+| 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 31 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 32 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 33 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 
 ---
 
@@ -756,33 +755,6 @@ _1 blocker resolved._
     human-judged production measurement, so a real claim needs human judging at
     adequate N.
   - **Resolved when:** thresholds are pre-registered here and the run is authorized, or F2.1 is cancelled and the preset ships documentation-only.
-
-### [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md)
-
-**Road to a run-continuation engagement anybody can point at** — 2 / 3 done (67%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Observe one engagement | 🟡 in progress | 1 | 2 | 1 | 0 | 67% |
-
-<a id="blockers-road-to-run-continuation-observation"></a>
-**Blockers**
-
-- **three-phase-contract-run** (owner: any autonomous `process-full` run, no dedicated effort) — blocks step 0.1 only. Step 0.0 is closed on its own evidence and does not wait for this.
-  - **Recommendation:** **do not schedule this.** Wait for the first qualifying run and close 0.1 off it, because the criterion is about what the mechanism does during ordinary work — manufacturing a three-phase run to satisfy it reproduces the ecological-validity problem the council already flagged against the self-referential observation, one size larger. The estate has several three-phase autonomous candidates already; the next one to be worked discharges this for free.
-  - **If you do nothing:** step 0.1 stays open and this roadmap stays in the active estate at 3 of 4 items. Nothing regresses and no evidence decays — the ledger line from 0.0 is durable. The cost is one open roadmap carrying one criterion, which is the shape its own risk 3 accepts by design.
-  - **What to do:**
-    claim a roadmap that (a) carries `execution.mode: autonomous`
-    in its frontmatter, (b) has **three or more `## Phase` sections with open
-    steps**, and (c) is not this roadmap — then run it to completion from a
-    worktree and open its PR. Check candidates with
-    `./agent-config roadmap:progress` for the phase count and
-    `grep -A2 '^execution:' agents/roadmaps/<slug>.md` for the mode; a roadmap in
-    `phase-checkpoints` mode makes the concern a no-op and produces no event at
-    all. Then read the run back with
-    `./scripts-run src/scripts/interruption_report --root <main-checkout>` and
-    confirm `asks=0 handbacks=0` alongside a non-zero `re=` on that run id.
-  - **Resolved when:** `interruption_report` shows one run id with `re=` non-zero, `asks=0`, `handbacks=0`, whose claimed roadmap had ≥ 3 phases and reached a PR — and that run id is recorded at step 0.1.
 
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
 

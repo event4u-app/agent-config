@@ -1,4 +1,4 @@
-# R2 completion review — run-continuation-provenance
+# R2 completion review — run-continuation-round9
 
 You are a FRESH reviewer subagent. You have no implementation context and
 you must not acquire any (blind-review pattern, plan-review-gates.md §5).
@@ -21,29 +21,25 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head d8a4cdcaaffc5be7fa095f69963de226d68a4925, review
-  artefacts excluded), scope hash `3fbe0a1736aaa05d5e35ff433b98faa8ea052fa9cc6c2a1d2f40f95fbb1ec655`
+- diff: `diff.patch` — the review scope (branch head 42e8c056aceb9953e45d6e572e8d28f43f0a8a6c, review
+  artefacts excluded), scope hash `255299709d3bc8ae3fefa1d091726e0dcc0c05ccde9587f33a3b3dae2e6bffc1`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
 
 - agents/roadmaps-progress.md
+- agents/roadmaps/later/road-to-run-continuation-observation.md
 - agents/roadmaps/road-to-run-continuation-observation.md
-- dist/agent-src/commands/roadmap/process-full.md
 - dist/agent-src/contexts/execution/roadmap-process-loop.md
-- docs/decisions/ADR-235-process-full-blocked-terminal-outcome.md
-- docs/decisions/INDEX.md
 - src/agent-src/contexts/execution/roadmap-process-loop.md
-- src/domains/product-basic/roadmap/process-full/command.md
+- src/config/estate-count-budget.json
 - src/scripts/hooks/run_continuation_hook.ts
-- src/scripts/session_register_hook.ts
 - tests/hooks/run_continuation_dispatch.test.ts
 - tests/scripts/hooks/run_continuation.test.ts
-- tests/scripts/session_register.test.ts
 
 ## Output format (contract §2.2)
 
-Fill the findings table in `run-continuation-provenance.findings.md`:
+Fill the findings table in `run-continuation-round9.findings.md`:
 
 ```markdown
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
@@ -61,5 +57,5 @@ Fill the findings table in `run-continuation-provenance.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 3fbe0a1736aaa05d5e35ff433b98faa8ea052fa9cc6c2a1d2f40f95fbb1ec655, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 255299709d3bc8ae3fefa1d091726e0dcc0c05ccde9587f33a3b3dae2e6bffc1, reviewed <YYYY-MM-DD>
 ```

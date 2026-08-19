@@ -939,6 +939,213 @@ describe('run-continuation — driven through the live dispatcher', () => {
         expect(fs.existsSync(keyed)).toBe(true);
     });
 
+    it('reports blocked — not complete — when the only open step is blocked, ONCE', () => {
+        // Round 8 finding 3. `scanOpenSteps` excludes a `blocked-by:` step from the
+        // open count, so this roadmap reads `open: 0, blocked: 1` — and the ladder
+        // returned `complete` for it, reporting a completion the run never reached
+        // and clearing the budget with it. ADR-235 defines exactly this state as
+        // its own terminal outcome.
+        const root = writeWorkspace();
+        fs.writeFileSync(
+            path.join(root, 'agents', 'roadmaps', `${SLUG}.md`),
+            [
+                '---',
+                'complexity: structural',
+                'execution:',
+                '  mode: autonomous',
+                '---',
+                '',
+                '# Fixture',
+                '',
+                '## Phase 0 — nothing runnable left',
+                '',
+                '- [x] **0.0** done',
+                '- [ ] **0.1** gated <!-- blocked-by: some-human-gate -->',
+                '',
+            ].join('\n'),
+            'utf-8',
+        );
+
+        dispatchStop(root, writeTranscript(3));
+        dispatchStop(root, writeTranscript(4));
+
+        const blocked = events(root).filter((e) => e['event'] === 'blocked');
+        expect(blocked.length).toBe(1);
+        expect(events(root).filter((e) => e['event'] === 'complete').length).toBe(0);
+        expect(blocked[0]?.['blocked']).toBe(1);
+        expect(blocked[0]?.['open']).toBe(0);
+        // The header declares the provenance mandatory for EVERY event.
+        expect(typeof blocked[0]?.['workspace_root']).toBe('string');
+        expect(typeof blocked[0]?.['session_root']).toBe('string');
+        expect(typeof blocked[0]?.['roadmap_path']).toBe('string');
+        // Terminal AND cleared, like `complete`. Round 9 finding 1: keeping the
+        // state here inherited a spent budget on the next claim, because `runId` is
+        // a hash of the SESSION and not of the run — so the second fire above,
+        // which stayed silent, must have stayed silent on the LEDGER rather than on
+        // a field in a file that no longer exists.
+        const keyed = path.join(root, stateRelPath(deriveSessionKey(SESSION), SLUG));
+        expect(fs.existsSync(keyed)).toBe(false);
+    });
+
+    it('a re-claim after blocked starts a fresh budget, not the spent one', () => {
+        // Round 9 finding 1, the consequence rather than the mechanism: `runId` is
+        // `deriveSessionKey(sessionId)`, so this same session re-claiming this same
+        // roadmap reuses the same keyed state path. With the state kept across
+        // `blocked`, a run whose blocker was later cleared resumed on the previous
+        // run's `iterations` — and since the ladder tests `blocked` BEFORE the
+        // iteration cap, a spent budget meant `halt-max-iterations` without ever
+        // engaging.
+        const root = writeWorkspace();
+        const blockedBody = [
+            '---',
+            'complexity: structural',
+            'execution:',
+            '  mode: autonomous',
+            '---',
+            '',
+            '# Fixture',
+            '',
+            '## Phase 0 — nothing runnable left',
+            '',
+            '- [ ] **0.1** gated <!-- blocked-by: some-human-gate -->',
+            '',
+        ].join('\n');
+        const roadmap = path.join(root, 'agents', 'roadmaps', `${SLUG}.md`);
+        fs.writeFileSync(roadmap, blockedBody, 'utf-8');
+
+        // Spend a budget first, then let the roadmap go blocked.
+        const stateFile = path.join(root, stateRelPath(deriveSessionKey(SESSION), SLUG));
+        fs.mkdirSync(path.dirname(stateFile), { recursive: true });
+        fs.writeFileSync(
+            stateFile,
+            JSON.stringify({
+                started_at: new Date().toISOString(),
+                iterations: 24,
+                last_turn: 1,
+                history: [1],
+                roadmap: SLUG,
+            }),
+            'utf-8',
+        );
+
+        dispatchStop(root, writeTranscript(3));
+        expect(events(root).filter((e) => e['event'] === 'blocked').length).toBe(1);
+
+        // The blocker clears: the step becomes runnable again.
+        fs.writeFileSync(roadmap, fixtureRoadmap(), 'utf-8');
+        dispatchStop(root, writeTranscript(4));
+
+        const after = events(root);
+        expect(after.filter((e) => e['event'] === 'halt-max-iterations').length).toBe(0);
+        const engaged = after.filter((e) => e['event'] === 'engage');
+        expect(engaged.length).toBe(1);
+        // Iteration 1, not 25: the budget was reclaimed by the blocked clear.
+        expect(engaged[0]?.['iteration']).toBe(1);
+    });
+
+    it('clears the LEGACY state file too, so a migrated run cannot resume a spent budget', () => {
+        // Round 8 finding 4: `readRunState` adopts the legacy per-session file, and
+        // both clear sites removed only the keyed one — so on a migrated run every
+        // clear was a no-op and the next read adopted the same spent budget again.
+        const root = writeWorkspace();
+        fs.writeFileSync(
+            path.join(root, 'agents', 'roadmaps', `${SLUG}.md`),
+            [
+                '---',
+                'complexity: structural',
+                'execution:',
+                '  mode: autonomous',
+                '---',
+                '',
+                '# Fixture',
+                '',
+                '## Phase 0 — finished',
+                '',
+                '- [x] **0.0** done',
+                '',
+            ].join('\n'),
+            'utf-8',
+        );
+        const legacy = path.join(root, legacyStateRelPath(deriveSessionKey(SESSION)));
+        fs.mkdirSync(path.dirname(legacy), { recursive: true });
+        fs.writeFileSync(
+            legacy,
+            JSON.stringify({
+                started_at: new Date().toISOString(),
+                iterations: 4,
+                last_turn: 1,
+                history: [1],
+            }),
+            'utf-8',
+        );
+
+        dispatchStop(root, writeTranscript(3));
+
+        expect(events(root).filter((e) => e['event'] === 'complete').length).toBe(1);
+        expect(fs.existsSync(legacy)).toBe(false);
+    });
+
+    it('leaves a legacy state file alone when this read did not adopt it', () => {
+        // Round 9 finding 2: the first version of `clearRunState` reused the legacy
+        // ADOPTION predicate as a DELETION predicate. A pre-round-7 legacy file
+        // carries no `roadmap` field, so it is adoptable by every slug — right for
+        // adopting and catastrophic for deleting: one slug's `complete` would take
+        // another slug's live budget or halt stamp with it. Here a keyed file exists,
+        // so the legacy file is NOT adopted, and the clear must not touch it.
+        const root = writeWorkspace();
+        fs.writeFileSync(
+            path.join(root, 'agents', 'roadmaps', `${SLUG}.md`),
+            [
+                '---',
+                'complexity: structural',
+                'execution:',
+                '  mode: autonomous',
+                '---',
+                '',
+                '# Fixture',
+                '',
+                '## Phase 0 — finished',
+                '',
+                '- [x] **0.0** done',
+                '',
+            ].join('\n'),
+            'utf-8',
+        );
+        const keyed = path.join(root, stateRelPath(deriveSessionKey(SESSION), SLUG));
+        fs.mkdirSync(path.dirname(keyed), { recursive: true });
+        fs.writeFileSync(
+            keyed,
+            JSON.stringify({
+                started_at: new Date().toISOString(),
+                iterations: 2,
+                last_turn: 1,
+                history: [1],
+                roadmap: SLUG,
+            }),
+            'utf-8',
+        );
+        // Slug-less on purpose: this is the shape the adoption predicate accepts for
+        // every slug, and therefore the one a deletion predicate must refuse.
+        const legacy = path.join(root, legacyStateRelPath(deriveSessionKey(SESSION)));
+        fs.mkdirSync(path.dirname(legacy), { recursive: true });
+        fs.writeFileSync(
+            legacy,
+            JSON.stringify({
+                started_at: new Date().toISOString(),
+                iterations: 9,
+                last_turn: 1,
+                history: [1],
+            }),
+            'utf-8',
+        );
+
+        dispatchStop(root, writeTranscript(3));
+
+        expect(events(root).filter((e) => e['event'] === 'complete').length).toBe(1);
+        expect(fs.existsSync(keyed)).toBe(false);
+        expect(fs.existsSync(legacy)).toBe(true);
+    });
+
     it('writes ONE halt line, not one per subsequent stop fire', () => {
         // Round 6 finding 6: once `halted` is stamped the state file is immortal for
         // the session, so every later stop fire re-entered the non-engage branch and

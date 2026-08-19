@@ -16,8 +16,8 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 34,
-    "later_roadmaps": 49,
+    "active_roadmaps": 33,
+    "later_roadmaps": 50,
     "open_blockers": 74
   },
   "baseline_history": [
@@ -146,6 +146,13 @@
       "later_roadmaps": 49,
       "open_blockers": 74,
       "why": "RESTORED to 74, and this entry records a WRONG WALK-DOWN rather than growth. The entry directly above walked open_blockers 74 -> 73 on the grounds that two blockers resolved and one opened. Two did resolve. But Phase 2 had halted a SECOND time in the same change - on an undecidable current-global-layer predicate - and that halt was written as PROSE in step 2.0 instead of as a blocker. So the number of open DECISIONS never fell, only the number of recorded ones did, and the ratchet was satisfied by not writing something down. R2 review caught it: after the flip, no open blocker blocked Phase 2, the dashboard stopped explaining the halt, and lint_roadmap_blockers decidability fields never applied to the live decision. partition-current-layer-undecidable now carries it with three enumerated options and a recommendation, and 74 is the measurement again. The lesson is the one this file keeps recording from the other direction: a walk-down is only honest if the work it claims to have removed is actually gone."
+    },
+    {
+      "at": "2026-08-19",
+      "active_roadmaps": 33,
+      "later_roadmaps": 50,
+      "open_blockers": 74,
+      "why": "RE-MEASURED AT MERGE, not carried over from either side, because both sides moved -- the same reason the row above states, and the second time in one day that this file has had to say it. This branch parks road-to-run-continuation-observation to later/ (-1 active, +1 later); the base it merged had itself moved to 34/49/74. Carrying this branch's earlier 32/50/70 forward would have described neither tree. open_blockers: 74 is the base's number, untouched, and that it is untouched is the check that this is a park and not a burial: the metric spans active AND later/ precisely so parking cannot print a free tightening over a blocker nobody resolved, and three-phase-contract-run is still open and still counted. Parked because every open item is gated on an external trigger this estate cannot supply: step 0.1 needs a process-full run over a roadmap carrying execution.mode: autonomous with open steps in three or more phases, and measured 2026-08-19 exactly three active roadmaps carried that mode while neither of the other two had open steps in three phases. process-full terminated on this roadmap as blocked-preflight, which is the mechanism agreeing with the disposition. The number walks back the moment it is un-parked. The unreconciled -1 this branch's earlier row recorded (commit 7d5114dbd walked open_blockers 71 -> 70 with no history row) is left where it is: the base has since re-measured to 74, so that gap is now historical rather than live, and inventing a reconstruction here would be a second unmeasured row."
     }
   ],
   "target": {

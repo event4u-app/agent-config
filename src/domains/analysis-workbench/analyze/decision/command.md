@@ -93,6 +93,13 @@ suggest deferring or strengthening evidence before proposing.
 ### Rules
 
 - Do NOT commit, push, or open a PR.
+- Do NOT report an ADR as still binding without evaluating it first —
+  `./scripts-run src/scripts/adr_cite_check <ADR-NNN>` resolves status,
+  `review_trigger` state, amendments, successors, and back-references in one
+  call. A `superseded` / `deprecated` ADR is not a live decision
+  to audit, and an amended one is not the text its body's top half claims.
+  (`rejected` is NOT in that set — on an ADR it records a rejected *proposal*,
+  so the rejection is the live decision.)
 - Do NOT auto-promote — `/memory propose` is the intake.
 - Do NOT re-litigate a decision confirmed still valid — acknowledge it,
   note the validation date, stop.

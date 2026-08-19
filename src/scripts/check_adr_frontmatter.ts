@@ -51,6 +51,92 @@ export const REVIEW_TRIGGER_SINCE = '2026-07-25';
 /** Fields every ADR must carry — the shape that already exists in practice. */
 const REQUIRED = ['adr', 'status', 'date', 'decision'] as const;
 
+/**
+ * Reopen-authority vocabulary (`adr-layout.md` § Reopen authority).
+ *
+ * Both fields are OPTIONAL and stay optional. An absent `reopen_policy`
+ * resolves to `unclassified` at the reader, never to `owner`: with 146 accepted
+ * ADRs a fail-closed default would encode the existing blockage into the new
+ * schema, which is the one thing both council seats (2026-08-19) rejected in
+ * the same words. This validator therefore checks the VALUE when present and
+ * never requires the KEY.
+ */
+const ALLOWED_REOPEN_POLICY = new Set(['directional', 'owner', 'unclassified']);
+
+const ALLOWED_PROTECTED_DIMENSIONS = new Set([
+    'purpose',
+    'security_floor',
+    'privacy_floor',
+    'external_commitment',
+    'governance',
+    'none',
+]);
+
+/** Split an inline `[a, b]` list or a folded multi-value string into members. */
+export function split_dimensions(raw: string): string[] {
+    return raw
+        .replace(/^\[/, '')
+        .replace(/\]$/, '')
+        .split(/[,\s]+/)
+        .map((s) =>
+            s
+                .trim()
+                .replace(/^-\s*/, '')
+                .replace(/^["'](.*)["']$/, '$1'),
+        )
+        .filter((s) => s !== '');
+}
+
+/**
+ * Validate the two optional reopen-authority fields — value only, never
+ * presence. A wrong enum is a real error (it silently mis-routes authority);
+ * an absent field is the documented default and not a finding.
+ */
+export function check_reopen_authority(
+    rel: string,
+    fm: Record<string, string>,
+    findings: AdrFinding[],
+): void {
+    const policy = fm['reopen_policy'];
+    if (policy !== undefined && policy !== '' && !ALLOWED_REOPEN_POLICY.has(policy)) {
+        findings.push({
+            file: rel,
+            level: 'error',
+            message:
+                `\`reopen_policy\` \`${policy}\` is not one of: ` +
+                `${[...ALLOWED_REOPEN_POLICY].sort().join(', ')} (absent = unclassified)`,
+        });
+    }
+
+    const dims = fm['protected_dimensions'];
+    if (dims !== undefined && dims !== '') {
+        for (const d of split_dimensions(dims)) {
+            if (!ALLOWED_PROTECTED_DIMENSIONS.has(d)) {
+                findings.push({
+                    file: rel,
+                    level: 'error',
+                    message:
+                        `\`protected_dimensions\` member \`${d}\` is not one of: ` +
+                        `${[...ALLOWED_PROTECTED_DIMENSIONS].sort().join(', ')}`,
+                });
+            }
+        }
+    }
+
+    // `owner` without a named dimension is the frozen-over-classification shape
+    // the contract warns about: it reserves every future transition, including
+    // the ones that only strengthen the decision, and records no reason.
+    if (policy === 'owner' && (dims === undefined || dims === '')) {
+        findings.push({
+            file: rel,
+            level: 'warn',
+            message:
+                '`reopen_policy: owner` without `protected_dimensions` — name the reserved ' +
+                'interest, or the reservation cannot be checked against a proposed transition',
+        });
+    }
+}
+
 const ALLOWED_STATUS = new Set([
     'accepted',
     'proposed',
@@ -141,6 +227,98 @@ export function check_one(rel: string, text: string): AdrFinding[] {
             message: `\`review_trigger\` is a cadence, not a condition: "${trigger}". A calendar review is ignored; an event fires.`,
         });
     }
+    check_reopen_authority(rel, fm, findings);
+    check_amendment_shape(rel, fm, findings);
+    return findings;
+}
+
+/** `ADR-035`, `035`, `35` → `35`. Returns null when nothing resolves. */
+export function adr_number(raw: string): string | null {
+    const m = /(\d{1,4})/.exec(raw.trim());
+    return m?.[1] === undefined ? null : String(Number(m[1]));
+}
+
+/**
+ * Validate `amends:` / `amended_by:` shape. The reciprocal half is checked in
+ * `check_amendment_links` (it needs the whole corpus); this one only rejects a
+ * value that is neither the em-dash placeholder nor an ADR reference, so a
+ * typo'd link is caught before it becomes an invisible one-sided amendment.
+ */
+export function check_amendment_shape(
+    rel: string,
+    fm: Record<string, string>,
+    findings: AdrFinding[],
+): void {
+    for (const key of ['amends', 'amended_by'] as const) {
+        const v = fm[key];
+        if (v === undefined || v === '' || v === '—') continue;
+        for (const part of v.split(',')) {
+            if (adr_number(part) === null) {
+                findings.push({
+                    file: rel,
+                    level: 'error',
+                    message: `\`${key}\` value \`${part.trim()}\` names no ADR number`,
+                });
+            }
+        }
+    }
+}
+
+/**
+ * Corpus-level check: every `amends:` has its reciprocal `amended_by:` and vice
+ * versa. This is the half the `supersedes:` / `superseded_by:` pair never had —
+ * and its absence is exactly how ADR-035 kept asserting a rejection ADR-232 had
+ * reopened. A one-sided link is invisible from the side that is stale, which is
+ * the side a reader lands on first.
+ */
+export function check_amendment_links(
+    files: { rel: string; fm: Record<string, string> }[],
+): AdrFinding[] {
+    const findings: AdrFinding[] = [];
+    const byNumber = new Map<string, { rel: string; fm: Record<string, string> }>();
+    for (const f of files) {
+        const n = f.fm['adr'] === undefined ? null : adr_number(f.fm['adr']);
+        if (n !== null) byNumber.set(n, f);
+    }
+
+    const reciprocal = { amends: 'amended_by', amended_by: 'amends' } as const;
+    for (const f of files) {
+        for (const key of ['amends', 'amended_by'] as const) {
+            const v = f.fm[key];
+            if (v === undefined || v === '' || v === '—') continue;
+            const self = f.fm['adr'] === undefined ? null : adr_number(f.fm['adr']);
+            for (const part of v.split(',')) {
+                const target = adr_number(part);
+                if (target === null) continue;
+                const other = byNumber.get(target);
+                if (other === undefined) {
+                    findings.push({
+                        file: f.rel,
+                        level: 'error',
+                        message: `\`${key}: ${part.trim()}\` points at an ADR that does not exist`,
+                    });
+                    continue;
+                }
+                const back = other.fm[reciprocal[key]] ?? '';
+                const names_self =
+                    self !== null &&
+                    back
+                        .split(',')
+                        .map((s) => adr_number(s))
+                        .includes(self);
+                if (!names_self) {
+                    findings.push({
+                        file: f.rel,
+                        level: 'error',
+                        message:
+                            `\`${key}: ${part.trim()}\` is one-sided — ${other.rel} carries no ` +
+                            `reciprocal \`${reciprocal[key]}\`. A one-sided amendment link is ` +
+                            `invisible from the stale side.`,
+                    });
+                }
+            }
+        }
+    }
     return findings;
 }
 
@@ -163,13 +341,20 @@ export function check(dir: string = ADR_DIR, ledger?: GateLedger): AdrFinding[] 
     const candidates = fs.readdirSync(dir).filter((n) => n.endsWith('.md')).sort();
     ledger?.plan(candidates);
 
+    // Collected for the corpus-level reciprocal-amendment check below, which
+    // cannot be decided from one file.
+    const corpus: { rel: string; fm: Record<string, string> }[] = [];
+
     for (const name of candidates) {
         if (!/^ADR-.*\.md$/.test(name)) {
             ledger?.outOfScope(name, 'not_applicable_kind');
             continue;
         }
         const rel = path.relative(REPO_ROOT, path.join(dir, name));
-        const own = check_one(rel, fs.readFileSync(path.join(dir, name), 'utf-8'));
+        const text = fs.readFileSync(path.join(dir, name), 'utf-8');
+        const parsed = parse_frontmatter(text);
+        if (parsed !== null) corpus.push({ rel, fm: parsed });
+        const own = check_one(rel, text);
         findings.push(...own);
 
         const errors = own.filter((f) => f.level === 'error').length;
@@ -179,6 +364,7 @@ export function check(dir: string = ADR_DIR, ledger?: GateLedger): AdrFinding[] 
             ledger?.complete(name);
         }
     }
+    findings.push(...check_amendment_links(corpus));
     return findings;
 }
 

@@ -246,6 +246,17 @@ jobs:
       - name: ADR frontmatter + review_trigger
         run: ./scripts-run src/scripts/check_adr_frontmatter
 
+      # Both of these were reachable only from `task ci`, which no workflow
+      # invokes — so `adr-layout.md` claimed the coverage gate "fails under
+      # task ci" while nothing ran it, and the index could go stale with no
+      # signal. Wired here rather than corrected in prose: both exit 0 on the
+      # current tree, so this costs nothing today and catches the next drift.
+      - name: ADR coverage gate
+        run: ./scripts-run src/scripts/audit_adr_coverage --check
+
+      - name: ADR index freshness
+        run: ./scripts-run src/scripts/adr/regenerate_index --dir docs/decisions --check
+
       - name: Subagent safety-floor freshness
         run: ./scripts-run src/scripts/generate_subagent_floor --check
 

@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 513,
+  "count": 514,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -1136,6 +1136,20 @@
       },
       "verdict": null,
       "status": "ready"
+    },
+    {
+      "slug": "road-to-adr-revisit-governance",
+      "title": "Roadmap: ADR revisit governance — a recorded decision is challengeable, not permanent",
+      "disposition": "completed",
+      "phases": 6,
+      "steps": {
+        "open": 0,
+        "done": 37,
+        "deferred": 0,
+        "cancelled": 0
+      },
+      "verdict": null,
+      "status": null
     },
     {
       "slug": "road-to-adversarial-council-benchmark",

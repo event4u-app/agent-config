@@ -4,7 +4,8 @@ status: accepted
 date: 2026-06-23
 decision: automatic-subagent-orchestration
 supersedes: —
-superseded_by: — (Decision 2 amended by ADR-117: shipped default ask → on)
+superseded_by: —
+amended_by: ADR-117
 phase: auto-subagent-orchestration
 type: structural
 ---
