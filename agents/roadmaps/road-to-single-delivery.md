@@ -273,13 +273,34 @@ project layer contains exactly the package-only set.
 
 ## Phase 3 — Stop the two surfaces that call duplication free
 
-- [ ] **3.1** `scope_guard.sh` reports the cost. `WARN` means "same version,
+- [x] **3.1** `scope_guard.sh` reports the cost. `WARN` means "same version,
       therefore fine" today; it must carry the overlap count per type. The verdict
       vocabulary is unchanged; the caller keeps deciding.
       `verify:` the guard names an overlap count for a two-scope layout.
-- [ ] **3.2** Correct `docs/contracts/install-scopes.md:28`, which states the
+      **DONE 2026-08-19.** `count_overlap()` added; WARN lines gain an **appended**
+      field 6, so every existing field-indexed consumer keeps working — verified
+      that `install.sh` parses with `awk -F'\t' '$1=="WARN" {... $2,$3,$4}'`, which
+      an appended field cannot break. The header contract documents field 6 and
+      replaces the refuted "Same content; duplicate registration but no drift"
+      wording with the measurement. `install.sh`'s own WARN message said "(same
+      version, no drift)" and now states the doubling with the per-tool count.
+      **`-1` is returned rather than `0` when the count cannot be taken** — the
+      copilot probe compares a single file, not a directory, and reporting "0
+      overlap" for "did not look" is how a gate starts reading as coverage.
+      Verified across all four branches by sourcing the script (it guards `main`
+      behind `BASH_SOURCE`): 3 shared of 6 → `3`, two empty dirs → `0`,
+      non-directory → `-1`, missing path → `-1`. And the counter **independently
+      reproduces the census**: 110 rules, 290 skills on the live layers.
+      **Honest gap:** no automated test covers this shell guard — none existed
+      before this change either — so the verification above is manual and
+      reproducible rather than pinned. A regression here would not red CI.
+- [x] **3.2** Correct `docs/contracts/install-scopes.md:28`, which states the
       refuted premise as policy, and point it at the partition invariant.
       `verify:` `./scripts-run src/scripts/check_references` green.
+      **DONE 2026-08-19** — the WARN row now reads "No drift, but **not free**"
+      with the overlap count, and says in as many words what the old wording
+      taught. A paragraph above the installer section carries the measurement and
+      links the census and ADR-235.
 
 **AC-3:** neither the guard nor the contract can be read as saying that
 same-version duplication is free.

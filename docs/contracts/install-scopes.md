@@ -20,12 +20,14 @@ keep-beta-until: 2026-09-04
 
 Installing at **both** scopes simultaneously is the failure mode the canonical-channel contract prevents — the host harness loads both registrations, and any version drift surfaces as duplicate skills with stale frontmatter (the 2026-05-25 bug).
 
+**Drift is not the only cost, and it is not the larger one.** A two-scope install at *identical* versions carries no drift and still doubles what reaches the model, because the host loads both registrations with no dedup. Measured 2026-08-19 on a freshly regenerated maintainer projection: **110 rules and 290 skills delivered twice**, standing rule prose at **203,873 tok against a 110,000 cap (185.3 %)**, roughly 90k of it redundant. Full census, with the projection shape the figures depend on: [`single-delivery-partition-census.md`](../../agents/evidence/analysis/single-delivery-partition-census.md). The invariant this contract works toward — every artefact delivered from exactly one layer — is [ADR-235](../decisions/ADR-235-one-artefact-one-layer.md).
+
 ## The installer enforces this
 
 `scripts/install.sh` runs `scripts/_lib/scope_guard.sh` before any file write:
 
 1. **`OK`** — no install at the other scope. Proceed.
-2. **`WARN`** — install at the other scope, same version. Same content; duplicate registration but no drift. Surface a warning, proceed.
+2. **`WARN`** — install at the other scope, same version. No drift, but **not free**: the duplicate registration is delivered twice, and the warning states the per-type overlap count so the cost is visible at the moment of the decision. Surface it, proceed. (This row used to read "Same content; duplicate registration but no drift", which taught every reader that identical copies cost nothing — refuted by the measurement above.)
 3. **`DRIFT`** — install at the other scope, different version. Block with a numbered-options prompt:
 
 ```
