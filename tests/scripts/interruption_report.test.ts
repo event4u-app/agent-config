@@ -290,3 +290,98 @@ describe('main — the CLI contract', () => {
         expect(rendered).toContain('WALL-CLOCK AXIS');
     });
 });
+
+// ── the autonomy axis (Phase 5.0) ───────────────────────────────────────────
+//
+// Three of the five metrics the roadmap names have a real source; two do not.
+// The distinction between "measured, and it is zero" and "there is no
+// instrument" is the whole reason these cases exist — printing 0 for an
+// unmeasurable axis is the confusion between an absent RECORD and an absent
+// EVENT that this repository has recorded costing a published false finding.
+
+function writeContinuation(lines: readonly object[]): void {
+    const dir = path.join(root, 'agents', 'runtime', 'state');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+        path.join(dir, 'run-continuation.jsonl'),
+        `${lines.map((l) => JSON.stringify(l)).join('\n')}\n`,
+        'utf8',
+    );
+}
+
+describe('buildReport — the autonomy axis', () => {
+    it('counts engage and halt-stall events per run', () => {
+        writeLedger([{ run_id: 'r1', turn: 1, kind: 'none', class: 'none', roadmap: null }]);
+        writeContinuation([
+            { run_id: 'r1', event: 'engage' },
+            { run_id: 'r1', event: 'engage' },
+            { run_id: 'r1', event: 'halt-stall' },
+            { run_id: 'r1', event: 'complete' },
+        ]);
+        const r = buildReport(root, DEFAULT_WINDOW);
+        const run = r.runs.find((x) => x.run_id === 'r1');
+        expect(run?.reengagements).toBe(2);
+        expect(run?.stall_halts).toBe(1);
+    });
+
+    it('the stall figure is a RATE over runs, not a count of events', () => {
+        // A raw count rises with the window and would read as a regression
+        // when nothing changed.
+        writeLedger([
+            { run_id: 'r1', turn: 1, kind: 'none', class: 'none', roadmap: null },
+            { run_id: 'r2', turn: 1, kind: 'none', class: 'none', roadmap: null },
+        ]);
+        writeContinuation([
+            { run_id: 'r1', event: 'halt-stall' },
+            { run_id: 'r1', event: 'halt-stall' },
+        ]);
+        // One of two runs stalled — 50%, whatever the event count.
+        expect(buildReport(root, DEFAULT_WINDOW).stall_halt_rate).toBe(0.5);
+    });
+
+    it('relaunches and memos join on the same run id', () => {
+        writeLedger([{ run_id: 'r1', turn: 1, kind: 'none', class: 'none', roadmap: null }]);
+        const state = path.join(root, 'agents', 'runtime', 'state');
+        fs.mkdirSync(path.join(state, 'decisions', 'r1'), { recursive: true });
+        fs.writeFileSync(path.join(state, 'decisions', 'r1', '001.md'), 'x', 'utf8');
+        fs.writeFileSync(path.join(state, 'decisions', 'r1', '002.md'), 'x', 'utf8');
+        fs.writeFileSync(
+            path.join(state, 'supervise-relaunches.json'),
+            JSON.stringify({ r1: 2 }),
+            'utf8',
+        );
+        const run = buildReport(root, DEFAULT_WINDOW).runs.find((x) => x.run_id === 'r1');
+        expect(run?.relaunches).toBe(2);
+        expect(run?.memos).toBe(2);
+    });
+
+    it('absent sources yield zeros, not an error — a run predating the mechanism had zero', () => {
+        writeLedger([{ run_id: 'r1', turn: 1, kind: 'none', class: 'none', roadmap: null }]);
+        const run = buildReport(root, DEFAULT_WINDOW).runs.find((x) => x.run_id === 'r1');
+        expect(run).toMatchObject({ reengagements: 0, stall_halts: 0, relaunches: 0, memos: 0 });
+    });
+
+    it('a malformed continuation line is skipped rather than fatal', () => {
+        writeLedger([{ run_id: 'r1', turn: 1, kind: 'none', class: 'none', roadmap: null }]);
+        const dir = path.join(root, 'agents', 'runtime', 'state');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'run-continuation.jsonl'),
+            `not json\n${JSON.stringify({ run_id: 'r1', event: 'engage' })}\n`,
+            'utf8',
+        );
+        expect(buildReport(root, DEFAULT_WINDOW).runs[0]?.reengagements).toBe(1);
+    });
+
+    it('renders the two unmeasurable axes as NO INSTRUMENT, never as 0', () => {
+        const out = renderText(buildReport(root, DEFAULT_WINDOW));
+        expect(out).toContain('AUTONOMY AXIS');
+        expect(out).toContain('unattended-vs-attended rework: NO INSTRUMENT');
+        expect(out).toContain('memo revisit rate:            NO INSTRUMENT');
+    });
+
+    it('the stall rate is n/a with no runs, not 0%', () => {
+        expect(buildReport(root, DEFAULT_WINDOW).stall_halt_rate).toBeNull();
+        expect(renderText(buildReport(root, DEFAULT_WINDOW))).toContain('stall-halt rate:           n/a');
+    });
+});

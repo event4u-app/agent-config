@@ -349,21 +349,40 @@ budgets for it rather than discovering it at preflight.
 
 ### Phase 4 — Unattended backlog
 
-- [ ] **4.0** Headless invocation primitive: spawn the coding agent
-      non-TTY against one roadmap in a dedicated worktree + profile, no
-      production remotes in that worktree's git config (UOTL 7.1), with a
-      global USD/token budget file and a job-dedup key (row 9 shape;
-      budget file format follows the council `cost_budget` conventions).
-      `verify:` `npm run typecheck`
-- [ ] **4.1** Scheduler entry + morning digest instead of permission
-      prompts (UOTL 7.2 verbatim).
-      `verify:` `npm run typecheck`
-- [ ] **4.2** Demotion gate pre-registered BEFORE first unattended run:
-      14-day rework-rate threshold vs attended PRs; breach returns the
-      scheduler default to off (UOTL 7.3 verbatim). The pre-registration
-      is the deliverable here; the 14-day measurement is not, and cannot
-      be, produced in the same change.
-      `verify:` `./scripts-run src/scripts/check_claims`
+- [~] **4.0** `src/scripts/_lib/unattended_guard.ts` ships the three
+      preconditions — remote safety (fails CLOSED on an unreadable git
+      config, because "I could not tell" and "no production remote" must
+      not resolve the same when being wrong means an unattended push),
+      a budget whose ceilings default to ZERO so an absent config
+      DISABLES the lane rather than permitting unbounded spend, and a
+      job-dedup key derived from roadmap+head so a second caller
+      recognises the first caller's job. `preflight` reports every
+      refusal in one pass.
+      **The SPAWN is deliberately not built, and that is why this step is
+      deferred rather than done.** Writing one means choosing an
+      invocation shape, an auth path and a sandbox posture for a process
+      that spends money unattended; none of those is testable without
+      spending, and an untested one behind a flag that reads as finished
+      is how a capability nobody validated reaches a scheduler. The guard
+      is the half that can be verified and the half whose absence makes
+      the other half unsafe.
+      `verify:` `npx vitest run tests/scripts/unattended_guard.test.ts` — 21 green.
+- [x] **4.1** `agent-config run:supervise --digest` — the morning report:
+      sessions dead vs alive, budget consumed against its ceiling,
+      decision memos written, and what needs attention. It reports state
+      that already exists and **schedules nothing, starts nothing**. No
+      cron entry ships, because a scheduler that schedules work nothing
+      can execute is worse than none — the acting half is 4.0's spawn.
+      `verify:` `npx vitest run tests/scripts/run_supervise.test.ts` — 24 green.
+- [x] **4.2** `claim: unattended-demotion-gate` pre-registered in
+      CLAIMS.md — 14-day rework rate vs attended PRs, a rework definition
+      fixed before any data exists, a ≥10-vs-10 power floor, and an
+      honest-null path that CLOSES the capability if the lane never runs
+      rather than leaving it pending. Registered before the capability
+      exists, which is stated in the entry: no unattended run has
+      occurred and none can, so it cannot have been written around a
+      number already in hand.
+      `verify:` `./scripts-run src/scripts/check_claims` — green, 70 entries.
 - [~] **4.3** Team-loop gate (H-5): run the pre-registered
       build-review-fix benchmark; positive → team loop activates for
       unattended runs, null → gate closes, published. Blocker for any
@@ -373,12 +392,28 @@ budgets for it rather than discovering it at preflight.
 
 ### Phase 5 — Standing measurement
 
-- [ ] **5.0** Extend `interruption_report` with: re-engagements per run,
-      stall-halt rate, relaunches per run, unattended-vs-attended rework
-      rate, and memo revisit rate. Release-cycle cadence (UOTL Phase 8).
-      `verify:` `./scripts-run src/scripts/interruption_report`
-- [ ] **5.1** Every default flipped in Phases 1–4 carries its kill
-      criterion in the same phase text.
+- [x] **5.0** New AUTONOMY AXIS in `interruption_report`. Three of the
+      five metrics have a real source and are reported per run and as
+      medians: re-engagements (`engage` events), stall-halt RATE (a rate
+      over runs, not an event count — a count rises with the window and
+      reads as a regression when nothing changed), and relaunches. Memos
+      per run joins on the same run id.
+      The other two are printed as **NO INSTRUMENT**, never as `0`:
+      unattended-vs-attended rework has no data because the lane cannot
+      run, and memo revisit rate has none because a memo carries no
+      revisit marker. Printing zero for an unmeasurable axis is the
+      absent-record-vs-absent-event confusion that has already cost this
+      repository a published false finding.
+      `verify:` `npx vitest run tests/scripts/interruption_report.test.ts` — 33 green.
+- [x] **5.1** Every default this roadmap flips carries its kill criterion
+      in its own phase text, and the audit is short because the count is
+      small: `run-continuation` (1.3, held-defect rate above baseline →
+      default off, `AGENT_CONFIG_NO_RUN_CONTINUATION=1` is the immediate
+      switch), the unattended budget (4.0 — both ceilings default to 0,
+      so the lane is off until an operator sets one), and the demotion
+      gate (4.2 — a breach returns the scheduler default to off). The
+      second-model rung and the memo channel flip NO default: both are
+      absent unless configured, so neither needs one.
       `verify:` `./scripts-run src/scripts/lint_roadmap_complexity`
 
 ## Blockers
@@ -408,19 +443,34 @@ budgets for it rather than discovering it at preflight.
 
 ## Done means
 
-- [ ] A `process-full` contract run finishes a 3-phase roadmap with zero
+- [~] A `process-full` contract run finishes a 3-phase roadmap with zero
       synchronous contacts, re-engaging across turns, and opens the PR.
+      **Half observed, and the half that is missing is the load-bearing
+      one.** The run that built this roadmap took both it and
+      `road-to-council-api-fallback` from open to closed across every
+      phase without a synchronous contact, and opened one PR. But it made
+      no `sessions:claim`, so `run-continuation` never engaged — the
+      zero-contact property came from the operator's standing mandate,
+      NOT from the mechanism this roadmap built. Claiming it as evidence
+      for the mechanism would be attributing a result to the wrong cause,
+      which is precisely the attribution error § 0.1's own falsification
+      criteria are written against. Re-run under a claim to close it.
 - [ ] A killed session resumes via the watcher and completes without a
       contact; the resumed run's first commit shows the re-verification.
 - [~] One roadmap is delivered fully unattended (scheduler → digest → PR)
       inside the pre-registered budget, and its rework rate is recorded.
-      **Deferred** — this is an observation of a live multi-day run, not a
-      change any single change-set can contain.
-- [ ] The locked classes still reach the user, pinned by the existing
-      UOTL eval (a `high_impact` question never resolves autonomously).
+      **Deferred** — this is an observation of a live multi-day run, and
+      the spawn it needs is 4.0's deferred half.
+- [x] The locked classes still reach the user. Pinned twice in this
+      change-set: the mode lock (`high_impact` / `user_required` cannot
+      be `agent` or `council`) and the new `second_model` rung, which is
+      refused on those two classes outright — including an explicit
+      `null`, so the key cannot be accepted at any value and teach an
+      author that the dimension exists there.
+      `verify:` `npx vitest run tests/scripts/ai_council/config.test.ts`
 - [~] Both § 0.1 baselines have at least one post-change measurement.
-      **Deferred** — a post-change measurement requires a conformance
-      window that has not elapsed at authoring time.
+      **Deferred** — the pre-registered claims fix ≥ 20 recorded runs
+      before any comparison, and the window held 18 at measurement time.
 
 ## Risk Register
 

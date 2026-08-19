@@ -44,6 +44,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { is_expired, register_dir, type SessionRecord } from './_lib/session_register.js';
 import { countRoadmap, readCheckpoint, roadmapPath } from './_lib/run_checkpoint.js';
+import { readBudget } from './_lib/unattended_guard.js';
 
 /** UOTL 6.2 verbatim: at most three relaunches per run. */
 export const MAX_RELAUNCHES_PER_RUN = 3;
@@ -247,12 +248,76 @@ export function render(candidates: readonly Candidate[]): string {
     return `${lines.join('\n')}\n`;
 }
 
-const USAGE = `usage: run_supervise [--root PATH] [--once] [--interval SECONDS] [--relaunch]
+/**
+ * The morning digest (UOTL 7.2) — what happened while nobody was watching.
+ *
+ * The point of the phrasing in UOTL is "instead of permission prompts": an
+ * unattended lane that interrupts is not unattended, so the reporting has to
+ * be something a human reads once, on their own schedule.
+ *
+ * It reports only state that ALREADY EXISTS on disk — dead runs, memos
+ * written, budget consumed. No scheduling, no cron entry, no spawn. A digest
+ * over an empty tree is the honest output of a lane that has not run yet, and
+ * is much better than a scheduler that schedules something nothing can
+ * execute.
+ */
+export function digest(repoRoot: string, candidates: readonly Candidate[], now: Date): string {
+    const lines = [`run:supervise digest · ${now.toISOString().slice(0, 10)}`, ''];
+
+    const dead = candidates.filter((c) => c.disposition !== 'alive');
+    const relaunchable = candidates.filter((c) => c.disposition === 'relaunchable');
+    lines.push(
+        `  sessions: ${candidates.length} registered · ${candidates.length - dead.length} alive · ` +
+            `${relaunchable.length} relaunchable`,
+    );
+
+    const budget = readBudget(repoRoot, now);
+    lines.push(
+        budget.max_usd <= 0 && budget.max_tokens <= 0
+            ? '  budget:   unattended runs DISABLED (no ceiling configured)'
+            : `  budget:   $${budget.spent_usd}/${budget.max_usd} · ` +
+              `${budget.spent_tokens}/${budget.max_tokens} tokens · window ${budget.window_opened}`,
+    );
+
+    const memoRoot = path.join(repoRoot, 'agents', 'runtime', 'state', 'decisions');
+    let memoCount = 0;
+    let memoRuns = 0;
+    try {
+        for (const run of fs.readdirSync(memoRoot)) {
+            const files = fs
+                .readdirSync(path.join(memoRoot, run))
+                .filter((n) => /^\d{3}\.md$/.test(n));
+            if (files.length > 0) {
+                memoRuns += 1;
+                memoCount += files.length;
+            }
+        }
+    } catch {
+        // no memos yet — reported as zero below, which is a real answer
+    }
+    lines.push(`  decisions: ${memoCount} memo(s) across ${memoRuns} run(s)`);
+
+    if (relaunchable.length > 0) {
+        lines.push('');
+        lines.push('  needs attention:');
+        for (const c of relaunchable) {
+            lines.push(`    ${c.session_id}  roadmap=${c.roadmap ?? '-'}  ${c.reason}`);
+        }
+    }
+    lines.push('');
+    lines.push('  This digest reports state; it schedules nothing and starts nothing.');
+    return `${lines.join('\n')}\n`;
+}
+
+const USAGE = `usage: run_supervise [--root PATH] [--once] [--digest] [--interval SECONDS] [--relaunch]
 
 Watches the session register for runs whose session died with open steps left.
 
   --root PATH        repository root (default: cwd)
   --once             one scan, then exit (default: loop)
+  --digest           the morning report instead of the per-session list:
+                     dead runs, decision memos written, budget consumed.
+                     Reports state; schedules nothing, starts nothing.
   --interval SECONDS seconds between scans when looping (default: 60)
   --relaunch         ACT: start a fresh session per relaunchable run, up to
                      ${MAX_RELAUNCHES_PER_RUN} per run. Default is report-only —
@@ -278,7 +343,12 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return 0;
     }
     const repoRoot = argValue(argv, '--root') ?? process.cwd();
-    const candidates = scan(repoRoot);
+    const now = new Date();
+    const candidates = scan(repoRoot, { now });
+    if (argv.includes('--digest')) {
+        process.stdout.write(digest(repoRoot, candidates, now));
+        return 0;
+    }
     process.stdout.write(render(candidates));
 
     if (argv.includes('--relaunch')) {

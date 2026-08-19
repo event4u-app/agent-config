@@ -29,6 +29,7 @@ import {
     MAX_RELAUNCHES_PER_RUN,
     SUPERVISE_STATE_REL,
     classify,
+    digest,
     readAllRecords,
     readLedger,
     render,
@@ -202,6 +203,64 @@ describe('render', () => {
 
     it('an empty register says so instead of printing an empty list', () => {
         expect(render([])).toContain('no sessions registered');
+    });
+});
+
+describe('digest — the morning report (UOTL 7.2)', () => {
+    const NOW_D = new Date('2026-08-19T07:00:00.000Z');
+
+    it('reports the three axes even when everything is empty', () => {
+        // A digest over an empty tree is the honest output of a lane that has
+        // not run yet — much better than a scheduler that schedules something
+        // nothing can execute.
+        const out = digest(root(), [], NOW_D);
+        expect(out).toContain('2026-08-19');
+        expect(out).toContain('sessions: 0 registered');
+        expect(out).toContain('decisions: 0 memo(s)');
+        expect(out).toContain('schedules nothing and starts nothing');
+    });
+
+    it('an absent budget reports DISABLED, never a blank ceiling', () => {
+        expect(digest(root(), [], NOW_D)).toContain('unattended runs DISABLED');
+    });
+
+    it('a configured budget reports spend against the ceiling', () => {
+        const r = root();
+        const f = path.join(r, 'agents', 'runtime', 'state', 'unattended-budget.json');
+        fs.mkdirSync(path.dirname(f), { recursive: true });
+        fs.writeFileSync(
+            f,
+            JSON.stringify({
+                max_usd: 10,
+                max_tokens: 1000,
+                spent_usd: 2,
+                spent_tokens: 50,
+                window_opened: '2026-08-19',
+            }),
+            'utf-8',
+        );
+        expect(digest(r, [], NOW_D)).toContain('$2/10');
+    });
+
+    it('counts decision memos across runs', () => {
+        const r = root();
+        for (const [run, n] of [['runA', 2], ['runB', 1]] as const) {
+            const d = path.join(r, 'agents', 'runtime', 'state', 'decisions', run);
+            fs.mkdirSync(d, { recursive: true });
+            for (let i = 1; i <= n; i++) {
+                fs.writeFileSync(path.join(d, `${String(i).padStart(3, '0')}.md`), 'x', 'utf-8');
+            }
+        }
+        expect(digest(r, [], NOW_D)).toContain('3 memo(s) across 2 run(s)');
+    });
+
+    it('lists what needs attention only when something does', () => {
+        const r = root();
+        writeRoadmap(r, 'road-to-x', ['- [ ] a']);
+        expect(digest(r, [], NOW_D)).not.toContain('needs attention');
+        const out = digest(r, [classify(r, rec(), {}, NOW)], NOW_D);
+        expect(out).toContain('needs attention');
+        expect(out).toContain('sess-1');
     });
 });
 
