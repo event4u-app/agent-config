@@ -124,6 +124,14 @@ export interface Report {
     contact_axis_runs: number;
     /** Runs carrying timing — the WALL-CLOCK axis's own, much smaller, denominator. */
     wall_clock_axis_runs: number;
+    /**
+     * Agent→user turnarounds behind `median_user_wait_minutes`.
+     *
+     * A THIRD denominator, and it is neither axis's: one run contributes as
+     * many waits as it had turnarounds, so this count is in gaps where the two
+     * above are in runs. Kept separate rather than folded into either.
+     */
+    user_wait_gaps: number;
     /** The pre-registered floor both claims fix before any comparison. */
     power_floor_runs: number;
     runs: RunReport[];
@@ -532,6 +540,7 @@ export function buildReport(root: string, windowRequested: number): Report {
         // `ledgerRuns`, so a second predicate is a second thing to keep true.
         contact_axis_runs: runsWithLedger,
         wall_clock_axis_runs: runs.filter((r) => r.elapsed_minutes !== null).length,
+        user_wait_gaps: allGaps.length,
         power_floor_runs: POWER_FLOOR_RUNS,
         runs,
         notes,
@@ -589,11 +598,27 @@ export function renderText(report: Report): string {
     lines.push('');
     lines.push(`CONTACT AXIS${power(report.contact_axis_runs, report.power_floor_runs)}`);
     lines.push(`  median contacts per run:   ${fmt(report.median_contacts_per_run)}`);
-    lines.push(`  median user wait:          ${fmt(report.median_user_wait_minutes, ' min')}`);
     lines.push('');
     lines.push(`WALL-CLOCK AXIS${power(report.wall_clock_axis_runs, report.power_floor_runs)}`);
     lines.push(`  median elapsed per run:    ${fmt(report.median_elapsed_minutes, ' min')}`);
     lines.push(`  median agent working time: ${fmt(report.median_working_minutes, ' min')}`);
+    // `user wait` sits HERE and not under the contact axis, and it carries a
+    // third denominator of its own.
+    //
+    // R2 round 2, finding 1. It used to print under CONTACT AXIS, directly
+    // beneath that axis's ledger-sourced n — so the per-axis fix reproduced
+    // the very conflation it was written to remove, one line further down.
+    // `roadmap-wall-clock-baseline` settles which axis owns it: WAITING is
+    // named as that claim's own instrument, derived from chat-history
+    // timestamps, i.e. the source whose N is the small one.
+    //
+    // And the unit is gaps, not runs: one run contributes as many waits as it
+    // had agent→user turnarounds. Printing a run-count next to it would be the
+    // second half of the same error, so it carries its own count.
+    lines.push(
+        `  median user wait:          ${fmt(report.median_user_wait_minutes, ' min')}` +
+            `  ·  n=${report.user_wait_gaps} gap(s), not runs`,
+    );
     lines.push('');
     lines.push('AUTONOMY AXIS (Phase 5.0)');
     lines.push(`  median re-engagements:     ${fmt(report.median_reengagements_per_run)}`);
@@ -610,13 +635,28 @@ export function renderText(report: Report): string {
     // no-instrument rather than printed as 0, because a zero here would read
     // as "measured, and it is zero" — the exact confusion between an absent
     // record and an absent event that this suite records elsewhere.
-    lines.push('  unattended-vs-attended rework: NO INSTRUMENT — the unattended lane cannot run');
-    lines.push('    yet (the spawn is unbuilt and the budget defaults to disabled). The threshold');
-    lines.push('    is pre-registered as `unattended-demotion-gate` in docs/CLAIMS.md.');
+    // "cannot run YET" and "pre-registered" were both true when written and
+    // are both false now: the spawn is a published refusal
+    // (road-to-long-horizon-execution 4.0) and `unattended-demotion-gate` took
+    // its honest-null path in the same change-set that refused it. R2 round 2,
+    // finding 2 — `run_supervise.ts` had its identical wording rewritten and
+    // this sibling site in the same diff was missed, which is what the
+    // defect-pattern sweep exists to catch and did not.
+    lines.push('  unattended-vs-attended rework: NO INSTRUMENT, and permanently so — the');
+    lines.push('    unattended lane will not run: the spawn is a published REFUSAL, not an');
+    lines.push('    unbuilt feature (road-to-long-horizon-execution 4.0). `unattended-demotion-gate`');
+    lines.push('    took its honest-null path and is CLOSED — do not read it as a live threshold.');
     lines.push('  memo revisit rate:            NO INSTRUMENT — a memo carries no revisit marker,');
     lines.push('    so a revisited decision is indistinguishable from one nobody reopened.');
     lines.push('');
-    lines.push(`runs: ${report.runs.length}`);
+    // The total carries its caveat inline, because the roadmap blames THIS
+    // line for the live misreading and round 1 left it untouched (R2 round 2,
+    // finding 11): a per-axis n printed thirty lines earlier does not reach a
+    // reader who scrolled to the number that looks like the sample size.
+    lines.push(
+        `runs: ${report.runs.length}  ·  NOT either axis's N — see the per-axis n above ` +
+            `(contact ${report.contact_axis_runs}, wall-clock ${report.wall_clock_axis_runs})`,
+    );
     for (const run of report.runs) {
         lines.push(
             `  ${run.run_id}  asks=${run.asks} handbacks=${run.handbacks} halts=${run.halts}` +

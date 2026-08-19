@@ -372,7 +372,11 @@ budgets for it rather than discovering it at preflight.
       review, $0.031). They SPLIT — build a dry-run seam vs cancel the
       capability — and named the same defect from both sides:
       `--relaunch` advertised something that did not exist. What ships is
-      the intersection, recorded in decision memo 001:
+      the intersection — written out here rather than behind a pointer,
+      because a decision memo is gitignored, run-scoped and auto-pruned,
+      so resting a tracked decision on one leaves a reader with an
+      unreachable citation (R2 round 2, finding 8). The memo exists as a
+      local supplement, not as the record:
       - `src/scripts/_lib/headless_invocation.ts` — builds the exact
         resume command per host off the `HOST_INVENTORY` tiering and
         `docs/contracts/host-agent-protocol.md`, refuses any host with no
@@ -410,7 +414,14 @@ budgets for it rather than discovering it at preflight.
       number as unverifiable from this diff's scope, which was correct about
       the scope and is why the provenance is written down instead of the
       figure being quietly reverted to a stale 21.)
-      `verify:` `npx vitest run tests/scripts/headless_invocation.test.ts` — 18 green.
+      `verify:` `npx vitest run tests/scripts/headless_invocation.test.ts` — 20 green.
+      (Was 18 here. Not a copy from a neighbour: 18 was correct when written
+      and went stale in the round-1 fix pass, which added the two
+      budget-probe cases and did not revisit the line. R2 round 2, finding 4
+      — the same step that spends nine lines correcting one stale count
+      shipped a second one, which is the argument for re-running every
+      cited number at the end of a pass rather than at the moment it is
+      first written.)
       `verify:` `npx vitest run tests/scripts/run_supervise.test.ts` — 38 green.
 - [x] **4.1** `agent-config run:supervise --digest` — the morning report:
       sessions dead vs alive, budget consumed against its ceiling,
@@ -447,7 +458,9 @@ budgets for it rather than discovering it at preflight.
       step 4.0 there is no live spawn for a team loop to drive, so
       funding this benchmark now would measure a capability that does not
       exist. **The multi-agent variant of 4.0 leaves scope permanently.**
-      Recorded in decision memo 002.
+      The full reasoning is the paragraph above and the blocker entry, both
+      tracked; the run's decision memo is a local supplement rather than
+      the record (R2 round 2, finding 8).
 
 ### Phase 5 — Standing measurement
 
@@ -486,7 +499,8 @@ budgets for it rather than discovering it at preflight.
   multi-agent variant of 4.0 leaves scope permanently; reconsideration
   requires a NEW roadmap with fresh pre-registration and explicit
   funding, never a reopening of this blocker. Step 4.3 carries the full
-  verdict; decision memo 002 carries the reasoning.
+  verdict AND the reasoning, both tracked — not a pointer at a gitignored
+  memo (R2 round 2, finding 8).
 - **Owner:** user
 - **Blocks:** Phase 4 step 4.3, and any multi-agent variant of 4.0
 - **Question:** may the pre-registered build-review-fix benchmark be run,
@@ -629,34 +643,60 @@ budgets for it rather than discovering it at preflight.
       author that the dimension exists there.
       `verify:` `npx vitest run tests/scripts/ai_council/config.test.ts`
 - [x] Both § 0.1 baselines have at least one post-change measurement.
-      **Measured 2026-08-19 against the main checkout** (`--root`, per the
-      § 0.1 finding that a worktree reads a clean zero): contacts per run
-      **median 0** · user wait **median 68.9 min** · elapsed **median
-      421.7 min** · agent working **median 169.6 min**. Both claims stay
-      `unbacked`; the measurement exists, the comparison does not.
-      **NEITHER axis clears its pre-registered ≥ 20-run floor, and the
-      report could not previously say so.** It printed `runs: 21` under a
-      single ⚠️ SHORT WINDOW banner driven by the SESSION count, so a
-      reader checking the floor read 21 and concluded the contact axis had
-      cleared it. It had not: 2 of those 21 runs carry timing and no
-      ledger entry, so the contact axis stands at **19**. One banner
-      cannot answer a question two axes ask separately, and this run made
-      exactly that misreading before the fix caught it. `interruption_report`
-      now prints per-axis N against the floor on each axis header.
+      **Measured 2026-08-19 11:04 UTC+2 against the main checkout**
+      (`--root`, per the § 0.1 finding that a worktree reads a clean
+      zero), reported per axis because the axes do not share a
+      denominator:
+      · CONTACT AXIS, n=19 runs — contacts per run **median 0**
+      · WALL-CLOCK AXIS, n=4 runs — elapsed **median 421.7 min**, agent
+        working **median 169.6 min**, user wait **median 68.9 min** over
+        11 gaps
+      Both claims stay `unbacked`; the measurement exists, the comparison
+      does not.
+      **User wait belongs to the WALL-CLOCK axis and is listed there, not
+      beside the contact count.** R2 round 2, finding 1: it had been
+      printed under `CONTACT AXIS` directly beneath that axis's
+      ledger-sourced n, so the per-axis fix reproduced the conflation it
+      was written to remove, one line down — and this criterion quoted the
+      conflated pair verbatim. `roadmap-wall-clock-baseline` settles it by
+      naming WAITING as its own instrument. Its unit is gaps, not runs, so
+      it now carries a third count of its own.
+      **NEITHER axis cleared its pre-registered ≥ 20-run floor at that
+      reading, and the report could not previously say so.** It printed
+      `runs: 21` under a single ⚠️ SHORT WINDOW banner driven by the
+      SESSION count, so a reader checking the floor read 21 and concluded
+      the contact axis had cleared it. It had not: 2 of those 21 runs
+      carry timing and no ledger entry, so the contact axis stood at
+      **19**. One banner cannot answer a question two axes ask separately,
+      and this run made exactly that misreading before the fix caught it —
+      then made it a second time in a source comment, which round 1 caught.
+      `interruption_report` now prints per-axis N on each axis header AND
+      on the `runs:` total, because a caveat thirty lines up does not reach
+      a reader who scrolled to the number that looks like the sample size.
+      **The reading moved while it was being taken, and that is a property
+      of the instrument rather than progress.** Re-run at 11:36 the same
+      day, the contact axis read **20** and cleared the floor. Nothing
+      about autonomy changed in thirty-two minutes: the measuring session
+      is itself a run in the window it measures, so a reading taken during
+      a run is not independent of it. The dated 19 stands as the recorded
+      measurement; the 20 is noted here so nobody reads a later screenshot
+      as a result. A genuine comparison needs a window that closed before
+      it was read.
       **A structural finding, worth more than the numbers.** The
       wall-clock axis reads timing from `agents/runtime/.agent-chat-history`,
       whose retention is `DEFAULT_MAX_SESSIONS = 5`
       (`src/scripts/chat_history.ts`; `chat_history.max_sessions` is unset
       on every settings layer). Five retained sessions yielded **4**
-      timing-bearing runs. So the ≥ 20-run floor of
+      timing-bearing runs, and 5 at the later reading — the cap is the
+      binding constraint, not the elapsed time. So the ≥ 20-run floor of
       `roadmap-wall-clock-baseline` is **unreachable at default retention**
       — not "not yet reached". Backing it needs a different timing source
       or a retention change, or the claim closes on its own honest-null
       path; recorded in its CLAIMS.md entry as a dated post-registration
       finding, with the threshold left exactly as pre-registered.
-      The contact axis is one run short and reachable, which is a
-      different answer from the wall-clock axis's and is why they are no
-      longer reported under one verdict.
+      The contact axis was one run short and reachable — and reached it
+      inside the hour — which is a different answer from the wall-clock
+      axis's and is why they are no longer reported under one verdict.
       `verify:` `npx vitest run tests/scripts/interruption_report.test.ts` — 41 green.
 
 ## Risk Register

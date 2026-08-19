@@ -410,15 +410,48 @@ describe('digest — the release line follows the WRITE, not the intent', () => 
         expect(readLedger(r)).toEqual({});
     });
 
+    it('a completed roadmap that never had a counter reports NOTHING and writes nothing', () => {
+        // R2 round 2, finding 7. Counting completed CANDIDATES rather than the
+        // ledger delta reported a release for a roadmap with no counter — and
+        // with no relaunch mechanism shipping, the ledger is always empty, so
+        // every such line was false. It also made a read-report create the
+        // state file holding `{}`.
+        const r = root();
+        const out = digest(r, [done()], NOW);
+        expect(out).not.toContain('released:');
+        expect(fs.existsSync(path.join(r, SUPERVISE_STATE_REL))).toBe(false);
+    });
+
+    it('counts what the ledger lost, not how many candidates completed', () => {
+        const r = root();
+        writeLedger(r, { 'road-to-x': 2 });
+        // Two completed candidates, ONE of which has a counter.
+        const out = digest(r, [done(), done({ roadmap: 'road-to-y' })], NOW);
+        expect(out).toContain('released:  1 completed roadmap(s)');
+    });
+
     it('reports NOT RESET when the ledger write failed', () => {
         // The direction that matters: a stale-high counter refuses the next
         // relaunch, and the digest had just told the operator it would not.
+        //
+        // The failure has to be a WRITE failure specifically — the read must
+        // still succeed, or the delta is 0 and the branch never runs (which is
+        // itself correct, and is the case above). So: a readable ledger inside
+        // a directory that refuses new writes.
         const r = root();
-        fs.mkdirSync(path.join(r, 'agents', 'runtime'), { recursive: true });
-        fs.writeFileSync(path.join(r, 'agents', 'runtime', 'state'), 'not a directory', 'utf-8');
-        const out = digest(r, [done()], NOW);
-        expect(out).toContain('NOT RESET');
-        expect(out).not.toContain('relaunch budget reset');
+        writeLedger(r, { 'road-to-x': 2 });
+        const stateDir = path.dirname(path.join(r, SUPERVISE_STATE_REL));
+        fs.chmodSync(path.join(r, SUPERVISE_STATE_REL), 0o444);
+        fs.chmodSync(stateDir, 0o555);
+        try {
+            const out = digest(r, [done()], NOW);
+            expect(out).toContain('NOT RESET');
+            expect(out).not.toContain('relaunch budget reset');
+        } finally {
+            // Restore before afterEach, or the tmpdir cleanup fails.
+            fs.chmodSync(stateDir, 0o755);
+            fs.chmodSync(path.join(r, SUPERVISE_STATE_REL), 0o644);
+        }
     });
 });
 

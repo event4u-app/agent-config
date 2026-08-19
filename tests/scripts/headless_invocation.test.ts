@@ -23,6 +23,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { HOST_CONFIGS } from '../../src/cli/python/workspace_drive.js';
 import { HOST_INVENTORY } from '../../src/cli/python/workspace_hosts.js';
 import {
     CHECKPOINT_DIR_REL,
@@ -30,7 +31,6 @@ import {
     PLATFORM_TO_HOST,
     buildResumeArgv,
     planResume,
-    promptOnStdin,
     renderResumePlans,
     resumePrompt,
     type ResumeTarget,
@@ -73,15 +73,37 @@ function target(over: Partial<ResumeTarget> = {}): ResumeTarget {
 
 const NOW = new Date('2026-08-19T12:00:00.000Z');
 
-describe('the module cannot start a process', () => {
-    it('contains no spawn, exec or fork of any kind', () => {
+describe('the module starts no AGENT — and that is narrower than "starts no process"', () => {
+    // R2 round 2, finding 5. This block was called "the module cannot start a
+    // process" and its note claimed "a module that cannot reach child_process
+    // cannot grow a spawn by accident". Both over-read the assertion, in the
+    // file whose thesis is that things are asserted rather than promised:
+    // `planResume` → `preflight` → `checkRemotes` runs `spawnSync('git',
+    // ['remote','-v'])`, one subprocess per plan. `--print-relaunch` therefore
+    // starts N git processes.
+    //
+    // What is actually pinned — and what the refusal is about — is that no
+    // AGENT is started from here: the file holds no spawn token of its own, so
+    // a live arm cannot appear without the diff that adds one being visible.
+    // Reading a git remote is not the capability under refusal.
+    it('holds no spawn token of its own, so a live arm cannot appear silently', () => {
         const src = fs.readFileSync(MODULE_SRC, 'utf-8');
-        // Deliberately matches the IMPORT and the CALL shapes both: a module
-        // that cannot reach child_process cannot grow a spawn by accident, and
-        // the assertion has to fail on the import that would enable one.
+        // Matches the IMPORT and the CALL shapes both — the assertion has to
+        // fail on the import that would enable one, not only on the call.
         for (const forbidden of ['child_process', 'spawnSync(', 'spawn(', 'execSync(', 'execFile', 'fork(']) {
             expect(src.includes(forbidden), `forbidden construct: ${forbidden}`).toBe(false);
         }
+    });
+
+    it('and the transitive git probe is real, so the narrower claim is the true one', () => {
+        // Pinned so the honest scope cannot drift back to the wider claim: the
+        // guard this module calls DOES shell out, and a future reader must not
+        // re-read the test above as "nothing here runs a process".
+        const guard = fs.readFileSync(
+            path.resolve(HERE, '../../src/scripts/_lib/unattended_guard.ts'),
+            'utf-8',
+        );
+        expect(guard).toContain("spawnSync('git'");
     });
 
     it('the refusal names a DECISION and a reopen condition, never a pending build', () => {
@@ -119,27 +141,79 @@ describe('platform → host mapping', () => {
         expect(buildResumeArgv('CLAUDE', 'road-to-x')).toBeNull();
     });
 
-    it('a Tier-3 host in the inventory is refused even though the inventory knows it', () => {
-        // augment IS in HOST_INVENTORY — with `cli: null`. Reaching the entry
-        // is not the same as being drivable, and the tier is what decides.
+    it('an unmapped host is refused at the MAP, before the tier is consulted', () => {
+        // augment IS in HOST_INVENTORY, with `cli: null` — but it is not in
+        // PLATFORM_TO_HOST, so this case short-circuits at the mapping. Named
+        // for what it actually exercises: R2 round 2, finding 6 caught this
+        // same case claiming "the tier is what decides" while never reaching
+        // the tier check. A fixture that agrees with the code instead of with
+        // reality reads as coverage and is worse than no test.
         expect(HOST_INVENTORY['augment']).toBeDefined();
+        expect(PLATFORM_TO_HOST['augment']).toBeUndefined();
         expect(buildResumeArgv('augment', 'road-to-x')).toBeNull();
+    });
+
+    it('a MAPPED host demoted to Tier 3 is refused at the tier guard', () => {
+        // The guard the previous case did not reach. It looks dead today
+        // because the map holds only Tier-1 hosts; it is the branch that has
+        // to hold the day an entry goes `tier: 1 -> 3` in HOST_INVENTORY while
+        // its row here stays — a one-line edit in another file with no reason
+        // to look at this one.
+        const demoted = { ...HOST_INVENTORY, 'claude-code': { tier: 3, cli: 'claude' } };
+        expect(buildResumeArgv('claude', 'road-to-x', demoted)).toBeNull();
+        // Same host, same map, Tier 1 restored — so the null above is the tier
+        // and not something else in the fixture.
+        expect(buildResumeArgv('claude', 'road-to-x', HOST_INVENTORY)).not.toBeNull();
+    });
+
+    it('a mapped host whose CLI is null is refused even at Tier 1', () => {
+        const noCli = { ...HOST_INVENTORY, 'claude-code': { tier: 1, cli: null } };
+        expect(buildResumeArgv('claude', 'road-to-x', noCli)).toBeNull();
+    });
+
+    it('a mapped host missing from the inventory is refused, not crashed', () => {
+        const gone: Record<string, { tier: number; cli: string | null }> = { ...HOST_INVENTORY };
+        delete gone['claude-code'];
+        expect(buildResumeArgv('claude', 'road-to-x', gone)).toBeNull();
+    });
+
+    it('every mapped platform reaches a switch arm — the map and the switch agree', () => {
+        // The `default:` arm is unreachable while these two lists agree, and
+        // this is the assertion that keeps them agreeing. Adding a row to
+        // PLATFORM_TO_HOST without a case would return null here, which is the
+        // fail-closed behaviour — and this test turns a silent null into a
+        // failure at the moment the rows diverge.
+        for (const platform of Object.keys(PLATFORM_TO_HOST)) {
+            expect(buildResumeArgv(platform, 'road-to-x'), `no argv for ${platform}`).not.toBeNull();
+        }
     });
 });
 
 describe('buildResumeArgv', () => {
-    it('claude takes the prompt in argv, per the host-agent-protocol contract', () => {
-        const argv = buildResumeArgv('claude', 'road-to-x');
-        expect(argv).toEqual(['claude', '-p', resumePrompt('road-to-x'), '--output-format', 'json']);
-        expect(promptOnStdin('claude')).toBe(false);
+    it('delegates to HOST_CONFIGS rather than re-deriving the argv', () => {
+        // R2 round 2, finding 12. The first version hand-built each host's
+        // argv off a prose contract that contradicts itself, and got BOTH
+        // codex and gemini wrong — it modelled them as stdin consumers while
+        // the tree's own drive configs pass the prompt as an argv member. The
+        // pasted command would have piped a prompt into a CLI not reading one.
+        // Delegating removes the second derivation instead of choosing between
+        // two prose rows.
+        for (const [platform, hostId] of Object.entries(PLATFORM_TO_HOST)) {
+            const cfg = HOST_CONFIGS[hostId];
+            expect(cfg, `no drive config for ${hostId}`).toBeDefined();
+            expect(buildResumeArgv(platform, 'road-to-x')).toEqual(
+                cfg?.build_args(resumePrompt('road-to-x'), null),
+            );
+        }
     });
 
-    it('codex and gemini take the prompt on stdin, so it is NOT in argv', () => {
-        const codex = buildResumeArgv('codex', 'road-to-x');
-        expect(codex).toEqual(['codex', 'exec', '--json']);
-        expect(codex?.join(' ')).not.toContain('road-to-x');
-        expect(promptOnStdin('codex')).toBe(true);
-        expect(promptOnStdin('gemini')).toBe(true);
+    it('every host carries the prompt IN argv — no host reads it from stdin', () => {
+        // The property the removed stdin branch got wrong. Asserted over the
+        // whole map so a future host added as a stdin consumer fails here
+        // rather than shipping a command that hangs.
+        for (const platform of Object.keys(PLATFORM_TO_HOST)) {
+            expect(buildResumeArgv(platform, 'road-to-x')?.join(' ')).toContain('road-to-x');
+        }
     });
 
     it('the prompt orders re-verification BEFORE acting on the checkpoint', () => {

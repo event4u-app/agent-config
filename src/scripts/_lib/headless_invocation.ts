@@ -14,7 +14,10 @@
  * openai/codex-default, blind peer review) split on what to do — build a
  * dry-run seam, or cancel the capability — and named the SAME defect from both
  * sides: `run:supervise --relaunch` advertised a capability that did not
- * exist. The resolution taken is recorded in the run's decision memo:
+ * exist. The resolution taken, recorded HERE and in the roadmap step rather
+ * than behind a pointer — a decision memo is gitignored, run-scoped and
+ * auto-pruned, so a tracked file resting its rationale on one leaves a reader
+ * with an unreachable citation (R2 round 2, finding 8):
  *
  *   The invocation seam SHIPS, print-only. Executing it is refused, and the
  *   refusal has a falsifiable reopen condition rather than a date.
@@ -30,6 +33,14 @@
  *
  * **There is no `spawn`, `exec` or `fork` in this file, and that is asserted
  * by a test rather than promised by this comment.**
+ *
+ * Scoped precisely, because the wider reading is false (R2 round 2, finding
+ * 5): what cannot start from here is an AGENT. A plan DOES cause a subprocess
+ * — `planResume` calls `preflight`, which runs `git remote -v` in the target
+ * worktree to answer the production-remote precondition, one per plan. Reading
+ * a git remote is not the capability under refusal, and a claim that "nothing
+ * here runs a process" would be the kind of over-read this module's own
+ * reopen-condition paragraph warns about in the other direction.
  *
  * ## Reopen condition — falsifiable, not a date
  *
@@ -47,6 +58,7 @@
  * license "the need does not exist".
  */
 
+import { HOST_CONFIGS } from '../../cli/python/workspace_drive.js';
 import { HOST_INVENTORY } from '../../cli/python/workspace_hosts.js';
 import { CHECKPOINT_DIR_REL } from './run_checkpoint.js';
 import { preflight, type PreflightVerdict } from './unattended_guard.js';
@@ -86,25 +98,49 @@ export function resumePrompt(roadmapSlug: string): string {
  * observe-only and there is nothing to construct. The shape is read off that
  * contract rather than invented here.
  */
-export function buildResumeArgv(platform: string, roadmapSlug: string): readonly string[] | null {
+export function buildResumeArgv(
+    platform: string,
+    roadmapSlug: string,
+    inventory: Readonly<Record<string, { tier: number; cli: string | null }>> = HOST_INVENTORY,
+    configs: Readonly<Record<string, { build_args: (p: string, cwd: string | null) => string[] }>> = HOST_CONFIGS,
+): readonly string[] | null {
     const hostId = PLATFORM_TO_HOST[platform];
     if (hostId === undefined) return null;
-    const entry = HOST_INVENTORY[hostId];
+
+    // The tier check is NOT dead code, and the reason is worth stating because
+    // it looks dead: `PLATFORM_TO_HOST` maps only Tier-1 hosts today, so every
+    // unmapped platform returns above and this guard is currently unreachable.
+    // It is the guard that has to hold the day a host is DEMOTED — an entry
+    // going `tier: 1 -> 3` in `HOST_INVENTORY` while its row here stays — and
+    // that is a one-line edit in a different file with no reason to look here.
+    //
+    // R2 round 2, finding 6 caught the test certifying this guard while
+    // short-circuiting at the mapping and never reaching it. The fix is the
+    // test, not the deletion — hence the injectable `inventory`, which lets a
+    // test demote a mapped host without waiting for a real demotion.
+    const entry = inventory[hostId];
     if (entry === undefined || entry.tier !== 1 || entry.cli === null) return null;
 
-    const prompt = resumePrompt(roadmapSlug);
-    switch (hostId) {
-        case 'claude-code':
-            return [entry.cli, '-p', prompt, '--output-format', 'json'];
-        case 'codex':
-            // `codex exec --json` consumes the prompt on stdin, so the prompt is
-            // not an argv member. The caller renders it as a pipe.
-            return [entry.cli, 'exec', '--json'];
-        case 'gemini':
-            return [entry.cli, '--output-format', 'json'];
-        default:
-            return null;
-    }
+    // The argv comes from `HOST_CONFIGS`, the config the drive loop actually
+    // executes — never re-derived here.
+    //
+    // R2 round 2, finding 12 flagged that `host-agent-protocol.md`
+    // contradicts itself about gemini (its inventory row reads
+    // `gemini --output-format json` over stdin; a later row reads
+    // `gemini -p … --output-format json`), and it was right that picking a
+    // side silently leaves an auditor at a coin flip. It turned out to be
+    // sharper than a documentation nit: the first version of this function
+    // hand-built BOTH codex and gemini as stdin consumers, and the tree's own
+    // executable configs pass the prompt as an argv member for both. A pasted
+    // command would have piped a prompt into a CLI that was not reading one.
+    //
+    // So the fix is not to choose a row. Prose can contradict itself; the
+    // config the drive loop runs cannot, and there is no reason for a second
+    // derivation of the same argv to exist. `promptOnStdin` is gone with it —
+    // no supported host takes the prompt on stdin.
+    const cfg = configs[hostId];
+    if (cfg === undefined) return null;
+    return cfg.build_args(resumePrompt(roadmapSlug), null);
 }
 
 /**
@@ -124,11 +160,6 @@ export function buildResumeArgv(platform: string, roadmapSlug: string): readonly
  */
 export const SPEND_PROBE_USD = 0.01;
 export const SPEND_PROBE_TOKENS = 1;
-
-/** True when this host takes its prompt on stdin rather than in argv. */
-export function promptOnStdin(platform: string): boolean {
-    return PLATFORM_TO_HOST[platform] === 'codex' || PLATFORM_TO_HOST[platform] === 'gemini';
-}
 
 export interface ResumeTarget {
     readonly roadmapSlug: string;
@@ -194,11 +225,11 @@ export function planResume(repoRoot: string, target: ResumeTarget, now?: Date): 
         };
     }
 
-    const cd = `cd ${shQuote(target.worktree)}`;
-    const call = argv.map(shQuote).join(' ');
-    const command = promptOnStdin(target.platform)
-        ? `${cd} && printf %s ${shQuote(resumePrompt(target.roadmapSlug))} | ${call}`
-        : `${cd} && ${call}`;
+    // Every supported host takes the prompt in argv — the stdin branch this
+    // line used to carry was built on a prose row that the tree's own drive
+    // configs contradict, and it would have piped a prompt into a CLI that was
+    // not reading one (R2 round 2, finding 12).
+    const command = `cd ${shQuote(target.worktree)} && ${argv.map(shQuote).join(' ')}`;
 
     return { target, command, hostRefusal: null, unattended };
 }

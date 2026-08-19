@@ -401,16 +401,25 @@ export function digest(repoRoot: string, candidates: readonly Candidate[], now: 
     // "three per run" cap bounds a run instead of a roadmap's lifetime
     // (R2 round 3, finding 6).
     //
-    // The report follows the WRITE, not the intent. It used to push
-    // "relaunch budget reset" unconditionally after a `writeLedger` that
+    // The report follows the WRITE and the DELTA, not the intent. It used to
+    // push "relaunch budget reset" unconditionally after a `writeLedger` that
     // swallowed its own failure, so a digest could tell the operator a
     // release had happened while the counter still stood — the direction that
     // matters, because a stale-high counter refuses the next relaunch and the
-    // digest had just said it would not.
-    const cleared = clearCompleted(readLedger(repoRoot), candidates);
-    const released = candidates.filter(
-        (c) => c.disposition === 'complete' && c.roadmap !== null,
-    ).length;
+    // digest had just said it would not. Round 1 fixed the write half and
+    // left the count reading off the candidate set; both halves are needed,
+    // and a read-report that writes when nothing changed is the smaller half
+    // of the same mistake.
+    const before = readLedger(repoRoot);
+    const cleared = clearCompleted(before, candidates);
+    // The count is the LEDGER DELTA, never the candidate set.
+    //
+    // R2 round 2, finding 7, and it is the same defect one level up from the
+    // one round 1 fixed. Counting completed candidates reports a release for a
+    // roadmap that never had a counter — and with no relaunch mechanism
+    // shipping, the ledger is always empty, so EVERY such line was false. It
+    // also made a read-report write `{}` to disk on its first run.
+    const released = Object.keys(before).length - Object.keys(cleared).length;
     if (released > 0) {
         try {
             writeLedger(repoRoot, cleared);
@@ -491,18 +500,22 @@ Watches the session register for runs whose session died with open steps left.
   --digest           the morning report instead of the per-session list:
                      dead runs, decision memos written, budget consumed.
                      Reports state; schedules nothing, starts nothing.
-  --interval SECONDS accepted and IGNORED — reserved for the loop driver that
-                     lands with the Phase 4.0 primitive. Listed rather than
-                     hidden so the flag is not silently dropped, and marked
-                     rather than documented with a default (R2 review, finding
-                     14: it advertised "default: 60" and was read by nothing,
-                     so an operator following this help got exit 2 and no
-                     watcher).
+  --interval SECONDS accepted and IGNORED. It used to say "reserved for the
+                     loop driver that lands with the Phase 4.0 primitive";
+                     that primitive is a published refusal now, so nothing is
+                     scheduled to land and the flag has no future caller.
+                     Listed rather than hidden so it is not silently dropped,
+                     and marked rather than documented with a default (an
+                     earlier round: it advertised "default: 60" and was read
+                     by nothing, so an operator following this help got exit 2
+                     and no watcher).
   --print-relaunch   PRINT the exact command that resumes each relaunchable
                      run, plus what an unattended lane would decide about the
-                     same run. Starts nothing, spends nothing. The command is
-                     for a human to paste; the unattended verdict never gates
-                     what a human may run.
+                     same run. Starts no SESSION and spends nothing; it does
+                     run one \`git remote -v\` per plan, which is the guard's
+                     production-remote precondition. The command is for a
+                     human to paste; the unattended verdict never gates what
+                     a human may run.
   --relaunch         REFUSED. Starting a session unattended is a published
                      refusal (road-to-long-horizon-execution 4.0, AI council
                      2026-08-19), not an unbuilt feature — the flag exits 2
@@ -529,6 +542,21 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stdout.write(`run:supervise — ${HALT_ENV} is set; watcher does not start.\n`);
         return 0;
     }
+    // Report-shape flags are mutually exclusive, and a silent precedence is
+    // the wrong way to say so (R2 round 2, finding 10): `--digest
+    // --print-relaunch` used to print the digest and drop the plans without a
+    // word, and `--print-relaunch --relaunch` returned 0 without ever emitting
+    // the refusal — success as the exit code of the one flag whose entire
+    // purpose is to refuse.
+    const shapes = ['--digest', '--print-relaunch', '--relaunch'].filter((f) => argv.includes(f));
+    if (shapes.length > 1) {
+        process.stderr.write(
+            `run:supervise: ${shapes.join(' and ')} are mutually exclusive — each is a ` +
+                `different report, and one silently winning would hide the other. Pick one.\n`,
+        );
+        return 2;
+    }
+
     const repoRoot = argValue(argv, '--root') ?? process.cwd();
     const now = new Date();
     const candidates = scan(repoRoot, { now });
@@ -556,9 +584,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
     if (!argv.includes('--once')) {
         process.stderr.write(
-            'run:supervise: looping is not implemented yet — use --once. The scan above is ' +
-                'the full v1 surface (Phase 3.1: a foreground loop is enough to falsify the ' +
-                'design; the loop driver lands with the Phase 4.0 primitive it would call).\n',
+            'run:supervise: looping is not implemented — use --once. The scan above is the ' +
+                'full surface (Phase 3.1: a foreground loop is enough to falsify the design). ' +
+                'The loop driver was tied to the Phase 4.0 spawn, which is a published refusal, ' +
+                'so it is not pending — there is nothing to wait for.\n',
         );
         return 2;
     }
