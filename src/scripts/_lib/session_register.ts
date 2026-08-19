@@ -321,9 +321,36 @@ export function delete_record(dir: string, session_id: string): boolean {
 export interface ReadLiveOptions {
     /** Unlink expired records as they are encountered. Default `false`. */
     prune?: boolean;
+    /**
+     * How long an EXPIRED record survives the prune. Default 24 h.
+     *
+     * R2 round 4, finding 5. The register has two consumers with opposite
+     * needs and only one of them knew: `sessions:list` and the session-start
+     * hook both read with `prune: true`, while `run:supervise` exists
+     * ENTIRELY to classify expired records — the runs whose session died. So
+     * the watcher's whole input was deleted by two routine read paths, the
+     * hook one of them, which fires on every session start. The digest could
+     * then report nothing, and round 3's `clearCompleted` release could never
+     * fire because no completed candidate ever reached it.
+     *
+     * The 24 h is derived, not picked: `digest` is documented as the MORNING
+     * report, so a once-a-day reader must be able to see a full day of deaths.
+     * A shorter grace loses runs that died overnight, which is precisely the
+     * population the watcher was built for.
+     *
+     * `0` restores the old delete-on-sight behaviour for a caller that really
+     * wants it. Nothing in the tree passes it today.
+     */
+    prune_grace_ms?: number;
     /** Clock injection for tests. */
     now?: Date;
 }
+
+/**
+ * How long an expired record outlives its expiry before a prune may remove it.
+ * See {@link ReadLiveOptions.prune_grace_ms} for why this is a day.
+ */
+export const PRUNE_GRACE_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Every live record in the register, optionally pruning expired ones as it goes.
@@ -339,6 +366,7 @@ export interface ReadLiveOptions {
 export function read_live_records(dir: string, options: ReadLiveOptions = {}): SessionRecord[] {
     const now = options.now ?? new Date();
     const prune = options.prune === true;
+    const grace = options.prune_grace_ms ?? PRUNE_GRACE_MS;
     let names: string[];
     try {
         names = fs.readdirSync(dir).filter((n) => n.endsWith('.json'));
@@ -356,7 +384,10 @@ export function read_live_records(dir: string, options: ReadLiveOptions = {}): S
             rec = null;
         }
         if (rec === null || is_expired(rec, now)) {
-            if (prune) {
+            // A record is dropped from the LIVE set the moment it expires, and
+            // deleted from disk only after the grace window — the watcher
+            // reads the register directly and needs the expired ones.
+            if (prune && (rec === null || is_expired(rec, new Date(now.getTime() - grace)))) {
                 try {
                     fs.unlinkSync(full);
                 } catch {

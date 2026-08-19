@@ -49,6 +49,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { SESSION_ID_LEN, derive_session_tag } from './chat_history.js';
+
 export const DEFAULT_WINDOW = 30;
 
 export interface LedgerRow {
@@ -70,13 +72,36 @@ export interface HistoryTurn {
 export interface RunReport {
     run_id: string;
     roadmap: string | null;
-    asks: number;
-    handbacks: number;
-    contacts: number;
-    halts: number;
+    /**
+     * Contact counts, or `null` when this run has NO interruption-ledger
+     * entry — a session predating the ledger, or one whose stop hook never
+     * fired.
+     *
+     * R2 round 6, finding 8. These were built unconditionally from the ledger
+     * rows, so an absent run emitted `asks: 0, contacts: 0, halts: 0` — while
+     * this report's own note tells the reader such a run is "reported with the
+     * missing axis null". The aggregate median already excluded them; the ROWS
+     * did not, and a reader consuming rows would score an unmeasured run as
+     * zero contacts. That is precisely the arithmetic falsification criterion
+     * (3) of the pre-registered `user-out-of-loop-baseline` claim forbids —
+     * "scoring an unmeasured run as zero contacts is the arithmetic that would
+     * manufacture the result".
+     */
+    asks: number | null;
+    handbacks: number | null;
+    contacts: number | null;
+    halts: number | null;
     elapsed_minutes: number | null;
     waiting_minutes: number | null;
     working_minutes: number | null;
+    /** `engage` events for this run in `run-continuation.jsonl`. */
+    reengagements: number;
+    /** `halt-stall` events — the anti-stall rung firing, not the loop working. */
+    stall_halts: number;
+    /** Relaunches the supervisor has spent on this run. */
+    relaunches: number;
+    /** Decision memos this run wrote instead of contacting the user. */
+    memos: number;
 }
 
 export interface Report {
@@ -89,6 +114,12 @@ export interface Report {
     median_user_wait_minutes: number | null;
     median_elapsed_minutes: number | null;
     median_working_minutes: number | null;
+    /** Phase 5.0 — the autonomy axis. */
+    median_reengagements_per_run: number | null;
+    /** Share of runs whose loop hit the stall rung. `null` with no runs. */
+    stall_halt_rate: number | null;
+    median_relaunches_per_run: number | null;
+    median_memos_per_run: number | null;
     notes: string[];
 }
 
@@ -105,6 +136,140 @@ const SYNTHETIC_MARKERS = [
 
 export function isSyntheticUserText(text: string): boolean {
     return SYNTHETIC_MARKERS.some((m) => text.includes(m));
+}
+
+/**
+ * Look one run's value up in a source keyed differently from the ledger.
+ *
+ * R2 review, finding 2. Three producers write three key spaces for the same
+ * run and the report joined them with exact lookups, so `reengagements`,
+ * `stall_halts`, `stall_halt_rate` and `relaunches` read 0 / 0 % for every
+ * real run while the data sat on disk:
+ *
+ *   - the interruption ledger  `derive_session_tag(id)`  = 16 hex
+ *   - run-continuation.jsonl   `deriveSessionKey(id)`    = 32 hex
+ *   - supervise-relaunches     the RAW `session_id`
+ *
+ * A zero meaning "no instrument" and a zero meaning "the key did not match"
+ * are indistinguishable in the output, and this report prints an explicit
+ * NO INSTRUMENT for two other axes precisely to avoid the first — so a silent
+ * second kind was the worse failure.
+ *
+ * Resolution is EXACT-FIRST and lives here rather than in the readers: a
+ * reader that rewrote its own keys would have to guess what an unrecognised
+ * string means, and guessing "hash it" turns a would-have-matched key into a
+ * guaranteed miss. The readers keep reporting what is on disk; the join owns
+ * the reconciliation, because only the join knows the ledger id it is
+ * looking for.
+ *
+ * The 32-hex key is a prefix-extension of the 16-hex tag ONLY because a
+ * session id carries no whitespace for `fingerprint` to normalise away.
+ * `interruption_report.test.ts` pins that equivalence rather than assuming it.
+ */
+export function lookupByRunId<T>(
+    source: ReadonlyMap<string, T> | Readonly<Record<string, T>>,
+    runId: string,
+): T | undefined {
+    const get = (k: string): T | undefined =>
+        source instanceof Map ? source.get(k) : (source as Record<string, T>)[k];
+    // 1. The key as the ledger spells it. Covers a source that already agrees,
+    //    and every fixture that writes one id everywhere.
+    const exact = get(runId);
+    if (exact !== undefined) return exact;
+    // 2. A 32-hex continuation key whose first SESSION_ID_LEN chars are this tag.
+    const keys: string[] = source instanceof Map ? [...source.keys()] : Object.keys(source);
+    for (const k of keys) {
+        if (k.length === 32 && /^[0-9a-f]+$/.test(k) && k.slice(0, SESSION_ID_LEN) === runId) {
+            return get(k);
+        }
+    }
+    // 3. A raw session id that hashes to this tag.
+    for (const k of keys) {
+        if (derive_session_tag(k) === runId) return get(k);
+    }
+    return undefined;
+}
+
+/**
+ * Phase 5.0 — the autonomy axis, from three runtime sources.
+ *
+ * Each reader is best-effort and returns an empty map on any failure. That is
+ * correct rather than lenient: a run that predates the mechanism genuinely had
+ * zero re-engagements, and refusing to report the other axes because one
+ * source is absent would make the whole report unavailable on a fresh install.
+ */
+export function readContinuationEvents(
+    root: string,
+): Map<string, { engage: number; stall: number }> {
+    const out = new Map<string, { engage: number; stall: number }>();
+    let text: string;
+    try {
+        text = fs.readFileSync(
+            path.join(root, 'agents', 'runtime', 'state', 'run-continuation.jsonl'),
+            'utf-8',
+        );
+    } catch {
+        return out;
+    }
+    for (const line of text.split('\n')) {
+        if (line.trim() === '') continue;
+        let rec: unknown;
+        try {
+            rec = JSON.parse(line);
+        } catch {
+            continue;
+        }
+        if (rec === null || typeof rec !== 'object' || Array.isArray(rec)) continue;
+        const o = rec as Record<string, unknown>;
+        const id = o['run_id'];
+        const ev = o['event'];
+        if (typeof id !== 'string' || typeof ev !== 'string') continue;
+        const cur = out.get(id) ?? { engage: 0, stall: 0 };
+        if (ev === 'engage') cur.engage += 1;
+        else if (ev === 'halt-stall') cur.stall += 1;
+        out.set(id, cur);
+    }
+    return out;
+}
+
+export function readRelaunchLedger(root: string): Record<string, number> {
+    try {
+        const raw: unknown = JSON.parse(
+            fs.readFileSync(
+                path.join(root, 'agents', 'runtime', 'state', 'supervise-relaunches.json'),
+                'utf-8',
+            ),
+        );
+        if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return {};
+        const out: Record<string, number> = {};
+        for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+            if (typeof v === 'number' && Number.isFinite(v) && v >= 0) out[k] = v;
+        }
+        return out;
+    } catch {
+        return {};
+    }
+}
+
+export function readMemoCounts(root: string): Record<string, number> {
+    const base = path.join(root, 'agents', 'runtime', 'state', 'decisions');
+    const out: Record<string, number> = {};
+    let runs: string[];
+    try {
+        runs = fs.readdirSync(base);
+    } catch {
+        return out;
+    }
+    for (const run of runs) {
+        try {
+            out[run] = fs
+                .readdirSync(path.join(base, run))
+                .filter((n) => /^\d{3}\.md$/.test(n)).length;
+        } catch {
+            // a file where a directory was expected — not a run
+        }
+    }
+    return out;
 }
 
 export function median(values: readonly number[]): number | null {
@@ -237,6 +402,13 @@ export function buildReport(root: string, windowRequested: number): Report {
     // null wall clock rather than disappearing from the denominator.
     for (const id of ledgerRuns) if (!windowedIds.has(id)) runIds.add(id);
 
+    // Phase 5.0 sources. All three are gitignored runtime state, all three are
+    // read best-effort, and an absent one yields zeros rather than an error —
+    // a run predating the mechanism genuinely had zero re-engagements.
+    const continuation = readContinuationEvents(root);
+    const relaunches = readRelaunchLedger(root);
+    const memosByRun = readMemoCounts(root);
+
     const allGaps: number[] = [];
     const runs: RunReport[] = [];
 
@@ -265,16 +437,31 @@ export function buildReport(root: string, windowRequested: number): Report {
             if (elapsed !== null) working = Math.max(0, elapsed - waiting);
         }
 
+        const cont = lookupByRunId(continuation, runId) ?? { engage: 0, stall: 0 };
+        const inLedger = ledgerRuns.has(runId);
         runs.push({
             run_id: runId,
             roadmap: rows.find((r) => r.roadmap !== null)?.roadmap ?? null,
-            asks,
-            handbacks,
-            contacts: contacts.length,
-            halts,
+            // `null`, not 0, when this run is absent from the ledger — see
+            // the field docs above and falsification criterion (3).
+            asks: inLedger ? asks : null,
+            handbacks: inLedger ? handbacks : null,
+            contacts: inLedger ? contacts.length : null,
+            halts: inLedger ? halts : null,
             elapsed_minutes: elapsed,
             waiting_minutes: waiting,
             working_minutes: working,
+            reengagements: cont.engage,
+            stall_halts: cont.stall,
+            // By ROADMAP, not by run id: the relaunch ledger is keyed on the
+            // roadmap slug so its per-run cap survives the new session id a
+            // relaunch produces (see `run_supervise.RelaunchLedger`). Joining
+            // it on the run id would read 0 for every run — the same
+            // permanent-zero shape finding 2 fixed one source over.
+            relaunches: (rows.find((r) => r.roadmap !== null)?.roadmap ?? null) === null
+                ? 0
+                : (relaunches[rows.find((r) => r.roadmap !== null)?.roadmap as string] ?? 0),
+            memos: lookupByRunId(memosByRun, runId) ?? 0,
         });
     }
 
@@ -306,7 +493,10 @@ export function buildReport(root: string, windowRequested: number): Report {
         runs,
         notes,
         median_contacts_per_run: median(
-            runs.filter((r) => ledgerRuns.has(r.run_id)).map((r) => r.contacts),
+            runs
+                .filter((r) => ledgerRuns.has(r.run_id))
+                .map((r) => r.contacts)
+                .filter((v): v is number => v !== null),
         ),
         median_user_wait_minutes: median(allGaps),
         median_elapsed_minutes: median(
@@ -315,6 +505,14 @@ export function buildReport(root: string, windowRequested: number): Report {
         median_working_minutes: median(
             runs.map((r) => r.working_minutes).filter((v): v is number => v !== null),
         ),
+        median_reengagements_per_run: median(runs.map((r) => r.reengagements)),
+        // A RATE, not a count: the question is what share of runs hit the
+        // anti-stall rung, and a raw count would rise with the window size and
+        // read as a regression when nothing changed.
+        stall_halt_rate:
+            runs.length === 0 ? null : runs.filter((r) => r.stall_halts > 0).length / runs.length,
+        median_relaunches_per_run: median(runs.map((r) => r.relaunches)),
+        median_memos_per_run: median(runs.map((r) => r.memos)),
     };
 }
 
@@ -340,11 +538,33 @@ export function renderText(report: Report): string {
     lines.push(`  median elapsed per run:    ${fmt(report.median_elapsed_minutes, ' min')}`);
     lines.push(`  median agent working time: ${fmt(report.median_working_minutes, ' min')}`);
     lines.push('');
+    lines.push('AUTONOMY AXIS (Phase 5.0)');
+    lines.push(`  median re-engagements:     ${fmt(report.median_reengagements_per_run)}`);
+    lines.push(
+        `  stall-halt rate:           ${
+            report.stall_halt_rate === null
+                ? 'n/a'
+                : `${Math.round(report.stall_halt_rate * 1000) / 10}%`
+        }`,
+    );
+    lines.push(`  median relaunches per run: ${fmt(report.median_relaunches_per_run)}`);
+    lines.push(`  median memos per run:      ${fmt(report.median_memos_per_run)}`);
+    // Two axes the roadmap names and this instrument CANNOT report. Stated as
+    // no-instrument rather than printed as 0, because a zero here would read
+    // as "measured, and it is zero" — the exact confusion between an absent
+    // record and an absent event that this suite records elsewhere.
+    lines.push('  unattended-vs-attended rework: NO INSTRUMENT — the unattended lane cannot run');
+    lines.push('    yet (the spawn is unbuilt and the budget defaults to disabled). The threshold');
+    lines.push('    is pre-registered as `unattended-demotion-gate` in docs/CLAIMS.md.');
+    lines.push('  memo revisit rate:            NO INSTRUMENT — a memo carries no revisit marker,');
+    lines.push('    so a revisited decision is indistinguishable from one nobody reopened.');
+    lines.push('');
     lines.push(`runs: ${report.runs.length}`);
     for (const run of report.runs) {
         lines.push(
             `  ${run.run_id}  asks=${run.asks} handbacks=${run.handbacks} halts=${run.halts}` +
                 `  elapsed=${fmt(run.elapsed_minutes)} working=${fmt(run.working_minutes)}` +
+                `  re=${run.reengagements} stall=${run.stall_halts} relaunch=${run.relaunches} memo=${run.memos}` +
                 `  roadmap=${run.roadmap ?? '-'}`,
         );
     }

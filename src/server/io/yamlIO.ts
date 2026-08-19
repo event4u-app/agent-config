@@ -66,9 +66,25 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
     if (dottedPath.length === 0) return template;
     const sections = dottedPath.slice(0, -1);
     const key = dottedPath[dottedPath.length - 1];
-    const targetIndent = '  '.repeat(sections.length);
 
     const lines = template.split('\n');
+    // The document's own width, the same read `upsertScalar` performs.
+    //
+    // R2 round 5, finding 1, and it is the second half of round 4's finding 7.
+    // That round taught `upsertScalar` to WRITE at the detected width and left
+    // this function — the probe that answers "does this key already exist?" —
+    // at a hardcoded two, in three places: the emitted indent, the `% 2`
+    // alignment test and the `/ 2` level. On a 4-space file `indentLen` 4
+    // passes `% 2` and computes level 2 for a depth-1 key, so the key is never
+    // found. The wizard then writes a correctly-indented line on the first
+    // toggle and, on the second, cannot see it and appends a DUPLICATE mapping
+    // key in the same block — two POSTs, both `{ok: true}`, and a config the
+    // parser rejects with "Map keys must be unique".
+    //
+    // A writer and its own existence-probe disagreeing about the format is the
+    // shape to look for whenever one of a pair is taught something new.
+    const width = detectIndentWidth(lines);
+    const targetIndent = ' '.repeat(width * sections.length);
     const currentPath: (string | null)[] = new Array<string | null>(sections.length).fill(null);
     const formatted = formatScalar(value);
 
@@ -78,8 +94,8 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
         const stripped = line.trim();
         if (stripped === '' || stripped.startsWith('#')) continue;
         const indentLen = line.length - line.trimStart().length;
-        if (indentLen % 2 !== 0) continue;
-        const level = indentLen / 2;
+        if (indentLen % width !== 0) continue;
+        const level = indentLen / width;
         if (level > sections.length) continue;
 
         const m = /^([A-Za-z_][A-Za-z0-9_]*)\s*:/.exec(stripped);
@@ -103,6 +119,154 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
         return lines.join('\n');
     }
     return template;
+}
+
+/**
+ * The indent width this document actually uses, or 2 when it has no nesting.
+ *
+ * The SMALLEST indent of any mapping line, not the first one seen. R2 round 6,
+ * finding 3: reading the first was wrong in two ways at once, and both were
+ * reachable on files this repository ships.
+ *
+ *   - The key pattern excluded `-`, so a dashed key (`first-principles:`, and
+ *     the shipped template has one) was skipped and the next, DEEPER line won:
+ *     a 2-space document read as 4.
+ *   - Even with the pattern fixed, "first" is not "representative" — a
+ *     document whose first indented line sits at depth 3 read as 6.
+ *
+ * Either way every `replaceScalar` probe then misses and `upsertScalar`
+ * appends a duplicate mapping key the parser rejects, over a `{ok: true}`.
+ * The minimum is the width by construction: nesting is a multiple of it, so
+ * the shallowest indented line IS one unit.
+ *
+ * Tabs are not YAML indentation and are ignored. A list item (`- x`) is not a
+ * mapping line and does not vote.
+ */
+export function detectIndentWidth(lines: readonly string[]): number {
+    let min = 0;
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed === '' || trimmed.startsWith('#') || trimmed.startsWith('-')) continue;
+        if (line.startsWith('\t')) continue;
+        const indentLen = line.length - line.trimStart().length;
+        if (indentLen === 0) continue;
+        // Hyphens and dots are legal in a YAML key and appear in this repo's
+        // own templates; excluding them is what let a deeper line win.
+        if (!/^[A-Za-z_][\w.-]*\s*:/.test(trimmed)) continue;
+        if (min === 0 || indentLen < min) min = indentLen;
+    }
+    return min === 0 ? 2 : min;
+}
+
+/**
+ * Set the scalar at `dottedPath`, CREATING the nesting when it is absent.
+ *
+ * R2 round 2, finding 6. `replaceScalar` returns the template unchanged when
+ * the path cannot be located, and the wizard's `set` helper never appended —
+ * so on every pre-existing `.ai-council.yml` written before a key existed, the
+ * wizard's toggle for that key returned 200 and wrote nothing. The user flips
+ * a switch, the server reports success, and the file is untouched.
+ *
+ * `mergeIntoTemplate` is not the fix for a NESTED key: its fallback appends a
+ * flat `a.b: value` line, which a YAML reader sees as a top-level key literally
+ * named "a.b" — so `doc['fallback']` stays undefined and the toggle is still
+ * inert, now with a line in the file suggesting otherwise.
+ *
+ * Insertion point is the end of the deepest EXISTING ancestor block, so an
+ * existing `fallback:` section gains a key rather than a second `fallback:`
+ * being appended — a duplicate mapping key is a YAML error in strict parsers
+ * and a silent last-wins in lenient ones.
+ *
+ * Comments and unrelated keys are preserved: nothing is rewritten, only
+ * inserted.
+ */
+export function upsertScalar(template: string, dottedPath: string[], value: unknown): string {
+    if (dottedPath.length === 0) return template;
+    const replaced = replaceScalar(template, dottedPath, value);
+    if (replaced !== template) return replaced;
+
+    const sections = dottedPath.slice(0, -1);
+    const key = dottedPath[dottedPath.length - 1] as string;
+    const formatted = formatScalar(value);
+    const lines = template.split('\n');
+    // The document's OWN indent width, not an assumed two.
+    //
+    // R2 round 4, finding 7. Both the ancestor search and the emitted block
+    // hardcoded `'  '.repeat(depth)`, so on a 4-space file the depth-2 walk
+    // round 3 added matched nothing at depth 1, `matched` stayed 0, and the
+    // whole chain was appended at EOF — producing a SECOND `fallback:` mapping
+    // key beside the existing one. `wizard.ts` writes the result without
+    // re-parsing and reports `{ok: true}`, so the user gets a 200 over a file
+    // a strict parser now rejects and a lenient one reads last-wins.
+    const width = detectIndentWidth(lines);
+    const pad = (depth: number): string => ' '.repeat(width * depth);
+
+    // How deep an existing ancestor chain runs, and where its block ends.
+    let matched = 0;
+    let insertAt = lines.length;
+    // The bounds of the ancestor matched at the previous depth. Each level
+    // searches only INSIDE its parent, so a nested key never binds to a
+    // same-named section under a different parent.
+    let parentStart = -1;
+    let parentEnd = lines.length;
+    for (let depth = 0; depth < sections.length; depth++) {
+        const want = sections[depth];
+        const indent = pad(depth);
+        let found = -1;
+        // R2 round 3, finding 5: this carried `depth === 0 ? 0 : insertAt ===
+        // lines.length ? 0 : 0` — every branch zero, i.e. a comment claiming a
+        // scoped search over an expression that does not scope anything. Made
+        // real: a nested section is searched only INSIDE its parent's block,
+        // so a depth-2 path cannot bind to a same-named key under a different
+        // parent. Latent today (the one caller is depth 1) and fixed rather
+        // than deleted, because the next caller is the one it would bite.
+        const from = depth === 0 ? 0 : parentStart + 1;
+        const until = depth === 0 ? lines.length : parentEnd;
+        for (let i = from; i < until; i++) {
+            const line = lines[i];
+            if (line === undefined) continue;
+            if (line.trim() === '' || line.trim().startsWith('#')) continue;
+            const indentLen = line.length - line.trimStart().length;
+            if (indentLen !== indent.length) continue;
+            const m = /^([A-Za-z_][A-Za-z0-9_]*)\s*:/.exec(line.trim());
+            if (m !== null && m[1] === want) {
+                found = i;
+                break;
+            }
+        }
+        if (found === -1) break;
+        matched = depth + 1;
+        // End of this block: the next line at or above its own indent level.
+        let end = lines.length;
+        for (let i = found + 1; i < lines.length; i++) {
+            const line = lines[i];
+            if (line === undefined) continue;
+            if (line.trim() === '' || line.trim().startsWith('#')) continue;
+            const indentLen = line.length - line.trimStart().length;
+            if (indentLen <= indent.length) {
+                end = i;
+                break;
+            }
+        }
+        insertAt = end;
+        parentStart = found;
+        parentEnd = end;
+    }
+
+    const block: string[] = [];
+    for (let depth = matched; depth < sections.length; depth++) {
+        block.push(`${pad(depth)}${sections[depth] as string}:`);
+    }
+    block.push(`${pad(sections.length)}${key}: ${formatted}`);
+
+    if (matched === 0) {
+        // No ancestor at all — append at EOF as its own block.
+        let body = template;
+        if (!body.endsWith('\n')) body += '\n';
+        return `${body}${block.join('\n')}\n`;
+    }
+    lines.splice(insertAt, 0, ...block);
+    return lines.join('\n');
 }
 
 /**

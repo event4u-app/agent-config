@@ -43,6 +43,12 @@ import type { EnvironmentReport } from '../../../src/scripts/_lib/environment_de
 import { load_council_config } from '../../../src/scripts/ai_council/config.js';
 import type { QuorumResult } from '../../../src/scripts/ai_council/quorum.js';
 import {
+    consult,
+    render,
+    CouncilQuestion,
+    type CliFallbackOptions,
+} from '../../../src/scripts/ai_council/orchestrator.js';
+import {
     CouncilDisabledError,
     build_members,
     cmd_debate,
@@ -605,6 +611,63 @@ describe('_synthesize_ai_council_block — quorum', () => {
         const synthesized = _synthesize_ai_council_block(cfg);
         expect(synthesized['quorum_min_present']).toBe(2);
     });
+
+    // Third instance of the same defect, and the one with money attached:
+    // `build_members` reads `ai_council.fallback.api_on_quota` off THIS block,
+    // so a dropped key means no config file can ever turn quota fall-through
+    // on — while the contract, the template and the unit tests all say it can.
+    it('forwards fallback.api_on_quota into the synthesized block', () => {
+        const dir = mkTmp();
+        const yamlPath = path.join(dir, '.ai-council.yml');
+        fs.writeFileSync(
+            yamlPath,
+            [
+                'enabled: true',
+                'defaults:',
+                '  mode: api',
+                'cost_budget:',
+                '  max_total_usd: 20.0',
+                'fallback:',
+                '  api_on_quota: true',
+                'members:',
+                '  anthropic:',
+                '    enabled: true',
+                '    model: claude-x',
+                '    api_key_ref: env:ANTHROPIC_KEY',
+                '',
+            ].join('\n'),
+            'utf-8',
+        );
+        const cfg = load_council_config(yamlPath);
+        expect(cfg.fallback.api_on_quota).toBe(true);
+        const synthesized = _synthesize_ai_council_block(cfg);
+        expect((synthesized['fallback'] as Record<string, unknown>)['api_on_quota']).toBe(true);
+    });
+
+    it('forwards the spend-safe default when the config omits the block', () => {
+        const dir = mkTmp();
+        const yamlPath = path.join(dir, '.ai-council.yml');
+        fs.writeFileSync(
+            yamlPath,
+            [
+                'enabled: true',
+                'defaults:',
+                '  mode: api',
+                'cost_budget:',
+                '  max_total_usd: 20.0',
+                'members:',
+                '  anthropic:',
+                '    enabled: true',
+                '    model: claude-x',
+                '    api_key_ref: env:ANTHROPIC_KEY',
+                '',
+            ].join('\n'),
+            'utf-8',
+        );
+        const cfg = load_council_config(yamlPath);
+        const synthesized = _synthesize_ai_council_block(cfg);
+        expect((synthesized['fallback'] as Record<string, unknown>)['api_on_quota']).toBe(false);
+    });
 });
 
 // ── cmd_render — handoff round-trip (road-to-always-on-orchestration Phase 4.1) ──
@@ -862,6 +925,53 @@ describe('_postRunQuorum', () => {
         const { quorum, absent } = _postRunQuorum(members, responses, {});
         expect(quorum).toEqual({ status: 'concluded', threshold: 1, total: 2, present: 1 });
         expect(absent).toEqual([{ member: 'openai', reason: 'quota', detail: 'cli_quota_exhausted' }]);
+    });
+
+    // A seat saved by the mid-flight fallback must count as PRESENT. The
+    // reading should already give that — the twin's response replaces the seat
+    // index-aligned, so this function sees a non-empty, error-free answer and
+    // never learns which transport produced it. Pinned rather than trusted:
+    // the whole point of the fallback is not losing the seat, and nothing else
+    // in the tree would fail if a future edit started keying attendance on the
+    // declared member's transport instead of on the response.
+    it('a seat answered by the api twin counts as present, not absent', () => {
+        const twinAnswer = new CouncilResponse({
+            provider: 'anthropic',
+            model: 'claude-x',
+            text: 'answered over the api rung',
+            metadata: {
+                fallback_from: 'cli',
+                fallback_reason: 'auth_rejected',
+                fallback_original_error: 'auth_expired',
+                transport: 'api',
+            },
+        });
+        const members = [
+            new StubMember('anthropic', 'claude-x', twinAnswer),
+            new StubMember('openai', 'gpt-x', new CouncilResponse({ provider: 'openai', model: 'gpt-x', text: 'b' })),
+        ];
+        const responses = members.map((m) => m.ask());
+        const { quorum, absent } = _postRunQuorum(members, responses, {});
+        expect(quorum).toEqual({ status: 'concluded', threshold: 1, total: 2, present: 2 });
+        expect(absent).toEqual([]);
+    });
+
+    it('a fallback that was REFUSED by the retry budget still counts as absent', () => {
+        // The mirror case: `fallback_skipped: cost_budget` means the original
+        // failure stands, so the seat is lost. Metadata must not rescue it.
+        const members = [
+            new StubMember('anthropic', 'claude-x', new CouncilResponse({
+                provider: 'anthropic',
+                model: 'claude-x',
+                text: '',
+                error: 'auth_expired',
+                metadata: { fallback_skipped: 'cost_budget' },
+            })),
+        ];
+        const responses = members.map((m) => m.ask());
+        const { quorum, absent } = _postRunQuorum(members, responses, {});
+        expect(quorum).toEqual({ status: 'inconclusive', threshold: 1, total: 1, present: 0 });
+        expect(absent).toEqual([{ member: 'anthropic', reason: 'no_auth', detail: 'auth_expired' }]);
     });
 
     it('a missing response entry (index past the end of `responses`) counts as absent, never as present', () => {
@@ -1139,5 +1249,218 @@ describe('_format_quorum_line — phase tag', () => {
         expect(post).toContain('after the run');
         expect(post).toContain('INCONCLUSIVE — release gate holds');
         expect(post).toContain('DEGRADED — 2 member(s) did not answer');
+    });
+});
+
+// ── Phase 4 falsifiability gate: the whole chain, end to end ────────────────
+//
+// Every layer of this feature was tested in isolation and shipped broken
+// twice anyway — once because the fallback sat behind a `billable` early
+// return that the real CLI clients always take, once because the config key
+// was dropped by the block `build_members` actually reads. Both would have
+// failed this test on its first run. So the claim it registers is
+// deliberately about the CHAIN, not about any one seam:
+//
+//   an eligible cli failure with a constructible api twin loses zero seats.
+//
+// config file → load_council_config → _synthesize_ai_council_block →
+// build_members(fallback_out) → consult → api twin → rendered artefact.
+
+describe('mid-flight fallback — end to end from a config file', () => {
+    const KEY_VAR = 'COUNCIL_FALLBACK_E2E_KEY';
+    afterEach(() => {
+        delete process.env[KEY_VAR];
+    });
+
+    /** A cli seat shaped like the real thing: subscription, non-billable. */
+    class DeadCliSeat extends ExternalAIClient {
+        calls = 0;
+        constructor(private readonly stderr: string) {
+            super();
+            this.name = 'anthropic';
+            this.model = 'claude-sonnet-4-5';
+            this.billable = false;
+            this.transport = 'cli';
+            this.subscription_label = 'claude-pro';
+        }
+        override ask(): CouncilResponse {
+            this.calls += 1;
+            return new CouncilResponse({
+                provider: this.name,
+                model: this.model,
+                text: '',
+                error: this.stderr,
+                latency_ms: 1,
+            });
+        }
+    }
+
+    /**
+     * Drive the REAL chain — file → loader → synthesized block →
+     * `build_members` → `fallback_out` — and hand back what it produced.
+     *
+     * The returned options are then used with `construct` swapped for a stub
+     * (see `hermetic` below). The real factory genuinely builds an
+     * `AnthropicClient`, and calling it would issue an HTTP request to
+     * Anthropic — the first draft of this test did exactly that and came back
+     * with a 401. A unit test that reaches the network is not a gate, it is a
+     * flake, so the chain is exercised up to and including construction and
+     * the transport itself is stubbed.
+     */
+    function fallbackOptionsFromConfig(yamlBody: string): CliFallbackOptions {
+        const dir = mkTmp();
+        const yamlPath = path.join(dir, '.ai-council.yml');
+        fs.writeFileSync(yamlPath, yamlBody, 'utf-8');
+        const cfg = load_council_config(yamlPath);
+        const settings = { ai_council: _synthesize_ai_council_block(cfg) };
+        const fallback_out: { options: CliFallbackOptions | null } = { options: null };
+        build_members(settings, { environment_report: emptyReport(), fallback_out });
+        if (fallback_out.options === null) {
+            throw new Error('build_members did not populate fallback_out');
+        }
+        return fallback_out.options;
+    }
+
+    /**
+     * The same options with the transport stubbed. `construct` still runs the
+     * real factory first and asserts it produced an api client — that is the
+     * link in the chain this test exists to prove — then returns a stub that
+     * answers offline.
+     */
+    function hermetic(options: CliFallbackOptions, answer = 'answered over api'): CliFallbackOptions {
+        return {
+            api_on_quota: options.api_on_quota,
+            construct: (provider: string) => {
+                const real: ExternalAIClient | null = options.construct(provider);
+                if (real === null) return null;
+                expect(real.transport).toBe('api');
+                const name = real.name;
+                const model = real.model;
+                const stub = new (class extends ExternalAIClient {
+                    constructor() {
+                        super();
+                        this.name = name;
+                        this.model = model;
+                        this.transport = 'api';
+                        this.billable = true;
+                    }
+                    override ask(): CouncilResponse {
+                        return new CouncilResponse({
+                            provider: this.name,
+                            model: this.model,
+                            text: answer,
+                            latency_ms: 1,
+                        });
+                    }
+                })();
+                return stub;
+            },
+        };
+    }
+
+    const CONFIG = (apiOnQuota: boolean): string =>
+        [
+            'enabled: true',
+            'cost_budget:',
+            '  max_total_usd: 20.0',
+            'fallback:',
+            `  api_on_quota: ${apiOnQuota}`,
+            'members:',
+            '  anthropic:',
+            '    enabled: true',
+            '    model: claude-sonnet-4-5',
+            `    api_key_ref: env:${KEY_VAR}`,
+            '',
+        ].join('\n');
+
+    it('a provider-quota cli failure keeps the seat when the opt-in is on', () => {
+        process.env[KEY_VAR] = 'sk-test-key';
+        const options = fallbackOptionsFromConfig(CONFIG(true));
+        // The chain carried the operator's decision all the way here. Before
+        // the key was modelled this read `false` no matter what the file said.
+        expect(options.api_on_quota).toBe(true);
+
+        const seat = new DeadCliSeat('cli_quota_exhausted');
+        const responses = consult(
+            [seat],
+            new CouncilQuestion({ mode: 'prompt', user_prompt: 'q' }),
+            null,
+            { cli_fallback: hermetic(options) },
+        );
+
+        expect(responses).toHaveLength(1);
+        expect(responses[0]!.error).toBeNull();
+        expect(responses[0]!.metadata['fallback_from']).toBe('cli');
+        expect(responses[0]!.metadata['fallback_reason']).toBe('quota_exhausted');
+        expect(responses[0]!.metadata['transport']).toBe('api');
+        // The dead binary was called once, and the twin answered after it.
+        expect(seat.calls).toBe(1);
+        // …and the artefact a human reads says which transport answered.
+        expect(render(responses)).toContain('fell back from cli: quota_exhausted');
+    });
+
+    it('the same failure loses the seat when the opt-in is off — the default', () => {
+        process.env[KEY_VAR] = 'sk-test-key';
+        const options = fallbackOptionsFromConfig(CONFIG(false));
+        expect(options.api_on_quota).toBe(false);
+
+        const seat = new DeadCliSeat('cli_quota_exhausted');
+        const responses = consult(
+            [seat],
+            new CouncilQuestion({ mode: 'prompt', user_prompt: 'q' }),
+            null,
+            { cli_fallback: hermetic(options) },
+        );
+        expect(responses[0]!.error).toBe('cli_quota_exhausted');
+        expect(responses[0]!.metadata['fallback_from']).toBeUndefined();
+    });
+
+    it('an auth failure keeps the seat with the opt-in OFF — the base classes never needed it', () => {
+        process.env[KEY_VAR] = 'sk-test-key';
+        const options = fallbackOptionsFromConfig(CONFIG(false));
+        // `auth_expired`, not raw stderr prose: `CliClient` normalises the
+        // binary's stderr to a short code before setting `error`, and
+        // `classifyCliFailure` matches the code. Handing it prose here would
+        // classify as `other` and test nothing.
+        const seat = new DeadCliSeat('auth_expired');
+        const responses = consult(
+            [seat],
+            new CouncilQuestion({ mode: 'prompt', user_prompt: 'q' }),
+            null,
+            { cli_fallback: hermetic(options) },
+        );
+        expect(responses[0]!.error).toBeNull();
+        expect(responses[0]!.metadata['fallback_reason']).toBe('auth_rejected');
+    });
+
+    it('a provider with no api rung yields no twin — the factory returns null, it does not throw', () => {
+        process.env[KEY_VAR] = 'sk-test-key';
+        const options = fallbackOptionsFromConfig(CONFIG(true));
+        // `perplexity` is not in this config, so the factory sees no
+        // `api_key_ref` and the strict api contract refuses it. The refusal
+        // must arrive as `null` — an escalation that throws would take down
+        // the pass it was supposed to rescue.
+        expect(options.construct('perplexity')).toBeNull();
+    });
+
+    it('a rotated key between construction and retry yields no twin, not a crash', () => {
+        process.env[KEY_VAR] = 'sk-test-key';
+        const options = fallbackOptionsFromConfig(CONFIG(true));
+        // The factory resolves the key at CONSTRUCT time, so unsetting it here
+        // is what a rotated or expired key looks like mid-pass.
+        delete process.env[KEY_VAR];
+        expect(options.construct('anthropic')).toBeNull();
+
+        const seat = new DeadCliSeat('cli_quota_exhausted');
+        const responses = consult(
+            [seat],
+            new CouncilQuestion({ mode: 'prompt', user_prompt: 'q' }),
+            null,
+            { cli_fallback: options },
+        );
+        // The original failure stands, unmodified. The seat is lost, which is
+        // the honest outcome when there is nothing to fall back to.
+        expect(responses[0]!.error).toBe('cli_quota_exhausted');
+        expect(responses[0]!.metadata['fallback_from']).toBeUndefined();
     });
 });

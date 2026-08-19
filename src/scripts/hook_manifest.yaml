@@ -669,6 +669,31 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+  # road-to-long-horizon-execution Phase 1 (H-1) — the stop slot's first
+  # WORK-REMAINING concern. No-op unless this session claimed a roadmap
+  # (`sessions:claim`) whose frontmatter says `execution.mode: autonomous`;
+  # then compares the claimed roadmap's open checkboxes against the run and
+  # BLOCKS the stop with a continuation naming the next step + its `verify:`
+  # line, under a termination ladder (max 25 iterations, 4 h wall clock,
+  # 3-engagement stall → allow). Registered AFTER turn-end-gate on purpose:
+  # concerns run sequentially, so a gate refusal for this turn is on disk
+  # first and this concern defers to it — quality gates outrank continuation,
+  # always. Events: agents/runtime/state/run-continuation.jsonl. Kill switch:
+  # AGENT_CONFIG_NO_RUN_CONTINUATION=1. fail_closed: false — the only block
+  # it ever emits is the one carrying its own continuation text.
+  run-continuation:
+    script: src/scripts/hooks/run_continuation_hook.ts
+    args: []
+    fail_closed: false
+    # `blocking`, and the R2 review is why. The concern shipped `advisory`,
+    # which the dispatcher enforces as a CEILING: `_is_advisory` downgrades any
+    # EXIT_BLOCK to EXIT_WARN, and `host_semantics.emitFor` maps stop+warn to
+    # exit 0 + additionalContext. The concern's `return EXIT_BLOCK`, this
+    # comment block's "BLOCKS the stop", and the hook's own docblock therefore
+    # all described behaviour the declaration forbade — the whole re-engagement
+    # mechanism was inert on the one verified host. `turn-end-gate` above sits
+    # on the same slot and declares `blocking` for exactly this reason.
+    severity: blocking
   # road-to-user-out-of-the-loop Phase 0 Step 1 — the interruption ledger.
   # Every Stop, classifies whether the turn that just ended put a synchronous
   # contact to the user and appends one `{run_id, turn, kind, class, roadmap}`
@@ -832,7 +857,7 @@ platforms:
   claude:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress]
-    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress]
+    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, run-continuation]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, language-mirror]

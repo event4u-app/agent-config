@@ -175,11 +175,67 @@ read-only environment report from `src/scripts/_lib/environment_detector.ts`.
   `auto`.
 - **Mid-flight fallback is failure-class-gated.** Within one invocation an
   `auto` (or `cli`) member may fall through to the `api` rung **at most once**,
-  and only for `binary_missing`, `auth_rejected`, or `cli_unsupported` — the
-  three classes where the CLI provably never reached the provider. A `timeout`,
-  a 5xx, or an exhausted `cli_call_budget` does **not** fall through: a
-  half-completed call must never be paid for twice, and a quota cap the user set
-  is not a fault to route around.
+  and only for `binary_missing`, `auth_rejected`, `cli_unsupported`, or
+  `model_unservable` — the classes where the CLI provably never reached the
+  provider (or was rejected at the request boundary with no generation
+  performed). A `timeout` or a 5xx does **not** fall through under any
+  configuration: a half-completed call must never be paid for twice.
+  Consumed by `orchestrator.ts::_run_round` via `ConsultOptions.cli_fallback`;
+  `council_cli.ts::build_members` supplies the api-twin factory (out-param
+  `fallback_out`), which enforces the same strict `api_key_ref` construction
+  contract as the api branch — a provider whose api rung cannot construct
+  simply surfaces the original failure. The retried call runs its **own**
+  projected-spend gate (it is metered even when the failed cli call was not);
+  a budget breach surfaces the original failure with
+  `metadata.fallback_skipped: cost_budget`. A retried seat carries
+  `metadata.fallback_from / fallback_reason / fallback_original_error` and is
+  stamped, billed, and daily-ledgered as the api member that answered.
+- **"At most once" is about ESTABLISHING the twin, not about answering once.**
+  A provider that falls through is **substituted for the remainder of the
+  invocation**: every later call in that invocation goes straight to the twin,
+  so the dead binary is spawned once and the twin is constructed once. Those
+  later responses carry `metadata.fallback_sticky: true` alongside the same
+  `fallback_from / fallback_reason` stamp, which is how a reader separates the
+  one escalation from the calls that merely reused it.
+
+  Without the substitution the invocation scope would be strictly worse than a
+  per-round one: the ledger grants `'api'` once per provider, so round 2 would
+  call the dead binary again, fail again, be refused by the ledger, and lose
+  the seat for the rest of the pass — having fallen back exactly once.
+- **Which calls are covered.** `consult()` and all its rounds; `run_debate()`
+  — its restate pass, every debate round, and the gate-repair re-prompts, all
+  under ONE ledger and one twin map per `run_debate` invocation; the
+  stance-repair re-prompt, on the same invocation-wide ledger as the rounds it
+  repairs; and the chairman synthesis, which is a separate invocation with its
+  own ledger and its own single-client member set. `cmd_estimate` is a decided
+  non-goal — it prices members and never calls one.
+- **A `billable: false` cli member is covered, and this is the load-bearing
+  case.** Every vendor-official CLI client is `billable = false` +
+  `transport = 'cli'`; only the two community CLI subclasses that consume an
+  API key are billable. A fallback wired only into the billable path would
+  therefore never fire for anthropic, openai, or gemini — the members the
+  mechanism exists for. The establishing retry runs in the non-billable branch
+  and then rejoins the metered path, so the twin's call is projected, gated,
+  booked, and stamped like any other api call.
+- **Quota fall-through is opt-in: `fallback.api_on_quota` (default `false`).**
+  Both quota shapes — the local `cli_call_budget` refusal (pre-spawn, nothing
+  sent) and the provider-side plan-quota reject (request boundary) — satisfy
+  the no-double-charge property, so the gate here is not double-spend but
+  **billing class**: a vendor CLI under a subscription is unmetered, its api
+  twin is metered USD, and converting exhausted plan quota into API spend is a
+  decision the operator states, never one `auto` infers. With the key set, the
+  retry still passes the ordinary `cost_budget` gates.
+
+  ```yaml
+  # Top level of .ai-council.yml — NOT nested under an `ai_council:` root.
+  fallback:
+    api_on_quota: true   # default false
+  ```
+
+  The root matters and this example had it wrong (R2 round 6, finding 7):
+  `config.ts` reads `fallback` off the TOP level of the file, and the shipped
+  template puts it there, so a pasted `ai_council:` wrapper parses fine and
+  resolves to the default `false` — the switch reads as set and is not.
 - **`cli_call_budget` ships populated**, because `auto` prefers the rung it
   guards.
 
@@ -482,10 +538,11 @@ quorum / absent-members fields above:
 ### Persistent events log (step-8 D3)
 
 The orchestrator appends one JSON line to `agents/runtime/council/events.log`
-on every necessity-gate decision (`proceed` / `skip_necessity`) and on
-every `cli_call_budget` block (`block_quota`). The log is gitignored
-by default — it is a local-only audit trail, never part of the
-repository contract.
+on every necessity-gate decision (`proceed` / `skip_necessity`), on
+every `cli_call_budget` block (`block_quota`), on each attendance reading
+(`quorum_result`), and on each mid-flight transport escalation
+(`transport_fallback`). The log is gitignored by default — it is a
+local-only audit trail, never part of the repository contract.
 
 Schema v1:
 
@@ -502,7 +559,16 @@ Schema v1:
 }
 ```
 
-- `action` ∈ `proceed | skip_necessity | block_quota`.
+- `action` ∈ `proceed | skip_necessity | block_quota | quorum_result | transport_fallback`.
+  (`quorum_result` was shipped and undocumented here until 2026-08-19;
+  it is listed now rather than left for the next reader to find in the
+  validator's error message.)
+- A `transport_fallback` line carries `provider`, `failure_class`,
+  `outcome` ∈ `retried | no_twin | cost_budget`, and `api_on_quota`. One
+  line per ESTABLISHING escalation, not per substituted call — the
+  substituted rounds are visible in the rendered artefact instead. Without
+  it, attendance analysis cannot separate a seat SAVED by the fallback from
+  a seat that was natively api, and only one of those spends unplanned USD.
 - `original_ask_hash` is `sha256(original_ask)[:12]`. The raw prompt
   is **never** written — privacy floor per
   [`agents/decisions/low-impact-decisions.md`](../../agents/decisions/low-impact-decisions.md).
@@ -835,6 +901,52 @@ threshold, the configured mode is upgraded one rung
 (`agent` → `council` → `user`) so low-certainty calls escalate rather
 than silently auto-resolve.
 
+**Optional second-model rung — `second_model`.** Absent by default. It
+exists because the council was the ONLY rung between the agent and a
+halt: a question below `high_impact` still stopped the run whenever no
+council was configured or its quota was gone. One local pass fills that
+gap without touching the locked classes.
+
+Three constraints, each with its own reason:
+
+- **The provider set is `anthropic | openai | gemini`** — narrower than
+  the five `members:` accepts. `xai` and `perplexity` ship COMMUNITY CLI
+  wrappers that consume an API key and are `billable = true`, so routing
+  a resolution there would spend USD on the rung whose entire purpose is
+  to be USD-neutral. The discriminator is `billable === false`, not "has
+  a cli subclass".
+- **Quota-bounded by the same `cli_call_budget` counter** the council's
+  own cli transport books against. One subscription, one counter — a
+  parallel count is how a plan quota gets spent twice.
+
+  **This one is an OBLIGATION ON THE RUNG, not an enforced coupling, and
+  the difference is stated because three surfaces asserted the stronger
+  reading at once (R2 round 4, finding 4).** No TypeScript path reads
+  `second_model` at runtime — the contract's own honesty note further
+  down says so for `decision_resolution.classes[*]` generally — and
+  `cli_call_budget.ts` declares its set of booking consumers closed at
+  two, neither of them this. So a rung that books nothing is not
+  prevented by a counter; it is required by this line to book against
+  the counter when it is built. Until then, "quota-bounded" describes
+  the contract the implementation must meet, never a guard that exists.
+- **Rejected on `high_impact` / `user_required`**, not ignored, and even
+  an explicit `null` is refused there. Same treatment `dispatch` gets on
+  those classes, for the same reason: a key that is silently dropped
+  reads to its author as configured, and this one would read as
+  "high-impact questions may resolve without me".
+
+**No self-adversarial fallback.** With neither a council nor a
+second-model rung, the ambiguity halt stands. The gap is never filled by
+the agent arguing both sides to itself — that produces a verdict with no
+independent observer, which is the failure `evaluator-independence`
+exists over, and it reads as convergence to whoever finds it later.
+
+**Where the routing is enforced.** In this schema, and only here: no
+TypeScript path reads `decision_resolution.classes[*]` at runtime — the
+routing is agent-carried, and the loader is the one thing that can refuse
+an illegal route before a model ever sees it. Stated so a reader does not
+go looking for a resolver that does not exist.
+
 ```yaml
 decision_resolution:
   enabled: true
@@ -848,13 +960,25 @@ decision_resolution:
     medium_impact:
       mode: council
       confidence_threshold: 0.6
+      second_model: gemini  # optional local rung; USD-neutral
     high_impact:
       mode: user            # LOCKED — Iron Law
       confidence_threshold: 0.6
+      # second_model here is a hard schema error, not a no-op
     user_required:
       mode: user            # LOCKED — Iron Law
       confidence_threshold: 0.6
 ```
+
+**A resolution taken without contacting the user is recorded.**
+`agent-config decision:memo write --run <id> --question … --chosen …
+--reasoning … --resolver … --confidence high|medium|low` writes
+`agents/runtime/state/decisions/<run>/NNN.md`. Local-only (the whole
+`agents/runtime/` tree is gitignored), monotonic index per run, and the
+writer refuses a memo missing any of the five fields — a record with no
+reasoning is a log line pretending to be a decision record. It gates
+nothing: the memo is what makes an autonomous resolution reviewable
+afterwards, which is the condition under which it is legitimate at all.
 
 ### Prior negative result in the wild — and what would falsify OUR design
 

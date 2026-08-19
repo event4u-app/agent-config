@@ -97,13 +97,13 @@ describe('events_log — write + schema', () => {
 
     it('invalid action throws (Python ValueError parity)', () => {
         expect(() => appendEvent({ action: 'nope' }, { logPath: path.join(tmpDir(), 'x.log') })).toThrow(
-            "events_log: action='nope' not in ['block_quota', 'proceed', 'quorum_result', 'skip_necessity'].",
+            "events_log: action='nope' not in ['block_quota', 'proceed', 'quorum_result', 'skip_necessity', 'transport_fallback'].",
         );
     });
 
     it('missing action throws with None repr', () => {
         expect(() => appendEvent({}, { logPath: path.join(tmpDir(), 'x.log') })).toThrow(
-            "events_log: action=None not in ['block_quota', 'proceed', 'quorum_result', 'skip_necessity'].",
+            "events_log: action=None not in ['block_quota', 'proceed', 'quorum_result', 'skip_necessity', 'transport_fallback'].",
         );
     });
 
