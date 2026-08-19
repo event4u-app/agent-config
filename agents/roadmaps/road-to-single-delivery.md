@@ -334,10 +334,20 @@ same-version duplication is free.
       `types_compared` printed **-2** (it subtracted absent LAYERS from TYPES), and
       the exit-code verification was worthless for the reason above. Both fixed,
       and the field now prints `N of 4`.
-- [ ] **4.2** `task generate-tools` states the consequence it creates: it writes
+- [x] **4.2** `task generate-tools` states the consequence it creates: it writes
       one layer and is silent about the other existing.
       `verify:` generating while the other layer holds an overlapping name prints
       the count and points at the check.
+      **DONE 2026-08-19** — `_warn_layer_overlap()` in `condense.ts`, after the
+      summary. Verified on a real run: `⚠️ a global layer holds the same names
+      (rules=110 skills=290 commands=40)`, the same figures the census and
+      `check_single_delivery` report independently.
+      **Advisory, never failing.** `generate-tools` is the normal build step, and
+      failing it on a topology the operator may not be able to change today would
+      make the build unusable rather than the duplication visible. The check that
+      can refuse is `check_single_delivery --enforce`.
+      It skips silently when one layer is absent — nothing is doubled there, and a
+      warning would be noise on exactly the topology this roadmap wants.
 - [ ] **4.3** Bind the check where the person who can act on it sees it.
       **Blocked on `overlap-check-binding-surface`.**
       `verify:` the binding is named and a deliberate overlap surfaces there.

@@ -2614,6 +2614,57 @@ function _generate_tools_inner(
         success(summary);
         flush_summary();
     }
+    _warn_layer_overlap();
+}
+
+/**
+ * Say what writing the project layer costs when a global layer already holds the
+ * same names.
+ *
+ * This generator writes ONE of the two layers Claude Code loads, and until now it
+ * was silent about the other existing — while the installer's overlap gate runs at
+ * install time and cannot see a layer written afterwards. So the overlap is created
+ * by whichever producer runs LAST, and neither said so. Measured 2026-08-19: 110
+ * rules, 290 skills and 40 commands delivered twice, 203,873 tok of standing rule
+ * prose against a 110,000 cap.
+ *
+ * Advisory only, and deliberately: `generate-tools` is the normal build step, and
+ * failing it on a topology the operator may not be able to change today would make
+ * the build unusable rather than the duplication visible. The invariant is
+ * ADR-235; the check that can refuse is `check_single_delivery --enforce`.
+ */
+function _warn_layer_overlap(): void {
+    const home = process.env['HOME'];
+    if (home === undefined || home === '') return;
+    const pairs: Array<[string, string, string]> = [
+        ['rules', path.join(home, '.claude', 'rules'), path.join(MODULE_STATE.PROJECT_ROOT, '.claude', 'rules')],
+        ['skills', path.join(home, '.claude', 'skills'), path.join(MODULE_STATE.PROJECT_ROOT, '.claude', 'skills')],
+        [
+            'commands',
+            path.join(home, '.claude', 'commands'),
+            path.join(MODULE_STATE.PROJECT_ROOT, '.claude', 'commands'),
+        ],
+    ];
+    const findings: string[] = [];
+    for (const [label, globalDir, projectDir] of pairs) {
+        let g: string[];
+        let p: string[];
+        try {
+            g = fs.readdirSync(globalDir);
+            p = fs.readdirSync(projectDir);
+        } catch {
+            continue; // one layer absent — nothing is doubled, nothing to say
+        }
+        const gset = new Set(g);
+        const both = p.filter((n) => gset.has(n)).length;
+        if (both > 0) findings.push(`${label}=${both}`);
+    }
+    if (findings.length === 0) return;
+    _print(
+        `  ⚠️  a global layer holds the same names (${findings.join(' ')}) — the host loads both` +
+            ' with no dedup, so these are delivered twice per session.' +
+            '\n      Detail: ./scripts-run src/scripts/check_single_delivery · invariant: ADR-235',
+    );
 }
 
 export function generate_tools(): void {
