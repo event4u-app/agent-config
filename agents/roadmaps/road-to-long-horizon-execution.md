@@ -143,15 +143,35 @@ questions, never safeguards.
 
 ### Phase 0 — Baseline before behaviour
 
-- [ ] **0.0** Re-verify every AC file:line in § 1 against branch HEAD
-      before executing any phase (the external rows re-verify against the
-      pins — external trees move; a moved line re-opens the row, not the
-      phase).
+- [x] **0.0** Every AC row in § 1 re-verified live at `3d5bf5945`
+      (2026-08-19). Row 1's count moves from 11 to **12** and the twelfth
+      is `run-continuation` itself, registered LAST on the claude full stop
+      chain — the ordering the whole design rests on, read straight off the
+      manifest rather than trusted from the patch. Rows 2–4 hold: the
+      `session-eol` concern is bound and the UOTL Phase 6 extensions are
+      still absent; `agents/runtime/state/scheduler.json` does not exist;
+      `roadmap-progress` is bound on `stop`, `post_tool_use` and
+      `session_end`. The external rows are NOT re-verified — they hold at
+      their pins only, and any phase that acts on one re-reads it first.
       `verify:` `./scripts-run src/scripts/lint_hook_manifest`
-- [ ] **0.1** Read the current `interruption_report` window (UOTL Phase 0
-      shipped it): record the two pre-registered baselines
-      (`user-out-of-loop-baseline`, `roadmap-wall-clock-baseline`) as the
-      numbers this roadmap is measured against.
+- [x] **0.1** Instrument run against the live store (2026-08-19, 18 runs
+      in a 30-run request):
+      contacts per run **median 0** · user wait **median 6.2 min** ·
+      elapsed **median 108.4 min** · agent working **median 98.6 min**.
+      **This is an interim reading and is NOT the baseline** — both
+      pre-registered claims fix ≥ 20 recorded runs before any comparison,
+      the instrument prints its own SHORT WINDOW warning at 18, and only 5
+      of the 18 runs carry timing at all. Recorded here so the next reading
+      has something to be compared against, and labelled so nobody cites
+      it as the number. The baselines stay `unbacked` in CLAIMS.md
+      (`user-out-of-loop-baseline`, `roadmap-wall-clock-baseline`), which
+      is where they belong until the window fills.
+      A second finding, worth more than the numbers: the instrument reads
+      the store from the repo root, and a worktree has neither
+      `interruptions.jsonl` nor the chat history (both gitignored), so it
+      reported 0 runs until pointed at the main checkout with `--root`.
+      Any later phase measuring from a worktree must pass `--root` or it
+      will read a clean zero as a result.
       `verify:` `./scripts-run src/scripts/interruption_report`
 
 ### Phase 1 — Re-engagement concern
@@ -184,14 +204,47 @@ questions, never safeguards.
       keeps it constant), so the duplicate key is ordinal + open-count +
       60 s window, and progress detection rides the checkbox delta alone.
       `verify:` `npx vitest run tests/scripts/hooks/run_continuation.test.ts`
-- [ ] **1.2** Eval — the pure surface (mode gate, scan vocabulary incl.
-      `[~]`/`[-]`/`blocked-by`, all six ladder rungs both directions,
-      duplicate-fire key, refusal defer) is pinned by 21 tests in
-      `tests/scripts/hooks/run_continuation.test.ts`. OPEN half: the same
-      sequence through the LIVE dispatcher chain (`dispatch_hook.ts`)
-      asserting turn-end-gate precedence end-to-end, as a test the suite
-      runs.
-      `verify:` `npx vitest run tests/scripts/hooks/run_continuation.test.ts`
+- [x] **1.2** Both halves now closed. The pure surface stays pinned by the
+      21 tests in `tests/scripts/hooks/run_continuation.test.ts`; the open
+      half is `tests/hooks/run_continuation_dispatch.test.ts`, 7 cases
+      driving the REAL `dispatch_hook` binary over the REAL manifest with a
+      claude `stop` envelope: engage, defer-on-refusal, no-claim, non-
+      autonomous, kill switch, plus two manifest-order assertions.
+      `verify:` `npx vitest run tests/hooks/run_continuation_dispatch.test.ts`
+
+#### What 1.2 found
+
+- **F-1 — the concern was not in `CONCERN_REGISTRY`.** A concern reaches
+  the in-process dispatcher path only through that table, and the parity
+  test (`tests/hooks/concern_registry_parity.test.ts`) is CI-enforced
+  precisely because a missing line silently drops the concern back to the
+  spawn path. The inherited patch declared the concern in the manifest,
+  registered it on the chain, and shipped 21 green unit tests without it.
+  That is the shape this phase's own § 2 H-1 warns about from the other
+  side: the unit suite proves the function, only the integration proves it
+  runs.
+- **F-2 — the race-freedom claim was a comment, now an assertion.**
+  `refusedThisTurn`'s docblock justifies reading the gate's marker off disk
+  with "race-free by chain order … registered after the gate". That is a
+  claim about one list in one YAML file, and a reordering is a one-line
+  edit no unit test can see. Two cases now read the live manifest and
+  assert both the strict ordering and that nothing runs after the
+  continuation decision.
+- **F-3 — two `verify:` lines in the source draft named a command that does
+  not exist.** `./scripts-run src/scripts/validate_evals` has no script
+  behind it (the tree carries `check_trigger_evals`, `lint_eval_freshness`,
+  `run_skill_evals` and others — no `validate_evals`). Counted by grep over
+  the inbox original, not from memory: 2 occurrences, at 1.2 and 3.2. A
+  verify line that cannot run is worse than none — it reads as verified and
+  checks nothing. Both replaced with commands that were actually executed.
+- **F-4 — the event ledger records that an engagement happened, not what
+  was injected.** The continuation text reaches the agent through the
+  dispatcher's output; the `.jsonl` line carries only counts. Both are
+  legitimate, and the test asserts the text on the output for that reason —
+  but a reader auditing the ledger alone cannot see a degenerate
+  continuation. Named here rather than fixed: adding the text to the ledger
+  is a privacy-surface decision (it embeds roadmap prose into a state file),
+  and this phase is not where that gets decided.
 - [x] **1.3** Kill criterion in this file: if the held-defect rate over
       the conformance window rises above baseline while `run-continuation`
       is bound, the concern's default flips to off in the same PR that
