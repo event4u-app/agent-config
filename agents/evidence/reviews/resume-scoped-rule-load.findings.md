@@ -17,12 +17,15 @@ The substance of this change is a **claim about the past**, so it was verified b
 probing the tree rather than by reasoning about a diff. Each of the four facts
 the step requires was established with a command:
 
-| Claim | How it was established | Result |
-|---|---|---|
-| The resume condition | read verbatim from the park block | *"Resume when P2.1 of `road-to-rule-delivery-integrity` closes"*, restated 2026-08-08, owner maintainer |
-| The date it was satisfied | P2.1's own completion marker in the archived parent | `done 2026-08-08` |
-| The artefact that satisfied it | the marker names it | `agents/evidence/analysis/skill-catalogue-description-delivery.md` |
-| No resumption event followed | `git log --since=2026-08-08` over the parked file | **zero commits**, i.e. eleven days |
+- **The resume condition** — read verbatim from the park block:
+  *"Resume when P2.1 of `road-to-rule-delivery-integrity` closes"*, restated
+  2026-08-08, owner maintainer.
+- **The date it was satisfied** — P2.1's own completion marker in the archived
+  parent reads `done 2026-08-08`.
+- **The artefact that satisfied it** — named by that same marker:
+  `agents/evidence/analysis/skill-catalogue-description-delivery.md`.
+- **No resumption event followed** — `git log --since=2026-08-08` over the parked
+  file returns **zero commits**, i.e. eleven days.
 
 Two adjacent facts were probed because the note asserts them: the parent roadmap
 archived 2026-08-09 at `259039157` (`git log --diff-filter=A`), and the
