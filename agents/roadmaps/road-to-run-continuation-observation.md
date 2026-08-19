@@ -22,11 +22,28 @@ estate_offset_exempt: >-
 ## Context
 
 `run-continuation` is the stop-slot concern that re-engages a run while
-its claimed roadmap still has open steps. It shipped, it is unit-tested
-(21 cases), it is integration-tested against the real dispatcher (7 cases
-when this roadmap was written; the file holds 26 at the close of this
-branch, of which 24 drive the dispatcher and 2 only read the hook
-manifest) — and it had **never fired once** outside a test.
+its claimed roadmap still has open steps. It shipped, it was tested, and
+it had **never fired once** outside a test.
+
+**The test counts are deliberately not quoted here any more.** Four
+separate review rounds caught this sentence carrying a stale figure —
+round 3 finding 8, round 5 finding 4, round 6 finding 7, and round 8
+finding 8, the last of which found the unit half still claiming 21
+against an actual 40 in the same revision that had just corrected the
+integration half. A number nobody can keep current is worse than no
+number, because its whole purpose was to be checkable. The counts are
+one command away and that command cannot go stale:
+
+```
+npx vitest run tests/scripts/hooks/run_continuation.test.ts \
+              tests/hooks/run_continuation_dispatch.test.ts
+```
+
+What the prose does claim, and what stays checkable by reading rather
+than counting: the unit suite exercises `ladder()`, `scanOpenSteps()` and
+`refusedThisTurn()` directly, the dispatch suite drives the real
+`dispatch_hook` binary over the real manifest, and a subset of the latter
+only parses the manifest without dispatching at all.
 
 The cause was a defect, not a missing step, and it is fixed: the run
 contract had two halves resolving different roots. `sessions:claim`
