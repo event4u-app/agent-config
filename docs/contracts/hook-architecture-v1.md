@@ -217,6 +217,44 @@ runs them **sequentially** in manifest order and reduces:
 in manifest order. Concerns are never run in parallel — concurrency
 guarantees rely on serial state writes.
 
+## Emission shaping — what leaves is a subset of what was produced
+
+Reduction decides the *verdict*. A second pass decides which of the collected
+messages are actually emitted, because two independently-correct advisory
+concerns can both fire on one event and nothing used to arbitrate between them.
+Both policies live in `src/scripts/hooks/injection_budget.ts` and run after
+reduction, in this order:
+
+1. **Nudge exclusivity.** A concern may declare `nudge_rank: <n>` in the
+   manifest. At most one ranked concern's message leaves per event: the lowest
+   rank wins, the rest are suppressed. A concern without the field is not
+   nudge-class and this policy never touches it.
+2. **Per-turn byte ceiling.** `src/config/hook-token-budget.json §
+   per_turn_aggregate_bytes` registers the bytes a representative turn may
+   inject. When the running total would exceed it, advisory messages are dropped
+   lowest-severity-first (`allow` before `warn`, then largest first) until it
+   fits. The events named in that row's `excluded_slots` — `session_start` above
+   all — are not shaped by volume at all.
+
+**Neither policy can drop a `severity: blocking` or `fail_closed` concern.** That
+exemption is by construction, not by configuration: a shaping layer able to
+silence a safety warning would be worse than the stacking it was added to fix.
+When the exempt set alone exceeds the ceiling, the dispatcher says so on stderr
+and drops nothing.
+
+Every suppression is recorded as one `dispatch-issues.jsonl` line, so a reader
+who expected a hook effect and did not see it can find out why. The two codes
+are `nudge_interference_drop` and `injection_budget_drop`; unlike the four
+concern-failure codes, they mean the concern ran correctly and the dispatcher
+chose not to emit it.
+
+The running total lives in `agents/runtime/state/injection-turn.json` — one
+session id and one integer, with no field capable of holding a prompt or an
+emitted line — and is reset on `user_prompt_submit`, the event that starts a
+turn. It is not written under replay, per § Replay mode. An unreadable or
+missing counter reads as zero: an accounting failure must never be the reason an
+advisory disappears.
+
 ## Feedback channel — `agents/runtime/state/.dispatcher/<session_id>/`
 
 Exit-code reduction collapses the severity ladder to a single
