@@ -1164,6 +1164,77 @@ PR is already a performance change carrying one security fix.
   `hook_manifest.yaml` as it stands today, and every added `stop` concern makes it
   less true.
 
+### blocker: b-concern-load-taxes-every-slot
+
+- **Status:** open
+- **Owner:** user
+- **Class:** 2 — consent-once
+- **Blocks:** the trunk, right now. `main` is RED on the pre-registered
+  hook-latency gate and has been since the org-telemetry merge, so every open PR
+  inherits the failure and reads as if it caused it.
+- **What to do:** decide how to answer a MEASURED cost increase that the
+  re-derived 175 ms cap has already caught. This is not the runner-variance case
+  the cap re-derivation absorbed; the control measurement separates them.
+
+  Evidence, in the order it was taken:
+
+  1. **CI, trunk.** `main` at `cab529209` (the `feat/org-telemetry-phase1-emission`
+     merge) measured `pre_tool_use` p50 **176** / p95 **185** ms and failed the
+     175 cap. The immediately preceding green run measured p50 111-148 — the
+     window the cap was derived from.
+  2. **CI, with a same-run control.** A branch carrying the control row measured
+     p50 **181** / p95 184 while `node -e 0` in the SAME job read **26 ms**,
+     identical to the 26 and 28 ms of the runs that had measured 143-151. The
+     runner is equally fast at process start; every slot is ~30 ms higher.
+  3. **Local A/B, one machine, `--runs 50` to match the gate, arms alternated.**
+     Merged bundle p50 **103** ms (110/112 p95) against the pre-merge bundle p50
+     **91.5** ms (99/105 p95) — **+11 ms, +12.6 %**, same direction in both
+     rounds, control constant at 40-49 ms throughout.
+
+  **The mechanism is bundle load, not concern execution**, and that is the part
+  worth acting on: the new `telemetry-usage` concern is bound to `post_tool_use`
+  ONLY, yet `pre_tool_use` slowed by the same margin. The dispatcher is one
+  precompiled bundle, so a concern bound to one slot is parsed and initialised on
+  every dispatch of every slot. The bundle grew 16 kb (+1.5 %).
+
+  **Two candidate causes were measured and REFUTED**, so neither is worth
+  re-opening: the YAML dependency is lazy by construction (`createRequire` plus a
+  type-only import), and `node:crypto` was already in the pre-merge bundle
+  (16 occurrences vs 17) and costs ~4 ms.
+
+  **What is NOT established:** which of the added modules dominates the 11 ms.
+  The measurement above attributes it to the merge, not to a file.
+
+  Options: (a) bisect the added module graph against the same A/B harness
+  (`bench_hook_latency --bundle`, which exists for exactly this) until the
+  dominant term has a name; (b) treat the per-slot tax as the real defect and
+  load concerns lazily per slot, which removes the class rather than this
+  instance — tracked separately, and it makes (a) unnecessary for the gate
+  though not for understanding; (c) re-derive the cap a third time, which this
+  roadmap's own budget file names as the config-bending its derivation block
+  exists to make visible, and which would now bury a confirmed regression rather
+  than absorb runner spread.
+- **Recommendation:** **(b) for the gate, (a) only if the number itself is
+  wanted.** (a) names a file; (b) stops every future concern from raising every
+  slot floor, which is the shape that will otherwise return at the next
+  concern. (c) is refused on this evidence — the cap is not too low, the cost
+  went up.
+- **Resolved when:** either the dominant module is named at this blocker with a
+  measurement, or the per-slot loading change has landed and a green run measures
+  `pre_tool_use` p50 back inside the 111-148 window the cap was derived from.
+- **If you do nothing:** the trunk stays red, the standing workaround becomes
+  re-running the job by hand — which the cap re-derivation recorded as the
+  problem it was fixing — and the next cap raise happens with a real regression
+  underneath it.
+
+**A wording hole in the cap file, found by this case and worth closing with it.**
+`pre_tool_use_cap_derivation.revisit_if` reads "a GREEN run whose p50 rises above
+160 ms". The observed run is p50 176-181 and RED, so the trigger does not fire on
+its own wording in exactly the situation it describes. That is the same class of
+defect its own `_revisit_if_correction` already fixed once. It needs "a run whose
+p50 rises above 160 ms, green or red" — a red run tells you MORE about cost
+growth, not less.
+
 ## Risk Register
 
 <!-- risk-review: v1 | reviewed: 2026-08-18 | reviewer: claude/host -->

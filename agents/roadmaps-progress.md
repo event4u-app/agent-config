@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 37 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **53** open blockers, **25** need you → `agent-config gates`
+> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **54** open blockers, **26** need you → `agent-config gates`
 
 ## Overall
 
-**299 / 570 steps done · 52%**
+**302 / 579 steps done · 52%**
 
 ```text
 █████████████████████░░░░░░░░░░░░░░░░░░░   52%
@@ -46,21 +46,22 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 20 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [1](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
 | 21 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 22 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 21 | 6 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ██░░░░░░░░ 22% |
-| 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
+| 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [7](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
 | 24 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
 | 25 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
 | 26 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 27 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 28 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 14 | 6 | 0 | 1 | [1](#blockers-road-to-skill-ecosystem-executable-payloads) | ███░░░░░░░ 30% |
 | 29 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 30 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
-| 31 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
-| 32 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 8 | 0 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ░░░░░░░░░░ 0% |
-| 33 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 8 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 58% |
-| 34 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 35 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 36 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 37 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+| 30 | [road-to-slot-scoped-concern-loading.md](roadmaps/road-to-slot-scoped-concern-loading.md) | 4 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 31 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
+| 32 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
+| 33 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 8 | 0 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ░░░░░░░░░░ 0% |
+| 34 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 8 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 58% |
+| 35 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 36 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 37 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 38 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 
 ---
 
@@ -852,6 +853,47 @@ _1 blocker resolved._
     still needs P1 and P3 but not P2; (c) cancel 5.3 the way 5.1 was cancelled and
     record that turn-end wall clock is addressed only by Phase 4's measurement.
   - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — P3's three files are written under a lock with a tmp+rename and a test that fails against the current unlocked write, before any group split ships.
+- **b-concern-load-taxes-every-slot** (owner: user) — blocks the trunk, right now. `main` is RED on the pre-registered hook-latency gate and has been since the org-telemetry merge, so every open PR inherits the failure and reads as if it caused it.
+  - **Recommendation:** **(b) for the gate, (a) only if the number itself is wanted.** (a) names a file; (b) stops every future concern from raising every slot floor, which is the shape that will otherwise return at the next concern. (c) is refused on this evidence — the cap is not too low, the cost went up.
+  - **If you do nothing:** the trunk stays red, the standing workaround becomes re-running the job by hand — which the cap re-derivation recorded as the problem it was fixing — and the next cap raise happens with a real regression underneath it.
+  - **What to do:**
+    decide how to answer a MEASURED cost increase that the
+    re-derived 175 ms cap has already caught. This is not the runner-variance case
+    the cap re-derivation absorbed; the control measurement separates them.
+    Evidence, in the order it was taken:
+    1. **CI, trunk.** `main` at `cab529209` (the `feat/org-telemetry-phase1-emission`
+    merge) measured `pre_tool_use` p50 **176** / p95 **185** ms and failed the
+    175 cap. The immediately preceding green run measured p50 111-148 — the
+    window the cap was derived from.
+    2. **CI, with a same-run control.** A branch carrying the control row measured
+    p50 **181** / p95 184 while `node -e 0` in the SAME job read **26 ms**,
+    identical to the 26 and 28 ms of the runs that had measured 143-151. The
+    runner is equally fast at process start; every slot is ~30 ms higher.
+    3. **Local A/B, one machine, `--runs 50` to match the gate, arms alternated.**
+    Merged bundle p50 **103** ms (110/112 p95) against the pre-merge bundle p50
+    **91.5** ms (99/105 p95) — **+11 ms, +12.6 %**, same direction in both
+    rounds, control constant at 40-49 ms throughout.
+    **The mechanism is bundle load, not concern execution**, and that is the part
+    worth acting on: the new `telemetry-usage` concern is bound to `post_tool_use`
+    ONLY, yet `pre_tool_use` slowed by the same margin. The dispatcher is one
+    precompiled bundle, so a concern bound to one slot is parsed and initialised on
+    every dispatch of every slot. The bundle grew 16 kb (+1.5 %).
+    **Two candidate causes were measured and REFUTED**, so neither is worth
+    re-opening: the YAML dependency is lazy by construction (`createRequire` plus a
+    type-only import), and `node:crypto` was already in the pre-merge bundle
+    (16 occurrences vs 17) and costs ~4 ms.
+    **What is NOT established:** which of the added modules dominates the 11 ms.
+    The measurement above attributes it to the merge, not to a file.
+    Options: (a) bisect the added module graph against the same A/B harness
+    (`bench_hook_latency --bundle`, which exists for exactly this) until the
+    dominant term has a name; (b) treat the per-slot tax as the real defect and
+    load concerns lazily per slot, which removes the class rather than this
+    instance — tracked separately, and it makes (a) unnecessary for the gate
+    though not for understanding; (c) re-derive the cap a third time, which this
+    roadmap's own budget file names as the config-bending its derivation block
+    exists to make visible, and which would now bury a confirmed regression rather
+    than absorb runner spread.
+  - **Resolved when:** either the dominant module is named at this blocker with a measurement, or the per-slot loading change has landed and a green run measures `pre_tool_use` p50 back inside the 111-148 window the cap was derived from.
 
 ### [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md)
 
@@ -1043,6 +1085,17 @@ _1 blocker resolved._
     maintenance obligation never fires. Do not invent a row to satisfy it —
     that would add a catalog entry nobody asked for.
   - **Resolved when:** both edits are merged and the soak has elapsed. Everything else in Phase 3 — both guidelines, the lifecycle, the gaming-risk block, and the inline suppression key — landed in this change and does not wait on it.
+
+### [road-to-slot-scoped-concern-loading.md](roadmaps/road-to-slot-scoped-concern-loading.md)
+
+**Road to slot-scoped concern loading — stop every concern taxing every slot** — 0 / 8 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Size the prize before changing anything | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 1 | Choose the mechanism (maintainer decision) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | Implement for one slot and measure | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | Roll out and lock the property | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md)
 
