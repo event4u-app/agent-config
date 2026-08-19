@@ -22,7 +22,11 @@
  * concerns it is; they read only the committed envelope. But `end-review-nudge`
  * decides whether to fire from the LIVE working-tree diff plus a once-per-session
  * latch, so one commit reads 1,140 B with uncommitted changes present and 922 B
- * without them — three different values appeared in one session on one commit.
+ * without them. Two values, observed three times in one session as the tree went
+ * dirty, clean and dirty again — the earlier wording here said "three different
+ * values", which counted the readings and not the values, and an R2 review was
+ * right to call that an unbacked number inside the paragraph that exists to
+ * replace an unbacked claim.
  * Two consequences. A single run is a reading of THIS checkout right now, so its
  * number must never be pinned as acceptance evidence (a roadmap note tried, and
  * had to be corrected). And the BREACH verdict is unaffected regardless, because

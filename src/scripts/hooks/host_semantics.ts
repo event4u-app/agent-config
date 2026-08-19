@@ -101,12 +101,20 @@ export function claudeAdditionalContext(event: string, text: string): string {
  * Will `emitFor` actually put the reasons on a stream?
  *
  * The per-turn injection ceiling (`injection_budget.ts`) may only charge bytes
- * the host receives, and TWO branches of `emitFor` below emit nothing at all: an
- * unverified platform (legacy pass-through) and `severity: allow`. The budget
- * module originally covered only the first, which let an `allow` dispatch spend
- * the turn on output nobody got — and a crashed non-`fail_closed` concern is
- * fail-opened to exactly that verdict with its stack trace as the largest
- * candidate.
+ * the host receives. Two branches of `emitFor` below emit nothing REGARDLESS of
+ * the reasons, and those are the two this predicate answers for: an unverified
+ * platform (legacy pass-through) and `severity: allow`. The budget module
+ * originally covered only the first, which let an `allow` dispatch spend the turn
+ * on output nobody got — and a crashed non-`fail_closed` concern is fail-opened
+ * to exactly that verdict with its stack trace as the largest candidate.
+ *
+ * A THIRD non-emitting case exists and this predicate deliberately does not claim
+ * it: a `warn` whose joined reason comes out empty, because `_joinReasons` trims
+ * and drops blanks, so a whitespace-only advisory text emits nothing either. It
+ * is content-dependent rather than a property of `(platform, severity)`, so a
+ * predicate with this signature cannot decide it — stated here rather than left
+ * to be discovered, since an R2 review found the earlier "TWO branches" wording
+ * asserting a completeness it did not have.
  *
  * Kept beside `emitFor` deliberately rather than re-derived at the call site:
  * the predicate is only correct while it mirrors the function below it, and a

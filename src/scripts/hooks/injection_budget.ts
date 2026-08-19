@@ -335,8 +335,6 @@ export interface TurnSpend {
     readonly bytes: number;
 }
 
-export const TURN_SPEND_BASENAME = "injection-turn.json";
-
 /** The per-session directory the counters live in. */
 export const TURN_SPEND_DIR_REL = path.join("agents", "runtime", "state", "injection-turn");
 
@@ -349,9 +347,15 @@ export const TURN_SPEND_MAX_FILES = 64;
  * Two jobs, and the second is why a plain `replace` is not enough: the id is
  * host-supplied, so it must not escape the directory (`../`), and it must not
  * blow the filesystem's name limit. Anything outside a conservative charset is
- * replaced, and an id that is too long — or that sanitises to something
- * ambiguous — is suffixed with a short FNV-1a digest of the ORIGINAL so two
- * different ids can never collide onto one counter.
+ * replaced, and the basename carries a short digest of the ORIGINAL id so two
+ * ids that sanitise to the same characters still land on different counters.
+ *
+ * The digest is a 32-bit FNV-1a-style mix over the id's UTF-16 code units — not
+ * over its encoded bytes, and not a cryptographic hash. So the collision claim
+ * is a PROBABILITY, not an absolute: ~2^-32 per pair, and the consequence of one
+ * is exactly the shared-file defect this layout removes (the foreign read returns
+ * 0, then the write clobbers). That is the honest bound; "can never collide" was
+ * the first version of this sentence and an R2 review was right to reject it.
  */
 export function turnSpendKey(session: string): string {
     const safe = session.replace(/[^A-Za-z0-9._-]/g, "_");
@@ -390,9 +394,13 @@ export function turnSpendPath(workspaceRoot: string, session: string): string {
  */
 function _pruneTurnSpend(dir: string): void {
     try {
+        // `.tmp` is included deliberately: the temp file is `<name>.json.<pid>.tmp`,
+        // which does NOT end in `.json`, so a `.json`-only filter left every temp
+        // leaked by a crash between the write and the rename to accumulate forever
+        // — unbounded growth in the directory this cap exists to bound.
         const entries = fs
             .readdirSync(dir)
-            .filter((n) => n.endsWith(".json"))
+            .filter((n) => n.endsWith(".json") || n.endsWith(".tmp"))
             .map((n) => {
                 const p = path.join(dir, n);
                 try {
@@ -443,14 +451,15 @@ export function readTurnSpend(workspaceRoot: string, session: string): number {
  * `reset` is passed on the slot that STARTS a turn (`user_prompt_submit`), so
  * the count is bounded by one turn rather than growing across a session.
  *
- * The write is ATOMIC — a temp file plus a rename — because the read-modify-write
- * above is not. Two dispatches of the SAME session can interleave (parallel tool
- * calls, a subagent fire landing between the parent's read and write), and a
- * plain `writeFileSync` there loses an update or leaves a torn file. The sibling
- * counter in this estate (`rule-trips.json`) already uses the same primitive for
- * the same class of artefact in the same directory; a lost update degrades to
- * under-counting, which is the safe direction, but it is avoidable and this makes
- * it so.
+ * The write is a temp file plus a rename, which buys exactly one thing: no reader
+ * ever sees a TORN file. It does NOT serialise the read-modify-write — the read
+ * at the top of this function and the write below it are still two steps, so two
+ * interleaved dispatches of the same session can still lose an update. Claiming
+ * otherwise was an R2 finding on the first version of this docblock, and the
+ * narrower claim is the true one. The residual failure is under-counting, which
+ * is the safe direction: an accounting error must never be the reason an advisory
+ * disappears. The sibling counter in this estate (`rule-trips.json`) uses the
+ * same primitive for the same class of artefact in the same directory.
  */
 export function recordTurnSpend(
     workspaceRoot: string,
@@ -636,13 +645,15 @@ export function shapeAndRecord(
                 nudgeRank: typeof rank === "number" ? rank : null,
             };
         });
-    // Skipped wholesale where the emission carries nothing. Two such cases, and
-    // one reason for both: this is an INJECTION ceiling, so it may only charge
-    // bytes the host actually receives. Shaping output that never left would
-    // write advisory-suppression records for nothing and — worse — spend the
-    // turn's budget, so a LATER dispatch whose advisory WOULD have been delivered
-    // gets dropped instead. Nothing to shape is not the same as shaping to
-    // nothing.
+    const workspaceRoot = _workspaceRoot(ctx);
+    const sessionKey = _sessionKey(ctx) ?? "";
+    const cap = resolveVolumeCap(ctx);
+    // Where the emission carries nothing, skip the CHARGE — never the reset.
+    // Two such cases, and one reason for both: this is an INJECTION ceiling, so
+    // it may only charge bytes the host actually receives. Shaping output that
+    // never left would write advisory-suppression records for nothing and —
+    // worse — spend the turn's budget, so a LATER dispatch whose advisory WOULD
+    // have been delivered gets dropped instead.
     //
     //   1. an unverified platform — `emitFor` returns the legacy pass-through,
     //      empty stdout AND stderr;
@@ -658,12 +669,20 @@ export function shapeAndRecord(
     // five such dispatches exhausted a 47,104-byte turn ceiling on output nobody
     // received. `emissionCarriesReasons` is the shared predicate, kept beside
     // `emitFor` so it cannot drift from the function whose behaviour it reports.
+    //
+    // THE RESET STILL HAS TO RUN, and getting that wrong was an R2 finding on the
+    // first version of this fix. `_reduce([])` is `EXIT_ALLOW`, so a
+    // `user_prompt_submit` where no concern fires — the common case for
+    // conditional-silence concerns — takes this branch. Returning here without
+    // resetting left the PREVIOUS turn's total on disk, and later dispatches in
+    // the new turn then dropped advisories to pay for bytes belonging to an
+    // earlier one. Skipping a charge and skipping a boundary are different acts.
     if (!emissionCarriesReasons(ctx.platform, _severityForRc(finalRc))) {
+        if (cap !== null && ctx.event === TURN_START_EVENT) {
+            recordTurnSpend(workspaceRoot, sessionKey, 0, { reset: true });
+        }
         return textOf(new Set(candidates.map((c) => c.concern)));
     }
-    const workspaceRoot = _workspaceRoot(ctx);
-    const sessionKey = _sessionKey(ctx) ?? "";
-    const cap = resolveVolumeCap(ctx);
     // On the turn-START slot the carried total is zero by definition: this is the
     // dispatch that begins the turn. Reading the stored value here budgeted the
     // new turn against the one that just ended.

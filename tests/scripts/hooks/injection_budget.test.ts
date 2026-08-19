@@ -380,6 +380,29 @@ describe("shapeAndRecord — only charges bytes the host receives", () => {
     expect(readTurnSpend(root, SESSION)).toBe(600);
   });
 
+  // REGRESSION. The first version of the ALLOW skip returned BEFORE
+  // recordTurnSpend, so a quiet user_prompt_submit — which reduces to ALLOW
+  // whenever no concern fires — stopped resetting the counter and the previous
+  // turn's total survived into the next one. My own two tests were blind to it:
+  // one ran on a fresh tmp root where a missing reset and a working one both read
+  // 0, the other used a prompt that reduces to WARN. This one seeds the counter
+  // first, which is what makes the reset observable.
+  it("a quiet ALLOW turn-start still RESETS the previous turn's total", () => {
+    recordTurnSpend(root, SESSION, 30_000);
+    expect(readTurnSpend(root, SESSION)).toBe(30_000);
+
+    // No deciding message at all: exactly the shape `_reduce([])` produces.
+    shapeAndRecord(ctxAt("user_prompt_submit"), [], RC_ALLOW);
+    expect(readTurnSpend(root, SESSION)).toBe(0);
+  });
+
+  it("a quiet ALLOW mid-turn slot leaves the carried total alone", () => {
+    recordTurnSpend(root, SESSION, 5_000);
+    shapeAndRecord(ctxAt("post_tool_use"), [], RC_ALLOW);
+    // Not a boundary, so nothing to reset — and nothing charged either.
+    expect(readTurnSpend(root, SESSION)).toBe(5_000);
+  });
+
   it("records no drop for an emission that never left", () => {
     shapeAndRecord(ctxAt("post_tool_use"), [message(90_000, RC_ALLOW)], RC_ALLOW);
     const log = path.join(root, "agents", "runtime", "state", "dispatch-issues.jsonl");
