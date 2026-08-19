@@ -36,12 +36,19 @@
 #   resume_condition          PARK-PROBEABLE only · the condition as authored
 #   probe                     PARK-PROBEABLE only · what `resume_probe` returns
 #   probe_verdict_at_parking  PARK-PROBEABLE only · fired | unmet | undecidable
-#   sheet_rows                DECISION-SHEET only · row numbers on the sheet
+#   sheet_blockers            DECISION-SHEET only · the blocker IDS on the sheet
 #   notes                     optional · free-form named notes, one map
 #
 # `notes` is one map rather than seven singleton top-level keys (the shape
 # finding 8 caught): a per-row note is still readable, and the key set above
 # stays fixed and checkable the day a validator does ship.
+#
+# `sheet_blockers` holds IDS, not row numbers, and that is a correction rather
+# than a preference. The first draft recorded `sheet_rows: [13, 14, ...]`, and
+# merging `origin/main` moved every one of them — the sheet is DERIVED from the
+# live estate and re-sorts by unblock count, so a row number is a fact about one
+# rendering rather than about the decision. A blocker id survives the re-sort and
+# is what `gates --sheet` keys on anyway.
 
 schema_version: 1
 validator: none
@@ -213,7 +220,7 @@ batches:
           spend budget) and `b-delegate-gate-maintainer-profile` (flip
           `allow_delegate` in the maintainer profile). Step 3.2 is nominally
           `[ ]` but unrunnable without the delegate path 3.1 opens.
-        sheet_rows: [23, 24]
+        sheet_blockers: [b-delegate-gate-maintainer-profile, b-gate-budget-preauth]
         notes:
           finding_already_returned: >-
             Its Phase 1 spike already returned a FINDING (24.5 % against a 40 %
@@ -230,12 +237,23 @@ batches:
           0's three open steps need the affected colleague's machine and its
           session logs — a dependency the file records nowhere as a blocker, and
           which is itself a sheet item.
-        sheet_rows: [13, 14, 15, 16, 17, 18]
+        sheet_blockers:
+          - b-guard-tool-partition
+          - b-payload-mis-nested-readers
+          - b-payload-read-parse-dominates
+          - b-per-turn-composite-bar
+          - b-stdin-read-failure-policy
+          - b-stop-async-split-prerequisites
         notes:
           file_untouched_because: >-
-            Held by open PR #1429 (`fix/hook-latency-gate-noise`), which edits
-            this same file. The verdict is recorded; no edit to the roadmap
-            rides in this PR.
+            Held by PR #1429 (`fix/hook-latency-gate-noise`) at triage time,
+            which edited this same file, so the verdict was recorded without an
+            edit to the roadmap. #1429 has since MERGED and is in this branch —
+            the hold is gone, and the reason for leaving the file untouched is
+            now simply that a DECISION-SHEET verdict needs no edit. Re-checked
+            on the merged tree: #1429 added `b-concern-load-taxes-every-slot`
+            and resolved it in the same change, so the file still carries exactly
+            the six open blockers listed above.
           live_defects_recorded: >-
             Two sit inside the un-actioned blockers rather than in the open
             steps, and are named here so a DECISION-SHEET verdict does not read

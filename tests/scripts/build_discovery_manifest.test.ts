@@ -384,12 +384,26 @@ describe('build_discovery_manifest — builder contract (ported from pytest)', (
         const m2 = build();
         mod._finalise_checksum(m1);
         mod._finalise_checksum(m2);
+        // `generated_at` is wall-clock at SECOND resolution and is deliberately
+        // not part of the checksum, so two builds either side of a second
+        // boundary differ in that field and nothing else. Comparing it made this
+        // a clock race rather than a determinism assertion: the observed
+        // failures (2026-08-04 PR #1161, again 2026-08-19 PR #1429) had
+        // byte-identical checksums and timestamps exactly one second apart, and
+        // both times the red named a file the diff had never touched.
+        //
+        // Same normalisation the sibling `orphan report is deterministic` above
+        // already applies for the same reason — this test simply post-dates it
+        // and missed the convention. Stripping the field does not weaken the
+        // assertion: the content-derived checksum and the whole workspace /
+        // pack structure stay in the compared string.
         const sortKeys = (o: unknown): string =>
-            JSON.stringify(o, (_k, v) =>
-                v !== null && typeof v === 'object' && !Array.isArray(v)
+            JSON.stringify(o, (k, v) => {
+                if (k === 'generated_at') return undefined;
+                return v !== null && typeof v === 'object' && !Array.isArray(v)
                     ? Object.fromEntries(Object.entries(v as object).sort())
-                    : v,
-            );
+                    : v;
+            });
         expect(sortKeys(mod._workspaces_view(m1))).toBe(sortKeys(mod._workspaces_view(m2)));
         expect(sortKeys(mod._packs_view(m1))).toBe(sortKeys(mod._packs_view(m2)));
     });

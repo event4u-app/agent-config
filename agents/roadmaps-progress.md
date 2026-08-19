@@ -795,6 +795,8 @@ _1 blocker resolved._
     record that turn-end wall clock is addressed only by Phase 4's measurement.
   - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — P3's three files are written under a lock with a tmp+rename and a test that fails against the current unlocked write, before any group split ships.
 
+_1 blocker resolved._
+
 ### [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md)
 
 **Road to release-review P0** — 10 / 17 done (59%)
