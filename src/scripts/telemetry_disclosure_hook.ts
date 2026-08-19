@@ -1,0 +1,244 @@
+#!/usr/bin/env node
+/**
+ * Org-telemetry disclosure — `session_start` concern.
+ *
+ * `road-to-org-telemetry` Phase 3, step 2, and the compensating control
+ * ADR-233 § D5 accepts in exchange for the `org-pack` consent class.
+ *
+ * WHY IT IS NOT OPTIONAL. Every other consent in this suite is given by the
+ * person it binds: `jit-answer` is a question they answered, `gui` is a human
+ * at the settings editor, `manual` is their own hand-edit. `org-pack` is the
+ * one grant made by somebody else — a human org administrator deciding for
+ * every install the pack reaches. That is a legitimate consent only if the
+ * person whose usage is being described can see that it was given. Without
+ * this line, an install would report on a user who was never told, which is
+ * the shape "a public repository that phones home reads as spyware" names in
+ * the roadmap's Risk 3, regardless of how content-free the payload is.
+ *
+ * WHAT IT SAYS AND WHAT IT DOES NOT. The line names the fact (pseudonymous
+ * usage data is reported), the recipient (`org_id`, and the endpoint host so
+ * "to whom" is answerable rather than gestured at), and where to read the
+ * local records. It carries no salt, no user hash, and no full endpoint URL
+ * with credentials — see the redaction in `_endpointHost`.
+ *
+ * ONCE, NOT EVERY SESSION — and re-disclosed when the fact changes. The step
+ * asks for the line "at first session start", so the concern records what it
+ * disclosed in `agents/runtime/state/telemetry-disclosure.json` and stays
+ * silent afterwards. The recorded key is the (org_id, endpoint) pair rather
+ * than a bare flag: a new sink or a new org is a NEW disclosure, and a design
+ * that showed the line once and then silently followed the data somewhere
+ * else would be worse than one that never showed it. A state file that cannot
+ * be written is treated as "not yet disclosed", so the failure mode is a
+ * repeated line rather than a suppressed one.
+ *
+ * SILENT ON EVERY INACTIVE SHAPE. `read_remote_settings` is fail-closed on
+ * each axis, and this concern adds nothing to it: no settings file, no
+ * section, `enabled: false`, or any of `endpoint` / `org_id` / `salt` missing
+ * all mean `active === false`, and an inactive install prints nothing and
+ * writes nothing.
+ */
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+import { readHookStdin } from './hooks/hook_stdin.js';
+import { is_replay_mode } from './hooks/state_io.js';
+import { _resolveRoot, resolveSettingsPath } from './hooks/telemetry_usage_hook.js';
+import { read_remote_settings } from '../agent-src/templates/scripts/telemetry/settings.js';
+
+const EXIT_ALLOW = 0;
+
+/**
+ * Longest interpolated field the disclosure will print, per field.
+ *
+ * The per-concern injection budget is 1024 bytes and three settings-supplied
+ * values are interpolated into a fixed frame, one of them twice. Those values
+ * come from a settings file, so their length is an operator's choice rather
+ * than a bound this concern can assume — an over-budget line is dropped by the
+ * dispatcher, which would silently remove the disclosure. Truncating keeps the
+ * line and keeps it legible; the settings file remains the full record.
+ */
+export const MAX_FIELD_CHARS = 120;
+
+/** Clamp one interpolated field, marking the cut so it does not read as the value. */
+export function _clamp(value: string): string {
+    return value.length <= MAX_FIELD_CHARS ? value : `${value.slice(0, MAX_FIELD_CHARS - 1)}…`;
+}
+
+/** Where the "already disclosed" note lives, relative to the project root. */
+export const DISCLOSURE_STATE_REL = 'agents/runtime/state/telemetry-disclosure.json';
+
+export interface DisclosureFacts {
+    readonly org_id: string;
+    readonly endpoint: string;
+    readonly log_path: string;
+}
+
+/**
+ * Host of the configured endpoint, or the raw value when it does not parse.
+ *
+ * The full URL can legitimately carry a path token, so only the host is
+ * disclosed: it answers "to whom" without turning a disclosure line into a
+ * place a credential can appear.
+ */
+export function _endpointHost(endpoint: string): string {
+    try {
+        return new URL(endpoint).host || endpoint;
+    } catch {
+        return endpoint;
+    }
+}
+
+/** The identity of one disclosure — a change here is a new disclosure. */
+export function disclosureKey(facts: DisclosureFacts): string {
+    return `${facts.org_id}\u0000${facts.endpoint}`;
+}
+
+/**
+ * Has this exact (org, endpoint) pair already been disclosed here?
+ *
+ * Every unreadable shape answers `false`. Re-showing a line the user has seen
+ * costs one line; suppressing one they have not seen costs the property this
+ * concern exists to provide.
+ */
+export function alreadyDisclosed(root: string, facts: DisclosureFacts): boolean {
+    try {
+        const raw = fs.readFileSync(path.join(root, DISCLOSURE_STATE_REL), 'utf-8');
+        const parsed = JSON.parse(raw) as unknown;
+        if (parsed === null || typeof parsed !== 'object') {
+            return false;
+        }
+        return (parsed as Record<string, unknown>)['disclosed'] === disclosureKey(facts);
+    } catch {
+        return false;
+    }
+}
+
+/** Record the disclosure. A write failure is swallowed — see the header. */
+export function recordDisclosure(root: string, facts: DisclosureFacts, at: string): void {
+    try {
+        const p = path.join(root, DISCLOSURE_STATE_REL);
+        fs.mkdirSync(path.dirname(p), { recursive: true });
+        fs.writeFileSync(
+            p,
+            `${JSON.stringify({ disclosed: disclosureKey(facts), at }, null, 2)}\n`,
+            'utf-8',
+        );
+    } catch {
+        // Intentionally silent: see the module header. An undisclosed state is
+        // recoverable (the line shows again); a blocked session start is not.
+    }
+}
+
+/** The disclosure line the user sees. One `<tag>`-wrapped block, no prose. */
+export function buildDisclosure(facts: DisclosureFacts): string {
+    const org = _clamp(facts.org_id);
+    const sink = _clamp(_endpointHost(facts.endpoint));
+    const log = _clamp(facts.log_path);
+    return [
+        '<telemetry-disclosure>',
+        `This install reports pseudonymous usage data to your organisation `
+        + `"${org}" (sink: ${sink}), enabled by an org administrator rather than by you.`,
+        `What is sent: which skill ran, the host, the package version, the discipline `
+        + `profile, and salted digests of your machine+login and session. No prompt `
+        + `text, file path, file content, or project name — the record type has no `
+        + `field able to hold them.`,
+        `The records are readable locally at ${log}. See SECURITY.md § Telemetry.`,
+        '</telemetry-disclosure>',
+    ].join('\n');
+}
+
+export function run(
+    stdin: string,
+    options: { now?: string; settingsFile?: string } = {},
+): number {
+    let envelope: Record<string, unknown> = {};
+    if (stdin.trim() !== '') {
+        try {
+            const parsed = JSON.parse(stdin) as unknown;
+            if (parsed !== null && typeof parsed === 'object') {
+                envelope = parsed as Record<string, unknown>;
+            }
+        } catch {
+            return EXIT_ALLOW; // never act on a malformed envelope
+        }
+    }
+    // Positively matched, never defaulted. An envelope carrying no `event`
+    // used to be treated as a session start on whatever slot invoked it, so a
+    // shape this concern cannot identify would still disclose and write state.
+    // Fail-open on identification is the wrong default for a concern that
+    // mutates a file.
+    if (envelope['event'] !== 'session_start') {
+        return EXIT_ALLOW;
+    }
+
+    // A replayed or benchmarked envelope must not consume the one-shot: it
+    // would write the state note into the target root and spend the real
+    // user's first disclosure on a run they never saw. Same guard, same
+    // reason, as the sibling that writes the records.
+    if (is_replay_mode()) {
+        return EXIT_ALLOW;
+    }
+
+    // One resolver for both concerns of this feature. Reading only the
+    // envelope root made the sibling silently inactive when a host reported a
+    // `cwd` inside a subdirectory — and here the asymmetry was worse than
+    // inactivity: the usage hook walked up and recorded while this one did
+    // not walk up and stayed silent, i.e. telemetry with the disclosure
+    // switched off, which is the single shape ADR-233 § D5 forbids.
+    const settingsFile = options.settingsFile ?? resolveSettingsPath(_resolveRoot(envelope as never));
+    // The state note belongs beside the settings file that decided the
+    // disclosure, not beside the session cwd: otherwise one project discloses
+    // once per subdirectory a session happens to start in.
+    const root = path.dirname(settingsFile);
+
+    let settings;
+    try {
+        settings = read_remote_settings(settingsFile);
+    } catch {
+        return EXIT_ALLOW;
+    }
+    if (!settings.active) {
+        return EXIT_ALLOW;
+    }
+
+    const facts: DisclosureFacts = {
+        org_id: settings.org_id,
+        endpoint: settings.endpoint,
+        log_path: settings.log_path,
+    };
+    if (alreadyDisclosed(root, facts)) {
+        return EXIT_ALLOW;
+    }
+
+    process.stdout.write(
+        `${JSON.stringify({
+            decision: 'allow',
+            reason: `telemetry-disclosure: org "${facts.org_id}"`,
+            context: buildDisclosure(facts),
+        })}\n`,
+    );
+    recordDisclosure(root, facts, options.now ?? new Date().toISOString());
+    return EXIT_ALLOW;
+}
+
+export function main(argv?: string[]): number {
+    const args = argv ?? process.argv.slice(2);
+    void args;
+    return run(readHookStdin());
+}
+
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
+function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
+    if (process.argv[1] === undefined) {
+        return false;
+    }
+    return import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+}
+
+if (_isCliEntry()) {
+    process.exit(main());
+}

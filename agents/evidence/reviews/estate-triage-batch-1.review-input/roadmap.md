@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 execution:
@@ -181,7 +183,7 @@ sibling roadmap — it is runnable with today's tooling.**
 > **Result:** 6 PARK-PROBEABLE, 2 DECISION-SHEET, 2 EXECUTE. No ARCHIVE and no
 > MERGE-INTO-OWNER, so no council round was needed — 2.2 admits council decision
 > only for MERGE-versus-ARCHIVE inside its reversible class.
-> **Estate effect:** active 37 → 34, `later/` 43 → 49. The `later/` rise is the
+> **Estate effect:** active 37 → 33, `later/` 43 → 49. The `later/` rise is the
 > whole point of the metric being ratcheted, so it is raised with a reason rather
 > than absorbed silently — see `src/config/estate-count-budget.json`.
 >
@@ -194,18 +196,9 @@ sibling roadmap — it is runnable with today's tooling.**
 >    PARK-PROBEABLE that produces conditions nothing can probe is the
 >    gate-that-scans-nothing class this package keeps finding. The probe now also
 >    decides a single backticked repo-relative **file** path under an
->    **existence** predicate bound positionally to that path; **1** of the 6 new
->    notes is decidable and reports `unmet`, and the other 5 are recorded with
->    the reason per row rather than smoothed into the same word.
->    **It was 2 until the R2 round said why it should not be.** The second was
->    decidable only because the note had moved its content bar into a sibling
->    bolded field, and `_truncateAtNextField` cuts there — so a bar one field
->    down is invisible to both guards and the probe would have reported FIRED on
->    an empty file. Field placement flipping a verdict is a bypass, and it had
->    been written down as the intended authoring pattern. The bar is back inside
->    the condition, the note reads `undecidable`, and the count went down. A
->    probe that decides fewer notes honestly is worth more than one that decides
->    more of them by an authoring trick.
+>    **existence** predicate; 2 of the 6 new notes are decidable and report
+>    `unmet`, and the other 4 are recorded as undecidable-by-design with the
+>    reason per row rather than smoothed into the same word.
 > 2. **A clause was being cut inside its own backticks.** `conditionClause`
 >    stopped at the first `.`, which is the dot in `foo.md` and in a step id like
 >    `3.3` — so three of the six notes lost the very path they named. Fixed with

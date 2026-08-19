@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: later
 ---
 
 # Roadmap: Domain-Pack Extraction (when triggered)
@@ -8,10 +8,19 @@ status: draft
 > Placeholder marker for the future extraction of in-repo domain
 > capabilities (video first, then audio / image / docs / exports) into
 > separately-installable domain packs under `agents/domain-packs/`.
-> Held at `status: draft` so the dashboard skips it. This file becomes
+> Parked at `status: later` so the dashboard skips it. This file becomes
 > an active roadmap only when the three trigger conditions in
-> [`ADR-011`](../../docs/decisions/ADR-011-domain-pack-readiness.md)
+> [`ADR-011`](../../../docs/decisions/ADR-011-domain-pack-readiness.md)
 > all hold.
+
+> **Blocked until:** `docs/contracts/domain-pack-overlap-inventory.md` exists.
+> That file is ADR-011's design gate, and its trigger conditions 2 and 3 are
+> downstream of it, so one `test -f` decides the whole trigger set.
+> **Origin:** `universal-platform-refinement.md` Phase 6 Step 4 created this file
+> as ADR-011's marker; parked 2026-08-19 by `road-to-estate-drawdown` Phase 2
+> batch 1 with the verdict PARK-PROBEABLE, because the file carries zero steps
+> and its gate is recorded unfired in
+> `agents/settings/contexts/org-pack-reopening-brief.md`.
 
 ## Trigger conditions (all three required)
 
@@ -44,7 +53,7 @@ status: draft
 
 Flip this file's status from `draft` to `proposed`, write the actual
 extraction plan, run it through the council, and supersede
-[`ADR-011`](../../docs/decisions/ADR-011-domain-pack-readiness.md)
+[`ADR-011`](../../../docs/decisions/ADR-011-domain-pack-readiness.md)
 with a follow-up ADR that records the *acceptance* decision and the
 extraction interface shape.
 

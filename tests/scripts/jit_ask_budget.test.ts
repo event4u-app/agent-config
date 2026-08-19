@@ -605,3 +605,110 @@ describe('who picks the moment — the half no gate can check', () => {
         expect(flat()).toMatch(/If the run would complete without the setting/);
     });
 });
+
+// ── ADR-233: the `org-pack` provenance class ────────────────────────────
+//
+// Three properties, and the third is the one that matters: the reader
+// understands a value the writer cannot produce. If those two vocabularies
+// ever converge, an agent can stamp its own permission, which is exactly what
+// excluding `auto-detected` was meant to prevent.
+
+describe('consentVerdict — org-pack provenance (ADR-233)', () => {
+    const IN_SCOPE = 'telemetry.remote.enabled';
+    const OUT_OF_SCOPE = 'memory.learn_on_session_end';
+
+    it('grants inside telemetry.remote.*, where an org administrator decided', () => {
+        expect(consentVerdict({
+            cls: 'B', key: IN_SCOPE, value: true, source: 'org-pack',
+        })).toBe('granted');
+    });
+
+    it('withholds outside that namespace — the grant is scoped, not general', () => {
+        expect(consentVerdict({
+            cls: 'B', key: OUT_OF_SCOPE, value: true, source: 'org-pack',
+        })).toBe('withheld-org-pack-out-of-scope');
+    });
+
+    it('withholds when no key is supplied, because unproven scope is not scope', () => {
+        expect(consentVerdict({ cls: 'B', value: true, source: 'org-pack' }))
+            .toBe('withheld-org-pack-out-of-scope');
+    });
+
+    it('does not grant a conservative value just because an org set it', () => {
+        expect(consentVerdict({
+            cls: 'B', key: IN_SCOPE, value: false, source: 'org-pack',
+        })).toBe('withheld-default');
+    });
+
+    it('leaves auto-detected never-consent, verbatim (ADR-233 D4)', () => {
+        expect(consentVerdict({
+            cls: 'B', key: IN_SCOPE, value: true, source: 'auto-detected',
+        })).toBe('withheld-machine-inferred');
+    });
+
+    it('explains the refusal without claiming the value was machine-inferred', () => {
+        const reason = withheldReason('withheld-org-pack-out-of-scope', OUT_OF_SCOPE);
+        expect(reason).toContain(OUT_OF_SCOPE);
+        expect(reason).toContain('telemetry.remote.');
+        expect(reason).not.toContain('auto-detected');
+    });
+
+    it('consentGranted mirrors the verdict on both sides of the scope line', () => {
+        expect(consentGranted({ cls: 'B', key: IN_SCOPE, value: true, source: 'org-pack' }))
+            .toBe(true);
+        expect(consentGranted({ cls: 'B', key: OUT_OF_SCOPE, value: true, source: 'org-pack' }))
+            .toBe(false);
+    });
+
+    it('the CLI writer cannot produce the value the reader accepts (ADR-233 D3)', () => {
+        // The invariant, read off the source rather than restated: the reader's
+        // union carries `org-pack` and the writer's allowlist does not. A future
+        // edit that adds it to the writer fails here, which is the whole point —
+        // an agent-writable `org-pack` is a self-granted permission.
+        const readerSrc = fs.readFileSync(
+            path.join(REPO, 'src/shared/settingsConsent.ts'), 'utf-8');
+        const writerSrc = fs.readFileSync(
+            path.join(REPO, 'src/scripts/_cli/cmd_settings_set.ts'), 'utf-8');
+
+        expect(readerSrc).toMatch(/export type ConsentSource[^;]*'org-pack'/u);
+
+        const writerList = writerSrc.match(
+            /const PROVENANCE_SOURCES:[^=]*=\s*\[([^\]]*)\]/u)?.[1] ?? '';
+        expect(writerList).not.toContain('org-pack');
+        // And the writer's own union, so the two cannot drift apart either.
+        const writerUnion = writerSrc.match(/export type ProvenanceSource\s*=([^;]*);/u)?.[1] ?? '';
+        expect(writerUnion).not.toContain('org-pack');
+    });
+});
+
+describe('consentVerdict — org-pack outranks the hand-edit branch (review finding 3)', () => {
+    const OUT_OF_SCOPE = 'memory.learn_on_session_end';
+
+    it('withholds an out-of-scope org-pack grant even when the file was hand-written', () => {
+        // The defect this pins: `handEdited` returned `granted` BEFORE the
+        // org-pack branch, and `handEdited` is documented as true for exactly
+        // the project-local `.agent-settings.yml` an org pack must ship. So
+        // the namespace scope held for no real deployment — the only shape
+        // where it mattered was the one that bypassed it.
+        expect(consentVerdict({
+            cls: 'B', key: OUT_OF_SCOPE, value: true, source: 'org-pack', handEdited: true,
+        })).toBe('withheld-org-pack-out-of-scope');
+    });
+
+    it('still grants in scope with the same hand-edited file', () => {
+        expect(consentVerdict({
+            cls: 'B', key: 'telemetry.remote.enabled', value: true, source: 'org-pack', handEdited: true,
+        })).toBe('granted');
+    });
+
+    it('leaves the hand-edit grant intact for every other source', () => {
+        // The reorder must not cost the path the class contract guarantees.
+        expect(consentVerdict({ cls: 'B', value: true, handEdited: true })).toBe('granted');
+        expect(consentVerdict({
+            cls: 'B', key: OUT_OF_SCOPE, value: true, source: 'manual', handEdited: true,
+        })).toBe('granted');
+        expect(consentVerdict({
+            cls: 'B', key: OUT_OF_SCOPE, value: true, source: 'auto-detected', handEdited: true,
+        })).toBe('granted');
+    });
+});

@@ -62,6 +62,51 @@ disclosure are credited in the release notes (unless they prefer anonymity).
 - Theoretical injection risks in AI model outputs not caused by shipped
   `agent-config` content.
 
+## Telemetry — what the package records, and what it never records
+
+**The default is off for everyone outside an org pack, and `enabled: true`
+alone does not switch it on.** The `telemetry.remote` namespace additionally
+requires an `endpoint`, an `org_id`, and a `salt`, none of which has a default.
+This repository is public, so it ships the key *names* and no values: a clone
+of the tree cannot reach the write path by copying it. A consumer install with
+no `.agent-settings.yml`, or one whose file omits the section, performs zero
+telemetry file operations and zero network calls.
+
+**What a record contains.** One line per skill invocation, holding: the usage
+class, the normalised skill id, the host (`claude`, `augment`, …), the
+installed package version, the declared discipline profile, the org id, a
+salted digest of hostname+login, a salted digest of the host session id, and a
+timestamp truncated to the hour.
+
+**What never ships, by construction rather than by filtering.** The record type
+has no field capable of holding free-form content — no `payload`, no `notes`,
+no `extra`. Every member is a value from a closed vocabulary, an id validated
+against the redaction floor, or a hex digest. So no prompt text, file path,
+file content, project name, identifier, or exact timestamp can be carried:
+there is no scrubber to fail, because there is nothing to scrub. The user and
+session digests are salted with an org-pack secret that never lives in this
+repository, so a digest is not reversible by dictionary the way a bare hash of
+a login name would be.
+
+**Inspecting it locally.** Records are written to the path in
+`telemetry.remote.output.path`, default `.agent-telemetry.jsonl` at the project
+root, as plain newline-delimited JSON. Read it with any text tool; nothing is
+encoded or obscured. The file is bounded by `telemetry.remote.retention` — 90
+days and 2 MiB by default, oldest records dropped first.
+
+Retention is enforced by the writer, on append, which is what makes it
+impossible to bypass by forgetting to run a sweep — and is also its one
+limit, stated rather than glossed: an install that stops writing stops
+pruning. Turn telemetry off and the file freezes at whatever it held, rather
+than ageing itself out. Deleting it is safe and is the intended way to clear
+it; nothing reconstructs it.
+
+**Consent.** Enablement is recorded with provenance. An org administrator's
+decision is recorded as `org-pack` and is disclosed to the affected user at
+session start; a value the machine inferred about itself is never treated as a
+consent. See [`ADR-233`](docs/decisions/ADR-233-org-pack-provenance-class.md)
+and [`docs/contracts/settings-classes.md`](docs/contracts/settings-classes.md).
+
 ## Security architecture reference
 
 The package threat model, linter coverage, and known gaps are documented in

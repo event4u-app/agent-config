@@ -1,0 +1,1645 @@
+diff --git a/SECURITY.md b/SECURITY.md
+index e3126851af4eb4823f410c0fd410c5b3a57969ce..9ee81217c64073c64e9b486477479574366e367f 100644
+--- a/SECURITY.md
++++ b/SECURITY.md
+@@ -62,6 +62,45 @@ disclosure are credited in the release notes (unless they prefer anonymity).
+ - Theoretical injection risks in AI model outputs not caused by shipped
+   `agent-config` content.
+ 
++## Telemetry — what the package records, and what it never records
++
++**The default is off for everyone outside an org pack, and `enabled: true`
++alone does not switch it on.** The `telemetry.remote` namespace additionally
++requires an `endpoint`, an `org_id`, and a `salt`, none of which has a default.
++This repository is public, so it ships the key *names* and no values: a clone
++of the tree cannot reach the write path by copying it. A consumer install with
++no `.agent-settings.yml`, or one whose file omits the section, performs zero
++telemetry file operations and zero network calls.
++
++**What a record contains.** One line per skill invocation, holding: the usage
++class, the normalised skill id, the host (`claude`, `augment`, …), the
++installed package version, the declared discipline profile, the org id, a
++salted digest of hostname+login, a salted digest of the host session id, and a
++timestamp truncated to the hour.
++
++**What never ships, by construction rather than by filtering.** The record type
++has no field capable of holding free-form content — no `payload`, no `notes`,
++no `extra`. Every member is a value from a closed vocabulary, an id validated
++against the redaction floor, or a hex digest. So no prompt text, file path,
++file content, project name, identifier, or exact timestamp can be carried:
++there is no scrubber to fail, because there is nothing to scrub. The user and
++session digests are salted with an org-pack secret that never lives in this
++repository, so a digest is not reversible by dictionary the way a bare hash of
++a login name would be.
++
++**Inspecting it locally.** Records are written to the path in
++`telemetry.remote.output.path`, default `.agent-telemetry.jsonl` at the project
++root, as plain newline-delimited JSON. Read it with any text tool; nothing is
++encoded or obscured. The file is bounded by `telemetry.remote.retention` — 90
++days and 2 MiB by default, oldest records dropped first — so it neither grows
++without limit nor retains history indefinitely.
++
++**Consent.** Enablement is recorded with provenance. An org administrator's
++decision is recorded as `org-pack` and is disclosed to the affected user at
++session start; a value the machine inferred about itself is never treated as a
++consent. See [`ADR-233`](docs/decisions/ADR-233-org-pack-provenance-class.md)
++and [`docs/contracts/settings-classes.md`](docs/contracts/settings-classes.md).
++
+ ## Security architecture reference
+ 
+ The package threat model, linter coverage, and known gaps are documented in
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index bba8d9305e46689fbca3432827e820ff76c85362..07b486102ad8730194e8e8858562ac3208c96c62 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -6,10 +6,10 @@
+ 
+ ## Overall
+ 
+-**299 / 570 steps done · 52%**
++**306 / 571 steps done · 54%**
+ 
+ ```text
+-█████████████████████░░░░░░░░░░░░░░░░░░░   52%
++██████████████████████░░░░░░░░░░░░░░░░░░   54%
+ ```
+ 
+ ## ⚠️ Iron Law 3 — unresolved deferred items
+@@ -45,7 +45,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ | 19 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
+ | 20 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [1](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
+ | 21 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+-| 22 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 21 | 6 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ██░░░░░░░░ 22% |
++| 22 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 17 | 10 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ████░░░░░░ 37% |
+ | 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
+ | 24 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
+ | 25 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+@@ -680,14 +680,14 @@ _1 blocker resolved._
+ 
+ ### [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md)
+ 
+-**Road to org telemetry** — 6 / 27 done (22%)
++**Road to org telemetry** — 10 / 27 done (37%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+ | 0 | Falsification spikes | ✅ done | 0 | 3 | 0 | 0 | 100% |
+ | 1 | Emission in the dispatcher | ✅ done | 0 | 3 | 0 | 0 | 100% |
+-| 2 | Transport | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+-| 3 | Consent | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
++| 2 | Transport | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
++| 3 | Consent | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+ | 4 | Report and the rationalization unblock | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+ | 5 | Self-repair intake over the wire | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+ | 6 | Aggregation and issues | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+diff --git a/agents/roadmaps/road-to-org-telemetry.md b/agents/roadmaps/road-to-org-telemetry.md
+index fdbdff0a2d2c7f468b627b8674d160249ebe1302..91c1ef116f5ad7fc534eb4010698afedfe0a0d0a 100644
+--- a/agents/roadmaps/road-to-org-telemetry.md
++++ b/agents/roadmaps/road-to-org-telemetry.md
+@@ -129,7 +129,7 @@ Recorded here so nobody re-derives it from the findings files.
+ ## Phase 2 — Transport
+ 
+ - [ ] Flush unsent records at session end as a batched outbound call per the second spike's result, with a timeout at or below one second, silent failure, and local retention for the next flush. <!-- verify: ./scripts-run src/scripts/test_telemetry_transport -->
+-- [ ] Declare a retention policy for the local record log and enforce it. Phase 1 ships an append-only file with no cap and no pruning, and `flush: never` endorses that as an indefinite steady state — one line per skill invocation, forever. The R2 review of Phase 1 raised it; it is a `scale-discipline` R-A7 growth-budget obligation and it is owed before the namespace is enabled anywhere broadly. <!-- verify: grep -q retention src/agent-src/templates/scripts/telemetry/remote.ts -->
++- [x] Declare a retention policy for the local record log and enforce it. Phase 1 ships an append-only file with no cap and no pruning, and `flush: never` endorses that as an indefinite steady state — one line per skill invocation, forever. The R2 review of Phase 1 raised it; it is a `scale-discipline` R-A7 growth-budget obligation and it is owed before the namespace is enabled anywhere broadly. **Landed as a TTL plus a byte backstop, enforced by the only writer** — `retention_due` / `enforce_retention` in `telemetry/remote.ts`, called from `append_class_a_record`, so there is no sweep a caller can forget to run. Defaults 90 days / 2 MiB, both measured rather than picked: `tool-result-census.jsonl` carries 24 `Skill` events over 3.62 days (6.6/day) and a Class-A line serialises to 248–286 bytes, so 90 days is ≈ 600 records ≈ 160 KiB and is the cap that actually binds; 2 MiB is the backstop for an unobserved rate. The hook passes the install's declared policy rather than the module defaults, and a test proves it fails when that wiring is dropped. <!-- verify: grep -q retention src/agent-src/templates/scripts/telemetry/remote.ts -->
+ - [ ] Stand up the sink as a minimal append-only ingest with no read API in this phase. <!-- blocked-by: sink-choice -->
+ 
+ **Exit criteria:** records written on a second machine appear in the sink, and an endpoint outage is invisible to the session.
+@@ -138,9 +138,9 @@ Recorded here so nobody re-derives it from the findings files.
+ 
+ ## Phase 3 — Consent
+ 
+-- [ ] Record an ADR introducing an org-pack provenance class alongside the existing human-chosen and auto-detected classes. It counts as recorded consent because a human org administrator made the choice; the machine still never grants itself permission, so the existing doctrine is preserved rather than bent. Auto-detected remains never-consent, verbatim. <!-- verify: ./scripts-run src/scripts/adr/regenerate_index -->
+-- [ ] Surface one visible disclosure line at first session start under an org-pack-enabled install, stating that the install reports pseudonymous usage data and to whom. <!-- verify: ./scripts-run src/scripts/validate_evals -->
+-- [ ] Add a security-documentation paragraph covering what ships, what never ships, the local inspection path for the emitted records, and that the default is off for everyone outside an org pack. <!-- verify: grep -q "telemetry" SECURITY.md -->
++- [x] Record an ADR introducing an org-pack provenance class alongside the existing human-chosen and auto-detected classes. It counts as recorded consent because a human org administrator made the choice; the machine still never grants itself permission, so the existing doctrine is preserved rather than bent. Auto-detected remains never-consent, verbatim. **Landed as ADR-233.** The mechanism that keeps the doctrine intact is a type asymmetry, not a check: the reader's `ConsentSource` gains `org-pack`, the CLI writer's `ProvenanceSource` deliberately does not, so `--source org-pack` is rejected like a typo and no agent-reachable path can stamp its own permission — asserted by a test that reads both unions off their sources. The grant is scoped to `telemetry.remote.*` rather than general, per Risk 6. **Two step-text corrections.** (1) The `verify:` below is a SILENT NO-OP as written: `regenerate_index` defaults to `--dir docs/adr/`, this repo keeps ADRs in `docs/decisions/`, and the script prints `adr-dir not found` and exits **0**. Re-pointed to the real directory; eighth recorded instance of a step naming a measurement path that does not exist. (2) The ADR does NOT classify the `telemetry.remote` keys, and cannot: `lint_settings_classes` check 2 requires every contract row to name a key the shipped template has, and Phase 1 deliberately keeps the namespace out of the template so a clone carries names without values. ADR-233 § D6 records the intended classification and the constraint instead — which leaves the org-pack branch reachable-by-design and unreached until those keys ship. <!-- verify: ./scripts-run src/scripts/adr/regenerate_index --dir docs/decisions/ -->
++- [x] Surface one visible disclosure line at first session start under an org-pack-enabled install, stating that the install reports pseudonymous usage data and to whom. **Landed as the `telemetry-disclosure` `session_start` concern**, bound on all seven platforms carrying the slot. "First session start" is implemented as once per `(org_id, endpoint)` pair with the note in `agents/runtime/state/telemetry-disclosure.json`, and it re-discloses when either changes — a new sink is a new fact, and a design that showed the line once and then silently followed the data elsewhere would be worse than one that never showed it. An unreadable state file reads as not-yet-disclosed, so the failure mode is a repeated line rather than a suppressed one. The line carries the org, the endpoint HOST only (never the full URL, which can hold a token), what is sent, what cannot be sent, and the local read path; it never carries the salt. Emission is asserted under the 1024-byte per-concern default, so no `hook-token-budget.json` row is owed, and `session_start_chain` runs the real dispatcher on all seven platforms at exit 0 under the composed context budget. **Step-text correction:** the `verify:` named `src/scripts/validate_evals`, which **does not exist** — `validate_evals_json` is a function inside `skill_linter.ts`, not a runnable script, so the check exits non-zero for the wrong reason. Ninth recorded instance of a step naming a measurement path that does not exist; Phase 5 step 2 carries the identical broken reference and is left for that phase to fix. Re-pointed to the concern's own suite. <!-- verify: npx vitest run tests/scripts/telemetry_disclosure_hook.test.ts -->
++- [x] Add a security-documentation paragraph covering what ships, what never ships, the local inspection path for the emitted records, and that the default is off for everyone outside an org pack. **Landed as `SECURITY.md` § Telemetry**, covering all four required elements plus the consent provenance. The what-never-ships half is stated as the structural property it is — the record type has no field able to hold free-form content, so there is no scrubber to fail — rather than as a promise about filtering. The zero-file-operations claim is not asserted on trust: `tests/hooks/telemetry_usage_hook.test.ts` § "inactive installs write nothing" covers all four not-opted-in shapes including no settings file at all. <!-- verify: grep -q "telemetry" SECURITY.md -->
+ - [ ] Route the design through the company data-protection process before any org-wide enablement. <!-- blocked-by: dpo-signoff -->
+ 
+ **Exit criteria:** the ADR is indexed, and an enabled flag without a consent-bearing provenance record is treated as disabled by the dispatcher.
+diff --git a/docs/contracts/settings-classes.md b/docs/contracts/settings-classes.md
+index 7326b6bb5687a2942e92d7c9ee1e2999f8a66741..478c3e8b46bf1a918be493910f96b1426c3e910f 100644
+--- a/docs/contracts/settings-classes.md
++++ b/docs/contracts/settings-classes.md
+@@ -34,6 +34,17 @@ who consented and when. `expires_at` / `revoked_at` / contract-version fields
+ stay deliberately unbuilt until a reader needs them — a field nothing reads is
+ surface without a consumer.
+ 
++**A fifth source exists on the READ side only: `org-pack`** (ADR-233). It
++records that a human org administrator decided, which is a consent — but one
++given by someone other than the person it binds, so it grants **only** for
++keys under `telemetry.remote.*` and withholds everywhere else. It is
++deliberately absent from `settings:set`'s own `ProvenanceSource`, so
++`--source org-pack` is rejected like a typo and no agent-reachable path can
++write it; the org-pack install route writes the sidecar entry directly. That
++asymmetry between the reader's vocabulary and the writer's is the safety
++property rather than an inconsistency — `auto-detected` remains never-consent
++verbatim, and this class must not become the precedent that erodes it.
++
+ ## What the fence covers — and what it does not
+ 
+ **It governs writes, not reads.** Every class is readable by everything. A C
+diff --git a/docs/decisions/ADR-233-org-pack-provenance-class.md b/docs/decisions/ADR-233-org-pack-provenance-class.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..b2358a7c2bcf146a54321cd82dddabdb58c52a77
+--- /dev/null
++++ b/docs/decisions/ADR-233-org-pack-provenance-class.md
+@@ -0,0 +1,189 @@
++---
++adr: 233
++status: accepted
++date: 2026-08-19
++decision: org-pack-provenance-class
++supersedes: —
++superseded_by: —
++phase: road-to-org-telemetry
++type: structural
++review_trigger: >-
++  Reopen if a second namespace asks for `org-pack` provenance — the grant is
++  scoped to `telemetry.remote.*` precisely so that widening it is a visible
++  decision rather than a diff nobody reads; if a CLI or agent path is ever
++  proposed that writes `org-pack` provenance, since the write asymmetry is the
++  only thing standing between this class and self-granted permission; or if the
++  first-session disclosure of Phase 3 is dropped, weakened, or made
++  suppressible, since it is the compensating control this record accepts in
++  exchange for a consent given by someone other than the affected user
++---
++
++# ADR-233 — The `org-pack` provenance class
++
++## Status
++
++Accepted. **Extends the provenance vocabulary defined by the settings-class
++contract; supersedes nothing.** In particular the exclusion of `auto-detected`
++from the consent-granting set is restated here verbatim and unchanged — this
++record adds a fourth human source, not a machine one.
++
++## Context
++
++`src/shared/settingsConsent.ts` answers one question: is a permissive
++class-B value a *recorded consent*, or just a value? It grants on
++`jit-answer`, `gui` and `manual`, and it excludes `auto-detected` with a
++stated reason:
++
++> Letting it grant a consent would mean the agent could arrive at its own
++> permission by observing the world, which is the confused-deputy shape in
++> miniature.
++
++The same four-value vocabulary is written down in four places: the reader
++above, the CLI writer (`src/scripts/_cli/cmd_settings_set.ts`), the dispatcher
++help text (`src/scripts/_dispatch.bash`), and the record shape in
++`docs/contracts/settings-classes.md`.
++
++`road-to-org-telemetry` needs a consent this vocabulary cannot express. Its
++Phase 1 shipped a `post_tool_use` concern that appends a Class-A usage record
++— usage class, skill id, host, package version, discipline profile, org id,
++salted user hash, salted session hash, hour bucket, and by construction no
++field able to hold project content — to a local JSONL file. Phase 2 will
++transport those records off the machine. The decision to switch that on is
++made once, centrally, by a human org administrator, and it applies to every
++install the org pack reaches.
++
++Two facts about the tree made this a decision rather than a mechanical
++addition:
++
++1. **`telemetry.remote.*` is not classified at all.** It appears nowhere in
++   the class table of `docs/contracts/settings-classes.md`, so `consentVerdict`
++   returns `not-a-consent-key` for it. The one namespace whose records are
++   intended to leave the machine is the one namespace no consent gate covers.
++2. **An org-pack consent is given by a human who is not the person the data
++   describes.** `jit-answer`, `gui` and `manual` all mean *this* user decided.
++   `org-pack` means *someone else* decided on their behalf. That is either a
++   legitimate fourth human source or a category change wearing the same word,
++   and the roadmap's own Risk 6 names the failure — *"the org-pack class
++   becomes a precedent for machine-granted permissions."*
++
++## Decision
++
++**D1 — `org-pack` joins the provenance vocabulary as a consent-granting
++source.** A human decided; the machine did not. That is the line the existing
++doctrine draws, and an org administrator is on the human side of it.
++
++**D2 — the grant is scoped to `telemetry.remote.*`.** A source that grants
++everywhere would let an org pack decide any consent question on a user's
++behalf. Scoping it to the namespace that motivated it means widening it later
++is a visible decision with its own record, rather than a diff nobody reads.
++
++**D3 — no agent-reachable write path may produce `org-pack` provenance, and
++the mechanism is a type asymmetry rather than a runtime check.** The reader's
++`ConsentSource` gains the value; the CLI writer's `ProvenanceSource` does not.
++`agent-config settings:set --source org-pack` is therefore rejected by the
++same allowlist that rejects a typo, and there is no code path by which the
++agent can stamp its own permission. The org-pack install route writes the
++sidecar entry directly.
++
++This is the load-bearing clause. Without it, D1 hands the agent a string it
++can write about itself, which is precisely the confused-deputy shape
++`auto-detected` was excluded to prevent — the exclusion would survive in the
++letter and die in effect.
++
++**D4 — `auto-detected` remains never-consent, verbatim.** Its exclusion, its
++comment, and its `withheld-machine-inferred` verdict are untouched by this
++record.
++
++**D5 — the affected user is told.** Phase 3's first-session disclosure line is
++not a courtesy; it is the compensating control that makes D1 acceptable. A
++consent given by another human is only legitimate if the person it binds can
++see that it was given. If that disclosure is ever dropped, weakened, or made
++suppressible, this record's premise is gone and it should be reopened — which
++is why that condition is in the review trigger rather than in prose only.
++
++**D6 — the `telemetry.remote` keys are NOT added to the class table, and the
++reason is a constraint rather than an omission.** `lint_settings_classes`
++check 2 requires every contract row to name a key the shipped template
++actually has, and check 5 requires the contract's own counts to match. Phase 1
++deliberately kept `telemetry.remote` out of `src/config/agent-settings.template.yml`
++— a public repository ships the key names and no values, so a clone cannot
++reach the write path by copying the tree. Classifying the keys therefore means
++shipping them, which is a different decision from this one and belongs to
++whoever takes it.
++
++What that leaves is stated rather than hidden: `consentVerdict` returns
++`not-a-consent-key` for an unclassified key, so the org-pack branch above is
++**reachable by design and unreached in the tree today**. It becomes live the
++moment these keys are classified, and D2's namespace scope is written against
++that future rather than against a present caller. A branch with no caller is
++a cost; this one is accepted because the alternative — adding the grant later,
++under time pressure, without the scope clause — is how the erosion in Risk 6
++actually happens.
++
++When the keys are shipped and classified, the intended split is: `enabled`,
++`endpoint`, `org_id`, `salt` and `flush` as class **B** (each has a
++conservative default — `false` or empty — which is what makes absent and
++declined the same answer under check 4), and `retention.max_age_days`,
++`retention.max_bytes` and `output.path` as class **A**, since they decide how
++much is kept rather than whether anything is collected.
++
++## Consequences
++
++- The consent reader gains one value and one branch; the CLI writer gains
++  nothing, and the asymmetry between the two is now a documented invariant
++  with a test rather than an accident of two lists drifting.
++- An org pack can enable telemetry centrally, which is the whole premise of
++  `road-to-org-telemetry`. Nothing else in the suite gains that ability.
++- A reader of `settings/.agent-settings.provenance.json` can now distinguish
++  "this user said yes" from "this user's organisation said yes", which the
++  previous vocabulary could not express at all — it would have had to record
++  the org decision as `manual` and lose the distinction entirely.
++- The four places that spell out the vocabulary become five surfaces to keep
++  in step. The pairing is asserted by a test rather than by a comment, because
++  a comment is what let the previous four drift into being copied by hand.
++
++## Alternatives
++
++**Record `org-pack` but do not let it grant.** Every install would still need
++a local `jit-answer` from the affected user before a single record is written.
++This is the maximum-doctrine option and it is coherent. It was rejected
++because it removes the ability to enable anything centrally, which is not a
++side effect of the roadmap — it is the roadmap. An org pack that cannot decide
++anything for the org is a distribution mechanism, not a consent mechanism.
++
++**Add no source; classify `telemetry.remote.enabled` as class C and let the
++org pack ship a hand-written settings file.** `consentVerdict` already grants
++on `handEdited`, so the mechanism exists and needs no new vocabulary — the
++cheapest option on the page, and it was the strongest challenger. Rejected
++because `handEdited` means "a human wrote this file", which is true of a file
++an org pack generated and equally true of a file the user wrote themselves.
++Collapsing the two loses exactly the distinction D1 exists to record, and it
++does so silently: a later reader auditing who consented would find a grant
++with no way to tell which human it came from. Cheapness that costs the audit
++trail is not cheap.
++
++**Widen the grant to every namespace.** Rejected as the erosion Risk 6 names.
++Nothing needs it today, and an unused permission costs nothing until someone
++uses it.
++
++## Note on how this was decided
++
++Single-model, and stated as such. The AI council is configured (two seats)
++but was unreachable at decision time: both seats were skipped before the run
++with `qualification: unknown — no exchange with this provider has ever been
++recorded`, quorum 0/2, zero spend. No subagent fan-out was substituted and
++called a council. The substance of D1 and D4 was already fixed by the
++roadmap step this record discharges; D2, D3, D5 and D6 are this record's own
++and are the parts a future reader should challenge first.
++
++## References
++
++- `src/shared/settingsConsent.ts` — the reader, and the `auto-detected`
++  exclusion this record preserves.
++- `src/scripts/_cli/cmd_settings_set.ts` — the CLI writer whose vocabulary
++  deliberately does **not** gain the new value (D3).
++- `docs/contracts/settings-classes.md` — the class table and the sidecar
++  record shape.
++- `src/rules/settings-ask-protocol.md` — the ask discipline the B
++  classification in D6 places these keys under.
++- `agents/roadmaps/road-to-org-telemetry.md` — Phase 3, and Risk 6.
+diff --git a/docs/decisions/INDEX.md b/docs/decisions/INDEX.md
+index 6f03e7daeedb9b1c5857423bcbfa3882d934f3a3..9271b1faaabf7e8584a1ddbb9d978d275e2e54b9 100644
+--- a/docs/decisions/INDEX.md
++++ b/docs/decisions/INDEX.md
+@@ -175,6 +175,7 @@ _Auto-generated by `src/scripts/adr/regenerate_index.ts`. Do not edit._
+ | [ADR-230](ADR-230-council-spend-bound-is-a-ceiling.md) | Council Spend Bound Is A Ceiling | accepted | 2026-08-13 | — |
+ | [ADR-231](ADR-231-remove-command-tier-alias.md) | Remove Command Tier Alias | accepted | 2026-08-14 | ADR-092 |
+ | [ADR-232](ADR-232-frontier-tier-reopened.md) | Frontier Tier Reopened | accepted | 2026-08-15 | — |
++| [ADR-233](ADR-233-org-pack-provenance-class.md) | Org Pack Provenance Class | accepted | 2026-08-19 | — |
+ 
+ ## Unnumbered (legacy)
+ 
+diff --git a/src/agent-src/templates/agent-settings.md b/src/agent-src/templates/agent-settings.md
+index 47c3579f302e0255ad8c3cd0a58785aff170d7f6..c8bee103d4253c99db8a7a7e1a07d7ab4a1f29ec 100644
+--- a/src/agent-src/templates/agent-settings.md
++++ b/src/agent-src/templates/agent-settings.md
+@@ -541,16 +541,31 @@ telemetry:
+     # silently inactive. Keep that file out of version control, or supply it
+     # from the org pack at install time.
+     salt: ""
+-    # `session-end` = flush at session end (Phase 2). `never` = keep records
+-    # local indefinitely, which is a legitimate way to run the local half
+-    # while the sink question is still open.
++    # `session-end` = flush at session end (Phase 2). `never` = no transport,
++    # which is a legitimate way to run the local half while the sink question
++    # is still open.
+     #
+-    # The log is append-only with NO cap and NO pruning today, so `never` is
+-    # an unbounded steady state — one line per skill invocation, forever.
+-    # A retention policy is owed before this namespace is enabled anywhere
+-    # broadly (see the roadmap Phase 2 note); until then, treat the file as
+-    # something you rotate yourself.
++    # `never` is NOT an unbounded steady state: the retention budget below
++    # bounds the log whether or not a flush is configured. The consequence
++    # worth knowing before choosing `never` is that the local file is then the
++    # only store, so a record retention evicts is a record that is never sent
++    # anywhere. Raise `retention.max_age_days` if you need a longer local
++    # history.
+     flush: session-end
++    # Growth budget for the log below (`scale-discipline` R-A7). Enforced by
++    # the writer itself, so there is no sweep to remember to run: after each
++    # append, records older than `max_age_days` are dropped, and the file is
++    # held under `max_bytes` from the oldest end regardless of dates.
++    #
++    # The defaults are measured, not guessed. The busiest machine this tree
++    # has observed writes 6.6 skill invocations a day at ~270 bytes each, so
++    # 90 days is roughly 600 records (~160 KiB) and is the cap that actually
++    # binds; 2 MiB is the backstop for a rate that has not been observed.
++    # Omit the section to take both defaults — there is no way to configure
++    # "unbounded", which is the state R-A7 forbids.
++    retention:
++      max_age_days: 90
++      max_bytes: 2097152
+     output:
+       # Append-only JSONL log, relative to the project root. Gitignored.
+       path: .agent-telemetry.jsonl
+@@ -653,8 +668,10 @@ the canonical narrative lives in
+ | `telemetry.remote.endpoint` | URL | *(none)* | Where Phase 2 will flush records to. Recorded now; no outbound call exists in Phase 1. Empty ⇒ inactive. |
+ | `telemetry.remote.org_id` | string | *(none)* | The org whose pack enabled this install; written into every record. Empty ⇒ inactive. |
+ | `telemetry.remote.salt` | string | *(none)* | Org-pack secret salting the user and session hashes — without it a digest of a login name is dictionary-reversible. Never written into a record, never logged. Must sit in the same `.agent-settings.yml` the reader resolves: it consults no override layer, so a salt in `.agent-settings.local.yml` leaves the install silently inactive. Empty ⇒ inactive. |
+-| `telemetry.remote.flush` | `session-end`, `never` | `session-end` | When Phase 2 flushes. `never` keeps records local indefinitely — a legitimate way to run the local half while the sink question is open. |
+-| `telemetry.remote.output.path` | path | `.agent-telemetry.jsonl` | Append-only JSONL log path, relative to the project root. Gitignored. |
++| `telemetry.remote.flush` | `session-end`, `never` | `session-end` | When Phase 2 flushes. `never` means no transport — a legitimate way to run the local half while the sink question is open. It is **not** an unbounded steady state: `retention` below bounds the log either way. Under `never` the local file is the only store, so a record retention evicts is never sent anywhere. |
++| `telemetry.remote.retention.max_age_days` | positive integer | `90` | TTL for the local log (`scale-discipline` R-A7). Records older than this are dropped after an append. At the observed 6.6 invocations/day this is ~600 records (~160 KiB) and is the cap that actually binds. Zero, negative, and non-integer values fall back to the default — there is no way to configure "unbounded". |
++| `telemetry.remote.retention.max_bytes` | positive integer | `2097152` (2 MiB) | Hard ceiling on the local log regardless of record age; the oldest records are dropped first, back to 75 % of the cap so the next prune is not immediate. Backstop for a write rate this tree has not observed. |
++| `telemetry.remote.output.path` | path | `.agent-telemetry.jsonl` | Append-only JSONL log path, relative to the project root. Gitignored. Bounded by `retention` above. |
+ | `linked_projects` | list of `{path, include}` | `[]` | IDE-attached sibling repos in scope for proactive cross-repo awareness. **Belongs in `.agent-settings.local.yml` (in agents/settings/)** (per-machine, gitignored). See [cross-repo guide](../../docs/guides/cross-repo-linked-projects.md) + ADR-032. |
+ | `linked_projects_max_files` | integer | `20000` | File-count ceiling above which a detected sibling is flagged `large` (awareness only). Never excludes. |
+ | `knowledge.global_sharing.enabled` | `true`, `false` | `true` | **User-global** (keep in `~/.event4u/agent-config/agent-settings.yml`). Master switch for the file-first global knowledge-card store (ADR-100; default-ON per ADR-119, the council-validated bounded-downside flip superseding ADR-103 — adversarially spot-checked redaction incl. hidden-unicode hardening, narrowest tier default, pre-registered demotion trigger). `false` fully no-ops the layer (single-key revert); v1 project-local cards unaffected. |
+diff --git a/src/agent-src/templates/scripts/telemetry/remote.ts b/src/agent-src/templates/scripts/telemetry/remote.ts
+index f6e581087cc1110a9a9a6e1768fb8ca3659dc8e9..a9721c58c57092f487e222419ca135331a608c39 100644
+--- a/src/agent-src/templates/scripts/telemetry/remote.ts
++++ b/src/agent-src/templates/scripts/telemetry/remote.ts
+@@ -279,15 +279,251 @@ export function build_class_a_record(input: BuildClassAInput): ClassARecord {
+     };
+ }
+ 
++// ── Retention — the growth budget for the local record log ──────────────
++//
++// Phase 1 shipped this file as append-only with no cap and no pruning, and
++// `flush: never` endorses that as an indefinite steady state: one line per
++// skill invocation, forever. Its own completion review raised it, and
++// `scale-discipline` R-A7 makes it an obligation rather than a nicety —
++// an append-only store declares a retention policy (TTL, pruning job,
++// partition rotation, or archive path) or it is not finished.
++//
++// This is the TTL-plus-pruning shape, enforced by the only writer, so it
++// cannot be bypassed by a caller that forgets to run a sweep.
++//
++// THE NUMBERS ARE MEASURED, NOT GUESSED. On the busiest machine this tree
++// has observed, `agents/runtime/state/tool-result-census.jsonl` carries 24
++// `Skill` tool events across 3.62 days — 6.6 per day — and a Class-A line
++// serialises to 248–286 bytes (measured over four skill-name lengths), so
++// call it 270. That machine therefore writes ≈ 637 KiB per year.
++//
++// The AGE cap is the policy that actually binds: at the observed rate 90
++// days is ≈ 600 records ≈ 160 KiB, so it fires regularly and keeps the file
++// small. The BYTE cap is a backstop for a rate this tree has not observed —
++// a shared machine, a much heavier user — where it bounds the file at 2 MiB
++// (≈ 7,700 records) regardless of dates. A cap chosen so generously that it
++// can never fire is a policy on paper only, which is the failure this repo
++// keeps finding in its own gates; 2 MiB is reached in eleven days at 100×
++// the observed rate and in eight years at 1×, and both of those are the
++// point.
++//
++// WHAT RETENTION COSTS UNDER `flush: never`. With no transport configured
++// the local file is the only store, so a record evicted here is a record
++// that is never sent anywhere. That is the intended trade — a growth budget
++// is a decision to lose the oldest data rather than to keep all of it — but
++// it is stated here rather than left for an operator to discover from a
++// short file. An org that needs the full history configures a flush.
++
++/** Days a record is kept before the age pass drops it. */
++export const DEFAULT_RETENTION_MAX_AGE_DAYS = 90;
++
++/** Hard ceiling on the log, in bytes, regardless of record age. */
++export const DEFAULT_RETENTION_MAX_BYTES = 2 * 1024 * 1024;
++
++/**
++ * How much of the byte cap a byte-triggered prune leaves behind.
++ *
++ * Hysteresis, not tidiness: pruning back to exactly the cap would leave the
++ * file at the trigger point, so the next append would prune again and every
++ * append after it would pay a full rewrite. At 0.75 a quarter of the cap
++ * must re-accumulate first.
++ */
++export const RETENTION_KEEP_FRACTION = 0.75;
++
++export interface RetentionPolicy {
++    readonly max_age_days: number;
++    readonly max_bytes: number;
++}
++
++export const DEFAULT_RETENTION_POLICY: RetentionPolicy = {
++    max_age_days: DEFAULT_RETENTION_MAX_AGE_DAYS,
++    max_bytes: DEFAULT_RETENTION_MAX_BYTES,
++};
++
++/**
++ * Epoch ms for a record line, or `null` when the line carries no readable
++ * `ts_bucket`.
++ *
++ * `null` is not an error path — see `enforce_retention` for why an undatable
++ * line is retained rather than dropped.
++ */
++export function record_line_ms(line: string): number | null {
++    if (!line.trim()) {
++        return null;
++    }
++    let parsed: unknown;
++    try {
++        parsed = JSON.parse(line);
++    } catch {
++        return null;
++    }
++    if (typeof parsed !== 'object' || parsed === null) {
++        return null;
++    }
++    const bucket = (parsed as Record<string, unknown>)['ts_bucket'];
++    if (typeof bucket !== 'string') {
++        return null;
++    }
++    const ms = Date.parse(bucket);
++    return Number.isNaN(ms) ? null : ms;
++}
++
++/** First line of a file without reading the whole file. */
++function _read_first_line(log_path: string): string | null {
++    let fd: number;
++    try {
++        fd = fs.openSync(log_path, 'r');
++    } catch {
++        return null;
++    }
++    try {
++        const buf = Buffer.alloc(4096);
++        const read = fs.readSync(fd, buf, 0, buf.length, 0);
++        if (read <= 0) {
++            return null;
++        }
++        const chunk = buf.subarray(0, read).toString('utf-8');
++        const nl = chunk.indexOf('\n');
++        return nl === -1 ? chunk : chunk.slice(0, nl);
++    } catch {
++        return null;
++    } finally {
++        fs.closeSync(fd);
++    }
++}
++
+ /**
+- * Append one record as a JSONL line.
++ * Is a prune owed right now?
++ *
++ * Deliberately cheap, because it runs on every append: one `stat`, and — only
++ * when the byte cap has not already decided it — one bounded read of the
++ * first line. The file is append-only and written in chronological order, so
++ * the first line is the oldest record: if IT is inside the window, nothing in
++ * the file is outside it, and the whole age pass is answered without reading
++ * the rest.
++ */
++export function retention_due(
++    log_path: string,
++    policy: RetentionPolicy = DEFAULT_RETENTION_POLICY,
++    now: Date = new Date(),
++): boolean {
++    let size: number;
++    try {
++        size = fs.statSync(log_path).size;
++    } catch {
++        return false;
++    }
++    if (size === 0) {
++        return false;
++    }
++    if (size > policy.max_bytes) {
++        return true;
++    }
++    const first = _read_first_line(log_path);
++    if (first === null) {
++        return false;
++    }
++    const oldest = record_line_ms(first);
++    if (oldest === null) {
++        return false;
++    }
++    return oldest < now.getTime() - policy.max_age_days * 86_400_000;
++}
++
++export interface RetentionResult {
++    readonly kept: number;
++    readonly dropped_by_age: number;
++    readonly dropped_by_size: number;
++}
++
++/**
++ * Apply the retention policy to the log, in place.
++ *
++ * Age first, then bytes, because the age pass is the policy and the byte cap
++ * is the backstop: running bytes first could evict a record the age window
++ * still covers while leaving nothing for the age pass to do.
++ *
++ * AN UNDATABLE LINE IS KEPT BY THE AGE PASS. This file has exactly one
++ * writer, so a line without a readable `ts_bucket` is corruption rather than
++ * an old record, and deleting data on the strength of not being able to read
++ * it is the wrong default. It still counts toward the byte cap, so it is
++ * evicted from the oldest end eventually — bounded, but never silently
++ * discarded for being unparseable.
++ *
++ * The rewrite goes through a sibling temp file and a rename, so a crash
++ * mid-prune leaves the original log intact rather than a truncated one.
++ */
++export function enforce_retention(
++    log_path: string,
++    policy: RetentionPolicy = DEFAULT_RETENTION_POLICY,
++    now: Date = new Date(),
++): RetentionResult {
++    let raw: string;
++    try {
++        raw = fs.readFileSync(log_path, 'utf-8');
++    } catch {
++        return { kept: 0, dropped_by_age: 0, dropped_by_size: 0 };
++    }
++    const lines = raw.split('\n').filter((l) => l.length > 0);
++    const total = lines.length;
++
++    const cutoff = now.getTime() - policy.max_age_days * 86_400_000;
++    const survived_age = lines.filter((l) => {
++        const ms = record_line_ms(l);
++        return ms === null || ms >= cutoff;
++    });
++    const dropped_by_age = total - survived_age.length;
++
++    // Byte cap: keep the NEWEST suffix that fits under the kept-fraction of
++    // the cap. Walking from the end is what makes "drop the oldest" true.
++    const budget = Math.floor(policy.max_bytes * RETENTION_KEEP_FRACTION);
++    let used = 0;
++    let start = survived_age.length;
++    for (let i = survived_age.length - 1; i >= 0; i -= 1) {
++        const cost = Buffer.byteLength(`${survived_age[i] as string}\n`);
++        if (used + cost > budget) {
++            break;
++        }
++        used += cost;
++        start = i;
++    }
++    const kept_lines = survived_age.slice(start);
++    const dropped_by_size = survived_age.length - kept_lines.length;
++
++    if (dropped_by_age === 0 && dropped_by_size === 0) {
++        return { kept: total, dropped_by_age: 0, dropped_by_size: 0 };
++    }
++
++    const payload = kept_lines.length === 0 ? '' : `${kept_lines.join('\n')}\n`;
++    const tmp = `${log_path}.retention.tmp`;
++    fs.writeFileSync(tmp, payload, { encoding: 'utf-8' });
++    fs.renameSync(tmp, log_path);
++
++    return { kept: kept_lines.length, dropped_by_age, dropped_by_size };
++}
++
++/**
++ * Append one record as a JSONL line, then enforce the retention policy.
+  *
+  * Uses the engagement module's compact-sorted serializer so a Class-A line
+  * is byte-comparable with the records already in this tree rather than
+  * carrying a second JSON convention.
++ *
++ * Enforcement runs AFTER the append and only when `retention_due` says so,
++ * which makes the common append one extra `stat` plus one bounded read. It
++ * lives here rather than in a separate sweep because this is the only writer:
++ * a policy a caller has to remember to run is a policy that stops running.
+  */
+-export function append_class_a_record(log_path: string, record: ClassARecord): void {
++export function append_class_a_record(
++    log_path: string,
++    record: ClassARecord,
++    policy: RetentionPolicy = DEFAULT_RETENTION_POLICY,
++    now: Date = new Date(),
++): void {
+     const payload = `${py_json_dumps_compact_sorted(record as unknown as Record<string, unknown>)}\n`;
+     fs.mkdirSync(path.dirname(log_path) || '.', { recursive: true });
+     fs.appendFileSync(log_path, payload, { encoding: 'utf-8' });
++    if (retention_due(log_path, policy, now)) {
++        enforce_retention(log_path, policy, now);
++    }
+ }
+diff --git a/src/agent-src/templates/scripts/telemetry/settings.ts b/src/agent-src/templates/scripts/telemetry/settings.ts
+index 3ae64db47b83dc6c9319802e44fb6cce01d44010..d015d7fee49e490972b76ebd1c4c61fb1306c2a5 100644
+--- a/src/agent-src/templates/scripts/telemetry/settings.ts
++++ b/src/agent-src/templates/scripts/telemetry/settings.ts
+@@ -219,11 +219,34 @@ export function read_tier_usage_settings(p: string): TierUsageSettings {
+ // only namespace whose records are intended to LEAVE the machine (Phase 2
+ // transports them; Phase 1 writes them locally and nothing else). So
+ // `enabled: true` alone is deliberately not enough to switch it on.
++//
++// `flush: never` AND RETENTION, TOGETHER. `never` means no transport, so the
++// local file is the only store — and the retention budget below then decides
++// what survives. A record evicted by retention under `flush: never` is a
++// record that is never sent anywhere. That is the intended trade of a growth
++// budget rather than an oversight, and it is stated here so an operator meets
++// it in the settings surface instead of inferring it from a short file. An
++// org that needs the full history configures a flush; an org that wants a
++// longer local history raises `retention.max_age_days`.
+ 
+ export const DEFAULT_REMOTE_LOG_PATH = '.agent-telemetry.jsonl';
+ export const DEFAULT_REMOTE_FLUSH = 'session-end';
+ export const ALLOWED_REMOTE_FLUSH = ['session-end', 'never'] as const;
+ 
++/**
++ * Growth budget for the local record log (`scale-discipline` R-A7).
++ *
++ * Mirrors `DEFAULT_RETENTION_MAX_AGE_DAYS` / `DEFAULT_RETENTION_MAX_BYTES`
++ * in `remote.ts`, which is where the measured basis for both numbers is
++ * written down. Duplicated as literals rather than imported because this
++ * module is the settings surface and must stay readable on its own; the
++ * pairing is asserted by a test rather than left to a comment.
++ */
++export const DEFAULT_REMOTE_RETENTION = {
++    max_age_days: 90,
++    max_bytes: 2 * 1024 * 1024,
++} as const;
++
+ /**
+  * The three fields that must ALL carry a value — on top of `enabled` —
+  * before a single record is written. `endpoint` and `org_id` name where the
+@@ -246,6 +269,14 @@ export class RemoteTelemetrySettings {
+     readonly salt: string;
+     readonly flush: string;
+     readonly log_path: string;
++    /**
++     * Growth budget for `log_path`. Always present — an install that
++     * declares no `retention:` gets the defaults rather than no policy,
++     * because "unbounded" is the state R-A7 forbids and a settings file is
++     * not a place to opt back into it.
++     */
++    readonly retention_max_age_days: number;
++    readonly retention_max_bytes: number;
+ 
+     constructor(init: {
+         enabled: boolean;
+@@ -254,6 +285,8 @@ export class RemoteTelemetrySettings {
+         salt: string;
+         flush: string;
+         log_path: string;
++        retention_max_age_days: number;
++        retention_max_bytes: number;
+     }) {
+         this.enabled = init.enabled;
+         this.endpoint = init.endpoint;
+@@ -261,6 +294,8 @@ export class RemoteTelemetrySettings {
+         this.salt = init.salt;
+         this.flush = init.flush;
+         this.log_path = init.log_path;
++        this.retention_max_age_days = init.retention_max_age_days;
++        this.retention_max_bytes = init.retention_max_bytes;
+     }
+ 
+     /**
+@@ -294,6 +329,22 @@ export class RemoteTelemetrySettings {
+ export function read_remote_settings(p: string): RemoteTelemetrySettings {
+     const { section } = _read_telemetry_section(p, 'remote');
+     const output = _isPlainObject(section['output']) ? section['output'] : {};
++    const retention = _isPlainObject(section['retention']) ? section['retention'] : {};
++
++    // A retention override must be a positive integer. Zero and negatives are
++    // rejected to the default rather than honoured: `max_age_days: 0` reads
++    // like "keep nothing" but would in practice mean "prune on every append",
++    // and neither is a growth budget an operator should be able to set by
++    // typing one character.
++    const _coerce_positive_int = (value: unknown, def: number): number => {
++        if (typeof value === 'boolean') {
++            return def;
++        }
++        if (typeof value === 'number' && Number.isInteger(value) && value > 0) {
++            return value;
++        }
++        return def;
++    };
+ 
+     return new RemoteTelemetrySettings({
+         enabled: _coerce_bool(section['enabled'], false),
+@@ -302,5 +353,13 @@ export function read_remote_settings(p: string): RemoteTelemetrySettings {
+         salt: _coerce_str(section['salt'], ''),
+         flush: _coerce_str(section['flush'], DEFAULT_REMOTE_FLUSH, ALLOWED_REMOTE_FLUSH),
+         log_path: _coerce_path(output['path'], DEFAULT_REMOTE_LOG_PATH),
++        retention_max_age_days: _coerce_positive_int(
++            retention['max_age_days'],
++            DEFAULT_REMOTE_RETENTION.max_age_days,
++        ),
++        retention_max_bytes: _coerce_positive_int(
++            retention['max_bytes'],
++            DEFAULT_REMOTE_RETENTION.max_bytes,
++        ),
+     });
+ }
+diff --git a/src/scripts/hook_manifest.yaml b/src/scripts/hook_manifest.yaml
+index cd4c78a2e28301d89023c5cb9dba2276b1c1a0c8..218c1c0a9f5573d43317e0d2f1bb63e4c8dfb802 100644
+--- a/src/scripts/hook_manifest.yaml
++++ b/src/scripts/hook_manifest.yaml
+@@ -410,6 +410,19 @@ concerns:
+     args: []
+     fail_closed: false
+     severity: advisory
++  # Org-telemetry disclosure (road-to-org-telemetry Phase 3.2; ADR-233 § D5).
++  # `org-pack` is the only consent class in this suite granted by somebody
++  # OTHER than the person it binds — an org administrator, once, for every
++  # install the pack reaches. Telling that person is what makes the grant
++  # legitimate rather than a courtesy on top of it. Emits once per
++  # (org_id, endpoint) pair and re-discloses when either changes, because a
++  # new sink is a new fact. An inactive install prints nothing and writes
++  # nothing. Advisory: it informs, it never blocks a session start.
++  telemetry-disclosure:
++    script: src/scripts/telemetry_disclosure_hook.ts
++    args: []
++    fail_closed: false
++    severity: advisory
+   # Self-repair intake (road-to-self-repair Phase 1). Two slots, one queue:
+   # user_prompt_submit opens a record when the user states the agent worked
+   # wrongly and injects the open-queue line; stop runs the deterministic
+@@ -823,14 +836,14 @@ roles:
+ 
+ platforms:
+   augment:
+-    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
++    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+     session_end:      [chat-history, memory-learn, session-register, roadmap-progress]
+     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
+     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard]
+     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape]
+ 
+   claude:
+-    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
++    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+     session_end:      [chat-history, memory-learn, session-register, roadmap-progress]
+     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register]
+@@ -874,7 +887,7 @@ platforms:
+   # Decision matrix + upstream blockers tracked in
+   # agents/settings/contexts/chat-history-platform-hooks.md § Cowork.
+   cowork:
+-    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
++    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+     session_end:      [chat-history, memory-learn, session-register, roadmap-progress]
+     # end-review-nudge and delegation-nudge are DELIBERATELY NOT bound on
+     # this platform (F10, review) — cowork-dispatcher.sh's own header states
+@@ -908,7 +921,7 @@ platforms:
+   # IDE-only — CLI-only users fall back to /checkpoint per
+   # agents/settings/contexts/chat-history-platform-hooks.md.
+   cursor:
+-    session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
++    session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+     session_end:        [chat-history, memory-learn, session-register, roadmap-progress]
+     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+@@ -923,7 +936,7 @@ platforms:
+   # both map to session_start. TaskCancel maps to stop because the
+   # session is interrupted with partial state (mirrors Augment Stop).
+   cline:
+-    session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
++    session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+     session_end:        [chat-history, memory-learn, session-register, roadmap-progress]
+     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+@@ -942,7 +955,7 @@ platforms:
+   # surface to record verification commands; documented limitation).
+   # minimal-safe-diff is omitted entirely on Windsurf for the same reason.
+   windsurf:
+-    session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, profile-staleness, wrapper-freshness, surface-probe, session-register]
++    session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, profile-staleness, wrapper-freshness, surface-probe, session-register]
+     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register]
+     # language-mirror IS bound here: unlike minimal-safe-diff it needs only the
+     # user_prompt_submit slot, which Windsurf has.
+@@ -959,7 +972,7 @@ platforms:
+   # turn-check semantics. AfterAgent fires when the agent loop ends
+   # — this is our `stop` slot.
+   gemini:
+-    session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
++    session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+     session_end:        [chat-history, memory-learn, session-register, roadmap-progress]
+     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+diff --git a/src/scripts/hooks/concern_registry.ts b/src/scripts/hooks/concern_registry.ts
+index 0d5fc721318babaa8629a009d5b7dcbbe72887d9..de7b89285a7acd060b1b1d273ce0d2023d07640c 100644
+--- a/src/scripts/hooks/concern_registry.ts
++++ b/src/scripts/hooks/concern_registry.ts
+@@ -43,6 +43,7 @@ import { main as teamReviewGateMain } from '../team_review_gate_hook.js';
+ import { main as prUrlReminderMain } from '../pr_url_reminder_hook.js';
+ import { main as sessionCanaryMain } from '../session_canary_hook.js';
+ import { main as councilAvailabilityMain } from '../council_availability_hook.js';
++import { main as telemetryDisclosureMain } from '../telemetry_disclosure_hook.js';
+ import { main as selfRepairMain } from '../self_repair_hook.js';
+ import { main as sessionRegisterMain } from '../session_register_hook.js';
+ import { main as languageMirrorMain } from '../language_mirror_hook.js';
+@@ -94,6 +95,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
+     'src/scripts/pr_url_reminder_hook.ts': prUrlReminderMain as ConcernMain,
+     'src/scripts/session_canary_hook.ts': sessionCanaryMain as ConcernMain,
+     'src/scripts/council_availability_hook.ts': councilAvailabilityMain as ConcernMain,
++    'src/scripts/telemetry_disclosure_hook.ts': telemetryDisclosureMain as ConcernMain,
+     'src/scripts/self_repair_hook.ts': selfRepairMain as ConcernMain,
+     'src/scripts/session_register_hook.ts': sessionRegisterMain as ConcernMain,
+     'src/scripts/language_mirror_hook.ts': languageMirrorMain as ConcernMain,
+diff --git a/src/scripts/hooks/telemetry_usage_hook.ts b/src/scripts/hooks/telemetry_usage_hook.ts
+index 4bb8fa5587f0a0b059be493b1b8436854fd2e836..86dadfd85e0fdfecbb3c9b53b1ed966f1a40c8eb 100644
+--- a/src/scripts/hooks/telemetry_usage_hook.ts
++++ b/src/scripts/hooks/telemetry_usage_hook.ts
+@@ -271,7 +271,14 @@ function processEnvelope(envelope: JsonValue, consumer_root: string): number {
+         const logPath = path.isAbsolute(settings.log_path)
+             ? settings.log_path
+             : path.join(root, settings.log_path);
+-        append_class_a_record(logPath, record);
++        // The growth budget travels from the settings the install actually
++        // declared, not from the appender's own defaults — a retention key
++        // the write path never reads would be a setting that decorates
++        // rather than decides.
++        append_class_a_record(logPath, record, {
++            max_age_days: settings.retention_max_age_days,
++            max_bytes: settings.retention_max_bytes,
++        });
+     } catch {
+         // Malformed payload, unreadable disk, a rejected id — never block
+         // the tool call, and never write a degraded record.
+diff --git a/src/scripts/telemetry_disclosure_hook.ts b/src/scripts/telemetry_disclosure_hook.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..20c340ee77f05c34391c4a8ea5ebcc9ce9e4b9af
+Binary files /dev/null and b/src/scripts/telemetry_disclosure_hook.ts differ
+diff --git a/src/shared/settingsConsent.ts b/src/shared/settingsConsent.ts
+index 1913b80aee8f1ce0feba5b78b2d18d5889be9f05..35f58e67a2b34b3f8ffc1948a8ae598a8f88f4a8 100644
+--- a/src/shared/settingsConsent.ts
++++ b/src/shared/settingsConsent.ts
+@@ -35,8 +35,21 @@
+ 
+ import { isConservativeDefault, type SettingsClass } from './settingsClasses.js';
+ 
+-/** The provenance vocabulary `settings:set` writes. Mirrors its own enum. */
+-export type ConsentSource = 'auto-detected' | 'jit-answer' | 'manual' | 'gui';
++/**
++ * The provenance vocabulary this READER understands.
++ *
++ * Deliberately one value wider than what `settings:set` can write: `org-pack`
++ * is readable here and absent from `ProvenanceSource` in
++ * `src/scripts/_cli/cmd_settings_set.ts`. That asymmetry is ADR-233 § D3 and
++ * it is the whole safety property — a value no agent-reachable path can write
++ * is a value the agent cannot stamp on its own permission. It is a type
++ * difference rather than a runtime check on purpose: there is no branch to
++ * forget and none to bypass.
++ */
++export type ConsentSource = 'auto-detected' | 'jit-answer' | 'manual' | 'gui' | 'org-pack';
++
++/** Keys `org-pack` provenance may grant. ADR-233 § D2. */
++const ORG_PACK_KEY_PREFIX = 'telemetry.remote.';
+ 
+ /**
+  * The sources that can carry a human decision.
+@@ -44,6 +57,11 @@ export type ConsentSource = 'auto-detected' | 'jit-answer' | 'manual' | 'gui';
+  * `jit-answer` is a question the user answered. `gui` is a human at the settings
+  * editor. `manual` is a hand-edit or an explicit CLI write on the user's
+  * instruction. `auto-detected` is excluded on purpose — see the module header.
++ *
++ * `org-pack` is NOT in this list, and its absence is not an oversight: it
++ * grants, but only for one namespace, so it is handled by its own branch in
++ * `consentVerdict` rather than by membership here. Putting it in this list
++ * would make it grant everywhere, which is the erosion ADR-233 § D2 refuses.
+  */
+ const HUMAN_SOURCES: readonly ConsentSource[] = ['jit-answer', 'gui', 'manual'];
+ 
+@@ -56,12 +74,23 @@ export type ConsentVerdict =
+     | 'withheld-unrecorded'
+     /** Permissive and recorded, but recorded as a machine inference. */
+     | 'withheld-machine-inferred'
++    /**
++     * An org administrator consented, but for a key outside the namespace
++     * that grant covers (ADR-233 § D2).
++     */
++    | 'withheld-org-pack-out-of-scope'
+     /** Not a consent question at all: A needs none, C is human-only. */
+     | 'not-a-consent-key';
+ 
+ export interface ConsentQuery {
+     /** The key's class, from the contract — `undefined` means unclassified. */
+     cls: SettingsClass | undefined;
++    /**
++     * The dotted key. Required only to evaluate an `org-pack` grant, which is
++     * namespace-scoped; every other source decides without it, so it stays
++     * optional rather than breaking existing callers.
++     */
++    key?: string | undefined;
+     /** The effective value after normal resolution. */
+     value: unknown;
+     /**
+@@ -103,6 +132,14 @@ export function consentVerdict(query: ConsentQuery): ConsentVerdict {
+     if (query.source === undefined) {
+         return 'withheld-unrecorded';
+     }
++    if (query.source === 'org-pack') {
++        // A human decided, but not the human this value binds — so the grant
++        // is real and narrow. An absent key cannot be shown to be in scope,
++        // and unproven is withheld here as everywhere else in this function.
++        return query.key !== undefined && query.key.startsWith(ORG_PACK_KEY_PREFIX)
++            ? 'granted'
++            : 'withheld-org-pack-out-of-scope';
++    }
+     if (!HUMAN_SOURCES.includes(query.source)) {
+         return 'withheld-machine-inferred';
+     }
+@@ -130,6 +167,9 @@ export function withheldReason(verdict: ConsentVerdict, key: string): string | n
+             return `${key} permits this, but nothing records who decided it. Ask, or set it via the GUI.`;
+         case 'withheld-machine-inferred':
+             return `${key} was auto-detected, not decided. A machine inference is not a consent.`;
++        case 'withheld-org-pack-out-of-scope':
++            return `${key} carries an org-pack consent, which grants only under `
++                + `${ORG_PACK_KEY_PREFIX}* (ADR-233). Ask this user directly.`;
+         case 'not-a-consent-key':
+             return `${key} is not a class-B consent key — this gate does not apply to it.`;
+     }
+diff --git a/tests/hooks/telemetry_usage_hook.test.ts b/tests/hooks/telemetry_usage_hook.test.ts
+index 06626b043bbebef863d849a2c183c6ada37945ab..0ac67ed93c5c0386df6798607a26e8dde8458224 100644
+--- a/tests/hooks/telemetry_usage_hook.test.ts
++++ b/tests/hooks/telemetry_usage_hook.test.ts
+@@ -234,3 +234,39 @@ describe('extractSkillName', () => {
+         expect(extractSkillName({})).toBeNull();
+     });
+ });
++
++// ── Retention reaches the write path (Phase 2 step 2) ───────────────────
++//
++// The unit tests in `templates_telemetry_remote.test.ts` prove the budget
++// works when it is passed. These prove the hook passes it — the seam where a
++// declared setting most easily becomes decoration.
++
++describe('telemetry-usage — the declared growth budget reaches the log', () => {
++    it('honours a byte cap the install declared, not the appender default', () => {
++        const cap = 1024;
++        const root = makeRoot(`${ACTIVE}
++`.replace('    salt: "org-pack-secret"', `    salt: "org-pack-secret"
++    retention:
++      max_bytes: ${cap}`));
++
++        // One record is ~270 B, so a 1 KiB cap binds within a handful of
++        // writes; the appender default (2 MiB) would not bind at all here.
++        for (let i = 0; i < 40; i += 1) {
++            expect(run(envelope(`skill-${i}`), { consumer_root: root })).toBe(0);
++        }
++
++        expect(fs.existsSync(logPath(root))).toBe(true);
++        expect(fs.statSync(logPath(root)).size).toBeLessThanOrEqual(cap);
++    });
++
++    it('leaves the log unbounded-looking under the default cap, so the test above is not vacuous', () => {
++        const root = makeRoot(ACTIVE);
++        for (let i = 0; i < 40; i += 1) {
++            run(envelope(`skill-${i}`), { consumer_root: root });
++        }
++        // 40 records at ~270 B is far under the 2 MiB default: the previous
++        // test's small file is the declared cap acting, not the writer.
++        const lines = fs.readFileSync(logPath(root), 'utf-8').split('\n').filter((l) => l.length > 0);
++        expect(lines).toHaveLength(40);
++    });
++});
+diff --git a/tests/scripts/jit_ask_budget.test.ts b/tests/scripts/jit_ask_budget.test.ts
+index 312863df0a478989c16315792b5de80538dfce91..f54a002c1eed8b6f934a313231e9f9e48aeacb31 100644
+--- a/tests/scripts/jit_ask_budget.test.ts
++++ b/tests/scripts/jit_ask_budget.test.ts
+@@ -605,3 +605,78 @@ describe('who picks the moment — the half no gate can check', () => {
+         expect(flat()).toMatch(/If the run would complete without the setting/);
+     });
+ });
++
++// ── ADR-233: the `org-pack` provenance class ────────────────────────────
++//
++// Three properties, and the third is the one that matters: the reader
++// understands a value the writer cannot produce. If those two vocabularies
++// ever converge, an agent can stamp its own permission, which is exactly what
++// excluding `auto-detected` was meant to prevent.
++
++describe('consentVerdict — org-pack provenance (ADR-233)', () => {
++    const IN_SCOPE = 'telemetry.remote.enabled';
++    const OUT_OF_SCOPE = 'memory.learn_on_session_end';
++
++    it('grants inside telemetry.remote.*, where an org administrator decided', () => {
++        expect(consentVerdict({
++            cls: 'B', key: IN_SCOPE, value: true, source: 'org-pack',
++        })).toBe('granted');
++    });
++
++    it('withholds outside that namespace — the grant is scoped, not general', () => {
++        expect(consentVerdict({
++            cls: 'B', key: OUT_OF_SCOPE, value: true, source: 'org-pack',
++        })).toBe('withheld-org-pack-out-of-scope');
++    });
++
++    it('withholds when no key is supplied, because unproven scope is not scope', () => {
++        expect(consentVerdict({ cls: 'B', value: true, source: 'org-pack' }))
++            .toBe('withheld-org-pack-out-of-scope');
++    });
++
++    it('does not grant a conservative value just because an org set it', () => {
++        expect(consentVerdict({
++            cls: 'B', key: IN_SCOPE, value: false, source: 'org-pack',
++        })).toBe('withheld-default');
++    });
++
++    it('leaves auto-detected never-consent, verbatim (ADR-233 D4)', () => {
++        expect(consentVerdict({
++            cls: 'B', key: IN_SCOPE, value: true, source: 'auto-detected',
++        })).toBe('withheld-machine-inferred');
++    });
++
++    it('explains the refusal without claiming the value was machine-inferred', () => {
++        const reason = withheldReason('withheld-org-pack-out-of-scope', OUT_OF_SCOPE);
++        expect(reason).toContain(OUT_OF_SCOPE);
++        expect(reason).toContain('telemetry.remote.');
++        expect(reason).not.toContain('auto-detected');
++    });
++
++    it('consentGranted mirrors the verdict on both sides of the scope line', () => {
++        expect(consentGranted({ cls: 'B', key: IN_SCOPE, value: true, source: 'org-pack' }))
++            .toBe(true);
++        expect(consentGranted({ cls: 'B', key: OUT_OF_SCOPE, value: true, source: 'org-pack' }))
++            .toBe(false);
++    });
++
++    it('the CLI writer cannot produce the value the reader accepts (ADR-233 D3)', () => {
++        // The invariant, read off the source rather than restated: the reader's
++        // union carries `org-pack` and the writer's allowlist does not. A future
++        // edit that adds it to the writer fails here, which is the whole point —
++        // an agent-writable `org-pack` is a self-granted permission.
++        const readerSrc = fs.readFileSync(
++            path.join(REPO, 'src/shared/settingsConsent.ts'), 'utf-8');
++        const writerSrc = fs.readFileSync(
++            path.join(REPO, 'src/scripts/_cli/cmd_settings_set.ts'), 'utf-8');
++
++        expect(readerSrc).toMatch(/export type ConsentSource[^;]*'org-pack'/u);
++
++        const writerList = writerSrc.match(
++            /const PROVENANCE_SOURCES:[^=]*=\s*\[([^\]]*)\]/u)?.[1] ?? '';
++        expect(writerList).not.toContain('org-pack');
++        // And the writer's own union, so the two cannot drift apart either.
++        const writerUnion = writerSrc.match(/export type ProvenanceSource\s*=([^;]*);/u)?.[1] ?? '';
++        expect(writerUnion).not.toContain('org-pack');
++    });
++});
+diff --git a/tests/scripts/telemetry_disclosure_hook.test.ts b/tests/scripts/telemetry_disclosure_hook.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..d96fa0a40f1996de3bfe6a1df77cf74d51459d25
+--- /dev/null
++++ b/tests/scripts/telemetry_disclosure_hook.test.ts
+@@ -0,0 +1,214 @@
++/**
++ * `telemetry-disclosure` concern — road-to-org-telemetry Phase 3, step 2.
++ *
++ * The assertion that matters is the silent half, in both directions: an
++ * install that did not fully opt in must print nothing AND write nothing, and
++ * an install that did must print exactly once — but must print again when the
++ * org or the sink changes, because a new recipient is a new disclosure.
++ */
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterEach, describe, expect, it } from 'vitest';
++
++import {
++    DISCLOSURE_STATE_REL,
++    _endpointHost,
++    alreadyDisclosed,
++    buildDisclosure,
++    disclosureKey,
++    run,
++} from '../../src/scripts/telemetry_disclosure_hook.js';
++
++const roots: string[] = [];
++
++afterEach(() => {
++    while (roots.length > 0) {
++        fs.rmSync(roots.pop() as string, { recursive: true, force: true });
++    }
++});
++
++const ACTIVE = `
++telemetry:
++  remote:
++    enabled: true
++    endpoint: "https://sink.example.invalid/ingest"
++    org_id: "acme"
++    salt: "org-pack-secret"
++`;
++
++function makeRoot(settingsBody: string | null): string {
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'telemetry-disclosure-'));
++    roots.push(dir);
++    if (settingsBody !== null) {
++        fs.writeFileSync(path.join(dir, '.agent-settings.yml'), settingsBody, 'utf-8');
++    }
++    return dir;
++}
++
++function envelope(root: string, event = 'session_start'): string {
++    return JSON.stringify({ schema_version: 1, platform: 'claude', event, cwd: root });
++}
++
++/** Capture the concern's stdout for one call. */
++function capture(stdin: string): { exit: number; out: string } {
++    const chunks: string[] = [];
++    const original = process.stdout.write.bind(process.stdout);
++    (process.stdout as unknown as { write: (s: string) => boolean }).write = (s: string) => {
++        chunks.push(s);
++        return true;
++    };
++    try {
++        const exit = run(stdin, { now: '2026-08-19T00:00:00.000Z' });
++        return { exit, out: chunks.join('') };
++    } finally {
++        (process.stdout as unknown as { write: typeof original }).write = original;
++    }
++}
++
++function stateFile(root: string): string {
++    return path.join(root, DISCLOSURE_STATE_REL);
++}
++
++describe('telemetry-disclosure — silent unless the install actually opted in', () => {
++    it.each([
++        ['no settings file at all', null],
++        ['no telemetry section', 'quality:\n  local_auto_run: false\n'],
++        ['enabled but no endpoint/org/salt', 'telemetry:\n  remote:\n    enabled: true\n'],
++        ['fully configured but disabled', ACTIVE.replace('enabled: true', 'enabled: false')],
++        ['configured but salt missing', ACTIVE.replace('    salt: "org-pack-secret"\n', '')],
++    ])('%s → exit 0, no output, no state written', (_label, body) => {
++        const root = makeRoot(body);
++        const { exit, out } = capture(envelope(root));
++        expect(exit).toBe(0);
++        expect(out).toBe('');
++        expect(fs.existsSync(stateFile(root))).toBe(false);
++    });
++
++    it('ignores every slot that is not session_start', () => {
++        const root = makeRoot(ACTIVE);
++        for (const event of ['post_tool_use', 'pre_tool_use', 'stop', 'user_prompt_submit']) {
++            const { out } = capture(envelope(root, event));
++            expect(out).toBe('');
++        }
++        expect(fs.existsSync(stateFile(root))).toBe(false);
++    });
++
++    it('is silent on a malformed envelope rather than throwing', () => {
++        expect(capture('not json at all').exit).toBe(0);
++        expect(capture('').exit).toBe(0);
++    });
++});
++
++describe('telemetry-disclosure — the line itself', () => {
++    it('discloses the fact, the recipient, and where to read the records', () => {
++        const root = makeRoot(ACTIVE);
++        const { exit, out } = capture(envelope(root));
++        expect(exit).toBe(0);
++
++        const payload = JSON.parse(out.trim()) as Record<string, unknown>;
++        expect(payload['decision']).toBe('allow');
++        const context = payload['context'] as string;
++
++        expect(context).toContain('<telemetry-disclosure>');
++        expect(context).toContain('</telemetry-disclosure>');
++        // Who, and on whose authority.
++        expect(context).toContain('acme');
++        expect(context).toContain('sink.example.invalid');
++        expect(context).toContain('org administrator');
++        // Where to read it, from the settings rather than a hardcoded name.
++        expect(context).toContain('.agent-telemetry.jsonl');
++    });
++
++    it('never carries the salt, and never the full endpoint path', () => {
++        const root = makeRoot(ACTIVE);
++        const { out } = capture(envelope(root));
++        expect(out).not.toContain('org-pack-secret');
++        expect(out).not.toContain('/ingest');
++    });
++
++    it('reduces a URL to its host and passes a non-URL through unchanged', () => {
++        expect(_endpointHost('https://sink.example.invalid/ingest?t=1')).toBe('sink.example.invalid');
++        expect(_endpointHost('not a url')).toBe('not a url');
++    });
++
++    it('fits the per-concern injection budget with headroom', () => {
++        // The manifest carries no `per_concern_caps_bytes` row for this
++        // concern, so the 1024-byte default applies. Asserted here rather than
++        // discovered by `bench_hook_injection` failing the build.
++        const root = makeRoot(ACTIVE);
++        const { out } = capture(envelope(root));
++        expect(Buffer.byteLength(out)).toBeLessThanOrEqual(1024);
++    });
++});
++
++describe('telemetry-disclosure — once, and again when the recipient changes', () => {
++    it('emits on the first session start and stays silent afterwards', () => {
++        const root = makeRoot(ACTIVE);
++
++        expect(capture(envelope(root)).out).not.toBe('');
++        expect(fs.existsSync(stateFile(root))).toBe(true);
++
++        for (let i = 0; i < 3; i += 1) {
++            expect(capture(envelope(root)).out).toBe('');
++        }
++    });
++
++    it('re-discloses when the org changes — a new recipient is a new disclosure', () => {
++        const root = makeRoot(ACTIVE);
++        expect(capture(envelope(root)).out).not.toBe('');
++
++        fs.writeFileSync(
++            path.join(root, '.agent-settings.yml'),
++            ACTIVE.replace('org_id: "acme"', 'org_id: "other-org"'),
++            'utf-8',
++        );
++        const second = capture(envelope(root));
++        expect(second.out).toContain('other-org');
++    });
++
++    it('re-discloses when the sink changes, with the org unchanged', () => {
++        const root = makeRoot(ACTIVE);
++        expect(capture(envelope(root)).out).not.toBe('');
++
++        fs.writeFileSync(
++            path.join(root, '.agent-settings.yml'),
++            ACTIVE.replace('sink.example.invalid', 'elsewhere.example.invalid'),
++            'utf-8',
++        );
++        expect(capture(envelope(root)).out).toContain('elsewhere.example.invalid');
++    });
++
++    it('treats an unreadable state file as not-yet-disclosed, so a line is repeated rather than suppressed', () => {
++        const root = makeRoot(ACTIVE);
++        const facts = { org_id: 'acme', endpoint: 'https://x.invalid', log_path: 'a.jsonl' };
++
++        fs.mkdirSync(path.dirname(stateFile(root)), { recursive: true });
++        for (const corrupt of ['', 'not json', 'null', '[]', '{"disclosed": 42}']) {
++            fs.writeFileSync(stateFile(root), corrupt, 'utf-8');
++            expect(alreadyDisclosed(root, facts)).toBe(false);
++        }
++
++        fs.writeFileSync(
++            stateFile(root),
++            JSON.stringify({ disclosed: disclosureKey(facts) }),
++            'utf-8',
++        );
++        expect(alreadyDisclosed(root, facts)).toBe(true);
++    });
++
++    it('keys the disclosure on both org and endpoint, not on either alone', () => {
++        const base = { org_id: 'a', endpoint: 'e', log_path: 'l' };
++        expect(disclosureKey(base)).not.toBe(disclosureKey({ ...base, org_id: 'b' }));
++        expect(disclosureKey(base)).not.toBe(disclosureKey({ ...base, endpoint: 'f' }));
++        // The log path is presentation, not identity — changing where the file
++        // sits does not change who receives the data.
++        expect(disclosureKey(base)).toBe(disclosureKey({ ...base, log_path: 'other' }));
++    });
++
++    it('builds a stable block for a given set of facts', () => {
++        const facts = { org_id: 'acme', endpoint: 'https://s.invalid/x', log_path: 'l.jsonl' };
++        expect(buildDisclosure(facts)).toBe(buildDisclosure({ ...facts }));
++    });
++});
+diff --git a/tests/scripts/templates_telemetry_remote.test.ts b/tests/scripts/templates_telemetry_remote.test.ts
+index cdb5b690b10e2b3cf76b7275cb9798d280ae2de9..573846d837c8dc9778aa1b8dc831e63e7a86e9c2 100644
+--- a/tests/scripts/templates_telemetry_remote.test.ts
++++ b/tests/scripts/templates_telemetry_remote.test.ts
+@@ -16,16 +16,23 @@ import { afterEach, describe, expect, it } from 'vitest';
+ import {
+     read_remote_settings,
+     DEFAULT_REMOTE_LOG_PATH,
++    DEFAULT_REMOTE_RETENTION,
+ } from '../../src/agent-src/templates/scripts/telemetry/settings.js';
+ import {
+     append_class_a_record,
+     build_class_a_record,
+     derive_session_hash,
+     derive_user_hash,
++    enforce_retention,
+     hour_bucket,
+     normalise_skill_name,
++    record_line_ms,
++    retention_due,
+     ClassARecordError,
++    DEFAULT_RETENTION_MAX_AGE_DAYS,
++    DEFAULT_RETENTION_MAX_BYTES,
+     HASH_HEX_LEN,
++    RETENTION_KEEP_FRACTION,
+ } from '../../src/agent-src/templates/scripts/telemetry/remote.js';
+ 
+ const tmpdirs: string[] = [];
+@@ -243,3 +250,277 @@ describe('append_class_a_record', () => {
+         expect(lines[0]).not.toContain(', ');
+     });
+ });
++
++// ── Retention (road-to-org-telemetry Phase 2 step 2) ────────────────────
++//
++// The property under test is a growth BUDGET, so every assertion here is
++// derived from the inputs — a cap, a clock, and the records actually written
++// — rather than pinned to a line count some future field rename would move.
++
++function makeRecord(skill: string, when: string): ReturnType<typeof build_class_a_record> {
++    return build_class_a_record({
++        skill,
++        host: 'claude',
++        org_id: 'acme',
++        salt: 's',
++        hostname: 'm',
++        username: 'u',
++        session_id: 'sid',
++        now: new Date(when),
++    });
++}
++
++function newLog(): string {
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'remote-telemetry-ret-'));
++    tmpdirs.push(dir);
++    return path.join(dir, 'telemetry.jsonl');
++}
++
++/** Write lines verbatim, bypassing the appender's own enforcement. */
++function seed(log: string, lines: readonly string[]): void {
++    fs.writeFileSync(log, lines.length === 0 ? '' : `${lines.join('\n')}\n`, 'utf-8');
++}
++
++function lineFor(skill: string, when: string): string {
++    return JSON.stringify(makeRecord(skill, when));
++}
++
++function readLines(log: string): string[] {
++    return fs.readFileSync(log, 'utf-8').split('\n').filter((l) => l.length > 0);
++}
++
++describe('record_line_ms', () => {
++    it('dates a real record from its own ts_bucket', () => {
++        const when = '2026-05-04T07:00:00Z';
++        const rec = makeRecord('brand-identity', when);
++        // Derived from the bucket the record carries, not from `when` — the
++        // record is hour-bucketed, so asserting against the raw input would
++        // pin the truncation rather than the parse.
++        expect(record_line_ms(JSON.stringify(rec))).toBe(Date.parse(rec.ts_bucket));
++    });
++
++    it('returns null for every shape it cannot date', () => {
++        for (const bad of [
++            '',
++            '   ',
++            'not json',
++            '[1,2,3]',
++            'null',
++            '"a string"',
++            JSON.stringify({ skill: 'x' }),
++            JSON.stringify({ ts_bucket: 42 }),
++            JSON.stringify({ ts_bucket: 'yesterday' }),
++        ]) {
++            expect(record_line_ms(bad)).toBeNull();
++        }
++    });
++});
++
++describe('retention_due', () => {
++    const policy = { max_age_days: 30, max_bytes: 4096 };
++
++    it('is false for an absent or empty log', () => {
++        const log = newLog();
++        expect(retention_due(log, policy)).toBe(false);
++        fs.writeFileSync(log, '', 'utf-8');
++        expect(retention_due(log, policy)).toBe(false);
++    });
++
++    it('is false while the oldest record is inside the window and the file is under the cap', () => {
++        const log = newLog();
++        seed(log, [lineFor('a', '2026-05-01T00:00:00Z'), lineFor('b', '2026-05-20T00:00:00Z')]);
++        expect(retention_due(log, policy, new Date('2026-05-21T00:00:00Z'))).toBe(false);
++    });
++
++    it('fires on age as soon as the OLDEST record leaves the window', () => {
++        const log = newLog();
++        const oldest = '2026-05-01T00:00:00Z';
++        seed(log, [lineFor('a', oldest), lineFor('b', '2026-06-01T00:00:00Z')]);
++        const cutoffDay = new Date(Date.parse(oldest) + policy.max_age_days * 86_400_000);
++        // One hour before the record ages out: nothing owed.
++        expect(retention_due(log, policy, new Date(cutoffDay.getTime() - 3_600_000))).toBe(false);
++        // One hour after: owed.
++        expect(retention_due(log, policy, new Date(cutoffDay.getTime() + 3_600_000))).toBe(true);
++    });
++
++    it('fires on size regardless of age', () => {
++        const log = newLog();
++        const line = lineFor('a', '2026-06-01T00:00:00Z');
++        const needed = Math.ceil(policy.max_bytes / (line.length + 1)) + 1;
++        seed(log, Array.from({ length: needed }, () => line));
++        expect(fs.statSync(log).size).toBeGreaterThan(policy.max_bytes);
++        // Every record is same-day fresh, so only the byte cap can be firing.
++        expect(retention_due(log, policy, new Date('2026-06-01T12:00:00Z'))).toBe(true);
++    });
++
++    it('does not fire on age it cannot read', () => {
++        const log = newLog();
++        seed(log, ['not a record', lineFor('a', '2026-06-01T00:00:00Z')]);
++        expect(retention_due(log, policy, new Date('2030-01-01T00:00:00Z'))).toBe(false);
++    });
++});
++
++describe('enforce_retention', () => {
++    const policy = { max_age_days: 30, max_bytes: 4096 };
++
++    it('drops exactly the records outside the window and keeps the rest in order', () => {
++        const log = newLog();
++        const kept = [
++            lineFor('fresh-1', '2026-06-10T00:00:00Z'),
++            lineFor('fresh-2', '2026-06-20T00:00:00Z'),
++        ];
++        const stale = [lineFor('old-1', '2026-01-01T00:00:00Z'), lineFor('old-2', '2026-02-01T00:00:00Z')];
++        seed(log, [...stale, ...kept]);
++
++        const res = enforce_retention(log, policy, new Date('2026-06-25T00:00:00Z'));
++
++        expect(res.dropped_by_age).toBe(stale.length);
++        expect(res.kept).toBe(kept.length);
++        expect(readLines(log)).toEqual(kept);
++    });
++
++    it('keeps a line it cannot date rather than deleting data it could not classify', () => {
++        const log = newLog();
++        const undatable = 'corrupted-half-line';
++        seed(log, [undatable, lineFor('old', '2026-01-01T00:00:00Z'), lineFor('new', '2026-06-20T00:00:00Z')]);
++
++        enforce_retention(log, policy, new Date('2026-06-25T00:00:00Z'));
++
++        expect(readLines(log)).toContain(undatable);
++    });
++
++    it('holds the file under the keep-fraction of the byte cap, keeping the NEWEST records', () => {
++        const log = newLog();
++        const day = 86_400_000;
++        const base = Date.parse('2026-06-01T00:00:00Z');
++        const line = lineFor('a', '2026-06-01T00:00:00Z');
++        const count = Math.ceil((policy.max_bytes * 2) / (line.length + 1));
++        // Distinct skill names make ordering observable; all same-hour, so
++        // the age pass cannot be what prunes.
++        const lines = Array.from({ length: count }, (_, i) =>
++            lineFor(`s${i}`, new Date(base + i * 1000).toISOString()));
++        seed(log, lines);
++
++        const res = enforce_retention(log, policy, new Date(base + day));
++
++        expect(res.dropped_by_age).toBe(0);
++        expect(res.dropped_by_size).toBeGreaterThan(0);
++        expect(fs.statSync(log).size).toBeLessThanOrEqual(
++            Math.floor(policy.max_bytes * RETENTION_KEEP_FRACTION),
++        );
++        // The survivors are the tail of the input, unreordered.
++        const survivors = readLines(log);
++        expect(survivors).toEqual(lines.slice(lines.length - survivors.length));
++    });
++
++    it('rewrites nothing and reports no drops when the log is already inside budget', () => {
++        const log = newLog();
++        const lines = [lineFor('a', '2026-06-20T00:00:00Z')];
++        seed(log, lines);
++        const before = fs.statSync(log).mtimeMs;
++
++        const res = enforce_retention(log, policy, new Date('2026-06-21T00:00:00Z'));
++
++        expect(res).toEqual({ kept: lines.length, dropped_by_age: 0, dropped_by_size: 0 });
++        expect(fs.statSync(log).mtimeMs).toBe(before);
++    });
++
++    it('empties the log when nothing survives, and leaves no temp file behind', () => {
++        const log = newLog();
++        seed(log, [lineFor('a', '2026-01-01T00:00:00Z')]);
++
++        const res = enforce_retention(log, policy, new Date('2027-01-01T00:00:00Z'));
++
++        expect(res.kept).toBe(0);
++        expect(fs.readFileSync(log, 'utf-8')).toBe('');
++        expect(fs.existsSync(`${log}.retention.tmp`)).toBe(false);
++        // An emptied log must not re-trigger on the next append.
++        expect(retention_due(log, policy, new Date('2027-01-01T00:00:00Z'))).toBe(false);
++    });
++
++    it('is a no-op on an absent log rather than throwing', () => {
++        const res = enforce_retention(path.join(os.tmpdir(), 'absent-retention-xyz.jsonl'), policy);
++        expect(res).toEqual({ kept: 0, dropped_by_age: 0, dropped_by_size: 0 });
++    });
++});
++
++describe('append_class_a_record enforces the budget itself', () => {
++    it('evicts records that aged out, without the caller running a sweep', () => {
++        const log = newLog();
++        const policy = { max_age_days: 30, max_bytes: 4096 };
++        seed(log, [lineFor('ancient', '2026-01-01T00:00:00Z')]);
++
++        const fresh = makeRecord('current', '2026-06-20T00:00:00Z');
++        append_class_a_record(log, fresh, policy, new Date('2026-06-20T00:00:00Z'));
++
++        const lines = readLines(log);
++        expect(lines).toHaveLength(1);
++        expect(JSON.parse(lines[0] as string)).toEqual(fresh);
++    });
++
++    it('leaves an in-budget log untouched apart from the new line', () => {
++        const log = newLog();
++        const policy = { max_age_days: 30, max_bytes: 4096 };
++        const existing = lineFor('kept', '2026-06-19T00:00:00Z');
++        seed(log, [existing]);
++
++        append_class_a_record(
++            log,
++            makeRecord('added', '2026-06-20T00:00:00Z'),
++            policy,
++            new Date('2026-06-20T00:00:00Z'),
++        );
++
++        expect(readLines(log)[0]).toBe(existing);
++        expect(readLines(log)).toHaveLength(2);
++    });
++
++    it('bounds an unbounded writer — the defect Phase 1 shipped', () => {
++        const log = newLog();
++        const policy = { max_age_days: 3650, max_bytes: 2048 };
++        const base = Date.parse('2026-06-01T00:00:00Z');
++
++        // Every record is inside the age window, so only the byte cap can
++        // stop this. Without one, this loop grows the file without limit.
++        for (let i = 0; i < 200; i += 1) {
++            const at = new Date(base + i * 3_600_000);
++            append_class_a_record(log, makeRecord(`s${i}`, at.toISOString()), policy, at);
++            expect(fs.statSync(log).size).toBeLessThanOrEqual(policy.max_bytes);
++        }
++    });
++});
++
++describe('retention settings', () => {
++    it('takes the measured defaults when no retention section is declared', () => {
++        const s = read_remote_settings(writeSettings(FULL));
++        expect(s.retention_max_age_days).toBe(DEFAULT_REMOTE_RETENTION.max_age_days);
++        expect(s.retention_max_bytes).toBe(DEFAULT_REMOTE_RETENTION.max_bytes);
++    });
++
++    it('pairs with the enforcing module, so the two cannot drift apart', () => {
++        expect(DEFAULT_REMOTE_RETENTION.max_age_days).toBe(DEFAULT_RETENTION_MAX_AGE_DAYS);
++        expect(DEFAULT_REMOTE_RETENTION.max_bytes).toBe(DEFAULT_RETENTION_MAX_BYTES);
++    });
++
++    it('honours a positive integer override', () => {
++        const s = read_remote_settings(writeSettings(`${FULL}
++    retention:
++      max_age_days: 7
++      max_bytes: 12345
++`));
++        expect(s.retention_max_age_days).toBe(7);
++        expect(s.retention_max_bytes).toBe(12345);
++    });
++
++    it('refuses every value that would mean "unbounded" or "prune everything"', () => {
++        for (const bad of ['0', '-1', '1.5', 'true', '"90"', '[]']) {
++            const s = read_remote_settings(writeSettings(`${FULL}
++    retention:
++      max_age_days: ${bad}
++      max_bytes: ${bad}
++`));
++            expect(s.retention_max_age_days).toBe(DEFAULT_REMOTE_RETENTION.max_age_days);
++            expect(s.retention_max_bytes).toBe(DEFAULT_REMOTE_RETENTION.max_bytes);
++        }
++    });
++});

@@ -1,12 +1,21 @@
 ---
 complexity: structural
-status: draft
+status: later
 parent_roadmap: road-to-product-clarity
 ---
 
 # Road to product bets — simple/expert mode, explainability, connectors
 
-> **Draft — deferred product bets from `road-to-product-clarity`.** A 2-round AI
+> **Blocked until:** a real external user signal naming rule count or surface
+> count as the adoption blocker is recorded under `agents/evidence/`.
+> **Why this half:** blocker `simple-expert-mode-demand-evidence` gates Phase 1
+> on exactly that artefact, and Phase 3's own gate — a named external adopter
+> under `domain-adoption-policy` — cannot be produced from this tree either.
+> Naming both would be a conjunction the resume probe cannot read; the evidence
+> artefact is the one a script can test. Parked 2026-08-19 by
+> `road-to-estate-drawdown` Phase 2 batch 1, verdict PARK-PROBEABLE.
+
+> **Parked — deferred product bets from `road-to-product-clarity`.** A 2-round AI
 > council (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-06-24) reviewed the
 > product-clarity scope and **deferred** these as genuine product bets that must
 > not be half-built. Each needs its own evidence / decision before promotion to

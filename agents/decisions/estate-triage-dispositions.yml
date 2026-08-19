@@ -1,0 +1,290 @@
+# Estate triage dispositions — one terminal verdict per roadmap file
+#
+# Produced by `road-to-estate-drawdown` Phase 2 (steps 2.1 + 2.2). One row per
+# file, from the closed vocabulary the roadmap defines:
+#
+#   EXECUTE           remaining steps are agent-workable now
+#   FINISH-THIN       nearly done; close the tail and ship the closure
+#   MERGE-INTO-OWNER  scope owned elsewhere; open steps migrate verbatim
+#   DECISION-SHEET    needs one class-2 maintainer answer
+#   PARK-PROBEABLE    legitimately waiting; resume condition rewritten probeable
+#   ARCHIVE           dead or superseded; migration note + not-adopted register
+#
+# The vocabulary is CLOSED. A file that fits none of the six is a finding about
+# the vocabulary, not a licence to invent a seventh — record it here as such.
+#
+# Batch order is `road-to-estate-drawdown` step 2.2: the active tree first,
+# `later/` second, oldest-untouched first within each, and the seven roadmaps
+# the 2026-08-17 `/analyze:inbox` cohort added are in batch one rather than
+# exempt from it.
+#
+# This file is APPEND-ONLY per batch. A verdict is terminal: revisiting one is a
+# new row with a `supersedes:` key and its own reason, never an edit in place.
+#
+# ── Row shape ────────────────────────────────────────────────────────────────
+#
+# `schema_version: 1` and NO VALIDATOR SHIPS WITH IT. Stated rather than implied,
+# because a version number nothing reads cannot detect the drift it exists to
+# prevent (R2 round 1, finding 8). What stands in for one is a CLOSED key set, so
+# the next batch has a shape to append against and a reader can see a new key as
+# a new key:
+#
+#   file                      required · repo-relative path as it stood at triage
+#   verdict                   required · one of the six above
+#   moved_to                  required · new path, or `null` when the file stayed
+#   reason                    required · why this verdict and not its neighbours
+#   resume_condition          PARK-PROBEABLE only · the condition as authored
+#   probe                     PARK-PROBEABLE only · what `resume_probe` returns
+#   probe_verdict_at_parking  PARK-PROBEABLE only · fired | unmet | undecidable
+#   sheet_blockers            DECISION-SHEET only · the blocker IDS on the sheet
+#   notes                     optional · free-form named notes, one map
+#
+# `notes` is one map rather than seven singleton top-level keys (the shape
+# finding 8 caught): a per-row note is still readable, and the key set above
+# stays fixed and checkable the day a validator does ship.
+#
+# `sheet_blockers` holds IDS, not row numbers, and that is a correction rather
+# than a preference. The first draft recorded `sheet_rows: [13, 14, ...]`, and
+# merging `origin/main` moved every one of them — the sheet is DERIVED from the
+# live estate and re-sorts by unblock count, so a row number is a fact about one
+# rendering rather than about the decision. A blocker id survives the re-sort and
+# is what `gates --sheet` keys on anyway.
+
+schema_version: 1
+validator: none
+
+batches:
+  - batch: 1
+    date: 2026-08-19
+    pr_branch: feat/estate-drawdown-triage-b1
+    selection: >-
+      The seven roadmaps of the 2026-08-17 `/analyze:inbox` cohort (step 2.2
+      names them as batch one), plus the three oldest-untouched files in the
+      active tree by last-commit date — domain-pack-extraction-when-triggered
+      (2026-06-09), road-to-live-app-verdict (2026-06-15), road-to-product-bets
+      (2026-07-06). Ten files, which is step 2.1's ceiling.
+    council: >-
+      No council round. Step 2.2 admits council decision only for
+      MERGE-versus-ARCHIVE calls inside its configured reversible class; batch 1
+      produced neither verdict, so no verdict here was council-decided and none
+      names a class.
+
+    verdicts:
+      - file: agents/roadmaps/domain-pack-extraction-when-triggered.md
+        verdict: PARK-PROBEABLE
+        moved_to: agents/roadmaps/later/domain-pack-extraction-when-triggered.md
+        reason: >-
+          Zero checkboxes — a prose marker ADR-011 § (ii) points at, not a plan.
+          Its three trigger conditions are recorded unfired in
+          `agents/settings/contexts/org-pack-reopening-brief.md`, and an accepted
+          ADR still names it as the carrier for a live two-way door, so it is
+          neither dead nor workable.
+        resume_condition: "`docs/contracts/domain-pack-overlap-inventory.md` exists"
+        probe: >-
+          resume_probe — DECIDABLE. One repo-relative file path under an
+          existence predicate bound to that path. The only row in this batch the
+          probe can decide, which is the honest count.
+        probe_verdict_at_parking: unmet
+
+      - file: agents/roadmaps/road-to-live-app-verdict.md
+        verdict: PARK-PROBEABLE
+        moved_to: agents/roadmaps/later/road-to-live-app-verdict.md
+        reason: >-
+          All three open steps sit behind a two-part trigger. Its first conjunct
+          has already fired — `road-to-mission-mode` is archived — and the second
+          is wiring a real consumer repo's CI, which no in-tree action reaches.
+        resume_condition: >-
+          a consumer repo's live-app CI run of the `playwright-testing` skill is
+          recorded under `agents/evidence/`
+        probe: >-
+          resume_probe — undecidable, and the mechanism is the directory: the
+          condition names `agents/evidence/`, which has no file extension, and a
+          directory exists in every checkout so no existence test decides it.
+          Corrected from the first draft of this row, which named that mechanism
+          while the condition it described still carried an `and` — so the
+          compound guard decided it and the directory rule was never reached
+          (R2 round 1, finding 7). The condition is now a single conjunct and
+          the recorded mechanism is the one that runs.
+        probe_verdict_at_parking: undecidable
+        notes:
+          why_not_decidable: >-
+            Giving it a concrete filename would mean inventing an artefact
+            nobody has agreed to produce. A probe lighting up on a name this
+            register made up is worse than an honest undecidable.
+
+      - file: agents/roadmaps/road-to-product-bets.md
+        verdict: PARK-PROBEABLE
+        moved_to: agents/roadmaps/later/road-to-product-bets.md
+        reason: >-
+          Phase 1 is gated on blocker `simple-expert-mode-demand-evidence`, which
+          needs a real external user signal ("a hunch does not" count, in its own
+          words); Phase 3 needs a named external adopter under
+          `domain-adoption-policy`. Neither is producible from this tree.
+        resume_condition: >-
+          a real external user signal naming rule count or surface count as the
+          adoption blocker is recorded under `agents/evidence/`
+        probe: >-
+          resume_probe — undecidable. Same directory mechanism as
+          road-to-live-app-verdict above, over an external fact.
+        probe_verdict_at_parking: undecidable
+
+      - file: agents/roadmaps/road-to-catalogue-host-fit.md
+        verdict: PARK-PROBEABLE
+        moved_to: agents/roadmaps/later/road-to-catalogue-host-fit.md
+        reason: >-
+          Steps 2.1 and 1b.1 are gated on Phase 1's observation series, and the
+          file's own Risk 2 commits Phase 2 to STOPPING if that series refutes
+          the count hypothesis — so executing 2.1 today would ship on a
+          possibly-refuted premise. The corpus stood at 7 of 20 at parking time
+          and fills only through a human-cadenced capture. Step 1b.1 additionally
+          depends on a script that exists only on a colleague's machine.
+        resume_condition: >-
+          `agents/evidence/metrics/skill-catalogue.jsonl` holds at least 20
+          observations spanning at least 2 distinct `host` values
+        probe: >-
+          resume_probe — undecidable, correctly: the predicate is a content bar,
+          not existence, and the file already exists with 7 lines. The real probe
+          is `capture_skill_catalogue --cadence`, which prints progress against
+          exactly this bar. This is the row where "machine-probeable" is true of
+          a command and false of the resume probe, and the distinction is
+          recorded rather than smoothed over.
+        probe_verdict_at_parking: undecidable
+        notes:
+          thin_tail_recorded: >-
+            Step 2.2 (deterministic tie-break, a pure function with a fixture) is
+            agent-workable today independent of the corpus. It is named in the
+            park note as the first thing to pull forward when this file un-parks,
+            rather than executed here — batch 1 is a triage sweep, and executing
+            one step of one file mid-sweep is the scope creep the batch form
+            exists to bound.
+          unlisted_blocker_finding: >-
+            Its real gate — `ui-session-capture-window`, owner maintainer, class
+            3 — lives in `road-to-frontend-skill-application` and is NOT listed
+            in this file's own Blockers section. Recorded here as a finding; the
+            cross-file blocker is left where it is rather than duplicated.
+
+      - file: agents/roadmaps/road-to-skill-ecosystem-executable-payloads.md
+        verdict: PARK-PROBEABLE
+        moved_to: agents/roadmaps/later/road-to-skill-ecosystem-executable-payloads.md
+        reason: >-
+          All 14 open steps are downstream of blocker
+          `phase-0-spikes-need-a-live-host-session` (class 3, human-only,
+          spend-bearing; the trigger-style eval hard-aborts under automation), so
+          zero of them is agent-workable. Six steps have shipped and the counts
+          are current, which is `later/` rather than `archive/`.
+        resume_condition: >-
+          `agents/evidence/analysis/skill-payload-phase0-spikes.md` records the
+          S0.1 invocation rate, the S0.2 median token delta and the S0.3
+          detection result
+        probe: >-
+          resume_probe — undecidable, and this row is a CORRECTION. The first
+          draft split the content bar into a sibling `**What it must record:**`
+          field so the probe would see a bare existence test and decide it —
+          which worked, and that was the defect: `_truncateAtNextField` cuts at
+          the next bolded label, so a bar moved one field down is invisible to
+          both guards and the probe would have reported FIRED on an empty file
+          (R2 round 1, finding 1). The bar is back inside the condition, the
+          probe correctly refuses a conjunction it can only half-weigh, and the
+          bypass is no longer documented as an authoring pattern.
+        probe_verdict_at_parking: undecidable
+        notes:
+          side_effect: >-
+            Frees one slot of the `road-to-skill-ecosystem-` family cap
+            (`lint_roadmap_family_cap`, CAP = 2), leaving
+            `road-to-skill-ecosystem-gate-integrity` alone in the active tree.
+
+      - file: agents/roadmaps/road-to-mixed-trigger-activation-cost.md
+        verdict: PARK-PROBEABLE
+        moved_to: agents/roadmaps/later/road-to-mixed-trigger-activation-cost.md
+        reason: >-
+          The repair already shipped — Phase 2 restored `paths:` on the two
+          path-dominant rules (−3,929 exact-BPE tokens, −3.7 %) and Phase 4's
+          census ratchet is in. Step 3.3 waits on an `InstructionsLoaded` host
+          observer absent from the 2.1.229 binary; step 2.3 waits on two open
+          siblings; steps 3.1/3.2 wait on `b-behavioural-bench-spend`.
+        resume_condition: >-
+          the host exposes an `InstructionsLoaded` observer that a session can
+          read
+        probe: >-
+          resume_probe — undecidable. The condition is a host-capability fact
+          with no in-tree artefact; the sibling dependencies are recorded in a
+          separate field on purpose, so the resume line stays a single conjunct.
+        probe_verdict_at_parking: undecidable
+
+      - file: agents/roadmaps/road-to-gate-autonomy.md
+        verdict: DECISION-SHEET
+        moved_to: null
+        reason: >-
+          Both open gates are `Owner: user`, class 2 consent-once, and already
+          carry recommendations — `b-gate-budget-preauth` (authorise a standing
+          spend budget) and `b-delegate-gate-maintainer-profile` (flip
+          `allow_delegate` in the maintainer profile). Step 3.2 is nominally
+          `[ ]` but unrunnable without the delegate path 3.1 opens.
+        sheet_blockers: [b-delegate-gate-maintainer-profile, b-gate-budget-preauth]
+        notes:
+          finding_already_returned: >-
+            Its Phase 1 spike already returned a FINDING (24.5 % against a 40 %
+            bar) and class 0 has zero live targets, so the remaining value is
+            removing human couriering rather than repairing a defect. That is a
+            reason to answer the sheet, not to archive the file.
+
+      - file: agents/roadmaps/road-to-per-turn-hook-economy.md
+        verdict: DECISION-SHEET
+        moved_to: null
+        reason: >-
+          Six open blockers, every one a class-2 judgement call with a drafted
+          recommendation, four of which block nothing by their own text. Phase
+          0's three open steps need the affected colleague's machine and its
+          session logs — a dependency the file records nowhere as a blocker, and
+          which is itself a sheet item.
+        sheet_blockers:
+          - b-guard-tool-partition
+          - b-payload-mis-nested-readers
+          - b-payload-read-parse-dominates
+          - b-per-turn-composite-bar
+          - b-stdin-read-failure-policy
+          - b-stop-async-split-prerequisites
+        notes:
+          file_untouched_because: >-
+            Held by PR #1429 (`fix/hook-latency-gate-noise`) at triage time,
+            which edited this same file, so the verdict was recorded without an
+            edit to the roadmap. #1429 has since MERGED and is in this branch —
+            the hold is gone, and the reason for leaving the file untouched is
+            now simply that a DECISION-SHEET verdict needs no edit. Re-checked
+            on the merged tree: #1429 added `b-concern-load-taxes-every-slot`
+            and resolved it in the same change, so the file still carries exactly
+            the six open blockers listed above.
+          live_defects_recorded: >-
+            Two sit inside the un-actioned blockers rather than in the open
+            steps, and are named here so a DECISION-SHEET verdict does not read
+            as "no defect": `ship_diff_volume_hook.ts` reads
+            `tool_input`/`command` off the envelope root and returns 0 on every
+            dispatcher-path invocation, so it costs a dispatch and can never
+            fire; and `dispatch-issues.jsonl` is written with no lock and no
+            tmp+rename, i.e. corruption-capable.
+
+      - file: agents/roadmaps/road-to-estate-drawdown.md
+        verdict: EXECUTE
+        moved_to: null
+        reason: >-
+          Phase 2 is agent-workable and this PR is its batch 1. Phase 0.2 waits
+          on `b-consolidated-decision-sheet`; Phase 1.1 and 4.1 wait on the
+          sibling `road-to-gate-autonomy`. Not exempt from its own sweep — the
+          roadmap says the cohort it added is in batch one, and it is in that
+          cohort.
+
+      - file: agents/roadmaps/road-to-standing-context-40k.md
+        verdict: EXECUTE
+        moved_to: null
+        reason: >-
+          Four of its eight open steps (1.1, 3.0, 4.1, 4.2) are ungated
+          agent-workable repo work today; its single blocker
+          `b-rules-efficiency-signal` touches one `[~]` step and its own
+          recommendation says to unblock it by executing 3.0. Phase 2 is the one
+          part not yet startable — step 2.1 sequences after a per-rule norm-line
+          lint still open in `road-to-cost-parity-1-rule-payload-diet` Phase 3.
+        notes:
+          scheduled_into: >-
+            The recurring pass (Phase 4.1), per the EXECUTE definition. Not
+            executed here: batch 1 is a triage sweep, and executing a second
+            roadmap inside it would make the batch unreviewable.

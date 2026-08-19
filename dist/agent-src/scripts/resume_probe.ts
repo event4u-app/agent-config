@@ -16,14 +16,19 @@
  *
  * ## What it can and cannot decide, stated plainly
  *
- * A resume condition is prose. Two shapes are machine-decidable and the rest
- * are not, so the verdict set has three values rather than two:
+ * A resume condition is prose. TWO shapes are machine-decidable — a roadmap
+ * reference, and a single repo-relative file path under an existence predicate
+ * — and the rest are not, so the verdict set has three values rather than two:
  *
  *   - `fired`       — every roadmap the condition names has archived, or the
- *                     named step in a still-active roadmap is ticked.
+ *                     named step in a still-active roadmap is ticked; or the
+ *                     single path it names under `exists` is there.
  *   - `unmet`       — at least one named roadmap is still active with the
- *                     named step (or the whole file) still open.
- *   - `undecidable` — the condition names no roadmap this tree can resolve.
+ *                     named step (or the whole file) still open; or the single
+ *                     path it names under `exists` is absent.
+ *   - `undecidable` — the condition names neither, names both (a conjunction
+ *                     this probe can only half-weigh), names two of either, or
+ *                     states a predicate other than existence over its path.
  *
  * `undecidable` is reported as its own count and never folded into "nothing
  * fired". A probe that reads 44 files, understands 12 of them and announces
@@ -84,6 +89,31 @@ const COMPOUND_RE = /\bboth\b|\band\b|\([1-9]\)|\([a-e]\)|`[ \t]*\+|\+[ \t]*`/i;
 const FIELD_LABEL_RE = /\*\*[^*]+:\*\*/;
 /** A roadmap slug as written in prose, with or without the `.md` suffix. */
 const ROADMAP_REF_RE = /\broad-to-[a-z0-9][a-z0-9-]*\b/g;
+
+/**
+ * A repo-relative path named inside backticks — the second decidable form.
+ *
+ * `PARK-PROBEABLE` (`road-to-estate-drawdown` Phase 2) means the resume
+ * condition can be tested by a script, and until this existed the probe could
+ * decide exactly one phrasing: a roadmap slug. Measured 2026-08-19 on the live
+ * estate, 42 of 44 park notes were `undecidable`, and the batch-1 sweep could
+ * only add six more — a verdict whose name promised a probe that did not read
+ * the conditions it was producing.
+ *
+ * Deliberately narrow in three ways, because a false FIRED un-parks live work:
+ * the path must be **inside backticks** (prose that merely contains a slash is
+ * not a condition), it must start at a **known top-level repo directory** and
+ * end in a **file extension**, and the clause must name **exactly one** — two
+ * paths are a conjunction this function cannot weigh, and `COMPOUND_RE` does
+ * not catch a comma.
+ *
+ * The extension requirement is what keeps a *directory* out. `agents/evidence/`
+ * exists in every checkout, so "recorded under `agents/evidence/`" is not a
+ * condition a probe can decide — and since `_exists` tests `isFile()`, matching
+ * it would have reported "does not exist" about a directory that does. A
+ * directory-shaped condition stays `undecidable`, which is the honest verdict.
+ */
+const REPO_PATH_RE = /`((?:agents|docs|src|tests|internal|scripts|evals|\.github)\/[A-Za-z0-9._\-/]*[A-Za-z0-9_\-]\.[A-Za-z0-9]{2,5})`/g;
 /**
  * A step reference: `P2.1`, `Phase 2.1`, or a bare `2.1`.
  *
@@ -232,6 +262,37 @@ function _blankFencedCode(text: string): string {
 }
 
 /**
+ * The head of `s` up to its first sentence terminator OUTSIDE backticks.
+ *
+ * A naive character-class scan that stops at any dot cuts inside `foo.md` or
+ * inside a step id like `3.3`, which truncates the clause mid-span and hides
+ * the very path or step the condition names. Measured 2026-08-19: three of the six park notes written by
+ * `road-to-estate-drawdown` Phase 2 batch 1 lost their backticked path this
+ * way, and the probe then reported "names no roadmap this tree can resolve"
+ * about a condition that named a file.
+ */
+function _sentenceHead(s: string): string {
+    // An ODD backtick count means the span never closes, and toggling on it
+    // would leave `inCode` stuck true for the whole remainder — the commentary
+    // paragraph then becomes the clause, and a path mentioned only in that
+    // commentary could decide the verdict. Fall back to the plain scan, which
+    // cuts at the first terminator and is the conservative direction.
+    const balanced = (s.match(/`/g) ?? []).length % 2 === 0;
+    let inCode = false;
+    for (let i = 0; i < s.length; i++) {
+        const ch = s[i] as string;
+        if (ch === '`' && balanced) {
+            inCode = !inCode;
+            continue;
+        }
+        if (!inCode && (ch === '.' || ch === '—' || ch === '–')) {
+            return s.slice(0, i);
+        }
+    }
+    return s;
+}
+
+/**
  * The condition CLAUSE inside the condition text.
  *
  * Park notes bold the condition and then explain it in prose:
@@ -260,11 +321,61 @@ function conditionClause(condition: string): string {
             // (`**Resume when** that pruning lands`), so take the span plus the
             // remainder of its sentence — up to an em dash or a full stop.
             const after = condition.slice(m.index + m[0].length);
-            const tail = /^[^—–.]*/.exec(after)?.[0] ?? '';
-            return `${span}${tail}`;
+            return `${span}${_sentenceHead(after)}`;
         }
     }
     return condition;
+}
+
+/**
+ * The clause's predicate is EXISTENCE, not some property of the file's content.
+ *
+ * Without this the path branch would answer a question the condition did not
+ * ask. Measured 2026-08-19 while writing it: `road-to-catalogue-host-fit` waits
+ * until `agents/evidence/metrics/skill-catalogue.jsonl` *holds at least 20
+ * observations*; the file exists today with 7 lines, so an existence test would
+ * have reported FIRED and un-parked a roadmap whose bar is 13 observations away.
+ * A content bar is decidable — by `capture_skill_catalogue --cadence` — but not
+ * by this probe, and `undecidable` is the honest verdict for it.
+ *
+ * The predicate is bound POSITIONALLY to the path rather than tested as a word
+ * anywhere in the clause, because word-presence is not a predicate: `\`x.md\` no
+ * longer exists` would have reported FIRED while the file was still there, and
+ * `blocked until a workaround exists, see \`docs/x.md\`` would have paired the
+ * word with a path it does not govern. Both shapes are regression tests.
+ *
+ * KNOWN LIMIT, stated rather than papered over: this probe reads the condition
+ * AFTER `_truncateAtNextField`, so a content bar an author moves into a sibling
+ * bolded field is invisible to it and the note decides as bare existence. That
+ * is an authoring bypass no check here can see — the guard is that a resume
+ * condition states its whole bar inside the condition, and it is model-carried.
+ */
+const EXISTENCE_PREDICATE_RE = /`(?:agents|docs|src|tests|internal|scripts|evals|\.github)\/[A-Za-z0-9._\-/]+`[ \t]*(?:currently[ \t]+)?exists\b/i;
+
+/**
+ * The single repo-relative path a condition names, or `null`.
+ *
+ * `null` for zero paths (nothing to test) and for two or more (a conjunction
+ * this probe cannot weigh — reporting FIRED on the first would be the
+ * partial-match resume the compound guard already refuses).
+ */
+function referencedPath(condition: string): string | null {
+    if (!EXISTENCE_PREDICATE_RE.test(condition)) {
+        return null;
+    }
+    const paths = _pathsIn(condition);
+    return paths.length === 1 ? (paths[0] as string) : null;
+}
+
+/** Every distinct repo-relative file path a clause names, predicate or not. */
+function _pathsIn(condition: string): string[] {
+    REPO_PATH_RE.lastIndex = 0;
+    const found = new Set<string>();
+    let m: RegExpExecArray | null;
+    while ((m = REPO_PATH_RE.exec(condition)) !== null) {
+        found.add(m[1] as string);
+    }
+    return [...found].sort();
 }
 
 /** Roadmap slugs named by the condition, minus the parked file's own slug. */
@@ -310,7 +421,10 @@ function stepIsDone(text: string, stepId: string): boolean | null {
  * tree rather than the live estate — a probe whose only test is the live tree
  * stops testing anything the day the live tree changes.
  */
-function probeLater(roadmapRoot: string): ResumeFinding[] {
+function probeLater(roadmapRoot: string, repoRootArg?: string): ResumeFinding[] {
+    // Defaults to the repo that owns `agents/roadmaps/`. Passed explicitly by
+    // the tests, whose fixture tree IS the roadmap root and has no repo above it.
+    const repoRoot = repoRootArg ?? path.resolve(roadmapRoot, '..', '..');
     const laterDir = path.join(roadmapRoot, 'later');
     let entries: string[];
     try {
@@ -353,13 +467,43 @@ function probeLater(roadmapRoot: string): ResumeFinding[] {
             continue;
         }
         const refs = referencedRoadmaps(clause, ownSlug);
-        if (refs.length === 0) {
+        // A clause naming a roadmap AND a path is a conjunction, and deciding it
+        // on the roadmap half alone is the partial-match resume `COMPOUND_RE`
+        // already refuses for two roadmaps. `COMPOUND_RE` does not close it —
+        // a comma joins the two without an `and`, which is the same hole the
+        // two-paths rule in `referencedPath` exists for. Refused symmetrically.
+        if (refs.length > 0 && _pathsIn(clause).length > 0) {
             findings.push({
                 file: `later/${name}`,
                 condition,
                 refs,
                 verdict: 'undecidable',
-                why: 'the condition names no roadmap this tree can resolve',
+                why: 'names a roadmap and a repo path — a conjunction the probe can only half-weigh',
+            });
+            continue;
+        }
+        if (refs.length === 0) {
+            // Second decidable form: a single repo-relative path. `exists` is
+            // the whole test — the condition says the artefact will appear, so
+            // its appearance IS the firing, and no content check is implied.
+            const rel = referencedPath(clause);
+            if (rel !== null) {
+                const there = _exists(path.join(repoRoot, rel));
+                findings.push({
+                    file: `later/${name}`,
+                    condition,
+                    refs,
+                    verdict: there ? 'fired' : 'unmet',
+                    why: there ? `${rel} exists` : `${rel} does not exist`,
+                });
+                continue;
+            }
+            findings.push({
+                file: `later/${name}`,
+                condition,
+                refs,
+                verdict: 'undecidable',
+                why: 'the condition names no roadmap or repo path this tree can resolve',
             });
             continue;
         }
@@ -414,6 +558,7 @@ export {
     conditionClause,
     extractCondition,
     probeLater,
+    referencedPath,
     referencedRoadmaps,
     roadmapDisposition,
     stepIsDone,

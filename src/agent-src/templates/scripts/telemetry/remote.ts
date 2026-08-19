@@ -279,15 +279,293 @@ export function build_class_a_record(input: BuildClassAInput): ClassARecord {
     };
 }
 
+// ── Retention — the growth budget for the local record log ──────────────
+//
+// Phase 1 shipped this file as append-only with no cap and no pruning, and
+// `flush: never` endorses that as an indefinite steady state: one line per
+// skill invocation, forever. Its own completion review raised it, and
+// `scale-discipline` R-A7 makes it an obligation rather than a nicety —
+// an append-only store declares a retention policy (TTL, pruning job,
+// partition rotation, or archive path) or it is not finished.
+//
+// This is the TTL-plus-pruning shape, enforced by the only writer, so it
+// cannot be bypassed by a caller that forgets to run a sweep.
+//
+// THE NUMBERS ARE MEASURED, NOT GUESSED. On the busiest machine this tree
+// has observed, `agents/runtime/state/tool-result-census.jsonl` carries 24
+// `Skill` tool events across 3.62 days — 6.6 per day — and a Class-A line
+// serialises to 248–286 bytes (measured over four skill-name lengths), so
+// call it 270. That machine therefore writes ≈ 637 KiB per year.
+//
+// The AGE cap is the policy that actually binds: at the observed rate 90
+// days is ≈ 600 records ≈ 160 KiB, so it fires regularly and keeps the file
+// small. The BYTE cap is a backstop for a rate this tree has not observed —
+// a shared machine, a much heavier user — where it bounds the file at 2 MiB
+// (≈ 7,700 records) regardless of dates. A cap chosen so generously that it
+// can never fire is a policy on paper only, which is the failure this repo
+// keeps finding in its own gates; 2 MiB is reached in about twelve days at
+// 100× the observed rate and in about 3.2 years at 1×, and both of those are
+// the point. (The 1× figure read "eight years" until the completion review
+// did the division: 2,097,152 B ÷ (6.6/day × 270 B) ≈ 1,177 days. A number
+// nobody checks is how a measured default quietly becomes a guessed one.)
+//
+// WHAT RETENTION COSTS UNDER `flush: never`. With no transport configured
+// the local file is the only store, so a record evicted here is a record
+// that is never sent anywhere. That is the intended trade — a growth budget
+// is a decision to lose the oldest data rather than to keep all of it — but
+// it is stated here rather than left for an operator to discover from a
+// short file. An org that needs the full history configures a flush.
+
+/** Days a record is kept before the age pass drops it. */
+export const DEFAULT_RETENTION_MAX_AGE_DAYS = 90;
+
+/** Hard ceiling on the log, in bytes, regardless of record age. */
+export const DEFAULT_RETENTION_MAX_BYTES = 2 * 1024 * 1024;
+
 /**
- * Append one record as a JSONL line.
+ * How much of the byte cap a byte-triggered prune leaves behind.
+ *
+ * Hysteresis, not tidiness: pruning back to exactly the cap would leave the
+ * file at the trigger point, so the next append would prune again and every
+ * append after it would pay a full rewrite. At 0.75 a quarter of the cap
+ * must re-accumulate first.
+ */
+export const RETENTION_KEEP_FRACTION = 0.75;
+
+export interface RetentionPolicy {
+    readonly max_age_days: number;
+    readonly max_bytes: number;
+}
+
+export const DEFAULT_RETENTION_POLICY: RetentionPolicy = {
+    max_age_days: DEFAULT_RETENTION_MAX_AGE_DAYS,
+    max_bytes: DEFAULT_RETENTION_MAX_BYTES,
+};
+
+/**
+ * Epoch ms for a record line, or `null` when the line carries no readable
+ * `ts_bucket`.
+ *
+ * `null` is not an error path — see `enforce_retention` for why an undatable
+ * line is retained rather than dropped.
+ */
+export function record_line_ms(line: string): number | null {
+    if (!line.trim()) {
+        return null;
+    }
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(line);
+    } catch {
+        return null;
+    }
+    if (typeof parsed !== 'object' || parsed === null) {
+        return null;
+    }
+    const bucket = (parsed as Record<string, unknown>)['ts_bucket'];
+    if (typeof bucket !== 'string') {
+        return null;
+    }
+    const ms = Date.parse(bucket);
+    return Number.isNaN(ms) ? null : ms;
+}
+
+/** Bytes of the log head read to find the oldest datable record. */
+export const RETENTION_HEAD_WINDOW_BYTES = 8192;
+
+/**
+ * Timestamp of the OLDEST DATABLE record, read from the head of the file.
+ *
+ * Not "the first line": a single undatable line at the head would otherwise
+ * answer the whole age question with `null` and disable the age policy for as
+ * long as that line survives — which, since `enforce_retention` deliberately
+ * keeps undatable lines, is until the byte cap evicts it. On a low-volume log
+ * that is years. Scanning the window instead means one corrupt head line
+ * costs nothing.
+ *
+ * `null` when the window holds no datable line at all. That case is bounded
+ * by the byte cap rather than by age, and it is a genuinely corrupt file
+ * rather than an ordinary one — the alternative, treating it as due, would
+ * read the whole file on every append forever.
+ *
+ * Only complete lines are considered: a final fragment with no newline may be
+ * a torn write, and half a record parses as nothing useful.
+ */
+export function _oldest_datable_ms(log_path: string): number | null {
+    let fd: number;
+    try {
+        fd = fs.openSync(log_path, 'r');
+    } catch {
+        return null;
+    }
+    try {
+        const buf = Buffer.alloc(RETENTION_HEAD_WINDOW_BYTES);
+        const read = fs.readSync(fd, buf, 0, buf.length, 0);
+        if (read <= 0) {
+            return null;
+        }
+        const chunk = buf.subarray(0, read).toString('utf-8');
+        const lines = chunk.split('\n');
+        // Drop the trailing element: it is either empty (the window ended on a
+        // newline) or an incomplete line (the window cut mid-record).
+        lines.pop();
+        for (const line of lines) {
+            const ms = record_line_ms(line);
+            if (ms !== null) {
+                return ms;
+            }
+        }
+        return null;
+    } catch {
+        return null;
+    } finally {
+        fs.closeSync(fd);
+    }
+}
+
+/**
+ * Is a prune owed right now?
+ *
+ * Deliberately cheap, because it runs on every append: one `stat`, and — only
+ * when the byte cap has not already decided it — one bounded read of the
+ * first line. The file is append-only and written in chronological order, so
+ * the first line is the oldest record: if IT is inside the window, nothing in
+ * the file is outside it, and the whole age pass is answered without reading
+ * the rest.
+ */
+export function retention_due(
+    log_path: string,
+    policy: RetentionPolicy = DEFAULT_RETENTION_POLICY,
+    now: Date = new Date(),
+): boolean {
+    let size: number;
+    try {
+        size = fs.statSync(log_path).size;
+    } catch {
+        return false;
+    }
+    if (size === 0) {
+        return false;
+    }
+    if (size > policy.max_bytes) {
+        return true;
+    }
+    const oldest = _oldest_datable_ms(log_path);
+    if (oldest === null) {
+        return false;
+    }
+    return oldest < now.getTime() - policy.max_age_days * 86_400_000;
+}
+
+export interface RetentionResult {
+    readonly kept: number;
+    readonly dropped_by_age: number;
+    readonly dropped_by_size: number;
+}
+
+/**
+ * Apply the retention policy to the log, in place.
+ *
+ * Age first, then bytes, because the age pass is the policy and the byte cap
+ * is the backstop: running bytes first could evict a record the age window
+ * still covers while leaving nothing for the age pass to do.
+ *
+ * AN UNDATABLE LINE IS KEPT BY THE AGE PASS. This file has exactly one
+ * writer, so a line without a readable `ts_bucket` is corruption rather than
+ * an old record, and deleting data on the strength of not being able to read
+ * it is the wrong default. It still counts toward the byte cap, so it is
+ * evicted from the oldest end eventually — bounded, but never silently
+ * discarded for being unparseable.
+ *
+ * The rewrite goes through a sibling temp file and a rename, so a crash
+ * mid-prune leaves the original log intact rather than a truncated one.
+ */
+export function enforce_retention(
+    log_path: string,
+    policy: RetentionPolicy = DEFAULT_RETENTION_POLICY,
+    now: Date = new Date(),
+): RetentionResult {
+    let raw: string;
+    try {
+        raw = fs.readFileSync(log_path, 'utf-8');
+    } catch {
+        return { kept: 0, dropped_by_age: 0, dropped_by_size: 0 };
+    }
+    const lines = raw.split('\n').filter((l) => l.length > 0);
+    const total = lines.length;
+
+    const cutoff = now.getTime() - policy.max_age_days * 86_400_000;
+    const survived_age = lines.filter((l) => {
+        const ms = record_line_ms(l);
+        return ms === null || ms >= cutoff;
+    });
+    const dropped_by_age = total - survived_age.length;
+
+    // Byte cap: keep the NEWEST suffix that fits under the kept-fraction of
+    // the cap. Walking from the end is what makes "drop the oldest" true.
+    const budget = Math.floor(policy.max_bytes * RETENTION_KEEP_FRACTION);
+    let used = 0;
+    let start = survived_age.length;
+    for (let i = survived_age.length - 1; i >= 0; i -= 1) {
+        const cost = Buffer.byteLength(`${survived_age[i] as string}\n`);
+        if (used + cost > budget) {
+            break;
+        }
+        used += cost;
+        start = i;
+    }
+    const kept_lines = survived_age.slice(start);
+    const dropped_by_size = survived_age.length - kept_lines.length;
+
+    if (dropped_by_age === 0 && dropped_by_size === 0) {
+        return { kept: total, dropped_by_age: 0, dropped_by_size: 0 };
+    }
+
+    const payload = kept_lines.length === 0 ? '' : `${kept_lines.join('\n')}\n`;
+
+    // A unique temp name per prune, then one rename.
+    //
+    // The rename is atomic, so no reader ever sees a half-written log and a
+    // crash mid-prune leaves the original intact. What it does NOT give is
+    // mutual exclusion: two processes rooted at the same project can both
+    // read, both prune, and the later rename wins, losing the records the
+    // other appended in between. A fixed temp path made that worse — the two
+    // writers shared one scratch file — so the name carries the pid.
+    //
+    // Stated rather than solved: a lock is the fix, and it belongs with the
+    // Phase 2 transport, which introduces a second writer to the same file
+    // and is where the locking contract has to be decided anyway. Until then
+    // the exposure is bounded to records written inside one prune window on a
+    // log that only exceeded its budget.
+    const tmp = `${log_path}.retention.${process.pid}.tmp`;
+    fs.writeFileSync(tmp, payload, { encoding: 'utf-8' });
+    fs.renameSync(tmp, log_path);
+
+    return { kept: kept_lines.length, dropped_by_age, dropped_by_size };
+}
+
+/**
+ * Append one record as a JSONL line, then enforce the retention policy.
  *
  * Uses the engagement module's compact-sorted serializer so a Class-A line
  * is byte-comparable with the records already in this tree rather than
  * carrying a second JSON convention.
+ *
+ * Enforcement runs AFTER the append and only when `retention_due` says so,
+ * which makes the common append one extra `stat` plus one bounded read. It
+ * lives here rather than in a separate sweep because this is the only writer:
+ * a policy a caller has to remember to run is a policy that stops running.
  */
-export function append_class_a_record(log_path: string, record: ClassARecord): void {
+export function append_class_a_record(
+    log_path: string,
+    record: ClassARecord,
+    policy: RetentionPolicy = DEFAULT_RETENTION_POLICY,
+    now: Date = new Date(),
+): void {
     const payload = `${py_json_dumps_compact_sorted(record as unknown as Record<string, unknown>)}\n`;
     fs.mkdirSync(path.dirname(log_path) || '.', { recursive: true });
     fs.appendFileSync(log_path, payload, { encoding: 'utf-8' });
+    if (retention_due(log_path, policy, now)) {
+        enforce_retention(log_path, policy, now);
+    }
 }
