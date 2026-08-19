@@ -21,17 +21,24 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 4f493467a502614abc001ccec8d10abbc2a0a3f2, review
-  artefacts excluded), scope hash `e9301c79f8548790983bfcf64205e4a565d473107d3e9c551a0c768732cee5f4`
+- diff: `diff.patch` — the review scope (branch head d8a4cdcaaffc5be7fa095f69963de226d68a4925, review
+  artefacts excluded), scope hash `3fbe0a1736aaa05d5e35ff433b98faa8ea052fa9cc6c2a1d2f40f95fbb1ec655`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
 
 - agents/roadmaps-progress.md
 - agents/roadmaps/road-to-run-continuation-observation.md
+- dist/agent-src/commands/roadmap/process-full.md
+- dist/agent-src/contexts/execution/roadmap-process-loop.md
+- docs/decisions/ADR-235-process-full-blocked-terminal-outcome.md
+- docs/decisions/INDEX.md
+- src/agent-src/contexts/execution/roadmap-process-loop.md
+- src/domains/product-basic/roadmap/process-full/command.md
 - src/scripts/hooks/run_continuation_hook.ts
 - src/scripts/session_register_hook.ts
 - tests/hooks/run_continuation_dispatch.test.ts
+- tests/scripts/hooks/run_continuation.test.ts
 - tests/scripts/session_register.test.ts
 
 ## Output format (contract §2.2)
@@ -54,5 +61,5 @@ Fill the findings table in `run-continuation-provenance.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope e9301c79f8548790983bfcf64205e4a565d473107d3e9c551a0c768732cee5f4, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 3fbe0a1736aaa05d5e35ff433b98faa8ea052fa9cc6c2a1d2f40f95fbb1ec655, reviewed <YYYY-MM-DD>
 ```
