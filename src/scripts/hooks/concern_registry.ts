@@ -43,6 +43,7 @@ import { main as teamReviewGateMain } from '../team_review_gate_hook.js';
 import { main as prUrlReminderMain } from '../pr_url_reminder_hook.js';
 import { main as sessionCanaryMain } from '../session_canary_hook.js';
 import { main as councilAvailabilityMain } from '../council_availability_hook.js';
+import { main as telemetryDisclosureMain } from '../telemetry_disclosure_hook.js';
 import { main as selfRepairMain } from '../self_repair_hook.js';
 import { main as sessionRegisterMain } from '../session_register_hook.js';
 import { main as languageMirrorMain } from '../language_mirror_hook.js';
@@ -94,6 +95,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/pr_url_reminder_hook.ts': prUrlReminderMain as ConcernMain,
     'src/scripts/session_canary_hook.ts': sessionCanaryMain as ConcernMain,
     'src/scripts/council_availability_hook.ts': councilAvailabilityMain as ConcernMain,
+    'src/scripts/telemetry_disclosure_hook.ts': telemetryDisclosureMain as ConcernMain,
     'src/scripts/self_repair_hook.ts': selfRepairMain as ConcernMain,
     'src/scripts/session_register_hook.ts': sessionRegisterMain as ConcernMain,
     'src/scripts/language_mirror_hook.ts': languageMirrorMain as ConcernMain,
