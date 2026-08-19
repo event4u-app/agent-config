@@ -7,7 +7,7 @@ inputs:
   diff_sha: ca2219b7fad22d6339ca69f8b655c0df6ac29843
   scope_hash: 39dc1de16566d59e351d330c119f0669d7de7fe97ea05f23c7957b34e59d7905
   roadmap: agents/roadmaps/road-to-estate-drawdown.md
-  roadmap_hash: 9a03bfa1a46fb4dd14d16b5cc06a411d147e66eee7b016ad4afea117e5593943
+  roadmap_hash: 5883d8364e88ab95c2f8768899cd3edfc4b929a582f0494da529e274f2031f3f
   ac_hash: 0308d5582ca2f060845f17b92dd930b0fe6865baf31272e8b3fad4c2880611bd
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
