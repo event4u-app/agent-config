@@ -288,9 +288,18 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
       for the instrument. See the follow-up note under this phase. -->
       <!-- verify: npx vitest run tests/scripts/hooks/nudge_interference.test.ts -->
 - **AC-4:** the aggregate appears in the bench output and the overlap fixture is
-  green. <!-- MET 2026-08-19: `bench_hook_injection` prints
-  `turn-aggregate 1140 B (cap 10240) over 4 non-exempt slot(s), one fire each`;
-  the fixture is 10/10 green. -->
+  green. <!-- MET 2026-08-19: `bench_hook_injection` prints a
+  `turn-aggregate … B (cap 10240) over 4 non-exempt slot(s), one fire each`
+  line; the interference fixture is green.
+  **No byte figure is quoted here on purpose.** The first version of this note
+  cited `1140 B`, and merging `origin/main` moved it to `922 B` the same day —
+  a concern this branch never touched stopped firing under the committed
+  fixture. The number is a property of the fixture set, not of this phase, so
+  pinning it in a roadmap note manufactures drift that says nothing about the
+  work. What AC-4 actually asks is that the line EXISTS and that the fixture is
+  green; the enforced number lives in the config row, and the bench figure is a
+  floor over fixtures rather than the live distribution (see the
+  `measurement_caveat` in `src/config/hook-token-budget.json`). -->
 
 > **Follow-up this phase produced, recorded so it is not lost.** The
 > delegation-nudge × skill-route double-fire above is a live interference, not a
