@@ -34,6 +34,17 @@ who consented and when. `expires_at` / `revoked_at` / contract-version fields
 stay deliberately unbuilt until a reader needs them — a field nothing reads is
 surface without a consumer.
 
+**A fifth source exists on the READ side only: `org-pack`** (ADR-233). It
+records that a human org administrator decided, which is a consent — but one
+given by someone other than the person it binds, so it grants **only** for
+keys under `telemetry.remote.*` and withholds everywhere else. It is
+deliberately absent from `settings:set`'s own `ProvenanceSource`, so
+`--source org-pack` is rejected like a typo and no agent-reachable path can
+write it; the org-pack install route writes the sidecar entry directly. That
+asymmetry between the reader's vocabulary and the writer's is the safety
+property rather than an inconsistency — `auto-detected` remains never-consent
+verbatim, and this class must not become the precedent that erodes it.
+
 ## What the fence covers — and what it does not
 
 **It governs writes, not reads.** Every class is readable by everything. A C
