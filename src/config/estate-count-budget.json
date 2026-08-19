@@ -16,9 +16,9 @@
         ]
     },
     "baseline": {
-        "active_roadmaps": 38,
+        "active_roadmaps": 40,
         "later_roadmaps": 43,
-        "open_blockers": 72
+        "open_blockers": 73
     },
     "baseline_history": [
         {
@@ -48,6 +48,13 @@
             "later_roadmaps": 43,
             "open_blockers": 72,
             "why": "RAISED by 3, on top of the 67 -> 69 correction above rather than beside it. All three are road-to-per-turn-hook-economy Phase 2, and each records a finding that would otherwise rot: b-payload-read-parse-dominates (two independent measurements now say D-2's cost is the dispatcher's own read+parse of the payload, once per event, not the per-concern churn the roadmap blamed — so the phase's AC is refuted and the null is published), b-payload-mis-nested-readers (two concerns read tool payload keys off the envelope root; one is a security scanner that works only via a whole-envelope fallback, the other returns 0 on every dispatcher-path call today), and b-stop-async-split-prerequisites (step 5.3 deferred, carrying the five prerequisites its classification surfaced). A blocker that puts a maintainer decision in front of the maintainer is the estate growing in the direction this ratchet exists FOR, which is why the raise is taken rather than the findings being dropped into prose where nothing tracks them. My first version of this entry claimed two of five as unattributed drift; the trunk's correction identified the same two and named their cause, so that half is withdrawn rather than restated."
+        },
+        {
+            "at": "2026-08-19",
+            "active_roadmaps": 40,
+            "later_roadmaps": 43,
+            "open_blockers": 73,
+            "why": "RAISED by 2 active and 1 blocker, for the two roadmaps the long-horizon branch installed from an inbox handover and then executed in the same PR. Both carry an `estate_offset_exempt` line, so the one-in-one-out check passes on its own terms; what still fires is the raw COUNT half, which is diff-blind by design and would otherwise red every later PR for growth it did not cause — the same permanently-red failure the 67 -> 69 entry above documents. The honest shape of this raise: road-to-council-api-fallback arrives at 16 of 17 steps done and would have ARCHIVED in this PR, which is the offset the check wanted. It does not, because Iron Law 3 refuses a silent archive while a `[~]` item is unresolved and that resolution belongs to the user. So this is a raise that a single user decision turns back into 39 — recorded as such rather than as permanent growth. road-to-long-horizon-execution stays open on one item that is an OBSERVATION of a live killed-and-resumed run: not work any change-set can contain, and not something to buy back by archiving an unrelated roadmap, which would move the number without moving the estate. The +1 blocker is `team-loop-benchmark-spend`, which puts a funded-or-published-null decision in front of the maintainer — the direction this ratchet exists FOR, per the 2026-08-18 entry directly above."
         }
     ],
     "target": {

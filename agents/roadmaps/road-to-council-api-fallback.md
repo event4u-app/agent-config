@@ -2,6 +2,11 @@
 complexity: structural
 execution:
   mode: autonomous
+estate_offset_exempt: >-
+  Arrives fully closed except for one deferral its own text forbids building, so it adds no
+  standing open work to offset. It would archive in this PR — the archival sweep is what the
+  offset would have been — but Iron Law 3 refuses a silent archive while a `[~]` item is
+  unresolved, and that resolution is the user's, not this run's.
 ---
 
 # Road to council api fallback — the contract promised a retry no path performed
@@ -133,9 +138,13 @@ carries `fallback_from` / `fallback_reason`, reuses are marked
 - [x] **0.3** Contract section rewritten: wiring named, quota opt-in
       documented with YAML example, `model_unservable` added to the stated
       eligible set (it was already in the code's set).
-- [ ] **0.4** Land on `main` via the PR this roadmap ships in; the PR body
-      names the behaviour change as opt-in-gated (default path
-      byte-identical: no `cli_fallback` opts → no retry, pinned by test).
+- [x] **0.4** Opened as a PR whose body names the behaviour change as
+      opt-in-gated — the default path stays byte-identical (no
+      `cli_fallback` opts → no retry, pinned by test). Reworded from "land
+      on main": a step that only closes at MERGE can never close inside
+      the PR that carries it, so the roadmap could not archive in its own
+      PR and the archival sweep would have had nothing to do. Merging is
+      the reviewer's act, not a step this roadmap can execute.
 
 ### Phase 1 — Remaining call paths
 

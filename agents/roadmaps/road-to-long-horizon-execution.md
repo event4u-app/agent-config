@@ -2,6 +2,10 @@
 complexity: structural
 execution:
   mode: autonomous
+estate_offset_exempt: >-
+  Its remaining open item is an OBSERVATION of a live killed-and-resumed run, not a change any
+  change-set can contain, so there is nothing to close and nothing to trade. Offsetting it by
+  archiving an unrelated roadmap would move the estate number without moving the estate.
 ---
 
 # Road to long-horizon execution — the agent stops when the roadmap doesn't

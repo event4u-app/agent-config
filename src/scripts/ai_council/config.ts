@@ -94,25 +94,15 @@ const _VALID_PROVIDERS: ReadonlySet<string> = new Set([
 ]);
 const _VALID_MODES: ReadonlySet<string> = new Set(['api', 'manual', 'cli', 'auto']);
 
-/**
- * Providers with a wired `mode=cli` subclass — the only ones a
- * `second_model` rung may name (see `DecisionResolutionEntry.second_model`
- * for why the rung must be USD-neutral).
- *
- * Deliberately a SUBSET of both `_VALID_PROVIDERS` and
- * `council_cli.ts::_CLI_PROVIDERS`, which each carry all five: `xai` and
- * `perplexity` ship COMMUNITY CLI wrappers that consume an API key and set
- * `billable = true` (`clients.ts` header, and `XAICliClient` /
- * `PerplexityCliClient` themselves). Routing a resolution there would spend
- * USD on the rung whose entire purpose is not to. So the discriminator is
- * `billable === false`, not "has a cli subclass" — the wider set would have
- * been the easy read and the wrong one.
- */
-const _SECOND_MODEL_PROVIDERS: ReadonlySet<string> = new Set([
-    'anthropic',
-    'openai',
-    'gemini',
-]);
+// The fallback/second-model surfaces live in `fallback_config.ts` — this file
+// is far over the source ceiling and the documented fix is extraction.
+const _FALLBACK_DEPS = {
+    isDict: _isDict as (v: unknown) => v is Dict,
+    isBool: _isBool as (v: unknown) => v is boolean,
+    isStr: _isStr as (v: unknown) => v is string,
+    repr: _pyRepr, typeName: _pyTypeName, sortedListRepr: _sortedListRepr,
+    error: (msg: string): Error => new CouncilConfigError(msg),
+};
 
 /**
  * Prefixes that signal "this is a raw API key" so we refuse it loudly
@@ -558,31 +548,9 @@ export interface DecisionResolutionEntry {
     readonly mode: string;
     readonly confidence_threshold: number;
     /**
-     * OPTIONAL local second-model rung for this class — UOTL Phase 4.1.
-     *
-     * The ladder for an open question is: agent → this rung → council →
-     * decision memo → user. This rung exists because the council was the
-     * ONLY rung between the agent and a halt, so a question below
-     * `high_impact` still stopped the run whenever no council was configured
-     * or its quota was gone. One additional rung softens that without
-     * touching the locked classes.
-     *
-     * Constraints the schema enforces, each for its own reason:
-     *
-     * - **A provider with a wired CLI subclass, never an api provider.**
-     *   The rung has to be USD-neutral: it rides a local binary under
-     *   subscription auth, so reaching for it can never turn a resolution
-     *   into metered spend. An api rung here would make the cheap path the
-     *   expensive one.
-     * - **Quota-bounded by the same `cli_call_budget` counter** the council's
-     *   own cli transport books against. One subscription, one counter — a
-     *   parallel count is how a plan quota gets spent twice.
-     * - **Rejected outright on `high_impact` / `user_required`.** Not merely
-     *   ignored: a key that is silently dropped reads to its author as
-     *   configured. Same treatment `dispatch` already gets on those classes.
-     *
-     * `null` (the default, and the shape when the key is absent) → the class
-     * has no second rung and the ladder is exactly what it was.
+     * OPTIONAL local second-model rung — UOTL Phase 4.1. Absent (`null`) →
+     * the ladder is unchanged. Provider set, quota binding and the locked-class
+     * refusal live in `fallback_config.ts::buildSecondModel`.
      */
     readonly second_model: string | null;
 }
@@ -665,26 +633,8 @@ export type QuorumSetting = 'majority' | number;
  */
 export type QuorumMinPresent = number;
 
-/**
- * `fallback.*` — the mid-flight cli→api retry's one configurable knob.
- *
- * It is modelled here rather than read leniently off the raw dict for a
- * mechanical reason: `council_cli.ts::load_settings` does not hand callers the
- * file, it hands them a block SYNTHESIZED from this type. A key this type does
- * not carry cannot reach `build_members`, whatever the operator wrote — the
- * same defect `quorum` and `quorum_min_present` each shipped once already, and
- * their comments in that synthesizer say so.
- */
-export interface FallbackConfig {
-    /**
-     * May an exhausted CLI quota retry on the metered api rung? Default
-     * `false`. The no-double-charge classes (`binary_missing`,
-     * `auth_rejected`, `cli_unsupported`, `model_unservable`) never consult
-     * this — they are always eligible. `timeout` / 5xx are never eligible
-     * under any value, and no key exists to change that.
-     */
-    readonly api_on_quota: boolean;
-}
+export type { FallbackConfig } from './fallback_config.js';
+import { buildFallback, buildSecondModel, type FallbackConfig as _FallbackConfig } from './fallback_config.js';
 
 export interface CouncilConfig {
     readonly enabled: boolean;
@@ -696,7 +646,7 @@ export interface CouncilConfig {
     readonly cli_call_budget: CliCallBudgetConfig;
     readonly quorum: QuorumSetting;
     readonly quorum_min_present: QuorumMinPresent;
-    readonly fallback: FallbackConfig;
+    readonly fallback: _FallbackConfig;
     readonly necessity_classifier: NecessityClassifierConfig;
     readonly model_downgrade: ModelDowngradeConfig;
     readonly debate: DebateConfig;
@@ -951,7 +901,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
     const quorum_min_present = _build_quorum_min_present(
         _get(raw, 'quorum_min_present', SOLO_FLOOR_MIN_PRESENT),
     );
-    const fallback = _build_fallback(_get(raw, 'fallback', {}));
+    const fallback = buildFallback(_get(raw, 'fallback', {}), _FALLBACK_DEPS);
     const necessity_classifier = _build_necessity_classifier(
         _asDict(_getOr(raw, 'necessity_classifier', {})),
     );
@@ -1323,43 +1273,6 @@ const _DEFAULT_RESOLUTION_MODES: Readonly<Record<string, string>> = {
     user_required: 'user',
 };
 
-/**
- * Validate one class's optional `second_model` rung.
- *
- * Absent → `null`, and the ladder is unchanged. Present on a locked class →
- * hard error. Present with a provider that has no USD-neutral local CLI →
- * hard error naming the allowed set, because the failure this rung exists to
- * prevent is a halt, and silently disabling it would reintroduce exactly that
- * halt at the moment it is needed.
- */
-function _build_second_model(entry_raw: Dict, cls: string): string | null {
-    if (!('second_model' in entry_raw)) {
-        return null;
-    }
-    if (_LOCKED_IMPACT_CLASSES.has(cls)) {
-        throw new CouncilConfigError(
-            `decision_resolution.classes.${cls}.second_model=` +
-                `${_pyRepr(entry_raw['second_model'])}: a second-model rung is ` +
-                `not configurable for high-impact / user-required decisions — ` +
-                `those classes are LOCKED to \`user\` (Iron Law) and never ` +
-                `resolve on a model of any kind.`,
-        );
-    }
-    const raw = entry_raw['second_model'];
-    if (raw === null) {
-        return null;
-    }
-    if (!(_isStr(raw) && _SECOND_MODEL_PROVIDERS.has(raw))) {
-        throw new CouncilConfigError(
-            `decision_resolution.classes.${cls}.second_model=${_pyRepr(raw)} ` +
-                `not in ${_sortedListRepr(_SECOND_MODEL_PROVIDERS)} — the rung ` +
-                `must be a provider whose local CLI runs under subscription ` +
-                `auth, so a resolution can never become metered USD spend.`,
-        );
-    }
-    return raw as string;
-}
-
 function _build_decision_resolution(d: Dict): DecisionResolutionConfig {
     if (!_isDict(d)) {
         throw new CouncilConfigError('`decision_resolution` must be a mapping.');
@@ -1418,12 +1331,10 @@ function _build_decision_resolution(d: Dict): DecisionResolutionConfig {
                     `must be in [0.0, 1.0] (got ${_pyRepr(_f(threshold))}).`,
             );
         }
-        // UOTL Phase 4.1 — the optional local second-model rung. Rejected
-        // on a locked class rather than ignored, for the same reason
-        // `dispatch` is: a silently dropped key reads to its author as
-        // configured, and this one would read as "high-impact questions may
-        // resolve without me".
-        const second_model = _build_second_model(entry_raw, cls);
+        // UOTL Phase 4.1 — the optional local rung, REFUSED on a locked
+        // class rather than ignored: a dropped key reads as configured.
+            const second_model = buildSecondModel(
+            entry_raw as Record<string, unknown>, cls, _LOCKED_IMPACT_CLASSES, _FALLBACK_DEPS);
         classes.set(cls, { mode, confidence_threshold: threshold, second_model });
     }
     const fast_path_raw = _getOr(d, 'fast_path', {});
@@ -2145,35 +2056,6 @@ function _build_quorum_min_present(raw: Json): QuorumMinPresent {
         `\`quorum_min_present\`=${_pyRepr(raw)} must be an integer >= 1 ` +
             `(got ${_pyTypeName(raw)}).`,
     );
-}
-
-/**
- * Validate the `fallback` block. Absent → the safe default (`false`), which
- * is the only value that cannot surprise an operator with USD spend.
- *
- * A malformed BLOCK (a string, a list) is tolerated as absent rather than
- * refused: the key's whole job is to withhold spend, and a config that fails
- * to load is a worse outcome than one that reads a garbled block as "off".
- * A malformed `api_on_quota` VALUE is a different matter and is rejected —
- * `api_on_quota: "yes"` is an operator trying to authorise spend, and
- * silently reading that as `false` would be as wrong as silently reading it
- * as `true`.
- */
-function _build_fallback(raw: Json): FallbackConfig {
-    if (!_isDict(raw)) {
-        return { api_on_quota: false };
-    }
-    const v = (raw as Dict)['api_on_quota'];
-    if (v === undefined) {
-        return { api_on_quota: false };
-    }
-    if (!_isBool(v)) {
-        throw new CouncilConfigError(
-            `\`fallback.api_on_quota\`=${_pyRepr(v)} must be a boolean ` +
-                `(got ${_pyTypeName(v)}).`,
-        );
-    }
-    return { api_on_quota: v as boolean };
 }
 
 function _build_advisor(name: string, cfg: Dict): AdvisorConfig {

@@ -98,6 +98,14 @@ import {
 } from './ai_council/qualification_wiring.js';
 import { PROBE_STORE_RELPATH, readProbeStore, type ProbeStore } from './ai_council/probe_store.js';
 import { appendEvent, type QuorumCommand, type QuorumDispatch } from './ai_council/events_log.js';
+import { _mapToObject } from './_lib/map_to_object.js';
+import { synthesizeAiCouncilBlock as _synthesize_ai_council_block } from './_lib/council_settings_block.js';
+import {
+    fallbackPostureFor,
+    renderPostureLines,
+    type FallbackPosture,
+} from './_lib/council_fallback_posture.js';
+import { buildFallbackOptions } from './_lib/council_fallback_wiring.js';
 import {
     type ClassificationResult,
     type SizeFitVerdict,
@@ -459,138 +467,7 @@ function load_settings(
     return settings;
 }
 
-function _synthesize_ai_council_block(cfg: CouncilConfig): Dict {
-    const members: Dict = {};
-    for (const [name, m] of cfg.members) {
-        const entry: Dict = { enabled: m.enabled, model: m.model };
-        if (m.api_key_ref !== null) {
-            entry['api_key_ref'] = m.api_key_ref;
-        }
-        if (m.mode !== null) {
-            entry['mode'] = m.mode;
-        }
-        if (m.binary !== null) {
-            entry['binary'] = m.binary;
-        }
-        if (m.model_ladder && m.model_ladder.length > 0) {
-            entry['model_ladder'] = [...m.model_ladder];
-        }
-        // road-to-cache-economy Phase 4: forward only an explicit override —
-        // the '5m' default needs no key, keeping the synthesized block
-        // byte-identical to pre-Phase-4 output when nobody opted in.
-        if (m.prompt_cache_ttl !== '5m') {
-            entry['prompt_cache_ttl'] = m.prompt_cache_ttl;
-        }
-        members[name] = entry;
-    }
-    const advisors: Dict = {};
-    for (const [name, a] of cfg.advisors) {
-        const entry: Dict = {
-            enabled: a.enabled,
-            member: a.member,
-            persona: a.persona,
-        };
-        if (a.model !== null) {
-            entry['model'] = a.model;
-        }
-        advisors[name] = entry;
-    }
-    const lensCostDisclosure: Dict = {};
-    for (const [lens, cd] of cfg.lens_overrides.cost_disclosure) {
-        lensCostDisclosure[lens] = {
-            mode: cd.mode,
-            threshold_usd: cd.threshold_usd,
-            show_per_member: cd.show_per_member,
-        };
-    }
-    const lensModelDowngrade: Dict = {};
-    for (const [lens, md] of cfg.lens_overrides.model_downgrade) {
-        lensModelDowngrade[lens] = { enabled: md.enabled, auto_apply: md.auto_apply };
-    }
-    return {
-        enabled: cfg.enabled,
-        mode: cfg.defaults.mode,
-        min_rounds: cfg.defaults.min_rounds,
-        deep_min_rounds: cfg.defaults.deep_min_rounds,
-        max_output_tokens: cfg.defaults.max_output_tokens,
-        session_retention_days: cfg.defaults.session_retention_days,
-        debate_max_rounds: cfg.defaults.debate_max_rounds,
-        cost_budget: {
-            max_input_tokens: cfg.cost_budget.max_input_tokens,
-            max_output_tokens: cfg.cost_budget.max_output_tokens,
-            max_calls: cfg.cost_budget.max_calls,
-            max_total_usd: cfg.cost_budget.max_total_usd,
-            daily_limit_usd: cfg.cost_budget.daily_limit_usd,
-        },
-        consensus_scoring: {
-            enabled: cfg.consensus_scoring.enabled,
-            strong_threshold: cfg.consensus_scoring.strong_threshold,
-            minority_threshold: cfg.consensus_scoring.minority_threshold,
-            lenses: [...cfg.consensus_scoring.lenses],
-        },
-        cli_call_budget: {
-            max_calls_per_day: _mapToObject(cfg.cli_call_budget.max_calls_per_day),
-            warn_at: cfg.cli_call_budget.warn_at,
-        },
-        // Phase 3.3 (road-to-always-on-orchestration): was validated by
-        // `_build_config`/`_build_quorum` but never forwarded into the
-        // synthesized block, so `build_members` always saw `undefined` and
-        // silently fell back to `'majority'` regardless of the user's
-        // configured `quorum: <k>`. Additive key — callers that never read
-        // it observe no change.
-        quorum: cfg.quorum,
-        // Forwarded for the same reason `quorum` above had to be: a key that
-        // `_build_config` validates and this block drops is a key the loader
-        // enforces and the runtime never sees. That defect shipped once here
-        // already; repeating it for the shadow floor would silently pin every
-        // `floor_would_hold` to the default no matter what the operator set.
-        quorum_min_present: cfg.quorum_min_present,
-        // Third instance of the same defect the two comments above describe,
-        // and the most expensive of the three: `build_members` reads
-        // `ai_council.fallback.api_on_quota` off THIS block, so before the key
-        // was forwarded no config file could turn quota fall-through on. The
-        // documentation, the contract section and the tests all described a
-        // switch that production could not flip.
-        fallback: { api_on_quota: cfg.fallback.api_on_quota },
-        necessity_classifier: {
-            enabled: cfg.necessity_classifier.enabled,
-            mode: cfg.necessity_classifier.mode,
-            user_explicit_mode: cfg.necessity_classifier.user_explicit_mode,
-        },
-        model_downgrade: {
-            enabled: cfg.model_downgrade.enabled,
-            auto_apply: cfg.model_downgrade.auto_apply,
-        },
-        debate: {
-            max_cost_usd: cfg.debate.max_cost_usd,
-            cost_disclosure: {
-                mode: cfg.debate.cost_disclosure.mode,
-                threshold_usd: cfg.debate.cost_disclosure.threshold_usd,
-                show_per_member: cfg.debate.cost_disclosure.show_per_member,
-            },
-        },
-        lens_overrides: {
-            necessity_classifier_mode: _mapToObject(
-                cfg.lens_overrides.necessity_classifier_mode,
-            ),
-            necessity_classifier_user_explicit_mode: _mapToObject(
-                cfg.lens_overrides.necessity_classifier_user_explicit_mode,
-            ),
-            model_downgrade: lensModelDowngrade,
-            cost_disclosure: lensCostDisclosure,
-        },
-        members,
-        advisors,
-    };
-}
 
-function _mapToObject<V>(m: ReadonlyMap<string, V>): Record<string, V> {
-    const out: Record<string, V> = {};
-    for (const [k, v] of m) {
-        out[k] = v;
-    }
-    return out;
-}
 
 // ── member construction ─────────────────────────────────────────────
 
@@ -643,14 +520,9 @@ interface BuildMembersOptions {
      */
     qualification_out?: MemberQualification[] | null;
     /**
-     * Out-param: mid-flight cli→api fallback wiring for `consult()`. Mutated
-     * in place (same convention as `quorum_out`). `.options` is populated with
-     * a lazy api-twin factory over this call's `members_cfg` — the factory
-     * enforces the SAME strict `api_key_ref` construction contract the api
-     * branch below does (`_construct_api_member` throwing
-     * `CouncilDisabledError` ⇒ `null`, no fallback for that provider) — plus
-     * the `ai_council.fallback.api_on_quota` policy read. Stays `null` when
-     * the caller passes no ref.
+     * Out-param for the mid-flight fallback wiring (the `quorum_out`
+     * convention). Populated by `council_fallback_wiring.buildFallbackOptions`;
+     * stays `null` when the caller passes no ref.
      */
     fallback_out?: { options: CliFallbackOptions | null } | null;
 }
@@ -1008,70 +880,17 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
         );
     }
     if (fallback_out !== null) {
-        // Read leniently off the raw dict, mirroring how this function reads
-        // `cli_call_budget` above — an absent/malformed block means `false`,
-        // never a throw. The key is `ai_council.fallback.api_on_quota`; see
-        // `FallbackPolicy.apiOnQuota` (transport_resolver.ts) for why quota
-        // fall-through is opt-in while the no-double-charge classes are not.
+        // Absent/malformed block means `false`, never a throw. Why quota
+        // fall-through is opt-in: `FallbackPolicy.apiOnQuota`.
         const fallback_cfg = _isDict(ai['fallback']) ? (ai['fallback'] as Dict) : {};
-        fallback_out.options = {
-            api_on_quota: _pyBool(fallback_cfg['api_on_quota']),
-            // The orchestrator is a pure library and holds no sink; this is
-            // it. One line per ESTABLISHING escalation, so attendance
-            // analysis can separate a seat saved by the fallback from a seat
-            // that was natively api — indistinguishable in the response set,
-            // and only one of the two spends money nobody planned.
-            on_event: (e): void => {
-                appendEvent({
-                    action: 'transport_fallback',
-                    provider: e.provider,
-                    failure_class: e.failure,
-                    outcome: e.outcome,
-                    api_on_quota: e.api_on_quota,
-                });
-            },
-            construct: (provider: string): ExternalAIClient | null => {
-                if (!_API_PROVIDERS.has(provider)) return null;
-                const cfg = ((members_cfg[provider] as Dict) || {}) as Dict;
-                // Same model resolution the cli member itself got — override,
-                // then config, then the api constructor's own default.
-                const model =
-                    (overrides[provider] as string | undefined) ||
-                    (cfg['model'] as string | undefined) ||
-                    null;
-                try {
-                    return _construct_api_member(provider, model, {
-                        api_key_ref: (cfg['api_key_ref'] as string | null) ?? null,
-                        enable_prompt_cache: cfg['prompt_cache'] !== false,
-                        prompt_cache_ttl:
-                            (cfg['prompt_cache_ttl'] as '5m' | '1h' | undefined) ?? undefined,
-                    });
-                } catch (exc) {
-                    // The strict api construction contract refusing (no
-                    // explicit `api_key_ref` for gemini/xai/perplexity, key
-                    // unresolvable, …) means "no api rung for this provider" —
-                    // the failure surfaces unchanged, it does not escalate.
-                    //
-                    // `CouncilConfigError` belongs in this set and was missing
-                    // from it: that is what `resolve_api_key` throws when a
-                    // referenced env var is unset or a key file has gone away.
-                    // A key rotated between construction and the retry is the
-                    // ordinary case, and it was escaping this factory into
-                    // `_run_round`, out of `consult`, and taking down the pass
-                    // the fallback exists to rescue. A mechanism that turns a
-                    // recoverable seat loss into a total loss is worse than no
-                    // mechanism.
-                    if (
-                        exc instanceof CouncilDisabledError ||
-                        exc instanceof CliClientError ||
-                        exc instanceof CouncilConfigError
-                    ) {
-                        return null;
-                    }
-                    throw exc;
-                }
-            },
-        };
+        fallback_out.options = buildFallbackOptions({
+            apiOnQuota: _pyBool(fallback_cfg['api_on_quota']),
+            hasApiRung: (p) => _API_PROVIDERS.has(p),
+            memberConfig: (p) => ((members_cfg[p] as Dict) || {}) as Dict,
+            modelOverride: (p) => (overrides[p] as string | undefined) ?? null,
+            constructApi: _construct_api_member,
+            emit: appendEvent,
+        });
     }
     return members;
 }
@@ -1602,24 +1421,13 @@ function _maybe_run_chairman(
         user_prompt: synth_prompt,
         max_tokens: question.max_tokens,
     });
-    // The synthesis falls back like any other billable pass. Council
-    // 2026-08-19 (single anthropic seat — the openai seat failed with
-    // `os_error: ENOBUFS`, so this is one opinion, not convergence) and this
-    // roadmap's own recommendation agree here, on the asymmetry: an
-    // individual seat has N−1 redundancy behind it, the synthesis has none,
-    // so a transport failure loses the artefact the whole pass exists for.
-    //
-    // The counter it named and that is NOT dismissed: the chairman often runs
-    // a larger model, whose api twin may fail differently (unserved model,
-    // separate quota pool), so the retry can spend to discover a second
-    // failure. That is bounded by `model_unservable` already being an
-    // eligible class and by the retry's own projected-spend gate; the
-    // annotation below still reports FAILED when the twin does not answer, so
-    // the operator sees a degraded synthesis rather than a silent one.
-    //
-    // `consult` builds its own ledger for this invocation, which is correct:
-    // the synthesis is a separate invocation from the deliberation rounds and
-    // uses a different member set (one client).
+    // The synthesis falls back like any other billable pass: an individual
+    // seat has N−1 redundancy behind it, this has none, so a transport failure
+    // loses the artefact the whole pass exists for. The counter — a larger
+    // chairman model whose twin may fail differently — is bounded by
+    // `model_unservable` being eligible and by the retry's spend gate, and the
+    // annotation below still reports FAILED rather than degrading silently.
+    // `consult` builds its own ledger: this is a separate invocation.
     const out = consult([client], synthQ, budget, {
         table,
         project: project as never,
@@ -1832,15 +1640,10 @@ function _resolve_max_tokens(args: Args, ai_cfg: Dict): number {
 // ── subcommands ─────────────────────────────────────────────────────
 
 /**
- * Cost preview only — it constructs members to price them and never calls
- * one, so there is no mid-flight failure to fall back from.
- *
- * **`fallback_out` here is a decided non-goal, not an oversight.** The
- * callsite census over `build_members` finds three sites (`cmd_estimate`,
- * `cmd_run`, `cmd_debate`) and two of them now pass `fallback_out`; without
- * this note the third reads as a gap and re-opens on every census. It is
- * recorded rather than wired because wiring it would construct an api twin
- * factory that nothing can ever invoke on a spend-free path.
+ * Cost preview only — it prices members and never calls one, so there is no
+ * mid-flight failure to fall back from. `fallback_out` here is a DECIDED
+ * non-goal: two of the three `build_members` sites pass it, and without this
+ * note the third re-opens on every callsite census.
  */
 function cmd_estimate(
     args: Args,
@@ -2406,63 +2209,27 @@ function _resolvedTransportFor(
     });
 }
 
-/**
- * Would this member have an api rung to fall back to, if its cli transport
- * died mid-pass?
- *
- * Answered from the same two facts the twin factory in `build_members` uses —
- * the provider has an api constructor, and its `api_key_ref` resolves — so the
- * posture printed here and the retry that actually happens cannot disagree.
- * It deliberately does NOT construct the client: `council:status` is the one
- * command that must stay free of side effects.
- *
- * `'n/a'` for a member that is not on the cli rung: there is nothing to fall
- * back FROM. Reporting `'none'` there would read as a missing capability
- * rather than an inapplicable question.
- */
-function _fallbackPostureFor(
+/** Gather what `fallbackPostureFor` needs; the decision itself is pure. */
+function _posture(
     name: string,
     member: { readonly binary: string | null; readonly api_key_ref: string | null },
-): 'api' | 'none' | 'n/a' {
+): FallbackPosture {
     const t = _resolvedTransportFor(name, member);
-    if (!t.available || t.transport !== 'cli') {
-        return 'n/a';
-    }
-    if (!_API_PROVIDERS.has(name)) {
-        return 'none';
-    }
-    if (member.api_key_ref !== null) {
-        return _member_api_key_present({ api_key_ref: member.api_key_ref }) === true
-            ? 'api'
-            : 'none';
-    }
-    // No explicit ref: only anthropic and openai have a keyless path, and
-    // even there the generic loader can come up empty — so probe it rather
-    // than report `'api'` on the strength of the provider name. The strict
-    // constructors (gemini, xai, perplexity) refuse without an explicit ref,
-    // which is exactly the case the twin factory catches and reports as "no
-    // api rung for this provider".
-    const keyless = _API_KEYLESS_LOADERS[name];
-    if (keyless === undefined) {
-        return 'none';
-    }
-    try {
-        return keyless() ? 'api' : 'none';
-    } catch {
-        return 'none';
-    }
+    const keyless: Readonly<Record<string, () => boolean>> = {
+        anthropic: () => Boolean(load_anthropic_key()),
+        openai: () => Boolean(load_openai_key()),
+    };
+    return fallbackPostureFor({
+        transport: t.available ? t.transport : null,
+        hasApiRung: _API_PROVIDERS.has(name),
+        apiKeyRef: member.api_key_ref,
+        refResolves:
+            member.api_key_ref === null
+                ? undefined
+                : _member_api_key_present({ api_key_ref: member.api_key_ref }),
+        keylessResolves: keyless[name],
+    });
 }
-
-/**
- * The keyless key loaders `_construct_api_member` falls back to when a member
- * sets no `api_key_ref`. Only these two providers have one; the other three
- * throw `CouncilDisabledError` instead. Both sides must stay in sync, and the
- * posture line above is the reader that notices when they drift.
- */
-const _API_KEYLESS_LOADERS: Readonly<Record<string, () => boolean>> = {
-    anthropic: () => Boolean(load_anthropic_key()),
-    openai: () => Boolean(load_openai_key()),
-};
 
 export function cmd_status(args: Args, opts: { env?: Record<string, string | undefined> } = {}): number {
     const env = opts.env ?? process.env;
@@ -2524,7 +2291,7 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
                 fallback: {
                     api_on_quota: cfg?.fallback.api_on_quota ?? false,
                     posture: Object.fromEntries(
-                        enabledMembers.map(([n, m]) => [n, _fallbackPostureFor(n, m)]),
+                        enabledMembers.map(([n, m]) => [n, _posture(n, m)]),
                     ),
                 },
                 ignored_transport_keys: cfg?.ignored_transport_keys ?? [],
@@ -2565,29 +2332,11 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
             const detail = t.available ? t.transport : `unavailable — ${t.reason ?? 'no usable transport'}`;
             _stdout(`  transport        ${name}: ${detail}${billing}\n`);
         }
-        // Mid-flight fallback posture, one line per cli seat. A seat that is
-        // not on the cli rung has nothing to fall back FROM and is skipped
-        // rather than printed as `none`, which would read as a missing
-        // capability instead of an inapplicable question.
-        const postures = enabledMembers
-            .map(([n, m]) => [n, _fallbackPostureFor(n, m)] as const)
-            .filter(([, p]) => p !== 'n/a');
-        if (postures.length > 0) {
-            for (const [name, posture] of postures) {
-                const detail =
-                    posture === 'api'
-                        ? 'would fall back to api'
-                        : 'no api rung — a lost cli transport loses the seat';
-                _stdout(`  fallback         ${name}: ${detail}\n`);
-            }
-            // Named separately from the per-seat lines because it is not a
-            // per-seat property: it is the one billing-class decision, and it
-            // governs every seat above at once.
-            _stdout(
-                `  fallback quota   api_on_quota: ${cfg.fallback.api_on_quota ? 'on' : 'off'}` +
-                    ` — an exhausted cli quota ${cfg.fallback.api_on_quota ? 'MAY' : 'may not'}` +
-                    ` retry on the metered rung\n`,
-            );
+        for (const line of renderPostureLines(
+            enabledMembers.map(([n, m]) => [n, _posture(n, m)] as const),
+            cfg.fallback.api_on_quota,
+        )) {
+            _stdout(`${line}\n`);
         }
         // The four-value verdict per seat, then the advice — TWO warnings, so
         // an `unavailable` seat is not told to re-run (R2 finding 12).
@@ -3239,9 +2988,8 @@ function cmd_debate(
     // gap is declared in quorum-attendance-budget.json rather than left for a
     // reader to discover from a missing row.
     const quorum_out: { result: QuorumResult | null } = { result: null };
-    // Mid-flight fallback for the debate path. `null` when `build_members` is
-    // never called (injected members in tests) — `run_debate` then behaves
-    // byte-identically to before, which is the same shape `cmd_run` uses.
+    // `null` when `build_members` is never called (injected members in
+    // tests) — `run_debate` then behaves byte-identically to before.
     const fallback_out: { options: CliFallbackOptions | null } = { options: null };
     if (members === null) {
         members = build_members(settings, {
