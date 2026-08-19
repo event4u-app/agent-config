@@ -16,6 +16,12 @@
  *     the default cap IS its row — but a breach names the missing row so
  *     the fix is a registered decision, not a silent default bump
  *   - per-slot SUM over all bound concerns > the slot cap → RED
+ *   - per-TURN aggregate (the sum over every non-exempt slot, one fire each)
+ *     > `per_turn_aggregate_cap_bytes.cap_bytes` → RED. Added by
+ *     road-to-standing-context-40k 4.1, because every row above caps one FIRE
+ *     and `pre_tool_use` / `post_tool_use` fire once per tool call — so a turn's
+ *     real total was the one axis with no ceiling. The runtime half lives in
+ *     `hooks/turn_injection_budget.ts`; this is the authoring-time reading.
  *
  * HONEST SCOPE, stated up front: concerns are conditional-silence by design —
  * a generic fixture triggers few of them, so most measure 0 bytes here. The
@@ -66,6 +72,20 @@ interface Budget {
     default_cap_bytes: number;
     per_concern_caps_bytes: Record<string, number | string>;
     per_slot_sum_caps_bytes: Record<string, number | string>;
+    /** road-to-standing-context-40k 4.1 — optional so an older budget file still benches. */
+    per_turn_aggregate_cap_bytes?: {
+        cap_bytes?: number;
+        exempt_slots?: string[];
+    };
+}
+
+/** The per-turn aggregate: the sum across every non-exempt slot, one fire each. */
+export interface TurnAggregate {
+    bytes: number;
+    cap: number;
+    breach: boolean;
+    /** Slots that fed the sum, so the reading is auditable rather than a bare number. */
+    slots: string[];
 }
 
 function capFor(budget: Budget, concern: string): number {
@@ -129,7 +149,7 @@ export function runConcernOnce(
     }
 }
 
-export function bench(opts: { platform?: string; budgetPath?: string } = {}): { measurements: Measurement[]; slotSums: Record<string, { bytes: number; cap: number; breach: boolean }>; errors: string[] } {
+export function bench(opts: { platform?: string; budgetPath?: string } = {}): { measurements: Measurement[]; slotSums: Record<string, { bytes: number; cap: number; breach: boolean }>; turnAggregate: TurnAggregate | null; errors: string[] } {
     const platform = opts.platform ?? 'claude';
     const manifest = _load_yaml(MANIFEST);
     const budget = JSON.parse(fs.readFileSync(opts.budgetPath ?? BUDGET, 'utf8')) as Budget;
@@ -158,7 +178,27 @@ export function bench(opts: { platform?: string; budgetPath?: string } = {}): { 
         const slotCap = typeof slotCapRaw === 'number' ? slotCapRaw : Number.MAX_SAFE_INTEGER;
         slotSums[event] = { bytes: sum, cap: slotCap, breach: sum > slotCap };
     }
-    return { measurements, slotSums, errors };
+
+    // Per-turn aggregate (road-to-standing-context-40k 4.1). The per-slot rows
+    // above cap ONE fire each; a turn spans several slots, so the sum over the
+    // non-exempt ones is the reading the runtime enforcer accumulates against.
+    //
+    // HONEST SCOPE, inherited from this bench's header and worth restating for
+    // the new row: the fixtures fire one of each slot, so this is a per-turn
+    // FLOOR, not the live distribution. A real turn with n tool calls fires
+    // pre/post_tool_use n times and the true aggregate is higher — that axis is
+    // exactly what the dispatcher enforces at runtime and the injection census
+    // measures. Reporting the fixture sum as "the per-turn load" would be the
+    // coverage inflation the honest-scope note refuses.
+    const turnRow = budget.per_turn_aggregate_cap_bytes;
+    let turnAggregate: TurnAggregate | null = null;
+    if (turnRow !== undefined && typeof turnRow.cap_bytes === 'number') {
+        const exempt = new Set(turnRow.exempt_slots ?? []);
+        const slots = Object.keys(slotSums).filter((s) => !exempt.has(s));
+        const bytes = slots.reduce((n, s) => n + (slotSums[s]?.bytes ?? 0), 0);
+        turnAggregate = { bytes, cap: turnRow.cap_bytes, breach: bytes > turnRow.cap_bytes, slots };
+    }
+    return { measurements, slotSums, turnAggregate, errors };
 }
 
 export function main(argv: readonly string[]): number {
@@ -211,10 +251,20 @@ export function main(argv: readonly string[]): number {
         for (const [slot, s] of Object.entries(result.slotSums)) {
             if (s.bytes > 0) process.stdout.write(`  slot-sum ${slot.padEnd(20)} ${String(s.bytes).padStart(6)} B (cap ${s.cap === Number.MAX_SAFE_INTEGER ? '—' : s.cap})${s.breach ? '  ❌ BREACH' : ''}\n`);
         }
+        if (result.turnAggregate !== null) {
+            const t = result.turnAggregate;
+            process.stdout.write(
+                `  turn-aggregate ${String(t.bytes).padStart(6)} B (cap ${t.cap}) over ${t.slots.length} non-exempt slot(s), one fire each` +
+                `${t.breach ? '  ❌ BREACH' : ''}\n`,
+            );
+        } else {
+            process.stdout.write('  turn-aggregate — no per_turn_aggregate_cap_bytes row in the budget; not measured\n');
+        }
         for (const e of result.errors) process.stdout.write(`  warn: ${e}\n`);
     }
-    if (breaches.length > 0 || slotBreaches.length > 0) {
-        process.stderr.write(`bench_hook_injection: ${breaches.length} concern breach(es), ${slotBreaches.length} slot-sum breach(es) — the budget row is the decision surface (src/config/hook-token-budget.json)\n`);
+    const turnBreach = result.turnAggregate?.breach === true;
+    if (breaches.length > 0 || slotBreaches.length > 0 || turnBreach) {
+        process.stderr.write(`bench_hook_injection: ${breaches.length} concern breach(es), ${slotBreaches.length} slot-sum breach(es)${turnBreach ? ', per-turn aggregate breached' : ''} — the budget row is the decision surface (src/config/hook-token-budget.json)\n`);
         return 1;
     }
     return 0;

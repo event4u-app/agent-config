@@ -42,6 +42,15 @@
         "pre_compact": 2048,
         "agent_error": 1024
     },
+    "per_turn_aggregate_cap_bytes": {
+        "_comment": "road-to-standing-context-40k Phase 4.1 — the SUM across every per-turn slot within ONE session-turn, which the per-slot rows above cannot express: they cap one FIRE, and pre_tool_use/post_tool_use fire once per tool call, so a turn's real injected total is the unbounded axis and had no ceiling at all. This is also the file's first row with RUNTIME teeth: every cap above is enforced only by bench_hook_injection in CI over committed fixtures, and dispatch_hook.ts never read this file. cap_bytes is DERIVED, not measured, and says so: 4096 (user_prompt_submit) + 2048 (stop) + 2048 (pre_tool_use) + 2048 (post_tool_use) = 10240, i.e. the committed per-slot caps for a turn with exactly one tool call. No live per-turn distribution exists yet; the injection census is the instrument that revises this number at the review date, by evidence, in a PR.",
+        "cap_bytes": 10240,
+        "exempt_slots": ["session_start", "session_end", "pre_compact", "subagent_start", "subagent_stop", "agent_error"],
+        "exempt_slots_reason": "A turn boundary is a user_prompt_submit; these slots fire outside one (session lifecycle, compaction, subagent lifecycle, error paths) and carry the one-shot restore payloads the roadmap step names as exempt.",
+        "enforcement": "dispatch_hook.ts accumulates emitted payload bytes per turn in agents/runtime/state/turn-injection.json (counts and ids only) and drops advisory messages — lowest severity first, largest first within a severity — until the remaining emission fits. severity: blocking and fail_closed: true concerns are NEVER dropped, by construction, so the policy cannot hide a safety-relevant warning (Risk 5). Every drop appends one budget_exceeded line to dispatch-issues.jsonl.",
+        "owner": "maintainer",
+        "review_by": "2026-11-19"
+    },
     "injection_load_metric": {
         "definition": "Roadmap 3.4: total injected bytes per session and per turn, hook-carried. The census mode of bench_hook_injection (--record) appends counts-only lines to agents/runtime/state/injection-census.jsonl; the caps above are the thresholds; breach trend at review date decides tighten vs relax — by evidence, in a PR. The census is also the repeat-injection-census blocker's instrument (one instrumented week ranks the repeaters for the 3.3 idempotency gate).",
         "privacy": "census lines carry {ts, slot, concern, bytes} — counts and ids only, never content"

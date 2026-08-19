@@ -38,6 +38,7 @@ describe('dispatch_issues — constants', () => {
     it('cap is 200 and VALID_ISSUE matches the schema', () => {
         expect(LOG_CAP).toBe(200);
         expect([...VALID_ISSUE].sort()).toEqual([
+            'budget_exceeded',
             'execution_failed',
             'permission_denied',
             'prerequisite_missing',

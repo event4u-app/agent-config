@@ -52,6 +52,14 @@ import {
 import { emitFor, type Severity } from "./host_semantics.js";
 import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
+import {
+  applyTurnCap,
+  readTurnBudget,
+  readTurnState,
+  writeTurnState,
+  slotCounts,
+  type CandidateMessage,
+} from "./turn_injection_budget.js";
 
 // Free-form JSON values flow through every helper here; a documented
 // alias keeps the surface honest without `any` (ADR-200 § strict TS).
@@ -75,6 +83,7 @@ const REPO_ROOT = path.resolve(
   ...(_IN_BUNDLE ? ["..", ".."] : ["..", "..", ".."]),
 );
 const MANIFEST_PATH = path.join(REPO_ROOT, "src", "scripts", "hook_manifest.yaml");
+const TOKEN_BUDGET_PATH = path.join(REPO_ROOT, "src", "config", "hook-token-budget.json");
 
 export const EXIT_ALLOW = 0;
 export const EXIT_BLOCK = 1;
@@ -1040,6 +1049,89 @@ function _write_feedback(
  * Fail-open (a broken counter must never affect dispatch), skipped in
  * replay mode like the feedback dir.
  */
+/**
+ * Per-turn injection aggregate (road-to-standing-context-40k Phase 4.1).
+ *
+ * Returns the messages that may actually be emitted. Every cap in
+ * `hook-token-budget.json` before this row was CI-only — `bench_hook_injection`
+ * measured committed fixtures and nothing read the file at runtime — and none
+ * of them bounded a TURN: `pre_tool_use` / `post_tool_use` fire once per tool
+ * call, so the per-slot rows capped one fire of a repeating axis.
+ *
+ * A `user_prompt_submit` opens a turn and zeroes the accumulator; every other
+ * non-exempt slot adds to it. Overflow drops advisory messages, largest first,
+ * until the emission fits — never a `severity: blocking` or `fail_closed`
+ * concern, which is what keeps the policy from hiding a safety-relevant
+ * warning (roadmap Risk 5). An emission that still exceeds the cap after every
+ * droppable message is gone is emitted in full and recorded: an over-cap
+ * warning is a budget finding, a swallowed block is a safety failure, and the
+ * two are not tradeable.
+ *
+ * Fail-open on every path — no budget row, an unreadable file, a missing
+ * workspace all mean "emit everything", which is the pre-4.1 behaviour.
+ * Skipped in replay mode so fixture replays write no state, exactly like the
+ * feedback dir and the trip counters.
+ */
+export function _apply_turn_injection_cap<
+  T extends { text: string; concern: string; advisory: boolean; fail_closed: boolean },
+>(envelope: JsonObject, session_id: string, event: string, messages: T[]): T[] {
+  if (messages.length === 0) return messages;
+  const budget = readTurnBudget(TOKEN_BUDGET_PATH);
+  if (budget === null || !slotCounts(event, budget)) return messages;
+  const workspace = String(envelope["workspace_root"] || process.cwd());
+
+  const prior = is_replay_mode()
+    ? { schema_version: 1, session_id, turn: 0, spent_bytes: 0, dropped: 0 }
+    : readTurnState(workspace, session_id);
+  // A prompt submission IS the turn boundary — the accumulator starts at zero
+  // and the turn counter advances, so a long turn's tool-call fires all charge
+  // against the same budget while the next prompt gets a clean one.
+  const opensTurn = event === "user_prompt_submit";
+  const spent = opensTurn ? 0 : prior.spent_bytes;
+
+  const candidates: CandidateMessage[] = messages.map((m) => ({
+    concern: m.concern,
+    text: m.text,
+    advisory: m.advisory,
+    failClosed: m.fail_closed,
+  }));
+  const verdict = applyTurnCap(candidates, spent, budget.capBytes);
+
+  if (!is_replay_mode()) {
+    writeTurnState(workspace, {
+      schema_version: 1,
+      session_id,
+      turn: opensTurn ? prior.turn + 1 : prior.turn,
+      spent_bytes: spent + verdict.keptBytes,
+      dropped: (opensTurn ? 0 : prior.dropped) + verdict.dropped.length,
+    });
+    for (const d of verdict.dropped) {
+      log_dispatch_issue(
+        workspace,
+        d.concern,
+        "budget_exceeded",
+        `advisory dropped: ${String(d.bytes)} B would take the turn past the ` +
+          `${String(budget.capBytes)} B per-turn injection cap (${String(spent)} B already spent)`,
+        "raise per_turn_aggregate_cap_bytes.cap_bytes in src/config/hook-token-budget.json, by evidence, in a PR",
+      );
+    }
+    if (verdict.overCapAfterDrops) {
+      log_dispatch_issue(
+        workspace,
+        "dispatch",
+        "budget_exceeded",
+        `turn injection is ${String(spent + verdict.keptBytes)} B over a ` +
+          `${String(budget.capBytes)} B cap with nothing droppable left — ` +
+          "blocking and fail_closed concerns are never dropped",
+        "raise per_turn_aggregate_cap_bytes.cap_bytes in src/config/hook-token-budget.json, by evidence, in a PR",
+      );
+    }
+  }
+
+  if (verdict.dropped.length === 0) return messages;
+  return verdict.keptIndices.map((i) => messages[i] as T);
+}
+
 function _record_rule_trips(envelope: JsonObject, entries: FeedbackEntry[]): void {
   if (is_replay_mode()) return;
   const tripped = entries.filter(
@@ -1269,7 +1361,17 @@ export function main(argv?: string[]): number {
   // feedback_entries on purpose: that record is written to disk with a
   // fixed-field schema (PII-exclusion-by-construction), and a concern's raw
   // stderr is free-form content. This array is in-memory only.
-  const concern_messages: Array<{ rc: number; text: string }> = [];
+  //
+  // Carries `concern` / `advisory` / `fail_closed` alongside the text since
+  // 4.1: the per-turn aggregate has to know which messages are droppable, and
+  // that is a property of the manifest declaration, not of the text.
+  const concern_messages: Array<{
+    rc: number;
+    text: string;
+    concern: string;
+    advisory: boolean;
+    fail_closed: boolean;
+  }> = [];
   // Per-concern `tools:` filter (see _concern_matches_tool). Applied here so it
   // is one place, after the envelope exists and before any concern is spawned.
   const tool_name = _payload_tool_name(envelope);
@@ -1355,7 +1457,13 @@ export function main(argv?: string[]): number {
         : "";
     const message = [stated, extra].filter(Boolean).join("\n\n");
     if (message) {
-      concern_messages.push({ rc, text: message });
+      concern_messages.push({
+        rc,
+        text: message,
+        concern: String(concern["name"]),
+        advisory: _is_advisory(concern),
+        fail_closed: Boolean(concern["fail_closed"]),
+      });
     }
     if (
       args.event === "session_start" &&
@@ -1400,9 +1508,13 @@ export function main(argv?: string[]): number {
   // disagree: on Claude Code exit 1 does not block and exit 2 does, which
   // inverted every verdict (see host_semantics.ts for the documented mapping).
   // Unverified platforms keep the legacy pass-through byte-for-byte.
-  const decidingReasons = concern_messages
-    .filter((m) => m.rc === final_rc)
-    .map((m) => m.text);
+  const deciding = concern_messages.filter((m) => m.rc === final_rc);
+  const decidingReasons = _apply_turn_injection_cap(
+    envelope,
+    session_id,
+    args.event,
+    deciding,
+  ).map((m) => m.text);
   const emission = emitFor(
     args.platform,
     args.event,

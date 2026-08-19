@@ -19,7 +19,8 @@
  *       "timestamp": "<ISO-8601 UTC>",
  *       "hook":      "<concern-id>",
  *       "issue":     "prerequisite_missing | script_not_found | "
- *                    "permission_denied | execution_failed",
+ *                    "permission_denied | execution_failed | "
+ *                    "budget_exceeded",
  *       "detail":    "<freeform one-line explanation>",
  *       "resolution": "<one-line command or doc link>"
  *     }
@@ -42,6 +43,18 @@ export const VALID_ISSUE: ReadonlySet<string> = new Set([
   "script_not_found",
   "permission_denied",
   "execution_failed",
+  // road-to-standing-context-40k 4.1. The four above are all resolver
+  // FAILURES — the class this log was built for. This fifth value is a POLICY
+  // action: the per-turn injection aggregate dropped an advisory message, or
+  // retained an emission that still exceeds the cap. It belongs here rather
+  // than in the feedback dir because a drop is exactly the "failure that would
+  // otherwise vanish into the never-block contract" this log exists for — the
+  // concern ran, returned a message, and the dispatcher chose not to forward
+  // it. Additive to the R3-locked set, deliberately: `VALID_ISSUE` is a write
+  // allowlist and no reader switches exhaustively on `issue` (`hooks_doctor`
+  // and `roadmap_progress_hook` write it, they do not classify), so widening
+  // it cannot invalidate a record already on disk.
+  "budget_exceeded",
 ]);
 
 export interface DispatchIssueEntry {
