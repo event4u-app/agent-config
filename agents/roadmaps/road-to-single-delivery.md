@@ -250,9 +250,27 @@ live and why the earlier one was replaced.
       something must say so when it does not. Decide where that check lives and
       what it does on failure — refuse to project, warn, or project the full set
       as a fallback.
-      **Blocked on `partition-requires-global-layer`.**
       `verify:` a checkout with no global rules layer produces a stated outcome
       rather than a silently reduced one.
+      **UNBLOCKED 2026-08-19 (option (c) recorded) and then HALTED AGAIN, one level
+      deeper — `process-full` halt condition 4, discovered while implementing it.**
+      Option (c) partitions only where a **current** global layer exists, and both
+      council seats attached that same word: openai's condition reads *"absent or
+      older than the installed release"*. **Measured: "older than" has no data
+      source.** There is **no `package.json` beside `~/.claude/`** — it is a host
+      directory, not an install root — so `installed_version_at` returns `unknown`
+      for the global layer, verified directly. Present-vs-absent is decidable;
+      **stale-vs-current is not**, and ADR-226 already recorded why a
+      refresh-until-they-agree definition has no fixed point in a repository that
+      is ahead of its own release by construction.
+      **What closes it:** either a version marker the global layer actually carries
+      (an installer-written stamp beside it), or a redefinition of the predicate to
+      the half that is decidable — present/absent — with the staleness half
+      explicitly dropped and its cost stated. Both are decisions, not measurements,
+      and the second is a narrowing of a verdict the council just gave.
+      **Not attempted on a guess:** building the partition on an undecidable
+      predicate is how a mechanism ships against an assumption, which is the failure
+      this roadmap's own Phase 0 exists to prevent.
 - [~] **2.1** The project projection emits only exclusively-package-only
       artefacts: `<repo>/.claude/rules/` carries the 16, `<repo>/.claude/skills/`
       carries none. The predicate goes beside `rule_in_scope`
@@ -311,6 +329,29 @@ project layer contains exactly the package-only set.
 
 **AC-3:** neither the guard nor the contract can be read as saying that
 same-version duplication is free.
+
+> **DEFECT FOUND IN THIS PHASE AFTER IT WAS MARKED DONE, by the Phase 2
+> investigation — recorded rather than quietly repaired.** 3.1 instruments the
+> `WARN` verdict with a per-type overlap count, and `install.sh` now states the
+> doubling. **Measured 2026-08-19: that branch never executes on this machine.**
+> `probe_tool` reaches `WARN` only when `other_ver == this_ver`, and
+> `installed_version_at` returns **`unknown`** for `~/.claude/…` because there is
+> no `package.json` beside it — so a live guard run reports
+> `DRIFT · claude-code · unknown · 14.5.0` for every tool, and the cost message,
+> field 6 and `count_overlap` all sit on a path that does not fire.
+>
+> **What survives:** the contract correction (3.2) is unconditional prose and
+> stands; the header docstring stating the measured cost stands; `count_overlap`
+> and its `-1` semantics are correct and tested-by-hand. **What does not:** the
+> claim that a two-scope consumer install now *sees* the cost. On a machine whose
+> global layer carries no version marker it sees `DRIFT` instead — which does block,
+> so the operator is not left uninformed, but the number this phase added is not
+> what they read.
+>
+> This is the same shape as the unreachable-`-1` case R2 found in `count_overlap`'s
+> own docstring: a path documented as the important one, which the control flow
+> never reaches. It is a **new** finding against completed work, so it gets a
+> blocker rather than a silent edit — `warn-path-unreachable-without-version-marker`.
 
 ## Phase 4 — One producer-agnostic invariant check
 
@@ -483,6 +524,36 @@ than reporting a clean invariant that does not hold.
   it is an implementation choice inside ADR-236, not a change to it.
 - **Resolved when:** DONE — the option is recorded above with the measurement that
   eliminated (a), and 2.0's verify runs against option (c)'s mode reporting.
+
+### blocker: warn-path-unreachable-without-version-marker
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 2 (a decision about what the guard should compare)
+- **Blocks:** nothing in this roadmap — Phase 3 shipped and its contract half is
+  unconditional. It is recorded here because it falsifies part of a completed
+  phase's claim, and a finding against done work has nowhere else to live.
+- **The question:** `scope_guard.sh` reaches its `WARN` verdict only when the two
+  scopes report the SAME version, and `installed_version_at` returns `unknown` for
+  `~/.claude/…` — there is no `package.json` beside the host layer. So every real
+  cross-scope install classifies as `DRIFT`, and the per-type overlap count Phase
+  3.1 added to `WARN` never prints. Verified: a live run reports
+  `DRIFT · claude-code · unknown · 14.5.0`.
+- **What to do:** pick one. **(a)** have the installer write a version stamp beside
+  each host layer it writes, so `unknown` stops being the normal answer;
+  **(b)** report the overlap count on the `DRIFT` line too, since that is the line
+  operators actually see; **(c)** treat `unknown` as "same version" for the overlap
+  half only, keeping DRIFT's block but printing the cost. Probe first with
+  `bash src/scripts/_lib/scope_guard.sh project "$PWD" "$PWD"`.
+- **Recommendation:** **(agent-drafted 2026-08-19 — from the measurement.)** (b).
+  It is the smallest change that puts the number in front of the person deciding,
+  it needs no new artefact on disk, and it does not weaken the DRIFT block the way
+  (c) would. (a) is the principled fix and a larger one — it changes what the
+  installer writes, which is a consumer-facing surface.
+- **If you do nothing:** the cost instrumentation stays live and unreachable, which
+  is strictly worse than absent — it reads as coverage in the diff and in this
+  roadmap, and only a live run refutes it.
+- **Resolved when:** the option is recorded and a live guard run prints the count on
+  the line it actually emits.
 
 ### blocker: compact-survival-of-package-only-rules
 - **Status:** open
