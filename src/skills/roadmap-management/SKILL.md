@@ -293,8 +293,8 @@ After the last step of a roadmap is done, check completion status:
    |---|---|---|---|---|
    | ≥ 1 | 0 | 0 | 0 | **Auto-archive** (silent) — pure completion |
    | ≥ 1 | 0 | 0 | ≥ 1 | **Auto-archive** (silent) — done with explicit drops |
-   | ≥ 1 | 0 | ≥ 1 | ≥ 0 | **STOP — Iron Law 3 flow.** Surface deferred items, present follow-up options, wait. See step 4b. |
-   | 0 | 0 | ≥ 1 | ≥ 0 | **STOP — Iron Law 3 flow.** Was this a scope-drop or deferred-to-later? Same options as 4b. |
+   | ≥ 1 | 0 | ≥ 1 | ≥ 0 | **STOP — Iron Law 3 flow.** Surface deferred items, present the options, resolve by the preservation test (council where the item survives, user where it does not). See step 4b. |
+   | 0 | 0 | ≥ 1 | ≥ 0 | **STOP — Iron Law 3 flow.** Was this a scope-drop or deferred-to-later? Same options and same routing as 4b. |
    | 0 | 0 | 0 | ≥ 1 | **Auto-skip** (silent) — no work, all cancelled |
    | ≥ 0 | ≥ 1 | ≥ 0 | ≥ 0 | **Ask the user** — open work remains (step 4a) |
 
@@ -343,8 +343,13 @@ After the last step of a roadmap is done, check completion status:
    the active tree.
 
 4b. **Deferred items present (`count_deferred ≥ 1`, `count_open == 0`)** — Iron Law 3 flow.
-   The archive is **blocked** until the user resolves the deferrals. Surface
-   the plan and ask:
+   Archive **blocked** until resolved. WHO resolves is the preservation test in
+   [`roadmap-progress-sync § Who resolves it`](../../rules/roadmap-progress-sync.md),
+   never the mode — same menu either way, only the resolver differs:
+
+   - **1, 2, 4** keep the item alive → **council**, recorded at the item (2 only
+     if the follow-up lands in the SAME change).
+   - **3, 5** drop or weaken it → **user**, always. In doubt: user.
 
    ```
    📋 Roadmap closure check — deferred items must resolve before archive:

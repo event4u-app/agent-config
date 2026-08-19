@@ -40,6 +40,9 @@ import {
 import {
     ROADMAP_CLAIM_REL,
     build_record,
+    CLAIM_DIRNAME,
+    claim_dir,
+    claim_file,
     claim_is_stale,
     foreign_sessions_block,
     read_claimed_slug,
@@ -891,5 +894,92 @@ describe('a shared branch NAME is only a collision inside one worktree', () => {
         // no branch hit there is nothing to report, and the paragraph itself was
         // the thing the model kept narrating.
         expect(foreign_sessions_block(wt, 'mine')).toBeNull();
+    });
+});
+
+describe('the claim is repo-global — writer and reader cannot land in different trees', () => {
+    // THE test for the 2026-08-19 defect, and the one every pre-existing test in
+    // this file passes either way: they write and read from the SAME root, which
+    // is the one arrangement in which the two-trees bug is invisible. The bug was
+    // that `sessions:claim` joined the claim path against `process.cwd()` (the
+    // operator's worktree) while the stop-slot concern joined it against
+    // `--project-dir` (the parent checkout). The concern then found no contract,
+    // took its `contract absent -> no-op` rung, and wrote NO event — so an empty
+    // ledger looked exactly like a healthy idle run, and `run-continuation` was
+    // inert in every worktree session for a release without one test noticing.
+
+    it('a claim written from a WORKTREE is read from the MAIN checkout', () => {
+        const { main, wt } = make_repo();
+        fs.mkdirSync(path.dirname(claim_file(wt, 'sess-x')), { recursive: true });
+        fs.writeFileSync(
+            claim_file(wt, 'sess-x'),
+            JSON.stringify({ slug: 'road-to-x', session_id: 'sess-x' }),
+            'utf-8',
+        );
+        // The reader starts from the OTHER tree. Before the fix this was null.
+        expect(read_claimed_slug(main, 'sess-x')).toBe('road-to-x');
+    });
+
+    it('and the reverse — written from main, read from the worktree', () => {
+        const { main, wt } = make_repo();
+        fs.mkdirSync(path.dirname(claim_file(main, 'sess-y')), { recursive: true });
+        fs.writeFileSync(
+            claim_file(main, 'sess-y'),
+            JSON.stringify({ slug: 'road-to-y', session_id: 'sess-y' }),
+            'utf-8',
+        );
+        expect(read_claimed_slug(wt, 'sess-y')).toBe('road-to-y');
+    });
+
+    it('both trees resolve to ONE directory, beside the session register', () => {
+        const { main, wt } = make_repo();
+        expect(claim_dir(main)).toBe(claim_dir(wt));
+        expect(claim_dir(main)).toContain(CLAIM_DIRNAME);
+        // The claim is the register's other half and is repo-global by intent,
+        // so it lives where the register lives — not in a worktree's state dir.
+        expect(path.dirname(claim_dir(main) as string)).toBe(
+            path.dirname(register_dir(main) as string),
+        );
+    });
+
+    it('a pre-fix per-tree claim is still read — existing claims are not lost', () => {
+        const { main } = make_repo();
+        const legacy = path.join(main, roadmap_claim_rel('sess-old'));
+        fs.mkdirSync(path.dirname(legacy), { recursive: true });
+        fs.writeFileSync(
+            legacy,
+            JSON.stringify({ slug: 'road-to-old', session_id: 'sess-old' }),
+            'utf-8',
+        );
+        expect(read_claimed_slug(main, 'sess-old')).toBe('road-to-old');
+    });
+
+    it('the shared claim WINS over a stale per-tree one for the same session', () => {
+        // Migration order, and the direction matters: a session that re-claimed
+        // after the fix must not be dragged back to what it claimed before it.
+        const { main } = make_repo();
+        const legacy = path.join(main, roadmap_claim_rel('sess-both'));
+        fs.mkdirSync(path.dirname(legacy), { recursive: true });
+        fs.writeFileSync(
+            legacy,
+            JSON.stringify({ slug: 'road-to-stale', session_id: 'sess-both' }),
+            'utf-8',
+        );
+        fs.mkdirSync(path.dirname(claim_file(main, 'sess-both')), { recursive: true });
+        fs.writeFileSync(
+            claim_file(main, 'sess-both'),
+            JSON.stringify({ slug: 'road-to-fresh', session_id: 'sess-both' }),
+            'utf-8',
+        );
+        expect(read_claimed_slug(main, 'sess-both')).toBe('road-to-fresh');
+    });
+
+    it('outside a repository it degrades to the per-tree path rather than failing', () => {
+        // Pre-fix behaviour, kept as the fallback: no git, no common dir, so the
+        // claim has nowhere shared to live. Losing the claim would be worse.
+        const bare = path.join(tmp, 'not-a-repo');
+        fs.mkdirSync(bare, { recursive: true });
+        expect(claim_dir(bare)).toBeNull();
+        expect(claim_file(bare, 'sess-z')).toBe(path.join(bare, roadmap_claim_rel('sess-z')));
     });
 });

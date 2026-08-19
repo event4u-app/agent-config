@@ -425,17 +425,45 @@ describe('extractVerify — both forms the tree actually writes', () => {
         expect(scanOpenSteps('## Phase 1\n- [ ] **1.0** bare\n').next?.verify).toBeNull();
     });
 
-    it('reads the real roadmap this branch ships', () => {
-        // The end-to-end statement: the form in the tree, not a fixture of it.
-        const md = fs.readFileSync(
-            path.join(REPO_ROOT, 'agents', 'roadmaps', 'road-to-long-horizon-execution.md'),
-            'utf8',
-        );
-        // Every open step in it is closed, so this asserts the MATCHER over the
-        // real text rather than the scan result.
-        expect(extractVerify('      `verify:` `npx vitest run tests/x.test.ts` — 21 green.')).toBe(
-            'npx vitest run tests/x.test.ts',
-        );
-        expect(md).toContain('`verify:`');
+    it('parses a verify line taken from the real roadmap tree, not a fixture of one', () => {
+        // The end-to-end statement: the form the tree actually writes.
+        //
+        // It used to hardcode `road-to-long-horizon-execution.md` and read it for
+        // the mere PRESENCE of a `verify:` string, which made an ordinary
+        // archival break the test — and that is exactly what happened when that
+        // roadmap was archived. Two defects in one: a path that any completed
+        // roadmap invalidates, and an assertion that never ran the matcher over
+        // the text it had just gone to the trouble of loading.
+        //
+        // Now it scans the active tree for a real line and parses THAT. Immune
+        // to archival, and strictly stronger: a malformed line in a shipped
+        // roadmap fails here instead of passing a substring check.
+        const dir = path.join(REPO_ROOT, 'agents', 'roadmaps');
+        const lines: string[] = [];
+        for (const f of fs.readdirSync(dir)) {
+            if (!f.endsWith('.md')) continue;
+            for (const line of fs.readFileSync(path.join(dir, f), 'utf8').split('\n')) {
+                // The COMMAND-BEARING declaration form, which is what
+                // `extractVerify` exists to parse. Two exclusions, both
+                // deliberate:
+                //
+                // - prose that merely mentions the token (a roadmap explaining
+                //   why a step's `verify:` probe holds a full path is not
+                //   itself a verify line);
+                // - a declaration carrying prose instead of a backticked
+                //   command. Those exist — 37 of them across 4 roadmaps at the
+                //   time of writing, none touched by this change. They are a
+                //   roadmap-lint concern, and pulling them in here would fail
+                //   CI on a latent backlog this test did not create, which is
+                //   the widen-a-gate-and-red-everything failure this repo has
+                //   refused before.
+                const t = line.trimStart();
+                if (t.startsWith('`verify:`') && /^`verify:`\s*`/.test(t)) lines.push(line);
+            }
+        }
+        expect(lines.length, 'no roadmap in the active tree carries a `verify:` line').toBeGreaterThan(0);
+        for (const line of lines) {
+            expect(extractVerify(line), line.trim()).not.toBeNull();
+        }
     });
 });

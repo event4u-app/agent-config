@@ -432,7 +432,22 @@ describe('buildCheckpoint — head is resolved, not left null', () => {
         // cannot make: run the real function over the real repository this
         // test executes in. It is a linked worktree during development and a
         // plain clone in CI, so this passes only if BOTH paths work.
-        const cp = buildCheckpoint(REPO_ROOT, 'r1', 'road-to-long-horizon-execution');
+        //
+        // The slug is READ FROM THE TREE, never hardcoded. It used to name
+        // `road-to-long-horizon-execution`, and archiving that roadmap turned
+        // this into a red CI check — `buildCheckpoint` returns null for a
+        // roadmap it cannot find, so the assertion failed on a missing file
+        // while claiming to be about HEAD resolution. Any completed roadmap
+        // invalidates a hardcoded slug, and completing roadmaps is the normal
+        // case. Same defect the sibling in run_continuation.test.ts carried.
+        const roadmapDir = path.join(REPO_ROOT, 'agents', 'roadmaps');
+        const slug = fs
+            .readdirSync(roadmapDir)
+            .filter((f) => f.endsWith('.md') && f !== 'template.md')
+            .sort()[0]
+            ?.replace(/\.md$/, '');
+        expect(slug, 'no roadmap in the active tree to checkpoint against').toBeDefined();
+        const cp = buildCheckpoint(REPO_ROOT, 'r1', slug as string);
         expect(cp).not.toBeNull();
         expect(cp?.head).toMatch(/^[0-9a-f]{40}$/);
     });

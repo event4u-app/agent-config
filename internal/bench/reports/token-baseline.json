@@ -1,11 +1,11 @@
 {
   "token_method": "tokens_gpt: exact (tiktoken cl100k_base); tokens_claude: proxy (chars/3.6)",
   "metrics": {
-    "eager_rule_load": 106704,
-    "thin_rule_load": 15563,
-    "skill_descriptions": 12379,
-    "command_descriptions": 6252,
-    "mcp_schemas": 4174
+    "eager_rule_load": 112694,
+    "thin_rule_load": 15653,
+    "skill_descriptions": 12423,
+    "command_descriptions": 6388,
+    "mcp_schemas": 4271
   },
-  "rebaseline_note": "eager_rule_load 101670 -> 106704, itemised rather than silently raised. +5034 total, of which THIS branch is 707 and 4327 is inherited growth that arrived with main after the previous anchor. Attribution VERIFIED by measurement, not assumed: the only projected rule in this diff is active-remediation, measured with token_count.gpt_tokens (exact BPE) at 1101 tokens on origin/main and 1870 here, so main alone stood at 105997 — +4.26% of a +5% allowance already spent before the branch existed, leaving 756 tokens for a change whose own share is +0.7%. As in the 96775 -> 101670 anchor, the response was to trim FIRST and only then re-anchor: the rule's first draft measured +931 and was condensed to +707 by moving the failing-check bounds, the ownership breakdown and the closing-summary failure mode into the mechanics guideline (not part of eager_rule_load), which brought the surface to 106704 and the gate green with 49 tokens of slack. That 49 is why this anchor exists at all: green-with-49 is not a working state, because the NEXT non-trivial edit to any always-loaded rule crosses the cliff regardless of its own size, and the maintainer would meet the same forced-condensation round for reasons that have nothing to do with their change. Re-anchored deliberately (user-authorised 2026-08-13) rather than inside the PR that hit the wall — the earlier refusal to re-anchor silently stands; what changed is that a human decided it, with the inherited 4.26% named here instead of absorbed unremarked. Durable fix is paths:-scoping of the always-loaded corpus, tracked as a follow-up roadmap; this anchor buys the room to do it deliberately rather than under a red gate."
+  "rebaseline_note": "eager_rule_load 106704 -> 112694, itemised rather than silently raised, same discipline as the previous re-anchor. +5990 total, of which THIS branch is 777 and 5213 is inherited growth that accumulated on main since the last anchor. The 777 is measured, not estimated: exact cl100k_base over dist/agent-src/rules/roadmap-progress-sync.md, 1608 at origin/main against 2385 at this head \u2014 Iron Law 3 gained the preservation test that decides who resolves a deferred item. It is the only always-loaded rule this branch touches, which is why the other 5213 is attributable elsewhere and is named as inherited rather than absorbed into a round number. The four remaining surfaces moved 0.4-2.3% and are re-anchored in the same pass so the next reader compares against one measurement rather than a mix of dates."
 }

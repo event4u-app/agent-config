@@ -233,7 +233,8 @@ When the closure check fires (`count_open == 0` and `count_deferred > 0`), the a
    3. **Keep in this archive** — confirm the deferred items stay searchable in the archived file; no follow-up roadmap. Choosing this records an explicit decision-to-drop in the same reply.
    4. **Restore selected items to `[ ]`** — finish them in this roadmap before archive.
    5. **Convert selected items to `[-]` cancelled** — drop them with rationale recorded inline.
-3. Only after the user resolves the deferrals does the `git mv` to `archive/` run. The dashboard regen happens after the resolution, not before.
+3. Route by the **preservation test** — full table, recording contract and residual limit in [`roadmap-progress-sync § Who resolves it`](../../../src/rules/roadmap-progress-sync.md). In one line: options 1, 2, 4 keep the item alive → council; 3 and 5 drop or weaken it → user, always; in doubt, user.
+4. Only after the deferrals are resolved does the `git mv` to `archive/` run. The dashboard regen happens after the resolution, not before.
 
 The migration mechanics (file naming, frontmatter pattern, body shape, parent-back-link) live in `roadmap-management § Spawn follow-up from deferred items`. The rule owns the obligation; the skill owns the procedure.
 
