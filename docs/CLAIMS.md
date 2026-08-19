@@ -637,3 +637,46 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: PRE-REGISTERED 2026-08-17 (road-to-context-fidelity Phase 0 Step 4). THE THRESHOLD PREDATES THE DATA, THE LEDGER ENTRY DOES NOT, and the distinction is stated rather than blurred: the roadmap fixed **a stale ratio below 10 % shrinks Phase 2 to stamps only** on the day it was written, BEFORE any census ran; this entry was written after cf02 produced a first reading, so it records a resolution-in-progress rather than claiming the ledger row itself came first. FIRST READING, from `agents/evidence/eval-findings/context-fidelity-cf02.md`: 107 curated entries walked one by one against the tree — 73 still-true, 23 stale, 11 unverifiable, i.e. **21.5 % of all entries and 24.0 % of the verifiable subset**. Both denominators clear 10 %, so the kill criterion does not fire on either reading and the ladder stays justified. THE LOAD-BEARING FINDING is that the shipped instrument disagrees: `memory_report` reports `staleness-rate=0.0%` because all 107 entries carry the SAME `last_validated: 2026-07-09` and the SAME `review_after_days: 365` — one bulk stamping event, so the age axis cannot read stale before 2027-07-09. Reading the kill criterion off that 0.0 % would have closed Phase 2 on a number that measures stamping rather than truth, which is the already-satisfied-test failure this repository has recorded before. WHY THIS STAYS UNBACKED despite having a number: the tree axis was walked BY HAND because no store-wide contradiction sweep exists (`check_memory_contradiction` takes `--type --key --body`, i.e. it validates one proposed entry), three observers each classified one store, and inter-rater agreement is therefore UNMEASURED. A hand classification is not a reproducible instrument, and a ratio that cannot be re-derived by a command is not backing. BACKING TRIGGER: a store-wide sweep exists AND reproduces a ratio within its own stated error of 21.5 %. FALSIFICATION fixed before data: (1) unverifiable entries are counted as their own class and folded into neither side — folding them into still-true inflates the pass rate, folding them into stale manufactures defects; (2) the commit anchor is the precondition for any automated reading, because without it a date cannot be tied to a tree state; (3) below 10 % on a reproducible sweep the recorded consequence is the roadmap's own: the ladder is unbuilt, only stamps ship, and the null is published.
 - status: unbacked
 - last_verified:
+
+### claim: council-fallback-loses-zero-seats
+- claim: An eligible mid-flight cli failure with a constructible api twin loses zero council seats WHEN THE PROJECTED-SPEND GATE PERMITS THE RETRY — the seat answers over the api rung instead of dropping out of the pass. A retry the budget REFUSES is outside the claim: the original failure stands, the seat is absent, and `fallback_skipped: cost_budget` says so.
+- kind: qual
+- evidence: exec:vitest run tests/scripts/ai_council/council_cli.test.ts -> 0
+- status: backed
+- last_verified: 2026-08-19
+
+**The condition was added 2026-08-19, after a review found the unconditional
+wording refuted by its own evidence.** Recorded here rather than quietly
+applied, because this is the failure shape the ledger exists against. The cited
+suite contains `a fallback that was REFUSED by the retry budget still counts as
+absent` — an ELIGIBLE failure with a CONSTRUCTIBLE twin whose seat IS lost,
+precisely the case the unconditional sentence denied. Nothing was steered and
+no test was wrong; the pointer simply did not prove what the prose above it
+said.
+
+**The gate could not have caught it, and that limitation is not fixed by this
+entry.** `check_claims` runs the command and compares an exit code, so a green
+suite publishes a ✅ over a sentence the suite refutes. An `exec:` pointer
+proves that a suite PASSES — never that the suite tests the claim. The
+mitigation available at authoring time is the boundary statement below; a
+reviewer reading the claim and the suite together is what closed this one.
+
+**What the suite does prove**, per test: a vendor-official cli member
+(`billable: false`, `transport: cli`) that fails eligibly is answered by its api
+twin and counts PRESENT in the quorum; the substitution is sticky, so a later
+round reuses the twin rather than re-spawning the dead binary and losing the
+seat to the ledger's one-shot rule; and a dead FREE seat cannot trigger the
+round-wide budget short-circuit.
+
+**What it does not prove**, stated so the boundary is not re-blurred: nothing
+about an ineligible failure class (`timeout` and `server_error` are ineligible
+under every policy and no config key can enable them), nothing about a provider
+with no api rung (`no_twin`), and nothing about the budget-refused path, which
+is the named exception in the claim itself.
+
+### claim: unattended-demotion-gate
+- claim: An unattended run's 14-day rework rate does not exceed the attended baseline; a breach returns the scheduler default to off.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-08-19 (road-to-long-horizon-execution Phase 4.2, sequencing UOTL Phase 7.3). REGISTERED BEFORE THE CAPABILITY EXISTS, which is the point and is stated rather than implied: at registration time NO unattended run has occurred and none can, because the headless spawn is deliberately unbuilt (`unattended_guard.ts` § "Why the spawn is not in this file") and the budget defaults to both ceilings zero, which disables the lane rather than permitting it. So this entry cannot have been written around a number already in hand. THRESHOLD, fixed now: the rework rate of PRs produced by unattended runs, measured over the 14 days after each merges, must not exceed the same-window rate for attended PRs; a breach flips `max_usd`/`max_tokens` back to 0 in the same change that reports the number. REWORK is defined before any data exists, because a metric defined after the fact is chosen: a follow-up commit touching a file the run's PR touched, within 14 days of merge, excluding (a) commits by the same run continuing planned roadmap work, (b) pure dependency bumps, (c) reverts of an unrelated change that merely collide. POWER: at least 10 unattended PRs and 10 attended PRs in the comparison window, else UNDERPOWERED and no claim either way — a two-PR sample producing a favourable ratio is the failure this line exists against. FALSIFICATION: (1) an unattended PR that a human had to substantially rewrite counts as rework even when no commit touched the same file, and that case is recorded by hand rather than dropped because the mechanical definition missed it; (2) the comparison is rate-vs-rate, never absolute counts, since the two populations will not be the same size; (3) a rate that is LOWER for unattended runs is reported as-is and is NOT used to argue for widening the lane — this gate can close a lane, never open one. HONEST-NULL PATH: if the lane never runs (the spawn stays unbuilt, or the budget stays at zero), the recorded finding is that the gate was pre-registered and never had data, and the capability is closed rather than left indefinitely pending — the same D-5 shape this roadmap opens by naming.
+- status: unbacked
+- last_verified:

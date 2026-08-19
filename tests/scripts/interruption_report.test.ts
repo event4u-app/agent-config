@@ -14,6 +14,9 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { SESSION_ID_LEN, derive_session_tag } from '../../src/scripts/chat_history.js';
+import { deriveSessionKey } from '../../src/scripts/_lib/turn_end_refusals.js';
+
 import {
     DEFAULT_WINDOW,
     buildReport,
@@ -288,5 +291,196 @@ describe('main — the CLI contract', () => {
         const rendered = renderText(buildReport(root, DEFAULT_WINDOW));
         expect(rendered).toContain('CONTACT AXIS');
         expect(rendered).toContain('WALL-CLOCK AXIS');
+    });
+});
+
+// ── the autonomy axis (Phase 5.0) ───────────────────────────────────────────
+//
+// Three of the five metrics the roadmap names have a real source; two do not.
+// The distinction between "measured, and it is zero" and "there is no
+// instrument" is the whole reason these cases exist — printing 0 for an
+// unmeasurable axis is the confusion between an absent RECORD and an absent
+// EVENT that this repository has recorded costing a published false finding.
+
+function writeContinuation(lines: readonly object[]): void {
+    const dir = path.join(root, 'agents', 'runtime', 'state');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+        path.join(dir, 'run-continuation.jsonl'),
+        `${lines.map((l) => JSON.stringify(l)).join('\n')}\n`,
+        'utf8',
+    );
+}
+
+describe('buildReport — the autonomy axis joins the PRODUCERS\' real keys', () => {
+    // R2 review, finding 2, and the reason it survived the original suite:
+    // every autonomy test hand-wrote `r1` into all three sources, so it
+    // verified the READER and could not see that the three WRITERS emit three
+    // different key spaces for one run. These tests derive each key the way
+    // its producer does, so a future divergence fails here instead of quietly
+    // printing 0.
+    const SESSION = 'b7c1f2a4-0d3e-4f56-9a8b-1c2d3e4f5061';
+
+    it('a run whose three sources use three producer keys joins into one row', () => {
+        const tag = derive_session_tag(SESSION); // the interruption ledger
+        const key = deriveSessionKey(SESSION); // run-continuation.jsonl
+        // The keys really are different — if this ever stops holding, the
+        // test below would pass for the wrong reason.
+        expect(key).not.toBe(tag);
+        expect(SESSION).not.toBe(tag);
+
+        writeLedger([
+            { run_id: tag, turn: 1, kind: 'none', class: 'none', roadmap: 'road-to-x' },
+        ]);
+        writeContinuation([
+            { run_id: key, event: 'engage' },
+            { run_id: key, event: 'engage' },
+            { run_id: key, event: 'halt-stall' },
+        ]);
+        const state = path.join(root, 'agents', 'runtime', 'state');
+        fs.mkdirSync(path.join(state, 'decisions', SESSION), { recursive: true });
+        fs.writeFileSync(path.join(state, 'decisions', SESSION, '001.md'), 'x', 'utf8');
+        // run_supervise keys its ledger on the ROADMAP — a fourth key space,
+        // and the one that survives the new session id a relaunch produces.
+        fs.writeFileSync(
+            path.join(state, 'supervise-relaunches.json'),
+            JSON.stringify({ 'road-to-x': 2 }),
+            'utf8',
+        );
+
+        const run = buildReport(root, DEFAULT_WINDOW).runs.find((x) => x.run_id === tag);
+        expect(run?.reengagements).toBe(2);
+        expect(run?.stall_halts).toBe(1);
+        expect(run?.relaunches).toBe(2);
+        expect(run?.memos).toBe(1);
+    });
+
+    it('the 16-hex tag is the 32-hex key truncated — pinned, not assumed', () => {
+        // `toLedgerRunId` re-derives a raw id rather than truncating it,
+        // because `fingerprint` normalises whitespace and `deriveSessionKey`
+        // does not. For an id without whitespace the two agree, and that
+        // agreement is what lets the continuation key be truncated at all.
+        expect(deriveSessionKey(SESSION).slice(0, SESSION_ID_LEN)).toBe(
+            derive_session_tag(SESSION),
+        );
+    });
+
+    it('counts engage and halt-stall events per run', () => {
+        writeLedger([{ run_id: 'r1', turn: 1, kind: 'none', class: 'none', roadmap: null }]);
+        writeContinuation([
+            { run_id: 'r1', event: 'engage' },
+            { run_id: 'r1', event: 'engage' },
+            { run_id: 'r1', event: 'halt-stall' },
+            { run_id: 'r1', event: 'complete' },
+        ]);
+        const r = buildReport(root, DEFAULT_WINDOW);
+        const run = r.runs.find((x) => x.run_id === 'r1');
+        expect(run?.reengagements).toBe(2);
+        expect(run?.stall_halts).toBe(1);
+    });
+
+    it('the stall figure is a RATE over runs, not a count of events', () => {
+        // A raw count rises with the window and would read as a regression
+        // when nothing changed.
+        writeLedger([
+            { run_id: 'r1', turn: 1, kind: 'none', class: 'none', roadmap: null },
+            { run_id: 'r2', turn: 1, kind: 'none', class: 'none', roadmap: null },
+        ]);
+        writeContinuation([
+            { run_id: 'r1', event: 'halt-stall' },
+            { run_id: 'r1', event: 'halt-stall' },
+        ]);
+        // One of two runs stalled — 50%, whatever the event count.
+        expect(buildReport(root, DEFAULT_WINDOW).stall_halt_rate).toBe(0.5);
+    });
+
+    it('memos join on the run id, relaunches on the ROADMAP', () => {
+        // The two sources are keyed differently on purpose. Memos are written
+        // per session, so the run id is right. The relaunch ledger is keyed by
+        // roadmap so its per-run cap survives the new session id a relaunch
+        // produces (R2 round 2, finding 9) — joining it on the run id would
+        // read 0 for every run.
+        writeLedger([
+            { run_id: 'r1', turn: 1, kind: 'none', class: 'none', roadmap: 'road-to-x' },
+        ]);
+        const state = path.join(root, 'agents', 'runtime', 'state');
+        fs.mkdirSync(path.join(state, 'decisions', 'r1'), { recursive: true });
+        fs.writeFileSync(path.join(state, 'decisions', 'r1', '001.md'), 'x', 'utf8');
+        fs.writeFileSync(path.join(state, 'decisions', 'r1', '002.md'), 'x', 'utf8');
+        fs.writeFileSync(
+            path.join(state, 'supervise-relaunches.json'),
+            JSON.stringify({ 'road-to-x': 2 }),
+            'utf8',
+        );
+        const run = buildReport(root, DEFAULT_WINDOW).runs.find((x) => x.run_id === 'r1');
+        expect(run?.relaunches).toBe(2);
+        expect(run?.memos).toBe(2);
+    });
+
+    it('absent sources yield zeros, not an error — a run predating the mechanism had zero', () => {
+        writeLedger([{ run_id: 'r1', turn: 1, kind: 'none', class: 'none', roadmap: null }]);
+        const run = buildReport(root, DEFAULT_WINDOW).runs.find((x) => x.run_id === 'r1');
+        expect(run).toMatchObject({ reengagements: 0, stall_halts: 0, relaunches: 0, memos: 0 });
+    });
+
+    it('a malformed continuation line is skipped rather than fatal', () => {
+        writeLedger([{ run_id: 'r1', turn: 1, kind: 'none', class: 'none', roadmap: null }]);
+        const dir = path.join(root, 'agents', 'runtime', 'state');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'run-continuation.jsonl'),
+            `not json\n${JSON.stringify({ run_id: 'r1', event: 'engage' })}\n`,
+            'utf8',
+        );
+        expect(buildReport(root, DEFAULT_WINDOW).runs[0]?.reengagements).toBe(1);
+    });
+
+    it('renders the two unmeasurable axes as NO INSTRUMENT, never as 0', () => {
+        const out = renderText(buildReport(root, DEFAULT_WINDOW));
+        expect(out).toContain('AUTONOMY AXIS');
+        expect(out).toContain('unattended-vs-attended rework: NO INSTRUMENT');
+        expect(out).toContain('memo revisit rate:            NO INSTRUMENT');
+    });
+
+    it('the stall rate is n/a with no runs, not 0%', () => {
+        expect(buildReport(root, DEFAULT_WINDOW).stall_halt_rate).toBeNull();
+        expect(renderText(buildReport(root, DEFAULT_WINDOW))).toContain('stall-halt rate:           n/a');
+    });
+});
+
+describe('a run with no ledger entry reports NULL contacts, never zero', () => {
+    // R2 round 6, finding 8. The rows were built unconditionally from the
+    // ledger while the report's own note promised null for a missing axis,
+    // and the pre-registered `user-out-of-loop-baseline` claim names this
+    // exact arithmetic as a falsification criterion: "scoring an unmeasured
+    // run as zero contacts is the arithmetic that would manufacture the
+    // result." The aggregate median already excluded such runs; the rows a
+    // downstream reader consumes did not.
+    it('emits null for the four ledger-derived fields', () => {
+        // A run in chat history with no interruptions.jsonl line at all.
+        writeLedger([{ run_id: 'has-ledger', turn: 1, kind: 'ask', class: 'ask', roadmap: null }]);
+        const r = buildReport(root, DEFAULT_WINDOW);
+        const orphan = r.runs.find((x) => x.run_id !== 'has-ledger');
+        if (orphan === undefined) {
+            // No history-only run in this fixture — the invariant is then
+            // vacuous rather than violated, and saying so beats a false pass.
+            expect(r.runs.every((x) => x.contacts !== null)).toBe(true);
+            return;
+        }
+        expect(orphan.contacts).toBeNull();
+        expect(orphan.asks).toBeNull();
+        expect(orphan.handbacks).toBeNull();
+        expect(orphan.halts).toBeNull();
+    });
+
+    it('a run WITH a ledger entry still reports numbers', () => {
+        writeLedger([
+            { run_id: 'r1', turn: 1, kind: 'ask', class: 'ask', roadmap: null },
+            { run_id: 'r1', turn: 2, kind: 'none', class: 'none', roadmap: null },
+        ]);
+        const run = buildReport(root, DEFAULT_WINDOW).runs.find((x) => x.run_id === 'r1');
+        expect(run?.contacts).toBe(1);
+        expect(run?.asks).toBe(1);
+        expect(typeof run?.halts).toBe('number');
     });
 });

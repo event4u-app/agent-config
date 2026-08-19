@@ -381,17 +381,34 @@ const FALLBACK_ELIGIBLE: ReadonlySet<CliFailureClass> = new Set([
     // of its shapes: the pre-spend gate refuses before any subprocess exists,
     // and the call-time shape is a provider 400 — rejected at the request
     // boundary, no generation performed.
-    //
-    // HONEST SCOPE: this set is not consumed by any shipped path today.
-    // `isFallbackEligible` and `MidFlightFallback` have zero call sites outside
-    // this module and its tests, so membership here is a stated property of the
-    // class, NOT a behaviour a caller performs. Said plainly because the
-    // opposite reading is the attractive one — the constraint really is the
-    // subscription transport's rather than the model's, so the api rung really
-    // would serve the same id, and it would be easy to write that as if it
-    // happened. It does not happen yet.
     'model_unservable',
 ]);
+
+/**
+ * Caller-supplied policy that widens the base eligibility set.
+ *
+ * `apiOnQuota` covers BOTH quota shapes, and both satisfy the same
+ * no-double-charge property the base set is built on:
+ *
+ * - the LOCAL `cli_call_budget` refusal happens before any subprocess exists
+ *   ("nothing sent, nothing booked" — `clients.ts` returns the response
+ *   without spawning);
+ * - the provider-side plan-quota rejection is refused at the request
+ *   boundary, no generation performed.
+ *
+ * They stay behind an opt-in for a different reason than double-spend: the
+ * fallback flips the billing class. A vendor CLI under a subscription login
+ * is unmetered; its api twin is metered USD. Silently converting exhausted
+ * plan quota into API spend is a decision the operator must state, not one
+ * `auto` may infer — the USD spend itself remains guarded by the ordinary
+ * `cost_budget` gates the orchestrator runs on the retry.
+ */
+export interface FallbackPolicy {
+    readonly apiOnQuota: boolean;
+}
+
+/** The base policy: exactly the three-plus-one no-double-charge classes. */
+export const DEFAULT_FALLBACK_POLICY: FallbackPolicy = { apiOnQuota: false };
 
 /** Normalise a raw client error / skip reason into a `CliFailureClass`. */
 export function classifyCliFailure(raw: string): CliFailureClass {
@@ -409,7 +426,19 @@ export function classifyCliFailure(raw: string): CliFailureClass {
     // Also matched on the provider's own wording, so a model refused at call
     // time (one the deny-list has never seen) classifies the same as one the
     // pre-spend gate caught.
-    if (s.startsWith('model_unservable') || s.includes('is not supported when using codex')) {
+    if (
+        s.startsWith('model_unservable') ||
+        // The token the PRODUCERS actually write. R2 round 6, finding 4:
+        // `clients.ts` emits `model_unsupported_on_transport` at both sites
+        // (the pre-spend gate at :1857 and the turn-failed path at :2002) and
+        // puts the vendor sentence in `metadata.detail`, never in `error` — so
+        // the class matched nothing a caller could produce and the contract's
+        // fourth eligible class was dead. The token is matched here rather
+        // than renamed at the producers because `code:` values reach the
+        // events log and a rename would break every reader of the history.
+        s.startsWith('model_unsupported_on_transport') ||
+        s.includes('is not supported when using codex')
+    ) {
         return 'model_unservable';
     }
     if (s === 'timeout') return 'timeout';
@@ -420,7 +449,22 @@ export function classifyCliFailure(raw: string): CliFailureClass {
 
 /** True when `failure` is eligible to fall through to the `api` rung. */
 export function isFallbackEligible(failure: CliFailureClass): boolean {
-    return FALLBACK_ELIGIBLE.has(failure);
+    return isFallbackEligibleUnder(failure, DEFAULT_FALLBACK_POLICY);
+}
+
+/**
+ * Policy-aware variant: the base set, plus `quota_exhausted` when the
+ * caller's policy opted in (`ai_council.fallback.api_on_quota`).
+ * `timeout` / `server_error` are ineligible under EVERY policy — a
+ * half-completed call must never be paid for twice, and no opt-in key
+ * exists (or may be added) to override that.
+ */
+export function isFallbackEligibleUnder(
+    failure: CliFailureClass,
+    policy: FallbackPolicy,
+): boolean {
+    if (FALLBACK_ELIGIBLE.has(failure)) return true;
+    return policy.apiOnQuota && failure === 'quota_exhausted';
 }
 
 /**
@@ -467,11 +511,35 @@ export class MidFlightFallback {
     private readonly used = new Set<string>();
 
     /** `'api'` to retry on the api rung, `'stop'` to surface the failure. */
-    attempt(provider: string, failure: CliFailureClass): 'api' | 'stop' {
-        if (!isFallbackEligible(failure)) return 'stop';
+    attempt(
+        provider: string,
+        failure: CliFailureClass,
+        policy: FallbackPolicy = DEFAULT_FALLBACK_POLICY,
+    ): 'api' | 'stop' {
+        if (!isFallbackEligibleUnder(failure, policy)) return 'stop';
         if (this.used.has(provider)) return 'stop';
         this.used.add(provider);
         return 'api';
+    }
+
+    /**
+     * Give a provider its one fallback back, because the twin never ran.
+     *
+     * R2 round 2, finding 8. `attempt` claims the slot at DECISION time, which
+     * is correct — the claim is what stops a dead binary being retried once per
+     * round. But a claim that is never CONSUMED must not stay spent: when the
+     * projected-spend gate refuses the escalation, no api call happens, and
+     * leaving the provider marked means the seat can never re-decide. Every
+     * later round then re-spawns the dead cli binary and gets `'stop'`, which
+     * is the exact per-round-ledger behaviour the invocation-scoped ledger was
+     * chosen to avoid.
+     *
+     * Called ONLY on a path where the twin was built and then not called.
+     * A provider that actually retried keeps its claim spent — that is the cap
+     * working.
+     */
+    release(provider: string): void {
+        this.used.delete(provider);
     }
 
     /** Providers that have already spent their one fallback. */
