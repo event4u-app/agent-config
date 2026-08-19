@@ -939,6 +939,95 @@ describe('run-continuation — driven through the live dispatcher', () => {
         expect(fs.existsSync(keyed)).toBe(true);
     });
 
+    it('reports blocked — not complete — when the only open step is blocked, ONCE', () => {
+        // Round 8 finding 3. `scanOpenSteps` excludes a `blocked-by:` step from the
+        // open count, so this roadmap reads `open: 0, blocked: 1` — and the ladder
+        // returned `complete` for it, reporting a completion the run never reached
+        // and clearing the budget with it. ADR-235 defines exactly this state as
+        // its own terminal outcome.
+        const root = writeWorkspace();
+        fs.writeFileSync(
+            path.join(root, 'agents', 'roadmaps', `${SLUG}.md`),
+            [
+                '---',
+                'complexity: structural',
+                'execution:',
+                '  mode: autonomous',
+                '---',
+                '',
+                '# Fixture',
+                '',
+                '## Phase 0 — nothing runnable left',
+                '',
+                '- [x] **0.0** done',
+                '- [ ] **0.1** gated <!-- blocked-by: some-human-gate -->',
+                '',
+            ].join('\n'),
+            'utf-8',
+        );
+
+        dispatchStop(root, writeTranscript(3));
+        dispatchStop(root, writeTranscript(4));
+
+        const blocked = events(root).filter((e) => e['event'] === 'blocked');
+        expect(blocked.length).toBe(1);
+        expect(events(root).filter((e) => e['event'] === 'complete').length).toBe(0);
+        expect(blocked[0]?.['blocked']).toBe(1);
+        expect(blocked[0]?.['open']).toBe(0);
+        // The header declares the provenance mandatory for EVERY event.
+        expect(typeof blocked[0]?.['workspace_root']).toBe('string');
+        expect(typeof blocked[0]?.['session_root']).toBe('string');
+        expect(typeof blocked[0]?.['roadmap_path']).toBe('string');
+        // Terminal, but not a halt: the stamp lives in its own field so
+        // `parseRecord` never has to accept `blocked` as a `halted` value.
+        const keyed = path.join(root, stateRelPath(deriveSessionKey(SESSION), SLUG));
+        const state = JSON.parse(fs.readFileSync(keyed, 'utf-8')) as Record<string, unknown>;
+        expect(state['blocked_reported']).toBe(true);
+        expect(state['halted']).toBeUndefined();
+    });
+
+    it('clears the LEGACY state file too, so a migrated run cannot resume a spent budget', () => {
+        // Round 8 finding 4: `readRunState` adopts the legacy per-session file, and
+        // both clear sites removed only the keyed one — so on a migrated run every
+        // clear was a no-op and the next read adopted the same spent budget again.
+        const root = writeWorkspace();
+        fs.writeFileSync(
+            path.join(root, 'agents', 'roadmaps', `${SLUG}.md`),
+            [
+                '---',
+                'complexity: structural',
+                'execution:',
+                '  mode: autonomous',
+                '---',
+                '',
+                '# Fixture',
+                '',
+                '## Phase 0 — finished',
+                '',
+                '- [x] **0.0** done',
+                '',
+            ].join('\n'),
+            'utf-8',
+        );
+        const legacy = path.join(root, legacyStateRelPath(deriveSessionKey(SESSION)));
+        fs.mkdirSync(path.dirname(legacy), { recursive: true });
+        fs.writeFileSync(
+            legacy,
+            JSON.stringify({
+                started_at: new Date().toISOString(),
+                iterations: 4,
+                last_turn: 1,
+                history: [1],
+            }),
+            'utf-8',
+        );
+
+        dispatchStop(root, writeTranscript(3));
+
+        expect(events(root).filter((e) => e['event'] === 'complete').length).toBe(1);
+        expect(fs.existsSync(legacy)).toBe(false);
+    });
+
     it('writes ONE halt line, not one per subsequent stop fire', () => {
         // Round 6 finding 6: once `halted` is stamped the state file is immortal for
         // the session, so every later stop fire re-entered the non-engage branch and

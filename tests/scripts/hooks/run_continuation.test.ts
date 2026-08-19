@@ -142,6 +142,25 @@ describe('ladder — both directions pinned', () => {
         expect(ladder(base({ iterations: MAX_ITERATIONS + 5 }), 0, Date.now())).toBe('complete');
     });
 
+    // Round 8 finding 3. The two rows differ in ONE input — the blocked count —
+    // so a regression that re-collapses them cannot pass by accident.
+    it('zero open with blocked steps remaining → blocked, never complete', () => {
+        expect(ladder(base(), 0, Date.now(), 1)).toBe('blocked');
+        expect(ladder(base(), 0, Date.now(), 0)).toBe('complete');
+    });
+
+    it('blocked is terminal but is NOT a halt — it stays out of HALT_ACTIONS', () => {
+        expect(HALT_ACTIONS).not.toContain('blocked');
+    });
+
+    it('a stamped halt still outranks blocked', () => {
+        expect(ladder(base({ halted: 'halt-stall' }), 0, Date.now(), 2)).toBe('halt-stall');
+    });
+
+    it('blocked does not pre-empt a run with runnable work left', () => {
+        expect(ladder(base(), 3, Date.now(), 4)).toBe('engage');
+    });
+
     it('iteration cap halts', () => {
         expect(ladder(base({ iterations: MAX_ITERATIONS }), 3, Date.now())).toBe(
             'halt-max-iterations',
