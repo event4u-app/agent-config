@@ -66,6 +66,16 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+import { log_dispatch_issue } from "./dispatch_issues.js";
+import { VERIFIED_PLATFORMS } from "./host_semantics.js";
+
+/**
+ * The event that STARTS a turn, and therefore the one that resets the per-turn
+ * counter. A platform that does not bind it has no observable turn boundary,
+ * which is a precondition of the volume policy.
+ */
+export const TURN_START_EVENT = "user_prompt_submit";
+
 /** Internal severity ladder, mirroring dispatch_hook's EXIT_* constants. */
 export const RC_ALLOW = 0;
 export const RC_BLOCK = 1;
@@ -362,4 +372,224 @@ export function recordTurnSpend(
     } catch {
         /* observability-adjacent bookkeeping never breaks the agent loop */
     }
+}
+
+// ─── The dispatcher-facing entry point ───────────────────────────────────────
+//
+// Everything below used to live inline in `dispatch_hook.ts`. It moved here
+// because it belongs here — resolving the ceiling, recording drops and writing
+// the overflow line are emission-shaping concerns, not dispatch concerns — and
+// because `check_source_size_budget` refused the inline version: dispatch_hook
+// sat exactly on the 1,500-line ratchet ceiling, so 180 inline lines were 180
+// new violations, and the gate says raising the baseline is a defect rather than
+// a fix. A gate that forces the logic into the module that owns it is a gate
+// doing its job.
+//
+// The context is passed IN rather than derived here, deliberately: the two facts
+// only the dispatcher can cheaply answer (does this platform bind the turn-start
+// event, did a real session id arrive) would otherwise need the manifest loader,
+// and importing that from here would close an import cycle.
+
+/**
+ * One collected concern message, as the dispatcher already holds it.
+ *
+ * `def` is the manifest concern definition passed through verbatim rather than
+ * unpacked at the call site: severity, `fail_closed` and `nudge_rank` are this
+ * module's vocabulary, so reading them here keeps the dispatcher from carrying a
+ * field list it has no other use for.
+ */
+export interface ConcernMessage {
+    readonly rc: number;
+    readonly text: string;
+    readonly def: Record<string, unknown>;
+}
+
+/**
+ * Everything `shapeAndRecord` needs that it cannot determine on its own.
+ *
+ * Deliberately five fields: the workspace root, the session key, whether a real
+ * session id arrived, and whether the platform emits at all are all DERIVED here
+ * from `envelope` and `platform` rather than passed. A caller that has to assemble
+ * seven correlated booleans is a caller that will eventually assemble one wrongly.
+ */
+export interface ShapingContext {
+    /** Package root — where the shipped budget row lives. */
+    readonly packageRoot: string;
+    /** The dispatch envelope; `workspace_root` and `session_id` are read from it. */
+    readonly envelope: Record<string, unknown>;
+    readonly platform: string;
+    /** agent-config event name for this dispatch. */
+    readonly event: string;
+}
+
+/**
+ * Does this platform bind the turn-start event?
+ *
+ * Without it the counter never resets, grows monotonically, and suppresses every
+ * droppable advisory for the rest of the session — so it is a precondition of the
+ * volume policy, not a detail.
+ *
+ * Read straight off the compiled manifest rather than through
+ * `dispatch_hook._resolve_concerns`, which would close an import cycle. The
+ * question here is narrower than that resolver's — "is this slot bound at all",
+ * with no role filtering — so a plain lookup is the honest tool and not a
+ * shortcut. Unreadable manifest → `false`, which switches the volume policy off:
+ * the fail-open direction for a policy whose job is to delete output.
+ */
+function _turnStartBound(packageRoot: string, platform: string): boolean {
+    for (const rel of [
+        ["src", "scripts", "hook_manifest.json"],
+        ["src", "scripts", "hook_manifest.yaml"],
+    ]) {
+        try {
+            const raw = fs.readFileSync(path.join(packageRoot, ...rel), "utf-8");
+            if (rel[2] === "hook_manifest.json") {
+                const parsed = JSON.parse(raw) as { manifest?: Record<string, unknown> };
+                const platforms = parsed.manifest?.["platforms"] as
+                    | Record<string, Record<string, unknown>>
+                    | undefined;
+                const bound = platforms?.[platform]?.[TURN_START_EVENT];
+                return Array.isArray(bound) && bound.length > 0;
+            }
+            // YAML fallback: the binding is one `    user_prompt_submit: [...]`
+            // line under the platform key. A structural read needs the YAML
+            // parser, which this module deliberately does not pull in; absence of
+            // the compiled sibling is a build defect surfaced elsewhere, so the
+            // conservative answer is enough.
+            return false;
+        } catch {
+            continue;
+        }
+    }
+    return false;
+}
+
+/** Consumer workspace — where the turn counter and the drop log are written. */
+function _workspaceRoot(ctx: ShapingContext): string {
+    const v = ctx.envelope["workspace_root"];
+    return typeof v === "string" && v ? v : process.cwd();
+}
+
+/**
+ * The session key, or `null` when no real `session_id` arrived. The dispatcher's
+ * fallback is unique per invocation by design, so a synthetic id makes the counter
+ * unreadable and would silently turn a per-TURN ceiling into a per-dispatch one.
+ */
+function _sessionKey(ctx: ShapingContext): string | null {
+    const v = ctx.envelope["session_id"];
+    return typeof v === "string" && v ? v : null;
+}
+
+/**
+ * The per-turn ceiling for this dispatch, or `null` when the VOLUME policy must
+ * not run. `null` is the fail-open direction: a budget that cannot be read, or
+ * whose turn boundary cannot be observed, must never become a budget of zero.
+ */
+export function resolveVolumeCap(ctx: ShapingContext): number | null {
+    if (!VERIFIED_PLATFORMS.has(ctx.platform)) return null;
+    if (_sessionKey(ctx) === null) return null;
+    if (!_turnStartBound(ctx.packageRoot, ctx.platform)) return null;
+    try {
+        const raw = fs.readFileSync(
+            path.join(ctx.packageRoot, "src", "config", "hook-token-budget.json"),
+            "utf-8",
+        );
+        const cfg = (JSON.parse(raw) as Record<string, unknown>)["per_turn_aggregate_bytes"];
+        if (cfg === undefined || cfg === null || typeof cfg !== "object") return null;
+        const row = cfg as Record<string, unknown>;
+        const excluded = row["excluded_slots"];
+        if (Array.isArray(excluded) && excluded.map(String).includes(ctx.event)) return null;
+        const ceiling = row["ceiling_bytes"];
+        return typeof ceiling === "number" && ceiling > 0 ? ceiling : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Shape this dispatch's would-be emissions, record every suppression, update the
+ * turn counter, and return THE MESSAGE TEXTS THAT MAY LEAVE, in manifest order.
+ *
+ * It returns the texts rather than a name set so the caller cannot re-derive the
+ * candidate set differently: the deciding-severity filter is part of this module's
+ * contract (see the header's caller obligation), and a caller that applied it
+ * twice — or once, differently — would make the ceiling govern bytes nothing ever
+ * wrote.
+ */
+export function shapeAndRecord(
+    ctx: ShapingContext,
+    messages: readonly ConcernMessage[],
+    finalRc: number,
+): string[] {
+    const deciding = messages.filter((m) => m.rc === finalRc);
+    const textOf = (kept: ReadonlySet<string>): string[] =>
+        deciding.filter((m) => kept.has(String(m.def["name"] ?? ""))).map((m) => m.text);
+    const candidates: EmissionCandidate[] = deciding
+        .map((m) => {
+            const rank = m.def["nudge_rank"];
+            return {
+                concern: String(m.def["name"] ?? ""),
+                severity: String(m.def["severity"] ?? ""),
+                failClosed: Boolean(m.def["fail_closed"]),
+                rc: m.rc,
+                bytes: Buffer.byteLength(m.text, "utf-8"),
+                nudgeRank: typeof rank === "number" ? rank : null,
+            };
+        });
+    // Skipped wholesale where the emission carries nothing: on an unverified
+    // platform `emitFor` returns empty stdout AND stderr, so choosing between two
+    // messages there would write advisory-suppression records into the consumer's
+    // log for output that never left the process. Nothing to shape is not the
+    // same as shaping to nothing.
+    if (!VERIFIED_PLATFORMS.has(ctx.platform)) {
+        return textOf(new Set(candidates.map((c) => c.concern)));
+    }
+    const workspaceRoot = _workspaceRoot(ctx);
+    const sessionKey = _sessionKey(ctx) ?? "";
+    const cap = resolveVolumeCap(ctx);
+    // On the turn-START slot the carried total is zero by definition: this is the
+    // dispatch that begins the turn. Reading the stored value here budgeted the
+    // new turn against the one that just ended.
+    const turnStartsHere = ctx.event === TURN_START_EVENT;
+    const spentBefore =
+        cap === null || turnStartsHere ? 0 : readTurnSpend(workspaceRoot, sessionKey);
+
+    const shaped = shapeEmissions(candidates, { capBytes: cap, spentBytes: spentBefore });
+
+    for (const drop of shaped.dropped) {
+        log_dispatch_issue(
+            workspaceRoot,
+            drop.concern,
+            drop.reason === "nudge_interference"
+                ? "nudge_interference_drop"
+                : "injection_budget_drop",
+            drop.detail,
+            "src/config/hook-token-budget.json § per_turn_aggregate_bytes",
+        );
+    }
+
+    if (shaped.ceilingExceeded) {
+        // Stated, never swallowed — and the CAUSE is named, because the two point
+        // at different fixes. `exempt-floor`: the safety-relevant set alone is
+        // over, so the policy held its contract and the budget row is the decision
+        // surface. `carried-spend`: earlier dispatches in this turn already filled
+        // it, which is a question about the turn, not about the row.
+        const cause =
+            shaped.ceilingCause === "exempt-floor"
+                ? "by exempt (blocking / fail_closed) concerns alone — nothing dropped, because dropping advisories could not bring it under"
+                : "by spend already carried from earlier dispatches in this turn — dropping advisories could not bring it under";
+        process.stderr.write(
+            `dispatch_hook: per-turn injection ceiling exceeded ${cause} ` +
+                `(${String(spentBefore + shaped.keptBytes)} B over ${String(cap)} B). ` +
+                `The row is the decision surface ` +
+                `(src/config/hook-token-budget.json § per_turn_aggregate_bytes).\n`,
+        );
+    }
+
+    if (cap !== null) {
+        recordTurnSpend(workspaceRoot, sessionKey, shaped.keptBytes, {
+            reset: turnStartsHere,
+        });
+    }
+    return textOf(new Set(shaped.kept));
 }

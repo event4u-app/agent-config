@@ -43,18 +43,14 @@ import {
   is_replay_mode,
 } from "./state_io.js";
 import { log_dispatch_issue, fix_hint } from "./dispatch_issues.js";
-import {
-  readTurnSpend,
-  recordTurnSpend,
-  shapeEmissions,
-} from "./injection_budget.js";
+import { shapeAndRecord, type ConcernMessage } from "./injection_budget.js";
 import { CONCERN_REGISTRY, type ConcernMain } from "./concern_registry.js";
 import {
   setHookStdinOverride,
   clearHookStdinOverride,
   readFd0ToEnd,
 } from "./hook_stdin.js";
-import { emitFor, VERIFIED_PLATFORMS, type Severity } from "./host_semantics.js";
+import { emitFor, type Severity } from "./host_semantics.js";
 import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
 
@@ -134,76 +130,6 @@ export function _severity_for(rc: number): string {
  */
 export function _is_advisory(concern: JsonObject): boolean {
   return String(concern["severity"] ?? "").trim().toLowerCase() === "advisory";
-}
-
-/**
- * The event that STARTS a turn, and therefore the one that resets the per-turn
- * injection counter. A platform that does not bind it has no observable turn
- * boundary, which is a precondition of the volume policy — see `_volume_cap`.
- */
-export const TURN_START_EVENT = "user_prompt_submit";
-
-/**
- * The per-turn injection ceiling for this dispatch, or `null` when the VOLUME
- * policy must not run.
- *
- * `null` is the fail-open direction and every path to it means the same thing —
- * do not shape by volume. A budget that cannot be read, or whose turn boundary
- * cannot be observed, must never become a budget of zero: failing open is the
- * only safe direction for a policy whose job is to delete output.
- *
- * Five conditions, three of them found by the R2 completion review (2026-08-19)
- * because each one silently turned a per-TURN ceiling into something else:
- *
- *   1. the row exists and carries a positive `ceiling_bytes`;
- *   2. the event is not named in the row's `excluded_slots` (`session_start`
- *      above all — the one-shot restore slot the step excludes by name);
- *   3. a REAL `session_id` arrived. `_resolve_session_id`'s fallback is unique
- *      per invocation by design, so the counter would never read back and the
- *      ceiling would degrade to per-dispatch while looking per-turn;
- *   4. the platform BINDS the turn-start event, so the counter has something to
- *      reset it. Without that the count only ever grows and every droppable
- *      advisory is suppressed for the rest of the session;
- *   5. the platform's emission actually carries reasons. Shaping output that
- *      `emitFor` discards would record advisory suppressions for lines that
- *      never left the process.
- *
- * The row lives in the PACKAGE (`REPO_ROOT`), not the consumer workspace — it is
- * a shipped decision, not a per-project setting. The workspace root is used only
- * for the turn counter and the drop log.
- */
-function _volume_cap(
-  platform: string,
-  event: string,
-  envelope: JsonObject,
-  session_id: string,
-): number | null {
-  // (5) and (3) first — both are cheap and both are absolute.
-  if (!VERIFIED_PLATFORMS.has(platform)) return null;
-  if (!envelope["session_id"] || String(envelope["session_id"]) !== session_id) {
-    return null;
-  }
-  try {
-    const raw = fs.readFileSync(
-      path.join(REPO_ROOT, "src", "config", "hook-token-budget.json"),
-      "utf-8",
-    );
-    const cfg = (JSON.parse(raw) as JsonObject)["per_turn_aggregate_bytes"];
-    if (cfg === undefined || cfg === null || typeof cfg !== "object") return null;
-    const row = cfg as JsonObject;
-    const excluded = row["excluded_slots"];
-    if (Array.isArray(excluded) && excluded.map(String).includes(event)) return null;
-    const ceiling = row["ceiling_bytes"];
-    if (typeof ceiling !== "number" || ceiling <= 0) return null;
-    // (4) — read straight off the manifest the dispatcher already resolved.
-    const manifest = _load_yaml(MANIFEST_PATH);
-    if (_resolve_concerns(manifest, platform, TURN_START_EVENT).length === 0) {
-      return null;
-    }
-    return ceiling;
-  } catch {
-    return null;
-  }
 }
 
 function _now_iso(): string {
@@ -1344,18 +1270,7 @@ export function main(argv?: string[]): number {
   // feedback_entries on purpose: that record is written to disk with a
   // fixed-field schema (PII-exclusion-by-construction), and a concern's raw
   // stderr is free-form content. This array is in-memory only.
-  // Carries the manifest fields the emission-shaping layer needs (severity,
-  // fail_closed, nudge_rank) alongside the text, so `shapeEmissions` decides
-  // from declarations rather than re-reading the manifest. Ids and integers
-  // only — the free-form half stays `text`, and nothing here is written to disk.
-  const concern_messages: Array<{
-    rc: number;
-    text: string;
-    concern: string;
-    severity: string;
-    failClosed: boolean;
-    nudgeRank: number | null;
-  }> = [];
+  const concern_messages: ConcernMessage[] = [];
   // Per-concern `tools:` filter (see _concern_matches_tool). Applied here so it
   // is one place, after the envelope exists and before any concern is spawned.
   const tool_name = _payload_tool_name(envelope);
@@ -1441,15 +1356,7 @@ export function main(argv?: string[]): number {
         : "";
     const message = [stated, extra].filter(Boolean).join("\n\n");
     if (message) {
-      const rawRank = concern["nudge_rank"];
-      concern_messages.push({
-        rc,
-        text: message,
-        concern: String(concern["name"]),
-        severity: String(concern["severity"] ?? ""),
-        failClosed: Boolean(concern["fail_closed"]),
-        nudgeRank: typeof rawRank === "number" ? rawRank : null,
-      });
+      concern_messages.push({ rc, text: message, def: concern });
     }
     if (
       args.event === "session_start" &&
@@ -1494,100 +1401,13 @@ export function main(argv?: string[]): number {
   // disagree: on Claude Code exit 1 does not block and exit 2 does, which
   // inverted every verdict (see host_semantics.ts for the documented mapping).
   // Unverified platforms keep the legacy pass-through byte-for-byte.
-  // Emission shaping (road-to-standing-context-40k Phase 4). Two policies —
-  // at most one nudge-class advisory per slot, then the per-turn byte ceiling —
-  // decide which of the messages that WOULD BE EMITTED actually leave. Blocking
-  // and fail_closed concerns are exempt by construction, so this can only ever
-  // remove advisory noise. See injection_budget.ts for the ordering rationale.
-  //
-  // The candidate set is the deciding-severity subset, NOT every collected
-  // message. Only `rc === final_rc` messages ever reach `emitFor`, so shaping
-  // the full set would make the persisted turn spend count bytes the dispatcher
-  // never writes — and could log a drop for a line that was not going out
-  // either way. injection_budget's header states this as a caller obligation.
-  const workspace_root_for_budget = String(
-    envelope["workspace_root"] || process.cwd(),
+  // Emission shaping (nudge exclusivity + per-turn byte ceiling) also owns the
+  // deciding-severity filter this line used to apply. See injection_budget.ts.
+  const decidingReasons = shapeAndRecord(
+    { packageRoot: REPO_ROOT, envelope, platform: args.platform, event: args.event },
+    concern_messages,
+    final_rc,
   );
-  const emission_candidates = concern_messages.filter((m) => m.rc === final_rc);
-  // Shaping is skipped wholesale where the emission carries nothing: on an
-  // unverified platform `emitFor` returns empty stdout AND stderr, so choosing
-  // between two messages there would write advisory-suppression records into the
-  // consumer's log for output that never left the process. Nothing to shape is
-  // not the same as shaping to nothing.
-  const shaping_active = VERIFIED_PLATFORMS.has(args.platform);
-  const budget_cap = shaping_active
-    ? _volume_cap(args.platform, args.event, envelope, session_id)
-    : null;
-  // On the turn-START slot the carried total is by definition zero: this is the
-  // dispatch that begins the turn. Reading the stored value here budgeted the
-  // new turn against the one that just ended, so a turn finishing near the
-  // ceiling silently suppressed the next turn's opening advisories — the exact
-  // "an accounting error must never be the reason an advisory disappears"
-  // failure injection_budget warns about. Found by the R2 review, 2026-08-19.
-  const turn_starts_here = args.event === TURN_START_EVENT;
-  const spent_before =
-    budget_cap === null || turn_starts_here
-      ? 0
-      : readTurnSpend(workspace_root_for_budget, session_id);
-  const shaped = shaping_active
-    ? shapeEmissions(
-        emission_candidates.map((m) => ({
-          concern: m.concern,
-          severity: m.severity,
-          failClosed: m.failClosed,
-          rc: m.rc,
-          bytes: Buffer.byteLength(m.text, "utf-8"),
-          nudgeRank: m.nudgeRank,
-        })),
-        { capBytes: budget_cap, spentBytes: spent_before },
-      )
-    : {
-        kept: emission_candidates.map((m) => m.concern),
-        dropped: [],
-        keptBytes: 0,
-        ceilingExceeded: false,
-        ceilingCause: null,
-      };
-  for (const drop of shaped.dropped) {
-    log_dispatch_issue(
-      workspace_root_for_budget,
-      drop.concern,
-      drop.reason === "nudge_interference"
-        ? "nudge_interference_drop"
-        : "injection_budget_drop",
-      drop.detail,
-      "src/config/hook-token-budget.json § per_turn_aggregate_bytes",
-    );
-  }
-  if (shaped.ceilingExceeded) {
-    // Stated, never swallowed — and the CAUSE is named, because the two point at
-    // different fixes. `exempt-floor`: the safety-relevant set alone is over, so
-    // the policy held its contract and the budget row is the decision surface.
-    // `carried-spend`: earlier dispatches in this turn already filled it, which
-    // is a question about the turn, not about the row.
-    const cause =
-      shaped.ceilingCause === "exempt-floor"
-        ? "by exempt (blocking / fail_closed) concerns alone — nothing dropped, because dropping advisories could not bring it under"
-        : "by spend already carried from earlier dispatches in this turn — every droppable advisory was dropped and it is still over";
-    process.stderr.write(
-      `dispatch_hook: per-turn injection ceiling exceeded ${cause} ` +
-        `(${String(spent_before + shaped.keptBytes)} B over ${String(budget_cap)} B). ` +
-        `The row is the decision surface ` +
-        `(src/config/hook-token-budget.json § per_turn_aggregate_bytes).\n`,
-    );
-  }
-  if (budget_cap !== null) {
-    recordTurnSpend(
-      workspace_root_for_budget,
-      session_id,
-      shaped.keptBytes,
-      { reset: turn_starts_here },
-    );
-  }
-  const kept_concerns = new Set(shaped.kept);
-  const decidingReasons = emission_candidates
-    .filter((m) => kept_concerns.has(m.concern))
-    .map((m) => m.text);
   const emission = emitFor(
     args.platform,
     args.event,

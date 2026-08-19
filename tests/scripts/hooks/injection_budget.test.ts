@@ -18,6 +18,7 @@ import {
   isExempt,
   readTurnSpend,
   recordTurnSpend,
+  resolveVolumeCap,
   shapeEmissions,
   turnSpendPath,
   type EmissionCandidate,
@@ -260,6 +261,51 @@ describe("evictionOrder", () => {
       candidate({ concern: "c", rc: RC_ALLOW, bytes: 900 }),
     ].sort(evictionOrder);
     expect(sorted.map((c) => c.concern)).toEqual(["c", "a", "b"]);
+  });
+});
+
+describe("resolveVolumeCap — the three preconditions", () => {
+  const PACKAGE_ROOT = path.resolve(__dirname, "..", "..", "..");
+  const base = {
+    packageRoot: PACKAGE_ROOT,
+    envelope: { session_id: "s1", workspace_root: "/tmp/x" } as Record<string, unknown>,
+    platform: "claude",
+    event: "user_prompt_submit",
+  };
+
+  it("resolves a cap on the shipped configuration", () => {
+    // The happy path is asserted first so the negatives below cannot pass by
+    // accident on a tree where the row or the binding went missing.
+    expect(resolveVolumeCap(base)).toBeGreaterThan(0);
+  });
+
+  it("is null on an unverified platform — its emission carries nothing", () => {
+    expect(resolveVolumeCap({ ...base, platform: "cursor" })).toBeNull();
+  });
+
+  it("is null without a real session_id — the fallback key is unreadable", () => {
+    expect(resolveVolumeCap({ ...base, envelope: { workspace_root: "/tmp/x" } })).toBeNull();
+  });
+
+  it("is null on an excluded slot — session_start above all", () => {
+    expect(resolveVolumeCap({ ...base, event: "session_start" })).toBeNull();
+  });
+
+  it("is null when the package root carries no budget row", () => {
+    const empty = fs.mkdtempSync(path.join(os.tmpdir(), "no-budget-"));
+    try {
+      expect(resolveVolumeCap({ ...base, packageRoot: empty })).toBeNull();
+    } finally {
+      fs.rmSync(empty, { recursive: true, force: true });
+    }
+  });
+
+  it("is null when the platform does not bind the turn-start event", () => {
+    // windsurf has no `user_prompt_submit` row, so the counter would never reset
+    // and every droppable advisory would be suppressed for the rest of the
+    // session. Guarded here because this precondition is read from the compiled
+    // manifest rather than through the dispatcher's resolver.
+    expect(resolveVolumeCap({ ...base, platform: "windsurf" })).toBeNull();
   });
 });
 
