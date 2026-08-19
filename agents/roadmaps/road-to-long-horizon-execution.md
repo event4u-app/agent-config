@@ -403,6 +403,13 @@ budgets for it rather than discovering it at preflight.
       digest just promised. It throws now, and the release line follows
       the write rather than the intent.
       `verify:` `npx vitest run tests/scripts/unattended_guard.test.ts` — 31 green.
+      (Was cited as 21 here; the file is NOT touched by this change, and the
+      count grew to 31 in `53b4ac34f`, the round-6 fix pass of the PR that
+      landed this step — the roadmap line was never updated with it. Re-run
+      fresh rather than carried over. R2 round 1, finding 3 flagged the
+      number as unverifiable from this diff's scope, which was correct about
+      the scope and is why the provenance is written down instead of the
+      figure being quietly reverted to a stale 21.)
       `verify:` `npx vitest run tests/scripts/headless_invocation.test.ts` — 18 green.
       `verify:` `npx vitest run tests/scripts/run_supervise.test.ts` — 38 green.
 - [x] **4.1** `agent-config run:supervise --digest` — the morning report:

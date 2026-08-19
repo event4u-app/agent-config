@@ -107,6 +107,24 @@ export function buildResumeArgv(platform: string, roadmapSlug: string): readonly
     }
 }
 
+/**
+ * The smallest REAL unit of each budget axis, used to probe whether the
+ * unattended lane is open at all.
+ *
+ * One cent and one token — the smallest amounts either axis can actually be
+ * charged. Not a forecast of what a resume costs, which is unknowable before
+ * it runs.
+ *
+ * The first version used `Number.EPSILON`, and a test caught it: EPSILON is
+ * the representable gap at 1.0, so `10 + Number.EPSILON === 10` and an
+ * EXHAUSTED $10/$10 budget read as open. A "smallest positive number" that
+ * disappears under addition at the magnitudes budgets actually use is not a
+ * probe, it is a zero wearing a careful name. A real minimum unit is exact at
+ * those magnitudes and is the smaller claim besides.
+ */
+export const SPEND_PROBE_USD = 0.01;
+export const SPEND_PROBE_TOKENS = 1;
+
 /** True when this host takes its prompt on stdin rather than in argv. */
 export function promptOnStdin(platform: string): boolean {
     return PLATFORM_TO_HOST[platform] === 'codex' || PLATFORM_TO_HOST[platform] === 'gemini';
@@ -149,13 +167,19 @@ export function planResume(repoRoot: string, target: ResumeTarget, now?: Date): 
         worktree: target.worktree,
         roadmapSlug: target.roadmapSlug,
         head: target.head,
-        // A resume's cost is not knowable before it runs. Projecting zero would
-        // let a disabled-by-zero budget read as "allowed" on the token axis, so
-        // the projection is a deliberate non-zero sentinel: any configured
-        // ceiling is compared against a real number, and the both-zero case
-        // refuses first regardless.
-        projectedUsd: 1,
-        projectedTokens: 1,
+        // A resume's cost is NOT knowable before it runs, so this projection
+        // is a probe, not an estimate, and the question it asks is "is the
+        // lane open at all" rather than "would it afford this run".
+        //
+        // The probe is each axis's smallest REAL unit: zero would let a
+        // disabled-by-zero ceiling read as allowed (`checkBudget` refuses a 0
+        // ceiling only against a positive projection), while a
+        // plausible-looking `1` USD would refuse a budget with $0.50 of
+        // headroom and report a closed lane that is open. A made-up cost is
+        // worse than an admittedly minimal one, because only the second is
+        // obviously not a forecast.
+        projectedUsd: SPEND_PROBE_USD,
+        projectedTokens: SPEND_PROBE_TOKENS,
         ...(now === undefined ? {} : { now }),
     });
 

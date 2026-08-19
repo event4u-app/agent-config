@@ -511,11 +511,26 @@ export function buildReport(root: string, windowRequested: number): Report {
         // read DIFFERENT sources — the ledger is a committed append-only file,
         // the chat history is a rolling buffer — so their effective N diverges
         // hard, and one banner over both cannot say which is underpowered.
-        // Measured 2026-08-19: 21 runs carried contacts and 4 carried timing,
-        // i.e. the contact axis had cleared its own floor while the wall-clock
-        // axis was at a fifth of it, under a single ⚠️ SHORT WINDOW line that
-        // named neither.
-        contact_axis_runs: runs.filter((r) => r.contacts !== null).length,
+        //
+        // Measured 2026-08-19: **19** runs carried contacts and 4 carried
+        // timing, out of 21 runs in the window. NEITHER axis cleared the
+        // floor. The two runs in the gap carry timing and no ledger entry, so
+        // they raise the total and not the contact axis — which is the whole
+        // reason the total may not be read as either axis's N.
+        //
+        // R2 round 1, finding 1: this comment first said "21 runs carried
+        // contacts … the contact axis had cleared its own floor", i.e. it
+        // shipped the exact misreading this field exists to prevent, as a
+        // fact, inside the fix for it. The roadmap and CLAIMS.md in the same
+        // change said 19 and "it had not". Worth leaving on the record: the
+        // number is easy to get wrong even while writing the guard against
+        // getting it wrong, which is the argument for reading it off the
+        // field rather than off the total.
+        //
+        // `runsWithLedger` is reused rather than re-filtered (finding 4):
+        // `r.contacts` is null exactly when the run is absent from
+        // `ledgerRuns`, so a second predicate is a second thing to keep true.
+        contact_axis_runs: runsWithLedger,
         wall_clock_axis_runs: runs.filter((r) => r.elapsed_minutes !== null).length,
         power_floor_runs: POWER_FLOOR_RUNS,
         runs,

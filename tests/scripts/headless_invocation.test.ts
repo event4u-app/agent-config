@@ -211,6 +211,50 @@ describe('planResume — the human command and the unattended verdict are separa
         expect(plan.command).toContain(`cd '/tmp/two words/wt'`);
     });
 
+    it('a nearly-exhausted budget still reads as OPEN, because the probe is not a forecast', () => {
+        // The verdict answers "is the lane open at all". A plausible-looking
+        // projection of 1 USD would refuse a budget with $0.50 of headroom and
+        // report a closed lane that is open — a made-up cost presented as an
+        // estimate. This pair of cases is what pins the probe: the first
+        // implementation used Number.EPSILON, which passed HERE and failed the
+        // exhausted case below, because `10 + Number.EPSILON === 10`. A
+        // smallest-positive constant that vanishes under addition at real
+        // budget magnitudes is a zero with a careful name.
+        const r = root();
+        const wt = gitRepo();
+        fs.mkdirSync(path.dirname(path.join(r, BUDGET_REL)), { recursive: true });
+        fs.writeFileSync(
+            path.join(r, BUDGET_REL),
+            JSON.stringify({
+                day: NOW.toISOString().slice(0, 10),
+                max_usd: 10,
+                max_tokens: 1_000,
+                spent_usd: 9.5,
+                spent_tokens: 999,
+            }),
+            'utf-8',
+        );
+        expect(planResume(r, target({ worktree: wt }), NOW).unattended.ok).toBe(true);
+    });
+
+    it('an EXHAUSTED budget reads as refused', () => {
+        const r = root();
+        const wt = gitRepo();
+        fs.mkdirSync(path.dirname(path.join(r, BUDGET_REL)), { recursive: true });
+        fs.writeFileSync(
+            path.join(r, BUDGET_REL),
+            JSON.stringify({
+                day: NOW.toISOString().slice(0, 10),
+                max_usd: 10,
+                max_tokens: 1_000,
+                spent_usd: 10,
+                spent_tokens: 1_000,
+            }),
+            'utf-8',
+        );
+        expect(planResume(r, target({ worktree: wt }), NOW).unattended.ok).toBe(false);
+    });
+
     it('the dedup key carries the head, so two heads are two jobs', () => {
         const r = root();
         const a = planResume(r, target({ head: 'aaa' }), NOW);
