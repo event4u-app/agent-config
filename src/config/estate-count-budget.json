@@ -16,9 +16,9 @@
         ]
     },
     "baseline": {
-        "active_roadmaps": 34,
+        "active_roadmaps": 33,
         "later_roadmaps": 50,
-        "open_blockers": 73
+        "open_blockers": 71
     },
     "baseline_history": [
         {
@@ -90,6 +90,13 @@
             "later_roadmaps": 50,
             "open_blockers": 73,
             "why": "The two Iron-Law-3 holdouts resolved on a converged AI-council verdict — anthropic + openai, 2 of 2 present, one round, 2026-08-19 — and both roadmaps archived. active_roadmaps 36 -> 34 is WALKED DOWN by exactly those two archivals; later_roadmaps 49 -> 50 is RAISED by one, the follow-up carrier the council required for the second of them. open_blockers is UNCHANGED at 73, which is the check that says nothing was bought by relocating an open decision: both archived files carried only resolved blockers, and the new carrier carries none. The two cases were not the same case, and the council said so on both. road-to-inbox-harvest-2026-08-d-top-band-model-economy's holdout was an acceptance CRITERION that is unsatisfiable as written and contradicted in that form by ADR-035; both seats returned archive-with-no-follow-up, because a contradictory criterion is a specification defect rather than future work and a roadmap spawned from it could never close. They split on the glyph and `[-]` won on the sharper argument, verified against the tree before adoption: `[x]` would assert 'no .md names a vendor model', and 160 .md files do. road-to-council-api-fallback's holdout was a real proposal gated on an operational trigger, so it moved to a carrier rather than being archived with it — later/road-to-council-api-quota-source-split.md, with the step migrated verbatim including its 'do not build ahead of that evidence' instruction. Both seats independently REFUSED that roadmap's claim about itself that its deferral 'does not gate archival': a roadmap does not get to exempt itself from a repository-wide preservation rule, or the gate becomes discretionary exactly where it is structural. The claim is left standing in the archived file rather than deleted, because the claim is the finding. The carrier's resume condition is an existence predicate over a named evidence file, which resume_probe decides — chosen over the other seat's `gh issue list` probe because the tree has a probe for one and not the other, and both seats named parked-roadmap clutter as the failure mode of a follow-up whose trigger nothing can observe."
+        },
+        {
+            "at": "2026-08-19",
+            "active_roadmaps": 33,
+            "later_roadmaps": 50,
+            "open_blockers": 71,
+            "why": "WALKED DOWN by 1 active and 2 blockers: road-to-inbox-harvest-residuals reached a terminal state and archived. Its last two open items, R1 and R2, were both blocked on a call rather than on effort, and both are now `[-]` against named locks — one of the three terminal states that roadmap's own Exit clause allows. later_roadmaps is UNCHANGED at 50, which is the check that says this is a closure and not a park: nothing was relocated to buy the number. The two blockers resolved are the roadmap's own, each on the option the blocker itself recommended — deferred-finding-decision-reopen on (b), cancel R2 against the in-source decline; spent-inbox-artifacts-await-deletion on (c), keep-reason recorded, the branch that deletes nothing. Neither was closed to make room: the AI council was polled first on whether an agent may record a disposition against a blocker whose declared Owner is the maintainer, and both seats converged that observing a named trigger did NOT fire closes the loop while the reserved call is whether to REOPEN — which is exactly what was not done. R2's trigger was probed rather than assumed (`check_review_dispositions`: 17 archived records, all terminal, zero findings, which is the trigger's negation), and R1's cancellation had to be RE-GROUNDED because the lock the step cited says the opposite of what the step claimed: § 2.7 of plan-review-gates.md opens with 'never an edit ban on the live artefact', and that same file already carried the refutation of the broader reading in writing. The lock that does hold is narrower — § 2.7 freezes only the 16 superseded round-review records, and the contract declined a corpus-migration event for this class when it made its v1 fields optional. A cancellation resting on a lock the cited contract denies would have been a burial wearing a citation, which is the failure this ratchet's own history keeps recording from the count side."
         }
     ],
     "target": {
