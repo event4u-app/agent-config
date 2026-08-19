@@ -219,10 +219,33 @@ export function read_tier_usage_settings(p: string): TierUsageSettings {
 // only namespace whose records are intended to LEAVE the machine (Phase 2
 // transports them; Phase 1 writes them locally and nothing else). So
 // `enabled: true` alone is deliberately not enough to switch it on.
+//
+// `flush: never` AND RETENTION, TOGETHER. `never` means no transport, so the
+// local file is the only store — and the retention budget below then decides
+// what survives. A record evicted by retention under `flush: never` is a
+// record that is never sent anywhere. That is the intended trade of a growth
+// budget rather than an oversight, and it is stated here so an operator meets
+// it in the settings surface instead of inferring it from a short file. An
+// org that needs the full history configures a flush; an org that wants a
+// longer local history raises `retention.max_age_days`.
 
 export const DEFAULT_REMOTE_LOG_PATH = '.agent-telemetry.jsonl';
 export const DEFAULT_REMOTE_FLUSH = 'session-end';
 export const ALLOWED_REMOTE_FLUSH = ['session-end', 'never'] as const;
+
+/**
+ * Growth budget for the local record log (`scale-discipline` R-A7).
+ *
+ * Mirrors `DEFAULT_RETENTION_MAX_AGE_DAYS` / `DEFAULT_RETENTION_MAX_BYTES`
+ * in `remote.ts`, which is where the measured basis for both numbers is
+ * written down. Duplicated as literals rather than imported because this
+ * module is the settings surface and must stay readable on its own; the
+ * pairing is asserted by a test rather than left to a comment.
+ */
+export const DEFAULT_REMOTE_RETENTION = {
+    max_age_days: 90,
+    max_bytes: 2 * 1024 * 1024,
+} as const;
 
 /**
  * The three fields that must ALL carry a value — on top of `enabled` —
@@ -246,6 +269,14 @@ export class RemoteTelemetrySettings {
     readonly salt: string;
     readonly flush: string;
     readonly log_path: string;
+    /**
+     * Growth budget for `log_path`. Always present — an install that
+     * declares no `retention:` gets the defaults rather than no policy,
+     * because "unbounded" is the state R-A7 forbids and a settings file is
+     * not a place to opt back into it.
+     */
+    readonly retention_max_age_days: number;
+    readonly retention_max_bytes: number;
 
     constructor(init: {
         enabled: boolean;
@@ -254,6 +285,8 @@ export class RemoteTelemetrySettings {
         salt: string;
         flush: string;
         log_path: string;
+        retention_max_age_days: number;
+        retention_max_bytes: number;
     }) {
         this.enabled = init.enabled;
         this.endpoint = init.endpoint;
@@ -261,6 +294,8 @@ export class RemoteTelemetrySettings {
         this.salt = init.salt;
         this.flush = init.flush;
         this.log_path = init.log_path;
+        this.retention_max_age_days = init.retention_max_age_days;
+        this.retention_max_bytes = init.retention_max_bytes;
     }
 
     /**
@@ -294,6 +329,22 @@ export class RemoteTelemetrySettings {
 export function read_remote_settings(p: string): RemoteTelemetrySettings {
     const { section } = _read_telemetry_section(p, 'remote');
     const output = _isPlainObject(section['output']) ? section['output'] : {};
+    const retention = _isPlainObject(section['retention']) ? section['retention'] : {};
+
+    // A retention override must be a positive integer. Zero and negatives are
+    // rejected to the default rather than honoured: `max_age_days: 0` reads
+    // like "keep nothing" but would in practice mean "prune on every append",
+    // and neither is a growth budget an operator should be able to set by
+    // typing one character.
+    const _coerce_positive_int = (value: unknown, def: number): number => {
+        if (typeof value === 'boolean') {
+            return def;
+        }
+        if (typeof value === 'number' && Number.isInteger(value) && value > 0) {
+            return value;
+        }
+        return def;
+    };
 
     return new RemoteTelemetrySettings({
         enabled: _coerce_bool(section['enabled'], false),
@@ -302,5 +353,13 @@ export function read_remote_settings(p: string): RemoteTelemetrySettings {
         salt: _coerce_str(section['salt'], ''),
         flush: _coerce_str(section['flush'], DEFAULT_REMOTE_FLUSH, ALLOWED_REMOTE_FLUSH),
         log_path: _coerce_path(output['path'], DEFAULT_REMOTE_LOG_PATH),
+        retention_max_age_days: _coerce_positive_int(
+            retention['max_age_days'],
+            DEFAULT_REMOTE_RETENTION.max_age_days,
+        ),
+        retention_max_bytes: _coerce_positive_int(
+            retention['max_bytes'],
+            DEFAULT_REMOTE_RETENTION.max_bytes,
+        ),
     });
 }

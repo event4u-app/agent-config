@@ -234,3 +234,39 @@ describe('extractSkillName', () => {
         expect(extractSkillName({})).toBeNull();
     });
 });
+
+// ── Retention reaches the write path (Phase 2 step 2) ───────────────────
+//
+// The unit tests in `templates_telemetry_remote.test.ts` prove the budget
+// works when it is passed. These prove the hook passes it — the seam where a
+// declared setting most easily becomes decoration.
+
+describe('telemetry-usage — the declared growth budget reaches the log', () => {
+    it('honours a byte cap the install declared, not the appender default', () => {
+        const cap = 1024;
+        const root = makeRoot(`${ACTIVE}
+`.replace('    salt: "org-pack-secret"', `    salt: "org-pack-secret"
+    retention:
+      max_bytes: ${cap}`));
+
+        // One record is ~270 B, so a 1 KiB cap binds within a handful of
+        // writes; the appender default (2 MiB) would not bind at all here.
+        for (let i = 0; i < 40; i += 1) {
+            expect(run(envelope(`skill-${i}`), { consumer_root: root })).toBe(0);
+        }
+
+        expect(fs.existsSync(logPath(root))).toBe(true);
+        expect(fs.statSync(logPath(root)).size).toBeLessThanOrEqual(cap);
+    });
+
+    it('leaves the log unbounded-looking under the default cap, so the test above is not vacuous', () => {
+        const root = makeRoot(ACTIVE);
+        for (let i = 0; i < 40; i += 1) {
+            run(envelope(`skill-${i}`), { consumer_root: root });
+        }
+        // 40 records at ~270 B is far under the 2 MiB default: the previous
+        // test's small file is the declared cap acting, not the writer.
+        const lines = fs.readFileSync(logPath(root), 'utf-8').split('\n').filter((l) => l.length > 0);
+        expect(lines).toHaveLength(40);
+    });
+});
