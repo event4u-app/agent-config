@@ -208,9 +208,12 @@ export function extractPointers(body: string): Array<{ raw: string; kind: Pointe
  * against the repo root manufactures a dead pointer out of a live claim.
  *
  * The trade-off is stated rather than hidden: this also demotes a genuinely
- * dead top-level reference (`.agent-src.uncondensed/`, a directory ADR-201
- * removed) from `dead` to `unparseable`. A triage instrument must under-flag
- * rather than over-flag — an unread queue catches nothing at all.
+ * dead reference to a top-level directory that ADR-051 retired from `dead` to
+ * `unparseable`, because its first segment no longer exists to match. A triage
+ * instrument must under-flag rather than over-flag — an unread queue catches
+ * nothing at all. (The retired directory is not named here: adding the literal
+ * anywhere under `src/` is what `check_no_new_legacy_path` forbids, and a
+ * docstring citing a dead path as an example is still a citation.)
  */
 let _repoRootNames: Set<string> | null = null;
 function repoRootNames(): Set<string> {
