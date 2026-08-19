@@ -1,6 +1,6 @@
 {
     "_comment": "Per-rule stub ceilings (road-to-rule-stub-projection Phase 2). One exact-BPE token ceiling per rule carrying a migration pointer. SHRINK-ONLY: a rule may fall below its ceiling freely, and may not rise above it. Raising a ceiling to clear a failing check is the config-weakening move this repo blocks by construction — every raise needs a `history` entry whose `reason` is a real sentence. The ceilings are a floor-plus-residue SNAPSHOT taken at adoption, not a target: a rule at its ceiling is not thereby correct, only not worse. Regenerate with `check_rule_stub_ceiling --write-baseline`; never hand-edit the counts.",
-    "measured_at_commit": "d8e2ee655",
+    "measured_at_commit": "4fae6e5b7",
     "tokens_exact": true,
     "ceilings": {
         "active-remediation": 1601,
@@ -38,7 +38,7 @@
         "provider-lifecycle-discipline": 472,
         "reviewer-awareness": 131,
         "roadmap-ci-steps-policy": 564,
-        "roadmap-progress-sync": 1424,
+        "roadmap-progress-sync": 2117,
         "rule-type-governance": 87,
         "skill-improvement-trigger": 81,
         "skill-quality": 78,
@@ -48,5 +48,13 @@
         "untrusted-input-defense": 845,
         "upstream-proposal": 76
     },
-    "history": []
+    "history": [
+        {
+            "date": "2026-08-19",
+            "rule": "roadmap-progress-sync",
+            "from": 1424,
+            "to": 2117,
+            "reason": "Iron Law 3 gained the preservation test that decides WHO resolves a deferred item — a routing table plus the two council refinements that make it binding (a follow-up naming a roadmap that does not exist yet fails closed to the user; a council resolution is recorded at the item or it did not happen) and the residual limit both authoring seats named. This is obligation surface, not explanation: the table decides a route and the two refinements are the conditions under which the route is legal, so a reader who reaches only the pointer target has already made the decision. It could not move to the pointer target either — roadmap-progress-mechanics.md sits at the 16,000-char check_depth_budget ceiling in this same change, and pushing prose there reds a count ratchet whose whole job is refusing a fifth over-ceiling file. The section was condensed once before this raise (2201 -> 2117) by turning four prose paragraphs into bullets; further cutting would delete substance, which preservation-guard forbids."
+        }
+    ]
 }

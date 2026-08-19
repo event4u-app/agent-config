@@ -79,33 +79,23 @@ in the estate?**
 | Keep-in-archive (an intentional drop) | **user** |
 | The item carries a `high_impact` / `user_required` classification | **user** |
 
-"Immediately active" is not a promise: a follow-up counts only if it is created
-in the same change and passes the estate ratchet. A council verdict naming a
-roadmap that does not exist yet **fails closed to the user**.
-
-**Council-resolved is recorded, or it did not happen.** In the roadmap, at the
-item: the criterion verbatim · the blocker id · every option that was on the
-table · the verdict and a one-sentence rationale · any dissent · the
-destination when carried · what will close it. A verdict with no record is a
-silent drop wearing a procedure.
-
-**The residual hole, stated rather than papered over.** Both council seats
-that authored this route named the same limit in their own strongest counter:
-a carried follow-up can still become an indefinite deferral, so the
-preservation test bounds *who decides*, not *whether the work happens*. Only
-the fix-now branch actually discharges the risk. A carried item that is still
-untouched at the next task boundary is raised again per
-[`active-remediation`](active-remediation.md) — it is not aged out by having
-been routed once.
-
-Adopted 2026-08-19 on a unanimous 2/2 council verdict (anthropic +
-openai, blind peer review), after the previous text — *"Wait for the user. The
-autonomous mandate does not lift this gate"* — handed back a fully analysed
-bookkeeping choice with four costed options and a measured defect. That
-hand-back is the low-value interruption [`no-cheap-questions`](no-cheap-questions.md)
-forbids, and the maintainer named it as one. What the gate protects is the
-item, not the maintainer's attention: routing preserves the first and stops
-spending the second.
+- **"Immediately active" is not a promise.** A follow-up counts only if created
+  in the same change and estate-ratchet compliant. A verdict naming a roadmap
+  that does not exist yet **fails closed to the user**.
+- **Recorded, or it did not happen.** At the item: criterion verbatim ·
+  blocker id · every option · verdict + one-sentence rationale · dissent ·
+  destination when carried · what closes it. A verdict with no record is a
+  silent drop wearing a procedure.
+- **The residual hole, stated not papered over.** Both authoring seats named
+  it in their own strongest counter: a carried follow-up can still become an
+  indefinite deferral, so this test bounds *who decides*, not *whether the work
+  happens*. Only fix-now discharges it. A carried item untouched at the next
+  task boundary is raised again per [`active-remediation`](active-remediation.md).
+- **Why it changed.** Adopted 2026-08-19, unanimous 2/2 council (blind peer
+  review). The prior text — *"Wait for the user"* — handed back a fully
+  analysed choice with four costed options, the low-value interruption
+  [`no-cheap-questions`](no-cheap-questions.md) forbids. The gate protects the
+  item, not the maintainer's attention.
 
 ## Later disposition — blocked-for-later roadmaps are parked, never left active
 
