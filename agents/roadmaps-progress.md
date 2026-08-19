@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 39 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **54** open blockers, **26** need you → `agent-config gates`
+> 36 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **51** open blockers, **24** need you → `agent-config gates`
 
 ## Overall
 
@@ -150,34 +150,6 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
     since the two-layer topology is a property of the install rather than of the
     repo. Run the reading, apply `install --layer`, run it again.
   - **Resolved when:** both readings exist at a named commit.
-
-### [road-to-catalogue-host-fit.md](roadmaps/road-to-catalogue-host-fit.md)
-
-**Road to catalogue host fit — a truncated entry is a skill that cannot route** — 4 / 7 done (57%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Run the live trigger eval | ⏭️ skipped | 0 | 0 | 1 | 0 | 0% |
-| 1 | Fill the observation corpus | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 2 | Project a host-fitting catalogue by default | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Make `skill-route` host-honest | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-
-<a id="blockers-road-to-catalogue-host-fit"></a>
-**Blockers**
-
-- **b-live-trigger-eval** (owner: user) — blocks Phase 0 only. Phases 1, 1b, 2 and 3 are repo work and proceed without it — Phase 0 sits first because of its cross-roadmap leverage, not because it gates this file.
-  - **Recommendation:** **option (a) — run it now, in one sitting.** This is the highest-leverage human action in the estate and the arithmetic is not close: one run commits the selection-accuracy baseline, satisfies a resume condition on `road-to-cost-parity-1-rule-payload-diet`, and satisfies a resume gate on `later/road-to-token-saving`. Option (b) is strictly slower for the same spend and makes three roadmaps wait on a mechanism that does not exist yet. Option (c) strands all three indefinitely.
-  - **If you do nothing:** three roadmaps stay blocked on a command whose only human ingredients are one confirmation and a bounded amount of spend — the canonical runnable-but-waiting gate `road-to-gate-autonomy` § 0 uses as its own worked example. The skill-selection accuracy of the rewritten descriptions stays unmeasured, so nothing can say whether they helped.
-  - **What to do:**
-    run the human-gated live trigger eval. It requires a terminal
-    confirmation and bills model tokens, which are its only human ingredients.
-    Options: (a) run it now in one sitting and commit the baseline; (b) name a budget
-    for it and let `road-to-gate-autonomy`'s class-1 ledger carry the consent once
-    that mechanism exists; (c) decline, in which case three roadmaps stay blocked and
-    that consequence is recorded here rather than rediscovered later. The eval's own
-    pre-registration sets the request count and shape coverage — do not re-specify
-    them here.
-  - **Resolved when:** the eval's baseline is committed, or option (b) or (c) is recorded at this blocker with its date.
 
 ### [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md)
 
@@ -638,33 +610,6 @@ _1 blocker resolved._
 | 3 | Make a release inheritable (the runbook) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 4 | Lower bus-factor toward >1 (opportunistic, honest) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
 
-### [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md)
-
-**Road to mixed-trigger activation cost — the 12.0→12.1 behaviour regression, found and priced** — 6 / 8 done (75%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | A field check that decides, then the two matrix-less rules | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Re-adjudicate the seventeen with the read-trigger fact on the table | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 3 | Behavioural regression bench (the falsifiability spine) | ⬜ not started | 1 | 0 | 2 | 0 | 0% |
-| 4 | Guard the surface | ✅ done | 0 | 1 | 0 | 0 | 100% |
-
-<a id="blockers-road-to-mixed-trigger-activation-cost"></a>
-**Blockers**
-
-- **b-behavioural-bench-spend** (owner: user) — blocks Phase 3 steps 3.1 and 3.2. Step 3.3's observer is repo work and proceeds without it.
-  - **Recommendation:** **defer it to the class-1 budget ledger** rather than naming a one-off budget now. The bench is the most expensive step in this roadmap and the least urgent: Phase 2's dispositions are justified by the token census on their own, and the bench decides only whether they are *mandatory* or merely *available*. Paying for it before the ledger exists spends the consent twice — once here, once again for the next bench — which is the exact couriering `road-to-gate-autonomy` was opened to end.
-  - **If you do nothing:** the behavioural-regression claim stays an argument rather than a number. Phase 2 can still ship on the token census, but the roadmap loses its falsifiability spine — nothing would refute the premise if it were wrong, and the honest-null consequence below becomes unreachable.
-  - **What to do:**
-    authorise the paired A/B run, which bills model tokens across
-    5–8 tasks in two arms. Either name a per-run budget for it, or defer it until
-    `road-to-gate-autonomy`'s class-1 budget ledger exists and let the ledger carry
-    the consent. The pre-registered success and kill bars are in step 3.2 and must
-    be recorded before the first run, not after.
-  - **Resolved when:** a budget is named at this blocker, or the step is re-dated against the ledger mechanism with that dependency stated.
-
-_1 blocker resolved._
-
 ### [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md)
 
 **Road to orchestration scope decision — one falsifiable minimal claim, or an honest exit from the front** — 4 / 10 done (40%)
@@ -986,33 +931,6 @@ _2 blockers resolved._
     must not simulate it. Substituting an AI rater would break the
     pre-registration.
   - **Resolved when:** a predictions JSON exists for the pre-rewrite and the post-rewrite tree state, produced by the same protocol.
-
-### [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md)
-
-**Road to executable skill payloads — a skill that only describes work cannot be measured doing it** — 6 / 20 done (30%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Falsification spikes | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 1 | Structured runtime requirements in the skill schema | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
-| 2 | Executable payload pilots | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | Injection hardening at the ingestion point | 🟡 in progress | 1 | 1 | 0 | 1 | 50% |
-| 4 | Output-quality benchmark axis | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Low-cost sweeps | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
-
-<a id="blockers-road-to-skill-ecosystem-executable-payloads"></a>
-**Blockers**
-
-- **phase-0-spikes-need-a-live-host-session** (owner: maintainer) — blocks all of Phase 0, Phase 1 step 3, Phase 2 in full, Phase 4 in full.
-  - **What to do:**
-    S0.1 needs 20 scripted invocations against a live host and
-    S0.2 needs a token measurement — both are spend-bearing and a live
-    trigger-style evaluation hard-aborts under automation, so they cannot be run
-    from an autonomous session. Run them, publish the results (including a null),
-    then unblock the dependent phases in their own change.
-  - **Resolved when:** the S0.1 invocation count and the S0.2 token measurement are published as evidence — a null counts — and the dependent phases are unblocked in a separate change that cites them.
-
-_1 blocker resolved._
 
 ### [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md)
 

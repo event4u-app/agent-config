@@ -1,5 +1,6 @@
 ---
 complexity: structural
+status: later
 execution:
   mode: phase-checkpoints
 ---
@@ -10,6 +11,25 @@ execution:
 > — external analysis session, 2026-08-17, drafted against `de76c38b932d1612d36cfc85d6b9fbaff4832350`.
 > Adopted 2026-08-17 via `/analyze:inbox` after per-claim verification against
 > `origin/main` @ `097ab6549`.
+
+> **Blocked until:** `agents/evidence/metrics/skill-catalogue.jsonl` holds at
+> least 20 observations spanning at least 2 distinct `host` values.
+> **Probe:** `capture_skill_catalogue --cadence` prints progress against exactly
+> that bar; the raw form is a line count plus a distinct-`host` count over the
+> JSONL. Measured at parking time: **7 lines**.
+> **Why parked rather than executed:** steps 2.1 and 2.2 are gated on Phase 1's
+> observation series, and the file's own Risk 2 commits Phase 2 to **stopping**
+> if that series refutes the count hypothesis — so executing 2.1 today would
+> ship on a possibly-refuted premise. The corpus fills only through a
+> human-cadenced capture (`ui-session-capture-window` in
+> `road-to-frontend-skill-application`, which this file does not list as its own
+> blocker and which is the real gate). Step `1b.1` additionally depends on a
+> script that exists only on a colleague's machine.
+> **Not parked:** step 2.2 is a pure function with a fixture and is workable
+> today independent of the corpus — it is recorded here as the thin tail to pull
+> forward first when this file un-parks.
+> **Parked** 2026-08-19 by `road-to-estate-drawdown` Phase 2 batch 1, verdict
+> PARK-PROBEABLE.
 
 ---
 

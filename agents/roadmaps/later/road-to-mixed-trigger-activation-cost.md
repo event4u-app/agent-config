@@ -1,5 +1,6 @@
 ---
 complexity: structural
+status: later
 execution:
   mode: phase-checkpoints
 ---
@@ -12,6 +13,21 @@ execution:
 > `origin/main` @ `097ab6549`. The draft's status line said PROPOSAL and its IDs
 > were proposal IDs; § 1 below records which of its claims survived verification,
 > which were overtaken, and the one that is refuted as written.
+
+> **Blocked until:** the host exposes an `InstructionsLoaded` observer that a
+> session can read (step 3.3's instrument; absent from the 2.1.229 binary's token
+> extraction, so building against it today would be designing on an assumption).
+> **The other open step is not this one's dependency, and is recorded here so the
+> conjunction stays out of the resume line:** step 2.3's just-in-time carrier
+> waits on `road-to-cost-parity-1-rule-payload-diet`'s per-rule norm-line lint and
+> on `road-to-per-turn-hook-economy` step 5.1 — two siblings, both open. Steps
+> 3.1/3.2 additionally wait on blocker `b-behavioural-bench-spend`.
+> **The repair already shipped**, which is why this is `later/` and not a live
+> defect: Phase 2 restored `paths:` on the two path-dominant rules
+> (−3,929 exact-BPE tokens, −3.7 %) and Phase 4's census ratchet is in. What
+> remains is measurement plus one additive carrier owned elsewhere.
+> **Parked** 2026-08-19 by `road-to-estate-drawdown` Phase 2 batch 1, verdict
+> PARK-PROBEABLE.
 
 > **Why this roadmap exists.** A colleague reported that the package "ran well and
 > above all fast before 12.\*" and that "since the 12.1.\* release it has problems

@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+status: later
 execution:
   mode: phase-checkpoints
 ---
@@ -10,6 +11,26 @@ execution:
 > work belongs in code with a declared runtime, a machine-readable output, and a
 > code-level injection guard — without importing any of the governance debt that
 > estate carries.
+
+> **Blocked until:** `agents/evidence/analysis/skill-payload-phase0-spikes.md`
+> records the S0.1 invocation rate, the S0.2 median token delta and the S0.3
+> detection result — a null counts as a recorded result.
+> **Why the bar is stated inside the condition and not beside it:** an earlier
+> draft of this note put it in a sibling field so the resume probe would see a
+> bare existence test and decide the note. That works, and that is the objection:
+> `_truncateAtNextField` cuts the condition at the next bolded label, so neither
+> the compound guard nor the existence guard sees a bar moved one field down, and
+> the probe would have reported FIRED on an empty file at this path. Field
+> placement flipping a verdict is a bypass, so the bar sits where it belongs and
+> the probe correctly reports `undecidable` — a conjunction it can only
+> half-weigh is exactly what it should refuse.
+> **Why:** all 14 open steps are downstream of blocker
+> `phase-0-spikes-need-a-live-host-session` (class 3, human-only, spend-bearing,
+> and the trigger-style eval hard-aborts under automation), so zero of them is
+> agent-workable. The file is live rather than dead — 6 steps shipped, its
+> counts are current — which is `later/`, not `archive/`.
+> **Parked** 2026-08-19 by `road-to-estate-drawdown` Phase 2 batch 1, verdict
+> PARK-PROBEABLE.
 
 > **Glyph re-classification, 2026-08-13 — maintainer decision, stated rather
 > than done quietly.** Fifteen steps carried `[~]` (*deferred*) while their own
@@ -36,7 +57,7 @@ default-off until its gate clears (ADR-202 discipline). Form: inverted harvest
 (ADR-211 C/D) — it starts from confirmed defects in this tree and draws sources
 in, never pushing sources onto the repo additively.
 
-Source: [`agents/tmp.old/inbox-2026-08-12-skill-payloads/road-to-executable-skill-payloads.md`](../tmp.old/inbox-2026-08-12-skill-payloads/road-to-executable-skill-payloads.md)
+Source: [`agents/tmp.old/inbox-2026-08-12-skill-payloads/road-to-executable-skill-payloads.md`](../../tmp.old/inbox-2026-08-12-skill-payloads/road-to-executable-skill-payloads.md)
 (+ `chat.txt`, the transcript that produced it), analysed via `/analyze:inbox`.
 Per `source-confidentiality`, the four external skill estates it compared against
 are described here by what they do, never by repo, org, or author name; the raw

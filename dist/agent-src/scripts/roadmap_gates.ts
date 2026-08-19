@@ -844,7 +844,7 @@ function main(argv?: readonly string[]): number {
     // condition is not a decision the reader owes anybody — it is a file that can
     // move. The sheet is the same argument for the same reason: it is the set of
     // answers the user owes, and a movable file is not one of them.
-    const resumed = reply || sheet ? [] : probeLater(roadmapRoot);
+    const resumed = reply || sheet ? [] : probeLater(roadmapRoot, repoRoot);
     process.stdout.write(
         sheet
             ? renderSheet(entries, new Date())

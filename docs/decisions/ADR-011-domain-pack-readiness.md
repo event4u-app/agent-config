@@ -135,9 +135,9 @@ clause is honoured. Without it, the ADR becomes a one-way door
 disguised as a two-way door.
 
 The placeholder roadmap
-[`agents/roadmaps/domain-pack-extraction-when-triggered.md`](../../agents/roadmaps/domain-pack-extraction-when-triggered.md)
-holds the marker; status `draft` keeps it dashboard-suppressed until
-the design gate fires.
+[`agents/roadmaps/later/domain-pack-extraction-when-triggered.md`](../../agents/roadmaps/later/domain-pack-extraction-when-triggered.md)
+holds the marker; it is parked at `status: later` (dashboard-suppressed,
+resume condition recorded) until the design gate fires.
 
 ### (iii) What is **not** extracted today
 

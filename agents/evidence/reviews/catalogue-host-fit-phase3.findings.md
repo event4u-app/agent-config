@@ -43,7 +43,7 @@ Recorded 2026-08-18, after the fact.
 
 The manifest above carries `ac_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
 which is the SHA-256 of the **empty string** rather than of any criteria. This
-review was dispatched against `agents/roadmaps/road-to-catalogue-host-fit.md`,
+review was dispatched against `agents/roadmaps/road-to-catalogue-host-fit.md`, <!-- ref-ignore -->
 which declares its criteria as inline `- **AC-n:**` bullets per phase and
 carries no `## Acceptance Criteria` heading at all, while the extractor of the
 day matched the heading form and nothing else. The reviewer therefore received a **0-byte** `acceptance-criteria.md`
