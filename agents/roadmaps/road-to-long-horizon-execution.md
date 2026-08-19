@@ -500,6 +500,56 @@ budgets for it rather than discovering it at preflight.
 - **Resolved when:** Phase 4 step `4.3` carries either a benchmark verdict
   with its run date and cost, or a published null naming option (b).
 
+### blocker: worktree-claim-root-split
+
+- **Status:** open
+- **Owner:** user
+- **Blocks:** the `process-full` contract-run acceptance criterion, and
+  every future observation of `run-continuation` made from a worktree.
+- **The defect, measured 2026-08-19.** The run contract has two halves
+  that resolve their root differently, and in a worktree they land in
+  different trees. `sessions_cli.cmd_claim` writes
+  `agents/runtime/state/roadmap-claim-<session>.json` under
+  `process.cwd()` — the worktree the operator is in. The stop-slot
+  concern reads it under `envelope.workspace_root`, which
+  `dispatch_hook` sets from `--project-dir`, i.e. the host's
+  `CLAUDE_PROJECT_DIR` — the parent checkout. Neither side is wrong on
+  its own; they simply never agreed on which tree the contract lives in.
+- **Why it stayed invisible.** The concern's first rung is
+  `contract absent → no-op`, and a no-op writes no event. So the ledger
+  built to make the mechanism auditable is empty in exactly the case
+  where it never ran, and empty is also what a healthy idle run looks
+  like. The dispatch integration test cannot see it either: it passes the
+  SAME root to the writer and the reader, which is the one arrangement
+  in which the two agree.
+- **Second symptom, same cause.** `session_register_hook` reads the slug
+  through `read_claimed_slug(workspace_root, …)` on the same envelope, so
+  the register records `roadmap_slug: null` for a session that has
+  claimed. `run:supervise` listed this session as `roadmap=-` minutes
+  after its claim. A watcher whose whole job is "dead session, roadmap
+  still open" cannot see the roadmap of any worktree session.
+- **What to do:** pick exactly one — (a) move the claim beside the
+  session register, under the git **common dir**, which every worktree of
+  a repo shares. That is the location `register_dir()` already uses and
+  for the same reason, and a roadmap claim is repo-global by intent —
+  `sessions:claim` tells the operator it "becomes visible to other
+  sessions". Back-compat: read the old per-tree path when the new one is
+  absent. Or (b) keep the claim per-tree and make the hook resolve the
+  same tree, which means the concern stops trusting `--project-dir` — a
+  larger change touching every concern, not just this one.
+- **Recommendation:** (a). It is one shared helper called by the writer
+  and both readers, it makes the claim agree with the register that
+  already carries it, and it fixes the watcher symptom in the same move.
+  Not taken autonomously in this run: the claim file is a shared contract
+  carrier read by four modules, and relocating one is a structural change
+  `scope-control` reserves for the maintainer.
+- **If you do nothing:** `run-continuation` remains inert for every
+  worktree session, which in this repository means effectively always,
+  and the acceptance criterion above cannot be observed.
+- **Resolved when:** a `process-full` run started from a worktree writes
+  at least one `engage` event to
+  `agents/runtime/state/run-continuation.jsonl`.
+
 ## Acceptance criteria
 
 - [~] A `process-full` contract run finishes a 3-phase roadmap with zero
@@ -514,6 +564,28 @@ budgets for it rather than discovering it at preflight.
       for the mechanism would be attributing a result to the wrong cause,
       which is precisely the attribution error § 0.1's own falsification
       criteria are written against. Re-run under a claim to close it.
+      **Re-run under a claim 2026-08-19. It still did not engage, and the
+      cause is a defect rather than a missing step** — see
+      `blocker: worktree-claim-root-split`. The claim was made
+      (`sessions:claim road-to-long-horizon-execution`, 10:41) and the
+      roadmap carries `execution.mode: autonomous`, so both halves of the
+      contract were present, and `run-continuation.jsonl` stayed absent
+      through every turn boundary of the run.
+      Diagnosed rather than assumed, in four steps: the concern IS
+      functional through the host's own shim entry point — driving
+      `agent-config dispatch:hook --event stop --project-dir <worktree>`
+      with this session's id wrote `{"event":"complete", …}` immediately;
+      the same call with an unknown session id wrote **nothing**, so
+      "contract absent → no-op" leaves no trace and a silent ledger is
+      indistinguishable from a concern that never ran; hook-written state
+      from this session (`context-fill.json`, `hot-context.md`,
+      `session-eol/`, `.dispatcher`) all landed in the MAIN checkout while
+      `sessions:claim` wrote into the WORKTREE; and `run:supervise`
+      independently listed this session as `roadmap=-` minutes after the
+      claim, which is the same cause seen through the register.
+      So the criterion is not "not tried" and not "will not measure" — it
+      is blocked on one identified defect, and it closes on the first run
+      after that defect is fixed.
 - [-] A killed session resumes via the watcher and completes without a
       contact; the resumed run's first commit shows the re-verification.
       **CANCELLED 2026-08-19 — WILL-NOT-MEASURE.** This criterion needs a
