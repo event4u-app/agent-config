@@ -133,5 +133,5 @@ The consequences of the gap are structural rather than cosmetic:
 - `src/scripts/_lib/model_tier.ts` — the single generator-owned mapping.
 - `src/scripts/hooks/orchestration_record_hook.ts:158` — `MODEL_FAMILIES`, the
   four-family constant that surfaced the asymmetry.
-- `agents/roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md` —
+- `agents/roadmaps/archive/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md` —
   the track this record unblocks.
