@@ -83,25 +83,12 @@ function writeWorkspace(): string {
     cleanups.push(root);
     const roadmapDir = path.join(root, 'agents', 'roadmaps');
     fs.mkdirSync(roadmapDir, { recursive: true });
-    fs.writeFileSync(
-        path.join(roadmapDir, `${SLUG}.md`),
-        [
-            '---',
-            'complexity: structural',
-            'execution:',
-            '  mode: autonomous',
-            '---',
-            '',
-            '# Fixture',
-            '',
-            '## Phase 0 — one open step',
-            '',
-            '- [x] **0.0** done',
-            '- [ ] **0.1** the open one <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->',
-            '',
-        ].join('\n'),
-        'utf-8',
-    );
+    // R2 finding 7: this used to carry a byte-identical inline copy of
+    // `fixtureRoadmap()`, so exactly one of the two fixtures in this file used
+    // the shared helper. Both fixtures share `SLUG` and cases below assert
+    // open-step counts against it — one edit to the helper would have pinned
+    // two different roadmaps under one name.
+    fs.writeFileSync(path.join(roadmapDir, `${SLUG}.md`), fixtureRoadmap(), 'utf-8');
     const claim = path.join(root, roadmap_claim_rel(SESSION));
     fs.mkdirSync(path.dirname(claim), { recursive: true });
     fs.writeFileSync(claim, JSON.stringify({ slug: SLUG, session_id: SESSION }), 'utf-8');
@@ -127,8 +114,24 @@ function fixtureRoadmap(): string {
     ].join('\n');
 }
 
+/**
+ * `git` against a fixture tree, with the ambient repository pointers stripped.
+ *
+ * R2 finding 4: `_lib/git_common_dir.ts` refuses to shell out to git at all,
+ * and its docblock names inherited `GIT_DIR` / `GIT_WORK_TREE` as the reason.
+ * This helper did shell out and inherited them, so running the suite from
+ * inside a git hook — which exports `GIT_DIR` — resolved every call against the
+ * HOOK's repository instead of the temp dir: `git config user.email` would
+ * rewrite the real repo's local identity and `git commit` could commit the real
+ * staged index, silently, instead of failing loudly.
+ */
 function git(cwd: string, ...args: string[]): void {
-    const r = spawnSync('git', args, { cwd, encoding: 'utf-8' });
+    const env = { ...process.env };
+    delete env['GIT_DIR'];
+    delete env['GIT_WORK_TREE'];
+    delete env['GIT_INDEX_FILE'];
+    delete env['GIT_COMMON_DIR'];
+    const r = spawnSync('git', args, { cwd, encoding: 'utf-8', env });
     if ((r.status ?? -1) !== 0) {
         throw new Error(`git ${args.join(' ')} failed: ${r.stderr}`);
     }
@@ -161,9 +164,16 @@ function writeWorktreePair(): { main: string; worktree: string } {
     cleanups.push(worktree);
     git(main, 'worktree', 'add', '--quiet', '-b', 'fixture-wt', worktree);
 
-    const roadmapDir = path.join(worktree, 'agents', 'roadmaps');
-    fs.mkdirSync(roadmapDir, { recursive: true });
-    fs.writeFileSync(path.join(roadmapDir, `${SLUG}.md`), fixtureRoadmap(), 'utf-8');
+    // In BOTH trees, because a real parent checkout carries `agents/roadmaps/`
+    // as well — and the parent-rooted-reader case below reads the roadmap from
+    // the parent. A fixture that only wrote it into the worktree would make
+    // that case return ALLOW on an unreadable roadmap instead of exercising the
+    // provenance it exists to pin.
+    for (const tree of [worktree, main]) {
+        const roadmapDir = path.join(tree, 'agents', 'roadmaps');
+        fs.mkdirSync(roadmapDir, { recursive: true });
+        fs.writeFileSync(path.join(roadmapDir, `${SLUG}.md`), fixtureRoadmap(), 'utf-8');
+    }
 
     // Through the production writer, never a hand-built path: the whole defect
     // was writer and reader disagreeing, so a fixture that hard-codes the
@@ -179,6 +189,7 @@ function writeWorktreePair(): { main: string; worktree: string } {
 function dispatchStop(
     root: string,
     transcript: string,
+    payloadCwd?: string,
 ): { code: number; err: string; out: string } {
     const r = spawnSync(
         'npx',
@@ -195,7 +206,11 @@ function dispatchStop(
             root,
         ],
         {
-            input: JSON.stringify({ session_id: SESSION, transcript_path: transcript }),
+            input: JSON.stringify(
+                payloadCwd === undefined
+                    ? { session_id: SESSION, transcript_path: transcript }
+                    : { session_id: SESSION, transcript_path: transcript, cwd: payloadCwd },
+            ),
             encoding: 'utf-8',
             cwd: REPO,
             timeout: 180_000,
@@ -306,10 +321,18 @@ describe('run-continuation — driven through the live dispatcher', () => {
         // 1. The tree the CONCERN resolved under — the `--project-dir` half.
         expect(real(ev['workspace_root'])).toBe(real(worktree));
 
+        // 1b. And the tree the SESSION itself works in. With no `cwd` in the
+        // payload `session_checkout` degrades to `workspace_root`, which is the
+        // honest reading for this case: the reader is already rooted in the
+        // worktree, so there is no second tree to disagree about. The
+        // parent-rooted case below is where the two diverge.
+        expect(real(ev['session_root'])).toBe(real(worktree));
+
         // 2. THE falsifiable fact. `git_dir` is this worktree's private gitdir,
         // `git_common_dir` is the main checkout's `.git`. They differ EXACTLY
         // when the session runs in a linked worktree, which is the condition
-        // under which the defect existed at all.
+        // under which the defect existed at all. Both are derived from
+        // `session_root`, never from the reader's root — R2 finding 1.
         const gitDir = ev['git_dir'] as string;
         const commonDir = ev['git_common_dir'] as string;
         expect(gitDir).not.toBe('');
@@ -324,6 +347,55 @@ describe('run-continuation — driven through the live dispatcher', () => {
         expect(path.isAbsolute(claimPath)).toBe(true);
         expect(claimPath.startsWith(`${real(commonDir)}${path.sep}`)).toBe(true);
         expect(claimPath.startsWith(`${real(worktree)}${path.sep}`)).toBe(false);
+    });
+
+    it('records the two-tree split when the READER is rooted in the parent checkout', () => {
+        // The arrangement the roadmap documents as the LIVE one, and the one no
+        // case covered: `CLAUDE_PROJECT_DIR` resolves to the parent even for a
+        // worktree session, so the dispatcher runs with `--project-dir <main>`
+        // while the session itself sits in the worktree.
+        //
+        // R2 finding 1 was invisible precisely here. The first version derived
+        // both git fields from the READER's root, where `git_dir(main)` and
+        // `git_common_dir(main)` are the SAME path — so the documented
+        // discriminator `git_dir !== git_common_dir` read FALSE for every real
+        // worktree-started run while the worktree-rooted case above stayed
+        // green. That is the "green suite over the arrangement that never fails"
+        // shape this file's own header warns about.
+        const { main, worktree } = writeWorktreePair();
+        const transcript = writeTranscript(3);
+        const res = dispatchStop(main, transcript, worktree);
+        expect(res.code).toBe(2);
+
+        const engaged = events(main).filter((e) => e['event'] === 'engage');
+        expect(engaged.length).toBe(1);
+        const ev = engaged[0] as Record<string, unknown>;
+        const real = (p: unknown): string => fs.realpathSync(p as string);
+
+        // The reader's tree and the session's tree, both recorded, and DIFFERENT
+        // — which is the defect condition itself, now readable per event.
+        expect(real(ev['workspace_root'])).toBe(real(main));
+        expect(real(ev['session_root'])).toBe(real(worktree));
+        expect(ev['workspace_root']).not.toBe(ev['session_root']);
+
+        // The discriminator now holds where it has to: derived from the
+        // session's tree, these differ. Derived from the reader's tree — the
+        // shipped behaviour this replaces — they would be equal.
+        const gitDir = ev['git_dir'] as string;
+        const commonDir = ev['git_common_dir'] as string;
+        expect(real(gitDir)).not.toBe(real(commonDir));
+        expect(real(commonDir)).toBe(real(path.join(main, '.git')));
+
+        // Pinned as a regression on the old derivation specifically: had the
+        // fields come from `workspace_root`, this is the value they would carry.
+        expect(real(gitDir)).not.toBe(real(path.join(main, '.git')));
+
+        // Every path realpath-normalised at the source, so the containment test
+        // works for a reader holding nothing but the line (R2 finding 3).
+        expect(ev['git_common_dir']).toBe(real(commonDir));
+        expect(ev['workspace_root']).toBe(real(main));
+        const claimPath = ev['claim_path'] as string;
+        expect(claimPath.startsWith(`${real(commonDir)}${path.sep}`)).toBe(true);
     });
 
     it('records the provenance on a non-engage event too — the defer branch', () => {
@@ -350,7 +422,18 @@ describe('run-continuation — driven through the live dispatcher', () => {
         expect(fs.realpathSync(deferred[0]?.['workspace_root'] as string)).toBe(
             fs.realpathSync(root),
         );
-        expect(typeof deferred[0]?.['claim_path']).toBe('string');
+        // R2 finding 8: this pinned only `typeof === 'string'`, which an empty
+        // string satisfies — so a regression that dropped the one field
+        // locating the contract would have left the assertion green. The
+        // fixture's claim path is deterministic, so pin it exactly, normalised
+        // the same way `provenance` normalises it.
+        const expectedClaim = path.join(root, roadmap_claim_rel(SESSION));
+        expect(deferred[0]?.['claim_path']).toBe(
+            path.join(
+                fs.realpathSync(path.dirname(expectedClaim)),
+                path.basename(expectedClaim),
+            ),
+        );
         // This fixture is a plain temp directory, not a repository — so both git
         // fields are empty, and that is the honest degenerate reading rather
         // than a gap. Pinned so a future change cannot start emitting a guessed

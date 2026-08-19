@@ -94,7 +94,7 @@ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { is_replay_mode } from './state_io.js';
 import { readTranscriptTail } from './turn_end_gate_hook.js';
-import { resolve_claim } from '../session_register_hook.js';
+import { resolve_claim, session_checkout } from '../session_register_hook.js';
 import { git_common_dir, git_dir } from '../_lib/git_common_dir.js';
 import {
     deriveSessionKey,
@@ -394,7 +394,7 @@ function readState(file: string): RunState | null {
 }
 
 /**
- * The four fields that make an event's two-tree property checkable by a third
+ * The five fields that make an event's two-tree property checkable by a third
  * party holding nothing but the ledger line.
  *
  * The defect this concern shipped with was a writer and a reader resolving
@@ -410,28 +410,84 @@ function readState(file: string): RunState | null {
  * observation rather than a check on it; the falsifiable facts are concrete
  * (AI council 2026-08-19, 2/2 convergent):
  *
- *   `git_dir !== git_common_dir`        → this IS a linked worktree
+ *   `session_root !== workspace_root`   → writer and reader resolved different
+ *                                         trees, which IS the shipped defect
+ *                                         condition, now visible per event
+ *   `git_dir !== git_common_dir`        → the session's own tree IS a linked
+ *                                         worktree
  *   `claim_path` under `git_common_dir` → the contract crossed into the shared
  *                                         root, which is the fix working
  *
- * `process.cwd()` is deliberately NOT among them. The dispatcher chdirs into
- * `--project-dir` before the chain runs, so at concern time cwd equals
+ * ## Both git fields come from `session_root`, not from `workspace_root`
+ *
+ * The first shipped version of this function derived both of them from the
+ * READER's root, and R2 finding 1 killed it: in the arrangement documented
+ * three paragraphs up as the live one — the concern running under
+ * `--project-dir <parent checkout>` — `git_dir(parent)` and
+ * `git_common_dir(parent)` are the SAME path, so the discriminator above read
+ * FALSE for every real worktree-started run. The enrichment existed to make
+ * the two-tree property auditable and could not express it. `claim_path` could
+ * not rescue it either: the claim lands under `git_common_dir` in a plain
+ * checkout too, so that containment holds in both arrangements.
+ *
+ * `session_root` is the session's OWN checkout, resolved through the register's
+ * `session_checkout` — the same three-condition guard (existing directory,
+ * checkout root, same repository) rather than a second, divergent reading of
+ * `payload.cwd`. It degrades to `workspace_root` when any condition fails,
+ * which makes `session_root === workspace_root` mean "same tree, or unresolvable"
+ * and never a false two-tree claim.
+ *
+ * `process.cwd()` is deliberately NOT among the fields. The dispatcher chdirs
+ * into `--project-dir` before the chain runs, so at concern time cwd equals
  * `workspace_root` on every shipped path — a field that can never disagree with
  * another cannot falsify anything, and shipping it as provenance would be the
  * decorative-evidence shape this whole change exists to remove. Measured while
  * writing the test that asserted the opposite.
  *
- * Absolute paths, deliberately: a relative form is interpreted against whichever
- * root the reader happens to hold, which is the exact ambiguity being removed.
- * These are local filesystem paths in gitignored runtime state, never published
- * — the same posture the session register already takes.
+ * Absolute AND realpath-normalised, deliberately: a relative form is
+ * interpreted against whichever root the reader happens to hold, and a
+ * symlinked form defeats the containment test above. R2 finding 3 measured the
+ * second half — the git fields come back realpath-resolved from
+ * `_lib/git_common_dir.ts` while the first version passed the envelope string
+ * verbatim, so on macOS a healthy run wrote `workspace_root: /var/...` against
+ * `git_common_dir: /private/var/...` and the documented prefix test failed on
+ * it. Normalising here is the only place a ledger-only reader can inherit it
+ * from. These are local filesystem paths in gitignored runtime state, never
+ * published — the same posture the session register already takes.
  */
-export function provenance(workspaceRoot: string, claimPath: string): JsonObject {
+function normalizeDir(p: string): string {
+    const abs = path.resolve(p);
+    try {
+        return fs.realpathSync(abs);
+    } catch {
+        return abs;
+    }
+}
+
+/**
+ * Realpath a file path without requiring the file to exist: the directory is
+ * normalised and the basename rejoined. The per-tree claim fallback names a
+ * path that may not have been written, and a missing file must not downgrade
+ * the whole line to un-normalised paths.
+ */
+function normalizeFile(p: string): string {
+    const abs = path.resolve(p);
+    return path.join(normalizeDir(path.dirname(abs)), path.basename(abs));
+}
+
+export function provenance(
+    workspaceRoot: string,
+    claimPath: string,
+    sessionRoot: string,
+): JsonObject {
+    const reader = normalizeDir(workspaceRoot);
+    const writer = normalizeDir(sessionRoot);
     return {
-        workspace_root: workspaceRoot,
-        git_dir: git_dir(workspaceRoot) ?? '',
-        git_common_dir: git_common_dir(workspaceRoot) ?? '',
-        claim_path: claimPath,
+        workspace_root: reader,
+        session_root: writer,
+        git_dir: git_dir(writer) ?? '',
+        git_common_dir: git_common_dir(writer) ?? '',
+        claim_path: normalizeFile(claimPath),
     };
 }
 
@@ -490,9 +546,6 @@ export function main(): number {
     const claim = resolve_claim(workspaceRoot, sessionId || null);
     if (claim === null) return EXIT_ALLOW;
     const slug = claim.slug;
-    // The two-root provenance, carried on every event this run emits. See
-    // `provenance()` for why these three and not a boolean.
-    const roots = provenance(workspaceRoot, claim.path);
 
     const roadmapPath = path.join(workspaceRoot, 'agents', 'roadmaps', `${slug}.md`);
     let roadmapText: string;
@@ -504,6 +557,21 @@ export function main(): number {
         return EXIT_ALLOW;
     }
     if (parseExecutionMode(roadmapText) !== 'autonomous') return EXIT_ALLOW;
+
+    // The two-tree provenance, carried on every event this run emits. See
+    // `provenance()` for why these five fields and not a boolean.
+    //
+    // Built AFTER the mode gate, not before it (R2 finding 6): a session
+    // holding a claim on a `phase-checkpoints` roadmap makes this concern a
+    // no-op, and the first version paid two `statSync` plus two `realpathSync`
+    // — more in a worktree — on every `stop` fire of such a session to build a
+    // value the next line discarded. Every path that can still emit an event
+    // is below this line.
+    const roots = provenance(
+        workspaceRoot,
+        claim.path,
+        session_checkout(workspaceRoot, str(payload['cwd'] as JsonValue | undefined)),
+    );
 
     // ── turn identity ────────────────────────────────────────────────
     const transcriptPath = str(
