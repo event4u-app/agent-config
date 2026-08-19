@@ -1,5 +1,5 @@
 ---
-adr: 235
+adr: 236
 status: accepted
 date: 2026-08-19
 decision: one-artefact-one-layer
@@ -19,7 +19,7 @@ review_trigger: >-
   depends on them.
 ---
 
-# ADR-235 — One artefact, one layer: the two rule/skill layers are partitioned, not duplicated
+# ADR-236 — One artefact, one layer: the two rule/skill layers are partitioned, not duplicated
 
 ## Status
 

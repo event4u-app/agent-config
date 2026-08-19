@@ -19,7 +19,7 @@
 #            so taught every reader that identical copies cost nothing. Measured
 #            2026-08-19 on a freshly regenerated maintainer projection: 110 rules
 #            and 290 skills delivered twice, 203,873 tok of standing rule prose
-#            against a 110,000 cap. See ADR-235 and
+#            against a 110,000 cap. See ADR-236 and
 #            agents/evidence/analysis/single-delivery-partition-census.md.
 #   DRIFT  — install at the other scope, DIFFERENT version (or unreadable).
 #            Drift will produce the 2026-05-25 failure mode (stale frontmatter
@@ -32,8 +32,9 @@
 # present in BOTH scope directories — what a same-version duplicate registration
 # actually delivers twice. It is APPENDED rather than inserted, so every existing
 # field-indexed consumer keeps working unchanged. `-1` means the count could not
-# be taken (a path that is not a directory), which is reported rather than
-# silently rendered as 0.
+# be taken — the scope being installed to does not exist yet, or a directory is
+# unreadable — which is reported rather than silently rendered as 0. See
+# `count_overlap` for why the two are different facts.
 #
 # A final summary line is emitted:
 #   SUMMARY\t<verdict>\t<count-OK>\t<count-WARN>\t<count-DRIFT>

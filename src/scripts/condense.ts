@@ -2631,7 +2631,7 @@ function _generate_tools_inner(
  * Advisory only, and deliberately: `generate-tools` is the normal build step, and
  * failing it on a topology the operator may not be able to change today would make
  * the build unusable rather than the duplication visible. The invariant is
- * ADR-235; the check that can refuse is `check_single_delivery --enforce`.
+ * ADR-236; the check that can refuse is `check_single_delivery --enforce`.
  */
 function _warn_layer_overlap(): void {
     const home = process.env['HOME'];
@@ -2672,7 +2672,7 @@ function _warn_layer_overlap(): void {
     _print(
         `  ⚠️  a global layer holds the same names (${findings.join(' ')}) — the host loads both` +
             ' with no dedup, so these are delivered twice per session.' +
-            '\n      Detail: ./scripts-run src/scripts/check_single_delivery · invariant: ADR-235',
+            '\n      Detail: ./scripts-run src/scripts/check_single_delivery · invariant: ADR-236',
     );
 }
 

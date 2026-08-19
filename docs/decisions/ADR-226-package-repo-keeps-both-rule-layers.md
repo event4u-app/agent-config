@@ -4,7 +4,7 @@ status: superseded
 date: 2026-08-13
 decision: package-repo-keeps-both-rule-layers
 supersedes: —
-superseded_by: ADR-235
+superseded_by: ADR-236
 phase: —
 type: structural
 review_trigger: >-
@@ -24,15 +24,15 @@ review_trigger: >-
 
 ## Status
 
-**Superseded** · by [ADR-235](ADR-235-one-artefact-one-layer.md), 2026-08-19.
+**Superseded** · by [ADR-236](ADR-236-one-artefact-one-layer.md), 2026-08-19.
 Accepted 2026-08-13.
 
-**What replaced it, and what did not.** ADR-235 partitions the two layers — every
+**What replaced it, and what did not.** ADR-236 partitions the two layers — every
 artefact is delivered from exactly one, chosen by `workspaces:` — so the question
 this record answered ("which layer wins") no longer arises. That is an owner
 decision about delivery topology, **not** a refutation of the reasoning below:
 both halves were re-verified on a freshly regenerated tree and both hold.
-`source-of-truth.md` is still the only project-only rule, and ADR-235 keeps it in
+`source-of-truth.md` is still the only project-only rule, and ADR-236 keeps it in
 the project layer, which is what this record was protecting. The structural
 generated-vs-installed divergence is confirmed and larger — 2 rules then, **110**
 now.

@@ -794,7 +794,7 @@ run_scope_guard() {
                 else printf "       - %s at %s (v%s) — overlap not counted (this scope is empty or unreadable; a first install here has nothing to double yet)\n", $2, $3, $4;
             }'
             echo ""
-            echo "      Pick one scope if you can: ADR-235 (one artefact, one layer)."
+            echo "      Pick one scope if you can: ADR-236 (one artefact, one layer)."
             echo ""
         }
         return 0

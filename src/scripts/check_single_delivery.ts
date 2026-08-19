@@ -1,7 +1,7 @@
 /**
  * check_single_delivery — assert that no artefact is delivered from both layers.
  *
- * THE INVARIANT (ADR-235, one-artefact-one-layer): every rule and every skill is
+ * THE INVARIANT (ADR-236, one-artefact-one-layer): every rule and every skill is
  * delivered from exactly ONE layer. Claude Code loads `~/.claude/**` AND
  * `<project>/.claude/**`, both, user layer first, with no dedup — so an artefact
  * present in both is delivered twice, in every session, forever.
@@ -270,7 +270,7 @@ export function evaluate(globalRoot: string, projectRoot: string): Verdict {
 
 export function render(v: Verdict, globalRoot: string, projectRoot: string): string {
     const out: string[] = [];
-    out.push('check_single_delivery · invariant: one artefact, one layer (ADR-235)');
+    out.push('check_single_delivery · invariant: one artefact, one layer (ADR-236)');
     out.push(`  global:  ${globalRoot}`);
     out.push(`  project: ${projectRoot}`);
     out.push('');
@@ -446,7 +446,7 @@ export function main(argv?: readonly string[]): number {
     }
     const detail = parts.join(', and ');
     if (enforce) {
-        process.stdout.write(`❌  check_single_delivery: ${detail}. Invariant ADR-235 violated.\n`);
+        process.stdout.write(`❌  check_single_delivery: ${detail}. Invariant ADR-236 violated.\n`);
         return 1;
     }
     process.stdout.write(

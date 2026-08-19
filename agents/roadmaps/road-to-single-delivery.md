@@ -216,9 +216,9 @@ taken on a stale or a fresh projection.
       `verify:` the ADR index regenerates consistently and `check_references` is
       green on both records.
       **DONE 2026-08-19:**
-      [`ADR-235`](../../docs/decisions/ADR-235-one-artefact-one-layer.md) accepted,
+      [`ADR-236`](../../docs/decisions/ADR-236-one-artefact-one-layer.md) accepted,
       `supersedes: ADR-226`; ADR-226 flipped to `status: superseded` with
-      `superseded_by: ADR-235` and a Status section stating which of its arguments
+      `superseded_by: ADR-236` and a Status section stating which of its arguments
       were re-verified (both) and which two figures expired (22 → 5 rules, and
       prose divergence 2 → 0). Index regenerated with
       `adr/regenerate_index --dir docs/decisions` — note the flag: the script
@@ -307,7 +307,7 @@ project layer contains exactly the package-only set.
       **DONE 2026-08-19** — the WARN row now reads "No drift, but **not free**"
       with the overlap count, and says in as many words what the old wording
       taught. A paragraph above the installer section carries the measurement and
-      links the census and ADR-235.
+      links the census and ADR-236.
 
 **AC-3:** neither the guard nor the contract can be read as saying that
 same-version duplication is free.
@@ -436,7 +436,7 @@ than reporting a clean invariant that does not hold.
 - **If you do nothing:** Phase 2 stays halted and the duplication stays live. That
   is the safe direction of this particular non-decision, which is why the phase
   halts rather than shipping a default.
-- **Resolved when:** the option is recorded in ADR-235 or an amendment to it, and
+- **Resolved when:** the option is recorded in ADR-236 or an amendment to it, and
   2.0's verify can be run against it.
 
 ### blocker: compact-survival-of-package-only-rules
