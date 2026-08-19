@@ -1,26 +1,33 @@
 ---
 complexity: lightweight
-status: draft
+status: later
 parent_roadmap: autonomous-verify-loop
 ---
 
 # Roadmap: Live-app Playwright as the canonical verdict source (verify-repair-loop)
 
-> **Status: draft (trigger-gated).** Spawned from
-> `road-to-autonomous-verify-loop.md` (Phase 2, 2026-06-15) to carry its one
-> deferred item without trapping the parent in Iron Law 3. Hidden from the
-> dashboard until flipped to `ready` — flip only when the trigger below fires.
+> **Blocked until:** a consumer repo's CI runs the `playwright-testing` skill
+> against a live app and that run is recorded under `agents/evidence/`.
+> **Why that half and not the other:** the trigger below is a conjunction, and
+> its first conjunct has already fired — `road-to-mission-mode` is archived. Only
+> the consumer-CI half is still open, so naming the whole conjunction as the
+> resume condition would read as FIRED to the resume probe on a third of the
+> evidence. Parked 2026-08-19 by `road-to-estate-drawdown` Phase 2 batch 1,
+> verdict PARK-PROBEABLE.
+> **Origin:** spawned from `road-to-autonomous-verify-loop.md` (Phase 2,
+> 2026-06-15) to carry its one deferred item without trapping the parent in
+> Iron Law 3.
 
-## Trigger (both must hold before this leaves draft)
+## Trigger (both must hold before this leaves `later/`)
 
 1. `road-to-mission-mode` (or a later mission) ships a mission whose output is
    **UI-observable**, AND
-2. [`playwright-testing`](../../src/skills/playwright-testing/SKILL.md) is wired
+2. [`playwright-testing`](../../../src/skills/playwright-testing/SKILL.md) is wired
    into a **consumer's CI** (a live app the loop can drive).
 
-Until both hold, [`verify-repair-loop`](../../src/skills/verify-repair-loop/SKILL.md)
+Until both hold, [`verify-repair-loop`](../../../src/skills/verify-repair-loop/SKILL.md)
 uses test/quality verdicts only — never a live app (which needs running services
-= a runtime, violating [`no-runtime-boundary`](../../docs/contracts/no-runtime-boundary.md)).
+= a runtime, violating [`no-runtime-boundary`](../../../docs/contracts/no-runtime-boundary.md)).
 
 ## Phase 1 — Live-app verdict (only when the trigger fires)
 

@@ -2,7 +2,7 @@
 
 > **Ownership (deduped 2026-07-12, road-to-opt-portfolio-consolidation
 > Phase 4):** the connector bet has ONE tracking owner —
-> [`road-to-product-bets.md`](../road-to-product-bets.md) Phase 3
+> [`road-to-product-bets.md`](../later/road-to-product-bets.md) Phase 3
 > (knowledge connectors, `domain-adoption-policy` gates: named adopter +
 > owner + CI, MCP-first pilot). This stub is NOT a second tracking
 > surface; it records only the workspace-OAuth-specific promotion
