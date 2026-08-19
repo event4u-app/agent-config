@@ -118,15 +118,19 @@ function loadRows(storeDir: string): Row[] {
 export function candidatePairs(rows: readonly Row[], threshold: number): Pair[] {
     const out: Pair[] = [];
     for (let i = 0; i < rows.length; i += 1) {
+        const left = rows[i];
+        if (!left) continue;
         for (let j = i + 1; j < rows.length; j += 1) {
-            const score = jaccardSimilarity(rows[i].text, rows[j].text);
+            const right = rows[j];
+            if (!right) continue;
+            const score = jaccardSimilarity(left.text, right.text);
             if (score < threshold) continue;
             const band = classifySimilarity(score);
             out.push({
-                a: rows[i].id,
-                b: rows[j].id,
-                type_a: rows[i].type,
-                type_b: rows[j].type,
+                a: left.id,
+                b: right.id,
+                type_a: left.type,
+                type_b: right.type,
                 score,
                 band,
             });

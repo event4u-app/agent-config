@@ -4,11 +4,10 @@ import { describe, expect, it } from 'vitest';
 
 import { candidatePairs } from '../../src/scripts/memory_consolidation.js';
 
-const rows = [
-    { id: 'a', type: 'product-rules', text: 'the roadmap archives inside the PR that completes it' },
-    { id: 'b', type: 'historical-patterns', text: 'the roadmap archives inside the PR that completes it' },
-    { id: 'c', type: 'product-rules', text: 'council spend is authorised on the subscription transport' },
-];
+const ROW_A = { id: 'a', type: 'product-rules', text: 'the roadmap archives inside the PR that completes it' };
+const ROW_B = { id: 'b', type: 'historical-patterns', text: 'the roadmap archives inside the PR that completes it' };
+const ROW_C = { id: 'c', type: 'product-rules', text: 'council spend is authorised on the subscription transport' };
+const rows = [ROW_A, ROW_B, ROW_C];
 
 describe('candidatePairs', () => {
     it('surfaces an identical pair across types', () => {
@@ -16,9 +15,14 @@ describe('candidatePairs', () => {
         // the shape worth surfacing: one claim, two rows in a capped index.
         const pairs = candidatePairs(rows, 0.4);
         expect(pairs).toHaveLength(1);
-        expect(pairs[0]).toMatchObject({ a: 'a', b: 'b', type_a: 'product-rules', type_b: 'historical-patterns' });
-        expect(pairs[0].score).toBe(1);
-        expect(pairs[0].band).toBe('merge');
+        expect(pairs[0]).toMatchObject({
+            a: 'a',
+            b: 'b',
+            type_a: 'product-rules',
+            type_b: 'historical-patterns',
+            score: 1,
+            band: 'merge',
+        });
     });
 
     it('reports each pair once, never mirrored', () => {
@@ -35,6 +39,6 @@ describe('candidatePairs', () => {
     });
 
     it('finds nothing in a store with no overlap', () => {
-        expect(candidatePairs([rows[0], rows[2]], 0.4)).toEqual([]);
+        expect(candidatePairs([ROW_A, ROW_C], 0.4)).toEqual([]);
     });
 });

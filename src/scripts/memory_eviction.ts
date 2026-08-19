@@ -245,7 +245,7 @@ function splitEntries(text: string): { header: string[]; blocks: Array<{ id: str
         const m = /^(\s*)-\s+id:\s*(\S+)\s*$/.exec(line);
         if (m) {
             if (current) blocks.push(current);
-            current = { id: m[2], lines: [line] };
+            current = { id: m[2] ?? '', lines: [line] };
             continue;
         }
         if (current) current.lines.push(line);
