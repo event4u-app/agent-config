@@ -45,10 +45,18 @@ import { read_lockfile } from './installed_lock.js';
  *
  * The roadmap's § 0 names three (A promissory, B language, C verification).
  * That was true of the draft and is not true of the tree: detector D
- * (`completion`) landed under round 7 § Phase 1 and is in the same
- * unconditional list as the other three. Counting three would silently drop a
- * detector's refusals, so the set is read off `DetectorId` in the gate rather
- * than off the prose.
+ * (`completion`) landed under round 7 § Phase 1 and runs in the same detector
+ * list as the other three. Counting three would silently drop a detector's
+ * refusals, so the set is read off `DetectorId` in the gate rather than off the
+ * prose.
+ *
+ * This said "the same UNCONDITIONAL list" until 2026-08-18, which was wrong and
+ * is worth naming rather than quietly rewording: `main()` runs A and D only when
+ * no subagent dispatch is open. It does not change this set — every detector
+ * that CAN fire needs a counter — but it does change what a reader may conclude
+ * from a zero here: A's and D's counts are censored by that third allow path,
+ * and `docs/contracts/turn-end-detector-demotion.md` is where that consequence
+ * is carried.
  */
 export const DETECTOR_IDS = [
     'promissory',

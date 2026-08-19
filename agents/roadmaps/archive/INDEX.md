@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**506 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 167 · completed 248 · completed-with-deferrals 25 · not-extractable 34
+**507 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 167 · completed 249 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -442,6 +442,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-spawn-env-completion`](road-to-spawn-env-completion.md) | Road to spawn-env completion — close the GIT_CONFIG RCE residual, classify every spawn site | completed | 2 | 9/9 | _not extractable_ |
 | [`road-to-stable-chat-history`](road-to-stable-chat-history.md) | Roadmap: Stable Chat History via Platform Hooks | archived-with-open-steps | 5 | 28/31 | _not extractable_ |
 | [`road-to-starlight-project-docs`](road-to-starlight-project-docs.md) | Roadmap: Starlight project documentation | archived-with-open-steps | 9 | 31/38 | _not extractable_ |
+| [`road-to-stop-gate-honesty`](road-to-stop-gate-honesty.md) | Road to stop-gate honesty — a blocking gate earns a number | completed | 3 | 7/7 | _not extractable_ |
 | [`road-to-structural-linter-reform`](road-to-structural-linter-reform.md) | Road to Structural Linter Reform | completed | 4 | 14/14 | _not extractable_ |
 | [`road-to-structural-optimization`](road-to-structural-optimization.md) | Road to Structural Optimization | closed-with-cancellations | 7 | 43/60 | _not extractable_ |
 | [`road-to-structure-grounding-v2`](road-to-structure-grounding-v2.md) | Roadmap: Structure-grounding v2 — global cross-project card sharing | completed | 6 | 17/17 | _not extractable_ |

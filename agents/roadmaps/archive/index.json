@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 506,
+  "count": 507,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -5854,6 +5854,20 @@
       },
       "verdict": null,
       "status": "active"
+    },
+    {
+      "slug": "road-to-stop-gate-honesty",
+      "title": "Road to stop-gate honesty — a blocking gate earns a number",
+      "disposition": "completed",
+      "phases": 3,
+      "steps": {
+        "open": 0,
+        "done": 7,
+        "deferred": 0,
+        "cancelled": 0
+      },
+      "verdict": null,
+      "status": null
     },
     {
       "slug": "road-to-structural-linter-reform",

@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 38 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **54** open blockers, **26** need you → `agent-config gates`
+> 37 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **53** open blockers, **25** need you → `agent-config gates`
 
 ## Overall
 
-**308 / 578 steps done · 53%**
+**299 / 570 steps done · 52%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   53%
+█████████████████████░░░░░░░░░░░░░░░░░░░   52%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -56,12 +56,11 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 30 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
 | 31 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
 | 32 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 8 | 0 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ░░░░░░░░░░ 0% |
-| 33 | [road-to-stop-gate-honesty.md](roadmaps/road-to-stop-gate-honesty.md) | 3 | 7 | 1 | 6 | 0 | 0 | [1](#blockers-road-to-stop-gate-honesty) | █████████░ 86% |
-| 34 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 8 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 58% |
-| 35 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 36 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 37 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 38 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+| 33 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 8 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 58% |
+| 34 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 35 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 36 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 37 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
 
 ---
 
@@ -1114,36 +1113,6 @@ _1 blocker resolved._
     build a retriever before the comparison against `src/scripts/_lib/lexical_index.ts`
     that `later/road-to-deferred-rule-retriever` pre-registered.
   - **Resolved when:** the metric reads against its bar and the fork resolves to (a) or (b), or the window is recorded as unfilled with a new date.
-
-### [road-to-stop-gate-honesty.md](roadmaps/road-to-stop-gate-honesty.md)
-
-**Road to stop-gate honesty — a blocking gate earns a number** — 6 / 7 done (86%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Count before judging | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Judge each detector on its measured rate against its measured benefit | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
-| 3 | Make refusals cheap when they happen | ✅ done | 0 | 2 | 0 | 0 | 100% |
-
-<a id="blockers-road-to-stop-gate-honesty"></a>
-**Blockers**
-
-- **b-detector-demotion-bars** (owner: user) — blocks Phase 2 step 2.1, and therefore any demotion. Steps 1.x, 2.2 and 3.x are repo work and proceed without it.
-  - **Recommendation:** **option (a) — per-detector bars.** The three detectors have genuinely different legitimacy profiles: A fires on the agent's own promissory language, B on a language mismatch against a fresh pin, C on an edit with no verifier. A single shared bar (option b) would be set by whichever detector fires most and would either demote a detector that was working or protect one that was not. Option (c) is defensible on the round-5 evidence but forecloses the question permanently, and this roadmap's whole premise is that a blocking gate should carry a number.
-  - **If you do nothing:** the gate keeps refusing turn-ends at an unmeasured rate, and the estate keeps a blocking concern with no registered kill standard while every advisory around it has one. Phase 1's counts would accumulate with nothing authorised to act on them — measurement without a decision rule, which is the shape this roadmap was opened to fix.
-  - **What to do:**
-    pre-register the demotion bar per detector, before reading Phase
-    1's data — pre-registration after the fact is not pre-registration. Options:
-    (a) name a re-refusal share and a per-session median for each of A, B and C
-    separately; (b) name one bar shared by all three, accepting that it will fit the
-    most-firing detector worst; (c) declare that no demotion is available and the
-    gate stays blocking regardless of rate, in which case Phase 2 closes with that
-    recorded and Phase 1's numbers become monitoring rather than a decision input.
-    The counter-argument to keep in view: the round-5 measurement — blocking
-    carriers at zero violations, advisory carriers not — is the strongest single
-    result in the enforcement estate, so a demotion trades a measured win for a
-    measured cost and both numbers should be on the table.
-  - **Resolved when:** the bars, or option (c), are recorded at this blocker with their reasoning, and the record predates the first read of Phase 1 data.
 
 ### [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md)
 
