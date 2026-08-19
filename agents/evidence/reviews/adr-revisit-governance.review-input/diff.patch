@@ -1,0 +1,2977 @@
+diff --git a/.github/workflows/rule-backstops.yml b/.github/workflows/rule-backstops.yml
+index 6b37e92660c9dc40f71d93ca304d1f2f960b53b4..fc909cf91aa8f51fef272e2ee46e0da949c8177a 100644
+--- a/.github/workflows/rule-backstops.yml
++++ b/.github/workflows/rule-backstops.yml
+@@ -246,6 +246,17 @@ jobs:
+       - name: ADR frontmatter + review_trigger
+         run: ./scripts-run src/scripts/check_adr_frontmatter
+ 
++      # Both of these were reachable only from `task ci`, which no workflow
++      # invokes — so `adr-layout.md` claimed the coverage gate "fails under
++      # task ci" while nothing ran it, and the index could go stale with no
++      # signal. Wired here rather than corrected in prose: both exit 0 on the
++      # current tree, so this costs nothing today and catches the next drift.
++      - name: ADR coverage gate
++        run: ./scripts-run src/scripts/audit_adr_coverage --check
++
++      - name: ADR index freshness
++        run: ./scripts-run src/scripts/adr/regenerate_index --dir docs/decisions --check
++
+       - name: Subagent safety-floor freshness
+         run: ./scripts-run src/scripts/generate_subagent_floor --check
+ 
+diff --git a/agents/roadmaps/archive/INDEX.md b/agents/roadmaps/archive/INDEX.md
+index 6aed7a8662c0c65c8d596ff723a6560c35a03506..1ffa9daf2fb12761690df21478cfd5cdc7714ae7 100644
+--- a/agents/roadmaps/archive/INDEX.md
++++ b/agents/roadmaps/archive/INDEX.md
+@@ -5,7 +5,7 @@
+ > history, not in this file (a clock here would make every drift check a
+ > false red).
+ 
+-**513 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 173 · completed 249 · completed-with-deferrals 25 · not-extractable 34
++**514 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 173 · completed 250 · completed-with-deferrals 25 · not-extractable 34
+ 
+ Every column is extracted deterministically from the file itself. No
+ summary here is model-written: a verdict the frontmatter does not carry
+@@ -105,6 +105,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
+ | [`road-to-activation-evidence-or-refusal`](road-to-activation-evidence-or-refusal.md) | Road to activation evidence — produce the red baseline or refuse the resolver permanently | closed-with-cancellations | 2 | 6/7 | _not extractable_ |
+ | [`road-to-additive-settings-sync`](road-to-additive-settings-sync.md) | Roadmap: Additive Settings Sync | completed | 7 | 35/35 | _not extractable_ |
+ | [`road-to-adoption-proof-and-ci-green`](road-to-adoption-proof-and-ci-green.md) | Adoption Proof + CI Green — convert the three deferred 3.2.0 actions into shipped reality | closed-with-cancellations | 4 | 22/33 | _not extractable_ |
++| [`road-to-adr-revisit-governance`](road-to-adr-revisit-governance.md) | Roadmap: ADR revisit governance — a recorded decision is challengeable, not permanent | completed | 6 | 37/37 | _not extractable_ |
+ | [`road-to-adversarial-council-benchmark`](road-to-adversarial-council-benchmark.md) | Road to resolving the adversarial-council finding-coverage claim (benchmark arm) | completed | 2 | 8/8 | _not extractable_ |
+ | [`road-to-adversarial-verification-council`](road-to-adversarial-verification-council.md) | Road to an adversarial verification council — a cross-model skeptic panel that maximizes defect-finding coverage on a real change | closed-with-cancellations | 6 | 25/27 | _not extractable_ |
+ | [`road-to-agent-behavior-conformance`](road-to-agent-behavior-conformance.md) | Road to agent-behaviour conformance — 30 sessions audited, ~130 rule violations, every rule already in context | completed | 6 | 30/30 | _not extractable_ |
+diff --git a/agents/roadmaps/archive/index.json b/agents/roadmaps/archive/index.json
+index 73fcbcca1fed5cc358dea4f85684326542d331f2..8cd05a97c31f57a13161ad2dc6a5b575d31b034a 100644
+--- a/agents/roadmaps/archive/index.json
++++ b/agents/roadmaps/archive/index.json
+@@ -1,7 +1,7 @@
+ {
+   "generated_by": "src/scripts/build_archive_index.ts",
+   "source": "agents/roadmaps/archive",
+-  "count": 513,
++  "count": 514,
+   "entries": [
+     {
+       "slug": "00-overview-and-ordering",
+@@ -1137,6 +1137,20 @@
+       "verdict": null,
+       "status": "ready"
+     },
++    {
++      "slug": "road-to-adr-revisit-governance",
++      "title": "Roadmap: ADR revisit governance — a recorded decision is challengeable, not permanent",
++      "disposition": "completed",
++      "phases": 6,
++      "steps": {
++        "open": 0,
++        "done": 37,
++        "deferred": 0,
++        "cancelled": 0
++      },
++      "verdict": null,
++      "status": null
++    },
+     {
+       "slug": "road-to-adversarial-council-benchmark",
+       "title": "Road to resolving the adversarial-council finding-coverage claim (benchmark arm)",
+diff --git a/agents/roadmaps/archive/road-to-adr-revisit-governance.md b/agents/roadmaps/archive/road-to-adr-revisit-governance.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..6da5a2fe2e224c7d078eb66c359c42cd845e8170
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-adr-revisit-governance.md
+@@ -0,0 +1,388 @@
++---
++complexity: structural
++execution:
++  mode: autonomous
++---
++
++# Roadmap: ADR revisit governance — a recorded decision is challengeable, not permanent
++
++> Turn "an ADR blocks this" from a full stop into a routed decision: the agent
++> must evaluate an ADR before citing it as a blocker, the council decides
++> mechanism reopenings, and only an owner-reserved transition reaches the user.
++
++## Prerequisites
++
++- [x] Read `AGENTS.md`, [`adr-layout`](../../docs/contracts/adr-layout.md), and
++      [`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md).
++- [x] `agent-config council:status` reports CONFIGURED (the routing target this
++      roadmap builds must have somewhere to route to).
++
++## Context
++
++The owner has demanded, in eleven distinct messages across seven sessions
++between 2026-07-25 and 2026-08-19, that recorded decisions be challengeable —
++escalating from *"we can overturn ADRs, nothing is fixed forever"* to *"old ADRs
++are irrelevant to me"* to naming a specific ADR "bullshit" and demanding every
++change it had blocked be unblocked retroactively.
++
++The measured counter-evidence is not disobedience. In **zero** cases did the
++agent refuse an explicit overturn instruction. In at least **13** assistant
++passages a change was parked or refused citing a named ADR (11 distinct
++numbers: 011, 035, 051, 054, 127, 133, 208, 211, 216, 220, 227). Two passages
++quantify the effect in the agent's own words — *"60–80 % of every substantive
++file is already built, already planned, or forbidden by a lock the file never
++read"* and *"roughly two thirds of the recommendations … predominantly
++prevented work"*. Both times the agent's lock report is timestamped **before**
++the owner's override demand.
++
++So the defect is **ordering**, not permission: the lock holds, the owner must
++notice and retroactively void it, and the work resumes. Nothing in the tree
++converts "this ADR blocks the change" into "is this ADR still true?".
++
++### What the tree already has (this roadmap builds on it, never rebuilds it)
++
++| # | Existing | Where |
++|---|---|---|
++| E1 | The doctrine is already anti-permanent — 26 decision-normative sites, **zero** files declaring a decision untouchable | tree-wide sweep |
++| E2 | `review_trigger` — a mandatory ADR field holding a *condition*, never a cadence; 60 of 174 carry one | `src/scripts/check_adr_frontmatter.ts:49,95-143` |
++| E3 | Council-first is doctrine, and "reopening a recorded decision" is already a listed council class | `src/skills/ai-council/SKILL.md:23-24,38-44` |
++| E4 | A complete council-vs-user routing test — eight dispositions, one discriminator, fail-closed, recording duty — **but scoped to roadmaps** | `src/rules/roadmap-progress-sync.md:57-98` |
++| E5 | The purpose/mechanism boundary, drawn in prose in one ADR | `docs/decisions/ADR-216-restraint-reanchored-to-capacity.md:47-48,314-317` |
++| E6 | A bulk re-evaluation precedent: 44 rejects reclassified RE-OPENED / RE-AFFIRMED / STAY-KILLED under "no silent re-openings, no silent re-affirmations" | `docs/decisions/engine-reclassification-2026-07.md` |
++| E7 | One working single-case reopen, on the ADR's own `review_trigger`, landed as an amendment | `docs/decisions/ADR-232-frontier-tier-reopened.md:23-26` |
++
++### The measured gaps this roadmap closes
++
++- **G1 — nothing ever asks whether a `review_trigger` has fired.** The gate
++  checks presence and non-cadence form only; its workflow has no `schedule:`;
++  nine cron workflows exist and none touches ADRs; zero hooks read the value.
++  Canonical proof: `ADR-001:84-86` declares its follow-up decision
++  *"**mandatory** before P4.1"*; the precondition shipped, the follow-up never
++  happened, the ADR is still `accepted`, `superseded_by: —`.
++- **G2 — amendment has no representation.** 18 ADRs carry amendment blocks in
++  three unreconciled conventions; no frontmatter field, no index signal, no
++  back-link. `ADR-035:39-41,:102` still states a 4th tier is rejected while
++  ADR-232 reopened exactly that; ADR-035 contains zero references to it.
++- **G3 — ADRs carry no class saying who owns the reopen.** `type:` holds
++  `structural | prospective | retrospective | standing`. Consequence in both
++  directions: `/optimize:project:161-168` routes *every* lock to the council
++  regardless of kind, while nothing marks the ADRs a council must never reopen.
++- **G4 — reach.** `decision-revisit-gate` triggers on five keywords and **none
++  is "ADR"**; it routes to `decision-review`, which is `install.default: false`
++  in a non-default pack; `docs/decisions/` is projected into no agent-visible
++  tree, and the always-loaded root file carries 3 ADR links out of 181.
++- **G5 — no command may supersede an ADR.** Three offer a path; all three end
++  in a recommendation or a roadmap step. No gate *blocks* an ADR edit either —
++  the brake is norm and reach, not enforcement.
++
++### Council pass — 2026-08-19, 2 seats, 2 rounds
++
++Artefact: `agents/runtime/council/responses/adr-revisit-governance.md`
++(gitignored, local-only). Convergent findings, carried into the phases below:
++
++1. **Cite-time evaluation is the first intervention** — both seats ranked
++   `(b) check at citation` above `(c) machine-readable grammar`, `(a) scheduled
++   sweep`, `(d) model-only`. Model-only is refuted by this suite's own measured
++   Δ=0 on reminder injection.
++2. **Legacy ADRs default to `unclassified`, never `owner`** — both seats,
++   explicitly: a fail-closed `owner` default *"would encode the existing
++   blockage into the new schema"*.
++3. **Authority is a property of the proposed transition, not only of the
++   document** — a security ADR may be *strengthened* by the council and only
++   *weakened* by the owner. A static field alone over-classifies.
++4. **User-only set** — purpose · **lowering** a recorded security/privacy/safety
++   floor (not every security touch) · irreversible or destructive · spend above
++   a delegated threshold (not all spend) · external legal/contractual/
++   compatibility/public commitments · governance self-amendment · the council
++   cannot decide (no quorum, unbounded blast radius, missing evidence).
++5. **Council split is an escalation condition, not a class.**
++6. **The named danger is precedent laundering through correlated self-review** —
++   the proposer frames the evidence, two correlated seats ratify, the amendment
++   becomes authoritative input for the next review. Safeguards in Phase 5.
++7. **Do NOT build a full machine-readable trigger grammar as a prerequisite**
++   (anthropic's explicit "would not make"); `indeterminate` must be a
++   first-class trigger result rather than being forced to a boolean.
++
++Divergence, and how it is resolved here: one seat proposed a two-axis matrix
++(constraint class × blast radius), the other a directional test on the
++transition. Phase 3 adopts the directional test as the **discriminator** and
++keeps blast radius as a **recorded field** on the reopen record — which is what
++both seats actually asked for, under two names.
++
++## Phase 1: Reach — make the anti-permanence law fire on the word that blocks
++
++Nothing downstream matters if the rule never loads. G4 is upstream of every
++other gap.
++
++- [x] **Step 1:** Add the missing triggers to
++      `src/rules/decision-revisit-gate.md` frontmatter — `keyword: "adr-"`,
++      `keyword: "adrs"`, `keyword: "superseded"`, `keyword: "review_trigger"`,
++      `phrase: "the adr"`. Keep the five existing keywords. **`adr-` and not a
++      bare `adr`:** matching is plain lower-cased substring containment, so a
++      bare `adr` fires on `adresse`, `quadrat`, `cadre` — the exact false
++      positive the transcript scan hit. `adr-` matches every `ADR-NNN` citation,
++      which is the shape a lock is actually cited in.
++      <!-- verify: grep -c 'keyword: "adr-"' src/rules/decision-revisit-gate.md -->
++- [x] **Step 2:** Fix the dangling route named in the rule's See-also: the
++      "escalation litmus" heading it cites does not exist in
++      `src/skills/decision-record/SKILL.md`. Repointed to **§ 4 Lock the choice
++      + consequences**, which carries the `Revisit-if:` obligation. Sibling
++      search on the exact wrong construct (a pointer asserting a heading that
++      does not exist): `grep -rn "escalation litmus" src/ docs/` → **2 sites**,
++      1 was this one, 1 (`docs/contracts/settings-classes.md:454`) claims no
++      heading and is correct as written. `check_references` cannot catch this
++      class — it validates links, and the link resolved; the heading claim is
++      prose, so the verify below is the grep that actually decides it.
++      <!-- verify: grep -c "Lock the choice" src/rules/decision-revisit-gate.md -->
++- [x] **Step 3:** Close the pack-reach hole. `decision-revisit-gate` is
++      `packs: [meta]` (always-on) but routed to `decision-review`
++      (`install.default: false`, pack `analysis-workbench`). **Chosen: the
++      second branch** — `routes_to` now names `skill:ai-council` and
++      `skill:decision-record` (both `packs: [meta]`, always-on), the five steps
++      are carried compactly in the rule body, and `decision-review` stays as
++      optional depth. Not the install-flip, because forcing a backward-audit
++      skill into every consumer install to satisfy one route is a larger
++      change than the defect. Linter: 12 → 11 unreachable-route findings, this
++      rule no longer among them.
++      <!-- verify: npx tsx src/scripts/lint_rule_skill_pack_reach.ts -->
++- [x] **Step 4:** Rewrite the rule's routing sentence so the default
++      re-evaluation venue is the **council**, not the user — matching
++      `ai-council/SKILL.md:23-24` ("goes to the council first, not to the user
++      first") and the owner's instruction. The user is reached only via the
++      Phase 3 owner-reserved set. Three lines added to the Iron Law (nothing
++      removed — `preservation-guard`): council-first, the user always for the
++      reserved set, and never cite an unevaluated lock. Rule size 62 → 110
++      lines, under the 200-line ceiling.
++      <!-- verify: npx tsx src/scripts/validate_frontmatter.ts -->
++
++**Exit criteria:** `check_references` exits 0; the four new keywords are present;
++`lint_rule_skill_pack_reach` exits 0.
++**Rollback:** revert `src/rules/decision-revisit-gate.md` and any skill
++frontmatter touched; no other surface changes in this phase.
++
++## Phase 2: The cite-time precondition — an ADR may not gate work unevaluated
++
++The council's first-change recommendation, from both seats.
++
++- [x] **Step 1:** Write `src/scripts/adr_cite_check.ts`. Input: one or more ADR
++      references (`ADR-211`, a path, or a bare number). Output (human + `--json`):
++      resolved file · `status` · `review_trigger` verbatim ·
++      trigger state `not-fired | fired | indeterminate` · `supersedes` /
++      `superseded_by` · amendment blocks found · later ADRs that name it.
++      **`indeterminate` is a first-class result** (council finding 7) — a
++      semantic condition the tool cannot evaluate resolves to `indeterminate`,
++      never to `not-fired`.
++      <!-- verify: npx tsx src/scripts/adr_cite_check.ts ADR-001 --json -->
++- [x] **Step 2:** Resolve the four secondary ADR surfaces the tool must read —
++      `docs/adrs/<area>/` (7), `docs/contracts/adr-*.md` (15),
++      `agents/settings/contexts/adr-*.md` (6) — or state in the tool's header
++      which it deliberately does not cover and why. A tool that silently sees
++      one of six surfaces reports false "not found".
++      <!-- verify: npx vitest run tests/scripts/adr_cite_check.test.ts -->
++- [x] **Step 3:** Write `tests/scripts/adr_cite_check.test.ts` covering: a
++      fired trigger (ADR-001 — its precondition demonstrably shipped), an
++      unmet trigger, a semantic trigger → `indeterminate`, a superseded ADR, an
++      amended ADR, and an unknown number.
++      <!-- verify: npx vitest run tests/scripts/adr_cite_check.test.ts -->
++- [x] **Step 4:** Bind the obligation in `decision-revisit-gate`: **no ADR may
++      be presented as a reason not to do something until `adr_cite_check` has
++      run on it and its result is stated.** A `fired` or `indeterminate` result
++      may not be reported as an unqualified lock — it opens the Phase 3 route.
++      State honestly that this obligation is model-carried outside the tool
++      (`enforced_by: none`), matching the tree's honesty convention.
++- [x] **Step 5:** Add the check to `/analyze:decision` and
++      `/optimize:project` as the first action whenever a lock is hit, replacing
++      the current "report the lock" step.
++
++**Exit criteria:** the tool exits 0 on a known ADR and non-zero on an unknown
++one; its test file passes; the rule and both commands name it.
++**Rollback:** delete the script + test, revert the rule and the two command
++files. No frontmatter or ADR content is touched in this phase.
++
++## Phase 3: Directional authority — who decides is a property of the transition
++
++- [x] **Step 1:** Add to `docs/contracts/adr-layout.md` a normative section
++      **"Reopen authority"** carrying: the discriminator — *does the proposed
++      transition weaken an owner-reserved invariant, or create an undelegated
++      external, irreversible, or destructive commitment?* — and the
++      owner-reserved set exactly as the council converged it (context § 4),
++      with council-split named as an **escalation condition**, not a class.
++- [x] **Step 2:** Extend the ADR frontmatter contract with two optional fields:
++      `protected_dimensions:` (list ∈ `purpose | security_floor | privacy_floor
++      | external_commitment | governance | none`) and
++      `reopen_policy: directional | owner | unclassified`. **A missing field
++      resolves to `unclassified`, never `owner`** (council finding 2).
++      `unclassified` means: the council may investigate, draft, and run
++      reversible experiments; execution of a transition that touches a reserved
++      dimension needs the owner.
++      <!-- verify: npx tsx src/scripts/check_adr_frontmatter.ts -->
++- [x] **Step 3:** Teach `check_adr_frontmatter.ts` the two new fields —
++      validate the enums when present, never require them, and never fail an
++      existing ADR for their absence.
++      <!-- verify: npx vitest run tests/scripts/check_adr_frontmatter.test.ts -->
++- [x] **Step 4:** Classify only the ADRs where classification is free of
++      judgment: the 24 `superseded` and 2 `rejected` (they gate nothing —
++      `reopen_policy: unclassified` is correct and needs no write), and the
++      ADRs whose own text already declares a purpose reservation. Everything
++      else stays absent → `unclassified`. **Do not bulk-classify 146 ADRs** —
++      both seats warned that a mass classification is expensive, error-prone,
++      and recreates the blockage under a new name.
++- [x] **Step 5:** Record the owner-reserved set in
++      `src/rules/decision-revisit-gate.md` as a compact table so the routing
++      decision is available without loading the contract.
++
++**Exit criteria:** `check_adr_frontmatter` exits 0 across the corpus with the
++new fields optional; the contract section exists and the rule's table matches
++it (same rows, same order).
++**Rollback:** revert the contract section, the two frontmatter keys, and the
++validator change; classified ADRs lose only two optional keys.
++
++## Phase 4: Amendment representation — make a reopened decision visible
++
++- [x] **Step 1:** Pick ONE amendment convention and record it in
++      `docs/contracts/adr-layout.md` (three exist today: `## Amendment N
++      (date)`, `## Amendment — date · topic`, `**Amended <date> —`). Do not
++      rewrite the 18 existing bodies in this roadmap — declare the convention
++      and require it going forward.
++- [x] **Step 2:** Add `amends:` / `amended_by:` frontmatter keys, mirroring the
++      existing `supersedes:` / `superseded_by:` pair, and validate them in
++      `check_adr_frontmatter.ts` — including the bidirectional check the
++      supersession pair is missing.
++      <!-- verify: npx vitest run tests/scripts/check_adr_frontmatter.test.ts -->
++- [x] **Step 3:** Backfill the one case the analysis proved live and wrong:
++      ADR-035 still asserts a rejection ADR-232 reopened, with zero back-link.
++      Add `amended_by: ADR-232` to ADR-035 and the reciprocal `amends: ADR-035`
++      to ADR-232, plus a one-line body banner on ADR-035 pointing at it.
++      <!-- verify: grep -c 'amended_by: ADR-232' docs/decisions/ADR-035-*.md -->
++- [x] **Step 4:** Teach `src/scripts/adr/regenerate_index.ts` to read
++      `superseded_by` and `amended_by` and render them — the index today writes
++      `| # | Title | Status | Date | Supersedes |` and a dead ADR shows
++      `superseded | — `, so the reader learns it is dead but not by what.
++      <!-- verify: npx vitest run tests/scripts/adr_regenerate_index.test.ts -->
++- [x] **Step 5:** Fix the two defects in `src/skills/adr-create/SKILL.md` the
++      analysis found: its `execution.command` calls `regenerate_index` without
++      `--dir`, so it targets the non-existent `docs/adr/` and returns 2; and it
++      cites `scripts/audit_adr_coverage.py`, a path and extension that do not
++      exist (`src/scripts/…​.ts`).
++      <!-- verify: npx tsx src/scripts/adr/regenerate_index.ts --dir docs/decisions --check -->
++
++**Exit criteria:** index renders the two new columns; ADR-035 ↔ ADR-232 link in
++both directions; the skill's declared command exits 0.
++**Rollback:** revert the renderer, the two frontmatter keys, and the ADR-035 /
++ADR-232 edits. The index is regenerated output — no history is lost.
++
++## Phase 5: Safeguards against precedent laundering
++
++Both seats named the same failure independently. It is not "less stability" —
++it is: the proposer frames the evidence, two correlated seats ratify, the
++amendment becomes authoritative input for the next review, and the original
++constraint erodes with its evidence.
++
++- [x] **Step 1:** Add to the Phase-3 contract section a **reopen record**
++      schema, required on every council-decided reopen: the original rationale
++      **addressed** (not merely cited) · what changed since · dependants and
++      external commitments touched · rollback path · blast radius
++      (`narrow | wide | irreversible`) with the evidence for that call.
++- [x] **Step 2:** Write the two clauses the council asked for, verbatim in
++      intent: **"precedent creates no authority"** — that a similar ADR was
++      reopened is never evidence that this one should be — and **the
++      reaffirmation duty** — one seat must argue the strongest case FOR keeping
++      the decision, citing its original rationale.
++- [x] **Step 3:** Add the proportionality carve-out both seats demanded: a
++      bounded, reversible, narrow transition takes the light path (record +
++      council); `wide` or `irreversible` adds owner notification. Without this
++      the ceremony costs more than asking the owner and the mechanism dies of
++      its own weight.
++- [x] **Step 4:** Wire the reopen record into
++      `src/skills/decision-review/SKILL.md` step 5, which today says "log the
++      outcome with scope + revisit-if" and has no schema.
++
++**Exit criteria:** the schema exists in the contract, is referenced from the
++skill, and the two clauses are present verbatim in the rule.
++**Rollback:** revert the contract section and the skill step; no code changes.
++
++## Phase 6: The backlog — go through what the locks blocked
++
++The owner's explicit instruction: *"overturn the ADR and then go through
++everything it blocked. Now, and in the past, and unblock it."* This phase
++produces the disposition table, not the downstream work.
++
++- [x] **Step 1:** Run `adr_cite_check` over the 11 ADRs the transcripts show
++      blocking work — 011, 035, 051, 054, 127, 133, 208, 211, 216, 220, 227 —
++      and record status, trigger state, amendments, and successors for each.
++      <!-- verify: npx tsx src/scripts/adr_cite_check.ts ADR-011 ADR-035 ADR-051 ADR-054 ADR-127 ADR-133 ADR-208 ADR-211 ADR-216 ADR-220 ADR-227 --json -->
++- [x] **Step 2:** Write `docs/decisions/adr-reopen-sweep-2026-08.md` following
++      the E6 precedent exactly: one row per ADR, columns
++      `adr | what it blocked | trigger state | disposition | route`, three
++      dispositions only — `RE-OPENED (candidate)` / `RE-AFFIRMED` /
++      `STAY-KILLED` — under the same Iron Law: no silent re-openings, no silent
++      re-affirmations.
++- [x] **Step 3:** Resolve ADR-001 specifically. It declares a follow-up
++      decision *mandatory* before a milestone that has shipped; it is the
++      canonical G1 proof and it is still `accepted`. Give it a disposition in
++      the sweep table with its evidence.
++- [x] **Step 4:** For every `RE-OPENED (candidate)` row, name the route — a
++      council reopen under Phase 3, or an owner decision with the reserved
++      dimension named. Do not execute the reopens in this roadmap; a candidate
++      list whose routes are named is the deliverable.
++- [x] **Step 5:** Fix the two dead gates the analysis found, since the sweep
++      depends on them being real: `audit_adr_coverage --check` hangs only off
++      `task ci`, which no workflow calls (while `adr-layout.md:83` claims it
++      "fails under `task ci`"), and `regenerate_index` is called by nothing
++      automated. Either wire them into an existing workflow or correct the
++      contract's claim — not both, and say which.
++      <!-- verify: npx tsx src/scripts/audit_adr_coverage.ts --check -->
++
++**Exit criteria:** the sweep file exists with 11+1 rows, every row carries a
++disposition and a route, and no row is blank.
++**Rollback:** delete the sweep file; it is additive and referenced by nothing
++until the follow-up work starts.
++
++## Acceptance Criteria
++
++- [x] `decision-revisit-gate` fires on the word "ADR" and routes to a skill a
++      pack-legal install actually receives.
++- [x] `adr_cite_check` resolves status, trigger state, amendments, and
++      successors for any ADR in the primary corpus, with `indeterminate` as a
++      first-class result, and its tests pass.
++- [x] `docs/contracts/adr-layout.md` carries the reopen-authority
++      discriminator, the owner-reserved set, and the reopen-record schema.
++- [x] A missing `reopen_policy` resolves to `unclassified`; no ADR is failed by
++      a validator for lacking the new fields.
++- [x] ADR-035 and ADR-232 link in both directions; the index renders
++      `Superseded by` and `Amended by`.
++- [x] `docs/decisions/adr-reopen-sweep-2026-08.md` gives all 11 named lock ADRs
++      plus ADR-001 a disposition and a route.
++- [x] `npx tsx src/scripts/check_adr_frontmatter.ts` and
++      `npx tsx src/scripts/check_references.ts` both exit 0.
++
++## Risk Register
++
++<!-- risk-review: v1 | reviewed: 2026-08-19 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | Precedent laundering | product | Council reopens a narrow mechanism ADR, then cites that reopen as grounds for a wider one, until an owner-reserved decision falls to a two-seat correlated review. Named independently by both council seats. | "Precedent creates no authority" clause + reaffirmation duty + reopen record naming dependants and rollback; owner notification on `wide`/`irreversible`. | Phase 5: Safeguards against precedent laundering |
++| 2 | The classification recreates the blockage | product | If `unclassified` behaves as `owner`, 146 ADRs become "drafts pending owner approval" — the same stall under a new name. | `unclassified` explicitly permits council investigation, drafting, and reversible experiments; only a reserved-dimension transition needs the owner. | Phase 3 Step 2 |
++| 3 | `adr_cite_check` reports false "not found" | implementation | Six ADR surfaces exist; a tool reading one reports a real lock as unknown, which reads as "no constraint" and is worse than the current stall. | Step 2 forces either coverage or an explicit written non-coverage statement; test covers an unknown number. | Phase 2 Step 2 |
++| 4 | Trigger evaluation asserts certainty it does not have | implementation | Most `review_trigger` values are semantic. Forcing them to a boolean converts uncertainty into permission (`not-fired` → lock holds wrongly) or into false unblocking. | `indeterminate` is a first-class result and routes to review rather than to either boolean. | Phase 2 Step 1 |
++| 5 | The obligation is model-carried and decays | implementation | The cite-time precondition has no deterministic enforcement; this suite has measured Δ=0 from reminder injection before. | Ship the tool (deterministic where it runs), state `enforced_by: none` honestly, and wire it into the two commands that hit locks — a command step is a stronger carrier than a rule sentence. | Phase 2 Step 4, Phase 2 Step 5 |
++| 6 | Scope creep into the 174-ADR corpus | implementation | Phases 3 and 4 could turn into a corpus-wide rewrite of 146 accepted ADRs. | Phase 3 Step 4 and Phase 4 Step 1 both explicitly forbid bulk rewriting; only ADR-035/232 are edited. | Phase 3 Step 4 |
++| 7 | A wrong sweep disposition unblocks something that should stay blocked | product | `RE-OPENED (candidate)` on a lock that was correct wastes work and may reintroduce a rejected design. | The sweep produces candidates and routes only — no reopen is executed in this roadmap; `STAY-KILLED` is a first-class outcome under the E6 Iron Law. | Phase 6 Step 4 |
++
++## Notes
++
++- **Scope boundary.** This roadmap builds the mechanism and produces the
++  candidate list. It does **not** execute the reopens, and it does not rewrite
++  the 146 accepted ADRs. Downstream reopen work spawns from the Phase 6 table.
++- **What the council told us NOT to build**, recorded so a later pass does not
++  reintroduce it: a full machine-readable `review_trigger` grammar as a
++  prerequisite (most triggers are semantic; cite-time evaluation is
++  grammar-agnostic), and a bare `reopen_authority` field defaulting legacy ADRs
++  to `owner`.
++- **One meta-finding is deliberately deferred**, not dropped: one seat asked
++  whether 174 binding ADRs is governable at all, and proposed splitting the
++  corpus into ~20–30 binding decisions plus a non-binding decision log. That is
++  a purpose decision about what the project's governance *is* — owner-reserved
++  by the very rule this roadmap writes — so it is surfaced here rather than
++  decided.
+diff --git a/dist/agent-src/commands/analyze/decision.md b/dist/agent-src/commands/analyze/decision.md
+index ec6502c7f3763349b9235fc0234c9fd22494ac10..f3b9ee0c9a0b2a1217aac3684ab387eb7b1795cc 100644
+--- a/dist/agent-src/commands/analyze/decision.md
++++ b/dist/agent-src/commands/analyze/decision.md
+@@ -93,6 +93,13 @@ suggest deferring or strengthening evidence before proposing.
+ ### Rules
+ 
+ - Do NOT commit, push, or open a PR.
++- Do NOT report an ADR as still binding without evaluating it first —
++  `./scripts-run src/scripts/adr_cite_check <ADR-NNN>` resolves status,
++  `review_trigger` state, amendments, successors, and back-references in one
++  call. A `superseded` / `deprecated` ADR is not a live decision
++  to audit, and an amended one is not the text its body's top half claims.
++  (`rejected` is NOT in that set — on an ADR it records a rejected *proposal*,
++  so the rejection is the live decision.)
+ - Do NOT auto-promote — `/memory propose` is the intake.
+ - Do NOT re-litigate a decision confirmed still valid — acknowledge it,
+   note the validation date, stop.
+diff --git a/dist/agent-src/commands/optimize/project.md b/dist/agent-src/commands/optimize/project.md
+index 721629a92c66d3b1c4820c87f101c34f505ccb34..77522359ab77b98aafa6bac686fc2a861c20e74b 100644
+--- a/dist/agent-src/commands/optimize/project.md
++++ b/dist/agent-src/commands/optimize/project.md
+@@ -166,6 +166,16 @@ Hard rules for this step:
+   and its recorded revisit-conditions first; if it truly blocks, the
+   only flip path offered is option 3 (council re-eval) — "Flip" is not
+   offered for locks.
++- **An ADR lock is evaluated before it is reported.** When the lock is a
++  numbered ADR, the FIRST action is
++  `./scripts-run src/scripts/adr_cite_check <ADR-NNN>` — not "report the
++  lock". A `superseded` / `deprecated` status means there is no
++  live lock to route at all, and an amended ADR means the cited text may not
++  be the operative one. `rejected` stays live — it records a rejected
++  *proposal*, so reopening it means showing the premise it rejected on has
++  changed. Reporting an unevaluated ADR as a blocker is the
++  ordering defect `decision-revisit-gate` exists over: it costs the owner a
++  turn to discover what one command answers.
+ - **Session budget:** at most 5 interview questions by default
+   (`--max-questions=N` to override). Budget exhausted → remaining
+   candidates go to Step 4 as "further candidates".
+diff --git a/dist/agent-src/rules/decision-revisit-gate.md b/dist/agent-src/rules/decision-revisit-gate.md
+index 3e217462d52f9dc4e2fa6810caadab6f7ef7cb51..83fa8e36df4249dc3e5b71cb98f85e0f3225e1b7 100644
+--- a/dist/agent-src/rules/decision-revisit-gate.md
++++ b/dist/agent-src/rules/decision-revisit-gate.md
+@@ -10,8 +10,14 @@ triggers:
+   - keyword: "already decided"
+   - keyword: "locked decision"
+   - keyword: "budget blocks"
++  - keyword: "adr-"
++  - keyword: "adrs"
++  - keyword: "superseded"
++  - keyword: "review_trigger"
++  - phrase: "the adr"
+ routes_to:
+-  - "skill:decision-review"
++  - "skill:ai-council"
++  - "skill:decision-record"
+ workspaces: [agent-config-maintainer, engineering]
+ packs: [meta]
+ collision_ok:
+@@ -28,24 +34,99 @@ obligation_frequency: "per-task"
+ A LOCK IS A DECISION UNDER PAST CONDITIONS, NOT A PERMANENT LAW.
+ BENEFIT BLOCKED BY A LOCK → SURFACE + OFFER RE-EVALUATION.
+ NEVER SILENT COMPLIANCE. NEVER SILENT DROP OF A GOOD CHANGE.
++RE-EVALUATION GOES TO THE COUNCIL FIRST, NOT TO THE USER FIRST.
++THE USER IS REACHED FOR THE RESERVED SET — AND ALWAYS FOR IT.
++NEVER CITE A LOCK YOU HAVE NOT EVALUATED THIS TURN.
+ ```
+ 
+ An agent that finds a genuinely beneficial change blocked by a recorded
+ past decision — an honest-null eval verdict, a "don't relitigate"
+ memory or context note, a token-frugality/budget canon line, or an ADR —
+-does not quietly comply and drop the change. It surfaces the conflict
+-and offers the user a path to re-evaluate the lock. Progress means
+-adaptation: locks encode what was true when they were written, not a
+-ceiling on what the package may ever become.
++does not quietly comply and drop the change. It surfaces the conflict and
++re-evaluates the lock — **in the council by default**, reaching the user only
++for the reserved set below. Progress means adaptation: locks encode what was
++true when they were written, not a ceiling on what the package may ever become.
++
++**The default venue is the council, and this is a correction, not a new
++policy.** [`ai-council`](../skills/ai-council/SKILL.md) has said since its own
++Iron Law that *"a design decision the agent cannot settle from the tree goes to
++the council first, not to the user first"*, and its class table already lists
++"reopening a recorded decision". This rule used to say "offers the user a path",
++which contradicted that and made every lock an owner interrupt. The measured
++cost of the contradiction: across 26 days of transcripts, the agent reported a
++lock and waited, and the owner had to void the decision retroactively before the
++work resumed — in the two clearest cases the lock report is timestamped **before**
++the override demand. The ordering was the defect; the permission was never
++missing.
+ 
+ **Mechanism-match check comes FIRST**: a verdict settles the *mechanism it
+ tested*, not every future proposal that resembles it — if the blocked change
+ is a different mechanism, the lock does not apply; proceed, noting the
+ distinction.
+ 
+-Body migrated to [`skill:decision-review` § Decision-revisit gate — mechanics](../skills/decision-review/SKILL.md) (per P4 of `road-to-kernel-and-router.md`) — what-counts-as-a-lock catalog (honest nulls, don't-relitigate notes, budget-canon lines, ADRs, hard structural caps), the five fire steps, when-NOT-to-fire, failure modes.
++## The five steps, carried here — the depth is elsewhere, the obligation is not
++
++1. **Mechanism-match** (above) — different mechanism, no lock, proceed.
++2. **Evaluate the lock before citing it.** An ADR may not be presented as a
++   reason not to act until its status, `review_trigger` state, amendments and
++   successors have been read. In this repository that is one command —
++   `./scripts-run src/scripts/adr_cite_check <ADR-NNN>`; elsewhere it is the
++   same four reads done by hand. A `superseded` / `deprecated` status means it is
++   not a live lock at all; a fired or indeterminate trigger means it is not an
++   **unqualified** one. `rejected` is NOT in the dead set — on an ADR it records
++   a rejected *proposal*, so the rejection binds until its premise is shown to
++   have changed.
++3. **Surface** the change, the lock, the condition it recorded, and what has
++   changed since.
++4. **Route it** — council by default (below), user only for the reserved set.
++5. **Record** the outcome with scope and `revisit-if`.
++
++These five are the obligation and they are stated here rather than only behind
++a route, because the route was measurably unreachable: `decision-revisit-gate`
++lives in the always-on `meta` pack while `decision-review` ships
++`install.default: false` in the non-default `analysis-workbench` pack, so a
++pack-legal install received the obligation and not the procedure. `routes_to`
++now names two always-on skills; the backward-audit depth in
++[`decision-review`](../skills/decision-review/SKILL.md) stays optional, which is
++the correct status for depth.
++
++Full catalog (honest nulls, don't-relitigate notes, budget-canon lines, ADRs,
++hard structural caps), the per-step detail, when-NOT-to-fire and the failure
++modes remain in [`skill:decision-review` § Decision-revisit gate — mechanics](../skills/decision-review/SKILL.md).
+ Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
+ 
++## Who decides — the owner-reserved set
++
++The discriminator, in one question: **does the proposed transition weaken an
++owner-reserved invariant, or create an undelegated external, irreversible, or
++destructive commitment?** No, and reversible inside the authorised envelope →
++the council decides. Yes, or not establishable from tree evidence → the owner.
++
++The routing unit is the **transition**, never the document: the same ADR may be
++strengthened by the council and weakened only by the owner.
++
++| Reserved to the owner | Council-decidable |
++|---|---|
++| Changes the project's purpose or a declared non-negotiable outcome | Any mechanism serving that purpose |
++| **Lowers or removes** a recorded security / privacy / safety / data-handling floor | Strengthening a floor, or an equivalent swap above it |
++| Irreversible or materially destructive | Reversible within the envelope |
++| Spend or liability **above** a delegated threshold | Budgeted, threshold-bounded spend |
++| Creates / removes / weakens a legal, regulatory, contractual, licensing, compatibility, or public commitment | Internal-only commitments |
++| Governance self-amendment — reopening authority, quorum, escalation, this set | What the rules already permit |
++| Cannot be bounded from available evidence | Bounded, with the evidence cited |
++
++Council split, abstention, or no quorum is an **escalation condition**, not a
++class: that transition escalates, the ADR does not become owner-reserved
++forever. Availability is `agent-config council:status`, never a project file
++([`council-availability`](council-availability.md)).
++
++Field on the ADR: `reopen_policy: directional | owner | unclassified`, absent →
++**`unclassified`**, which permits council investigation and reversible
++experiments and gates only execution of a reserved transition. Absent is
++deliberately not `owner`: with 146 accepted ADRs that default would encode
++today's blockage into the new schema. Full contract, the reopen record, and the
++precedent-creates-no-authority clause: [`adr-layout § Reopen authority`](../docs/contracts/adr-layout.md).
++
+ ## See also
+ 
+ - [`decision-review`](../skills/decision-review/SKILL.md) — the backward-audit
+@@ -53,10 +134,30 @@ Trigger-set above activates this routing on demand, independent of the disciplin
+ - [`ai-council`](../skills/ai-council/SKILL.md) — the re-evaluation mechanism;
+   owns the convergence-summary scope + `revisit-if` contract.
+ - [`decision-record`](../skills/decision-record/SKILL.md) — forward-flow decision
+-  locking; the escalation litmus there names the reopening condition up front.
++  locking; its **§ 4 Lock the choice + consequences** requires the `Revisit-if:`
++  line that names the reopening condition up front. (This pointer used to cite an
++  "escalation litmus" heading; `grep` over `src/` + `docs/` returns two hits and
++  neither is in that file — the heading never existed, so the pointer led
++  nowhere. Corrected to the section that carries the obligation.)
+ - [`token-budget-discipline`](token-budget-discipline.md) — the frugality-canon
+   value-over-budget escalation this rule's budget-lock case defers to.
+ - [`no-cheap-questions`](no-cheap-questions.md) — the question-quality floor a
+   revisit-offer must still clear.
+ - [`ask-when-uncertain`](ask-when-uncertain.md) — the numbered-options shape
+   used to present the revisit offer.
++
++## Honest enforcement — `enforced_by: none`
++
++`adr_cite_check` is deterministic where it runs, and nothing makes it run. No
++gate can observe an agent citing a decision it never opened, so step 2 above is
++model-carried — the same honesty boundary
++[`security-sensitive-stop`](security-sensitive-stop.md) and
++[`active-remediation`](active-remediation.md) state for their own obligations.
++
++Two reach limits, named rather than implied. The tool lives in this repository's
++`src/scripts/` and is **not** exposed as an `agent-config` verb, so a consumer
++install performs step 2 by hand; wiring the verb touches six further surfaces
++plus the curated `dist/agent-src/scripts/` list and is deliberately out of this
++change. And `docs/decisions/` is projected into no agent-visible tree at all —
++the agent sees ADR *numbers* cited across rules and skills, almost never ADR
++*text*. Until that changes, "evaluate before citing" means opening the file.
+diff --git a/dist/agent-src/skills/adr-create/SKILL.md b/dist/agent-src/skills/adr-create/SKILL.md
+index b39b2fa3b118988d5c5fdb709a79bfb55e909eb7..5b0cc7d4b6bb92a2d5bed575b4bc152b4b83fae2 100644
+--- a/dist/agent-src/skills/adr-create/SKILL.md
++++ b/dist/agent-src/skills/adr-create/SKILL.md
+@@ -11,6 +11,8 @@ execution:
+   command:
+     - ./scripts-run
+     - src/scripts/adr/regenerate_index
++    - --dir
++    - docs/decisions
+ runtime_requires:
+   bins:
+     - bash
+@@ -59,7 +61,10 @@ Do NOT use when:
+     governance ADRs, 3-digit numbering (`ADR-NNN-<slug>.md`).
+   - **Per-area** — `docs/adrs/<area>/`: sub-area ADRs, 4-digit
+     numbering (`NNNN-<slug>.md`); `<area>` must match the canonical
+-    inventory in [`scripts/audit_adr_coverage.ts`](../../../scripts/audit_adr_coverage.ts).
++    inventory in `src/scripts/audit_adr_coverage.ts` (`AREAS`). Deliberately not
++    a link: this skill is projected into `dist/agent-src/skills/`, whose sibling
++    `scripts/` directory carries six curated files and not this one, so any
++    relative href that resolves in `src/` is broken in the projection.
+ - The decision is **already made** — ADRs record outcomes, they do
+   not run the decision process. For unresolved trade-offs, run the
+   council or consult `adversarial-review` first.
+@@ -80,7 +85,7 @@ Ask one question only if both are plausible:
+    `NNNN-<slug>.md` (4-digit, no `ADR-` prefix).
+ 3. **Unknown area** — `<area>` not in the inventory: refuse with a
+    hint to add the area to `AREAS` in
+-   `scripts/audit_adr_coverage.ts` in the same PR. Do not invent.
++   `src/scripts/audit_adr_coverage.ts` in the same PR. Do not invent.
+ 4. **In doubt** → per-area (cheaper to surface, easier to relocate).
+ 
+ ### 2. Pick the next ADR number
+@@ -134,8 +139,12 @@ date: YYYY-MM-DD
+ decision: <slug>
+ supersedes: — | ADR-MMM
+ superseded_by: — | ADR-MMM
++amends: — | ADR-MMM          # optional — this ADR amends that one (reciprocal required)
++amended_by: — | ADR-MMM      # optional — reciprocal of `amends`
+ phase: <roadmap> · <phase-id>
+ review_trigger: <the CONDITION that would reopen this decision>
++protected_dimensions: [...]  # optional — purpose | security_floor | privacy_floor | external_commitment | governance | none
++reopen_policy: directional | owner | unclassified   # optional; absent → unclassified
+ ---
+ 
+ # ADR-NNN — <Decision Title>
+@@ -204,7 +213,7 @@ completeness check — not on every ADR by default.
+ - **Per-area numbering is 4-digit** (`NNNN-<slug>.md`); the flat
+   surface stays 3-digit (`ADR-NNN-<slug>.md`). Do not mix.
+ - **Area inventory is closed** — `<area>` must already exist in
+-  `AREAS` in `scripts/audit_adr_coverage.ts`. Adding a new area is
++  `AREAS` in `src/scripts/audit_adr_coverage.ts`. Adding a new area is
+   a separate PR with explicit reviewer sign-off.
+ - Frontmatter `adr:` (flat) is the canonical number; the filename
+   prefix must match. The flat regenerator fails on mismatch.
+@@ -214,6 +223,19 @@ completeness check — not on every ADR by default.
+   to `superseded`.
+ - Never delete an ADR file — supersede it. Deletion breaks
+   historical links and round-trips through git history checks.
++- **Amending is the common case; wire it in both directions.** Most reopens
++  correct one decision inside an otherwise sound ADR rather than replacing the
++  whole record. Use `## Amendment N (YYYY-MM-DD) — <topic>` plus the reciprocal
++  `amends:` / `amended_by:` pair — the validator rejects a one-sided link,
++  because a one-sided link is invisible from the stale side, and the stale side
++  is the one a reader lands on first. Where the amendment reverses text that is
++  still asserted above it, add a one-line banner there too; the frontmatter
++  alone does not stop someone quoting the reversed sentence.
++- **Who may reopen it is recorded, not assumed** — `reopen_policy` /
++  `protected_dimensions`, both optional, absent meaning `unclassified`
++  ([`adr-layout § Reopen authority`](../../../docs/contracts/adr-layout.md)).
++  Reach for `owner` only when EVERY future transition is genuinely reserved;
++  `directional` is the normal answer, and no answer is a fine answer.
+ 
+ ## Frugality Standards
+ 
+diff --git a/dist/agent-src/skills/decision-review/SKILL.md b/dist/agent-src/skills/decision-review/SKILL.md
+index f95aedfc3f2674d9468e6ec45d7cfada75e75af6..2dd5b5db9dd9fc3dfca7aad32fa9323e792575a5 100644
+--- a/dist/agent-src/skills/decision-review/SKILL.md
++++ b/dist/agent-src/skills/decision-review/SKILL.md
+@@ -280,6 +280,24 @@ in the rule; the lock catalog, fire steps, and failure modes live here.
+    contract — every re-evaluated lock gets a fresh, correctly-scoped
+    disposition, not a re-statement of the old one.
+ 
++   When the lock is an **ADR**, the disposition carries the five-field reopen
++   record from [`adr-layout § Reopen record`](../../../docs/contracts/adr-layout.md):
++   the original rationale **addressed** (not cited), what changed with tree
++   evidence, dependants and external commitments touched, the rollback path,
++   and a blast radius — `narrow | wide | irreversible` — with the evidence for
++   that call. Two clauses bind the same record: **precedent creates no
++   authority** (that a similar ADR was reopened is never grounds for this one),
++   and **one seat must argue the strongest case for keeping the decision**.
++   Both answer precedent laundering through correlated self-review, which is
++   the failure two independent council seats named for this mechanism on
++   2026-08-19: the proposer frames the evidence, correlated seats ratify, and
++   the amendment becomes authoritative input for the next review.
++
++   Proportionally: a narrow, reversible, bounded transition takes the light
++   path (record + council); `wide` or `irreversible` adds owner notification.
++   Identical ceremony for a typo-level amendment would cost more than asking
++   the owner and the mechanism would die of its own weight.
++
+ ### When NOT to fire
+ 
+ - The blocked change has no real benefit — the gate is not a lever to
+diff --git a/docs/contracts/adr-layout.md b/docs/contracts/adr-layout.md
+index 52a5f2ee0adee7682d919a277857a32b664cfb78..1b6f9bd11f62d177ae5fd9194354e3686fffe293 100644
+--- a/docs/contracts/adr-layout.md
++++ b/docs/contracts/adr-layout.md
+@@ -56,31 +56,195 @@ date: YYYY-MM-DD
+ decision: <slug>
+ supersedes: — | ADR-<area>-NNNN | ADR-MMM
+ superseded_by: — | ADR-<area>-NNNN | ADR-MMM
++amends: — | ADR-MMM                    # optional; this ADR amends that one
++amended_by: — | ADR-MMM                # optional; reciprocal of `amends`
+ phase: <roadmap-stem> · <phase-id>     # optional but recommended
+ type: retrospective | prospective
++protected_dimensions: [...]            # optional — see § Reopen authority
++reopen_policy: directional | owner | unclassified   # optional; absent → unclassified
+ ---
+ ```
+ 
+ Supersession links cross surfaces: a per-area ADR may supersede a flat ADR and vice versa. The numeric prefix in `supersedes:` makes the target unambiguous (`ADR-007` = flat, `ADR-cost-0001` = per-area).
+ 
++## Reopen authority
++
++A recorded decision is a decision under past conditions, not a permanent law
++([`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md)). This
++section says who may reopen one, and it is deliberately not a property of the
++ADR alone.
++
++### The discriminator
++
++```
++DOES THE PROPOSED TRANSITION WEAKEN AN OWNER-RESERVED INVARIANT, OR CREATE AN
++UNDELEGATED EXTERNAL, IRREVERSIBLE, OR DESTRUCTIVE COMMITMENT?
++NO, AND REVERSIBLE INSIDE THE AUTHORISED ENVELOPE → THE COUNCIL DECIDES.
++YES, OR NOT ESTABLISHABLE FROM TREE EVIDENCE → THE OWNER DECIDES.
++```
++
++**The routing unit is the transition, never the document.** `current decision →
++proposed decision → affected reserved invariants`. The same security ADR may be
++*strengthened* by the council, refactored equivalently by the council, and
++*weakened* only by the owner — a static per-document label cannot express that,
++which is why one is not enough on its own (council 2026-08-19, both seats
++convergent).
++
++Two questions it deliberately does **not** collapse into one: *what interests
++does this ADR protect* (recorded once, on the ADR) and *what does this specific
++amendment do to them* (recorded per reopen, § Reopen record).
++
++Rejected wording, recorded so it is not re-proposed: *"does this keep safety and
++purpose intact?"*. Both seats refused it — "safety" is undefined unless tied to
++a recorded floor, "purpose intact" can be narratively satisfied while
++compatibility or cost changes materially, and it ignores **direction**.
++
++### The owner-reserved set
++
++Reaching the owner is mandatory when the transition does any of:
++
++| # | Reserved | Not reserved (council-decidable) |
++|---|---|---|
++| 1 | Changes the project's purpose or an owner-declared non-negotiable outcome | Any mechanism choice serving that purpose |
++| 2 | **Lowers or removes** a recorded security, privacy, safety, or data-handling floor | Strengthening a floor, or substituting an implementation above the same floor |
++| 3 | Is irreversible or materially destructive | Reversible within the authorised envelope |
++| 4 | Commits spend or continuing liability **above a delegated threshold** | Budgeted, threshold-bounded spend |
++| 5 | Creates, removes, or weakens a legal, regulatory, contractual, licensing, compatibility, or public commitment | Internal-only commitments |
++| 6 | Changes reopening authority, quorum, escalation, or the definition of this set (**governance self-amendment**) | Anything the governance rules already permit |
++| 7 | Cannot be bounded from available evidence | Bounded, with the evidence cited |
++
++Rows 2 and 4 are narrowed on purpose. "Touches security" and "involves spend"
++were both proposed and both rejected as over-broad: they route a routine
++hardening or a budgeted call to the owner, which is the blockage this section
++exists to remove.
++
++**Council split, abstention, or missing quorum is an escalation *condition*, not
++a class.** An otherwise council-decidable transition escalates when the council
++cannot reach a decision; it does not become owner-reserved for every future
++proposal. `agent-config council:status` decides availability — never a project
++file ([`council-availability`](../../src/rules/council-availability.md)).
++
++### The two frontmatter fields
++
++```yaml
++protected_dimensions:            # optional; list, any of:
++  - purpose | security_floor | privacy_floor | external_commitment | governance | none
++reopen_policy: directional | owner | unclassified   # optional; absent → unclassified
++```
++
++- `directional` — the discriminator above decides per transition.
++- `owner` — a shortcut for a decision whose every transition is reserved
++  (purpose statements, the governance rules themselves). Use it sparingly: an
++  ADR marked `owner` blocks even a strengthening or consequence-neutral
++  amendment, which is the frozen-over-classification failure mode.
++- `unclassified` — **the default, and it is not `owner`.** The council may
++  investigate, draft a reopen proposal, and run reversible experiments; owner
++  approval is required only when the proposed transition may weaken a reserved
++  interest or cannot be bounded.
++
++**Why absent resolves to `unclassified` and not fail-closed to `owner`.** Both
++council seats rejected the fail-closed default in the same words: it *"would
++encode the existing blockage into the new schema"*. With 146 accepted ADRs, an
++`owner` default renames "blocked on the owner" to "drafts pending owner
++approval" and changes nothing. The residual risk is governance debt — an ADR
++that stays `unclassified` forever — and it is accepted here rather than traded
++for a certain re-blockage.
++
++**No bulk classification.** Classifying 146 decisions up front is expensive,
++error-prone, and invites tendentious self-classification. Classify an ADR when
++it is reopened, cited as a blocker, or otherwise on the desk.
++
++### The reopen record
++
++Every council-decided reopen records, at the decision:
++
++1. The **original rationale addressed** — not cited, addressed. A reopen that
++   only advocates the replacement has not met the decision it is replacing.
++2. What changed since, with tree evidence.
++3. Dependants and external commitments touched.
++4. The rollback path.
++5. **Blast radius** — `narrow | wide | irreversible` — and the evidence for that
++   call: files touched, downstream dependants, compatibility impact, rollback
++   cost. Never "a similar ADR was called narrow".
++
++```
++PRECEDENT CREATES NO AUTHORITY.
++THAT A SIMILAR DECISION WAS REOPENED IS NEVER EVIDENCE THAT THIS ONE MAY BE.
++EVERY REOPEN IS DECIDED ON ITS OWN MERITS AGAINST THE DISCRIMINATOR.
++ONE SEAT MUST ARGUE THE STRONGEST CASE FOR KEEPING THE DECISION.
++```
++
++Both clauses answer the failure both council seats named independently —
++**precedent laundering through correlated self-review**: the proposer frames the
++evidence, two correlated seats ratify, the amendment becomes authoritative input
++for the next review, and the original constraint erodes along with the evidence
++that supported it. Backlinks preserve traceability; they do not supply
++independent challenge, which is what the reaffirmation duty is for.
++
++**Proportional, or it dies of its own weight.** A `narrow`, reversible,
++bounded transition takes the light path — reopen record plus council. `wide` or
++`irreversible` adds owner notification (notification, not approval, unless a
++reserved row fires). Identical ceremony for a typo-level amendment and an
++architectural shift costs more than asking the owner, which would reintroduce
++the interrupt this section removes.
++
++## Amendments
++
++Amendment is the most common form a reopen actually takes — an ADR is rarely
++replaced wholesale, it is corrected in place with its history kept. 18 ADRs in
++this tree carry an amendment block, in **three** unreconciled conventions
++(`## Amendment N (date)`, `## Amendment — date · topic`, `**Amended <date> —`),
++none of them signalled in frontmatter or in the index. The measurable cost:
++ADR-035 asserts a rejection in two places that ADR-232 reopened, and ADR-035
++contains no reference to ADR-232 — the amendment link is one-sided, so the stale
++half is the half a reader finds first.
++
++**The convention, going forward:**
++
++```markdown
++## Amendment N (YYYY-MM-DD) — <one-line topic>
++```
++
++Plus the reciprocal frontmatter pair, which is what makes the link
++bidirectional and therefore findable from the stale side:
++
++```yaml
++# on the amended ADR
++amended_by: ADR-232
++# on the amending ADR
++amends: ADR-035
++```
++
++The 18 existing bodies are **not** rewritten to the new heading — a corpus-wide
++reformat teaches nobody anything and risks the amendment text itself. The
++convention binds new amendments; `adr_cite_check` reads all three so the
++transition period is not a blind spot.
++
++An ADR whose top half still asserts what its own amendment reversed is a live
++defect, not merely untidy prose. Where the reversal is total the amendment
++belongs above the reversed text, or the frontmatter link plus a one-line body
++banner does the job.
++
+ ## Per-area README contract
+ 
+ Every `<area>/` directory carries a `README.md` with:
+ 
+ 1. One-paragraph area scope (≤ 4 sentences).
+ 2. Single contract pointer — the `docs/contracts/<X>.md` this area implements (or "no published contract" if pre-Phase 5).
+-3. Numbered table of ADRs in the area: `| # | Title | Status | Date | Supersedes |`. Generated by `scripts/audit_adr_coverage.py --regen-area-readme <area>`.
++3. Numbered table of ADRs in the area: `| # | Title | Status | Date | Supersedes |`. Generated by `./scripts-run src/scripts/audit_adr_coverage --regen-area-readme <area>`.
+ 
+ ## Coverage gate
+ 
+-`scripts/audit_adr_coverage.py --check` (wired to `task lint-adr-coverage`):
++`./scripts-run src/scripts/audit_adr_coverage --check` (also wired to `task lint-adr-coverage`):
+ 
+ - Warns when a `docs/contracts/<X>.md` exists without a matching `docs/adrs/<X>/0001-*.md`.
+ - Hard-fails on number gaps within an area (e.g. `0001`, `0003` without `0002`).
+ - Hard-fails on missing `README.md` in any non-empty area directory.
+ - Warns on dangling `supersedes:` or `superseded_by:` references.
+ 
+-Default mode is **warn** at the consumer surface; **fail** under `task ci`. Rationale: a new contract dropped without an ADR is a documentation gap, not a bug. CI enforces it for this package; consumer projects opt in by adding the task to their own pipeline.
++Default mode is **warn** at the consumer surface; **fail** in this package's CI — the `ADR coverage gate` step of `rule-backstops.yml`, alongside `ADR frontmatter + review_trigger` and `ADR index freshness`. Rationale: a new contract dropped without an ADR is a documentation gap, not a bug. Consumer projects opt in by adding the task to their own pipeline.
++
++**Corrected 2026-08-19.** This line used to read "**fail** under `task ci`", and no workflow invokes `task ci` — the gate was reachable from a taskfile nobody ran, so the sentence described enforcement that did not happen. Same for `regenerate_index`, which was called by nothing automated at all, leaving `INDEX.md` staleness ungated. Both are wired into `rule-backstops.yml` now; both exited 0 on the tree at the time of wiring, so the change costs nothing today and catches the next drift.
+ 
+ ## Numbering & gaps
+ 
+diff --git a/docs/decisions/ADR-035-model-capability-tiers.md b/docs/decisions/ADR-035-model-capability-tiers.md
+index 7fea8850e004dd6906d435c1d17b5c1ddda1ff7b..deaf41f1fcb3922f9865c2e5fda21dbf0a191e5c 100644
+--- a/docs/decisions/ADR-035-model-capability-tiers.md
++++ b/docs/decisions/ADR-035-model-capability-tiers.md
+@@ -5,6 +5,7 @@ date: 2026-05-30
+ decision: model-capability-tiers
+ supersedes: 034
+ superseded_by: —
++amended_by: ADR-232
+ phase: model-capability-tiers
+ type: structural
+ review_trigger: >-
+@@ -34,12 +35,18 @@ The values are also version-brittle (model names churn) and couple the portable
+ source to specific vendors' line-ups. The fix is to recommend a **capability
+ band**, not a model, and let each agent resolve the band to its own best model.
+ 
++> **Amended by [ADR-232](ADR-232-frontier-tier-reopened.md) (2026-08-15) —
++> Decision 1's rejection of a 4th `frontier` tier was reopened on this ADR's own
++> `review_trigger` and no longer holds. Read ADR-232 before citing Decision 1 or
++> the matching Alternatives entry below.**
++
+ ## Decision
+ 
+ 1. **Tiers — `lite | medium | high` (+ `inherit`).** Pure capability descriptors
+    (reasoning horsepower), not use-case names. A 4th `frontier` tier is rejected
+    — it would map sparsely (one vendor's outlier) and break vendor-neutrality.
+-   `inherit` = "no opinion, keep the session model".
++   `inherit` = "no opinion, keep the session model". **(Reopened by ADR-232 —
++   see the banner above.)**
+ 
+ 2. **Field rename `recommended_model` → `model_tier`.** The semantics changed
+    from a model identifier to an abstract band; keeping the old name "is lying in
+@@ -99,7 +106,9 @@ deprecated upstream.
+   drift failure; suggestion-only is simpler and self-maintaining.
+ - **Context length as a tier (`high-context`).** Rejected — conflates two
+   orthogonal axes; handled by the sparse `context: large` modifier instead.
+-- **4th `frontier` tier.** Rejected — sparse cross-vendor mapping.
++- **4th `frontier` tier.** Rejected — sparse cross-vendor mapping. **Reopened by
++  [ADR-232](ADR-232-frontier-tier-reopened.md) (2026-08-15): the sparseness
++  premise was re-measured and no longer held.**
+ 
+ ## References
+ 
+diff --git a/docs/decisions/ADR-105-automatic-subagent-orchestration.md b/docs/decisions/ADR-105-automatic-subagent-orchestration.md
+index 9292f88589a8d906b31158d9eac0801222b33c81..b69ef92a60df64db280262bc3f1af3b003fa6aef 100644
+--- a/docs/decisions/ADR-105-automatic-subagent-orchestration.md
++++ b/docs/decisions/ADR-105-automatic-subagent-orchestration.md
+@@ -4,7 +4,8 @@ status: accepted
+ date: 2026-06-23
+ decision: automatic-subagent-orchestration
+ supersedes: —
+-superseded_by: — (Decision 2 amended by ADR-117: shipped default ask → on)
++superseded_by: —
++amended_by: ADR-117
+ phase: auto-subagent-orchestration
+ type: structural
+ ---
+diff --git a/docs/decisions/ADR-216-restraint-reanchored-to-capacity.md b/docs/decisions/ADR-216-restraint-reanchored-to-capacity.md
+index 9a702685959d8ae03af7194c8645a9e2424711ed..0309b2b433c5e173b6c219b6b9aa48d0fd03aabd 100644
+--- a/docs/decisions/ADR-216-restraint-reanchored-to-capacity.md
++++ b/docs/decisions/ADR-216-restraint-reanchored-to-capacity.md
+@@ -7,6 +7,8 @@ supersedes: —
+ superseded_by: —
+ phase: ADR-211 Amendment E + correction of ADR-215 + adoption-anchor sweep
+ type: structural
++protected_dimensions: [purpose]
++reopen_policy: owner
+ review_trigger: >-
+   Reopen when the capacity premise changes: a second regular maintainer joins
+   (the concurrency cap's basis disappears), or the cap demonstrably blocks work
+diff --git a/docs/decisions/ADR-232-frontier-tier-reopened.md b/docs/decisions/ADR-232-frontier-tier-reopened.md
+index b235c8f64982da6c9e66feb4bee021614224d255..9ceb7b3892e0f1fc96b41b4c951f25087d73068d 100644
+--- a/docs/decisions/ADR-232-frontier-tier-reopened.md
++++ b/docs/decisions/ADR-232-frontier-tier-reopened.md
+@@ -5,6 +5,7 @@ date: 2026-08-15
+ decision: frontier-tier-reopened
+ supersedes: —
+ superseded_by: —
++amends: ADR-035
+ phase: road-to-inbox-harvest-2026-08-d-top-band-model-economy
+ type: structural
+ review_trigger: >-
+diff --git a/docs/decisions/INDEX.md b/docs/decisions/INDEX.md
+index 23f4990d94fe19a7d9fd5759b6568d5e1d9a1d11..50cf7bcb5f994a9ac83dd5252d12f193e98f274e 100644
+--- a/docs/decisions/INDEX.md
++++ b/docs/decisions/INDEX.md
+@@ -2,187 +2,187 @@
+ 
+ _Auto-generated by `src/scripts/adr/regenerate_index.ts`. Do not edit._
+ 
+-| # | Title | Status | Date | Supersedes |
+-|---|---|---|---|---|
+-| [ADR-001](ADR-001-kernel-swap-deferred.md) | Kernel Swap Deferred | accepted | 2026-05-06 | — |
+-| [ADR-002](ADR-002-kernel-bucket-overrides.md) | Kernel Bucket Overrides | accepted | 2026-05-06 | — |
+-| [ADR-003](ADR-003-flat-cluster-subs-and-colon-syntax.md) | Flat Cluster Subs And Colon Syntax | accepted | 2026-05-07 | — |
+-| [ADR-004](ADR-004-rule-governance-pruning.md) | Rule Governance Pruning | accepted | 2026-05-08 | — |
+-| [ADR-005](ADR-005-subagent-worktrees.md) | Subagent Worktrees No Auto Merge | accepted | 2026-05-09 | — |
+-| [ADR-006](ADR-006-skill-tools-python-pilot.md) | Skill Tools Python Pilot Pass | accepted | 2026-05-09 | — |
+-| [ADR-007](ADR-007-agent-discovery-scopes.md) | Global Default Install With Export Subcommand | accepted | 2026-05-12 | — |
+-| [ADR-008](ADR-008-installed-tools-manifest.md) | Committed Installed Tools Manifest Separate From Settings | accepted | 2026-05-12 | — |
+-| [ADR-009](ADR-009-event4u-namespace.md) | Event4U Namespace And Claude Desktop Zip Bundles | accepted | 2026-05-13 | — |
+-| [ADR-010](ADR-010-profile-pack-preset-boundary.md) | Profile Pack Preset Boundary | accepted | 2026-05-16 | — |
+-| [ADR-011](ADR-011-domain-pack-readiness.md) | Domain Pack Readiness | accepted | 2026-05-17 | — |
+-| [ADR-012](ADR-012-typescript-cli-shell.md) | Typescript Cli Shell | accepted | 2026-05-19 | — |
+-| [ADR-013](ADR-013-discovery-frontmatter-contract.md) | Discovery Frontmatter Contract | accepted | 2026-05-19 | — |
+-| [ADR-014](ADR-014-gui-framework-choice.md) | Gui Framework Choice | accepted | 2026-05-20 | — |
+-| [ADR-015](ADR-015-discovery-manifest-contract.md) | Discovery Manifest Contract | accepted | 2026-05-21 | — |
+-| [ADR-016](ADR-016-installer-architecture.md) | Installer Architecture | accepted | 2026-05-21 | — |
+-| [ADR-017](ADR-017-monorepo-physical-layout.md) | Monorepo Physical Layout | accepted | 2026-05-21 | — |
+-| [ADR-018](ADR-018-trust-and-safety-layer.md) | Trust And Safety Layer | accepted | 2026-05-21 | — |
+-| [ADR-019](ADR-019-router-json-dist-location.md) | Router Json Dist Location | accepted | 2026-05-23 | — |
+-| [ADR-020](ADR-020-global-only-consumer-scope.md) | Global Only Consumer Scope | accepted | 2026-05-23 | — |
+-| [ADR-021](ADR-021-deployment-shape.md) | Deployment Shape | accepted | 2026-05-24 | — |
+-| [ADR-022](ADR-022-daily-workspace-decomposition.md) | Daily Workspace Decomposition | accepted | 2026-05-24 | — |
+-| [ADR-023](ADR-023-host-agent-protocol.md) | Host Agent Protocol | accepted | 2026-05-24 | — |
+-| [ADR-024](ADR-024-workspace-v0-feature-floor.md) | Workspace V0 Feature Floor | accepted | 2026-05-24 | — |
+-| [ADR-025](ADR-025-workspace-chrome.md) | Workspace Chrome | accepted | 2026-05-24 | — |
+-| [ADR-026](ADR-026-explain-mode-translation.md) | Explain Mode Translation | accepted | 2026-05-24 | — |
+-| [ADR-027](ADR-027-changelog-machine-vs-manual.md) | Changelog Machine Vs Manual | accepted | 2026-05-25 | — |
+-| [ADR-028](ADR-028-root-layout.md) | Root Layout | superseded | 2026-05-25 | — |
+-| [ADR-029](ADR-029-multi-workspace-deferred.md) | Multi Workspace Deferred | accepted | 2026-05-25 | — |
+-| [ADR-030](ADR-030-claude-code-command-projection.md) | Claude Code Command Projection | accepted | 2026-05-28 | — |
+-| [ADR-031](ADR-031-validation-severity-tiers-and-projection-roundtrip.md) | Validation Severity Tiers And Projection Roundtrip | accepted | 2026-05-29 | — |
+-| [ADR-032](ADR-032-linked-projects-scope.md) | Linked Projects Scope Go Option A | accepted | 2026-05-29 | — |
+-| [ADR-033](ADR-033-distribution-identity-npm-primary.md) | Distribution Identity Npm Primary | accepted | 2026-05-29 | — |
+-| [ADR-034](ADR-034-per-skill-model-recommendation-transport.md) | Per Skill Model Recommendation Transport | superseded | 2026-05-30 | — |
+-| [ADR-035](ADR-035-model-capability-tiers.md) | Model Capability Tiers | accepted | 2026-05-30 | 034 |
+-| [ADR-036](ADR-036-global-install-browser-wizard-handoff.md) | Global Install Browser Wizard Handoff | accepted | 2026-06-01 | — |
+-| [ADR-037](ADR-037-cost-profile-untangle.md) | Cost Profile Untangle | accepted | 2026-06-01 | — |
+-| [ADR-038](ADR-038-canonical-settings-path.md) | Canonical Settings Path | accepted | 2026-06-01 | — |
+-| [ADR-039](ADR-039-claude-skills-untracked.md) | Claude Skills Untracked | accepted | 2026-06-01 | — |
+-| [ADR-040](ADR-040-execution-model-projection-time-filtering.md) | Execution Model Projection Time Filtering | accepted | 2026-06-02 | — |
+-| [ADR-041](ADR-041-controlled-command-verbs.md) | Controlled Command Verbs | accepted | 2026-06-03 | — |
+-| [ADR-042](ADR-042-runtime-resolver-decision-gate.md) | Runtime Resolver Decision Gate | accepted | 2026-06-03 | — |
+-| [ADR-043](ADR-043-monorepo-collapse-to-src-domains.md) | Monorepo Collapse To Src Domains | accepted | 2026-06-03 | ADR-017 |
+-| [ADR-044](ADR-044-command-naming-scheme-hyphenated.md) | Command Naming Scheme Hyphenated | accepted | 2026-06-03 | — |
+-| [ADR-045](ADR-045-src-source-layout-and-profiles-as-views.md) | Src Source Layout And Profiles As Views | accepted | 2026-06-03 | ADR-028 |
+-| [ADR-046](ADR-046-thin-command-principle.md) | Thin Command Principle | accepted | 2026-06-03 | — |
+-| [ADR-047](ADR-047-framework-neutral-stack-adaptive-commands.md) | Framework Neutral Stack Adaptive Commands | accepted | 2026-06-03 | — |
+-| [ADR-048](ADR-048-command-justification-rule.md) | Command Justification Rule | accepted | 2026-06-03 | — |
+-| [ADR-049](ADR-049-configuration-trust-boundary.md) | Configuration Trust Boundary | accepted | 2026-06-03 | — |
+-| [ADR-050](ADR-050-workspace-vs-package-root-boundary.md) | Workspace Vs Package Root Boundary | accepted | 2026-06-05 | — |
+-| [ADR-051](ADR-051-uncondensed-source-container-relocation.md) | Uncondensed Source Container Relocation | accepted | 2026-06-05 | — |
+-| [ADR-052](ADR-052-packages-removal-and-pack-home-migration.md) | Packages Removal And Pack Home Migration | accepted | 2026-06-05 | — |
+-| [ADR-053](ADR-053-agents-namespace-dual-role-resolution.md) | Agents Namespace Dual Role Resolution | accepted | 2026-06-05 | — |
+-| [ADR-054](ADR-054-rule-adherence-decay-triggered-restate.md) | Rule Adherence Decay Triggered Restate | rejected | 2026-06-05 | — |
+-| [ADR-055](ADR-055-flow-layer-data-model.md) | Flow Layer Data Model | accepted | 2026-06-06 | — |
+-| [ADR-056](ADR-056-unvalidated-video-adapters-disposition.md) | Unvalidated Video Adapters Disposition | accepted | 2026-06-06 | — |
+-| [ADR-057](ADR-057-consolidation-evidence-gate-outcomes.md) | Consolidation Evidence Gate Outcomes | accepted | 2026-06-06 | — |
+-| [ADR-058](ADR-058-condensed-output-relocation-to-dist.md) | Condensed Output Relocation To Dist | accepted | 2026-06-06 | — |
+-| [ADR-059](ADR-059-render-resume-filesystem-as-state.md) | Render Resume Filesystem As State | accepted | 2026-06-07 | — |
+-| [ADR-060](ADR-060-comfyui-sandbox-model.md) | Comfyui Sandbox Model | accepted | 2026-06-07 | — |
+-| [ADR-061](ADR-061-corpus-grounding-layer.md) | Corpus Grounding Layer | accepted | 2026-06-07 | — |
+-| [ADR-062](ADR-062-encrypt-at-rest-store-architecture.md) | Encrypt At Rest Store Architecture | accepted | 2026-06-08 | — |
+-| [ADR-063](ADR-063-append-jsonl-encryption-deferred.md) | Append Jsonl Encryption Deferred | accepted | 2026-06-08 | — |
+-| [ADR-064](ADR-064-append-jsonl-per-record-encryption.md) | Append Jsonl Per Record Encryption | accepted | 2026-06-08 | — |
+-| [ADR-065](ADR-065-tier3-inbox-handoff-v0.md) | Tier3 Inbox Handoff V0 | accepted | 2026-06-08 | — |
+-| [ADR-066](ADR-066-skill-body-prerendering.md) | Skill Body Prerendering | accepted | 2026-06-08 | — |
+-| [ADR-067](ADR-067-glama-registry-listing.md) | Glama Registry Listing | superseded | 2026-06-08 | — |
+-| [ADR-068](ADR-068-host-tier-detection.md) | Host Tier Detection | superseded | 2026-06-08 | — |
+-| [ADR-069](ADR-069-prompt-renderer.md) | Prompt Renderer | accepted | 2026-06-08 | — |
+-| [ADR-070](ADR-070-tier1-drive-loop.md) | Tier1 Drive Loop | superseded | 2026-06-08 | — |
+-| [ADR-071](ADR-071-launch-drive-integration.md) | Launch Drive Integration | superseded | 2026-06-08 | — |
+-| [ADR-072](ADR-072-codex-gemini-drive-configs.md) | Codex Gemini Drive Configs | superseded | 2026-06-08 | — |
+-| [ADR-073](ADR-073-drive-health-kill-switch.md) | Drive Health Kill Switch | superseded | 2026-06-08 | — |
+-| [ADR-074](ADR-074-drive-kill-switch-auto-recovery.md) | Drive Kill Switch Auto Recovery | superseded | 2026-06-08 | — |
+-| [ADR-075](ADR-075-workspace-gui-drive.md) | Workspace Gui Drive | superseded | 2026-06-08 | — |
+-| [ADR-076](ADR-076-workspace-multi-turn.md) | Workspace Multi Turn | superseded | 2026-06-09 | — |
+-| [ADR-077](ADR-077-workspace-followup-gui.md) | Workspace Followup Gui | superseded | 2026-06-09 | — |
+-| [ADR-078](ADR-078-drive-health-panel.md) | Drive Health Panel | superseded | 2026-06-09 | — |
+-| [ADR-079](ADR-079-workspace-host-picker.md) | Workspace Host Picker | superseded | 2026-06-09 | — |
+-| [ADR-080](ADR-080-host-session-expired-410.md) | Host Session Expired 410 | superseded | 2026-06-09 | — |
+-| [ADR-081](ADR-081-drive-health-reset-and-410-affordance.md) | Drive Health Reset And 410 Affordance | superseded | 2026-06-09 | — |
+-| [ADR-082](ADR-082-410-one-click-relaunch.md) | 410 One Click Relaunch | superseded | 2026-06-09 | — |
+-| [ADR-083](ADR-083-session-thread-and-arbitrary-continuation.md) | Session Thread And Arbitrary Continuation | superseded | 2026-06-09 | — |
+-| [ADR-084](ADR-084-drive-health-refresh-on-drive.md) | Drive Health Refresh On Drive | superseded | 2026-06-09 | — |
+-| [ADR-085](ADR-085-mcp-stdio-end-user-distribution-shape.md) | Mcp Stdio End User Distribution Shape | superseded | 2026-06-10 | — |
+-| [ADR-086](ADR-086-read-only-cross-agent-mcp-discovery-helper.md) | Read Only Cross Agent Mcp Discovery Helper | rejected | 2026-06-11 | — |
+-| [ADR-087](ADR-087-installer-e2e-test-strategy.md) | Installer E2E Test Strategy | accepted | 2026-06-11 | — |
+-| [ADR-088](ADR-088-no-external-runtime-federation.md) | No External Runtime Federation | accepted | 2026-06-11 | — |
+-| [ADR-089](ADR-089-lean-local-plugin-install.md) | Lean Local Plugin Install | superseded | 2026-06-12 | — |
+-| [ADR-090](ADR-090-visibility-command-frontmatter-field.md) | Visibility Command Frontmatter Field | accepted | 2026-06-13 | — |
+-| [ADR-091](ADR-091-split-meta-capability-packs.md) | Split Meta Capability Packs | accepted | 2026-06-13 | — |
+-| [ADR-092](ADR-092-defer-command-tier-alias-removal.md) | Defer Command Tier Alias Removal | superseded | 2026-06-13 | — |
+-| [ADR-093](ADR-093-ai-council-config-user-global.md) | Ai Council Config User Global | superseded | 2026-06-13 | — |
+-| [ADR-094](ADR-094-agent-memory-layer-removal.md) | Agent Memory Layer Removal | accepted | 2026-06-14 | — |
+-| [ADR-095](ADR-095-workspace-boundary-contract.md) | Workspace Boundary Contract | accepted | 2026-06-14 | — |
+-| [ADR-096](ADR-096-analysis-workbench.md) | Analysis Workbench | accepted | 2026-06-15 | — |
+-| [ADR-097](ADR-097-mission-recipe-privilege-boundary.md) | Mission Recipe Privilege Boundary | accepted | 2026-06-15 | — |
+-| [ADR-098](ADR-098-evidence-first-structure-discovery.md) | Evidence First Structure Discovery | accepted | 2026-06-15 | — |
+-| [ADR-099](ADR-099-file-first-pattern-library.md) | File First Pattern Library | accepted | 2026-06-15 | — |
+-| [ADR-100](ADR-100-global-knowledge-card-sharing.md) | Global Knowledge Card Sharing | accepted | 2026-06-15 | ADR-098 |
+-| [ADR-101](ADR-101-ticket-bundle-emission.md) | Ticket Bundle Emission | accepted | 2026-06-15 | — |
+-| [ADR-102](ADR-102-ticket-handoff-paste-and-mcp.md) | Ticket Handoff Paste And Mcp | accepted | 2026-06-16 | — |
+-| [ADR-103](ADR-103-global-knowledge-default-off-until-measured.md) | Global Knowledge Default Off Until Measured | superseded | 2026-06-16 | — |
+-| [ADR-104](ADR-104-ai-council-config-global-only.md) | Ai Council Config Global Only | accepted | 2026-06-22 | 093 |
+-| [ADR-105](ADR-105-automatic-subagent-orchestration.md) | Automatic Subagent Orchestration | accepted | 2026-06-23 | — |
+-| [ADR-106](ADR-106-recursive-verification-benchmark-gate.md) | Recursive Verification Benchmark Gate | accepted | 2026-06-23 | — |
+-| [ADR-107](ADR-107-legal-domain-pack-adoption.md) | Legal Domain Pack Adoption | accepted | 2026-06-24 | — |
+-| [ADR-108](ADR-108-open-source-forever-no-commercial-tier.md) | Open Source Forever No Commercial Tier | accepted | 2026-06-24 | — |
+-| [ADR-109](ADR-109-subagent-v1-contract.md) | Subagent V1 Contract | accepted | 2026-07-04 | — |
+-| [ADR-110](ADR-110-discipline-profile-resolution-locus.md) | Discipline Profile Resolution Locus | accepted | 2026-07-07 | — |
+-| [ADR-111](ADR-111-canonical-glama-listing.md) | Canonical Glama Listing | accepted | 2026-07-07 | — |
+-| [ADR-112](ADR-112-stdio-lite-stays-read-only.md) | Stdio Lite Stays Read Only | accepted | 2026-07-07 | — |
+-| [ADR-113](ADR-113-ci-native-release-label-trigger.md) | Ci Native Release Label Trigger | accepted | 2026-07-08 | — |
+-| [ADR-114](ADR-114-commit-policy-iron-law-override.md) | Commit Policy Iron Law Override | accepted | 2026-07-08 | — |
+-| [ADR-115](ADR-115-command-cluster-consolidation-phase-4.md) | Command Cluster Consolidation Phase 4 | accepted | 2026-07-08 | — |
+-| [ADR-116](ADR-116-memory-tripwire-activation-path.md) | Memory Tripwire Activation Path | accepted | 2026-07-08 | — |
+-| [ADR-117](ADR-117-subagents-auto-default-on.md) | Subagents Auto Default On | accepted | 2026-07-09 | — |
+-| [ADR-118](ADR-118-loop-engineering-boundaries.md) | Loop Engineering Boundaries | accepted | 2026-07-10 | — |
+-| [ADR-119](ADR-119-global-knowledge-default-on.md) | Global Knowledge Default On | accepted | 2026-07-12 | 103 |
+-| [ADR-120](ADR-120-council-chairman-mode.md) | Council Chairman Mode | accepted | 2026-07-12 | — |
+-| [ADR-121](ADR-121-knowledge-sensitivity-classes.md) | Knowledge Sensitivity Classes | accepted | 2026-07-12 | — |
+-| [ADR-122](ADR-122-adversarial-verification-council.md) | Adversarial Verification Council | accepted | 2026-07-14 | — |
+-| [ADR-123](ADR-123-runtime-security-scope-and-spawn-hardening.md) | Runtime Security Scope And Spawn Hardening | accepted | 2026-07-20 | — |
+-| [ADR-124](ADR-124-embedded-engine-doctrine.md) | Embedded Engine Doctrine | accepted | 2026-07-23 | ADR-088 (engine-adoption interpretation only), ADR-094 (engine-adoption interpretation only) |
+-| [ADR-125](ADR-125-doc-screenshot-anonymization.md) | Doc Screenshot Anonymization | accepted | 2026-07-23 | — |
+-| [ADR-126](ADR-126-internet-reach-operator-tooling.md) | Internet Reach Operator Tooling | accepted | 2026-07-24 | — |
+-| [ADR-127](ADR-127-enforcement-claims-must-resolve.md) | Enforcement Claims Must Resolve | accepted | 2026-07-25 | — |
+-| [ADR-128](ADR-128-executable-evidence-and-measured-escalation.md) | Executable Evidence And Measured Escalation | accepted | 2026-07-25 | — |
+-| [ADR-129](ADR-129-sqlite-substrate-maintainer-override.md) | Sqlite Substrate Maintainer Override | accepted | 2026-07-27 | 116 |
+-| [ADR-130](ADR-130-storage-subject-axis.md) | Storage Subject Axis | accepted | 2026-07-27 | — |
+-| [ADR-131](ADR-131-mcp-sdk-hono-override.md) | Mcp Sdk Hono Override | accepted | 2026-07-27 | — |
+-| [ADR-132](ADR-132-stub-tools-off-the-wire.md) | Stub Tools Off The Wire | accepted | 2026-07-27 | — |
+-| [ADR-133](ADR-133-subsystem-freeze-unblock-list.md) | Subsystem Freeze Unblock List | accepted | 2026-07-28 | — |
+-| [ADR-134](ADR-134-launch-decision-dated-defer.md) | Launch Decision Dated Defer | accepted | 2026-07-28 | — |
+-| [ADR-135](ADR-135-trust-boundary-escalation.md) | Trust Boundary Escalation | accepted | 2026-07-28 | — |
+-| [ADR-136](ADR-136-provenance-governance-honesty-boundary.md) | Provenance Governance Honesty Boundary | accepted | 2026-07-28 | — |
+-| [ADR-137](ADR-137-amend-tier-removal-reopen-triggers.md) | Amend Tier Removal Reopen Triggers | accepted | 2026-07-28 | — |
+-| [ADR-138](ADR-138-global-user-profile-layer.md) | Global User Profile Layer | accepted | 2026-07-30 | — |
+-| [ADR-200](ADR-200-python-to-typescript-migration.md) | Python To Typescript Migration | accepted | 2026-06-11 | — |
+-| [ADR-201](ADR-201-remove-md-condensation.md) | Remove Md Condensation | accepted | 2026-07-29 | — |
+-| [ADR-202](ADR-202-anchor-scoring-as-thin-quality-instrument.md) | Anchor Scoring As Thin Quality Instrument | accepted | 2026-07-30 | — |
+-| [ADR-203](ADR-203-narrow-the-safety-floor-lock.md) | Narrow The Safety Floor Lock | accepted | 2026-07-31 | — |
+-| [ADR-204](ADR-204-precompile-cli-delegate-commands.md) | Precompile Cli Delegate Commands | accepted | 2026-07-31 | — |
+-| [ADR-205](ADR-205-webfont-delivery-ownership.md) | Webfont Delivery Ownership | accepted | 2026-07-31 | — |
+-| [ADR-206](ADR-206-drive-loop-era-disposition.md) | Drive Loop Era Disposition | accepted | 2026-08-03 | ADR-068, ADR-070, ADR-071, ADR-072, ADR-073, ADR-074, ADR-075, ADR-076, ADR-077, ADR-078, ADR-079, ADR-080, ADR-081, ADR-082, ADR-083, ADR-084 |
+-| [ADR-207](ADR-207-mcp-stdio-lite-node-grounds.md) | Mcp Stdio Lite Node Grounds | accepted | 2026-08-03 | ADR-085 |
+-| [ADR-208](ADR-208-dist-agent-src-keep-forever.md) | Dist Agent Src Keep Forever | accepted | 2026-08-03 | — |
+-| [ADR-209](ADR-209-projection-era-corrections.md) | Projection Era Corrections | accepted | 2026-08-03 | ADR-089, ADR-030 (Decision 2 — the "keep the skills-list projection for now" carve-out only) |
+-| [ADR-210](ADR-210-router-self-contained-rules.md) | Router Self Contained Rules | accepted | 2026-08-03 | — |
+-| [ADR-211](ADR-211-harvest-freeze-resume-conditions.md) | Harvest Freeze Resume Conditions | accepted | 2026-08-03 | — |
+-| [ADR-212](ADR-212-declarative-routing-with-quantified-resolver-reopen.md) | Declarative Routing With Quantified Resolver Reopen | accepted | 2026-08-03 | — |
+-| [ADR-213](ADR-213-scoped-abstraction-threshold-canon.md) | Scoped Abstraction Threshold Canon | accepted | 2026-08-03 | — |
+-| [ADR-214](ADR-214-package-wide-consistency-sweep.md) | Package Wide Consistency Sweep | accepted | 2026-08-04 | — |
+-| [ADR-215](ADR-215-harvest-freeze-verification-arm-lift.md) | Harvest Freeze Verification Arm Lift | accepted | 2026-08-05 | — |
+-| [ADR-216](ADR-216-restraint-reanchored-to-capacity.md) | Restraint Reanchored To Capacity | accepted | 2026-08-05 | — |
+-| [ADR-217](ADR-217-rich-class-band-measured-and-enforced.md) | Rich Class Band Measured And Enforced | accepted | 2026-08-06 | — |
+-| [ADR-218](ADR-218-absoluta-census-is-a-closed-decision-input.md) | Absoluta Census Is A Closed Decision Input | accepted | 2026-08-06 | — |
+-| [ADR-219](ADR-219-mergeable-keys-follow-the-migration.md) | Mergeable Keys Follow The Migration | accepted | 2026-08-08 | — |
+-| [ADR-220](ADR-220-skill-invocation-attestation.md) | Skill Invocation Attestation | accepted | 2026-08-09 | — |
+-| [ADR-221](ADR-221-host-native-first-ladder.md) | Host Native First Ladder | accepted | 2026-08-10 | — |
+-| [ADR-222](ADR-222-blocker-handover-at-reply-close.md) | Blocker Handover At Reply Close | proposed | 2026-08-11 | — |
+-| [ADR-223](ADR-223-no-required-check-demotion-on-cost-grounds.md) | No Required Check Demotion On Cost Grounds | accepted | 2026-08-11 | — |
+-| [ADR-224](ADR-224-gate-scoped-solo-attendance-floor.md) | Gate Scoped Solo Attendance Floor | proposed | 2026-08-11 | — |
+-| [ADR-225](ADR-225-cross-corpus-proposal-verification.md) | Cross Corpus Proposal Verification | accepted | 2026-08-12 | — |
+-| [ADR-226](ADR-226-package-repo-keeps-both-rule-layers.md) | Package Repo Keeps Both Rule Layers | accepted | 2026-08-13 | — |
+-| [ADR-227](ADR-227-paths-scoping-is-saturated-not-a-corpus-lever.md) | Paths Scoping Is Saturated Not A Corpus Lever | accepted | 2026-08-13 | — |
+-| [ADR-228](ADR-228-global-install-does-not-emit-paths.md) | Global Install Does Not Emit Paths | accepted | 2026-08-13 | — |
+-| [ADR-229](ADR-229-worktrees-are-instruction-only.md) | Worktrees Are Instruction Only | accepted | 2026-08-13 | — |
+-| [ADR-230](ADR-230-council-spend-bound-is-a-ceiling.md) | Council Spend Bound Is A Ceiling | accepted | 2026-08-13 | — |
+-| [ADR-231](ADR-231-remove-command-tier-alias.md) | Remove Command Tier Alias | accepted | 2026-08-14 | ADR-092 |
+-| [ADR-232](ADR-232-frontier-tier-reopened.md) | Frontier Tier Reopened | accepted | 2026-08-15 | — |
+-| [ADR-233](ADR-233-org-pack-provenance-class.md) | Org Pack Provenance Class | accepted | 2026-08-19 | — |
+-| [ADR-234](ADR-234-curated-memory-verification-and-eviction.md) | Curated Memory Verification And Eviction | accepted | 2026-08-19 | — |
++| # | Title | Status | Date | Supersedes | Superseded by | Amended by |
++|---|---|---|---|---|---|---|
++| [ADR-001](ADR-001-kernel-swap-deferred.md) | Kernel Swap Deferred | accepted | 2026-05-06 | — | — | — |
++| [ADR-002](ADR-002-kernel-bucket-overrides.md) | Kernel Bucket Overrides | accepted | 2026-05-06 | — | — | — |
++| [ADR-003](ADR-003-flat-cluster-subs-and-colon-syntax.md) | Flat Cluster Subs And Colon Syntax | accepted | 2026-05-07 | — | — | — |
++| [ADR-004](ADR-004-rule-governance-pruning.md) | Rule Governance Pruning | accepted | 2026-05-08 | — | — | — |
++| [ADR-005](ADR-005-subagent-worktrees.md) | Subagent Worktrees No Auto Merge | accepted | 2026-05-09 | — | — | — |
++| [ADR-006](ADR-006-skill-tools-python-pilot.md) | Skill Tools Python Pilot Pass | accepted | 2026-05-09 | — | — | — |
++| [ADR-007](ADR-007-agent-discovery-scopes.md) | Global Default Install With Export Subcommand | accepted | 2026-05-12 | — | — | — |
++| [ADR-008](ADR-008-installed-tools-manifest.md) | Committed Installed Tools Manifest Separate From Settings | accepted | 2026-05-12 | — | — | — |
++| [ADR-009](ADR-009-event4u-namespace.md) | Event4U Namespace And Claude Desktop Zip Bundles | accepted | 2026-05-13 | — | — | — |
++| [ADR-010](ADR-010-profile-pack-preset-boundary.md) | Profile Pack Preset Boundary | accepted | 2026-05-16 | — | — | — |
++| [ADR-011](ADR-011-domain-pack-readiness.md) | Domain Pack Readiness | accepted | 2026-05-17 | — | — | — |
++| [ADR-012](ADR-012-typescript-cli-shell.md) | Typescript Cli Shell | accepted | 2026-05-19 | — | — | — |
++| [ADR-013](ADR-013-discovery-frontmatter-contract.md) | Discovery Frontmatter Contract | accepted | 2026-05-19 | — | — | — |
++| [ADR-014](ADR-014-gui-framework-choice.md) | Gui Framework Choice | accepted | 2026-05-20 | — | — | — |
++| [ADR-015](ADR-015-discovery-manifest-contract.md) | Discovery Manifest Contract | accepted | 2026-05-21 | — | — | — |
++| [ADR-016](ADR-016-installer-architecture.md) | Installer Architecture | accepted | 2026-05-21 | — | — | — |
++| [ADR-017](ADR-017-monorepo-physical-layout.md) | Monorepo Physical Layout | accepted | 2026-05-21 | — | — | — |
++| [ADR-018](ADR-018-trust-and-safety-layer.md) | Trust And Safety Layer | accepted | 2026-05-21 | — | — | — |
++| [ADR-019](ADR-019-router-json-dist-location.md) | Router Json Dist Location | accepted | 2026-05-23 | — | — | — |
++| [ADR-020](ADR-020-global-only-consumer-scope.md) | Global Only Consumer Scope | accepted | 2026-05-23 | — | — | — |
++| [ADR-021](ADR-021-deployment-shape.md) | Deployment Shape | accepted | 2026-05-24 | — | — | — |
++| [ADR-022](ADR-022-daily-workspace-decomposition.md) | Daily Workspace Decomposition | accepted | 2026-05-24 | — | — | — |
++| [ADR-023](ADR-023-host-agent-protocol.md) | Host Agent Protocol | accepted | 2026-05-24 | — | — | — |
++| [ADR-024](ADR-024-workspace-v0-feature-floor.md) | Workspace V0 Feature Floor | accepted | 2026-05-24 | — | — | — |
++| [ADR-025](ADR-025-workspace-chrome.md) | Workspace Chrome | accepted | 2026-05-24 | — | — | — |
++| [ADR-026](ADR-026-explain-mode-translation.md) | Explain Mode Translation | accepted | 2026-05-24 | — | — | — |
++| [ADR-027](ADR-027-changelog-machine-vs-manual.md) | Changelog Machine Vs Manual | accepted | 2026-05-25 | — | — | — |
++| [ADR-028](ADR-028-root-layout.md) | Root Layout | superseded | 2026-05-25 | — | ADR-045 | — |
++| [ADR-029](ADR-029-multi-workspace-deferred.md) | Multi Workspace Deferred | accepted | 2026-05-25 | — | — | — |
++| [ADR-030](ADR-030-claude-code-command-projection.md) | Claude Code Command Projection | accepted | 2026-05-28 | — | — | — |
++| [ADR-031](ADR-031-validation-severity-tiers-and-projection-roundtrip.md) | Validation Severity Tiers And Projection Roundtrip | accepted | 2026-05-29 | — | — | — |
++| [ADR-032](ADR-032-linked-projects-scope.md) | Linked Projects Scope Go Option A | accepted | 2026-05-29 | — | — | — |
++| [ADR-033](ADR-033-distribution-identity-npm-primary.md) | Distribution Identity Npm Primary | accepted | 2026-05-29 | — | — | — |
++| [ADR-034](ADR-034-per-skill-model-recommendation-transport.md) | Per Skill Model Recommendation Transport | superseded | 2026-05-30 | — | 035 | — |
++| [ADR-035](ADR-035-model-capability-tiers.md) | Model Capability Tiers | accepted | 2026-05-30 | 034 | — | ADR-232 |
++| [ADR-036](ADR-036-global-install-browser-wizard-handoff.md) | Global Install Browser Wizard Handoff | accepted | 2026-06-01 | — | — | — |
++| [ADR-037](ADR-037-cost-profile-untangle.md) | Cost Profile Untangle | accepted | 2026-06-01 | — | — | — |
++| [ADR-038](ADR-038-canonical-settings-path.md) | Canonical Settings Path | accepted | 2026-06-01 | — | — | — |
++| [ADR-039](ADR-039-claude-skills-untracked.md) | Claude Skills Untracked | accepted | 2026-06-01 | — | — | — |
++| [ADR-040](ADR-040-execution-model-projection-time-filtering.md) | Execution Model Projection Time Filtering | accepted | 2026-06-02 | — | — | — |
++| [ADR-041](ADR-041-controlled-command-verbs.md) | Controlled Command Verbs | accepted | 2026-06-03 | — | — | — |
++| [ADR-042](ADR-042-runtime-resolver-decision-gate.md) | Runtime Resolver Decision Gate | accepted | 2026-06-03 | — | — | — |
++| [ADR-043](ADR-043-monorepo-collapse-to-src-domains.md) | Monorepo Collapse To Src Domains | accepted | 2026-06-03 | ADR-017 | — | — |
++| [ADR-044](ADR-044-command-naming-scheme-hyphenated.md) | Command Naming Scheme Hyphenated | accepted | 2026-06-03 | — | — | — |
++| [ADR-045](ADR-045-src-source-layout-and-profiles-as-views.md) | Src Source Layout And Profiles As Views | accepted | 2026-06-03 | ADR-028 | — | — |
++| [ADR-046](ADR-046-thin-command-principle.md) | Thin Command Principle | accepted | 2026-06-03 | — | — | — |
++| [ADR-047](ADR-047-framework-neutral-stack-adaptive-commands.md) | Framework Neutral Stack Adaptive Commands | accepted | 2026-06-03 | — | — | — |
++| [ADR-048](ADR-048-command-justification-rule.md) | Command Justification Rule | accepted | 2026-06-03 | — | — | — |
++| [ADR-049](ADR-049-configuration-trust-boundary.md) | Configuration Trust Boundary | accepted | 2026-06-03 | — | — | — |
++| [ADR-050](ADR-050-workspace-vs-package-root-boundary.md) | Workspace Vs Package Root Boundary | accepted | 2026-06-05 | — | — | — |
++| [ADR-051](ADR-051-uncondensed-source-container-relocation.md) | Uncondensed Source Container Relocation | accepted | 2026-06-05 | — | — | — |
++| [ADR-052](ADR-052-packages-removal-and-pack-home-migration.md) | Packages Removal And Pack Home Migration | accepted | 2026-06-05 | — | — | — |
++| [ADR-053](ADR-053-agents-namespace-dual-role-resolution.md) | Agents Namespace Dual Role Resolution | accepted | 2026-06-05 | — | — | — |
++| [ADR-054](ADR-054-rule-adherence-decay-triggered-restate.md) | Rule Adherence Decay Triggered Restate | rejected | 2026-06-05 | — | — | — |
++| [ADR-055](ADR-055-flow-layer-data-model.md) | Flow Layer Data Model | accepted | 2026-06-06 | — | — | — |
++| [ADR-056](ADR-056-unvalidated-video-adapters-disposition.md) | Unvalidated Video Adapters Disposition | accepted | 2026-06-06 | — | — | — |
++| [ADR-057](ADR-057-consolidation-evidence-gate-outcomes.md) | Consolidation Evidence Gate Outcomes | accepted | 2026-06-06 | — | — | — |
++| [ADR-058](ADR-058-condensed-output-relocation-to-dist.md) | Condensed Output Relocation To Dist | accepted | 2026-06-06 | — | — | — |
++| [ADR-059](ADR-059-render-resume-filesystem-as-state.md) | Render Resume Filesystem As State | accepted | 2026-06-07 | — | — | — |
++| [ADR-060](ADR-060-comfyui-sandbox-model.md) | Comfyui Sandbox Model | accepted | 2026-06-07 | — | — | — |
++| [ADR-061](ADR-061-corpus-grounding-layer.md) | Corpus Grounding Layer | accepted | 2026-06-07 | — | — | — |
++| [ADR-062](ADR-062-encrypt-at-rest-store-architecture.md) | Encrypt At Rest Store Architecture | accepted | 2026-06-08 | — | — | — |
++| [ADR-063](ADR-063-append-jsonl-encryption-deferred.md) | Append Jsonl Encryption Deferred | accepted | 2026-06-08 | — | — | — |
++| [ADR-064](ADR-064-append-jsonl-per-record-encryption.md) | Append Jsonl Per Record Encryption | accepted | 2026-06-08 | — | — | — |
++| [ADR-065](ADR-065-tier3-inbox-handoff-v0.md) | Tier3 Inbox Handoff V0 | accepted | 2026-06-08 | — | — | — |
++| [ADR-066](ADR-066-skill-body-prerendering.md) | Skill Body Prerendering | accepted | 2026-06-08 | — | — | — |
++| [ADR-067](ADR-067-glama-registry-listing.md) | Glama Registry Listing | superseded | 2026-06-08 | — | 111 | — |
++| [ADR-068](ADR-068-host-tier-detection.md) | Host Tier Detection | superseded | 2026-06-08 | — | 206 | — |
++| [ADR-069](ADR-069-prompt-renderer.md) | Prompt Renderer | accepted | 2026-06-08 | — | — | — |
++| [ADR-070](ADR-070-tier1-drive-loop.md) | Tier1 Drive Loop | superseded | 2026-06-08 | — | 206 | — |
++| [ADR-071](ADR-071-launch-drive-integration.md) | Launch Drive Integration | superseded | 2026-06-08 | — | 206 | — |
++| [ADR-072](ADR-072-codex-gemini-drive-configs.md) | Codex Gemini Drive Configs | superseded | 2026-06-08 | — | 206 | — |
++| [ADR-073](ADR-073-drive-health-kill-switch.md) | Drive Health Kill Switch | superseded | 2026-06-08 | — | 206 | — |
++| [ADR-074](ADR-074-drive-kill-switch-auto-recovery.md) | Drive Kill Switch Auto Recovery | superseded | 2026-06-08 | — | 206 | — |
++| [ADR-075](ADR-075-workspace-gui-drive.md) | Workspace Gui Drive | superseded | 2026-06-08 | — | 206 | — |
++| [ADR-076](ADR-076-workspace-multi-turn.md) | Workspace Multi Turn | superseded | 2026-06-09 | — | 206 | — |
++| [ADR-077](ADR-077-workspace-followup-gui.md) | Workspace Followup Gui | superseded | 2026-06-09 | — | 206 | — |
++| [ADR-078](ADR-078-drive-health-panel.md) | Drive Health Panel | superseded | 2026-06-09 | — | 206 | — |
++| [ADR-079](ADR-079-workspace-host-picker.md) | Workspace Host Picker | superseded | 2026-06-09 | — | 206 | — |
++| [ADR-080](ADR-080-host-session-expired-410.md) | Host Session Expired 410 | superseded | 2026-06-09 | — | 206 | — |
++| [ADR-081](ADR-081-drive-health-reset-and-410-affordance.md) | Drive Health Reset And 410 Affordance | superseded | 2026-06-09 | — | 206 | — |
++| [ADR-082](ADR-082-410-one-click-relaunch.md) | 410 One Click Relaunch | superseded | 2026-06-09 | — | 206 | — |
++| [ADR-083](ADR-083-session-thread-and-arbitrary-continuation.md) | Session Thread And Arbitrary Continuation | superseded | 2026-06-09 | — | 206 | — |
++| [ADR-084](ADR-084-drive-health-refresh-on-drive.md) | Drive Health Refresh On Drive | superseded | 2026-06-09 | — | 206 | — |
++| [ADR-085](ADR-085-mcp-stdio-end-user-distribution-shape.md) | Mcp Stdio End User Distribution Shape | superseded | 2026-06-10 | — | 207 | — |
++| [ADR-086](ADR-086-read-only-cross-agent-mcp-discovery-helper.md) | Read Only Cross Agent Mcp Discovery Helper | rejected | 2026-06-11 | — | — | — |
++| [ADR-087](ADR-087-installer-e2e-test-strategy.md) | Installer E2E Test Strategy | accepted | 2026-06-11 | — | — | — |
++| [ADR-088](ADR-088-no-external-runtime-federation.md) | No External Runtime Federation | accepted | 2026-06-11 | — | ADR-124 (engine-adoption interpretation only) | — |
++| [ADR-089](ADR-089-lean-local-plugin-install.md) | Lean Local Plugin Install | superseded | 2026-06-12 | — | 209 | — |
++| [ADR-090](ADR-090-visibility-command-frontmatter-field.md) | Visibility Command Frontmatter Field | accepted | 2026-06-13 | — | — | — |
++| [ADR-091](ADR-091-split-meta-capability-packs.md) | Split Meta Capability Packs | accepted | 2026-06-13 | — | — | — |
++| [ADR-092](ADR-092-defer-command-tier-alias-removal.md) | Defer Command Tier Alias Removal | superseded | 2026-06-13 | — | ADR-231 | — |
++| [ADR-093](ADR-093-ai-council-config-user-global.md) | Ai Council Config User Global | superseded | 2026-06-13 | — | 104 | — |
++| [ADR-094](ADR-094-agent-memory-layer-removal.md) | Agent Memory Layer Removal | accepted | 2026-06-14 | — | ADR-124 (engine-adoption interpretation only) | — |
++| [ADR-095](ADR-095-workspace-boundary-contract.md) | Workspace Boundary Contract | accepted | 2026-06-14 | — | — | — |
++| [ADR-096](ADR-096-analysis-workbench.md) | Analysis Workbench | accepted | 2026-06-15 | — | — | — |
++| [ADR-097](ADR-097-mission-recipe-privilege-boundary.md) | Mission Recipe Privilege Boundary | accepted | 2026-06-15 | — | — | — |
++| [ADR-098](ADR-098-evidence-first-structure-discovery.md) | Evidence First Structure Discovery | accepted | 2026-06-15 | — | ADR-100 (Decision-10 only) | — |
++| [ADR-099](ADR-099-file-first-pattern-library.md) | File First Pattern Library | accepted | 2026-06-15 | — | — | — |
++| [ADR-100](ADR-100-global-knowledge-card-sharing.md) | Global Knowledge Card Sharing | accepted | 2026-06-15 | ADR-098 | — | — |
++| [ADR-101](ADR-101-ticket-bundle-emission.md) | Ticket Bundle Emission | accepted | 2026-06-15 | — | — | — |
++| [ADR-102](ADR-102-ticket-handoff-paste-and-mcp.md) | Ticket Handoff Paste And Mcp | accepted | 2026-06-16 | — | — | — |
++| [ADR-103](ADR-103-global-knowledge-default-off-until-measured.md) | Global Knowledge Default Off Until Measured | superseded | 2026-06-16 | — | 119 | — |
++| [ADR-104](ADR-104-ai-council-config-global-only.md) | Ai Council Config Global Only | accepted | 2026-06-22 | 093 | — | — |
++| [ADR-105](ADR-105-automatic-subagent-orchestration.md) | Automatic Subagent Orchestration | accepted | 2026-06-23 | — | — | ADR-117 |
++| [ADR-106](ADR-106-recursive-verification-benchmark-gate.md) | Recursive Verification Benchmark Gate | accepted | 2026-06-23 | — | — | — |
++| [ADR-107](ADR-107-legal-domain-pack-adoption.md) | Legal Domain Pack Adoption | accepted | 2026-06-24 | — | — | — |
++| [ADR-108](ADR-108-open-source-forever-no-commercial-tier.md) | Open Source Forever No Commercial Tier | accepted | 2026-06-24 | — | — | — |
++| [ADR-109](ADR-109-subagent-v1-contract.md) | Subagent V1 Contract | accepted | 2026-07-04 | — | — | — |
++| [ADR-110](ADR-110-discipline-profile-resolution-locus.md) | Discipline Profile Resolution Locus | accepted | 2026-07-07 | — | — | — |
++| [ADR-111](ADR-111-canonical-glama-listing.md) | Canonical Glama Listing | accepted | 2026-07-07 | — | — | — |
++| [ADR-112](ADR-112-stdio-lite-stays-read-only.md) | Stdio Lite Stays Read Only | accepted | 2026-07-07 | — | — | — |
++| [ADR-113](ADR-113-ci-native-release-label-trigger.md) | Ci Native Release Label Trigger | accepted | 2026-07-08 | — | — | — |
++| [ADR-114](ADR-114-commit-policy-iron-law-override.md) | Commit Policy Iron Law Override | accepted | 2026-07-08 | — | — | — |
++| [ADR-115](ADR-115-command-cluster-consolidation-phase-4.md) | Command Cluster Consolidation Phase 4 | accepted | 2026-07-08 | — | — | — |
++| [ADR-116](ADR-116-memory-tripwire-activation-path.md) | Memory Tripwire Activation Path | accepted | 2026-07-08 | — | — | — |
++| [ADR-117](ADR-117-subagents-auto-default-on.md) | Subagents Auto Default On | accepted | 2026-07-09 | — | — | — |
++| [ADR-118](ADR-118-loop-engineering-boundaries.md) | Loop Engineering Boundaries | accepted | 2026-07-10 | — | — | — |
++| [ADR-119](ADR-119-global-knowledge-default-on.md) | Global Knowledge Default On | accepted | 2026-07-12 | 103 | — | — |
++| [ADR-120](ADR-120-council-chairman-mode.md) | Council Chairman Mode | accepted | 2026-07-12 | — | — | — |
++| [ADR-121](ADR-121-knowledge-sensitivity-classes.md) | Knowledge Sensitivity Classes | accepted | 2026-07-12 | — | — | — |
++| [ADR-122](ADR-122-adversarial-verification-council.md) | Adversarial Verification Council | accepted | 2026-07-14 | — | — | — |
++| [ADR-123](ADR-123-runtime-security-scope-and-spawn-hardening.md) | Runtime Security Scope And Spawn Hardening | accepted | 2026-07-20 | — | — | — |
++| [ADR-124](ADR-124-embedded-engine-doctrine.md) | Embedded Engine Doctrine | accepted | 2026-07-23 | ADR-088 (engine-adoption interpretation only), ADR-094 (engine-adoption interpretation only) | — | — |
++| [ADR-125](ADR-125-doc-screenshot-anonymization.md) | Doc Screenshot Anonymization | accepted | 2026-07-23 | — | — | — |
++| [ADR-126](ADR-126-internet-reach-operator-tooling.md) | Internet Reach Operator Tooling | accepted | 2026-07-24 | — | — | — |
++| [ADR-127](ADR-127-enforcement-claims-must-resolve.md) | Enforcement Claims Must Resolve | accepted | 2026-07-25 | — | — | — |
++| [ADR-128](ADR-128-executable-evidence-and-measured-escalation.md) | Executable Evidence And Measured Escalation | accepted | 2026-07-25 | — | — | — |
++| [ADR-129](ADR-129-sqlite-substrate-maintainer-override.md) | Sqlite Substrate Maintainer Override | accepted | 2026-07-27 | 116 | — | — |
++| [ADR-130](ADR-130-storage-subject-axis.md) | Storage Subject Axis | accepted | 2026-07-27 | — | — | — |
++| [ADR-131](ADR-131-mcp-sdk-hono-override.md) | Mcp Sdk Hono Override | accepted | 2026-07-27 | — | — | — |
++| [ADR-132](ADR-132-stub-tools-off-the-wire.md) | Stub Tools Off The Wire | accepted | 2026-07-27 | — | — | — |
++| [ADR-133](ADR-133-subsystem-freeze-unblock-list.md) | Subsystem Freeze Unblock List | accepted | 2026-07-28 | — | — | — |
++| [ADR-134](ADR-134-launch-decision-dated-defer.md) | Launch Decision Dated Defer | accepted | 2026-07-28 | — | — | — |
++| [ADR-135](ADR-135-trust-boundary-escalation.md) | Trust Boundary Escalation | accepted | 2026-07-28 | — | — | — |
++| [ADR-136](ADR-136-provenance-governance-honesty-boundary.md) | Provenance Governance Honesty Boundary | accepted | 2026-07-28 | — | — | — |
++| [ADR-137](ADR-137-amend-tier-removal-reopen-triggers.md) | Amend Tier Removal Reopen Triggers | accepted | 2026-07-28 | — | — | — |
++| [ADR-138](ADR-138-global-user-profile-layer.md) | Global User Profile Layer | accepted | 2026-07-30 | — | — | — |
++| [ADR-200](ADR-200-python-to-typescript-migration.md) | Python To Typescript Migration | accepted | 2026-06-11 | — | — | — |
++| [ADR-201](ADR-201-remove-md-condensation.md) | Remove Md Condensation | accepted | 2026-07-29 | — | — | — |
++| [ADR-202](ADR-202-anchor-scoring-as-thin-quality-instrument.md) | Anchor Scoring As Thin Quality Instrument | accepted | 2026-07-30 | — | — | — |
++| [ADR-203](ADR-203-narrow-the-safety-floor-lock.md) | Narrow The Safety Floor Lock | accepted | 2026-07-31 | — | — | — |
++| [ADR-204](ADR-204-precompile-cli-delegate-commands.md) | Precompile Cli Delegate Commands | accepted | 2026-07-31 | — | — | — |
++| [ADR-205](ADR-205-webfont-delivery-ownership.md) | Webfont Delivery Ownership | accepted | 2026-07-31 | — | — | — |
++| [ADR-206](ADR-206-drive-loop-era-disposition.md) | Drive Loop Era Disposition | accepted | 2026-08-03 | ADR-068, ADR-070, ADR-071, ADR-072, ADR-073, ADR-074, ADR-075, ADR-076, ADR-077, ADR-078, ADR-079, ADR-080, ADR-081, ADR-082, ADR-083, ADR-084 | — | — |
++| [ADR-207](ADR-207-mcp-stdio-lite-node-grounds.md) | Mcp Stdio Lite Node Grounds | accepted | 2026-08-03 | ADR-085 | — | — |
++| [ADR-208](ADR-208-dist-agent-src-keep-forever.md) | Dist Agent Src Keep Forever | accepted | 2026-08-03 | — | — | — |
++| [ADR-209](ADR-209-projection-era-corrections.md) | Projection Era Corrections | accepted | 2026-08-03 | ADR-089, ADR-030 (Decision 2 — the "keep the skills-list projection for now" carve-out only) | — | — |
++| [ADR-210](ADR-210-router-self-contained-rules.md) | Router Self Contained Rules | accepted | 2026-08-03 | — | — | — |
++| [ADR-211](ADR-211-harvest-freeze-resume-conditions.md) | Harvest Freeze Resume Conditions | accepted | 2026-08-03 | — | — | — |
++| [ADR-212](ADR-212-declarative-routing-with-quantified-resolver-reopen.md) | Declarative Routing With Quantified Resolver Reopen | accepted | 2026-08-03 | — | — | — |
++| [ADR-213](ADR-213-scoped-abstraction-threshold-canon.md) | Scoped Abstraction Threshold Canon | accepted | 2026-08-03 | — | — | — |
++| [ADR-214](ADR-214-package-wide-consistency-sweep.md) | Package Wide Consistency Sweep | accepted | 2026-08-04 | — | — | — |
++| [ADR-215](ADR-215-harvest-freeze-verification-arm-lift.md) | Harvest Freeze Verification Arm Lift | accepted | 2026-08-05 | — | — | — |
++| [ADR-216](ADR-216-restraint-reanchored-to-capacity.md) | Restraint Reanchored To Capacity | accepted | 2026-08-05 | — | — | — |
++| [ADR-217](ADR-217-rich-class-band-measured-and-enforced.md) | Rich Class Band Measured And Enforced | accepted | 2026-08-06 | — | — | — |
++| [ADR-218](ADR-218-absoluta-census-is-a-closed-decision-input.md) | Absoluta Census Is A Closed Decision Input | accepted | 2026-08-06 | — | — | — |
++| [ADR-219](ADR-219-mergeable-keys-follow-the-migration.md) | Mergeable Keys Follow The Migration | accepted | 2026-08-08 | — | — | — |
++| [ADR-220](ADR-220-skill-invocation-attestation.md) | Skill Invocation Attestation | accepted | 2026-08-09 | — | — | — |
++| [ADR-221](ADR-221-host-native-first-ladder.md) | Host Native First Ladder | accepted | 2026-08-10 | — | — | — |
++| [ADR-222](ADR-222-blocker-handover-at-reply-close.md) | Blocker Handover At Reply Close | proposed | 2026-08-11 | — | — | — |
++| [ADR-223](ADR-223-no-required-check-demotion-on-cost-grounds.md) | No Required Check Demotion On Cost Grounds | accepted | 2026-08-11 | — | — | — |
++| [ADR-224](ADR-224-gate-scoped-solo-attendance-floor.md) | Gate Scoped Solo Attendance Floor | proposed | 2026-08-11 | — | — | — |
++| [ADR-225](ADR-225-cross-corpus-proposal-verification.md) | Cross Corpus Proposal Verification | accepted | 2026-08-12 | — | — | — |
++| [ADR-226](ADR-226-package-repo-keeps-both-rule-layers.md) | Package Repo Keeps Both Rule Layers | accepted | 2026-08-13 | — | — | — |
++| [ADR-227](ADR-227-paths-scoping-is-saturated-not-a-corpus-lever.md) | Paths Scoping Is Saturated Not A Corpus Lever | accepted | 2026-08-13 | — | — | — |
++| [ADR-228](ADR-228-global-install-does-not-emit-paths.md) | Global Install Does Not Emit Paths | accepted | 2026-08-13 | — | — | — |
++| [ADR-229](ADR-229-worktrees-are-instruction-only.md) | Worktrees Are Instruction Only | accepted | 2026-08-13 | — | — | — |
++| [ADR-230](ADR-230-council-spend-bound-is-a-ceiling.md) | Council Spend Bound Is A Ceiling | accepted | 2026-08-13 | — | — | — |
++| [ADR-231](ADR-231-remove-command-tier-alias.md) | Remove Command Tier Alias | accepted | 2026-08-14 | ADR-092 | — | — |
++| [ADR-232](ADR-232-frontier-tier-reopened.md) | Frontier Tier Reopened | accepted | 2026-08-15 | — | — | — |
++| [ADR-233](ADR-233-org-pack-provenance-class.md) | Org Pack Provenance Class | accepted | 2026-08-19 | — | — | — |
++| [ADR-234](ADR-234-curated-memory-verification-and-eviction.md) | Curated Memory Verification And Eviction | accepted | 2026-08-19 | — | — | — |
+ 
+ ## Unnumbered (legacy)
+ 
+-| # | Title | Status | Date | Supersedes |
+-|---|---|---|---|---|
+-| [ADR-rule-kernel-and-router](ADR-rule-kernel-and-router.md) | Rule Kernel And Router Roadmap Closure | accepted | 2026-05-06 | — |
++| # | Title | Status | Date | Supersedes | Superseded by | Amended by |
++|---|---|---|---|---|---|---|
++| [ADR-rule-kernel-and-router](ADR-rule-kernel-and-router.md) | Rule Kernel And Router Roadmap Closure | accepted | 2026-05-06 | — | — | — |
+ 
+ ## Decision records outside this directory
+ 
+diff --git a/docs/decisions/adr-reopen-sweep-2026-08.md b/docs/decisions/adr-reopen-sweep-2026-08.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..a282c534e9eb5dc53937c97e5d328bbe730189b9
+--- /dev/null
++++ b/docs/decisions/adr-reopen-sweep-2026-08.md
+@@ -0,0 +1,86 @@
++# ADR reopen sweep — 2026-08
++
++> Every ADR the transcript record shows blocking work, given a disposition and a
++> route. Candidates only: **no reopen is executed here.**
++
++```
++NO SILENT RE-OPENINGS. NO SILENT RE-AFFIRMATIONS.
++```
++
++Same Iron Law and the same three dispositions as the 2026-07 engine
++reclassification, which is the precedent this file follows deliberately rather
++than inventing a second shape for the same job.
++
++## Why this file exists
++
++Measured over 26 days of transcripts (2026-07-25 – 2026-08-19): the owner
++demanded in **11 distinct messages** that recorded decisions be challengeable,
++and in **at least 13 assistant passages** a change was parked or refused citing
++a named ADR. Zero of those refusals followed an explicit overturn instruction —
++the friction is entirely upstream of the instruction. Two passages quantify it:
++*"60–80 % of every substantive file is already built, already planned, or
++forbidden by a lock the file never read"*, and *"roughly two thirds of the
++recommendations … predominantly prevented work"*.
++
++The owner's instruction was not only "make ADRs challengeable" but *"go through
++everything it blocked. Now, and in the past, and unblock it."* This table is
++that pass.
++
++## How to read a disposition
++
++| Disposition | Means |
++|---|---|
++| `RE-OPENED (candidate)` | The premise this decision rested on is questionable **today**. Someone must decide it — the route column says who. Not yet reopened. |
++| `RE-AFFIRMED` | Checked and still correct, or already reopened elsewhere and needing nothing further. |
++| `STAY-KILLED` | The decision holds and no evidence suggests otherwise; citing it as a blocker is legitimate. |
++
++Route per [`adr-layout § Reopen authority`](adr-layout-reopen-authority) — the
++discriminator is whether the proposed transition weakens an owner-reserved
++invariant. `council` = the council may decide it; `owner` = reserved.
++
++## The table
++
++Trigger state from `./scripts-run src/scripts/adr_cite_check <ADR-NNN>`,
++2026-08-19. `indeterminate` is the honest reading of a semantic condition, not
++a failure — it means the lock is not *unqualified*, and the condition must be
++evaluated against the tree before the ADR is cited again.
++
++| ADR | Title | What it blocked (transcript evidence) | Trigger state | Disposition | Route |
++|---|---|---|---|---|---|
++| 001 | Kernel-Set Swap Deferred | Its own follow-up. The record says the swap re-evaluation is *"**mandatory** before P4.1"*; the router compiler shipped and the follow-up ADR was never written. | `none` | **RE-OPENED (candidate)** | council — mechanism; no reserved dimension is touched by re-running a swap evaluation |
++| 011 | Domain-Pack Readiness | A plugin/pack proposal was *"parked behind ADR-011"* with no evaluation of whether its readiness gates had since been met. | `none` | **RE-OPENED (candidate)** | council — the gates are mechanism criteria and measurable from the tree |
++| 035 | Model capability tiers | Asserted a 4th `frontier` tier "is rejected", in two places, after ADR-232 had reopened exactly that on ADR-035's own `review_trigger`. | `indeterminate` | **RE-AFFIRMED** — already reopened by ADR-232; the defect was the missing back-link, fixed in this change (`amended_by: ADR-232` + body banner) | none needed |
++| 051 | Uncondensed source container relocation | A kernel fix that added a legacy-path fallback — *"exactly what ADR-051 forbids"*. The prohibition was correctly applied. | `indeterminate` | **STAY-KILLED** | — |
++| 054 | Decay-triggered re-state, not per-turn injection | A per-turn doctrine cue, and separately an activation-measurement proposal, were both closed with *"ADR-054 rejected"*. | `none` | **RE-OPENED (candidate)** | council — `rejected` records a rejected proposal, so reopening means showing the premise moved; the per-turn carrier evidence gathered since (`session-canary`, the nudge concerns) is exactly such evidence |
++| 127 | An enforcement claim must resolve | Cited when a proposed claim could not name its enforcing gate. That is the ADR working as designed. | `indeterminate` | **STAY-KILLED** | — |
++| 133 | Subsystem freeze in unblock-list form | A WIP limit was struck as *"accounting theater for a solo maintainer"*. The reasoning is capacity-anchored and capacity has not changed. | `indeterminate` | **STAY-KILLED** | — |
++| 208 | `dist/agent-src/` kept forever | An inbox analysis whose core ask was *"abolish tracked `dist/agent-src`"* was refused *"against ADR-208, accepted the day before"*. | `indeterminate` | **RE-OPENED (candidate)** | council — projection-tree shape is mechanism; a reopen must address ADR-208's own rationale, not merely re-assert the ask |
++| 211 | Harvest freeze | *"ADR-211 forbids new capability-adoption roadmaps."* The owner's response: *"ADR-211 is bullshit … overturn the ADR and unblock everything it blocked."* Partially resolved since via its own amendment path and ADR-216. | `indeterminate` (amended) | **RE-OPENED (candidate)** | **owner** — the freeze's basis is *what the project is for* (external adoption as a goal), and ADR-216 states in terms that a council cannot adjudicate that |
++| 216 | Restraint re-anchored to capacity | Named as the capacity cap that struck three of five components in one analysis. | `indeterminate` | **RE-AFFIRMED** — and classified in this change as `reopen_policy: owner`, `protected_dimensions: [purpose]`, which is the first ADR to carry the new fields | **owner** if ever reopened |
++| 220 | Skill invocation attestation: check deferred | Cited as an active deferral blocking a related proposal. The deferral names its own resume condition. | `indeterminate` | **RE-OPENED (candidate)** | council — evaluate the stated resume condition against the tree; mechanism only |
++| 227 | `paths:` scoping is saturated | Closed a proposal on measured saturation. The measurement is the load-bearing part and it is published. | `indeterminate` | **STAY-KILLED** | — |
++
++**Tally:** 6 `RE-OPENED (candidate)` · 2 `RE-AFFIRMED` · 4 `STAY-KILLED`.
++Of the six candidates, five route to the council and one (ADR-211) to the owner.
++
++## What this table is not
++
++It is not a decision. Every `RE-OPENED (candidate)` row is an *entry* into the
++reopen path, and that path requires the reopen record from
++[`adr-layout § The reopen record`](adr-layout-reopen-record): the original
++rationale addressed rather than cited, what changed with tree evidence,
++dependants touched, a rollback path, and a blast radius with its evidence. The
++precedent-creates-no-authority clause applies to this table too — that six rows
++here read `RE-OPENED (candidate)` is not itself an argument for reopening any
++one of them.
++
++**Two dispositions rest on transcript evidence rather than a fresh read of the
++blocked proposal**, and are stated as such: ADR-011 and ADR-220. Their blocked
++items are named in session prose, not in a tracked artefact, so the candidate
++status says "this is worth a look", not "this was wrongly blocked".
++
++<!-- Link targets are intentionally section anchors in docs/contracts/adr-layout.md;
++     see § Reopen authority and § Reopen record there. -->
++
++[adr-layout-reopen-authority]: ../contracts/adr-layout.md#reopen-authority
++[adr-layout-reopen-record]: ../contracts/adr-layout.md#the-reopen-record
+diff --git a/src/domains/analysis-workbench/analyze/decision/command.md b/src/domains/analysis-workbench/analyze/decision/command.md
+index ec6502c7f3763349b9235fc0234c9fd22494ac10..f3b9ee0c9a0b2a1217aac3684ab387eb7b1795cc 100644
+--- a/src/domains/analysis-workbench/analyze/decision/command.md
++++ b/src/domains/analysis-workbench/analyze/decision/command.md
+@@ -93,6 +93,13 @@ suggest deferring or strengthening evidence before proposing.
+ ### Rules
+ 
+ - Do NOT commit, push, or open a PR.
++- Do NOT report an ADR as still binding without evaluating it first —
++  `./scripts-run src/scripts/adr_cite_check <ADR-NNN>` resolves status,
++  `review_trigger` state, amendments, successors, and back-references in one
++  call. A `superseded` / `deprecated` ADR is not a live decision
++  to audit, and an amended one is not the text its body's top half claims.
++  (`rejected` is NOT in that set — on an ADR it records a rejected *proposal*,
++  so the rejection is the live decision.)
+ - Do NOT auto-promote — `/memory propose` is the intake.
+ - Do NOT re-litigate a decision confirmed still valid — acknowledge it,
+   note the validation date, stop.
+diff --git a/src/domains/meta/optimize/project/command.md b/src/domains/meta/optimize/project/command.md
+index 721629a92c66d3b1c4820c87f101c34f505ccb34..77522359ab77b98aafa6bac686fc2a861c20e74b 100644
+--- a/src/domains/meta/optimize/project/command.md
++++ b/src/domains/meta/optimize/project/command.md
+@@ -166,6 +166,16 @@ Hard rules for this step:
+   and its recorded revisit-conditions first; if it truly blocks, the
+   only flip path offered is option 3 (council re-eval) — "Flip" is not
+   offered for locks.
++- **An ADR lock is evaluated before it is reported.** When the lock is a
++  numbered ADR, the FIRST action is
++  `./scripts-run src/scripts/adr_cite_check <ADR-NNN>` — not "report the
++  lock". A `superseded` / `deprecated` status means there is no
++  live lock to route at all, and an amended ADR means the cited text may not
++  be the operative one. `rejected` stays live — it records a rejected
++  *proposal*, so reopening it means showing the premise it rejected on has
++  changed. Reporting an unevaluated ADR as a blocker is the
++  ordering defect `decision-revisit-gate` exists over: it costs the owner a
++  turn to discover what one command answers.
+ - **Session budget:** at most 5 interview questions by default
+   (`--max-questions=N` to override). Budget exhausted → remaining
+   candidates go to Step 4 as "further candidates".
+diff --git a/src/rules/decision-revisit-gate.md b/src/rules/decision-revisit-gate.md
+index 3e217462d52f9dc4e2fa6810caadab6f7ef7cb51..83fa8e36df4249dc3e5b71cb98f85e0f3225e1b7 100644
+--- a/src/rules/decision-revisit-gate.md
++++ b/src/rules/decision-revisit-gate.md
+@@ -10,8 +10,14 @@ triggers:
+   - keyword: "already decided"
+   - keyword: "locked decision"
+   - keyword: "budget blocks"
++  - keyword: "adr-"
++  - keyword: "adrs"
++  - keyword: "superseded"
++  - keyword: "review_trigger"
++  - phrase: "the adr"
+ routes_to:
+-  - "skill:decision-review"
++  - "skill:ai-council"
++  - "skill:decision-record"
+ workspaces: [agent-config-maintainer, engineering]
+ packs: [meta]
+ collision_ok:
+@@ -28,24 +34,99 @@ obligation_frequency: "per-task"
+ A LOCK IS A DECISION UNDER PAST CONDITIONS, NOT A PERMANENT LAW.
+ BENEFIT BLOCKED BY A LOCK → SURFACE + OFFER RE-EVALUATION.
+ NEVER SILENT COMPLIANCE. NEVER SILENT DROP OF A GOOD CHANGE.
++RE-EVALUATION GOES TO THE COUNCIL FIRST, NOT TO THE USER FIRST.
++THE USER IS REACHED FOR THE RESERVED SET — AND ALWAYS FOR IT.
++NEVER CITE A LOCK YOU HAVE NOT EVALUATED THIS TURN.
+ ```
+ 
+ An agent that finds a genuinely beneficial change blocked by a recorded
+ past decision — an honest-null eval verdict, a "don't relitigate"
+ memory or context note, a token-frugality/budget canon line, or an ADR —
+-does not quietly comply and drop the change. It surfaces the conflict
+-and offers the user a path to re-evaluate the lock. Progress means
+-adaptation: locks encode what was true when they were written, not a
+-ceiling on what the package may ever become.
++does not quietly comply and drop the change. It surfaces the conflict and
++re-evaluates the lock — **in the council by default**, reaching the user only
++for the reserved set below. Progress means adaptation: locks encode what was
++true when they were written, not a ceiling on what the package may ever become.
++
++**The default venue is the council, and this is a correction, not a new
++policy.** [`ai-council`](../skills/ai-council/SKILL.md) has said since its own
++Iron Law that *"a design decision the agent cannot settle from the tree goes to
++the council first, not to the user first"*, and its class table already lists
++"reopening a recorded decision". This rule used to say "offers the user a path",
++which contradicted that and made every lock an owner interrupt. The measured
++cost of the contradiction: across 26 days of transcripts, the agent reported a
++lock and waited, and the owner had to void the decision retroactively before the
++work resumed — in the two clearest cases the lock report is timestamped **before**
++the override demand. The ordering was the defect; the permission was never
++missing.
+ 
+ **Mechanism-match check comes FIRST**: a verdict settles the *mechanism it
+ tested*, not every future proposal that resembles it — if the blocked change
+ is a different mechanism, the lock does not apply; proceed, noting the
+ distinction.
+ 
+-Body migrated to [`skill:decision-review` § Decision-revisit gate — mechanics](../skills/decision-review/SKILL.md) (per P4 of `road-to-kernel-and-router.md`) — what-counts-as-a-lock catalog (honest nulls, don't-relitigate notes, budget-canon lines, ADRs, hard structural caps), the five fire steps, when-NOT-to-fire, failure modes.
++## The five steps, carried here — the depth is elsewhere, the obligation is not
++
++1. **Mechanism-match** (above) — different mechanism, no lock, proceed.
++2. **Evaluate the lock before citing it.** An ADR may not be presented as a
++   reason not to act until its status, `review_trigger` state, amendments and
++   successors have been read. In this repository that is one command —
++   `./scripts-run src/scripts/adr_cite_check <ADR-NNN>`; elsewhere it is the
++   same four reads done by hand. A `superseded` / `deprecated` status means it is
++   not a live lock at all; a fired or indeterminate trigger means it is not an
++   **unqualified** one. `rejected` is NOT in the dead set — on an ADR it records
++   a rejected *proposal*, so the rejection binds until its premise is shown to
++   have changed.
++3. **Surface** the change, the lock, the condition it recorded, and what has
++   changed since.
++4. **Route it** — council by default (below), user only for the reserved set.
++5. **Record** the outcome with scope and `revisit-if`.
++
++These five are the obligation and they are stated here rather than only behind
++a route, because the route was measurably unreachable: `decision-revisit-gate`
++lives in the always-on `meta` pack while `decision-review` ships
++`install.default: false` in the non-default `analysis-workbench` pack, so a
++pack-legal install received the obligation and not the procedure. `routes_to`
++now names two always-on skills; the backward-audit depth in
++[`decision-review`](../skills/decision-review/SKILL.md) stays optional, which is
++the correct status for depth.
++
++Full catalog (honest nulls, don't-relitigate notes, budget-canon lines, ADRs,
++hard structural caps), the per-step detail, when-NOT-to-fire and the failure
++modes remain in [`skill:decision-review` § Decision-revisit gate — mechanics](../skills/decision-review/SKILL.md).
+ Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
+ 
++## Who decides — the owner-reserved set
++
++The discriminator, in one question: **does the proposed transition weaken an
++owner-reserved invariant, or create an undelegated external, irreversible, or
++destructive commitment?** No, and reversible inside the authorised envelope →
++the council decides. Yes, or not establishable from tree evidence → the owner.
++
++The routing unit is the **transition**, never the document: the same ADR may be
++strengthened by the council and weakened only by the owner.
++
++| Reserved to the owner | Council-decidable |
++|---|---|
++| Changes the project's purpose or a declared non-negotiable outcome | Any mechanism serving that purpose |
++| **Lowers or removes** a recorded security / privacy / safety / data-handling floor | Strengthening a floor, or an equivalent swap above it |
++| Irreversible or materially destructive | Reversible within the envelope |
++| Spend or liability **above** a delegated threshold | Budgeted, threshold-bounded spend |
++| Creates / removes / weakens a legal, regulatory, contractual, licensing, compatibility, or public commitment | Internal-only commitments |
++| Governance self-amendment — reopening authority, quorum, escalation, this set | What the rules already permit |
++| Cannot be bounded from available evidence | Bounded, with the evidence cited |
++
++Council split, abstention, or no quorum is an **escalation condition**, not a
++class: that transition escalates, the ADR does not become owner-reserved
++forever. Availability is `agent-config council:status`, never a project file
++([`council-availability`](council-availability.md)).
++
++Field on the ADR: `reopen_policy: directional | owner | unclassified`, absent →
++**`unclassified`**, which permits council investigation and reversible
++experiments and gates only execution of a reserved transition. Absent is
++deliberately not `owner`: with 146 accepted ADRs that default would encode
++today's blockage into the new schema. Full contract, the reopen record, and the
++precedent-creates-no-authority clause: [`adr-layout § Reopen authority`](../docs/contracts/adr-layout.md).
++
+ ## See also
+ 
+ - [`decision-review`](../skills/decision-review/SKILL.md) — the backward-audit
+@@ -53,10 +134,30 @@ Trigger-set above activates this routing on demand, independent of the disciplin
+ - [`ai-council`](../skills/ai-council/SKILL.md) — the re-evaluation mechanism;
+   owns the convergence-summary scope + `revisit-if` contract.
+ - [`decision-record`](../skills/decision-record/SKILL.md) — forward-flow decision
+-  locking; the escalation litmus there names the reopening condition up front.
++  locking; its **§ 4 Lock the choice + consequences** requires the `Revisit-if:`
++  line that names the reopening condition up front. (This pointer used to cite an
++  "escalation litmus" heading; `grep` over `src/` + `docs/` returns two hits and
++  neither is in that file — the heading never existed, so the pointer led
++  nowhere. Corrected to the section that carries the obligation.)
+ - [`token-budget-discipline`](token-budget-discipline.md) — the frugality-canon
+   value-over-budget escalation this rule's budget-lock case defers to.
+ - [`no-cheap-questions`](no-cheap-questions.md) — the question-quality floor a
+   revisit-offer must still clear.
+ - [`ask-when-uncertain`](ask-when-uncertain.md) — the numbered-options shape
+   used to present the revisit offer.
++
++## Honest enforcement — `enforced_by: none`
++
++`adr_cite_check` is deterministic where it runs, and nothing makes it run. No
++gate can observe an agent citing a decision it never opened, so step 2 above is
++model-carried — the same honesty boundary
++[`security-sensitive-stop`](security-sensitive-stop.md) and
++[`active-remediation`](active-remediation.md) state for their own obligations.
++
++Two reach limits, named rather than implied. The tool lives in this repository's
++`src/scripts/` and is **not** exposed as an `agent-config` verb, so a consumer
++install performs step 2 by hand; wiring the verb touches six further surfaces
++plus the curated `dist/agent-src/scripts/` list and is deliberately out of this
++change. And `docs/decisions/` is projected into no agent-visible tree at all —
++the agent sees ADR *numbers* cited across rules and skills, almost never ADR
++*text*. Until that changes, "evaluate before citing" means opening the file.
+diff --git a/src/scripts/adr/regenerate_index.ts b/src/scripts/adr/regenerate_index.ts
+index b43d59df6bd80c85aac02cb7be97f36985bb2c14..ab8fbe72801ffd9eab59c23fa4c7fce707cae1ac 100644
+--- a/src/scripts/adr/regenerate_index.ts
++++ b/src/scripts/adr/regenerate_index.ts
+@@ -23,7 +23,17 @@ const NAMED = /^ADR-(\d{3})-([a-z0-9-]+)\.md$/;
+ const FM = /^---\n([\s\S]*?)\n---/;
+ // ^([a-z_]+):\s*(.+?)\s*$  (MULTILINE)
+ const FIELD = /^([a-z_]+):[ \t]*(.+?)[ \t]*$/gm;
+-const HEAD = '| # | Title | Status | Date | Supersedes |\n|---|---|---|---|---|';
++/**
++ * The index used to render `| # | Title | Status | Date | Supersedes |`, which
++ * is forward-only: a dead ADR showed `superseded | —` and the reader learned it
++ * was dead but not by what. `superseded_by` was read nowhere despite being a
++ * documented field, and `amended_by` had no representation at all — 18 ADRs
++ * carry an amendment block and the index could not distinguish one with five
++ * amendments from one never touched.
++ */
++const HEAD =
++    '| # | Title | Status | Date | Supersedes | Superseded by | Amended by |\n' +
++    '|---|---|---|---|---|---|---|';
+ 
+ type Meta = Record<string, string>;
+ interface Row extends Meta {
+@@ -182,7 +192,8 @@ export function row(r: Row): string {
+     const label = 'num' in r ? `ADR-${r.num}` : (r.path as string).slice(0, -3);
+     return (
+         `| [${label}](${r.path}) | ${title} | ${r.status ?? '—'} ` +
+-        `| ${r.date ?? '—'} | ${r.supersedes ?? '—'} |`
++        `| ${r.date ?? '—'} | ${r.supersedes ?? '—'} | ${r.superseded_by ?? '—'} ` +
++        `| ${r.amended_by ?? '—'} |`
+     );
+ }
+ 
+diff --git a/src/scripts/adr_cite_check.ts b/src/scripts/adr_cite_check.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..8a18e05f05f1663e78277a226e44cb4603e2795d
+--- /dev/null
++++ b/src/scripts/adr_cite_check.ts
+@@ -0,0 +1,424 @@
++#!/usr/bin/env tsx
++/**
++ * ADR cite-check — evaluate a decision BEFORE citing it as a reason not to act.
++ *
++ * The defect this closes is one of ordering, not of permission. Measured across
++ * 26 days of transcripts: in at least 13 passages a change was parked or refused
++ * citing a named ADR, and in zero cases did the agent refuse an explicit
++ * overturn instruction. The lock held, the owner had to notice and void it
++ * retroactively, and only then did the work resume. Nothing in the tree turned
++ * "this ADR blocks the change" into "is this ADR still true?".
++ *
++ * So this tool answers exactly that question, and only from what is mechanically
++ * decidable:
++ *
++ *   - **status** — a `superseded` / `deprecated` ADR is not a live lock at all.
++ *     This alone resolves a class of blockage with certainty. `rejected` is
++ *     deliberately excluded: on an ADR it records a rejected PROPOSAL, so the
++ *     rejection is the live decision.
++ *   - **successors and predecessors** — `superseded_by` / `supersedes`, plus the
++ *     `amended_by` / `amends` pair.
++ *   - **amendment blocks in the body** — three unreconciled conventions exist in
++ *     the corpus, so all three are matched.
++ *   - **back-references** — other ADRs that name this one. A decision reopened
++ *     by a later ADR that never linked back is invisible from the ADR's own file
++ *     (measured: ADR-035 still asserts a rejection ADR-232 reopened).
++ *   - **review_trigger** — verbatim, plus a state.
++ *
++ * `indeterminate` is a FIRST-CLASS trigger result, not a failure. Every
++ * `review_trigger` in the corpus is a semantic condition ("reopen when the
++ * capacity premise changes", "if a fifth band appears"), so forcing them to a
++ * boolean would convert uncertainty into either permission or blockage. Both
++ * council seats (2026-08-19) independently rejected building a machine-readable
++ * trigger grammar as a prerequisite for exactly this reason. An `indeterminate`
++ * result means: this may not be presented as an unqualified lock — route it.
++ *
++ * Usage:
++ *   ./scripts-run src/scripts/adr_cite_check ADR-211
++ *   ./scripts-run src/scripts/adr_cite_check ADR-001 ADR-035 --json
++ *
++ * Exit codes: 0 every reference resolved · 1 at least one did not · 2 usage.
++ */
++
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++const _HERE = path.dirname(fileURLToPath(import.meta.url));
++const REPO_ROOT = path.resolve(_HERE, '..', '..');
++
++/**
++ * The surfaces a decision can live on. Six exist in this tree; this tool reads
++ * the two that carry numbered ADRs and can therefore be cited as `ADR-NNN`.
++ *
++ * Deliberately NOT covered, stated rather than silently skipped:
++ * `docs/contracts/adr-*.md` (15 files) and `agents/settings/contexts/adr-*.md`
++ * (6) are named-slug contracts with their own status vocabulary (`Decided`,
++ * `locked`) and no ADR number, so a numeric reference can never resolve to one;
++ * `agents/decisions/` is a ledger of rows, not of files. A tool that silently
++ * saw one of six surfaces would report a real lock as unknown, which reads as
++ * "no constraint" and is worse than the stall it replaces — so the gap is
++ * printed in `--json` under `surfaces_not_scanned` and named here.
++ *
++ * The per-area surface took two passes to get honest. Its files are
++ * `<area>/NNNN-<slug>.md` with no `ADR-` prefix, so the flat filename pattern
++ * could never match one — the directory was listed as scanned and resolved
++ * nothing, which is the same false "not found" the paragraph above warns
++ * about, committed by this very file. It resolves by path and by the
++ * `ADR-<area>-NNNN` citation form now; a BARE number still cannot address one,
++ * because per-area numbering restarts per area and five files here are `0001`.
++ * See `PARTIAL_COVERAGE` for what a per-area hit does and does not carry.
++ */
++export const ADR_DIRS = ['docs/decisions', 'docs/adrs'] as const;
++
++export const SURFACES_NOT_SCANNED = [
++    'docs/contracts/adr-*.md — slug-named contracts, no ADR number to resolve against',
++    'agents/settings/contexts/adr-*.md — shadow notes, own status vocabulary',
++    'agents/decisions/ — row ledger, not per-decision files',
++] as const;
++
++/**
++ * Partial coverage, stated because a silent partial is the failure this tool
++ * exists to avoid: `docs/adrs/<area>/` resolves by PATH and by the
++ * `ADR-<area>-NNNN` citation form, but those files carry a quote-block header
++ * rather than YAML frontmatter, so `status` / `review_trigger` / the link
++ * fields read as absent. A per-area result is an accurate location and an
++ * honestly empty metadata set — never a claim that the fields are empty in the
++ * document.
++ */
++export const PARTIAL_COVERAGE = [
++    'docs/adrs/<area>/ — resolves, but the header is a quote block, not YAML: metadata reads empty',
++] as const;
++
++/** A trigger state. `none` means the ADR never recorded a reopen condition. */
++export type TriggerState = 'none' | 'indeterminate' | 'fired' | 'not-fired';
++
++export interface CiteResult {
++    ref: string;
++    resolved: boolean;
++    file?: string;
++    status?: string;
++    date?: string;
++    decision?: string;
++    review_trigger?: string;
++    trigger_state: TriggerState;
++    supersedes?: string;
++    superseded_by?: string;
++    amends?: string;
++    amended_by?: string;
++    /** Amendment headings found in the body, any of the three conventions. */
++    amendment_blocks: string[];
++    /** Other ADR files whose text names this one. */
++    referenced_by: string[];
++    /** Why this may or may not be cited as a live lock. */
++    verdict: string;
++}
++
++/**
++ * A parsed citation. `area` is null for the flat surface.
++ *
++ * Per-area numbering restarts at `0001` inside every area, so a bare number
++ * cannot address one: five files in this tree are `0001`. A per-area citation
++ * must therefore name its area — `ADR-cost-0001`, the form `adr-layout.md`
++ * already specifies for cross-surface `supersedes:` values.
++ */
++export interface ParsedRef {
++    id: string;
++    area: string | null;
++    num: string;
++}
++
++/**
++ * `ADR-211` · `adr-211` · `211` · a path → the flat surface.
++ * `ADR-cost-0001` · a `docs/adrs/<area>/NNNN-…` path → that area.
++ */
++export function normalise_ref(ref: string): ParsedRef | null {
++    const raw = ref.trim();
++
++    // A per-area path carries its area in the directory, and its file never
++    // has an `ADR-` prefix — `docs/adrs/cost/0001-hard-stop-hook.md`.
++    const byPath = /(?:^|\/)docs\/adrs\/([a-z0-9-]+)\/(\d{1,4})-/i.exec(raw);
++    if (byPath?.[1] !== undefined && byPath[2] !== undefined) {
++        const num = byPath[2].padStart(4, '0');
++        return { id: `ADR-${byPath[1]}-${num}`, area: byPath[1], num };
++    }
++
++    // `ADR-<area>-NNNN` — the citation form for a per-area decision.
++    const byArea = /^adr-([a-z][a-z0-9-]*?)-(\d{1,4})$/i.exec(raw.replace(/\.md$/i, ''));
++    if (byArea?.[1] !== undefined && byArea[2] !== undefined) {
++        const area = byArea[1].toLowerCase();
++        const num = byArea[2].padStart(4, '0');
++        return { id: `ADR-${area}-${num}`, area, num };
++    }
++
++    const m = /(?:^|[^0-9])(\d{1,4})(?:[^0-9]|$)/.exec(raw.replace(/^.*\//, ''));
++    if (m?.[1] === undefined) return null;
++    return { id: `ADR-${m[1].padStart(3, '0')}`, area: null, num: String(Number(m[1])) };
++}
++
++function walk_md(dir: string): string[] {
++    if (!fs.existsSync(dir)) return [];
++    const out: string[] = [];
++    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
++        const full = path.join(dir, entry.name);
++        if (entry.isDirectory()) out.push(...walk_md(full));
++        // INDEX.md is generated FROM these files and names every one of them, so
++        // leaving it in makes every ADR look referenced by one more decision
++        // than it is — noise that hides the single real back-reference.
++        else if (entry.name.endsWith('.md') && entry.name !== 'INDEX.md') out.push(full);
++    }
++    return out.sort();
++}
++
++/** Every candidate decision file across the scanned surfaces. */
++export function adr_files(repo_root: string = REPO_ROOT): string[] {
++    return ADR_DIRS.flatMap((d) => walk_md(path.join(repo_root, d)));
++}
++
++/**
++ * Minimal frontmatter reader — folded (`>-`) values are joined, which the
++ * corpus needs: every `review_trigger` in it is a folded multi-line string.
++ */
++export function parse_frontmatter(text: string): Record<string, string> | null {
++    if (!text.startsWith('---\n')) return null;
++    const end = text.indexOf('\n---\n', 4);
++    if (end === -1) return null;
++    const out: Record<string, string> = {};
++    let key: string | null = null;
++    for (const raw of text.slice(4, end).split('\n')) {
++        const line = raw.replace(/\s+$/, '');
++        if (!line || line.trimStart().startsWith('#')) continue;
++        if (/^\s/.test(line) && key !== null) {
++            out[key] = `${out[key]} ${line.trim()}`.trim();
++            continue;
++        }
++        const idx = line.indexOf(':');
++        if (idx === -1) continue;
++        key = line.slice(0, idx).trim();
++        out[key] = line
++            .slice(idx + 1)
++            .trim()
++            .replace(/^["'](.*)["']$/, '$1')
++            .replace(/^>-?$/, '');
++    }
++    return out;
++}
++
++/**
++ * The three amendment conventions the corpus actually uses. No convention is
++ * canonical yet, so all three are matched rather than one being assumed.
++ */
++export function amendment_blocks(body: string): string[] {
++    const found: string[] = [];
++    for (const line of body.split('\n')) {
++        if (/^#{2,3}\s+Amendment\b/i.test(line) || /^\*\*Amended\b/i.test(line)) {
++            found.push(line.trim().replace(/^#+\s*/, '').replace(/\*\*/g, ''));
++        }
++    }
++    return found;
++}
++
++/**
++ * A trigger's state, from what is mechanically decidable and nothing else.
++ *
++ * There is no clause that returns `fired` or `not-fired` from prose, and that
++ * absence is the design: every trigger in the corpus is semantic. The states
++ * exist in the type because a future structured trigger can carry them; today
++ * the honest answers are `none` and `indeterminate`.
++ */
++export function trigger_state(fm: Record<string, string>): TriggerState {
++    const t = (fm['review_trigger'] ?? '').trim();
++    if (t === '') return 'none';
++    return 'indeterminate';
++}
++
++/** The one-line answer to "may I cite this as a reason not to act?". */
++export function verdict_for(r: Omit<CiteResult, 'verdict'>): string {
++    if (!r.resolved) return 'UNRESOLVED — no ADR file carries this number on a scanned surface.';
++    const status = (r.status ?? '').toLowerCase();
++    // `rejected` is deliberately NOT in this set. On an ADR it means "the
++    // proposal was rejected" — the record is a LIVE lock stating that
++    // rejection, not a dead decision. Folding it in with `superseded` would
++    // make the tool clear a lock that still binds, which is a worse failure
++    // than the stall it replaces. Found by running this tool over the eleven
++    // ADRs the transcripts show blocking work: ADR-054 came back "not a live
++    // lock" and it is one.
++    if (status === 'superseded' || status === 'deprecated') {
++        const by = r.superseded_by !== undefined && r.superseded_by !== '—' ? ` (by ${r.superseded_by})` : '';
++        return `NOT A LIVE LOCK — status is \`${status}\`${by}. Citing it as a blocker is a stale-state claim.`;
++    }
++    if (status === 'rejected') {
++        return (
++            'LIVE — status `rejected` records a REJECTED PROPOSAL, so the rejection is the ' +
++            'decision and it still binds. Reopening it means showing the premise it rejected on ' +
++            'has changed; it does not mean the record is stale.'
++        );
++    }
++    if (r.amendment_blocks.length > 0 || (r.amended_by !== undefined && r.amended_by !== '—')) {
++        return 'AMENDED — read the amendment before citing the original decision; the text above it may no longer hold.';
++    }
++    if (r.trigger_state === 'none') {
++        return 'LIVE, NO REOPEN CONDITION — the ADR records no `review_trigger`, so nothing would ever reopen it on its own. Treat that as a defect in the ADR, not as strength of the lock.';
++    }
++    return 'LIVE, TRIGGER INDETERMINATE — the reopen condition is semantic and this tool cannot decide it. Not an unqualified lock: evaluate the condition against the current tree and route the result.';
++}
++
++export function cite_check(refs: string[], repo_root: string = REPO_ROOT): CiteResult[] {
++    const files = adr_files(repo_root);
++    const contents = new Map<string, string>();
++    for (const f of files) contents.set(f, fs.readFileSync(f, 'utf-8'));
++
++    return refs.map((ref) => {
++        const parsed = normalise_ref(ref);
++        if (parsed === null) {
++            const empty: Omit<CiteResult, 'verdict'> = {
++                ref,
++                resolved: false,
++                trigger_state: 'none',
++                amendment_blocks: [],
++                referenced_by: [],
++            };
++            return { ...empty, verdict: verdict_for(empty) };
++        }
++        const { id, area, num } = parsed;
++
++        // Two filename conventions, and the flat one's `ADR-` prefix is exactly
++        // what a per-area file does NOT have (`docs/adrs/cost/0001-…`). Matching
++        // both against one pattern was the defect: the tool advertised
++        // `docs/adrs` as covered and could never resolve a citation to it.
++        const match =
++            area === null
++                ? files.find((f) => new RegExp(`(^|/)ADR-0*${num}[-.]`, 'i').test(f))
++                : files.find((f) =>
++                      new RegExp(`/docs/adrs/${area}/0*${Number(num)}-`, 'i').test(f),
++                  );
++        if (match === undefined) {
++            const empty: Omit<CiteResult, 'verdict'> = {
++                ref: id,
++                resolved: false,
++                trigger_state: 'none',
++                amendment_blocks: [],
++                referenced_by: [],
++            };
++            return { ...empty, verdict: verdict_for(empty) };
++        }
++
++        const text = contents.get(match) ?? '';
++        const fm = parse_frontmatter(text) ?? {};
++        const bodyStart = text.indexOf('\n---\n', 4);
++        const body = bodyStart === -1 ? text : text.slice(bodyStart + 5);
++
++        // Back-references: any OTHER decision file naming this number. This is
++        // the only way to see a one-sided reopen — the amending ADR links back,
++        // the amended one does not.
++        // A per-area decision is cited as `ADR-<area>-NNNN`; a flat one by number.
++        const cited =
++            area === null
++                ? new RegExp(`ADR-0*${num}\\b`, 'i')
++                : new RegExp(`ADR-${area}-0*${Number(num)}\\b`, 'i');
++        const referenced_by = files
++            .filter((f) => f !== match && cited.test(contents.get(f) ?? ''))
++            .map((f) => path.relative(repo_root, f));
++
++        const partial: Omit<CiteResult, 'verdict'> = {
++            ref: id,
++            resolved: true,
++            file: path.relative(repo_root, match),
++            ...(fm['status'] !== undefined ? { status: fm['status'] } : {}),
++            ...(fm['date'] !== undefined ? { date: fm['date'] } : {}),
++            ...(fm['decision'] !== undefined ? { decision: fm['decision'] } : {}),
++            ...(fm['review_trigger'] !== undefined && fm['review_trigger'] !== ''
++                ? { review_trigger: fm['review_trigger'] }
++                : {}),
++            trigger_state: trigger_state(fm),
++            ...(fm['supersedes'] !== undefined ? { supersedes: fm['supersedes'] } : {}),
++            ...(fm['superseded_by'] !== undefined ? { superseded_by: fm['superseded_by'] } : {}),
++            ...(fm['amends'] !== undefined ? { amends: fm['amends'] } : {}),
++            ...(fm['amended_by'] !== undefined ? { amended_by: fm['amended_by'] } : {}),
++            amendment_blocks: amendment_blocks(body),
++            referenced_by,
++        };
++        return { ...partial, verdict: verdict_for(partial) };
++    });
++}
++
++function render(results: CiteResult[]): string {
++    const lines: string[] = [];
++    for (const r of results) {
++        lines.push(`\n${r.ref}${r.file !== undefined ? `  ·  ${r.file}` : ''}`);
++        if (!r.resolved) {
++            lines.push(`  ❌  ${r.verdict}`);
++            continue;
++        }
++        lines.push(`  status           ${r.status ?? '—'}   date ${r.date ?? '—'}`);
++        if (r.decision !== undefined) lines.push(`  decision         ${r.decision}`);
++        lines.push(`  review_trigger   ${r.review_trigger ?? '— (none recorded)'}`);
++        lines.push(`  trigger state    ${r.trigger_state}`);
++        if (r.supersedes !== undefined && r.supersedes !== '—') lines.push(`  supersedes       ${r.supersedes}`);
++        if (r.superseded_by !== undefined && r.superseded_by !== '—')
++            lines.push(`  superseded_by    ${r.superseded_by}`);
++        if (r.amends !== undefined && r.amends !== '—') lines.push(`  amends           ${r.amends}`);
++        if (r.amended_by !== undefined && r.amended_by !== '—') lines.push(`  amended_by       ${r.amended_by}`);
++        if (r.amendment_blocks.length > 0)
++            lines.push(`  amendments       ${String(r.amendment_blocks.length)}: ${r.amendment_blocks.join(' · ')}`);
++        if (r.referenced_by.length > 0)
++            lines.push(`  referenced by    ${String(r.referenced_by.length)} other ADR(s): ${r.referenced_by.join(', ')}`);
++        lines.push(`  →  ${r.verdict}`);
++    }
++    return lines.join('\n');
++}
++
++function main(argv: string[]): number {
++    const as_json = argv.includes('--json');
++    const refs = argv.filter((a) => !a.startsWith('--'));
++    if (refs.length === 0) {
++        process.stderr.write(
++            'usage: adr_cite_check <ADR-NNN> [ADR-NNN …] [--json]\n' +
++                '       evaluate a decision before citing it as a reason not to act\n',
++        );
++        return 2;
++    }
++
++    const results = cite_check(refs);
++    if (as_json) {
++        process.stdout.write(
++            JSON.stringify(
++                {
++                    results,
++                    surfaces_not_scanned: SURFACES_NOT_SCANNED,
++                    partial_coverage: PARTIAL_COVERAGE,
++                },
++                null,
++                2,
++            ) + '\n',
++        );
++    } else {
++        process.stdout.write(render(results) + '\n');
++    }
++
++    const unresolved = results.filter((r) => !r.resolved);
++    if (unresolved.length > 0) {
++        process.stderr.write(
++            `\n❌  ${String(unresolved.length)} reference(s) did not resolve on a scanned surface. ` +
++                `Not scanned: ${SURFACES_NOT_SCANNED.join(' · ')}\n`,
++        );
++        return 1;
++    }
++    return 0;
++}
++
++// Main-guard (realpath-compared, mirrors the repo convention).
++if (process.argv[1] !== undefined) {
++    try {
++        const here = fs.realpathSync(fileURLToPath(import.meta.url));
++        const argv1 = fs.realpathSync(path.resolve(process.argv[1]));
++        if (here === argv1) {
++            process.exit(main(process.argv.slice(2)));
++        }
++    } catch {
++        const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
++        if (import.meta.url === argvUrl) {
++            process.exit(main(process.argv.slice(2)));
++        }
++    }
++}
+diff --git a/src/scripts/check_adr_frontmatter.ts b/src/scripts/check_adr_frontmatter.ts
+index 545b582906f9f8fee52b3174170840745101a3d9..2b1746697c57f09c3d6be6f6d08cf346cb1fd33d 100644
+--- a/src/scripts/check_adr_frontmatter.ts
++++ b/src/scripts/check_adr_frontmatter.ts
+@@ -51,6 +51,92 @@ export const REVIEW_TRIGGER_SINCE = '2026-07-25';
+ /** Fields every ADR must carry — the shape that already exists in practice. */
+ const REQUIRED = ['adr', 'status', 'date', 'decision'] as const;
+ 
++/**
++ * Reopen-authority vocabulary (`adr-layout.md` § Reopen authority).
++ *
++ * Both fields are OPTIONAL and stay optional. An absent `reopen_policy`
++ * resolves to `unclassified` at the reader, never to `owner`: with 146 accepted
++ * ADRs a fail-closed default would encode the existing blockage into the new
++ * schema, which is the one thing both council seats (2026-08-19) rejected in
++ * the same words. This validator therefore checks the VALUE when present and
++ * never requires the KEY.
++ */
++const ALLOWED_REOPEN_POLICY = new Set(['directional', 'owner', 'unclassified']);
++
++const ALLOWED_PROTECTED_DIMENSIONS = new Set([
++    'purpose',
++    'security_floor',
++    'privacy_floor',
++    'external_commitment',
++    'governance',
++    'none',
++]);
++
++/** Split an inline `[a, b]` list or a folded multi-value string into members. */
++export function split_dimensions(raw: string): string[] {
++    return raw
++        .replace(/^\[/, '')
++        .replace(/\]$/, '')
++        .split(/[,\s]+/)
++        .map((s) =>
++            s
++                .trim()
++                .replace(/^-\s*/, '')
++                .replace(/^["'](.*)["']$/, '$1'),
++        )
++        .filter((s) => s !== '');
++}
++
++/**
++ * Validate the two optional reopen-authority fields — value only, never
++ * presence. A wrong enum is a real error (it silently mis-routes authority);
++ * an absent field is the documented default and not a finding.
++ */
++export function check_reopen_authority(
++    rel: string,
++    fm: Record<string, string>,
++    findings: AdrFinding[],
++): void {
++    const policy = fm['reopen_policy'];
++    if (policy !== undefined && policy !== '' && !ALLOWED_REOPEN_POLICY.has(policy)) {
++        findings.push({
++            file: rel,
++            level: 'error',
++            message:
++                `\`reopen_policy\` \`${policy}\` is not one of: ` +
++                `${[...ALLOWED_REOPEN_POLICY].sort().join(', ')} (absent = unclassified)`,
++        });
++    }
++
++    const dims = fm['protected_dimensions'];
++    if (dims !== undefined && dims !== '') {
++        for (const d of split_dimensions(dims)) {
++            if (!ALLOWED_PROTECTED_DIMENSIONS.has(d)) {
++                findings.push({
++                    file: rel,
++                    level: 'error',
++                    message:
++                        `\`protected_dimensions\` member \`${d}\` is not one of: ` +
++                        `${[...ALLOWED_PROTECTED_DIMENSIONS].sort().join(', ')}`,
++                });
++            }
++        }
++    }
++
++    // `owner` without a named dimension is the frozen-over-classification shape
++    // the contract warns about: it reserves every future transition, including
++    // the ones that only strengthen the decision, and records no reason.
++    if (policy === 'owner' && (dims === undefined || dims === '')) {
++        findings.push({
++            file: rel,
++            level: 'warn',
++            message:
++                '`reopen_policy: owner` without `protected_dimensions` — name the reserved ' +
++                'interest, or the reservation cannot be checked against a proposed transition',
++        });
++    }
++}
++
+ const ALLOWED_STATUS = new Set([
+     'accepted',
+     'proposed',
+@@ -141,6 +227,98 @@ export function check_one(rel: string, text: string): AdrFinding[] {
+             message: `\`review_trigger\` is a cadence, not a condition: "${trigger}". A calendar review is ignored; an event fires.`,
+         });
+     }
++    check_reopen_authority(rel, fm, findings);
++    check_amendment_shape(rel, fm, findings);
++    return findings;
++}
++
++/** `ADR-035`, `035`, `35` → `35`. Returns null when nothing resolves. */
++export function adr_number(raw: string): string | null {
++    const m = /(\d{1,4})/.exec(raw.trim());
++    return m?.[1] === undefined ? null : String(Number(m[1]));
++}
++
++/**
++ * Validate `amends:` / `amended_by:` shape. The reciprocal half is checked in
++ * `check_amendment_links` (it needs the whole corpus); this one only rejects a
++ * value that is neither the em-dash placeholder nor an ADR reference, so a
++ * typo'd link is caught before it becomes an invisible one-sided amendment.
++ */
++export function check_amendment_shape(
++    rel: string,
++    fm: Record<string, string>,
++    findings: AdrFinding[],
++): void {
++    for (const key of ['amends', 'amended_by'] as const) {
++        const v = fm[key];
++        if (v === undefined || v === '' || v === '—') continue;
++        for (const part of v.split(',')) {
++            if (adr_number(part) === null) {
++                findings.push({
++                    file: rel,
++                    level: 'error',
++                    message: `\`${key}\` value \`${part.trim()}\` names no ADR number`,
++                });
++            }
++        }
++    }
++}
++
++/**
++ * Corpus-level check: every `amends:` has its reciprocal `amended_by:` and vice
++ * versa. This is the half the `supersedes:` / `superseded_by:` pair never had —
++ * and its absence is exactly how ADR-035 kept asserting a rejection ADR-232 had
++ * reopened. A one-sided link is invisible from the side that is stale, which is
++ * the side a reader lands on first.
++ */
++export function check_amendment_links(
++    files: { rel: string; fm: Record<string, string> }[],
++): AdrFinding[] {
++    const findings: AdrFinding[] = [];
++    const byNumber = new Map<string, { rel: string; fm: Record<string, string> }>();
++    for (const f of files) {
++        const n = f.fm['adr'] === undefined ? null : adr_number(f.fm['adr']);
++        if (n !== null) byNumber.set(n, f);
++    }
++
++    const reciprocal = { amends: 'amended_by', amended_by: 'amends' } as const;
++    for (const f of files) {
++        for (const key of ['amends', 'amended_by'] as const) {
++            const v = f.fm[key];
++            if (v === undefined || v === '' || v === '—') continue;
++            const self = f.fm['adr'] === undefined ? null : adr_number(f.fm['adr']);
++            for (const part of v.split(',')) {
++                const target = adr_number(part);
++                if (target === null) continue;
++                const other = byNumber.get(target);
++                if (other === undefined) {
++                    findings.push({
++                        file: f.rel,
++                        level: 'error',
++                        message: `\`${key}: ${part.trim()}\` points at an ADR that does not exist`,
++                    });
++                    continue;
++                }
++                const back = other.fm[reciprocal[key]] ?? '';
++                const names_self =
++                    self !== null &&
++                    back
++                        .split(',')
++                        .map((s) => adr_number(s))
++                        .includes(self);
++                if (!names_self) {
++                    findings.push({
++                        file: f.rel,
++                        level: 'error',
++                        message:
++                            `\`${key}: ${part.trim()}\` is one-sided — ${other.rel} carries no ` +
++                            `reciprocal \`${reciprocal[key]}\`. A one-sided amendment link is ` +
++                            `invisible from the stale side.`,
++                    });
++                }
++            }
++        }
++    }
+     return findings;
+ }
+ 
+@@ -163,13 +341,20 @@ export function check(dir: string = ADR_DIR, ledger?: GateLedger): AdrFinding[]
+     const candidates = fs.readdirSync(dir).filter((n) => n.endsWith('.md')).sort();
+     ledger?.plan(candidates);
+ 
++    // Collected for the corpus-level reciprocal-amendment check below, which
++    // cannot be decided from one file.
++    const corpus: { rel: string; fm: Record<string, string> }[] = [];
++
+     for (const name of candidates) {
+         if (!/^ADR-.*\.md$/.test(name)) {
+             ledger?.outOfScope(name, 'not_applicable_kind');
+             continue;
+         }
+         const rel = path.relative(REPO_ROOT, path.join(dir, name));
+-        const own = check_one(rel, fs.readFileSync(path.join(dir, name), 'utf-8'));
++        const text = fs.readFileSync(path.join(dir, name), 'utf-8');
++        const parsed = parse_frontmatter(text);
++        if (parsed !== null) corpus.push({ rel, fm: parsed });
++        const own = check_one(rel, text);
+         findings.push(...own);
+ 
+         const errors = own.filter((f) => f.level === 'error').length;
+@@ -179,6 +364,7 @@ export function check(dir: string = ADR_DIR, ledger?: GateLedger): AdrFinding[]
+             ledger?.complete(name);
+         }
+     }
++    findings.push(...check_amendment_links(corpus));
+     return findings;
+ }
+ 
+diff --git a/src/skills/adr-create/SKILL.md b/src/skills/adr-create/SKILL.md
+index b39b2fa3b118988d5c5fdb709a79bfb55e909eb7..5b0cc7d4b6bb92a2d5bed575b4bc152b4b83fae2 100644
+--- a/src/skills/adr-create/SKILL.md
++++ b/src/skills/adr-create/SKILL.md
+@@ -11,6 +11,8 @@ execution:
+   command:
+     - ./scripts-run
+     - src/scripts/adr/regenerate_index
++    - --dir
++    - docs/decisions
+ runtime_requires:
+   bins:
+     - bash
+@@ -59,7 +61,10 @@ Do NOT use when:
+     governance ADRs, 3-digit numbering (`ADR-NNN-<slug>.md`).
+   - **Per-area** — `docs/adrs/<area>/`: sub-area ADRs, 4-digit
+     numbering (`NNNN-<slug>.md`); `<area>` must match the canonical
+-    inventory in [`scripts/audit_adr_coverage.ts`](../../../scripts/audit_adr_coverage.ts).
++    inventory in `src/scripts/audit_adr_coverage.ts` (`AREAS`). Deliberately not
++    a link: this skill is projected into `dist/agent-src/skills/`, whose sibling
++    `scripts/` directory carries six curated files and not this one, so any
++    relative href that resolves in `src/` is broken in the projection.
+ - The decision is **already made** — ADRs record outcomes, they do
+   not run the decision process. For unresolved trade-offs, run the
+   council or consult `adversarial-review` first.
+@@ -80,7 +85,7 @@ Ask one question only if both are plausible:
+    `NNNN-<slug>.md` (4-digit, no `ADR-` prefix).
+ 3. **Unknown area** — `<area>` not in the inventory: refuse with a
+    hint to add the area to `AREAS` in
+-   `scripts/audit_adr_coverage.ts` in the same PR. Do not invent.
++   `src/scripts/audit_adr_coverage.ts` in the same PR. Do not invent.
+ 4. **In doubt** → per-area (cheaper to surface, easier to relocate).
+ 
+ ### 2. Pick the next ADR number
+@@ -134,8 +139,12 @@ date: YYYY-MM-DD
+ decision: <slug>
+ supersedes: — | ADR-MMM
+ superseded_by: — | ADR-MMM
++amends: — | ADR-MMM          # optional — this ADR amends that one (reciprocal required)
++amended_by: — | ADR-MMM      # optional — reciprocal of `amends`
+ phase: <roadmap> · <phase-id>
+ review_trigger: <the CONDITION that would reopen this decision>
++protected_dimensions: [...]  # optional — purpose | security_floor | privacy_floor | external_commitment | governance | none
++reopen_policy: directional | owner | unclassified   # optional; absent → unclassified
+ ---
+ 
+ # ADR-NNN — <Decision Title>
+@@ -204,7 +213,7 @@ completeness check — not on every ADR by default.
+ - **Per-area numbering is 4-digit** (`NNNN-<slug>.md`); the flat
+   surface stays 3-digit (`ADR-NNN-<slug>.md`). Do not mix.
+ - **Area inventory is closed** — `<area>` must already exist in
+-  `AREAS` in `scripts/audit_adr_coverage.ts`. Adding a new area is
++  `AREAS` in `src/scripts/audit_adr_coverage.ts`. Adding a new area is
+   a separate PR with explicit reviewer sign-off.
+ - Frontmatter `adr:` (flat) is the canonical number; the filename
+   prefix must match. The flat regenerator fails on mismatch.
+@@ -214,6 +223,19 @@ completeness check — not on every ADR by default.
+   to `superseded`.
+ - Never delete an ADR file — supersede it. Deletion breaks
+   historical links and round-trips through git history checks.
++- **Amending is the common case; wire it in both directions.** Most reopens
++  correct one decision inside an otherwise sound ADR rather than replacing the
++  whole record. Use `## Amendment N (YYYY-MM-DD) — <topic>` plus the reciprocal
++  `amends:` / `amended_by:` pair — the validator rejects a one-sided link,
++  because a one-sided link is invisible from the stale side, and the stale side
++  is the one a reader lands on first. Where the amendment reverses text that is
++  still asserted above it, add a one-line banner there too; the frontmatter
++  alone does not stop someone quoting the reversed sentence.
++- **Who may reopen it is recorded, not assumed** — `reopen_policy` /
++  `protected_dimensions`, both optional, absent meaning `unclassified`
++  ([`adr-layout § Reopen authority`](../../../docs/contracts/adr-layout.md)).
++  Reach for `owner` only when EVERY future transition is genuinely reserved;
++  `directional` is the normal answer, and no answer is a fine answer.
+ 
+ ## Frugality Standards
+ 
+diff --git a/src/skills/decision-review/SKILL.md b/src/skills/decision-review/SKILL.md
+index f95aedfc3f2674d9468e6ec45d7cfada75e75af6..2dd5b5db9dd9fc3dfca7aad32fa9323e792575a5 100644
+--- a/src/skills/decision-review/SKILL.md
++++ b/src/skills/decision-review/SKILL.md
+@@ -280,6 +280,24 @@ in the rule; the lock catalog, fire steps, and failure modes live here.
+    contract — every re-evaluated lock gets a fresh, correctly-scoped
+    disposition, not a re-statement of the old one.
+ 
++   When the lock is an **ADR**, the disposition carries the five-field reopen
++   record from [`adr-layout § Reopen record`](../../../docs/contracts/adr-layout.md):
++   the original rationale **addressed** (not cited), what changed with tree
++   evidence, dependants and external commitments touched, the rollback path,
++   and a blast radius — `narrow | wide | irreversible` — with the evidence for
++   that call. Two clauses bind the same record: **precedent creates no
++   authority** (that a similar ADR was reopened is never grounds for this one),
++   and **one seat must argue the strongest case for keeping the decision**.
++   Both answer precedent laundering through correlated self-review, which is
++   the failure two independent council seats named for this mechanism on
++   2026-08-19: the proposer frames the evidence, correlated seats ratify, and
++   the amendment becomes authoritative input for the next review.
++
++   Proportionally: a narrow, reversible, bounded transition takes the light
++   path (record + council); `wide` or `irreversible` adds owner notification.
++   Identical ceremony for a typo-level amendment would cost more than asking
++   the owner and the mechanism would die of its own weight.
++
+ ### When NOT to fire
+ 
+ - The blocked change has no real benefit — the gate is not a lever to
+diff --git a/tests/scripts/adr_cite_check.test.ts b/tests/scripts/adr_cite_check.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..3f447e1815d8992d814b113541b8cd7ffd108781
+--- /dev/null
++++ b/tests/scripts/adr_cite_check.test.ts
+@@ -0,0 +1,269 @@
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterAll, beforeAll, describe, expect, it } from 'vitest';
++
++import {
++    PARTIAL_COVERAGE,
++    SURFACES_NOT_SCANNED,
++    amendment_blocks,
++    cite_check,
++    normalise_ref,
++    parse_frontmatter,
++    trigger_state,
++} from '../../src/scripts/adr_cite_check.js';
++
++/**
++ * A throwaway decision corpus. The tests assert the tool's behaviour, never the
++ * real tree's content — a fixture keeps them from going red the day someone
++ * legitimately supersedes ADR-028.
++ */
++let root: string;
++
++function write(rel: string, body: string): void {
++    const full = path.join(root, rel);
++    fs.mkdirSync(path.dirname(full), { recursive: true });
++    fs.writeFileSync(full, body, 'utf-8');
++}
++
++beforeAll(() => {
++    root = fs.mkdtempSync(path.join(os.tmpdir(), 'adr-cite-'));
++
++    write(
++        'docs/decisions/ADR-001-precondition-shipped.md',
++        [
++            '---',
++            'adr: 1',
++            'status: accepted',
++            'date: 2026-05-06',
++            'decision: kernel-swap-deferred',
++            'review_trigger: >-',
++            '  Reopen once the router compiler ships; the swap re-evaluation is',
++            '  mandatory before the next milestone.',
++            '---',
++            '',
++            '# ADR-001',
++            '',
++            'Body.',
++            '',
++        ].join('\n'),
++    );
++
++    write(
++        'docs/decisions/ADR-020-no-trigger.md',
++        ['---', 'adr: 20', 'status: accepted', 'date: 2026-05-10', 'decision: no-trigger', '---', '', 'Body.', ''].join(
++            '\n',
++        ),
++    );
++
++    write(
++        'docs/decisions/ADR-028-dead.md',
++        [
++            '---',
++            'adr: 28',
++            'status: superseded',
++            'date: 2026-05-25',
++            'decision: root-layout',
++            'superseded_by: ADR-045',
++            '---',
++            '',
++            'Body.',
++            '',
++        ].join('\n'),
++    );
++
++    write(
++        'docs/decisions/ADR-035-amended.md',
++        [
++            '---',
++            'adr: 35',
++            'status: accepted',
++            'date: 2026-05-30',
++            'decision: model-capability-tiers',
++            'review_trigger: >-',
++            '  Reopen if a vendor ships a band the three tiers cannot express.',
++            '---',
++            '',
++            '## Amendment 1 (2026-08-15) — fourth tier reopened',
++            '',
++            'Body.',
++            '',
++        ].join('\n'),
++    );
++
++    write(
++        'docs/decisions/ADR-232-reopener.md',
++        [
++            '---',
++            'adr: 232',
++            'status: accepted',
++            'date: 2026-08-15',
++            'decision: frontier-tier-reopened',
++            'review_trigger: >-',
++            '  Reopen if the fourth family disappears from the vendor line-up.',
++            '---',
++            '',
++            'This amends ADR-035.',
++            '',
++        ].join('\n'),
++    );
++
++    write('docs/decisions/INDEX.md', '# Index\n\nADR-001 ADR-020 ADR-028 ADR-035 ADR-232\n');
++});
++
++afterAll(() => {
++    fs.rmSync(root, { recursive: true, force: true });
++});
++
++describe('normalise_ref', () => {
++    it('accepts every flat citation shape the corpus uses', () => {
++        expect(normalise_ref('ADR-211')?.id).toBe('ADR-211');
++        expect(normalise_ref('adr-211')?.id).toBe('ADR-211');
++        expect(normalise_ref('211')?.id).toBe('ADR-211');
++        expect(normalise_ref('docs/decisions/ADR-211-harvest-freeze.md')?.id).toBe('ADR-211');
++        expect(normalise_ref('ADR-211')?.area).toBeNull();
++    });
++
++    it('zero-pads so ADR-1 and ADR-001 are the same decision', () => {
++        expect(normalise_ref('ADR-1')?.id).toBe('ADR-001');
++    });
++
++    it('resolves a per-area citation to its area — the surface the flat pattern could never match', () => {
++        expect(normalise_ref('ADR-cost-0001')).toEqual({ id: 'ADR-cost-0001', area: 'cost', num: '0001' });
++        expect(normalise_ref('docs/adrs/telegraph/0002-dormant.md')).toEqual({
++            id: 'ADR-telegraph-0002',
++            area: 'telegraph',
++            num: '0002',
++        });
++    });
++
++    it('returns null when there is no number to resolve', () => {
++        expect(normalise_ref('adr-layout')).toBeNull();
++    });
++});
++
++describe('parse_frontmatter', () => {
++    it('joins a folded value — every review_trigger in the corpus is folded', () => {
++        const fm = parse_frontmatter(
++            ['---', 'review_trigger: >-', '  first line', '  second line', '---', '', 'body'].join('\n'),
++        );
++        expect(fm?.['review_trigger']).toBe('first line second line');
++    });
++
++    it('returns null without a frontmatter block', () => {
++        expect(parse_frontmatter('# no frontmatter\n')).toBeNull();
++    });
++});
++
++describe('trigger_state', () => {
++    it('is `none` when the ADR recorded no reopen condition', () => {
++        expect(trigger_state({})).toBe('none');
++    });
++
++    it('is `indeterminate` for a semantic condition, never a guessed boolean', () => {
++        expect(trigger_state({ review_trigger: 'Reopen when the capacity premise changes.' })).toBe('indeterminate');
++    });
++});
++
++describe('amendment_blocks', () => {
++    it('matches all three conventions present in the corpus', () => {
++        const body = [
++            '## Amendment 1 (2026-08-15)',
++            'text',
++            '### Amendment — 2026-07-02 · scope',
++            'text',
++            '**Amended 2026-06-01 — premise corrected**',
++            'text',
++        ].join('\n');
++        expect(amendment_blocks(body)).toHaveLength(3);
++    });
++
++    it('finds nothing in an unamended body', () => {
++        expect(amendment_blocks('## Context\n\nplain text\n')).toEqual([]);
++    });
++});
++
++describe('cite_check', () => {
++    it('reports a superseded ADR as not a live lock, naming the successor', () => {
++        const [r] = cite_check(['ADR-028'], root);
++        expect(r?.resolved).toBe(true);
++        expect(r?.status).toBe('superseded');
++        expect(r?.verdict).toContain('NOT A LIVE LOCK');
++        expect(r?.verdict).toContain('ADR-045');
++    });
++
++    it('flags an amended ADR so the original text is not cited alone', () => {
++        const [r] = cite_check(['ADR-035'], root);
++        expect(r?.amendment_blocks).toHaveLength(1);
++        expect(r?.verdict).toContain('AMENDED');
++    });
++
++    it('surfaces the one-sided reopen through back-references', () => {
++        const [r] = cite_check(['ADR-035'], root);
++        expect(r?.referenced_by.some((f) => f.includes('ADR-232'))).toBe(true);
++    });
++
++    it('excludes the generated INDEX from back-references', () => {
++        const [r] = cite_check(['ADR-001'], root);
++        expect(r?.referenced_by.some((f) => f.includes('INDEX.md'))).toBe(false);
++    });
++
++    it('names a live ADR with a semantic trigger indeterminate, not blocking', () => {
++        const [r] = cite_check(['ADR-001'], root);
++        expect(r?.trigger_state).toBe('indeterminate');
++        expect(r?.verdict).toContain('INDETERMINATE');
++    });
++
++    it('calls a missing reopen condition a defect in the ADR, not a stronger lock', () => {
++        const [r] = cite_check(['ADR-020'], root);
++        expect(r?.trigger_state).toBe('none');
++        expect(r?.verdict).toContain('NO REOPEN CONDITION');
++    });
++
++    it('keeps a `rejected` ADR live — a rejected proposal still binds', () => {
++        // The failure this pins: folding `rejected` in with `superseded` makes
++        // the tool clear a lock that still holds. Found by running the tool
++        // over the real eleven-ADR blocking set.
++        write(
++            'docs/decisions/ADR-054-rejected.md',
++            ['---', 'adr: 54', 'status: rejected', 'date: 2026-06-05', 'decision: decay-restate', '---', '', 'Body.', ''].join('\n'),
++        );
++        const [r] = cite_check(['ADR-054'], root);
++        expect(r?.verdict).toContain('LIVE');
++        expect(r?.verdict).not.toContain('NOT A LIVE LOCK');
++    });
++
++    it('does not resolve an unknown number, and says so', () => {
++        const [r] = cite_check(['ADR-999'], root);
++        expect(r?.resolved).toBe(false);
++        expect(r?.verdict).toContain('UNRESOLVED');
++    });
++
++    it('resolves a per-area ADR by path and by ADR-<area>-NNNN', () => {
++        write('docs/adrs/cost/0001-hard-stop-hook.md', '> Area: cost · Status: accepted\n\nBody.\n');
++        for (const ref of ['ADR-cost-0001', 'docs/adrs/cost/0001-hard-stop-hook.md']) {
++            const [r] = cite_check([ref], root);
++            expect(r?.resolved, `${ref} must resolve`).toBe(true);
++            expect(r?.file).toContain('docs/adrs/cost/0001');
++        }
++    });
++
++    it('does not let a bare number address a per-area ADR — numbering restarts per area', () => {
++        write('docs/adrs/cost/0001-hard-stop-hook.md', '> Area: cost\n\nBody.\n');
++        write('docs/adrs/router/0001-three-tier.md', '> Area: router\n\nBody.\n');
++        const [r] = cite_check(['0001'], root);
++        // Resolves against the flat surface (ADR-001) or not at all — never
++        // silently against one of two same-numbered per-area files.
++        expect(r?.file ?? '').not.toContain('docs/adrs');
++    });
++
++    it('publishes both the unscanned surfaces and the partial one', () => {
++        expect(PARTIAL_COVERAGE.join(' ')).toContain('docs/adrs');
++    });
++
++    it('publishes the surfaces it deliberately does not scan', () => {
++        expect(SURFACES_NOT_SCANNED.length).toBeGreaterThan(0);
++        expect(SURFACES_NOT_SCANNED.join(' ')).toContain('docs/contracts/adr-');
++    });
++});
+diff --git a/tests/scripts/adr_regenerate_index.test.ts b/tests/scripts/adr_regenerate_index.test.ts
+index 3664ce83e5cf7a56688f03ecff695fd4f5898b3d..8970225fe29ef5132ac64dc56f8656c1d520ffff 100644
+--- a/tests/scripts/adr_regenerate_index.test.ts
++++ b/tests/scripts/adr_regenerate_index.test.ts
+@@ -133,17 +133,17 @@ describe('regenerate_index — pure helpers', () => {
+ 
+     it('row title-cases the decision and emits the ADR-NNN label', () => {
+         const out = rgi.row({ num: '001', slug: 'foo-bar', path: 'ADR-001-foo-bar.md', decision: 'python-to-ts-migration', status: 'accepted', date: '2026-01-01' });
+-        expect(out).toBe('| [ADR-001](ADR-001-foo-bar.md) | Python To Ts Migration | accepted | 2026-01-01 | — |');
++        expect(out).toBe('| [ADR-001](ADR-001-foo-bar.md) | Python To Ts Migration | accepted | 2026-01-01 | — | — | — |');
+     });
+ 
+     it('row falls back to the slug, then to dashes, when decision is absent', () => {
+         const out = rgi.row({ num: '003', slug: 'just-the-slug', path: 'ADR-003-just-the-slug.md' });
+-        expect(out).toBe('| [ADR-003](ADR-003-just-the-slug.md) | Just The Slug | — | — | — |');
++        expect(out).toBe('| [ADR-003](ADR-003-just-the-slug.md) | Just The Slug | — | — | — | — | — |');
+     });
+ 
+     it('row for a legacy entry strips .md for the label and renders em-dash placeholders', () => {
+         const out = rgi.row({ path: 'ADR-rule-kernel.md' });
+-        expect(out).toBe('| [ADR-rule-kernel](ADR-rule-kernel.md) | — | — | — | — |');
++        expect(out).toBe('| [ADR-rule-kernel](ADR-rule-kernel.md) | — | — | — | — | — | — |');
+     });
+ 
+     it('render emits the No-ADRs body when empty', () => {
+diff --git a/tests/scripts/check_adr_frontmatter.test.ts b/tests/scripts/check_adr_frontmatter.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..0434506a7948b737aaadc3e4b8c4b7e77c00a2a2
+--- /dev/null
++++ b/tests/scripts/check_adr_frontmatter.test.ts
+@@ -0,0 +1,162 @@
++import { describe, expect, it } from 'vitest';
++
++import {
++    type AdrFinding,
++    adr_number,
++    check_amendment_links,
++    check_amendment_shape,
++    check_one,
++    check_reopen_authority,
++    split_dimensions,
++} from '../../src/scripts/check_adr_frontmatter.js';
++
++/**
++ * Covers the reopen-authority fields added by road-to-adr-revisit-governance.
++ * The pre-existing checks (required fields, status enum, `review_trigger`) had
++ * no test file at all — the two smoke cases at the bottom close that gap for
++ * the paths this change touches, not for the whole validator.
++ */
++
++function fm(body: string): string {
++    return `---\n${body}\n---\n\n# ADR\n`;
++}
++
++describe('split_dimensions', () => {
++    it('reads an inline list', () => {
++        expect(split_dimensions('[purpose, security_floor]')).toEqual(['purpose', 'security_floor']);
++    });
++
++    it('reads a folded block list, dashes stripped', () => {
++        expect(split_dimensions('- purpose - governance')).toEqual(['purpose', 'governance']);
++    });
++
++    it('is empty for an empty value', () => {
++        expect(split_dimensions('')).toEqual([]);
++    });
++});
++
++describe('check_reopen_authority', () => {
++    it('says nothing when both fields are absent — absent is unclassified, not a finding', () => {
++        const findings: AdrFinding[] = [];
++        check_reopen_authority('x.md', { status: 'accepted' }, findings);
++        expect(findings).toEqual([]);
++    });
++
++    it('accepts every documented policy value', () => {
++        for (const policy of ['directional', 'owner', 'unclassified']) {
++            const findings: AdrFinding[] = [];
++            check_reopen_authority('x.md', { reopen_policy: policy, protected_dimensions: '[purpose]' }, findings);
++            expect(findings.filter((f) => f.level === 'error')).toEqual([]);
++        }
++    });
++
++    it('errors on an unknown policy — a typo must not silently mis-route authority', () => {
++        const findings: AdrFinding[] = [];
++        check_reopen_authority('x.md', { reopen_policy: 'council' }, findings);
++        expect(findings).toHaveLength(1);
++        expect(findings[0]?.level).toBe('error');
++        expect(findings[0]?.message).toContain('reopen_policy');
++    });
++
++    it('errors on an unknown protected dimension', () => {
++        const findings: AdrFinding[] = [];
++        check_reopen_authority('x.md', { protected_dimensions: '[purpose, velocity]' }, findings);
++        expect(findings).toHaveLength(1);
++        expect(findings[0]?.message).toContain('velocity');
++    });
++
++    it('warns — never errors — on `owner` with no named reserved interest', () => {
++        const findings: AdrFinding[] = [];
++        check_reopen_authority('x.md', { reopen_policy: 'owner' }, findings);
++        expect(findings).toHaveLength(1);
++        expect(findings[0]?.level).toBe('warn');
++    });
++});
++
++describe('check_one — the new fields never make an existing ADR fail', () => {
++    it('passes a grandfathered ADR that carries neither new field', () => {
++        const text = fm(['adr: 1', 'status: accepted', 'date: 2026-05-06', 'decision: something'].join('\n'));
++        const errors = check_one('ADR-001-x.md', text).filter((f) => f.level === 'error');
++        expect(errors).toEqual([]);
++    });
++
++    it('still fails a post-cutoff ADR with no review_trigger — the older gate is intact', () => {
++        const text = fm(['adr: 200', 'status: accepted', 'date: 2026-08-01', 'decision: something'].join('\n'));
++        const errors = check_one('ADR-200-x.md', text).filter((f) => f.level === 'error');
++        expect(errors).toHaveLength(1);
++        expect(errors[0]?.message).toContain('review_trigger');
++    });
++});
++
++describe('adr_number', () => {
++    it('normalises every reference shape to a bare number', () => {
++        expect(adr_number('ADR-035')).toBe('35');
++        expect(adr_number('035')).toBe('35');
++        expect(adr_number('35')).toBe('35');
++        expect(adr_number(' 105 (Decision 2 only — the contract stands)')).toBe('105');
++    });
++
++    it('is null when nothing resolves', () => {
++        expect(adr_number('—')).toBeNull();
++        expect(adr_number('none')).toBeNull();
++    });
++});
++
++describe('check_amendment_shape', () => {
++    it('ignores the em-dash placeholder and an absent key', () => {
++        const findings: AdrFinding[] = [];
++        check_amendment_shape('x.md', { amends: '—' }, findings);
++        check_amendment_shape('x.md', {}, findings);
++        expect(findings).toEqual([]);
++    });
++
++    it('errors when a link value names no ADR number', () => {
++        const findings: AdrFinding[] = [];
++        check_amendment_shape('x.md', { amended_by: 'the other one' }, findings);
++        expect(findings).toHaveLength(1);
++        expect(findings[0]?.level).toBe('error');
++    });
++});
++
++describe('check_amendment_links — the reciprocal half `supersedes` never had', () => {
++    const corpus = (rows: Record<string, string>[]) =>
++        rows.map((fm, i) => ({ rel: `ADR-${String(i)}.md`, fm }));
++
++    it('passes a bidirectional pair', () => {
++        const f = check_amendment_links(
++            corpus([
++                { adr: '35', amended_by: 'ADR-232' },
++                { adr: '232', amends: 'ADR-035' },
++            ]),
++        );
++        expect(f).toEqual([]);
++    });
++
++    it('tolerates the annotated form the corpus already uses', () => {
++        // ADR-117 carries `amends: 105 (Decision 2 only — …)`; the parenthetical
++        // must not defeat the reciprocal match.
++        const f = check_amendment_links(
++            corpus([
++                { adr: '117', amends: '105 (Decision 2 only — the contract itself stands)' },
++                { adr: '105', amended_by: 'ADR-117' },
++            ]),
++        );
++        expect(f).toEqual([]);
++    });
++
++    it('errors on a one-sided link — invisible from the stale side', () => {
++        const f = check_amendment_links(corpus([{ adr: '35', amended_by: 'ADR-232' }, { adr: '232' }]));
++        expect(f).toHaveLength(1);
++        expect(f[0]?.message).toContain('one-sided');
++    });
++
++    it('errors when the target does not exist', () => {
++        const f = check_amendment_links(corpus([{ adr: '35', amended_by: 'ADR-999' }]));
++        expect(f).toHaveLength(1);
++        expect(f[0]?.message).toContain('does not exist');
++    });
++
++    it('says nothing about a corpus with no amendment links at all', () => {
++        expect(check_amendment_links(corpus([{ adr: '1' }, { adr: '2' }]))).toEqual([]);
++    });
++});

@@ -166,6 +166,16 @@ Hard rules for this step:
   and its recorded revisit-conditions first; if it truly blocks, the
   only flip path offered is option 3 (council re-eval) — "Flip" is not
   offered for locks.
+- **An ADR lock is evaluated before it is reported.** When the lock is a
+  numbered ADR, the FIRST action is
+  `./scripts-run src/scripts/adr_cite_check <ADR-NNN>` — not "report the
+  lock". A `superseded` / `deprecated` status means there is no
+  live lock to route at all, and an amended ADR means the cited text may not
+  be the operative one. `rejected` stays live — it records a rejected
+  *proposal*, so reopening it means showing the premise it rejected on has
+  changed. Reporting an unevaluated ADR as a blocker is the
+  ordering defect `decision-revisit-gate` exists over: it costs the owner a
+  turn to discover what one command answers.
 - **Session budget:** at most 5 interview questions by default
   (`--max-questions=N` to override). Budget exhausted → remaining
   candidates go to Step 4 as "further candidates".

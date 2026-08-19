@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**513 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 173 · completed 249 · completed-with-deferrals 25 · not-extractable 34
+**514 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 173 · completed 250 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -105,6 +105,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-activation-evidence-or-refusal`](road-to-activation-evidence-or-refusal.md) | Road to activation evidence — produce the red baseline or refuse the resolver permanently | closed-with-cancellations | 2 | 6/7 | _not extractable_ |
 | [`road-to-additive-settings-sync`](road-to-additive-settings-sync.md) | Roadmap: Additive Settings Sync | completed | 7 | 35/35 | _not extractable_ |
 | [`road-to-adoption-proof-and-ci-green`](road-to-adoption-proof-and-ci-green.md) | Adoption Proof + CI Green — convert the three deferred 3.2.0 actions into shipped reality | closed-with-cancellations | 4 | 22/33 | _not extractable_ |
+| [`road-to-adr-revisit-governance`](road-to-adr-revisit-governance.md) | Roadmap: ADR revisit governance — a recorded decision is challengeable, not permanent | completed | 6 | 37/37 | _not extractable_ |
 | [`road-to-adversarial-council-benchmark`](road-to-adversarial-council-benchmark.md) | Road to resolving the adversarial-council finding-coverage claim (benchmark arm) | completed | 2 | 8/8 | _not extractable_ |
 | [`road-to-adversarial-verification-council`](road-to-adversarial-verification-council.md) | Road to an adversarial verification council — a cross-model skeptic panel that maximizes defect-finding coverage on a real change | closed-with-cancellations | 6 | 25/27 | _not extractable_ |
 | [`road-to-agent-behavior-conformance`](road-to-agent-behavior-conformance.md) | Road to agent-behaviour conformance — 30 sessions audited, ~130 rule violations, every rule already in context | completed | 6 | 30/30 | _not extractable_ |

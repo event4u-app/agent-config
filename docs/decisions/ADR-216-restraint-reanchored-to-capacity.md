@@ -7,6 +7,8 @@ supersedes: —
 superseded_by: —
 phase: ADR-211 Amendment E + correction of ADR-215 + adoption-anchor sweep
 type: structural
+protected_dimensions: [purpose]
+reopen_policy: owner
 review_trigger: >-
   Reopen when the capacity premise changes: a second regular maintainer joins
   (the concurrency cap's basis disappears), or the cap demonstrably blocks work

@@ -11,6 +11,8 @@ execution:
   command:
     - ./scripts-run
     - src/scripts/adr/regenerate_index
+    - --dir
+    - docs/decisions
 runtime_requires:
   bins:
     - bash
@@ -59,7 +61,10 @@ Do NOT use when:
     governance ADRs, 3-digit numbering (`ADR-NNN-<slug>.md`).
   - **Per-area** — `docs/adrs/<area>/`: sub-area ADRs, 4-digit
     numbering (`NNNN-<slug>.md`); `<area>` must match the canonical
-    inventory in [`scripts/audit_adr_coverage.ts`](../../../scripts/audit_adr_coverage.ts).
+    inventory in `src/scripts/audit_adr_coverage.ts` (`AREAS`). Deliberately not
+    a link: this skill is projected into `dist/agent-src/skills/`, whose sibling
+    `scripts/` directory carries six curated files and not this one, so any
+    relative href that resolves in `src/` is broken in the projection.
 - The decision is **already made** — ADRs record outcomes, they do
   not run the decision process. For unresolved trade-offs, run the
   council or consult `adversarial-review` first.
@@ -80,7 +85,7 @@ Ask one question only if both are plausible:
    `NNNN-<slug>.md` (4-digit, no `ADR-` prefix).
 3. **Unknown area** — `<area>` not in the inventory: refuse with a
    hint to add the area to `AREAS` in
-   `scripts/audit_adr_coverage.ts` in the same PR. Do not invent.
+   `src/scripts/audit_adr_coverage.ts` in the same PR. Do not invent.
 4. **In doubt** → per-area (cheaper to surface, easier to relocate).
 
 ### 2. Pick the next ADR number
@@ -134,8 +139,12 @@ date: YYYY-MM-DD
 decision: <slug>
 supersedes: — | ADR-MMM
 superseded_by: — | ADR-MMM
+amends: — | ADR-MMM          # optional — this ADR amends that one (reciprocal required)
+amended_by: — | ADR-MMM      # optional — reciprocal of `amends`
 phase: <roadmap> · <phase-id>
 review_trigger: <the CONDITION that would reopen this decision>
+protected_dimensions: [...]  # optional — purpose | security_floor | privacy_floor | external_commitment | governance | none
+reopen_policy: directional | owner | unclassified   # optional; absent → unclassified
 ---
 
 # ADR-NNN — <Decision Title>
@@ -204,7 +213,7 @@ completeness check — not on every ADR by default.
 - **Per-area numbering is 4-digit** (`NNNN-<slug>.md`); the flat
   surface stays 3-digit (`ADR-NNN-<slug>.md`). Do not mix.
 - **Area inventory is closed** — `<area>` must already exist in
-  `AREAS` in `scripts/audit_adr_coverage.ts`. Adding a new area is
+  `AREAS` in `src/scripts/audit_adr_coverage.ts`. Adding a new area is
   a separate PR with explicit reviewer sign-off.
 - Frontmatter `adr:` (flat) is the canonical number; the filename
   prefix must match. The flat regenerator fails on mismatch.
@@ -214,6 +223,19 @@ completeness check — not on every ADR by default.
   to `superseded`.
 - Never delete an ADR file — supersede it. Deletion breaks
   historical links and round-trips through git history checks.
+- **Amending is the common case; wire it in both directions.** Most reopens
+  correct one decision inside an otherwise sound ADR rather than replacing the
+  whole record. Use `## Amendment N (YYYY-MM-DD) — <topic>` plus the reciprocal
+  `amends:` / `amended_by:` pair — the validator rejects a one-sided link,
+  because a one-sided link is invisible from the stale side, and the stale side
+  is the one a reader lands on first. Where the amendment reverses text that is
+  still asserted above it, add a one-line banner there too; the frontmatter
+  alone does not stop someone quoting the reversed sentence.
+- **Who may reopen it is recorded, not assumed** — `reopen_policy` /
+  `protected_dimensions`, both optional, absent meaning `unclassified`
+  ([`adr-layout § Reopen authority`](../../../docs/contracts/adr-layout.md)).
+  Reach for `owner` only when EVERY future transition is genuinely reserved;
+  `directional` is the normal answer, and no answer is a fine answer.
 
 ## Frugality Standards
 
