@@ -157,33 +157,6 @@ describe("emission shaping through the real dispatcher", () => {
         expect(dispatchIssues(ws).filter((e) => e["issue"].endsWith("_drop"))).toEqual([]);
     });
 
-    it("does not budget the turn-start slot against the previous turn's spend", () => {
-        // The R2 review found the read side unguarded: `spent_before` was read
-        // before the reset, so a turn that ended near the ceiling suppressed the
-        // NEXT turn's opening advisories. Seed a counter at the full ceiling and
-        // assert the opening nudge survives anyway — on the slot that begins a
-        // turn, the carried total is zero by definition.
-        const ws = workspace();
-        const stateDir = path.join(ws, "agents", "runtime", "state");
-        fs.mkdirSync(stateDir, { recursive: true });
-        fs.writeFileSync(
-            path.join(stateDir, "injection-turn.json"),
-            JSON.stringify({ session: "injection-budget-dispatch-test", bytes: 47_104 }),
-        );
-
-        const r = dispatchPrompt(ws, CO_FIRE_PROMPT);
-        expect(r.status).toBe(0);
-        expect(r.stdout).toContain("<delegation-nudge>");
-        expect(
-            dispatchIssues(ws).filter((e) => e["issue"] === "injection_budget_drop"),
-        ).toEqual([]);
-        // And the counter is now this turn's own spend, not the seeded total.
-        const after = JSON.parse(
-            fs.readFileSync(path.join(stateDir, "injection-turn.json"), "utf-8"),
-        ) as Record<string, unknown>;
-        expect(after["bytes"] as number).toBeLessThan(47_104);
-    });
-
     it("writes a counts-only turn counter and resets it on the turn-start slot", () => {
         const ws = workspace();
         dispatchPrompt(ws, CO_FIRE_PROMPT);

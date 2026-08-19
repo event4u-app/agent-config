@@ -6,13 +6,6 @@
 # and then through the real `shapeEmissions` policy with the ranks read live
 # from `src/scripts/hook_manifest.yaml`.
 #
-# The ranker runs against a TWO-ENTRY TEMP CATALOGUE built by the runner, not the
-# live `src/skills` tree. The scores below are therefore a property of this file:
-# an unrelated SKILL.md description edit cannot flip a row and red this corpus
-# with a nudge-interference message it has nothing to do with. (The first version
-# ranked against the shipped catalogue; the R2 review caught that the sibling
-# end-to-end fixture had already made the opposite choice for this exact reason.)
-#
 # Each row carries TWO expectations and both matter:
 #
 #   `fires`   — which nudges WOULD fire on this prompt, before any policy. This
