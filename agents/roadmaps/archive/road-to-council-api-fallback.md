@@ -299,11 +299,23 @@ caught, and pinned by the rotated-key case.
 
 ### Phase 5 — Optional refinement (proposal, not committed)
 
-- [~] **5.0** *(P-QUOTA-SOURCE-SPLIT — proposal)* Split the opt-in by
+- [-] **5.0** *(P-QUOTA-SOURCE-SPLIT — proposal)* Split the opt-in by
       quota_source: `api_on_quota: local | provider | both | false`. Only
       if real operation shows the operator wants provider-quota
       fall-through but not local-cap fall-through, or the reverse. Do not
-      build ahead of that evidence. **Deferred by design** — the roadmap's
+      build ahead of that evidence.
+      **MOVED, NOT CANCELLED — 2026-08-19.** Migrated verbatim to
+      `agents/roadmaps/later/road-to-council-api-quota-source-split.md`, which is
+      now its carrier and holds the "do not build ahead of that evidence"
+      instruction unchanged. The glyph is `[-]` **in this file only** because the
+      step no longer lives here; the work is open in the destination.
+      **The self-exemption below was refused by an AI council** — anthropic +
+      openai, 2 of 2 present, one round — and it is left standing rather than
+      quietly deleted, because the claim is the finding: a roadmap does not get to
+      exempt itself from a repository-wide preservation rule. *"That would make the
+      gate discretionary precisely where it is intended to be structural."* The
+      Iron-Law-3 gate was right and this file was wrong.
+      **Deferred by design** — the roadmap's
       own text forbids building it now; the deferral IS the decision, not
       a delay, and it does not gate archival.
 

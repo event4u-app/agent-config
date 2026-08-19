@@ -223,7 +223,19 @@ is not gated on the answer.
       verdict; `docs/contracts/budget-routing.md` is the migration record and
       carries the union revisit-if.
 - [x] The downshift-versus-cache reading is published, in either direction.
-- [~] No `.md` in the tree names a vendor model as the resolution of a band.
+- [-] No `.md` in the tree names a vendor model as the resolution of a band.
+      **CANCELLED AS WRITTEN 2026-08-19, on a converged AI-council verdict** —
+      anthropic + openai, 2 of 2 present, one round. Both reached *archive, no
+      follow-up*: a contradictory acceptance criterion is a specification defect,
+      not future work, and spawning a roadmap from it would manufacture a
+      permanently uncloseable file. They split on the glyph and `[-]` won on the
+      sharper argument: `[x]` would assert the sentence above, and the sentence is
+      false — **160 `.md` files in the tree name a vendor model** (measured
+      2026-08-19, `grep -rl 'claude-sonnet|claude-opus|claude-haiku' src docs`),
+      so a coherent reinterpretation does not retroactively make the written
+      criterion true. The intended constraint — *no **second** vendor mapping
+      beyond the ADR-035 § 3 one* — WAS satisfied by step 3.2, and that is
+      recorded below rather than smuggled into a tick.
       **Unsatisfiable as literally written, and the contradiction is with
       ADR-035 itself.** ADR-035 § 3 mandates exactly one tier→model mapping,
       and `model-recommendations.md` is it; 10+ further `.md` files carry the
