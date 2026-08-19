@@ -1143,7 +1143,22 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root
                 r.open_blockers === 0
                     ? '0'
                     : `${r.open_blockers}${r.needs_user > 0 ? ` (${r.needs_user} you)` : ''}`;
-            lines.push(`| [${r.rel}](roadmaps/later/${r.rel}) | ${blockers} | ${cell} |`);
+            // `<!-- ref-ignore -->` per row, and it is a correctness fix rather than a
+            // suppression. A resume condition is BY NATURE a reference to something
+            // that does not exist yet — "when `x.md` exists" is the commonest shape
+            // in `later/` — so checking these quoted paths as live references fires
+            // the gate on correct content. It fired immediately: one parked roadmap
+            // carries its own `ref-ignore` for exactly this reason ("this path is a
+            // condition, not a reference"), and stripping HTML comments out of the
+            // cell (the previous round's finding 4) removed the marker that had been
+            // exempting it. The authoritative copy of every path here is the roadmap
+            // file, which is where a reference belongs; this table is a quotation of
+            // it, and no coverage is lost because `later/` is not walked by that
+            // gate either way.
+            lines.push(
+                `| [${r.rel}](roadmaps/later/${r.rel}) | ${blockers} | ${cell} |` +
+                    ' <!-- ref-ignore -->',
+            );
         }
         lines.push('');
         lines.push('---\n');

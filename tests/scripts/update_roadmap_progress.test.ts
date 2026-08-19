@@ -666,8 +666,17 @@ describe('parked inventory — later/ is listed, never counted', () => {
         );
         const { dashboard } = regen();
         expect(dashboard).toContain('## Per-roadmap phase breakdown');
-        expect(dashboard).not.toContain('ref-ignore');
-        expect(dashboard).not.toContain('<!--\n');
+        // The generator appends its OWN `<!-- ref-ignore -->` to every parked row,
+        // so the assertion is about the quoted CELL, not the document: the cell text
+        // between the pipes must carry no comment of the roadmap's own.
+        const row = dashboard
+            .split('\n')
+            .find((l) => l.includes('roadmaps/later/road-to-commented.md')) as string;
+        expect(row).toBeDefined();
+        const cells = row.slice(0, row.lastIndexOf('|') + 1);
+        expect(cells).not.toContain('ref-ignore');
+        expect(cells).not.toContain('<!--');
+        expect(cells).toContain('Resume when `x.md` exists.');
     });
 
     it('counts the blockers a parked roadmap still carries, and says parking resolved nothing', () => {
@@ -740,6 +749,24 @@ describe('parked inventory — later/ is listed, never counted', () => {
         expect(row.endsWith('...  |') || row.includes('... |')).toBe(true);
         // No lone backslash immediately before a cell boundary.
         expect(row).not.toMatch(/\\ \|/);
+    });
+
+    it('marks each parked row ref-ignore, because a resume condition names what does not exist yet', () => {
+        // Not a suppression. "Blocked until `x.md` exists" is the commonest resume
+        // shape in later/, so checking those quoted paths as live references fires
+        // the reference gate on correct content — it did, on the first regen, over a
+        // roadmap that carries its own ref-ignore for exactly that reason.
+        mk('road-to-active.md', ['# Active', '', '## Phase 1 — Go', '- [ ] open one', ''].join('\n'));
+        mk(
+            path.join('later', 'road-to-awaits-a-file.md'),
+            ['# Awaits', '', '> Blocked until `agents/evidence/not-yet/created.md` exists.', ''].join('\n'),
+        );
+        const { dashboard } = regen();
+        const row = dashboard
+            .split('\n')
+            .find((l) => l.includes('roadmaps/later/road-to-awaits-a-file.md')) as string;
+        expect(row).toBeDefined();
+        expect(row.endsWith('<!-- ref-ignore -->')).toBe(true);
     });
 
     it('omits the section entirely when later/ holds no roadmaps', () => {
