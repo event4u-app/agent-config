@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 8c9041488ae67aa58d90fbd85fef39866bb2e921, review
-  artefacts excluded), scope hash `4292e4a7f3a36b0daa59776f857d398d672b4429453dea3c087aa78d39ebe845`
+- diff: `diff.patch` — the review scope (branch head 561b486e0c1a4d8bfa2aba3e6b6dd82bf0803c64, review
+  artefacts excluded), scope hash `02922a59531e1c7d1f04601e9552f247071ab484af067baa37b0955b956bf5b7`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -56,6 +56,7 @@ Changed files:
 - src/scripts/ai_council/orchestrator.ts
 - src/scripts/ai_council/py_parity.ts
 - src/scripts/ai_council/response_render.ts
+- src/scripts/ai_council/spend_gate.ts
 - src/scripts/ai_council/transport_resolver.ts
 - src/scripts/council_cli.ts
 - src/scripts/decision_memo.ts
@@ -65,7 +66,9 @@ Changed files:
 - src/scripts/hooks/session_eol_hook.ts
 - src/scripts/interruption_report.ts
 - src/scripts/run_supervise.ts
+- src/server/io/yamlIO.ts
 - src/server/routes/wizard.ts
+- tests/hooks/concern_severity.test.ts
 - tests/hooks/run_continuation_dispatch.test.ts
 - tests/scripts/ai_council/config.test.ts
 - tests/scripts/ai_council/council_cli.test.ts
@@ -80,6 +83,7 @@ Changed files:
 - tests/scripts/session_eol_hook.test.ts
 - tests/scripts/unattended_guard.test.ts
 - tests/server/wizard.aiCouncil.test.ts
+- tests/server/yamlIO.upsert.test.ts
 
 ## Output format (contract §2.2)
 
@@ -101,5 +105,5 @@ Fill the findings table in `worktree-long-horizon.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 4292e4a7f3a36b0daa59776f857d398d672b4429453dea3c087aa78d39ebe845, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 02922a59531e1c7d1f04601e9552f247071ab484af067baa37b0955b956bf5b7, reviewed <YYYY-MM-DD>
 ```

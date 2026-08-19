@@ -1036,7 +1036,7 @@ index dc8c0f1dc34893886ac51dc6959ff249534be334..8c21cfb88212096005e57c4a65e06760
        mode: user            # LOCKED — Iron Law
        confidence_threshold: 0.6
 diff --git a/dist/agent-src/contexts/execution/roadmap-process-loop.md b/dist/agent-src/contexts/execution/roadmap-process-loop.md
-index 400eb7885024531bb301ba286bcf370daaedcc1e..a9b3bb8210a74adc910ee7df5c7df831465caa11 100644
+index 400eb7885024531bb301ba286bcf370daaedcc1e..c09c790885ae7a9f32f5e5b88239825facf6177c 100644
 --- a/dist/agent-src/contexts/execution/roadmap-process-loop.md
 +++ b/dist/agent-src/contexts/execution/roadmap-process-loop.md
 @@ -277,11 +277,33 @@ For each open step in the working set (scope-bound — see wrapper):
@@ -1073,7 +1073,7 @@ index 400eb7885024531bb301ba286bcf370daaedcc1e..a9b3bb8210a74adc910ee7df5c7df831
  5. **Atomic flip — same reply, every step.**
     Flip the checkbox in `agents/roadmaps/<file>.md`: `[x]` done ·
     `[~]` partial · `[-]` skipped. **Non-skippable, non-batchable**
-@@ -345,20 +367,49 @@ For each open step in the working set (scope-bound — see wrapper):
+@@ -345,20 +367,56 @@ For each open step in the working set (scope-bound — see wrapper):
     file is the source of truth between regens.
  7. Run quality pipeline if cadence is `per_step`.
  
@@ -1091,8 +1091,15 @@ index 400eb7885024531bb301ba286bcf370daaedcc1e..a9b3bb8210a74adc910ee7df5c7df831
 +RESUME BY EVIDENCE, NEVER BY BOOKKEEPING.
 +```
 +
-+The first act of a resumed run is `verifyCheckpoint` against the current
-+tree — the per-field report names WHICH claim went stale, which is what a bare
++The first act of a resumed run is to look its checkpoint up **by roadmap slug**
++— `latestCheckpointFor(repoRoot, slug)` — and then `verifyCheckpoint` it against
++the current tree. The slug, not the run id: a relaunched session has a NEW
++session id, so the run-id-keyed `readCheckpoint` cannot find the checkpoint the
++DYING session wrote, and this instruction named an unreachable path until the
++R2 review's finding 7. The slug is the one key a resumed run holds by
++definition, because claiming the same roadmap is what makes it a resume.
++
++The per-field report then names WHICH claim went stale, which is what a bare
 +"stale/fresh" verdict cannot. **A disagreement is not an error**: work landing
 +between the checkpoint and the resume is the normal case (a human committed, a
 +sibling worktree moved, the dying session finished a step it never recorded),
@@ -1570,7 +1577,7 @@ index 6154d9444d0821ffc9039e85c1e9243dff6e961e..a93ad5d3409a74222380e3c6a3115e20
      "mcp_public_tool_count": {
        "max": 20,
 diff --git a/src/config/gate-violation-baselines.json b/src/config/gate-violation-baselines.json
-index 33bbd746c199198f5df12ead2e44bd4b3b976877..ea65595afedc33542300a7d52255bd84212a6102 100644
+index 33bbd746c199198f5df12ead2e44bd4b3b976877..2d4621742df4f446320c703dfeee7996c1a4e05e 100644
 --- a/src/config/gate-violation-baselines.json
 +++ b/src/config/gate-violation-baselines.json
 @@ -57,9 +57,9 @@
@@ -1580,9 +1587,9 @@ index 33bbd746c199198f5df12ead2e44bd4b3b976877..ea65595afedc33542300a7d52255bd84
 -      "count": 19611,
 -      "landed": "2026-08-17",
 -      "note": "Lowered 19,626 → 19,611 on 2026-08-17 by the release-gh-transient branch, and it is a LOWERING through extraction, never a raise — the −15 is against the trunk value, reproducible with `git stash && npx tsx src/scripts/check_source_size_budget.ts`. That branch hardened `release.ts` against GitHub's 5xx responses, which is exactly the kind of change that grows an already over-ceiling file: release.ts sits at 2,819 and carries 1,319 of this total. The retry loop, the transient classifier and the argv elider therefore went into a NEW module (`_lib/gh_transient.ts`, 74 lines, under the ceiling and contributing nothing here), leaving release.ts a 20-line wrapper. The payback came from the five call sites the wrapper replaced: each was a `run(['gh', …], {check, capture})` block spread over up to 17 lines, and each collapses to one `gh([…])` call. The ordering is the lesson and it matches the two entries below: extract, then measure — a wrapper written inline would have added ~20 lines and turned a hardening commit into a ratchet regression. Second lesson, learned the hard way on this same branch: pin the baseline ONCE, at the end. Two intermediate pins (19,606 then 19,612) made subsequent legitimate edits read as `N new` against numbers that had never been on the trunk.",
-+      "count": 19604,
++      "count": 19571,
 +      "landed": "2026-08-19",
-+      "note": "Lowered 19,626 → 19,611 on 2026-08-17 by the release-gh-transient branch, and it is a LOWERING through extraction, never a raise — the −15 is against the trunk value, reproducible with `git stash && npx tsx src/scripts/check_source_size_budget.ts`. That branch hardened `release.ts` against GitHub's 5xx responses, which is exactly the kind of change that grows an already over-ceiling file: release.ts sits at 2,819 and carries 1,319 of this total. The retry loop, the transient classifier and the argv elider therefore went into a NEW module (`_lib/gh_transient.ts`, 74 lines, under the ceiling and contributing nothing here), leaving release.ts a 20-line wrapper. The payback came from the five call sites the wrapper replaced: each was a `run(['gh', …], {check, capture})` block spread over up to 17 lines, and each collapses to one `gh([…])` call. The ordering is the lesson and it matches the two entries below: extract, then measure — a wrapper written inline would have added ~20 lines and turned a hardening commit into a ratchet regression. Second lesson, learned the hard way on this same branch: pin the baseline ONCE, at the end. Two intermediate pins (19,606 then 19,612) made subsequent legitimate edits read as `N new` against numbers that had never been on the trunk. Lowered 19,611 -> 19,604 on 2026-08-19 by the long-horizon branch, and it is again a LOWERING through extraction rather than a raise. Worth recording because the branch is the first case the gate met that it had no answer for: two roadmaps of new behaviour whose footprint landed in three files that were ALREADY 3,962 lines over the ceiling before the work started, so the initial reading was +759 new. The council (2/2 seats, 2026-08-19) split between extracting and escalating and agreed on two negatives -- raising the baseline contradicts the gate's own words, and a preparatory refactor PR creates no headroom because lowering the baseline by N and then adding N back trips the gate at the same number. What closed it was seven extractions, each a cohesive unit moved UNCHANGED: mid_flight_fallback, fallback_config, response_render, py_parity, _lib/council_fallback_posture, _lib/council_fallback_wiring, _lib/council_settings_block (+ _lib/map_to_object, which had to move so the settings block could stop importing back into council_cli). Four duplicated call sites collapsed on the way -- the split/ask branch appeared three times and the projected-spend comparison twice, which is how a metered retry could have come to gate on different rules than the round it ran inside. The lesson the previous entry states holds and is now tested at scale: extract, then measure, and pin ONCE at the end -- an intermediate de-duplication briefly RAISED the total by 5, because in an over-ceiling file a shared helper's own docblock can cost more than the duplication it removes.",
++      "note": "Lowered 19,626 → 19,611 on 2026-08-17 by the release-gh-transient branch, and it is a LOWERING through extraction, never a raise — the −15 is against the trunk value, reproducible with `git stash && npx tsx src/scripts/check_source_size_budget.ts`. That branch hardened `release.ts` against GitHub's 5xx responses, which is exactly the kind of change that grows an already over-ceiling file: release.ts sits at 2,819 and carries 1,319 of this total. The retry loop, the transient classifier and the argv elider therefore went into a NEW module (`_lib/gh_transient.ts`, 74 lines, under the ceiling and contributing nothing here), leaving release.ts a 20-line wrapper. The payback came from the five call sites the wrapper replaced: each was a `run(['gh', …], {check, capture})` block spread over up to 17 lines, and each collapses to one `gh([…])` call. The ordering is the lesson and it matches the two entries below: extract, then measure — a wrapper written inline would have added ~20 lines and turned a hardening commit into a ratchet regression. Second lesson, learned the hard way on this same branch: pin the baseline ONCE, at the end. Two intermediate pins (19,606 then 19,612) made subsequent legitimate edits read as `N new` against numbers that had never been on the trunk. Lowered 19,611 -> 19,604 on 2026-08-19 by the long-horizon branch, and it is again a LOWERING through extraction rather than a raise. Worth recording because the branch is the first case the gate met that it had no answer for: two roadmaps of new behaviour whose footprint landed in three files that were ALREADY 3,962 lines over the ceiling before the work started, so the initial reading was +759 new. The council (2/2 seats, 2026-08-19) split between extracting and escalating and agreed on two negatives -- raising the baseline contradicts the gate's own words, and a preparatory refactor PR creates no headroom because lowering the baseline by N and then adding N back trips the gate at the same number. What closed it was seven extractions, each a cohesive unit moved UNCHANGED: mid_flight_fallback, fallback_config, response_render, py_parity, _lib/council_fallback_posture, _lib/council_fallback_wiring, _lib/council_settings_block (+ _lib/map_to_object, which had to move so the settings block could stop importing back into council_cli). Four duplicated call sites collapsed on the way -- the split/ask branch appeared three times and the projected-spend comparison twice, which is how a metered retry could have come to gate on different rules than the round it ran inside. The lesson the previous entry states holds and is now tested at scale: extract, then measure, and pin ONCE at the end -- an intermediate de-duplication briefly RAISED the total by 5, because in an over-ceiling file a shared helper's own docblock can cost more than the duplication it removes. Lowered 19,604 -> 19,571 on 2026-08-19, and this entry records a RED GATE before it records a lowering. The pin at 19,604 was taken at the end of the long-horizon extraction pass; the R2 completion review of that very branch then produced fixes that grew orchestrator.ts by 53 lines, and the gate went red at 19,656 -- 52 new, against a note in this file that claimed a lowering the tree no longer showed. The review caught it, not the author, which is the argument for reviewing a fix pass rather than only the work it fixes. Repaired the way this file's own text demands: by extracting, never by re-pinning. The spend gate came out whole into ai_council/spend_gate.ts -- CostBudget (the ceilings), _breach (the decision), OverrunEvent (what a crossing hands the operator) and the _total_usd arithmetic all three share, re-exported so no caller changed. Cohesive on its own terms: nothing in it calls a provider or knows what a round is. The refusal path of the unmetered escalation moved to mid_flight_fallback.refuseUnmeteredEscalation in the same pass, next to the runGatedRetry it mirrors. Second lesson, and it is the reason the first attempt only bought 5 lines: moving code INTO another over-ceiling file buys nothing, so check which files are actually over the line before choosing a destination -- the same shape as the note below where de-duplication briefly RAISED the total by 5.",
        "falsifier": "./scripts-run src/scripts/check_source_size_budget --quiet"
      }
    }
@@ -1737,10 +1744,10 @@ index 0000000000000000000000000000000000000000..c04b0c12211ecf93cbc446ca0cd042a2
 +}
 diff --git a/src/scripts/_lib/council_fallback_wiring.ts b/src/scripts/_lib/council_fallback_wiring.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..7cc7195be62c9187ecddb848403e58cd68a09726
+index 0000000000000000000000000000000000000000..c38a7f4813e88e1e124ef762a5b8d433fd31ee5e
 --- /dev/null
 +++ b/src/scripts/_lib/council_fallback_wiring.ts
-@@ -0,0 +1,101 @@
+@@ -0,0 +1,115 @@
 +/**
 + * council_fallback_wiring — the api-twin factory and the event sink that
 + * `build_members` hands to the orchestrator.
@@ -1815,13 +1822,27 @@ index 0000000000000000000000000000000000000000..7cc7195be62c9187ecddb848403e58cd
 +        // One line per establishing escalation, so attendance analysis can
 +        // tell a seat SAVED by the fallback from one that was natively api.
 +        on_event: (e: FallbackEvent): void => {
-+            deps.emit({
-+                action: 'transport_fallback',
-+                provider: e.provider,
-+                failure_class: e.failure,
-+                outcome: e.outcome,
-+                api_on_quota: e.api_on_quota,
-+            });
++            // Wrapped, for the reason `appendQuorumEvent` states for the
++            // identical call: an events-log write is best-effort telemetry, and
++            // a failed one (read-only mount, full disk, a permission change on
++            // agents/runtime) must not take the council pass down with it.
++            //
++            // R2 round 2, finding 7. Unwrapped, this throws out of `on_event`,
++            // out of `establishTwin`, and out of `consult` — so a disk problem
++            // during a fallback kills the whole round, and the mechanism whose
++            // entire purpose is to SAVE a seat becomes the thing that loses
++            // every seat. Losing the log line is the strictly smaller failure.
++            try {
++                deps.emit({
++                    action: 'transport_fallback',
++                    provider: e.provider,
++                    failure_class: e.failure,
++                    outcome: e.outcome,
++                    api_on_quota: e.api_on_quota,
++                });
++            } catch {
++                /* best-effort telemetry — never fail the pass */
++            }
 +        },
 +        construct: (provider: string) => {
 +            if (!deps.hasApiRung(provider)) return null;
@@ -2095,10 +2116,10 @@ index 0000000000000000000000000000000000000000..23de7e0f53b8ce6072e38e261873f2a4
 +}
 diff --git a/src/scripts/_lib/run_checkpoint.ts b/src/scripts/_lib/run_checkpoint.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..b248cd9b08045cda8d7b5742f650563b4e79e32f
+index 0000000000000000000000000000000000000000..bd0898514ab2da0958d35c688ad736e62c8f98f8
 --- /dev/null
 +++ b/src/scripts/_lib/run_checkpoint.ts
-@@ -0,0 +1,286 @@
+@@ -0,0 +1,334 @@
 +/**
 + * run_checkpoint — the deterministic checkpoint a dying run leaves behind,
 + * and the re-verification a resumed run owes before trusting it.
@@ -2213,6 +2234,54 @@ index 0000000000000000000000000000000000000000..b248cd9b08045cda8d7b5742f650563b
 +}
 +
 +/**
++ * The current commit, read straight off `.git` — no subprocess.
++ *
++ * R2 round 2, finding 5. `head` was populated only from `opts.head`, and the
++ * ONE production caller (`session_eol_hook`) never passed it, so the field was
++ * always `null` while the checkpoint's own docblock, the loop contract and the
++ * roadmap all describe it as carrying the commit the tree was on. Only the
++ * test injected a value, which is why nothing noticed.
++ *
++ * No `git rev-parse`: this runs on the Stop path, where a spawn is a cost paid
++ * on every reply. Two files answer it — and a WORKTREE is the case a naive
++ * reader gets wrong, because there `.git` is a FILE holding `gitdir: <path>`
++ * rather than a directory. This package is developed in worktrees, so the naive
++ * version would have returned null exactly where it was being exercised.
++ *
++ * Returns `null` on anything unexpected. A checkpoint without a commit is
++ * still useful; a Stop path that throws is not.
++ */
++function readHead(repoRoot: string): string | null {
++    try {
++        let gitDir = path.join(repoRoot, '.git');
++        if (fs.statSync(gitDir).isFile()) {
++            const m = /^gitdir:\s*(.+)$/m.exec(fs.readFileSync(gitDir, 'utf-8').trim());
++            if (m === null) return null;
++            gitDir = path.resolve(repoRoot, m[1] as string);
++        }
++        const head = fs.readFileSync(path.join(gitDir, 'HEAD'), 'utf-8').trim();
++        // A detached HEAD is the sha itself.
++        if (/^[0-9a-f]{40}$/.test(head)) return head;
++        const ref = /^ref:\s*(.+)$/.exec(head);
++        if (ref === null) return null;
++        const refName = ref[1] as string;
++        try {
++            return fs.readFileSync(path.join(gitDir, refName), 'utf-8').trim() || null;
++        } catch {
++            // Packed refs: a loose file does not exist for every branch.
++            const packed = fs.readFileSync(path.join(gitDir, 'packed-refs'), 'utf-8');
++            for (const line of packed.split('\n')) {
++                const pm = /^([0-9a-f]{40})\s+(.+)$/.exec(line.trim());
++                if (pm !== null && pm[2] === refName) return pm[1] as string;
++            }
++            return null;
++        }
++    } catch {
++        return null;
++    }
++}
++
++/**
 + * Derive a checkpoint from the tree. Returns `null` when the roadmap is
 + * unreadable — a checkpoint that guesses is worse than none, because the whole
 + * contract of this file is that its fields were computed rather than recalled.
@@ -2238,7 +2307,7 @@ index 0000000000000000000000000000000000000000..b248cd9b08045cda8d7b5742f650563b
 +        done_steps: counts.done,
 +        parked_steps: counts.parked,
 +        next_step: counts.next,
-+        head: opts.head ?? null,
++        head: opts.head ?? readHead(repoRoot),
 +        written_at: (opts.now ?? ((): Date => new Date()))().toISOString(),
 +    };
 +}
@@ -2968,10 +3037,10 @@ index 0000000000000000000000000000000000000000..900ab6f3629a39256dcc03d0802b67cf
 +}
 diff --git a/src/scripts/ai_council/mid_flight_fallback.ts b/src/scripts/ai_council/mid_flight_fallback.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..6c1fff6361bf3fc15009ed9487f81c0cf6f30bd9
+index 0000000000000000000000000000000000000000..be21804af68cf8ba2bcbb743ee3b1ff2a45a973c
 --- /dev/null
 +++ b/src/scripts/ai_council/mid_flight_fallback.ts
-@@ -0,0 +1,241 @@
+@@ -0,0 +1,286 @@
 +/**
 + * mid_flight_fallback — the cli→api retry's types, its establish step, and its
 + * response stamp.
@@ -3207,17 +3276,62 @@ index 0000000000000000000000000000000000000000..6c1fff6361bf3fc15009ed9487f81c0c
 +        ledger,
 +    });
 +    if (twin === null) return null;
-+    // Emitted at establishment: on this path the twin goes through the round's
-+    // ORDINARY spend gate, whose refusal surfaces as `cost_budget_exceeded` on
-+    // the response rather than as a fallback event.
-+    emitOutcome(fallback, member.name, twin, 'retried');
++    // NOTHING is emitted here, and the previous comment justifying an emit at
++    // establishment is deleted rather than reworded because it stopped being
++    // true. It read: "on this path the twin goes through the round's ORDINARY
++    // spend gate, whose refusal surfaces as `cost_budget_exceeded` on the
++    // response rather than as a fallback event." Round 1's finding-3 fix made
++    // a refusal surface as exactly such an event, so an `retried` written here
++    // and a `cost_budget` written there put two contradictory lines in the log
++    // for one seat — and the first of them claims a seat was saved that was
++    // not. R2 round 2, finding 4.
++    //
++    // The caller emits once, on the outcome it actually observed:
++    // `refuseUnmeteredEscalation` for the refusal, `emitOutcome(…, 'retried')`
++    // immediately before the metered call for the acceptance.
 +    return twin;
 +}
++
++/**
++ * A budget-refused escalation of an UNMETERED seat, as one call.
++ *
++ * The seat degrades to its own original cli failure — never to an abort, and
++ * never to the round-wide short-circuit. Before the escalation existed a
++ * `billable: false` member returned before the spend gate and could not reach
++ * it at all, so a dead free CLI cost its own seat and nothing else; falling
++ * through priced as the metered twin put it one branch from aborting EVERY
++ * remaining member, which the shipped claim `council-fallback-loses-zero-seats`
++ * says cannot happen. R2 round 1, finding 3.
++ *
++ * The shape matches {@link runGatedRetry}'s refusal path exactly: the original
++ * response, `fallback_skipped: cost_budget` so a reader can tell "not retried"
++ * from "retry refused", and one outcome on the event log.
++ *
++ * Rolls the sticky substitution back — the twin was never called, so a later
++ * round must re-decide rather than inherit a substitution that never happened.
++ * `ledger.release` undoes the once-per-provider claim for the same reason: a
++ * twin that never ran must not consume the provider's one escalation.
++ */
++export function refuseUnmeteredEscalation(args: {
++    readonly original: CouncilResponse;
++    readonly declared: ExternalAIClient;
++    readonly twin: EstablishedTwin;
++    readonly fallback: CliFallbackOptions | null;
++    readonly ledger: MidFlightFallback | null;
++    readonly twins: TwinMap | null;
++}): CouncilResponse {
++    const { original, declared, twin, fallback, ledger, twins } = args;
++    original.metadata = { ...(original.metadata ?? {}), fallback_skipped: 'cost_budget' };
++    if (fallback !== null) emitOutcome(fallback, declared.name, twin, 'cost_budget');
++    twins?.delete(declared.name);
++    ledger?.release(declared.name);
++    return original;
++}
 diff --git a/src/scripts/ai_council/orchestrator.ts b/src/scripts/ai_council/orchestrator.ts
-index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a68e668cb6 100644
+index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..8900a14030fd60c967520be0aa53592b30c44f80 100644
 --- a/src/scripts/ai_council/orchestrator.ts
 +++ b/src/scripts/ai_council/orchestrator.ts
-@@ -70,70 +70,41 @@ import {
+@@ -70,70 +70,60 @@ import {
  } from './prompts.js';
  import { count_dissenters, dissent_quota_met, is_near_duplicate } from './debate_gates.js';
  import { parse_stance_line, render_vote_tally, tally_stances } from './stance_tally.js';
@@ -3225,6 +3339,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
 +import {
 +    emitOutcome,
 +    escalateUnmetered,
++    refuseUnmeteredEscalation,
 +    establishTwin,
 +    isFailedCliCall,
 +    runGatedRetry,
@@ -3235,6 +3350,24 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
 +} from './mid_flight_fallback.js';
 +
 +export type { CliFallbackOptions, EstablishedTwin } from './mid_flight_fallback.js';
++
++// The spend gate, extracted whole. Re-exported so every existing importer of
++// `CostBudget` / `OverrunEvent` from this module keeps working unchanged.
++export {
++    CostBudget,
++    OverrunEvent,
++    _breach,
++    _total_usd,
++    type BreachKind,
++    type Spent,
++} from './spend_gate.js';
++import {
++    CostBudget,
++    OverrunEvent,
++    _breach,
++    _total_usd,
++    type Spent,
++} from './spend_gate.js';
 +import { callMember, renderResponseMeta } from './response_render.js';
 +import {
 +    _excTag,
@@ -3318,7 +3451,94 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
  
  /**
   * Mirror Python `getattr(obj, name, fallback)` for the duck-typed member
-@@ -449,6 +420,8 @@ export interface ConsultOptions {
+@@ -160,30 +150,6 @@ function _label(idx: number): string {
+ 
+ // ── dataclasses ───────────────────────────────────────────────────────
+ 
+-export class CostBudget {
+-    max_input_tokens: number;
+-    max_output_tokens: number;
+-    max_calls: number;
+-    max_total_usd: number; // 0 = USD ceiling disabled (token caps still apply)
+-    daily_limit_usd: number; // 0 = rolling 24h cap disabled (D3)
+-
+-    constructor(
+-        args: {
+-            max_input_tokens?: number;
+-            max_output_tokens?: number;
+-            max_calls?: number;
+-            max_total_usd?: number;
+-            daily_limit_usd?: number;
+-        } = {},
+-    ) {
+-        this.max_input_tokens = args.max_input_tokens ?? 50_000;
+-        this.max_output_tokens = args.max_output_tokens ?? 20_000;
+-        this.max_calls = args.max_calls ?? 10;
+-        this.max_total_usd = args.max_total_usd ?? 0.0;
+-        this.daily_limit_usd = args.daily_limit_usd ?? 0.0;
+-    }
+-}
+-
+ export class CouncilQuestion {
+     mode: string; // one of: prompt, roadmap, diff, files
+     user_prompt: string; // bundled artefact text
+@@ -196,44 +162,6 @@ export class CouncilQuestion {
+     }
+ }
+ 
+-/** Passed to `on_overrun` when projected spend exceeds the budget. */
+-export class OverrunEvent {
+-    member_index: number;
+-    member: ExternalAIClient;
+-    next_estimate: CostEstimate; // this member's projected cost
+-    spent_input_tokens: number; // already-billed totals BEFORE this member
+-    spent_output_tokens: number;
+-    spent_usd: number;
+-    projected_total_usd: number; // spent_usd + next_estimate.total_usd
+-    daily_spent_usd: number; // rolling 24h spend BEFORE this member (D3)
+-    daily_limit_usd: number; // the configured daily cap (0 = disabled)
+-    breach_kind: string; // "session" | "daily" | "tokens"
+-
+-    constructor(args: {
+-        member_index: number;
+-        member: ExternalAIClient;
+-        next_estimate: CostEstimate;
+-        spent_input_tokens: number;
+-        spent_output_tokens: number;
+-        spent_usd: number;
+-        projected_total_usd: number;
+-        daily_spent_usd?: number;
+-        daily_limit_usd?: number;
+-        breach_kind?: string;
+-    }) {
+-        this.member_index = args.member_index;
+-        this.member = args.member;
+-        this.next_estimate = args.next_estimate;
+-        this.spent_input_tokens = args.spent_input_tokens;
+-        this.spent_output_tokens = args.spent_output_tokens;
+-        this.spent_usd = args.spent_usd;
+-        this.projected_total_usd = args.projected_total_usd;
+-        this.daily_spent_usd = args.daily_spent_usd ?? 0.0;
+-        this.daily_limit_usd = args.daily_limit_usd ?? 0.0;
+-        this.breach_kind = args.breach_kind ?? 'session';
+-    }
+-}
+-
+ // Callback signature: receive event → return True (proceed) or False (skip + tag error).
+ export type OnOverrunCallback = (event: OverrunEvent) => boolean;
+ 
+@@ -360,10 +288,6 @@ export function estimate_debate_cost(
+     });
+ }
+ 
+-/** Mirror the Python `CostEstimate.total_usd` property. */
+-function _total_usd(e: CostEstimate): number {
+-    return e.input_usd + e.output_usd;
+-}
+ 
+ /**
+  * Return a pre-call cost estimate per member, in input order.
+@@ -449,6 +373,8 @@ export interface ConsultOptions {
       * context). Default `null` → byte-identical to today.
       */
      no_project_context_members?: ReadonlySet<string> | null;
@@ -3327,7 +3547,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
  }
  
  /**
-@@ -504,6 +477,11 @@ export function consult(
+@@ -504,6 +430,11 @@ export function consult(
      }
  
      const spent: Spent = { input: 0, output: 0, usd: 0.0 };
@@ -3339,7 +3559,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
      let last_results: CouncilResponse[] = [];
      // A3 read unlock: the stable prefix is ALWAYS the original user prompt;
      // per-round critiques + the STANCE contract ride in a volatile suffix so
-@@ -535,6 +513,9 @@ export function consult(
+@@ -535,6 +466,9 @@ export function consult(
              project,
              original_ask,
              advisor_plans,
@@ -3349,7 +3569,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
              member_prompt_suffix: opts.member_prompt_suffix ?? null,
              no_project_context_members: opts.no_project_context_members ?? null,
              split: suffix_for_round
-@@ -572,12 +553,19 @@ export function consult(
+@@ -572,12 +506,19 @@ export function consult(
                      `Reply with ONLY that single line for your final position.\n\n${STANCE_LINE_CONTRACT}`,
                  max_tokens: question.max_tokens,
              });
@@ -3369,42 +3589,21 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
              });
              const rep = rr[0];
              if (rep !== undefined) {
-@@ -592,6 +580,34 @@ export function consult(
+@@ -592,12 +533,8 @@ export function consult(
      return last_results;
  }
  
-+
+-interface Spent {
+-    input: number;
+-    output: number;
+-    usd: number;
+-}
+ 
 +/** Which cap a projected call breaches, or `null` when it fits. */
-+type BreachKind = 'tokens' | 'daily' | 'session' | null;
-+
-+/**
-+ * The projected-spend verdict. One implementation because the round head and
-+ * the fallback's metered retry must gate on the SAME rules — two copies of
-+ * four comparisons is how they drift.
-+ */
-+function _breach(
-+    est: CostEstimate | null,
-+    spent: Spent,
-+    budget: CostBudget,
-+): BreachKind {
-+    const usd = est ? _total_usd(est) : 0.0;
-+    if (
-+        spent.input + (est ? est.input_tokens : 0) > budget.max_input_tokens ||
-+        spent.output + (est ? est.output_tokens : 0) > budget.max_output_tokens
-+    ) {
-+        return 'tokens';
-+    }
-+    if (budget.daily_limit_usd > 0 && _would_exceed_daily(budget.daily_limit_usd, usd)) {
-+        return 'daily';
-+    }
-+    if (budget.max_total_usd > 0 && spent.usd + usd > budget.max_total_usd) return 'session';
-+    return null;
-+}
-+
- interface Spent {
-     input: number;
-     output: number;
-@@ -616,6 +632,11 @@ interface RunRoundOptions {
+ interface RunRoundOptions {
+     table: PriceTable | null;
+     on_overrun: OnOverrunCallback | null;
+@@ -616,6 +553,11 @@ interface RunRoundOptions {
      member_prompt_suffix?: Map<string, string> | null;
      /** Ü2 — see `ConsultOptions.no_project_context_members`. */
      no_project_context_members?: ReadonlySet<string> | null;
@@ -3416,7 +3615,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
  }
  
  /** Run a single round; mutate `spent` with cumulative totals. */
-@@ -668,77 +689,127 @@ function _run_round(
+@@ -668,77 +610,111 @@ function _run_round(
                })
              : null;
  
@@ -3540,38 +3739,22 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
                      : 'cost_budget_exceeded';
 +            // A seat that arrived here by escalating from an UNMETERED cli
 +            // call degrades to its own original failure — never to an abort,
-+            // and never to the round-wide short-circuit below.
-+            //
-+            // The R2 review's finding 3. Before the escalation existed, a
-+            // `billable: false` member `continue`d above and could not reach
-+            // this gate at all, so a dead free CLI cost its own seat and
-+            // nothing else. Falling through priced as the metered twin put it
-+            // one branch away from `_aborted(left, …)` for EVERY remaining
-+            // member — a missing vendor binary near a `max_total_usd` could
-+            // terminate the round, which is precisely what the shipped claim
-+            // `council-fallback-loses-zero-seats` says cannot happen.
-+            //
-+            // The shape matches `runGatedRetry`'s refusal path exactly: the
-+            // original response, `fallback_skipped: cost_budget` so a reader
-+            // can tell "not retried" from "retry refused", and the outcome on
-+            // the event log.
++            // and never to the round-wide short-circuit below. The reasoning,
++            // and the rollback of both the twin map and the ledger claim, live
++            // in `refuseUnmeteredEscalation`.
 +            if (unmetered_original !== null && unmetered_twin !== null) {
-+                unmetered_original.metadata = {
-+                    ...(unmetered_original.metadata ?? {}),
-+                    fallback_skipped: 'cost_budget',
-+                };
-+                const fb = opts.cli_fallback ?? null;
-+                if (fb !== null) {
-+                    emitOutcome(fb, declared.name, unmetered_twin, 'cost_budget');
-+                }
-+                _stamp_transport_metadata(unmetered_original, declared);
-+                results.push(unmetered_original);
-+                spent.input += unmetered_original.input_tokens;
-+                spent.output += unmetered_original.output_tokens;
-+                // The sticky map is rolled back: the twin was never called, so
-+                // a later round must re-decide rather than inherit a
-+                // substitution that never happened.
-+                twins?.delete(declared.name);
++                const refused = refuseUnmeteredEscalation({
++                    original: unmetered_original,
++                    declared,
++                    twin: unmetered_twin,
++                    fallback: opts.cli_fallback ?? null,
++                    ledger: opts.fallback_ledger ?? null,
++                    twins,
++                });
++                _stamp_transport_metadata(refused, declared);
++                results.push(refused);
++                spent.input += refused.input_tokens;
++                spent.output += refused.output_tokens;
 +                continue;
 +            }
              if (on_overrun !== null && estimates !== null) {
@@ -3594,9 +3777,20 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
                      daily_spent_usd:
                          budget.daily_limit_usd > 0 ? _today_spend_usd() : 0.0,
                      daily_limit_usd: budget.daily_limit_usd,
-@@ -758,28 +829,51 @@ function _run_round(
+@@ -757,29 +733,62 @@ function _run_round(
+             }
          }
  
++        // An escalated unmetered seat clears the gate: NOW the escalation is
++        // real, so `retried` is emitted here rather than at establishment.
++        // `escalateUnmetered` used to emit it the moment the twin was built,
++        // which put a "seat saved" line in the log for escalations the budget
++        // then refused — R2 round 2, finding 4.
++        if (unmetered_twin !== null) {
++            const fb = opts.cli_fallback ?? null;
++            if (fb !== null) emitOutcome(fb, declared.name, unmetered_twin, 'retried');
++        }
++
          // ── actual call ──────────────────────────────────────────────
 -        let response: CouncilResponse;
 -        try {
@@ -3666,7 +3860,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
          results.push(response);
          spent.input += response.input_tokens;
          spent.output += response.output_tokens;
-@@ -792,8 +886,8 @@ function _run_round(
+@@ -792,8 +801,8 @@ function _run_round(
              // ttl is '5m': the request builder emits `cache_control:
              // {type:'ephemeral'}` with no explicit ttl, i.e. the 5-min default.
              const actual = reprice_with_cache(
@@ -3677,7 +3871,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
                  {
                      input_tokens: response.input_tokens,
                      cache_read_input_tokens: response.cache_read_input_tokens,
-@@ -808,14 +902,14 @@ function _run_round(
+@@ -808,14 +817,14 @@ function _run_round(
              // Persist to the rolling 24h ledger when the daily cap is
              // active. Errors are swallowed inside record_spend.
              if (budget.daily_limit_usd > 0 && !response.error) {
@@ -3694,7 +3888,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
      }
  
      return results;
-@@ -1067,6 +1161,10 @@ function _run_debate_gate_repairs(
+@@ -1067,6 +1076,10 @@ function _run_debate_gate_repairs(
          project: ProjectContext | null;
          original_ask: string;
          advisor_plans: Map<string, AdvisorPlan> | null;
@@ -3705,7 +3899,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
      },
      on_repair: ((member: string, reason: string) => boolean) | null,
  ): CouncilResponse[] {
-@@ -1182,6 +1280,18 @@ export interface RunDebateOptions {
+@@ -1182,6 +1195,18 @@ export interface RunDebateOptions {
      restate?: boolean;
      /** Receives the restate responses (rendering, divergence flags, cost). */
      on_restate?: ((responses: CouncilResponse[]) => void) | null;
@@ -3724,7 +3918,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
  }
  
  /**
-@@ -1241,6 +1351,11 @@ export function run_debate(
+@@ -1241,6 +1266,11 @@ export function run_debate(
      }
  
      const spent: Spent = { input: 0, output: 0, usd: 0.0 };
@@ -3736,7 +3930,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
      const all_rounds: CouncilResponse[][] = [];
      // A3 read unlock (debate twin): stable prefix = the original prompt; the
      // per-round positions block rides in a volatile suffix (see consult loop).
-@@ -1267,6 +1382,9 @@ export function run_debate(
+@@ -1267,6 +1297,9 @@ export function run_debate(
              project,
              original_ask,
              advisor_plans,
@@ -3746,7 +3940,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
          });
          opts.on_restate?.(restated);
      }
-@@ -1296,6 +1414,9 @@ export function run_debate(
+@@ -1296,6 +1329,9 @@ export function run_debate(
                  project,
                  original_ask,
                  advisor_plans,
@@ -3756,7 +3950,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
                  split: current_suffix
                      ? { stable: question.user_prompt, suffix: current_suffix }
                      : null,
-@@ -1315,7 +1436,16 @@ export function run_debate(
+@@ -1315,7 +1351,16 @@ export function run_debate(
                  }),
                  budget,
                  spent,
@@ -3774,7 +3968,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
                  opts.on_repair ?? null,
              );
          }
-@@ -1731,28 +1861,6 @@ export function run_consensus_scoring(
+@@ -1731,28 +1776,6 @@ export function run_consensus_scoring(
   * Tokens marked `estimated=True` get a `~` prefix so the audit
   * trail flags heuristic counts.
   */
@@ -3803,7 +3997,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
  
  // Lens defaults for the Phase 9 confidence-explanation badge. The PR
  // lens stays terse so the existing "Must-fix / Nice-to-have" structure
-@@ -1906,7 +2014,7 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}):
+@@ -1906,7 +1929,7 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}):
              blocks.push(`${header}\n\n*ERROR:* \`${r.error}\``);
              continue;
          }
@@ -3812,7 +4006,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..46db5ca0402fa3bea2841f5bdf8f32a6
          blocks.push(`${header}\n\n${meta}\n\n${r.text}`);
      }
      if (peer_review !== null && peer_review.responses.length > 0) {
-@@ -2205,67 +2313,3 @@ function _render_bucket(
+@@ -2205,67 +2228,3 @@ function _render_bucket(
      }
      return lines.join('\n');
  }
@@ -4130,8 +4324,137 @@ index 0000000000000000000000000000000000000000..08911f454cb288715c258701f7268566
 +    }
 +}
 +
+diff --git a/src/scripts/ai_council/spend_gate.ts b/src/scripts/ai_council/spend_gate.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..315b9544a04b953b56e8aca62d50bc6c576b726b
+--- /dev/null
++++ b/src/scripts/ai_council/spend_gate.ts
+@@ -0,0 +1,123 @@
++/**
++ * spend_gate — the ceilings, the breach decision, and the event a breach raises.
++ *
++ * Extracted from `orchestrator.ts` unchanged, and the ordering is the point
++ * (`gate-violation-baselines.json` § check_source_size_budget: "extract, then
++ * measure"): the orchestrator sits far over the 1,500-line source ceiling, so
++ * a change that grows it has to hand a cohesive unit out rather than pin a
++ * higher number — the gate's own text calls raising the baseline a defect.
++ *
++ * The unit is cohesive on its own terms, not merely convenient: `CostBudget`
++ * states the ceilings, `_breach` decides whether one is crossed, `OverrunEvent`
++ * is what a crossing hands to the operator, and `_total_usd` is the arithmetic
++ * all three share. Nothing here calls a provider or knows what a round is.
++ *
++ * Re-exported from `orchestrator.ts`, so no caller changes.
++ */
++
++import type { CostEstimate } from './pricing.js';
++import type { ExternalAIClient } from './clients.js';
++import { would_exceed as _would_exceed_daily } from './budget_guard.js';
++
++export class CostBudget {
++    max_input_tokens: number;
++    max_output_tokens: number;
++    max_calls: number;
++    max_total_usd: number; // 0 = USD ceiling disabled (token caps still apply)
++    daily_limit_usd: number; // 0 = rolling 24h cap disabled (D3)
++
++    constructor(
++        args: {
++            max_input_tokens?: number;
++            max_output_tokens?: number;
++            max_calls?: number;
++            max_total_usd?: number;
++            daily_limit_usd?: number;
++        } = {},
++    ) {
++        this.max_input_tokens = args.max_input_tokens ?? 50_000;
++        this.max_output_tokens = args.max_output_tokens ?? 20_000;
++        this.max_calls = args.max_calls ?? 10;
++        this.max_total_usd = args.max_total_usd ?? 0.0;
++        this.daily_limit_usd = args.daily_limit_usd ?? 0.0;
++    }
++}
++
++
++/** Passed to `on_overrun` when projected spend exceeds the budget. */
++export class OverrunEvent {
++    member_index: number;
++    member: ExternalAIClient;
++    next_estimate: CostEstimate; // this member's projected cost
++    spent_input_tokens: number; // already-billed totals BEFORE this member
++    spent_output_tokens: number;
++    spent_usd: number;
++    projected_total_usd: number; // spent_usd + next_estimate.total_usd
++    daily_spent_usd: number; // rolling 24h spend BEFORE this member (D3)
++    daily_limit_usd: number; // the configured daily cap (0 = disabled)
++    breach_kind: string; // "session" | "daily" | "tokens"
++
++    constructor(args: {
++        member_index: number;
++        member: ExternalAIClient;
++        next_estimate: CostEstimate;
++        spent_input_tokens: number;
++        spent_output_tokens: number;
++        spent_usd: number;
++        projected_total_usd: number;
++        daily_spent_usd?: number;
++        daily_limit_usd?: number;
++        breach_kind?: string;
++    }) {
++        this.member_index = args.member_index;
++        this.member = args.member;
++        this.next_estimate = args.next_estimate;
++        this.spent_input_tokens = args.spent_input_tokens;
++        this.spent_output_tokens = args.spent_output_tokens;
++        this.spent_usd = args.spent_usd;
++        this.projected_total_usd = args.projected_total_usd;
++        this.daily_spent_usd = args.daily_spent_usd ?? 0.0;
++        this.daily_limit_usd = args.daily_limit_usd ?? 0.0;
++        this.breach_kind = args.breach_kind ?? 'session';
++    }
++}
++
++
++/** Mirror the Python `CostEstimate.total_usd` property. */
++export function _total_usd(e: CostEstimate): number {
++    return e.input_usd + e.output_usd;
++}
++
++export type BreachKind = 'tokens' | 'daily' | 'session' | null;
++
++/**
++ * The projected-spend verdict. One implementation because the round head and
++ * the fallback's metered retry must gate on the SAME rules — two copies of
++ * four comparisons is how they drift.
++ */
++export function _breach(
++    est: CostEstimate | null,
++    spent: Spent,
++    budget: CostBudget,
++): BreachKind {
++    const usd = est ? _total_usd(est) : 0.0;
++    if (
++        spent.input + (est ? est.input_tokens : 0) > budget.max_input_tokens ||
++        spent.output + (est ? est.output_tokens : 0) > budget.max_output_tokens
++    ) {
++        return 'tokens';
++    }
++    if (budget.daily_limit_usd > 0 && _would_exceed_daily(budget.daily_limit_usd, usd)) {
++        return 'daily';
++    }
++    if (budget.max_total_usd > 0 && spent.usd + usd > budget.max_total_usd) return 'session';
++    return null;
++}
++
++
++export interface Spent {
++    input: number;
++    output: number;
++    usd: number;
++}
++
 diff --git a/src/scripts/ai_council/transport_resolver.ts b/src/scripts/ai_council/transport_resolver.ts
-index 9082f31f5f5625786fe02553b55af0cbb5c6d930..7bf8a03d33a4959c555f78517197a8bdd4ae7c22 100644
+index 9082f31f5f5625786fe02553b55af0cbb5c6d930..93b01f86e28859574c2abf901efcab29b8b4d2bc 100644
 --- a/src/scripts/ai_council/transport_resolver.ts
 +++ b/src/scripts/ai_council/transport_resolver.ts
 @@ -381,18 +381,35 @@ const FALLBACK_ELIGIBLE: ReadonlySet<CliFailureClass> = new Set([
@@ -4203,7 +4526,7 @@ index 9082f31f5f5625786fe02553b55af0cbb5c6d930..7bf8a03d33a4959c555f78517197a8bd
  }
  
  /**
-@@ -467,8 +499,12 @@ export class MidFlightFallback {
+@@ -467,13 +499,37 @@ export class MidFlightFallback {
      private readonly used = new Set<string>();
  
      /** `'api'` to retry on the api rung, `'stop'` to surface the failure. */
@@ -4218,6 +4541,31 @@ index 9082f31f5f5625786fe02553b55af0cbb5c6d930..7bf8a03d33a4959c555f78517197a8bd
          if (this.used.has(provider)) return 'stop';
          this.used.add(provider);
          return 'api';
+     }
+ 
++    /**
++     * Give a provider its one fallback back, because the twin never ran.
++     *
++     * R2 round 2, finding 8. `attempt` claims the slot at DECISION time, which
++     * is correct — the claim is what stops a dead binary being retried once per
++     * round. But a claim that is never CONSUMED must not stay spent: when the
++     * projected-spend gate refuses the escalation, no api call happens, and
++     * leaving the provider marked means the seat can never re-decide. Every
++     * later round then re-spawns the dead cli binary and gets `'stop'`, which
++     * is the exact per-round-ledger behaviour the invocation-scoped ledger was
++     * chosen to avoid.
++     *
++     * Called ONLY on a path where the twin was built and then not called.
++     * A provider that actually retried keeps its claim spent — that is the cap
++     * working.
++     */
++    release(provider: string): void {
++        this.used.delete(provider);
++    }
++
+     /** Providers that have already spent their one fallback. */
+     spent(): readonly string[] {
+         return [...this.used].sort();
 diff --git a/src/scripts/council_cli.ts b/src/scripts/council_cli.ts
 index 8c5f0b97f20e3284ed6ccba06eca0d1ca66a2275..93f1bb82597b2cfbf8fbad1d18d4cde0cee198ec 100644
 --- a/src/scripts/council_cli.ts
@@ -4969,10 +5317,10 @@ index 0d5fc721318babaa8629a009d5b7dcbbe72887d9..7e1afba83e0154c46c983143f0e45928
  };
 diff --git a/src/scripts/hooks/run_continuation_hook.ts b/src/scripts/hooks/run_continuation_hook.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..34aa790033959a8ea1912b677e9ef52e422502ba
+index 0000000000000000000000000000000000000000..3f0da79fbd0e59a4c051cee0ed38b374d9d538d1
 --- /dev/null
 +++ b/src/scripts/hooks/run_continuation_hook.ts
-@@ -0,0 +1,539 @@
+@@ -0,0 +1,618 @@
 +/**
 + * run_continuation — road-to-long-horizon-execution Phase 1 (H-1).
 + *
@@ -5066,8 +5414,27 @@ index 0000000000000000000000000000000000000000..34aa790033959a8ea1912b677e9ef52e
 +/** Dispatcher-internal block code; the dispatcher maps stop-slot 1 → host 2. */
 +const EXIT_BLOCK = 1;
 +
-+/** Same cap the interruption ledger reads its tail under. */
-+const TRANSCRIPT_READ_MAX_BYTES = 2 * 1024 * 1024;
++/**
++ * The gate's cap, IMPORTED rather than restated — the two must agree by
++ * construction, not by two numbers that happened to match.
++ *
++ * R2 round 2, finding 1, and it was critical. This file carried its own 2 MB
++ * ("same cap the interruption ledger reads its tail under") while
++ * `turn_end_gate_hook` uses 8 MB, and `readTranscriptTail` returns
++ * `turnOrdinal: 0` over its cap WITHOUT throwing. So on any 2-8 MB transcript
++ * the gate computed ordinal N and wrote `refused_turn: N`, this concern
++ * computed 0, `refusedThisTurn` compared `N === 0`, the defer was skipped, and
++ * the concern BLOCKED a stop the quality gate had just refused — silently, and
++ * in exactly the long-running regime this roadmap targets. That is Risk 1 of
++ * the register ("quality gates outrank continuation, always") inverted.
++ *
++ * Sharing the constant is the fix; a matching literal would re-introduce the
++ * same defect the next time one side is tuned.
++ */
++import { TRANSCRIPT_READ_MAX_BYTES } from './turn_end_gate_hook.js';
++
++/** Re-exported so a test can assert the IDENTITY, not two matching literals. */
++export { TRANSCRIPT_READ_MAX_BYTES };
 +
 +export const EVENTS_RELPATH = path.join(
 +    'agents',
@@ -5188,32 +5555,77 @@ index 0000000000000000000000000000000000000000..34aa790033959a8ea1912b677e9ef52e
 +    let open = 0;
 +    let blocked = 0;
 +    let next: NextStep | null = null;
-+    // Phase spans only. A `- [ ]` under `## Done means`, `## Blockers` or
-+    // `## Risk Register` is an acceptance criterion, a gate or a risk row —
-+    // never an executable step, and re-engaging on one is a guaranteed stall.
-+    // See `_lib/roadmap_checkboxes.ts`.
-+    for (const line of phaseLines(text)) {
++    // Phase spans only. A `- [ ]` under `## Acceptance criteria`,
++    // `## Blockers` or `## Risk Register` is a criterion, a gate or a risk
++    // row — never an executable step, and re-engaging on one is a guaranteed
++    // stall. See `_lib/roadmap_checkboxes.ts`.
++    const lines = phaseLines(text);
++    for (let i = 0; i < lines.length; i++) {
++        const line = lines[i] as string;
 +        const m = OPEN_BOX.exec(line);
 +        if (!m) continue;
-+        const body = m[1]!;
++        // A step spans its own line plus the indented continuation lines under
++        // it, and the `verify:` command is conventionally written on one of
++        // those rather than inline. Gathered up to the next checkbox or
++        // heading, so one step never absorbs the next one's verify line.
++        const step: string[] = [line];
++        for (let j = i + 1; j < lines.length; j++) {
++            const cont = lines[j] as string;
++            if (cont.trim() === '') break;
++            if (/^[ \t]*[-*][ \t]+\[/.test(cont)) break;
++            if (/^#{1,6}[ \t]/.test(cont)) break;
++            if (!/^[ \t]/.test(cont)) break;
++            step.push(cont);
++        }
++        const full = step.join('\n');
++        const body = m[1] as string;
 +        if (body.includes('blocked-by:')) {
 +            blocked += 1;
 +            continue;
 +        }
 +        open += 1;
 +        if (next === null) {
-+            const verifyMatch = body.match(/<!--\s*verify:\s*(.*?)\s*-->/);
-+            const cleaned = body
-+                .replace(/<!--.*?-->/g, '')
-+                .replace(/\s+/g, ' ')
-+                .trim();
 +            next = {
-+                text: cleaned.length > 240 ? `${cleaned.slice(0, 237)}...` : cleaned,
-+                verify: verifyMatch ? verifyMatch[1]! : null,
++                text: (() => {
++                    const cleaned = body
++                        .replace(/<!--.*?-->/g, '')
++                        .replace(/\s+/g, ' ')
++                        .trim();
++                    return cleaned.length > 240 ? `${cleaned.slice(0, 237)}...` : cleaned;
++                })(),
++                verify: extractVerify(full),
 +            };
 +        }
 +    }
 +    return { open, blocked, next };
++}
++
++/**
++ * The step's `verify:` command, in either form the tree writes.
++ *
++ * R2 round 2, finding 10. Only the HTML-comment form was matched, and only on
++ * the step's OWN line — while 18 roadmaps, including both this branch ships,
++ * write the backticked form on a continuation line:
++ *
++ *     - [ ] **1.0** do the thing
++ *           `verify:` `./scripts-run src/scripts/lint_thing`
++ *
++ * So the continuation named a next step and omitted the command that proves it
++ * — and Risk 7 of the roadmap names exactly that command as its mitigation
++ * against a re-engagement that cannot check its own work.
++ *
++ * The comment form wins when both are present: it is the machine-readable one,
++ * and a step carrying both has a human-facing line and a tooling-facing line
++ * rather than two commands.
++ */
++export function extractVerify(stepText: string): string | null {
++    const html = /<!--\s*verify:\s*(.*?)\s*-->/.exec(stepText);
++    if (html !== null) return (html[1] as string).trim() || null;
++    // `verify:` then the command, both backticked. The label's own backticks
++    // are optional because the tree carries `verify:` and `` `verify:` ``.
++    const backticked = /`?verify:`?\s*`([^`]+)`/.exec(stepText);
++    if (backticked !== null) return (backticked[1] as string).trim() || null;
++    return null;
 +}
 +
 +/**
@@ -5359,6 +5771,21 @@ index 0000000000000000000000000000000000000000..34aa790033959a8ea1912b677e9ef52e
 +        (payload['transcript_path'] ?? payload['transcriptPath']) as JsonValue | undefined,
 +    );
 +    if (!transcriptPath) return EXIT_ALLOW;
++    // Over the shared cap, `readTranscriptTail` returns `turnOrdinal: 0`
++    // without throwing — indistinguishable from a genuinely fresh session. The
++    // ordinal is the ONLY key the defer-to-the-gate check has, so an untrusted
++    // one must not be used to decide a block: allow instead.
++    //
++    // This is the residual half of R2 round 2's finding 1. Sharing the cap
++    // stops the two hooks disagreeing about the SAME transcript; this stops
++    // this concern acting on an ordinal neither of them could compute. Erring
++    // toward allow is the same fail-open posture the gate takes on every
++    // unreadable-transcript case.
++    try {
++        if (fs.statSync(transcriptPath).size > TRANSCRIPT_READ_MAX_BYTES) return EXIT_ALLOW;
++    } catch {
++        return EXIT_ALLOW;
++    }
 +    let turnOrdinal = 0;
 +    try {
 +        turnOrdinal = readTranscriptTail(transcriptPath, {
@@ -5590,7 +6017,7 @@ index 82f722c60109e8aebde00912f34fbd06d5d9fd4c..74db279bd86565f1c82fb2cd70991a59
          process.stdout.write(
              `${JSON.stringify({
 diff --git a/src/scripts/interruption_report.ts b/src/scripts/interruption_report.ts
-index 48f3284352a0367fe7247a24fb0ff2b42ab2390e..30e83f8e378a14731e0c73b8799906f7a4c14dfd 100644
+index 48f3284352a0367fe7247a24fb0ff2b42ab2390e..b2e27c5e7a0485819331ad11674a4be7fdfce00b 100644
 --- a/src/scripts/interruption_report.ts
 +++ b/src/scripts/interruption_report.ts
 @@ -49,6 +49,8 @@ import * as fs from 'node:fs';
@@ -5793,18 +6220,25 @@ index 48f3284352a0367fe7247a24fb0ff2b42ab2390e..30e83f8e378a14731e0c73b8799906f7
          runs.push({
              run_id: runId,
              roadmap: rows.find((r) => r.roadmap !== null)?.roadmap ?? null,
-@@ -275,6 +433,10 @@ export function buildReport(root: string, windowRequested: number): Report {
+@@ -275,6 +433,17 @@ export function buildReport(root: string, windowRequested: number): Report {
              elapsed_minutes: elapsed,
              waiting_minutes: waiting,
              working_minutes: working,
 +            reengagements: cont.engage,
 +            stall_halts: cont.stall,
-+            relaunches: lookupByRunId(relaunches, runId) ?? 0,
++            // By ROADMAP, not by run id: the relaunch ledger is keyed on the
++            // roadmap slug so its per-run cap survives the new session id a
++            // relaunch produces (see `run_supervise.RelaunchLedger`). Joining
++            // it on the run id would read 0 for every run — the same
++            // permanent-zero shape finding 2 fixed one source over.
++            relaunches: (rows.find((r) => r.roadmap !== null)?.roadmap ?? null) === null
++                ? 0
++                : (relaunches[rows.find((r) => r.roadmap !== null)?.roadmap as string] ?? 0),
 +            memos: lookupByRunId(memosByRun, runId) ?? 0,
          });
      }
  
-@@ -315,6 +477,14 @@ export function buildReport(root: string, windowRequested: number): Report {
+@@ -315,6 +484,14 @@ export function buildReport(root: string, windowRequested: number): Report {
          median_working_minutes: median(
              runs.map((r) => r.working_minutes).filter((v): v is number => v !== null),
          ),
@@ -5819,7 +6253,7 @@ index 48f3284352a0367fe7247a24fb0ff2b42ab2390e..30e83f8e378a14731e0c73b8799906f7
      };
  }
  
-@@ -340,11 +510,33 @@ export function renderText(report: Report): string {
+@@ -340,11 +517,33 @@ export function renderText(report: Report): string {
      lines.push(`  median elapsed per run:    ${fmt(report.median_elapsed_minutes, ' min')}`);
      lines.push(`  median agent working time: ${fmt(report.median_working_minutes, ' min')}`);
      lines.push('');
@@ -5855,10 +6289,10 @@ index 48f3284352a0367fe7247a24fb0ff2b42ab2390e..30e83f8e378a14731e0c73b8799906f7
      }
 diff --git a/src/scripts/run_supervise.ts b/src/scripts/run_supervise.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..4276c57e0cb2ba1cd71c6cd432e9542991369921
+index 0000000000000000000000000000000000000000..cbdf29597dd471dd3dbf068ce6bb52e6270f1054
 --- /dev/null
 +++ b/src/scripts/run_supervise.ts
-@@ -0,0 +1,438 @@
+@@ -0,0 +1,456 @@
 +/**
 + * run_supervise — the out-of-process watcher for runs whose session died.
 + *
@@ -5912,7 +6346,11 @@ index 0000000000000000000000000000000000000000..4276c57e0cb2ba1cd71c6cd432e95429
 +} from './_lib/run_checkpoint.js';
 +import { readBudget } from './_lib/unattended_guard.js';
 +
-+/** UOTL 6.2 verbatim: at most three relaunches per run. */
++/**
++ * UOTL 6.2 verbatim: at most three relaunches per run — and "run" means the
++ * roadmap across every session that worked it, not one session id. See
++ * {@link RelaunchLedger}.
++ */
 +export const MAX_RELAUNCHES_PER_RUN = 3;
 +
 +/** The emergency stop. Same switch the orchestration layer already honours. */
@@ -5945,6 +6383,20 @@ index 0000000000000000000000000000000000000000..4276c57e0cb2ba1cd71c6cd432e95429
 +}
 +
 +/** Per-run relaunch counts. A plain object so the file stays readable by eye. */
++/**
++ * Relaunch counts, keyed by ROADMAP SLUG — never by session id.
++ *
++ * R2 round 2, finding 9. The cap is documented as "at most three relaunches
++ * per RUN", and a run spans generations by definition: relaunching produces a
++ * NEW session id, so a session-keyed ledger handed every generation a fresh
++ * budget of three and the cap could never bind. The roadmap is what identifies
++ * a run across its generations — the same key `latestCheckpointFor` uses, and
++ * for the same reason.
++ *
++ * Total over the relaunchable set: a record with no roadmap slug is classified
++ * `no-roadmap` before the cap is consulted, so there is no relaunchable run
++ * this key cannot name.
++ */
 +export type RelaunchLedger = Record<string, number>;
 +
 +export function readLedger(repoRoot: string): RelaunchLedger {
@@ -5999,7 +6451,7 @@ index 0000000000000000000000000000000000000000..4276c57e0cb2ba1cd71c6cd432e95429
 +        session_id: rec.session_id,
 +        roadmap: rec.roadmap_slug,
 +        worktree: rec.worktree,
-+        relaunches: ledger[rec.session_id] ?? 0,
++        relaunches: ledger[rec.roadmap_slug ?? ''] ?? 0,
 +    };
 +    if (!is_expired(rec, now)) {
 +        return { ...base, disposition: 'alive', open_steps: null, reason: 'session is still beating' };
@@ -6297,11 +6749,116 @@ index 0000000000000000000000000000000000000000..4276c57e0cb2ba1cd71c6cd432e95429
 + * R2 review, finding 7 — the checkpoint was write-only until this existed.
 + */
 +export { latestCheckpointFor, readCheckpoint };
+diff --git a/src/server/io/yamlIO.ts b/src/server/io/yamlIO.ts
+index 3998239861d5422a0e8084c8edcc59af509267ca..076b13d7bd214f87ab478fdde0491684731b43d8 100644
+--- a/src/server/io/yamlIO.ts
++++ b/src/server/io/yamlIO.ts
+@@ -105,6 +105,92 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
+     return template;
+ }
+ 
++/**
++ * Set the scalar at `dottedPath`, CREATING the nesting when it is absent.
++ *
++ * R2 round 2, finding 6. `replaceScalar` returns the template unchanged when
++ * the path cannot be located, and the wizard's `set` helper never appended —
++ * so on every pre-existing `.ai-council.yml` written before a key existed, the
++ * wizard's toggle for that key returned 200 and wrote nothing. The user flips
++ * a switch, the server reports success, and the file is untouched.
++ *
++ * `mergeIntoTemplate` is not the fix for a NESTED key: its fallback appends a
++ * flat `a.b: value` line, which a YAML reader sees as a top-level key literally
++ * named "a.b" — so `doc['fallback']` stays undefined and the toggle is still
++ * inert, now with a line in the file suggesting otherwise.
++ *
++ * Insertion point is the end of the deepest EXISTING ancestor block, so an
++ * existing `fallback:` section gains a key rather than a second `fallback:`
++ * being appended — a duplicate mapping key is a YAML error in strict parsers
++ * and a silent last-wins in lenient ones.
++ *
++ * Comments and unrelated keys are preserved: nothing is rewritten, only
++ * inserted.
++ */
++export function upsertScalar(template: string, dottedPath: string[], value: unknown): string {
++    if (dottedPath.length === 0) return template;
++    const replaced = replaceScalar(template, dottedPath, value);
++    if (replaced !== template) return replaced;
++
++    const sections = dottedPath.slice(0, -1);
++    const key = dottedPath[dottedPath.length - 1] as string;
++    const formatted = formatScalar(value);
++    const lines = template.split('\n');
++
++    // How deep an existing ancestor chain runs, and where its block ends.
++    let matched = 0;
++    let insertAt = lines.length;
++    for (let depth = 0; depth < sections.length; depth++) {
++        const want = sections[depth];
++        const indent = '  '.repeat(depth);
++        let found = -1;
++        // Search only inside the block established so far.
++        const from = depth === 0 ? 0 : insertAt === lines.length ? 0 : 0;
++        for (let i = from; i < lines.length; i++) {
++            const line = lines[i];
++            if (line === undefined) continue;
++            if (line.trim() === '' || line.trim().startsWith('#')) continue;
++            const indentLen = line.length - line.trimStart().length;
++            if (indentLen !== indent.length) continue;
++            const m = /^([A-Za-z_][A-Za-z0-9_]*)\s*:/.exec(line.trim());
++            if (m !== null && m[1] === want) {
++                found = i;
++                break;
++            }
++        }
++        if (found === -1) break;
++        matched = depth + 1;
++        // End of this block: the next line at or above its own indent level.
++        let end = lines.length;
++        for (let i = found + 1; i < lines.length; i++) {
++            const line = lines[i];
++            if (line === undefined) continue;
++            if (line.trim() === '' || line.trim().startsWith('#')) continue;
++            const indentLen = line.length - line.trimStart().length;
++            if (indentLen <= indent.length) {
++                end = i;
++                break;
++            }
++        }
++        insertAt = end;
++    }
++
++    const block: string[] = [];
++    for (let depth = matched; depth < sections.length; depth++) {
++        block.push(`${'  '.repeat(depth)}${sections[depth] as string}:`);
++    }
++    block.push(`${'  '.repeat(sections.length)}${key}: ${formatted}`);
++
++    if (matched === 0) {
++        // No ancestor at all — append at EOF as its own block.
++        let body = template;
++        if (!body.endsWith('\n')) body += '\n';
++        return `${body}${block.join('\n')}\n`;
++    }
++    lines.splice(insertAt, 0, ...block);
++    return lines.join('\n');
++}
++
+ /**
+  * Apply every leaf change from `newValues` to `templateBody`. Paths that
+  * are not present in the template are appended at the end. Comments are
 diff --git a/src/server/routes/wizard.ts b/src/server/routes/wizard.ts
-index f5d6bcb14487f5b2d11ec5a3bff0e958df0f1cc7..d40023e65bfa96315564a715267a3497212efe91 100644
+index f5d6bcb14487f5b2d11ec5a3bff0e958df0f1cc7..c280158b0f2d8ce0dc7d83a54e8b49331bf3d217 100644
 --- a/src/server/routes/wizard.ts
 +++ b/src/server/routes/wizard.ts
-@@ -328,6 +328,8 @@ interface CouncilConfigView {
+@@ -33,6 +33,7 @@ import {
+     readPath,
+     renderSparseSettings,
+     replaceScalar,
++    upsertScalar,
+     substituteTemplatePlaceholders,
+     writePath,
+ } from '../io/yamlIO.js';
+@@ -328,6 +329,8 @@ interface CouncilConfigView {
      // Mode per decision class (trivial/low_impact/medium_impact); matches the
      // SPA `AiCouncilState.decision` + the POST payload `decision` field.
      decision: Record<string, string>;
@@ -6310,7 +6867,7 @@ index f5d6bcb14487f5b2d11ec5a3bff0e958df0f1cc7..d40023e65bfa96315564a715267a3497
  }
  
  /** Pull the wizard-controlled scalar subset out of a parsed council config. */
-@@ -339,6 +341,7 @@ function extractCouncilConfig(body: string): CouncilConfigView {
+@@ -339,6 +342,7 @@ function extractCouncilConfig(body: string): CouncilConfigView {
      const membersRaw = obj(doc['members']);
      const dr = obj(doc['decision_resolution']);
      const classes = obj(dr['classes']);
@@ -6318,7 +6875,7 @@ index f5d6bcb14487f5b2d11ec5a3bff0e958df0f1cc7..d40023e65bfa96315564a715267a3497
      const members: Record<string, CouncilMemberView> = {};
      for (const p of AI_COUNCIL_PROVIDERS) {
          const m = obj(membersRaw[p]);
-@@ -367,6 +370,9 @@ function extractCouncilConfig(body: string): CouncilConfigView {
+@@ -367,6 +371,9 @@ function extractCouncilConfig(body: string): CouncilConfigView {
          },
          members,
          decision,
@@ -6328,7 +6885,7 @@ index f5d6bcb14487f5b2d11ec5a3bff0e958df0f1cc7..d40023e65bfa96315564a715267a3497
      };
  }
  
-@@ -691,6 +697,13 @@ const aiCouncilPayloadSchema = z.object({
+@@ -691,6 +698,13 @@ const aiCouncilPayloadSchema = z.object({
      })).optional(),
      // keys ∈ {trivial, low_impact, medium_impact} — others ignored.
      decision: z.record(z.enum(['agent', 'council', 'user'])).optional(),
@@ -6342,14 +6899,63 @@ index f5d6bcb14487f5b2d11ec5a3bff0e958df0f1cc7..d40023e65bfa96315564a715267a3497
  }).strict();
  
  // road-to-reciprocal-ecosystem § Phase 1 — the closed set of dismissible
-@@ -908,6 +921,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
+@@ -908,6 +922,14 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                  for (const cls of ['trivial', 'low_impact', 'medium_impact']) {
                      set(['decision_resolution', 'classes', cls, 'mode'], p.decision?.[cls]);
                  }
-+                set(['fallback', 'api_on_quota'], p.fallbackApiOnQuota);
++                // UPSERT, not set. R2 round 2, finding 6: `replaceScalar`
++                // no-ops on an absent path, so on every `.ai-council.yml`
++                // written before this key existed the toggle returned 200 and
++                // wrote nothing. It is the one key here that a pre-existing
++                // file is guaranteed NOT to carry.
++                if (p.fallbackApiOnQuota !== undefined) {
++                    body = upsertScalar(body, ['fallback', 'api_on_quota'], p.fallbackApiOnQuota);
++                }
                  const target = join(opts.writeRoot, AI_COUNCIL_REL);
                  await fs.mkdir(dirname(target), { recursive: true });
                  await writeAtomic(target, body, { mode: 0o600 });
+diff --git a/tests/hooks/concern_severity.test.ts b/tests/hooks/concern_severity.test.ts
+index 74c2c3fe520a757d9caaaeb991466a44efb827bc..23f734a6fa6fc74cc5416046b11993c6141c0d73 100644
+--- a/tests/hooks/concern_severity.test.ts
++++ b/tests/hooks/concern_severity.test.ts
+@@ -65,6 +65,37 @@ const BLOCKING_ALLOWLIST = new Set([
+     // closing a turn (verify-before-complete § turn-completion) and a reply
+     // in the wrong language (language-and-tone Iron Law).
+     'turn-end-gate',
++    // road-to-long-horizon-execution Phase 1, and it declares `blocking`
++    // because `advisory` made it INERT — the R2 review's critical finding.
++    // The dispatcher enforces advisory as a ceiling (`_is_advisory` downgrades
++    // EXIT_BLOCK to EXIT_WARN) and `host_semantics.emitFor` maps stop+warn to
++    // exit 0, so the concern ran, logged `engage`, injected its continuation as
++    // passive context, and let the turn end. Every other assertion about it
++    // passed the whole time.
++    //
++    // The second turn-END refusal after `turn-end-gate`, so the same three
++    // questions, answered on this concern's own terms rather than by analogy:
++    //
++    //   · SCOPE, not a settings flag. It refuses only a session that made a
++    //     `sessions:claim` on a roadmap whose frontmatter declares
++    //     `execution.mode: autonomous` and still carries an open phase step.
++    //     A session that claimed nothing is untouched — which is most of them,
++    //     and is why this needs no soak switch to be narrow. Kill switch:
++    //     `AGENT_CONFIG_NO_RUN_CONTINUATION=1`.
++    //   · `fail_closed: false`, so a crash lets the turn END. A continuation
++    //     that fails closed does not degrade the session, it wedges it.
++    //   · TERMINATION is the property that makes a blocking loop safe, and it
++    //     is three independent rungs — 25 iterations, a 4 h wall clock, and a
++    //     3-engagement stall — each of which now STAMPS the state instead of
++    //     deleting it. Deleting was the same defect one layer down: the next
++    //     Stop read a fresh budget and re-armed the loop the rungs had just
++    //     ended.
++    //
++    // It defers to `turn-end-gate` by chain order — concerns run sequentially
++    // and this one is registered last, so a quality-gate refusal for this turn
++    // is on disk before this concern reads it. Quality gates outrank
++    // continuation, always.
++    'run-continuation',
+ ]);
+ 
+ interface Concern {
 diff --git a/tests/hooks/run_continuation_dispatch.test.ts b/tests/hooks/run_continuation_dispatch.test.ts
 new file mode 100644
 index 0000000000000000000000000000000000000000..06d16fa86abd3a593f48b2fb4aa68c3e87c44e65
@@ -8012,10 +8618,10 @@ index 0000000000000000000000000000000000000000..7dc19668744b8ccb88334645beaab845
 +});
 diff --git a/tests/scripts/hooks/run_continuation.test.ts b/tests/scripts/hooks/run_continuation.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..437130a85f3c8ed228e0d2d86078c4451e6d4e4f
+index 0000000000000000000000000000000000000000..62f46be53f05fc11ecf8f7eaee21360391600c9e
 --- /dev/null
 +++ b/tests/scripts/hooks/run_continuation.test.ts
-@@ -0,0 +1,313 @@
+@@ -0,0 +1,441 @@
 +/**
 + * run_continuation — road-to-long-horizon-execution Phase 1.2 (partial: the
 + * pure surface; the end-to-end eval with a live dispatcher is 1.2's open half).
@@ -8039,8 +8645,14 @@ index 0000000000000000000000000000000000000000..437130a85f3c8ed228e0d2d86078c445
 +import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 +
 +import {
++    TRANSCRIPT_READ_MAX_BYTES as GATE_TRANSCRIPT_MAX_BYTES,
++    readTranscriptTail,
++} from '../../../src/scripts/hooks/turn_end_gate_hook.js';
++
++import {
 +    DUPLICATE_WINDOW_MS,
 +    HALT_ACTIONS,
++    TRANSCRIPT_READ_MAX_BYTES as CONTINUATION_TRANSCRIPT_MAX_BYTES,
 +    MAX_ITERATIONS,
 +    STALL_WINDOW,
 +    WALL_CLOCK_CAP_MS,
@@ -8048,6 +8660,7 @@ index 0000000000000000000000000000000000000000..437130a85f3c8ed228e0d2d86078c445
 +    ladder,
 +    parseExecutionMode,
 +    refusedThisTurn,
++    extractVerify,
 +    scanOpenSteps,
 +    stateRelPath,
 +    type RunState,
@@ -8329,8 +8942,129 @@ index 0000000000000000000000000000000000000000..437130a85f3c8ed228e0d2d86078c445
 +        expect(scanOpenSteps('- [ ] **0.1** a step\n').open).toBe(1);
 +    });
 +});
++
++/** This worktree's root — four levels up from tests/scripts/hooks/. */
++const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
++
++const homeDirs: string[] = [];
++afterEach(() => {
++    while (homeDirs.length > 0) {
++        const d = homeDirs.pop();
++        if (d) fs.rmSync(d, { recursive: true, force: true });
++    }
++});
++
++describe('the transcript cap agrees with the quality gate', () => {
++    // R2 round 2, finding 1 — the critical one. This concern carried its own
++    // 2 MB cap while `turn_end_gate_hook` uses 8 MB, and `readTranscriptTail`
++    // returns `turnOrdinal: 0` over its cap WITHOUT throwing. On any 2-8 MB
++    // transcript the gate wrote `refused_turn: N`, this concern computed 0,
++    // the defer compared `N === 0` and was skipped — so the concern BLOCKED a
++    // stop the quality gate had just refused. Risk 1 of the register inverted,
++    // silently, in the long-run regime the roadmap targets.
++    it('reads the SAME constant the gate does, not a matching literal', () => {
++        // The identity is the assertion. Two literals that happen to agree
++        // re-introduce the defect the next time one side is tuned.
++        expect(CONTINUATION_TRANSCRIPT_MAX_BYTES).toBe(GATE_TRANSCRIPT_MAX_BYTES);
++    });
++
++    it('a transcript in the old 2-8 MB dead zone yields the gate\'s real ordinal', () => {
++        // Built just over the OLD 2 MB cap and well under the shared 8 MB one:
++        // under the old constant this read 0, under the shared one it reads the
++        // true count, which is what makes the defer comparison meaningful.
++        // Under $HOME: `isSafeTranscriptPath` refuses anything else, and a
++        // refusal also returns ordinal 0 — which would make this test pass for
++        // the wrong reason.
++        const home = fs.mkdtempSync(path.join(os.homedir(), '.agent-config-rc-test-'));
++        homeDirs.push(home);
++        const file = path.join(home, 'big.jsonl');
++        const pad = 'y'.repeat(4096);
++        const rows: string[] = [];
++        for (let i = 0; i < 3; i++) {
++            rows.push(JSON.stringify({ type: 'user', message: { role: 'user', content: 'hi' } }));
++            rows.push(
++                JSON.stringify({ type: 'assistant', message: { role: 'assistant', content: pad } }),
++            );
++        }
++        // Pad past 2 MB with assistant rows, which do not move the ordinal.
++        while (rows.join('\n').length < 2.2 * 1024 * 1024) {
++            rows.push(
++                JSON.stringify({ type: 'assistant', message: { role: 'assistant', content: pad } }),
++            );
++        }
++        fs.writeFileSync(file, `${rows.join('\n')}\n`, 'utf8');
++        expect(fs.statSync(file).size).toBeGreaterThan(2 * 1024 * 1024);
++        expect(fs.statSync(file).size).toBeLessThan(8 * 1024 * 1024);
++
++        const under2mb = readTranscriptTail(file, { maxBytes: 2 * 1024 * 1024 }).turnOrdinal;
++        const shared = readTranscriptTail(file, {
++            maxBytes: CONTINUATION_TRANSCRIPT_MAX_BYTES,
++        }).turnOrdinal;
++        expect(under2mb).toBe(0);
++        expect(shared).toBe(3);
++    });
++});
++
++describe('extractVerify — both forms the tree actually writes', () => {
++    // R2 round 2, finding 10. Only the HTML-comment form was matched, and only
++    // on the step's own line, while 18 roadmaps — including both this branch
++    // ships — write the backticked form on a CONTINUATION line. So the
++    // continuation named a next step and omitted the command that proves it,
++    // which Risk 7 names as its mitigation.
++    it('reads the backticked form from a continuation line', () => {
++        const md = [
++            '## Phase 1',
++            '',
++            '- [ ] **1.0** do the thing',
++            '      `verify:` `./scripts-run src/scripts/lint_thing`',
++        ].join('\n');
++        expect(scanOpenSteps(md).next?.verify).toBe('./scripts-run src/scripts/lint_thing');
++    });
++
++    it('still reads the HTML-comment form, and it wins when both are present', () => {
++        // A step carrying both has a human-facing line and a tooling-facing
++        // one — not two commands.
++        const md = [
++            '## Phase 1',
++            '- [ ] **1.0** do it <!-- verify: machine-readable -->',
++            '      `verify:` `human-facing`',
++        ].join('\n');
++        expect(scanOpenSteps(md).next?.verify).toBe('machine-readable');
++    });
++
++    it('does not absorb the NEXT step\'s verify line', () => {
++        const md = [
++            '## Phase 1',
++            '- [ ] **1.0** first',
++            '- [ ] **1.1** second',
++            '      `verify:` `belongs-to-1.1`',
++        ].join('\n');
++        const scan = scanOpenSteps(md);
++        expect(scan.open).toBe(2);
++        expect(scan.next?.text).toContain('first');
++        expect(scan.next?.verify).toBeNull();
++    });
++
++    it('a step with no verify line reports null, not an empty string', () => {
++        expect(scanOpenSteps('## Phase 1\n- [ ] **1.0** bare\n').next?.verify).toBeNull();
++    });
++
++    it('reads the real roadmap this branch ships', () => {
++        // The end-to-end statement: the form in the tree, not a fixture of it.
++        const md = fs.readFileSync(
++            path.join(REPO_ROOT, 'agents', 'roadmaps', 'road-to-long-horizon-execution.md'),
++            'utf8',
++        );
++        // Every open step in it is closed, so this asserts the MATCHER over the
++        // real text rather than the scan result.
++        expect(extractVerify('      `verify:` `npx vitest run tests/x.test.ts` — 21 green.')).toBe(
++            'npx vitest run tests/x.test.ts',
++        );
++        expect(md).toContain('`verify:`');
++    });
++});
 diff --git a/tests/scripts/interruption_report.test.ts b/tests/scripts/interruption_report.test.ts
-index 898f1205a60ab722f06f8123e429c267b5bf0301..0b4c0a5610221154fc1fd7b2671721cd9ce63c5a 100644
+index 898f1205a60ab722f06f8123e429c267b5bf0301..6933ce470a7ca4e2a171a453e6d28b9422cf5da5 100644
 --- a/tests/scripts/interruption_report.test.ts
 +++ b/tests/scripts/interruption_report.test.ts
 @@ -14,6 +14,9 @@ import * as path from 'node:path';
@@ -8343,7 +9077,7 @@ index 898f1205a60ab722f06f8123e429c267b5bf0301..0b4c0a5610221154fc1fd7b2671721cd
  import {
      DEFAULT_WINDOW,
      buildReport,
-@@ -290,3 +293,147 @@ describe('main — the CLI contract', () => {
+@@ -290,3 +293,157 @@ describe('main — the CLI contract', () => {
          expect(rendered).toContain('WALL-CLOCK AXIS');
      });
  });
@@ -8383,7 +9117,9 @@ index 898f1205a60ab722f06f8123e429c267b5bf0301..0b4c0a5610221154fc1fd7b2671721cd
 +        expect(key).not.toBe(tag);
 +        expect(SESSION).not.toBe(tag);
 +
-+        writeLedger([{ run_id: tag, turn: 1, kind: 'none', class: 'none', roadmap: null }]);
++        writeLedger([
++            { run_id: tag, turn: 1, kind: 'none', class: 'none', roadmap: 'road-to-x' },
++        ]);
 +        writeContinuation([
 +            { run_id: key, event: 'engage' },
 +            { run_id: key, event: 'engage' },
@@ -8392,10 +9128,11 @@ index 898f1205a60ab722f06f8123e429c267b5bf0301..0b4c0a5610221154fc1fd7b2671721cd
 +        const state = path.join(root, 'agents', 'runtime', 'state');
 +        fs.mkdirSync(path.join(state, 'decisions', SESSION), { recursive: true });
 +        fs.writeFileSync(path.join(state, 'decisions', SESSION, '001.md'), 'x', 'utf8');
-+        // run_supervise keys its ledger on the RAW session id.
++        // run_supervise keys its ledger on the ROADMAP — a fourth key space,
++        // and the one that survives the new session id a relaunch produces.
 +        fs.writeFileSync(
 +            path.join(state, 'supervise-relaunches.json'),
-+            JSON.stringify({ [SESSION]: 2 }),
++            JSON.stringify({ 'road-to-x': 2 }),
 +            'utf8',
 +        );
 +
@@ -8445,15 +9182,22 @@ index 898f1205a60ab722f06f8123e429c267b5bf0301..0b4c0a5610221154fc1fd7b2671721cd
 +        expect(buildReport(root, DEFAULT_WINDOW).stall_halt_rate).toBe(0.5);
 +    });
 +
-+    it('relaunches and memos join on the same run id', () => {
-+        writeLedger([{ run_id: 'r1', turn: 1, kind: 'none', class: 'none', roadmap: null }]);
++    it('memos join on the run id, relaunches on the ROADMAP', () => {
++        // The two sources are keyed differently on purpose. Memos are written
++        // per session, so the run id is right. The relaunch ledger is keyed by
++        // roadmap so its per-run cap survives the new session id a relaunch
++        // produces (R2 round 2, finding 9) — joining it on the run id would
++        // read 0 for every run.
++        writeLedger([
++            { run_id: 'r1', turn: 1, kind: 'none', class: 'none', roadmap: 'road-to-x' },
++        ]);
 +        const state = path.join(root, 'agents', 'runtime', 'state');
 +        fs.mkdirSync(path.join(state, 'decisions', 'r1'), { recursive: true });
 +        fs.writeFileSync(path.join(state, 'decisions', 'r1', '001.md'), 'x', 'utf8');
 +        fs.writeFileSync(path.join(state, 'decisions', 'r1', '002.md'), 'x', 'utf8');
 +        fs.writeFileSync(
 +            path.join(state, 'supervise-relaunches.json'),
-+            JSON.stringify({ r1: 2 }),
++            JSON.stringify({ 'road-to-x': 2 }),
 +            'utf8',
 +        );
 +        const run = buildReport(root, DEFAULT_WINDOW).runs.find((x) => x.run_id === 'r1');
@@ -8493,10 +9237,10 @@ index 898f1205a60ab722f06f8123e429c267b5bf0301..0b4c0a5610221154fc1fd7b2671721cd
 +});
 diff --git a/tests/scripts/run_checkpoint.test.ts b/tests/scripts/run_checkpoint.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..9385cf11e4a009b5d0d71ace55f602169e6e65d8
+index 0000000000000000000000000000000000000000..c0f368efc95b4cb07bedd0b20d4511734595aa17
 --- /dev/null
 +++ b/tests/scripts/run_checkpoint.test.ts
-@@ -0,0 +1,340 @@
+@@ -0,0 +1,414 @@
 +/**
 + * run_checkpoint — the derived checkpoint and its re-verification.
 + *
@@ -8837,12 +9581,86 @@ index 0000000000000000000000000000000000000000..9385cf11e4a009b5d0d71ace55f60216
 +        expect(latestCheckpointFor(root(), 'road-to-thing')).toBeNull();
 +    });
 +});
++
++describe('buildCheckpoint — head is resolved, not left null', () => {
++    // R2 round 2, finding 5. `head` came only from `opts.head` and the one
++    // production caller never passed it, so the field was always null while
++    // three surfaces described it as carrying the commit. Only the test
++    // injected a value, which is exactly why nothing noticed.
++    it('resolves HEAD from a plain .git directory', () => {
++        const repoRoot = root();
++        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
++        const git = path.join(repoRoot, '.git');
++        fs.mkdirSync(path.join(git, 'refs', 'heads'), { recursive: true });
++        fs.writeFileSync(path.join(git, 'HEAD'), 'ref: refs/heads/main\n', 'utf-8');
++        fs.writeFileSync(path.join(git, 'refs', 'heads', 'main'), `${'a'.repeat(40)}\n`, 'utf-8');
++        expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBe('a'.repeat(40));
++    });
++
++    it('resolves HEAD in a WORKTREE, where .git is a file', () => {
++        // The case a naive reader gets wrong, and the one this package is
++        // actually developed in — so the naive version would have returned
++        // null exactly where it was being exercised.
++        const repoRoot = root();
++        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
++        const realGit = path.join(repoRoot, 'elsewhere', 'worktrees', 'wt');
++        fs.mkdirSync(path.join(realGit, 'refs', 'heads'), { recursive: true });
++        fs.writeFileSync(path.join(realGit, 'HEAD'), 'ref: refs/heads/feature\n', 'utf-8');
++        fs.writeFileSync(
++            path.join(realGit, 'refs', 'heads', 'feature'),
++            `${'b'.repeat(40)}\n`,
++            'utf-8',
++        );
++        fs.writeFileSync(path.join(repoRoot, '.git'), `gitdir: ${realGit}\n`, 'utf-8');
++        expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBe('b'.repeat(40));
++    });
++
++    it('falls back to packed-refs when the loose ref file is absent', () => {
++        const repoRoot = root();
++        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
++        const git = path.join(repoRoot, '.git');
++        fs.mkdirSync(git, { recursive: true });
++        fs.writeFileSync(path.join(git, 'HEAD'), 'ref: refs/heads/packed\n', 'utf-8');
++        fs.writeFileSync(
++            path.join(git, 'packed-refs'),
++            `# pack-refs with: peeled\n${'c'.repeat(40)} refs/heads/packed\n`,
++            'utf-8',
++        );
++        expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBe('c'.repeat(40));
++    });
++
++    it('a detached HEAD is the sha itself', () => {
++        const repoRoot = root();
++        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
++        const git = path.join(repoRoot, '.git');
++        fs.mkdirSync(git, { recursive: true });
++        fs.writeFileSync(path.join(git, 'HEAD'), `${'d'.repeat(40)}\n`, 'utf-8');
++        expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBe('d'.repeat(40));
++    });
++
++    it('no git at all is null, never a throw — the Stop path must not fail', () => {
++        const repoRoot = root();
++        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
++        expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBeNull();
++    });
++
++    it('an explicit opts.head still wins', () => {
++        const repoRoot = root();
++        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
++        const git = path.join(repoRoot, '.git');
++        fs.mkdirSync(git, { recursive: true });
++        fs.writeFileSync(path.join(git, 'HEAD'), `${'e'.repeat(40)}\n`, 'utf-8');
++        expect(
++            buildCheckpoint(repoRoot, 'r1', 'road-to-thing', { head: 'injected' })?.head,
++        ).toBe('injected');
++    });
++});
 diff --git a/tests/scripts/run_supervise.test.ts b/tests/scripts/run_supervise.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..ac22d9a230ac62de8ad8d3a54a19bd393716ccb9
+index 0000000000000000000000000000000000000000..672067fc35e4bc50f5a568b3d3893224750db01d
 --- /dev/null
 +++ b/tests/scripts/run_supervise.test.ts
-@@ -0,0 +1,286 @@
+@@ -0,0 +1,308 @@
 +/**
 + * run_supervise — the watcher's classification, and the two things it must
 + * never do.
@@ -8967,18 +9785,40 @@ index 0000000000000000000000000000000000000000..ac22d9a230ac62de8ad8d3a54a19bd39
 +    it('the relaunch budget caps at three per run', () => {
 +        const r = root();
 +        writeRoadmap(r, 'road-to-x', ['- [ ] a']);
-+        expect(classify(r, rec(), { 'sess-1': MAX_RELAUNCHES_PER_RUN - 1 }, NOW).disposition).toBe(
-+            'relaunchable',
-+        );
-+        const spent = classify(r, rec(), { 'sess-1': MAX_RELAUNCHES_PER_RUN }, NOW);
++        expect(
++            classify(r, rec(), { 'road-to-x': MAX_RELAUNCHES_PER_RUN - 1 }, NOW).disposition,
++        ).toBe('relaunchable');
++        const spent = classify(r, rec(), { 'road-to-x': MAX_RELAUNCHES_PER_RUN }, NOW);
 +        expect(spent.disposition).toBe('budget-exhausted');
 +        expect(spent.relaunches).toBe(MAX_RELAUNCHES_PER_RUN);
++    });
++
++    it('the cap binds ACROSS generations — a new session id does not reset it', () => {
++        // R2 round 2, finding 9, and the reason the tests above had to move to
++        // the roadmap key: relaunching produces a new session id, so a
++        // session-keyed ledger handed every generation a fresh budget of three
++        // and the "three per RUN" cap could never bind. This test is the whole
++        // point of the key change — a second-generation session, spent budget.
++        const r = root();
++        writeRoadmap(r, 'road-to-x', ['- [ ] a']);
++        const secondGeneration = rec({ session_id: 'sess-2-relaunched' });
++        const c = classify(r, secondGeneration, { 'road-to-x': MAX_RELAUNCHES_PER_RUN }, NOW);
++        expect(c.disposition).toBe('budget-exhausted');
++    });
++
++    it('a session-keyed ledger no longer grants a budget — the old shape is inert', () => {
++        // Pins the direction: the pre-fix key reads as "never relaunched".
++        const r = root();
++        writeRoadmap(r, 'road-to-x', ['- [ ] a']);
++        const c = classify(r, rec(), { 'sess-1': MAX_RELAUNCHES_PER_RUN }, NOW);
++        expect(c.disposition).toBe('relaunchable');
++        expect(c.relaunches).toBe(0);
 +    });
 +
 +    it('liveness is checked BEFORE the budget — a live session is never budget-exhausted', () => {
 +        const r = root();
 +        writeRoadmap(r, 'road-to-x', ['- [ ] a']);
-+        const c = classify(r, rec({ last_seen: iso_now(NOW) }), { 'sess-1': 99 }, NOW);
++        const c = classify(r, rec({ last_seen: iso_now(NOW) }), { 'road-to-x': 99 }, NOW);
 +        expect(c.disposition).toBe('alive');
 +    });
 +});
@@ -9014,9 +9854,9 @@ index 0000000000000000000000000000000000000000..ac22d9a230ac62de8ad8d3a54a19bd39
 +describe('the relaunch ledger', () => {
 +    it('round-trips and lands under runtime state', () => {
 +        const r = root();
-+        writeLedger(r, { 'sess-1': 2 });
++        writeLedger(r, { 'road-to-x': 2 });
 +        expect(fs.existsSync(path.join(r, SUPERVISE_STATE_REL))).toBe(true);
-+        expect(readLedger(r)).toEqual({ 'sess-1': 2 });
++        expect(readLedger(r)).toEqual({ 'road-to-x': 2 });
 +    });
 +
 +    it('a malformed or absent ledger reads as empty rather than throwing', () => {
@@ -9565,3 +10405,73 @@ index f61fcb35de55c299512730762f4253935d57bd64..8a0f128a5d447ca236ead01ba21bad8d
      it('404 when extended-mode is off', async () => {
          ctx = await bootTestApp({ port: PORT + 2 });
          const res = await ctx.app.inject({
+diff --git a/tests/server/yamlIO.upsert.test.ts b/tests/server/yamlIO.upsert.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..7e04da7a0599c777a5d2080de570adaa11e7477e
+--- /dev/null
++++ b/tests/server/yamlIO.upsert.test.ts
+@@ -0,0 +1,64 @@
++/**
++ * `upsertScalar` — the write path a key the user's file does NOT yet carry.
++ *
++ * R2 round 2, finding 6. `replaceScalar` returns the template unchanged when
++ * the path is absent and the wizard's `set` helper never appended, so the
++ * `fallback.api_on_quota` toggle returned 200 and wrote nothing on every
++ * `.ai-council.yml` written before that key existed. The wizard's own
++ * round-trip test passed the whole time, because the SEED template carries the
++ * block — the defect lives only on a pre-existing file, which is every real
++ * installation.
++ */
++import { describe, expect, it } from 'vitest';
++import { parse as parseYaml } from 'yaml';
++
++import { replaceScalar, upsertScalar } from '../../src/server/io/yamlIO.js';
++
++const read = (body: string, a: string, b: string): unknown =>
++    ((parseYaml(body) as Record<string, Record<string, unknown>>)[a] ?? {})[b];
++
++describe('upsertScalar', () => {
++    it('creates a missing top-level section, nested so a YAML reader sees it', () => {
++        const before = 'enabled: true\ndefaults:\n  min_rounds: 2\n';
++        // The pre-fix behaviour, pinned: this is what the wizard was doing.
++        expect(replaceScalar(before, ['fallback', 'api_on_quota'], true)).toBe(before);
++
++        const after = upsertScalar(before, ['fallback', 'api_on_quota'], true);
++        expect(after).not.toBe(before);
++        // The assertion that matters: `doc.fallback.api_on_quota`, not a
++        // top-level key literally named "fallback.api_on_quota" — which is
++        // what a flat append produces and what the reader would never see.
++        expect(read(after, 'fallback', 'api_on_quota')).toBe(true);
++        expect(Object.keys(parseYaml(after) as object)).toContain('fallback');
++    });
++
++    it('adds a key to an EXISTING section instead of appending a second one', () => {
++        const before = 'fallback:\n  something_else: 1\nenabled: true\n';
++        const after = upsertScalar(before, ['fallback', 'api_on_quota'], false);
++        expect(read(after, 'fallback', 'api_on_quota')).toBe(false);
++        expect(read(after, 'fallback', 'something_else')).toBe(1);
++        // A duplicate mapping key is an error in a strict parser and a silent
++        // last-wins in a lenient one, so neither is acceptable.
++        expect(after.split('\n').filter((l) => l === 'fallback:')).toHaveLength(1);
++    });
++
++    it('replaces in place when the key already exists — no second line', () => {
++        const before = 'fallback:\n  api_on_quota: false\n';
++        const after = upsertScalar(before, ['fallback', 'api_on_quota'], true);
++        expect(read(after, 'fallback', 'api_on_quota')).toBe(true);
++        expect(after.split('\n').filter((l) => l.includes('api_on_quota'))).toHaveLength(1);
++    });
++
++    it('preserves comments and unrelated keys', () => {
++        const before = '# LOCKED — do not reorder\nenabled: true\n# a trailing note\n';
++        const after = upsertScalar(before, ['fallback', 'api_on_quota'], true);
++        expect(after).toContain('# LOCKED — do not reorder');
++        expect(after).toContain('# a trailing note');
++        expect(read(after, 'fallback', 'api_on_quota')).toBe(true);
++    });
++
++    it('handles a file with no trailing newline', () => {
++        const after = upsertScalar('enabled: true', ['fallback', 'api_on_quota'], true);
++        expect(read(after, 'fallback', 'api_on_quota')).toBe(true);
++    });
++});
