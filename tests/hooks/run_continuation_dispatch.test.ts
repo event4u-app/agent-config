@@ -40,6 +40,7 @@ import { parse as parseYaml } from 'yaml';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { deriveSessionKey, sessionRefusalFile } from '../../src/scripts/_lib/turn_end_refusals.js';
+import { stateRelPath } from '../../src/scripts/hooks/run_continuation_hook.js';
 import { claim_file, roadmap_claim_rel } from '../../src/scripts/session_register_hook.js';
 import { EVENTS_RELPATH } from '../../src/scripts/hooks/run_continuation_hook.js';
 
@@ -702,6 +703,118 @@ describe('run-continuation — driven through the live dispatcher', () => {
         expect(log.filter((e) => e['event'] === 'halt-stall').length).toBe(0);
         const opens = log.filter((e) => e['event'] === 'engage').map((e) => e['open']);
         expect(opens).toEqual([3, 2, 1]);
+    });
+
+    it('emits halt-roadmap-absent and clears the budget when a DRIVEN run archives its roadmap', () => {
+        // Round 5 finding 2. The archival case was already covered for a run the
+        // concern had never driven — it allows, silently, correctly. The half that
+        // was broken is the one that matters: a run this concern DROVE, which then
+        // completes and `git mv`s its roadmap in the same reply as the last
+        // checkbox, per roadmap-progress-sync.
+        //
+        // Before the fix that fire returned a bare EXIT_ALLOW: no line said the run
+        // had finished, and the state file survived with iterations and started_at
+        // from the finished run — so a later claim by the same session id began with
+        // part of the 25-iteration budget spent and the 4 h clock already running,
+        // which the comment on the complete rung promises will not happen.
+        const { main, worktree, sub } = writeNestedWorktreePair();
+        // Fire once to create state — this run is now DRIVEN.
+        dispatchStop(main, writeTranscript(3), sub);
+        expect(events(main).filter((e) => e['event'] === 'engage').length).toBe(1);
+        const stateFile = path.join(main, stateRelPath(deriveSessionKey(SESSION)));
+        expect(fs.existsSync(stateFile)).toBe(true);
+
+        // Now archive it the way a completing run does, in the SESSION tree only.
+        const live = path.join(worktree, 'agents', 'roadmaps', `${SLUG}.md`);
+        const archive = path.join(worktree, 'agents', 'roadmaps', 'archive');
+        fs.mkdirSync(archive, { recursive: true });
+        fs.renameSync(live, path.join(archive, `${SLUG}.md`));
+
+        const res = dispatchStop(main, writeTranscript(4), sub);
+        expect(res.code).toBe(0);
+        const absent = events(main).filter((e) => e['event'] === 'halt-roadmap-absent');
+        expect(absent.length).toBe(1);
+        expect(absent[0]?.['roadmap']).toBe(SLUG);
+        // The budget is cleared, which is the half no ledger line can substitute for.
+        expect(fs.existsSync(stateFile)).toBe(false);
+    });
+
+    it('does not read a stall off the PREVIOUS source document', () => {
+        // Round 5 findings 1 and 8 together: the reset existed and sat in the wrong
+        // place — inside the engage branch, which runs after `ladder()` and after
+        // the non-engage branch has already returned. So on the ONE fire where the
+        // source changes, the stall test still compared counts from two files.
+        //
+        // The fixture is the reviewer's: the session tree has NO agents/roadmaps at
+        // first, so three fires read the parent copy at a frozen count and build a
+        // full stall window. Then the session tree gains its own copy AT THE SAME
+        // COUNT. With the reset before the ladder, fire 4 engages on a cleared
+        // window; with the reset after it, fire 4 returns halt-stall on the parent's
+        // numbers and declares a working run finished.
+        const { main, worktree, sub } = writeNestedWorktreePair();
+        const wtRoadmaps = path.join(worktree, 'agents', 'roadmaps');
+        fs.rmSync(wtRoadmaps, { recursive: true, force: true });
+        // The parent copy is the only readable one, at a fixed two open steps.
+        for (let i = 0; i < 3; i++) {
+            dispatchStop(main, writeTranscript(3 + i), sub);
+        }
+        const before = events(main).filter((e) => e['event'] === 'engage');
+        expect(before.length).toBe(3);
+        expect(before.every((e) => e['open'] === 2)).toBe(true);
+        expect(before.every((e) => e['roadmap_path'] === path.join(fs.realpathSync(main), 'agents', 'roadmaps', `${SLUG}.md`))).toBe(true);
+
+        // The session tree gains its own copy, at the SAME count — the coincidence
+        // the finding turns on.
+        fs.mkdirSync(wtRoadmaps, { recursive: true });
+        fs.writeFileSync(path.join(wtRoadmaps, `${SLUG}.md`), fixtureRoadmapWithOpen(2), 'utf-8');
+
+        const res = dispatchStop(main, writeTranscript(6), sub);
+        expect(events(main).filter((e) => e['event'] === 'halt-stall').length).toBe(0);
+        expect(res.code).toBe(2);
+        const after = events(main).filter((e) => e['event'] === 'engage');
+        expect(after.length).toBe(4);
+        expect(after[3]?.['roadmap_path']).toBe(
+            path.join(fs.realpathSync(worktree), 'agents', 'roadmaps', `${SLUG}.md`),
+        );
+    });
+
+    it('normalises a claim slug that carries the .md suffix', () => {
+        // Round 5 finding 7: `claim_is_stale` strips a trailing `.md` before
+        // resolving the same string and this did not, so such a claim rendered as
+        // live work in the register while the concern resolved `<slug>.md.md`,
+        // failed the read and allowed every stop.
+        const root = writeWorkspace();
+        fs.writeFileSync(
+            path.join(root, roadmap_claim_rel(SESSION)),
+            JSON.stringify({ slug: `${SLUG}.md`, session_id: SESSION }),
+            'utf-8',
+        );
+        const res = dispatchStop(root, writeTranscript(3));
+        expect(res.code).toBe(2);
+        expect(events(root).filter((e) => e['event'] === 'engage').length).toBe(1);
+    });
+
+    it('accepts a legitimate slug containing a double dot', () => {
+        // Round 5 finding 10: the containment guard tested the CHARACTERS for `..`
+        // rather than the resulting structure, so `road-to-a..b` — a legal filename
+        // — was refused and the concern silently allowed every stop.
+        const root = writeWorkspace();
+        const oddSlug = 'road-to-a..b';
+        fs.writeFileSync(
+            path.join(root, 'agents', 'roadmaps', `${oddSlug}.md`),
+            fixtureRoadmap(),
+            'utf-8',
+        );
+        fs.writeFileSync(
+            path.join(root, roadmap_claim_rel(SESSION)),
+            JSON.stringify({ slug: oddSlug, session_id: SESSION }),
+            'utf-8',
+        );
+        const res = dispatchStop(root, writeTranscript(3));
+        expect(res.code).toBe(2);
+        const engaged = events(root).filter((e) => e['event'] === 'engage');
+        expect(engaged.length).toBe(1);
+        expect(engaged[0]?.['roadmap']).toBe(oddSlug);
     });
 
     it('records the provenance on a non-engage event too — the defer branch', () => {

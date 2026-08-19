@@ -54,7 +54,9 @@
  * Every event this concern writes carries `workspace_root`, `session_root`,
  * `session_cwd`, `git_dir`, `git_common_dir` and `claim_path` — the two-tree
  * provenance, per `provenance()` below — plus `roadmap_path`, the file the
- * open-step count on that same line was read from (round 4 finding 4). Without them the ledger records that an
+ * open-step count on that same line was read from (round 4 finding 4). Seven
+ * fields. The count has been caught wrong in three separate rounds; if you add
+ * one, this line, `provenance()`s heading and the roadmap enumeration all move. Without them the ledger records that an
  * engagement happened but not that it crossed the tree boundary the fix was
  * about, and crossing it is the whole claim. This list is the file's canonical
  * statement of the contract: R2 round 2 finding 4 caught it enumerating four
@@ -197,9 +199,20 @@ export function isDuplicateFire(
     turnOrdinal: number,
     openCount: number,
     nowMs: number,
+    roadmapSource?: string,
 ): boolean {
     if (state === null) return false;
     if (state.last_turn !== turnOrdinal) return false;
+    // Round 5 finding 6: this compared the recorded count against the fresh scan
+    // with no regard for which FILE either came from — the same cross-document
+    // comparison `history_source` exists to stop, in the one place that returns
+    // BLOCK without consuming an iteration or writing a line. A source change with
+    // a coincidentally equal count therefore erased a genuine engagement from the
+    // ledger the acceptance criteria are counted from. A changed source is never a
+    // duplicate fire.
+    if (roadmapSource !== undefined && state.history_source !== roadmapSource) {
+        return false;
+    }
     if (state.history.length === 0 || state.history[state.history.length - 1] !== openCount) {
         return false;
     }
@@ -230,6 +243,14 @@ export type LadderAction =
     | 'halt-stall';
 
 /** The terminal rungs — the set `RunState.halted` may hold. */
+/**
+ * `halt-roadmap-absent` is deliberately NOT in this union and not in
+ * `LadderAction`. It is an event name the caller emits directly when the claimed
+ * roadmap is unreadable from the authoritative tree, and it CLEARS the state
+ * rather than stamping `halted` — widening the union would let `parseRecord`
+ * accept it as a `halted` value, which would mean a run whose budget was cleared
+ * also carried a halt stamp. The two are mutually exclusive by construction.
+ */
 export const HALT_ACTIONS: readonly LadderAction[] = [
     'halt-max-iterations',
     'halt-wall-clock',
@@ -638,15 +659,29 @@ function resolveRoadmap(
     slug: string,
 ): string | null {
     const dirRel = path.join('agents', 'roadmaps');
-    const rel = path.join(dirRel, `${slug}.md`);
-    // `path.join` has already collapsed `..`; the assertion is that what came out
-    // is still inside the roadmaps directory.
+    // The SAME normalisation `claim_is_stale` applies to the same claim string
+    // (round 5 finding 7). Without it a claim whose slug already carries the
+    // suffix rendered as live work in the register while this concern resolved
+    // `<slug>.md.md`, failed the read, and allowed every stop — two functions in
+    // one flow disagreeing about one string.
+    const stem = slug.trim().replace(/\.md$/, '');
+    const rel = path.join(dirRel, `${stem}.md`);
     const norm = path.normalize(rel);
-    if (!norm.startsWith(`${dirRel}${path.sep}`) || norm.includes('..')) return null;
+    // Containment on the STRUCTURE, not on the characters: `path.join` has already
+    // collapsed traversal, so what matters is whether the result is still inside
+    // the roadmaps directory and names a file directly in it. Round 5 finding 10:
+    // a substring test for `..` also rejected a legitimate slug like
+    // `road-to-a..b`, which then silently allowed every stop.
+    if (path.dirname(norm) !== dirRel) return null;
     if (sessionRoot !== workspaceRoot && isDirectory(path.join(sessionRoot, dirRel))) {
         return path.join(sessionRoot, norm);
     }
-    return path.join(workspaceRoot, norm);
+    // Canonical, like every emitted path field (round 5 finding 9). The fallback
+    // branch joined the RAW reader root while `workspace_root` on the same line is
+    // normalised, so under a symlinked ancestor a reader's containment test failed
+    // on a perfectly healthy line — the regression round 2 finding 3 fixed for the
+    // other six fields, reintroduced on the seventh.
+    return path.join(normalizeDir(workspaceRoot), norm);
 }
 
 function isDirectory(p: string): boolean {
@@ -743,13 +778,82 @@ export function main(): number {
         str(payload['cwd'] as JsonValue | undefined),
     );
     const roadmapPath = resolveRoadmap(sessionRoot, workspaceRoot, slug);
-    if (roadmapPath === null) return EXIT_ALLOW;
-    let roadmapText: string;
-    try {
-        roadmapText = fs.readFileSync(roadmapPath, 'utf8');
-    } catch {
-        // A claim naming no readable roadmap is the stale-claim state the
-        // session register already labels; not this concern's problem.
+    const runId = deriveSessionKey(sessionId || 'unknown-session');
+    const stateFile = path.join(workspaceRoot, stateRelPath(runId));
+
+    // Two locals rather than one plus a re-check: `roadmapFile` is only assigned
+    // where the read succeeded, so the guard below narrows BOTH and everything
+    // downstream holds a plain string. The alternative — re-testing `roadmapPath`
+    // after the guard purely for the compiler — would be a branch that cannot be
+    // reached and cannot be tested.
+    let roadmapFile: string | null = null;
+    let roadmapText: string | null = null;
+    if (roadmapPath !== null) {
+        try {
+            roadmapText = fs.readFileSync(roadmapPath, 'utf8');
+            roadmapFile = roadmapPath;
+        } catch {
+            roadmapText = null;
+        }
+    }
+
+    if (roadmapText === null || roadmapFile === null) {
+        // ── the roadmap is not readable from the authoritative tree ──────
+        //
+        // Round 5 findings 2, 5 and 10, which are one shape seen three ways: this
+        // returned a bare `EXIT_ALLOW` and left NOTHING behind.
+        //
+        // Finding 2 is the sharp end. `roadmap-progress-sync` mandates archival in
+        // the same change that closes the last step, so a completing run flips the
+        // last box and `git mv`s the file in one reply. The next fire found it
+        // gone, allowed, and never reached the `complete` rung — so no line said
+        // the run finished, AND `fs.rmSync(stateFile)` never ran. The state file
+        // survived with `iterations` and `started_at` from the finished run, so a
+        // later claim by the same session id began with part of the 25-iteration
+        // budget spent and the 4 h clock already running — exactly what the
+        // comment on that rung promises will not happen.
+        //
+        // A prior state file is the discriminator, and it is a fact rather than a
+        // guess: the state only exists if THIS concern engaged on this roadmap
+        // before, which it only does on an `autonomous` one. So:
+        //
+        //   state present → this run was driven here and its roadmap is gone. Emit
+        //                   the line, clear the budget, allow.
+        //   state absent  → nothing was ever driven. Stay silent, which is the
+        //                   truth rather than a gap: a `phase-checkpoints` claim
+        //                   and a worktree branched before the roadmap landed
+        //                   (finding 5) both land here, and neither is an event.
+        //
+        // What this does NOT claim is to tell archival from never-created. The
+        // filesystem cannot: both are an absent file. The docblock on
+        // `resolveRoadmap` used to assert the archival reading, and finding 5 was
+        // right that it conflated the two — so the reading is now carried by the
+        // state file, which actually knows.
+        const driven = readState(stateFile);
+        if (driven === null) return EXIT_ALLOW;
+        const absenceRoots = provenance(
+            workspaceRoot,
+            claim.path,
+            sessionRoot,
+            str(payload['cwd'] as JsonValue | undefined),
+        );
+        // `null` where a traversal or malformed slug refused to name a file at
+        // all (finding 10): the line still exists, so a refusal is no longer
+        // indistinguishable from the concern never firing.
+        absenceRoots['roadmap_path'] = roadmapPath;
+        appendEvent(workspaceRoot, {
+            event: 'halt-roadmap-absent',
+            run_id: runId,
+            roadmap: slug,
+            iterations: driven.iterations,
+            at: new Date().toISOString(),
+            ...absenceRoots,
+        });
+        try {
+            fs.rmSync(stateFile, { force: true });
+        } catch {
+            /* fail-open — the ledger line is the durable half */
+        }
         return EXIT_ALLOW;
     }
     if (parseExecutionMode(roadmapText) !== 'autonomous') return EXIT_ALLOW;
@@ -783,7 +887,6 @@ export function main(): number {
         return EXIT_ALLOW;
     }
 
-    const runId = deriveSessionKey(sessionId || 'unknown-session');
 
     // The two-tree provenance, carried on every event this run emits. See
     // `provenance()` for the six fields and why none of them is a boolean.
@@ -824,7 +927,7 @@ export function main(): number {
     // whether the count came from the session copy (the fix working) or from the
     // reader's after a fallback (the defect still live) — the exact ambiguity the
     // other six fields exist to remove.
-    roots['roadmap_path'] = roadmapPath;
+    roots['roadmap_path'] = roadmapFile;
 
     // ── defer to the quality gate ────────────────────────────────────
     if (refusedThisTurn(workspaceRoot, sessionId, turnOrdinal)) {
@@ -840,7 +943,6 @@ export function main(): number {
     }
 
     // ── state + duplicate-fire detection ─────────────────────────────
-    const stateFile = path.join(workspaceRoot, stateRelPath(runId));
     const prev = readState(stateFile);
     const state: RunState = prev ?? {
         started_at: new Date().toISOString(),
@@ -856,9 +958,22 @@ export function main(): number {
     // very stop, and an allow on the re-fire would end the reply the block
     // exists to continue. (An earlier draft allowed here — the smoke run
     // caught it ending the run it had re-engaged one event earlier.)
-    if (isDuplicateFire(prev, turnOrdinal, scan.open, Date.now())) {
+    if (isDuplicateFire(prev, turnOrdinal, scan.open, Date.now(), roadmapFile)) {
         process.stderr.write(_continuationText(slug, scan, state.iterations));
         return EXIT_BLOCK;
+    }
+
+    // The source-change reset runs HERE, before the ladder reads the history —
+    // round 5 finding 1. It used to sit inside the engage branch, which is after
+    // `ladder()` and after the non-engage branch returns, so on the ONE fire where
+    // the source document changes the stall test still compared counts from two
+    // different files. Three parent-copy readings at `open: 4` followed by a
+    // session copy that also reads 4 produced `halt-stall` on the parent's numbers
+    // and declared a working run finished — the precise failure the field's own
+    // docblock claims to prevent, defeated by where the guard sat.
+    if (state.history_source !== roadmapFile) {
+        state.history = [];
+        state.history_source = roadmapFile;
     }
 
     const action = ladder(state, scan.open, Date.now());
@@ -903,12 +1018,6 @@ export function main(): number {
 
     state.iterations += 1;
     state.last_turn = turnOrdinal;
-    // Reset the stall window when the source document changed — see
-    // `RunState.history_source`.
-    if (state.history_source !== roadmapPath) {
-        state.history = [];
-        state.history_source = roadmapPath;
-    }
     state.history.push(scan.open);
     state.last_engaged_at = new Date().toISOString();
     try {

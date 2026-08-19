@@ -688,8 +688,19 @@ export function foreign_sessions_block(
     // `session_checkout`. Before that every record claimed the main checkout, so
     // every collision looked like the dangerous one.
     if (branch_hit !== null) {
-        const peer_tree = path.resolve(branch_hit.record.worktree ?? '');
-        const same_tree = peer_tree !== '' && peer_tree === path.resolve(workspace_root);
+        // Compared through `canonical`, not `path.resolve`, because resolve does not
+        // follow symlinks — round 5 finding 11. Round 4 finding 5 made every
+        // `session_checkout` branch canonical, which fixes records written from now
+        // on; it does nothing for a record already in the register from before the
+        // upgrade, and those live for the whole TTL window. Under a symlinked
+        // ancestor such a peer holds `/var/…/repo` while this session holds
+        // `/private/var/…/repo`, and comparing the raw strings reads two sessions
+        // in ONE working tree as separate trees — printing the benign note where
+        // the collision prompt belongs. Canonicalising at the comparison closes the
+        // upgrade boundary the writer side cannot reach.
+        const peer_tree = canonical(branch_hit.record.worktree ?? '');
+        const same_tree =
+            (branch_hit.record.worktree ?? '') !== '' && peer_tree === canonical(workspace_root);
         if (same_tree) {
             parts.push(
                 '',

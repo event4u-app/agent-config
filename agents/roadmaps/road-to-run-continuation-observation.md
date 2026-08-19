@@ -23,8 +23,9 @@ estate_offset_exempt: >-
 
 `run-continuation` is the stop-slot concern that re-engages a run while
 its claimed roadmap still has open steps. It shipped, it is unit-tested
-(21 cases), it is integration-tested against the real dispatcher (7
-cases) — and it had **never fired once** outside a test.
+(21 cases), it is integration-tested against the real dispatcher (22
+cases at the close of this branch, 7 when this roadmap was written) — and
+it had **never fired once** outside a test.
 
 The cause was a defect, not a missing step, and it is fixed: the run
 contract had two halves resolving different roots. `sessions:claim`
@@ -98,13 +99,19 @@ engages and leaves the event behind.
      autonomous work.
   2. *The provenance fields are test-verified, not self-verified.* The
      same change adds `workspace_root` / `session_root` / `session_cwd` /
-     `git_dir` / `git_common_dir` / `claim_path` — six fields — to every
-     event, so a future line carries the two-tree fact itself instead of
-     needing this table. Round 3 finding 4 caught this enumeration listing
-     five while the same bullet said six forty lines down, which would have
-     had a reader auditing a real ledger line conclude either that an
-     undocumented field was present or that `session_cwd` was not part of
-     the contract.
+     `git_dir` / `git_common_dir` / `claim_path` / `roadmap_path` — **seven
+     fields** — to every event, so a future line carries the two-tree fact
+     itself instead of needing this table.
+
+     This enumeration has now been caught wrong twice: round 3 finding 4
+     found it listing five where the code emitted six, and round 5 finding 3
+     found it listing six where the code emits seven, `roadmap_path` having
+     arrived in between. Both times the consequence is the same — a reader
+     auditing a real ledger line finds a field the contract does not mention
+     and cannot tell whether it is part of the contract or noise.
+     `roadmap_path` names the file the open-step count on that same line was
+     read from, which is the one number on the line whose meaning depends on
+     which tree was chosen.
      `session_root` is the field R2 finding 1 added after the fact: the
      first version derived both git fields from the READER's root, where
      they are equal in exactly the arrangement documented above, so the
@@ -113,12 +120,24 @@ engages and leaves the event behind.
      and the enrichment was built in the worktree. Verified by
      `tests/hooks/run_continuation_dispatch.test.ts` over a real
      `git worktree add` fixture — which reds against the un-enriched
-     event while the other cases stay green. **Counts corrected on round 3
-     finding 8:** that file now holds twelve cases, not nine, and THREE of
-     them assert the provenance rather than one. The stale figure mattered
-     more here than it would elsewhere — this bullet exists so a reader can
-     check the artefact against a falsifiable number, and the number was
-     wrong.
+     event while the other cases stay green.
+
+     **The counts in this bullet went stale twice, in the same branch that
+     corrected them, and the second time is the more useful lesson.** Round
+     3 finding 8 caught "nine cases, one asserting the provenance" when the
+     file held twelve with three; the correction to twelve/three was then
+     overtaken by rounds 4 and 5, which added six more cases, and round 5
+     finding 4 caught that — along with the `## Context` line above still
+     saying 7.
+
+     So the numbers are stated once, at the close, and the reason for
+     pinning them is stated with them: **22 integration cases, 15 of which
+     exercise the two-tree resolution or the ledger fields.** A bullet whose
+     whole purpose is to let a reader check the artefact against a
+     falsifiable number is worse than useless when the number is wrong, and
+     a per-round correction is a number that will be wrong again by the next
+     round. Anyone extending that file should either update this line or
+     delete it rather than leave a stale figure standing.
 
      **Superseded 2026-08-19 by a live event, and the live event refuted
      the fields.** The enrichment merged, `dist/` was rebuilt, and the
