@@ -1,13 +1,13 @@
 # Findings: single-delivery
-<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 6551c2d0af03014b1dd1312fbad11cfa1ca27f714915726a0df0ea5401d9fd42 | diff: 7f3fd034f383c726f63e8b6db4772bf9f9a1c7f1 | reviewer: r2-fresh-subagent-single-delivery | prompt_hash: a319dcedcc9b467dad63b72359469b802970bdd1d02635708b3d8adaafadd8ce -->
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: fade276373c8eb0cc82aa83c822365692ee763e6faa20d54d690aceec40aa8e4 | diff: 2de07e2fd672e428d173794f0f36f398f125424a | reviewer: r2-fresh-subagent-single-delivery | prompt_hash: a319dcedcc9b467dad63b72359469b802970bdd1d02635708b3d8adaafadd8ce -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 7f3fd034f383c726f63e8b6db4772bf9f9a1c7f1
-  scope_hash: 6551c2d0af03014b1dd1312fbad11cfa1ca27f714915726a0df0ea5401d9fd42
+  diff_sha: 2de07e2fd672e428d173794f0f36f398f125424a
+  scope_hash: fade276373c8eb0cc82aa83c822365692ee763e6faa20d54d690aceec40aa8e4
   roadmap: agents/roadmaps/road-to-single-delivery.md
-  roadmap_hash: b23b9cc2a0e363d4cfa84587c76b49b45cd646d55a21d4b6bbb8e1c221c3d669
+  roadmap_hash: a01b027224377c2176bcd3afbf6cbfa1bbfecfa953e0df9807c1c14cb75aadbe
   ac_hash: 508e3882142046224dd1cb4c555b8792f1858c690aab57cec4a19d071e68a95f
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
