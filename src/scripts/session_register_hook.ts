@@ -354,8 +354,17 @@ export function claim_is_stale(
     // roadmaps directory" — and it is the same check for a traversal, an absolute
     // path, and an encoding nobody enumerated. A slug that fails it is reported
     // stale rather than resolved, so no read happens at all.
+    // Structural, not textual. Round 6 finding 3: the previous form ANDed a
+    // `!rel.includes('..')` substring test onto the prefix check, and round 5
+    // finding 10 removed exactly that test from `resolveRoadmap` — one-sided. The
+    // two functions then disagreed about one claim string in the opposite
+    // direction: for a legal slug like `road-to-a..b` the register rendered a live
+    // claim as stale (dropping it from the collision set and disabling the
+    // duplicate-work warning) while the hook resolved it and engaged. `path.dirname`
+    // asks the only question that matters — is the result a file directly inside the
+    // roadmaps directory — and is the same check both sides now make.
     const rel = path.normalize(path.join('agents', 'roadmaps', `${base}.md`));
-    const inside = rel.startsWith(`agents${path.sep}roadmaps${path.sep}`) && !rel.includes('..');
+    const inside = path.dirname(rel) === path.join('agents', 'roadmaps');
     if (!inside || path.isAbsolute(base)) {
         return true; // not a slug this repo can hold; never render it as live work
     }
@@ -409,29 +418,98 @@ export function claim_is_stale(
  * conditions, because a wrong anchor is worse than the fallback:
  *
  * 1. it is an existing directory;
- * 2. it is the ROOT of a checkout (`git_dir` looks for `<dir>/.git` and does not
- *    walk up, so a session whose cwd is a subdirectory degrades to
- *    `workspace_root` — today's behaviour, never something worse);
- * 3. it belongs to the SAME repository — identical git common dir. A cwd in
- *    another repo would otherwise write this repo's register with a foreign
+ * 2. it resolves to the NEAREST enclosing checkout root, walking up from the
+ *    reported directory;
+ * 3. that root belongs to the SAME repository — identical git common dir. A cwd
+ *    in another repo would otherwise write this repo's register with a foreign
  *    branch, and the register is shared by every worktree here.
+ *
+ * ## Condition 2 used to reject a subdirectory, and that was wrong here
+ *
+ * It required the reported directory to BE a checkout root, and defended the
+ * rejection as "a session whose cwd is a subdirectory degrades to
+ * `workspace_root` — today's behaviour, never something worse". R2 round 3
+ * finding 2 measured that claim false in this repository's own layout, where
+ * worktrees live at `<parent>/.claude/worktrees/<name>` — NESTED under the
+ * parent. For a session standing at `<parent>/.claude/worktrees/wt/src`:
+ *
+ *   - the degraded root is `<parent>`, i.e. equal to `workspace_root`;
+ *   - so `git_dir` and `git_common_dir` taken from it are both `<parent>/.git`;
+ *   - and the reported cwd is under `<parent>` as well.
+ *
+ * Every available signal then reports a healthy same-tree run for a genuine
+ * two-tree one. That is not a loss of precision, it is a confident wrong answer,
+ * which is strictly worse than the fallback the docblock was defending.
+ *
+ * The walk is bounded twice over, per the AI council's condition (2026-08-19,
+ * 2/2 convergent on this shape): it stops at the FIRST enclosing checkout root,
+ * so a nested worktree is found before the parent that contains it, and the
+ * same-repository check is retained on whatever it finds — a cwd inside an
+ * unrelated repo nested in this tree resolves to that repo's root, fails the
+ * identity check, and falls back. Paths are canonicalised before the walk so a
+ * symlinked cwd cannot walk a different chain than the one it names.
  */
 export function session_checkout(
     workspace_root: string,
     payload_cwd: string | null | undefined,
 ): string {
+    // EVERY branch returns a canonical path, resolve and fallback alike.
+    //
+    // Round 4 finding 5: the resolve branch realpath-normalised and the four
+    // fallback branches returned `workspace_root` verbatim, so under a repo
+    // reached through a symlinked ancestor two sessions in the SAME working tree
+    // stored different strings for it — `/private/var/…/repo` from the resolver
+    // and `/var/…/repo` from the envelope. `foreign_sessions_block` compares the
+    // stored forms with `path.resolve`, which does not follow symlinks, so it read
+    // them as different worktrees and printed the benign "separate trees" note
+    // where the same-worktree COLLISION prompt belongs. The walk-up widened the
+    // exposure by moving subdirectory sessions onto the normalising branch.
+    const fallback = canonical(workspace_root);
     const cwd = String(payload_cwd ?? '').trim();
-    if (cwd === '') return workspace_root;
+    if (cwd === '') return fallback;
+    let start: string;
     try {
-        if (!fs.statSync(cwd).isDirectory()) return workspace_root;
+        if (!fs.statSync(cwd).isDirectory()) return fallback;
+        start = fs.realpathSync(cwd);
     } catch {
-        return workspace_root;
+        return fallback;
     }
-    if (git_dir(cwd) === null) return workspace_root;
-    const mine = git_common_dir(cwd);
+    const root = nearest_checkout_root(start);
+    if (root === null) return fallback;
+    const mine = git_common_dir(root);
     const theirs = git_common_dir(workspace_root);
-    if (mine === null || theirs === null || mine !== theirs) return workspace_root;
-    return cwd;
+    if (mine === null || theirs === null || mine !== theirs) return fallback;
+    return root;
+}
+
+/** `realpath` that falls back to an absolute form when the path is unreadable. */
+function canonical(p: string): string {
+    const abs = path.resolve(p);
+    try {
+        return fs.realpathSync(abs);
+    } catch {
+        return abs;
+    }
+}
+
+/**
+ * The nearest enclosing directory that is a checkout root, or `null`.
+ *
+ * The iteration cap is a loop guard, not a policy: `path.dirname` is a fixed
+ * point at the filesystem root, so the terminating condition is the unchanged
+ * path and the counter only bounds a pathological filesystem. The FIRST hit
+ * wins, which is what makes a nested worktree resolve to itself rather than to
+ * the checkout it sits inside.
+ */
+function nearest_checkout_root(start: string): string | null {
+    let dir = start;
+    for (let i = 0; i < 64; i++) {
+        if (git_dir(dir) !== null) return dir;
+        const up = path.dirname(dir);
+        if (up === dir) return null;
+        dir = up;
+    }
+    return null;
 }
 
 /**
@@ -619,8 +697,19 @@ export function foreign_sessions_block(
     // `session_checkout`. Before that every record claimed the main checkout, so
     // every collision looked like the dangerous one.
     if (branch_hit !== null) {
-        const peer_tree = path.resolve(branch_hit.record.worktree ?? '');
-        const same_tree = peer_tree !== '' && peer_tree === path.resolve(workspace_root);
+        // Compared through `canonical`, not `path.resolve`, because resolve does not
+        // follow symlinks — round 5 finding 11. Round 4 finding 5 made every
+        // `session_checkout` branch canonical, which fixes records written from now
+        // on; it does nothing for a record already in the register from before the
+        // upgrade, and those live for the whole TTL window. Under a symlinked
+        // ancestor such a peer holds `/var/…/repo` while this session holds
+        // `/private/var/…/repo`, and comparing the raw strings reads two sessions
+        // in ONE working tree as separate trees — printing the benign note where
+        // the collision prompt belongs. Canonicalising at the comparison closes the
+        // upgrade boundary the writer side cannot reach.
+        const peer_tree = canonical(branch_hit.record.worktree ?? '');
+        const same_tree =
+            (branch_hit.record.worktree ?? '') !== '' && peer_tree === canonical(workspace_root);
         if (same_tree) {
             parts.push(
                 '',

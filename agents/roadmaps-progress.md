@@ -758,11 +758,11 @@ _1 blocker resolved._
 
 ### [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md)
 
-**Road to a run-continuation engagement anybody can point at** — 3 / 4 done (75%)
+**Road to a run-continuation engagement anybody can point at** — 2 / 3 done (67%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Observe one engagement | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+| 0 | Observe one engagement | 🟡 in progress | 1 | 2 | 1 | 0 | 67% |
 
 <a id="blockers-road-to-run-continuation-observation"></a>
 **Blockers**
