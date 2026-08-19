@@ -123,7 +123,6 @@ describe('update_roadmap_progress — intent', () => {
         mkRoadmap('road-to-live.md', ['# Live', '', '## Phase 1 — Go', '- [x] a', '- [ ] b', ''].join('\n'));
         // None of these may appear in the dashboard.
         mkRoadmap('archive/road-to-old.md', ['# Old', '', '## Phase 1 — X', '- [x] z', ''].join('\n'));
-        mkRoadmap('later/road-to-parked.md', ['# Parked', '', '## Phase 1 — Y', '- [ ] q', ''].join('\n'));
         mkRoadmap('skipped/road-to-dropped.md', ['# Dropped', '', '## Phase 1 — W', '- [ ] r', ''].join('\n'));
         mkRoadmap('stubs/road-to-stub.md', ['# Stub', '', '## Phase 1 — S', '- [ ] s', ''].join('\n'));
         mkRoadmap('README.md', ['# Readme', '', '## Phase 1 — N', '- [ ] no', ''].join('\n'));
@@ -136,7 +135,6 @@ describe('update_roadmap_progress — intent', () => {
         expect(dashboard).toContain('road-to-live.md');
         for (const excluded of [
             'road-to-old.md',
-            'road-to-parked.md',
             'road-to-dropped.md',
             'road-to-stub.md',
             'README.md',
@@ -145,6 +143,32 @@ describe('update_roadmap_progress — intent', () => {
         ]) {
             expect(dashboard, `excluded: ${excluded}`).not.toContain(excluded);
         }
+    });
+
+    it('regen: later/ is excluded from the COUNTS but is listed as parked', () => {
+        // `later/` used to be in the list above, and this case is the deliberate
+        // split rather than a loosened assertion. The other three excluded
+        // directories are TERMINAL — archived work is done, skipped work was
+        // dropped, a stub is not a roadmap yet — so there is nothing about them a
+        // reader needs to act on. Parked work is the opposite: it resumes, and the
+        // one fact that matters is what brings it back. Excluding it from the
+        // counted table stays correct; excluding it from the FILE meant a roadmap
+        // moved there left the dashboard entirely (AI council 2026-08-19, 2/2, made
+        // a visible inventory the condition of parking two near-complete roadmaps).
+        mkRoadmap('road-to-live.md', ['# Live', '', '## Phase 1 — Go', '- [x] a', '- [ ] b', ''].join('\n'));
+        mkRoadmap(
+            'later/road-to-parked.md',
+            ['# Parked', '', '> Resume when the window elapses.', '', '## Phase 1 — Y', '- [ ] q', ''].join('\n'),
+        );
+        const { result, dashboard } = regen();
+        expect(result.status, 'exit').toBe(0);
+        // Not counted: one open roadmap, and its step is not in the tally.
+        expect(dashboard).toContain('1 open roadmap ');
+        expect(dashboard).not.toContain('| [road-to-parked.md](roadmaps/road-to-parked.md)');
+        // Listed, with its resume condition, under the parked heading.
+        expect(dashboard).toContain('## Parked — `later/` (1 roadmap, not active backlog)');
+        expect(dashboard).toContain('roadmaps/later/road-to-parked.md');
+        expect(dashboard).toContain('Resume when the window elapses.');
     });
 
     it('regen: draft frontmatter hidden, ready frontmatter listed', () => {
@@ -484,6 +508,116 @@ describe('update_roadmap_progress — intent', () => {
 // could only start on the line after. Both cut the user-facing instruction
 // mid-sentence — in the dashboard and in `agent-config gates`, which is the one
 // field those surfaces exist to deliver.
+describe('parked inventory — later/ is listed, never counted', () => {
+    let tmp: string;
+    let root: string;
+    let roadmaps: string;
+
+    beforeEach(() => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'urp-parked-'));
+        root = path.join(tmp, 'proj');
+        roadmaps = path.join(root, 'agents', 'roadmaps');
+        fs.mkdirSync(path.join(roadmaps, 'later'), { recursive: true });
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    function mk(rel: string, body: string): void {
+        const fp = path.join(roadmaps, rel);
+        fs.mkdirSync(path.dirname(fp), { recursive: true });
+        fs.writeFileSync(fp, body, 'utf-8');
+    }
+
+    function regen(): { result: SpawnSyncReturns<string>; dashboard: string } {
+        const result = runTs(['--repo-root', root], tmp);
+        const dashPath = path.join(root, 'agents', 'roadmaps-progress.md');
+        const dashboard = fs.existsSync(dashPath) ? fs.readFileSync(dashPath, 'utf-8') : '';
+        return { result, dashboard };
+    }
+
+    it('lists a parked roadmap with its stated resume condition, and does not count it', () => {
+        mk('road-to-active.md', ['# Active', '', '## Phase 1 — Go', '- [ ] open one', ''].join('\n'));
+        mk(
+            path.join('later', 'road-to-parked.md'),
+            [
+                '---',
+                'status: later',
+                '---',
+                '',
+                '# Parked',
+                '',
+                '> **Parked. Resume when** the maintainer takes the reading.',
+                '',
+                '## Phase 1 — Waits',
+                '- [ ] blocked one',
+                '',
+            ].join('\n'),
+        );
+        const { result, dashboard } = regen();
+        expect(result.status, 'exit').toBe(0);
+        // Counted as ONE open roadmap: the parked file is not backlog.
+        expect(dashboard).toContain('1 open roadmap ');
+        expect(dashboard).toContain('## Parked — `later/` (1 roadmap, not active backlog)');
+        expect(dashboard).toContain('Resume when the maintainer takes the reading.');
+        // And it is absent from the active table, which is the whole reason the
+        // inventory exists as a separate section.
+        expect(dashboard).not.toContain('| [road-to-parked.md](roadmaps/road-to-parked.md)');
+    });
+
+    it('reads later/ even though the shared candidate predicate excludes that directory', () => {
+        // The regression this pins: `is_roadmap_candidate` rejects ANY path with an
+        // excluded component, `later` among them, so the first version of the
+        // collector filtered out every file it looked at and the section silently
+        // never rendered. Only the NAME half of the predicate may apply here.
+        mk('road-to-active.md', ['# Active', '', '## Phase 1 — Go', '- [ ] open one', ''].join('\n'));
+        mk(
+            path.join('later', 'road-to-parked.md'),
+            ['# Parked', '', '> Blocked until the window elapses.', ''].join('\n'),
+        );
+        // The name filter still applies: a README is not a roadmap on either side.
+        mk(path.join('later', 'README.md'), '# Later\n\n> Blocked until nothing.\n');
+        const { dashboard } = regen();
+        expect(dashboard).toContain('(1 roadmap, not active backlog)');
+        expect(dashboard).toContain('Blocked until the window elapses.');
+        expect(dashboard).not.toContain('later/README.md');
+    });
+
+    it('reports an unlabelled condition as such rather than quoting a wrong line', () => {
+        // `lint_roadmap_later_disposition` accepts a bare `trigger`, which is too
+        // loose to quote from: over the live tree it matched a `Source:` path
+        // containing `mixed-trigger-cleanup`. A file carrying only the loose marker
+        // still PASSES that gate, so the cell must not read "no resume line" —
+        // the dashboard would then contradict a green gate.
+        mk('road-to-active.md', ['# Active', '', '## Phase 1 — Go', '- [ ] open one', ''].join('\n'));
+        mk(
+            path.join('later', 'road-to-loose.md'),
+            [
+                '# Loose',
+                '',
+                '> Source: `agents/tmp.old/mixed-trigger-cleanup/road-to-loose.md`',
+                '',
+            ].join('\n'),
+        );
+        const { dashboard } = regen();
+        expect(dashboard).toContain('_condition present but unlabelled — see file_');
+        expect(dashboard).not.toContain('mixed-trigger-cleanup');
+    });
+
+    it('says so when a parked file records no resume line at all', () => {
+        mk('road-to-active.md', ['# Active', '', '## Phase 1 — Go', '- [ ] open one', ''].join('\n'));
+        mk(path.join('later', 'road-to-silent.md'), ['---', 'status: later', '---', '', '# Silent', ''].join('\n'));
+        const { dashboard } = regen();
+        expect(dashboard).toContain('_no resume line recorded_');
+    });
+
+    it('omits the section entirely when later/ holds no roadmaps', () => {
+        mk('road-to-active.md', ['# Active', '', '## Phase 1 — Go', '- [ ] open one', ''].join('\n'));
+        const { dashboard } = regen();
+        expect(dashboard).not.toContain('## Parked —');
+    });
+});
+
 describe('parse_blockers — instruction text is never truncated', () => {
     it('keeps a "What to do:" that starts inline on the marker line', () => {
         const text = [

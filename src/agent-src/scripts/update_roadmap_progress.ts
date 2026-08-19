@@ -280,12 +280,24 @@ function is_draft(fm: Record<string, string>): boolean {
     return DRAFT_VALUES.has((fm['status'] ?? '').toLowerCase());
 }
 
-function is_roadmap_candidate(p: string): boolean {
-    const name = path.basename(p);
+/**
+ * The NAME half of the candidate test: is this filename a roadmap at all.
+ *
+ * Split out because one caller needs it WITHOUT the directory half.
+ * `is_roadmap_candidate` rejects any path carrying an excluded component, and
+ * `later` is one of them, so the parked inventory -- which reads that directory on
+ * purpose -- cannot reuse the full predicate. Sharing the name half is what keeps
+ * `later/README.md` excluded from both sides by one rule rather than two.
+ */
+function is_roadmap_name(name: string): boolean {
     if (EXCLUDE_NAMES.has(name)) {
         return false;
     }
-    if (EXCLUDE_PREFIXES.some((pre) => name.startsWith(pre))) {
+    return !EXCLUDE_PREFIXES.some((pre) => name.startsWith(pre));
+}
+
+function is_roadmap_candidate(p: string): boolean {
+    if (!is_roadmap_name(path.basename(p))) {
         return false;
     }
     // path.parts — every component of the path; exclude if any is an excluded dir.
@@ -741,6 +753,109 @@ function collect(roadmap_root: string): RoadmapStats[] {
     return results;
 }
 
+/** One parked roadmap, as the inventory needs it. */
+interface ParkedRoadmap {
+    rel: string;
+    resume: string | null;
+    /** Only the linter's looser marker matched — CI passes, the cell cannot quote. */
+    unlabelled: boolean;
+}
+
+/**
+ * A line that STATES when the roadmap comes back.
+ *
+ * `lint_roadmap_later_disposition` accepts a bare `trigger` as a resume
+ * condition, and that word is too loose to extract a sentence with: measured over
+ * the live `later/` tree it matched a `Source:` path containing
+ * `mixed-trigger-cleanup` and several mid-sentence fragments, i.e. it produced
+ * table cells that were wrong rather than short. So the extraction is TWO tiers
+ * and the render distinguishes them, instead of one loose pattern pretending to
+ * be precise.
+ */
+const RESUME_STATEMENT = /\b(blocked until|resume when|resume-when|blocked-until)\b/i;
+
+/**
+ * The linter's looser vocabulary. A file matching only this DOES carry a resume
+ * condition as far as CI is concerned, so the inventory must not report it as
+ * missing — it reports it as unlabelled and sends the reader to the file. Without
+ * this tier the dashboard would contradict a gate that had already passed.
+ */
+const RESUME_LOOSE = /\btrigger\b/i;
+
+/**
+ * Parked roadmaps, with the resume condition each one records.
+ *
+ * `later/` is excluded from `collect()` and from `/roadmap:process-*` by design —
+ * parked work is not active backlog. That exclusion had no counterweight: the
+ * header linked the directory and nothing listed what was in it, so a roadmap
+ * moved there left the dashboard entirely and its resume condition was visible
+ * only to someone who opened the file. Both AI council seats (2026-08-19, 2/2)
+ * made a visible parked-work inventory the CONDITION of parking two roadmaps that
+ * were 6-of-8 and 12-of-14 resolved, on the argument that metric honesty bought
+ * with operational amnesia is a bad trade.
+ *
+ * This is a view over data that already exists, not a new governance mechanism:
+ * nothing here gates, counts toward a ratchet, or changes what `collect()` scans.
+ */
+function collect_parked(roadmap_root: string): ParkedRoadmap[] {
+    const dir = path.join(roadmap_root, 'later');
+    let names: string[];
+    try {
+        names = fs.readdirSync(dir).sort();
+    } catch {
+        return [];
+    }
+    const out: ParkedRoadmap[] = [];
+    for (const name of names) {
+        const full = path.join(dir, name);
+        // The NAME half only: the full predicate rejects every path under `later`.
+        if (!_isFile(full) || !is_roadmap_name(name)) {
+            continue;
+        }
+        let text: string;
+        try {
+            text = fs.readFileSync(full, { encoding: 'utf-8' });
+        } catch {
+            continue;
+        }
+        if (is_draft(parse_frontmatter(text))) {
+            continue;
+        }
+        const cell = resume_cell(text);
+        out.push({ rel: name, resume: cell.stated, unlabelled: cell.unlabelled });
+    }
+    return out;
+}
+
+/**
+ * What brings a parked roadmap back, as one table cell.
+ *
+ * `stated` carries the line when the file makes the statement explicitly;
+ * `unlabelled` means only the linter's looser marker is present. Both false means
+ * the file records nothing — reported as such rather than left blank, because an
+ * empty cell reads as "nothing to wait for".
+ */
+function resume_cell(text: string): { stated: string | null; unlabelled: boolean } {
+    for (const raw of text.split('\n')) {
+        if (!RESUME_STATEMENT.test(raw)) {
+            continue;
+        }
+        const line = raw
+            .replace(/^\s*>\s?/, '')
+            .replace(/\*\*/g, '')
+            .replace(/\|/g, '\\|')
+            .trim();
+        if (line === '') {
+            continue;
+        }
+        return {
+            stated: line.length > 200 ? `${line.slice(0, 197)}...` : line,
+            unlabelled: false,
+        };
+    }
+    return { stated: null, unlabelled: RESUME_LOOSE.test(text) };
+}
+
 function unarchived_complete(roadmaps: RoadmapStats[]): RoadmapStats[] {
     return roadmaps.filter((r) => r.total_active > 0 && r.open_ === 0 && r.deferred === 0);
 }
@@ -812,7 +927,11 @@ function collect_bundles(repo_root: string): Bundle[] {
     return out;
 }
 
-function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null = null): string {
+function render(
+    roadmaps: RoadmapStats[],
+    bundles: Bundle[] | null = null,
+    roadmap_root: string | null = null,
+): string {
     const total_done = roadmaps.reduce((s, r) => s + r.done, 0);
     const total_active = roadmaps.reduce((s, r) => s + r.total_active, 0);
     const overall_pct = total_active ? _pyRound((total_done * 100) / total_active) : 0;
@@ -939,6 +1058,37 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null = null): stri
     });
     lines.push('');
     lines.push('---\n');
+
+    // Parked work, listed right under the active table so the two are read
+    // together. A parked roadmap is not backlog and carries no counts here — the
+    // one thing a reader needs is what brings it back.
+    // Null when a caller renders without a root (the unit tests do); the section
+    // is then absent rather than guessed at.
+    const parked = roadmap_root === null ? [] : collect_parked(roadmap_root);
+    if (parked.length > 0) {
+        lines.push(
+            `## Parked — \`later/\` (${parked.length} roadmap` +
+                `${parked.length !== 1 ? 's' : ''}, not active backlog)\n`,
+        );
+        lines.push(
+            '> Excluded from the table above and from `/roadmap:process-*` by ' +
+                'design. Listed here so a resume condition is visible without ' +
+                'opening the file.\n',
+        );
+        lines.push('| Roadmap | Resume when |');
+        lines.push('|---|---|');
+        for (const r of parked) {
+            const cell =
+                r.resume ??
+                (r.unlabelled
+                    ? '_condition present but unlabelled — see file_'
+                    : '_no resume line recorded_');
+            lines.push(`| [${r.rel}](roadmaps/later/${r.rel}) | ${cell} |`);
+        }
+        lines.push('');
+        lines.push('---\n');
+    }
+
     lines.push('## Per-roadmap phase breakdown\n');
     for (const r of roadmaps) {
         lines.push(`### [${r.rel}](roadmaps/${r.rel})\n`);
@@ -1095,7 +1245,7 @@ function main(argv?: readonly string[]): number {
         return 0;
     }
     const roadmaps = collect(roadmap_root);
-    const new_text = render(roadmaps, collect_bundles(repo_root));
+    const new_text = render(roadmaps, collect_bundles(repo_root), roadmap_root);
     const current = fs.existsSync(target) ? fs.readFileSync(target, { encoding: 'utf-8' }) : '';
     const complete = unarchived_complete(roadmaps);
     const pending = pending_iron_law_3(roadmaps);
