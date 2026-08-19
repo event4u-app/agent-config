@@ -140,13 +140,25 @@ export function upsertScalar(template: string, dottedPath: string[], value: unkn
     // How deep an existing ancestor chain runs, and where its block ends.
     let matched = 0;
     let insertAt = lines.length;
+    // The bounds of the ancestor matched at the previous depth. Each level
+    // searches only INSIDE its parent, so a nested key never binds to a
+    // same-named section under a different parent.
+    let parentStart = -1;
+    let parentEnd = lines.length;
     for (let depth = 0; depth < sections.length; depth++) {
         const want = sections[depth];
         const indent = '  '.repeat(depth);
         let found = -1;
-        // Search only inside the block established so far.
-        const from = depth === 0 ? 0 : insertAt === lines.length ? 0 : 0;
-        for (let i = from; i < lines.length; i++) {
+        // R2 round 3, finding 5: this carried `depth === 0 ? 0 : insertAt ===
+        // lines.length ? 0 : 0` — every branch zero, i.e. a comment claiming a
+        // scoped search over an expression that does not scope anything. Made
+        // real: a nested section is searched only INSIDE its parent's block,
+        // so a depth-2 path cannot bind to a same-named key under a different
+        // parent. Latent today (the one caller is depth 1) and fixed rather
+        // than deleted, because the next caller is the one it would bite.
+        const from = depth === 0 ? 0 : parentStart + 1;
+        const until = depth === 0 ? lines.length : parentEnd;
+        for (let i = from; i < until; i++) {
             const line = lines[i];
             if (line === undefined) continue;
             if (line.trim() === '' || line.trim().startsWith('#')) continue;
@@ -173,6 +185,8 @@ export function upsertScalar(template: string, dottedPath: string[], value: unkn
             }
         }
         insertAt = end;
+        parentStart = found;
+        parentEnd = end;
     }
 
     const block: string[] = [];

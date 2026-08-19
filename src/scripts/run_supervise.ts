@@ -101,8 +101,43 @@ export interface Candidate {
  * Total over the relaunchable set: a record with no roadmap slug is classified
  * `no-roadmap` before the cap is consulted, so there is no relaunchable run
  * this key cannot name.
+ *
+ * THE COUNTER IS CLEARED WHEN THE ROADMAP COMPLETES, and that half is what
+ * makes the key correct rather than merely different. R2 round 3, finding 6:
+ * a roadmap-keyed counter with no reset swaps a cap that never binds for one
+ * that never releases — three deaths in March would refuse a relaunch in
+ * September for a run that has nothing to do with them. "Per run" needs both
+ * a key that spans a run's generations AND a boundary where one run ends, and
+ * `disposition: complete` is that boundary: zero open steps means the work the
+ * counter was counting attempts at is done.
+ *
+ * `clearCompleted` is the writer. It is called from `digest`, which is a
+ * read-report — so the clear is stated where it happens rather than hidden in
+ * a getter, and a caller that only classifies never mutates.
  */
 export type RelaunchLedger = Record<string, number>;
+
+/**
+ * Drop the counters of every roadmap whose run is complete.
+ *
+ * Returns a NEW ledger; the caller decides whether to persist it. Separating
+ * the decision from the write keeps `classify` pure — it is called from a
+ * digest, from tests, and (one day) from the spawn, and only one of those
+ * should be writing state.
+ */
+export function clearCompleted(
+    ledger: RelaunchLedger,
+    candidates: readonly Candidate[],
+): RelaunchLedger {
+    const done = new Set(
+        candidates.filter((c) => c.disposition === 'complete' && c.roadmap !== null).map((c) => c.roadmap as string),
+    );
+    const out: RelaunchLedger = {};
+    for (const [k, v] of Object.entries(ledger)) {
+        if (!done.has(k)) out[k] = v;
+    }
+    return out;
+}
 
 export function readLedger(repoRoot: string): RelaunchLedger {
     try {
@@ -293,6 +328,20 @@ export function render(candidates: readonly Candidate[]): string {
  */
 export function digest(repoRoot: string, candidates: readonly Candidate[], now: Date): string {
     const lines = [`run:supervise digest · ${now.toISOString().slice(0, 10)}`, ''];
+
+    // The one write this read-report performs, and it is stated here rather
+    // than buried: a completed roadmap's relaunch counter is released, so the
+    // "three per run" cap bounds a run instead of a roadmap's lifetime
+    // (R2 round 3, finding 6). Best-effort — a failed write leaves a counter
+    // high, which refuses a relaunch rather than granting one.
+    const cleared = clearCompleted(readLedger(repoRoot), candidates);
+    const released = candidates.filter(
+        (c) => c.disposition === 'complete' && c.roadmap !== null,
+    ).length;
+    if (released > 0) {
+        writeLedger(repoRoot, cleared);
+        lines.push(`  released:  ${released} completed roadmap(s) — relaunch budget reset`);
+    }
 
     const dead = candidates.filter((c) => c.disposition !== 'alive');
     const relaunchable = candidates.filter((c) => c.disposition === 'relaunchable');

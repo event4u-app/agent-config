@@ -137,6 +137,24 @@ function readHead(repoRoot: string): string | null {
             if (m === null) return null;
             gitDir = path.resolve(repoRoot, m[1] as string);
         }
+        // HEAD is per-worktree; REFS are not. A linked worktree's gitdir holds
+        // its own HEAD and a `commondir` pointer, and `refs/` + `packed-refs`
+        // live at that commondir — never beside HEAD.
+        //
+        // R2 round 3, finding 1, and the round-2 version of this function got
+        // it exactly half right: it handled `.git`-as-a-file and then resolved
+        // refs against the worktree gitdir, so `head` was null in every linked
+        // worktree — including the one this package is developed in. Its test
+        // passed because the fixture wrote refs beside HEAD, a layout git never
+        // produces. A fixture that agrees with the code instead of with reality
+        // reads as coverage and is worse than no test at all.
+        let refRoot = gitDir;
+        try {
+            const common = fs.readFileSync(path.join(gitDir, 'commondir'), 'utf-8').trim();
+            if (common !== '') refRoot = path.resolve(gitDir, common);
+        } catch {
+            // No commondir — a plain repository, where gitDir already is it.
+        }
         const head = fs.readFileSync(path.join(gitDir, 'HEAD'), 'utf-8').trim();
         // A detached HEAD is the sha itself.
         if (/^[0-9a-f]{40}$/.test(head)) return head;
@@ -144,10 +162,10 @@ function readHead(repoRoot: string): string | null {
         if (ref === null) return null;
         const refName = ref[1] as string;
         try {
-            return fs.readFileSync(path.join(gitDir, refName), 'utf-8').trim() || null;
+            return fs.readFileSync(path.join(refRoot, refName), 'utf-8').trim() || null;
         } catch {
             // Packed refs: a loose file does not exist for every branch.
-            const packed = fs.readFileSync(path.join(gitDir, 'packed-refs'), 'utf-8');
+            const packed = fs.readFileSync(path.join(refRoot, 'packed-refs'), 'utf-8');
             for (const line of packed.split('\n')) {
                 const pm = /^([0-9a-f]{40})\s+(.+)$/.exec(line.trim());
                 if (pm !== null && pm[2] === refName) return pm[1] as string;
@@ -300,11 +318,27 @@ export function verifyCheckpoint(repoRoot: string, cp: RunCheckpoint): VerifyRes
         return { readable: false, fields: [], agrees: false };
     }
     const counts = countRoadmap(text);
+    // Read ONCE, so the recorded `actual` and the verdict about it are one
+    // expression rather than two that happen to agree.
+    const head = readHead(repoRoot);
     const fields: FieldVerdict[] = [
         { field: 'open_steps', claimed: cp.open_steps, actual: counts.open, agrees: cp.open_steps === counts.open },
         { field: 'done_steps', claimed: cp.done_steps, actual: counts.done, agrees: cp.done_steps === counts.done },
         { field: 'parked_steps', claimed: cp.parked_steps, actual: counts.parked, agrees: cp.parked_steps === counts.parked },
         { field: 'next_step', claimed: cp.next_step, actual: counts.next, agrees: cp.next_step === counts.next },
+        // `head` is recomputed like every other field. R2 round 3, finding 2:
+        // round 2 fixed only the WRITE half of finding 5, so the loop
+        // contract's "every field is recomputed" was false for exactly the
+        // field that says whether the tree moved under the run — which is the
+        // one a resume most needs to see. A disagreement here is the NORMAL
+        // case (a human committed, a sibling worktree moved) and is reported,
+        // never treated as corruption.
+        {
+            field: 'head',
+            claimed: cp.head,
+            actual: head,
+            agrees: cp.head === head,
+        },
     ];
     return { readable: true, fields, agrees: fields.every((f) => f.agrees) };
 }

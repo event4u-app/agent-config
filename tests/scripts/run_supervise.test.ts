@@ -29,12 +29,14 @@ import {
     MAX_RELAUNCHES_PER_RUN,
     SUPERVISE_STATE_REL,
     classify,
+    clearCompleted,
     digest,
     readAllRecords,
     readLedger,
     render,
     scan,
     writeLedger,
+    type Candidate,
 } from '../../src/scripts/run_supervise.js';
 
 const dirs: string[] = [];
@@ -304,5 +306,62 @@ describe('scan — wiring against a real register directory', () => {
 
     it('a non-repository yields no candidates rather than an error', () => {
         expect(scan(root(), { now: NOW })).toEqual([]);
+    });
+});
+
+describe('clearCompleted — the cap bounds a RUN, not a roadmap lifetime', () => {
+    // R2 round 3, finding 6. Round 2 moved the key from session to roadmap so
+    // the cap could bind at all; without a reset that swapped a cap that never
+    // binds for one that never releases — three deaths in March refusing a
+    // relaunch in September for an unrelated run.
+    const cand = (over: Partial<Candidate>): Candidate =>
+        ({
+            session_id: 's',
+            roadmap: 'road-to-x',
+            worktree: null,
+            relaunches: 0,
+            disposition: 'relaunchable',
+            open_steps: 1,
+            reason: '',
+            ...over,
+        }) as Candidate;
+
+    it('drops the counter of a completed roadmap', () => {
+        const out = clearCompleted({ 'road-to-x': 3 }, [cand({ disposition: 'complete' })]);
+        expect(out).toEqual({});
+    });
+
+    it('keeps the counter of a roadmap still running', () => {
+        const out = clearCompleted({ 'road-to-x': 2 }, [cand({ disposition: 'relaunchable' })]);
+        expect(out).toEqual({ 'road-to-x': 2 });
+    });
+
+    it('touches only the completed roadmap, never its neighbours', () => {
+        const out = clearCompleted({ 'road-to-x': 3, 'road-to-y': 1 }, [
+            cand({ disposition: 'complete' }),
+            cand({ roadmap: 'road-to-y', disposition: 'relaunchable' }),
+        ]);
+        expect(out).toEqual({ 'road-to-y': 1 });
+    });
+
+    it('a completed candidate with no roadmap clears nothing', () => {
+        const out = clearCompleted({ 'road-to-x': 3 }, [
+            cand({ roadmap: null, disposition: 'complete' }),
+        ]);
+        expect(out).toEqual({ 'road-to-x': 3 });
+    });
+
+    it('a spent budget becomes relaunchable again after the run completes', () => {
+        // The end-to-end statement of the fix: same roadmap, budget spent,
+        // then a completion — and the next run starts from zero.
+        const r = root();
+        writeRoadmap(r, 'road-to-x', ['- [ ] a']);
+        const spent = classify(r, rec(), { 'road-to-x': MAX_RELAUNCHES_PER_RUN }, NOW);
+        expect(spent.disposition).toBe('budget-exhausted');
+
+        const afterCompletion = clearCompleted({ 'road-to-x': MAX_RELAUNCHES_PER_RUN }, [
+            cand({ disposition: 'complete' }),
+        ]);
+        expect(classify(r, rec(), afterCompletion, NOW).disposition).toBe('relaunchable');
     });
 });

@@ -196,10 +196,19 @@ export function runGatedRetry(
     twin: EstablishedTwin,
     fallback: CliFallbackOptions,
     deps: GatedRetryDeps,
+    ledger: MidFlightFallback | null = null,
 ): GatedRetryResult {
     if (!deps.gate(twin.client)) {
         original.metadata = { ...(original.metadata ?? {}), fallback_skipped: 'cost_budget' };
         emitOutcome(fallback, member.name, twin, 'cost_budget');
+        // The claim goes back, for the same reason it does on the unmetered
+        // path: the twin was built and never called, so the provider has not
+        // spent its one escalation. R2 round 3, finding 4 — the unmetered
+        // refusal released and this one did not, so the two paths this
+        // function's own docblock calls parallel behaved differently, and a
+        // billable community-cli seat was permanently lost after a single
+        // budget-refused escalation.
+        ledger?.release(member.name);
         return { response: original, effective: member, retried: false };
     }
     const response = deps.call(twin.client);

@@ -32,6 +32,9 @@ import {
     type RunCheckpoint,
 } from '../../src/scripts/_lib/run_checkpoint.js';
 
+/** This worktree's root — three levels up from tests/scripts/. */
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
+
 const dirs: string[] = [];
 afterEach(() => {
     while (dirs.length > 0) {
@@ -354,25 +357,75 @@ describe('buildCheckpoint — head is resolved, not left null', () => {
         expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBe('a'.repeat(40));
     });
 
-    it('resolves HEAD in a WORKTREE, where .git is a file', () => {
-        // The case a naive reader gets wrong, and the one this package is
-        // actually developed in — so the naive version would have returned
-        // null exactly where it was being exercised.
+    it('resolves HEAD in a real LINKED WORKTREE layout', () => {
+        // The layout `git worktree add` actually produces, and the round-2
+        // version of this test did not: HEAD is per-worktree, refs are NOT.
+        // The linked gitdir holds HEAD plus a `commondir` pointer, and
+        // `refs/` lives at that commondir. Writing refs beside HEAD — which
+        // the earlier fixture did — is a shape git never creates, so the test
+        // agreed with the code instead of with reality and reported coverage
+        // for a function that returned null in every real worktree.
         const repoRoot = root();
         writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
-        const realGit = path.join(repoRoot, 'elsewhere', 'worktrees', 'wt');
-        fs.mkdirSync(path.join(realGit, 'refs', 'heads'), { recursive: true });
-        fs.writeFileSync(path.join(realGit, 'HEAD'), 'ref: refs/heads/feature\n', 'utf-8');
+        const common = path.join(repoRoot, 'main-repo', '.git');
+        const linked = path.join(common, 'worktrees', 'wt');
+        fs.mkdirSync(path.join(common, 'refs', 'heads'), { recursive: true });
+        fs.mkdirSync(linked, { recursive: true });
+        fs.writeFileSync(path.join(linked, 'HEAD'), 'ref: refs/heads/feature\n', 'utf-8');
+        // Relative, exactly as git writes it.
+        fs.writeFileSync(path.join(linked, 'commondir'), '../..\n', 'utf-8');
         fs.writeFileSync(
-            path.join(realGit, 'refs', 'heads', 'feature'),
+            path.join(common, 'refs', 'heads', 'feature'),
             `${'b'.repeat(40)}\n`,
             'utf-8',
         );
-        fs.writeFileSync(path.join(repoRoot, '.git'), `gitdir: ${realGit}\n`, 'utf-8');
+        fs.writeFileSync(path.join(repoRoot, '.git'), `gitdir: ${linked}\n`, 'utf-8');
         expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBe('b'.repeat(40));
     });
 
-    it('falls back to packed-refs when the loose ref file is absent', () => {
+    it('resolves HEAD against THIS checkout — the reviewer reproduced null here', () => {
+        // The end-to-end statement, and the one assertion the fixture above
+        // cannot make: run the real function over the real repository this
+        // test executes in. It is a linked worktree during development and a
+        // plain clone in CI, so this passes only if BOTH paths work.
+        const cp = buildCheckpoint(REPO_ROOT, 'r1', 'road-to-long-horizon-execution');
+        expect(cp).not.toBeNull();
+        expect(cp?.head).toMatch(/^[0-9a-f]{40}$/);
+    });
+
+    it('a worktree whose commondir is ABSOLUTE resolves too', () => {
+        const repoRoot = root();
+        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
+        const common = path.join(repoRoot, 'elsewhere', '.git');
+        const linked = path.join(repoRoot, 'linked-gitdir');
+        fs.mkdirSync(path.join(common, 'refs', 'heads'), { recursive: true });
+        fs.mkdirSync(linked, { recursive: true });
+        fs.writeFileSync(path.join(linked, 'HEAD'), 'ref: refs/heads/abs\n', 'utf-8');
+        fs.writeFileSync(path.join(linked, 'commondir'), `${common}\n`, 'utf-8');
+        fs.writeFileSync(path.join(common, 'refs', 'heads', 'abs'), `${'f'.repeat(40)}\n`, 'utf-8');
+        fs.writeFileSync(path.join(repoRoot, '.git'), `gitdir: ${linked}\n`, 'utf-8');
+        expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBe('f'.repeat(40));
+    });
+
+    it('packed-refs is read from the COMMONDIR in a worktree, not beside HEAD', () => {
+        const repoRoot = root();
+        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
+        const common = path.join(repoRoot, 'main-repo', '.git');
+        const linked = path.join(common, 'worktrees', 'wt');
+        fs.mkdirSync(common, { recursive: true });
+        fs.mkdirSync(linked, { recursive: true });
+        fs.writeFileSync(path.join(linked, 'HEAD'), 'ref: refs/heads/packed\n', 'utf-8');
+        fs.writeFileSync(path.join(linked, 'commondir'), '../..\n', 'utf-8');
+        fs.writeFileSync(
+            path.join(common, 'packed-refs'),
+            `# pack-refs with: peeled\n${'c'.repeat(40)} refs/heads/packed\n`,
+            'utf-8',
+        );
+        fs.writeFileSync(path.join(repoRoot, '.git'), `gitdir: ${linked}\n`, 'utf-8');
+        expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBe('c'.repeat(40));
+    });
+
+    it('falls back to packed-refs in a PLAIN repo when the loose ref is absent', () => {
         const repoRoot = root();
         writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
         const git = path.join(repoRoot, '.git');
@@ -410,5 +463,48 @@ describe('buildCheckpoint — head is resolved, not left null', () => {
         expect(
             buildCheckpoint(repoRoot, 'r1', 'road-to-thing', { head: 'injected' })?.head,
         ).toBe('injected');
+    });
+});
+
+describe('verifyCheckpoint — head is re-verified like every other field', () => {
+    // R2 round 3, finding 2. Round 2 fixed only the WRITE half of finding 5,
+    // so `§5d: every field is recomputed` was false for exactly the field that
+    // says whether the tree moved under the run.
+    const withGit = (sha: string): string => {
+        const repoRoot = root();
+        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
+        const git = path.join(repoRoot, '.git');
+        fs.mkdirSync(git, { recursive: true });
+        fs.writeFileSync(path.join(git, 'HEAD'), `${sha}\n`, 'utf-8');
+        return repoRoot;
+    };
+
+    it('reports head among the fields, and agrees when the tree has not moved', () => {
+        const repoRoot = withGit('a'.repeat(40));
+        const cp = buildCheckpoint(repoRoot, 'r1', 'road-to-thing') as RunCheckpoint;
+        const res = verifyCheckpoint(repoRoot, cp);
+        const field = res.fields.find((f) => f.field === 'head');
+        expect(field).toBeDefined();
+        expect(field?.agrees).toBe(true);
+        expect(field?.actual).toBe('a'.repeat(40));
+    });
+
+    it('a moved HEAD is a reported DISAGREEMENT, never an error', () => {
+        // Work landing between the checkpoint and the resume is the normal
+        // case; treating it as corruption would refuse every healthy resume.
+        const repoRoot = withGit('a'.repeat(40));
+        const cp = buildCheckpoint(repoRoot, 'r1', 'road-to-thing') as RunCheckpoint;
+        fs.writeFileSync(
+            path.join(repoRoot, '.git', 'HEAD'),
+            `${'9'.repeat(40)}\n`,
+            'utf-8',
+        );
+        const res = verifyCheckpoint(repoRoot, cp);
+        expect(res.readable).toBe(true);
+        const field = res.fields.find((f) => f.field === 'head');
+        expect(field?.agrees).toBe(false);
+        expect(field?.claimed).toBe('a'.repeat(40));
+        expect(field?.actual).toBe('9'.repeat(40));
+        expect(renderVerification(cp, res)).toContain('head');
     });
 });

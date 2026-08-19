@@ -778,7 +778,7 @@ function _run_round(
                             budget,
                         ) === null,
                     call: (client) => callMember(client, question, opts, _system_prompt_for_member, _excTag),
-                });
+                }, ledger);
                 response = out.response;
                 effective = out.effective;
                 // Established for the rest of the invocation, so later rounds

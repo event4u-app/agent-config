@@ -64,11 +64,20 @@
  * agent into a step the roadmap itself declares blocked is a guaranteed
  * stall, manufactured by the mechanism whose job is to detect one.
  *
- * FAIL-OPEN THROUGHOUT. severity: advisory, fail_closed: false. Any read
+ * FAIL-OPEN THROUGHOUT. severity: BLOCKING, fail_closed: false. Any read
  * error, any malformed state, any surprise → EXIT_ALLOW. A continuation
  * mechanism must never be the thing that blocks a stop for a reason nobody
  * can see; the only BLOCK this file emits is the one that carries its own
  * explanation on stderr.
+ *
+ * The severity word matters and this docblock had the wrong one. It read
+ * `advisory` — which the dispatcher enforces as a CEILING, downgrading any
+ * EXIT_BLOCK to WARN, so the whole mechanism was inert. That was round 1's
+ * critical finding; the manifest moved and this line did not, which round 3
+ * then caught as a doc contradicting the declaration it describes. Blocking
+ * and fail-open are not in tension: fail-open governs what happens when this
+ * file cannot decide, blocking governs what happens when it decides to
+ * continue.
  */
 
 import * as fs from 'node:fs';
