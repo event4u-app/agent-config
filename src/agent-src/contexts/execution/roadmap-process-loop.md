@@ -180,6 +180,65 @@ change in § 3a.
   `commit-policy` § NEVER ask about committing holds regardless of
   autonomy).
 
+### 3c. Runnable-work precondition — refuse a run with nothing to do
+
+```
+A RUN WITH NO RUNNABLE OPEN STEP DOES NOT START.
+NAME THE BLOCKERS. CREATE NO BRANCH. WRITE NOTHING.
+THIS IS A PRECONDITION, NEVER A HALT — IT CANNOT FIRE MID-RUN.
+```
+
+Run once, at the end of the pre-scan, before any grant is exercised.
+
+**Runnable** is decided from the roadmap's own `## Blockers` section and nothing
+else. An open step is **not** runnable when a blocker satisfies all four:
+
+1. it exists in `## Blockers` **before this run started** — a blocker the run
+   itself authored does not count (see the gaming note below);
+2. its `Class:` is `2` (consent-once) or `3` (human-only) — classes `0` and `1`
+   are agent-runnable by construction and carry a `Run:` the agent executes,
+   per [`templates/roadmaps.md`](../../templates/roadmaps.md);
+3. its `Blocks:` field names this step, by phase-and-step identifier or by a
+   phase whose scope contains it;
+4. it names what would clear it.
+
+Every other open step is runnable. **No blocker citation → runnable**, and the
+default direction is deliberate: the failure this precondition must not have is
+refusing work an agent could have done.
+
+- **At least one runnable open step** → the run proceeds. It does *not* matter
+  how many steps are blocked; the blocked ones are skipped in place (never
+  flipped — see the terminal-outcomes section), and the run works the rest.
+- **Zero runnable open steps** → `blocked-preflight`. Report the roadmap, the
+  open-step count, and each blocker with its class and its clearing action.
+  Create no branch, write no state, take no grant.
+
+**Why a precondition and not a sixth halt.** The five halt conditions interrupt
+work that is still runnable; this decides whether any runnable work exists at
+all. Keeping them structurally separate is what preserves the forbidden-list's
+authority over mid-run stopping — an agent that may not stop for "this phase is
+large" also may not stop for "this feels human-gated". AI council 2026-08-19,
+2/2 convergent, explicitly on this point: *"keep this structurally separate from
+'five, and only five': the five are exceptional halts; `blocked` is an
+exhaustion-of-runnable-work terminal outcome."*
+
+**The gaming vector, named because it is the one thing that would make this
+worse than the gap it closes.** An agent meets a hard step, writes a `## Blockers`
+entry claiming Class 3, cites it, and stops — a comfort-stop wearing a citation.
+Condition 1 is the whole defence: a blocker must pre-date the run, which is
+checkable from git rather than from the agent's word. A blocker discovered
+mid-run is recorded (that is honest and useful) and does **not** make the step
+non-runnable in this run.
+
+**One imprecision, recorded rather than smoothed over.** The class taxonomy has
+four rows and none of them says *"waiting on time"* or *"waiting on another
+roadmap"*. A soak window and a cross-roadmap dependency are authored as `3`
+today, because absence of `Class:` already means `3` — so they are decidable but
+mislabelled as human-only. A fifth class is a taxonomy change with a linter
+behind it (`lint_roadmap_blockers`) and is not made here.
+*Revisit-if:* a run is refused on a blocker whose real content is "wait", and
+the report reads wrong to the person holding it.
+
 ## 4. Resolve cadences — read once, cache for the run
 
 Read both keys from `.agent-settings.yml` once and cache for the whole
@@ -430,6 +489,52 @@ artifact drafting, council enablement), not safety.
 
 On halt: stop, surface state, do **not** auto-fix outside the failing step.
 
+### Terminal outcomes — `complete`, `blocked`, or a halt
+
+The halt list above answers *"what interrupts runnable work"*. It does not answer
+*"what does the run report when there is no runnable work left and the roadmap is
+not finished"*, and until this section there was no answer: the wrapper's stop
+condition was `count_open == 0` or a halt, so a roadmap whose remaining steps all
+need a human had **no legal stopping point**.
+
+That is not a hypothetical. Measured 2026-08-19 across the twelve most nearly
+complete roadmaps in the estate: **zero** could reach `count_open == 0` in one
+PR. Every remaining open step needed a human action — flip branch protection,
+delete committed evidence, authorise paid spend, install an absent binary, wait
+out a soak window, use the maintainer's own machine, or edit a file an armed host
+hook denies.
+
+Three outcomes, and only one of them is success:
+
+| Outcome | When | What it reports |
+|---|---|---|
+| `complete` | `count_open == 0` | the roadmap is finished; archival check runs (§ 6) |
+| `blocked` | `count_open > 0` **and** no open step is runnable | the work that DID close, plus every blocker with its clearing action |
+| a halt | one of the five conditions above fired | the halt, its evidence, and what remains |
+
+```
+`blocked` IS NEVER PRESENTED AS COMPLETION.
+count_open STAYS > 0. NO CHECKBOX IS FLIPPED TO [~] TO REACH IT.
+A PR OPENED ON A BLOCKED RUN IS LABELLED PARTIAL PROGRESS.
+REVALIDATE IMMEDIATELY BEFORE REPORTING IT — ONE RUNNABLE STEP LEFT REJECTS THE CLAIM.
+```
+
+The `[~]` prohibition is load-bearing and was the one point the council split on.
+Deferring a blocked step to `[~]` would let the run reach `count_open == 0` and
+report completion — laundering unfinished work through a glyph, which is exactly
+what Iron Law 3 of [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)
+exists to catch on the archival side. So the boxes stay open and the outcome
+carries the truth instead.
+
+Revalidation is the second half of the same discipline: the runnable set is
+recomputed at the moment of reporting, because steps unblock during a run (a
+prerequisite closes, a `Run:` succeeds, a peer merges). If any open step is
+runnable, `blocked` is refused and the loop continues.
+
+**Runnability is decided by the § 3c test**, unchanged — the same four conditions,
+including that a qualifying blocker must pre-date the run. A blocker the run
+authored is recorded and does not make a step non-runnable in that run.
+
 ### Forbidden non-halt reasons — agent-invented cautions
 
 The halt list above is **exhaustive**. An agent running `process-full` (or any
@@ -446,9 +551,15 @@ a violation of the command and the user's will:
   a phase boundary emits a non-blocking status line and the run **continues**;
   the stop-and-wait reading of `phase-checkpoints` applies only to
   `process-phase`.
+- **"this step looks human-gated"** — the `blocked` outcome above is reached by
+  the § 3c test over blockers that pre-date the run, never by a judgement about
+  how a step feels. A step with no qualifying blocker citation is runnable, and
+  writing the citation yourself does not make it one. This entry exists because
+  the terminal outcome is the single most abusable thing on this page.
 
 If the work genuinely cannot continue, it will be because one of the five real
-halt conditions fired — surface THAT, not a manufactured caution.
+halt conditions fired, or because the runnable set is empty by the § 3c test —
+surface THAT, with the blockers named, not a manufactured caution.
 
 ### Non-halt — gating notes, "optional" tags
 
