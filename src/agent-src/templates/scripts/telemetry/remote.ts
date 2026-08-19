@@ -303,9 +303,11 @@ export function build_class_a_record(input: BuildClassAInput): ClassARecord {
 // a shared machine, a much heavier user — where it bounds the file at 2 MiB
 // (≈ 7,700 records) regardless of dates. A cap chosen so generously that it
 // can never fire is a policy on paper only, which is the failure this repo
-// keeps finding in its own gates; 2 MiB is reached in eleven days at 100×
-// the observed rate and in eight years at 1×, and both of those are the
-// point.
+// keeps finding in its own gates; 2 MiB is reached in about twelve days at
+// 100× the observed rate and in about 3.2 years at 1×, and both of those are
+// the point. (The 1× figure read "eight years" until the completion review
+// did the division: 2,097,152 B ÷ (6.6/day × 270 B) ≈ 1,177 days. A number
+// nobody checks is how a measured default quietly becomes a guessed one.)
 //
 // WHAT RETENTION COSTS UNDER `flush: never`. With no transport configured
 // the local file is the only store, so a record evicted here is a record
@@ -368,8 +370,28 @@ export function record_line_ms(line: string): number | null {
     return Number.isNaN(ms) ? null : ms;
 }
 
-/** First line of a file without reading the whole file. */
-function _read_first_line(log_path: string): string | null {
+/** Bytes of the log head read to find the oldest datable record. */
+export const RETENTION_HEAD_WINDOW_BYTES = 8192;
+
+/**
+ * Timestamp of the OLDEST DATABLE record, read from the head of the file.
+ *
+ * Not "the first line": a single undatable line at the head would otherwise
+ * answer the whole age question with `null` and disable the age policy for as
+ * long as that line survives — which, since `enforce_retention` deliberately
+ * keeps undatable lines, is until the byte cap evicts it. On a low-volume log
+ * that is years. Scanning the window instead means one corrupt head line
+ * costs nothing.
+ *
+ * `null` when the window holds no datable line at all. That case is bounded
+ * by the byte cap rather than by age, and it is a genuinely corrupt file
+ * rather than an ordinary one — the alternative, treating it as due, would
+ * read the whole file on every append forever.
+ *
+ * Only complete lines are considered: a final fragment with no newline may be
+ * a torn write, and half a record parses as nothing useful.
+ */
+export function _oldest_datable_ms(log_path: string): number | null {
     let fd: number;
     try {
         fd = fs.openSync(log_path, 'r');
@@ -377,14 +399,23 @@ function _read_first_line(log_path: string): string | null {
         return null;
     }
     try {
-        const buf = Buffer.alloc(4096);
+        const buf = Buffer.alloc(RETENTION_HEAD_WINDOW_BYTES);
         const read = fs.readSync(fd, buf, 0, buf.length, 0);
         if (read <= 0) {
             return null;
         }
         const chunk = buf.subarray(0, read).toString('utf-8');
-        const nl = chunk.indexOf('\n');
-        return nl === -1 ? chunk : chunk.slice(0, nl);
+        const lines = chunk.split('\n');
+        // Drop the trailing element: it is either empty (the window ended on a
+        // newline) or an incomplete line (the window cut mid-record).
+        lines.pop();
+        for (const line of lines) {
+            const ms = record_line_ms(line);
+            if (ms !== null) {
+                return ms;
+            }
+        }
+        return null;
     } catch {
         return null;
     } finally {
@@ -419,11 +450,7 @@ export function retention_due(
     if (size > policy.max_bytes) {
         return true;
     }
-    const first = _read_first_line(log_path);
-    if (first === null) {
-        return false;
-    }
-    const oldest = record_line_ms(first);
+    const oldest = _oldest_datable_ms(log_path);
     if (oldest === null) {
         return false;
     }
@@ -495,7 +522,22 @@ export function enforce_retention(
     }
 
     const payload = kept_lines.length === 0 ? '' : `${kept_lines.join('\n')}\n`;
-    const tmp = `${log_path}.retention.tmp`;
+
+    // A unique temp name per prune, then one rename.
+    //
+    // The rename is atomic, so no reader ever sees a half-written log and a
+    // crash mid-prune leaves the original intact. What it does NOT give is
+    // mutual exclusion: two processes rooted at the same project can both
+    // read, both prune, and the later rename wins, losing the records the
+    // other appended in between. A fixed temp path made that worse — the two
+    // writers shared one scratch file — so the name carries the pid.
+    //
+    // Stated rather than solved: a lock is the fix, and it belongs with the
+    // Phase 2 transport, which introduces a second writer to the same file
+    // and is where the locking contract has to be decided anyway. Until then
+    // the exposure is bounded to records written inside one prune window on a
+    // log that only exceeded its budget.
+    const tmp = `${log_path}.retention.${process.pid}.tmp`;
     fs.writeFileSync(tmp, payload, { encoding: 'utf-8' });
     fs.renameSync(tmp, log_path);
 

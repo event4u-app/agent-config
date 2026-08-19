@@ -19,6 +19,8 @@ import {
     buildDisclosure,
     disclosureKey,
     run,
+    _clamp,
+    MAX_FIELD_CHARS,
 } from '../../src/scripts/telemetry_disclosure_hook.js';
 
 const roots: string[] = [];
@@ -207,8 +209,86 @@ describe('telemetry-disclosure — once, and again when the recipient changes', 
         expect(disclosureKey(base)).toBe(disclosureKey({ ...base, log_path: 'other' }));
     });
 
-    it('builds a stable block for a given set of facts', () => {
-        const facts = { org_id: 'acme', endpoint: 'https://s.invalid/x', log_path: 'l.jsonl' };
-        expect(buildDisclosure(facts)).toBe(buildDisclosure({ ...facts }));
+    it('carries every fact the disclosure owes, and nothing the settings kept private', () => {
+        // Replaces a tautology the completion review caught: the old assertion
+        // compared a pure function to itself over a shallow copy, which no
+        // implementation can fail. What the block actually owes is its content.
+        const facts = { org_id: 'acme', endpoint: 'https://s.invalid/tok3n', log_path: 'l.jsonl' };
+        const block = buildDisclosure(facts);
+
+        expect(block.split('\n')[0]).toBe('<telemetry-disclosure>');
+        expect(block.trimEnd().endsWith('</telemetry-disclosure>')).toBe(true);
+        expect(block).toContain(facts.org_id);
+        expect(block).toContain('s.invalid');
+        expect(block).toContain(facts.log_path);
+        expect(block).toContain('org administrator');
+        // The path segment of the endpoint is the place a token would sit.
+        expect(block).not.toContain('tok3n');
+        // Changing any disclosed fact changes the block — the property the
+        // old self-comparison was reaching for.
+        for (const changed of [
+            { ...facts, org_id: 'other' },
+            { ...facts, endpoint: 'https://elsewhere.invalid/x' },
+            { ...facts, log_path: 'other.jsonl' },
+        ]) {
+            expect(buildDisclosure(changed)).not.toBe(block);
+        }
+    });
+
+    it('clamps an unbounded settings value so the line survives the injection budget', () => {
+        // org_id and endpoint come from a settings file, so their length is an
+        // operator's choice. Over budget the dispatcher drops the line, which
+        // would silently remove the disclosure entirely — the failure mode
+        // this concern exists to prevent.
+        const long = 'x'.repeat(4000);
+        const block = buildDisclosure({ org_id: long, endpoint: long, log_path: long });
+        expect(Buffer.byteLength(block)).toBeLessThan(1024);
+        expect(block).toContain('…');
+        expect(_clamp('short')).toBe('short');
+        expect(_clamp(long)).toHaveLength(MAX_FIELD_CHARS);
+    });
+});
+
+describe('telemetry-disclosure — the failures the completion review found', () => {
+    it('walks up to the settings file, so a subdirectory cwd cannot silence it', () => {
+        // The sibling that WRITES the records walks up (its own doc block
+        // records why). Reading only the envelope root here meant a host
+        // reporting a cwd inside a subdirectory got telemetry recorded and no
+        // disclosure — the one shape ADR-233 D5 forbids.
+        const root = makeRoot(ACTIVE);
+        const nested = path.join(root, 'packages', 'inner');
+        fs.mkdirSync(nested, { recursive: true });
+
+        const { out } = capture(envelope(nested));
+        expect(out).not.toBe('');
+        expect(out).toContain('acme');
+        // And the state note lands beside the settings file, not in the
+        // subdirectory — otherwise one project discloses once per directory.
+        expect(fs.existsSync(stateFile(root))).toBe(true);
+        expect(fs.existsSync(path.join(nested, DISCLOSURE_STATE_REL))).toBe(false);
+    });
+
+    it('does not treat an envelope with no event as a session start', () => {
+        // Fail-open on identification is the wrong default for a concern that
+        // writes a file: it would disclose and consume the one-shot on
+        // whatever slot happened to invoke it.
+        const root = makeRoot(ACTIVE);
+        const { out } = capture(JSON.stringify({ schema_version: 1, platform: 'claude', cwd: root }));
+        expect(out).toBe('');
+        expect(fs.existsSync(stateFile(root))).toBe(false);
+    });
+
+    it('stays out of replay, so a benchmark cannot spend the real first disclosure', () => {
+        const root = makeRoot(ACTIVE);
+        const prior = process.env['AGENT_CONFIG_REPLAY'];
+        process.env['AGENT_CONFIG_REPLAY'] = '1';
+        try {
+            const { out } = capture(envelope(root));
+            expect(out).toBe('');
+            expect(fs.existsSync(stateFile(root))).toBe(false);
+        } finally {
+            if (prior === undefined) delete process.env['AGENT_CONFIG_REPLAY'];
+            else process.env['AGENT_CONFIG_REPLAY'] = prior;
+        }
     });
 });

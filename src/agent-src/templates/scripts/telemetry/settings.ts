@@ -248,6 +248,19 @@ export const DEFAULT_REMOTE_RETENTION = {
 } as const;
 
 /**
+ * Smallest legal retention override, per key.
+ *
+ * A budget below these is not a stricter budget, it is a broken one: a
+ * `max_bytes` under one record line empties the log on every append, and a
+ * `max_age_days` of zero prunes everything written before this instant. Both
+ * are the "retains nothing" outcome the zero-rejection above refuses, reached
+ * by a value that is technically positive. 4 KiB is one full record clear of
+ * the largest line measured (286 bytes).
+ */
+export const MIN_RETENTION_MAX_AGE_DAYS = 1;
+export const MIN_RETENTION_MAX_BYTES = 4096;
+
+/**
  * The three fields that must ALL carry a value — on top of `enabled` —
  * before a single record is written. `endpoint` and `org_id` name where the
  * data goes and on whose authority; `salt` is the org-pack secret without
@@ -331,16 +344,24 @@ export function read_remote_settings(p: string): RemoteTelemetrySettings {
     const output = _isPlainObject(section['output']) ? section['output'] : {};
     const retention = _isPlainObject(section['retention']) ? section['retention'] : {};
 
-    // A retention override must be a positive integer. Zero and negatives are
-    // rejected to the default rather than honoured: `max_age_days: 0` reads
-    // like "keep nothing" but would in practice mean "prune on every append",
-    // and neither is a growth budget an operator should be able to set by
-    // typing one character.
-    const _coerce_positive_int = (value: unknown, def: number): number => {
+    // A retention override must be a positive integer AND at least the floor
+    // for its key. Zero and negatives are rejected to the default rather than
+    // honoured: `max_age_days: 0` reads like "keep nothing" but would in
+    // practice mean "prune on every append", and neither is a growth budget an
+    // operator should be able to set by typing one character.
+    //
+    // The floor exists because rejecting only `0` left the strictly worse
+    // value reachable. `max_bytes: 1` is a positive integer, passes a
+    // >0 test, and is smaller than one ~270-byte record — so every append
+    // prunes the file back to empty and the log silently retains nothing,
+    // which is exactly the outcome the zero-check was written to refuse.
+    // `MIN_RETENTION_MAX_BYTES` is one full record over the largest observed
+    // line so the smallest legal setting still keeps something.
+    const _coerce_bounded_int = (value: unknown, def: number, floor: number): number => {
         if (typeof value === 'boolean') {
             return def;
         }
-        if (typeof value === 'number' && Number.isInteger(value) && value > 0) {
+        if (typeof value === 'number' && Number.isInteger(value) && value >= floor) {
             return value;
         }
         return def;
@@ -353,13 +374,15 @@ export function read_remote_settings(p: string): RemoteTelemetrySettings {
         salt: _coerce_str(section['salt'], ''),
         flush: _coerce_str(section['flush'], DEFAULT_REMOTE_FLUSH, ALLOWED_REMOTE_FLUSH),
         log_path: _coerce_path(output['path'], DEFAULT_REMOTE_LOG_PATH),
-        retention_max_age_days: _coerce_positive_int(
+        retention_max_age_days: _coerce_bounded_int(
             retention['max_age_days'],
             DEFAULT_REMOTE_RETENTION.max_age_days,
+            MIN_RETENTION_MAX_AGE_DAYS,
         ),
-        retention_max_bytes: _coerce_positive_int(
+        retention_max_bytes: _coerce_bounded_int(
             retention['max_bytes'],
             DEFAULT_REMOTE_RETENTION.max_bytes,
+            MIN_RETENTION_MAX_BYTES,
         ),
     });
 }

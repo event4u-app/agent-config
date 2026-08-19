@@ -680,3 +680,35 @@ describe('consentVerdict — org-pack provenance (ADR-233)', () => {
         expect(writerUnion).not.toContain('org-pack');
     });
 });
+
+describe('consentVerdict — org-pack outranks the hand-edit branch (review finding 3)', () => {
+    const OUT_OF_SCOPE = 'memory.learn_on_session_end';
+
+    it('withholds an out-of-scope org-pack grant even when the file was hand-written', () => {
+        // The defect this pins: `handEdited` returned `granted` BEFORE the
+        // org-pack branch, and `handEdited` is documented as true for exactly
+        // the project-local `.agent-settings.yml` an org pack must ship. So
+        // the namespace scope held for no real deployment — the only shape
+        // where it mattered was the one that bypassed it.
+        expect(consentVerdict({
+            cls: 'B', key: OUT_OF_SCOPE, value: true, source: 'org-pack', handEdited: true,
+        })).toBe('withheld-org-pack-out-of-scope');
+    });
+
+    it('still grants in scope with the same hand-edited file', () => {
+        expect(consentVerdict({
+            cls: 'B', key: 'telemetry.remote.enabled', value: true, source: 'org-pack', handEdited: true,
+        })).toBe('granted');
+    });
+
+    it('leaves the hand-edit grant intact for every other source', () => {
+        // The reorder must not cost the path the class contract guarantees.
+        expect(consentVerdict({ cls: 'B', value: true, handEdited: true })).toBe('granted');
+        expect(consentVerdict({
+            cls: 'B', key: OUT_OF_SCOPE, value: true, source: 'manual', handEdited: true,
+        })).toBe('granted');
+        expect(consentVerdict({
+            cls: 'B', key: OUT_OF_SCOPE, value: true, source: 'auto-detected', handEdited: true,
+        })).toBe('granted');
+    });
+});

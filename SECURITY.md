@@ -92,8 +92,14 @@ a login name would be.
 `telemetry.remote.output.path`, default `.agent-telemetry.jsonl` at the project
 root, as plain newline-delimited JSON. Read it with any text tool; nothing is
 encoded or obscured. The file is bounded by `telemetry.remote.retention` — 90
-days and 2 MiB by default, oldest records dropped first — so it neither grows
-without limit nor retains history indefinitely.
+days and 2 MiB by default, oldest records dropped first.
+
+Retention is enforced by the writer, on append, which is what makes it
+impossible to bypass by forgetting to run a sweep — and is also its one
+limit, stated rather than glossed: an install that stops writing stops
+pruning. Turn telemetry off and the file freezes at whatever it held, rather
+than ageing itself out. Deleting it is safe and is the intended way to clear
+it; nothing reconstructs it.
 
 **Consent.** Enablement is recorded with provenance. An org administrator's
 decision is recorded as `org-pack` and is disclosed to the affected user at

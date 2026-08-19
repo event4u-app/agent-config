@@ -243,14 +243,17 @@ describe('extractSkillName', () => {
 
 describe('telemetry-usage — the declared growth budget reaches the log', () => {
     it('honours a byte cap the install declared, not the appender default', () => {
-        const cap = 1024;
+        // The smallest LEGAL cap: below MIN_RETENTION_MAX_BYTES the reader
+        // falls back to the default, so a smaller number here would silently
+        // test the default and pass for the wrong reason.
+        const cap = 4096;
         const root = makeRoot(`${ACTIVE}
 `.replace('    salt: "org-pack-secret"', `    salt: "org-pack-secret"
     retention:
       max_bytes: ${cap}`));
 
-        // One record is ~270 B, so a 1 KiB cap binds within a handful of
-        // writes; the appender default (2 MiB) would not bind at all here.
+        // One record is ~270 B, so a 4 KiB cap binds within ~15 writes; the
+        // appender default (2 MiB) would not bind at all across 40.
         for (let i = 0; i < 40; i += 1) {
             expect(run(envelope(`skill-${i}`), { consumer_root: root })).toBe(0);
         }

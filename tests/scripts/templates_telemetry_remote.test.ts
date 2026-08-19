@@ -17,6 +17,8 @@ import {
     read_remote_settings,
     DEFAULT_REMOTE_LOG_PATH,
     DEFAULT_REMOTE_RETENTION,
+    MIN_RETENTION_MAX_AGE_DAYS,
+    MIN_RETENTION_MAX_BYTES,
 } from '../../src/agent-src/templates/scripts/telemetry/settings.js';
 import {
     append_class_a_record,
@@ -28,6 +30,7 @@ import {
     normalise_skill_name,
     record_line_ms,
     retention_due,
+    _oldest_datable_ms,
     ClassARecordError,
     DEFAULT_RETENTION_MAX_AGE_DAYS,
     DEFAULT_RETENTION_MAX_BYTES,
@@ -353,10 +356,34 @@ describe('retention_due', () => {
         expect(retention_due(log, policy, new Date('2026-06-01T12:00:00Z'))).toBe(true);
     });
 
-    it('does not fire on age it cannot read', () => {
+    it('looks past an undatable head line instead of giving up on the age policy', () => {
+        // The defect this replaces: reading only line 1 meant ONE corrupt head
+        // line disabled the age pass entirely — and since the pass deliberately
+        // keeps undatable lines, it stayed disabled until the byte cap evicted
+        // that line, which on a low-volume log is years.
         const log = newLog();
-        seed(log, ['not a record', lineFor('a', '2026-06-01T00:00:00Z')]);
+        const stale = lineFor('a', '2026-06-01T00:00:00Z');
+        seed(log, ['not a record', stale]);
+        expect(retention_due(log, policy, new Date('2030-01-01T00:00:00Z'))).toBe(true);
+        // …and the same head line does not manufacture a prune when the record
+        // behind it is still inside the window.
+        expect(retention_due(log, policy, new Date('2026-06-02T00:00:00Z'))).toBe(false);
+    });
+
+    it('answers no on age when the head window holds no datable line at all', () => {
+        // Bounded by the byte cap rather than by age. The alternative — calling
+        // it due — would read the whole file on every append, forever.
+        const log = newLog();
+        seed(log, ['not a record', 'nor this one']);
         expect(retention_due(log, policy, new Date('2030-01-01T00:00:00Z'))).toBe(false);
+    });
+
+    it('ignores a torn final line in the head window rather than reading half a record', () => {
+        const log = newLog();
+        const line = lineFor('a', '2026-06-01T00:00:00Z');
+        // No trailing newline: the last line is incomplete by construction.
+        fs.writeFileSync(log, line.slice(0, line.length - 10), 'utf-8');
+        expect(_oldest_datable_ms(log)).toBeNull();
     });
 });
 
@@ -522,5 +549,60 @@ describe('retention settings', () => {
             expect(s.retention_max_age_days).toBe(DEFAULT_REMOTE_RETENTION.max_age_days);
             expect(s.retention_max_bytes).toBe(DEFAULT_REMOTE_RETENTION.max_bytes);
         }
+    });
+});
+
+describe('retention settings — the floor the zero-check alone did not give', () => {
+    it('refuses a byte budget smaller than one record, which retains nothing', () => {
+        // `max_bytes: 1` is a positive integer and passed the original guard,
+        // yet it is strictly worse than the `0` that guard refuses: every
+        // append prunes the log back to empty. Found by the completion review.
+        for (const bad of ['1', '100', String(MIN_RETENTION_MAX_BYTES - 1)]) {
+            const s = read_remote_settings(writeSettings(`${FULL}
+    retention:
+      max_bytes: ${bad}
+`));
+            expect(s.retention_max_bytes).toBe(DEFAULT_REMOTE_RETENTION.max_bytes);
+        }
+    });
+
+    it('accepts the floor itself, so the smallest legal budget still keeps a record', () => {
+        const s = read_remote_settings(writeSettings(`${FULL}
+    retention:
+      max_bytes: ${MIN_RETENTION_MAX_BYTES}
+      max_age_days: ${MIN_RETENTION_MAX_AGE_DAYS}
+`));
+        expect(s.retention_max_bytes).toBe(MIN_RETENTION_MAX_BYTES);
+        expect(s.retention_max_age_days).toBe(MIN_RETENTION_MAX_AGE_DAYS);
+
+        // And the floor is genuinely above one line, which is the property
+        // that makes it a floor rather than a number.
+        const line = lineFor('a-reasonably-long-skill-name', '2026-06-01T00:00:00Z');
+        expect(MIN_RETENTION_MAX_BYTES).toBeGreaterThan(line.length + 1);
+    });
+
+    it('keeps records under the smallest legal budget rather than emptying the log', () => {
+        const log = newLog();
+        const policy = {
+            max_age_days: MIN_RETENTION_MAX_AGE_DAYS,
+            max_bytes: MIN_RETENTION_MAX_BYTES,
+        };
+        const at = new Date('2026-06-01T00:00:00Z');
+        for (let i = 0; i < 40; i += 1) {
+            append_class_a_record(log, makeRecord(`s${i}`, at.toISOString()), policy, at);
+        }
+        expect(readLines(log).length).toBeGreaterThan(0);
+        expect(fs.statSync(log).size).toBeLessThanOrEqual(policy.max_bytes);
+    });
+
+    it('leaves no temp file behind, and names it per process', () => {
+        const log = newLog();
+        const policy = { max_age_days: 30, max_bytes: 4096 };
+        seed(log, [lineFor('old', '2026-01-01T00:00:00Z'), lineFor('new', '2026-06-20T00:00:00Z')]);
+        enforce_retention(log, policy, new Date('2026-06-25T00:00:00Z'));
+
+        const dir = path.dirname(log);
+        expect(fs.readdirSync(dir).filter((f) => f.includes('.retention.'))).toEqual([]);
+        expect(fs.existsSync(`${log}.retention.${process.pid}.tmp`)).toBe(false);
     });
 });

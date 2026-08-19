@@ -126,12 +126,13 @@ export function consentVerdict(query: ConsentQuery): ConsentVerdict {
     if (isConservativeDefault(query.value)) {
         return 'withheld-default';
     }
-    if (query.handEdited === true) {
-        return 'granted';
-    }
-    if (query.source === undefined) {
-        return 'withheld-unrecorded';
-    }
+    // The org-pack branch runs BEFORE the hand-edit branch, and the order is
+    // the fix rather than a style choice. `handEdited` is true for a
+    // project-local `.agent-settings.yml` — which is precisely the file an org
+    // pack ships — so with hand-edit first, a recorded `org-pack` provenance
+    // on an out-of-scope key would be granted by the wrong branch and ADR-233
+    // § D2's namespace scope would hold for no real deployment. A recorded
+    // source is the more specific fact and decides first.
     if (query.source === 'org-pack') {
         // A human decided, but not the human this value binds — so the grant
         // is real and narrow. An absent key cannot be shown to be in scope,
@@ -139,6 +140,12 @@ export function consentVerdict(query: ConsentQuery): ConsentVerdict {
         return query.key !== undefined && query.key.startsWith(ORG_PACK_KEY_PREFIX)
             ? 'granted'
             : 'withheld-org-pack-out-of-scope';
+    }
+    if (query.handEdited === true) {
+        return 'granted';
+    }
+    if (query.source === undefined) {
+        return 'withheld-unrecorded';
     }
     if (!HUMAN_SOURCES.includes(query.source)) {
         return 'withheld-machine-inferred';
