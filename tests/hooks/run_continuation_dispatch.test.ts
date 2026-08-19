@@ -40,7 +40,10 @@ import { parse as parseYaml } from 'yaml';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { deriveSessionKey, sessionRefusalFile } from '../../src/scripts/_lib/turn_end_refusals.js';
-import { stateRelPath } from '../../src/scripts/hooks/run_continuation_hook.js';
+import {
+    legacyStateRelPath,
+    stateRelPath,
+} from '../../src/scripts/hooks/run_continuation_hook.js';
 import { claim_file, roadmap_claim_rel } from '../../src/scripts/session_register_hook.js';
 import { EVENTS_RELPATH } from '../../src/scripts/hooks/run_continuation_hook.js';
 
@@ -721,7 +724,7 @@ describe('run-continuation — driven through the live dispatcher', () => {
         // Fire once to create state — this run is now DRIVEN.
         dispatchStop(main, writeTranscript(3), sub);
         expect(events(main).filter((e) => e['event'] === 'engage').length).toBe(1);
-        const stateFile = path.join(main, stateRelPath(deriveSessionKey(SESSION)));
+        const stateFile = path.join(main, stateRelPath(deriveSessionKey(SESSION), SLUG));
         expect(fs.existsSync(stateFile)).toBe(true);
 
         // Now archive it the way a completing run does, in the SESSION tree only.
@@ -730,12 +733,22 @@ describe('run-continuation — driven through the live dispatcher', () => {
         fs.mkdirSync(archive, { recursive: true });
         fs.renameSync(live, path.join(archive, `${SLUG}.md`));
 
+        // FIRST absent fire: the line is written and the budget is NOT yet
+        // reclaimed. Round 7 finding 1: one fire cannot tell an archival from a
+        // non-atomic rewrite, and treating it as confirmation reset a live budget
+        // to iteration 1 with a fresh 4 h clock, repeatably.
         const res = dispatchStop(main, writeTranscript(4), sub);
         expect(res.code).toBe(0);
         const absent = events(main).filter((e) => e['event'] === 'halt-roadmap-absent');
         expect(absent.length).toBe(1);
         expect(absent[0]?.['roadmap']).toBe(SLUG);
-        // The budget is cleared, which is the half no ledger line can substitute for.
+        expect(absent[0]?.['absent_fires']).toBe(1);
+        expect(fs.existsSync(stateFile)).toBe(true);
+
+        // SECOND consecutive absent fire confirms it: the budget is reclaimed, and
+        // the ledger is NOT given a second identical line.
+        dispatchStop(main, writeTranscript(5), sub);
+        expect(events(main).filter((e) => e['event'] === 'halt-roadmap-absent').length).toBe(1);
         expect(fs.existsSync(stateFile)).toBe(false);
     });
 
@@ -826,7 +839,7 @@ describe('run-continuation — driven through the live dispatcher', () => {
         // full 25-iteration cap: the unbounded loop `RunState.halted` exists to
         // prevent, restored by the branch meant to close a leak.
         const { main, worktree, sub } = writeNestedWorktreePair();
-        const stateFile = path.join(main, stateRelPath(deriveSessionKey(SESSION)));
+        const stateFile = path.join(main, stateRelPath(deriveSessionKey(SESSION), SLUG));
         fs.mkdirSync(path.dirname(stateFile), { recursive: true });
         fs.writeFileSync(
             stateFile,
@@ -854,37 +867,76 @@ describe('run-continuation — driven through the live dispatcher', () => {
         expect(kept['iterations']).toBe(25);
     });
 
-    it('does not inherit a halt stamped on a DIFFERENT roadmap', () => {
-        // Round 6 finding 2: the state is keyed on the session id alone and one
-        // session may re-claim. A halt stamped on roadmap A is never cleared — only
-        // `complete` unlinks — so a later legitimate claim of roadmap B inherited
-        // it, emitted a halt line naming B without ever engaging, and reported A's
-        // iteration count under B's slug.
+    it('does not inherit a halt stamped on a DIFFERENT roadmap, and does not destroy it', () => {
+        // Round 6 finding 2 fixed the inheritance with an in-file slug guard; round 7
+        // finding 3 showed that guard made the OTHER roadmap's halt stamp
+        // destructible — nulling `prev` on a mismatch let the next write overwrite
+        // it, so a halted roadmap became re-engageable with a full budget by the
+        // detour of claiming something else once. The state is keyed on
+        // (session, roadmap) now, so the two live in different files and neither
+        // assertion below depends on a guard remembering to fire.
         const root = writeWorkspace();
-        const stateFile = path.join(root, stateRelPath(deriveSessionKey(SESSION)));
-        fs.mkdirSync(path.dirname(stateFile), { recursive: true });
-        fs.writeFileSync(
-            stateFile,
-            JSON.stringify({
-                started_at: '2026-08-19T00:00:00.000Z',
-                iterations: 25,
-                last_turn: 9,
-                history: [7, 7, 7],
-                roadmap: 'road-to-some-other-thing',
-                halted: 'halt-max-iterations',
-            }),
-            'utf-8',
-        );
+        const otherSlug = 'road-to-some-other-thing';
+        const otherFile = path.join(root, stateRelPath(deriveSessionKey(SESSION), otherSlug));
+        fs.mkdirSync(path.dirname(otherFile), { recursive: true });
+        const otherState = {
+            started_at: '2026-08-19T00:00:00.000Z',
+            iterations: 25,
+            last_turn: 9,
+            history: [7, 7, 7],
+            roadmap: otherSlug,
+            halted: 'halt-max-iterations',
+        };
+        fs.writeFileSync(otherFile, JSON.stringify(otherState), 'utf-8');
 
         const res = dispatchStop(root, writeTranscript(3));
         expect(res.code).toBe(2);
         const log = events(root);
         expect(log.filter((e) => e['event'] === 'engage').length).toBe(1);
         expect(log.filter((e) => String(e['event']).startsWith('halt-')).length).toBe(0);
-        // A fresh budget, not the other roadmap's spent one.
-        const now = JSON.parse(fs.readFileSync(stateFile, 'utf-8')) as Record<string, unknown>;
-        expect(now['iterations']).toBe(1);
-        expect(now['roadmap']).toBe(SLUG);
+
+        // A fresh budget for THIS roadmap.
+        const mine = JSON.parse(
+            fs.readFileSync(path.join(root, stateRelPath(deriveSessionKey(SESSION), SLUG)), 'utf-8'),
+        ) as Record<string, unknown>;
+        expect(mine['iterations']).toBe(1);
+        expect(mine['roadmap']).toBe(SLUG);
+
+        // And the other roadmap's halt is byte-identical — round 7 finding 3.
+        expect(JSON.parse(fs.readFileSync(otherFile, 'utf-8'))).toEqual(otherState);
+    });
+
+    it('migrates a legacy per-session state file, and refuses a foreign one', () => {
+        // The orphaning objection round 6 raised against keying the path is answered
+        // by migrating rather than by avoiding: a pre-round-7 file is adopted once
+        // when its recorded roadmap is absent or equal, and ignored when it belongs
+        // to another roadmap.
+        const root = writeWorkspace();
+        const legacy = path.join(root, legacyStateRelPath(deriveSessionKey(SESSION)));
+        fs.mkdirSync(path.dirname(legacy), { recursive: true });
+        fs.writeFileSync(
+            legacy,
+            JSON.stringify({
+                // NOW, not a fixed stamp: the wall-clock rung caps a run at 4 h, so a
+                // midnight timestamp made this fixture halt instead of engaging and
+                // the test measured the clock rather than the migration.
+                started_at: new Date().toISOString(),
+                iterations: 4,
+                last_turn: 1,
+                history: [1],
+            }),
+            'utf-8',
+        );
+
+        dispatchStop(root, writeTranscript(3));
+        const engaged = events(root).filter((e) => e['event'] === 'engage');
+        expect(engaged.length).toBe(1);
+        // The budget continued from 4 rather than restarting — the live-budget half
+        // of the migration.
+        expect(engaged[0]?.['iteration']).toBe(5);
+        // And the keyed file is what gets written from now on.
+        const keyed = path.join(root, stateRelPath(deriveSessionKey(SESSION), SLUG));
+        expect(fs.existsSync(keyed)).toBe(true);
     });
 
     it('writes ONE halt line, not one per subsequent stop fire', () => {
@@ -893,7 +945,7 @@ describe('run-continuation — driven through the live dispatcher', () => {
         // appended another record with the same run_id and iterations — an unbounded
         // number of duplicates in the ledger the acceptance criteria count from.
         const root = writeWorkspace();
-        const stateFile = path.join(root, stateRelPath(deriveSessionKey(SESSION)));
+        const stateFile = path.join(root, stateRelPath(deriveSessionKey(SESSION), SLUG));
         fs.mkdirSync(path.dirname(stateFile), { recursive: true });
         fs.writeFileSync(
             stateFile,

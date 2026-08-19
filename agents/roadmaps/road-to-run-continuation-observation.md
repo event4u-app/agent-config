@@ -24,8 +24,8 @@ estate_offset_exempt: >-
 `run-continuation` is the stop-slot concern that re-engages a run while
 its claimed roadmap still has open steps. It shipped, it is unit-tested
 (21 cases), it is integration-tested against the real dispatcher (7 cases
-when this roadmap was written; the file holds 25 at the close of this
-branch, of which 23 drive the dispatcher and 2 only read the hook
+when this roadmap was written; the file holds 26 at the close of this
+branch, of which 24 drive the dispatcher and 2 only read the hook
 manifest) — and it had **never fired once** outside a test.
 
 The cause was a defect, not a missing step, and it is fixed: the run
@@ -137,7 +137,7 @@ engages and leaves the event behind.
      and never call `dispatchStop`.
 
      **At three misses the number is the defect, so it is now stated with
-     the distinction that kept breaking it: 25 cases in the file, 23 of
+     the distinction that kept breaking it: 26 cases in the file, 24 of
      which drive the dispatcher, 2 of which read only the manifest.** A
      bullet whose whole purpose is to let a reader check the artefact
      against a falsifiable number is worse than useless when the number is
@@ -213,6 +213,46 @@ engages and leaves the event behind.
      repository, a cwd that does not exist, a cwd under no checkout root.
      Those still fall back, and on those lines it is still the only field
      that says so.
+
+     **Rounds 4-7 then rewrote the run-state contract twice, and both
+     rewrites came from the same place: the state's identity was wrong.**
+     Worth recording because the intermediate steps each looked correct.
+
+     Round 4 introduced a `halt-roadmap-absent` rung so a completing run
+     stopped leaking its budget, and round 5 found it cleared a halt stamp;
+     round 6 guarded the stamp and keyed the roadmap INSIDE the state file;
+     round 7 then found two highs in that guard. The absent branch never
+     applied it, so it reported one roadmap's iteration count under
+     another's slug and deleted a live state — and on the main path,
+     nulling the previous state on a slug mismatch let the next write
+     OVERWRITE the other roadmap's halt stamp, so "a halt must NOT clear
+     it" was not durable. A halted roadmap became re-engageable with a full
+     budget by the detour of claiming something else once.
+
+     One session-keyed file cannot hold two roadmaps' budgets. The state
+     path is keyed on **(session, roadmap)** now, and round 6's objection —
+     that keying the path "would orphan every state file in existence" —
+     is answered by migrating rather than by avoiding: the legacy
+     per-session file is adopted once when its recorded roadmap is absent
+     or equal, and ignored when it belongs to another roadmap.
+
+     The second rewrite is the absence semantics. Round 6 stopped the rung
+     erasing a *halted* run's stamp and left the larger half open: a run
+     with a **live** budget still lost its state on one unreadable fire —
+     an ordinary event (a branch switch to a ref without the roadmap, a
+     non-atomic rewrite landing on the stop fire) with an unbounded
+     consequence, since iteration 20 becomes iteration 1 with a fresh 4 h
+     clock, repeatable. One fire cannot tell an archival from a rewrite
+     window; two can, because a rewrite is sub-second and an archival lasts
+     across turns. So the absence is counted, the ledger line is written
+     once, and the budget is reclaimed only at `ABSENT_CONFIRM_FIRES`.
+
+     Round 7 also closed the last silent rung: a transcript over the shared
+     read cap made this concern go inert for the rest of a long run while
+     its budget stayed live, writing nothing — an inert mechanism
+     indistinguishable in the ledger from a healthy idle run, which is the
+     failure this whole roadmap exists over. It emits
+     `inert-transcript-over-cap` once per run now.
 
      The test both council seats named independently is the one that closes
      both findings at once, and it is in the tree: a real nested worktree,

@@ -41,13 +41,24 @@
  * `agents/runtime/state/run-continuation.jsonl`:
  *   contract absent            → no-op (no event; the common case is silent)
  *   roadmap unreadable from the
- *   authoritative tree         → allow  (event: halt-roadmap-absent, and ONLY
- *                                for a run this concern had already engaged —
- *                                state present is the discriminator. State
- *                                absent stays silent, because nothing was ever
- *                                driven. Deliberately NOT in `HALT_ACTIONS`:
- *                                it clears the budget rather than stamping
- *                                `halted`, and the two are exclusive)
+ *   authoritative tree         → allow  (event: halt-roadmap-absent, ONCE, and
+ *                                only for a run this concern had already engaged
+ *                                on THIS roadmap — the keyed state is the
+ *                                discriminator. State absent stays silent,
+ *                                because nothing was ever driven. The budget is
+ *                                reclaimed only after `ABSENT_CONFIRM_FIRES`
+ *                                consecutive absent fires: one fire cannot tell
+ *                                an archival from a non-atomic rewrite, two can.
+ *                                Deliberately NOT in `HALT_ACTIONS` — it clears
+ *                                the budget rather than stamping `halted`, and
+ *                                the two are exclusive)
+ *   transcript over the shared
+ *   read cap                   → allow  (event: inert-transcript-over-cap, ONCE
+ *                                per run. The concern cannot compute a turn
+ *                                ordinal past the cap, so it goes inert — and an
+ *                                inert mechanism that says nothing is
+ *                                indistinguishable from a healthy idle run,
+ *                                which is the failure this file exists over)
  *   quality-gate refusal       → defer            (event: deferred-quality-gate)
  *   duplicate stop fire        → repeat the BLOCK, no count (event: none —
  *                                an allow here would END the reply the block
@@ -158,12 +169,38 @@ export const MAX_ITERATIONS = 25;
 export const WALL_CLOCK_CAP_MS = 4 * 60 * 60 * 1000;
 export const STALL_WINDOW = 3;
 
+/**
+ * How many consecutive absent-roadmap fires confirm the absence.
+ *
+ * Two, because that is the smallest number that separates the two causes: a
+ * non-atomic rewrite is open for well under one turn, an archival lasts across
+ * them. Round 7 findings 1 and 4 measured the cost of treating one fire as
+ * confirmation — an unbounded budget reset, repeatable.
+ */
+export const ABSENT_CONFIRM_FIRES = 2;
+
 export interface RunState {
     started_at: string;
     iterations: number;
     last_turn: number;
     /** Open-step count recorded at each engagement, newest last. */
     history: number[];
+    /**
+     * Set once the over-cap-transcript rung has reported this run inert.
+     *
+     * The rung fires on every stop for the rest of a long run, and one line saying
+     * so is information while a stream of identical lines is noise.
+     */
+    inert_reported?: boolean;
+    /**
+     * Consecutive stop fires on which the roadmap was unreadable.
+     *
+     * Reset by any successful read (the engage/halt paths never carry it forward),
+     * so it counts a run of absences rather than a total. At
+     * `ABSENT_CONFIRM_FIRES` the budget is reclaimed; below it the state is left
+     * alone. See the absent-roadmap branch for why one fire is not enough.
+     */
+    absent_fires?: number;
     /**
      * The roadmap slug this state belongs to.
      *
@@ -238,7 +275,17 @@ export function isDuplicateFire(
     // a coincidentally equal count therefore erased a genuine engagement from the
     // ledger the acceptance criteria are counted from. A changed source is never a
     // duplicate fire.
-    if (roadmapSource !== undefined && state.history_source !== roadmapSource) {
+    // Round 7 finding 6: this read an ABSENT recorded source as a changed one, so
+    // the first fire after the upgrade that introduced the field failed to
+    // recognise a genuine duplicate — it consumed an iteration and appended an
+    // extra `engage` line to the ledger the acceptance criteria count from, which
+    // is the false count round 5 finding 6 added the guard to prevent. Both sides
+    // must be known before a difference means anything.
+    if (
+        state.history_source !== undefined &&
+        roadmapSource !== undefined &&
+        state.history_source !== roadmapSource
+    ) {
         return false;
     }
     if (state.history.length === 0 || state.history[state.history.length - 1] !== openCount) {
@@ -421,9 +468,93 @@ export function ladder(
     return 'engage';
 }
 
-export function stateRelPath(runId: string): string {
+/**
+ * Where a run's state lives: keyed on the session AND the roadmap.
+ *
+ * ## Round 6 keyed it on the session alone, and round 7 killed that
+ *
+ * Round 6 finding 2 observed that one session may re-claim, so a halt stamped on
+ * roadmap A was inherited by a later claim of roadmap B. It fixed that by
+ * recording the slug INSIDE the file and reading a mismatch as a fresh run —
+ * declining to key the path on the slug because that "would have orphaned every
+ * state file in existence".
+ *
+ * Round 7 findings 2 and 3 showed the in-file discriminator trades one defect for
+ * two. The absent-roadmap branch never applied it, so it reported A's iteration
+ * count under B's slug and deleted A's live state; and on the main path, nulling
+ * `prev` on a mismatch means the next write OVERWRITES A's halt stamp — so a
+ * halted roadmap became re-engageable with a full budget by the detour of
+ * claiming something else once. "A halt must NOT clear it" was not durable.
+ *
+ * One file cannot hold two roadmaps' budgets, which is what both findings say from
+ * opposite ends. So the path carries the slug, and the orphaning objection is
+ * answered by MIGRATING rather than by avoiding: `readRunState` falls back to the
+ * legacy per-session path when the keyed one is absent, and adopts it only when its
+ * recorded roadmap is absent or equal. A live budget survives the upgrade; a
+ * foreign one is not inherited.
+ */
+export function stateRelPath(runId: string, slug: string): string {
+    const safeRun = runId.replace(/[^A-Za-z0-9_-]/g, '_');
+    const safeSlug = slug.replace(/[^A-Za-z0-9_-]/g, '_');
+    return path.join(STATE_DIR_REL, `run-continuation-${safeRun}-${safeSlug}.json`);
+}
+
+/** The pre-round-7 path, read for migration and never written. */
+export function legacyStateRelPath(runId: string): string {
     const safe = runId.replace(/[^A-Za-z0-9_-]/g, '_');
     return path.join(STATE_DIR_REL, `run-continuation-${safe}.json`);
+}
+
+/**
+ * This run's state, from the keyed path or — once, on migration — from the legacy
+ * per-session one.
+ *
+ * Returns the state and the file it came from, because the caller has to know
+ * whether it is looking at a keyed file (safe to delete) or a legacy one shared
+ * with other roadmaps (never deleted; the keyed write supersedes it).
+ */
+export function readRunState(
+    workspaceRoot: string,
+    runId: string,
+    slug: string,
+): { state: RunState | null; from: 'keyed' | 'legacy' | 'none'; keyedFile: string } {
+    const keyedFile = path.join(workspaceRoot, stateRelPath(runId, slug));
+    const keyed = readState(keyedFile);
+    if (keyed !== null) return { state: keyed, from: 'keyed', keyedFile };
+    if (fileExists(keyedFile)) {
+        // Present but unreadable. NOT a migration case: adopting the legacy file
+        // here would silently replace a corrupt budget with a foreign one.
+        return { state: null, from: 'keyed', keyedFile };
+    }
+    const legacy = readState(path.join(workspaceRoot, legacyStateRelPath(runId)));
+    if (legacy === null) return { state: null, from: 'none', keyedFile };
+    // Adopted only when the legacy file is not another roadmap's.
+    if (legacy.roadmap !== undefined && legacy.roadmap !== slug) {
+        return { state: null, from: 'none', keyedFile };
+    }
+    return { state: legacy, from: 'legacy', keyedFile };
+}
+
+/**
+ * The only writer of a run-state file. Fail-open on every error: the state is a
+ * budget, and losing a write costs at most one iteration of accounting, while
+ * throwing here would turn an observability concern into a turn-end failure.
+ */
+function writeState(file: string, state: RunState): void {
+    try {
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, `${JSON.stringify(state)}\n`, 'utf8');
+    } catch {
+        /* fail-open */
+    }
+}
+
+function fileExists(p: string): boolean {
+    try {
+        return fs.statSync(p).isFile();
+    } catch {
+        return false;
+    }
 }
 
 function readState(file: string): RunState | null {
@@ -454,6 +585,12 @@ function readState(file: string): RunState | null {
         }
         if (typeof o['roadmap'] === 'string') {
             rec.roadmap = o['roadmap'];
+        }
+        if (typeof o['absent_fires'] === 'number' && Number.isFinite(o['absent_fires'])) {
+            rec.absent_fires = o['absent_fires'];
+        }
+        if (o['inert_reported'] === true) {
+            rec.inert_reported = true;
         }
         // Validated against the halt set rather than accepted as any string:
         // an unrecognised value would be returned verbatim by `ladder` and
@@ -810,7 +947,6 @@ export function main(): number {
     );
     const roadmapPath = resolveRoadmap(sessionRoot, workspaceRoot, slug);
     const runId = deriveSessionKey(sessionId || 'unknown-session');
-    const stateFile = path.join(workspaceRoot, stateRelPath(runId));
 
     // Two locals rather than one plus a re-check: `roadmapFile` is only assigned
     // where the read succeeded, so the guard below narrows BOTH and everything
@@ -860,27 +996,16 @@ export function main(): number {
         // `resolveRoadmap` used to assert the archival reading, and finding 5 was
         // right that it conflated the two — so the reading is now carried by the
         // state file, which actually knows.
-        // File PRESENCE, not parseability (round 6 finding 5): `readState` returns
-        // null for a state file that exists but is truncated or malformed — which
-        // is exactly the interrupted-write case — so keying the branch on a
-        // successful parse left the very leak it was added to close in place.
-        let stateExists = false;
-        try {
-            stateExists = fs.statSync(stateFile).isFile();
-        } catch {
-            stateExists = false;
-        }
-        if (!stateExists) return EXIT_ALLOW;
-        const driven = readState(stateFile);
+        // Read THIS roadmap's state, keyed (round 7 finding 2). The previous version
+        // read the session-keyed file with no roadmap discriminator, so after a
+        // re-claim it reported roadmap A's iteration count under roadmap B's slug
+        // and deleted A's live state — falsifying its own documented premise that
+        // "state only exists if this concern engaged on THIS roadmap before".
+        const runState = readRunState(workspaceRoot, runId, slug);
+        const driven = runState.state;
+        if (driven === null && runState.from === 'none') return EXIT_ALLOW;
 
         // A HALT STAMP IS NEVER ERASED HERE (round 6 finding 1, high).
-        //
-        // Clearing unconditionally meant one transient read failure of the roadmap
-        // — an unlink-then-write by any tool, a `git checkout`/`stash`/`mv`
-        // mid-run, an EACCES — erased the stamp AND the budget. The next fire then
-        // read no state, started at iteration 0 with a fresh wall clock, and
-        // re-engaged with the full cap: the unbounded loop `RunState.halted` exists
-        // to prevent, restored by the branch meant to close a leak.
         //
         // A halted run has already recorded its own end, so there is nothing to
         // announce and nothing to reclaim. Silence and no write is the whole
@@ -896,19 +1021,52 @@ export function main(): number {
         // all (finding 10): the line still exists, so a refusal is no longer
         // indistinguishable from the concern never firing.
         absenceRoots['roadmap_path'] = roadmapPath;
-        appendEvent(workspaceRoot, {
-            event: 'halt-roadmap-absent',
-            run_id: runId,
-            roadmap: slug,
-            // `null` when the state file exists but could not be parsed — the
-            // interrupted-write case above. Reported as null rather than as 0,
-            // which would claim a fact the file no longer carries.
-            iterations: driven?.iterations ?? null,
-            at: new Date().toISOString(),
-            ...absenceRoots,
-        });
+
+        // ── ONE absence is not a finished run (round 7 findings 1 and 4) ──
+        //
+        // Round 6 stopped this branch erasing a HALTED run's stamp and left the
+        // larger half open: a run with a LIVE budget still had its state deleted on
+        // a single unreadable fire. The triggers are ordinary — the agent checks out
+        // a ref without the roadmap, a tool rewrites the file unlink-then-write, an
+        // EACCES lands on the stop fire — and the consequence is unbounded: iteration
+        // 20 becomes iteration 1 with a fresh 4 h clock, repeatable every time.
+        //
+        // Archival and a momentary read failure are indistinguishable from ONE fire.
+        // They are not indistinguishable across two: a rewrite window is
+        // sub-second, while an archived roadmap stays archived across turns. So the
+        // absence is counted, the ledger line is written ONCE (on the first), and
+        // the budget is reclaimed only after the absence has persisted.
+        //
+        // A state file that exists but cannot be parsed is never deleted here
+        // (round 7 finding 4): the counter has nowhere to live, and deleting what we
+        // could not read would erase an interrupted halt stamp — the exact leak the
+        // presence check was added to close. The next healthy write supersedes it.
+        const absentFires = (driven?.absent_fires ?? 0) + 1;
+        if (absentFires === 1) {
+            appendEvent(workspaceRoot, {
+                event: 'halt-roadmap-absent',
+                run_id: runId,
+                roadmap: slug,
+                // `null` when the state file exists but could not be parsed.
+                // Reported as null rather than as 0, which would claim a fact the
+                // file no longer carries.
+                iterations: driven?.iterations ?? null,
+                absent_fires: driven === null ? null : absentFires,
+                at: new Date().toISOString(),
+                ...absenceRoots,
+            });
+        }
+        if (driven === null) return EXIT_ALLOW;
+        if (absentFires < ABSENT_CONFIRM_FIRES) {
+            driven.absent_fires = absentFires;
+            writeState(runState.keyedFile, driven);
+            return EXIT_ALLOW;
+        }
+        // Confirmed. Only the KEYED file is removed — a legacy per-session file is
+        // shared with other roadmaps and is never this branch's to delete; the
+        // keyed write above supersedes it for this slug.
         try {
-            fs.rmSync(stateFile, { force: true });
+            fs.rmSync(runState.keyedFile, { force: true });
         } catch {
             /* fail-open — the ledger line is the durable half */
         }
@@ -932,7 +1090,32 @@ export function main(): number {
     // toward allow is the same fail-open posture the gate takes on every
     // unreadable-transcript case.
     try {
-        if (fs.statSync(transcriptPath).size > TRANSCRIPT_READ_MAX_BYTES) return EXIT_ALLOW;
+        if (fs.statSync(transcriptPath).size > TRANSCRIPT_READ_MAX_BYTES) {
+            // Round 7 finding 5: this returned ALLOW with no event and no state
+            // change, so in the long-run regime this concern exists for — a 4 h cap
+            // — a session whose transcript crosses the cap went silently inert for
+            // the rest of the run while its budget stayed live. An inert mechanism
+            // indistinguishable in the ledger from a healthy idle run is the exact
+            // failure this whole roadmap is about, and the header claims every rung
+            // is a named event.
+            //
+            // Emitted ONCE per run, keyed on the state, so a long inert tail does
+            // not become a long stream of identical lines. No state file means no
+            // run to report on — the same silence the contract-absent rung takes.
+            const inert = readRunState(workspaceRoot, runId, slug);
+            if (inert.state !== null && inert.state.inert_reported !== true) {
+                appendEvent(workspaceRoot, {
+                    event: 'inert-transcript-over-cap',
+                    run_id: runId,
+                    roadmap: slug,
+                    iterations: inert.state.iterations,
+                    at: new Date().toISOString(),
+                });
+                inert.state.inert_reported = true;
+                writeState(inert.keyedFile, inert.state);
+            }
+            return EXIT_ALLOW;
+        }
     } catch {
         return EXIT_ALLOW;
     }
@@ -1010,10 +1193,14 @@ export function main(): number {
     // under B's slug. An absent `roadmap` field is trusted rather than discarded:
     // it means the state predates this field, and dropping a live budget on an
     // upgrade would be the worse error.
-    const onDisk = readState(stateFile);
-    const prev = onDisk !== null && onDisk.roadmap !== undefined && onDisk.roadmap !== slug
-        ? null
-        : onDisk;
+    // Keyed on (session, roadmap), with the legacy per-session file migrated once —
+    // see `readRunState`. The in-file `roadmap` guard round 6 added is gone as a
+    // BRANCH: it is now an identity, so a mismatch cannot reach this code at all,
+    // and round 7 finding 3's "a mismatch nulls prev, so the next write overwrites
+    // the other roadmap's halt stamp" has no path left.
+    const mainState = readRunState(workspaceRoot, runId, slug);
+    const stateFile = mainState.keyedFile;
+    const prev = mainState.state;
     const state: RunState = prev ?? {
         started_at: new Date().toISOString(),
         iterations: 0,
@@ -1090,12 +1277,7 @@ export function main(): number {
         // worst case of a lost stamp is the pre-fix behaviour, never a block.
         if (!state.halted) {
             state.halted = action;
-            try {
-                fs.mkdirSync(path.dirname(stateFile), { recursive: true });
-                fs.writeFileSync(stateFile, `${JSON.stringify(state)}\n`, 'utf8');
-            } catch {
-                /* fail-open */
-            }
+            writeState(stateFile, state);
         }
         return EXIT_ALLOW;
     }
@@ -1105,8 +1287,7 @@ export function main(): number {
     state.history.push(scan.open);
     state.last_engaged_at = new Date().toISOString();
     try {
-        fs.mkdirSync(path.dirname(stateFile), { recursive: true });
-        fs.writeFileSync(stateFile, `${JSON.stringify(state)}\n`, 'utf8');
+        writeState(stateFile, state);
     } catch {
         // If the counter cannot persist, the ladder cannot bound the loop —
         // so the loop must not run. Allowing here is the fail-open posture
