@@ -541,16 +541,31 @@ telemetry:
     # silently inactive. Keep that file out of version control, or supply it
     # from the org pack at install time.
     salt: ""
-    # `session-end` = flush at session end (Phase 2). `never` = keep records
-    # local indefinitely, which is a legitimate way to run the local half
-    # while the sink question is still open.
+    # `session-end` = flush at session end (Phase 2). `never` = no transport,
+    # which is a legitimate way to run the local half while the sink question
+    # is still open.
     #
-    # The log is append-only with NO cap and NO pruning today, so `never` is
-    # an unbounded steady state — one line per skill invocation, forever.
-    # A retention policy is owed before this namespace is enabled anywhere
-    # broadly (see the roadmap Phase 2 note); until then, treat the file as
-    # something you rotate yourself.
+    # `never` is NOT an unbounded steady state: the retention budget below
+    # bounds the log whether or not a flush is configured. The consequence
+    # worth knowing before choosing `never` is that the local file is then the
+    # only store, so a record retention evicts is a record that is never sent
+    # anywhere. Raise `retention.max_age_days` if you need a longer local
+    # history.
     flush: session-end
+    # Growth budget for the log below (`scale-discipline` R-A7). Enforced by
+    # the writer itself, so there is no sweep to remember to run: after each
+    # append, records older than `max_age_days` are dropped, and the file is
+    # held under `max_bytes` from the oldest end regardless of dates.
+    #
+    # The defaults are measured, not guessed. The busiest machine this tree
+    # has observed writes 6.6 skill invocations a day at ~270 bytes each, so
+    # 90 days is roughly 600 records (~160 KiB) and is the cap that actually
+    # binds; 2 MiB is the backstop for a rate that has not been observed.
+    # Omit the section to take both defaults — there is no way to configure
+    # "unbounded", which is the state R-A7 forbids.
+    retention:
+      max_age_days: 90
+      max_bytes: 2097152
     output:
       # Append-only JSONL log, relative to the project root. Gitignored.
       path: .agent-telemetry.jsonl
@@ -653,8 +668,10 @@ the canonical narrative lives in
 | `telemetry.remote.endpoint` | URL | *(none)* | Where Phase 2 will flush records to. Recorded now; no outbound call exists in Phase 1. Empty ⇒ inactive. |
 | `telemetry.remote.org_id` | string | *(none)* | The org whose pack enabled this install; written into every record. Empty ⇒ inactive. |
 | `telemetry.remote.salt` | string | *(none)* | Org-pack secret salting the user and session hashes — without it a digest of a login name is dictionary-reversible. Never written into a record, never logged. Must sit in the same `.agent-settings.yml` the reader resolves: it consults no override layer, so a salt in `.agent-settings.local.yml` leaves the install silently inactive. Empty ⇒ inactive. |
-| `telemetry.remote.flush` | `session-end`, `never` | `session-end` | When Phase 2 flushes. `never` keeps records local indefinitely — a legitimate way to run the local half while the sink question is open. |
-| `telemetry.remote.output.path` | path | `.agent-telemetry.jsonl` | Append-only JSONL log path, relative to the project root. Gitignored. |
+| `telemetry.remote.flush` | `session-end`, `never` | `session-end` | When Phase 2 flushes. `never` means no transport — a legitimate way to run the local half while the sink question is open. It is **not** an unbounded steady state: `retention` below bounds the log either way. Under `never` the local file is the only store, so a record retention evicts is never sent anywhere. |
+| `telemetry.remote.retention.max_age_days` | positive integer | `90` | TTL for the local log (`scale-discipline` R-A7). Records older than this are dropped after an append. At the observed 6.6 invocations/day this is ~600 records (~160 KiB) and is the cap that actually binds. Zero, negative, and non-integer values fall back to the default — there is no way to configure "unbounded". |
+| `telemetry.remote.retention.max_bytes` | positive integer | `2097152` (2 MiB) | Hard ceiling on the local log regardless of record age; the oldest records are dropped first, back to 75 % of the cap so the next prune is not immediate. Backstop for a write rate this tree has not observed. |
+| `telemetry.remote.output.path` | path | `.agent-telemetry.jsonl` | Append-only JSONL log path, relative to the project root. Gitignored. Bounded by `retention` above. |
 | `linked_projects` | list of `{path, include}` | `[]` | IDE-attached sibling repos in scope for proactive cross-repo awareness. **Belongs in `.agent-settings.local.yml` (in agents/settings/)** (per-machine, gitignored). See [cross-repo guide](../../docs/guides/cross-repo-linked-projects.md) + ADR-032. |
 | `linked_projects_max_files` | integer | `20000` | File-count ceiling above which a detected sibling is flagged `large` (awareness only). Never excludes. |
 | `knowledge.global_sharing.enabled` | `true`, `false` | `true` | **User-global** (keep in `~/.event4u/agent-config/agent-settings.yml`). Master switch for the file-first global knowledge-card store (ADR-100; default-ON per ADR-119, the council-validated bounded-downside flip superseding ADR-103 — adversarially spot-checked redaction incl. hidden-unicode hardening, narrowest tier default, pre-registered demotion trigger). `false` fully no-ops the layer (single-key revert); v1 project-local cards unaffected. |
