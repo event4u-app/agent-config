@@ -39,8 +39,21 @@ ls ~/.claude/<type> | sort > g ; ls .claude/<type> | sort > p ; comm -12 g p
 |---|---:|---:|---:|---:|---:|
 | rules | 115 | 111 | 5 | 1 | **110** |
 | skills | 298 | 338 | 8 | 48 | **290** |
-| commands | 93 | 0 | 93 | 0 | 0 |
+| commands | 93 | 40 | 53 | 0 | **40** |
 | agents | 0 | 1 | 0 | 1 | 0 |
+
+**Total delivered twice: 440 names.** The commands row is a **correction to this
+artefact's first version**, and it is worth stating how it was wrong: the first
+reading was taken in the stale main checkout, where no commands were projected at
+all, so the row read `93 / 0 / 0` and commands looked clean. `check_single_delivery`
+— written afterwards for Phase 4, against a freshly regenerated worktree — reported
+40 in both on its very first run. So a third artefact type was duplicated and three
+of the four inbox drafts plus the first version of this census all missed it, for
+the same reason the rules figures were wrong: the projection shape.
+
+`agents` is the one type with a genuinely absent layer (`~/.claude/agents` does not
+exist), which is reported as `absent` rather than as `0` — the two are different
+facts.
 
 - **global-only rules (5):** `analysis-skill-routing`, `brand-consistency`,
   `guidelines`, `package-ci-checks`, `size-enforcement`.

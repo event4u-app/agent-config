@@ -307,12 +307,33 @@ same-version duplication is free.
 
 ## Phase 4 — One producer-agnostic invariant check
 
-- [ ] **4.1** Ship a check that asserts the partition for **all** artefact types
+- [x] **4.1** Ship a check that asserts the partition for **all** artefact types
       — rules, skills, commands, agents — independent of which producer wrote
       either layer, reporting `paths:` scope defeat separately from raw overlap
       because the two need different remedies.
       `verify:` the check reports overlap 0 after Phase 2 and reproduces a
       non-zero count on a deliberately re-created overlap.
+      **DONE 2026-08-19 —** `src/scripts/check_single_delivery.ts`.
+      **It found a third duplicated type on its first run: 40 commands.** The
+      census's first version read `commands 93 / 0 / 0` because it was taken in the
+      stale main checkout where no commands were projected; against a fresh
+      worktree it is 93 / 40 with **40 in both**. Total delivered twice is
+      therefore **440**, not 400, and the census is corrected.
+      **Reports by default, `--enforce` exits 1.** Deliberate: the invariant is not
+      true while Phase 2 is halted, and a blocking default would red every run on a
+      defect nobody can currently fix — which is how a gate teaches readers to
+      ignore it. The zero-overlap half of the verify above is therefore **pending
+      Phase 2** and is stated as pending rather than claimed.
+      Six paths verified with real exit codes — captured **without a pipe**, after
+      a first attempt reported 0 for every case because `$?` after `| tail` is
+      tail's: live report-only 0 · live `--enforce` 1 · disjoint layers `--enforce`
+      0 · **read-nothing `--enforce` 1** · unknown flag 1 · `--global` without a
+      value 1. The read-nothing case is the one that matters: a gate that compared
+      nothing must not pass, and it does not.
+      Two defects in the first draft were found by reading its own output:
+      `types_compared` printed **-2** (it subtracted absent LAYERS from TYPES), and
+      the exit-code verification was worthless for the reason above. Both fixed,
+      and the field now prints `N of 4`.
 - [ ] **4.2** `task generate-tools` states the consequence it creates: it writes
       one layer and is silent about the other existing.
       `verify:` generating while the other layer holds an overlapping name prints
