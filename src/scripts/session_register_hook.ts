@@ -237,7 +237,23 @@ function _read_claim_file(file: string): RoadmapClaim | null {
 }
 
 /**
- * The roadmap slug THIS session has claimed, or `null`. Never throws.
+ * A resolved claim plus the file it was actually read from.
+ *
+ * The path is not decoration. The defect this whole surface exists to prevent
+ * was a WRITER and a READER resolving different trees, and the only fact that
+ * falsifies it is the concrete pair of roots — a boolean asserting "worktree
+ * started" is another claim by the system under observation, not a check on it
+ * (AI council 2026-08-19, 2/2, on the run-continuation observation).
+ */
+export interface ResolvedClaim {
+    slug: string;
+    /** Absolute path of the claim file this read came from. */
+    path: string;
+}
+
+/**
+ * The roadmap slug THIS session has claimed, and the file it came from — or
+ * `null`. Never throws.
  *
  * Two reads, in order, and the second one is why a peer's claim can no longer be
  * inherited: the per-session file first, then the legacy per-worktree file —
@@ -246,14 +262,14 @@ function _read_claim_file(file: string): RoadmapClaim | null {
  * that session's claim, and reading it as this session's is exactly the defect
  * that put one archived slug on four live records.
  */
-export function read_claimed_slug(
+export function resolve_claim(
     workspace_root: string,
     // REQUIRED, on the reviewer's point: an optional id means a caller that forgets
     // it silently gets legacy semantics instead of a type error, and there is
     // exactly one call site that matters (`build_record`). `null` stays a legal
     // value — it is the host-exports-nothing case — but it has to be passed.
     session_id: string | null,
-): string | null {
+): ResolvedClaim | null {
     const own = roadmap_claim_rel(session_id);
     if (own !== ROADMAP_CLAIM_REL) {
         // Per-session, shared dir first, then the pre-fix per-tree path. The
@@ -262,16 +278,20 @@ export function read_claimed_slug(
         for (const p of claim_read_paths(workspace_root, session_id)) {
             if (path.basename(p) === path.basename(ROADMAP_CLAIM_REL)) continue;
             const mine = _read_claim_file(p);
-            if (mine !== null) return mine.slug;
+            if (mine !== null) return { slug: mine.slug, path: p };
         }
     }
     // The legacy per-WORKTREE file, in the same two locations. Unchanged in
     // meaning: it is a claim on the checkout, not on a session.
     let legacy: RoadmapClaim | null = null;
+    let legacy_path = '';
     for (const p of claim_read_paths(workspace_root, session_id)) {
         if (path.basename(p) !== path.basename(ROADMAP_CLAIM_REL)) continue;
         legacy = _read_claim_file(p);
-        if (legacy !== null) break;
+        if (legacy !== null) {
+            legacy_path = p;
+            break;
+        }
     }
     if (legacy === null) {
         return null;
@@ -293,7 +313,21 @@ export function read_claimed_slug(
     if (id !== '') {
         return null;
     }
-    return legacy.slug;
+    return { slug: legacy.slug, path: legacy_path };
+}
+
+/**
+ * The roadmap slug THIS session has claimed, or `null`. Never throws.
+ *
+ * Thin projection of `resolve_claim` — kept because every existing caller wants
+ * the slug alone, and widening their return type to carry a path none of them
+ * reads would be a signature change for no consumer.
+ */
+export function read_claimed_slug(
+    workspace_root: string,
+    session_id: string | null,
+): string | null {
+    return resolve_claim(workspace_root, session_id)?.slug ?? null;
 }
 
 /**

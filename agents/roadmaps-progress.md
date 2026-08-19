@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 33 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **48** open blockers, **23** need you → `agent-config gates`
+> 33 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **49** open blockers, **23** need you → `agent-config gates`
 
 ## Overall
 
 **277 / 523 steps done · 53%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   53%
+██████████████████████░░░░░░░░░░░░░░░░░░   54%
 ```
 
 ## Open roadmaps
@@ -37,7 +37,7 @@
 | 19 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
 | 20 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
 | 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
-| 22 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 4 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 22 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 1 | 3 | 0 | 0 | [1](#blockers-road-to-run-continuation-observation) | ████████░░ 75% |
 | 23 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 24 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
@@ -761,11 +761,30 @@ _1 blocker resolved._
 
 ### [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md)
 
-**Road to a run-continuation engagement anybody can point at** — 0 / 4 done (0%)
+**Road to a run-continuation engagement anybody can point at** — 3 / 4 done (75%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Observe one engagement | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 0 | Observe one engagement | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+
+<a id="blockers-road-to-run-continuation-observation"></a>
+**Blockers**
+
+- **three-phase-contract-run** (owner: any autonomous `process-full` run, no dedicated effort) — blocks step 0.1 only. Step 0.0 is closed on its own evidence and does not wait for this.
+  - **Recommendation:** **do not schedule this.** Wait for the first qualifying run and close 0.1 off it, because the criterion is about what the mechanism does during ordinary work — manufacturing a three-phase run to satisfy it reproduces the ecological-validity problem the council already flagged against the self-referential observation, one size larger. The estate has several three-phase autonomous candidates already; the next one to be worked discharges this for free.
+  - **If you do nothing:** step 0.1 stays open and this roadmap stays in the active estate at 3 of 4 items. Nothing regresses and no evidence decays — the ledger line from 0.0 is durable. The cost is one open roadmap carrying one criterion, which is the shape its own risk 3 accepts by design.
+  - **What to do:**
+    claim a roadmap that (a) carries `execution.mode: autonomous`
+    in its frontmatter, (b) has **three or more `## Phase` sections with open
+    steps**, and (c) is not this roadmap — then run it to completion from a
+    worktree and open its PR. Check candidates with
+    `./agent-config roadmap:progress` for the phase count and
+    `grep -A2 '^execution:' agents/roadmaps/<slug>.md` for the mode; a roadmap in
+    `phase-checkpoints` mode makes the concern a no-op and produces no event at
+    all. Then read the run back with
+    `./scripts-run src/scripts/interruption_report --root <main-checkout>` and
+    confirm `asks=0 handbacks=0` alongside a non-zero `re=` on that run id.
+  - **Resolved when:** `interruption_report` shows one run id with `re=` non-zero, `asks=0`, `handbacks=0`, whose claimed roadmap had ≥ 3 phases and reached a PR — and that run id is recorded at step 0.1.
 
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
 

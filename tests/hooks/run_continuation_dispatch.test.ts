@@ -40,7 +40,7 @@ import { parse as parseYaml } from 'yaml';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { deriveSessionKey, sessionRefusalFile } from '../../src/scripts/_lib/turn_end_refusals.js';
-import { roadmap_claim_rel } from '../../src/scripts/session_register_hook.js';
+import { claim_file, roadmap_claim_rel } from '../../src/scripts/session_register_hook.js';
 import { EVENTS_RELPATH } from '../../src/scripts/hooks/run_continuation_hook.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -106,6 +106,73 @@ function writeWorkspace(): string {
     fs.mkdirSync(path.dirname(claim), { recursive: true });
     fs.writeFileSync(claim, JSON.stringify({ slug: SLUG, session_id: SESSION }), 'utf-8');
     return root;
+}
+
+/** The roadmap body every fixture in this file uses. */
+function fixtureRoadmap(): string {
+    return [
+        '---',
+        'complexity: structural',
+        'execution:',
+        '  mode: autonomous',
+        '---',
+        '',
+        '# Fixture',
+        '',
+        '## Phase 0 — one open step',
+        '',
+        '- [x] **0.0** done',
+        '- [ ] **0.1** the open one <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->',
+        '',
+    ].join('\n');
+}
+
+function git(cwd: string, ...args: string[]): void {
+    const r = spawnSync('git', args, { cwd, encoding: 'utf-8' });
+    if ((r.status ?? -1) !== 0) {
+        throw new Error(`git ${args.join(' ')} failed: ${r.stderr}`);
+    }
+}
+
+/**
+ * A REAL main checkout plus a REAL linked worktree, with the claim written
+ * through `claim_file` — i.e. the exact arrangement in which the shipped defect
+ * was invisible, and the only one that can prove the fix.
+ *
+ * Every other fixture in this file uses a plain temp directory, which is not a
+ * git repository at all: there `git_dir` and `git_common_dir` are both empty and
+ * the claim resolves to the per-tree fallback. That is a legitimate degenerate
+ * case, and it is also the case the two-tree property cannot be observed in — so
+ * asserting the property needs this.
+ */
+function writeWorktreePair(): { main: string; worktree: string } {
+    const main = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-dispatch-main-'));
+    cleanups.push(main);
+    git(main, 'init', '--quiet', '--initial-branch=main');
+    git(main, 'config', 'user.email', 'fixture@example.com');
+    git(main, 'config', 'user.name', 'fixture');
+    fs.writeFileSync(path.join(main, 'README.md'), 'fixture\n', 'utf-8');
+    git(main, 'add', 'README.md');
+    git(main, 'commit', '--quiet', '-m', 'fixture base');
+
+    // Outside `main` on purpose: a worktree nested inside its own checkout would
+    // make the two roots share a prefix and hide a path-prefix mistake.
+    const worktree = path.join(path.dirname(main), `${path.basename(main)}-wt`);
+    cleanups.push(worktree);
+    git(main, 'worktree', 'add', '--quiet', '-b', 'fixture-wt', worktree);
+
+    const roadmapDir = path.join(worktree, 'agents', 'roadmaps');
+    fs.mkdirSync(roadmapDir, { recursive: true });
+    fs.writeFileSync(path.join(roadmapDir, `${SLUG}.md`), fixtureRoadmap(), 'utf-8');
+
+    // Through the production writer, never a hand-built path: the whole defect
+    // was writer and reader disagreeing, so a fixture that hard-codes the
+    // location cannot catch a regression in either half.
+    const claim = claim_file(worktree, SESSION);
+    fs.mkdirSync(path.dirname(claim), { recursive: true });
+    fs.writeFileSync(claim, JSON.stringify({ slug: SLUG, session_id: SESSION }), 'utf-8');
+
+    return { main, worktree };
 }
 
 /** Drive the real dispatcher over the real manifest for a claude `stop`. */
@@ -214,6 +281,82 @@ describe('run-continuation — driven through the live dispatcher', () => {
         // block-capable). exit 0 here means the continuation was delivered as
         // passive context on a turn that ended anyway — the inert shape.
         expect(res.code).toBe(2);
+    });
+
+    // The observation this concern exists to make auditable is "an engagement
+    // crossed a tree boundary". Before these fields the ledger recorded that an
+    // engagement happened and nothing about WHERE — so a reader could not tell
+    // a two-tree run from a same-root one, which is precisely the arrangement
+    // in which the original defect was invisible. AI council 2026-08-19 (2/2):
+    // record the concrete roots, never a `worktree_started` boolean, because a
+    // boolean is another assertion by the system under observation.
+    it('records the two-tree provenance on the engage event, from a real worktree', () => {
+        const { main, worktree } = writeWorktreePair();
+        const transcript = writeTranscript(3);
+        dispatchStop(worktree, transcript);
+        const engaged = events(worktree).filter((e) => e['event'] === 'engage');
+        expect(engaged.length).toBe(1);
+        const ev = engaged[0] as Record<string, unknown>;
+
+        // Realpath on every comparison: macOS hands `os.tmpdir()` back as
+        // `/var/folders/…` while the resolvers report `/private/var/folders/…`,
+        // so a raw compare fails on the symlink rather than on the property.
+        const real = (p: unknown): string => fs.realpathSync(p as string);
+
+        // 1. The tree the CONCERN resolved under — the `--project-dir` half.
+        expect(real(ev['workspace_root'])).toBe(real(worktree));
+
+        // 2. THE falsifiable fact. `git_dir` is this worktree's private gitdir,
+        // `git_common_dir` is the main checkout's `.git`. They differ EXACTLY
+        // when the session runs in a linked worktree, which is the condition
+        // under which the defect existed at all.
+        const gitDir = ev['git_dir'] as string;
+        const commonDir = ev['git_common_dir'] as string;
+        expect(gitDir).not.toBe('');
+        expect(commonDir).not.toBe('');
+        expect(real(gitDir)).not.toBe(real(commonDir));
+        expect(real(commonDir)).toBe(real(path.join(main, '.git')));
+
+        // 3. And the contract was read out of the SHARED root, not this tree —
+        // the fix, stated as a path relation a third party can check with no
+        // access to the machine beyond the ledger line.
+        const claimPath = real(ev['claim_path']);
+        expect(path.isAbsolute(claimPath)).toBe(true);
+        expect(claimPath.startsWith(`${real(commonDir)}${path.sep}`)).toBe(true);
+        expect(claimPath.startsWith(`${real(worktree)}${path.sep}`)).toBe(false);
+    });
+
+    it('records the provenance on a non-engage event too — the defer branch', () => {
+        const root = writeWorkspace();
+        const transcript = writeTranscript(3);
+        const marker = sessionRefusalFile(root, deriveSessionKey(SESSION));
+        fs.mkdirSync(path.dirname(marker), { recursive: true });
+        fs.writeFileSync(
+            marker,
+            JSON.stringify({
+                refused_at: '2026-08-19T00:00:00.000Z',
+                refused_turn: 3,
+                detector: 'verification',
+            }),
+            'utf-8',
+        );
+        dispatchStop(root, transcript);
+        const deferred = events(root).filter((e) => e['event'] === 'deferred-quality-gate');
+        expect(deferred.length).toBe(1);
+        // Asserted on a SECOND branch on purpose: provenance carried only by the
+        // happy path would leave every halt and defer unattributable, and those
+        // are the lines a reader reaches for when asking why a run did NOT
+        // continue.
+        expect(fs.realpathSync(deferred[0]?.['workspace_root'] as string)).toBe(
+            fs.realpathSync(root),
+        );
+        expect(typeof deferred[0]?.['claim_path']).toBe('string');
+        // This fixture is a plain temp directory, not a repository — so both git
+        // fields are empty, and that is the honest degenerate reading rather
+        // than a gap. Pinned so a future change cannot start emitting a guessed
+        // path where git could not be read.
+        expect(deferred[0]?.['git_dir']).toBe('');
+        expect(deferred[0]?.['git_common_dir']).toBe('');
     });
 
     it('DEFERS when turn-end-gate refused this turn — the quality gate always wins', () => {
