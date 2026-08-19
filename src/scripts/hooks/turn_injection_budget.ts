@@ -81,13 +81,17 @@ export const TOKEN_BUDGET_PATH = path.join(_REPO_ROOT, "src", "config", "hook-to
  * `severity === "advisory"`. An advisory-POSITIVE test would make a severity
  * tier added later (a `warn` rung, say) silently UNDROPPABLE, inverting the
  * policy the budget file documents. Lives here, with the policy it serves.
+ *
+ * Reads the manifest entry BY INDEX rather than declaring a shape with two
+ * optional fields: the caller's `ConcernDef` carries an index signature and no
+ * declared `severity`, so an all-optional parameter type trips TypeScript's
+ * weak-type check ("no properties in common"). Reading the way the dispatcher
+ * already reads a concern also keeps the seam honest about what the manifest
+ * actually guarantees, which is nothing beyond `name`.
  */
-export function isDroppableConcern(concern: {
-    readonly severity?: unknown;
-    readonly fail_closed?: unknown;
-}): boolean {
-    const severity = String(concern.severity ?? "").trim().toLowerCase();
-    return severity !== "blocking" && !concern.fail_closed;
+export function isDroppableConcern(concern: Readonly<Record<string, unknown>>): boolean {
+    const severity = String(concern["severity"] ?? "").trim().toLowerCase();
+    return severity !== "blocking" && !concern["fail_closed"];
 }
 
 /** The turn accumulator, on disk. Counts and ids only — never content. */
