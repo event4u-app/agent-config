@@ -467,6 +467,56 @@ concerns:
     severity: advisory
     tools: [Agent, Task]
     needs_payload_bodies: [input, result]
+  # road-to-org-telemetry Phase 1 (step 1.2) — Class-A usage capture. Fires
+  # only on a `Skill` tool-use completion, the event Phase 0's first spike
+  # confirmed carries the invoked skill name (`tool_input.skill`, present on
+  # 164 of 164 real invocations). Exists because the regex collector is blind
+  # to consumer installs by construction — spike 3 measured 0 of 89
+  # invocations detected on the set it reads.
+  #
+  # DEFAULT-OFF and then some: `read_remote_settings` activates only when
+  # `telemetry.remote.enabled` is true AND the org pack supplied an endpoint,
+  # an org id, and a salt. A clone of this repository carries the key names
+  # and no values, so it cannot reach the write path. Inactive ⇒ zero
+  # telemetry file operations and zero network calls.
+  #
+  # It appends to a LOCAL JSONL file and stops — no outbound call exists in
+  # this concern. Transport is Phase 2 (blocked on `sink-choice`); org-wide
+  # enablement is Phase 3 (blocked on `dpo-signoff`).
+  #
+  # BOUND ON SIX PLATFORMS, INERT ON MOST OF THEM — and that asymmetry is a
+  # reading caveat for Phase 4, not a defect to fix by unbinding. A `Skill`
+  # tool is a Claude-family surface; on a host that has none, this concern
+  # never fires and the org's record set carries no rows for it. A zero from
+  # such a host therefore means "no instrument", NOT "no adoption" — which is
+  # precisely the blind-zero class this roadmap exists to remove, so it must
+  # not be read as a measurement. Every record carries `host`, so the
+  # denominator is reconstructable per host; unbinding would convert a
+  # readable absence into a guaranteed one.
+  #
+  # Silent on every path (never writes to stdout); exit 0 always, including a
+  # malformed envelope or a write failure. Carries no hook-token-budget row —
+  # it emits nothing, same as orchestration-record. fail_closed: false.
+  #
+  # Concern-budget note: this takes all six `post_tool_use` cells from 10 to
+  # 11 against a `max_per_event: 8` that is warn-only (`hard_fail: false`)
+  # and was already exceeded by 2 before this change. The threshold is a
+  # placeholder awaiting session evidence, per its own comment in the
+  # settings template — not a bar this concern is the first to cross.
+  telemetry-usage:
+    script: src/scripts/hooks/telemetry_usage_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    # Provable from the hook's own source: the only branch surface is
+    # `extractToolName(payload) !== SKILL_TOOL_NAME`.
+    tools: [Skill]
+    # `[input]` only, and provable by reading the hook: it takes the skill
+    # name from `tool_input.skill` and the host/session from the envelope.
+    # It never touches `tool_response` — a skill invocation's RESULT body is
+    # the large one, and this concern records a usage FACT rather than an
+    # outcome, so the result class would be paid for and discarded.
+    needs_payload_bodies: [input]
   # road-to-orchestrator-discipline-carriers Phase 4 (F3-lite) — conditional
   # delegation nudge. Extracts cheap structural signals from the SUBMITTED
   # prompt (enumerated file lists, "for each"/"alle …" shapes, explicit slice
@@ -794,7 +844,7 @@ platforms:
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress]
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape]
 
   claude:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
@@ -802,7 +852,7 @@ platforms:
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, run-continuation]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape, language-mirror]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, language-mirror]
     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;
     # the `post_tool_use` entry above re-emits the pin exactly once while that
     # marker is set, then clears it. One extra injection per compaction EVENT —
@@ -856,7 +906,7 @@ platforms:
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape]
     # subagent-ledger IS bound here, unlike the two nudges above, and the
     # difference is the delivery channel rather than the platform: the nudges
     # depend on stdout reaching the model, which this trampoline discards by
@@ -879,7 +929,7 @@ platforms:
     session_end:        [chat-history, memory-learn, session-register, roadmap-progress]
     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape]
 
   # Phase 7.6 — Cline. Hooks live under `.clinerules/hooks/<HookName>`
   # (project, no file extension, must be executable per Cline docs) or
@@ -894,7 +944,7 @@ platforms:
     session_end:        [chat-history, memory-learn, session-register, roadmap-progress]
     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape]
 
   # Phase 7.7 — Windsurf (Cascade). Hooks live at `.windsurf/hooks.json`
   # (project) or `~/.codeium/windsurf/hooks.json` (user). Cascade has
@@ -930,7 +980,7 @@ platforms:
     session_end:        [chat-history, memory-learn, session-register, roadmap-progress]
     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape]
 
   # Phase 7.9 — Copilot has no hook surface. Concerns route through
   # rule-only fallback; the dispatcher silently no-ops on --platform copilot.

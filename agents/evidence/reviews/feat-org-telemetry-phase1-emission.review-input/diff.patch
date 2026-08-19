@@ -1,0 +1,1934 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 44dc8d9da62d42506747d70fb937f317c889663e..36ff1231da99dd5f08823edfd1440b00ee436801 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -6,10 +6,10 @@
+ 
+ ## Overall
+ 
+-**302 / 576 steps done · 52%**
++**305 / 576 steps done · 53%**
+ 
+ ```text
+-█████████████████████░░░░░░░░░░░░░░░░░░░   52%
++█████████████████████░░░░░░░░░░░░░░░░░░░   53%
+ ```
+ 
+ ## ⚠️ Iron Law 3 — unresolved deferred items
+@@ -45,7 +45,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ | 19 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
+ | 20 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [1](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
+ | 21 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+-| 22 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 26 | 23 | 3 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | █░░░░░░░░░ 12% |
++| 22 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 26 | 20 | 6 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ██░░░░░░░░ 23% |
+ | 23 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 6 | 9 | 1 | 2 | [3](#blockers-road-to-per-turn-hook-economy) | ██████░░░░ 60% |
+ | 24 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
+ | 25 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+@@ -681,12 +681,12 @@ _1 blocker resolved._
+ 
+ ### [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md)
+ 
+-**Road to org telemetry** — 3 / 26 done (12%)
++**Road to org telemetry** — 6 / 26 done (23%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+ | 0 | Falsification spikes | ✅ done | 0 | 3 | 0 | 0 | 100% |
+-| 1 | Emission in the dispatcher | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
++| 1 | Emission in the dispatcher | ✅ done | 0 | 3 | 0 | 0 | 100% |
+ | 2 | Transport | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+ | 3 | Consent | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+ | 4 | Report and the rationalization unblock | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+diff --git a/agents/roadmaps/road-to-org-telemetry.md b/agents/roadmaps/road-to-org-telemetry.md
+index 1948cf6bc99cd43a188f3864c12b8f0352bc052b..e7fd43c403e17827f557df61545d43ac8aec7726 100644
+--- a/agents/roadmaps/road-to-org-telemetry.md
++++ b/agents/roadmaps/road-to-org-telemetry.md
+@@ -79,14 +79,53 @@ Recorded here so nobody re-derives it from the findings files.
+ 
+ ## Phase 1 — Emission in the dispatcher
+ 
+-- [ ] Add a remote telemetry namespace beside the existing engagement namespace in the settings template, defaulting to disabled, with an endpoint, an org identifier, and a session-end flush policy; extend the tolerant reader with the same default-off semantics. <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
+-- [ ] Append Class-A usage records in the consumer project on the tool event confirmed by the first spike, with a schema aligned to the existing records plus user hash, package version, host, and active tier. Perform zero file operations when disabled. <!-- verify: ./scripts-run src/scripts/test_telemetry_settings -->
+-- [ ] Derive the user hash as a salted hash of hostname and user, with the salt living in the org pack rather than the public repository. No prompt content anywhere in Class A. <!-- verify: grep -q user_hash src/agent-src/templates/scripts/telemetry/settings.ts -->
++- [x] Add a remote telemetry namespace beside the existing engagement namespace in the settings template, defaulting to disabled, with an endpoint, an org identifier, and a session-end flush policy; extend the tolerant reader with the same default-off semantics. **Landed as `telemetry.remote`** — `read_remote_settings` in `telemetry/settings.ts`, documented in `agent-settings.md` beside `artifact_engagement`. `enabled: true` alone is deliberately NOT the switch; see the note below. <!-- verify: npx vitest run tests/scripts/templates_telemetry_remote.test.ts -->
++- [x] Append Class-A usage records in the consumer project on the tool event confirmed by the first spike, with a schema aligned to the existing records plus user hash, package version, host, and active tier. Perform zero file operations when disabled. **Landed as the `telemetry-usage` PostToolUse concern**, bound on all six platforms carrying `post_tool_use`, `tools: [Skill]`. Active tier reads `rule_loading_tier`; an unresolvable version or tier records `null` rather than a guess. <!-- verify: npx vitest run tests/hooks/telemetry_usage_hook.test.ts -->
++- [x] Derive the user hash as a salted hash of hostname and user, with the salt living in the org pack rather than the public repository. No prompt content anywhere in Class A. **Landed in `telemetry/remote.ts`** — `derive_user_hash` refuses an empty salt outright, and the settings reader will not activate without one. <!-- verify: npx vitest run tests/scripts/templates_telemetry_remote.test.ts -->
+ 
+-**Exit criteria:** an enabled install writes records for real invocations; a disabled install performs zero file operations, matching the doctrine the engagement telemetry already follows.
++**Exit criteria:** an enabled install writes records for real invocations; a disabled install performs zero file operations, matching the doctrine the engagement telemetry already follows. **Met** — both halves asserted in `tests/hooks/telemetry_usage_hook.test.ts`, the disabled half across four not-fully-opted-in shapes, each asserting the log file does not exist.
+ 
+ **Rollback:** the namespace defaults off; removing the dispatch branch restores current behaviour exactly.
+ 
++### What Phase 1 settled, and one place the step text was imprecise
++
++- **"The settings template" is two files, and the shipped YAML deliberately
++  carries no `telemetry:` key at all.** `src/config/agent-settings.template.yml`
++  has none — that absence IS the default-off mechanism, and
++  `agent-settings.md` line 636 already says so in as many words ("Not in the
++  shipped template — a missing `telemetry:` section means disabled"). So the
++  namespace was added where the engagement one actually lives: the documented
++  example block and the key table in `agent-settings.md`. Adding live keys to
++  the shipped YAML would have contradicted the doctrine the step asked to
++  match.
++- **`enabled: true` is not the switch, and that is a deliberate strengthening
++  of what the step asked for.** `active` requires `enabled` AND an `endpoint`
++  AND an `org_id` AND a `salt`, none of which has a default. The reason is
++  acceptance criterion 4: this repository is public, so it must ship the key
++  names and no values. A clone cannot reach the write path by copying the
++  documented block. `missing` names which field is absent so a future doctor
++  command can explain an inactive install without printing the salt.
++- **The salt is load-bearing, not decoration.** An unsalted digest of a login
++  name is dictionary-reversible in seconds, so `derive_user_hash` throws on an
++  empty salt rather than producing one. Hash parts join on NUL — a username
++  may contain a space, so a space join would let `("a b", "c")` and
++  `("a", "b c")` collide.
++- **Phase 0's normalisation requirement is enforced at write time**, as its
++  note demanded. The collapse direction is `:` → `-` because that mapping is
++  total; the reverse is undecidable without carrying the command catalogue
++  into the hot path (`brand-asset-generation` has no cluster). Asserted on
++  both spellings of `roadmap:process-full`.
++- **Two `verify:` annotations named scripts that do not exist.**
++  `src/scripts/test_telemetry_settings` is absent from the tree, and
++  `grep -q user_hash …/settings.ts` would have failed because the hash lives
++  in `remote.ts` (schema + derivation) rather than in the settings reader —
++  the same split `engagement.ts` and `settings.ts` already use. Both
++  re-pointed at the real tests. Seventh recorded instance of a step naming a
++  measurement path that does not exist.
++- **No outbound call ships here.** Both blockers stand: `sink-choice` gates
++  Phase 2's transport and `dpo-signoff` gates Phase 3's enablement. The
++  concern appends to a local JSONL file and stops.
++
+ ## Phase 2 — Transport
+ 
+ - [ ] Flush unsent records at session end as a batched outbound call per the second spike's result, with a timeout at or below one second, silent failure, and local retention for the next flush. <!-- verify: ./scripts-run src/scripts/test_telemetry_transport -->
+diff --git a/dist/agent-src/templates/agent-settings.md b/dist/agent-src/templates/agent-settings.md
+index 764f8153fa88a96f2e17072990b6d8834c6b0710..67044120632bcf27a65a619dcd0207b6861a1cdb 100644
+--- a/dist/agent-src/templates/agent-settings.md
++++ b/dist/agent-src/templates/agent-settings.md
+@@ -507,6 +507,42 @@ telemetry:
+       # Append-only JSONL log. Path is relative to the project root.
+       # Always gitignored (see config/gitignore-block.txt).
+       path: .agent-engagement.jsonl
++  # --- Org telemetry (road-to-org-telemetry Phase 1) ---
++  #
++  # Class-A usage records: which skill was invoked, on which host, at which
++  # package version and rule tier, under a pseudonymous user hash and an
++  # hour-bucketed timestamp. Zero bytes of project content — the record type
++  # has no field capable of holding free text.
++  #
++  # `enabled: true` on its own does NOT switch this on. All three of
++  # `endpoint`, `org_id`, and `salt` must also carry a value, and none of
++  # them has a default. That is deliberate: this repository is public, so it
++  # ships the key NAMES and no values, and a clone cannot reach the write
++  # path by copying the tree. The values come from an org pack.
++  #
++  # Phase 1 writes records LOCALLY and nothing else. The outbound flush is
++  # Phase 2 and org-wide enablement is Phase 3; both are gated on open
++  # blockers in the roadmap.
++  remote:
++    # Master switch. Combined with the three required fields below — see
++    # `active` in scripts/telemetry/settings.ts.
++    enabled: false
++    # Where Phase 2 will flush to. Recorded now, never called in Phase 1.
++    endpoint: ""
++    # The org whose pack enabled this install; written into every record.
++    org_id: ""
++    # Org-pack secret. Salts the user and session hashes so a digest of a
++    # login name is not reversible by dictionary. Never written into a
++    # record, never logged. Belongs in the machine-local override layer,
++    # never in a committed `.agent-settings.yml`.
++    salt: ""
++    # `session-end` = flush at session end (Phase 2). `never` = keep records
++    # local indefinitely, which is a legitimate way to run the local half
++    # while the sink question is still open.
++    flush: session-end
++    output:
++      # Append-only JSONL log, relative to the project root. Gitignored.
++      path: .agent-telemetry.jsonl
+ 
+ # --- Linked projects (cross-repo awareness, local-only) ---
+ #
+@@ -602,6 +638,12 @@ the canonical narrative lives in
+ | `telemetry.artifact_engagement.record.consulted` | `true`, `false` | `true` | When `true`: record artefacts loaded into context. |
+ | `telemetry.artifact_engagement.record.applied` | `true`, `false` | `true` | When `true`: record artefacts cited or driving a decision. |
+ | `telemetry.artifact_engagement.output.path` | path | `.agent-engagement.jsonl` | Append-only JSONL log path, relative to the project root. Always gitignored. |
++| `telemetry.remote.enabled` | `true`, `false` | `false` | Opt-in for Class-A org usage records. **Not the switch on its own** — `endpoint`, `org_id`, and `salt` must all carry a value too, and none has a default, so a clone of the public repository cannot reach the write path. Not in the shipped template; a missing section means disabled. |
++| `telemetry.remote.endpoint` | URL | *(none)* | Where Phase 2 will flush records to. Recorded now; no outbound call exists in Phase 1. Empty ⇒ inactive. |
++| `telemetry.remote.org_id` | string | *(none)* | The org whose pack enabled this install; written into every record. Empty ⇒ inactive. |
++| `telemetry.remote.salt` | string | *(none)* | Org-pack secret salting the user and session hashes — without it a digest of a login name is dictionary-reversible. Never written into a record, never logged. Belongs in the machine-local override layer, never in a committed `.agent-settings.yml`. Empty ⇒ inactive. |
++| `telemetry.remote.flush` | `session-end`, `never` | `session-end` | When Phase 2 flushes. `never` keeps records local indefinitely — a legitimate way to run the local half while the sink question is open. |
++| `telemetry.remote.output.path` | path | `.agent-telemetry.jsonl` | Append-only JSONL log path, relative to the project root. Gitignored. |
+ | `linked_projects` | list of `{path, include}` | `[]` | IDE-attached sibling repos in scope for proactive cross-repo awareness. **Belongs in `.agent-settings.local.yml` (in agents/settings/)** (per-machine, gitignored). See [cross-repo guide](../../docs/guides/cross-repo-linked-projects.md) + ADR-032. |
+ | `linked_projects_max_files` | integer | `20000` | File-count ceiling above which a detected sibling is flagged `large` (awareness only). Never excludes. |
+ | `knowledge.global_sharing.enabled` | `true`, `false` | `true` | **User-global** (keep in `~/.event4u/agent-config/agent-settings.yml`). Master switch for the file-first global knowledge-card store (ADR-100; default-ON per ADR-119, the council-validated bounded-downside flip superseding ADR-103 — adversarially spot-checked redaction incl. hidden-unicode hardening, narrowest tier default, pre-registered demotion trigger). `false` fully no-ops the layer (single-key revert); v1 project-local cards unaffected. |
+diff --git a/dist/agent-src/templates/scripts/telemetry/remote.ts b/dist/agent-src/templates/scripts/telemetry/remote.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..2d2b39cad7834c404d6a732921addb7ff4091952
+--- /dev/null
++++ b/dist/agent-src/templates/scripts/telemetry/remote.ts
+@@ -0,0 +1,227 @@
++/**
++ * Class-A usage record — schema, skill-name normalisation, salted hashes,
++ * and the JSONL appender (road-to-org-telemetry Phase 1).
++ *
++ * Class A is the package describing itself: a usage class, the skill that
++ * was invoked, the host, the package version, the active rule-loading tier,
++ * a pseudonymous user hash, a session hash, and an hour-bucketed timestamp.
++ * It carries zero bytes of project content.
++ *
++ * PII-EXCLUSION-BY-CONSTRUCTION — the point of this file, not a caution.
++ * `ClassARecord` has no field capable of holding free-form content: every
++ * member is a string drawn from a closed vocabulary, an id validated by the
++ * engagement redaction floor, or a hex digest. There is no `payload`, no
++ * `notes`, no `extra: unknown`. A type that cannot carry a prompt has no
++ * scrubber that can fail — the same principle `domain-safety-pii` § Surface 2
++ * applies to log streams, and the same one the artefact-engagement event
++ * already follows. Never widen this interface with a free-text member.
++ *
++ * Two host-supplied opaque tokens are deliberately hashed rather than
++ * recorded: the session id and the login name. The session id in particular
++ * is high-entropy and `check_secret_leak` correctly reads a raw one as a
++ * candidate credential (a trap `orchestration_record_hook.ts` recorded when
++ * it chose to generate its own id instead).
++ *
++ * PHASE BOUNDARY. This module writes to a local file and nothing else. The
++ * outbound flush is Phase 2 and is blocked on the `sink-choice` blocker;
++ * org-wide enablement is Phase 3 and is blocked on `dpo-signoff`. Nothing
++ * here opens a socket, and no caller in this phase may make it do so.
++ */
++import * as crypto from 'node:crypto';
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++
++import { check_id_redaction, py_json_dumps_compact_sorted } from './engagement.js';
++
++export const CLASS_A_SCHEMA_VERSION = 1;
++
++/** Usage classes. Phase 5 adds the self-repair class; Phase 1 emits one. */
++export const ALLOWED_RECORD_CLASSES = ['usage'] as const;
++
++/** `rule_loading_tier` values from the settings template. */
++export const ALLOWED_RULE_TIERS = ['minimal', 'balanced', 'full', 'custom'] as const;
++
++/** Digest length, in hex chars — matches the tier-usage signal contract. */
++export const HASH_HEX_LEN = 16;
++
++export class ClassARecordError extends Error {
++    constructor(message: string) {
++        super(message);
++        this.name = 'ClassARecordError';
++    }
++}
++
++/**
++ * One Class-A usage record. Every field is structural; see the file header
++ * for why there is no free-form member and why that must stay true.
++ */
++export interface ClassARecord {
++    schema_version: number;
++    /** Closed vocabulary — see `ALLOWED_RECORD_CLASSES`. */
++    record_class: string;
++    /** ISO-8601 UTC, HOUR resolution. Never an exact timestamp. */
++    ts_bucket: string;
++    /** Normalised skill id — see `normalise_skill_name`. */
++    skill: string;
++    /** Host id (`claude`, `augment`, …) — an id-shaped enum, never a path. */
++    host: string;
++    /** Installed package version, or `null` when the install did not report one. */
++    package_version: string | null;
++    /** Active `rule_loading_tier`, or `null` when unresolvable. */
++    rule_tier: string | null;
++    /** The org whose pack enabled this install. */
++    org_id: string;
++    /** Salted digest of host + login. Never the login itself. */
++    user_hash: string;
++    /** Salted digest of the host session id. Never the raw id. */
++    session_hash: string;
++}
++
++/**
++ * Canonical skill id.
++ *
++ * Phase 0's third spike measured the host sending ONE skill under two
++ * spellings — `roadmap:process-full` (64 observations) and
++ * `roadmap-process-full` (22), likewise `roadmap:ai-council`. Left alone,
++ * per-skill counts split and the busiest skills undercount by roughly a
++ * quarter.
++ *
++ * The collapse direction is `:` → `-`, and it is chosen because it is
++ * TOTAL: every colon form has exactly one dash form, so the mapping is a
++ * function. The other direction is not — `brand-asset-generation` has no
++ * cluster and nothing in a hook can decide which dash of
++ * `roadmap-process-full` would have been a colon without carrying the whole
++ * command catalogue into the hot path.
++ *
++ * The two names that collide under this rule are the same skill, which is
++ * the entire reason the rule exists. Should a genuinely distinct skill ever
++ * be named exactly like another cluster's flattened form, the collision is
++ * a naming defect upstream of this function, not a defect here — and the
++ * duplicate name would already be ambiguous to a human reading the report.
++ *
++ * Throws on anything the engagement redaction floor rejects: a path, a file
++ * extension, embedded whitespace, or an over-long value. The caller drops
++ * the record rather than recording a name it could not validate.
++ */
++export function normalise_skill_name(raw: unknown): string {
++    if (typeof raw !== 'string') {
++        throw new ClassARecordError('skill must be a string');
++    }
++    const collapsed = raw.trim().replace(/:/gu, '-');
++    check_id_redaction('skill', collapsed);
++    return collapsed;
++}
++
++/**
++ * ISO-8601 UTC truncated to the hour — `2026-08-18T21:00Z`.
++ *
++ * Hour buckets, never exact timestamps: the tier-usage signal contract
++ * names exact timestamps in its forbidden list precisely because they
++ * re-identify a single user's working pattern from an otherwise
++ * pseudonymous record set.
++ */
++export function hour_bucket(d: Date): string {
++    const p = (n: number): string => String(n).padStart(2, '0');
++    return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`
++        + `T${p(d.getUTCHours())}:00Z`;
++}
++
++/**
++ * Salted digest, first `HASH_HEX_LEN` hex chars of a SHA-256.
++ *
++ * The salt is the org pack's, never this repository's — an unsalted hash of
++ * a login name is reversible by dictionary in seconds, so a salt-less digest
++ * would be an identifier wearing a hash's clothes. `read_remote_settings`
++ * refuses to activate without one, which is what makes that guarantee
++ * structural rather than a convention.
++ *
++ * Parts are joined on NUL, which cannot occur in a hostname, a login, or a
++ * session id — so no pair of distinct inputs can produce one joined string.
++ */
++function _salted_digest(salt: string, parts: readonly string[]): string {
++    if (!salt) {
++        throw new ClassARecordError('salt must be non-empty — refusing to emit an unsalted digest');
++    }
++    const material = [salt, ...parts].join('\u0000');
++    return crypto.createHash('sha256').update(material, 'utf-8').digest('hex').slice(0, HASH_HEX_LEN);
++}
++
++/** Pseudonymous per-user id. Stable per (salt, machine, login). */
++export function derive_user_hash(salt: string, hostname: string, username: string): string {
++    return _salted_digest(salt, ['user', hostname, username]);
++}
++
++/**
++ * Pseudonymous per-session id. Domain-separated from the user hash by the
++ * literal prefix, so the same salt cannot make the two digests collide or
++ * let one be derived from the other.
++ */
++export function derive_session_hash(salt: string, session_id: string): string {
++    return _salted_digest(salt, ['session', session_id]);
++}
++
++export interface BuildClassAInput {
++    skill: unknown;
++    host: string;
++    org_id: string;
++    salt: string;
++    hostname: string;
++    username: string;
++    session_id: string;
++    package_version?: string | null;
++    rule_tier?: string | null;
++    now?: Date;
++}
++
++/**
++ * Build one validated Class-A usage record. Pure — no I/O and no ambient
++ * clock unless the caller omits `now`, so the mapping stays independently
++ * testable.
++ *
++ * Throws rather than returning a partial record: a record that failed
++ * validation is dropped by the caller, never written in a degraded shape.
++ */
++export function build_class_a_record(input: BuildClassAInput): ClassARecord {
++    const skill = normalise_skill_name(input.skill);
++
++    check_id_redaction('host', input.host);
++    check_id_redaction('org_id', input.org_id);
++
++    const rule_tier = input.rule_tier ?? null;
++    if (rule_tier !== null && !(ALLOWED_RULE_TIERS as readonly string[]).includes(rule_tier)) {
++        throw new ClassARecordError(
++            `rule_tier must be one of ${ALLOWED_RULE_TIERS.join(', ')} or null`,
++        );
++    }
++
++    const package_version = input.package_version ?? null;
++    if (package_version !== null) {
++        check_id_redaction('package_version', package_version);
++    }
++
++    return {
++        schema_version: CLASS_A_SCHEMA_VERSION,
++        record_class: 'usage',
++        ts_bucket: hour_bucket(input.now ?? new Date()),
++        skill,
++        host: input.host,
++        package_version,
++        rule_tier,
++        org_id: input.org_id,
++        user_hash: derive_user_hash(input.salt, input.hostname, input.username),
++        session_hash: derive_session_hash(input.salt, input.session_id),
++    };
++}
++
++/**
++ * Append one record as a JSONL line.
++ *
++ * Uses the engagement module's compact-sorted serializer so a Class-A line
++ * is byte-comparable with the records already in this tree rather than
++ * carrying a second JSON convention.
++ */
++export function append_class_a_record(log_path: string, record: ClassARecord): void {
++    const payload = `${py_json_dumps_compact_sorted(record as unknown as Record<string, unknown>)}\n`;
++    fs.mkdirSync(path.dirname(log_path) || '.', { recursive: true });
++    fs.appendFileSync(log_path, payload, { encoding: 'utf-8' });
++}
+diff --git a/dist/agent-src/templates/scripts/telemetry/settings.ts b/dist/agent-src/templates/scripts/telemetry/settings.ts
+index 2d518bcb7fbf6e117f8ff582768d657f9506fd5a..4d7d40c8707413b70be8ce1a1aa6617237d8e96f 100644
+--- a/dist/agent-src/templates/scripts/telemetry/settings.ts
++++ b/dist/agent-src/templates/scripts/telemetry/settings.ts
+@@ -5,6 +5,12 @@
+  * `telemetry.artifact_engagement` namespace from `.agent-settings.yml`.
+  * Tolerates a missing file, a missing section, and a missing YAML parser —
+  * the default-off doctrine means "everything unparseable means disabled".
++ *
++ * Three namespaces live here, all under `telemetry:` and all default-off:
++ * `artifact_engagement` (the CLI's own log), `tier_usage` (the documented
++ * signal contract), and `remote` (road-to-org-telemetry Phase 1 — the
++ * org-pack-enabled Class-A usage record). They share one doctrine and one
++ * set of coercion helpers; they share no state.
+  */
+ import { createRequire } from 'node:module';
+ import * as fs from 'node:fs';
+@@ -100,32 +106,49 @@ function _isFile(p: string): boolean {
+     }
+ }
+ 
+-/** Return parsed telemetry settings — never raises on missing data. */
+-export function read_settings(p: string): TelemetrySettings {
+-    let section: Record<string, unknown> = {};
+-    let section_present = false;
+-
+-    if (_isFile(p)) {
+-        let raw: unknown = {};
+-        try {
+-            raw = YAML.parse(fs.readFileSync(p, 'utf-8'), { version: '1.1' });
+-            if (raw === null || raw === undefined) {
+-                raw = {};
+-            }
+-        } catch {
++/**
++ * Read one `telemetry.<key>` section out of a settings file.
++ *
++ * Every branch that cannot produce a section returns the empty one with
++ * `present: false` — a missing file, unparseable YAML, a missing `telemetry:`
++ * mapping, and a missing sub-key are deliberately indistinguishable here.
++ * That IS the default-off doctrine: unparseable means disabled, and a reader
++ * that could tell those cases apart would invite a caller to treat one of
++ * them as consent.
++ */
++function _read_telemetry_section(
++    p: string,
++    key: string,
++): { section: Record<string, unknown>; present: boolean } {
++    if (!_isFile(p)) {
++        return { section: {}, present: false };
++    }
++    let raw: unknown = {};
++    try {
++        raw = YAML.parse(fs.readFileSync(p, 'utf-8'), { version: '1.1' });
++        if (raw === null || raw === undefined) {
+             raw = {};
+         }
+-        if (_isPlainObject(raw)) {
+-            const tele = raw['telemetry'];
+-            if (_isPlainObject(tele)) {
+-                const artefact = tele['artifact_engagement'];
+-                if (_isPlainObject(artefact)) {
+-                    section = artefact;
+-                    section_present = true;
+-                }
+-            }
+-        }
++    } catch {
++        raw = {};
++    }
++    if (!_isPlainObject(raw)) {
++        return { section: {}, present: false };
++    }
++    const tele = raw['telemetry'];
++    if (!_isPlainObject(tele)) {
++        return { section: {}, present: false };
++    }
++    const sub = tele[key];
++    if (!_isPlainObject(sub)) {
++        return { section: {}, present: false };
+     }
++    return { section: sub, present: true };
++}
++
++/** Return parsed telemetry settings — never raises on missing data. */
++export function read_settings(p: string): TelemetrySettings {
++    const { section, present: section_present } = _read_telemetry_section(p, 'artifact_engagement');
+ 
+     const record = _isPlainObject(section['record']) ? section['record'] : {};
+     const output = _isPlainObject(section['output']) ? section['output'] : {};
+@@ -164,27 +187,7 @@ export class TierUsageSettings {
+ 
+ /** Return parsed tier-usage settings — never raises on missing data. */
+ export function read_tier_usage_settings(p: string): TierUsageSettings {
+-    let section: Record<string, unknown> = {};
+-    if (_isFile(p)) {
+-        let raw: unknown = {};
+-        try {
+-            raw = YAML.parse(fs.readFileSync(p, 'utf-8'), { version: '1.1' });
+-            if (raw === null || raw === undefined) {
+-                raw = {};
+-            }
+-        } catch {
+-            raw = {};
+-        }
+-        if (_isPlainObject(raw)) {
+-            const tele = raw['telemetry'];
+-            if (_isPlainObject(tele)) {
+-                const tu = tele['tier_usage'];
+-                if (_isPlainObject(tu)) {
+-                    section = tu;
+-                }
+-            }
+-        }
+-    }
++    const { section } = _read_telemetry_section(p, 'tier_usage');
+ 
+     const output = _isPlainObject(section['output']) ? section['output'] : {};
+     const retier = _isPlainObject(section['retier']) ? section['retier'] : {};
+@@ -208,3 +211,95 @@ export function read_tier_usage_settings(p: string): TierUsageSettings {
+         min_distinct_users: _coerce_int(retier['min_distinct_users'], defaults.min_distinct_users),
+     });
+ }
++
++// ── telemetry.remote — org-pack Class-A usage records ───────────────────
++//
++// road-to-org-telemetry Phase 1. Same default-off doctrine as the two
++// namespaces above, with one addition the others do not need: this is the
++// only namespace whose records are intended to LEAVE the machine (Phase 2
++// transports them; Phase 1 writes them locally and nothing else). So
++// `enabled: true` alone is deliberately not enough to switch it on.
++
++export const DEFAULT_REMOTE_LOG_PATH = '.agent-telemetry.jsonl';
++export const DEFAULT_REMOTE_FLUSH = 'session-end';
++export const ALLOWED_REMOTE_FLUSH = ['session-end', 'never'] as const;
++
++/**
++ * The four fields that must ALL carry a value before a single record is
++ * written. `endpoint` and `org_id` name where the data goes and on whose
++ * authority; `salt` is the org-pack secret without which the user hash
++ * would be a plain hash of a login name — i.e. reversible by dictionary.
++ *
++ * None of the four has a usable default, and that is the point: an
++ * external clone of this repository carries the key NAMES and no values,
++ * so it cannot reach `active` by copying the tree.
++ */
++export const REMOTE_REQUIRED_FIELDS = ['endpoint', 'org_id', 'salt'] as const;
++
++export class RemoteTelemetrySettings {
++    /** The raw `enabled:` value. NOT the switch — see `active`. */
++    readonly enabled: boolean;
++    readonly endpoint: string;
++    readonly org_id: string;
++    /** Org-pack secret. Never written into a record, never logged. */
++    readonly salt: string;
++    readonly flush: string;
++    readonly log_path: string;
++
++    constructor(init: {
++        enabled: boolean;
++        endpoint: string;
++        org_id: string;
++        salt: string;
++        flush: string;
++        log_path: string;
++    }) {
++        this.enabled = init.enabled;
++        this.endpoint = init.endpoint;
++        this.org_id = init.org_id;
++        this.salt = init.salt;
++        this.flush = init.flush;
++        this.log_path = init.log_path;
++    }
++
++    /**
++     * Which required fields are absent. Empty array + `enabled` ⇒ `active`.
++     * Exposed so a doctor command can say WHICH field is missing without
++     * printing the salt, rather than reporting a bare "disabled".
++     */
++    get missing(): string[] {
++        const out: string[] = [];
++        for (const field of REMOTE_REQUIRED_FIELDS) {
++            if (!this[field]) {
++                out.push(field);
++            }
++        }
++        return out;
++    }
++
++    /** The real switch: opted in AND fully configured by the org pack. */
++    get active(): boolean {
++        return this.enabled && this.missing.length === 0;
++    }
++}
++
++/**
++ * Return parsed remote-telemetry settings — never raises on missing data.
++ *
++ * Fail-closed on every axis. A missing file, unparseable YAML, a missing
++ * section, a missing field, or an unknown `flush` value all resolve to a
++ * settings object whose `active` is false.
++ */
++export function read_remote_settings(p: string): RemoteTelemetrySettings {
++    const { section } = _read_telemetry_section(p, 'remote');
++    const output = _isPlainObject(section['output']) ? section['output'] : {};
++
++    return new RemoteTelemetrySettings({
++        enabled: _coerce_bool(section['enabled'], false),
++        endpoint: _coerce_str(section['endpoint'], ''),
++        org_id: _coerce_str(section['org_id'], ''),
++        salt: _coerce_str(section['salt'], ''),
++        flush: _coerce_str(section['flush'], DEFAULT_REMOTE_FLUSH, ALLOWED_REMOTE_FLUSH),
++        log_path: _coerce_path(output['path'], DEFAULT_REMOTE_LOG_PATH),
++    });
++}
+diff --git a/src/agent-src/templates/agent-settings.md b/src/agent-src/templates/agent-settings.md
+index 9868bbcb8c61357684d3cdba5bca5d1a42bf7c8b..13f0c8f6d5b4b17a9b600c9ce703296351883c5c 100644
+--- a/src/agent-src/templates/agent-settings.md
++++ b/src/agent-src/templates/agent-settings.md
+@@ -507,6 +507,42 @@ telemetry:
+       # Append-only JSONL log. Path is relative to the project root.
+       # Always gitignored (see config/gitignore-block.txt).
+       path: .agent-engagement.jsonl
++  # --- Org telemetry (road-to-org-telemetry Phase 1) ---
++  #
++  # Class-A usage records: which skill was invoked, on which host, at which
++  # package version and rule tier, under a pseudonymous user hash and an
++  # hour-bucketed timestamp. Zero bytes of project content — the record type
++  # has no field capable of holding free text.
++  #
++  # `enabled: true` on its own does NOT switch this on. All three of
++  # `endpoint`, `org_id`, and `salt` must also carry a value, and none of
++  # them has a default. That is deliberate: this repository is public, so it
++  # ships the key NAMES and no values, and a clone cannot reach the write
++  # path by copying the tree. The values come from an org pack.
++  #
++  # Phase 1 writes records LOCALLY and nothing else. The outbound flush is
++  # Phase 2 and org-wide enablement is Phase 3; both are gated on open
++  # blockers in the roadmap.
++  remote:
++    # Master switch. Combined with the three required fields below — see
++    # `active` in scripts/telemetry/settings.ts.
++    enabled: false
++    # Where Phase 2 will flush to. Recorded now, never called in Phase 1.
++    endpoint: ""
++    # The org whose pack enabled this install; written into every record.
++    org_id: ""
++    # Org-pack secret. Salts the user and session hashes so a digest of a
++    # login name is not reversible by dictionary. Never written into a
++    # record, never logged. Belongs in the machine-local override layer,
++    # never in a committed `.agent-settings.yml`.
++    salt: ""
++    # `session-end` = flush at session end (Phase 2). `never` = keep records
++    # local indefinitely, which is a legitimate way to run the local half
++    # while the sink question is still open.
++    flush: session-end
++    output:
++      # Append-only JSONL log, relative to the project root. Gitignored.
++      path: .agent-telemetry.jsonl
+ 
+ # --- Linked projects (cross-repo awareness, local-only) ---
+ #
+@@ -602,6 +638,12 @@ the canonical narrative lives in
+ | `telemetry.artifact_engagement.record.consulted` | `true`, `false` | `true` | When `true`: record artefacts loaded into context. |
+ | `telemetry.artifact_engagement.record.applied` | `true`, `false` | `true` | When `true`: record artefacts cited or driving a decision. |
+ | `telemetry.artifact_engagement.output.path` | path | `.agent-engagement.jsonl` | Append-only JSONL log path, relative to the project root. Always gitignored. |
++| `telemetry.remote.enabled` | `true`, `false` | `false` | Opt-in for Class-A org usage records. **Not the switch on its own** — `endpoint`, `org_id`, and `salt` must all carry a value too, and none has a default, so a clone of the public repository cannot reach the write path. Not in the shipped template; a missing section means disabled. |
++| `telemetry.remote.endpoint` | URL | *(none)* | Where Phase 2 will flush records to. Recorded now; no outbound call exists in Phase 1. Empty ⇒ inactive. |
++| `telemetry.remote.org_id` | string | *(none)* | The org whose pack enabled this install; written into every record. Empty ⇒ inactive. |
++| `telemetry.remote.salt` | string | *(none)* | Org-pack secret salting the user and session hashes — without it a digest of a login name is dictionary-reversible. Never written into a record, never logged. Belongs in the machine-local override layer, never in a committed `.agent-settings.yml`. Empty ⇒ inactive. |
++| `telemetry.remote.flush` | `session-end`, `never` | `session-end` | When Phase 2 flushes. `never` keeps records local indefinitely — a legitimate way to run the local half while the sink question is open. |
++| `telemetry.remote.output.path` | path | `.agent-telemetry.jsonl` | Append-only JSONL log path, relative to the project root. Gitignored. |
+ | `linked_projects` | list of `{path, include}` | `[]` | IDE-attached sibling repos in scope for proactive cross-repo awareness. **Belongs in `.agent-settings.local.yml` (in agents/settings/)** (per-machine, gitignored). See [cross-repo guide](../../docs/guides/cross-repo-linked-projects.md) + ADR-032. |
+ | `linked_projects_max_files` | integer | `20000` | File-count ceiling above which a detected sibling is flagged `large` (awareness only). Never excludes. |
+ | `knowledge.global_sharing.enabled` | `true`, `false` | `true` | **User-global** (keep in `~/.event4u/agent-config/agent-settings.yml`). Master switch for the file-first global knowledge-card store (ADR-100; default-ON per ADR-119, the council-validated bounded-downside flip superseding ADR-103 — adversarially spot-checked redaction incl. hidden-unicode hardening, narrowest tier default, pre-registered demotion trigger). `false` fully no-ops the layer (single-key revert); v1 project-local cards unaffected. |
+diff --git a/src/agent-src/templates/scripts/telemetry/remote.ts b/src/agent-src/templates/scripts/telemetry/remote.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..2d2b39cad7834c404d6a732921addb7ff4091952
+--- /dev/null
++++ b/src/agent-src/templates/scripts/telemetry/remote.ts
+@@ -0,0 +1,227 @@
++/**
++ * Class-A usage record — schema, skill-name normalisation, salted hashes,
++ * and the JSONL appender (road-to-org-telemetry Phase 1).
++ *
++ * Class A is the package describing itself: a usage class, the skill that
++ * was invoked, the host, the package version, the active rule-loading tier,
++ * a pseudonymous user hash, a session hash, and an hour-bucketed timestamp.
++ * It carries zero bytes of project content.
++ *
++ * PII-EXCLUSION-BY-CONSTRUCTION — the point of this file, not a caution.
++ * `ClassARecord` has no field capable of holding free-form content: every
++ * member is a string drawn from a closed vocabulary, an id validated by the
++ * engagement redaction floor, or a hex digest. There is no `payload`, no
++ * `notes`, no `extra: unknown`. A type that cannot carry a prompt has no
++ * scrubber that can fail — the same principle `domain-safety-pii` § Surface 2
++ * applies to log streams, and the same one the artefact-engagement event
++ * already follows. Never widen this interface with a free-text member.
++ *
++ * Two host-supplied opaque tokens are deliberately hashed rather than
++ * recorded: the session id and the login name. The session id in particular
++ * is high-entropy and `check_secret_leak` correctly reads a raw one as a
++ * candidate credential (a trap `orchestration_record_hook.ts` recorded when
++ * it chose to generate its own id instead).
++ *
++ * PHASE BOUNDARY. This module writes to a local file and nothing else. The
++ * outbound flush is Phase 2 and is blocked on the `sink-choice` blocker;
++ * org-wide enablement is Phase 3 and is blocked on `dpo-signoff`. Nothing
++ * here opens a socket, and no caller in this phase may make it do so.
++ */
++import * as crypto from 'node:crypto';
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++
++import { check_id_redaction, py_json_dumps_compact_sorted } from './engagement.js';
++
++export const CLASS_A_SCHEMA_VERSION = 1;
++
++/** Usage classes. Phase 5 adds the self-repair class; Phase 1 emits one. */
++export const ALLOWED_RECORD_CLASSES = ['usage'] as const;
++
++/** `rule_loading_tier` values from the settings template. */
++export const ALLOWED_RULE_TIERS = ['minimal', 'balanced', 'full', 'custom'] as const;
++
++/** Digest length, in hex chars — matches the tier-usage signal contract. */
++export const HASH_HEX_LEN = 16;
++
++export class ClassARecordError extends Error {
++    constructor(message: string) {
++        super(message);
++        this.name = 'ClassARecordError';
++    }
++}
++
++/**
++ * One Class-A usage record. Every field is structural; see the file header
++ * for why there is no free-form member and why that must stay true.
++ */
++export interface ClassARecord {
++    schema_version: number;
++    /** Closed vocabulary — see `ALLOWED_RECORD_CLASSES`. */
++    record_class: string;
++    /** ISO-8601 UTC, HOUR resolution. Never an exact timestamp. */
++    ts_bucket: string;
++    /** Normalised skill id — see `normalise_skill_name`. */
++    skill: string;
++    /** Host id (`claude`, `augment`, …) — an id-shaped enum, never a path. */
++    host: string;
++    /** Installed package version, or `null` when the install did not report one. */
++    package_version: string | null;
++    /** Active `rule_loading_tier`, or `null` when unresolvable. */
++    rule_tier: string | null;
++    /** The org whose pack enabled this install. */
++    org_id: string;
++    /** Salted digest of host + login. Never the login itself. */
++    user_hash: string;
++    /** Salted digest of the host session id. Never the raw id. */
++    session_hash: string;
++}
++
++/**
++ * Canonical skill id.
++ *
++ * Phase 0's third spike measured the host sending ONE skill under two
++ * spellings — `roadmap:process-full` (64 observations) and
++ * `roadmap-process-full` (22), likewise `roadmap:ai-council`. Left alone,
++ * per-skill counts split and the busiest skills undercount by roughly a
++ * quarter.
++ *
++ * The collapse direction is `:` → `-`, and it is chosen because it is
++ * TOTAL: every colon form has exactly one dash form, so the mapping is a
++ * function. The other direction is not — `brand-asset-generation` has no
++ * cluster and nothing in a hook can decide which dash of
++ * `roadmap-process-full` would have been a colon without carrying the whole
++ * command catalogue into the hot path.
++ *
++ * The two names that collide under this rule are the same skill, which is
++ * the entire reason the rule exists. Should a genuinely distinct skill ever
++ * be named exactly like another cluster's flattened form, the collision is
++ * a naming defect upstream of this function, not a defect here — and the
++ * duplicate name would already be ambiguous to a human reading the report.
++ *
++ * Throws on anything the engagement redaction floor rejects: a path, a file
++ * extension, embedded whitespace, or an over-long value. The caller drops
++ * the record rather than recording a name it could not validate.
++ */
++export function normalise_skill_name(raw: unknown): string {
++    if (typeof raw !== 'string') {
++        throw new ClassARecordError('skill must be a string');
++    }
++    const collapsed = raw.trim().replace(/:/gu, '-');
++    check_id_redaction('skill', collapsed);
++    return collapsed;
++}
++
++/**
++ * ISO-8601 UTC truncated to the hour — `2026-08-18T21:00Z`.
++ *
++ * Hour buckets, never exact timestamps: the tier-usage signal contract
++ * names exact timestamps in its forbidden list precisely because they
++ * re-identify a single user's working pattern from an otherwise
++ * pseudonymous record set.
++ */
++export function hour_bucket(d: Date): string {
++    const p = (n: number): string => String(n).padStart(2, '0');
++    return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`
++        + `T${p(d.getUTCHours())}:00Z`;
++}
++
++/**
++ * Salted digest, first `HASH_HEX_LEN` hex chars of a SHA-256.
++ *
++ * The salt is the org pack's, never this repository's — an unsalted hash of
++ * a login name is reversible by dictionary in seconds, so a salt-less digest
++ * would be an identifier wearing a hash's clothes. `read_remote_settings`
++ * refuses to activate without one, which is what makes that guarantee
++ * structural rather than a convention.
++ *
++ * Parts are joined on NUL, which cannot occur in a hostname, a login, or a
++ * session id — so no pair of distinct inputs can produce one joined string.
++ */
++function _salted_digest(salt: string, parts: readonly string[]): string {
++    if (!salt) {
++        throw new ClassARecordError('salt must be non-empty — refusing to emit an unsalted digest');
++    }
++    const material = [salt, ...parts].join('\u0000');
++    return crypto.createHash('sha256').update(material, 'utf-8').digest('hex').slice(0, HASH_HEX_LEN);
++}
++
++/** Pseudonymous per-user id. Stable per (salt, machine, login). */
++export function derive_user_hash(salt: string, hostname: string, username: string): string {
++    return _salted_digest(salt, ['user', hostname, username]);
++}
++
++/**
++ * Pseudonymous per-session id. Domain-separated from the user hash by the
++ * literal prefix, so the same salt cannot make the two digests collide or
++ * let one be derived from the other.
++ */
++export function derive_session_hash(salt: string, session_id: string): string {
++    return _salted_digest(salt, ['session', session_id]);
++}
++
++export interface BuildClassAInput {
++    skill: unknown;
++    host: string;
++    org_id: string;
++    salt: string;
++    hostname: string;
++    username: string;
++    session_id: string;
++    package_version?: string | null;
++    rule_tier?: string | null;
++    now?: Date;
++}
++
++/**
++ * Build one validated Class-A usage record. Pure — no I/O and no ambient
++ * clock unless the caller omits `now`, so the mapping stays independently
++ * testable.
++ *
++ * Throws rather than returning a partial record: a record that failed
++ * validation is dropped by the caller, never written in a degraded shape.
++ */
++export function build_class_a_record(input: BuildClassAInput): ClassARecord {
++    const skill = normalise_skill_name(input.skill);
++
++    check_id_redaction('host', input.host);
++    check_id_redaction('org_id', input.org_id);
++
++    const rule_tier = input.rule_tier ?? null;
++    if (rule_tier !== null && !(ALLOWED_RULE_TIERS as readonly string[]).includes(rule_tier)) {
++        throw new ClassARecordError(
++            `rule_tier must be one of ${ALLOWED_RULE_TIERS.join(', ')} or null`,
++        );
++    }
++
++    const package_version = input.package_version ?? null;
++    if (package_version !== null) {
++        check_id_redaction('package_version', package_version);
++    }
++
++    return {
++        schema_version: CLASS_A_SCHEMA_VERSION,
++        record_class: 'usage',
++        ts_bucket: hour_bucket(input.now ?? new Date()),
++        skill,
++        host: input.host,
++        package_version,
++        rule_tier,
++        org_id: input.org_id,
++        user_hash: derive_user_hash(input.salt, input.hostname, input.username),
++        session_hash: derive_session_hash(input.salt, input.session_id),
++    };
++}
++
++/**
++ * Append one record as a JSONL line.
++ *
++ * Uses the engagement module's compact-sorted serializer so a Class-A line
++ * is byte-comparable with the records already in this tree rather than
++ * carrying a second JSON convention.
++ */
++export function append_class_a_record(log_path: string, record: ClassARecord): void {
++    const payload = `${py_json_dumps_compact_sorted(record as unknown as Record<string, unknown>)}\n`;
++    fs.mkdirSync(path.dirname(log_path) || '.', { recursive: true });
++    fs.appendFileSync(log_path, payload, { encoding: 'utf-8' });
++}
+diff --git a/src/agent-src/templates/scripts/telemetry/settings.ts b/src/agent-src/templates/scripts/telemetry/settings.ts
+index 2d518bcb7fbf6e117f8ff582768d657f9506fd5a..4d7d40c8707413b70be8ce1a1aa6617237d8e96f 100644
+--- a/src/agent-src/templates/scripts/telemetry/settings.ts
++++ b/src/agent-src/templates/scripts/telemetry/settings.ts
+@@ -5,6 +5,12 @@
+  * `telemetry.artifact_engagement` namespace from `.agent-settings.yml`.
+  * Tolerates a missing file, a missing section, and a missing YAML parser —
+  * the default-off doctrine means "everything unparseable means disabled".
++ *
++ * Three namespaces live here, all under `telemetry:` and all default-off:
++ * `artifact_engagement` (the CLI's own log), `tier_usage` (the documented
++ * signal contract), and `remote` (road-to-org-telemetry Phase 1 — the
++ * org-pack-enabled Class-A usage record). They share one doctrine and one
++ * set of coercion helpers; they share no state.
+  */
+ import { createRequire } from 'node:module';
+ import * as fs from 'node:fs';
+@@ -100,32 +106,49 @@ function _isFile(p: string): boolean {
+     }
+ }
+ 
+-/** Return parsed telemetry settings — never raises on missing data. */
+-export function read_settings(p: string): TelemetrySettings {
+-    let section: Record<string, unknown> = {};
+-    let section_present = false;
+-
+-    if (_isFile(p)) {
+-        let raw: unknown = {};
+-        try {
+-            raw = YAML.parse(fs.readFileSync(p, 'utf-8'), { version: '1.1' });
+-            if (raw === null || raw === undefined) {
+-                raw = {};
+-            }
+-        } catch {
++/**
++ * Read one `telemetry.<key>` section out of a settings file.
++ *
++ * Every branch that cannot produce a section returns the empty one with
++ * `present: false` — a missing file, unparseable YAML, a missing `telemetry:`
++ * mapping, and a missing sub-key are deliberately indistinguishable here.
++ * That IS the default-off doctrine: unparseable means disabled, and a reader
++ * that could tell those cases apart would invite a caller to treat one of
++ * them as consent.
++ */
++function _read_telemetry_section(
++    p: string,
++    key: string,
++): { section: Record<string, unknown>; present: boolean } {
++    if (!_isFile(p)) {
++        return { section: {}, present: false };
++    }
++    let raw: unknown = {};
++    try {
++        raw = YAML.parse(fs.readFileSync(p, 'utf-8'), { version: '1.1' });
++        if (raw === null || raw === undefined) {
+             raw = {};
+         }
+-        if (_isPlainObject(raw)) {
+-            const tele = raw['telemetry'];
+-            if (_isPlainObject(tele)) {
+-                const artefact = tele['artifact_engagement'];
+-                if (_isPlainObject(artefact)) {
+-                    section = artefact;
+-                    section_present = true;
+-                }
+-            }
+-        }
++    } catch {
++        raw = {};
++    }
++    if (!_isPlainObject(raw)) {
++        return { section: {}, present: false };
++    }
++    const tele = raw['telemetry'];
++    if (!_isPlainObject(tele)) {
++        return { section: {}, present: false };
++    }
++    const sub = tele[key];
++    if (!_isPlainObject(sub)) {
++        return { section: {}, present: false };
+     }
++    return { section: sub, present: true };
++}
++
++/** Return parsed telemetry settings — never raises on missing data. */
++export function read_settings(p: string): TelemetrySettings {
++    const { section, present: section_present } = _read_telemetry_section(p, 'artifact_engagement');
+ 
+     const record = _isPlainObject(section['record']) ? section['record'] : {};
+     const output = _isPlainObject(section['output']) ? section['output'] : {};
+@@ -164,27 +187,7 @@ export class TierUsageSettings {
+ 
+ /** Return parsed tier-usage settings — never raises on missing data. */
+ export function read_tier_usage_settings(p: string): TierUsageSettings {
+-    let section: Record<string, unknown> = {};
+-    if (_isFile(p)) {
+-        let raw: unknown = {};
+-        try {
+-            raw = YAML.parse(fs.readFileSync(p, 'utf-8'), { version: '1.1' });
+-            if (raw === null || raw === undefined) {
+-                raw = {};
+-            }
+-        } catch {
+-            raw = {};
+-        }
+-        if (_isPlainObject(raw)) {
+-            const tele = raw['telemetry'];
+-            if (_isPlainObject(tele)) {
+-                const tu = tele['tier_usage'];
+-                if (_isPlainObject(tu)) {
+-                    section = tu;
+-                }
+-            }
+-        }
+-    }
++    const { section } = _read_telemetry_section(p, 'tier_usage');
+ 
+     const output = _isPlainObject(section['output']) ? section['output'] : {};
+     const retier = _isPlainObject(section['retier']) ? section['retier'] : {};
+@@ -208,3 +211,95 @@ export function read_tier_usage_settings(p: string): TierUsageSettings {
+         min_distinct_users: _coerce_int(retier['min_distinct_users'], defaults.min_distinct_users),
+     });
+ }
++
++// ── telemetry.remote — org-pack Class-A usage records ───────────────────
++//
++// road-to-org-telemetry Phase 1. Same default-off doctrine as the two
++// namespaces above, with one addition the others do not need: this is the
++// only namespace whose records are intended to LEAVE the machine (Phase 2
++// transports them; Phase 1 writes them locally and nothing else). So
++// `enabled: true` alone is deliberately not enough to switch it on.
++
++export const DEFAULT_REMOTE_LOG_PATH = '.agent-telemetry.jsonl';
++export const DEFAULT_REMOTE_FLUSH = 'session-end';
++export const ALLOWED_REMOTE_FLUSH = ['session-end', 'never'] as const;
++
++/**
++ * The four fields that must ALL carry a value before a single record is
++ * written. `endpoint` and `org_id` name where the data goes and on whose
++ * authority; `salt` is the org-pack secret without which the user hash
++ * would be a plain hash of a login name — i.e. reversible by dictionary.
++ *
++ * None of the four has a usable default, and that is the point: an
++ * external clone of this repository carries the key NAMES and no values,
++ * so it cannot reach `active` by copying the tree.
++ */
++export const REMOTE_REQUIRED_FIELDS = ['endpoint', 'org_id', 'salt'] as const;
++
++export class RemoteTelemetrySettings {
++    /** The raw `enabled:` value. NOT the switch — see `active`. */
++    readonly enabled: boolean;
++    readonly endpoint: string;
++    readonly org_id: string;
++    /** Org-pack secret. Never written into a record, never logged. */
++    readonly salt: string;
++    readonly flush: string;
++    readonly log_path: string;
++
++    constructor(init: {
++        enabled: boolean;
++        endpoint: string;
++        org_id: string;
++        salt: string;
++        flush: string;
++        log_path: string;
++    }) {
++        this.enabled = init.enabled;
++        this.endpoint = init.endpoint;
++        this.org_id = init.org_id;
++        this.salt = init.salt;
++        this.flush = init.flush;
++        this.log_path = init.log_path;
++    }
++
++    /**
++     * Which required fields are absent. Empty array + `enabled` ⇒ `active`.
++     * Exposed so a doctor command can say WHICH field is missing without
++     * printing the salt, rather than reporting a bare "disabled".
++     */
++    get missing(): string[] {
++        const out: string[] = [];
++        for (const field of REMOTE_REQUIRED_FIELDS) {
++            if (!this[field]) {
++                out.push(field);
++            }
++        }
++        return out;
++    }
++
++    /** The real switch: opted in AND fully configured by the org pack. */
++    get active(): boolean {
++        return this.enabled && this.missing.length === 0;
++    }
++}
++
++/**
++ * Return parsed remote-telemetry settings — never raises on missing data.
++ *
++ * Fail-closed on every axis. A missing file, unparseable YAML, a missing
++ * section, a missing field, or an unknown `flush` value all resolve to a
++ * settings object whose `active` is false.
++ */
++export function read_remote_settings(p: string): RemoteTelemetrySettings {
++    const { section } = _read_telemetry_section(p, 'remote');
++    const output = _isPlainObject(section['output']) ? section['output'] : {};
++
++    return new RemoteTelemetrySettings({
++        enabled: _coerce_bool(section['enabled'], false),
++        endpoint: _coerce_str(section['endpoint'], ''),
++        org_id: _coerce_str(section['org_id'], ''),
++        salt: _coerce_str(section['salt'], ''),
++        flush: _coerce_str(section['flush'], DEFAULT_REMOTE_FLUSH, ALLOWED_REMOTE_FLUSH),
++        log_path: _coerce_path(output['path'], DEFAULT_REMOTE_LOG_PATH),
++    });
++}
+diff --git a/src/config/gitignore-block.txt b/src/config/gitignore-block.txt
+index 590dbf97de65f99391ff7cc6397c7e6ec2396bae..80f5add8d5d2713612ec85b075f2dcedbb8c4b9f 100644
+--- a/src/config/gitignore-block.txt
++++ b/src/config/gitignore-block.txt
+@@ -102,6 +102,11 @@
+ .agent-engagement.jsonl
+ .agent-engagement.jsonl.bak
+ 
++# Agent config — org usage telemetry (Class-A records; default-off and
++# inactive without an org pack, never commit)
++.agent-telemetry.jsonl
++.agent-telemetry.jsonl.bak
++
+ # Agent config — volatile runtime artefacts (machine-generated,
+ # regenerated on demand, never committed). Single catch-all per the
+ # Volatile Runtime policy: everything under agents/runtime/ is
+diff --git a/src/scripts/hook_manifest.yaml b/src/scripts/hook_manifest.yaml
+index 4b1e486c3cd2bc7f73e16e3fa6d7588c5b215a42..ed5956d238eb13c0d76d488313f86657d582284a 100644
+--- a/src/scripts/hook_manifest.yaml
++++ b/src/scripts/hook_manifest.yaml
+@@ -450,6 +450,34 @@ concerns:
+     fail_closed: false
+     severity: advisory
+     tools: [Agent, Task]
++  # road-to-org-telemetry Phase 1 (step 1.2) — Class-A usage capture. Fires
++  # only on a `Skill` tool-use completion, the event Phase 0's first spike
++  # confirmed carries the invoked skill name (`tool_input.skill`, present on
++  # 164 of 164 real invocations). Exists because the regex collector is blind
++  # to consumer installs by construction — spike 3 measured 0 of 89
++  # invocations detected on the set it reads.
++  #
++  # DEFAULT-OFF and then some: `read_remote_settings` activates only when
++  # `telemetry.remote.enabled` is true AND the org pack supplied an endpoint,
++  # an org id, and a salt. A clone of this repository carries the key names
++  # and no values, so it cannot reach the write path. Inactive ⇒ zero
++  # telemetry file operations and zero network calls.
++  #
++  # It appends to a LOCAL JSONL file and stops — no outbound call exists in
++  # this concern. Transport is Phase 2 (blocked on `sink-choice`); org-wide
++  # enablement is Phase 3 (blocked on `dpo-signoff`).
++  #
++  # Silent on every path (never writes to stdout); exit 0 always, including a
++  # malformed envelope or a write failure. Carries no hook-token-budget row —
++  # it emits nothing, same as orchestration-record. fail_closed: false.
++  telemetry-usage:
++    script: src/scripts/hooks/telemetry_usage_hook.ts
++    args: []
++    fail_closed: false
++    severity: advisory
++    # Provable from the hook's own source: the only branch surface is
++    # `extractToolName(payload) !== SKILL_TOOL_NAME`.
++    tools: [Skill]
+   # road-to-orchestrator-discipline-carriers Phase 4 (F3-lite) — conditional
+   # delegation nudge. Extracts cheap structural signals from the SUBMITTED
+   # prompt (enumerated file lists, "for each"/"alle …" shapes, explicit slice
+@@ -758,7 +786,7 @@ platforms:
+     session_end:      [chat-history, memory-learn, session-register, roadmap-progress]
+     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
+     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard]
+-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
++    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape]
+ 
+   claude:
+     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+@@ -766,7 +794,7 @@ platforms:
+     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register]
+     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow]
+-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape, language-mirror]
++    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, language-mirror]
+     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;
+     # the `post_tool_use` entry above re-emits the pin exactly once while that
+     # marker is set, then clears it. One extra injection per compaction EVENT —
+@@ -820,7 +848,7 @@ platforms:
+     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow]
+-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
++    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape]
+     # subagent-ledger IS bound here, unlike the two nudges above, and the
+     # difference is the delivery channel rather than the platform: the nudges
+     # depend on stdout reaching the model, which this trampoline discards by
+@@ -843,7 +871,7 @@ platforms:
+     session_end:        [chat-history, memory-learn, session-register, roadmap-progress]
+     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
++    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape]
+ 
+   # Phase 7.6 — Cline. Hooks live under `.clinerules/hooks/<HookName>`
+   # (project, no file extension, must be executable per Cline docs) or
+@@ -858,7 +886,7 @@ platforms:
+     session_end:        [chat-history, memory-learn, session-register, roadmap-progress]
+     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
++    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape]
+ 
+   # Phase 7.7 — Windsurf (Cascade). Hooks live at `.windsurf/hooks.json`
+   # (project) or `~/.codeium/windsurf/hooks.json` (user). Cascade has
+@@ -894,7 +922,7 @@ platforms:
+     session_end:        [chat-history, memory-learn, session-register, roadmap-progress]
+     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, tool-result-bytes, edit-shape]
++    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape]
+ 
+   # Phase 7.9 — Copilot has no hook surface. Concerns route through
+   # rule-only fallback; the dispatcher silently no-ops on --platform copilot.
+diff --git a/src/scripts/hooks/concern_registry.ts b/src/scripts/hooks/concern_registry.ts
+index e7af0df1605c2a1a5c02a019bce239a03ca2d9f9..0d5fc721318babaa8629a009d5b7dcbbe72887d9 100644
+--- a/src/scripts/hooks/concern_registry.ts
++++ b/src/scripts/hooks/concern_registry.ts
+@@ -57,6 +57,7 @@ import { main as designSlopMain } from './design_slop_hook.js';
+ import { main as codeGraphNudgeMain } from './code_graph_nudge_hook.js';
+ import { main as uiRouteNudgeMain } from './ui_route_nudge_hook.js';
+ import { main as orchestrationRecordMain } from './orchestration_record_hook.js';
++import { main as telemetryUsageMain } from './telemetry_usage_hook.js';
+ import { main as delegationNudgeMain } from './delegation_nudge_hook.js';
+ import { main as skillRouteMain } from './skill_route_hook.js';
+ import { main as endReviewNudgeMain } from './end_review_nudge_hook.js';
+@@ -107,6 +108,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
+     'src/scripts/hooks/code_graph_nudge_hook.ts': codeGraphNudgeMain as ConcernMain,
+     'src/scripts/hooks/ui_route_nudge_hook.ts': uiRouteNudgeMain as ConcernMain,
+     'src/scripts/hooks/orchestration_record_hook.ts': orchestrationRecordMain as ConcernMain,
++    'src/scripts/hooks/telemetry_usage_hook.ts': telemetryUsageMain as ConcernMain,
+     'src/scripts/hooks/delegation_nudge_hook.ts': delegationNudgeMain as ConcernMain,
+     'src/scripts/hooks/skill_route_hook.ts': skillRouteMain as ConcernMain,
+     'src/scripts/hooks/end_review_nudge_hook.ts': endReviewNudgeMain as ConcernMain,
+diff --git a/src/scripts/hooks/telemetry_usage_hook.ts b/src/scripts/hooks/telemetry_usage_hook.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..34518b7691736243a4a9c07f97272c523376da8a
+--- /dev/null
++++ b/src/scripts/hooks/telemetry_usage_hook.ts
+@@ -0,0 +1,268 @@
++#!/usr/bin/env tsx
++/**
++ * Deterministic PostToolUse Class-A usage capture
++ * (road-to-org-telemetry Phase 1, step 1.2).
++ *
++ * Why a hook rather than the existing collector. `skill_usage_collect.ts`
++ * scans the maintainer's own transcript directory and derives its project
++ * slug from this repository, so a consumer session is invisible to it by
++ * construction — the roadmap's Context table records that as still true
++ * after 479 commits. Phase 0's third spike then measured the size of the
++ * gap on the set the collector DOES read: **0 of 89** invocations detected,
++ * against 163 of 164 across every worktree slug. The zero in the usage
++ * report is an instrumentation artefact, not an adoption measurement.
++ *
++ * Phase 0's first spike settled the event this concern binds to:
++ * `post_tool_use` with `tool_name === "Skill"`, the skill name at
++ * `tool_input.skill` — present in 164 of 164 real invocations across 14,171
++ * live records. The transcript-scan fallback the roadmap pre-registered does
++ * not fire.
++ *
++ * DEFAULT-OFF, AND THE SWITCH IS NOT `enabled`. `read_remote_settings`
++ * activates only when `enabled` is true AND the org pack supplied an
++ * endpoint, an org id, and a salt. An external clone of this repository
++ * carries the key names and no values, so copying the tree cannot reach the
++ * write path. When inactive this concern performs zero telemetry file
++ * operations — no log write, no directory creation — and zero network calls.
++ * (It does read `.agent-settings.yml`, once per process and memoised: the
++ * settings file is how it learns it is off, the same as the artefact-
++ * engagement surface it mirrors.)
++ *
++ * NO OUTBOUND CALL EXISTS HERE, DELIBERATELY. Transport is Phase 2 and is
++ * blocked on `sink-choice`; org-wide enablement is Phase 3 and is blocked on
++ * `dpo-signoff`. This concern appends to a local JSONL file and stops.
++ *
++ * Exit code is ALWAYS 0 — malformed envelope, unreadable settings, failed
++ * write, anything. A hook `warn` (exit 2) is read as a hard BLOCK on this
++ * host (recorded trap), and a telemetry concern has nothing to say to the
++ * model, so it never warns either.
++ */
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++import * as fs from 'node:fs';
++
++import {
++    read_remote_settings,
++    type RemoteTelemetrySettings,
++} from '../../agent-src/templates/scripts/telemetry/settings.js';
++import {
++    append_class_a_record,
++    build_class_a_record,
++} from '../../agent-src/templates/scripts/telemetry/remote.js';
++import { is_replay_mode } from './state_io.js';
++import { readHookStdin } from './hook_stdin.js';
++
++const EXIT_ALLOW = 0;
++
++/** The tool name Phase 0 spike 1 confirmed for a skill invocation. */
++export const SKILL_TOOL_NAME = 'Skill';
++
++const SETTINGS_FILENAME = '.agent-settings.yml';
++
++type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
++type JsonObject = { [k: string]: JsonValue };
++
++function isObject(v: unknown): v is JsonObject {
++    return typeof v === 'object' && v !== null && !Array.isArray(v);
++}
++
++/** Unwrap the dispatcher envelope down to the platform-native payload. */
++export function unwrapPayload(envelope: JsonObject): JsonObject {
++    const inner = envelope['payload'];
++    return isObject(inner) ? inner : envelope;
++}
++
++/** Best-effort read of the tool name across host key variants. */
++export function extractToolName(payload: JsonObject): string | null {
++    const v = payload['tool_name'] ?? payload['toolName'] ?? payload['tool'];
++    return typeof v === 'string' && v ? v : null;
++}
++
++/**
++ * The invoked skill's name, off `tool_input.skill`.
++ *
++ * Spike 1 observed this key on 164 of 164 real invocations; the camelCase
++ * variant is accepted for the same reason `extractToolName` accepts one —
++ * host key casing has varied across versions in this tree before.
++ */
++export function extractSkillName(payload: JsonObject): string | null {
++    const input = payload['tool_input'] ?? payload['toolInput'];
++    if (!isObject(input)) return null;
++    const v = input['skill'] ?? input['skill_name'] ?? input['name'];
++    return typeof v === 'string' && v ? v : null;
++}
++
++/** Host id off the dispatcher envelope (`claude`, `augment`, …). */
++export function extractHost(envelope: JsonObject): string | null {
++    const v = envelope['platform'] ?? envelope['host'];
++    return typeof v === 'string' && v ? v : null;
++}
++
++/**
++ * The host session id. Hashed before it is recorded, never stored raw —
++ * it is a high-entropy opaque token that `check_secret_leak` reads as a
++ * candidate credential.
++ */
++export function extractSessionId(envelope: JsonObject, payload: JsonObject): string {
++    for (const source of [envelope, payload]) {
++        const v = source['session_id'] ?? source['sessionId'];
++        if (typeof v === 'string' && v) return v;
++    }
++    return '';
++}
++
++/**
++ * Active `rule_loading_tier`, read from the same settings file.
++ *
++ * Deliberately a raw line scan rather than a YAML parse: this runs on the
++ * post-tool hot path, the value is a top-level scalar from a closed enum,
++ * and `build_class_a_record` rejects anything outside that enum — so a
++ * mis-parse produces a dropped field, never a wrong one. Unresolvable
++ * reads `null`, which the record carries honestly rather than defaulting
++ * to `balanced` and inventing a fact about the install.
++ */
++export function extractRuleTier(settingsText: string): string | null {
++    for (const line of settingsText.split('\n')) {
++        const m = /^rule_loading_tier:\s*(\S+)\s*$/u.exec(line);
++        if (m && m[1]) {
++            const value = m[1].replace(/^["']|["']$/gu, '');
++            // The shipped template ships a placeholder until `install` fills
++            // it in; that is "not yet resolved", not a tier.
++            if (value.startsWith('__')) return null;
++            return value;
++        }
++    }
++    return null;
++}
++
++/**
++ * Installed package version, from the env the installer sets. Never
++ * fabricated: an install that did not report one records `null`.
++ */
++export function extractPackageVersion(env: NodeJS.ProcessEnv): string | null {
++    const v = env['AGENT_CONFIG_PACKAGE_VERSION'];
++    return typeof v === 'string' && v.trim() ? v.trim() : null;
++}
++
++interface SettingsRead {
++    settings: RemoteTelemetrySettings;
++    text: string;
++}
++
++/**
++ * Read + memoise the settings for one process. The in-process dispatcher
++ * runs every concern in one `node`, so without this the file would be read
++ * once per concern per tool call.
++ */
++const _settingsCache = new Map<string, SettingsRead>();
++
++export function readSettingsFor(consumerRoot: string): SettingsRead {
++    const p = path.join(consumerRoot, SETTINGS_FILENAME);
++    const cached = _settingsCache.get(p);
++    if (cached !== undefined) return cached;
++
++    let text = '';
++    try {
++        text = fs.readFileSync(p, 'utf-8');
++    } catch {
++        text = '';
++    }
++    const read: SettingsRead = { settings: read_remote_settings(p), text };
++    _settingsCache.set(p, read);
++    return read;
++}
++
++/** Test seam — the cache is process-global and tests write real files. */
++export function _resetSettingsCache(): void {
++    _settingsCache.clear();
++}
++
++function processEnvelope(envelope: JsonValue, consumer_root: string): number {
++    try {
++        if (!isObject(envelope)) return EXIT_ALLOW;
++
++        const payload = unwrapPayload(envelope);
++        if (extractToolName(payload) !== SKILL_TOOL_NAME) return EXIT_ALLOW;
++
++        const { settings, text } = readSettingsFor(consumer_root);
++        if (!settings.active) return EXIT_ALLOW;
++        if (is_replay_mode()) return EXIT_ALLOW;
++
++        const skill = extractSkillName(payload);
++        if (skill === null) return EXIT_ALLOW;
++
++        const record = build_class_a_record({
++            skill,
++            host: extractHost(envelope) ?? 'unknown',
++            org_id: settings.org_id,
++            salt: settings.salt,
++            hostname: os.hostname(),
++            username: os.userInfo().username,
++            session_id: extractSessionId(envelope, payload),
++            package_version: extractPackageVersion(process.env),
++            rule_tier: extractRuleTier(text),
++        });
++
++        const logPath = path.isAbsolute(settings.log_path)
++            ? settings.log_path
++            : path.join(consumer_root, settings.log_path);
++        append_class_a_record(logPath, record);
++    } catch {
++        // Malformed payload, unreadable disk, a rejected id — never block
++        // the tool call, and never write a degraded record.
++        return EXIT_ALLOW;
++    }
++    return EXIT_ALLOW;
++}
++
++export function run(stdin_text: string, options: { consumer_root: string }): number {
++    let envelope: JsonValue;
++    try {
++        const raw = stdin_text.trim();
++        if (!raw) return EXIT_ALLOW;
++        envelope = JSON.parse(raw) as JsonValue;
++    } catch {
++        return EXIT_ALLOW;
++    }
++    return processEnvelope(envelope, options.consumer_root);
++}
++
++function _resolveRoot(envelope: JsonValue): string {
++    if (isObject(envelope)) {
++        const cwd = envelope['cwd'];
++        if (typeof cwd === 'string' && cwd) return cwd;
++        const pr = envelope['workspace_root'] ?? envelope['project_root'];
++        if (typeof pr === 'string' && pr) return pr;
++    }
++    return process.cwd();
++}
++
++export function main(): number {
++    const raw = readHookStdin();
++    let envelope: JsonValue = {};
++    try {
++        envelope = raw.trim() ? (JSON.parse(raw) as JsonValue) : {};
++    } catch {
++        return EXIT_ALLOW;
++    }
++    return processEnvelope(envelope, _resolveRoot(envelope));
++}
++
++// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
++// every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
++declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
++function _isCliEntry(): boolean {
++    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
++        return false;
++    }
++    if (process.argv[1] === undefined) return false;
++    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
++    if (import.meta.url === argvUrl) return true;
++    try {
++        return fs.realpathSync(fileURLToPath(import.meta.url)) === fs.realpathSync(path.resolve(process.argv[1]));
++    } catch {
++        return false;
++    }
++}
++if (_isCliEntry()) process.exit(main());
+diff --git a/tests/hooks/telemetry_usage_hook.test.ts b/tests/hooks/telemetry_usage_hook.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..1bdd7fb4b93eb30848eec2db8186adf5dff82cbc
+--- /dev/null
++++ b/tests/hooks/telemetry_usage_hook.test.ts
+@@ -0,0 +1,175 @@
++/**
++ * `telemetry-usage` concern — road-to-org-telemetry Phase 1, step 1.2.
++ *
++ * The exit criterion has two halves and the disabled half is the one that
++ * matters: "a disabled install performs zero file operations". So the first
++ * assertion is not that a record appears — it is that the log file does not
++ * exist at all, on every not-fully-opted-in shape.
++ */
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterEach, describe, expect, it } from 'vitest';
++
++import {
++    extractRuleTier,
++    extractPackageVersion,
++    extractSkillName,
++    run,
++    _resetSettingsCache,
++} from '../../src/scripts/hooks/telemetry_usage_hook.js';
++
++const roots: string[] = [];
++
++function makeRoot(settingsBody: string | null): string {
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'telemetry-usage-'));
++    roots.push(dir);
++    if (settingsBody !== null) {
++        fs.writeFileSync(path.join(dir, '.agent-settings.yml'), settingsBody, 'utf-8');
++    }
++    _resetSettingsCache();
++    return dir;
++}
++
++function logPath(root: string): string {
++    return path.join(root, '.agent-telemetry.jsonl');
++}
++
++function envelope(skill: string, extra: Record<string, unknown> = {}): string {
++    return JSON.stringify({
++        schema_version: 1,
++        platform: 'claude',
++        event: 'post_tool_use',
++        session_id: 'host-session-token',
++        payload: { tool_name: 'Skill', tool_input: { skill } },
++        ...extra,
++    });
++}
++
++const ACTIVE = `
++telemetry:
++  remote:
++    enabled: true
++    endpoint: "https://sink.example.invalid/ingest"
++    org_id: "acme"
++    salt: "org-pack-secret"
++rule_loading_tier: balanced
++`;
++
++afterEach(() => {
++    while (roots.length > 0) {
++        const dir = roots.pop() as string;
++        fs.rmSync(dir, { recursive: true, force: true });
++    }
++    _resetSettingsCache();
++});
++
++describe('inactive installs write nothing', () => {
++    it.each([
++        ['no settings file at all', null],
++        ['no telemetry section', 'quality:\n  local_auto_run: false\n'],
++        ['enabled but no endpoint/org/salt', 'telemetry:\n  remote:\n    enabled: true\n'],
++        ['fully configured but disabled', `${ACTIVE.replace('enabled: true', 'enabled: false')}`],
++    ])('%s → exit 0 and no log file', (_label, body) => {
++        const root = makeRoot(body);
++        expect(run(envelope('brand-identity'), { consumer_root: root })).toBe(0);
++        expect(fs.existsSync(logPath(root))).toBe(false);
++    });
++});
++
++describe('the tool filter', () => {
++    it('ignores a non-Skill tool even on an active install', () => {
++        const root = makeRoot(ACTIVE);
++        const other = JSON.stringify({
++            platform: 'claude',
++            payload: { tool_name: 'Read', tool_input: { file_path: '/etc/passwd' } },
++        });
++        expect(run(other, { consumer_root: root })).toBe(0);
++        expect(fs.existsSync(logPath(root))).toBe(false);
++    });
++
++    it('ignores a Skill call carrying no skill name', () => {
++        const root = makeRoot(ACTIVE);
++        const bare = JSON.stringify({ platform: 'claude', payload: { tool_name: 'Skill', tool_input: {} } });
++        expect(run(bare, { consumer_root: root })).toBe(0);
++        expect(fs.existsSync(logPath(root))).toBe(false);
++    });
++});
++
++describe('an active install records the invocation', () => {
++    it('writes one Class-A record with the resolved tier and host', () => {
++        const root = makeRoot(ACTIVE);
++        expect(run(envelope('brand-identity'), { consumer_root: root })).toBe(0);
++
++        const lines = fs.readFileSync(logPath(root), 'utf-8').trimEnd().split('\n');
++        expect(lines).toHaveLength(1);
++        const rec = JSON.parse(lines[0] as string) as Record<string, unknown>;
++        expect(rec['skill']).toBe('brand-identity');
++        expect(rec['host']).toBe('claude');
++        expect(rec['org_id']).toBe('acme');
++        expect(rec['rule_tier']).toBe('balanced');
++        expect(rec['record_class']).toBe('usage');
++    });
++
++    // Phase 0's note: without normalisation the busiest skills undercount by
++    // roughly a quarter because the host sends two spellings of one name.
++    it('records both host spellings of one skill under a single id', () => {
++        const root = makeRoot(ACTIVE);
++        run(envelope('roadmap:process-full'), { consumer_root: root });
++        run(envelope('roadmap-process-full'), { consumer_root: root });
++
++        const skills = fs.readFileSync(logPath(root), 'utf-8').trimEnd().split('\n')
++            .map((l) => (JSON.parse(l) as Record<string, unknown>)['skill']);
++        expect(skills).toEqual(['roadmap-process-full', 'roadmap-process-full']);
++    });
++
++    it('never writes the raw host session id or the salt', () => {
++        const root = makeRoot(ACTIVE);
++        run(envelope('brand-identity'), { consumer_root: root });
++        const body = fs.readFileSync(logPath(root), 'utf-8');
++        expect(body).not.toContain('host-session-token');
++        expect(body).not.toContain('org-pack-secret');
++    });
++
++    it('is silent on a malformed envelope rather than throwing', () => {
++        const root = makeRoot(ACTIVE);
++        expect(run('not json at all', { consumer_root: root })).toBe(0);
++        expect(run('', { consumer_root: root })).toBe(0);
++        expect(fs.existsSync(logPath(root))).toBe(false);
++    });
++});
++
++describe('extractRuleTier', () => {
++    it('reads the enum value', () => {
++        expect(extractRuleTier('rule_loading_tier: full\n')).toBe('full');
++        expect(extractRuleTier('rule_loading_tier: "minimal"\n')).toBe('minimal');
++    });
++
++    // The shipped template carries a placeholder until `install` fills it
++    // in; that is "not yet resolved", not a tier.
++    it('treats the unfilled template placeholder as unresolved', () => {
++        expect(extractRuleTier('rule_loading_tier: __RULE_LOADING_TIER__\n')).toBeNull();
++    });
++
++    it('is null when the key is absent', () => {
++        expect(extractRuleTier('quality:\n  local_auto_run: false\n')).toBeNull();
++    });
++});
++
++describe('extractPackageVersion', () => {
++    it('reads the installer-set env var and nothing else', () => {
++        expect(extractPackageVersion({ AGENT_CONFIG_PACKAGE_VERSION: '14.1.0' })).toBe('14.1.0');
++        expect(extractPackageVersion({ AGENT_CONFIG_PACKAGE_VERSION: '  ' })).toBeNull();
++        expect(extractPackageVersion({})).toBeNull();
++    });
++});
++
++describe('extractSkillName', () => {
++    it('accepts the confirmed key and the casing variants', () => {
++        expect(extractSkillName({ tool_input: { skill: 'a' } })).toBe('a');
++        expect(extractSkillName({ toolInput: { skill: 'a' } })).toBe('a');
++        expect(extractSkillName({ tool_input: {} })).toBeNull();
++        expect(extractSkillName({})).toBeNull();
++    });
++});
+diff --git a/tests/scripts/templates_telemetry_remote.test.ts b/tests/scripts/templates_telemetry_remote.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..e2c2f5fbdbabf062d3e61473791fa60e53fe4b42
+--- /dev/null
++++ b/tests/scripts/templates_telemetry_remote.test.ts
+@@ -0,0 +1,225 @@
++/**
++ * Class-A record schema + the `telemetry.remote` settings reader
++ * (road-to-org-telemetry Phase 1).
++ *
++ * The two properties worth asserting are both negative: an install that did
++ * not fully opt in is inactive, and a digest is never derivable without the
++ * org-pack salt. The positive path (a record gets written) is the easy half
++ * and is covered last.
++ */
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterEach, describe, expect, it } from 'vitest';
++
++import {
++    read_remote_settings,
++    DEFAULT_REMOTE_LOG_PATH,
++} from '../../src/agent-src/templates/scripts/telemetry/settings.js';
++import {
++    append_class_a_record,
++    build_class_a_record,
++    derive_session_hash,
++    derive_user_hash,
++    hour_bucket,
++    normalise_skill_name,
++    ClassARecordError,
++    HASH_HEX_LEN,
++} from '../../src/agent-src/templates/scripts/telemetry/remote.js';
++
++const tmpdirs: string[] = [];
++
++function writeSettings(body: string): string {
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'remote-telemetry-'));
++    tmpdirs.push(dir);
++    const p = path.join(dir, '.agent-settings.yml');
++    fs.writeFileSync(p, body, 'utf-8');
++    return p;
++}
++
++afterEach(() => {
++    while (tmpdirs.length > 0) {
++        const dir = tmpdirs.pop() as string;
++        fs.rmSync(dir, { recursive: true, force: true });
++    }
++});
++
++const FULL = `
++telemetry:
++  remote:
++    enabled: true
++    endpoint: "https://sink.example.invalid/ingest"
++    org_id: "acme"
++    salt: "org-pack-secret"
++`;
++
++describe('read_remote_settings — default-off on every axis', () => {
++    it('is inactive when the file does not exist', () => {
++        const s = read_remote_settings(path.join(os.tmpdir(), 'definitely-absent-xyz.yml'));
++        expect(s.enabled).toBe(false);
++        expect(s.active).toBe(false);
++        expect(s.log_path).toBe(DEFAULT_REMOTE_LOG_PATH);
++    });
++
++    it('is inactive when the YAML is unparseable', () => {
++        const s = read_remote_settings(writeSettings('telemetry: [: :\n  broken'));
++        expect(s.active).toBe(false);
++    });
++
++    it('is inactive when the section is absent', () => {
++        const s = read_remote_settings(writeSettings('telemetry:\n  artifact_engagement:\n    enabled: true\n'));
++        expect(s.active).toBe(false);
++    });
++
++    // The load-bearing case: `enabled: true` alone must NOT switch it on,
++    // because that is the shape a clone of the public repository could
++    // reach by copying the documented block.
++    it.each([
++        ['endpoint', 'enabled: true\n    org_id: "acme"\n    salt: "s"'],
++        ['org_id', 'enabled: true\n    endpoint: "https://x.invalid"\n    salt: "s"'],
++        ['salt', 'enabled: true\n    endpoint: "https://x.invalid"\n    org_id: "acme"'],
++    ])('is inactive when %s is missing, and says so', (field, body) => {
++        const s = read_remote_settings(writeSettings(`telemetry:\n  remote:\n    ${body}\n`));
++        expect(s.enabled).toBe(true);
++        expect(s.active).toBe(false);
++        expect(s.missing).toContain(field);
++    });
++
++    it('is active only with all four, and reports nothing missing', () => {
++        const s = read_remote_settings(writeSettings(FULL));
++        expect(s.active).toBe(true);
++        expect(s.missing).toEqual([]);
++        expect(s.org_id).toBe('acme');
++    });
++
++    it('falls back to session-end on an unknown flush value', () => {
++        const s = read_remote_settings(writeSettings(`${FULL}    flush: whenever\n`));
++        expect(s.flush).toBe('session-end');
++    });
++});
++
++describe('normalise_skill_name', () => {
++    // Phase 0 spike 3's measured defect: one skill, two spellings, counts
++    // split roughly 64/22 on the busiest entries.
++    it('collapses the cluster and flattened spellings onto one id', () => {
++        expect(normalise_skill_name('roadmap:process-full'))
++            .toBe(normalise_skill_name('roadmap-process-full'));
++        expect(normalise_skill_name('roadmap:process-full')).toBe('roadmap-process-full');
++    });
++
++    it('leaves a dash-only name untouched', () => {
++        expect(normalise_skill_name('brand-asset-generation')).toBe('brand-asset-generation');
++    });
++
++    it.each([
++        ['a path', 'src/skills/foo/SKILL.md'],
++        ['a file extension', 'foo.md'],
++        ['a newline', 'foo\nbar'],
++        ['an empty value', ''],
++        ['a non-string', 42],
++    ])('rejects %s rather than recording it', (_label, value) => {
++        expect(() => normalise_skill_name(value)).toThrow();
++    });
++});
++
++describe('hashes', () => {
++    it('refuses to produce an unsalted digest', () => {
++        expect(() => derive_user_hash('', 'host', 'user')).toThrow(ClassARecordError);
++    });
++
++    it('is stable per input and the documented length', () => {
++        const a = derive_user_hash('salt', 'machine', 'alice');
++        expect(a).toBe(derive_user_hash('salt', 'machine', 'alice'));
++        expect(a).toHaveLength(HASH_HEX_LEN);
++        expect(a).toMatch(/^[0-9a-f]+$/u);
++    });
++
++    it('changes with the salt — the whole point of having one', () => {
++        expect(derive_user_hash('salt-a', 'machine', 'alice'))
++            .not.toBe(derive_user_hash('salt-b', 'machine', 'alice'));
++    });
++
++    // The NUL join exists so that a username containing a space cannot
++    // collide with a different (hostname, username) split.
++    it('does not collide across an ambiguous space split', () => {
++        expect(derive_user_hash('s', 'a b', 'c')).not.toBe(derive_user_hash('s', 'a', 'b c'));
++    });
++
++    it('domain-separates the user and session digests under one salt', () => {
++        expect(derive_user_hash('s', 'x', 'y')).not.toBe(derive_session_hash('s', 'x'));
++    });
++});
++
++describe('hour_bucket', () => {
++    it('truncates to the hour — never an exact timestamp', () => {
++        expect(hour_bucket(new Date('2026-08-18T21:47:13.512Z'))).toBe('2026-08-18T21:00Z');
++    });
++});
++
++describe('build_class_a_record', () => {
++    const base = {
++        skill: 'roadmap:process-full',
++        host: 'claude',
++        org_id: 'acme',
++        salt: 'org-pack-secret',
++        hostname: 'machine',
++        username: 'alice',
++        session_id: 'sess-abc',
++        now: new Date('2026-08-18T21:47:13Z'),
++    };
++
++    it('carries only structural fields, and no raw session id or login', () => {
++        const rec = build_class_a_record({ ...base, package_version: '14.1.0', rule_tier: 'balanced' });
++        expect(Object.keys(rec).sort()).toEqual([
++            'host', 'org_id', 'package_version', 'record_class', 'rule_tier',
++            'schema_version', 'session_hash', 'skill', 'ts_bucket', 'user_hash',
++        ]);
++        const serialised = JSON.stringify(rec);
++        expect(serialised).not.toContain('sess-abc');
++        expect(serialised).not.toContain('alice');
++        expect(serialised).not.toContain('org-pack-secret');
++    });
++
++    it('normalises the skill name on the way in', () => {
++        expect(build_class_a_record(base).skill).toBe('roadmap-process-full');
++    });
++
++    it('records an unknown package version and rule tier as null, never a guess', () => {
++        const rec = build_class_a_record(base);
++        expect(rec.package_version).toBeNull();
++        expect(rec.rule_tier).toBeNull();
++    });
++
++    it('rejects a rule tier outside the settings enum', () => {
++        expect(() => build_class_a_record({ ...base, rule_tier: 'turbo' })).toThrow(ClassARecordError);
++    });
++});
++
++describe('append_class_a_record', () => {
++    it('writes one sorted compact JSONL line and creates the directory', () => {
++        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'remote-telemetry-out-'));
++        tmpdirs.push(dir);
++        const log = path.join(dir, 'nested', 'out.jsonl');
++        const rec = build_class_a_record({
++            skill: 'brand-identity',
++            host: 'claude',
++            org_id: 'acme',
++            salt: 's',
++            hostname: 'm',
++            username: 'u',
++            session_id: 'sid',
++            now: new Date('2026-08-18T21:00:00Z'),
++        });
++        append_class_a_record(log, rec);
++        append_class_a_record(log, rec);
++
++        const lines = fs.readFileSync(log, 'utf-8').trimEnd().split('\n');
++        expect(lines).toHaveLength(2);
++        expect(JSON.parse(lines[0] as string)).toEqual(rec);
++        // Sorted keys, compact separators — same convention as the
++        // engagement records already in this tree.
++        expect(lines[0]).toMatch(/^\{"host":/u);
++        expect(lines[0]).not.toContain(', ');
++    });
++});
