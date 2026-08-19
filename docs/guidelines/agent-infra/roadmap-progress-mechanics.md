@@ -233,11 +233,8 @@ When the closure check fires (`count_open == 0` and `count_deferred > 0`), the a
    3. **Keep in this archive** — confirm the deferred items stay searchable in the archived file; no follow-up roadmap. Choosing this records an explicit decision-to-drop in the same reply.
    4. **Restore selected items to `[ ]`** — finish them in this roadmap before archive.
    5. **Convert selected items to `[-]` cancelled** — drop them with rationale recorded inline.
-3. Route the resolution by the **preservation test** in [`roadmap-progress-sync § Who resolves it`](../../../src/rules/roadmap-progress-sync.md): options 1, 2 and 4 keep the criterion alive in the active estate and may be resolved by the council; options 3 and 5 drop or weaken it and reach the user, always, with no mandate lifting that. Option 2's follow-up counts only when it is created in the SAME change and passes the estate ratchet — a verdict naming a roadmap that does not exist yet fails closed to the user. In doubt: user.
-4. A council-resolved item is **recorded at the item or it did not happen**: the criterion verbatim, the blocker id, every option considered, the verdict plus a one-sentence rationale, any dissent, the destination when carried, and what will close it.
-5. Only after the deferrals are resolved does the `git mv` to `archive/` run. The dashboard regen happens after the resolution, not before.
-
-**What the routing does NOT buy.** The preservation test bounds *who decides*, never *whether the work happens*. Both council seats that authored the route named the same residual hole in their own strongest counter: a carried follow-up can still become an indefinite deferral, which is the D-5 shape a `[~]` gate exists against. Only the fix-now branch discharges it outright. A carried item still untouched at the next task boundary is raised again per [`active-remediation`](../../../src/rules/active-remediation.md) rather than aged out by having been routed once.
+3. Route by the **preservation test** — full table, recording contract and residual limit in [`roadmap-progress-sync § Who resolves it`](../../../src/rules/roadmap-progress-sync.md). In one line: options 1, 2, 4 keep the item alive → council; 3 and 5 drop or weaken it → user, always; in doubt, user.
+4. Only after the deferrals are resolved does the `git mv` to `archive/` run. The dashboard regen happens after the resolution, not before.
 
 The migration mechanics (file naming, frontmatter pattern, body shape, parent-back-link) live in `roadmap-management § Spawn follow-up from deferred items`. The rule owns the obligation; the skill owns the procedure.
 
