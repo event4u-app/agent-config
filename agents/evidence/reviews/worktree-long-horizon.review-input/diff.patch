@@ -2116,10 +2116,10 @@ index 0000000000000000000000000000000000000000..23de7e0f53b8ce6072e38e261873f2a4
 +}
 diff --git a/src/scripts/_lib/run_checkpoint.ts b/src/scripts/_lib/run_checkpoint.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..bd0898514ab2da0958d35c688ad736e62c8f98f8
+index 0000000000000000000000000000000000000000..93472437f03836c85e428b1ca4e29361bcef5222
 --- /dev/null
 +++ b/src/scripts/_lib/run_checkpoint.ts
-@@ -0,0 +1,334 @@
+@@ -0,0 +1,368 @@
 +/**
 + * run_checkpoint — the deterministic checkpoint a dying run leaves behind,
 + * and the re-verification a resumed run owes before trusting it.
@@ -2259,6 +2259,24 @@ index 0000000000000000000000000000000000000000..bd0898514ab2da0958d35c688ad736e6
 +            if (m === null) return null;
 +            gitDir = path.resolve(repoRoot, m[1] as string);
 +        }
++        // HEAD is per-worktree; REFS are not. A linked worktree's gitdir holds
++        // its own HEAD and a `commondir` pointer, and `refs/` + `packed-refs`
++        // live at that commondir — never beside HEAD.
++        //
++        // R2 round 3, finding 1, and the round-2 version of this function got
++        // it exactly half right: it handled `.git`-as-a-file and then resolved
++        // refs against the worktree gitdir, so `head` was null in every linked
++        // worktree — including the one this package is developed in. Its test
++        // passed because the fixture wrote refs beside HEAD, a layout git never
++        // produces. A fixture that agrees with the code instead of with reality
++        // reads as coverage and is worse than no test at all.
++        let refRoot = gitDir;
++        try {
++            const common = fs.readFileSync(path.join(gitDir, 'commondir'), 'utf-8').trim();
++            if (common !== '') refRoot = path.resolve(gitDir, common);
++        } catch {
++            // No commondir — a plain repository, where gitDir already is it.
++        }
 +        const head = fs.readFileSync(path.join(gitDir, 'HEAD'), 'utf-8').trim();
 +        // A detached HEAD is the sha itself.
 +        if (/^[0-9a-f]{40}$/.test(head)) return head;
@@ -2266,10 +2284,10 @@ index 0000000000000000000000000000000000000000..bd0898514ab2da0958d35c688ad736e6
 +        if (ref === null) return null;
 +        const refName = ref[1] as string;
 +        try {
-+            return fs.readFileSync(path.join(gitDir, refName), 'utf-8').trim() || null;
++            return fs.readFileSync(path.join(refRoot, refName), 'utf-8').trim() || null;
 +        } catch {
 +            // Packed refs: a loose file does not exist for every branch.
-+            const packed = fs.readFileSync(path.join(gitDir, 'packed-refs'), 'utf-8');
++            const packed = fs.readFileSync(path.join(refRoot, 'packed-refs'), 'utf-8');
 +            for (const line of packed.split('\n')) {
 +                const pm = /^([0-9a-f]{40})\s+(.+)$/.exec(line.trim());
 +                if (pm !== null && pm[2] === refName) return pm[1] as string;
@@ -2422,11 +2440,27 @@ index 0000000000000000000000000000000000000000..bd0898514ab2da0958d35c688ad736e6
 +        return { readable: false, fields: [], agrees: false };
 +    }
 +    const counts = countRoadmap(text);
++    // Read ONCE, so the recorded `actual` and the verdict about it are one
++    // expression rather than two that happen to agree.
++    const head = readHead(repoRoot);
 +    const fields: FieldVerdict[] = [
 +        { field: 'open_steps', claimed: cp.open_steps, actual: counts.open, agrees: cp.open_steps === counts.open },
 +        { field: 'done_steps', claimed: cp.done_steps, actual: counts.done, agrees: cp.done_steps === counts.done },
 +        { field: 'parked_steps', claimed: cp.parked_steps, actual: counts.parked, agrees: cp.parked_steps === counts.parked },
 +        { field: 'next_step', claimed: cp.next_step, actual: counts.next, agrees: cp.next_step === counts.next },
++        // `head` is recomputed like every other field. R2 round 3, finding 2:
++        // round 2 fixed only the WRITE half of finding 5, so the loop
++        // contract's "every field is recomputed" was false for exactly the
++        // field that says whether the tree moved under the run — which is the
++        // one a resume most needs to see. A disagreement here is the NORMAL
++        // case (a human committed, a sibling worktree moved) and is reported,
++        // never treated as corruption.
++        {
++            field: 'head',
++            claimed: cp.head,
++            actual: head,
++            agrees: cp.head === head,
++        },
 +    ];
 +    return { readable: true, fields, agrees: fields.every((f) => f.agrees) };
 +}
@@ -3037,10 +3071,10 @@ index 0000000000000000000000000000000000000000..900ab6f3629a39256dcc03d0802b67cf
 +}
 diff --git a/src/scripts/ai_council/mid_flight_fallback.ts b/src/scripts/ai_council/mid_flight_fallback.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..be21804af68cf8ba2bcbb743ee3b1ff2a45a973c
+index 0000000000000000000000000000000000000000..73a65779088181648b886b11c4971f93a82e5e1b
 --- /dev/null
 +++ b/src/scripts/ai_council/mid_flight_fallback.ts
-@@ -0,0 +1,286 @@
+@@ -0,0 +1,295 @@
 +/**
 + * mid_flight_fallback — the cli→api retry's types, its establish step, and its
 + * response stamp.
@@ -3239,10 +3273,19 @@ index 0000000000000000000000000000000000000000..be21804af68cf8ba2bcbb743ee3b1ff2
 +    twin: EstablishedTwin,
 +    fallback: CliFallbackOptions,
 +    deps: GatedRetryDeps,
++    ledger: MidFlightFallback | null = null,
 +): GatedRetryResult {
 +    if (!deps.gate(twin.client)) {
 +        original.metadata = { ...(original.metadata ?? {}), fallback_skipped: 'cost_budget' };
 +        emitOutcome(fallback, member.name, twin, 'cost_budget');
++        // The claim goes back, for the same reason it does on the unmetered
++        // path: the twin was built and never called, so the provider has not
++        // spent its one escalation. R2 round 3, finding 4 — the unmetered
++        // refusal released and this one did not, so the two paths this
++        // function's own docblock calls parallel behaved differently, and a
++        // billable community-cli seat was permanently lost after a single
++        // budget-refused escalation.
++        ledger?.release(member.name);
 +        return { response: original, effective: member, retried: false };
 +    }
 +    const response = deps.call(twin.client);
@@ -3328,7 +3371,7 @@ index 0000000000000000000000000000000000000000..be21804af68cf8ba2bcbb743ee3b1ff2
 +    return original;
 +}
 diff --git a/src/scripts/ai_council/orchestrator.ts b/src/scripts/ai_council/orchestrator.ts
-index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..8900a14030fd60c967520be0aa53592b30c44f80 100644
+index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..7e54852b68441de4826e58d1349596053c355ed9 100644
 --- a/src/scripts/ai_council/orchestrator.ts
 +++ b/src/scripts/ai_council/orchestrator.ts
 @@ -70,70 +70,60 @@ import {
@@ -3846,7 +3889,7 @@ index 09d7ab1a4655c8c669e06d48d788c19bac78cee4..8900a14030fd60c967520be0aa53592b
 +                            budget,
 +                        ) === null,
 +                    call: (client) => callMember(client, question, opts, _system_prompt_for_member, _excTag),
-+                });
++                }, ledger);
 +                response = out.response;
 +                effective = out.effective;
 +                // Established for the rest of the invocation, so later rounds
@@ -5317,10 +5360,10 @@ index 0d5fc721318babaa8629a009d5b7dcbbe72887d9..7e1afba83e0154c46c983143f0e45928
  };
 diff --git a/src/scripts/hooks/run_continuation_hook.ts b/src/scripts/hooks/run_continuation_hook.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..3f0da79fbd0e59a4c051cee0ed38b374d9d538d1
+index 0000000000000000000000000000000000000000..68409aef59af44d95c806860eacef61b782e4814
 --- /dev/null
 +++ b/src/scripts/hooks/run_continuation_hook.ts
-@@ -0,0 +1,618 @@
+@@ -0,0 +1,627 @@
 +/**
 + * run_continuation — road-to-long-horizon-execution Phase 1 (H-1).
 + *
@@ -5387,11 +5430,20 @@ index 0000000000000000000000000000000000000000..3f0da79fbd0e59a4c051cee0ed38b374
 + * agent into a step the roadmap itself declares blocked is a guaranteed
 + * stall, manufactured by the mechanism whose job is to detect one.
 + *
-+ * FAIL-OPEN THROUGHOUT. severity: advisory, fail_closed: false. Any read
++ * FAIL-OPEN THROUGHOUT. severity: BLOCKING, fail_closed: false. Any read
 + * error, any malformed state, any surprise → EXIT_ALLOW. A continuation
 + * mechanism must never be the thing that blocks a stop for a reason nobody
 + * can see; the only BLOCK this file emits is the one that carries its own
 + * explanation on stderr.
++ *
++ * The severity word matters and this docblock had the wrong one. It read
++ * `advisory` — which the dispatcher enforces as a CEILING, downgrading any
++ * EXIT_BLOCK to WARN, so the whole mechanism was inert. That was round 1's
++ * critical finding; the manifest moved and this line did not, which round 3
++ * then caught as a doc contradicting the declaration it describes. Blocking
++ * and fail-open are not in tension: fail-open governs what happens when this
++ * file cannot decide, blocking governs what happens when it decides to
++ * continue.
 + */
 +
 +import * as fs from 'node:fs';
@@ -6289,10 +6341,10 @@ index 48f3284352a0367fe7247a24fb0ff2b42ab2390e..b2e27c5e7a0485819331ad11674a4be7
      }
 diff --git a/src/scripts/run_supervise.ts b/src/scripts/run_supervise.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..cbdf29597dd471dd3dbf068ce6bb52e6270f1054
+index 0000000000000000000000000000000000000000..92c8d5a76e82395b70f489d48abd503831ba35e8
 --- /dev/null
 +++ b/src/scripts/run_supervise.ts
-@@ -0,0 +1,456 @@
+@@ -0,0 +1,505 @@
 +/**
 + * run_supervise — the out-of-process watcher for runs whose session died.
 + *
@@ -6396,8 +6448,43 @@ index 0000000000000000000000000000000000000000..cbdf29597dd471dd3dbf068ce6bb52e6
 + * Total over the relaunchable set: a record with no roadmap slug is classified
 + * `no-roadmap` before the cap is consulted, so there is no relaunchable run
 + * this key cannot name.
++ *
++ * THE COUNTER IS CLEARED WHEN THE ROADMAP COMPLETES, and that half is what
++ * makes the key correct rather than merely different. R2 round 3, finding 6:
++ * a roadmap-keyed counter with no reset swaps a cap that never binds for one
++ * that never releases — three deaths in March would refuse a relaunch in
++ * September for a run that has nothing to do with them. "Per run" needs both
++ * a key that spans a run's generations AND a boundary where one run ends, and
++ * `disposition: complete` is that boundary: zero open steps means the work the
++ * counter was counting attempts at is done.
++ *
++ * `clearCompleted` is the writer. It is called from `digest`, which is a
++ * read-report — so the clear is stated where it happens rather than hidden in
++ * a getter, and a caller that only classifies never mutates.
 + */
 +export type RelaunchLedger = Record<string, number>;
++
++/**
++ * Drop the counters of every roadmap whose run is complete.
++ *
++ * Returns a NEW ledger; the caller decides whether to persist it. Separating
++ * the decision from the write keeps `classify` pure — it is called from a
++ * digest, from tests, and (one day) from the spawn, and only one of those
++ * should be writing state.
++ */
++export function clearCompleted(
++    ledger: RelaunchLedger,
++    candidates: readonly Candidate[],
++): RelaunchLedger {
++    const done = new Set(
++        candidates.filter((c) => c.disposition === 'complete' && c.roadmap !== null).map((c) => c.roadmap as string),
++    );
++    const out: RelaunchLedger = {};
++    for (const [k, v] of Object.entries(ledger)) {
++        if (!done.has(k)) out[k] = v;
++    }
++    return out;
++}
 +
 +export function readLedger(repoRoot: string): RelaunchLedger {
 +    try {
@@ -6589,6 +6676,20 @@ index 0000000000000000000000000000000000000000..cbdf29597dd471dd3dbf068ce6bb52e6
 +export function digest(repoRoot: string, candidates: readonly Candidate[], now: Date): string {
 +    const lines = [`run:supervise digest · ${now.toISOString().slice(0, 10)}`, ''];
 +
++    // The one write this read-report performs, and it is stated here rather
++    // than buried: a completed roadmap's relaunch counter is released, so the
++    // "three per run" cap bounds a run instead of a roadmap's lifetime
++    // (R2 round 3, finding 6). Best-effort — a failed write leaves a counter
++    // high, which refuses a relaunch rather than granting one.
++    const cleared = clearCompleted(readLedger(repoRoot), candidates);
++    const released = candidates.filter(
++        (c) => c.disposition === 'complete' && c.roadmap !== null,
++    ).length;
++    if (released > 0) {
++        writeLedger(repoRoot, cleared);
++        lines.push(`  released:  ${released} completed roadmap(s) — relaunch budget reset`);
++    }
++
 +    const dead = candidates.filter((c) => c.disposition !== 'alive');
 +    const relaunchable = candidates.filter((c) => c.disposition === 'relaunchable');
 +    lines.push(
@@ -6750,10 +6851,10 @@ index 0000000000000000000000000000000000000000..cbdf29597dd471dd3dbf068ce6bb52e6
 + */
 +export { latestCheckpointFor, readCheckpoint };
 diff --git a/src/server/io/yamlIO.ts b/src/server/io/yamlIO.ts
-index 3998239861d5422a0e8084c8edcc59af509267ca..076b13d7bd214f87ab478fdde0491684731b43d8 100644
+index 3998239861d5422a0e8084c8edcc59af509267ca..4944135d5cd2f701b2a6bba559a2781a7da6edf6 100644
 --- a/src/server/io/yamlIO.ts
 +++ b/src/server/io/yamlIO.ts
-@@ -105,6 +105,92 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
+@@ -105,6 +105,106 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
      return template;
  }
  
@@ -6792,13 +6893,25 @@ index 3998239861d5422a0e8084c8edcc59af509267ca..076b13d7bd214f87ab478fdde0491684
 +    // How deep an existing ancestor chain runs, and where its block ends.
 +    let matched = 0;
 +    let insertAt = lines.length;
++    // The bounds of the ancestor matched at the previous depth. Each level
++    // searches only INSIDE its parent, so a nested key never binds to a
++    // same-named section under a different parent.
++    let parentStart = -1;
++    let parentEnd = lines.length;
 +    for (let depth = 0; depth < sections.length; depth++) {
 +        const want = sections[depth];
 +        const indent = '  '.repeat(depth);
 +        let found = -1;
-+        // Search only inside the block established so far.
-+        const from = depth === 0 ? 0 : insertAt === lines.length ? 0 : 0;
-+        for (let i = from; i < lines.length; i++) {
++        // R2 round 3, finding 5: this carried `depth === 0 ? 0 : insertAt ===
++        // lines.length ? 0 : 0` — every branch zero, i.e. a comment claiming a
++        // scoped search over an expression that does not scope anything. Made
++        // real: a nested section is searched only INSIDE its parent's block,
++        // so a depth-2 path cannot bind to a same-named key under a different
++        // parent. Latent today (the one caller is depth 1) and fixed rather
++        // than deleted, because the next caller is the one it would bite.
++        const from = depth === 0 ? 0 : parentStart + 1;
++        const until = depth === 0 ? lines.length : parentEnd;
++        for (let i = from; i < until; i++) {
 +            const line = lines[i];
 +            if (line === undefined) continue;
 +            if (line.trim() === '' || line.trim().startsWith('#')) continue;
@@ -6825,6 +6938,8 @@ index 3998239861d5422a0e8084c8edcc59af509267ca..076b13d7bd214f87ab478fdde0491684
 +            }
 +        }
 +        insertAt = end;
++        parentStart = found;
++        parentEnd = end;
 +    }
 +
 +    const block: string[] = [];
@@ -9237,10 +9352,10 @@ index 898f1205a60ab722f06f8123e429c267b5bf0301..6933ce470a7ca4e2a171a453e6d28b94
 +});
 diff --git a/tests/scripts/run_checkpoint.test.ts b/tests/scripts/run_checkpoint.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..c0f368efc95b4cb07bedd0b20d4511734595aa17
+index 0000000000000000000000000000000000000000..e8ba3cf97e1361edafbb5934c330ba7b600fd7c4
 --- /dev/null
 +++ b/tests/scripts/run_checkpoint.test.ts
-@@ -0,0 +1,414 @@
+@@ -0,0 +1,510 @@
 +/**
 + * run_checkpoint — the derived checkpoint and its re-verification.
 + *
@@ -9274,6 +9389,9 @@ index 0000000000000000000000000000000000000000..c0f368efc95b4cb07bedd0b20d451173
 +    writeCheckpoint,
 +    type RunCheckpoint,
 +} from '../../src/scripts/_lib/run_checkpoint.js';
++
++/** This worktree's root — three levels up from tests/scripts/. */
++const REPO_ROOT = path.resolve(__dirname, '..', '..');
 +
 +const dirs: string[] = [];
 +afterEach(() => {
@@ -9597,25 +9715,75 @@ index 0000000000000000000000000000000000000000..c0f368efc95b4cb07bedd0b20d451173
 +        expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBe('a'.repeat(40));
 +    });
 +
-+    it('resolves HEAD in a WORKTREE, where .git is a file', () => {
-+        // The case a naive reader gets wrong, and the one this package is
-+        // actually developed in — so the naive version would have returned
-+        // null exactly where it was being exercised.
++    it('resolves HEAD in a real LINKED WORKTREE layout', () => {
++        // The layout `git worktree add` actually produces, and the round-2
++        // version of this test did not: HEAD is per-worktree, refs are NOT.
++        // The linked gitdir holds HEAD plus a `commondir` pointer, and
++        // `refs/` lives at that commondir. Writing refs beside HEAD — which
++        // the earlier fixture did — is a shape git never creates, so the test
++        // agreed with the code instead of with reality and reported coverage
++        // for a function that returned null in every real worktree.
 +        const repoRoot = root();
 +        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
-+        const realGit = path.join(repoRoot, 'elsewhere', 'worktrees', 'wt');
-+        fs.mkdirSync(path.join(realGit, 'refs', 'heads'), { recursive: true });
-+        fs.writeFileSync(path.join(realGit, 'HEAD'), 'ref: refs/heads/feature\n', 'utf-8');
++        const common = path.join(repoRoot, 'main-repo', '.git');
++        const linked = path.join(common, 'worktrees', 'wt');
++        fs.mkdirSync(path.join(common, 'refs', 'heads'), { recursive: true });
++        fs.mkdirSync(linked, { recursive: true });
++        fs.writeFileSync(path.join(linked, 'HEAD'), 'ref: refs/heads/feature\n', 'utf-8');
++        // Relative, exactly as git writes it.
++        fs.writeFileSync(path.join(linked, 'commondir'), '../..\n', 'utf-8');
 +        fs.writeFileSync(
-+            path.join(realGit, 'refs', 'heads', 'feature'),
++            path.join(common, 'refs', 'heads', 'feature'),
 +            `${'b'.repeat(40)}\n`,
 +            'utf-8',
 +        );
-+        fs.writeFileSync(path.join(repoRoot, '.git'), `gitdir: ${realGit}\n`, 'utf-8');
++        fs.writeFileSync(path.join(repoRoot, '.git'), `gitdir: ${linked}\n`, 'utf-8');
 +        expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBe('b'.repeat(40));
 +    });
 +
-+    it('falls back to packed-refs when the loose ref file is absent', () => {
++    it('resolves HEAD against THIS checkout — the reviewer reproduced null here', () => {
++        // The end-to-end statement, and the one assertion the fixture above
++        // cannot make: run the real function over the real repository this
++        // test executes in. It is a linked worktree during development and a
++        // plain clone in CI, so this passes only if BOTH paths work.
++        const cp = buildCheckpoint(REPO_ROOT, 'r1', 'road-to-long-horizon-execution');
++        expect(cp).not.toBeNull();
++        expect(cp?.head).toMatch(/^[0-9a-f]{40}$/);
++    });
++
++    it('a worktree whose commondir is ABSOLUTE resolves too', () => {
++        const repoRoot = root();
++        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
++        const common = path.join(repoRoot, 'elsewhere', '.git');
++        const linked = path.join(repoRoot, 'linked-gitdir');
++        fs.mkdirSync(path.join(common, 'refs', 'heads'), { recursive: true });
++        fs.mkdirSync(linked, { recursive: true });
++        fs.writeFileSync(path.join(linked, 'HEAD'), 'ref: refs/heads/abs\n', 'utf-8');
++        fs.writeFileSync(path.join(linked, 'commondir'), `${common}\n`, 'utf-8');
++        fs.writeFileSync(path.join(common, 'refs', 'heads', 'abs'), `${'f'.repeat(40)}\n`, 'utf-8');
++        fs.writeFileSync(path.join(repoRoot, '.git'), `gitdir: ${linked}\n`, 'utf-8');
++        expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBe('f'.repeat(40));
++    });
++
++    it('packed-refs is read from the COMMONDIR in a worktree, not beside HEAD', () => {
++        const repoRoot = root();
++        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
++        const common = path.join(repoRoot, 'main-repo', '.git');
++        const linked = path.join(common, 'worktrees', 'wt');
++        fs.mkdirSync(common, { recursive: true });
++        fs.mkdirSync(linked, { recursive: true });
++        fs.writeFileSync(path.join(linked, 'HEAD'), 'ref: refs/heads/packed\n', 'utf-8');
++        fs.writeFileSync(path.join(linked, 'commondir'), '../..\n', 'utf-8');
++        fs.writeFileSync(
++            path.join(common, 'packed-refs'),
++            `# pack-refs with: peeled\n${'c'.repeat(40)} refs/heads/packed\n`,
++            'utf-8',
++        );
++        fs.writeFileSync(path.join(repoRoot, '.git'), `gitdir: ${linked}\n`, 'utf-8');
++        expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBe('c'.repeat(40));
++    });
++
++    it('falls back to packed-refs in a PLAIN repo when the loose ref is absent', () => {
 +        const repoRoot = root();
 +        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
 +        const git = path.join(repoRoot, '.git');
@@ -9655,12 +9823,55 @@ index 0000000000000000000000000000000000000000..c0f368efc95b4cb07bedd0b20d451173
 +        ).toBe('injected');
 +    });
 +});
++
++describe('verifyCheckpoint — head is re-verified like every other field', () => {
++    // R2 round 3, finding 2. Round 2 fixed only the WRITE half of finding 5,
++    // so `§5d: every field is recomputed` was false for exactly the field that
++    // says whether the tree moved under the run.
++    const withGit = (sha: string): string => {
++        const repoRoot = root();
++        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
++        const git = path.join(repoRoot, '.git');
++        fs.mkdirSync(git, { recursive: true });
++        fs.writeFileSync(path.join(git, 'HEAD'), `${sha}\n`, 'utf-8');
++        return repoRoot;
++    };
++
++    it('reports head among the fields, and agrees when the tree has not moved', () => {
++        const repoRoot = withGit('a'.repeat(40));
++        const cp = buildCheckpoint(repoRoot, 'r1', 'road-to-thing') as RunCheckpoint;
++        const res = verifyCheckpoint(repoRoot, cp);
++        const field = res.fields.find((f) => f.field === 'head');
++        expect(field).toBeDefined();
++        expect(field?.agrees).toBe(true);
++        expect(field?.actual).toBe('a'.repeat(40));
++    });
++
++    it('a moved HEAD is a reported DISAGREEMENT, never an error', () => {
++        // Work landing between the checkpoint and the resume is the normal
++        // case; treating it as corruption would refuse every healthy resume.
++        const repoRoot = withGit('a'.repeat(40));
++        const cp = buildCheckpoint(repoRoot, 'r1', 'road-to-thing') as RunCheckpoint;
++        fs.writeFileSync(
++            path.join(repoRoot, '.git', 'HEAD'),
++            `${'9'.repeat(40)}\n`,
++            'utf-8',
++        );
++        const res = verifyCheckpoint(repoRoot, cp);
++        expect(res.readable).toBe(true);
++        const field = res.fields.find((f) => f.field === 'head');
++        expect(field?.agrees).toBe(false);
++        expect(field?.claimed).toBe('a'.repeat(40));
++        expect(field?.actual).toBe('9'.repeat(40));
++        expect(renderVerification(cp, res)).toContain('head');
++    });
++});
 diff --git a/tests/scripts/run_supervise.test.ts b/tests/scripts/run_supervise.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..672067fc35e4bc50f5a568b3d3893224750db01d
+index 0000000000000000000000000000000000000000..b134db455816e60f87e14c80efb118ad0ead0b88
 --- /dev/null
 +++ b/tests/scripts/run_supervise.test.ts
-@@ -0,0 +1,308 @@
+@@ -0,0 +1,367 @@
 +/**
 + * run_supervise — the watcher's classification, and the two things it must
 + * never do.
@@ -9692,12 +9903,14 @@ index 0000000000000000000000000000000000000000..672067fc35e4bc50f5a568b3d3893224
 +    MAX_RELAUNCHES_PER_RUN,
 +    SUPERVISE_STATE_REL,
 +    classify,
++    clearCompleted,
 +    digest,
 +    readAllRecords,
 +    readLedger,
 +    render,
 +    scan,
 +    writeLedger,
++    type Candidate,
 +} from '../../src/scripts/run_supervise.js';
 +
 +const dirs: string[] = [];
@@ -9967,6 +10180,63 @@ index 0000000000000000000000000000000000000000..672067fc35e4bc50f5a568b3d3893224
 +
 +    it('a non-repository yields no candidates rather than an error', () => {
 +        expect(scan(root(), { now: NOW })).toEqual([]);
++    });
++});
++
++describe('clearCompleted — the cap bounds a RUN, not a roadmap lifetime', () => {
++    // R2 round 3, finding 6. Round 2 moved the key from session to roadmap so
++    // the cap could bind at all; without a reset that swapped a cap that never
++    // binds for one that never releases — three deaths in March refusing a
++    // relaunch in September for an unrelated run.
++    const cand = (over: Partial<Candidate>): Candidate =>
++        ({
++            session_id: 's',
++            roadmap: 'road-to-x',
++            worktree: null,
++            relaunches: 0,
++            disposition: 'relaunchable',
++            open_steps: 1,
++            reason: '',
++            ...over,
++        }) as Candidate;
++
++    it('drops the counter of a completed roadmap', () => {
++        const out = clearCompleted({ 'road-to-x': 3 }, [cand({ disposition: 'complete' })]);
++        expect(out).toEqual({});
++    });
++
++    it('keeps the counter of a roadmap still running', () => {
++        const out = clearCompleted({ 'road-to-x': 2 }, [cand({ disposition: 'relaunchable' })]);
++        expect(out).toEqual({ 'road-to-x': 2 });
++    });
++
++    it('touches only the completed roadmap, never its neighbours', () => {
++        const out = clearCompleted({ 'road-to-x': 3, 'road-to-y': 1 }, [
++            cand({ disposition: 'complete' }),
++            cand({ roadmap: 'road-to-y', disposition: 'relaunchable' }),
++        ]);
++        expect(out).toEqual({ 'road-to-y': 1 });
++    });
++
++    it('a completed candidate with no roadmap clears nothing', () => {
++        const out = clearCompleted({ 'road-to-x': 3 }, [
++            cand({ roadmap: null, disposition: 'complete' }),
++        ]);
++        expect(out).toEqual({ 'road-to-x': 3 });
++    });
++
++    it('a spent budget becomes relaunchable again after the run completes', () => {
++        // The end-to-end statement of the fix: same roadmap, budget spent,
++        // then a completion — and the next run starts from zero.
++        const r = root();
++        writeRoadmap(r, 'road-to-x', ['- [ ] a']);
++        const spent = classify(r, rec(), { 'road-to-x': MAX_RELAUNCHES_PER_RUN }, NOW);
++        expect(spent.disposition).toBe('budget-exhausted');
++
++        const afterCompletion = clearCompleted({ 'road-to-x': MAX_RELAUNCHES_PER_RUN }, [
++            cand({ disposition: 'complete' }),
++        ]);
++        expect(classify(r, rec(), afterCompletion, NOW).disposition).toBe('relaunchable');
 +    });
 +});
 diff --git a/tests/scripts/session_eol_hook.test.ts b/tests/scripts/session_eol_hook.test.ts
@@ -10407,10 +10677,10 @@ index f61fcb35de55c299512730762f4253935d57bd64..8a0f128a5d447ca236ead01ba21bad8d
          const res = await ctx.app.inject({
 diff --git a/tests/server/yamlIO.upsert.test.ts b/tests/server/yamlIO.upsert.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..7e04da7a0599c777a5d2080de570adaa11e7477e
+index 0000000000000000000000000000000000000000..b26c15a254450a4c54ef6ece60f2bf1fc789d56c
 --- /dev/null
 +++ b/tests/server/yamlIO.upsert.test.ts
-@@ -0,0 +1,64 @@
+@@ -0,0 +1,108 @@
 +/**
 + * `upsertScalar` — the write path a key the user's file does NOT yet carry.
 + *
@@ -10473,5 +10743,49 @@ index 0000000000000000000000000000000000000000..7e04da7a0599c777a5d2080de570adaa
 +    it('handles a file with no trailing newline', () => {
 +        const after = upsertScalar('enabled: true', ['fallback', 'api_on_quota'], true);
 +        expect(read(after, 'fallback', 'api_on_quota')).toBe(true);
++    });
++});
++
++describe('upsertScalar — nested paths bind under the RIGHT parent', () => {
++    // R2 round 3, finding 5. The scoping expression was
++    // `depth === 0 ? 0 : insertAt === lines.length ? 0 : 0` — every branch
++    // zero, so the comment claimed a scoped search over an expression that
++    // scoped nothing. Latent, because the one live caller is depth 1; these
++    // tests are the ones the next caller would have needed.
++    const read2 = (body: string, a: string, b: string, c: string): unknown => {
++        const doc = parseYaml(body) as Record<string, Record<string, Record<string, unknown>>>;
++        return ((doc[a] ?? {})[b] ?? {})[c];
++    };
++
++    it('does not bind to a same-named section under a DIFFERENT parent', () => {
++        const before = [
++            'other:',
++            '  members:',
++            '    anthropic: 1',
++            'council:',
++            '  members:',
++            '    openai: 2',
++            '',
++        ].join('\n');
++        const after = upsertScalar(before, ['council', 'members', 'anthropic'], true);
++        expect(read2(after, 'council', 'members', 'anthropic')).toBe(true);
++        // The decisive assertion: `other.members.anthropic` keeps its value
++        // rather than being the line that got rewritten.
++        expect(read2(after, 'other', 'members', 'anthropic')).toBe(1);
++    });
++
++    it('creates a missing depth-2 leaf inside an existing depth-1 parent', () => {
++        const before = 'council:\n  members:\n    openai: 2\n';
++        const after = upsertScalar(before, ['council', 'members', 'gemini'], false);
++        expect(read2(after, 'council', 'members', 'gemini')).toBe(false);
++        expect(read2(after, 'council', 'members', 'openai')).toBe(2);
++        expect(after.split('\n').filter((l) => l === 'council:')).toHaveLength(1);
++    });
++
++    it('creates the whole missing chain when only the root exists', () => {
++        const before = 'council:\n  enabled: true\n';
++        const after = upsertScalar(before, ['council', 'fallback', 'api_on_quota'], true);
++        expect(read2(after, 'council', 'fallback', 'api_on_quota')).toBe(true);
++        expect((parseYaml(after) as Record<string, Record<string, unknown>>)['council']?.['enabled']).toBe(true);
 +    });
 +});
