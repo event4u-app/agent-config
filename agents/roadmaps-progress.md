@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 33 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **47** open blockers, **23** need you → `agent-config gates`
+> 33 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **49** open blockers, **23** need you → `agent-config gates`
 
 ## Overall
 
-**284 / 523 steps done · 54%**
+**277 / 523 steps done · 53%**
 
 ```text
 ██████████████████████░░░░░░░░░░░░░░░░░░   54%
@@ -19,7 +19,7 @@
 | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
 | 2 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 12 | 11 | 0 | 1 | [2](#blockers-road-to-context-fidelity) | █████░░░░░ 48% |
+| 4 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 19 | 4 | 0 | 1 | [3](#blockers-road-to-context-fidelity) | ██░░░░░░░░ 17% |
 | 5 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
 | 7 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
@@ -37,7 +37,7 @@
 | 19 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
 | 20 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
 | 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
-| 22 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 4 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 22 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 1 | 3 | 0 | 0 | [1](#blockers-road-to-run-continuation-observation) | ████████░░ 75% |
 | 23 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 24 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
@@ -147,15 +147,15 @@
 
 ### [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md)
 
-**Road to context fidelity** — 11 / 23 done (48%)
+**Road to context fidelity** — 4 / 23 done (17%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Falsification spikes | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
 | 1 | Compaction-boundary rule reinjection | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | Memory eviction on the curated store | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 2 | Memory eviction on the curated store | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
 | 3 | Skill-top position lint | ⏭️ skipped | 0 | 0 | 0 | 1 | 0% |
-| 4 | Context management for spawned workers | 🟡 in progress | 5 | 2 | 0 | 0 | 29% |
+| 4 | Context management for spawned workers | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-context-fidelity"></a>
 **Blockers**
@@ -169,6 +169,14 @@
     3. If it is NOT detectable: re-specify cf01 against the automatic path, and reword the five-session repetition — it was there to average manual variance.
     4. Either way, note that the capture side is currently UNOBSERVED (`session_eol_report` reports no session-eol state directory), so a Phase 1 delta cannot be computed until that directory exists.
   - **Resolved when:** a `context-fidelity-cf01.md` finding exists under `agents/evidence/eval-findings/` carrying a per-probe-class number and a host stamp, or the user records that the compaction-survival question is closed unmeasured and Phase 1 is cancelled. (The filename is deliberately not written as a full path here: `check_references` resolves a path in prose and the file does not exist yet, so a link would be a broken reference by construction. The step's own `verify:` probe holds the full path, which is where it belongs.)
+- **memory-sweep-instrument** (owner: maintainer) — blocks the backing of `context-fidelity-memory-staleness`, and Phase 2 step 3's thresholds
+  - **Recommendation:** Build the sweep as part of Phase 2 step 1, not as a separate phase. The commit anchor and the sweep are the same work seen from two sides: the anchor is what lets a sweep decide whether an entry was verified against *this* tree, and without it any automated reading repeats the 0.0 % artefact in a new form. Shipping the ladder on a hand reading would make the thresholds unre-derivable by the next maintainer, which is the property that made this census necessary in the first place.
+  - **If you do nothing:** the ladder can still be built — 21.5 % clears the 10 % threshold on both denominators, so the decision it gates is already made. What stays missing is the ability to re-measure, so the thresholds in Phase 2 step 3 would be set once from a number nobody can reproduce, and drift in either direction would be invisible.
+  - **What to do:**
+    1. Decide whether the sweep is Phase 2 step 1's scope or a new step.
+    2. If in scope, note that `check_memory_contradiction` is a per-proposal checker (`--type --key --body`) and is the wrong shape to extend — the sweep needs to iterate the store, which is a different entry point.
+    3. Record whether inter-rater agreement on the hand walk needs measuring before the ladder ships, or whether the 2:1 margin over the threshold makes that unnecessary.
+  - **Resolved when:** the maintainer records the sweep as in-scope for a named step, or records that the ladder ships on cf02's hand reading with the reproducibility limitation accepted.
 - **prominence-gate-skills-corpus** (owner: maintainer) — blocks Phase 3 (the withdrawn skill-top position step; this is the residual gap that survived the withdrawal)
   - **Recommendation:** Extend it, but not by simply adding the path to the existing invocation — that lands 13 blocking findings in one change, which is the gate-that-arrives-as-N-instant-blockers shape this repository has refused before. The two-step version is cheap: first add a skills run whose findings are reported and baselined (the ratchet pattern this tree already uses for `ci-parity:local-only` and `lint_roadmap_blockers:decidability`), then drain. Note that 10 of the 13 are one repeated shape — an Iron Law H2 sitting behind `When to use` and `Goal` — so a single ordering convention clears most of them.
   - **If you do nothing:** the skills tree stays unscanned for obligation prominence, which is the status quo and costs nothing new. What it does cost is the next executor of this phase: the step reads as unbuilt, so the next attempt is likely to rebuild what this branch already reverted. That is why the blocker exists rather than a re-opened step.
@@ -177,8 +185,6 @@
     2. If extending, decide whether skills are warn-level or blocking-with-baseline. The gate has no warn flag today (`--format`, `--quiet`, positional paths only), so warn-level means adding one.
     3. Reconcile the two definitions before either lands: `preservation-guard` forbids Iron Law heading downgrades, and the gate already encodes that as `deep_iron_law`. Any new positional check must not contradict it — that contradiction is what got the first attempt reverted.
   - **Resolved when:** the maintainer records extend-with-baseline (with the baseline landed) or leave-unscanned, and Phase 3's step text is updated to match so the next executor does not rebuild the reverted gate.
-
-_1 blocker resolved._
 
 ### [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md)
 
@@ -755,11 +761,30 @@ _1 blocker resolved._
 
 ### [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md)
 
-**Road to a run-continuation engagement anybody can point at** — 0 / 4 done (0%)
+**Road to a run-continuation engagement anybody can point at** — 3 / 4 done (75%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Observe one engagement | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 0 | Observe one engagement | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+
+<a id="blockers-road-to-run-continuation-observation"></a>
+**Blockers**
+
+- **three-phase-contract-run** (owner: any autonomous `process-full` run, no dedicated effort) — blocks step 0.1 only. Step 0.0 is closed on its own evidence and does not wait for this.
+  - **Recommendation:** **do not schedule this.** Wait for the first qualifying run and close 0.1 off it, because the criterion is about what the mechanism does during ordinary work — manufacturing a three-phase run to satisfy it reproduces the ecological-validity problem the council already flagged against the self-referential observation, one size larger. The estate has several three-phase autonomous candidates already; the next one to be worked discharges this for free.
+  - **If you do nothing:** step 0.1 stays open and this roadmap stays in the active estate at 3 of 4 items. Nothing regresses and no evidence decays — the ledger line from 0.0 is durable. The cost is one open roadmap carrying one criterion, which is the shape its own risk 3 accepts by design.
+  - **What to do:**
+    claim a roadmap that (a) carries `execution.mode: autonomous`
+    in its frontmatter, (b) has **three or more `## Phase` sections with open
+    steps**, and (c) is not this roadmap — then run it to completion from a
+    worktree and open its PR. Check candidates with
+    `./agent-config roadmap:progress` for the phase count and
+    `grep -A2 '^execution:' agents/roadmaps/<slug>.md` for the mode; a roadmap in
+    `phase-checkpoints` mode makes the concern a no-op and produces no event at
+    all. Then read the run back with
+    `./scripts-run src/scripts/interruption_report --root <main-checkout>` and
+    confirm `asks=0 handbacks=0` alongside a non-zero `re=` on that run id.
+  - **Resolved when:** `interruption_report` shows one run id with `re=` non-zero, `asks=0`, `handbacks=0`, whose claimed roadmap had ≥ 3 phases and reached a PR — and that run id is recorded at step 0.1.
 
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
 

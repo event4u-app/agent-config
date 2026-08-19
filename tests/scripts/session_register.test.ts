@@ -46,6 +46,7 @@ import {
     claim_is_stale,
     foreign_sessions_block,
     read_claimed_slug,
+    resolve_claim,
     roadmap_claim_rel,
     session_checkout,
 } from '../../src/scripts/session_register_hook.js';
@@ -981,5 +982,65 @@ describe('the claim is repo-global — writer and reader cannot land in differen
         fs.mkdirSync(bare, { recursive: true });
         expect(claim_dir(bare)).toBeNull();
         expect(claim_file(bare, 'sess-z')).toBe(path.join(bare, roadmap_claim_rel('sess-z')));
+    });
+
+    // `resolve_claim` exists so a consumer can record WHICH file answered, not
+    // merely that one did. `read_claimed_slug` throws that away, and throwing it
+    // away is what made the two-tree defect unattributable from the ledger: an
+    // event could say an engagement happened and nothing about the tree it came
+    // out of.
+    describe('resolve_claim — the slug AND the file it came from', () => {
+        it('returns the shared-dir path when the claim is the post-fix one', () => {
+            const { main, wt } = make_repo();
+            const written = claim_file(wt, 'sess-r1');
+            fs.mkdirSync(path.dirname(written), { recursive: true });
+            fs.writeFileSync(
+                written,
+                JSON.stringify({ slug: 'road-to-r1', session_id: 'sess-r1' }),
+                'utf-8',
+            );
+            const got = resolve_claim(main, 'sess-r1');
+            expect(got?.slug).toBe('road-to-r1');
+            // Read from the OTHER tree and still the same file — the path is the
+            // fact that makes the crossing checkable.
+            expect(got?.path).toBe(written);
+            expect(got?.path).toBe(claim_file(main, 'sess-r1'));
+        });
+
+        it('returns the per-tree path when only a pre-fix claim exists', () => {
+            const { main } = make_repo();
+            const legacy = path.join(main, roadmap_claim_rel('sess-r2'));
+            fs.mkdirSync(path.dirname(legacy), { recursive: true });
+            fs.writeFileSync(
+                legacy,
+                JSON.stringify({ slug: 'road-to-r2', session_id: 'sess-r2' }),
+                'utf-8',
+            );
+            const got = resolve_claim(main, 'sess-r2');
+            expect(got?.slug).toBe('road-to-r2');
+            expect(got?.path).toBe(legacy);
+            // Which is NOT the shared location — so a reader of this path can
+            // tell a migrated claim from an unmigrated one without guessing.
+            expect(got?.path).not.toBe(claim_file(main, 'sess-r2'));
+        });
+
+        it('names the LEGACY per-worktree file when that is what answered', () => {
+            const { main } = make_repo();
+            const shared = claim_dir(main) as string;
+            const legacy = path.join(shared, path.basename(ROADMAP_CLAIM_REL));
+            fs.mkdirSync(shared, { recursive: true });
+            fs.writeFileSync(legacy, JSON.stringify({ slug: 'road-to-r3' }), 'utf-8');
+            // Unidentified session — the one case a checkout-scoped claim is
+            // still inherited.
+            const got = resolve_claim(main, null);
+            expect(got?.slug).toBe('road-to-r3');
+            expect(got?.path).toBe(legacy);
+        });
+
+        it('is null exactly when read_claimed_slug is null', () => {
+            const { main } = make_repo();
+            expect(resolve_claim(main, 'sess-none')).toBeNull();
+            expect(read_claimed_slug(main, 'sess-none')).toBeNull();
+        });
     });
 });
