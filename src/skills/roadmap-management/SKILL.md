@@ -343,18 +343,13 @@ After the last step of a roadmap is done, check completion status:
    the active tree.
 
 4b. **Deferred items present (`count_deferred ≥ 1`, `count_open == 0`)** — Iron Law 3 flow.
-   The archive is **blocked** until the deferrals are resolved. WHO resolves
-   them is decided by the preservation test in
+   Archive **blocked** until resolved. WHO resolves is the preservation test in
    [`roadmap-progress-sync § Who resolves it`](../../rules/roadmap-progress-sync.md),
-   not by the mode: options **1, 2 and 4 keep the criterion alive** in the
-   active estate and may be resolved by the council, recorded at the item;
-   options **3 and 5 drop or weaken it** and reach the user, always. Option 2's
-   follow-up counts only if it is created in the SAME change and passes the
-   estate ratchet — a verdict naming a roadmap that does not exist yet fails
-   closed to the user. In doubt: user.
+   never the mode — same menu either way, only the resolver differs:
 
-   Surface the plan either way — the menu is the same, only the resolver
-   differs:
+   - **1, 2, 4** keep the item alive → **council**, recorded at the item (2 only
+     if the follow-up lands in the SAME change).
+   - **3, 5** drop or weaken it → **user**, always. In doubt: user.
 
    ```
    📋 Roadmap closure check — deferred items must resolve before archive:
