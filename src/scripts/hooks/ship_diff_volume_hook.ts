@@ -32,8 +32,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { unwrap } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
+import { isPayloadStub } from './payload_stub.js';
 import { atomic_write_json } from './state_io.js';
 
 export const STATE_FILE = path.join('agents', 'state', 'ship-diff-volume.json');
@@ -91,20 +91,76 @@ export function correctedVolume(numstat: string): { volume: number; excluded: nu
 }
 
 /**
- * The tool command, read off the PLATFORM PAYLOAD — never off the envelope root.
+ * Tools that carry a shell command.
+ *
+ * Without this gate the concern reads `tool_input.command` from every tool that
+ * happens to carry one, and `SHIP_PATTERNS` are unanchored — so a `grep` for the
+ * string `git push`, or a heredoc writing this very file, would spawn two `git`
+ * subprocesses on a blocking slot. Mirrors `COMMAND_TOOLS` in
+ * `block_unauthorized_git.ts`, the sibling guard on the same slot.
+ *
+ * The set is an ALLOW-list: a named tool outside it is declined, so a host whose
+ * shell tool is not listed here goes dark until it is added. That is the same
+ * trade `block_unauthorized_git` already makes while BLOCKING, so an advisory
+ * concern can hardly demand more. A payload naming no tool at all still reads —
+ * that is the bare-host and legacy shape, where there is nothing to gate on.
+ */
+const COMMAND_TOOLS: ReadonlySet<string> = new Set([
+    'launch-process',
+    'launch_process',
+    'Bash',
+    'BashTool',
+    'run-process',
+    'runProcess',
+    'shell',
+    'execute_shell',
+    'RunShellCommand',
+]);
+
+function isObj(v: unknown): v is Record<string, unknown> {
+    return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+
+/**
+ * Descend to the platform payload.
  *
  * The dispatcher nests the host-shaped tool fields under `payload`
- * (`_build_envelope` in `dispatch_hook.ts`); only a bare host invocation puts
- * them at the top level. This concern shipped reading the top level only, so
- * under the real dispatcher it found nothing and returned `''` on every
- * invocation — it ran, cost a dispatch, and could never fire. Same defect the
- * `design-slop` concern already carries a note about; `unwrap` is the shared
- * accessor that makes both shapes read alike.
+ * (`_build_envelope` in `dispatch_hook.ts`); a bare host invocation puts them at
+ * the top level. This concern shipped reading the top level ONLY, so under the
+ * real dispatcher it found nothing and returned `''` on every invocation — it
+ * ran, cost a dispatch, and could never fire.
+ *
+ * Deliberately NOT `envelope.ts`'s shared `unwrap`: that one descends only when
+ * all four `ENVELOPE_KEYS` are present, so a producer emitting a partial
+ * envelope would return this concern to exactly its pre-fix dead state with no
+ * test noticing. `design-slop` and `ui-route-nudge` each carry their own local
+ * descent for the same reason; this is the third instance of that shape, not an
+ * adoption of a shared accessor.
  */
-export function extractCommand(payload: Record<string, unknown>): string {
-    const ti = payload['tool_input'];
-    if (ti !== null && typeof ti === 'object') {
-        const c = (ti as Record<string, unknown>)['command'];
+function payloadOf(root: Record<string, unknown>): Record<string, unknown> {
+    const inner = root['payload'];
+    return isObj(inner) ? inner : root;
+}
+
+/** The ship command, or `''` when this payload does not carry one. */
+function shipCommandFrom(payload: Record<string, unknown>): string {
+    const toolRaw = payload['tool_name'] ?? payload['toolName'] ?? payload['tool'];
+    if (typeof toolRaw === 'string' && !COMMAND_TOOLS.has(toolRaw)) return '';
+
+    const ti = payload['tool_input'] ?? payload['toolInput'];
+    if (isPayloadStub(ti)) {
+        // The dispatcher omitted the body this concern declares it needs
+        // (`needs_payload_bodies: [input]`). Returning '' here is indistinguishable
+        // from "no ship verb", which is precisely the silent death this file was
+        // fixed to remove — so say so instead of dying quietly again.
+        process.stderr.write(
+            'ship-diff-volume: tool_input arrived stubbed; the concern declares ' +
+                'needs_payload_bodies: [input] and cannot read a command without it.\n',
+        );
+        return '';
+    }
+    if (isObj(ti)) {
+        const c = ti['command'];
         if (typeof c === 'string') return c;
     }
     const c = payload['command'];
@@ -112,14 +168,22 @@ export function extractCommand(payload: Record<string, unknown>): string {
 }
 
 /**
- * The stdin boundary itself: raw dispatcher stdin → the ship command.
+ * The stdin boundary itself: raw concern stdin → the ship command.
  *
- * Exported so a regression can exercise the same text the dispatcher writes,
- * rather than a hand-built fixture that could agree with the bug.
+ * Exported so a regression can drive the boundary rather than the extractor.
+ * Never throws — a concern that crashes in the agent loop is worse than one
+ * that declines.
  */
 export function commandFromStdin(raw: string): string {
-    const [, payload] = unwrap(raw);
-    return extractCommand(payload);
+    if (!raw.trim()) return '';
+    let root: unknown;
+    try {
+        root = JSON.parse(raw);
+    } catch {
+        return '';
+    }
+    if (!isObj(root)) return '';
+    return shipCommandFrom(payloadOf(root));
 }
 
 export function main(argv?: string[]): number {
