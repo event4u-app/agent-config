@@ -34,6 +34,7 @@ import {
     readAllRecords,
     readLedger,
     render,
+    resumePlans,
     scan,
     writeLedger,
     type Candidate,
@@ -363,5 +364,102 @@ describe('clearCompleted — the cap bounds a RUN, not a roadmap lifetime', () =
             cand({ disposition: 'complete' }),
         ]);
         expect(classify(r, rec(), afterCompletion, NOW).disposition).toBe('relaunchable');
+    });
+});
+
+describe('writeLedger — a failed write is never swallowed', () => {
+    // The swallow this replaces carried a comment asserting "there is NO
+    // CALLER", which was false in the same file: `digest` calls it. The two
+    // comments contradicted each other fourteen lines apart, and the
+    // consequence was a digest reporting a release that had not happened.
+    it('throws rather than reporting success it did not achieve', () => {
+        const r = root();
+        // A FILE where the state directory must be: mkdirSync then fails.
+        fs.mkdirSync(path.join(r, 'agents', 'runtime'), { recursive: true });
+        fs.writeFileSync(path.join(r, 'agents', 'runtime', 'state'), 'not a directory', 'utf-8');
+        expect(() => writeLedger(r, { 'road-to-x': 1 })).toThrow();
+    });
+
+    it('round-trips through readLedger on a healthy tree', () => {
+        const r = root();
+        writeLedger(r, { 'road-to-x': 2 });
+        expect(readLedger(r)).toEqual({ 'road-to-x': 2 });
+        expect(fs.existsSync(path.join(r, SUPERVISE_STATE_REL))).toBe(true);
+    });
+});
+
+describe('digest — the release line follows the WRITE, not the intent', () => {
+    const done = (over: Partial<Candidate> = {}): Candidate =>
+        ({
+            session_id: 's',
+            roadmap: 'road-to-x',
+            worktree: '/tmp/wt',
+            platform: 'claude',
+            relaunches: 0,
+            disposition: 'complete',
+            open_steps: 0,
+            reason: '',
+            ...over,
+        }) as Candidate;
+
+    it('reports a reset when the ledger write succeeded', () => {
+        const r = root();
+        writeLedger(r, { 'road-to-x': 2 });
+        const out = digest(r, [done()], NOW);
+        expect(out).toContain('relaunch budget reset');
+        expect(readLedger(r)).toEqual({});
+    });
+
+    it('reports NOT RESET when the ledger write failed', () => {
+        // The direction that matters: a stale-high counter refuses the next
+        // relaunch, and the digest had just told the operator it would not.
+        const r = root();
+        fs.mkdirSync(path.join(r, 'agents', 'runtime'), { recursive: true });
+        fs.writeFileSync(path.join(r, 'agents', 'runtime', 'state'), 'not a directory', 'utf-8');
+        const out = digest(r, [done()], NOW);
+        expect(out).toContain('NOT RESET');
+        expect(out).not.toContain('relaunch budget reset');
+    });
+});
+
+describe('resumePlans — only what the scan classified as relaunchable', () => {
+    const cand = (over: Partial<Candidate>): Candidate =>
+        ({
+            session_id: 's',
+            roadmap: 'road-to-x',
+            worktree: '/tmp/wt',
+            platform: 'claude',
+            relaunches: 0,
+            disposition: 'relaunchable',
+            open_steps: 1,
+            reason: '',
+            ...over,
+        }) as Candidate;
+
+    it('skips alive, complete and budget-exhausted runs', () => {
+        // Printing a command for those would hand the operator a line that
+        // undoes the classification the scan just made.
+        const plans = resumePlans(
+            root(),
+            [
+                cand({ disposition: 'alive' }),
+                cand({ disposition: 'complete' }),
+                cand({ disposition: 'budget-exhausted' }),
+                cand({ disposition: 'relaunchable' }),
+            ],
+            NOW,
+        );
+        expect(plans).toHaveLength(1);
+        expect(plans[0]?.target.roadmapSlug).toBe('road-to-x');
+    });
+
+    it('a relaunchable candidate with no roadmap yields no plan', () => {
+        expect(resumePlans(root(), [cand({ roadmap: null })], NOW)).toHaveLength(0);
+    });
+
+    it('carries the DEAD session platform, never the current process host', () => {
+        const plans = resumePlans(root(), [cand({ platform: 'gemini' })], NOW);
+        expect(plans[0]?.command).toContain('gemini');
+        expect(plans[0]?.command).not.toContain('claude');
     });
 });

@@ -129,7 +129,7 @@ export interface BuildOptions {
  * Returns `null` on anything unexpected. A checkpoint without a commit is
  * still useful; a Stop path that throws is not.
  */
-function readHead(repoRoot: string): string | null {
+export function readHead(repoRoot: string): string | null {
     try {
         let gitDir = path.join(repoRoot, '.git');
         if (fs.statSync(gitDir).isFile()) {
