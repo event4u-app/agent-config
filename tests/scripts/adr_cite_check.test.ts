@@ -5,6 +5,7 @@ import * as path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
+    PARTIAL_COVERAGE,
     SURFACES_NOT_SCANNED,
     amendment_blocks,
     cite_check,
@@ -116,15 +117,25 @@ afterAll(() => {
 });
 
 describe('normalise_ref', () => {
-    it('accepts every citation shape the corpus uses', () => {
-        expect(normalise_ref('ADR-211')).toBe('ADR-211');
-        expect(normalise_ref('adr-211')).toBe('ADR-211');
-        expect(normalise_ref('211')).toBe('ADR-211');
-        expect(normalise_ref('docs/decisions/ADR-211-harvest-freeze.md')).toBe('ADR-211');
+    it('accepts every flat citation shape the corpus uses', () => {
+        expect(normalise_ref('ADR-211')?.id).toBe('ADR-211');
+        expect(normalise_ref('adr-211')?.id).toBe('ADR-211');
+        expect(normalise_ref('211')?.id).toBe('ADR-211');
+        expect(normalise_ref('docs/decisions/ADR-211-harvest-freeze.md')?.id).toBe('ADR-211');
+        expect(normalise_ref('ADR-211')?.area).toBeNull();
     });
 
     it('zero-pads so ADR-1 and ADR-001 are the same decision', () => {
-        expect(normalise_ref('ADR-1')).toBe('ADR-001');
+        expect(normalise_ref('ADR-1')?.id).toBe('ADR-001');
+    });
+
+    it('resolves a per-area citation to its area — the surface the flat pattern could never match', () => {
+        expect(normalise_ref('ADR-cost-0001')).toEqual({ id: 'ADR-cost-0001', area: 'cost', num: '0001' });
+        expect(normalise_ref('docs/adrs/telegraph/0002-dormant.md')).toEqual({
+            id: 'ADR-telegraph-0002',
+            area: 'telegraph',
+            num: '0002',
+        });
     });
 
     it('returns null when there is no number to resolve', () => {
@@ -227,6 +238,28 @@ describe('cite_check', () => {
         const [r] = cite_check(['ADR-999'], root);
         expect(r?.resolved).toBe(false);
         expect(r?.verdict).toContain('UNRESOLVED');
+    });
+
+    it('resolves a per-area ADR by path and by ADR-<area>-NNNN', () => {
+        write('docs/adrs/cost/0001-hard-stop-hook.md', '> Area: cost · Status: accepted\n\nBody.\n');
+        for (const ref of ['ADR-cost-0001', 'docs/adrs/cost/0001-hard-stop-hook.md']) {
+            const [r] = cite_check([ref], root);
+            expect(r?.resolved, `${ref} must resolve`).toBe(true);
+            expect(r?.file).toContain('docs/adrs/cost/0001');
+        }
+    });
+
+    it('does not let a bare number address a per-area ADR — numbering restarts per area', () => {
+        write('docs/adrs/cost/0001-hard-stop-hook.md', '> Area: cost\n\nBody.\n');
+        write('docs/adrs/router/0001-three-tier.md', '> Area: router\n\nBody.\n');
+        const [r] = cite_check(['0001'], root);
+        // Resolves against the flat surface (ADR-001) or not at all — never
+        // silently against one of two same-numbered per-area files.
+        expect(r?.file ?? '').not.toContain('docs/adrs');
+    });
+
+    it('publishes both the unscanned surfaces and the partial one', () => {
+        expect(PARTIAL_COVERAGE.join(' ')).toContain('docs/adrs');
     });
 
     it('publishes the surfaces it deliberately does not scan', () => {

@@ -59,6 +59,15 @@ const REPO_ROOT = path.resolve(_HERE, '..', '..');
  * saw one of six surfaces would report a real lock as unknown, which reads as
  * "no constraint" and is worse than the stall it replaces — so the gap is
  * printed in `--json` under `surfaces_not_scanned` and named here.
+ *
+ * The per-area surface took two passes to get honest. Its files are
+ * `<area>/NNNN-<slug>.md` with no `ADR-` prefix, so the flat filename pattern
+ * could never match one — the directory was listed as scanned and resolved
+ * nothing, which is the same false "not found" the paragraph above warns
+ * about, committed by this very file. It resolves by path and by the
+ * `ADR-<area>-NNNN` citation form now; a BARE number still cannot address one,
+ * because per-area numbering restarts per area and five files here are `0001`.
+ * See `PARTIAL_COVERAGE` for what a per-area hit does and does not carry.
  */
 export const ADR_DIRS = ['docs/decisions', 'docs/adrs'] as const;
 
@@ -66,6 +75,19 @@ export const SURFACES_NOT_SCANNED = [
     'docs/contracts/adr-*.md — slug-named contracts, no ADR number to resolve against',
     'agents/settings/contexts/adr-*.md — shadow notes, own status vocabulary',
     'agents/decisions/ — row ledger, not per-decision files',
+] as const;
+
+/**
+ * Partial coverage, stated because a silent partial is the failure this tool
+ * exists to avoid: `docs/adrs/<area>/` resolves by PATH and by the
+ * `ADR-<area>-NNNN` citation form, but those files carry a quote-block header
+ * rather than YAML frontmatter, so `status` / `review_trigger` / the link
+ * fields read as absent. A per-area result is an accurate location and an
+ * honestly empty metadata set — never a claim that the fields are empty in the
+ * document.
+ */
+export const PARTIAL_COVERAGE = [
+    'docs/adrs/<area>/ — resolves, but the header is a quote block, not YAML: metadata reads empty',
 ] as const;
 
 /** A trigger state. `none` means the ADR never recorded a reopen condition. */
@@ -92,11 +114,46 @@ export interface CiteResult {
     verdict: string;
 }
 
-/** `ADR-211`, `adr-211`, `211`, or a path — all normalise to a zero-padded id. */
-export function normalise_ref(ref: string): string | null {
-    const m = /(?:^|[^0-9])(\d{1,4})(?:[^0-9]|$)/.exec(ref.replace(/^.*\//, ''));
-    if (m === null || m[1] === undefined) return null;
-    return `ADR-${m[1].padStart(3, '0')}`;
+/**
+ * A parsed citation. `area` is null for the flat surface.
+ *
+ * Per-area numbering restarts at `0001` inside every area, so a bare number
+ * cannot address one: five files in this tree are `0001`. A per-area citation
+ * must therefore name its area — `ADR-cost-0001`, the form `adr-layout.md`
+ * already specifies for cross-surface `supersedes:` values.
+ */
+export interface ParsedRef {
+    id: string;
+    area: string | null;
+    num: string;
+}
+
+/**
+ * `ADR-211` · `adr-211` · `211` · a path → the flat surface.
+ * `ADR-cost-0001` · a `docs/adrs/<area>/NNNN-…` path → that area.
+ */
+export function normalise_ref(ref: string): ParsedRef | null {
+    const raw = ref.trim();
+
+    // A per-area path carries its area in the directory, and its file never
+    // has an `ADR-` prefix — `docs/adrs/cost/0001-hard-stop-hook.md`.
+    const byPath = /(?:^|\/)docs\/adrs\/([a-z0-9-]+)\/(\d{1,4})-/i.exec(raw);
+    if (byPath?.[1] !== undefined && byPath[2] !== undefined) {
+        const num = byPath[2].padStart(4, '0');
+        return { id: `ADR-${byPath[1]}-${num}`, area: byPath[1], num };
+    }
+
+    // `ADR-<area>-NNNN` — the citation form for a per-area decision.
+    const byArea = /^adr-([a-z][a-z0-9-]*?)-(\d{1,4})$/i.exec(raw.replace(/\.md$/i, ''));
+    if (byArea?.[1] !== undefined && byArea[2] !== undefined) {
+        const area = byArea[1].toLowerCase();
+        const num = byArea[2].padStart(4, '0');
+        return { id: `ADR-${area}-${num}`, area, num };
+    }
+
+    const m = /(?:^|[^0-9])(\d{1,4})(?:[^0-9]|$)/.exec(raw.replace(/^.*\//, ''));
+    if (m?.[1] === undefined) return null;
+    return { id: `ADR-${m[1].padStart(3, '0')}`, area: null, num: String(Number(m[1])) };
 }
 
 function walk_md(dir: string): string[] {
@@ -212,8 +269,8 @@ export function cite_check(refs: string[], repo_root: string = REPO_ROOT): CiteR
     for (const f of files) contents.set(f, fs.readFileSync(f, 'utf-8'));
 
     return refs.map((ref) => {
-        const id = normalise_ref(ref);
-        if (id === null) {
+        const parsed = normalise_ref(ref);
+        if (parsed === null) {
             const empty: Omit<CiteResult, 'verdict'> = {
                 ref,
                 resolved: false,
@@ -223,8 +280,18 @@ export function cite_check(refs: string[], repo_root: string = REPO_ROOT): CiteR
             };
             return { ...empty, verdict: verdict_for(empty) };
         }
-        const num = id.slice(4);
-        const match = files.find((f) => new RegExp(`(^|/)ADR-0*${num}[-.]`, 'i').test(f));
+        const { id, area, num } = parsed;
+
+        // Two filename conventions, and the flat one's `ADR-` prefix is exactly
+        // what a per-area file does NOT have (`docs/adrs/cost/0001-…`). Matching
+        // both against one pattern was the defect: the tool advertised
+        // `docs/adrs` as covered and could never resolve a citation to it.
+        const match =
+            area === null
+                ? files.find((f) => new RegExp(`(^|/)ADR-0*${num}[-.]`, 'i').test(f))
+                : files.find((f) =>
+                      new RegExp(`/docs/adrs/${area}/0*${Number(num)}-`, 'i').test(f),
+                  );
         if (match === undefined) {
             const empty: Omit<CiteResult, 'verdict'> = {
                 ref: id,
@@ -244,7 +311,11 @@ export function cite_check(refs: string[], repo_root: string = REPO_ROOT): CiteR
         // Back-references: any OTHER decision file naming this number. This is
         // the only way to see a one-sided reopen — the amending ADR links back,
         // the amended one does not.
-        const cited = new RegExp(`ADR-0*${num}\\b`, 'i');
+        // A per-area decision is cited as `ADR-<area>-NNNN`; a flat one by number.
+        const cited =
+            area === null
+                ? new RegExp(`ADR-0*${num}\\b`, 'i')
+                : new RegExp(`ADR-${area}-0*${Number(num)}\\b`, 'i');
         const referenced_by = files
             .filter((f) => f !== match && cited.test(contents.get(f) ?? ''))
             .map((f) => path.relative(repo_root, f));
@@ -311,7 +382,15 @@ function main(argv: string[]): number {
     const results = cite_check(refs);
     if (as_json) {
         process.stdout.write(
-            JSON.stringify({ results, surfaces_not_scanned: SURFACES_NOT_SCANNED }, null, 2) + '\n',
+            JSON.stringify(
+                {
+                    results,
+                    surfaces_not_scanned: SURFACES_NOT_SCANNED,
+                    partial_coverage: PARTIAL_COVERAGE,
+                },
+                null,
+                2,
+            ) + '\n',
         );
     } else {
         process.stdout.write(render(results) + '\n');

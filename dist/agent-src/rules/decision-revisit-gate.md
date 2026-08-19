@@ -108,10 +108,10 @@ strengthened by the council and weakened only by the owner.
 | Reserved to the owner | Council-decidable |
 |---|---|
 | Changes the project's purpose or a declared non-negotiable outcome | Any mechanism serving that purpose |
-| **Lowers** a recorded security / privacy / safety / data-handling floor | Strengthening a floor, or an equivalent swap above it |
+| **Lowers or removes** a recorded security / privacy / safety / data-handling floor | Strengthening a floor, or an equivalent swap above it |
 | Irreversible or materially destructive | Reversible within the envelope |
 | Spend or liability **above** a delegated threshold | Budgeted, threshold-bounded spend |
-| Creates / removes / weakens a legal, contractual, licensing, compatibility, or public commitment | Internal-only commitments |
+| Creates / removes / weakens a legal, regulatory, contractual, licensing, compatibility, or public commitment | Internal-only commitments |
 | Governance self-amendment — reopening authority, quorum, escalation, this set | What the rules already permit |
 | Cannot be bounded from available evidence | Bounded, with the evidence cited |
 

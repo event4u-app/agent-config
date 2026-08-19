@@ -67,7 +67,7 @@ Of the six candidates, five route to the council and one (ADR-211) to the owner.
 
 It is not a decision. Every `RE-OPENED (candidate)` row is an *entry* into the
 reopen path, and that path requires the reopen record from
-[`adr-layout § Reopen record`](adr-layout-reopen-authority): the original
+[`adr-layout § The reopen record`](adr-layout-reopen-record): the original
 rationale addressed rather than cited, what changed with tree evidence,
 dependants touched, a rollback path, and a blast radius with its evidence. The
 precedent-creates-no-authority clause applies to this table too — that six rows
@@ -83,3 +83,4 @@ status says "this is worth a look", not "this was wrongly blocked".
      see § Reopen authority and § Reopen record there. -->
 
 [adr-layout-reopen-authority]: ../contracts/adr-layout.md#reopen-authority
+[adr-layout-reopen-record]: ../contracts/adr-layout.md#the-reopen-record

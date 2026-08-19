@@ -61,7 +61,10 @@ Do NOT use when:
     governance ADRs, 3-digit numbering (`ADR-NNN-<slug>.md`).
   - **Per-area** — `docs/adrs/<area>/`: sub-area ADRs, 4-digit
     numbering (`NNNN-<slug>.md`); `<area>` must match the canonical
-    inventory in [`src/scripts/audit_adr_coverage.ts`](../../scripts/audit_adr_coverage.ts).
+    inventory in `src/scripts/audit_adr_coverage.ts` (`AREAS`). Deliberately not
+    a link: this skill is projected into `dist/agent-src/skills/`, whose sibling
+    `scripts/` directory carries six curated files and not this one, so any
+    relative href that resolves in `src/` is broken in the projection.
 - The decision is **already made** — ADRs record outcomes, they do
   not run the decision process. For unresolved trade-offs, run the
   council or consult `adversarial-review` first.
