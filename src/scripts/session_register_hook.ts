@@ -409,12 +409,36 @@ export function claim_is_stale(
  * conditions, because a wrong anchor is worse than the fallback:
  *
  * 1. it is an existing directory;
- * 2. it is the ROOT of a checkout (`git_dir` looks for `<dir>/.git` and does not
- *    walk up, so a session whose cwd is a subdirectory degrades to
- *    `workspace_root` — today's behaviour, never something worse);
- * 3. it belongs to the SAME repository — identical git common dir. A cwd in
- *    another repo would otherwise write this repo's register with a foreign
+ * 2. it resolves to the NEAREST enclosing checkout root, walking up from the
+ *    reported directory;
+ * 3. that root belongs to the SAME repository — identical git common dir. A cwd
+ *    in another repo would otherwise write this repo's register with a foreign
  *    branch, and the register is shared by every worktree here.
+ *
+ * ## Condition 2 used to reject a subdirectory, and that was wrong here
+ *
+ * It required the reported directory to BE a checkout root, and defended the
+ * rejection as "a session whose cwd is a subdirectory degrades to
+ * `workspace_root` — today's behaviour, never something worse". R2 round 3
+ * finding 2 measured that claim false in this repository's own layout, where
+ * worktrees live at `<parent>/.claude/worktrees/<name>` — NESTED under the
+ * parent. For a session standing at `<parent>/.claude/worktrees/wt/src`:
+ *
+ *   - the degraded root is `<parent>`, i.e. equal to `workspace_root`;
+ *   - so `git_dir` and `git_common_dir` taken from it are both `<parent>/.git`;
+ *   - and the reported cwd is under `<parent>` as well.
+ *
+ * Every available signal then reports a healthy same-tree run for a genuine
+ * two-tree one. That is not a loss of precision, it is a confident wrong answer,
+ * which is strictly worse than the fallback the docblock was defending.
+ *
+ * The walk is bounded twice over, per the AI council's condition (2026-08-19,
+ * 2/2 convergent on this shape): it stops at the FIRST enclosing checkout root,
+ * so a nested worktree is found before the parent that contains it, and the
+ * same-repository check is retained on whatever it finds — a cwd inside an
+ * unrelated repo nested in this tree resolves to that repo's root, fails the
+ * identity check, and falls back. Paths are canonicalised before the walk so a
+ * symlinked cwd cannot walk a different chain than the one it names.
  */
 export function session_checkout(
     workspace_root: string,
@@ -422,16 +446,39 @@ export function session_checkout(
 ): string {
     const cwd = String(payload_cwd ?? '').trim();
     if (cwd === '') return workspace_root;
+    let start: string;
     try {
         if (!fs.statSync(cwd).isDirectory()) return workspace_root;
+        start = fs.realpathSync(cwd);
     } catch {
         return workspace_root;
     }
-    if (git_dir(cwd) === null) return workspace_root;
-    const mine = git_common_dir(cwd);
+    const root = nearest_checkout_root(start);
+    if (root === null) return workspace_root;
+    const mine = git_common_dir(root);
     const theirs = git_common_dir(workspace_root);
     if (mine === null || theirs === null || mine !== theirs) return workspace_root;
-    return cwd;
+    return root;
+}
+
+/**
+ * The nearest enclosing directory that is a checkout root, or `null`.
+ *
+ * The iteration cap is a loop guard, not a policy: `path.dirname` is a fixed
+ * point at the filesystem root, so the terminating condition is the unchanged
+ * path and the counter only bounds a pathological filesystem. The FIRST hit
+ * wins, which is what makes a nested worktree resolve to itself rather than to
+ * the checkout it sits inside.
+ */
+function nearest_checkout_root(start: string): string | null {
+    let dir = start;
+    for (let i = 0; i < 64; i++) {
+        if (git_dir(dir) !== null) return dir;
+        const up = path.dirname(dir);
+        if (up === dir) return null;
+        dir = up;
+    }
+    return null;
 }
 
 /**

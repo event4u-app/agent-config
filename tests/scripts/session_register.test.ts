@@ -842,11 +842,32 @@ describe('the record describes THIS session checkout, not the chdir target', () 
         expect(session_checkout(main, file)).toBe(main);
     });
 
-    it('refuses a cwd that is not a checkout root — git_dir does not walk up', () => {
+    it('walks up from a subdirectory to the nearest enclosing checkout root', () => {
+        // This case previously asserted the OPPOSITE — "refuses a cwd that is not
+        // a checkout root — git_dir does not walk up" — and it was testing wrong
+        // behaviour. R2 round 3 finding 2 measured what the refusal cost: with a
+        // worktree NESTED under the parent (this repository's own layout,
+        // `.claude/worktrees/<name>`), a session standing in a subdirectory
+        // resolved to the PARENT, and every downstream signal then reported a
+        // healthy same-tree run for a genuine two-tree one. A confidently wrong
+        // answer, not a loss of precision.
         const { main, wt } = make_repo();
-        const sub = path.join(wt, 'src');
+        const sub = path.join(wt, 'src', 'deeper');
         fs.mkdirSync(sub, { recursive: true });
-        expect(session_checkout(main, sub)).toBe(main);
+        expect(session_checkout(main, sub)).toBe(fs.realpathSync(wt));
+    });
+
+    it('walks up out of a NESTED worktree to the worktree, never to the parent', () => {
+        // The topology the finding was measured in, and the one the walk has to
+        // resolve in the narrow direction: the first enclosing checkout root wins,
+        // so the nested worktree is found before the checkout that contains it.
+        const { main } = make_repo();
+        const nested = path.join(main, '.claude', 'worktrees', 'wt-nested');
+        fs.mkdirSync(path.dirname(nested), { recursive: true });
+        git(main, 'worktree', 'add', '--quiet', '-b', 'nested-branch', nested);
+        const sub = path.join(nested, 'src');
+        fs.mkdirSync(sub, { recursive: true });
+        expect(session_checkout(main, sub)).toBe(fs.realpathSync(nested));
     });
 
     it('refuses a cwd in a DIFFERENT repository — the register is shared per repo', () => {

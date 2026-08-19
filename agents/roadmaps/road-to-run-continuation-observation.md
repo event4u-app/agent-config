@@ -150,16 +150,53 @@ engages and leaves the event behind.
      On the line above, `session_root` would have been the worktree and
      `workspace_root` the parent: different, which is the fact.
 
-     `session_cwd` came out of round 2 finding 1, and it is worth naming
-     because it bounds the fix rather than extending it. `session_checkout`
-     requires the reported directory to BE a checkout root, so a session
-     started from a SUBDIRECTORY of a worktree still collapses
-     `session_root` onto the reader's root and both path discriminators
-     still read FALSE. The guard's conditions belong to the register and
-     loosening them is a different change; carrying the raw `cwd` makes
-     that case *distinguishable* instead of silent — a path that is
-     neither `session_root` nor under it, which no healthy resolution
-     produces.
+     `session_cwd` came out of round 2 finding 1 as a way to make a
+     degraded resolution *distinguishable* rather than silent, on the
+     reasoning that the resolver's conditions belonged to the register and
+     loosening them was a different change.
+
+     **Round 3 finding 2 refuted that reasoning by measuring where the
+     field is blind, and the fix moved upstream after all.** Worktrees in
+     this repository live at `<parent>/.claude/worktrees/<name>` — NESTED
+     under the parent. For a session standing one directory deeper, the
+     collapsed `session_root` equals the reader's root, both git fields
+     taken from it are equal, **and** the raw `cwd` is under the parent
+     too. All three signals report a healthy same-tree run for a genuine
+     two-tree one. A confidently wrong answer is not a loss of precision,
+     and the resolver's own docblock had defended the rejection as "never
+     something worse".
+
+     Two things followed, both ratified by the AI council (2026-08-19,
+     2/2 convergent, A/A):
+
+     1. `session_checkout` now walks UP to the nearest enclosing checkout
+        root, bounded by the same-repository identity check it already had.
+        The first hit wins, so a nested worktree resolves to itself rather
+        than to the checkout containing it. The session register gets the
+        same correction for free — it records which worktree a session is
+        in, and had the identical blind spot.
+     2. The roadmap the run executes is resolved against the **session's**
+        checkout, falling back to the reader's. Round 3 finding 1: the
+        open-step count feeds a stall detector, and reading the reader's
+        tree meant watching a file nobody was editing — the count never
+        moved and the detector declared a working run finished after three
+        engagements. The mechanism whose job is to detect a stall was
+        manufacturing one.
+
+     `session_cwd` stayed, with a narrower job: a cwd in a DIFFERENT
+     repository, a cwd that does not exist, a cwd under no checkout root.
+     Those still fall back, and on those lines it is still the only field
+     that says so.
+
+     The test both council seats named independently is the one that closes
+     both findings at once, and it is in the tree: a real nested worktree,
+     the session in a subdirectory of it, and the two roadmap copies made
+     to DISAGREE on purpose (parent 2 open, worktree 1) — because no
+     assertion about paths alone can show which file was read. Its sibling
+     fires three times with the worktree count advancing and asserts the
+     emitted counts are `[3, 2, 1]` with no `halt-stall`; against the
+     reader's tree the count is frozen at 2 for all three and the third
+     fire halts.
 
 - [ ] **0.1** The parent criterion closes on that evidence: *"a
       `process-full` contract run finishes a 3-phase roadmap with zero

@@ -194,6 +194,86 @@ function writeWorktreePair(): { main: string; worktree: string } {
     return { main, worktree };
 }
 
+/**
+ * A roadmap body with a chosen number of open steps, so the parent and the
+ * worktree copies of the SAME slug can be made to disagree. That disagreement is
+ * the whole instrument: it is what tells a reader which tree the concern actually
+ * read, and no assertion about paths alone can establish it.
+ */
+function fixtureRoadmapWithOpen(openSteps: number): string {
+    const lines = [
+        '---',
+        'complexity: structural',
+        'execution:',
+        '  mode: autonomous',
+        '---',
+        '',
+        '# Fixture',
+        '',
+        '## Phase 0 — parameterised open steps',
+        '',
+        '- [x] **0.0** done',
+    ];
+    for (let i = 1; i <= openSteps; i++) {
+        lines.push(`- [ ] **0.${i}** open ${i}`);
+    }
+    lines.push('');
+    return lines.join('\n');
+}
+
+/**
+ * A main checkout with the worktree NESTED INSIDE IT, at
+ * `<main>/.claude/worktrees/wt` — this repository's own layout.
+ *
+ * `writeWorktreePair` deliberately places the worktree OUTSIDE `main`, to keep a
+ * shared path prefix from hiding a prefix mistake. That choice also made the
+ * whole nested class unreachable, which is how round 3 finding 2 survived two
+ * review rounds: every signal the concern emits reads "healthy same-tree" when
+ * the session sits in a SUBDIRECTORY of a nested worktree, because the degraded
+ * session root lands on the parent and the raw cwd is under the parent too.
+ *
+ * Both fixtures are kept. Nested and non-nested are different topologies and the
+ * concern has to be right in both.
+ */
+function writeNestedWorktreePair(): { main: string; worktree: string; sub: string } {
+    const main = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-nested-main-'));
+    cleanups.push(main);
+    git(main, 'init', '--quiet', '--initial-branch=main');
+    git(main, 'config', 'user.email', 'fixture@example.com');
+    git(main, 'config', 'user.name', 'fixture');
+    fs.writeFileSync(path.join(main, 'README.md'), 'fixture\n', 'utf-8');
+    git(main, 'add', 'README.md');
+    git(main, 'commit', '--quiet', '-m', 'fixture base');
+
+    const worktree = path.join(main, '.claude', 'worktrees', 'wt');
+    fs.mkdirSync(path.dirname(worktree), { recursive: true });
+    git(main, 'worktree', 'add', '--quiet', '-b', 'fixture-nested-wt', worktree);
+
+    // The parent copy carries TWO open steps, the worktree copy ONE. A concern
+    // reading the parent reports 2; reading the worktree reports 1.
+    const parentRoadmaps = path.join(main, 'agents', 'roadmaps');
+    fs.mkdirSync(parentRoadmaps, { recursive: true });
+    fs.writeFileSync(
+        path.join(parentRoadmaps, `${SLUG}.md`),
+        fixtureRoadmapWithOpen(2),
+        'utf-8',
+    );
+    const wtRoadmaps = path.join(worktree, 'agents', 'roadmaps');
+    fs.mkdirSync(wtRoadmaps, { recursive: true });
+    fs.writeFileSync(path.join(wtRoadmaps, `${SLUG}.md`), fixtureRoadmapWithOpen(1), 'utf-8');
+
+    const claim = claim_file(worktree, SESSION);
+    fs.mkdirSync(path.dirname(claim), { recursive: true });
+    fs.writeFileSync(claim, JSON.stringify({ slug: SLUG, session_id: SESSION }), 'utf-8');
+
+    // The session stands in a SUBDIRECTORY of the worktree, which is the shape
+    // `session_checkout`'s checkout-root condition used to reject.
+    const sub = path.join(worktree, 'src');
+    fs.mkdirSync(sub, { recursive: true });
+
+    return { main, worktree, sub };
+}
+
 /** Drive the real dispatcher over the real manifest for a claude `stop`. */
 function dispatchStop(
     root: string,
@@ -415,18 +495,19 @@ describe('run-continuation — driven through the live dispatcher', () => {
         expect(claimPath.startsWith(`${real(commonDir)}${path.sep}`)).toBe(true);
     });
 
-    it('keeps the degraded resolution distinguishable — cwd inside a worktree subdirectory', () => {
-        // Round 2 finding 1. `session_checkout` requires the cwd to BE a
-        // checkout root, and a session started with `cd <worktree>/src` is not:
-        // `session_root` therefore collapses onto the reader's root and BOTH
-        // path discriminators read FALSE for a genuine two-tree run — the
-        // round-1 false negative re-entering through the degradation path.
+    it('walks up from a worktree subdirectory — the non-nested topology too', () => {
+        // This case was written for round 2 finding 1 and PINNED THE OPPOSITE
+        // BEHAVIOUR: `session_checkout` required the cwd to BE a checkout root,
+        // so `cd <worktree>/src` degraded onto the reader's root, and the case
+        // asserted that degradation as "the honest current behaviour" while
+        // arguing that only its VISIBILITY could be fixed.
         //
-        // The fields cannot prevent the degradation (the guard's three
-        // conditions are the register's, and loosening them is a change to the
-        // register). What they must do is make it VISIBLE, which is what
-        // `session_cwd` is for: a raw path that is neither `session_root` nor
-        // under it, a shape no healthy resolution produces.
+        // Round 3 finding 2 refuted the premise: in a NESTED worktree layout the
+        // degraded answer is not merely imprecise, it is confidently wrong, and
+        // every signal then reads healthy same-tree. The council's fix walks the
+        // resolver up, which makes the old assertion false. Retargeted rather
+        // than deleted — the topology it covers (worktree OUTSIDE the parent) is
+        // still one the walk has to get right, and it is the one this fixture has.
         const { main, worktree } = writeWorktreePair();
         const sub = path.join(worktree, 'src');
         fs.mkdirSync(sub, { recursive: true });
@@ -438,16 +519,38 @@ describe('run-continuation — driven through the live dispatcher', () => {
         const ev = engaged[0] as Record<string, unknown>;
         const real = (p: unknown): string => fs.realpathSync(p as string);
 
-        // The degradation itself, pinned as the honest current behaviour rather
-        // than asserted away.
-        expect(ev['session_root']).toBe(real(main));
-        expect(ev['session_root']).toBe(ev['workspace_root']);
-
-        // And the fact that makes it readable: the raw cwd is the subdirectory,
-        // which is NOT under the resolved session root. A reader comparing the
-        // two can tell this line apart from a genuine same-tree run, where the
-        // cwd would sit under `session_root`.
+        expect(ev['session_root']).toBe(real(worktree));
+        expect(ev['session_root']).not.toBe(ev['workspace_root']);
+        // The raw cwd stays on the line, and now it sits UNDER the resolved root
+        // — which is what a healthy resolution looks like, and is the reading the
+        // field exists to make available either way.
         expect(ev['session_cwd']).toBe(real(sub));
+        expect(
+            (ev['session_cwd'] as string).startsWith(`${ev['session_root'] as string}${path.sep}`),
+        ).toBe(true);
+    });
+
+    it('still falls back when the cwd belongs to a DIFFERENT repository', () => {
+        // The same-repository bound the council named, and the reason
+        // `session_cwd` keeps earning its place after the walk-up: degradation
+        // did not disappear, it narrowed. A cwd in a foreign checkout resolves to
+        // that checkout's root, fails the common-dir identity check, and falls
+        // back — and the raw cwd is then a path outside the resolved root, which
+        // is the shape that tells a reader a fallback happened.
+        const { main } = writeWorktreePair();
+        const foreign = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-foreign-'));
+        cleanups.push(foreign);
+        git(foreign, 'init', '--quiet', '--initial-branch=main');
+        const transcript = writeTranscript(3);
+        dispatchStop(main, transcript, foreign);
+
+        const engaged = events(main).filter((e) => e['event'] === 'engage');
+        expect(engaged.length).toBe(1);
+        const ev = engaged[0] as Record<string, unknown>;
+        const real = (p: unknown): string => fs.realpathSync(p as string);
+
+        expect(ev['session_root']).toBe(real(main));
+        expect(ev['session_cwd']).toBe(real(foreign));
         expect(
             (ev['session_cwd'] as string).startsWith(`${ev['session_root'] as string}${path.sep}`),
         ).toBe(false);
@@ -464,6 +567,79 @@ describe('run-continuation — driven through the live dispatcher', () => {
         const engaged = events(root).filter((e) => e['event'] === 'engage');
         expect(engaged.length).toBe(1);
         expect(engaged[0]?.['session_cwd']).toBe('');
+    });
+
+    it('reads the SESSION tree roadmap from a nested worktree subdirectory — no false stall', () => {
+        // The fixture both council seats named independently (2026-08-19, 2/2 on
+        // A/A), and it is the one that closes round 3's two highs together:
+        //
+        //   finding 2 — `session_checkout` required the reported cwd to BE a
+        //   checkout root, so a session in `<worktree>/src` degraded onto the
+        //   parent. With the worktree NESTED under the parent, every signal then
+        //   reads healthy same-tree for a genuine two-tree run.
+        //
+        //   finding 1 — the progress scan read the roadmap from the READER's
+        //   tree, so the count follows a file nobody is editing. The agent flips
+        //   a checkbox in the worktree, the parent copy does not move, and the
+        //   stall detector declares a working run finished.
+        //
+        // The two roadmap copies disagree ON PURPOSE — parent 2 open, worktree 1.
+        // That disagreement is the instrument: no assertion about paths alone
+        // can show which file was read.
+        const { main, worktree, sub } = writeNestedWorktreePair();
+        const transcript = writeTranscript(3);
+        const res = dispatchStop(main, transcript, sub);
+        expect(res.code).toBe(2);
+
+        const engaged = events(main).filter((e) => e['event'] === 'engage');
+        expect(engaged.length).toBe(1);
+        const ev = engaged[0] as Record<string, unknown>;
+        const real = (p: unknown): string => fs.realpathSync(p as string);
+
+        // 1. The resolver walked up out of the subdirectory to the worktree root.
+        expect(ev['session_root']).toBe(real(worktree));
+        expect(ev['session_root']).not.toBe(ev['workspace_root']);
+        expect(ev['workspace_root']).toBe(real(main));
+
+        // 2. Which tree was actually READ. The worktree copy has one open step,
+        // the parent copy two — so this single number is the finding-1 assertion.
+        expect(ev['open']).toBe(1);
+
+        // 3. And the two-tree discriminators hold in the nested topology, where
+        // before the fix all three read healthy same-tree.
+        expect(real(ev['git_dir'] as string)).not.toBe(real(ev['git_common_dir'] as string));
+        expect(real(ev['git_common_dir'] as string)).toBe(real(path.join(main, '.git')));
+        expect(ev['session_cwd']).toBe(real(sub));
+
+        // 4. The council's same-repository bound: walking up must not cross into
+        // another repository, and the proof is the shared common dir.
+        expect(real(ev['git_common_dir'] as string)).toBe(
+            real(path.join(main, '.git')),
+        );
+    });
+
+    it('does not stall while the SESSION tree count keeps moving', () => {
+        // The second half of the council's fixture: three fires with the worktree
+        // count advancing between them. Reading the parent, the count is frozen
+        // at 2 for all three and the third fire emits `halt-stall` — a working
+        // run declared finished. Reading the session tree, it moves 3 → 2 → 1 and
+        // no halt is emitted.
+        const { main, worktree, sub } = writeNestedWorktreePair();
+        const wtRoadmap = path.join(worktree, 'agents', 'roadmaps', `${SLUG}.md`);
+
+        for (const [i, open] of [3, 2, 1].entries()) {
+            fs.writeFileSync(wtRoadmap, fixtureRoadmapWithOpen(open), 'utf-8');
+            // A fresh transcript per fire, with a growing user-turn count: the
+            // concern keys its duplicate-fire guard on the turn ordinal, so
+            // re-firing on the same transcript would be discarded as a duplicate
+            // rather than counted as an engagement.
+            dispatchStop(main, writeTranscript(3 + i), sub);
+        }
+
+        const log = events(main);
+        expect(log.filter((e) => e['event'] === 'halt-stall').length).toBe(0);
+        const opens = log.filter((e) => e['event'] === 'engage').map((e) => e['open']);
+        expect(opens).toEqual([3, 2, 1]);
     });
 
     it('records the provenance on a non-engage event too — the defer branch', () => {

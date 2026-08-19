@@ -458,17 +458,26 @@ function readState(file: string): RunState | null {
  * check `git_common_dir !== ''` before applying either relation.
  *
  * `session_cwd` exists for the same reason, and it is a fact rather than an
- * assertion. `session_checkout` degrades to `workspace_root` on any of its three
- * guard failures, and one of them is ordinary: a session started from a
- * SUBDIRECTORY of a worktree (`cd <worktree>/src && claude`) fails the
- * checkout-root condition, so `session_root` collapses onto the reader's root
- * and BOTH discriminators above read FALSE for a genuine two-tree run — the
- * round-1 false negative, re-entering through the degradation path. Round 2
- * finding 1 measured it. Carrying the raw `cwd` makes that case distinguishable
- * from a real same-tree run: `session_cwd` is then a path that is neither
+ * assertion. `session_checkout` degrades to `workspace_root` when its guards
+ * fail, and the raw `cwd` is what makes a degraded line distinguishable from a
+ * genuine same-tree one: `session_cwd` is then a path that is neither
  * `session_root` nor under it, which no healthy resolution produces. A boolean
  * `resolved: false` would have been the system under observation asserting its
  * own health; the raw path is checkable.
+ *
+ * **The degradation this field was introduced for is gone, and the field stayed.**
+ * Round 2 added it because a session started from a SUBDIRECTORY of a worktree
+ * failed the resolver's checkout-root condition and collapsed onto the reader's
+ * root. Round 3 finding 2 then showed the field was BLIND to exactly that case in
+ * the layout it mattered in: with the worktree nested under the parent, the
+ * collapsed root, both git fields AND the raw cwd all read healthy same-tree.
+ * The fix was upstream — `session_checkout` now walks up to the nearest enclosing
+ * checkout root — so a subdirectory is no longer a degradation at all.
+ *
+ * What remains, and what the field is now for: a cwd inside a DIFFERENT
+ * repository, a cwd that does not exist, a cwd under no checkout root at all.
+ * Those still fall back, and on those lines `session_cwd` is still the only
+ * thing that says so. Two cases pin both directions.
  *
  * ## Both git fields come from `session_root`, not from `workspace_root`
  *
@@ -557,6 +566,22 @@ export function provenance(
     };
 }
 
+/**
+ * The roadmap file this run is executing: the session's copy when it exists,
+ * otherwise the reader's.
+ *
+ * `existsSync` rather than a try/read, because the fallback has to be chosen
+ * before the read in order to keep the "no readable roadmap" branch meaning what
+ * it says — a claim naming a roadmap that exists in NEITHER tree, rather than one
+ * that merely has not been created in the session's tree yet.
+ */
+function resolveRoadmap(sessionRoot: string, workspaceRoot: string, slug: string): string {
+    const rel = path.join('agents', 'roadmaps', `${slug}.md`);
+    const mine = path.join(sessionRoot, rel);
+    if (sessionRoot !== workspaceRoot && fs.existsSync(mine)) return mine;
+    return path.join(workspaceRoot, rel);
+}
+
 function appendEvent(workspaceRoot: string, record: JsonObject): void {
     try {
         const file = path.join(workspaceRoot, EVENTS_RELPATH);
@@ -613,7 +638,36 @@ export function main(): number {
     if (claim === null) return EXIT_ALLOW;
     const slug = claim.slug;
 
-    const roadmapPath = path.join(workspaceRoot, 'agents', 'roadmaps', `${slug}.md`);
+    // ── which tree's roadmap is the run ──────────────────────────────
+    //
+    // The SESSION's own checkout, falling back to the reader's root. In a plain
+    // checkout the two are the same path and nothing about this changes; only
+    // the two-tree case moves.
+    //
+    // R2 round 3 finding 1: this read the READER's tree unconditionally, and the
+    // count it produces feeds the stall detector. In a worktree session the agent
+    // flips checkboxes in the worktree copy while the parent copy does not move
+    // until a merge — so the detector watched a file nobody was editing, the
+    // count never changed, and after three engagements it emitted `halt-stall`
+    // and declared a working run finished. The mechanism whose job is to detect a
+    // stall was manufacturing one, which is the failure this file's own header
+    // warns about in the abstract.
+    //
+    // AI council 2026-08-19, 2/2 convergent: resolve against the session
+    // checkout, keep the fallback. Both seats also flagged, independently, that
+    // `execution.mode` and the open-step count need not share an authority —
+    // progress is inherently session-local while a mode could be read as
+    // repo-wide policy. That choice is made HERE and stated rather than left
+    // implicit: BOTH come from the session's file, because the session is
+    // executing the file in its own tree and the parent's copy is simply an older
+    // revision of the same document. A genuinely repo-wide mode policy would need
+    // its own precedence rule, and inventing one on this evidence would be
+    // designing for a case nobody has met.
+    const sessionRoot = session_checkout(
+        workspaceRoot,
+        str(payload['cwd'] as JsonValue | undefined),
+    );
+    const roadmapPath = resolveRoadmap(sessionRoot, workspaceRoot, slug);
     let roadmapText: string;
     try {
         roadmapText = fs.readFileSync(roadmapPath, 'utf8');
@@ -658,25 +712,22 @@ export function main(): number {
     // The two-tree provenance, carried on every event this run emits. See
     // `provenance()` for the six fields and why none of them is a boolean.
     //
-    // Position is deliberate and was moved twice. Round 1 finding 6 moved it
-    // below the execution-mode gate, because a session holding a claim on a
-    // `phase-checkpoints` roadmap makes this concern a no-op and was paying the
-    // resolution on every stop fire for a discarded value. Round 2 finding 6
-    // then observed the same argument applied only half way: three transcript
-    // early-returns still sat below it, so an autonomous session whose
-    // transcript is over `TRANSCRIPT_READ_MAX_BYTES` kept paying it for
-    // nothing. It now sits below every one of those.
+    // Position, and what changed about the cost argument. Rounds 1 and 2 pushed
+    // this call downward to stop a `phase-checkpoints` session, and then a
+    // session with an over-cap transcript, from paying the git resolution for a
+    // value the next line discarded.
     //
-    // It is NOT true that nothing below writes no line, and round 3 finding 5
-    // caught the previous comment claiming exactly that. Two branches below
-    // still return without an `appendEvent`: the duplicate-stop-fire guard and
-    // the failed-state-write path. Duplicate fires are routine for this
-    // concern, so the resolution is genuinely paid on a no-line path. That is
-    // stated rather than fixed, because the remaining fix is to thread the value
-    // lazily through five call sites to save four syscalls on a path that has
-    // already read a roadmap file and a transcript tail — and an over-claiming
-    // comment is the worse defect of the two, since it is the thing a later
-    // reader would trust.
+    // Round 3 finding 1 made half of that moot: the session root is now needed
+    // ABOVE the mode gate, because it decides which tree's roadmap the mode is
+    // read from. So the resolution happens early by necessity and this call
+    // merely reuses it — the double resolution round 2 finding 5 accepted is
+    // gone as a side effect, and nothing here re-derives it.
+    //
+    // What remains true, and round 3 finding 5 was right to catch the previous
+    // comment claiming otherwise: two branches below still return without an
+    // `appendEvent` — the duplicate-stop-fire guard and the failed-state-write
+    // path — so this is not a position where every path writes a line. It is
+    // simply the cheapest honest one now that the value is already in hand.
     //
     // The git resolution here duplicates the one `session_checkout` does to
     // validate the cwd, and that duplication is ACCEPTED rather than removed
@@ -685,12 +736,11 @@ export function main(): number {
     // roadmap file and a transcript tail. The two resolutions also answer
     // different questions — the guard asks whether the cwd belongs to this
     // repository, this asks what the session's own tree is.
-    const sessionCwd = str(payload['cwd'] as JsonValue | undefined);
     const roots = provenance(
         workspaceRoot,
         claim.path,
-        session_checkout(workspaceRoot, sessionCwd),
-        sessionCwd,
+        sessionRoot,
+        str(payload['cwd'] as JsonValue | undefined),
     );
 
     // ── defer to the quality gate ────────────────────────────────────
