@@ -6,10 +6,10 @@
 
 ## Overall
 
-**277 / 523 steps done · 53%**
+**279 / 522 steps done · 53%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   54%
+█████████████████████░░░░░░░░░░░░░░░░░░░   53%
 ```
 
 ## Open roadmaps
@@ -37,7 +37,7 @@
 | 19 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
 | 20 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
 | 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
-| 22 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 1 | 3 | 0 | 0 | [1](#blockers-road-to-run-continuation-observation) | ████████░░ 75% |
+| 22 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 1 | 2 | 1 | 0 | [1](#blockers-road-to-run-continuation-observation) | ███████░░░ 67% |
 | 23 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 24 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
 | 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
@@ -761,11 +761,11 @@ _1 blocker resolved._
 
 ### [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md)
 
-**Road to a run-continuation engagement anybody can point at** — 3 / 4 done (75%)
+**Road to a run-continuation engagement anybody can point at** — 2 / 3 done (67%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Observe one engagement | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+| 0 | Observe one engagement | 🟡 in progress | 1 | 2 | 1 | 0 | 67% |
 
 <a id="blockers-road-to-run-continuation-observation"></a>
 **Blockers**

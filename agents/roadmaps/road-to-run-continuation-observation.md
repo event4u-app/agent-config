@@ -97,9 +97,13 @@ engages and leaves the event behind.
      validity is that of a production smoke probe, not of ordinary
      autonomous work.
   2. *The provenance fields are test-verified, not self-verified.* The
-     same change adds `workspace_root` / `git_dir` / `git_common_dir` /
-     `claim_path` to every event, so a future line carries the two-tree
-     fact itself instead of needing this table. This event does not
+     same change adds `workspace_root` / `session_root` / `git_dir` /
+     `git_common_dir` / `claim_path` to every event, so a future line
+     carries the two-tree fact itself instead of needing this table.
+     `session_root` is the field R2 finding 1 added after the fact: the
+     first version derived both git fields from the READER's root, where
+     they are equal in exactly the arrangement documented above, so the
+     enrichment could not express the property it was built for. This event does not
      carry them: the live hook is the parent checkout's `dist/` build,
      and the enrichment was built in the worktree. Verified by
      `tests/hooks/run_continuation_dispatch.test.ts` over a real
@@ -128,19 +132,36 @@ engages and leaves the event behind.
 - [x] `run-continuation.jsonl` holds at least one `engage` event from a
       worktree-started run, with the run id recorded here.
       Run id `12653f90d7cb4243821392afd5d8c4db`, recorded in step 0.0.
-- [x] The AUTONOMY AXIS in `interruption_report` reports a non-zero
+- [~] The AUTONOMY AXIS in `interruption_report` reports a non-zero
       median re-engagement count for at least one run.
-      **Closed on the per-run reading, and the criterion's own wording is
-      inconsistent — stated rather than quietly reinterpreted.** A median
-      is taken *across* runs, so "median … for at least one run" cannot
-      be satisfied as literally written by any number of runs. The
-      per-run breakdown is what the qualifier points at, and it reports
+      **Satisfied on the per-run reading, unsatisfiable on the aggregate
+      one, and therefore DEFERRED rather than closed.** A median is taken
+      *across* runs, so "median … for at least one run" cannot be
+      satisfied as literally written by any number of runs. The per-run
+      breakdown is what the qualifier points at, and it reports
       `12653f90d7cb4243  … re=1` — non-zero for exactly one run, as
       asked. The aggregate `median re-engagements:` stays **0**, and will
       until a majority of the window's runs engage (13 of 24 today); that
-      is a property of the statistic, not a gap in the evidence. Anyone
-      reading the criterion the aggregate way should reopen this box
-      rather than treat the two readings as settled.
+      is a property of the statistic, not a gap in the evidence.
+
+      **Reopened 2026-08-19 on R2 finding 5, and the glyph is the whole
+      point.** The previous revision ended "anyone reading the criterion
+      the aggregate way should reopen this box" — and then marked the box
+      `[x]`, which is the one glyph that makes that instruction
+      unreachable. `[x]` counts as done, so once step 0.1 closes the
+      archival sweep would have seen `count_open == 0` **and**
+      `count_deferred == 0` and archived this roadmap over a criterion the
+      roadmap itself flags as unresolved: the silent-archive-of-open-work
+      case Iron Law 3 of `roadmap-progress-sync` exists to catch, routed
+      around by glyph choice rather than by argument. `[~]` routes it
+      through the deferred-resolution gate instead, where the two readings
+      are decided by someone rather than left "settled" by a checkbox.
+
+      **What closes it:** either a window in which a majority of runs
+      engage, so the aggregate median is non-zero on the criterion's
+      literal wording — or a deliberate re-wording of the criterion to the
+      per-run reading, which is a decision about what was being measured
+      and not a re-measurement.
 
 ## Blockers
 
