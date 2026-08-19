@@ -58,11 +58,35 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const TYPES = ['rules', 'skills', 'commands', 'agents'] as const;
 type ArtefactType = (typeof TYPES)[number];
 
+/**
+ * What a layer's entries physically ARE — symlinks, directories, or regular files.
+ *
+ * R2 finding 2: without this, name-equality was reported as "delivered twice" for
+ * two layers holding entirely different payload shapes. Measured on this repo:
+ * project `.claude/commands/` is **40 directories** of symlinks into
+ * `src/domains/**` while global `.claude/commands/` is **52 regular files**. Those
+ * 40 shared names are not 40 duplicated artefacts in the sense the rules row means,
+ * and a check that prints one number for both teaches the reader they are.
+ */
+export interface LayerShape {
+    symlinks: number;
+    dirs: number;
+    files: number;
+}
+
 export interface TypeReading {
     type: ArtefactType;
     /** null when that layer's directory does not exist — distinct from empty. */
     globalNames: string[] | null;
     projectNames: string[] | null;
+    globalShape: LayerShape | null;
+    projectShape: LayerShape | null;
+    /**
+     * True when the two layers' dominant entry shape differs, so a shared NAME is
+     * not evidence of a shared artefact. The overlap is still reported — it is
+     * still a delivery collision — but it is labelled, never summed with the rest.
+     */
+    shapeMismatch: boolean;
     both: string[];
     globalOnly: string[];
     projectOnly: string[];
@@ -70,17 +94,38 @@ export interface TypeReading {
     scopeDefeat: string[];
 }
 
-function readNames(dir: string): string[] | null {
+function dominant(s: LayerShape): 'symlink' | 'dir' | 'file' | 'empty' {
+    const max = Math.max(s.symlinks, s.dirs, s.files);
+    if (max === 0) return 'empty';
+    if (s.symlinks === max) return 'symlink';
+    if (s.dirs === max) return 'dir';
+    return 'file';
+}
+
+interface LayerReading {
+    names: string[];
+    shape: LayerShape;
+}
+
+function readLayer(dir: string): LayerReading | null {
+    let entries: fs.Dirent[];
     try {
         if (!fs.statSync(dir).isDirectory()) return null;
+        entries = fs.readdirSync(dir, { withFileTypes: true });
     } catch {
         return null;
     }
-    try {
-        return fs.readdirSync(dir).sort();
-    } catch {
-        return null;
+    const shape: LayerShape = { symlinks: 0, dirs: 0, files: 0 };
+    for (const e of entries) {
+        // isSymbolicLink() is checked FIRST and deliberately: readdir with
+        // withFileTypes does not follow links, but a reader who tested isDirectory
+        // first would classify a symlink-to-directory as a directory and lose the
+        // distinction this whole field exists for.
+        if (e.isSymbolicLink()) shape.symlinks += 1;
+        else if (e.isDirectory()) shape.dirs += 1;
+        else shape.files += 1;
     }
+    return { names: entries.map((e) => e.name).sort(), shape };
 }
 
 /**
@@ -106,8 +151,14 @@ export function declaresPaths(file: string): boolean {
 export function readType(type: ArtefactType, globalRoot: string, projectRoot: string): TypeReading {
     const gDir = path.join(globalRoot, type);
     const pDir = path.join(projectRoot, type);
-    const globalNames = readNames(gDir);
-    const projectNames = readNames(pDir);
+    const gLayer = readLayer(gDir);
+    const pLayer = readLayer(pDir);
+    const globalNames = gLayer?.names ?? null;
+    const projectNames = pLayer?.names ?? null;
+    const globalShape = gLayer?.shape ?? null;
+    const projectShape = pLayer?.shape ?? null;
+    const shapeMismatch =
+        gLayer !== null && pLayer !== null && dominant(gLayer.shape) !== dominant(pLayer.shape);
     const g = new Set(globalNames ?? []);
     const p = new Set(projectNames ?? []);
 
@@ -128,13 +179,33 @@ export function readType(type: ArtefactType, globalRoot: string, projectRoot: st
                   .sort()
             : [];
 
-    return { type, globalNames, projectNames, both, globalOnly, projectOnly, scopeDefeat };
+    return {
+        type,
+        globalNames,
+        projectNames,
+        globalShape,
+        projectShape,
+        shapeMismatch,
+        both,
+        globalOnly,
+        projectOnly,
+        scopeDefeat,
+    };
 }
 
 export interface Verdict {
     readings: TypeReading[];
-    /** Total names delivered twice, across every type. */
+    /**
+     * Shared names in types where BOTH layers hold the same dominant shape — the
+     * number that means "this artefact is delivered twice".
+     */
     duplicated: number;
+    /**
+     * Shared names in types whose layers hold DIFFERENT shapes. Still a delivery
+     * collision on the same name, but not the same claim, so it is reported on its
+     * own line and never summed into `duplicated` (R2 finding 2).
+     */
+    nameOverlapDifferentShape: number;
     /** Shared rules whose copies disagree on `paths:`. */
     defeated: number;
     /** Types where at least one layer's directory is missing. */
@@ -172,7 +243,11 @@ export function evaluate(globalRoot: string, projectRoot: string): Verdict {
     }
     return {
         readings,
-        duplicated: readings.reduce((n, r) => n + r.both.length, 0),
+        duplicated: readings.reduce((n, r) => n + (r.shapeMismatch ? 0 : r.both.length), 0),
+        nameOverlapDifferentShape: readings.reduce(
+            (n, r) => n + (r.shapeMismatch ? r.both.length : 0),
+            0,
+        ),
         defeated: readings.reduce((n, r) => n + r.scopeDefeat.length, 0),
         absent,
         typesCompared: compared,
@@ -190,6 +265,8 @@ export function render(v: Verdict, globalRoot: string, projectRoot: string): str
     out.push(`  global:  ${globalRoot}`);
     out.push(`  project: ${projectRoot}`);
     out.push('');
+    const shapeOf = (s: LayerShape | null): string =>
+        s === null ? 'absent' : `${dominant(s)} (l${s.symlinks}/d${s.dirs}/f${s.files})`;
     for (const r of v.readings) {
         const g = r.globalNames === null ? 'absent' : String(r.globalNames.length);
         const p = r.projectNames === null ? 'absent' : String(r.projectNames.length);
@@ -199,6 +276,25 @@ export function render(v: Verdict, globalRoot: string, projectRoot: string): str
                 ` · global-only ${String(r.globalOnly.length).padStart(4)}` +
                 ` · project-only ${String(r.projectOnly.length).padStart(4)}`,
         );
+        out.push(`             shape: global ${shapeOf(r.globalShape)} · project ${shapeOf(r.projectShape)}`);
+        if (r.shapeMismatch && r.both.length > 0) {
+            out.push(
+                `             ⚠️  SHAPE MISMATCH — this check cannot establish that the` +
+                    ` ${r.both.length} shared name(s) are the same artefact.`,
+            );
+            out.push(
+                '             It does not establish that they differ either: a project symlink into' +
+                    ' dist/ and a real',
+            );
+            out.push(
+                '             directory installed globally can hold identical content reached two' +
+                    ' ways. Counted on its own',
+            );
+            out.push(
+                '             line rather than as duplication, because only the same-shape rows' +
+                    ' support that claim.',
+            );
+        }
         if (r.scopeDefeat.length > 0) {
             out.push(
                 `             scope defeat: ${r.scopeDefeat.length} shared rule(s) where one copy` +
@@ -217,7 +313,9 @@ export function render(v: Verdict, globalRoot: string, projectRoot: string): str
     }
     out.push('');
     out.push(
-        `check_single_delivery ledger: duplicated=${v.duplicated} scope_defeat=${v.defeated}` +
+        `check_single_delivery ledger: duplicated=${v.duplicated}` +
+            ` name_overlap_different_shape=${v.nameOverlapDifferentShape}` +
+            ` scope_defeat=${v.defeated}` +
             ` types_compared=${v.typesCompared} of ${v.readings.length}` +
             ` names_read=${v.namesRead}`,
     );
@@ -256,8 +354,17 @@ export function main(argv?: readonly string[]): number {
                     '--enforce exits 1 on any overlap, and is what to register once Phase 2 lands.\n',
             );
             return 0;
-        } else if (a !== undefined && a.startsWith('--')) {
-            process.stderr.write(`check_single_delivery: unknown flag ${a}\n`);
+        } else if (a !== undefined) {
+            // R2 finding: this used to reject only `--`-prefixed tokens, so
+            // `-enforce` (one dash) and a bare positional both fell through
+            // SILENTLY — the gate then reported without enforcing while the caller
+            // believed it had asked for enforcement. A typo that turns a blocking
+            // gate advisory is worse than a crash, so anything unrecognised is an
+            // error, dash or not.
+            process.stderr.write(
+                `check_single_delivery: unexpected argument ${a}` +
+                    ' (did you mean --enforce, --global DIR or --project DIR?)\n',
+            );
             return 1;
         }
     }
@@ -275,23 +382,31 @@ export function main(argv?: readonly string[]): number {
     // a Node stack trace, which is the correct exit code wearing an unusable
     // message. The error carries the gate name and the roots, so printing it plus
     // the repoint hint gives the reader what the trace was burying.
-    try {
-        reportScanned({
-            gate: 'check_single_delivery',
-            scanned: v.namesRead,
-            units: 'artefact name(s) across both layers',
-            roots: [globalRoot, projectRoot],
-        });
-    } catch (err) {
-        process.stdout.write(
-            // No gate-name prefix here: the DeadScopeError message already opens
-            // with it, and prefixing printed it twice.
-            `❌  ${err instanceof Error ? err.message : String(err)}\n` +
-                '    Neither layer holds any artefact, so nothing was read. This is NOT a pass —\n' +
-                '    repoint with --global/--project, or check that the install and the projection ran.\n',
-        );
-        return 1;
-    }
+    reportScanned({
+        gate: 'check_single_delivery',
+        scanned: v.namesRead,
+        units: 'artefact name(s) across both layers',
+        roots: [globalRoot, projectRoot],
+        // R2 finding 1: without this reason the gate returned 1 UNCONDITIONALLY
+        // wherever it is meant to be bound. `.claude/` is gitignored and no CI leg
+        // installs at user scope, so `namesRead` is 0 there, the DeadScopeError
+        // fired before both the `readNothing` branch and `--enforce`, and the
+        // gate contradicted its own `--help` ("Reports by default and exits 0").
+        //
+        // OPTIONAL_SURFACE is the correct one of the three prefixes: these two
+        // directories are an INSTALL-TIME surface, not a corpus this repo owns.
+        // Applying the doc's operational test — if the scan root were deleted,
+        // would the reason still make sense? — yes: no layers installed means
+        // there is no delivery to duplicate, which is a true answer rather than
+        // blindness. The blindness case is narrower and is still refused below:
+        // layers that exist but never pair up (`readNothing`).
+        allowEmpty:
+            'OPTIONAL_SURFACE: both host layers are install-time surfaces, absent by' +
+            ' construction in CI (.claude/ is gitignored) and on any machine that has' +
+            ' not installed. Zero names means nothing is delivered, so nothing can be' +
+            ' delivered twice — a true verdict, not a dead scope. The unverifiable' +
+            ' case (layers present but never paired) is refused separately.',
+    });
 
     if (v.readNothing) {
         // Never a pass. A gate that compared nothing has not verified anything,
@@ -304,14 +419,23 @@ export function main(argv?: readonly string[]): number {
         return enforce ? 1 : 0;
     }
 
-    if (v.duplicated === 0 && v.defeated === 0) {
+    if (v.duplicated === 0 && v.defeated === 0 && v.nameOverlapDifferentShape === 0) {
         process.stdout.write('✅  check_single_delivery: one artefact, one layer — no overlap.\n');
         return 0;
     }
 
-    const detail =
-        `${v.duplicated} name(s) delivered twice` +
-        (v.defeated > 0 ? `, and ${v.defeated} shared rule(s) with defeated \`paths:\` scoping` : '');
+    const parts: string[] = [];
+    if (v.duplicated > 0) parts.push(`${v.duplicated} artefact(s) delivered twice`);
+    if (v.nameOverlapDifferentShape > 0) {
+        parts.push(
+            `${v.nameOverlapDifferentShape} name collision(s) across layers of DIFFERENT shape` +
+                ' (a delivery collision, not a duplicated artefact)',
+        );
+    }
+    if (v.defeated > 0) {
+        parts.push(`${v.defeated} shared rule(s) with defeated \`paths:\` scoping`);
+    }
+    const detail = parts.join(', and ');
     if (enforce) {
         process.stdout.write(`❌  check_single_delivery: ${detail}. Invariant ADR-235 violated.\n`);
         return 1;

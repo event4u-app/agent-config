@@ -30,9 +30,24 @@ reasoning — see § What ADR-226 got right.
 
 ## Context
 
-Claude Code loads `~/.claude/**` **and** `<project>/.claude/**`, both, user layer
-first, with no dedup. Measured 2026-08-19 on a **freshly regenerated** projection
-at `b490f3845` (full census, with its mandatory projection-shape field, in
+Claude Code loads `~/.claude/rules/` **and** `<project>/.claude/rules/`, both, user
+layer first, with no dedup.
+
+**That premise is established for RULES and only for rules, and the distinction
+survived R2 review rather than being smoothed over.** The tree's one first-party
+loading observation
+([`claude-code-rules-dir-contract.md:23-29`](../../agents/evidence/analysis/claude-code-rules-dir-contract.md))
+records a session carrying `downstream-changes`, `verify-before-complete`,
+`scope-control` and `commit-policy` in **two copies each**, one attributed to each
+layer. Nothing comparable exists for **skills** or **commands**: their layers hold
+different payload shapes (project symlinks into `dist/`, global real
+directories/files), so a shared name there is a delivery collision whose payload
+equivalence is **unverified**. This record therefore rests on the rules half; the
+partition is applied to the other types because one-artefact-one-layer is the right
+topology regardless, not because their doubling was measured.
+
+Measured 2026-08-19 on a **freshly regenerated** projection at `b490f3845` (full
+census, with its per-type projection-shape field, in
 [`single-delivery-partition-census.md`](../../agents/evidence/analysis/single-delivery-partition-census.md)):
 
 ```
@@ -125,7 +140,10 @@ is recorded here because the number circulated in three parallel analyses.
   It stays the right tool for a consumer who ends up with two installs.
 - **The invariant needs a machine check, and the precedent here is bad.**
   `check_standing_rule_delivery` measures this exact defect and is registered only
-  in `ci-fast`, which no workflow invokes; `check_rule_projection_integrity` is
+  in `taskfiles/dev.yml:136` — NOT in `ci-fast`, as an earlier revision of this
+  record and its roadmap both claimed; corrected on R2 review, and `dev.yml`
+  documents it as a local reading on purpose rather than as an orphan;
+  `check_rule_projection_integrity` is
   inert when `agents/.agent-tools.yml` selects zero tools, which is the
   maintainer's normal local state. A third unbound gate would read as coverage
   while adding none, so the binding surface is an explicit decision in

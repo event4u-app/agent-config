@@ -7,13 +7,26 @@
 ## REQUIRED FIELD — the projection shape this census was taken on
 
 ```
-projection:            EMITTED REAL FILES (post-PR-#1231)
-project rule files:    111 real files, 0 symlinks
-of those carrying paths:  8
 regenerated with:      task sync && task generate-tools
-worktree HEAD:         b490f3845
+worktree HEAD:         b490f3845 (later re-verified after a merge of origin/main)
 host:                  claude, macOS, single machine
+
+PER TYPE, PER LAYER — dominant shape (symlinks / dirs / files):
+  rules     global  file    (l0   / d0   / f115)   project  file    (l0   / d0   / f111)
+  skills    global  dir     (l0   / d298 / f0)     project  symlink (l290 / d48  / f0)
+  commands  global  file    (l0   / d41  / f52)    project  dir     (l0   / d40  / f0)
+  agents    global  absent                          project  file    (l0   / d0   / f1)
+
+project rule files:       111 real files, 0 symlinks  (post-PR-#1231 emitted shape)
+of those carrying paths:  8
 ```
+
+**Corrected after R2 review — the field used to cover RULES ONLY.** It declared
+`EMITTED REAL FILES … 0 symlinks` and stopped there, while skills are **290
+symlinks** into `dist/agent-src/skills/` and commands **40 directories** against
+52 global files. So this artefact's two largest rows sat outside the very field it
+calls the point of the artefact. That is the same failure the field exists to
+prevent, committed by the field itself.
 
 **This field is mandatory and it is the point of the artefact.** Its absence is
 what produced two refuted drafts (§ The refutation). A census of these two layers
@@ -42,14 +55,31 @@ ls ~/.claude/<type> | sort > g ; ls .claude/<type> | sort > p ; comm -12 g p
 | commands | 93 | 40 | 53 | 0 | **40** |
 | agents | 0 | 1 | 0 | 1 | 0 |
 
-**Total delivered twice: 440 names.** The commands row is a **correction to this
-artefact's first version**, and it is worth stating how it was wrong: the first
-reading was taken in the stale main checkout, where no commands were projected at
-all, so the row read `93 / 0 / 0` and commands looked clean. `check_single_delivery`
-— written afterwards for Phase 4, against a freshly regenerated worktree — reported
-40 in both on its very first run. So a third artefact type was duplicated and three
-of the four inbox drafts plus the first version of this census all missed it, for
-the same reason the rules figures were wrong: the projection shape.
+**CONFIRMED delivered twice: 110 — the rules row, and only that row.** The other
+330 shared names are **name collisions across layers of different shape**, which is
+a weaker claim, and conflating the two is a defect this artefact committed twice
+before getting it right:
+
+| | shared names | both layers same shape? | claim supported |
+|---|---:|---|---|
+| rules | 110 | yes — file vs file | **delivered twice** |
+| skills | 290 | no — global dirs vs project symlinks into `dist/` | name collision; payload equivalence **unverified** |
+| commands | 40 | no — global files vs project dirs | name collision; payload equivalence **unverified** |
+
+**A shape mismatch establishes neither identity nor difference.** A project symlink
+into `dist/agent-src/skills/` and a real directory installed globally can hold
+byte-identical content reached two ways — which is the likely case for skills — and
+nothing in this census measures it. So `290 duplicated skills` is withdrawn as a
+*measured* figure and stands only as a name-collision count.
+
+**Two corrections, recorded rather than quietly folded in.** The first version of
+this table read `commands 93 / 0 / 0` — clean — because that reading was taken in
+the stale main checkout where no commands were projected. `check_single_delivery`
+reported 40 in both on its first run against a fresh worktree. Its **second**
+version then published `Total delivered twice: 440`, summing three rows whose
+claims are not the same; the R2 reviewer caught that, and the split above is the
+repair. The pattern in both is identical to the one this artefact's projection-shape
+field exists to stop: a number that is arithmetically fine and semantically wrong.
 
 `agents` is the one type with a genuinely absent layer (`~/.claude/agents` does not
 exist), which is reported as `absent` rather than as `0` — the two are different
@@ -130,11 +160,14 @@ decides the layer:
 | rules (117 in `src/rules/`) | **16** | 101 |
 | skills (290 in `src/skills/`) | **0** | 290 |
 
-The 16: `augment-edit-discipline`, `domain-adoption-policy`,
+The 16, **enumerated in full** — an earlier version wrote "plus two more", which
+left AC-3's target set unenumerated anywhere in the tree:
+`augment-edit-discipline`, `domain-adoption-policy`,
 `framework-neutrality-in-generic-skills`, `low-impact-corpus-privacy-floor`,
 `no-roadmap-references`, `package-ci-checks`, `persona-governance`,
 `preservation-guard`, `rule-type-governance`, `size-enforcement`, `skill-quality`,
-`source-confidentiality`, `source-of-truth`, `telegraph-speak`, plus two more.
+`source-confidentiality`, `source-of-truth`, `telegraph-speak`,
+`token-budget-discipline`, `token-optimizer-maintenance`.
 
 **Zero package-only skills is a finding, not a parse failure.** It means the
 project layer's `.claude/skills/` can be empty and all 290 duplicate catalogue

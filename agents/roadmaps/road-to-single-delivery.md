@@ -14,9 +14,14 @@ estate_offset_exempt: "adopted from a four-draft inbox reconciliation (agents/tm
 > this repository, is superseded rather than worked around.
 
 > Measured 2026-08-19 on a **freshly regenerated** projection at `b490f3845`:
-> **110 rules** and **290 skills** currently arrive twice; standing rule prose is
-> **203,873 tok against a 110,000 cap (185.3 %)**; and for 7 rules the unscoped
-> global copy defeats the project copy's `paths:` scoping.
+> **110 rules** arrive twice — the one figure both layers' shapes support (file
+> against file). A further **290 skills and 40 commands** share a name across layers
+> of DIFFERENT shape (project symlinks into `dist/`, global real directories and
+> files), which is a delivery collision whose payload equivalence is **unverified**;
+> an earlier revision summed all three as "440 delivered twice" and R2 review
+> refused it. Standing rule prose is **203,873 tok against a 110,000 cap (185.3 %)**,
+> and for 7 rules the unscoped global copy defeats the project copy's `paths:`
+> scoping.
 
 > Source (consumed inbox): `agents/tmp.old/double-rules/` — four drafts and two
 > transcripts, reconciled here. See § Where this came from.
@@ -58,7 +63,9 @@ The 16: `augment-edit-discipline`, `domain-adoption-policy`,
 `framework-neutrality-in-generic-skills`, `low-impact-corpus-privacy-floor`,
 `no-roadmap-references`, `package-ci-checks`, `persona-governance`,
 `preservation-guard`, `rule-type-governance`, `size-enforcement`, `skill-quality`,
-`source-confidentiality`, `source-of-truth`, `telegraph-speak`, and two more.
+`source-confidentiality`, `source-of-truth`, `telegraph-speak`,
+`token-budget-discipline`, `token-optimizer-maintenance` — enumerated in full,
+because "and two more" left AC-3's target set unenumerated anywhere (R2 review).
 
 **Zero skills is not an error and is worth stating twice.** No skill in the tree
 declares `workspaces: [agent-config-maintainer]` alone, so under the partition
@@ -386,7 +393,7 @@ than reporting a clean invariant that does not hold.
 | 2 | Compaction survival is lost for four Iron-Law rules | product | Once the unscoped global twin is gone, the 4 remaining project-only `paths:`-carrying rules are path-scoped only, and ADR-227:79-80 records that path-scoped rules are not re-injected after `/compact` | The 4 are named, 5.1 is `[~]` behind a blocker so no run picks a direction silently, and the Honest null consequence names the documented-second-copy outcome | Phase 5 — The residue the partition does not resolve |
 | 3 | A census is taken on a stale projection and the design leans on it | product | This happened twice in the inbox that produced this roadmap: a 5-July symlink tree reported 24 global-only rules where a fresh tree reports 5 | Phase 0.1 makes projection shape a required artefact field, and the stale-vs-fresh table stays in this file rather than being deleted after the correction | Phase 0 — Pin the measurement so no fifth draft repeats the fourth's error |
 | 4 | ADR-226 is treated as merely refuted | product | Its secondary argument moved (0 prose-divergent on a fresh tree) while its primary one — `source-of-truth.md` project-only, structural generated-vs-installed divergence — was confirmed; a successor that claims the record was wrong would discard reasoning that is still correct | 1.1 requires the successor to state what changed as a topology DECISION, and the partition keeps `source-of-truth` in the project layer exactly where ADR-226 wanted it | Phase 1 — Replace ADR-226 |
-| 5 | A new check joins the set nothing invokes | implementation | `check_standing_rule_delivery` measures this defect, sits in `ci-fast` which no workflow runs, and has reported 185 % to nobody; `check_rule_projection_integrity` is inert with zero tools selected | 4.3 is blocked on an explicit binding decision rather than defaulted, and 0.2 records the second hole so it is not rediscovered as a surprise | Phase 4 — One producer-agnostic invariant check |
+| 5 | A new check joins the set nothing invokes | implementation | `check_standing_rule_delivery` measures this defect and is registered in `taskfiles/dev.yml:136` — an earlier revision of this row said `ci-fast`, which is wrong against the tree and was corrected on R2 review; `dev.yml` documents it as a deliberate local reading, so it is a weaker precedent than claimed but still one nobody runs; `check_rule_projection_integrity` is inert with zero tools selected | 4.3 is blocked on an explicit binding decision rather than defaulted, and 0.2 records the second hole so it is not rediscovered as a surprise | Phase 4 — One producer-agnostic invariant check |
 | 6 | A checkout without a current global layer is left under-governed | product | The partition delivers all but 16 rules and all 290 skills from the global layer alone, so a fresh clone, a CI runner or a colleague who never ran the installer would drop from 111 rules and 338 skills to 16 and 0 — silently. This is the risk that HALTED Phase 2: it was not in the phase when it was written, and it was found by implementing it | Phase 2.0 makes the precondition an explicit step, blocker `partition-requires-global-layer` reserves the fallback choice, and the recommendation makes the partition conditional on a machine holding both layers so omission cannot cost governance | Phase 2 — Make the producers write disjoint layers |
 | 7 | The projector change reds a wide set of generated-output gates | implementation | Changing what the project layer emits moves counts, byte-stability baselines and projection-integrity readings at once, which is the classic multi-gate cascade | 2.1 is one predicate beside an existing filter rather than a restructure, 2.3 re-measures immediately, and the phase order puts the measurement and the ADR before the mechanism so a halt leaves a coherent partial state | Phase 2 — Make the producers write disjoint layers |
 
