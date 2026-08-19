@@ -59,8 +59,27 @@ import {
 
 let tmp: string;
 
+/**
+ * `git` against a fixture tree with the ambient repository pointers AND the
+ * ambient config stripped.
+ *
+ * Round 4 finding 6: the sibling fixture helper in
+ * `tests/hooks/run_continuation_dispatch.test.ts` was hardened on both axes and
+ * this one was not, while the same change added a `git worktree add` case here.
+ * With `GIT_DIR` exported — the suite run from inside a git hook — `make_repo`s
+ * `git config user.email` writes the REAL repository local config instead of the
+ * fixture one, and a global `commit.gpgsign` with no available key reds the
+ * fixture commit for a reason unrelated to anything under test.
+ */
 function git(cwd: string, ...args: string[]): string {
-    return execFileSync('git', args, { cwd, encoding: 'utf-8' }).trim();
+    const env = { ...process.env };
+    delete env['GIT_DIR'];
+    delete env['GIT_WORK_TREE'];
+    delete env['GIT_INDEX_FILE'];
+    delete env['GIT_COMMON_DIR'];
+    env['GIT_CONFIG_GLOBAL'] = '/dev/null';
+    env['GIT_CONFIG_SYSTEM'] = '/dev/null';
+    return execFileSync('git', args, { cwd, encoding: 'utf-8', env }).trim();
 }
 
 /** A repo with a linked worktree — the shape the whole design rests on. */
@@ -505,6 +524,27 @@ describe('a stale slug is not a claim', () => {
         expect(claim_is_stale(main, 'road-to-open.md')).toBe(false);
     });
 
+    it('a legal slug containing a double dot is live, not stale', () => {
+        // Round 6 finding 3. Round 5 finding 10 replaced the `..` substring test with
+        // a structural check in `resolveRoadmap` and NOT here, so the two functions
+        // disagreed about one claim string in the opposite direction: this side
+        // called a live claim stale — dropping it from the collision set and
+        // disabling the duplicate-work warning — while the hook resolved it and
+        // engaged on it. Round 5's own new case pinned that green because it only
+        // exercised the hook side, which is the argument for pinning both.
+        const { main } = make_repo();
+        fs.mkdirSync(path.join(main, 'agents', 'roadmaps'), { recursive: true });
+        fs.writeFileSync(path.join(main, 'agents', 'roadmaps', 'road-to-a..b.md'), '#');
+        expect(claim_is_stale(main, 'road-to-a..b')).toBe(false);
+    });
+
+    it('a slug that would escape the roadmaps directory still reads as stale', () => {
+        // The direction the structural check must NOT loosen.
+        const { main } = make_repo();
+        expect(claim_is_stale(main, '../../etc/passwd')).toBe(true);
+        expect(claim_is_stale(main, '/etc/passwd')).toBe(true);
+    });
+
     it('null is not stale — absence is a state, not a defect', () => {
         const { main } = make_repo();
         expect(claim_is_stale(main, null)).toBe(false);
@@ -834,19 +874,47 @@ describe('the record describes THIS session checkout, not the chdir target', () 
 
     it('falls back to workspace_root when the cwd is absent, empty, or not a directory', () => {
         const { main } = make_repo();
-        expect(session_checkout(main, null)).toBe(main);
-        expect(session_checkout(main, '   ')).toBe(main);
-        expect(session_checkout(main, path.join(main, 'nope'))).toBe(main);
+        // Canonical on the fallback branch too, which is round 4 finding 5:
+        // the resolve branch realpath-normalised and the fallbacks did not, so
+        // two sessions in one working tree stored different strings for it under a
+        // symlinked ancestor and the foreign-session block read them as separate
+        // trees. Asserted as the canonical form rather than as the raw input, so a
+        // regression back to the asymmetry reds here.
+        const canon = fs.realpathSync(main);
+        expect(session_checkout(main, null)).toBe(canon);
+        expect(session_checkout(main, '   ')).toBe(canon);
+        expect(session_checkout(main, path.join(main, 'nope'))).toBe(canon);
         const file = path.join(main, 'a-file');
         fs.writeFileSync(file, 'x');
-        expect(session_checkout(main, file)).toBe(main);
+        expect(session_checkout(main, file)).toBe(canon);
     });
 
-    it('refuses a cwd that is not a checkout root — git_dir does not walk up', () => {
+    it('walks up from a subdirectory to the nearest enclosing checkout root', () => {
+        // This case previously asserted the OPPOSITE — "refuses a cwd that is not
+        // a checkout root — git_dir does not walk up" — and it was testing wrong
+        // behaviour. R2 round 3 finding 2 measured what the refusal cost: with a
+        // worktree NESTED under the parent (this repository's own layout,
+        // `.claude/worktrees/<name>`), a session standing in a subdirectory
+        // resolved to the PARENT, and every downstream signal then reported a
+        // healthy same-tree run for a genuine two-tree one. A confidently wrong
+        // answer, not a loss of precision.
         const { main, wt } = make_repo();
-        const sub = path.join(wt, 'src');
+        const sub = path.join(wt, 'src', 'deeper');
         fs.mkdirSync(sub, { recursive: true });
-        expect(session_checkout(main, sub)).toBe(main);
+        expect(session_checkout(main, sub)).toBe(fs.realpathSync(wt));
+    });
+
+    it('walks up out of a NESTED worktree to the worktree, never to the parent', () => {
+        // The topology the finding was measured in, and the one the walk has to
+        // resolve in the narrow direction: the first enclosing checkout root wins,
+        // so the nested worktree is found before the checkout that contains it.
+        const { main } = make_repo();
+        const nested = path.join(main, '.claude', 'worktrees', 'wt-nested');
+        fs.mkdirSync(path.dirname(nested), { recursive: true });
+        git(main, 'worktree', 'add', '--quiet', '-b', 'nested-branch', nested);
+        const sub = path.join(nested, 'src');
+        fs.mkdirSync(sub, { recursive: true });
+        expect(session_checkout(main, sub)).toBe(fs.realpathSync(nested));
     });
 
     it('refuses a cwd in a DIFFERENT repository — the register is shared per repo', () => {
@@ -854,7 +922,7 @@ describe('the record describes THIS session checkout, not the chdir target', () 
         const other = path.join(tmp, 'other-repo');
         fs.mkdirSync(other, { recursive: true });
         git(other, 'init', '-q', '-b', 'main');
-        expect(session_checkout(main, other)).toBe(main);
+        expect(session_checkout(main, other)).toBe(fs.realpathSync(main));
     });
 });
 

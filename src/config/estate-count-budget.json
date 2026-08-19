@@ -16,9 +16,9 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 33,
+    "active_roadmaps": 34,
     "later_roadmaps": 49,
-    "open_blockers": 70
+    "open_blockers": 74
   },
   "baseline_history": [
     {
@@ -125,6 +125,13 @@
       "later_roadmaps": 49,
       "open_blockers": 71,
       "why": "WALKED DOWN by 1 active roadmap: road-to-inbox-harvest-2026-08-b-dispatch-safety archived, its last open step closed. Nothing was parked and nothing was created to absorb it, which is the check that this is a real termination rather than a burial wearing a tightening's clothes. The step it closed had been deferred on a premise that turned out to be false: the zero producer count it waited on was produced by an unchecked validator rather than by producers, so the condition could never have been met. Its deferred half was relocated intact into an EXISTING active roadmap (road-to-subagent-lifecycle-integrity, as its own phase) rather than into a new one, which is why the active count falls by one instead of staying flat - a follow-up roadmap would have made this a net zero and bought nothing. READ TOGETHER WITH THE ENTRY ABOVE, or the arithmetic does not reconcile: this walk-down was authored against 33 active / 50 later and merged onto a base where the un-park had already moved those to 34 / 49. The active number below is therefore 33, not 32, and the later number is 49, not 50 - the difference is the parallel session's file, not a correction to this closure. Restated at merge rather than left at its authoring values, because a history entry that records a measurement nobody can reproduce against the tree is the staleness this ratchet's own metric note refuses."
+    },
+    {
+      "at": "2026-08-19",
+      "active_roadmaps": 34,
+      "later_roadmaps": 49,
+      "open_blockers": 74,
+      "why": "RE-MEASURED AT MERGE, not carried over from either side, because both sides moved. This branch adopts road-to-single-delivery (+1 active) and opens four blockers on it (+4); the trunk meanwhile WALKED DOWN by archiving road-to-inbox-harvest-2026-08-b-dispatch-safety. Taking this branch authored numbers through the merge would have silently pocketed that archival as headroom, which is the loose-ratchet failure two earlier entries in this file record from the other direction. So the trunk file was taken whole and these numbers are the measurement on the merged tree: 33 + 1 = 34 active, 49 later unchanged, 70 + 4 = 74 blockers. WHAT THE +4 BUYS, since it is the larger half: partition-requires-global-layer HALTED Phase 2 mid-implementation - the partition leaves the project layer with 16 rules and zero skills, so a checkout with no current global install would silently drop from 111 rules and 338 skills to 16 and 0, which is an under-governed session rather than a token cost. compact-survival-of-package-only-rules carries four rules that stop surviving /compact once their unscoped global twin is gone, three of them Iron-Law bearing. overlap-check-binding-surface exists because two gates in this area already report to nobody. host-skill-suppression-capability is a host probe whose negative answer closes it. Each carries enumerated options and a recommendation rather than a flag. later_roadmaps unchanged at 49 is the check that nothing was parked to pay for any of this."
     }
   ],
   "target": {
