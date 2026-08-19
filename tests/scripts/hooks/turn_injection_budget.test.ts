@@ -7,7 +7,7 @@
 //   - `applyTurnCap` is pure, so the drop policy is asserted directly: order,
 //     the blocking/fail_closed exemption (roadmap Risk 5), and the
 //     undroppable-overflow case.
-//   - `_apply_turn_injection_cap` is the dispatcher seam: a fixture that
+//   - `applyTurnInjectionCap` is the dispatcher seam: a fixture that
 //     exceeds the cap must drop the RIGHT message and RECORD the drop in
 //     dispatch-issues.jsonl.
 //   - the preconditions: no turn boundary → no accounting; an emission that
@@ -35,10 +35,11 @@ import {
     writeTurnState,
     slotCounts,
     statePath,
+    applyTurnInjectionCap,
+    isDroppableConcern,
     _clearTurnBudgetCache,
     type CandidateMessage,
 } from '../../../src/scripts/hooks/turn_injection_budget.js';
-import { _apply_turn_injection_cap } from '../../../src/scripts/hooks/dispatch_hook.js';
 import { emissionCarriesReasons } from '../../../src/scripts/hooks/host_semantics.js';
 import { read_dispatch_issues } from '../../../src/scripts/hooks/dispatch_issues.js';
 
@@ -132,6 +133,22 @@ describe('applyTurnCap — the drop policy', () => {
     });
 });
 
+describe('isDroppableConcern — stated negatively on purpose', () => {
+    it('drops advisory, keeps blocking, keeps fail_closed', () => {
+        expect(isDroppableConcern({ severity: 'advisory' })).toBe(true);
+        expect(isDroppableConcern({ severity: 'blocking' })).toBe(false);
+        expect(isDroppableConcern({ severity: 'advisory', fail_closed: true })).toBe(false);
+    });
+
+    it('keeps a FUTURE severity tier droppable rather than exempt', () => {
+        // The finding this guards: an `advisory`-positive test would make a
+        // `warn` rung silently undroppable, i.e. grant it a budget exemption
+        // nobody decided to give it.
+        expect(isDroppableConcern({ severity: 'warn' })).toBe(true);
+        expect(isDroppableConcern({})).toBe(true);
+    });
+});
+
 describe('readTurnBudget — the shipped row', () => {
     it('reads a positive cap and the exempt slots from the real config', () => {
         const budget = readTurnBudget(BUDGET_PATH);
@@ -209,7 +226,7 @@ describe('turn state — counts only, per session', () => {
     });
 });
 
-describe('_apply_turn_injection_cap — the dispatcher seam', () => {
+describe('applyTurnInjectionCap — the dispatcher seam', () => {
     const cap = (): number => readTurnBudget(BUDGET_PATH)!.capBytes;
     const ON = { hasTurnBoundary: true, emissionCarriesReasons: true };
 
@@ -220,7 +237,7 @@ describe('_apply_turn_injection_cap — the dispatcher seam', () => {
     it('passes everything through under the cap and opens a turn', () => {
         const env = { workspace_root: tmp };
         const msgs = [msg('nudge', 100)];
-        expect(_apply_turn_injection_cap(env, 'sess', 'user_prompt_submit', msgs, ON)).toHaveLength(1);
+        expect(applyTurnInjectionCap(env, 'sess', 'user_prompt_submit', msgs, ON)).toHaveLength(1);
         const state = readTurnState(tmp, 'sess');
         expect(state.turn).toBe(1);
         expect(state.spent_bytes).toBe(messageBytes(msgs[0]!.text));
@@ -233,7 +250,7 @@ describe('_apply_turn_injection_cap — the dispatcher seam', () => {
             msg('big-nudge', cap() + 1),
             msg('small-nudge', 50),
         ];
-        const out = _apply_turn_injection_cap(env, 'sess', 'user_prompt_submit', msgs, ON);
+        const out = applyTurnInjectionCap(env, 'sess', 'user_prompt_submit', msgs, ON);
         expect(out.map((m) => m.concern)).toEqual(['block-no-verify', 'small-nudge']);
         const budgetIssues = read_dispatch_issues(tmp).filter((e) => e['issue'] === 'budget_exceeded');
         // One ring entry per fire, naming the dropped concern — see the comment
@@ -245,7 +262,7 @@ describe('_apply_turn_injection_cap — the dispatcher seam', () => {
 
     it('records the undroppable-overflow case instead of swallowing a block', () => {
         const env = { workspace_root: tmp };
-        const out = _apply_turn_injection_cap(
+        const out = applyTurnInjectionCap(
             env,
             'sess',
             'user_prompt_submit',
@@ -260,15 +277,15 @@ describe('_apply_turn_injection_cap — the dispatcher seam', () => {
     it('accumulates across slots within one turn, and resets on the next prompt', () => {
         const env = { workspace_root: tmp };
         const half = Math.floor(cap() / 2) + 10;
-        _apply_turn_injection_cap(env, 'sess', 'user_prompt_submit', [msg('a', half)], ON);
-        expect(_apply_turn_injection_cap(env, 'sess', 'post_tool_use', [msg('b', half)], ON)).toHaveLength(0);
-        expect(_apply_turn_injection_cap(env, 'sess', 'user_prompt_submit', [msg('c', half)], ON)).toHaveLength(1);
+        applyTurnInjectionCap(env, 'sess', 'user_prompt_submit', [msg('a', half)], ON);
+        expect(applyTurnInjectionCap(env, 'sess', 'post_tool_use', [msg('b', half)], ON)).toHaveLength(0);
+        expect(applyTurnInjectionCap(env, 'sess', 'user_prompt_submit', [msg('c', half)], ON)).toHaveLength(1);
         expect(readTurnState(tmp, 'sess').turn).toBe(2);
     });
 
     it('leaves an exempt slot untouched and unaccounted', () => {
         const env = { workspace_root: tmp };
-        const out = _apply_turn_injection_cap(env, 'sess', 'session_start', [msg('restore', cap() + 1)], ON);
+        const out = applyTurnInjectionCap(env, 'sess', 'session_start', [msg('restore', cap() + 1)], ON);
         expect(out).toHaveLength(1);
         expect(readTurnState(tmp, 'sess').spent_bytes).toBe(0);
     });
@@ -276,12 +293,12 @@ describe('_apply_turn_injection_cap — the dispatcher seam', () => {
     it('writes no state in replay mode', () => {
         process.env['AGENT_CONFIG_REPLAY'] = '1';
         const env = { workspace_root: tmp };
-        _apply_turn_injection_cap(env, 'sess', 'user_prompt_submit', [msg('a', 100)], ON);
+        applyTurnInjectionCap(env, 'sess', 'user_prompt_submit', [msg('a', 100)], ON);
         expect(fs.existsSync(statePath(tmp, 'sess'))).toBe(false);
     });
 });
 
-describe('_apply_turn_injection_cap — the four preconditions', () => {
+describe('applyTurnInjectionCap — the four preconditions', () => {
     const cap = (): number => readTurnBudget(BUDGET_PATH)!.capBytes;
     function msg(concern: string, bytes: number, isDroppable = true) {
         return { concern, text: 'x'.repeat(bytes), droppable: isDroppable };
@@ -295,18 +312,18 @@ describe('_apply_turn_injection_cap — the four preconditions', () => {
         const env = { workspace_root: tmp };
         const ON = { hasTurnBoundary: true, emissionCarriesReasons: true };
         const nearlyFull = cap() - 10;
-        _apply_turn_injection_cap(env, 'sess', 'user_prompt_submit', [msg('a', nearlyFull)], ON);
+        applyTurnInjectionCap(env, 'sess', 'user_prompt_submit', [msg('a', nearlyFull)], ON);
         expect(readTurnState(tmp, 'sess').spent_bytes).toBe(nearlyFull);
 
         // Next turn produced nothing to inject — the reset must still happen.
-        _apply_turn_injection_cap(env, 'sess', 'user_prompt_submit', [], ON);
+        applyTurnInjectionCap(env, 'sess', 'user_prompt_submit', [], ON);
         const state = readTurnState(tmp, 'sess');
         expect(state.spent_bytes).toBe(0);
         expect(state.turn).toBe(2);
 
         // …so a later slot in that turn has the full budget, not 10 bytes of it.
         expect(
-            _apply_turn_injection_cap(env, 'sess', 'post_tool_use', [msg('b', nearlyFull)], ON),
+            applyTurnInjectionCap(env, 'sess', 'post_tool_use', [msg('b', nearlyFull)], ON),
         ).toHaveLength(1);
     });
 
@@ -318,7 +335,7 @@ describe('_apply_turn_injection_cap — the four preconditions', () => {
         const env = { workspace_root: tmp };
         const OFF = { hasTurnBoundary: false, emissionCarriesReasons: true };
         for (let i = 0; i < 4; i++) {
-            const out = _apply_turn_injection_cap(env, 'sess', 'post_tool_use', [msg('a', cap())], OFF);
+            const out = applyTurnInjectionCap(env, 'sess', 'post_tool_use', [msg('a', cap())], OFF);
             expect(out).toHaveLength(1); // never dropped, however often it fires
         }
         expect(readTurnState(tmp, 'sess').spent_bytes).toBe(0);
@@ -332,7 +349,7 @@ describe('_apply_turn_injection_cap — the four preconditions', () => {
     it('an emission that carries nothing → no bytes charged', () => {
         const env = { workspace_root: tmp };
         const SILENT = { hasTurnBoundary: true, emissionCarriesReasons: false };
-        const out = _apply_turn_injection_cap(
+        const out = applyTurnInjectionCap(
             env,
             'sess',
             'post_tool_use',
@@ -357,7 +374,7 @@ describe('_apply_turn_injection_cap — the four preconditions', () => {
     it('an unstable session id → declined, not silently unenforced', () => {
         const env = { workspace_root: tmp };
         const ON = { hasTurnBoundary: true, emissionCarriesReasons: true };
-        const out = _apply_turn_injection_cap(
+        const out = applyTurnInjectionCap(
             env,
             'dispatch-2026-08-19T00:00:00Z-999',
             'user_prompt_submit',

@@ -18,11 +18,11 @@
  * drops droppable messages until the remainder fits.
  *
  * SAFETY BY CONSTRUCTION (roadmap Risk 5: "the advisory-drop policy hides a
- * safety-relevant warning"). Droppability is decided at the call site and
- * carried in, as `NOT blocking AND NOT fail_closed`. The negative form is
- * deliberate and was a review finding: an `advisory`-positive test would make a
- * future `severity: warn` concern silently UNDROPPABLE, which inverts the
- * policy the budget file documents. Anything blocking or fail-closed is
+ * safety-relevant warning"). Droppability is `NOT blocking AND NOT fail_closed`,
+ * decided by `isDroppableConcern` below. The negative form is deliberate and was
+ * a review finding: an `advisory`-positive test would make a future
+ * `severity: warn` concern silently UNDROPPABLE, which inverts the policy the
+ * budget file documents. Anything blocking or fail-closed is
  * retained unconditionally, even when that leaves the emission over cap — an
  * over-cap emission is a budget finding, whereas a swallowed blocking warning
  * is a safety failure, and the two are not tradeable. The over-cap case is
@@ -57,8 +57,38 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { atomic_write_json } from "./state_io.js";
+import { atomic_write_json, is_replay_mode } from "./state_io.js";
+import { log_dispatch_issue } from "./dispatch_issues.js";
+
+// Same bundle-depth dance as the dispatcher: bundled, this module sits two
+// levels below the repo root; under tsx, three. Owned here rather than passed
+// in, so the module that reads the budget also resolves it.
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
+const _IN_BUNDLE = typeof __AGENT_CONFIG_BUNDLE__ !== "undefined" && __AGENT_CONFIG_BUNDLE__;
+const _REPO_ROOT = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    ...(_IN_BUNDLE ? ["..", ".."] : ["..", "..", ".."]),
+);
+export const TOKEN_BUDGET_PATH = path.join(_REPO_ROOT, "src", "config", "hook-token-budget.json");
+
+/**
+ * May the cap drop this concern's message?
+ *
+ * Stated negatively — `NOT blocking AND NOT fail_closed` — and that is the
+ * whole point of the function existing rather than the caller testing
+ * `severity === "advisory"`. An advisory-POSITIVE test would make a severity
+ * tier added later (a `warn` rung, say) silently UNDROPPABLE, inverting the
+ * policy the budget file documents. Lives here, with the policy it serves.
+ */
+export function isDroppableConcern(concern: {
+    readonly severity?: unknown;
+    readonly fail_closed?: unknown;
+}): boolean {
+    const severity = String(concern.severity ?? "").trim().toLowerCase();
+    return severity !== "blocking" && !concern.fail_closed;
+}
 
 /** The turn accumulator, on disk. Counts and ids only — never content. */
 export interface TurnInjectionState {
@@ -82,11 +112,7 @@ export interface CandidateMessage {
     /** Concern id — used for the dispatch-issues record, never emitted. */
     readonly concern: string;
     readonly text: string;
-    /**
-     * `NOT blocking AND NOT fail_closed`, decided by the caller from the
-     * manifest declaration. See the safety note in the module header for why
-     * this is stated negatively.
-     */
+    /** `NOT blocking AND NOT fail_closed` — see `isDroppableConcern`. */
     readonly droppable: boolean;
 }
 
@@ -291,4 +317,142 @@ export function applyTurnCap(
  */
 export function slotCounts(slot: string, budget: TurnBudget): boolean {
     return !budget.exemptSlots.has(slot);
+}
+
+/** Only the field this module reads; avoids importing the dispatcher's JsonObject. */
+interface EnvelopeLike {
+    readonly workspace_root?: unknown;
+}
+
+/** The two facts the caller resolves, because their sources live over there. */
+export interface TurnCapContext {
+    /**
+     * Does this platform bind `user_prompt_submit` at all? A manifest fact, and
+     * the guard on the defect the R2 review caught — see the module header.
+     */
+    readonly hasTurnBoundary: boolean;
+    /**
+     * Will the emission actually put the reasons on a stream?
+     * `host_semantics.emissionCarriesReasons` answers it.
+     */
+    readonly emissionCarriesReasons: boolean;
+}
+
+/**
+ * Apply the per-turn cap to the messages a dispatch is about to emit.
+ *
+ * Returns the messages that may actually be emitted, in order.
+ *
+ * FOUR PRECONDITIONS, all from the R2 review, none of them cosmetic:
+ *
+ *   - `hasTurnBoundary` — without a `user_prompt_submit` binding there is no
+ *     turn to cap. `augment` binds `stop`, `pre_tool_use` and `post_tool_use`
+ *     (all non-exempt) and no prompt slot, so a slot-only exemption let the
+ *     accumulator run for the whole session and drop every advisory once past
+ *     the cap.
+ *   - `emissionCarriesReasons` — the messages must actually leave the process.
+ *     `emitFor` returns empty stdout/stderr for `severity: allow` and for every
+ *     unverified platform, so charging those bytes bills the turn for text
+ *     nobody receives. A crashed non-fail-closed concern is the sharp case: its
+ *     stderr becomes an rc-0 "deciding" message, typically the largest one.
+ *   - a stable session id — see `isStableSessionId`.
+ *   - the turn reset happens BEFORE the empty-message return. A prompt turn
+ *     that produced no deciding message is the COMMON case (the branch's own
+ *     nudge corpus: 463 of 510 prompts fire neither nudge), so returning early
+ *     left the reset as the exception and leaked bytes across turns.
+ *
+ * Fail-open on every path. Skipped in replay mode so fixture replays write no
+ * state, exactly like the dispatcher's feedback dir and trip counters.
+ */
+export function applyTurnInjectionCap<
+    T extends { text: string; concern: string; droppable: boolean },
+>(
+    envelope: EnvelopeLike,
+    sessionId: string,
+    event: string,
+    messages: T[],
+    ctx: TurnCapContext,
+    budgetPath: string = TOKEN_BUDGET_PATH,
+): T[] {
+    const budget = readTurnBudget(budgetPath);
+    if (budget === null || !slotCounts(event, budget)) return messages;
+    if (!ctx.hasTurnBoundary) return messages;
+    if (!isStableSessionId(sessionId)) return messages;
+    const workspace = String(envelope.workspace_root || process.cwd());
+    const replay = is_replay_mode();
+
+    const prior = replay
+        ? { schema_version: SCHEMA_VERSION, session_id: sessionId, turn: 0, spent_bytes: 0, dropped: 0 }
+        : readTurnState(workspace, sessionId);
+    // A prompt submission IS the turn boundary — the accumulator starts at zero
+    // and the turn counter advances, so a long turn's tool-call fires all charge
+    // against the same budget while the next prompt gets a clean one.
+    const opensTurn = event === "user_prompt_submit";
+    const spent = opensTurn ? 0 : prior.spent_bytes;
+    const priorDropped = opensTurn ? 0 : prior.dropped;
+
+    // Nothing to charge, but the boundary still has to move. Ordered ahead of
+    // the empty-message return on purpose — precondition 4 above.
+    if (messages.length === 0 || !ctx.emissionCarriesReasons) {
+        if (!replay && (opensTurn || spent !== prior.spent_bytes)) {
+            writeTurnState(workspace, {
+                schema_version: SCHEMA_VERSION,
+                session_id: sessionId,
+                turn: opensTurn ? prior.turn + 1 : prior.turn,
+                spent_bytes: spent,
+                dropped: priorDropped,
+            });
+        }
+        return messages;
+    }
+
+    const verdict = applyTurnCap(
+        messages.map((m) => ({ concern: m.concern, text: m.text, droppable: m.droppable })),
+        spent,
+        budget.capBytes,
+    );
+
+    if (!replay) {
+        writeTurnState(workspace, {
+            schema_version: SCHEMA_VERSION,
+            session_id: sessionId,
+            turn: opensTurn ? prior.turn + 1 : prior.turn,
+            spent_bytes: spent + verdict.keptBytes,
+            dropped: priorDropped + verdict.dropped.length,
+        });
+        const fix =
+            "raise per_turn_aggregate_cap_bytes.cap_bytes in src/config/hook-token-budget.json, by evidence, in a PR";
+        // ONE line per fire, naming every concern dropped and its byte count —
+        // not one line per drop. `dispatch-issues.jsonl` is a 200-entry ring, and
+        // a review finding named the consequence: a per-drop append on the
+        // per-tool-call path evicts the resolver-failure records the log exists
+        // for. Each drop is still recorded, which is what the step asks; the ring
+        // just pays once per dispatch instead of once per message.
+        if (verdict.dropped.length > 0) {
+            const named = verdict.dropped.map((d) => `${d.concern} (${String(d.bytes)} B)`).join(", ");
+            log_dispatch_issue(
+                workspace,
+                "dispatch",
+                "budget_exceeded",
+                `${String(verdict.dropped.length)} message(s) dropped on '${event}': ${named} — ` +
+                    `would take the turn past the ${String(budget.capBytes)} B per-turn injection cap ` +
+                    `(${String(spent)} B already spent)`,
+                fix,
+            );
+        }
+        if (verdict.overCapAfterDrops) {
+            log_dispatch_issue(
+                workspace,
+                "dispatch",
+                "budget_exceeded",
+                `turn injection is ${String(spent + verdict.keptBytes)} B over a ` +
+                    `${String(budget.capBytes)} B cap with nothing droppable left — ` +
+                    "blocking and fail_closed concerns are never dropped",
+                fix,
+            );
+        }
+    }
+
+    if (verdict.dropped.length === 0) return messages;
+    return verdict.keptIndices.map((i) => messages[i] as T);
 }

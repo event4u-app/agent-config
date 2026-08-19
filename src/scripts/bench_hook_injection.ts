@@ -23,6 +23,18 @@
  *     real total was the one axis with no ceiling. The runtime half lives in
  *     `hooks/turn_injection_budget.ts`; this is the authoring-time reading.
  *
+ * DETERMINISM IS NOT COMPLETE, found 2026-08-19 while adding the per-turn row.
+ * The fixture path is called deterministic below, and for most concerns it is —
+ * but `end-review-nudge` decides whether to fire from the live WORKING-TREE diff
+ * plus a once-per-session latch, so the same commit reads 1140 B with
+ * uncommitted changes present and 922 B without them. Three different values
+ * appeared in one session. Consequence for readers: a single run of this bench
+ * is a reading of THIS checkout right now, so do not pin its number as evidence
+ * anywhere (a roadmap note tried, and had to be corrected). The BREACH verdict
+ * is unaffected — a state-dependent concern can only push the sum up, so a green
+ * run is still a green run, and that is why this is documented rather than
+ * fixed here.
+ *
  * HONEST SCOPE, stated up front: concerns are conditional-silence by design —
  * a generic fixture triggers few of them, so most measure 0 bytes here. The
  * gate therefore enforces the cap on whatever DOES fire under the committed

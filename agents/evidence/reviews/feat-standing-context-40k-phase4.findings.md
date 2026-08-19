@@ -7,8 +7,8 @@ inputs:
   diff_sha: bb763dcc6c78da4a2fe127a8d331e90496c0747f
   scope_hash: a7c27a65445d6c77334fe54f354df02b15101217583d2456900c601a0fd3e68a
   roadmap: agents/roadmaps/road-to-standing-context-40k.md
-  roadmap_hash: 1993f815dc5e06a517f2dba14a2e63e4b08cb62cfaf4b7bc0539e1242ce4cd5d
-  ac_hash: 4b51f97b062e06a87573430211a06fda68685a963df397874e4d3c1bbd02c49f
+  roadmap_hash: 5d6f699100393b80aadd7527834cdc4d453f88503852065551c98bbed98b081f
+  ac_hash: c2376abf9bde955e06fbd8d9f3737d349d5413b3af141b44e72bb39042bd26f2
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-19T11:20:08Z
@@ -26,3 +26,17 @@ dispatched: 2026-08-19T11:20:08Z
 | 8 | low | src/scripts/hooks/turn_injection_budget.ts:170 | `writeTurnState` uses a plain `fs.writeFileSync` while the sibling counter in the calling file (`_record_rule_trips`, dispatch_hook.ts:1166) uses `atomic_write_json` for the same class of artefact in the same directory. Concurrent dispatches (parallel tool calls, a subagent fire interleaving with the parent) can interleave the read-modify-write and lose or truncate the accumulator. Fail-open bounds the damage to "no cap applied", which is why this is low rather than higher — but it is an unexplained divergence from the neighbouring pattern. | fixed | 73f712ee5 |
 | 9 | low | src/scripts/hooks/dispatch_hook.ts:1079 | Per-fire I/O added to the hottest hook path. Every non-exempt dispatch — `pre_tool_use`/`post_tool_use` fire once per tool call — now re-reads and `JSON.parse`s the whole ~8 KB budget file plus a state read and a state write; each drop additionally does a full read-modify-write of `dispatch-issues.jsonl`, whose 200-line cap then evicts the resolver-failure records the log exists for (`dispatch_issues.ts:190-193`). `applyTurnCap` also recomputes `Buffer.byteLength` per candidate inside both `total()` and the sort comparator rather than measuring once (turn_injection_budget.ts:190-203). | fixed | 73f712ee5 |
 | 10 | low | tests/scripts/hooks/nudge_interference.test.ts:93 | The corpus's ≤N direction cannot distinguish "did not fire" from "crashed": `nudgeFires` swallows every exception and returns `false`, so a broken nudge leaves every `max_nudges` class green — including `silent` (cap 0), which is then vacuously true. Only the single `overlap` class carries liveness. The "assertion has teeth" test does not close this either: its final expectation (:190) restates the line above it, since `forced.length` was already asserted to be 2 while `singles[0].max_nudges` is 1 by the filter that selected it. | fixed | 73f712ee5 |
+
+## Re-bind note
+
+The reviewer read the roadmap at `roadmap_hash: 1993f815dc`, not the hash pinned
+above. The roadmap prose moved afterwards **in response to these findings** —
+finding 1 required correcting a note that claimed the module already failed open
+on a host with no `user_prompt_submit`, and the AC note lost its byte figure
+because merging `origin/main` moved it the same day. The manifest is re-derived
+because the contract's §5 gate requires it to match current inputs; this note is
+here so the sequence stays legible: findings first, roadmap corrections second,
+re-bind last.
+
+The findings rows and `prompt_hash` are untouched across every re-bind, so what
+was asked and what was answered remain auditable independently of the pins.

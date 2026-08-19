@@ -52,15 +52,7 @@ import {
 import { emitFor, emissionCarriesReasons, type Severity } from "./host_semantics.js";
 import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
-import {
-  applyTurnCap,
-  isStableSessionId,
-  readTurnBudget,
-  readTurnState,
-  writeTurnState,
-  slotCounts,
-  type CandidateMessage,
-} from "./turn_injection_budget.js";
+import { applyTurnInjectionCap, isDroppableConcern } from "./turn_injection_budget.js";
 
 // Free-form JSON values flow through every helper here; a documented
 // alias keeps the surface honest without `any` (ADR-200 § strict TS).
@@ -84,7 +76,6 @@ const REPO_ROOT = path.resolve(
   ...(_IN_BUNDLE ? ["..", ".."] : ["..", "..", ".."]),
 );
 const MANIFEST_PATH = path.join(REPO_ROOT, "src", "scripts", "hook_manifest.yaml");
-const TOKEN_BUDGET_PATH = path.join(REPO_ROOT, "src", "config", "hook-token-budget.json");
 
 export const EXIT_ALLOW = 0;
 export const EXIT_BLOCK = 1;
@@ -141,20 +132,6 @@ export function _is_advisory(concern: JsonObject): boolean {
   return String(concern["severity"] ?? "").trim().toLowerCase() === "advisory";
 }
 
-/**
- * Is this concern declared blocking?
- *
- * The complement of `_is_advisory` only while the manifest carries exactly two
- * severities, which is why the per-turn injection cap
- * (road-to-standing-context-40k 4.1) asks THIS question rather than negating
- * that one: droppability is `not blocking and not fail_closed`, so a severity
- * added later (a `warn` tier, say) stays droppable instead of silently becoming
- * exempt from a budget it was never granted an exemption from.
- */
-export function _is_blocking(concern: JsonObject): boolean {
-  return String(concern["severity"] ?? "").trim().toLowerCase() === "blocking";
-}
-
 function _now_iso(): string {
   // Python: datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ").
   return new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -196,12 +173,6 @@ export function _parse_concern_stdout(stdout_text: string): JsonObject {
 }
 
 /**
- * Minimal manifest loader — the retired Python implementation prefers PyYAML and falls
- * back to `_fallback_yaml` only when PyYAML is absent. The TS runtime
- * always ships the `yaml` package, so this mirrors the PyYAML-present
- * path (`yaml.safe_load(text) or {}`); version 1.1 matches PyYAML.safe_load.
- */
-/**
  * Cheap content fingerprint of a manifest source — FNV-1a 32-bit plus the byte
  * length, hex.
  *
@@ -220,6 +191,12 @@ export function _manifest_fingerprint(text: string): string {
   return `${h.toString(16)}:${String(text.length)}`;
 }
 
+/**
+ * Minimal manifest loader — the retired Python implementation prefers PyYAML and
+ * falls back to `_fallback_yaml` only when PyYAML is absent. The TS runtime
+ * always ships the `yaml` package, so this mirrors the PyYAML-present path
+ * (`yaml.safe_load(text) or {}`); version 1.1 matches PyYAML.safe_load.
+ */
 export function _load_yaml(p: string): JsonObject {
   // Precompiled fast path. The manifest is ~61 kB of YAML and is parsed on
   // EVERY dispatch, which measured 12 ms of a ~103 ms dispatch (plus 8 ms to
@@ -1061,144 +1038,9 @@ function _write_feedback(
  * integer counters, and ISO dates — no field capable of holding free-form
  * content, prompt text, or file bodies. Never widen it.
  *
- * Fail-open (a broken counter must never affect dispatch), skipped in
- * replay mode like the feedback dir.
+ * Fail-open (a broken counter must never affect dispatch), skipped in replay
+ * mode like the feedback dir.
  */
-/**
- * Per-turn injection aggregate (road-to-standing-context-40k Phase 4.1).
- *
- * Returns the messages that may actually be emitted. Every cap in
- * `hook-token-budget.json` before this row was CI-only — `bench_hook_injection`
- * measured committed fixtures and nothing read the file at runtime — and none
- * of them bounded a TURN: `pre_tool_use` / `post_tool_use` fire once per tool
- * call, so the per-slot rows capped one fire of a repeating axis.
- *
- * A `user_prompt_submit` opens a turn and zeroes the accumulator; every other
- * non-exempt slot adds to it. Overflow drops droppable messages, largest first,
- * until the emission fits — never a `severity: blocking` or `fail_closed`
- * concern, which is what keeps the policy from hiding a safety-relevant
- * warning (roadmap Risk 5). An emission that still exceeds the cap after every
- * droppable message is gone is emitted in full and recorded: an over-cap
- * warning is a budget finding, a swallowed block is a safety failure, and the
- * two are not tradeable.
- *
- * FOUR PRECONDITIONS, all from the R2 review, none of them cosmetic:
- *
- *   - `hasTurnBoundary` — the platform must bind `user_prompt_submit`. Without
- *     it there is no turn to cap: `augment` binds three non-exempt slots and no
- *     prompt slot, so a slot-only exemption let the accumulator run for the
- *     whole session and drop every advisory once past the cap.
- *   - `emissionCarriesReasons` — the messages must actually leave the process.
- *     `emitFor` returns empty stdout/stderr for `severity: allow` and for every
- *     unverified platform, so charging those bytes bills the turn for text
- *     nobody receives. A crashed non-fail-closed concern is the sharp case: its
- *     stderr becomes an rc-0 "deciding" message, typically the largest one.
- *   - a stable session id — `_resolve_session_id` synthesises
- *     `dispatch-<ts>-<pid>` when the envelope carries none, and says the
- *     instability is deliberate. Keyed on that, every read is zero and the cap
- *     silently does nothing; declining is honest, pretending is not.
- *   - the turn reset happens BEFORE the empty-message return. A prompt turn
- *     that produced no deciding message is the COMMON case (this branch's own
- *     corpus: 463 of 510 prompts fire neither nudge), so returning early left
- *     the reset as the exception and leaked bytes across turns.
- *
- * Fail-open on every path — no budget row, an unreadable file, a missing
- * workspace all mean "emit everything", which is the pre-4.1 behaviour.
- * Skipped in replay mode so fixture replays write no state, exactly like the
- * feedback dir and the trip counters.
- */
-export function _apply_turn_injection_cap<
-  T extends { text: string; concern: string; droppable: boolean },
->(
-  envelope: JsonObject,
-  session_id: string,
-  event: string,
-  messages: T[],
-  opts: { hasTurnBoundary: boolean; emissionCarriesReasons: boolean },
-): T[] {
-  const budget = readTurnBudget(TOKEN_BUDGET_PATH);
-  if (budget === null || !slotCounts(event, budget)) return messages;
-  if (!opts.hasTurnBoundary) return messages;
-  if (!isStableSessionId(session_id)) return messages;
-  const workspace = String(envelope["workspace_root"] || process.cwd());
-
-  const prior = is_replay_mode()
-    ? { schema_version: 1, session_id, turn: 0, spent_bytes: 0, dropped: 0 }
-    : readTurnState(workspace, session_id);
-  // A prompt submission IS the turn boundary — the accumulator starts at zero
-  // and the turn counter advances, so a long turn's tool-call fires all charge
-  // against the same budget while the next prompt gets a clean one.
-  const opensTurn = event === "user_prompt_submit";
-  const spent = opensTurn ? 0 : prior.spent_bytes;
-  const priorDropped = opensTurn ? 0 : prior.dropped;
-
-  // Nothing to charge, but the boundary still has to move. Ordered ahead of the
-  // empty-message return on purpose — see precondition 4 in the header.
-  if (messages.length === 0 || !opts.emissionCarriesReasons) {
-    if (!is_replay_mode() && (opensTurn || spent !== prior.spent_bytes)) {
-      writeTurnState(workspace, {
-        schema_version: 1,
-        session_id,
-        turn: opensTurn ? prior.turn + 1 : prior.turn,
-        spent_bytes: spent,
-        dropped: priorDropped,
-      });
-    }
-    return messages;
-  }
-
-  const candidates: CandidateMessage[] = messages.map((m) => ({
-    concern: m.concern,
-    text: m.text,
-    droppable: m.droppable,
-  }));
-  const verdict = applyTurnCap(candidates, spent, budget.capBytes);
-
-  if (!is_replay_mode()) {
-    writeTurnState(workspace, {
-      schema_version: 1,
-      session_id,
-      turn: opensTurn ? prior.turn + 1 : prior.turn,
-      spent_bytes: spent + verdict.keptBytes,
-      dropped: priorDropped + verdict.dropped.length,
-    });
-    // ONE line per fire, naming every concern dropped and its byte count —
-    // not one line per drop. `dispatch-issues.jsonl` is a 200-entry ring, and a
-    // review finding named the consequence: a per-drop append on the
-    // per-tool-call path evicts the resolver-failure records the log exists for.
-    // Each drop is still recorded, which is what the step asks; the ring just
-    // pays once per dispatch instead of once per message.
-    if (verdict.dropped.length > 0) {
-      const named = verdict.dropped
-        .map((d) => `${d.concern} (${String(d.bytes)} B)`)
-        .join(", ");
-      log_dispatch_issue(
-        workspace,
-        "dispatch",
-        "budget_exceeded",
-        `${String(verdict.dropped.length)} message(s) dropped on '${event}': ${named} — ` +
-          `would take the turn past the ${String(budget.capBytes)} B per-turn injection cap ` +
-          `(${String(spent)} B already spent)`,
-        "raise per_turn_aggregate_cap_bytes.cap_bytes in src/config/hook-token-budget.json, by evidence, in a PR",
-      );
-    }
-    if (verdict.overCapAfterDrops) {
-      log_dispatch_issue(
-        workspace,
-        "dispatch",
-        "budget_exceeded",
-        `turn injection is ${String(spent + verdict.keptBytes)} B over a ` +
-          `${String(budget.capBytes)} B cap with nothing droppable left — ` +
-          "blocking and fail_closed concerns are never dropped",
-        "raise per_turn_aggregate_cap_bytes.cap_bytes in src/config/hook-token-budget.json, by evidence, in a PR",
-      );
-    }
-  }
-
-  if (verdict.dropped.length === 0) return messages;
-  return verdict.keptIndices.map((i) => messages[i] as T);
-}
-
 function _record_rule_trips(envelope: JsonObject, entries: FeedbackEntry[]): void {
   if (is_replay_mode()) return;
   const tripped = entries.filter(
@@ -1429,18 +1271,7 @@ export function main(argv?: string[]): number {
   // fixed-field schema (PII-exclusion-by-construction), and a concern's raw
   // stderr is free-form content. This array is in-memory only.
   //
-  // Carries `concern` and `droppable` alongside the text since 4.1: the
-  // per-turn aggregate has to know which messages it may drop, and that is a
-  // property of the manifest declaration, not of the text. Stated negatively
-  // (`not blocking and not fail_closed`) on a review finding — an
-  // advisory-positive test would make a future `severity: warn` concern
-  // undroppable, inverting the documented policy.
-  const concern_messages: Array<{
-    rc: number;
-    text: string;
-    concern: string;
-    droppable: boolean;
-  }> = [];
+  const concern_messages: { rc: number; text: string; concern: string; droppable: boolean }[] = [];
   // Per-concern `tools:` filter (see _concern_matches_tool). Applied here so it
   // is one place, after the envelope exists and before any concern is spawned.
   const tool_name = _payload_tool_name(envelope);
@@ -1526,12 +1357,7 @@ export function main(argv?: string[]): number {
         : "";
     const message = [stated, extra].filter(Boolean).join("\n\n");
     if (message) {
-      concern_messages.push({
-        rc,
-        text: message,
-        concern: String(concern["name"]),
-        droppable: !_is_blocking(concern) && !concern["fail_closed"],
-      });
+      concern_messages.push({ rc, text: message, concern: String(concern["name"]), droppable: isDroppableConcern(concern) });
     }
     if (
       args.event === "session_start" &&
@@ -1569,7 +1395,6 @@ export function main(argv?: string[]): number {
   if (context_blocks.length > 0 && final_rc === EXIT_ALLOW) {
     process.stdout.write(context_blocks.join("\n\n") + "\n");
   }
-
   // P0.1 host-semantics translation. The internal ladder (0/1/2) is written to
   // the feedback dir verbatim above — that record is unchanged. What leaves the
   // process is now the HOST's native contract, because the two languages
@@ -1577,26 +1402,12 @@ export function main(argv?: string[]): number {
   // inverted every verdict (see host_semantics.ts for the documented mapping).
   // Unverified platforms keep the legacy pass-through byte-for-byte.
   const severity = _severity_for(final_rc) as Severity;
-  const deciding = concern_messages.filter((m) => m.rc === final_rc);
-  // Per-turn injection aggregate (4.1). Both preconditions are resolved HERE
-  // rather than inside the helper: the turn boundary is a manifest fact about
-  // this platform (does it bind `user_prompt_submit` at all — `augment` does
-  // not), and whether the reasons reach a stream is a `host_semantics` fact
-  // about this (platform, severity). Deriving either one inside the budget
-  // module would put a second copy of both next to the wrong source of truth.
-  const decidingReasons = _apply_turn_injection_cap(
-    envelope,
-    session_id,
-    args.event,
-    deciding,
-    {
-      hasTurnBoundary:
-        _resolve_concerns(manifest, args.platform, "user_prompt_submit", session_role, {
-          refusal_retry,
-        }).length > 0,
-      emissionCarriesReasons: emissionCarriesReasons(args.platform, severity),
-    },
-  ).map((m) => m.text);
+  // Per-turn injection aggregate (4.1) — policy + the four preconditions live in turn_injection_budget.ts.
+  const turnCtx = {
+    hasTurnBoundary: _resolve_concerns(manifest, args.platform, "user_prompt_submit", session_role, { refusal_retry }).length > 0,
+    emissionCarriesReasons: emissionCarriesReasons(args.platform, severity),
+  };
+  const decidingReasons = applyTurnInjectionCap(envelope, session_id, args.event, concern_messages.filter((m) => m.rc === final_rc), turnCtx).map((m) => m.text);
   const emission = emitFor(
     args.platform,
     args.event,

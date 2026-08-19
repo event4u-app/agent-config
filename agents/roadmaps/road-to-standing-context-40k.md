@@ -291,15 +291,22 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
   green. <!-- MET 2026-08-19: `bench_hook_injection` prints a
   `turn-aggregate … B (cap 10240) over 4 non-exempt slot(s), one fire each`
   line; the interference fixture is green.
-  **No byte figure is quoted here on purpose.** The first version of this note
-  cited `1140 B`, and merging `origin/main` moved it to `922 B` the same day —
-  a concern this branch never touched stopped firing under the committed
-  fixture. The number is a property of the fixture set, not of this phase, so
-  pinning it in a roadmap note manufactures drift that says nothing about the
-  work. What AC-4 actually asks is that the line EXISTS and that the fixture is
-  green; the enforced number lives in the config row, and the bench figure is a
-  floor over fixtures rather than the live distribution (see the
-  `measurement_caveat` in `src/config/hook-token-budget.json`). -->
+  **No byte figure is quoted here, and the reason is a finding rather than a
+  preference.** The first version of this note cited `1140 B`. It then read
+  `922 B`, and then `1140 B` again — three values in one session. The first
+  explanation written here blamed the `origin/main` merge and was **wrong**;
+  traced properly, the cause is that `end-review-nudge` decides whether to fire
+  from the live WORKING-TREE diff (`diffLines`) plus a once-per-session latch
+  (`markFiredThisSession`), so a clean tree silences its 218 B and a dirty one
+  restores it.
+  That makes the reading a property of the checkout's momentary state, not of
+  the fixture set alone — and `bench_hook_injection`'s own header calls the
+  fixture path "deterministic, CI-reproducible", which is overstated for at
+  least this one bound concern. Noted in that header too. So AC-4 is satisfied
+  by the aggregate line EXISTING and the fixture being green; the enforced
+  number lives in the config row, and the bench figure is a floor over fixtures
+  rather than the live distribution (see `measurement_caveat` in
+  `src/config/hook-token-budget.json`). -->
 
 > **Follow-up this phase produced, recorded so it is not lost.** The
 > delegation-nudge × skill-route double-fire above is a live interference, not a
