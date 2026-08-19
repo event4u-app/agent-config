@@ -57,11 +57,20 @@ interface Corpus {
 
 const corpus = YAML.parse(fs.readFileSync(CORPUS, 'utf-8')) as Corpus;
 
-/** Run one nudge against one prompt; true when it injected anything. */
+/**
+ * Run one nudge against one prompt; true when it injected anything.
+ *
+ * A crash is RETHROWN, not swallowed. The first version caught it and returned
+ * `false`, which a review finding named correctly: a broken nudge then reads as
+ * "did not fire", every `max_nudges` class goes green — the `silent` class,
+ * cap 0, vacuously so — and only the one `overlap` class carries any liveness at
+ * all. A concern that throws is a failure of this fixture, not a silence.
+ */
 function nudgeFires(script: string, prompt: string): boolean {
     const main = CONCERN_REGISTRY[script];
     if (main === undefined) throw new Error(`not in CONCERN_REGISTRY: ${script}`);
     let out = '';
+    let crash: unknown = null;
     const prevOut = process.stdout.write;
     const prevErr = process.stderr.write;
     const prevReplay = process.env['AGENT_CONFIG_REPLAY'];
@@ -89,14 +98,20 @@ function nudgeFires(script: string, prompt: string): boolean {
     }) as typeof process.stderr.write;
     try {
         main(['--platform', corpus.platform]);
-    } catch {
-        /* a crashing concern injects nothing — the latency/parity suites own crashes */
+    } catch (exc) {
+        crash = exc;
     } finally {
         process.stdout.write = prevOut;
         process.stderr.write = prevErr;
         if (prevReplay === undefined) delete process.env['AGENT_CONFIG_REPLAY'];
         else process.env['AGENT_CONFIG_REPLAY'] = prevReplay;
         clearHookStdinOverride();
+    }
+    if (crash !== null) {
+        throw new Error(
+            `nudge '${script}' threw on prompt: ${prompt}\n` +
+                `${crash instanceof Error ? crash.stack ?? crash.message : String(crash)}`,
+        );
     }
     return out.trim().length > 0;
 }
@@ -108,6 +123,23 @@ export function firedNudges(prompt: string): string[] {
         if (script === undefined) throw new Error(`corpus names an unmapped nudge: ${id}`);
         return nudgeFires(script, prompt);
     });
+}
+
+/**
+ * The ≤N check, extracted so it is testable rather than only inlined into the
+ * per-class `it()` bodies. A review finding: the old teeth test restated an
+ * assertion it had already made instead of exercising the mechanism, so nothing
+ * would have caught the check itself going vacuous.
+ *
+ * Returns one line per offending prompt; an empty array means the class holds.
+ */
+export function capViolations(cap: number, prompts: readonly string[]): string[] {
+    const out: string[] = [];
+    for (const prompt of prompts) {
+        const fired = firedNudges(prompt);
+        if (fired.length > cap) out.push(`[${fired.join(', ')}] on: ${prompt}`);
+    }
+    return out;
 }
 
 describe('nudge-interference corpus — shape', () => {
@@ -146,14 +178,10 @@ describe('nudge-interference — at most one nudge per prompt class', () => {
     for (const c of corpus.classes.filter((x) => x.max_nudges !== undefined)) {
         const cap = c.max_nudges as number;
         it(`${c.class}: no prompt fires more than ${String(cap)} nudge(s)`, () => {
-            for (const prompt of c.prompts) {
-                const fired = firedNudges(prompt);
-                expect(
-                    fired.length,
-                    `class '${c.class}' allows at most ${String(cap)} nudge(s) but ` +
-                        `[${fired.join(', ')}] fired on: ${prompt}`,
-                ).toBeLessThanOrEqual(cap);
-            }
+            expect(
+                capViolations(cap, c.prompts),
+                `class '${c.class}' allows at most ${String(cap)} nudge(s)`,
+            ).toEqual([]);
         });
     }
 });
@@ -176,18 +204,22 @@ describe('nudge-interference — the recorded overlap stays recorded', () => {
 
 describe('nudge-interference — the assertion has teeth', () => {
     // The verify clause is "fails when a second nudge is forced". The classes
-    // above cover the real path; this covers the mechanism directly, so a future
-    // refactor of `firedNudges` cannot quietly make every class vacuously green.
-    it('a forced double-fire violates a max_nudges class', () => {
-        const singles = corpus.classes.filter((c) => c.max_nudges === 1);
-        expect(singles.length).toBeGreaterThan(0);
+    // above cover the real path; these exercise the CHECK, so a refactor that
+    // made every class vacuously green would be caught here.
+    it('capViolations reports a forced double-fire under a single-nudge cap', () => {
         const overlap = corpus.classes.find((c) => (c.expect_nudges ?? 0) === 2);
         expect(overlap).toBeDefined();
-        // A prompt from the overlap class, judged under a single-nudge class's
-        // cap: the same assertion the classes above run must reject it.
-        const forced = firedNudges(overlap!.prompts[0] as string);
-        expect(forced.length).toBe(2);
-        expect(forced.length <= (singles[0]!.max_nudges as number)).toBe(false);
+        const forced = capViolations(1, overlap!.prompts);
+        // Every overlap prompt violates a cap of 1 — that is what makes the
+        // ≤1 classes above meaningful rather than untested.
+        expect(forced).toHaveLength(overlap!.prompts.length);
+        expect(forced[0]).toContain('delegation-nudge');
+        expect(forced[0]).toContain('skill-route');
+    });
+
+    it('capViolations stays silent when the cap is satisfied', () => {
+        const overlap = corpus.classes.find((c) => (c.expect_nudges ?? 0) === 2);
+        expect(capViolations(2, overlap!.prompts)).toEqual([]);
     });
 
     it('the runner distinguishes fire from silence', () => {
@@ -195,5 +227,13 @@ describe('nudge-interference — the assertion has teeth', () => {
         expect(firedNudges('Set up Terraform state locking for the staging bucket')).toEqual([
             'skill-route',
         ]);
+    });
+
+    it('a crashing nudge is a failure, not a silence', () => {
+        // Guards the finding directly: the registry key is looked up by name, so
+        // an unmapped one must throw rather than read as "did not fire".
+        expect(() => nudgeFires('src/scripts/hooks/does_not_exist_hook.ts', 'x')).toThrow(
+            /CONCERN_REGISTRY/,
+        );
     });
 });

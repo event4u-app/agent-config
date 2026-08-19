@@ -180,16 +180,26 @@ export function bench(opts: { platform?: string; budgetPath?: string } = {}): { 
     }
 
     // Per-turn aggregate (road-to-standing-context-40k 4.1). The per-slot rows
-    // above cap ONE fire each; a turn spans several slots, so the sum over the
-    // non-exempt ones is the reading the runtime enforcer accumulates against.
+    // above cap ONE fire each; a turn spans several slots, so this sums the
+    // non-exempt ones.
     //
-    // HONEST SCOPE, inherited from this bench's header and worth restating for
-    // the new row: the fixtures fire one of each slot, so this is a per-turn
-    // FLOOR, not the live distribution. A real turn with n tool calls fires
-    // pre/post_tool_use n times and the true aggregate is higher — that axis is
-    // exactly what the dispatcher enforces at runtime and the injection census
-    // measures. Reporting the fixture sum as "the per-turn load" would be the
-    // coverage inflation the honest-scope note refuses.
+    // NOT THE ENFORCED NUMBER, and the distinction was a review finding worth
+    // stating rather than glossing. This bench sums every bound concern's
+    // `reason` + `additional_context` + `context` per slot, regardless of exit
+    // code. The runtime enforcer sums only the messages whose `rc` equals the
+    // reduced verdict, never reads `context` outside the exempt `session_start`,
+    // and counts neither the reason join nor the `hookSpecificOutput` JSON
+    // envelope the host actually receives. So the two measure different
+    // populations and neither is a check on the other — calling this "the
+    // reading the enforcer accumulates against" (as an earlier draft of this
+    // comment did) asserted a comparability that does not hold in either
+    // direction.
+    //
+    // HONEST SCOPE, inherited from this bench's header: the fixtures fire one of
+    // each slot, so this is a per-turn FLOOR over committed fixtures, not the
+    // live distribution. A real turn with n tool calls fires pre/post_tool_use n
+    // times and the true aggregate is higher — that axis is what the dispatcher
+    // enforces at runtime and the injection census measures.
     const turnRow = budget.per_turn_aggregate_cap_bytes;
     let turnAggregate: TurnAggregate | null = null;
     if (turnRow !== undefined && typeof turnRow.cap_bytes === 'number') {

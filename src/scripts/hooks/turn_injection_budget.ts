@@ -15,21 +15,33 @@
  *
  * This module is the runtime half. It accumulates the bytes a dispatch is
  * about to emit, per turn, and — when the aggregate would exceed the cap —
- * drops advisory messages until the remainder fits.
+ * drops droppable messages until the remainder fits.
  *
  * SAFETY BY CONSTRUCTION (roadmap Risk 5: "the advisory-drop policy hides a
- * safety-relevant warning"). A droppable message is one whose concern declares
- * `severity: advisory` AND `fail_closed: false`. Everything else is retained
- * unconditionally, even when that leaves the emission over cap — an over-cap
- * emission is a budget finding, whereas a swallowed blocking warning is a
- * safety failure, and the two are not tradeable. The over-cap case is recorded
- * rather than silently tolerated.
+ * safety-relevant warning"). Droppability is decided at the call site and
+ * carried in, as `NOT blocking AND NOT fail_closed`. The negative form is
+ * deliberate and was a review finding: an `advisory`-positive test would make a
+ * future `severity: warn` concern silently UNDROPPABLE, which inverts the
+ * policy the budget file documents. Anything blocking or fail-closed is
+ * retained unconditionally, even when that leaves the emission over cap — an
+ * over-cap emission is a budget finding, whereas a swallowed blocking warning
+ * is a safety failure, and the two are not tradeable. The over-cap case is
+ * recorded rather than silently tolerated.
  *
- * WHAT COUNTS AS A TURN. A `user_prompt_submit` fire starts one. Every
- * non-exempt slot after it accumulates into the same turn until the next
- * `user_prompt_submit`. Slots listed in `exempt_slots` neither open a turn nor
- * accumulate — they are the session-lifecycle and compaction paths that carry
- * the one-shot restore payloads.
+ * WHAT COUNTS AS A TURN, and where this module declines to guess. A
+ * `user_prompt_submit` fire starts one. Every non-exempt slot after it
+ * accumulates into the same turn until the next `user_prompt_submit`. Slots
+ * listed in `exempt_slots` neither open a turn nor accumulate.
+ *
+ * A host that binds no `user_prompt_submit` therefore has NO turn boundary, and
+ * on such a host this module accumulates nothing at all. That is not a
+ * simplification — it was a live defect the R2 review caught: `augment` binds
+ * `stop`, `pre_tool_use` and `post_tool_use` (all non-exempt) and no prompt
+ * slot, so with a slot-only exemption the accumulator never reset and the
+ * per-turn cap silently became a per-SESSION cap that dropped every advisory
+ * for the rest of the session once passed. `hasTurnBoundary` is the guard, and
+ * the caller resolves it from the manifest rather than from a hardcoded host
+ * list.
  *
  * PII-EXCLUSION-BY-CONSTRUCTION. The state file's type carries a schema
  * version, a session id, a turn counter and two integers. It has NO field
@@ -37,13 +49,16 @@
  * the same discipline `domain-safety-pii` § Surface 2 states for logs and
  * `_record_rule_trips` applies to its counters. Never widen it.
  *
- * Fail-open throughout: an unreadable budget, an unwritable state file, or a
- * corrupt record all resolve to "no cap applied". A broken accountant must
- * never swallow a concern's message.
+ * Fail-open throughout: an unreadable budget, an unwritable state file, a
+ * corrupt record, or a session id the dispatcher deliberately made unstable all
+ * resolve to "no cap applied". A broken accountant must never swallow a
+ * concern's message.
  */
 
 import * as fs from "node:fs";
 import * as path from "node:path";
+
+import { atomic_write_json } from "./state_io.js";
 
 /** The turn accumulator, on disk. Counts and ids only — never content. */
 export interface TurnInjectionState {
@@ -53,7 +68,7 @@ export interface TurnInjectionState {
     turn: number;
     /** Payload bytes already emitted in this turn, across slots. */
     spent_bytes: number;
-    /** Advisory messages dropped in this turn, across slots. */
+    /** Messages dropped in this turn, across slots. */
     dropped: number;
 }
 
@@ -62,15 +77,17 @@ export interface TurnBudget {
     readonly exemptSlots: ReadonlySet<string>;
 }
 
-/** One candidate message, with the two facts the drop decision needs. */
+/** One candidate message, with the one fact the drop decision needs. */
 export interface CandidateMessage {
     /** Concern id — used for the dispatch-issues record, never emitted. */
     readonly concern: string;
     readonly text: string;
-    /** `severity: advisory` in the manifest. */
-    readonly advisory: boolean;
-    /** `fail_closed: true` in the manifest. */
-    readonly failClosed: boolean;
+    /**
+     * `NOT blocking AND NOT fail_closed`, decided by the caller from the
+     * manifest declaration. See the safety note in the module header for why
+     * this is stated negatively.
+     */
+    readonly droppable: boolean;
 }
 
 export interface DropRecord {
@@ -97,8 +114,20 @@ export interface CapVerdict {
     readonly overCapAfterDrops: boolean;
 }
 
-export const STATE_REL = path.join("agents", "runtime", "state", "turn-injection.json");
+export const STATE_DIR_REL = path.join("agents", "runtime", "state", "turn-injection");
 const SCHEMA_VERSION = 1;
+
+/**
+ * Session ids the dispatcher synthesises per invocation.
+ *
+ * `_resolve_session_id` falls back to `dispatch-<ts>-<pid>` for an envelope
+ * carrying no id, and its own comment says the instability "is the point". A
+ * per-turn accumulator keyed on such an id reads zero on every fire, so the cap
+ * would be silently unenforced. Detected and declined instead of pretended.
+ */
+export function isStableSessionId(sessionId: string): boolean {
+    return sessionId.trim() !== "" && !sessionId.startsWith("dispatch-");
+}
 
 /** Byte length of a message as the emission layer will write it. */
 export function messageBytes(text: string): number {
@@ -106,10 +135,31 @@ export function messageBytes(text: string): number {
 }
 
 /**
+ * Cached budget row, keyed by path. The per-tool-call slots fire on the
+ * hottest hook path and re-parsing an ~8 KB config on each of them was a
+ * review finding; a hook process is short-lived and single-dispatch, so a
+ * process-lifetime cache cannot go stale within one run.
+ */
+const _budgetCache = new Map<string, TurnBudget | null>();
+
+/**
  * Read the per-turn aggregate row. Returns `null` when the row is absent or
  * unusable — the caller then applies no cap, which is the pre-4.1 behaviour.
  */
 export function readTurnBudget(budgetPath: string): TurnBudget | null {
+    const cached = _budgetCache.get(budgetPath);
+    if (cached !== undefined) return cached;
+    const resolved = _readTurnBudgetUncached(budgetPath);
+    _budgetCache.set(budgetPath, resolved);
+    return resolved;
+}
+
+/** Test seam: drop the cache so a fixture can swap budget files in one process. */
+export function _clearTurnBudgetCache(): void {
+    _budgetCache.clear();
+}
+
+function _readTurnBudgetUncached(budgetPath: string): TurnBudget | null {
     let doc: Record<string, unknown>;
     try {
         doc = JSON.parse(fs.readFileSync(budgetPath, "utf-8")) as Record<string, unknown>;
@@ -127,8 +177,18 @@ export function readTurnBudget(budgetPath: string): TurnBudget | null {
     return { capBytes: cap, exemptSlots: new Set(exempt) };
 }
 
-function statePath(workspaceRoot: string): string {
-    return path.join(workspaceRoot, STATE_REL);
+/**
+ * Per-SESSION state path.
+ *
+ * One shared file per workspace let two concurrent sessions — or a subagent
+ * carrying its own id — zero each other on every fire, since a record from a
+ * foreign session reads as "no bytes spent". The estate's own pattern for
+ * per-session state is a directory (`agents/runtime/state/end-review-nudge/`);
+ * this follows it.
+ */
+export function statePath(workspaceRoot: string, sessionId: string): string {
+    const safe = sessionId.replace(/[^A-Za-z0-9._-]/g, "_");
+    return path.join(workspaceRoot, STATE_DIR_REL, `${safe}.json`);
 }
 
 /** Read the accumulator, or a zeroed one for a session with no record yet. */
@@ -142,13 +202,14 @@ export function readTurnState(workspaceRoot: string, sessionId: string): TurnInj
     };
     let parsed: unknown;
     try {
-        parsed = JSON.parse(fs.readFileSync(statePath(workspaceRoot), "utf-8"));
+        parsed = JSON.parse(fs.readFileSync(statePath(workspaceRoot, sessionId), "utf-8"));
     } catch {
         return zero;
     }
     if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return zero;
     const doc = parsed as Record<string, unknown>;
-    // A record from a different session says nothing about this one's turn.
+    // The path is already session-scoped; this is a belt-and-braces check for a
+    // hand-edited or collided file, not the isolation mechanism.
     if (doc["session_id"] !== sessionId) return zero;
     const turn = typeof doc["turn"] === "number" ? doc["turn"] : 0;
     const spent = typeof doc["spent_bytes"] === "number" ? doc["spent_bytes"] : 0;
@@ -162,12 +223,18 @@ export function readTurnState(workspaceRoot: string, sessionId: string): TurnInj
     };
 }
 
-/** Persist the accumulator. Fail-open: a write failure applies no cap later. */
+/**
+ * Persist the accumulator, atomically — the sibling counter in the calling file
+ * (`_record_rule_trips`) uses the same primitive for the same class of artefact
+ * in the same directory, and a plain write could lose or truncate the record
+ * when two dispatches interleave. Fail-open: a write failure applies no cap
+ * later.
+ */
 export function writeTurnState(workspaceRoot: string, state: TurnInjectionState): void {
     try {
-        const target = statePath(workspaceRoot);
+        const target = statePath(workspaceRoot, state.session_id);
         fs.mkdirSync(path.dirname(target), { recursive: true });
-        fs.writeFileSync(target, JSON.stringify(state, null, 2) + "\n", "utf-8");
+        atomic_write_json(target, state as unknown as Record<string, unknown>);
     } catch {
         /* observability, never a dispatch failure */
     }
@@ -176,42 +243,37 @@ export function writeTurnState(workspaceRoot: string, state: TurnInjectionState)
 /**
  * Decide which messages survive the turn cap.
  *
- * Pure: no I/O, no clock. The drop order is lowest-severity-first, and within
- * the droppable set LARGEST-first — dropping one 3 KB advisory beats dropping
- * four 200-byte ones to free the same room, and it keeps the verdict
- * deterministic for a fixture.
+ * Pure: no I/O, no clock. Droppable messages go largest-first — dropping one
+ * 3 KB advisory beats dropping four 200-byte ones to free the same room, and it
+ * keeps the verdict deterministic for a fixture. Byte lengths are measured once
+ * up front rather than inside the running total and the sort comparator.
  */
 export function applyTurnCap(
     messages: readonly CandidateMessage[],
     spentBytes: number,
     capBytes: number,
 ): CapVerdict {
+    const sizes = messages.map((m) => messageBytes(m.text));
     const retained = new Set(messages.map((_, i) => i));
     const dropped: DropRecord[] = [];
-    const bytesOf = (i: number): number => messageBytes(messages[i]?.text ?? "");
-    const total = (): number => {
-        let n = spentBytes;
-        for (const i of retained) n += bytesOf(i);
-        return n;
-    };
+    let running = spentBytes + sizes.reduce((n, b) => n + b, 0);
 
-    if (total() > capBytes) {
-        // Droppable = advisory AND not fail_closed. Largest first.
+    if (running > capBytes) {
         const droppable = messages
             .map((m, i) => ({ m, i }))
-            .filter(({ m }) => m.advisory && !m.failClosed)
-            .sort((a, b) => bytesOf(b.i) - bytesOf(a.i) || a.i - b.i);
+            .filter(({ m }) => m.droppable)
+            .sort((a, b) => (sizes[b.i] as number) - (sizes[a.i] as number) || a.i - b.i);
         for (const { m, i } of droppable) {
-            if (total() <= capBytes) break;
+            if (running <= capBytes) break;
             retained.delete(i);
-            dropped.push({ concern: m.concern, bytes: bytesOf(i) });
+            running -= sizes[i] as number;
+            dropped.push({ concern: m.concern, bytes: sizes[i] as number });
         }
     }
 
     const keptIndices = [...retained].sort((a, b) => a - b);
     const kept = keptIndices.map((i) => messages[i] as CandidateMessage);
-    let keptBytes = 0;
-    for (const i of retained) keptBytes += bytesOf(i);
+    const keptBytes = keptIndices.reduce((n, i) => n + (sizes[i] as number), 0);
     return {
         kept,
         keptIndices,

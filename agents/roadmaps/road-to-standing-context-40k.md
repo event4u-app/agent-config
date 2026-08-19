@@ -244,8 +244,25 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
       Second finding, for the same reason: a turn boundary had no representation
       anywhere. `user_prompt_submit` is used as the boundary here, which is
       correct on `claude` and is a *choice* rather than a host fact — a host
-      without that slot gets no turn accounting at all, and the module fails
-      open rather than pretending otherwise. -->
+      without that slot gets no turn accounting at all.
+      **Corrected 2026-08-19 after the R2 review, because the sentence above
+      claimed something the first implementation did not do.** It read "the
+      module fails open rather than pretending otherwise", and it did not:
+      exemption was per SLOT, so on `augment` — which binds `stop`,
+      `pre_tool_use` and `post_tool_use`, all non-exempt, and no prompt slot —
+      nothing ever reset the accumulator and the per-turn cap silently became a
+      per-SESSION cap that dropped every advisory for the rest of the session
+      once passed. The guard now exists (`hasTurnBoundary`, resolved from the
+      manifest at the call site) and the claim is true. Three further
+      preconditions came out of the same review and are recorded in the config
+      row: the emission must actually carry the reasons (`emitFor` emits nothing
+      for `severity: allow` or an unverified platform, so charging those bills
+      the turn for text nobody receives — a crashed concern is the sharp case),
+      the session id must be stable (`dispatch-<ts>-<pid>` is synthesised per
+      invocation by design, and an accumulator keyed on it reads zero every
+      fire), and the turn reset must precede the empty-message return, which it
+      did not — and by this branch own corpus the empty case is 463 of 510
+      prompts, i.e. the common path. -->
       <!-- verify: ./scripts-run src/scripts/bench_hook_injection -->
 - [x] **4.2** Interference fixture: one routing-matrix-style corpus file asserting
       that for each prompt class at most one nudge fires. The delegation-nudge and

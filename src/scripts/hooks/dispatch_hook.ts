@@ -49,11 +49,12 @@ import {
   clearHookStdinOverride,
   readFd0ToEnd,
 } from "./hook_stdin.js";
-import { emitFor, type Severity } from "./host_semantics.js";
+import { emitFor, emissionCarriesReasons, type Severity } from "./host_semantics.js";
 import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
 import {
   applyTurnCap,
+  isStableSessionId,
   readTurnBudget,
   readTurnState,
   writeTurnState,
@@ -138,6 +139,20 @@ export function _severity_for(rc: number): string {
  */
 export function _is_advisory(concern: JsonObject): boolean {
   return String(concern["severity"] ?? "").trim().toLowerCase() === "advisory";
+}
+
+/**
+ * Is this concern declared blocking?
+ *
+ * The complement of `_is_advisory` only while the manifest carries exactly two
+ * severities, which is why the per-turn injection cap
+ * (road-to-standing-context-40k 4.1) asks THIS question rather than negating
+ * that one: droppability is `not blocking and not fail_closed`, so a severity
+ * added later (a `warn` tier, say) stays droppable instead of silently becoming
+ * exempt from a budget it was never granted an exemption from.
+ */
+export function _is_blocking(concern: JsonObject): boolean {
+  return String(concern["severity"] ?? "").trim().toLowerCase() === "blocking";
 }
 
 function _now_iso(): string {
@@ -1059,7 +1074,7 @@ function _write_feedback(
  * call, so the per-slot rows capped one fire of a repeating axis.
  *
  * A `user_prompt_submit` opens a turn and zeroes the accumulator; every other
- * non-exempt slot adds to it. Overflow drops advisory messages, largest first,
+ * non-exempt slot adds to it. Overflow drops droppable messages, largest first,
  * until the emission fits — never a `severity: blocking` or `fail_closed`
  * concern, which is what keeps the policy from hiding a safety-relevant
  * warning (roadmap Risk 5). An emission that still exceeds the cap after every
@@ -1067,17 +1082,44 @@ function _write_feedback(
  * warning is a budget finding, a swallowed block is a safety failure, and the
  * two are not tradeable.
  *
+ * FOUR PRECONDITIONS, all from the R2 review, none of them cosmetic:
+ *
+ *   - `hasTurnBoundary` — the platform must bind `user_prompt_submit`. Without
+ *     it there is no turn to cap: `augment` binds three non-exempt slots and no
+ *     prompt slot, so a slot-only exemption let the accumulator run for the
+ *     whole session and drop every advisory once past the cap.
+ *   - `emissionCarriesReasons` — the messages must actually leave the process.
+ *     `emitFor` returns empty stdout/stderr for `severity: allow` and for every
+ *     unverified platform, so charging those bytes bills the turn for text
+ *     nobody receives. A crashed non-fail-closed concern is the sharp case: its
+ *     stderr becomes an rc-0 "deciding" message, typically the largest one.
+ *   - a stable session id — `_resolve_session_id` synthesises
+ *     `dispatch-<ts>-<pid>` when the envelope carries none, and says the
+ *     instability is deliberate. Keyed on that, every read is zero and the cap
+ *     silently does nothing; declining is honest, pretending is not.
+ *   - the turn reset happens BEFORE the empty-message return. A prompt turn
+ *     that produced no deciding message is the COMMON case (this branch's own
+ *     corpus: 463 of 510 prompts fire neither nudge), so returning early left
+ *     the reset as the exception and leaked bytes across turns.
+ *
  * Fail-open on every path — no budget row, an unreadable file, a missing
  * workspace all mean "emit everything", which is the pre-4.1 behaviour.
  * Skipped in replay mode so fixture replays write no state, exactly like the
  * feedback dir and the trip counters.
  */
 export function _apply_turn_injection_cap<
-  T extends { text: string; concern: string; advisory: boolean; fail_closed: boolean },
->(envelope: JsonObject, session_id: string, event: string, messages: T[]): T[] {
-  if (messages.length === 0) return messages;
+  T extends { text: string; concern: string; droppable: boolean },
+>(
+  envelope: JsonObject,
+  session_id: string,
+  event: string,
+  messages: T[],
+  opts: { hasTurnBoundary: boolean; emissionCarriesReasons: boolean },
+): T[] {
   const budget = readTurnBudget(TOKEN_BUDGET_PATH);
   if (budget === null || !slotCounts(event, budget)) return messages;
+  if (!opts.hasTurnBoundary) return messages;
+  if (!isStableSessionId(session_id)) return messages;
   const workspace = String(envelope["workspace_root"] || process.cwd());
 
   const prior = is_replay_mode()
@@ -1088,12 +1130,27 @@ export function _apply_turn_injection_cap<
   // against the same budget while the next prompt gets a clean one.
   const opensTurn = event === "user_prompt_submit";
   const spent = opensTurn ? 0 : prior.spent_bytes;
+  const priorDropped = opensTurn ? 0 : prior.dropped;
+
+  // Nothing to charge, but the boundary still has to move. Ordered ahead of the
+  // empty-message return on purpose — see precondition 4 in the header.
+  if (messages.length === 0 || !opts.emissionCarriesReasons) {
+    if (!is_replay_mode() && (opensTurn || spent !== prior.spent_bytes)) {
+      writeTurnState(workspace, {
+        schema_version: 1,
+        session_id,
+        turn: opensTurn ? prior.turn + 1 : prior.turn,
+        spent_bytes: spent,
+        dropped: priorDropped,
+      });
+    }
+    return messages;
+  }
 
   const candidates: CandidateMessage[] = messages.map((m) => ({
     concern: m.concern,
     text: m.text,
-    advisory: m.advisory,
-    failClosed: m.fail_closed,
+    droppable: m.droppable,
   }));
   const verdict = applyTurnCap(candidates, spent, budget.capBytes);
 
@@ -1103,15 +1160,25 @@ export function _apply_turn_injection_cap<
       session_id,
       turn: opensTurn ? prior.turn + 1 : prior.turn,
       spent_bytes: spent + verdict.keptBytes,
-      dropped: (opensTurn ? 0 : prior.dropped) + verdict.dropped.length,
+      dropped: priorDropped + verdict.dropped.length,
     });
-    for (const d of verdict.dropped) {
+    // ONE line per fire, naming every concern dropped and its byte count —
+    // not one line per drop. `dispatch-issues.jsonl` is a 200-entry ring, and a
+    // review finding named the consequence: a per-drop append on the
+    // per-tool-call path evicts the resolver-failure records the log exists for.
+    // Each drop is still recorded, which is what the step asks; the ring just
+    // pays once per dispatch instead of once per message.
+    if (verdict.dropped.length > 0) {
+      const named = verdict.dropped
+        .map((d) => `${d.concern} (${String(d.bytes)} B)`)
+        .join(", ");
       log_dispatch_issue(
         workspace,
-        d.concern,
+        "dispatch",
         "budget_exceeded",
-        `advisory dropped: ${String(d.bytes)} B would take the turn past the ` +
-          `${String(budget.capBytes)} B per-turn injection cap (${String(spent)} B already spent)`,
+        `${String(verdict.dropped.length)} message(s) dropped on '${event}': ${named} — ` +
+          `would take the turn past the ${String(budget.capBytes)} B per-turn injection cap ` +
+          `(${String(spent)} B already spent)`,
         "raise per_turn_aggregate_cap_bytes.cap_bytes in src/config/hook-token-budget.json, by evidence, in a PR",
       );
     }
@@ -1362,15 +1429,17 @@ export function main(argv?: string[]): number {
   // fixed-field schema (PII-exclusion-by-construction), and a concern's raw
   // stderr is free-form content. This array is in-memory only.
   //
-  // Carries `concern` / `advisory` / `fail_closed` alongside the text since
-  // 4.1: the per-turn aggregate has to know which messages are droppable, and
-  // that is a property of the manifest declaration, not of the text.
+  // Carries `concern` and `droppable` alongside the text since 4.1: the
+  // per-turn aggregate has to know which messages it may drop, and that is a
+  // property of the manifest declaration, not of the text. Stated negatively
+  // (`not blocking and not fail_closed`) on a review finding — an
+  // advisory-positive test would make a future `severity: warn` concern
+  // undroppable, inverting the documented policy.
   const concern_messages: Array<{
     rc: number;
     text: string;
     concern: string;
-    advisory: boolean;
-    fail_closed: boolean;
+    droppable: boolean;
   }> = [];
   // Per-concern `tools:` filter (see _concern_matches_tool). Applied here so it
   // is one place, after the envelope exists and before any concern is spawned.
@@ -1461,8 +1530,7 @@ export function main(argv?: string[]): number {
         rc,
         text: message,
         concern: String(concern["name"]),
-        advisory: _is_advisory(concern),
-        fail_closed: Boolean(concern["fail_closed"]),
+        droppable: !_is_blocking(concern) && !concern["fail_closed"],
       });
     }
     if (
@@ -1508,17 +1576,31 @@ export function main(argv?: string[]): number {
   // disagree: on Claude Code exit 1 does not block and exit 2 does, which
   // inverted every verdict (see host_semantics.ts for the documented mapping).
   // Unverified platforms keep the legacy pass-through byte-for-byte.
+  const severity = _severity_for(final_rc) as Severity;
   const deciding = concern_messages.filter((m) => m.rc === final_rc);
+  // Per-turn injection aggregate (4.1). Both preconditions are resolved HERE
+  // rather than inside the helper: the turn boundary is a manifest fact about
+  // this platform (does it bind `user_prompt_submit` at all — `augment` does
+  // not), and whether the reasons reach a stream is a `host_semantics` fact
+  // about this (platform, severity). Deriving either one inside the budget
+  // module would put a second copy of both next to the wrong source of truth.
   const decidingReasons = _apply_turn_injection_cap(
     envelope,
     session_id,
     args.event,
     deciding,
+    {
+      hasTurnBoundary:
+        _resolve_concerns(manifest, args.platform, "user_prompt_submit", session_role, {
+          refusal_retry,
+        }).length > 0,
+      emissionCarriesReasons: emissionCarriesReasons(args.platform, severity),
+    },
   ).map((m) => m.text);
   const emission = emitFor(
     args.platform,
     args.event,
-    _severity_for(final_rc) as Severity,
+    severity,
     decidingReasons,
     final_rc,
   );
