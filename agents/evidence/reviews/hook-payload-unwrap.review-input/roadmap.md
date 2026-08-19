@@ -1125,10 +1125,40 @@ PR is already a performance change carrying one security fix.
   malformed payload shapes. Both seats also required the regression to sit at the
   dispatcher boundary rather than on the extractor.
 
-  **What landed.** `extractCommand` now reads the platform payload via the shared
-  `unwrap` from `hooks/envelope.js` — the same accessor `design-slop` adopted for
-  the identical defect — and the hand-rolled `JSON.parse` in `main` is gone with
-  it. `commandFromStdin` is exported so the test can drive the raw stdin text.
+  **What landed.** The extraction descends into `payload` before reading
+  `tool_input`, and gates on `tool_name` against a `COMMAND_TOOLS` allow-list
+  mirroring `block_unauthorized_git`'s. `commandFromStdin` is the only export;
+  the extractor stays private, so it cannot be confused at an import site with
+  `block_unauthorized_git`'s same-named export, which takes the ENVELOPE and
+  returns a nullable string.
+
+  **The descent is local, NOT `envelope.ts`'s shared `unwrap`, and an earlier
+  revision of this paragraph claimed the opposite.** It said the fix adopted
+  "the same accessor `design-slop` adopted", which is false twice over:
+  `design_slop_hook.ts:80` defines its own private `_unwrap`, `ui_route_nudge_hook.ts:72`
+  a second local one, and neither imports `hooks/envelope.js`. The claim also
+  contradicted this same paragraph's own construct table two dozen lines below,
+  which credits those two "via their own `unwrap`". The distinction is
+  behavioural, not stylistic: the shared `unwrap` descends only when all four
+  `ENVELOPE_KEYS` are present, so a producer emitting a partial envelope would
+  have returned this concern to its pre-fix dead state with every test still
+  green. A partial-envelope case is now pinned.
+
+  **Making a dead concern live also makes its false positives live**, and that
+  was not in the original option text. `SHIP_PATTERNS` are unanchored, so before
+  the tool gate any call merely MENTIONING a ship verb — a `grep` for it, a
+  heredoc writing this file — would have spawned `git merge-base` plus a
+  `git diff --numstat` with a 64 MB buffer on the blocking `pre_tool_use` slot.
+  The allow-list has its own cost, pinned in a test rather than left implicit: a
+  host shell not in the set goes dark until added. That is the trade
+  `block_unauthorized_git` already makes while blocking.
+
+  **The stub path is the concern's second silent-death route and is now loud.**
+  `needs_payload_bodies: [input]` is what keeps `tool_input` served whole; if
+  that declaration is ever dropped, the body arrives as a `PayloadStub` and a
+  plain read returns `''` — indistinguishable from "no ship verb", which is the
+  exact failure being fixed. The extractor detects the stub and says so on
+  stderr instead.
 
   **The regression fails against the pre-fix code, verified by restoring it.**
   Against the exact pre-fix extraction, two of the five new cases fail — the
@@ -1140,10 +1170,12 @@ PR is already a performance change carrying one security fix.
 
   **Construct count across the remaining concerns — 2 of 47, and the count took
   three predicates.** A literal-key grep for envelope-root reads found 8 of the
-  47 registered concerns; 6 of those descend into `payload` first with the root
-  only as a fallback (`block-config-weakening`, `block-kernel-rule-writes`,
+  47 registered concerns; **7** of those descend into `payload` first with the
+  root only as a fallback (`block-config-weakening`, `block-kernel-rule-writes`,
   `code-graph-nudge`, `rtk-wrap`, `tool-result-bytes`, and both
-  `design-slop`/`ui-route-nudge` via their own `unwrap`), which is correct. That
+  `design-slop`/`ui-route-nudge` via their own `unwrap`), which is correct — the
+  figure read 6 in an earlier revision while naming seven, so the subtraction
+  below did not close. That
   predicate **missed `injection-scan`, which reads through a loop variable** — so
   a second predicate asked which concerns never mention `payload` at all (14),
   and a third checked which of those read a key the dispatcher places only under
