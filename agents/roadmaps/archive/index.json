@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 507,
+  "count": 508,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -5809,6 +5809,20 @@
         "done": 14,
         "deferred": 0,
         "cancelled": 0
+      },
+      "verdict": null,
+      "status": "ready"
+    },
+    {
+      "slug": "road-to-slot-scoped-concern-loading",
+      "title": "Road to slot-scoped concern loading — stop every concern taxing every slot",
+      "disposition": "closed-with-cancellations",
+      "phases": 4,
+      "steps": {
+        "open": 0,
+        "done": 2,
+        "deferred": 0,
+        "cancelled": 6
       },
       "verdict": null,
       "status": "ready"
