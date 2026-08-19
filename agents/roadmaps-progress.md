@@ -6,7 +6,7 @@
 
 ## Overall
 
-**297 / 543 steps done · 55%**
+**299 / 543 steps done · 55%**
 
 ```text
 ██████████████████████░░░░░░░░░░░░░░░░░░   55%
@@ -52,7 +52,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 26 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 | 27 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
 | 28 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
-| 29 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 8 | 0 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ░░░░░░░░░░ 0% |
+| 29 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 6 | 2 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ██░░░░░░░░ 25% |
 | 30 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 8 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 58% |
 | 31 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 32 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
@@ -1027,7 +1027,7 @@ _1 blocker resolved._
 
 ### [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md)
 
-**Road to standing context 40k — the registered destination, given a route** — 0 / 8 done (0%)
+**Road to standing context 40k — the registered destination, given a route** — 2 / 8 done (25%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -1035,7 +1035,7 @@ _1 blocker resolved._
 | 1 | Pull the lever that already exists | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 2 | Shrink the structural payload without touching reach | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | Give rules a runtime carrier, or retire the dead triggers | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
-| 4 | Per-turn injection aggregate | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 4 | Per-turn injection aggregate | ✅ done | 0 | 2 | 0 | 0 | 100% |
 
 <a id="blockers-road-to-standing-context-40k"></a>
 **Blockers**

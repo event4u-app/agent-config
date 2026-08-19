@@ -216,7 +216,7 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
 
 ### Phase 4 — Per-turn injection aggregate
 
-- [ ] **4.1** Add an aggregate row to `hook-token-budget.json`: the sum of all
+- [x] **4.1** Add an aggregate row to `hook-token-budget.json`: the sum of all
       concern emissions per session-turn, capped outside `session_start`, with the
       dispatcher enforcing by dropping lowest-severity advisories first and
       recording each drop in dispatch issues. The cap exempts `severity: blocking`
@@ -224,12 +224,67 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
       safety-relevant warning.
       `verify:` the injection bench reports the aggregate; a fixture exceeding the
       cap drops the right advisory and records it.
-- [ ] **4.2** Interference fixture: one routing-matrix-style corpus file asserting
+      <!-- DONE 2026-08-19. `per_turn_aggregate_cap_bytes` in
+      `src/config/hook-token-budget.json`; runtime half in
+      `src/scripts/hooks/turn_injection_budget.ts`, wired at
+      `dispatch_hook._apply_turn_injection_cap`; bench reports a
+      `turn-aggregate` line and reds on breach; 21 tests in
+      `tests/scripts/hooks/turn_injection_budget.test.ts`.
+      **The step understated what was missing.** It reads as "add a row", but
+      NOTHING in the tree read this budget file at runtime — `bench_hook_injection`
+      was its only consumer, over committed fixtures. So the per-concern and
+      per-slot caps that shipped in 3.1 were CI-only too, and this step is the
+      file's first row with runtime teeth rather than one more row beside
+      equals.
+      `cap_bytes: 10240` is DERIVED, not measured, and the config says so:
+      4096 (user_prompt_submit) + 2048 (stop) + 2048 (pre_tool_use) + 2048
+      (post_tool_use) — the committed per-slot caps for a turn with exactly one
+      tool call. No live per-turn distribution exists; the injection census
+      revises it at the review date.
+      Second finding, for the same reason: a turn boundary had no representation
+      anywhere. `user_prompt_submit` is used as the boundary here, which is
+      correct on `claude` and is a *choice* rather than a host fact — a host
+      without that slot gets no turn accounting at all, and the module fails
+      open rather than pretending otherwise. -->
+      <!-- verify: ./scripts-run src/scripts/bench_hook_injection -->
+- [x] **4.2** Interference fixture: one routing-matrix-style corpus file asserting
       that for each prompt class at most one nudge fires. The delegation-nudge and
       skill-route overlap is the first known pair to pin.
       `verify:` the fixture is green and fails when a second nudge is forced.
+      <!-- DONE 2026-08-19. Corpus
+      `tests/eval/nudge-interference/user-prompt-submit.yaml`, runner
+      `tests/scripts/hooks/nudge_interference.test.ts`, 10 tests green.
+      **THE PAIR DOES DOUBLE-FIRE, and the fixture records it rather than
+      passing over it.** Measured first over the widest prompt corpus in the
+      repo — the 510 prompt lines of `tests/eval/routing-matrix/*.yaml`, platform
+      `claude`: 3 fired delegation-nudge only, 44 skill-route only, 463 neither,
+      **0 both**. So ≤1 holds there, and a fixture built only from that corpus
+      would have been green over a case it never exercises. Two hand-constructed
+      prompts — enumerated files AND strong single-skill terms in one sentence —
+      fire BOTH, reproducibly, e.g. "Audit these files: a.php, b.php, c.php —
+      each needs an Eloquent scope and a FormRequest".
+      The corpus is therefore bidirectional: a `max_nudges` class going above its
+      number reds (a nudge widened), and the recorded `overlap` class going below
+      its number reds too (a suppression landed and the corpus did not follow).
+      NOT FIXED HERE, deliberately: suppressing the second nudge is a behaviour
+      change to two shipped concerns, which is a step of its own, and 4.2 asks
+      for the instrument. See the follow-up note under this phase. -->
+      <!-- verify: npx vitest run tests/scripts/hooks/nudge_interference.test.ts -->
 - **AC-4:** the aggregate appears in the bench output and the overlap fixture is
-  green.
+  green. <!-- MET 2026-08-19: `bench_hook_injection` prints
+  `turn-aggregate 1140 B (cap 10240) over 4 non-exempt slot(s), one fire each`;
+  the fixture is 10/10 green. -->
+
+> **Follow-up this phase produced, recorded so it is not lost.** The
+> delegation-nudge × skill-route double-fire above is a live interference, not a
+> hypothetical: on a prompt carrying both signals the model gets two advisory
+> lines in one turn, which is the per-turn noise this whole roadmap is about. The
+> fix is a suppression rule (one nudge yields when the other has a verdict) plus
+> a decision about WHICH yields — a delegation verdict is coarser and a skill
+> pointer is cheaper to ignore, so the ordering is a judgement, not a
+> derivation. That makes it a maintainer call and a separate step; the corpus
+> above is what makes it measurable, and it will red the moment the suppression
+> lands, which is the intended signal.
 
 ## Blockers
 
