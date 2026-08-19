@@ -1,12 +1,41 @@
 ---
 complexity: lightweight
-status: ready
+status: later
 execution:
   mode: autonomous
 parent_roadmap: road-to-feedback-9-29
 ---
 
 # Road to carrier-layer convergence — 109 rules arrive twice, none identical
+
+> **Parked 2026-08-19. Resume when** the before/after delivered-token pair for
+> Phase 3 exists: both readings taken on the maintainer's own installed topology,
+> either side of `install --layer`, recorded against one named commit, and with
+> the suppressed layer named — not only the token delta. That evidence is the
+> whole of what is missing; Phases 1 and 2 are resolved (Phase 1 done, Phase 2's
+> three steps cancelled plus one added step done), so the two remaining steps are
+> both in Phase 3 and both covered by `b-convergence-machine`, Class 3.
+>
+> Parked rather than left active because every open item is gated outside this
+> roadmap, which is the repository's own active-vs-later test: an agent cannot
+> make progress here now. `/roadmap:process-full` agrees independently — run on
+> this file it terminates at `blocked-preflight` with zero runnable open steps,
+> taking no grant and writing nothing. Leaving it active would make the estate
+> advertise work the command is required to refuse.
+>
+> The blocker is preserved unresolved and still counted: parking claims no
+> reduction in open blockers. AI council 2026-08-19, 2/2 convergent
+> (anthropic/claude-sonnet-4-5 + openai/codex-default, two rounds, blind peer
+> review) on exactly this disposition, against the three alternatives of keeping
+> it active, splitting the finished phases out, or leaving both candidates in
+> place.
+>
+> **The known cost, recorded because it is the one real argument against this
+> move:** `later/` is excluded from `/roadmap:process-*`, so a roadmap 6 of 8
+> steps resolved leaves the working set. Both council seats made a visible
+> parked-work inventory the condition of the disposition, and the same change
+> adds one to the generated dashboard — so this file is discoverable with its
+> resume condition rather than only as a directory entry.
 
 > The delivered-payload measurement found 109 rules present in BOTH carrier
 > layers with **zero byte-identical duplicates — all 109 divergent**. That is two

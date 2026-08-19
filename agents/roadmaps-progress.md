@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 33 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **51** open blockers, **23** need you → `agent-config gates`
+> 31 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **48** open blockers, **21** need you → `agent-config gates`
 
 ## Overall
 
-**316 / 557 steps done · 57%**
+**301 / 539 steps done · 56%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   57%
+██████████████████████░░░░░░░░░░░░░░░░░░   56%
 ```
 
 ## Open roadmaps
@@ -17,38 +17,97 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
-| 2 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
-| 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 12 | 11 | 0 | 1 | [2](#blockers-road-to-context-fidelity) | █████░░░░░ 48% |
-| 5 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
-| 6 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
-| 7 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
-| 8 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 2 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ████░░░░░░ 40% |
-| 9 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
-| 10 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
-| 11 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 12 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 2 | 18 | 0 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 90% |
-| 13 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
-| 14 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 15 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
-| 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 17 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 17 | 10 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ████░░░░░░ 37% |
-| 18 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
-| 19 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
-| 20 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | 0 | █████████░ 94% |
-| 21 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
-| 22 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 23 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 21 | 5 | 11 | 5 | 0 | [4](#blockers-road-to-single-delivery) | ███████░░░ 69% |
-| 24 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
-| 25 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 26 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
-| 27 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
-| 28 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
-| 29 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
-| 30 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 31 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 32 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 33 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+| 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-context-fidelity.md](roadmaps/road-to-context-fidelity.md) | 5 | 24 | 12 | 11 | 0 | 1 | [2](#blockers-road-to-context-fidelity) | █████░░░░░ 48% |
+| 4 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
+| 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | [1](#blockers-road-to-council-blind-review) | ██████░░░░ 60% |
+| 6 | [road-to-distillation-followups.md](roadmaps/road-to-distillation-followups.md) | 2 | 2 | 2 | 0 | 0 | 0 | [2](#blockers-road-to-distillation-followups) | ░░░░░░░░░░ 0% |
+| 7 | [road-to-estate-drawdown.md](roadmaps/road-to-estate-drawdown.md) | 5 | 8 | 3 | 2 | 3 | 0 | [1](#blockers-road-to-estate-drawdown) | ████░░░░░░ 40% |
+| 8 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
+| 9 | [road-to-gate-autonomy.md](roadmaps/road-to-gate-autonomy.md) | 4 | 9 | 1 | 6 | 2 | 0 | [2](#blockers-road-to-gate-autonomy) | █████████░ 86% |
+| 10 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+| 11 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 2 | 18 | 0 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 90% |
+| 12 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
+| 13 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 14 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
+| 15 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 16 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 17 | 10 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ████░░░░░░ 37% |
+| 17 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
+| 18 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
+| 19 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | 0 | █████████░ 94% |
+| 20 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+| 21 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 22 | [road-to-single-delivery.md](roadmaps/road-to-single-delivery.md) | 6 | 21 | 5 | 11 | 5 | 0 | [4](#blockers-road-to-single-delivery) | ███████░░░ 69% |
+| 23 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+| 24 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 25 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
+| 26 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
+| 27 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 5 | 3 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ████░░░░░░ 38% |
+| 28 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 8 | 22 | 9 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 55% |
+| 29 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 30 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 31 | [road-to-user-out-of-the-loop.md](roadmaps/road-to-user-out-of-the-loop.md) | 9 | 40 | 31 | 9 | 0 | 0 | [2](#blockers-road-to-user-out-of-the-loop) | ██░░░░░░░░ 22% |
+
+---
+
+## Parked — `later/` (52 roadmaps, not active backlog)
+
+> Excluded from the table above and from `/roadmap:process-*` by design. Listed here so a resume condition is visible without opening the file.
+
+| Roadmap | Resume when |
+|---|---|
+| [domain-pack-extraction-when-triggered.md](roadmaps/later/domain-pack-extraction-when-triggered.md) | Blocked until: `docs/contracts/domain-pack-overlap-inventory.md` exists. |
+| [road-to-benchmark-obsolescence-lifecycle.md](roadmaps/later/road-to-benchmark-obsolescence-lifecycle.md) | _condition present but unlabelled — see file_ |
+| [road-to-carrier-layer-convergence.md](roadmaps/later/road-to-carrier-layer-convergence.md) | Parked 2026-08-19. Resume when the before/after delivered-token pair for |
+| [road-to-catalogue-host-fit.md](roadmaps/later/road-to-catalogue-host-fit.md) | Blocked until: `agents/evidence/metrics/skill-catalogue.jsonl` holds at |
+| [road-to-command-structure-followup.md](roadmaps/later/road-to-command-structure-followup.md) | Blocked until: the per-item triggers below fire. |
+| [road-to-contract-integrity.md](roadmaps/later/road-to-contract-integrity.md) | only open work — Phase 2 family-first presentation — is blocked until the |
+| [road-to-corpus-knowledge-skills.md](roadmaps/later/road-to-corpus-knowledge-skills.md) | Blocked until the maintainer names the first two corpora (Phase 0.2) or |
+| [road-to-cost-parity-2-state-aware-dispatch.md](roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md) | Resume when EITHER: (a) the orchestration claim queue is free and the |
+| [road-to-council-api-quota-source-split.md](roadmaps/later/road-to-council-api-quota-source-split.md) | Blocked until `agents/evidence/council-api-fallback/quota-source-split-request.md` exists. <!-- ref-ignore --> |
+| [road-to-credible-install.md](roadmaps/later/road-to-credible-install.md) | Resume when the breaking release carrying the Phase-2 scoped-projection |
+| [road-to-cross-model-residuals.md](roadmaps/later/road-to-cross-model-residuals.md) | ## Resume when / Trigger |
+| [road-to-cross-model-routing-eval.md](roadmaps/later/road-to-cross-model-routing-eval.md) | Blocked until all three gates clear: (a) OpenAI and Gemini API |
+| [road-to-deferred-rule-retriever.md](roadmaps/later/road-to-deferred-rule-retriever.md) | Blocked until BOTH hold: (1) the first native engine's Phase-5 benchmark |
+| [road-to-discipline-profile-tiering-followup.md](roadmaps/later/road-to-discipline-profile-tiering-followup.md) | Resume when: an open-source-host adapter exists AND the maintainer wants |
+| [road-to-external-proof-upgrade.md](roadmaps/later/road-to-external-proof-upgrade.md) | Resume when the maintainer picks up the encryption default-flip; it needs no |
+| [road-to-gateway-harvest.md](roadmaps/later/road-to-gateway-harvest.md) | Resume when the maintainer decides to spend a slot on it. That is the only |
+| [road-to-guided-journeys.md](roadmaps/later/road-to-guided-journeys.md) | Resume when the maintainer decides to spend a slot on it. That is the only |
+| [road-to-harvest-second-sweep-proposals.md](roadmaps/later/road-to-harvest-second-sweep-proposals.md) | they are tracked, not lost — neither is auto-applied. Resume when the |
+| [road-to-inbox-harvest-2026-08-d-llm-distillation-comparison.md](roadmaps/later/road-to-inbox-harvest-2026-08-d-llm-distillation-comparison.md) | _condition present but unlabelled — see file_ |
+| [road-to-install-path-convergence-followup.md](roadmaps/later/road-to-install-path-convergence-followup.md) | Blocked until the bootstrap shim has shipped and a monitoring window |
+| [road-to-live-app-verdict.md](roadmaps/later/road-to-live-app-verdict.md) | Blocked until: a consumer repo's live-app CI run of the |
+| [road-to-mcp-full-power.md](roadmaps/later/road-to-mcp-full-power.md) | Blocked until the next council-approved MCP tool batch exists — the only open work (Phase 5 Step 3 codegen bridge + AC2) generates tools from an approved cut list, and the 2026-07-07 verdict left z... |
+| [road-to-mission-catalogue.md](roadmaps/later/road-to-mission-catalogue.md) | Status: later (parked). Blocked until the `/mission:upgrade` |
+| [road-to-mixed-trigger-activation-cost.md](roadmaps/later/road-to-mixed-trigger-activation-cost.md) | Blocked until: the host exposes an `InstructionsLoaded` observer that a |
+| [road-to-originality-gate-and-contributor-funnel.md](roadmaps/later/road-to-originality-gate-and-contributor-funnel.md) | Blocked until: the extraction demand-gate window closes — floor met |
+| [road-to-per-workspace-license-policy.md](roadmaps/later/road-to-per-workspace-license-policy.md) | Blocked until: a real consumer repo hits the v1 escalation, i.e. a |
+| [road-to-plugin-runtime-borrowings.md](roadmaps/later/road-to-plugin-runtime-borrowings.md) | Resume when the maintainer decides to spend a slot on it. That is the only |
+| [road-to-policy-evaluation-core.md](roadmaps/later/road-to-policy-evaluation-core.md) | Blocked until BOTH hold: (1) the first native engine's Phase-5 benchmark |
+| [road-to-product-bets.md](roadmaps/later/road-to-product-bets.md) | Blocked until: a real external user signal naming rule count or surface |
+| [road-to-reach-cost-primary-bench.md](roadmaps/later/road-to-reach-cost-primary-bench.md) | _condition present but unlabelled — see file_ |
+| [road-to-reach-headless.md](roadmaps/later/road-to-reach-headless.md) | _condition present but unlabelled — see file_ |
+| [road-to-reach-reddit-approved-api.md](roadmaps/later/road-to-reach-reddit-approved-api.md) | _condition present but unlabelled — see file_ |
+| [road-to-reach-reddit-session.md](roadmaps/later/road-to-reach-reddit-session.md) | _condition present but unlabelled — see file_ |
+| [road-to-reach-transcribe.md](roadmaps/later/road-to-reach-transcribe.md) | _condition present but unlabelled — see file_ |
+| [road-to-reach-twitter-login.md](roadmaps/later/road-to-reach-twitter-login.md) | _condition present but unlabelled — see file_ |
+| [road-to-run-continuation-observation.md](roadmaps/later/road-to-run-continuation-observation.md) | Parked 2026-08-19. Resume when any roadmap carrying |
+| [road-to-skill-ecosystem-capability-queue.md](roadmaps/later/road-to-skill-ecosystem-capability-queue.md) | Resume when a slot frees and the maintainer picks an entry for it. Verify |
+| [road-to-skill-ecosystem-eval-integrity.md](roadmaps/later/road-to-skill-ecosystem-eval-integrity.md) | Resume when a verification slot frees — a predecessor roadmap reaches zero |
+| [road-to-skill-ecosystem-executable-payloads.md](roadmaps/later/road-to-skill-ecosystem-executable-payloads.md) | Blocked until: `agents/evidence/analysis/skill-payload-phase0-spikes.md` |
+| [road-to-skill-ecosystem-runtime-enforcement.md](roadmaps/later/road-to-skill-ecosystem-runtime-enforcement.md) | Resume when one of the two open verification roadmaps reaches zero open |
+| [road-to-skill-ecosystem-security-and-conformance.md](roadmaps/later/road-to-skill-ecosystem-security-and-conformance.md) | Resume when a verification slot frees — a predecessor roadmap reaches zero |
+| [road-to-sparring-critic-spike.md](roadmaps/later/road-to-sparring-critic-spike.md) | Blocked until BOTH hold: (1) `road-to-lean-agent-init.md` is closed and |
+| [road-to-surface-consolidation.md](roadmaps/later/road-to-surface-consolidation.md) | Parked 2026-08-19. Resume when BOTH hold — the condition is conjunctive on |
+| [road-to-thin-flip-under-anchor-scoring.md](roadmaps/later/road-to-thin-flip-under-anchor-scoring.md) | _no resume line recorded_ |
+| [road-to-token-economy-cache-followup.md](roadmaps/later/road-to-token-economy-cache-followup.md) | external trigger: one instrumented week of real sessions. Resume when: |
+| [road-to-token-economy-dispatch-followup.md](roadmaps/later/road-to-token-economy-dispatch-followup.md) | or a maintainer blocker. Resume when EITHER: (a) the `rules_used` |
+| [road-to-token-proof-and-story.md](roadmaps/later/road-to-token-proof-and-story.md) | Resume when: a context-reduction mechanism (orchestration-scoped loading, |
+| [road-to-token-saving-HUMAN-MEASUREMENT.md](roadmaps/later/road-to-token-saving-HUMAN-MEASUREMENT.md) | _condition present but unlabelled — see file_ |
+| [road-to-token-saving.md](roadmaps/later/road-to-token-saving.md) | operator-gated; nothing is agent-workable now. Resume when the operator |
+| [road-to-voice-negative-lexicon.md](roadmaps/later/road-to-voice-negative-lexicon.md) | Resume when the maintainer decides to spend a slot on it. That is the only |
+| [road-to-worker-generation-recycling.md](roadmaps/later/road-to-worker-generation-recycling.md) | construction. Resume when the maintainer blockers are resolved and |
+| [road-to-zero-ceremony-host-primitives.md](roadmaps/later/road-to-zero-ceremony-host-primitives.md) | Blocked until the ADR that governs tier→model mapping enters its recorded |
 
 ---
 
@@ -113,28 +172,6 @@
     egress discipline), then add the two resolver entries (report-only
     workers).
   - **Resolved when:** the policy artefact exists and the resolver entries cite it.
-
-### [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md)
-
-**Road to carrier-layer convergence — 109 rules arrive twice, none identical** — 3 / 5 done (60%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Establish which layer is stale, per rule | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 2 | Converge | ✅ done | 0 | 1 | 0 | 3 | 100% |
-| 3 | Deduplicate, and prove the saving | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-carrier-layer-convergence"></a>
-**Blockers**
-
-- **b-convergence-machine** (owner: user) — blocks Phase 3 only (Phases 1-2 are repo work)
-  - **Recommendation:** **(agent-drafted 2026-08-18 — this entry predates the field; drafted from the roadmap's own text for the consolidated decision sheet, not from a maintainer decision.)** Take all three steps in ONE sitting — reading, `install --layer`, reading — and record both readings against a named commit in the same note. Do not try to reproduce the two-layer topology in the repo: the entry already states that the topology is a property of the install, so a repo-side reconstruction would measure something else and read as the same number. Phases 1-2 are repo work and proceed meanwhile; only Phase 3 waits.
-  - **If you do nothing:** Phases 1-2 land and Phase 3 stays open, which means the convergence claim ships with no before/after pair behind it — the shape where a number is published and the measurement that would falsify it was never taken.
-  - **What to do:**
-    Phase 3's before/after pair needs the maintainer machine,
-    since the two-layer topology is a property of the install rather than of the
-    repo. Run the reading, apply `install --layer`, run it again.
-  - **Resolved when:** both readings exist at a named commit.
 
 ### [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md)
 
@@ -1114,34 +1151,6 @@ _1 blocker resolved._
     answered, `≥ 20 usable dispatches` is unreachable regardless of how many
     lines accumulate, and raising the line count further will not move it.
   - **Resolved when:** a probe result records whether any hook slot sees the task-completion payload, and — if one does — `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥ 20 orchestration lines whose quality columns are populated rather than `null`. The bare line-count condition this field carried until 2026-08-16 was already satisfied at 99 lines while the blocker stayed open, which made it unusable as a resolution test.
-
-### [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md)
-
-**Road to surface consolidation — collapse the proactive mental surface, remove don't add** — 12 / 13 done (92%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Collapse the proactive suggestion surface (the core) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Supporting net-reductions (remove / fold, never add) | ✅ done | 0 | 4 | 1 | 0 | 100% |
-| 3 | Utilization-window disposition sweep (re-homed 2026-07-28) | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
-
-<a id="blockers-road-to-surface-consolidation"></a>
-**Blockers**
-
-- **repo-admin-and-usage** (owner: maintainer) — blocks branch-protection apply; utilization-driven MERGE/DEMOTE/HIDE/REMOVE of artefacts (needs loaded-vs-fired usage over the window); auto-tiering monitoring
-  - **Recommendation:** (a) plus (b) — apply protection now and keep the removals waiting. Protection is a settings action whose cost is one visit to repo settings, while every removal is irreversible against artefacts nobody has usage data for, and this package's own discipline is that a deletion needs a data-backed list rather than a plausible one. (c) is worth doing at the same time, since one entry blocking two unrelated things is why the cheap half has waited on the expensive one.
-  - **If you do nothing:** the required-check set stays advisory — a check can go red on the trunk without refusing the merge, which is exactly the state branch protection exists to end — and the artefact surface keeps growing with no removal ever justified, which is the condition this roadmap was opened to close.
-  - **What to do:**
-    the branch-protection `gh api` is a repo-settings UI action; utilization removal needs real usage data before anything is deleted. The two halves share nothing but this entry, so decide them separately: (a) apply branch protection now — it has no data dependency; (b) hold the utilization-driven MERGE/DEMOTE/HIDE/REMOVE list until a loaded-vs-fired window exists; (c) split this blocker in two so the second half stops holding the first.
-  - **Resolved when:** branch protection is on and the utilization window has produced a data-backed removal list.
-- **benchmark-spend** (owner: user) — blocks lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
-  - **Recommendation:** (a) alone, if anything. It is the only one of the three with a runner and a spend cap already in the tree, so it is the only one that can be authorized against a real estimate rather than a guess; (b) needs a runner named first, and until either verdict exists (c) is a decision about a question nobody has asked recently.
-  - **If you do nothing:** nothing degrades and nothing is at risk — which is precisely why this has not moved. The cost is that the Unified Verification Router decision stays parked indefinitely while reading as pending, so the roadmap cannot close and a reader cannot tell a deferred decision from a forgotten one.
-  - **What to do:**
-    each is a spend-bearing (or corpus-gated) paid run, authorized per run and never as a bundle. The options: (a) authorize the lazy-catalog A/B — `task bench:ab:live -- --budget <N>`, which caps per-task spend and resumes rather than re-spends when restarted with the same flags; (b) authorize the team / adversarial-council benchmarks, which have no task wired today and need their runner named before an estimate exists; (c) authorize none and mark the Unified Verification Router decision cancelled rather than parked, since it is gated on verdicts (a) and (b) would produce.
-  - **Resolved when:** the maintainer authorizes the specific run with an estimate, or records (c).
-
-_1 blocker resolved._
 
 ### [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md)
 
