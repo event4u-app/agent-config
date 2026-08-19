@@ -166,11 +166,39 @@ export function writeMemo(
     }
     const dir = runDir(repoRoot, runId);
     fs.mkdirSync(dir, { recursive: true });
-    const index = nextIndex(dir);
-    const file = path.join(dir, `${String(index).padStart(3, '0')}.md`);
     const stamp = (opts.now ?? ((): Date => new Date()))().toISOString();
-    fs.writeFileSync(file, render(memo, index, stamp), 'utf-8');
-    return { path: file, index };
+    // Claim the slot with `wx` and retry on collision, rather than
+    // read-then-write.
+    //
+    // R2 review, finding 10. `nextIndex` followed by a plain `writeFileSync`
+    // is a read-then-write with no lock: two memos written for the same run
+    // concurrently — the unattended or parallel lane this module exists for,
+    // or simply two shell calls — compute the same index and the second
+    // silently overwrites the first. That breaks the exact property the header
+    // sells as this module's reason to exist ("monotonic and gap-free per run,
+    // so a reader can tell a pruned memo from an unwritten one"), because a
+    // LOST memo leaves no gap at all.
+    //
+    // The bound is generous and finite: a loop that cannot fail would hide a
+    // permission error as a hang.
+    const MAX_ATTEMPTS = 64;
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+        const index = nextIndex(dir);
+        const file = path.join(dir, `${String(index).padStart(3, '0')}.md`);
+        try {
+            fs.writeFileSync(file, render(memo, index, stamp), { encoding: 'utf-8', flag: 'wx' });
+            return { path: file, index };
+        } catch (err) {
+            // EEXIST means another writer took this index between the read and
+            // the write — re-read and take the next one. Anything else (EACCES,
+            // ENOSPC) is a real failure and must not be retried into a hang.
+            if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
+        }
+    }
+    throw new Error(
+        `decision_memo: could not claim an index for run ${JSON.stringify(runId)} ` +
+            `after ${MAX_ATTEMPTS} attempts — another writer is taking every slot`,
+    );
 }
 
 /** Every memo of one run, in index order. */

@@ -43,7 +43,12 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { is_expired, register_dir, type SessionRecord } from './_lib/session_register.js';
-import { countRoadmap, readCheckpoint, roadmapPath } from './_lib/run_checkpoint.js';
+import {
+    countRoadmap,
+    latestCheckpointFor,
+    readCheckpoint,
+    roadmapPath,
+} from './_lib/run_checkpoint.js';
 import { readBudget } from './_lib/unattended_guard.js';
 
 /** UOTL 6.2 verbatim: at most three relaunches per run. */
@@ -103,8 +108,15 @@ export function writeLedger(repoRoot: string, ledger: RelaunchLedger): void {
         fs.mkdirSync(path.dirname(file), { recursive: true });
         fs.writeFileSync(file, `${JSON.stringify(ledger, null, 2)}\n`, 'utf-8');
     } catch {
-        // The ledger bounds relaunches; a failed write must not silently
-        // UNBOUND them, so the caller treats a write failure as a stop below.
+        // Swallowed, and the honest reason is that there is NO CALLER — the
+        // only thing that would relaunch is the spawn Phase 4.0 deliberately
+        // does not build, so `writeLedger` is a writer waiting for one.
+        //
+        // R2 review, finding 13: this comment used to assert that "the caller
+        // treats a write failure as a stop below", which describes a control
+        // that does not exist. When the spawn lands, the swallow becomes the
+        // wrong shape and must be replaced by a thrown error the spawn catches
+        // — a ledger that bounds relaunches cannot fail open.
     }
 }
 
@@ -282,8 +294,20 @@ export function digest(repoRoot: string, candidates: readonly Candidate[], now: 
     const memoRoot = path.join(repoRoot, 'agents', 'runtime', 'state', 'decisions');
     let memoCount = 0;
     let memoRuns = 0;
+    let entries: string[] = [];
     try {
-        for (const run of fs.readdirSync(memoRoot)) {
+        entries = fs.readdirSync(memoRoot);
+    } catch {
+        // no memos yet — reported as zero below, which is a real answer
+    }
+    for (const run of entries) {
+        // The try is INSIDE the loop. R2 review, finding 6: with it outside,
+        // one non-directory entry under decisions/ — a .DS_Store, a stray
+        // note — threw ENOTDIR, aborted the whole walk and reported whatever
+        // partial count had been reached, which is 0 when the bad entry sorts
+        // first. `interruption_report.readMemoCounts` walks the same tree with
+        // the try inside, so the two disagreed on identical data.
+        try {
             const files = fs
                 .readdirSync(path.join(memoRoot, run))
                 .filter((n) => /^\d{3}\.md$/.test(n));
@@ -291,9 +315,9 @@ export function digest(repoRoot: string, candidates: readonly Candidate[], now: 
                 memoRuns += 1;
                 memoCount += files.length;
             }
+        } catch {
+            // a file where a directory was expected — not a run
         }
-    } catch {
-        // no memos yet — reported as zero below, which is a real answer
     }
     lines.push(`  decisions: ${memoCount} memo(s) across ${memoRuns} run(s)`);
 
@@ -314,11 +338,18 @@ const USAGE = `usage: run_supervise [--root PATH] [--once] [--digest] [--interva
 Watches the session register for runs whose session died with open steps left.
 
   --root PATH        repository root (default: cwd)
-  --once             one scan, then exit (default: loop)
+  --once             one scan, then exit. REQUIRED today: looping is not
+                     implemented, so omitting this exits 2 with that message.
   --digest           the morning report instead of the per-session list:
                      dead runs, decision memos written, budget consumed.
                      Reports state; schedules nothing, starts nothing.
-  --interval SECONDS seconds between scans when looping (default: 60)
+  --interval SECONDS accepted and IGNORED — reserved for the loop driver that
+                     lands with the Phase 4.0 primitive. Listed rather than
+                     hidden so the flag is not silently dropped, and marked
+                     rather than documented with a default (R2 review, finding
+                     14: it advertised "default: 60" and was read by nothing,
+                     so an operator following this help got exit 2 and no
+                     watcher).
   --relaunch         ACT: start a fresh session per relaunchable run, up to
                      ${MAX_RELAUNCHES_PER_RUN} per run. Default is report-only —
                      a relaunch spends tokens with nobody watching.
@@ -396,5 +427,12 @@ if (_isCliEntry()) {
     process.exit(main());
 }
 
-/** Re-exported so a resumed run can read its own checkpoint through one path. */
-export { readCheckpoint };
+/**
+ * Re-exported so a resumed run reaches its checkpoint through one path.
+ *
+ * `latestCheckpointFor` is the one a RELAUNCHED session can actually use: it
+ * keys on the roadmap slug, which such a session holds by definition, whereas
+ * `readCheckpoint` keys on the run id derived from the session that died.
+ * R2 review, finding 7 — the checkpoint was write-only until this existed.
+ */
+export { latestCheckpointFor, readCheckpoint };

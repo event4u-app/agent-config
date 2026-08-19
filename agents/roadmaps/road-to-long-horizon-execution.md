@@ -445,7 +445,7 @@ budgets for it rather than discovering it at preflight.
 - **Resolved when:** Phase 4 step `4.3` carries either a benchmark verdict
   with its run date and cost, or a published null naming option (b).
 
-## Done means
+## Acceptance criteria
 
 - [~] A `process-full` contract run finishes a 3-phase roadmap with zero
       synchronous contacts, re-engaging across turns, and opens the PR.
@@ -486,6 +486,6 @@ budgets for it rather than discovering it at preflight.
 | 2 | The agent loops forever on a roadmap it cannot finish | implementation | Without a termination ladder a stuck run burns budget indefinitely. | Six rungs, each an event: max-iterations 25, wall-clock 4h, stall at 3 engagements with no checkbox delta, plus an environment kill switch. | Phase 1 |
 | 3 | A supervisor that relaunches sessions merges work nobody reviewed | product | The external reference this design borrows from auto-merges ready worktrees; inheriting that would break the merge-stays-human anti-goal. | The auto-merge is a named rejection in H-2, restated in 3.1; the supervisor may open a PR and never merges one. | Phase 3 |
 | 4 | Unattended runs spend without a ceiling | implementation | A headless primitive with no budget file converts a scheduling mistake into unbounded cost. | 4.0 carries the global budget file and a job-dedup key as part of the primitive rather than as a follow-up; 4.2 pre-registers the demotion threshold before the first unattended run. | Phase 4 |
-| 5 | A relaunched session trusts a checkpoint that no longer describes the tree | implementation | Resuming by bookkeeping alone re-enters a run on stale claimed state. | 3.2 makes re-verification against the worktree the relaunched session's first act, which is the deliberate departure from the borrowed shape. | Phase 3 |
+| 5 | A relaunched session trusts a checkpoint that no longer describes the tree | implementation | Resuming by bookkeeping alone re-enters a run on stale claimed state. | 3.2 makes re-verification against the worktree the relaunched session's first act, which is the deliberate departure from the borrowed shape. The R2 completion review found the mitigation UNREACHABLE as first shipped — the checkpoint was keyed on the dying session's run id, which a relaunched session cannot derive — and it is reachable now via `latestCheckpointFor(repoRoot, slug)`, the slug being the one key a resume holds by definition. | Phase 3 |
 | 6 | The benchmark stays pending forever and the gate is neither open nor honestly closed | product | D-5 is exactly this shape already; a second indefinite pending would reproduce the defect the roadmap names. | The gate is a declared blocker with two mutually exclusive resolutions, one of which is a published null. | Phase 4 |
 | 7 | A continuation prompt that names no next step degrades into "keep going" | product | A bare imperative is the anti-pattern the harvest section rejects by name, and it produces work with no verifiable target. | The continuation must name the next unchecked step AND its `verify:` line; 2.3 restates the no-self-adversarial-fallback rule in the ladder text. | Phase 1 |

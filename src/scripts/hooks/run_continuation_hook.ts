@@ -85,6 +85,7 @@ import {
     parseRecord,
     sessionRefusalFile,
 } from '../_lib/turn_end_refusals.js';
+import { phaseLines } from '../_lib/roadmap_checkboxes.js';
 
 const EXIT_ALLOW = 0;
 /** Dispatcher-internal block code; the dispatcher maps stop-slot 1 → host 2. */
@@ -195,7 +196,13 @@ export function parseExecutionMode(text: string): string | null {
     return m ? m[1]! : null;
 }
 
-const OPEN_BOX = /^[ \t]*-\s\[ \]\s+(.*)$/;
+/**
+ * An OPEN step. The mark set is the dashboard's, narrowed to the one mark that
+ * means "not done": `[~]` and `[-]` are parked by a human decision, and `[x]`
+ * is finished. The BULLET set is the dashboard's in full, because a `*` bullet
+ * is a legitimate authoring shape that used to read as zero open steps.
+ */
+const OPEN_BOX = /^[ \t]*[-*][ \t]+\[ \][ \t]+(.*)$/;
 
 /**
  * Count open steps and pick the next one. `[~]` / `[-]` never match the open
@@ -206,7 +213,11 @@ export function scanOpenSteps(text: string): ScanResult {
     let open = 0;
     let blocked = 0;
     let next: NextStep | null = null;
-    for (const line of text.split('\n')) {
+    // Phase spans only. A `- [ ]` under `## Done means`, `## Blockers` or
+    // `## Risk Register` is an acceptance criterion, a gate or a risk row —
+    // never an executable step, and re-engaging on one is a guaranteed stall.
+    // See `_lib/roadmap_checkboxes.ts`.
+    for (const line of phaseLines(text)) {
         const m = OPEN_BOX.exec(line);
         if (!m) continue;
         const body = m[1]!;

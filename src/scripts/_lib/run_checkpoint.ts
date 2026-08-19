@@ -31,6 +31,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { CHECKBOX_LINE, phaseLines } from './roadmap_checkboxes.js';
+
 export const CHECKPOINT_DIR_REL = path.join('agents', 'runtime', 'state', 'checkpoints');
 
 /**
@@ -75,11 +77,13 @@ export interface RoadmapCounts {
  */
 export function countRoadmap(text: string): RoadmapCounts {
     const counts: RoadmapCounts = { open: 0, done: 0, parked: 0, next: null };
-    for (const raw of text.split('\n')) {
-        const m = /^\s*-\s*\[([ x~-])\]\s*(.*)$/.exec(raw);
+    // Phase spans only, and the dashboard's own vocabulary — see
+    // `_lib/roadmap_checkboxes.ts` for what each half was getting wrong.
+    for (const raw of phaseLines(text)) {
+        const m = CHECKBOX_LINE.exec(raw);
         if (m === null) continue;
         const mark = m[1];
-        if (mark === 'x') {
+        if (mark === 'x' || mark === 'X') {
             counts.done += 1;
         } else if (mark === '~' || mark === '-') {
             counts.parked += 1;
@@ -161,6 +165,59 @@ export function readCheckpoint(repoRoot: string, runId: string): RunCheckpoint |
     } catch {
         return null;
     }
+}
+
+/**
+ * The most recent checkpoint for a ROADMAP, across every run id.
+ *
+ * R2 review, finding 7. `readCheckpoint` keys on the run id, which is derived
+ * from the session id of the session that DIED — so a relaunched session, which
+ * by definition has a new id and no index from slug to old id, could not reach
+ * its own checkpoint through any path in the tree. `verifyCheckpoint` and
+ * `renderVerification` had zero production call sites, and the loop contract
+ * nonetheless instructed a resumed run that "the first act is verifyCheckpoint".
+ * The mitigation Risk 5 names was unreachable as shipped.
+ *
+ * The roadmap slug is the one key a relaunched run genuinely holds: it claims
+ * the same roadmap, which is what makes it a resume rather than a new run.
+ *
+ * Ties are broken by `written_at` descending, then by filename, so the result
+ * is deterministic when two checkpoints share a timestamp. A malformed or
+ * unreadable file is skipped rather than failing the lookup — a resume that
+ * refuses to start because one stale JSON file is corrupt is worse than a
+ * resume that verifies against the newest readable one.
+ */
+export function latestCheckpointFor(repoRoot: string, roadmap: string): RunCheckpoint | null {
+    const dir = path.join(repoRoot, CHECKPOINT_DIR_REL);
+    let names: string[];
+    try {
+        names = fs.readdirSync(dir).filter((n) => n.endsWith('.json'));
+    } catch {
+        return null;
+    }
+    const found: RunCheckpoint[] = [];
+    for (const name of names.sort()) {
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(fs.readFileSync(path.join(dir, name), 'utf-8'));
+        } catch {
+            continue;
+        }
+        if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) continue;
+        const o = parsed as Record<string, unknown>;
+        if (o['roadmap'] !== roadmap) continue;
+        if (typeof o['run_id'] !== 'string') continue;
+        if (typeof o['open_steps'] !== 'number' || typeof o['done_steps'] !== 'number') continue;
+        found.push(parsed as RunCheckpoint);
+    }
+    if (found.length === 0) return null;
+    found.sort((a, b) => {
+        const at = String(a.written_at ?? '');
+        const bt = String(b.written_at ?? '');
+        if (at !== bt) return at < bt ? 1 : -1;
+        return a.run_id < b.run_id ? 1 : -1;
+    });
+    return found[0] ?? null;
 }
 
 /** One claim's verdict — the field, what was claimed, what is true now. */

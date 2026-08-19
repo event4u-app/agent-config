@@ -20,9 +20,11 @@ import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+    CHECKPOINT_DIR_REL,
     buildCheckpoint,
     checkpointFile,
     countRoadmap,
+    latestCheckpointFor,
     readCheckpoint,
     renderVerification,
     verifyCheckpoint,
@@ -212,5 +214,127 @@ describe('renderVerification', () => {
         const cp = buildCheckpoint(r, 'run1', 'road-to-x') as RunCheckpoint;
         fs.rmSync(path.join(r, 'agents', 'roadmaps', 'road-to-x.md'));
         expect(renderVerification(cp, verifyCheckpoint(r, cp))).toContain('may be assumed');
+    });
+});
+
+describe('countRoadmap — the dashboard vocabulary and the phase span', () => {
+    // R2 review, findings 11 and 15. Both directions matter and they pull
+    // opposite ways: a narrow vocabulary under-counts open work (a run reads
+    // `complete` while work remains), a whole-file scan over-counts it (a
+    // an acceptance criterion is named as the next executable step).
+
+    it('a `*` bullet and an uppercase [X] are read, not skipped', () => {
+        const md = [
+            '## Phase 1 — work',
+            '',
+            '* [X] done with a star bullet and a capital mark',
+            '* [ ] open with a star bullet',
+        ].join('\n');
+        const c = countRoadmap(md);
+        expect(c.done).toBe(1);
+        expect(c.open).toBe(1);
+    });
+
+    it('checkboxes outside a phase span are not counted', () => {
+        // The shape of the roadmap this review was run against: every phase
+        // step closed, and the only open box an acceptance criterion.
+        const md = [
+            '## Phase 1 — work',
+            '',
+            '- [x] the real step',
+            '',
+            '## Acceptance criteria',
+            '',
+            '- [ ] a killed session resumes via the watcher',
+            '',
+            '## Blockers',
+            '',
+            '- [ ] someone funds the benchmark',
+        ].join('\n');
+        const c = countRoadmap(md);
+        expect(c.open).toBe(0);
+        expect(c.done).toBe(1);
+        expect(c.next).toBeNull();
+    });
+
+    it('a roadmap with NO phase heading counts every line — the safe direction', () => {
+        // Returning nothing here would make every unphased roadmap read as
+        // `complete`, which is the more dangerous of the two errors.
+        const c = countRoadmap('- [ ] a step\n- [x] another\n');
+        expect(c.open).toBe(1);
+        expect(c.done).toBe(1);
+    });
+
+    it('a phase span ends at the next H2, not at the end of the file', () => {
+        const md = [
+            '## Phase 1',
+            '- [ ] inside',
+            '## Notes',
+            '- [ ] outside',
+            '### Phase 2',
+            '- [ ] inside again',
+        ].join('\n');
+        expect(countRoadmap(md).open).toBe(2);
+    });
+});
+
+describe('latestCheckpointFor — the lookup a RELAUNCHED session can perform', () => {
+    // R2 review, finding 7. `readCheckpoint` keys on the run id derived from
+    // the session that DIED; a relaunched session has a new id and no index
+    // from slug to old id, so the checkpoint was write-only in practice while
+    // the loop contract instructed a resumed run to verify against it.
+    const write = (root: string, cp: Record<string, unknown>): void => {
+        const dir = path.join(root, CHECKPOINT_DIR_REL);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, `${String(cp['run_id'])}.json`), JSON.stringify(cp), 'utf-8');
+    };
+    const cp = (over: Record<string, unknown>): Record<string, unknown> => ({
+        schema_version: 1,
+        run_id: 'r-old',
+        roadmap: 'road-to-thing',
+        open_steps: 2,
+        done_steps: 3,
+        parked_steps: 0,
+        next_step: 'do the next thing',
+        head: 'abc',
+        written_at: '2026-08-19T01:00:00Z',
+        ...over,
+    });
+
+    it('finds the dying run\'s checkpoint from the roadmap slug alone', () => {
+        const repoRoot = root();
+        write(repoRoot, cp({}));
+        const found = latestCheckpointFor(repoRoot, 'road-to-thing');
+        expect(found?.run_id).toBe('r-old');
+        expect(found?.next_step).toBe('do the next thing');
+    });
+
+    it('picks the NEWEST when a roadmap has several runs behind it', () => {
+        const repoRoot = root();
+        write(repoRoot, cp({ run_id: 'r-a', written_at: '2026-08-19T01:00:00Z' }));
+        write(repoRoot, cp({ run_id: 'r-b', written_at: '2026-08-19T05:00:00Z' }));
+        write(repoRoot, cp({ run_id: 'r-c', written_at: '2026-08-19T03:00:00Z' }));
+        expect(latestCheckpointFor(repoRoot, 'road-to-thing')?.run_id).toBe('r-b');
+    });
+
+    it('ignores other roadmaps, and returns null when none matches', () => {
+        const repoRoot = root();
+        write(repoRoot, cp({ run_id: 'r-other', roadmap: 'road-to-something-else' }));
+        expect(latestCheckpointFor(repoRoot, 'road-to-thing')).toBeNull();
+    });
+
+    it('skips a corrupt file instead of failing the whole lookup', () => {
+        // A resume that refuses to start because one stale JSON is unparseable
+        // is worse than one that verifies against the newest readable record.
+        const repoRoot = root();
+        const dir = path.join(repoRoot, CHECKPOINT_DIR_REL);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'aaa-broken.json'), '{ not json', 'utf-8');
+        write(repoRoot, cp({ run_id: 'zzz-good' }));
+        expect(latestCheckpointFor(repoRoot, 'road-to-thing')?.run_id).toBe('zzz-good');
+    });
+
+    it('returns null when no checkpoint directory exists at all', () => {
+        expect(latestCheckpointFor(root(), 'road-to-thing')).toBeNull();
     });
 });

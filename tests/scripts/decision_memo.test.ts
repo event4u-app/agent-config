@@ -231,3 +231,35 @@ describe('decision_memo — CLI', () => {
         }
     });
 });
+
+describe('writeMemo — a concurrent writer never overwrites a memo', () => {
+    // R2 review, finding 10. The claim this module makes is that the index is
+    // monotonic and gap-free, so a reader can tell a PRUNED memo from an
+    // UNWRITTEN one. A lost write leaves no gap, so it defeats exactly that.
+    it('two writers racing the same index each get their own file', () => {
+        const root = tmpRoot();
+        const run = 'race-run';
+        const dir = runDir(root, run);
+        fs.mkdirSync(dir, { recursive: true });
+        // Simulate the loser of the race: 001 already exists by the time this
+        // writer's `wx` lands, which is precisely the window the old
+        // read-then-write ignored.
+        fs.writeFileSync(path.join(dir, '001.md'), 'written by the other caller', 'utf-8');
+        const res = writeMemo(root, run, MEMO);
+        expect(res.index).toBe(2);
+        expect(fs.readFileSync(path.join(dir, '001.md'), 'utf-8')).toBe(
+            'written by the other caller',
+        );
+        expect(listMemos(root, run)).toHaveLength(2);
+    });
+
+    it('a non-EEXIST failure is raised, never retried into a hang', () => {
+        const root = tmpRoot();
+        // A FILE where the run directory must go: mkdirSync throws EEXIST on
+        // the directory itself, before any slot is claimed.
+        const dir = runDir(root, 'not-a-dir');
+        fs.mkdirSync(path.dirname(dir), { recursive: true });
+        fs.writeFileSync(dir, 'x', 'utf-8');
+        expect(() => writeMemo(root, 'not-a-dir', MEMO)).toThrow();
+    });
+});

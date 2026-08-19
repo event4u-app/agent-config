@@ -381,8 +381,15 @@ A RESUMED RUN RE-VERIFIES THE CHECKPOINT BEFORE ACTING ON IT.
 RESUME BY EVIDENCE, NEVER BY BOOKKEEPING.
 ```
 
-The first act of a resumed run is `verifyCheckpoint` against the current
-tree — the per-field report names WHICH claim went stale, which is what a bare
+The first act of a resumed run is to look its checkpoint up **by roadmap slug**
+— `latestCheckpointFor(repoRoot, slug)` — and then `verifyCheckpoint` it against
+the current tree. The slug, not the run id: a relaunched session has a NEW
+session id, so the run-id-keyed `readCheckpoint` cannot find the checkpoint the
+DYING session wrote, and this instruction named an unreachable path until the
+R2 review's finding 7. The slug is the one key a resumed run holds by
+definition, because claiming the same roadmap is what makes it a resume.
+
+The per-field report then names WHICH claim went stale, which is what a bare
 "stale/fresh" verdict cannot. **A disagreement is not an error**: work landing
 between the checkpoint and the resume is the normal case (a human committed, a
 sibling worktree moved, the dying session finished a step it never recorded),

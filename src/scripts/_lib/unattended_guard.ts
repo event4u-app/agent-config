@@ -200,10 +200,32 @@ export function checkBudget(b: UnattendedBudget, usd: number, tokens: number): B
                 'disables unattended runs rather than permitting unbounded ones',
         };
     }
+    // Each ceiling is checked INDEPENDENTLY, and a 0 on either dimension
+    // refuses any consumption of it rather than skipping the check.
+    //
+    // R2 review, finding 5. The guarded form was `max_tokens > 0 && …`, so an
+    // operator writing `{max_usd: 5, max_tokens: 0}` — following the field's
+    // own "`0` disables" — got an UNBOUNDED token allowance, and `digest()`
+    // then printed `N/0 tokens`, which reads as an exhausted cap while runs
+    // were being permitted. The whole point of this module's zero-default is
+    // that a missing number never means unlimited; a zero written on purpose
+    // must mean the same thing as a zero left unset.
+    if (b.max_usd <= 0 && usd > 0) {
+        return {
+            allowed: false,
+            reason: `USD ceiling is 0 (disabled) and ${usd} was projected`,
+        };
+    }
     if (b.max_usd > 0 && b.spent_usd + usd > b.max_usd) {
         return {
             allowed: false,
             reason: `USD ceiling: ${b.spent_usd} spent + ${usd} projected > ${b.max_usd}`,
+        };
+    }
+    if (b.max_tokens <= 0 && tokens > 0) {
+        return {
+            allowed: false,
+            reason: `token ceiling is 0 (disabled) and ${tokens} was projected`,
         };
     }
     if (b.max_tokens > 0 && b.spent_tokens + tokens > b.max_tokens) {
@@ -283,6 +305,21 @@ export interface PreflightVerdict {
  * Returns every refusal rather than short-circuiting: an operator fixing one
  * precondition at a time round-trips N times, and the whole point of a
  * preflight is that it answers in one pass.
+ *
+ * THE DEDUP PRECONDITION CANNOT FIRE TODAY, and that is stated here rather
+ * than implied by a passing read. It queries the job ledger correctly, but
+ * nothing in the tree WRITES that ledger: `writeJobs`, `bookSpend` and
+ * `writeBudget` have no production caller, so two callers racing the same
+ * `roadmap@head` both receive `ok: true`. R2 review, finding 13 — the module
+ * previously listed dedup among its three preconditions with no note, which
+ * describes a control that is not there.
+ *
+ * The write half belongs to the spawn, which Phase 4.0 deliberately does not
+ * build. The claim-and-release lifecycle is the spawn's to own: a claim
+ * written by a checker that never learns whether the job started would strand
+ * the key on every crash and turn the dedup into a permanent refusal. Until
+ * the spawn exists, treat this as a read that is ready for a writer, never as
+ * a live guarantee.
  */
 export function preflight(input: PreflightInput): PreflightVerdict {
     const refusals: string[] = [];

@@ -272,3 +272,42 @@ describe('isDuplicateFire — a re-fire repeats the block, real progress engages
         expect(isDuplicateFire(legacy, 3, 2, now)).toBe(false);
     });
 });
+
+describe('scanOpenSteps — phase spans only, dashboard bullets', () => {
+    // R2 review, finding 15. On the roadmap this review was run against every
+    // phase step is closed and the only `- [ ]` sits under `## Acceptance criteria`, so
+    // the continuation would have named "A killed session resumes via the
+    // watcher…" as the next step — an observation of a live multi-day run, and
+    // by construction with no `verify:` line. That is a guaranteed stall of
+    // the kind the `blocked-by:` exclusion was added to avoid.
+    it('does not re-engage on an acceptance criterion or a blocker row', () => {
+        const md = [
+            '## Phase 4 — unattended backlog',
+            '',
+            '- [x] **4.1** the digest',
+            '',
+            '## Acceptance criteria',
+            '',
+            '- [ ] A killed session resumes via the watcher and completes',
+            '',
+            '## Blockers',
+            '',
+            '- [ ] someone decides whether to fund the benchmark',
+        ].join('\n');
+        const scan = scanOpenSteps(md);
+        expect(scan.open).toBe(0);
+        expect(scan.next).toBeNull();
+    });
+
+    it('a `*` bullet inside a phase is a real open step', () => {
+        // The narrower bullet set read this as zero open work, and
+        // `run_supervise.classify` then reports `complete`.
+        const scan = scanOpenSteps('## Phase 1\n\n* [ ] **1.0** do the thing\n');
+        expect(scan.open).toBe(1);
+        expect(scan.next?.text).toContain('do the thing');
+    });
+
+    it('an unphased roadmap still yields its steps', () => {
+        expect(scanOpenSteps('- [ ] **0.1** a step\n').open).toBe(1);
+    });
+});

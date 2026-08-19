@@ -9,6 +9,7 @@
  */
 
 import { CouncilResponse, type ExternalAIClient } from './clients.js';
+import { _metaGet } from './py_parity.js';
 
 /**
  * The shape `callMember` reads off a question. Structural rather than an
@@ -18,11 +19,6 @@ import { CouncilResponse, type ExternalAIClient } from './clients.js';
 interface QuestionShape {
     readonly user_prompt: string;
     readonly max_tokens: number;
-}
-
-function _metaGet(d: Record<string, unknown>, k: string, dflt: unknown): unknown {
-    const v = d[k];
-    return v === undefined ? dflt : v;
 }
 
 /** Round half-to-even to `n` decimals, matching CPython's `format(x, ".nf")`. */

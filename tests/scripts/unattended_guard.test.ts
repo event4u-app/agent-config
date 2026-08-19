@@ -29,6 +29,7 @@ import {
     utcDay,
     writeBudget,
     writeJobs,
+    type UnattendedBudget,
 } from '../../src/scripts/_lib/unattended_guard.js';
 
 const dirs: string[] = [];
@@ -249,5 +250,37 @@ describe('preflight — every refusal, not just the first', () => {
         expect(v.ok).toBe(true);
         expect(v.refusals).toEqual([]);
         expect(v.jobKey).toBe('road-to-x@abcdef123456');
+    });
+});
+
+describe('checkBudget — a ceiling written as 0 disables its dimension', () => {
+    // R2 review, finding 5. `0` is documented as "disables" on BOTH fields,
+    // and the guard read it as "skip this check" on the token side.
+    const at = (over: Partial<UnattendedBudget>): UnattendedBudget => ({
+        ...emptyBudget('2026-08-19'),
+        ...over,
+    });
+
+    it('max_tokens: 0 refuses token spend even when the USD ceiling has room', () => {
+        const v = checkBudget(at({ max_usd: 5 }), 0.01, 1000);
+        expect(v.allowed).toBe(false);
+        expect(v.reason).toContain('token ceiling is 0');
+    });
+
+    it('max_usd: 0 refuses USD spend even when the token ceiling has room', () => {
+        const v = checkBudget(at({ max_tokens: 10_000 }), 0.01, 100);
+        expect(v.allowed).toBe(false);
+        expect(v.reason).toContain('USD ceiling is 0');
+    });
+
+    it('a disabled dimension still permits a run that consumes none of it', () => {
+        // The refusal is on CONSUMPTION, not on the dimension existing — a
+        // token-only run under a token ceiling is a legitimate shape.
+        expect(checkBudget(at({ max_tokens: 10_000 }), 0, 100).allowed).toBe(true);
+    });
+
+    it('both ceilings set behave exactly as before', () => {
+        expect(checkBudget(at({ max_usd: 5, max_tokens: 10_000 }), 1, 100).allowed).toBe(true);
+        expect(checkBudget(at({ max_usd: 5, max_tokens: 10_000 }), 9, 100).allowed).toBe(false);
     });
 });
