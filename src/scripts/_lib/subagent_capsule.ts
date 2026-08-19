@@ -120,6 +120,76 @@ function isShortLine(value: unknown, max: number): value is string {
     return typeof value === 'string' && value.length > 0 && value.length <= max && !value.includes('\n');
 }
 
+/**
+ * Is this a path ref rather than prose?
+ *
+ * The discriminator is **whitespace**, and it is deliberately the only one.
+ * A path ref is one token; a prose sentence is several words. Anything
+ * narrower — a character class, a required extension, a mandatory `/` —
+ * rejects entries this tree really uses: a bare directory (`docs`), a sibling
+ * worktree (`../other-worktree/`), a dotfile. Anything wider stops telling the
+ * two shapes apart at all.
+ *
+ * This is a SHAPE check, never an existence or semantics check. A single-token
+ * value that is not a real path passes and then simply never matches anything,
+ * which is correct: the failure this closes is a field whose own documentation
+ * says "a list of path refs" silently accepting full sentences.
+ *
+ * **It is not a matcher, and a consumer must not mistake it for one.** It
+ * answers "is this one token", never "does this entry cover that write target".
+ * It admits a bare directory, a trailing-slash relative ref, a glob and a
+ * `file:line` ref; normalisation, directory-prefix matching and glob matching
+ * are deliberately unspecified here, because they are a separate decision that
+ * belongs to whatever ships the comparison. Reuse this for what VALIDATES;
+ * decide separately what MATCHES.
+ *
+ * **Stated default, not a measured optimum:** zero tracked paths in this repo
+ * contain whitespace, so the rule costs nothing here. *Revisit-if* a consumer
+ * legitimately needs a path containing a space — that needs a quoting
+ * convention, not a wider character class.
+ */
+export function isPathRef(value: unknown): value is string {
+    return typeof value === 'string' && value.length > 0 && !/\s/.test(value);
+}
+
+/**
+ * `checkList` plus the path-ref shape, for a field whose own documentation
+ * calls its entries path refs. Names the offending entries: "one of your
+ * twelve entries is wrong" is not an actionable error.
+ *
+ * The shape report is suppressed for exactly one reason — the same entries
+ * already failed the per-entry budget, where reporting both says the same thing
+ * twice. It is deliberately NOT suppressed by the entry-COUNT error, which is
+ * orthogonal: a 41-entry list of prose sentences must report both problems in
+ * one pass, or the author trims to 40, re-validates, and only then learns the
+ * entries were prose — an extra refuse-and-repair round-trip on the write path
+ * this contract points at as the repair mechanism.
+ */
+function checkPathRefList(
+    errors: string[],
+    field: string,
+    value: unknown,
+    max: number,
+    required: boolean,
+): void {
+    checkList(errors, field, value, max, required);
+    if (!Array.isArray(value)) return;
+    // Same-entry duplicate only: an entry that failed the budget is already
+    // reported, and its shape adds nothing a reader can act on separately.
+    if (value.some((x) => !isShortLine(x, max))) return;
+
+    const bad = value.filter((x) => !isPathRef(x));
+    if (bad.length === 0) return;
+
+    const shown = bad.slice(0, 3).map((x) => JSON.stringify(String(x))).join(', ');
+    errors.push(
+        `${field} carries ${bad.length} entr${bad.length === 1 ? 'y' : 'ies'} that are prose, not path refs: ` +
+            `${shown}${bad.length > 3 ? ', …' : ''} — write the path (src/generated/api.ts, ../other-worktree/) ` +
+            'or drop the entry; a sentence naming a file cannot be compared against a write target, and being ' +
+            'comparable is the whole reason this is a field rather than a line of prose',
+    );
+}
+
 function checkList(
     errors: string[],
     field: string,
@@ -256,6 +326,14 @@ export interface MainSessionRecycleEnvelope {
      * is a field rather than a sentence — the same bar the handoff-envelope
      * adjudication set (a field whose presence is checkable survives where a
      * doctrine whose effect is unmeasured did not).
+     *
+     * The path-ref shape is **enforced** (`isPathRef`), not merely documented.
+     * It was documented-only until 2026-08-19, and the gap was not academic:
+     * the validator applied the ref CHARACTER BUDGET and no shape rule, so the
+     * one real non-empty producer — a composing model — wrote prose sentences
+     * naming files, and every one of them validated. A field that accepts
+     * whatever prose the writer felt like is `constraints` with extra steps,
+     * and nothing downstream can compare it to a write target.
      *
      * Optional: an envelope with nothing off limits states nothing here, and an
      * empty list is not a claim that everything is writable.
@@ -596,7 +674,9 @@ export function validateRecycleEnvelope(input: unknown): string[] {
     errors.push(...decisionTagErrors(e['decisions']));
     checkList(errors, 'constraints', e['constraints'], MAX_LINE_CHARS, false);
     // Path refs, so the REF budget applies — not the prose one `constraints` uses.
-    checkList(errors, 'do_not_touch', e['do_not_touch'], MAX_REF_CHARS, false);
+    // And the SHAPE is checked, not only the budget: the budget alone accepted a
+    // prose sentence naming a file, which is what the only real producer wrote.
+    checkPathRefList(errors, 'do_not_touch', e['do_not_touch'], MAX_REF_CHARS, false);
     checkList(errors, 'open_worker_envelopes', e['open_worker_envelopes'], MAX_REF_CHARS, false);
     checkList(errors, 'artifact_paths', e['artifact_paths'], MAX_REF_CHARS, false);
     checkList(errors, 'suggested_skills', e['suggested_skills'], MAX_REF_CHARS, false);

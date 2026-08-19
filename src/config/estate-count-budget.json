@@ -16,7 +16,7 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 35,
+    "active_roadmaps": 34,
     "later_roadmaps": 49,
     "open_blockers": 74
   },
@@ -121,17 +121,17 @@
     },
     {
       "at": "2026-08-19",
-      "active_roadmaps": 35,
+      "active_roadmaps": 33,
       "later_roadmaps": 49,
-      "open_blockers": 73,
-      "why": "RAISED by 1 active and 3 blockers for road-to-single-delivery, adopted from a four-draft inbox reconciliation. Direction stated plainly because the config-weakening guard asks for it: this is growth, not a tightening, and it is taken rather than offset because the only offset available would be archiving an unrelated roadmap to buy the number back - which moves the count without moving the estate and is what this history repeatedly refuses. later_roadmaps is UNCHANGED at 49, the check that says nothing was relocated to pay for this. WHAT THE +1 BUYS: the inbox held FOUR parallel drafts of one defect plus a cross-review, and adopting more than one would have put three roadmaps on a single subject. One arrives, four are consumed into agents/tmp.old/, and the four-way ambiguity leaves the estate - which is a net reduction in planning surface that this metric cannot see, since a draft in agents/tmp/ was never counted. WHAT THE +3 BUYS: each blocker routes a decision an agent must not take. compact-survival-of-package-only-rules is the sharpest - four package-only rules carry paths:, and once the partition removes their unscoped global twin they stop surviving /compact per ADR-227:79-80, while three of the four carry Iron Laws; the entry carries three enumerated options and a recommendation rather than a flag. host-skill-suppression-capability is a host probe whose negative answer closes it. overlap-check-binding-surface exists because TWO gates in this exact area already report to nobody - check_standing_rule_delivery sits in ci-fast which no workflow invokes, and check_rule_projection_integrity is inert when .agent-tools.yml selects zero tools. Putting a decision in front of the maintainer is the direction this ratchet exists FOR. The measured defect underwriting all of it: 110 rules and 290 skills delivered twice, 203,873 tok against a 110,000 cap on a freshly regenerated tree."
+      "open_blockers": 71,
+      "why": "WALKED DOWN by 1 active roadmap: road-to-inbox-harvest-2026-08-b-dispatch-safety archived, its last open step closed. Nothing was parked and nothing was created to absorb it, which is the check that this is a real termination rather than a burial wearing a tightening's clothes. The step it closed had been deferred on a premise that turned out to be false: the zero producer count it waited on was produced by an unchecked validator rather than by producers, so the condition could never have been met. Its deferred half was relocated intact into an EXISTING active roadmap (road-to-subagent-lifecycle-integrity, as its own phase) rather than into a new one, which is why the active count falls by one instead of staying flat - a follow-up roadmap would have made this a net zero and bought nothing. READ TOGETHER WITH THE ENTRY ABOVE, or the arithmetic does not reconcile: this walk-down was authored against 33 active / 50 later and merged onto a base where the un-park had already moved those to 34 / 49. The active number below is therefore 33, not 32, and the later number is 49, not 50 - the difference is the parallel session's file, not a correction to this closure. Restated at merge rather than left at its authoring values, because a history entry that records a measurement nobody can reproduce against the tree is the staleness this ratchet's own metric note refuses."
     },
     {
       "at": "2026-08-19",
-      "active_roadmaps": 35,
+      "active_roadmaps": 34,
       "later_roadmaps": 49,
       "open_blockers": 74,
-      "why": "RAISED by 1 blocker, and it is the one this ratchet most wants visible: partition-requires-global-layer HALTED road-to-single-delivery Phase 2 mid-implementation. The partition leaves the project layer with 16 rules and zero skills, so every other artefact is delivered by the global layer alone - and a checkout with no current global install would silently drop from 111 rules and 338 skills to 16 and 0. That is an under-governed session, not a token cost, and the phase was written without stating the precondition. The alternative to this +1 was shipping a default for a trade between silent under-governance and silently re-created duplication, which is exactly the operator call a blocker exists to carry. Three enumerated options and a recommendation are recorded at the entry. active_roadmaps unchanged at 35 and later_roadmaps unchanged at 49, which together say no roadmap was created or relocated to absorb this - one existing roadmap gained one honest blocker."
+      "why": "RE-MEASURED AT MERGE, not carried over from either side, because both sides moved. This branch adopts road-to-single-delivery (+1 active) and opens four blockers on it (+4); the trunk meanwhile WALKED DOWN by archiving road-to-inbox-harvest-2026-08-b-dispatch-safety. Taking this branch authored numbers through the merge would have silently pocketed that archival as headroom, which is the loose-ratchet failure two earlier entries in this file record from the other direction. So the trunk file was taken whole and these numbers are the measurement on the merged tree: 33 + 1 = 34 active, 49 later unchanged, 70 + 4 = 74 blockers. WHAT THE +4 BUYS, since it is the larger half: partition-requires-global-layer HALTED Phase 2 mid-implementation - the partition leaves the project layer with 16 rules and zero skills, so a checkout with no current global install would silently drop from 111 rules and 338 skills to 16 and 0, which is an under-governed session rather than a token cost. compact-survival-of-package-only-rules carries four rules that stop surviving /compact once their unscoped global twin is gone, three of them Iron-Law bearing. overlap-check-binding-surface exists because two gates in this area already report to nobody. host-skill-suppression-capability is a host probe whose negative answer closes it. Each carries enumerated options and a recommendation rather than a flag. later_roadmaps unchanged at 49 is the check that nothing was parked to pay for any of this."
     }
   ],
   "target": {

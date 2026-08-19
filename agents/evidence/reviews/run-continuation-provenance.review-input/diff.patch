@@ -1,0 +1,1989 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 1e8752700c21889fd793054195965372d4a55ebd..23a30ee0b6bd77b97fa14c6122937d967d960d20 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -6,7 +6,7 @@
+ 
+ ## Overall
+ 
+-**315 / 559 steps done · 56%**
++**314 / 558 steps done · 56%**
+ 
+ ```text
+ ██████████████████████░░░░░░░░░░░░░░░░░░   56%
+@@ -38,7 +38,7 @@
+ | 20 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
+ | 21 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 7 | 37 | 2 | 34 | 0 | 1 | 0 | █████████░ 94% |
+ | 22 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
+-| 23 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 1 | 3 | 0 | 0 | [1](#blockers-road-to-run-continuation-observation) | ████████░░ 75% |
++| 23 | [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md) | 1 | 4 | 1 | 2 | 1 | 0 | [1](#blockers-road-to-run-continuation-observation) | ███████░░░ 67% |
+ | 24 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+ | 25 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+ | 26 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+@@ -776,11 +776,11 @@ _1 blocker resolved._
+ 
+ ### [road-to-run-continuation-observation.md](roadmaps/road-to-run-continuation-observation.md)
+ 
+-**Road to a run-continuation engagement anybody can point at** — 3 / 4 done (75%)
++**Road to a run-continuation engagement anybody can point at** — 2 / 3 done (67%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+-| 0 | Observe one engagement | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
++| 0 | Observe one engagement | 🟡 in progress | 1 | 2 | 1 | 0 | 67% |
+ 
+ <a id="blockers-road-to-run-continuation-observation"></a>
+ **Blockers**
+diff --git a/agents/roadmaps/road-to-run-continuation-observation.md b/agents/roadmaps/road-to-run-continuation-observation.md
+index 4a4d1c840935bfc5e67640ad3c674d28dbc6b5d5..485b4f1a95f5f6175f05af1d25b9c8f5b7750466 100644
+--- a/agents/roadmaps/road-to-run-continuation-observation.md
++++ b/agents/roadmaps/road-to-run-continuation-observation.md
+@@ -23,8 +23,10 @@ estate_offset_exempt: >-
+ 
+ `run-continuation` is the stop-slot concern that re-engages a run while
+ its claimed roadmap still has open steps. It shipped, it is unit-tested
+-(21 cases), it is integration-tested against the real dispatcher (7
+-cases) — and it had **never fired once** outside a test.
++(21 cases), it is integration-tested against the real dispatcher (7 cases
++when this roadmap was written; the file holds 25 at the close of this
++branch, of which 23 drive the dispatcher and 2 only read the hook
++manifest) — and it had **never fired once** outside a test.
+ 
+ The cause was a defect, not a missing step, and it is fixed: the run
+ contract had two halves resolving different roots. `sessions:claim`
+@@ -97,14 +99,130 @@ engages and leaves the event behind.
+      validity is that of a production smoke probe, not of ordinary
+      autonomous work.
+   2. *The provenance fields are test-verified, not self-verified.* The
+-     same change adds `workspace_root` / `git_dir` / `git_common_dir` /
+-     `claim_path` to every event, so a future line carries the two-tree
+-     fact itself instead of needing this table. This event does not
++     same change adds `workspace_root` / `session_root` / `session_cwd` /
++     `git_dir` / `git_common_dir` / `claim_path` / `roadmap_path` — **seven
++     fields** — to every event, so a future line carries the two-tree fact
++     itself instead of needing this table.
++
++     This enumeration has now been caught wrong twice: round 3 finding 4
++     found it listing five where the code emitted six, and round 5 finding 3
++     found it listing six where the code emits seven, `roadmap_path` having
++     arrived in between. Both times the consequence is the same — a reader
++     auditing a real ledger line finds a field the contract does not mention
++     and cannot tell whether it is part of the contract or noise.
++     `roadmap_path` names the file the open-step count on that same line was
++     read from, which is the one number on the line whose meaning depends on
++     which tree was chosen.
++     `session_root` is the field R2 finding 1 added after the fact: the
++     first version derived both git fields from the READER's root, where
++     they are equal in exactly the arrangement documented above, so the
++     enrichment could not express the property it was built for. This event does not
+      carry them: the live hook is the parent checkout's `dist/` build,
+      and the enrichment was built in the worktree. Verified by
+      `tests/hooks/run_continuation_dispatch.test.ts` over a real
+      `git worktree add` fixture — which reds against the un-enriched
+-     event while the other eight cases stay green.
++     event while the other cases stay green.
++
++     **The counts in this bullet went stale twice, in the same branch that
++     corrected them, and the second time is the more useful lesson.** Round
++     3 finding 8 caught "nine cases, one asserting the provenance" when the
++     file held twelve with three; the correction to twelve/three was then
++     overtaken by rounds 4 and 5, which added six more cases, and round 5
++     finding 4 caught that — along with the `## Context` line above still
++     saying 7.
++
++     Then round 6 finding 7 caught it a THIRD time, in the revision that
++     corrected the second: "22 cases against the real dispatcher" counted
++     every `it(` in the file, and two of them only parse the hook manifest
++     and never call `dispatchStop`.
++
++     **At three misses the number is the defect, so it is now stated with
++     the distinction that kept breaking it: 25 cases in the file, 23 of
++     which drive the dispatcher, 2 of which read only the manifest.** A
++     bullet whose whole purpose is to let a reader check the artefact
++     against a falsifiable number is worse than useless when the number is
++     wrong — and a per-round correction is a number that will be wrong again
++     by the next round. Anyone extending that file updates this line or
++     deletes it; leaving a stale figure standing is the one option that has
++     already failed three times.
++
++     **Superseded 2026-08-19 by a live event, and the live event refuted
++     the fields.** The enrichment merged, `dist/` was rebuilt, and the
++     concern fired again from a worktree session at
++     `2026-08-19T17:18:12.843Z` (run `e9bcaa908c103495bd817f4217a03316`).
++     That line carries the four fields — and reads:
++
++     | Field | Value |
++     |---|---|
++     | `workspace_root` | `<parent checkout>` |
++     | `git_dir` | `<parent checkout>/.git` |
++     | `git_common_dir` | `<parent checkout>/.git` |
++     | `claim_path` | `<parent checkout>/.git/agent-claims/roadmap-claim-<session>.json` |
++
++     The two git paths are **identical**, on a run that genuinely started
++     from `.claude/worktrees/long-horizon`. So the discriminator this note
++     promised — `git_dir !== git_common_dir` → linked worktree — reads
++     FALSE for exactly the case it was built to detect, and
++     `claim_path ⊂ git_common_dir` holds in a plain checkout too and
++     cannot disambiguate. The two-tree fact is not recoverable from the
++     line at all.
++
++     R2 finding 1 predicted this from the code before the line existed;
++     the line is the production confirmation, not a second opinion. The
++     fix derives both git fields from `session_root` — the session's own
++     checkout, resolved through the register's `session_checkout` guard —
++     and ships `session_root` plus `session_cwd`, taking the line to six
++     fields, so writer-vs-reader divergence is itself readable per event.
++     On the line above, `session_root` would have been the worktree and
++     `workspace_root` the parent: different, which is the fact.
++
++     `session_cwd` came out of round 2 finding 1 as a way to make a
++     degraded resolution *distinguishable* rather than silent, on the
++     reasoning that the resolver's conditions belonged to the register and
++     loosening them was a different change.
++
++     **Round 3 finding 2 refuted that reasoning by measuring where the
++     field is blind, and the fix moved upstream after all.** Worktrees in
++     this repository live at `<parent>/.claude/worktrees/<name>` — NESTED
++     under the parent. For a session standing one directory deeper, the
++     collapsed `session_root` equals the reader's root, both git fields
++     taken from it are equal, **and** the raw `cwd` is under the parent
++     too. All three signals report a healthy same-tree run for a genuine
++     two-tree one. A confidently wrong answer is not a loss of precision,
++     and the resolver's own docblock had defended the rejection as "never
++     something worse".
++
++     Two things followed, both ratified by the AI council (2026-08-19,
++     2/2 convergent, A/A):
++
++     1. `session_checkout` now walks UP to the nearest enclosing checkout
++        root, bounded by the same-repository identity check it already had.
++        The first hit wins, so a nested worktree resolves to itself rather
++        than to the checkout containing it. The session register gets the
++        same correction for free — it records which worktree a session is
++        in, and had the identical blind spot.
++     2. The roadmap the run executes is resolved against the **session's**
++        checkout, falling back to the reader's. Round 3 finding 1: the
++        open-step count feeds a stall detector, and reading the reader's
++        tree meant watching a file nobody was editing — the count never
++        moved and the detector declared a working run finished after three
++        engagements. The mechanism whose job is to detect a stall was
++        manufacturing one.
++
++     `session_cwd` stayed, with a narrower job: a cwd in a DIFFERENT
++     repository, a cwd that does not exist, a cwd under no checkout root.
++     Those still fall back, and on those lines it is still the only field
++     that says so.
++
++     The test both council seats named independently is the one that closes
++     both findings at once, and it is in the tree: a real nested worktree,
++     the session in a subdirectory of it, and the two roadmap copies made
++     to DISAGREE on purpose (parent 2 open, worktree 1) — because no
++     assertion about paths alone can show which file was read. Its sibling
++     fires three times with the worktree count advancing and asserts the
++     emitted counts are `[3, 2, 1]` with no `halt-stall`; against the
++     reader's tree the count is frozen at 2 for all three and the third
++     fire halts.
+ 
+ - [ ] **0.1** The parent criterion closes on that evidence: *"a
+       `process-full` contract run finishes a 3-phase roadmap with zero
+@@ -123,24 +241,71 @@ engages and leaves the event behind.
+       would be exactly the attribution error its own text warns about,
+       one layer up. See `### blocker: three-phase-contract-run`.
+ 
++      **2026-08-19, second reading — one more half arrived, and it is
++      still not the whole.** Run `e9bcaa908c103495` re-engaged TWICE
++      across turns and `interruption_report` reports it
++      `asks=0 handbacks=0 halts=0 · elapsed=93.7 working=93.7 · re=2`.
++      That matters for a specific reason this step's own text names: the
++      zero-contact half was previously attributable to the operator's
++      standing mandate rather than to the mechanism, and here the two
++      re-engagements ARE the mechanism's own events. Zero-contact and
++      mechanism-driven re-engagement now co-occur on one run id.
++
++      What is still missing is the element the criterion actually turns
++      on: **three phases.** This roadmap has one, and the run above is
++      the session working THIS roadmap, so it cannot supply it. Recorded
++      as a second partial rather than folded into a closure, because two
++      halves of different criteria do not make one criterion — that is
++      the same attribution error at a smaller scale.
++
++      **The blocker's own recommendation was tested and holds.** It says
++      "do not schedule this — the estate has several three-phase
++      autonomous candidates already; the next one to be worked discharges
++      this for free." On 2026-08-19 the estate had **none**: of 33 active
++      roadmaps exactly three carry `execution.mode: autonomous`
++      (`-carrier-layer-convergence`, `-surface-consolidation`, and this
++      one), and neither of the other two has open steps in three or more
++      `## Phase` sections. A `phase-checkpoints` roadmap makes the
++      concern a no-op and produces no event at all, so the 30 remaining
++      roadmaps cannot supply the run either. The recommendation stays
++      right; the "already several candidates" premise it rests on was
++      measured false, which is worth knowing before anyone waits on it.
++
+ ## Acceptance criteria
+ 
+ - [x] `run-continuation.jsonl` holds at least one `engage` event from a
+       worktree-started run, with the run id recorded here.
+       Run id `12653f90d7cb4243821392afd5d8c4db`, recorded in step 0.0.
+-- [x] The AUTONOMY AXIS in `interruption_report` reports a non-zero
++- [~] The AUTONOMY AXIS in `interruption_report` reports a non-zero
+       median re-engagement count for at least one run.
+-      **Closed on the per-run reading, and the criterion's own wording is
+-      inconsistent — stated rather than quietly reinterpreted.** A median
+-      is taken *across* runs, so "median … for at least one run" cannot
+-      be satisfied as literally written by any number of runs. The
+-      per-run breakdown is what the qualifier points at, and it reports
++      **Satisfied on the per-run reading, unsatisfiable on the aggregate
++      one, and therefore DEFERRED rather than closed.** A median is taken
++      *across* runs, so "median … for at least one run" cannot be
++      satisfied as literally written by any number of runs. The per-run
++      breakdown is what the qualifier points at, and it reports
+       `12653f90d7cb4243  … re=1` — non-zero for exactly one run, as
+       asked. The aggregate `median re-engagements:` stays **0**, and will
+       until a majority of the window's runs engage (13 of 24 today); that
+-      is a property of the statistic, not a gap in the evidence. Anyone
+-      reading the criterion the aggregate way should reopen this box
+-      rather than treat the two readings as settled.
++      is a property of the statistic, not a gap in the evidence.
++
++      **Reopened 2026-08-19 on R2 finding 5, and the glyph is the whole
++      point.** The previous revision ended "anyone reading the criterion
++      the aggregate way should reopen this box" — and then marked the box
++      `[x]`, which is the one glyph that makes that instruction
++      unreachable. `[x]` counts as done, so once step 0.1 closes the
++      archival sweep would have seen `count_open == 0` **and**
++      `count_deferred == 0` and archived this roadmap over a criterion the
++      roadmap itself flags as unresolved: the silent-archive-of-open-work
++      case Iron Law 3 of `roadmap-progress-sync` exists to catch, routed
++      around by glyph choice rather than by argument. `[~]` routes it
++      through the deferred-resolution gate instead, where the two readings
++      are decided by someone rather than left "settled" by a checkbox.
++
++      **What closes it:** either a window in which a majority of runs
++      engage, so the aggregate median is non-zero on the criterion's
++      literal wording — or a deliberate re-wording of the criterion to the
++      per-run reading, which is a decision about what was being measured
++      and not a re-measurement.
+ 
+ ## Blockers
+ 
+diff --git a/src/scripts/hooks/run_continuation_hook.ts b/src/scripts/hooks/run_continuation_hook.ts
+index 00c56abab92153551ac63a9b057777b1b6df04fe..1c7426476e0398d1c1652f59e0f3246a502e0901 100644
+--- a/src/scripts/hooks/run_continuation_hook.ts
++++ b/src/scripts/hooks/run_continuation_hook.ts
+@@ -40,10 +40,20 @@
+  * TERMINATION LADDER (Phase 1.1) — every rung a named event in
+  * `agents/runtime/state/run-continuation.jsonl`:
+  *   contract absent            → no-op (no event; the common case is silent)
++ *   roadmap unreadable from the
++ *   authoritative tree         → allow  (event: halt-roadmap-absent, and ONLY
++ *                                for a run this concern had already engaged —
++ *                                state present is the discriminator. State
++ *                                absent stays silent, because nothing was ever
++ *                                driven. Deliberately NOT in `HALT_ACTIONS`:
++ *                                it clears the budget rather than stamping
++ *                                `halted`, and the two are exclusive)
+  *   quality-gate refusal       → defer            (event: deferred-quality-gate)
+  *   duplicate stop fire        → repeat the BLOCK, no count (event: none —
+  *                                an allow here would END the reply the block
+- *                                one event earlier exists to continue)
++ *                                one event earlier exists to continue). A fire
++ *                                whose roadmap SOURCE changed is never a
++ *                                duplicate, whatever the counts say.
+  *   scope complete (0 open)    → allow            (event: complete; state cleared)
+  *   iterations ≥ MAX (25)      → allow            (event: halt-max-iterations)
+  *   wall clock ≥ cap (4 h)     → allow            (event: halt-wall-clock)
+@@ -51,11 +61,17 @@
+  *   checkbox delta)            → allow            (event: halt-stall)
+  *   otherwise                  → BLOCK + continue (event: engage)
+  *
+- * Every event this concern writes carries `workspace_root`, `git_dir`,
+- * `git_common_dir` and `claim_path` — the two-tree provenance, per
+- * `provenance()` below. Without them the ledger records that an engagement
+- * happened but not that it crossed the tree boundary the fix was about, and
+- * crossing it is the whole claim.
++ * Every event this concern writes carries `workspace_root`, `session_root`,
++ * `session_cwd`, `git_dir`, `git_common_dir` and `claim_path` — the two-tree
++ * provenance, per `provenance()` below — plus `roadmap_path`, the file the
++ * open-step count on that same line was read from (round 4 finding 4). Seven
++ * fields. The count has been caught wrong in three separate rounds; if you add
++ * one, this line, `provenance()`s heading and the roadmap enumeration all move. Without them the ledger records that an
++ * engagement happened but not that it crossed the tree boundary the fix was
++ * about, and crossing it is the whole claim. This list is the file's canonical
++ * statement of the contract: R2 round 2 finding 4 caught it enumerating four
++ * fields while the function emitted five, which would have let a later edit drop
++ * one without contradicting any documented promise.
+  *
+  * Stall counts CONSECUTIVE ENGAGEMENTS whose open-step count did not move.
+  * The upstream stalls on 5-of-5 completed-count readings; AC's checkbox
+@@ -94,7 +110,7 @@ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
+ import { readHookStdin } from './hook_stdin.js';
+ import { is_replay_mode } from './state_io.js';
+ import { readTranscriptTail } from './turn_end_gate_hook.js';
+-import { resolve_claim } from '../session_register_hook.js';
++import { resolve_claim, session_checkout } from '../session_register_hook.js';
+ import { git_common_dir, git_dir } from '../_lib/git_common_dir.js';
+ import {
+     deriveSessionKey,
+@@ -148,6 +164,40 @@ export interface RunState {
+     last_turn: number;
+     /** Open-step count recorded at each engagement, newest last. */
+     history: number[];
++    /**
++     * The roadmap slug this state belongs to.
++     *
++     * Round 6 finding 2: the state is keyed on the session id alone, and one
++     * session may re-claim a different roadmap. A halt stamp is never cleared —
++     * only `complete` unlinks — so a later legitimate claim of roadmap B inherited
++     * A's stamp, emitted a halt line naming B without ever engaging, and reported
++     * A's iteration count under B's slug.
++     *
++     * Keying the FILE on the slug would have orphaned every state file in
++     * existence; recording the slug inside it does the same work and degrades
++     * cleanly. A mismatch is read as a fresh run, which is what it is.
++     *
++     * Optional so a state file written before this field parses unchanged; absent
++     * means "unknown roadmap" and is trusted, because the alternative is
++     * discarding a live budget on an upgrade.
++     */
++    roadmap?: string;
++    /**
++     * The roadmap file the counts in `history` were read from.
++     *
++     * Round 4 finding 2: `resolveRoadmap` re-chooses the source tree on every
++     * fire, and `ladder`'s stall test compares the counts for equality — so a run
++     * whose source changed mid-flight compared numbers from two different
++     * documents. Both directions were wrong: a differing earlier count from the
++     * other tree reset a genuine stall streak, and a coincidentally equal one
++     * contributed a false match toward `halt-stall`. Recording the source lets a
++     * change reset the window, which is the only honest reading — the counts
++     * before the change measured a different file.
++     *
++     * Optional so a state file written before this field parses unchanged; absent
++     * means "unknown source", which resets once and then tracks.
++     */
++    history_source?: string;
+     /** ISO stamp of the most recent engagement — half of the duplicate key. */
+     last_engaged_at?: string;
+     /**
+@@ -177,9 +227,20 @@ export function isDuplicateFire(
+     turnOrdinal: number,
+     openCount: number,
+     nowMs: number,
++    roadmapSource?: string,
+ ): boolean {
+     if (state === null) return false;
+     if (state.last_turn !== turnOrdinal) return false;
++    // Round 5 finding 6: this compared the recorded count against the fresh scan
++    // with no regard for which FILE either came from — the same cross-document
++    // comparison `history_source` exists to stop, in the one place that returns
++    // BLOCK without consuming an iteration or writing a line. A source change with
++    // a coincidentally equal count therefore erased a genuine engagement from the
++    // ledger the acceptance criteria are counted from. A changed source is never a
++    // duplicate fire.
++    if (roadmapSource !== undefined && state.history_source !== roadmapSource) {
++        return false;
++    }
+     if (state.history.length === 0 || state.history[state.history.length - 1] !== openCount) {
+         return false;
+     }
+@@ -210,6 +271,14 @@ export type LadderAction =
+     | 'halt-stall';
+ 
+ /** The terminal rungs — the set `RunState.halted` may hold. */
++/**
++ * `halt-roadmap-absent` is deliberately NOT in this union and not in
++ * `LadderAction`. It is an event name the caller emits directly when the claimed
++ * roadmap is unreadable from the authoritative tree, and it CLEARS the state
++ * rather than stamping `halted` — widening the union would let `parseRecord`
++ * accept it as a `halted` value, which would mean a run whose budget was cleared
++ * also carried a halt stamp. The two are mutually exclusive by construction.
++ */
+ export const HALT_ACTIONS: readonly LadderAction[] = [
+     'halt-max-iterations',
+     'halt-wall-clock',
+@@ -377,6 +446,15 @@ function readState(file: string): RunState | null {
+         if (typeof o['last_engaged_at'] === 'string') {
+             rec.last_engaged_at = o['last_engaged_at'];
+         }
++        // Round-tripped, and it has to be: dropping it here would make the
++        // source look changed on EVERY fire, reset the window every time, and
++        // silently disable the stall detector the field was added to protect.
++        if (typeof o['history_source'] === 'string') {
++            rec.history_source = o['history_source'];
++        }
++        if (typeof o['roadmap'] === 'string') {
++            rec.roadmap = o['roadmap'];
++        }
+         // Validated against the halt set rather than accepted as any string:
+         // an unrecognised value would be returned verbatim by `ladder` and
+         // become an action no branch below handles.
+@@ -394,8 +472,16 @@ function readState(file: string): RunState | null {
+ }
+ 
+ /**
+- * The four fields that make an event's two-tree property checkable by a third
+- * party holding nothing but the ledger line.
++ * The six fields that make an event's two-tree property checkable by a third
++ * party holding nothing but the ledger line. The caller adds a seventh,
++ * `roadmap_path`, which it knows and this function does not.
++ *
++ * Keep this count in step with the file header and the call-site comment. Round 2
++ * finding 4 caught the header saying four where the function emitted five; the
++ * edit that fixed it added `session_cwd` and left THIS heading saying five, which
++ * round 3 finding 3 then caught. Two rounds, same drift, opposite direction — the
++ * count is load-bearing because it is what a later edit dropping a field would
++ * have to contradict.
+  *
+  * The defect this concern shipped with was a writer and a reader resolving
+  * DIFFERENT trees: `sessions:claim` wrote under `process.cwd()` (the operator's
+@@ -410,31 +496,233 @@ function readState(file: string): RunState | null {
+  * observation rather than a check on it; the falsifiable facts are concrete
+  * (AI council 2026-08-19, 2/2 convergent):
+  *
+- *   `git_dir !== git_common_dir`        → this IS a linked worktree
++ *   `session_root !== workspace_root`   → writer and reader resolved different
++ *                                         trees. After the fix this is the
++ *                                         NORMAL healthy two-tree arrangement,
++ *                                         not a defect: the claim now lives in
++ *                                         the shared root, so the line existing
++ *                                         at all with the two roots differing is
++ *                                         the fix working. Round 2 finding 7
++ *                                         caught the previous wording calling it
++ *                                         "the shipped defect condition", which
++ *                                         made a healthy engagement line read as
++ *                                         evidence of the bug
++ *   `git_dir !== git_common_dir`        → the session's own tree IS a linked
++ *                                         worktree. Only meaningful when both
++ *                                         are non-empty — see the degenerate
++ *                                         reading below
+  *   `claim_path` under `git_common_dir` → the contract crossed into the shared
+- *                                         root, which is the fix working
++ *                                         root. Also gated on a non-empty
++ *                                         `git_common_dir`: round 2 finding 2
++ *                                         measured that on a non-repo line both
++ *                                         git fields are `''` and every absolute
++ *                                         path satisfies `startsWith('')`, so a
++ *                                         reader applying the rule unguarded
++ *                                         concludes the contract crossed a
++ *                                         boundary the line says nothing about
++ *   `session_cwd`                       → the raw directory the session reported
++ *                                         before any resolution, so a reader can
++ *                                         tell "same tree" from "could not
++ *                                         resolve"
+  *
+- * `process.cwd()` is deliberately NOT among them. The dispatcher chdirs into
+- * `--project-dir` before the chain runs, so at concern time cwd equals
++ * ## The degenerate reading, stated so it cannot be mistaken for a negative
++ *
++ * Two of the three path relations above are only interpretable on a line whose
++ * git fields are non-empty. Empty means git could not be read from the session's
++ * root at all — a plain temp directory, a broken checkout — and that is an
++ * ABSENCE of evidence rather than evidence of a same-root run. A reader must
++ * check `git_common_dir !== ''` before applying either relation.
++ *
++ * `session_cwd` exists for the same reason, and it is a fact rather than an
++ * assertion. `session_checkout` degrades to `workspace_root` when its guards
++ * fail, and the raw `cwd` is what can make a degraded line distinguishable from a
++ * genuine same-tree one. A boolean `resolved: false` would have been the system
++ * under observation asserting its own health; the raw path is checkable.
++ *
++ * **The relation is SUFFICIENT, never necessary, and this file has now written it
++ * as necessary three rounds running.** A `session_cwd` outside `session_root`
++ * proves a fallback happened. The converse does not hold: round 4 finding 3 names
++ * three reachable inputs where the resolver falls back and the raw cwd still sits
++ * under `session_root` — a cwd inside a DIFFERENT repository nested under this
++ * checkout (a vendored clone, a test fixture) failing the identity check, a cwd
++ * that does not exist, and a relative cwd resolved against the reader's root. On
++ * those lines the provenance cannot tell a reader that a fallback occurred, and
++ * saying so is the honest bound rather than a wider claim that keeps being
++ * refuted.
++ *
++ * **The degradation this field was introduced for is gone, and the field stayed.**
++ * Round 2 added it because a session started from a SUBDIRECTORY of a worktree
++ * failed the resolver's checkout-root condition and collapsed onto the reader's
++ * root. Round 3 finding 2 then showed the field was BLIND to exactly that case in
++ * the layout it mattered in: with the worktree nested under the parent, the
++ * collapsed root, both git fields AND the raw cwd all read healthy same-tree.
++ * The fix was upstream — `session_checkout` now walks up to the nearest enclosing
++ * checkout root — so a subdirectory is no longer a degradation at all.
++ *
++ * What remains, and what the field is now for: a cwd inside a DIFFERENT
++ * repository, a cwd that does not exist, a cwd under no checkout root at all.
++ * Those still fall back, and on those lines `session_cwd` is still the only
++ * thing that says so. Two cases pin both directions.
++ *
++ * ## Both git fields come from `session_root`, not from `workspace_root`
++ *
++ * The first shipped version of this function derived both of them from the
++ * READER's root, and R2 finding 1 killed it: in the arrangement documented
++ * three paragraphs up as the live one — the concern running under
++ * `--project-dir <parent checkout>` — `git_dir(parent)` and
++ * `git_common_dir(parent)` are the SAME path, so the discriminator above read
++ * FALSE for every real worktree-started run. The enrichment existed to make
++ * the two-tree property auditable and could not express it. `claim_path` could
++ * not rescue it either: the claim lands under `git_common_dir` in a plain
++ * checkout too, so that containment holds in both arrangements.
++ *
++ * `session_root` is the session's OWN checkout, resolved through the register's
++ * `session_checkout` — the same three-condition guard (existing directory,
++ * checkout root, same repository) rather than a second, divergent reading of
++ * `payload.cwd`. It degrades to `workspace_root` when any condition fails,
++ * which makes `session_root === workspace_root` mean "same tree, or unresolvable"
++ * and never a false two-tree claim.
++ *
++ * `process.cwd()` is deliberately NOT among the fields. The dispatcher chdirs
++ * into `--project-dir` before the chain runs, so at concern time cwd equals
+  * `workspace_root` on every shipped path — a field that can never disagree with
+  * another cannot falsify anything, and shipping it as provenance would be the
+  * decorative-evidence shape this whole change exists to remove. Measured while
+  * writing the test that asserted the opposite.
+  *
+- * Absolute paths, deliberately: a relative form is interpreted against whichever
+- * root the reader happens to hold, which is the exact ambiguity being removed.
+- * These are local filesystem paths in gitignored runtime state, never published
+- * — the same posture the session register already takes.
++ * Absolute AND realpath-normalised, deliberately: a relative form is
++ * interpreted against whichever root the reader happens to hold, and a
++ * symlinked form defeats the containment test above. R2 finding 3 measured the
++ * second half — the git fields come back realpath-resolved from
++ * `_lib/git_common_dir.ts` while the first version passed the envelope string
++ * verbatim, so on macOS a healthy run wrote `workspace_root: /var/...` against
++ * `git_common_dir: /private/var/...` and the documented prefix test failed on
++ * it. Normalising here is the only place a ledger-only reader can inherit it
++ * from. These are local filesystem paths in gitignored runtime state, never
++ * published — the same posture the session register already takes.
++ */
++function normalizeDir(p: string): string {
++    const abs = path.resolve(p);
++    try {
++        return fs.realpathSync(abs);
++    } catch {
++        return abs;
++    }
++}
++
++/**
++ * Realpath a file path without requiring the file to exist: the directory is
++ * normalised and the basename rejoined. The per-tree claim fallback names a
++ * path that may not have been written, and a missing file must not downgrade
++ * the whole line to un-normalised paths.
+  */
+-export function provenance(workspaceRoot: string, claimPath: string): JsonObject {
++function normalizeFile(p: string): string {
++    const abs = path.resolve(p);
++    return path.join(normalizeDir(path.dirname(abs)), path.basename(abs));
++}
++
++export function provenance(
++    workspaceRoot: string,
++    claimPath: string,
++    sessionRoot: string,
++    sessionCwd: string,
++): JsonObject {
++    const reader = normalizeDir(workspaceRoot);
++    const writer = normalizeDir(sessionRoot);
+     return {
+-        workspace_root: workspaceRoot,
+-        git_dir: git_dir(workspaceRoot) ?? '',
+-        git_common_dir: git_common_dir(workspaceRoot) ?? '',
+-        claim_path: claimPath,
++        workspace_root: reader,
++        session_root: writer,
++        // Empty when the host sent no `cwd` at all, which is a different fact
++        // from a `cwd` that failed resolution — the first says the host is
++        // silent, the second says the session sat somewhere `session_checkout`
++        // would not trust. Both are readable; neither is guessed.
++        //
++        // Trimmed with the SAME rule `session_checkout` applies to the same
++        // string (round 3 finding 6). Without it a whitespace-padded value
++        // validated fine there and was `path.resolve`d here against the reader's
++        // cwd, fabricating a path that is neither `session_root` nor under it —
++        // precisely the shape the docblock above says no healthy resolution
++        // produces, so a healthy line read as degraded. A whitespace-only value
++        // now reads as host silence, which is what it is.
++        session_cwd: sessionCwd.trim() === '' ? '' : normalizeDir(sessionCwd.trim()),
++        git_dir: git_dir(writer) ?? '',
++        git_common_dir: git_common_dir(writer) ?? '',
++        claim_path: normalizeFile(claimPath),
+     };
+ }
+ 
++/**
++ * The roadmap file this run is executing, chosen by which tree OWNS the
++ * roadmaps directory — never by whether one particular file is present.
++ *
++ * ## The per-file fallback was wrong, and round 4 finding 1 named the cost
++ *
++ * The first version resolved per FILE: session copy if it exists, else the
++ * reader's. That reads correctly in a fresh worktree and breaks a finished run.
++ * `roadmap-progress-sync` mandates archival in the SAME change that closes the
++ * last step, so a completing run `git mv`s the file into
++ * `agents/roadmaps/archive/`. On the next stop fire the session copy is gone, the
++ * per-file rule silently fell back to the parent's UN-archived copy, read its
++ * still-open steps, and blocked with "continue with this step now" against a path
++ * that no longer exists in the tree the agent is editing — re-engaging to the
++ * iteration cap instead of ever reaching `complete`.
++ *
++ * Per DIRECTORY instead: if the session's tree has `agents/roadmaps/` at all,
++ * that tree is authoritative and a missing slug file means the roadmap is gone
++ * from this run — archived, renamed, or never created — which the caller's
++ * unreadable-roadmap branch already handles correctly by allowing the turn to
++ * end. The fallback survives for the case it was actually for: a session root
++ * that is not a checkout of this project layout.
++ *
++ * ## Slug containment
++ *
++ * The slug comes from a claim file, and `_read_claim_file` accepts any non-empty
++ * trimmed string. `claim_is_stale` in the same module treats containment as
++ * necessary before any read; round 4 finding 7 observed that this function did
++ * not, and that it now builds paths in TWO trees rather than one. A slug that
++ * escapes `agents/roadmaps/` returns `null` and the caller allows — refusing to
++ * name a file is the safe direction for a concern whose only power is refusing to
++ * end a turn.
++ */
++function resolveRoadmap(
++    sessionRoot: string,
++    workspaceRoot: string,
++    slug: string,
++): string | null {
++    const dirRel = path.join('agents', 'roadmaps');
++    // The SAME normalisation `claim_is_stale` applies to the same claim string
++    // (round 5 finding 7). Without it a claim whose slug already carries the
++    // suffix rendered as live work in the register while this concern resolved
++    // `<slug>.md.md`, failed the read, and allowed every stop — two functions in
++    // one flow disagreeing about one string.
++    const stem = slug.trim().replace(/\.md$/, '');
++    const rel = path.join(dirRel, `${stem}.md`);
++    const norm = path.normalize(rel);
++    // Containment on the STRUCTURE, not on the characters: `path.join` has already
++    // collapsed traversal, so what matters is whether the result is still inside
++    // the roadmaps directory and names a file directly in it. Round 5 finding 10:
++    // a substring test for `..` also rejected a legitimate slug like
++    // `road-to-a..b`, which then silently allowed every stop.
++    if (path.dirname(norm) !== dirRel) return null;
++    if (sessionRoot !== workspaceRoot && isDirectory(path.join(sessionRoot, dirRel))) {
++        return path.join(sessionRoot, norm);
++    }
++    // Canonical, like every emitted path field (round 5 finding 9). The fallback
++    // branch joined the RAW reader root while `workspace_root` on the same line is
++    // normalised, so under a symlinked ancestor a reader's containment test failed
++    // on a perfectly healthy line — the regression round 2 finding 3 fixed for the
++    // other six fields, reintroduced on the seventh.
++    return path.join(normalizeDir(workspaceRoot), norm);
++}
++
++function isDirectory(p: string): boolean {
++    try {
++        return fs.statSync(p).isDirectory();
++    } catch {
++        return false;
++    }
++}
++
+ function appendEvent(workspaceRoot: string, record: JsonObject): void {
+     try {
+         const file = path.join(workspaceRoot, EVENTS_RELPATH);
+@@ -490,17 +778,140 @@ export function main(): number {
+     const claim = resolve_claim(workspaceRoot, sessionId || null);
+     if (claim === null) return EXIT_ALLOW;
+     const slug = claim.slug;
+-    // The two-root provenance, carried on every event this run emits. See
+-    // `provenance()` for why these three and not a boolean.
+-    const roots = provenance(workspaceRoot, claim.path);
+ 
+-    const roadmapPath = path.join(workspaceRoot, 'agents', 'roadmaps', `${slug}.md`);
+-    let roadmapText: string;
+-    try {
+-        roadmapText = fs.readFileSync(roadmapPath, 'utf8');
+-    } catch {
+-        // A claim naming no readable roadmap is the stale-claim state the
+-        // session register already labels; not this concern's problem.
++    // ── which tree's roadmap is the run ──────────────────────────────
++    //
++    // The SESSION's own checkout, falling back to the reader's root. In a plain
++    // checkout the two are the same path and nothing about this changes; only
++    // the two-tree case moves.
++    //
++    // R2 round 3 finding 1: this read the READER's tree unconditionally, and the
++    // count it produces feeds the stall detector. In a worktree session the agent
++    // flips checkboxes in the worktree copy while the parent copy does not move
++    // until a merge — so the detector watched a file nobody was editing, the
++    // count never changed, and after three engagements it emitted `halt-stall`
++    // and declared a working run finished. The mechanism whose job is to detect a
++    // stall was manufacturing one, which is the failure this file's own header
++    // warns about in the abstract.
++    //
++    // AI council 2026-08-19, 2/2 convergent: resolve against the session
++    // checkout, keep the fallback. Both seats also flagged, independently, that
++    // `execution.mode` and the open-step count need not share an authority —
++    // progress is inherently session-local while a mode could be read as
++    // repo-wide policy. That choice is made HERE and stated rather than left
++    // implicit: BOTH come from the session's file, because the session is
++    // executing the file in its own tree and the parent's copy is simply an older
++    // revision of the same document. A genuinely repo-wide mode policy would need
++    // its own precedence rule, and inventing one on this evidence would be
++    // designing for a case nobody has met.
++    const sessionRoot = session_checkout(
++        workspaceRoot,
++        str(payload['cwd'] as JsonValue | undefined),
++    );
++    const roadmapPath = resolveRoadmap(sessionRoot, workspaceRoot, slug);
++    const runId = deriveSessionKey(sessionId || 'unknown-session');
++    const stateFile = path.join(workspaceRoot, stateRelPath(runId));
++
++    // Two locals rather than one plus a re-check: `roadmapFile` is only assigned
++    // where the read succeeded, so the guard below narrows BOTH and everything
++    // downstream holds a plain string. The alternative — re-testing `roadmapPath`
++    // after the guard purely for the compiler — would be a branch that cannot be
++    // reached and cannot be tested.
++    let roadmapFile: string | null = null;
++    let roadmapText: string | null = null;
++    if (roadmapPath !== null) {
++        try {
++            roadmapText = fs.readFileSync(roadmapPath, 'utf8');
++            roadmapFile = roadmapPath;
++        } catch {
++            roadmapText = null;
++        }
++    }
++
++    if (roadmapText === null || roadmapFile === null) {
++        // ── the roadmap is not readable from the authoritative tree ──────
++        //
++        // Round 5 findings 2, 5 and 10, which are one shape seen three ways: this
++        // returned a bare `EXIT_ALLOW` and left NOTHING behind.
++        //
++        // Finding 2 is the sharp end. `roadmap-progress-sync` mandates archival in
++        // the same change that closes the last step, so a completing run flips the
++        // last box and `git mv`s the file in one reply. The next fire found it
++        // gone, allowed, and never reached the `complete` rung — so no line said
++        // the run finished, AND `fs.rmSync(stateFile)` never ran. The state file
++        // survived with `iterations` and `started_at` from the finished run, so a
++        // later claim by the same session id began with part of the 25-iteration
++        // budget spent and the 4 h clock already running — exactly what the
++        // comment on that rung promises will not happen.
++        //
++        // A prior state file is the discriminator, and it is a fact rather than a
++        // guess: the state only exists if THIS concern engaged on this roadmap
++        // before, which it only does on an `autonomous` one. So:
++        //
++        //   state present → this run was driven here and its roadmap is gone. Emit
++        //                   the line, clear the budget, allow.
++        //   state absent  → nothing was ever driven. Stay silent, which is the
++        //                   truth rather than a gap: a `phase-checkpoints` claim
++        //                   and a worktree branched before the roadmap landed
++        //                   (finding 5) both land here, and neither is an event.
++        //
++        // What this does NOT claim is to tell archival from never-created. The
++        // filesystem cannot: both are an absent file. The docblock on
++        // `resolveRoadmap` used to assert the archival reading, and finding 5 was
++        // right that it conflated the two — so the reading is now carried by the
++        // state file, which actually knows.
++        // File PRESENCE, not parseability (round 6 finding 5): `readState` returns
++        // null for a state file that exists but is truncated or malformed — which
++        // is exactly the interrupted-write case — so keying the branch on a
++        // successful parse left the very leak it was added to close in place.
++        let stateExists = false;
++        try {
++            stateExists = fs.statSync(stateFile).isFile();
++        } catch {
++            stateExists = false;
++        }
++        if (!stateExists) return EXIT_ALLOW;
++        const driven = readState(stateFile);
++
++        // A HALT STAMP IS NEVER ERASED HERE (round 6 finding 1, high).
++        //
++        // Clearing unconditionally meant one transient read failure of the roadmap
++        // — an unlink-then-write by any tool, a `git checkout`/`stash`/`mv`
++        // mid-run, an EACCES — erased the stamp AND the budget. The next fire then
++        // read no state, started at iteration 0 with a fresh wall clock, and
++        // re-engaged with the full cap: the unbounded loop `RunState.halted` exists
++        // to prevent, restored by the branch meant to close a leak.
++        //
++        // A halted run has already recorded its own end, so there is nothing to
++        // announce and nothing to reclaim. Silence and no write is the whole
++        // correct action.
++        if (driven?.halted !== undefined) return EXIT_ALLOW;
++        const absenceRoots = provenance(
++            workspaceRoot,
++            claim.path,
++            sessionRoot,
++            str(payload['cwd'] as JsonValue | undefined),
++        );
++        // `null` where a traversal or malformed slug refused to name a file at
++        // all (finding 10): the line still exists, so a refusal is no longer
++        // indistinguishable from the concern never firing.
++        absenceRoots['roadmap_path'] = roadmapPath;
++        appendEvent(workspaceRoot, {
++            event: 'halt-roadmap-absent',
++            run_id: runId,
++            roadmap: slug,
++            // `null` when the state file exists but could not be parsed — the
++            // interrupted-write case above. Reported as null rather than as 0,
++            // which would claim a fact the file no longer carries.
++            iterations: driven?.iterations ?? null,
++            at: new Date().toISOString(),
++            ...absenceRoots,
++        });
++        try {
++            fs.rmSync(stateFile, { force: true });
++        } catch {
++            /* fail-open — the ledger line is the durable half */
++        }
+         return EXIT_ALLOW;
+     }
+     if (parseExecutionMode(roadmapText) !== 'autonomous') return EXIT_ALLOW;
+@@ -534,7 +945,47 @@ export function main(): number {
+         return EXIT_ALLOW;
+     }
+ 
+-    const runId = deriveSessionKey(sessionId || 'unknown-session');
++
++    // The two-tree provenance, carried on every event this run emits. See
++    // `provenance()` for the six fields and why none of them is a boolean.
++    //
++    // Position, and what changed about the cost argument. Rounds 1 and 2 pushed
++    // this call downward to stop a `phase-checkpoints` session, and then a
++    // session with an over-cap transcript, from paying the git resolution for a
++    // value the next line discarded.
++    //
++    // Round 3 finding 1 made half of that moot: the session root is now needed
++    // ABOVE the mode gate, because it decides which tree's roadmap the mode is
++    // read from. So the resolution happens early by necessity and this call
++    // merely reuses it — the double resolution round 2 finding 5 accepted is
++    // gone as a side effect, and nothing here re-derives it.
++    //
++    // What remains true, and round 3 finding 5 was right to catch the previous
++    // comment claiming otherwise: two branches below still return without an
++    // `appendEvent` — the duplicate-stop-fire guard and the failed-state-write
++    // path — so this is not a position where every path writes a line. It is
++    // simply the cheapest honest one now that the value is already in hand.
++    //
++    // The git resolution here duplicates the one `session_checkout` does to
++    // validate the cwd, and that duplication is ACCEPTED rather than removed
++    // (round 2 finding 5): collapsing it means widening a register API that
++    // other callers use, to save six syscalls on a path that has already read a
++    // roadmap file and a transcript tail. The two resolutions also answer
++    // different questions — the guard asks whether the cwd belongs to this
++    // repository, this asks what the session's own tree is.
++    const roots = provenance(
++        workspaceRoot,
++        claim.path,
++        sessionRoot,
++        str(payload['cwd'] as JsonValue | undefined),
++    );
++    // Round 4 finding 4: the line carried six path fields and not the one path
++    // the only tree-dependent NUMBER on it came from. On a line with
++    // `session_root !== workspace_root` and `open: 2`, a reader could not tell
++    // whether the count came from the session copy (the fix working) or from the
++    // reader's after a fallback (the defect still live) — the exact ambiguity the
++    // other six fields exist to remove.
++    roots['roadmap_path'] = roadmapFile;
+ 
+     // ── defer to the quality gate ────────────────────────────────────
+     if (refusedThisTurn(workspaceRoot, sessionId, turnOrdinal)) {
+@@ -550,14 +1001,29 @@ export function main(): number {
+     }
+ 
+     // ── state + duplicate-fire detection ─────────────────────────────
+-    const stateFile = path.join(workspaceRoot, stateRelPath(runId));
+-    const prev = readState(stateFile);
++    //
++    // A state file recorded against a DIFFERENT roadmap is not this run's state —
++    // round 6 finding 2. The file is keyed on the session id alone and one session
++    // may re-claim, so a halt stamped on roadmap A (never cleared: only `complete`
++    // unlinks) was inherited by a later claim of roadmap B, which then emitted a
++    // halt line naming B without ever engaging and reported A's iteration count
++    // under B's slug. An absent `roadmap` field is trusted rather than discarded:
++    // it means the state predates this field, and dropping a live budget on an
++    // upgrade would be the worse error.
++    const onDisk = readState(stateFile);
++    const prev = onDisk !== null && onDisk.roadmap !== undefined && onDisk.roadmap !== slug
++        ? null
++        : onDisk;
+     const state: RunState = prev ?? {
+         started_at: new Date().toISOString(),
+         iterations: 0,
+         last_turn: -1,
+         history: [],
++        roadmap: slug,
+     };
++    // Stamped on an inherited state too, so the field fills in on first contact
++    // rather than staying absent for the life of the run.
++    state.roadmap = slug;
+ 
+     const scan = scanOpenSteps(roadmapText);
+ 
+@@ -566,25 +1032,48 @@ export function main(): number {
+     // very stop, and an allow on the re-fire would end the reply the block
+     // exists to continue. (An earlier draft allowed here — the smoke run
+     // caught it ending the run it had re-engaged one event earlier.)
+-    if (isDuplicateFire(prev, turnOrdinal, scan.open, Date.now())) {
++    if (isDuplicateFire(prev, turnOrdinal, scan.open, Date.now(), roadmapFile)) {
+         process.stderr.write(_continuationText(slug, scan, state.iterations));
+         return EXIT_BLOCK;
+     }
+ 
++    // The source-change reset runs HERE, before the ladder reads the history —
++    // round 5 finding 1. It used to sit inside the engage branch, which is after
++    // `ladder()` and after the non-engage branch returns, so on the ONE fire where
++    // the source document changes the stall test still compared counts from two
++    // different files. Three parent-copy readings at `open: 4` followed by a
++    // session copy that also reads 4 produced `halt-stall` on the parent's numbers
++    // and declared a working run finished — the precise failure the field's own
++    // docblock claims to prevent, defeated by where the guard sat.
++    if (state.history_source !== roadmapFile) {
++        state.history = [];
++        state.history_source = roadmapFile;
++    }
++
+     const action = ladder(state, scan.open, Date.now());
+ 
+     if (action !== 'engage') {
+-        appendEvent(workspaceRoot, {
+-            event: action,
+-            run_id: runId,
+-            roadmap: slug,
+-            turn: turnOrdinal,
+-            iterations: state.iterations,
+-            open: scan.open,
+-            blocked: scan.blocked,
+-            at: new Date().toISOString(),
+-            ...roots,
+-        });
++        // A run that is ALREADY stamped emits nothing further — round 6 finding 6.
++        // Once `halted` is set the state file is immortal for the session (only
++        // `complete` unlinks it), so every later stop fire re-entered this branch
++        // and appended another line with the same `run_id` and `iterations`: an
++        // unbounded number of duplicate halt records in the ledger the acceptance
++        // criteria's counts are derived from. The FIRST halt is the event; the rest
++        // are the same fact re-stated.
++        const alreadyStamped = prev?.halted !== undefined;
++        if (!alreadyStamped) {
++            appendEvent(workspaceRoot, {
++                event: action,
++                run_id: runId,
++                roadmap: slug,
++                turn: turnOrdinal,
++                iterations: state.iterations,
++                open: scan.open,
++                blocked: scan.blocked,
++                at: new Date().toISOString(),
++                ...roots,
++            });
++        }
+         if (action === 'complete') {
+             // Only a COMPLETION clears the state, so a later run on the same
+             // roadmap (post-merge follow-up, re-claim) starts a fresh budget.
+diff --git a/src/scripts/session_register_hook.ts b/src/scripts/session_register_hook.ts
+index d99af09c3b8326cb6b3b7d6a42a74a61a69ba311..6545333e28c03036c0f8f8422fcb4b6bebfb543e 100644
+--- a/src/scripts/session_register_hook.ts
++++ b/src/scripts/session_register_hook.ts
+@@ -354,8 +354,17 @@ export function claim_is_stale(
+     // roadmaps directory" — and it is the same check for a traversal, an absolute
+     // path, and an encoding nobody enumerated. A slug that fails it is reported
+     // stale rather than resolved, so no read happens at all.
++    // Structural, not textual. Round 6 finding 3: the previous form ANDed a
++    // `!rel.includes('..')` substring test onto the prefix check, and round 5
++    // finding 10 removed exactly that test from `resolveRoadmap` — one-sided. The
++    // two functions then disagreed about one claim string in the opposite
++    // direction: for a legal slug like `road-to-a..b` the register rendered a live
++    // claim as stale (dropping it from the collision set and disabling the
++    // duplicate-work warning) while the hook resolved it and engaged. `path.dirname`
++    // asks the only question that matters — is the result a file directly inside the
++    // roadmaps directory — and is the same check both sides now make.
+     const rel = path.normalize(path.join('agents', 'roadmaps', `${base}.md`));
+-    const inside = rel.startsWith(`agents${path.sep}roadmaps${path.sep}`) && !rel.includes('..');
++    const inside = path.dirname(rel) === path.join('agents', 'roadmaps');
+     if (!inside || path.isAbsolute(base)) {
+         return true; // not a slug this repo can hold; never render it as live work
+     }
+@@ -409,29 +418,98 @@ export function claim_is_stale(
+  * conditions, because a wrong anchor is worse than the fallback:
+  *
+  * 1. it is an existing directory;
+- * 2. it is the ROOT of a checkout (`git_dir` looks for `<dir>/.git` and does not
+- *    walk up, so a session whose cwd is a subdirectory degrades to
+- *    `workspace_root` — today's behaviour, never something worse);
+- * 3. it belongs to the SAME repository — identical git common dir. A cwd in
+- *    another repo would otherwise write this repo's register with a foreign
++ * 2. it resolves to the NEAREST enclosing checkout root, walking up from the
++ *    reported directory;
++ * 3. that root belongs to the SAME repository — identical git common dir. A cwd
++ *    in another repo would otherwise write this repo's register with a foreign
+  *    branch, and the register is shared by every worktree here.
++ *
++ * ## Condition 2 used to reject a subdirectory, and that was wrong here
++ *
++ * It required the reported directory to BE a checkout root, and defended the
++ * rejection as "a session whose cwd is a subdirectory degrades to
++ * `workspace_root` — today's behaviour, never something worse". R2 round 3
++ * finding 2 measured that claim false in this repository's own layout, where
++ * worktrees live at `<parent>/.claude/worktrees/<name>` — NESTED under the
++ * parent. For a session standing at `<parent>/.claude/worktrees/wt/src`:
++ *
++ *   - the degraded root is `<parent>`, i.e. equal to `workspace_root`;
++ *   - so `git_dir` and `git_common_dir` taken from it are both `<parent>/.git`;
++ *   - and the reported cwd is under `<parent>` as well.
++ *
++ * Every available signal then reports a healthy same-tree run for a genuine
++ * two-tree one. That is not a loss of precision, it is a confident wrong answer,
++ * which is strictly worse than the fallback the docblock was defending.
++ *
++ * The walk is bounded twice over, per the AI council's condition (2026-08-19,
++ * 2/2 convergent on this shape): it stops at the FIRST enclosing checkout root,
++ * so a nested worktree is found before the parent that contains it, and the
++ * same-repository check is retained on whatever it finds — a cwd inside an
++ * unrelated repo nested in this tree resolves to that repo's root, fails the
++ * identity check, and falls back. Paths are canonicalised before the walk so a
++ * symlinked cwd cannot walk a different chain than the one it names.
+  */
+ export function session_checkout(
+     workspace_root: string,
+     payload_cwd: string | null | undefined,
+ ): string {
++    // EVERY branch returns a canonical path, resolve and fallback alike.
++    //
++    // Round 4 finding 5: the resolve branch realpath-normalised and the four
++    // fallback branches returned `workspace_root` verbatim, so under a repo
++    // reached through a symlinked ancestor two sessions in the SAME working tree
++    // stored different strings for it — `/private/var/…/repo` from the resolver
++    // and `/var/…/repo` from the envelope. `foreign_sessions_block` compares the
++    // stored forms with `path.resolve`, which does not follow symlinks, so it read
++    // them as different worktrees and printed the benign "separate trees" note
++    // where the same-worktree COLLISION prompt belongs. The walk-up widened the
++    // exposure by moving subdirectory sessions onto the normalising branch.
++    const fallback = canonical(workspace_root);
+     const cwd = String(payload_cwd ?? '').trim();
+-    if (cwd === '') return workspace_root;
++    if (cwd === '') return fallback;
++    let start: string;
+     try {
+-        if (!fs.statSync(cwd).isDirectory()) return workspace_root;
++        if (!fs.statSync(cwd).isDirectory()) return fallback;
++        start = fs.realpathSync(cwd);
+     } catch {
+-        return workspace_root;
++        return fallback;
+     }
+-    if (git_dir(cwd) === null) return workspace_root;
+-    const mine = git_common_dir(cwd);
++    const root = nearest_checkout_root(start);
++    if (root === null) return fallback;
++    const mine = git_common_dir(root);
+     const theirs = git_common_dir(workspace_root);
+-    if (mine === null || theirs === null || mine !== theirs) return workspace_root;
+-    return cwd;
++    if (mine === null || theirs === null || mine !== theirs) return fallback;
++    return root;
++}
++
++/** `realpath` that falls back to an absolute form when the path is unreadable. */
++function canonical(p: string): string {
++    const abs = path.resolve(p);
++    try {
++        return fs.realpathSync(abs);
++    } catch {
++        return abs;
++    }
++}
++
++/**
++ * The nearest enclosing directory that is a checkout root, or `null`.
++ *
++ * The iteration cap is a loop guard, not a policy: `path.dirname` is a fixed
++ * point at the filesystem root, so the terminating condition is the unchanged
++ * path and the counter only bounds a pathological filesystem. The FIRST hit
++ * wins, which is what makes a nested worktree resolve to itself rather than to
++ * the checkout it sits inside.
++ */
++function nearest_checkout_root(start: string): string | null {
++    let dir = start;
++    for (let i = 0; i < 64; i++) {
++        if (git_dir(dir) !== null) return dir;
++        const up = path.dirname(dir);
++        if (up === dir) return null;
++        dir = up;
++    }
++    return null;
+ }
+ 
+ /**
+@@ -619,8 +697,19 @@ export function foreign_sessions_block(
+     // `session_checkout`. Before that every record claimed the main checkout, so
+     // every collision looked like the dangerous one.
+     if (branch_hit !== null) {
+-        const peer_tree = path.resolve(branch_hit.record.worktree ?? '');
+-        const same_tree = peer_tree !== '' && peer_tree === path.resolve(workspace_root);
++        // Compared through `canonical`, not `path.resolve`, because resolve does not
++        // follow symlinks — round 5 finding 11. Round 4 finding 5 made every
++        // `session_checkout` branch canonical, which fixes records written from now
++        // on; it does nothing for a record already in the register from before the
++        // upgrade, and those live for the whole TTL window. Under a symlinked
++        // ancestor such a peer holds `/var/…/repo` while this session holds
++        // `/private/var/…/repo`, and comparing the raw strings reads two sessions
++        // in ONE working tree as separate trees — printing the benign note where
++        // the collision prompt belongs. Canonicalising at the comparison closes the
++        // upgrade boundary the writer side cannot reach.
++        const peer_tree = canonical(branch_hit.record.worktree ?? '');
++        const same_tree =
++            (branch_hit.record.worktree ?? '') !== '' && peer_tree === canonical(workspace_root);
+         if (same_tree) {
+             parts.push(
+                 '',
+diff --git a/tests/hooks/run_continuation_dispatch.test.ts b/tests/hooks/run_continuation_dispatch.test.ts
+index 4837ca02e528a2ab55336c30368f36c29324712a..82a5dbf90ec4f5ddbbfd8b0d53d58499723474c6 100644
+--- a/tests/hooks/run_continuation_dispatch.test.ts
++++ b/tests/hooks/run_continuation_dispatch.test.ts
+@@ -40,6 +40,7 @@ import { parse as parseYaml } from 'yaml';
+ import { afterEach, describe, expect, it } from 'vitest';
+ 
+ import { deriveSessionKey, sessionRefusalFile } from '../../src/scripts/_lib/turn_end_refusals.js';
++import { stateRelPath } from '../../src/scripts/hooks/run_continuation_hook.js';
+ import { claim_file, roadmap_claim_rel } from '../../src/scripts/session_register_hook.js';
+ import { EVENTS_RELPATH } from '../../src/scripts/hooks/run_continuation_hook.js';
+ 
+@@ -83,25 +84,12 @@ function writeWorkspace(): string {
+     cleanups.push(root);
+     const roadmapDir = path.join(root, 'agents', 'roadmaps');
+     fs.mkdirSync(roadmapDir, { recursive: true });
+-    fs.writeFileSync(
+-        path.join(roadmapDir, `${SLUG}.md`),
+-        [
+-            '---',
+-            'complexity: structural',
+-            'execution:',
+-            '  mode: autonomous',
+-            '---',
+-            '',
+-            '# Fixture',
+-            '',
+-            '## Phase 0 — one open step',
+-            '',
+-            '- [x] **0.0** done',
+-            '- [ ] **0.1** the open one <!-- verify: ./scripts-run src/scripts/lint_hook_manifest -->',
+-            '',
+-        ].join('\n'),
+-        'utf-8',
+-    );
++    // R2 finding 7: this used to carry a byte-identical inline copy of
++    // `fixtureRoadmap()`, so exactly one of the two fixtures in this file used
++    // the shared helper. Both fixtures share `SLUG` and cases below assert
++    // open-step counts against it — one edit to the helper would have pinned
++    // two different roadmaps under one name.
++    fs.writeFileSync(path.join(roadmapDir, `${SLUG}.md`), fixtureRoadmap(), 'utf-8');
+     const claim = path.join(root, roadmap_claim_rel(SESSION));
+     fs.mkdirSync(path.dirname(claim), { recursive: true });
+     fs.writeFileSync(claim, JSON.stringify({ slug: SLUG, session_id: SESSION }), 'utf-8');
+@@ -127,8 +115,33 @@ function fixtureRoadmap(): string {
+     ].join('\n');
+ }
+ 
++/**
++ * `git` against a fixture tree, with the ambient repository pointers stripped.
++ *
++ * R2 finding 4: `_lib/git_common_dir.ts` refuses to shell out to git at all,
++ * and its docblock names inherited `GIT_DIR` / `GIT_WORK_TREE` as the reason.
++ * This helper did shell out and inherited them, so running the suite from
++ * inside a git hook — which exports `GIT_DIR` — resolved every call against the
++ * HOOK's repository instead of the temp dir: `git config user.email` would
++ * rewrite the real repo's local identity and `git commit` could commit the real
++ * staged index, silently, instead of failing loudly.
++ */
+ function git(cwd: string, ...args: string[]): void {
+-    const r = spawnSync('git', args, { cwd, encoding: 'utf-8' });
++    const env = { ...process.env };
++    delete env['GIT_DIR'];
++    delete env['GIT_WORK_TREE'];
++    delete env['GIT_INDEX_FILE'];
++    delete env['GIT_COMMON_DIR'];
++    // Round 3 finding 7: stripping the four pointers closed the ENV axis and
++    // left the CONFIG axis open. A maintainer with a global `core.hooksPath`
++    // had their real hook set run against the fixture repo on `commit`, and a
++    // global `commit.gpgsign = true` without an available key made the fixture
++    // commit throw — reding three cases for a reason unrelated to the concern.
++    // Pointing both config scopes at /dev/null is the documented way to run git
++    // against nothing but the repository-local config.
++    env['GIT_CONFIG_GLOBAL'] = '/dev/null';
++    env['GIT_CONFIG_SYSTEM'] = '/dev/null';
++    const r = spawnSync('git', args, { cwd, encoding: 'utf-8', env });
+     if ((r.status ?? -1) !== 0) {
+         throw new Error(`git ${args.join(' ')} failed: ${r.stderr}`);
+     }
+@@ -161,9 +174,16 @@ function writeWorktreePair(): { main: string; worktree: string } {
+     cleanups.push(worktree);
+     git(main, 'worktree', 'add', '--quiet', '-b', 'fixture-wt', worktree);
+ 
+-    const roadmapDir = path.join(worktree, 'agents', 'roadmaps');
+-    fs.mkdirSync(roadmapDir, { recursive: true });
+-    fs.writeFileSync(path.join(roadmapDir, `${SLUG}.md`), fixtureRoadmap(), 'utf-8');
++    // In BOTH trees, because a real parent checkout carries `agents/roadmaps/`
++    // as well — and the parent-rooted-reader case below reads the roadmap from
++    // the parent. A fixture that only wrote it into the worktree would make
++    // that case return ALLOW on an unreadable roadmap instead of exercising the
++    // provenance it exists to pin.
++    for (const tree of [worktree, main]) {
++        const roadmapDir = path.join(tree, 'agents', 'roadmaps');
++        fs.mkdirSync(roadmapDir, { recursive: true });
++        fs.writeFileSync(path.join(roadmapDir, `${SLUG}.md`), fixtureRoadmap(), 'utf-8');
++    }
+ 
+     // Through the production writer, never a hand-built path: the whole defect
+     // was writer and reader disagreeing, so a fixture that hard-codes the
+@@ -175,10 +195,91 @@ function writeWorktreePair(): { main: string; worktree: string } {
+     return { main, worktree };
+ }
+ 
++/**
++ * A roadmap body with a chosen number of open steps, so the parent and the
++ * worktree copies of the SAME slug can be made to disagree. That disagreement is
++ * the whole instrument: it is what tells a reader which tree the concern actually
++ * read, and no assertion about paths alone can establish it.
++ */
++function fixtureRoadmapWithOpen(openSteps: number): string {
++    const lines = [
++        '---',
++        'complexity: structural',
++        'execution:',
++        '  mode: autonomous',
++        '---',
++        '',
++        '# Fixture',
++        '',
++        '## Phase 0 — parameterised open steps',
++        '',
++        '- [x] **0.0** done',
++    ];
++    for (let i = 1; i <= openSteps; i++) {
++        lines.push(`- [ ] **0.${i}** open ${i}`);
++    }
++    lines.push('');
++    return lines.join('\n');
++}
++
++/**
++ * A main checkout with the worktree NESTED INSIDE IT, at
++ * `<main>/.claude/worktrees/wt` — this repository's own layout.
++ *
++ * `writeWorktreePair` deliberately places the worktree OUTSIDE `main`, to keep a
++ * shared path prefix from hiding a prefix mistake. That choice also made the
++ * whole nested class unreachable, which is how round 3 finding 2 survived two
++ * review rounds: every signal the concern emits reads "healthy same-tree" when
++ * the session sits in a SUBDIRECTORY of a nested worktree, because the degraded
++ * session root lands on the parent and the raw cwd is under the parent too.
++ *
++ * Both fixtures are kept. Nested and non-nested are different topologies and the
++ * concern has to be right in both.
++ */
++function writeNestedWorktreePair(): { main: string; worktree: string; sub: string } {
++    const main = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-nested-main-'));
++    cleanups.push(main);
++    git(main, 'init', '--quiet', '--initial-branch=main');
++    git(main, 'config', 'user.email', 'fixture@example.com');
++    git(main, 'config', 'user.name', 'fixture');
++    fs.writeFileSync(path.join(main, 'README.md'), 'fixture\n', 'utf-8');
++    git(main, 'add', 'README.md');
++    git(main, 'commit', '--quiet', '-m', 'fixture base');
++
++    const worktree = path.join(main, '.claude', 'worktrees', 'wt');
++    fs.mkdirSync(path.dirname(worktree), { recursive: true });
++    git(main, 'worktree', 'add', '--quiet', '-b', 'fixture-nested-wt', worktree);
++
++    // The parent copy carries TWO open steps, the worktree copy ONE. A concern
++    // reading the parent reports 2; reading the worktree reports 1.
++    const parentRoadmaps = path.join(main, 'agents', 'roadmaps');
++    fs.mkdirSync(parentRoadmaps, { recursive: true });
++    fs.writeFileSync(
++        path.join(parentRoadmaps, `${SLUG}.md`),
++        fixtureRoadmapWithOpen(2),
++        'utf-8',
++    );
++    const wtRoadmaps = path.join(worktree, 'agents', 'roadmaps');
++    fs.mkdirSync(wtRoadmaps, { recursive: true });
++    fs.writeFileSync(path.join(wtRoadmaps, `${SLUG}.md`), fixtureRoadmapWithOpen(1), 'utf-8');
++
++    const claim = claim_file(worktree, SESSION);
++    fs.mkdirSync(path.dirname(claim), { recursive: true });
++    fs.writeFileSync(claim, JSON.stringify({ slug: SLUG, session_id: SESSION }), 'utf-8');
++
++    // The session stands in a SUBDIRECTORY of the worktree, which is the shape
++    // `session_checkout`'s checkout-root condition used to reject.
++    const sub = path.join(worktree, 'src');
++    fs.mkdirSync(sub, { recursive: true });
++
++    return { main, worktree, sub };
++}
++
+ /** Drive the real dispatcher over the real manifest for a claude `stop`. */
+ function dispatchStop(
+     root: string,
+     transcript: string,
++    payloadCwd?: string,
+ ): { code: number; err: string; out: string } {
+     const r = spawnSync(
+         'npx',
+@@ -195,7 +296,11 @@ function dispatchStop(
+             root,
+         ],
+         {
+-            input: JSON.stringify({ session_id: SESSION, transcript_path: transcript }),
++            input: JSON.stringify(
++                payloadCwd === undefined
++                    ? { session_id: SESSION, transcript_path: transcript }
++                    : { session_id: SESSION, transcript_path: transcript, cwd: payloadCwd },
++            ),
+             encoding: 'utf-8',
+             cwd: REPO,
+             timeout: 180_000,
+@@ -306,10 +411,18 @@ describe('run-continuation — driven through the live dispatcher', () => {
+         // 1. The tree the CONCERN resolved under — the `--project-dir` half.
+         expect(real(ev['workspace_root'])).toBe(real(worktree));
+ 
++        // 1b. And the tree the SESSION itself works in. With no `cwd` in the
++        // payload `session_checkout` degrades to `workspace_root`, which is the
++        // honest reading for this case: the reader is already rooted in the
++        // worktree, so there is no second tree to disagree about. The
++        // parent-rooted case below is where the two diverge.
++        expect(real(ev['session_root'])).toBe(real(worktree));
++
+         // 2. THE falsifiable fact. `git_dir` is this worktree's private gitdir,
+         // `git_common_dir` is the main checkout's `.git`. They differ EXACTLY
+         // when the session runs in a linked worktree, which is the condition
+-        // under which the defect existed at all.
++        // under which the defect existed at all. Both are derived from
++        // `session_root`, never from the reader's root — R2 finding 1.
+         const gitDir = ev['git_dir'] as string;
+         const commonDir = ev['git_common_dir'] as string;
+         expect(gitDir).not.toBe('');
+@@ -326,6 +439,483 @@ describe('run-continuation — driven through the live dispatcher', () => {
+         expect(claimPath.startsWith(`${real(worktree)}${path.sep}`)).toBe(false);
+     });
+ 
++    it('records the two-tree split when the READER is rooted in the parent checkout', () => {
++        // The arrangement the roadmap documents as the LIVE one, and the one no
++        // case covered: `CLAUDE_PROJECT_DIR` resolves to the parent even for a
++        // worktree session, so the dispatcher runs with `--project-dir <main>`
++        // while the session itself sits in the worktree.
++        //
++        // R2 finding 1 was invisible precisely here. The first version derived
++        // both git fields from the READER's root, where `git_dir(main)` and
++        // `git_common_dir(main)` are the SAME path — so the documented
++        // discriminator `git_dir !== git_common_dir` read FALSE for every real
++        // worktree-started run while the worktree-rooted case above stayed
++        // green. That is the "green suite over the arrangement that never fails"
++        // shape this file's own header warns about.
++        const { main, worktree } = writeWorktreePair();
++        const transcript = writeTranscript(3);
++        const res = dispatchStop(main, transcript, worktree);
++        expect(res.code).toBe(2);
++
++        const engaged = events(main).filter((e) => e['event'] === 'engage');
++        expect(engaged.length).toBe(1);
++        const ev = engaged[0] as Record<string, unknown>;
++        const real = (p: unknown): string => fs.realpathSync(p as string);
++
++        // The reader's tree and the session's tree, both recorded, and DIFFERENT
++        // — which is the defect condition itself, now readable per event.
++        expect(real(ev['workspace_root'])).toBe(real(main));
++        expect(real(ev['session_root'])).toBe(real(worktree));
++        expect(ev['workspace_root']).not.toBe(ev['session_root']);
++
++        // Round 2 finding 3: every `session_root` assertion wrapped BOTH sides
++        // in `real()`, so dropping `normalizeDir` from that branch — passing the
++        // envelope value verbatim, the precise regression finding 3 fixed —
++        // stayed green on macOS, where `/var` resolves to `/private/var`. Pinned
++        // as an exact string, the way the two sibling fields already were.
++        expect(ev['session_root']).toBe(real(worktree));
++        expect(ev['session_cwd']).toBe(real(worktree));
++
++        // The discriminator now holds where it has to: derived from the
++        // session's tree, these differ. Derived from the reader's tree — the
++        // shipped behaviour this replaces — they would be equal.
++        const gitDir = ev['git_dir'] as string;
++        const commonDir = ev['git_common_dir'] as string;
++        expect(real(gitDir)).not.toBe(real(commonDir));
++        expect(real(commonDir)).toBe(real(path.join(main, '.git')));
++
++        // Pinned as a regression on the old derivation specifically: had the
++        // fields come from `workspace_root`, this is the value they would carry.
++        expect(real(gitDir)).not.toBe(real(path.join(main, '.git')));
++
++        // Every path realpath-normalised at the source, so the containment test
++        // works for a reader holding nothing but the line (R2 finding 3).
++        expect(ev['git_common_dir']).toBe(real(commonDir));
++        expect(ev['workspace_root']).toBe(real(main));
++        const claimPath = ev['claim_path'] as string;
++        expect(claimPath.startsWith(`${real(commonDir)}${path.sep}`)).toBe(true);
++    });
++
++    it('walks up from a worktree subdirectory — the non-nested topology too', () => {
++        // This case was written for round 2 finding 1 and PINNED THE OPPOSITE
++        // BEHAVIOUR: `session_checkout` required the cwd to BE a checkout root,
++        // so `cd <worktree>/src` degraded onto the reader's root, and the case
++        // asserted that degradation as "the honest current behaviour" while
++        // arguing that only its VISIBILITY could be fixed.
++        //
++        // Round 3 finding 2 refuted the premise: in a NESTED worktree layout the
++        // degraded answer is not merely imprecise, it is confidently wrong, and
++        // every signal then reads healthy same-tree. The council's fix walks the
++        // resolver up, which makes the old assertion false. Retargeted rather
++        // than deleted — the topology it covers (worktree OUTSIDE the parent) is
++        // still one the walk has to get right, and it is the one this fixture has.
++        const { main, worktree } = writeWorktreePair();
++        const sub = path.join(worktree, 'src');
++        fs.mkdirSync(sub, { recursive: true });
++        const transcript = writeTranscript(3);
++        dispatchStop(main, transcript, sub);
++
++        const engaged = events(main).filter((e) => e['event'] === 'engage');
++        expect(engaged.length).toBe(1);
++        const ev = engaged[0] as Record<string, unknown>;
++        const real = (p: unknown): string => fs.realpathSync(p as string);
++
++        expect(ev['session_root']).toBe(real(worktree));
++        expect(ev['session_root']).not.toBe(ev['workspace_root']);
++        // The raw cwd stays on the line, and now it sits UNDER the resolved root
++        // — which is what a healthy resolution looks like, and is the reading the
++        // field exists to make available either way.
++        expect(ev['session_cwd']).toBe(real(sub));
++        expect(
++            (ev['session_cwd'] as string).startsWith(`${ev['session_root'] as string}${path.sep}`),
++        ).toBe(true);
++    });
++
++    it('still falls back when the cwd belongs to a DIFFERENT repository', () => {
++        // The same-repository bound the council named, and the reason
++        // `session_cwd` keeps earning its place after the walk-up: degradation
++        // did not disappear, it narrowed. A cwd in a foreign checkout resolves to
++        // that checkout's root, fails the common-dir identity check, and falls
++        // back — and the raw cwd is then a path outside the resolved root, which
++        // is the shape that tells a reader a fallback happened.
++        const { main } = writeWorktreePair();
++        const foreign = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-foreign-'));
++        cleanups.push(foreign);
++        git(foreign, 'init', '--quiet', '--initial-branch=main');
++        const transcript = writeTranscript(3);
++        dispatchStop(main, transcript, foreign);
++
++        const engaged = events(main).filter((e) => e['event'] === 'engage');
++        expect(engaged.length).toBe(1);
++        const ev = engaged[0] as Record<string, unknown>;
++        const real = (p: unknown): string => fs.realpathSync(p as string);
++
++        expect(ev['session_root']).toBe(real(main));
++        expect(ev['session_cwd']).toBe(real(foreign));
++        expect(
++            (ev['session_cwd'] as string).startsWith(`${ev['session_root'] as string}${path.sep}`),
++        ).toBe(false);
++    });
++
++    it('reports an empty session_cwd when the host sends no cwd at all', () => {
++        // The other half of finding 1: host silence and a failed resolution are
++        // different facts, and a reader must not have to guess which one a line
++        // records. Every other case in this file dispatches without a `cwd`, so
++        // this pins what those lines say about it.
++        const root = writeWorkspace();
++        const transcript = writeTranscript(3);
++        dispatchStop(root, transcript);
++        const engaged = events(root).filter((e) => e['event'] === 'engage');
++        expect(engaged.length).toBe(1);
++        expect(engaged[0]?.['session_cwd']).toBe('');
++    });
++
++    it('reads the SESSION tree roadmap from a nested worktree subdirectory — no false stall', () => {
++        // The fixture both council seats named independently (2026-08-19, 2/2 on
++        // A/A), and it is the one that closes round 3's two highs together:
++        //
++        //   finding 2 — `session_checkout` required the reported cwd to BE a
++        //   checkout root, so a session in `<worktree>/src` degraded onto the
++        //   parent. With the worktree NESTED under the parent, every signal then
++        //   reads healthy same-tree for a genuine two-tree run.
++        //
++        //   finding 1 — the progress scan read the roadmap from the READER's
++        //   tree, so the count follows a file nobody is editing. The agent flips
++        //   a checkbox in the worktree, the parent copy does not move, and the
++        //   stall detector declares a working run finished.
++        //
++        // The two roadmap copies disagree ON PURPOSE — parent 2 open, worktree 1.
++        // That disagreement is the instrument: no assertion about paths alone
++        // can show which file was read.
++        const { main, worktree, sub } = writeNestedWorktreePair();
++        const transcript = writeTranscript(3);
++        const res = dispatchStop(main, transcript, sub);
++        expect(res.code).toBe(2);
++
++        const engaged = events(main).filter((e) => e['event'] === 'engage');
++        expect(engaged.length).toBe(1);
++        const ev = engaged[0] as Record<string, unknown>;
++        const real = (p: unknown): string => fs.realpathSync(p as string);
++
++        // 1. The resolver walked up out of the subdirectory to the worktree root.
++        expect(ev['session_root']).toBe(real(worktree));
++        expect(ev['session_root']).not.toBe(ev['workspace_root']);
++        expect(ev['workspace_root']).toBe(real(main));
++
++        // 2. Which tree was actually READ. The worktree copy has one open step,
++        // the parent copy two — so this single number is the finding-1 assertion.
++        expect(ev['open']).toBe(1);
++
++        // 3. And the two-tree discriminators hold in the nested topology, where
++        // before the fix all three read healthy same-tree.
++        expect(real(ev['git_dir'] as string)).not.toBe(real(ev['git_common_dir'] as string));
++        expect(real(ev['git_common_dir'] as string)).toBe(real(path.join(main, '.git')));
++        expect(ev['session_cwd']).toBe(real(sub));
++
++        // 4. The council's same-repository bound: walking up must not cross into
++        // another repository, and the proof is the shared common dir.
++        expect(real(ev['git_common_dir'] as string)).toBe(
++            real(path.join(main, '.git')),
++        );
++    });
++
++    it('names the roadmap file it read on the line', () => {
++        // Round 4 finding 4: the line carried six path fields and not the path the
++        // only tree-dependent NUMBER on it came from, so `open: 1` on a two-tree
++        // line could not be told apart from `open: 1` after a silent fallback.
++        const { main, worktree, sub } = writeNestedWorktreePair();
++        dispatchStop(main, writeTranscript(3), sub);
++        const ev = events(main).filter((e) => e['event'] === 'engage')[0] as Record<
++            string,
++            unknown
++        >;
++        expect(ev['roadmap_path']).toBe(
++            path.join(fs.realpathSync(worktree), 'agents', 'roadmaps', `${SLUG}.md`),
++        );
++        // And the count on the same line comes from that file, not the parent's.
++        expect(ev['open']).toBe(1);
++    });
++
++    it('ALLOWS when the session tree archived the roadmap — never falls back to the parent', () => {
++        // Round 4 finding 1, and it is the fix's own failure mode rather than the
++        // original defect's. `roadmap-progress-sync` mandates archival in the same
++        // change that closes the last step, so a completing run `git mv`s the file
++        // into `agents/roadmaps/archive/`. Resolving PER FILE, the next fire found
++        // the session copy gone, silently read the parent's un-archived copy, saw
++        // its still-open steps, and blocked with "continue with this step now"
++        // against a path that no longer exists in the tree being edited — engaging
++        // to the iteration cap instead of ever reaching complete.
++        //
++        // Resolving per DIRECTORY, the session tree stays authoritative and a
++        // missing file means the roadmap is gone from this run, which the
++        // unreadable-roadmap branch already handles by allowing the turn to end.
++        const { main, worktree, sub } = writeNestedWorktreePair();
++        const live = path.join(worktree, 'agents', 'roadmaps', `${SLUG}.md`);
++        const archive = path.join(worktree, 'agents', 'roadmaps', 'archive');
++        fs.mkdirSync(archive, { recursive: true });
++        fs.renameSync(live, path.join(archive, `${SLUG}.md`));
++        // The parent copy is deliberately left in place with its two open steps —
++        // it is exactly what a fallback would have found.
++        expect(fs.existsSync(path.join(main, 'agents', 'roadmaps', `${SLUG}.md`))).toBe(true);
++
++        const res = dispatchStop(main, writeTranscript(3), sub);
++        expect(res.code).toBe(0);
++        expect(events(main).length).toBe(0);
++    });
++
++    it('ALLOWS on a claim slug that would escape the roadmaps directory', () => {
++        // Round 4 finding 7. `_read_claim_file` accepts any non-empty trimmed
++        // string as a slug, and the resolver now builds paths in TWO trees, so a
++        // traversal slug would have made the concern read outside
++        // `agents/roadmaps/` twice over. Refusing to name a file is the safe
++        // direction for a concern whose only power is refusing to end a turn.
++        const root = writeWorkspace();
++        const claim = path.join(root, roadmap_claim_rel(SESSION));
++        fs.writeFileSync(
++            claim,
++            JSON.stringify({ slug: '../../etc/passwd', session_id: SESSION }),
++            'utf-8',
++        );
++        const res = dispatchStop(root, writeTranscript(3));
++        expect(res.code).toBe(0);
++        expect(events(root).length).toBe(0);
++    });
++
++    it('does not stall while the SESSION tree count keeps moving', () => {
++        // The second half of the council's fixture: three fires with the worktree
++        // count advancing between them. Reading the parent, the count is frozen
++        // at 2 for all three and the third fire emits `halt-stall` — a working
++        // run declared finished. Reading the session tree, it moves 3 → 2 → 1 and
++        // no halt is emitted.
++        const { main, worktree, sub } = writeNestedWorktreePair();
++        const wtRoadmap = path.join(worktree, 'agents', 'roadmaps', `${SLUG}.md`);
++
++        for (const [i, open] of [3, 2, 1].entries()) {
++            fs.writeFileSync(wtRoadmap, fixtureRoadmapWithOpen(open), 'utf-8');
++            // A fresh transcript per fire, with a growing user-turn count: the
++            // concern keys its duplicate-fire guard on the turn ordinal, so
++            // re-firing on the same transcript would be discarded as a duplicate
++            // rather than counted as an engagement.
++            dispatchStop(main, writeTranscript(3 + i), sub);
++        }
++
++        const log = events(main);
++        expect(log.filter((e) => e['event'] === 'halt-stall').length).toBe(0);
++        const opens = log.filter((e) => e['event'] === 'engage').map((e) => e['open']);
++        expect(opens).toEqual([3, 2, 1]);
++    });
++
++    it('emits halt-roadmap-absent and clears the budget when a DRIVEN run archives its roadmap', () => {
++        // Round 5 finding 2. The archival case was already covered for a run the
++        // concern had never driven — it allows, silently, correctly. The half that
++        // was broken is the one that matters: a run this concern DROVE, which then
++        // completes and `git mv`s its roadmap in the same reply as the last
++        // checkbox, per roadmap-progress-sync.
++        //
++        // Before the fix that fire returned a bare EXIT_ALLOW: no line said the run
++        // had finished, and the state file survived with iterations and started_at
++        // from the finished run — so a later claim by the same session id began with
++        // part of the 25-iteration budget spent and the 4 h clock already running,
++        // which the comment on the complete rung promises will not happen.
++        const { main, worktree, sub } = writeNestedWorktreePair();
++        // Fire once to create state — this run is now DRIVEN.
++        dispatchStop(main, writeTranscript(3), sub);
++        expect(events(main).filter((e) => e['event'] === 'engage').length).toBe(1);
++        const stateFile = path.join(main, stateRelPath(deriveSessionKey(SESSION)));
++        expect(fs.existsSync(stateFile)).toBe(true);
++
++        // Now archive it the way a completing run does, in the SESSION tree only.
++        const live = path.join(worktree, 'agents', 'roadmaps', `${SLUG}.md`);
++        const archive = path.join(worktree, 'agents', 'roadmaps', 'archive');
++        fs.mkdirSync(archive, { recursive: true });
++        fs.renameSync(live, path.join(archive, `${SLUG}.md`));
++
++        const res = dispatchStop(main, writeTranscript(4), sub);
++        expect(res.code).toBe(0);
++        const absent = events(main).filter((e) => e['event'] === 'halt-roadmap-absent');
++        expect(absent.length).toBe(1);
++        expect(absent[0]?.['roadmap']).toBe(SLUG);
++        // The budget is cleared, which is the half no ledger line can substitute for.
++        expect(fs.existsSync(stateFile)).toBe(false);
++    });
++
++    it('does not read a stall off the PREVIOUS source document', () => {
++        // Round 5 findings 1 and 8 together: the reset existed and sat in the wrong
++        // place — inside the engage branch, which runs after `ladder()` and after
++        // the non-engage branch has already returned. So on the ONE fire where the
++        // source changes, the stall test still compared counts from two files.
++        //
++        // The fixture is the reviewer's: the session tree has NO agents/roadmaps at
++        // first, so three fires read the parent copy at a frozen count and build a
++        // full stall window. Then the session tree gains its own copy AT THE SAME
++        // COUNT. With the reset before the ladder, fire 4 engages on a cleared
++        // window; with the reset after it, fire 4 returns halt-stall on the parent's
++        // numbers and declares a working run finished.
++        const { main, worktree, sub } = writeNestedWorktreePair();
++        const wtRoadmaps = path.join(worktree, 'agents', 'roadmaps');
++        fs.rmSync(wtRoadmaps, { recursive: true, force: true });
++        // The parent copy is the only readable one, at a fixed two open steps.
++        for (let i = 0; i < 3; i++) {
++            dispatchStop(main, writeTranscript(3 + i), sub);
++        }
++        const before = events(main).filter((e) => e['event'] === 'engage');
++        expect(before.length).toBe(3);
++        expect(before.every((e) => e['open'] === 2)).toBe(true);
++        expect(before.every((e) => e['roadmap_path'] === path.join(fs.realpathSync(main), 'agents', 'roadmaps', `${SLUG}.md`))).toBe(true);
++
++        // The session tree gains its own copy, at the SAME count — the coincidence
++        // the finding turns on.
++        fs.mkdirSync(wtRoadmaps, { recursive: true });
++        fs.writeFileSync(path.join(wtRoadmaps, `${SLUG}.md`), fixtureRoadmapWithOpen(2), 'utf-8');
++
++        const res = dispatchStop(main, writeTranscript(6), sub);
++        expect(events(main).filter((e) => e['event'] === 'halt-stall').length).toBe(0);
++        expect(res.code).toBe(2);
++        const after = events(main).filter((e) => e['event'] === 'engage');
++        expect(after.length).toBe(4);
++        expect(after[3]?.['roadmap_path']).toBe(
++            path.join(fs.realpathSync(worktree), 'agents', 'roadmaps', `${SLUG}.md`),
++        );
++    });
++
++    it('normalises a claim slug that carries the .md suffix', () => {
++        // Round 5 finding 7: `claim_is_stale` strips a trailing `.md` before
++        // resolving the same string and this did not, so such a claim rendered as
++        // live work in the register while the concern resolved `<slug>.md.md`,
++        // failed the read and allowed every stop.
++        const root = writeWorkspace();
++        fs.writeFileSync(
++            path.join(root, roadmap_claim_rel(SESSION)),
++            JSON.stringify({ slug: `${SLUG}.md`, session_id: SESSION }),
++            'utf-8',
++        );
++        const res = dispatchStop(root, writeTranscript(3));
++        expect(res.code).toBe(2);
++        expect(events(root).filter((e) => e['event'] === 'engage').length).toBe(1);
++    });
++
++    it('accepts a legitimate slug containing a double dot', () => {
++        // Round 5 finding 10: the containment guard tested the CHARACTERS for `..`
++        // rather than the resulting structure, so `road-to-a..b` — a legal filename
++        // — was refused and the concern silently allowed every stop.
++        const root = writeWorkspace();
++        const oddSlug = 'road-to-a..b';
++        fs.writeFileSync(
++            path.join(root, 'agents', 'roadmaps', `${oddSlug}.md`),
++            fixtureRoadmap(),
++            'utf-8',
++        );
++        fs.writeFileSync(
++            path.join(root, roadmap_claim_rel(SESSION)),
++            JSON.stringify({ slug: oddSlug, session_id: SESSION }),
++            'utf-8',
++        );
++        const res = dispatchStop(root, writeTranscript(3));
++        expect(res.code).toBe(2);
++        const engaged = events(root).filter((e) => e['event'] === 'engage');
++        expect(engaged.length).toBe(1);
++        expect(engaged[0]?.['roadmap']).toBe(oddSlug);
++    });
++
++    it('never erases a halt stamp when the roadmap goes absent', () => {
++        // Round 6 finding 1, high. The absent rung cleared the state file
++        // unconditionally, so one transient read failure of the roadmap — an
++        // unlink-then-write by any tool, a git checkout or stash mid-run, an EACCES
++        // — erased the halt stamp AND the budget. The next fire read no state,
++        // started at iteration 0 with a fresh wall clock, and re-engaged with the
++        // full 25-iteration cap: the unbounded loop `RunState.halted` exists to
++        // prevent, restored by the branch meant to close a leak.
++        const { main, worktree, sub } = writeNestedWorktreePair();
++        const stateFile = path.join(main, stateRelPath(deriveSessionKey(SESSION)));
++        fs.mkdirSync(path.dirname(stateFile), { recursive: true });
++        fs.writeFileSync(
++            stateFile,
++            JSON.stringify({
++                started_at: '2026-08-19T00:00:00.000Z',
++                iterations: 25,
++                last_turn: 9,
++                history: [1, 1, 1],
++                roadmap: SLUG,
++                halted: 'halt-max-iterations',
++            }),
++            'utf-8',
++        );
++        // The roadmap disappears from the session tree — archived, or mid-rewrite.
++        fs.rmSync(path.join(worktree, 'agents', 'roadmaps', `${SLUG}.md`));
++
++        const res = dispatchStop(main, writeTranscript(3), sub);
++        expect(res.code).toBe(0);
++        // No line: a halted run has already recorded its own end.
++        expect(events(main).length).toBe(0);
++        // And the stamp survives, which is the half that bounds the loop.
++        expect(fs.existsSync(stateFile)).toBe(true);
++        const kept = JSON.parse(fs.readFileSync(stateFile, 'utf-8')) as Record<string, unknown>;
++        expect(kept['halted']).toBe('halt-max-iterations');
++        expect(kept['iterations']).toBe(25);
++    });
++
++    it('does not inherit a halt stamped on a DIFFERENT roadmap', () => {
++        // Round 6 finding 2: the state is keyed on the session id alone and one
++        // session may re-claim. A halt stamped on roadmap A is never cleared — only
++        // `complete` unlinks — so a later legitimate claim of roadmap B inherited
++        // it, emitted a halt line naming B without ever engaging, and reported A's
++        // iteration count under B's slug.
++        const root = writeWorkspace();
++        const stateFile = path.join(root, stateRelPath(deriveSessionKey(SESSION)));
++        fs.mkdirSync(path.dirname(stateFile), { recursive: true });
++        fs.writeFileSync(
++            stateFile,
++            JSON.stringify({
++                started_at: '2026-08-19T00:00:00.000Z',
++                iterations: 25,
++                last_turn: 9,
++                history: [7, 7, 7],
++                roadmap: 'road-to-some-other-thing',
++                halted: 'halt-max-iterations',
++            }),
++            'utf-8',
++        );
++
++        const res = dispatchStop(root, writeTranscript(3));
++        expect(res.code).toBe(2);
++        const log = events(root);
++        expect(log.filter((e) => e['event'] === 'engage').length).toBe(1);
++        expect(log.filter((e) => String(e['event']).startsWith('halt-')).length).toBe(0);
++        // A fresh budget, not the other roadmap's spent one.
++        const now = JSON.parse(fs.readFileSync(stateFile, 'utf-8')) as Record<string, unknown>;
++        expect(now['iterations']).toBe(1);
++        expect(now['roadmap']).toBe(SLUG);
++    });
++
++    it('writes ONE halt line, not one per subsequent stop fire', () => {
++        // Round 6 finding 6: once `halted` is stamped the state file is immortal for
++        // the session, so every later stop fire re-entered the non-engage branch and
++        // appended another record with the same run_id and iterations — an unbounded
++        // number of duplicates in the ledger the acceptance criteria count from.
++        const root = writeWorkspace();
++        const stateFile = path.join(root, stateRelPath(deriveSessionKey(SESSION)));
++        fs.mkdirSync(path.dirname(stateFile), { recursive: true });
++        fs.writeFileSync(
++            stateFile,
++            JSON.stringify({
++                started_at: '2026-08-19T00:00:00.000Z',
++                iterations: 25,
++                last_turn: 9,
++                history: [1],
++                roadmap: SLUG,
++            }),
++            'utf-8',
++        );
++
++        // First fire crosses the cap and stamps.
++        dispatchStop(root, writeTranscript(3));
++        expect(events(root).filter((e) => e['event'] === 'halt-max-iterations').length).toBe(1);
++        // Two more fires say nothing new.
++        dispatchStop(root, writeTranscript(4));
++        dispatchStop(root, writeTranscript(5));
++        expect(events(root).filter((e) => e['event'] === 'halt-max-iterations').length).toBe(1);
++    });
++
+     it('records the provenance on a non-engage event too — the defer branch', () => {
+         const root = writeWorkspace();
+         const transcript = writeTranscript(3);
+@@ -350,7 +940,18 @@ describe('run-continuation — driven through the live dispatcher', () => {
+         expect(fs.realpathSync(deferred[0]?.['workspace_root'] as string)).toBe(
+             fs.realpathSync(root),
+         );
+-        expect(typeof deferred[0]?.['claim_path']).toBe('string');
++        // R2 finding 8: this pinned only `typeof === 'string'`, which an empty
++        // string satisfies — so a regression that dropped the one field
++        // locating the contract would have left the assertion green. The
++        // fixture's claim path is deterministic, so pin it exactly, normalised
++        // the same way `provenance` normalises it.
++        const expectedClaim = path.join(root, roadmap_claim_rel(SESSION));
++        expect(deferred[0]?.['claim_path']).toBe(
++            path.join(
++                fs.realpathSync(path.dirname(expectedClaim)),
++                path.basename(expectedClaim),
++            ),
++        );
+         // This fixture is a plain temp directory, not a repository — so both git
+         // fields are empty, and that is the honest degenerate reading rather
+         // than a gap. Pinned so a future change cannot start emitting a guessed
+diff --git a/tests/scripts/session_register.test.ts b/tests/scripts/session_register.test.ts
+index eb81a88a215e94fa8ec71d4fca7984e4bc9d27de..6397b4a3371de861b900253ac821fcd8976b6c71 100644
+--- a/tests/scripts/session_register.test.ts
++++ b/tests/scripts/session_register.test.ts
+@@ -59,8 +59,27 @@ import {
+ 
+ let tmp: string;
+ 
++/**
++ * `git` against a fixture tree with the ambient repository pointers AND the
++ * ambient config stripped.
++ *
++ * Round 4 finding 6: the sibling fixture helper in
++ * `tests/hooks/run_continuation_dispatch.test.ts` was hardened on both axes and
++ * this one was not, while the same change added a `git worktree add` case here.
++ * With `GIT_DIR` exported — the suite run from inside a git hook — `make_repo`s
++ * `git config user.email` writes the REAL repository local config instead of the
++ * fixture one, and a global `commit.gpgsign` with no available key reds the
++ * fixture commit for a reason unrelated to anything under test.
++ */
+ function git(cwd: string, ...args: string[]): string {
+-    return execFileSync('git', args, { cwd, encoding: 'utf-8' }).trim();
++    const env = { ...process.env };
++    delete env['GIT_DIR'];
++    delete env['GIT_WORK_TREE'];
++    delete env['GIT_INDEX_FILE'];
++    delete env['GIT_COMMON_DIR'];
++    env['GIT_CONFIG_GLOBAL'] = '/dev/null';
++    env['GIT_CONFIG_SYSTEM'] = '/dev/null';
++    return execFileSync('git', args, { cwd, encoding: 'utf-8', env }).trim();
+ }
+ 
+ /** A repo with a linked worktree — the shape the whole design rests on. */
+@@ -505,6 +524,27 @@ describe('a stale slug is not a claim', () => {
+         expect(claim_is_stale(main, 'road-to-open.md')).toBe(false);
+     });
+ 
++    it('a legal slug containing a double dot is live, not stale', () => {
++        // Round 6 finding 3. Round 5 finding 10 replaced the `..` substring test with
++        // a structural check in `resolveRoadmap` and NOT here, so the two functions
++        // disagreed about one claim string in the opposite direction: this side
++        // called a live claim stale — dropping it from the collision set and
++        // disabling the duplicate-work warning — while the hook resolved it and
++        // engaged on it. Round 5's own new case pinned that green because it only
++        // exercised the hook side, which is the argument for pinning both.
++        const { main } = make_repo();
++        fs.mkdirSync(path.join(main, 'agents', 'roadmaps'), { recursive: true });
++        fs.writeFileSync(path.join(main, 'agents', 'roadmaps', 'road-to-a..b.md'), '#');
++        expect(claim_is_stale(main, 'road-to-a..b')).toBe(false);
++    });
++
++    it('a slug that would escape the roadmaps directory still reads as stale', () => {
++        // The direction the structural check must NOT loosen.
++        const { main } = make_repo();
++        expect(claim_is_stale(main, '../../etc/passwd')).toBe(true);
++        expect(claim_is_stale(main, '/etc/passwd')).toBe(true);
++    });
++
+     it('null is not stale — absence is a state, not a defect', () => {
+         const { main } = make_repo();
+         expect(claim_is_stale(main, null)).toBe(false);
+@@ -834,19 +874,47 @@ describe('the record describes THIS session checkout, not the chdir target', ()
+ 
+     it('falls back to workspace_root when the cwd is absent, empty, or not a directory', () => {
+         const { main } = make_repo();
+-        expect(session_checkout(main, null)).toBe(main);
+-        expect(session_checkout(main, '   ')).toBe(main);
+-        expect(session_checkout(main, path.join(main, 'nope'))).toBe(main);
++        // Canonical on the fallback branch too, which is round 4 finding 5:
++        // the resolve branch realpath-normalised and the fallbacks did not, so
++        // two sessions in one working tree stored different strings for it under a
++        // symlinked ancestor and the foreign-session block read them as separate
++        // trees. Asserted as the canonical form rather than as the raw input, so a
++        // regression back to the asymmetry reds here.
++        const canon = fs.realpathSync(main);
++        expect(session_checkout(main, null)).toBe(canon);
++        expect(session_checkout(main, '   ')).toBe(canon);
++        expect(session_checkout(main, path.join(main, 'nope'))).toBe(canon);
+         const file = path.join(main, 'a-file');
+         fs.writeFileSync(file, 'x');
+-        expect(session_checkout(main, file)).toBe(main);
++        expect(session_checkout(main, file)).toBe(canon);
++    });
++
++    it('walks up from a subdirectory to the nearest enclosing checkout root', () => {
++        // This case previously asserted the OPPOSITE — "refuses a cwd that is not
++        // a checkout root — git_dir does not walk up" — and it was testing wrong
++        // behaviour. R2 round 3 finding 2 measured what the refusal cost: with a
++        // worktree NESTED under the parent (this repository's own layout,
++        // `.claude/worktrees/<name>`), a session standing in a subdirectory
++        // resolved to the PARENT, and every downstream signal then reported a
++        // healthy same-tree run for a genuine two-tree one. A confidently wrong
++        // answer, not a loss of precision.
++        const { main, wt } = make_repo();
++        const sub = path.join(wt, 'src', 'deeper');
++        fs.mkdirSync(sub, { recursive: true });
++        expect(session_checkout(main, sub)).toBe(fs.realpathSync(wt));
+     });
+ 
+-    it('refuses a cwd that is not a checkout root — git_dir does not walk up', () => {
+-        const { main, wt } = make_repo();
+-        const sub = path.join(wt, 'src');
++    it('walks up out of a NESTED worktree to the worktree, never to the parent', () => {
++        // The topology the finding was measured in, and the one the walk has to
++        // resolve in the narrow direction: the first enclosing checkout root wins,
++        // so the nested worktree is found before the checkout that contains it.
++        const { main } = make_repo();
++        const nested = path.join(main, '.claude', 'worktrees', 'wt-nested');
++        fs.mkdirSync(path.dirname(nested), { recursive: true });
++        git(main, 'worktree', 'add', '--quiet', '-b', 'nested-branch', nested);
++        const sub = path.join(nested, 'src');
+         fs.mkdirSync(sub, { recursive: true });
+-        expect(session_checkout(main, sub)).toBe(main);
++        expect(session_checkout(main, sub)).toBe(fs.realpathSync(nested));
+     });
+ 
+     it('refuses a cwd in a DIFFERENT repository — the register is shared per repo', () => {
+@@ -854,7 +922,7 @@ describe('the record describes THIS session checkout, not the chdir target', ()
+         const other = path.join(tmp, 'other-repo');
+         fs.mkdirSync(other, { recursive: true });
+         git(other, 'init', '-q', '-b', 'main');
+-        expect(session_checkout(main, other)).toBe(main);
++        expect(session_checkout(main, other)).toBe(fs.realpathSync(main));
+     });
+ });
+ 

@@ -229,9 +229,17 @@ describe('refusedThisTurn — the quality-gate defer', () => {
 });
 
 describe('stateRelPath', () => {
-    it('sanitises the run id into a state filename', () => {
-        expect(stateRelPath('abc/../etc')).toBe(
-            path.join('agents', 'runtime', 'state', 'run-continuation-abc____etc.json'),
+    it('sanitises the run id AND the slug into a state filename', () => {
+        // Round 7 findings 2 and 3: the path is keyed on (session, roadmap), because
+        // one session-keyed file cannot hold two roadmaps budgets — the absent
+        // branch reported one roadmap iteration count under another slug, and a
+        // slug mismatch on the main path let the next write overwrite the other
+        // roadmap halt stamp.
+        expect(stateRelPath('abc/../etc', 'road-to-x')).toBe(
+            path.join('agents', 'runtime', 'state', 'run-continuation-abc____etc-road-to-x.json'),
+        );
+        expect(stateRelPath('s', 'a/../b')).toBe(
+            path.join('agents', 'runtime', 'state', 'run-continuation-s-a____b.json'),
         );
     });
 });
