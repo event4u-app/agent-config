@@ -6,7 +6,7 @@
 
 ## Overall
 
-**291 / 542 steps done · 54%**
+**295 / 542 steps done · 54%**
 
 ```text
 ██████████████████████░░░░░░░░░░░░░░░░░░   54%
@@ -35,7 +35,7 @@
 | 17 | [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md) | 6 | 24 | 1 | 18 | 5 | 0 | [1](#blockers-road-to-long-horizon-execution) | ██████████ 95% |
 | 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
 | 19 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 20 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 21 | 6 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ██░░░░░░░░ 22% |
+| 20 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 17 | 10 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ████░░░░░░ 37% |
 | 21 | [road-to-per-turn-hook-economy.md](roadmaps/road-to-per-turn-hook-economy.md) | 6 | 18 | 3 | 11 | 2 | 2 | [6](#blockers-road-to-per-turn-hook-economy) | ████████░░ 79% |
 | 22 | [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md) | 3 | 17 | 7 | 10 | 0 | 0 | 0 | ██████░░░░ 59% |
 | 23 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 7 | 2 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ██░░░░░░░░ 22% |
@@ -630,14 +630,14 @@ _1 blocker resolved._
 
 ### [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md)
 
-**Road to org telemetry** — 6 / 27 done (22%)
+**Road to org telemetry** — 10 / 27 done (37%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Falsification spikes | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 1 | Emission in the dispatcher | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Transport | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Consent | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Transport | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
+| 3 | Consent | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
 | 4 | Report and the rationalization unblock | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 5 | Self-repair intake over the wire | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 6 | Aggregation and issues | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
