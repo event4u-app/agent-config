@@ -1,6 +1,7 @@
 ---
 complexity: lightweight
 status: ready
+estate_offset_exempt: opened because the trunk is RED on the pre-registered hook-latency gate and the cause has no owner. The offset available in this change would be archiving an unrelated roadmap purely to buy room, which bundles a disposition nobody reviewed into a PR about the latency gate — a worse trade than one visible line. It carries its own Honest null, so it terminates on a measurement rather than on attention.
 ---
 
 # Road to slot-scoped concern loading — stop every concern taxing every slot

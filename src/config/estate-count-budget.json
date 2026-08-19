@@ -16,9 +16,9 @@
         ]
     },
     "baseline": {
-        "active_roadmaps": 37,
+        "active_roadmaps": 38,
         "later_roadmaps": 43,
-        "open_blockers": 71
+        "open_blockers": 72
     },
     "baseline_history": [
         {
@@ -55,6 +55,13 @@
             "later_roadmaps": 43,
             "open_blockers": 71,
             "why": "LOWERED by 1 on each gated metric, in the direction this ratchet exists for. road-to-stop-gate-honesty reached zero open steps and zero deferred items and was archived, which is a terminal disposition rather than a park; its `b-detector-demotion-bars` was resolved with the decision recorded at the entry, not moved elsewhere. Both numbers are therefore measurements of a smaller estate, not room bought by relocating work — later_roadmaps is unchanged at 43, which is the check that distinguishes the two. Walked down because the count gate reported both as free tightening and its unit test asserts the committed budget equals the live tree: a baseline left above a lower measurement is headroom a later change can spend without any gate objecting, which is the loose-ratchet failure the 67 -> 69 entry above records from the other direction."
+        },
+        {
+            "at": "2026-08-19",
+            "active_roadmaps": 38,
+            "later_roadmaps": 43,
+            "open_blockers": 72,
+            "why": "RAISED by 1 on active_roadmaps and open_blockers, and the direction is stated plainly because this ratchet exists to make exactly this visible. Both come from one change that routes a MEASURED hook-latency regression to an owner: the blocker b-concern-load-taxes-every-slot on road-to-per-turn-hook-economy, and road-to-slot-scoped-concern-loading for the structural half. The trunk is red on the pre-registered latency gate — main measured pre_tool_use p50 176 ms against a derivation window of 111-148, a local A/B at the gate own n=50 reproduced +12.6 percent, and the same-run control was flat, so it is cost growth rather than runner spread. The estate grew because the defect had nowhere to live, not because scope was added. NOT offset deliberately: the only offset available here would be archiving an unrelated roadmap to buy room, which bundles an unreviewed disposition into a latency-gate PR. The roadmap carries estate_offset_exempt with that reason and its own Honest null, so it closes on a measurement in Phase 0 if module load turns out to be a minor share — which is the walk back down this raise is underwritten by. later_roadmaps unchanged at 43, the check that distinguishes a real addition from work relocated into later/."
         }
     ],
     "target": {
