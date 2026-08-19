@@ -16,8 +16,8 @@
     ]
   },
   "baseline": {
-    "active_roadmaps": 32,
-    "later_roadmaps": 50,
+    "active_roadmaps": 33,
+    "later_roadmaps": 49,
     "open_blockers": 71
   },
   "baseline_history": [
@@ -114,10 +114,17 @@
     },
     {
       "at": "2026-08-19",
-      "active_roadmaps": 32,
-      "later_roadmaps": 50,
+      "active_roadmaps": 34,
+      "later_roadmaps": 49,
       "open_blockers": 71,
-      "why": "WALKED DOWN by 1 active roadmap: road-to-inbox-harvest-2026-08-b-dispatch-safety archived, its last open step closed. Nothing was parked and nothing was created to absorb it \u2014 later_roadmaps and open_blockers are both unchanged, which is the check that this is a real termination rather than a burial wearing a tightening's clothes. The step it closed had been deferred on a premise that turned out to be false: the zero producer count it waited on was produced by an unchecked validator rather than by producers, so the condition could never have been met. Its deferred half was relocated intact into an EXISTING active roadmap (road-to-subagent-lifecycle-integrity, as its own phase) rather than into a new one, which is why the active count falls by one instead of staying flat \u2014 a follow-up roadmap would have made this a net zero and bought nothing. Walked here rather than banked because this gate fails on an un-walked tightening by design: a lower measurement is the new ceiling, not headroom a later change gets to spend with nothing objecting."
+      "why": "An UN-PARK, which is the one estate move this gate had no shape for. active_roadmaps 33 -> 34 is RAISED and later_roadmaps 50 -> 49 is WALKED DOWN, by the same single file moving in the same commit: later/road-to-request-scoped-rule-load.md returns to the active tree. Net estate is zero, and the two numbers move in opposite directions for that reason rather than by coincidence. Read the raise together with the walk-down or it reads as growth, which it is not: no roadmap was created, no work was added, and open_blockers is UNCHANGED at 71 because open_blockers already spans active plus later/ and therefore cannot notice a move between them. That invariance is the check that this is a disposition change and not a park wearing a tightening's clothes, in the exact mirror of the test the 2026-08-19 batch-1 entry above applies in the parking direction. WHY THE FILE MOVES: its resume condition, restated 2026-08-08 and owned by the maintainer, was 'Resume when P2.1 of road-to-rule-delivery-integrity closes'. P2.1's own completion marker in the archived parent reads done 2026-08-08, the parent archived 2026-08-09 at 259039157, and git log over the parked file since 2026-08-08 returns ZERO commits. So the condition has been satisfied for eleven days with nothing acting on it and nothing recording a decision not to, while three consecutive /roadmap:next screens logged the FIRED probe as a by-product finding and each correctly declined the work behind it as maintainer-owned. Declining the work and leaving the file parked are different acts, and only the first was ever decided. THE RAISE IS NOT UNDERWRITTEN BY FUTURE WORK, which distinguishes it from every prior raise in this history: nothing is promised, and it does not walk back down on a measurement. It walks down when Phase 4 terminates in either direction, and Phase 4 stays council-parked by the 2026-07-07 verdict with its design locked and both steps still open. The file carries estate_offset_exempt so the one-in-one-out half passes on its own terms; what fires is the raw COUNT half, which is diff-blind by design and cannot see that the offset it wants is the later/ decrement recorded on the very same line. The alternative was archiving an unrelated roadmap to buy the number back, which moves the count without moving the estate and is what this ratchet's own history repeatedly refuses. Left unrecorded, the shape has a worse cost than one raise: an un-park would be permanently unrepresentable, later/ would be a one-way door, and burial would be the cheapest disposition available - which is precisely the failure the later_roadmaps metric was added to prevent."
+    },
+    {
+      "at": "2026-08-19",
+      "active_roadmaps": 33,
+      "later_roadmaps": 49,
+      "open_blockers": 71,
+      "why": "WALKED DOWN by 1 active roadmap: road-to-inbox-harvest-2026-08-b-dispatch-safety archived, its last open step closed. Nothing was parked and nothing was created to absorb it, which is the check that this is a real termination rather than a burial wearing a tightening's clothes. The step it closed had been deferred on a premise that turned out to be false: the zero producer count it waited on was produced by an unchecked validator rather than by producers, so the condition could never have been met. Its deferred half was relocated intact into an EXISTING active roadmap (road-to-subagent-lifecycle-integrity, as its own phase) rather than into a new one, which is why the active count falls by one instead of staying flat - a follow-up roadmap would have made this a net zero and bought nothing. READ TOGETHER WITH THE ENTRY ABOVE, or the arithmetic does not reconcile: this walk-down was authored against 33 active / 50 later and merged onto a base where the un-park had already moved those to 34 / 49. The active number below is therefore 33, not 32, and the later number is 49, not 50 - the difference is the parallel session's file, not a correction to this closure. Restated at merge rather than left at its authoring values, because a history entry that records a measurement nobody can reproduce against the tree is the staleness this ratchet's own metric note refuses."
     }
   ],
   "target": {

@@ -1,7 +1,8 @@
 ---
 complexity: structural
-status: later
+status: ready
 parent_roadmap: road-to-token-saving
+estate_offset_exempt: "resumed out of later/ on a satisfied resume condition (2026-08-08), so active_roadmaps rises by one while later_roadmaps falls by one — a disposition change, not estate growth. The ratchet gates the two metrics separately and has no cross-metric offset; without this field an un-park can never be recorded, which would make later/ a one-way door and exactly the burial the estate-drawdown quality anchor exists to prevent."
 ---
 
 # Road to request-scoped rule load — ship only what the request needs
@@ -63,6 +64,46 @@ parent_roadmap: road-to-token-saving
 > or its gates. Phase 1b addition council-confirmed 2026-07-08
 > (claude-sonnet-4-5 + gpt-4o, 2 rounds: extend this roadmap, do not
 > spawn a sibling).
+
+> **PARK DISCHARGED — resumed 2026-08-19 into the active tree.** Written as the
+> deliverable of step 1.1 of [`road-to-standing-context-40k`](road-to-standing-context-40k.md),
+> which owns the resumption-evidence note but deliberately does **not** own this
+> roadmap's remaining work. The park block above is kept verbatim as the
+> historical record; this note discharges it rather than replacing it.
+>
+> - **The resume condition, verbatim:** *"Resume when P2.1 of
+>   `road-to-rule-delivery-integrity` closes"* — restated 2026-08-08 by P0.4 of
+>   that roadmap, owner maintainer.
+> - **Date it was satisfied: 2026-08-08.** P2.1's own completion marker in
+>   [`archive/road-to-rule-delivery-integrity.md`](archive/road-to-rule-delivery-integrity.md)
+>   carries `done 2026-08-08`. The parent roadmap itself archived one day later,
+>   2026-08-09 (`259039157`), which is the event `agent-config gates` reports the
+>   machine-decidable probe as having FIRED on. Both point at the same discharge;
+>   the written condition is the earlier and narrower of the two.
+> - **The artefact that satisfied it:**
+>   [`skill-catalogue-description-delivery.md`](../evidence/analysis/skill-catalogue-description-delivery.md).
+>   Its finding is *not* the one P2.1 hypothesised: 414/414 installed skills carry
+>   a description on disk (measured), while 5 of 8 sampled catalogue entries
+>   reached the model without one (first-party observation). So the projection is
+>   complete and **the loss is host-side** — "our projection is missing
+>   descriptions" is refuted. It claims no total bare-vs-described rate, because
+>   the catalogue is not persisted and hand-counting a context window would not be
+>   verifiable. That is what the two Phase-4 steps below now have to be read
+>   against: the surface a rules-as-skills probe would move rules *onto* is
+>   measured, and measured lossy for a reason this suite does not control.
+> - **No resumption event followed, for eleven days.** `git log` over this file
+>   since 2026-08-08 returns **zero** commits, so nothing acted on the satisfied
+>   condition and nothing recorded a decision not to. Three consecutive
+>   `/roadmap:next` screens (2026-08-18 h, 2026-08-19 i, and this one) logged the
+>   FIRED probe in their by-product findings and each correctly declined it as a
+>   maintainer-owned Phase-4 probe — which is why the file needed the note and the
+>   move, not execution.
+>
+> **What resuming does and does not authorise.** It puts the file where the
+> dashboard counts it and where a screen can see it, and it records why. It does
+> **not** promote Phase 4: both remaining steps stay `[ ]` and stay
+> council-parked by the 2026-07-07 verdict with their design locked. Owner
+> unchanged: maintainer.
 
 ## Goal
 
@@ -499,6 +540,22 @@ checks green per batch; trigger-eval coverage not regressed; backlink report
 current.
 **Rollback:** per-batch — restore the monolithic rule bodies from git; the
 target files' added sections are additive.
+
+## Risk Register
+
+<!-- risk-review: v1 | reviewed: 2026-08-19 | reviewer: claude/host -->
+
+Written at resumption, not at authoring: the grandfather exemption lifts on the
+first substantial edit after 2026-08-04, and the resumption note above is that
+edit. So this register covers what is left — Phase 4 and the resumption itself —
+rather than the 35 steps that already landed.
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | Resumption reads as promotion and Phase 4 gets executed | implementation | The file leaving `later/` is the visible change, so the next reader can take "active" to mean "start the probe" — while the 2026-07-07 council verdict that parked Phase 4 with its design locked is unchanged and its owner is still the maintainer | The resumption note says in as many words what resuming does and does not authorise; both Phase 4 steps stay `[ ]`; the phase heading still reads PARKED | Phase 4 — PARKED: rules-as-skills falsification probe |
+| 2 | The probe is run against a surface already measured lossy, and its null is misread as a verdict on rules-as-skills | product | The artefact that discharged the resume condition found 5 of 8 sampled catalogue entries reaching the model with no description while 414/414 carry one on disk — so a probe that moves rules onto the skill surface can fail for a host-side reason that has nothing to do with the hypothesis | The resumption note records that finding at the point of resumption, including its explicit refusal to claim a bare-vs-described rate; the probe's design is locked and any run has to state which of the two it is measuring | Phase 4 — PARKED: rules-as-skills falsification probe |
+| 3 | An un-park becomes a routine way to move estate numbers | implementation | If resuming a parked file is cheap, `later/` turns into a staging area both directions and the ratchet stops describing the estate | The estate raise is recorded with its reason in `estate-count-budget.json` and states that it is NOT underwritten by future work; `later_roadmaps` falls by one in the same commit, which is the invariant that distinguishes a disposition change from growth | Acceptance criteria |
+| 4 | The remaining consumer-scoping levers are believed shipped and are not | product | Phases 0-3 and 5 are marked done against 2026-07/08 measurements; a consumer install that still ships unfiltered rules would make this roadmap's Goal false while every checkbox reads closed | The Goal's claim is measurable rather than asserted — `check_standing_rule_delivery` and `report_carrier_divergence` both read the live install, and the sibling `road-to-standing-context-40k` owns the standing-delivery number | Goal |
 
 ## Acceptance criteria
 
