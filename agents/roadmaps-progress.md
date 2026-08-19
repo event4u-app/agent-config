@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 39 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **54** open blockers, **26** need you → `agent-config gates`
+> 39 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **53** open blockers, **25** need you → `agent-config gates`
 
 ## Overall
 
-**336 / 606 steps done · 55%**
+**338 / 607 steps done · 56%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   55%
+██████████████████████░░░░░░░░░░░░░░░░░░   56%
 ```
 
 ## ⚠️ Iron Law 3 — unresolved deferred items
@@ -20,6 +20,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 |---|---:|---:|---:|
 | [road-to-council-api-fallback.md](roadmaps/road-to-council-api-fallback.md) | 16 | 1 | 0 |
 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 13 | 1 | 0 |
+| [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md) | 20 | 1 | 3 |
 
 ## Open roadmaps
 
@@ -44,7 +45,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 17 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 0 | 13 | 1 | 0 | 0 | ██████████ 100% |
 | 18 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 2 | 2 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | █████░░░░░ 50% |
 | 19 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 20 | [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md) | 6 | 24 | 1 | 18 | 5 | 0 | [1](#blockers-road-to-long-horizon-execution) | ██████████ 95% |
+| 20 | [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md) | 6 | 24 | 0 | 20 | 1 | 3 | 0 | ██████████ 100% |
 | 21 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
 | 22 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [1](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
 | 23 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
@@ -602,7 +603,7 @@ _1 blocker resolved._
 
 ### [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md)
 
-**Road to long-horizon execution — the agent stops when the roadmap doesn't** — 18 / 19 done (95%)
+**Road to long-horizon execution — the agent stops when the roadmap doesn't** — 20 / 20 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -610,22 +611,8 @@ _1 blocker resolved._
 | 1 | Re-engagement concern | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | Question ladder closure | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Session immortality | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | Unattended backlog | ✅ done | 0 | 2 | 2 | 0 | 100% |
-| 5 | Standing measurement | 🟡 in progress | 1 | 3 | 3 | 0 | 75% |
-
-<a id="blockers-road-to-long-horizon-execution"></a>
-**Blockers**
-
-- **team-loop-benchmark-spend** (owner: user) — blocks Phase 4 step 4.3, and any multi-agent variant of 4.0
-  - **Recommendation:** (b). D-5 names this benchmark as pending "since it was written", and a second indefinite pending reproduces the exact defect this roadmap opens with. A published null is a real answer that closes the gate; option (a) is right only if the multi-agent variant is wanted soon enough to justify the spend now.
-  - **If you do nothing:** 4.3 stays `[~]` forever and the multi-agent variant of 4.0 stays neither built nor refused — the indefinite-pending state D-5 already describes, now carried by a second roadmap.
-  - **What to do:**
-    pick exactly one — (a) authorise the benchmark run with a
-    named USD ceiling, so 4.3 executes and its verdict is published either
-    way; or (b) close the gate as a published null on the stated ground that
-    the benchmark will not be funded, which permanently removes the
-    multi-agent variant of 4.0 from scope.
-  - **Resolved when:** Phase 4 step `4.3` carries either a benchmark verdict with its run date and cost, or a published null naming option (b).
+| 4 | Unattended backlog | ✅ done | 0 | 3 | 0 | 1 | 100% |
+| 5 | Standing measurement | ✅ done | 0 | 4 | 1 | 2 | 100% |
 
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 

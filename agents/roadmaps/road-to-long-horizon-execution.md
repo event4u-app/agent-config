@@ -353,7 +353,7 @@ budgets for it rather than discovering it at preflight.
 
 ### Phase 4 — Unattended backlog
 
-- [~] **4.0** `src/scripts/_lib/unattended_guard.ts` ships the three
+- [x] **4.0** `src/scripts/_lib/unattended_guard.ts` ships the three
       preconditions — remote safety (fails CLOSED on an unreadable git
       config, because "I could not tell" and "no production remote" must
       not resolve the same when being wrong means an unattended push),
@@ -362,15 +362,49 @@ budgets for it rather than discovering it at preflight.
       job-dedup key derived from roadmap+head so a second caller
       recognises the first caller's job. `preflight` reports every
       refusal in one pass.
-      **The SPAWN is deliberately not built, and that is why this step is
-      deferred rather than done.** Writing one means choosing an
-      invocation shape, an auth path and a sandbox posture for a process
-      that spends money unattended; none of those is testable without
-      spending, and an untested one behind a flag that reads as finished
-      is how a capability nobody validated reaches a scheduler. The guard
-      is the half that can be verified and the half whose absence makes
-      the other half unsafe.
-      `verify:` `npx vitest run tests/scripts/unattended_guard.test.ts` — 21 green.
+      **The live SPAWN is now a published refusal rather than a deferral,
+      and the seam ships print-only.** The step stood `[~]` on the
+      argument that an untested money-spending spawn is worse than none —
+      which is right about the spawn and wrong about the deferral: a
+      deferral with no end condition IS D-5, the defect this roadmap
+      opens with, reproduced inside it. Resolved 2026-08-19 by AI council
+      (anthropic/claude-sonnet-4-5 + openai/codex-default, blind peer
+      review, $0.031). They SPLIT — build a dry-run seam vs cancel the
+      capability — and named the same defect from both sides:
+      `--relaunch` advertised something that did not exist. What ships is
+      the intersection, recorded in decision memo 001:
+      - `src/scripts/_lib/headless_invocation.ts` — builds the exact
+        resume command per host off the `HOST_INVENTORY` tiering and
+        `docs/contracts/host-agent-protocol.md`, refuses any host with no
+        documented headless surface, and **contains no spawn, exec or
+        fork — asserted by a source test, not promised by a comment.**
+      - `run:supervise --print-relaunch` prints that command *for a
+        human* alongside what an unattended lane would decide about the
+        same run. The two are separate fields on purpose: conflating them
+        tells an operator that a disabled budget forbids them from
+        running it by hand, which is the opposite of true.
+      - `--relaunch` now names a DECISION and its reopen condition
+        instead of "not implemented yet" — the sentence that makes an
+        operator wait for a release nobody is preparing.
+      - **Reopen condition, falsifiable and not a date:** the first time
+        `agents/runtime/state/checkpoints/` holds a checkpoint from a
+        real dying run. Measured 2026-08-19 on the main checkout, that
+        directory does not exist — the resume path has never had one
+        input. Stated the other way round so it cannot be over-read: an
+        empty directory is a CONJUNCTION of two rare conditions (recycle
+        threshold AND a roadmap claim), so it licenses "do not build the
+        spawn yet" and never "the need does not exist".
+      Two live defects found on the way and fixed here, both in
+      `run_supervise.ts`: `writeLedger` swallowed its own write failure
+      under a comment asserting "there is NO CALLER" — false in the same
+      file, since `digest` calls it fourteen lines later — so a digest
+      could print `relaunch budget reset` over a counter that still
+      stood, and a stale-high counter refuses the next relaunch the
+      digest just promised. It throws now, and the release line follows
+      the write rather than the intent.
+      `verify:` `npx vitest run tests/scripts/unattended_guard.test.ts` — 31 green.
+      `verify:` `npx vitest run tests/scripts/headless_invocation.test.ts` — 18 green.
+      `verify:` `npx vitest run tests/scripts/run_supervise.test.ts` — 38 green.
 - [x] **4.1** `agent-config run:supervise --digest` — the morning report:
       sessions dead vs alive, budget consumed against its ceiling,
       decision memos written, and what needs attention. It reports state
@@ -387,12 +421,26 @@ budgets for it rather than discovering it at preflight.
       occurred and none can, so it cannot have been written around a
       number already in hand.
       `verify:` `./scripts-run src/scripts/check_claims` — green, 70 entries.
-- [~] **4.3** Team-loop gate (H-5): run the pre-registered
+- [-] **4.3** Team-loop gate (H-5): run the pre-registered
       build-review-fix benchmark; positive → team loop activates for
       unattended runs, null → gate closes, published. Blocker for any
-      multi-agent variant of 4.0. **Deferred** — see
-      `blocker: team-loop-benchmark-spend`; the single-agent 4.0 primitive
-      is unaffected and ships without it.
+      multi-agent variant of 4.0.
+      **CLOSED 2026-08-19 as a published WILL-NOT-FUND null.** The AI
+      council was UNANIMOUS 2/2 for option (b), matching the blocker's
+      own recommendation, and openai supplied the refinement that makes
+      the closure hold: reconsideration requires a NEW roadmap with fresh
+      pre-registration and explicit funding — never reopening this
+      blocker — because a closure that can be reopened by re-reading it
+      decays straight back into the indefinite pending D-5 names. No USD
+      ceiling is named at all: the $25 figure floated in round 1 was
+      refused as unconnected to any evidence about what a valid verdict
+      costs, and naming an unevidenced number would have been the same
+      defect in a smaller font.
+      Compounding fact, not a tiebreaker but decisive on its own: under
+      step 4.0 there is no live spawn for a team loop to drive, so
+      funding this benchmark now would measure a capability that does not
+      exist. **The multi-agent variant of 4.0 leaves scope permanently.**
+      Recorded in decision memo 002.
 
 ### Phase 5 — Standing measurement
 
@@ -424,7 +472,14 @@ budgets for it rather than discovering it at preflight.
 
 ### blocker: team-loop-benchmark-spend
 
-- **Status:** open
+- **Status:** resolved
+- **Resolution:** (b) — published WILL-NOT-FUND null, 2026-08-19. AI
+  council unanimous 2/2 (anthropic/claude-sonnet-4-5 +
+  openai/codex-default), matching the recommendation below. The
+  multi-agent variant of 4.0 leaves scope permanently; reconsideration
+  requires a NEW roadmap with fresh pre-registration and explicit
+  funding, never a reopening of this blocker. Step 4.3 carries the full
+  verdict; decision memo 002 carries the reasoning.
 - **Owner:** user
 - **Blocks:** Phase 4 step 4.3, and any multi-agent variant of 4.0
 - **Question:** may the pre-registered build-review-fix benchmark be run,
@@ -459,12 +514,34 @@ budgets for it rather than discovering it at preflight.
       for the mechanism would be attributing a result to the wrong cause,
       which is precisely the attribution error § 0.1's own falsification
       criteria are written against. Re-run under a claim to close it.
-- [ ] A killed session resumes via the watcher and completes without a
+- [-] A killed session resumes via the watcher and completes without a
       contact; the resumed run's first commit shows the re-verification.
-- [~] One roadmap is delivered fully unattended (scheduler → digest → PR)
+      **CANCELLED 2026-08-19 — WILL-NOT-MEASURE.** This criterion needs a
+      LIVE relaunch, and starting a session unattended is now a published
+      refusal (step 4.0). Left `[ ]` it would be the indefinite pending
+      D-5 names, dressed as an acceptance criterion.
+      What the refusal does NOT cancel is the half that can be observed
+      without a spawn: `run:supervise --print-relaunch` emits the exact
+      resume command, whose prompt orders the checkpoint re-verification
+      as the resumed run's first act, and `verifyCheckpoint`'s per-field
+      report is pinned by `tests/scripts/run_checkpoint.test.ts`. The
+      unobserved part is precisely "and no human was involved".
+      Reopens with 4.0's condition — the first checkpoint written by a
+      real dying run.
+- [-] One roadmap is delivered fully unattended (scheduler → digest → PR)
       inside the pre-registered budget, and its rework rate is recorded.
-      **Deferred** — this is an observation of a live multi-day run, and
-      the spawn it needs is 4.0's deferred half.
+      **CANCELLED 2026-08-19 — WILL-NOT-MEASURE.** The spawn it needs is
+      not deferred any more; it is refused (step 4.0). No scheduler ships,
+      by the same reasoning 4.1 already recorded: a scheduler that
+      schedules work nothing can execute is worse than none.
+      Consequence for the ledger, followed through rather than left
+      dangling: `claim: unattended-demotion-gate` pre-registered a
+      14-day rework comparison for a lane that will not run, and its own
+      honest-null path says the capability CLOSES if the lane never runs.
+      That path is now taken — see its CLAIMS.md entry. Registering a
+      threshold and then never resolving it is the failure the entry was
+      written to avoid, and it would be odd to reproduce it in the same
+      roadmap that refuses the capability.
 - [x] The locked classes still reach the user. Pinned twice in this
       change-set: the mode lock (`high_impact` / `user_required` cannot
       be `agent` or `council`) and the new `second_model` rung, which is
@@ -472,9 +549,36 @@ budgets for it rather than discovering it at preflight.
       `null`, so the key cannot be accepted at any value and teach an
       author that the dimension exists there.
       `verify:` `npx vitest run tests/scripts/ai_council/config.test.ts`
-- [~] Both § 0.1 baselines have at least one post-change measurement.
-      **Deferred** — the pre-registered claims fix ≥ 20 recorded runs
-      before any comparison, and the window held 18 at measurement time.
+- [x] Both § 0.1 baselines have at least one post-change measurement.
+      **Measured 2026-08-19 against the main checkout** (`--root`, per the
+      § 0.1 finding that a worktree reads a clean zero): contacts per run
+      **median 0** · user wait **median 68.9 min** · elapsed **median
+      421.7 min** · agent working **median 169.6 min**. Both claims stay
+      `unbacked`; the measurement exists, the comparison does not.
+      **NEITHER axis clears its pre-registered ≥ 20-run floor, and the
+      report could not previously say so.** It printed `runs: 21` under a
+      single ⚠️ SHORT WINDOW banner driven by the SESSION count, so a
+      reader checking the floor read 21 and concluded the contact axis had
+      cleared it. It had not: 2 of those 21 runs carry timing and no
+      ledger entry, so the contact axis stands at **19**. One banner
+      cannot answer a question two axes ask separately, and this run made
+      exactly that misreading before the fix caught it. `interruption_report`
+      now prints per-axis N against the floor on each axis header.
+      **A structural finding, worth more than the numbers.** The
+      wall-clock axis reads timing from `agents/runtime/.agent-chat-history`,
+      whose retention is `DEFAULT_MAX_SESSIONS = 5`
+      (`src/scripts/chat_history.ts`; `chat_history.max_sessions` is unset
+      on every settings layer). Five retained sessions yielded **4**
+      timing-bearing runs. So the ≥ 20-run floor of
+      `roadmap-wall-clock-baseline` is **unreachable at default retention**
+      — not "not yet reached". Backing it needs a different timing source
+      or a retention change, or the claim closes on its own honest-null
+      path; recorded in its CLAIMS.md entry as a dated post-registration
+      finding, with the threshold left exactly as pre-registered.
+      The contact axis is one run short and reachable, which is a
+      different answer from the wall-clock axis's and is why they are no
+      longer reported under one verdict.
+      `verify:` `npx vitest run tests/scripts/interruption_report.test.ts` — 41 green.
 
 ## Risk Register
 
