@@ -384,6 +384,41 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 14.6.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [14.5.0](https://github.com/event4u-app/agent-config/compare/14.4.0...14.5.0) (2026-08-19)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _none_
+- **Security and correctness:** _auto-derived, rewrite before merge:_ security-scoped commits or fixes to executable surface in 1b787fe, 7f65655.
+- **Honest nulls:** _auto-derived, rewrite before merge:_ commits recording a null, waived or falsified result in c45093d.
+- **Known limitations:** _none_
+
+### Features
+
+* **hooks:** carry the two-tree provenance on every run-continuation event ([fcc3272](https://github.com/event4u-app/agent-config/commit/fcc32722c7566532e01ca1ebbb05eb219959e2e3))
+* **register:** resolve a claim to its slug AND the file it came from ([e882235](https://github.com/event4u-app/agent-config/commit/e8822358d16ed74567ada8369398e27de745fa42))
+
+### Bug Fixes
+
+* **hooks:** close the seven R2 findings on the hardening branch ([1b787fe](https://github.com/event4u-app/agent-config/commit/1b787fea177c151362fd2af8ec163b0a8dd182b4))
+* **hooks:** charge the injection ceiling only for bytes the host receives ([7f65655](https://github.com/event4u-app/agent-config/commit/7f656558c9beb91353a0cb2031ef99023f2d5641))
+
+### Documentation
+
+* **roadmap:** record the first run-continuation engagement outside a test ([d9e040b](https://github.com/event4u-app/agent-config/commit/d9e040bd2bc6199363b367aa784a42a8cbbcccc6))
+* **review:** re-bind the hardening findings after the fixes and the base merge ([5507a19](https://github.com/event4u-app/agent-config/commit/5507a19e15d869db9dabe56e346d7fd400c6937e))
+* **review:** mark the seven hardening findings fixed at 1b787fea1 ([1c031f0](https://github.com/event4u-app/agent-config/commit/1c031f0a3f51c7a9adbad19fb79dffdebb0212ce))
+* **review:** record the R2 review of the hardening branch ([363a1ef](https://github.com/event4u-app/agent-config/commit/363a1ef4f38821266d1fc37f62c1188d660d50f2))
+
+### Chores
+
+* **estate:** raise the open-blocker baseline by one, with the reason ([7762ca5](https://github.com/event4u-app/agent-config/commit/7762ca5592f61e42090d5f53e86794e750b1290d))
+* **review:** bind the R2 review scope before the reviewer runs ([c45093d](https://github.com/event4u-app/agent-config/commit/c45093d8c5549183447ef2313f31968ebb129400))
+
+Tests: 15272 (+18 since 14.4.0)
+
 # Era: pre-4.0.0 — archived
 
 > All entries from `3.2.0` and `3.3.0` live in
