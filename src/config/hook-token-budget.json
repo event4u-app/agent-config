@@ -42,6 +42,22 @@
         "pre_compact": 2048,
         "agent_error": 1024
     },
+    "per_turn_aggregate_bytes": {
+        "_comment": "road-to-standing-context-40k Phase 4 step 4.1 — the sum the USER feels, which no row above could see. The per-slot caps bound ONE fire; a turn fires user_prompt_submit once, pre_tool_use and post_tool_use once per tool call, and stop once, so the number a turn actually injects is a multiple of them and was unregistered. This row is the injection twin of `per_turn_composite` in hook-latency-budget.json: same definition shape, same tool_calls, different unit. bench_hook_injection derives and prints it on every run; the DISPATCHER enforces `ceiling_bytes` at runtime by dropping lowest-severity advisories first (src/scripts/hooks/injection_budget.ts), exempting severity:blocking and fail_closed concerns by construction so the policy can never hide a safety-relevant warning.",
+        "owner": "maintainer",
+        "review_by": "2026-11-10",
+        "definition": "(pre_tool_use + post_tool_use) x tool_calls + user_prompt_submit + stop",
+        "tool_calls": 10,
+        "tool_calls_rationale": "Taken verbatim from hook-latency-budget.json's per_turn_composite rather than re-derived. Two definitions of 'a representative turn' in one repo is how two people compute two different composites and both call their row green.",
+        "slots_counted": ["user_prompt_submit", "pre_tool_use", "post_tool_use", "stop"],
+        "excluded_slots": ["session_start", "session_end", "pre_compact", "agent_error"],
+        "excluded_slots_rationale": "session_start is excluded BY THE STEP: it is the one-shot restore slot that legitimately carries hot-context, handoff-context and the canary contract, and capping it against a per-turn number would evict exactly the payloads it exists to deliver. The other three are not per-turn events at all.",
+        "ceiling_bytes": 47104,
+        "ceiling_derivation": "NOT a fresh number, and deliberately so: it is the arithmetic consequence of the per_slot_sum_caps_bytes rows already registered above — 4096 + (2048 + 2048) x 10 + 2048. A tighter per-turn ceiling would contradict per-slot rows that are already the committed decision, and a looser one would let the composition exceed what every part was capped at. Tightening it is a decision about those rows, taken there, in a PR.",
+        "gate_on_ceiling": false,
+        "gate_on_ceiling_rationale": "The bench REPORTS the aggregate but does not red the build on it yet — the first-reading discipline the latency twin's observe_only flag encodes. Measured 2026-08-19 under the committed fixtures: 1,140 B against a 47,104 B ceiling, i.e. the row is registered roughly forty times above the only reading that exists. That reading MOVES between runs (922-1,140 B observed minutes apart) because the stop-slot end-review-nudge is session-state-conditional and replay skips its writes but not its reads — a pre-existing bench non-determinism this row surfaces rather than introduces, and one more reason not to arm the ceiling on it. Arming a ceiling nobody has ever approached would gate on an untested inequality. Runtime enforcement is NOT gated by this flag and is always on: this flag governs CI, the ceiling governs the live session.",
+        "honest_null_consequence": "If the census shows real turns sitting near the ceiling, the per-slot rows move first and this row follows from them. If real turns never approach it, the row is a bound that costs nothing and the finding is published at review date either way."
+    },
     "injection_load_metric": {
         "definition": "Roadmap 3.4: total injected bytes per session and per turn, hook-carried. The census mode of bench_hook_injection (--record) appends counts-only lines to agents/runtime/state/injection-census.jsonl; the caps above are the thresholds; breach trend at review date decides tighten vs relax — by evidence, in a PR. The census is also the repeat-injection-census blocker's instrument (one instrumented week ranks the repeaters for the 3.3 idempotency gate).",
         "privacy": "census lines carry {ts, slot, concern, bytes} — counts and ids only, never content"

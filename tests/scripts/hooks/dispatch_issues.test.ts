@@ -35,10 +35,16 @@ afterEach(() => {
 const LOG_REL = path.join('agents', 'runtime', 'state', 'dispatch-issues.jsonl');
 
 describe('dispatch_issues — constants', () => {
+    // The four concern-failure codes are the Council-R3 schema; the two
+    // suppression codes were added by road-to-standing-context-40k Phase 4, when
+    // the dispatcher gained a reason to record a line it decided NOT to emit.
+    // Both halves are pinned so a future addition is a deliberate edit here.
     it('cap is 200 and VALID_ISSUE matches the schema', () => {
         expect(LOG_CAP).toBe(200);
         expect([...VALID_ISSUE].sort()).toEqual([
             'execution_failed',
+            'injection_budget_drop',
+            'nudge_interference_drop',
             'permission_denied',
             'prerequisite_missing',
             'script_not_found',

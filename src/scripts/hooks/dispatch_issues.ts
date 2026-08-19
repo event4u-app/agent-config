@@ -42,6 +42,16 @@ export const VALID_ISSUE: ReadonlySet<string> = new Set([
   "script_not_found",
   "permission_denied",
   "execution_failed",
+  // road-to-standing-context-40k Phase 4. The four codes above all mean "a
+  // concern tried to run and could not". These two mean the opposite — the
+  // concern ran, produced its line, and the DISPATCHER decided not to emit it.
+  // They share this log because it is already the place a reader looks to find
+  // out why an expected hook effect never appeared, and a suppressed advisory
+  // is exactly that question. The distinct codes keep the two classes
+  // separable: `hooks_doctor` surfaces the whole log, and a budget drop must
+  // not read as a broken hook.
+  "injection_budget_drop",
+  "nudge_interference_drop",
 ]);
 
 export interface DispatchIssueEntry {

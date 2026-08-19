@@ -1,0 +1,276 @@
+// Emission-shaping policy tests (road-to-standing-context-40k Phase 4).
+//
+// Every case here is a PAIRED fixture: a positive that must drop and a
+// near-miss that must not. A shaping layer whose job is to delete output is
+// only trustworthy if the not-dropping half is pinned as hard as the dropping
+// half — the dangerous failure is a silenced safety warning, not a surviving
+// advisory.
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import {
+  RC_ALLOW,
+  RC_WARN,
+  evictionOrder,
+  isExempt,
+  readTurnSpend,
+  recordTurnSpend,
+  shapeEmissions,
+  turnSpendPath,
+  type EmissionCandidate,
+} from "../../../src/scripts/hooks/injection_budget.js";
+
+function candidate(over: Partial<EmissionCandidate> = {}): EmissionCandidate {
+  return {
+    concern: "some-advisory",
+    severity: "advisory",
+    failClosed: false,
+    rc: RC_ALLOW,
+    bytes: 100,
+    nudgeRank: null,
+    ...over,
+  };
+}
+
+describe("isExempt", () => {
+  it("exempts a blocking concern", () => {
+    expect(isExempt(candidate({ severity: "blocking" }))).toBe(true);
+  });
+
+  it("exempts a fail_closed concern even when it declares advisory", () => {
+    expect(isExempt(candidate({ severity: "advisory", failClosed: true }))).toBe(true);
+  });
+
+  it("does not exempt a plain advisory — the near-miss", () => {
+    expect(isExempt(candidate())).toBe(false);
+  });
+
+  it("treats severity case-insensitively and ignores surrounding space", () => {
+    expect(isExempt(candidate({ severity: " BLOCKING " }))).toBe(true);
+    expect(isExempt(candidate({ severity: " advisory " }))).toBe(false);
+  });
+});
+
+describe("nudge exclusivity", () => {
+  it("keeps the lowest nudge_rank and drops the rest", () => {
+    const result = shapeEmissions(
+      [
+        candidate({ concern: "skill-route", nudgeRank: 2, bytes: 300 }),
+        candidate({ concern: "delegation-nudge", nudgeRank: 1, bytes: 400 }),
+      ],
+      { capBytes: null },
+    );
+    expect(result.kept).toEqual(["delegation-nudge"]);
+    expect(result.dropped).toHaveLength(1);
+    expect(result.dropped[0]?.concern).toBe("skill-route");
+    expect(result.dropped[0]?.reason).toBe("nudge_interference");
+  });
+
+  it("near-miss — a single nudge is never suppressed", () => {
+    const result = shapeEmissions(
+      [candidate({ concern: "skill-route", nudgeRank: 2 })],
+      { capBytes: null },
+    );
+    expect(result.kept).toEqual(["skill-route"]);
+    expect(result.dropped).toEqual([]);
+  });
+
+  it("near-miss — unranked advisories are not nudge-class and coexist freely", () => {
+    const result = shapeEmissions(
+      [
+        candidate({ concern: "language-mirror" }),
+        candidate({ concern: "session-canary" }),
+      ],
+      { capBytes: null },
+    );
+    expect(result.kept).toEqual(["language-mirror", "session-canary"]);
+    expect(result.dropped).toEqual([]);
+  });
+
+  it("never suppresses an exempt concern that happens to carry a rank", () => {
+    const result = shapeEmissions(
+      [
+        candidate({ concern: "guard", nudgeRank: 1, severity: "blocking" }),
+        candidate({ concern: "advisory-nudge", nudgeRank: 2 }),
+      ],
+      { capBytes: null },
+    );
+    // The guard is out of the policy's population entirely, so the remaining
+    // nudge is a single nudge and survives.
+    expect(result.kept).toEqual(["guard", "advisory-nudge"]);
+    expect(result.dropped).toEqual([]);
+  });
+
+  it("breaks a rank tie deterministically on concern name", () => {
+    const forward = shapeEmissions(
+      [
+        candidate({ concern: "zulu", nudgeRank: 1 }),
+        candidate({ concern: "alpha", nudgeRank: 1 }),
+      ],
+      { capBytes: null },
+    );
+    const reversed = shapeEmissions(
+      [
+        candidate({ concern: "alpha", nudgeRank: 1 }),
+        candidate({ concern: "zulu", nudgeRank: 1 }),
+      ],
+      { capBytes: null },
+    );
+    expect(forward.kept).toEqual(["alpha"]);
+    expect(reversed.kept).toEqual(["alpha"]);
+  });
+});
+
+describe("byte budget", () => {
+  it("drops nothing when the input is already under the ceiling", () => {
+    const result = shapeEmissions([candidate({ bytes: 100 })], { capBytes: 1000 });
+    expect(result.dropped).toEqual([]);
+    expect(result.keptBytes).toBe(100);
+    expect(result.ceilingExceeded).toBe(false);
+  });
+
+  it("drops the ALLOW advisory before the WARN one", () => {
+    const result = shapeEmissions(
+      [
+        candidate({ concern: "warned", rc: RC_WARN, bytes: 600 }),
+        candidate({ concern: "quiet", rc: RC_ALLOW, bytes: 600 }),
+      ],
+      { capBytes: 700 },
+    );
+    expect(result.dropped.map((d) => d.concern)).toEqual(["quiet"]);
+    expect(result.kept).toEqual(["warned"]);
+    expect(result.dropped[0]?.reason).toBe("injection_budget");
+  });
+
+  it("frees the ceiling in the fewest drops — largest first within one rc", () => {
+    const result = shapeEmissions(
+      [
+        candidate({ concern: "small", bytes: 100 }),
+        candidate({ concern: "large", bytes: 900 }),
+      ],
+      { capBytes: 500 },
+    );
+    expect(result.dropped.map((d) => d.concern)).toEqual(["large"]);
+    expect(result.kept).toEqual(["small"]);
+  });
+
+  it("counts bytes already spent earlier in the same turn", () => {
+    const under = shapeEmissions([candidate({ bytes: 400 })], { capBytes: 1000 });
+    expect(under.dropped).toEqual([]);
+    const over = shapeEmissions([candidate({ bytes: 400 })], {
+      capBytes: 1000,
+      spentBytes: 900,
+    });
+    expect(over.dropped).toHaveLength(1);
+  });
+
+  it("never drops an exempt concern, and reports the overflow instead", () => {
+    const result = shapeEmissions(
+      [
+        candidate({ concern: "guard", severity: "blocking", bytes: 5000 }),
+        candidate({ concern: "noise", bytes: 200 }),
+      ],
+      { capBytes: 1000 },
+    );
+    expect(result.kept).toContain("guard");
+    expect(result.dropped.map((d) => d.concern)).toEqual(["noise"]);
+    expect(result.ceilingExceeded).toBe(true);
+  });
+
+  it("skips the budget entirely when the cap is null (the session_start case)", () => {
+    const result = shapeEmissions(
+      [candidate({ bytes: 99999 }), candidate({ concern: "other", bytes: 99999 })],
+      { capBytes: null },
+    );
+    expect(result.dropped).toEqual([]);
+    expect(result.ceilingExceeded).toBe(false);
+  });
+
+  it("applies exclusivity before the budget, so the surviving nudge is the ranked one", () => {
+    // Without exclusivity-first, the 900-byte rank-1 nudge would be the budget's
+    // first victim and the policy would have made the relevance call by size.
+    const result = shapeEmissions(
+      [
+        candidate({ concern: "delegation-nudge", nudgeRank: 1, bytes: 900 }),
+        candidate({ concern: "skill-route", nudgeRank: 2, bytes: 100 }),
+      ],
+      { capBytes: 1000 },
+    );
+    expect(result.kept).toEqual(["delegation-nudge"]);
+    expect(result.dropped.map((d) => d.reason)).toEqual(["nudge_interference"]);
+  });
+});
+
+describe("evictionOrder", () => {
+  it("is a total order — rc, then bytes descending, then name", () => {
+    const sorted = [
+      candidate({ concern: "b", rc: RC_WARN, bytes: 100 }),
+      candidate({ concern: "a", rc: RC_ALLOW, bytes: 100 }),
+      candidate({ concern: "c", rc: RC_ALLOW, bytes: 900 }),
+    ].sort(evictionOrder);
+    expect(sorted.map((c) => c.concern)).toEqual(["c", "a", "b"]);
+  });
+});
+
+describe("turn spend accounting", () => {
+  let root: string;
+  const session = "sess-1";
+
+  beforeEach(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), "injection-turn-"));
+    delete process.env["AGENT_CONFIG_REPLAY"];
+  });
+  afterEach(() => {
+    fs.rmSync(root, { recursive: true, force: true });
+    delete process.env["AGENT_CONFIG_REPLAY"];
+  });
+
+  it("returns 0 for a missing file", () => {
+    expect(readTurnSpend(root, session)).toBe(0);
+  });
+
+  it("accumulates within one session and resets on request", () => {
+    recordTurnSpend(root, session, 100);
+    recordTurnSpend(root, session, 250);
+    expect(readTurnSpend(root, session)).toBe(350);
+    recordTurnSpend(root, session, 50, { reset: true });
+    expect(readTurnSpend(root, session)).toBe(50);
+  });
+
+  it("does not carry a count across sessions", () => {
+    recordTurnSpend(root, session, 400);
+    expect(readTurnSpend(root, "other-session")).toBe(0);
+  });
+
+  it("returns 0 for a malformed file rather than throwing", () => {
+    fs.mkdirSync(path.dirname(turnSpendPath(root)), { recursive: true });
+    fs.writeFileSync(turnSpendPath(root), "not json at all");
+    expect(readTurnSpend(root, session)).toBe(0);
+  });
+
+  it("returns 0 for a negative or non-numeric byte count", () => {
+    fs.mkdirSync(path.dirname(turnSpendPath(root)), { recursive: true });
+    fs.writeFileSync(turnSpendPath(root), JSON.stringify({ session, bytes: -5 }));
+    expect(readTurnSpend(root, session)).toBe(0);
+    fs.writeFileSync(turnSpendPath(root), JSON.stringify({ session, bytes: "40" }));
+    expect(readTurnSpend(root, session)).toBe(0);
+  });
+
+  it("writes nothing under replay — fixture runs never mutate state", () => {
+    process.env["AGENT_CONFIG_REPLAY"] = "1";
+    recordTurnSpend(root, session, 500);
+    expect(fs.existsSync(turnSpendPath(root))).toBe(false);
+  });
+
+  it("carries no field capable of holding content", () => {
+    recordTurnSpend(root, session, 120);
+    const parsed = JSON.parse(fs.readFileSync(turnSpendPath(root), "utf-8")) as Record<
+      string,
+      unknown
+    >;
+    expect(Object.keys(parsed).sort()).toEqual(["bytes", "session"]);
+  });
+});

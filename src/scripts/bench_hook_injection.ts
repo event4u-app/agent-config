@@ -62,10 +62,60 @@ export interface Measurement {
     breach: boolean;
 }
 
+interface PerTurnAggregate {
+    tool_calls: number;
+    slots_counted: string[];
+    ceiling_bytes: number;
+    gate_on_ceiling: boolean;
+}
+
 interface Budget {
     default_cap_bytes: number;
     per_concern_caps_bytes: Record<string, number | string>;
     per_slot_sum_caps_bytes: Record<string, number | string>;
+    per_turn_aggregate_bytes?: PerTurnAggregate;
+}
+
+/** The per-turn aggregate reading, or the reason there isn't one. */
+export interface TurnAggregate {
+    /** Bytes a representative turn injects, or `null` when it is not derivable. */
+    bytes: number | null;
+    ceiling: number;
+    gated: boolean;
+    breach: boolean;
+    /** Present only when `bytes` is null — names the slot that was missing. */
+    unresolved?: string;
+}
+
+/**
+ * Derive the per-turn aggregate from the same per-slot sums the rows above
+ * report, per `per_turn_aggregate_bytes.definition`.
+ *
+ * Returns `null` bytes rather than a number when a counted slot produced no
+ * reading. This is the latency twin's rule, adopted deliberately: a composite
+ * over a subset reads LOW, and low is the direction that makes a ceiling look
+ * met. A missing slot is an unresolved measurement, never a small one.
+ */
+export function perTurnAggregate(
+    slotSums: Record<string, { bytes: number }>,
+    cfg: PerTurnAggregate | undefined,
+): TurnAggregate | null {
+    if (cfg === undefined) return null;
+    const perCallSlots = new Set(['pre_tool_use', 'post_tool_use']);
+    let bytes = 0;
+    for (const slot of cfg.slots_counted) {
+        const reading = slotSums[slot];
+        if (reading === undefined) {
+            return { bytes: null, ceiling: cfg.ceiling_bytes, gated: cfg.gate_on_ceiling, breach: false, unresolved: slot };
+        }
+        bytes += perCallSlots.has(slot) ? reading.bytes * cfg.tool_calls : reading.bytes;
+    }
+    return {
+        bytes,
+        ceiling: cfg.ceiling_bytes,
+        gated: cfg.gate_on_ceiling,
+        breach: cfg.gate_on_ceiling && bytes > cfg.ceiling_bytes,
+    };
 }
 
 function capFor(budget: Budget, concern: string): number {
@@ -129,7 +179,7 @@ export function runConcernOnce(
     }
 }
 
-export function bench(opts: { platform?: string; budgetPath?: string } = {}): { measurements: Measurement[]; slotSums: Record<string, { bytes: number; cap: number; breach: boolean }>; errors: string[] } {
+export function bench(opts: { platform?: string; budgetPath?: string } = {}): { measurements: Measurement[]; slotSums: Record<string, { bytes: number; cap: number; breach: boolean }>; errors: string[]; turnAggregate: TurnAggregate | null } {
     const platform = opts.platform ?? 'claude';
     const manifest = _load_yaml(MANIFEST);
     const budget = JSON.parse(fs.readFileSync(opts.budgetPath ?? BUDGET, 'utf8')) as Budget;
@@ -158,7 +208,7 @@ export function bench(opts: { platform?: string; budgetPath?: string } = {}): { 
         const slotCap = typeof slotCapRaw === 'number' ? slotCapRaw : Number.MAX_SAFE_INTEGER;
         slotSums[event] = { bytes: sum, cap: slotCap, breach: sum > slotCap };
     }
-    return { measurements, slotSums, errors };
+    return { measurements, slotSums, errors, turnAggregate: perTurnAggregate(slotSums, budget.per_turn_aggregate_bytes) };
 }
 
 export function main(argv: readonly string[]): number {
@@ -211,9 +261,20 @@ export function main(argv: readonly string[]): number {
         for (const [slot, s] of Object.entries(result.slotSums)) {
             if (s.bytes > 0) process.stdout.write(`  slot-sum ${slot.padEnd(20)} ${String(s.bytes).padStart(6)} B (cap ${s.cap === Number.MAX_SAFE_INTEGER ? '—' : s.cap})${s.breach ? '  ❌ BREACH' : ''}\n`);
         }
+        const agg = result.turnAggregate;
+        if (agg !== null) {
+            const reading =
+                agg.bytes === null
+                    ? `UNRESOLVED (slot '${String(agg.unresolved)}' produced no reading)`
+                    : `${String(agg.bytes)} B`;
+            const arm = agg.gated ? 'gated' : 'reported, not gated';
+            process.stdout.write(
+                `  per-turn aggregate      ${reading} (ceiling ${String(agg.ceiling)} B, ${arm})${agg.breach ? '  ❌ BREACH' : ''}\n`,
+            );
+        }
         for (const e of result.errors) process.stdout.write(`  warn: ${e}\n`);
     }
-    if (breaches.length > 0 || slotBreaches.length > 0) {
+    if (breaches.length > 0 || slotBreaches.length > 0 || result.turnAggregate?.breach === true) {
         process.stderr.write(`bench_hook_injection: ${breaches.length} concern breach(es), ${slotBreaches.length} slot-sum breach(es) — the budget row is the decision surface (src/config/hook-token-budget.json)\n`);
         return 1;
     }

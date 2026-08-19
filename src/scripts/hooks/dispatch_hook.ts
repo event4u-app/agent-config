@@ -43,6 +43,11 @@ import {
   is_replay_mode,
 } from "./state_io.js";
 import { log_dispatch_issue, fix_hint } from "./dispatch_issues.js";
+import {
+  readTurnSpend,
+  recordTurnSpend,
+  shapeEmissions,
+} from "./injection_budget.js";
 import { CONCERN_REGISTRY, type ConcernMain } from "./concern_registry.js";
 import {
   setHookStdinOverride,
@@ -129,6 +134,39 @@ export function _severity_for(rc: number): string {
  */
 export function _is_advisory(concern: JsonObject): boolean {
   return String(concern["severity"] ?? "").trim().toLowerCase() === "advisory";
+}
+
+/**
+ * The per-turn injection ceiling for one event, or `null` when the budget does
+ * not apply here.
+ *
+ * `null` on three paths, and all three mean the same thing — do not shape by
+ * volume: the event is one the row excludes by name (`session_start` above all,
+ * the one-shot restore slot), the config is missing or malformed, or the row
+ * has not been added yet. A budget that cannot be read must never become a
+ * budget of zero; failing open is the only safe direction for a policy whose
+ * job is to delete output.
+ *
+ * The row lives in the PACKAGE (`REPO_ROOT`), not the consumer workspace — it
+ * is a shipped decision, not a per-project setting. The workspace root is used
+ * only for the turn counter and the drop log.
+ */
+function _per_turn_cap(_workspace_root: string, event: string): number | null {
+  try {
+    const raw = fs.readFileSync(
+      path.join(REPO_ROOT, "src", "config", "hook-token-budget.json"),
+      "utf-8",
+    );
+    const cfg = (JSON.parse(raw) as JsonObject)["per_turn_aggregate_bytes"];
+    if (cfg === undefined || cfg === null || typeof cfg !== "object") return null;
+    const row = cfg as JsonObject;
+    const excluded = row["excluded_slots"];
+    if (Array.isArray(excluded) && excluded.map(String).includes(event)) return null;
+    const ceiling = row["ceiling_bytes"];
+    return typeof ceiling === "number" && ceiling > 0 ? ceiling : null;
+  } catch {
+    return null;
+  }
 }
 
 function _now_iso(): string {
@@ -1269,7 +1307,18 @@ export function main(argv?: string[]): number {
   // feedback_entries on purpose: that record is written to disk with a
   // fixed-field schema (PII-exclusion-by-construction), and a concern's raw
   // stderr is free-form content. This array is in-memory only.
-  const concern_messages: Array<{ rc: number; text: string }> = [];
+  // Carries the manifest fields the emission-shaping layer needs (severity,
+  // fail_closed, nudge_rank) alongside the text, so `shapeEmissions` decides
+  // from declarations rather than re-reading the manifest. Ids and integers
+  // only — the free-form half stays `text`, and nothing here is written to disk.
+  const concern_messages: Array<{
+    rc: number;
+    text: string;
+    concern: string;
+    severity: string;
+    failClosed: boolean;
+    nudgeRank: number | null;
+  }> = [];
   // Per-concern `tools:` filter (see _concern_matches_tool). Applied here so it
   // is one place, after the envelope exists and before any concern is spawned.
   const tool_name = _payload_tool_name(envelope);
@@ -1355,7 +1404,15 @@ export function main(argv?: string[]): number {
         : "";
     const message = [stated, extra].filter(Boolean).join("\n\n");
     if (message) {
-      concern_messages.push({ rc, text: message });
+      const rawRank = concern["nudge_rank"];
+      concern_messages.push({
+        rc,
+        text: message,
+        concern: String(concern["name"]),
+        severity: String(concern["severity"] ?? ""),
+        failClosed: Boolean(concern["fail_closed"]),
+        nudgeRank: typeof rawRank === "number" ? rawRank : null,
+      });
     }
     if (
       args.event === "session_start" &&
@@ -1400,8 +1457,63 @@ export function main(argv?: string[]): number {
   // disagree: on Claude Code exit 1 does not block and exit 2 does, which
   // inverted every verdict (see host_semantics.ts for the documented mapping).
   // Unverified platforms keep the legacy pass-through byte-for-byte.
+  // Emission shaping (road-to-standing-context-40k Phase 4). Two policies —
+  // at most one nudge-class advisory per slot, then the per-turn byte ceiling —
+  // decide which of the collected messages actually leave. Blocking and
+  // fail_closed concerns are exempt by construction, so this can only ever
+  // remove advisory noise. See injection_budget.ts for the ordering rationale.
+  const workspace_root_for_budget = String(
+    envelope["workspace_root"] || process.cwd(),
+  );
+  const budget_cap = _per_turn_cap(workspace_root_for_budget, args.event);
+  const spent_before =
+    budget_cap === null
+      ? 0
+      : readTurnSpend(workspace_root_for_budget, session_id);
+  const shaped = shapeEmissions(
+    concern_messages.map((m) => ({
+      concern: m.concern,
+      severity: m.severity,
+      failClosed: m.failClosed,
+      rc: m.rc,
+      bytes: Buffer.byteLength(m.text, "utf-8"),
+      nudgeRank: m.nudgeRank,
+    })),
+    { capBytes: budget_cap, spentBytes: spent_before },
+  );
+  for (const drop of shaped.dropped) {
+    log_dispatch_issue(
+      workspace_root_for_budget,
+      drop.concern,
+      drop.reason === "nudge_interference"
+        ? "nudge_interference_drop"
+        : "injection_budget_drop",
+      drop.detail,
+      "src/config/hook-token-budget.json § per_turn_aggregate_bytes",
+    );
+  }
+  if (shaped.ceilingExceeded) {
+    // Stated, never swallowed: the exempt set alone is over the ceiling, so the
+    // policy held its own contract (nothing safety-relevant dropped) and the
+    // ceiling did not hold. That is a budget finding, not a runtime failure.
+    process.stderr.write(
+      `dispatch_hook: per-turn injection ceiling exceeded by exempt concerns alone ` +
+        `(${String(spent_before + shaped.keptBytes)} B over ${String(budget_cap)} B) — ` +
+        `nothing dropped; the row is the decision surface ` +
+        `(src/config/hook-token-budget.json § per_turn_aggregate_bytes).\n`,
+    );
+  }
+  if (budget_cap !== null) {
+    recordTurnSpend(
+      workspace_root_for_budget,
+      session_id,
+      shaped.keptBytes,
+      { reset: args.event === "user_prompt_submit" },
+    );
+  }
+  const kept_concerns = new Set(shaped.kept);
   const decidingReasons = concern_messages
-    .filter((m) => m.rc === final_rc)
+    .filter((m) => m.rc === final_rc && kept_concerns.has(m.concern))
     .map((m) => m.text);
   const emission = emitFor(
     args.platform,
