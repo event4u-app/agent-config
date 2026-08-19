@@ -1079,7 +1079,7 @@ PR is already a performance change carrying one security fix.
   measurement have now refuted.
 
 ### blocker: b-payload-mis-nested-readers
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Class:** 2 — consent-once
 - **Blocks:** nothing in this roadmap. Phase 2's declarations are correct for the
@@ -1110,6 +1110,84 @@ PR is already a performance change carrying one security fix.
 - **If you do nothing:** `ship-diff-volume` stays a concern that runs, costs a
   dispatch, and can never fire; and `injection-scan`'s coverage depends on a
   fallback that any future envelope change could remove without a test noticing.
+
+- **Resolution (2026-08-20): option (b) recorded — `ship-diff-volume` fixed here,
+  `injection-scan` split to its own blocker.** Decided by council, 2/2 quorum
+  (anthropic + openai, $0.0289, subscription transport). Both seats rejected (a)
+  on the same ground and it is worth keeping: the two halves have **different
+  contracts and different risk profiles**, so shipping them together buys one
+  review for two questions. `ship-diff-volume` is provably dead and its fix is
+  verifiable from the envelope contract alone; `injection-scan` works by accident
+  and changing its unwrap changes what a security scanner sees in production,
+  which needs its own review against fixtures for the valid, missing and
+  malformed payload shapes. Both seats also required the regression to sit at the
+  dispatcher boundary rather than on the extractor.
+
+  **What landed.** `extractCommand` now reads the platform payload via the shared
+  `unwrap` from `hooks/envelope.js` — the same accessor `design-slop` adopted for
+  the identical defect — and the hand-rolled `JSON.parse` in `main` is gone with
+  it. `commandFromStdin` is exported so the test can drive the raw stdin text.
+
+  **The regression fails against the pre-fix code, verified by restoring it.**
+  Against the exact pre-fix extraction, two of the five new cases fail — the
+  dispatcher-envelope case and the payload-carries-`command` case — while the
+  bare-host-payload case stays green, which is correct: that path worked before
+  and still works. The envelope under test is built by the dispatcher's OWN
+  `_build_envelope`, so a hand-written fixture cannot drift into agreeing with
+  the bug.
+
+  **Construct count across the remaining concerns — 2 of 47, and the count took
+  three predicates.** A literal-key grep for envelope-root reads found 8 of the
+  47 registered concerns; 6 of those descend into `payload` first with the root
+  only as a fallback (`block-config-weakening`, `block-kernel-rule-writes`,
+  `code-graph-nudge`, `rtk-wrap`, `tool-result-bytes`, and both
+  `design-slop`/`ui-route-nudge` via their own `unwrap`), which is correct. That
+  predicate **missed `injection-scan`, which reads through a loop variable** — so
+  a second predicate asked which concerns never mention `payload` at all (14),
+  and a third checked which of those read a key the dispatcher places only under
+  `payload`. Result: exactly **two** carried the defect —
+  `ship_diff_volume_hook.ts` and `injection_scan_hook.ts`. The other twelve read
+  genuine root keys (`event`, `session_id`, `workspace_root`, `cwd`) and are
+  right as they stand. The first predicate alone would have reported one.
+
+### blocker: b-injection-scan-unwrap-security
+- **Status:** open
+- **Owner:** user
+- **Class:** 2 — consent-once
+- **Blocks:** nothing in this roadmap. It is the half of
+  `b-payload-mis-nested-readers` that option (b) deliberately did not ship, kept
+  as a blocker rather than a prose note so it stays visible to the estate's own
+  blocker count.
+- **What to do:** decide whether to fix `injection_scan_hook.ts`'s unwrap.
+  `_tool_output` reads `tool_response` / `tool_result` / `toolResponse` /
+  `output` / `result` off the envelope ROOT, where the dispatcher never puts
+  them, and then falls through to serialising the WHOLE envelope. So the scanner
+  does run and does see the tool output today — inside a serialisation of
+  everything else as well. It works by accident, and nothing tests the accident.
+
+  **Why this is not a drive-by edit.** Fixing the unwrap NARROWS what the
+  scanner reads, on a security surface. The current fallback is a superset: it
+  can raise a hit on text that is not tool output at all (a false positive that
+  currently costs a warning), and the narrowed version could drop a host shape
+  nobody enumerated (a false negative that costs coverage). Neither direction is
+  decidable without first writing down what the scanner is contractually
+  supposed to read.
+
+  Options: (a) establish the intended output-envelope contract with fixtures for
+  the valid, missing and malformed payload shapes, then fix the unwrap against
+  it; (b) fix the unwrap and keep the whole-envelope serialisation as an
+  explicit second pass, trading precision for coverage; (c) leave it and record
+  in the concern itself that its production coverage is fallback-dependent.
+- **Recommendation:** **(a), as its own PR.** The fixtures are the deliverable,
+  not the one-line change — without them the fix is a coverage change nobody can
+  review, which is exactly the reason the council split it out of the
+  `ship-diff-volume` PR rather than shipping the pair.
+- **Resolved when:** one option is recorded at this blocker and — for (a) or
+  (b) — `injection-scan` carries a test that fails against the pre-fix unwrap,
+  with the valid / missing / malformed payload shapes named.
+- **If you do nothing:** the scanner's production coverage stays a property of
+  its fallback rather than of its contract, and the next envelope change can
+  remove it with every test still green.
 
 ### blocker: b-stop-async-split-prerequisites
 - **Status:** open

@@ -643,27 +643,29 @@ _1 blocker resolved._
     streaming/incremental-parse question, which is a much larger change than
     anything this roadmap scoped.
   - **Resolved when:** one option is recorded at this blocker and — for (a) — the read-and-exit cell exists on the § 2 matrix, so the unavoidable transport share of the large-payload cell is a number rather than an assumption.
-- **b-payload-mis-nested-readers** (owner: user) — blocks nothing in this roadmap. Phase 2's declarations are correct for the code as it stands, including for the two concerns below.
-  - **Recommendation:** **(a), as its own PR.** Both are one-line unwraps with a cheap negative test, and the pair is exactly the "one instance is a sample" case: the audit found two, and nothing has searched the remaining concerns for the same construct with a predicate other than the one that found these.
-  - **If you do nothing:** `ship-diff-volume` stays a concern that runs, costs a dispatch, and can never fire; and `injection-scan`'s coverage depends on a fallback that any future envelope change could remove without a test noticing.
+- **b-injection-scan-unwrap-security** (owner: user) — blocks nothing in this roadmap. It is the half of `b-payload-mis-nested-readers` that option (b) deliberately did not ship, kept as a blocker rather than a prose note so it stays visible to the estate's own blocker count.
+  - **Recommendation:** **(a), as its own PR.** The fixtures are the deliverable, not the one-line change — without them the fix is a coverage change nobody can review, which is exactly the reason the council split it out of the `ship-diff-volume` PR rather than shipping the pair.
+  - **If you do nothing:** the scanner's production coverage stays a property of its fallback rather than of its contract, and the next envelope change can remove it with every test still green.
   - **What to do:**
-    decide whether to fix two concerns that read tool payload keys
-    at the WRONG nesting level — off the envelope root instead of `envelope.payload`
-    — found by Phase 2's audit and deliberately not touched by it.
-    · `injection_scan_hook.ts` reads its result keys off the root, so what it
-    actually scans in production is its whole-envelope-serialisation fallback. It
-    works by accident, and it declares `[input, result]` so Phase 2 keeps it
-    working. Fixing the unwrap changes what a security scanner sees, which is a
-    behaviour change on a security surface and not a drive-by edit.
-    · `ship_diff_volume_hook.ts` reads `tool_input` / `command` off the root and
-    therefore finds NOTHING under the real dispatcher envelope — it returns 0 on
-    every dispatcher-path invocation today. It declares `[input]`, which preserves
-    the status quo and bakes in nothing new.
-    Options: (a) fix both unwraps in one PR with a negative test per concern that
-    fails against the current code; (b) fix `ship-diff-volume` only, since it is
-    provably dead rather than accidentally-working; (c) leave both and record that
-    the scanner's coverage is fallback-dependent.
-  - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — each fixed concern carries a test that fails against the pre-fix unwrap, plus a reported count of the same construct across the remaining concerns.
+    decide whether to fix `injection_scan_hook.ts`'s unwrap.
+    `_tool_output` reads `tool_response` / `tool_result` / `toolResponse` /
+    `output` / `result` off the envelope ROOT, where the dispatcher never puts
+    them, and then falls through to serialising the WHOLE envelope. So the scanner
+    does run and does see the tool output today — inside a serialisation of
+    everything else as well. It works by accident, and nothing tests the accident.
+    **Why this is not a drive-by edit.** Fixing the unwrap NARROWS what the
+    scanner reads, on a security surface. The current fallback is a superset: it
+    can raise a hit on text that is not tool output at all (a false positive that
+    currently costs a warning), and the narrowed version could drop a host shape
+    nobody enumerated (a false negative that costs coverage). Neither direction is
+    decidable without first writing down what the scanner is contractually
+    supposed to read.
+    Options: (a) establish the intended output-envelope contract with fixtures for
+    the valid, missing and malformed payload shapes, then fix the unwrap against
+    it; (b) fix the unwrap and keep the whole-envelope serialisation as an
+    explicit second pass, trading precision for coverage; (c) leave it and record
+    in the concern itself that its production coverage is fallback-dependent.
+  - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — `injection-scan` carries a test that fails against the pre-fix unwrap, with the valid / missing / malformed payload shapes named.
 - **b-stop-async-split-prerequisites** (owner: user) — blocks step 5.3 only. Phases 1-4 are unaffected and Phase 2 has landed.
   - **Recommendation:** **(a), and P3 before anything else.** P3 is a live data-integrity defect that does not need the split to matter: `dispatch-issues.jsonl` already has no lock today, and any second concurrent dispatcher — two platforms installed into one workspace, which the manifest supports — can truncate it. Fixing it is small, independently valuable, and turns the riskiest part of a future split into a non-issue. Option (b) is tempting and is the wrong first move: it pays P1's contract change for one concern while leaving the collisions in place. Option (c) is defensible only if Phase 4's composite says turn-end wall clock is not the binding cost.
   - **If you do nothing:** turn-end wall clock keeps carrying eight concerns that cannot refuse anything, `dispatch-issues.jsonl` stays corruption-capable under any concurrent dispatch, and the classification above rots — it is pinned to `hook_manifest.yaml` as it stands today, and every added `stop` concern makes it less true.
@@ -700,7 +702,7 @@ _1 blocker resolved._
     record that turn-end wall clock is addressed only by Phase 4's measurement.
   - **Resolved when:** one option is recorded at this blocker and — for (a) or (b) — P3's three files are written under a lock with a tmp+rename and a test that fails against the current unlocked write, before any group split ships.
 
-_1 blocker resolved._
+_2 blockers resolved._
 
 ### [road-to-release-review-p0.md](roadmaps/road-to-release-review-p0.md)
 
