@@ -1,14 +1,14 @@
 # Findings: fix-injection-budget-emission-and-session-state
-<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 6ccd3bc3893f819410a37a4371ea2bdfbc80eb820c06fe7c09e0380ebd17d115 | diff: 7f656558c9beb91353a0cb2031ef99023f2d5641 | reviewer: r2-fresh-subagent-fix-injection-budget-emission-and-session-state | prompt_hash: d4172e1167e0bd1b0545a2df21f4a3ccd05d0193648d6c430c73f2109521e2e5 -->
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: ba9f9b9961a3ef0cc94ec634d1a37a13ac93ab906e47dfa84335088c48dd4bc8 | diff: 1c031f0a3f51c7a9adbad19fb79dffdebb0212ce | reviewer: r2-fresh-subagent-fix-injection-budget-emission-and-session-state | prompt_hash: d4172e1167e0bd1b0545a2df21f4a3ccd05d0193648d6c430c73f2109521e2e5 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 7f656558c9beb91353a0cb2031ef99023f2d5641
-  scope_hash: 6ccd3bc3893f819410a37a4371ea2bdfbc80eb820c06fe7c09e0380ebd17d115
+  diff_sha: 1c031f0a3f51c7a9adbad19fb79dffdebb0212ce
+  scope_hash: ba9f9b9961a3ef0cc94ec634d1a37a13ac93ab906e47dfa84335088c48dd4bc8
   roadmap: agents/roadmaps/road-to-standing-context-40k.md
-  roadmap_hash: 425882734a4d2f592dad8547d0bd655197e662dc4008f468f199f4cc065b2a45
-  ac_hash: 59f47cf4c6dc28cfbcf68350c5ef223a056bd45105fe2bd7560bb8db7891f7c4
+  roadmap_hash: f628b5ae6dcea5f4de7168df76942a3f514d3d85e9ad7fbf6899bfd64813996a
+  ac_hash: 4fd135d9b339abde40f3c3c7bd3ec3bdca6d89bfa4dbb64ed42970a1dbb0f7df
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-19T14:17:12Z
@@ -24,3 +24,19 @@ dispatched: 2026-08-19T14:17:12Z
 | 6 | low | src/scripts/hooks/injection_budget.ts:396 | `_pruneTurnSpend` filters `n.endsWith(".json")`, but the temp file is `<target>.json.<pid>.tmp` (:468), so a temp leaked by a crash between `writeFileSync` and `renameSync` is never pruned — unbounded file growth in the directory the cap exists to bound, and the only test for it (tests/scripts/hooks/injection_budget.test.ts:464) covers the happy path only. Separately, the prune runs inside every `recordTurnSpend`, i.e. a `readdirSync` plus up to `TURN_SPEND_MAX_FILES + n` `statSync` calls on every charged dispatch, when the turn-start reset would be a sufficient and far cheaper trigger on a latency-gated path. | fixed | 1b787fea1 |
 | 7 | low | src/scripts/hooks/injection_budget.ts:446-453 | The docblock claims the temp-plus-rename makes a lost update "avoidable and this makes it so". It does not: `renameSync` prevents a TORN file, but the read-modify-write spanning `readTurnSpend` (:462) and the write is still unserialised, so two interleaved same-session dispatches — the exact scenario the paragraph names — still lose an update. The mechanism described and the mechanism shipped disagree; the correct claim is the narrower one (no torn reads, lost updates still possible and still under-counting). | fixed | 1b787fea1 |
 <!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->
+
+## Re-bind note
+
+The reviewer read this branch at head `7f656558c` / scope `6ccd3bc389`. Both
+moved afterwards, twice and for two different reasons: the fixes that close the
+findings above, and an `origin/main` merge that landed a release. The manifest is
+re-derived because the contract's §5 gate requires it to match current inputs;
+this note keeps the sequence legible — findings first, fixes second, re-bind last.
+
+The findings rows and the `prompt_hash` are untouched, so what was asked and what
+was answered stay auditable independently of the pins.
+
+One disclosure the reviewer made and this artefact keeps: to establish finding 1's
+reachability rather than assert it, the reviewer read four narrow ranges of
+`dispatch_hook.ts` outside the branch-touched set, and the third of those reads is
+what RULED OUT a stronger version of the claim.
