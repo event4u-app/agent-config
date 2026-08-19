@@ -1,11 +1,11 @@
 # Findings: org-telemetry-retention
-<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 031c9a556da162425a07fcdb96b4e17512e85c0f6aa834fe085c3ffa6db26d4d | diff: 23abc9e0a7f14c0b6c0123b4cf4c90498f97f4b1 | reviewer: r2-fresh-subagent-org-telemetry-retention | prompt_hash: 46332c88f6b56a4e5f6b1aff542397b2669cbc88fed900e761e2baaff80827c7 -->
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: c4905a06dbde119c105ab20a1038c7a3f8e69e59e079483c71a8e575007acb2b | diff: d7b50e5eef25321cb94120a0c8df35317b84f202 | reviewer: r2-fresh-subagent-org-telemetry-retention | prompt_hash: 46332c88f6b56a4e5f6b1aff542397b2669cbc88fed900e761e2baaff80827c7 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 23abc9e0a7f14c0b6c0123b4cf4c90498f97f4b1
-  scope_hash: 031c9a556da162425a07fcdb96b4e17512e85c0f6aa834fe085c3ffa6db26d4d
+  diff_sha: d7b50e5eef25321cb94120a0c8df35317b84f202
+  scope_hash: c4905a06dbde119c105ab20a1038c7a3f8e69e59e079483c71a8e575007acb2b
   roadmap: agents/roadmaps/road-to-org-telemetry.md
   roadmap_hash: 9fca6dff92e1aff95af0ee16fe8ea779c842c496b76ea8dad581888778111464
   ac_hash: 62d3483b628c50db130545b5ffbacbfd2cbdc618a6f39774b7b6465d1176fc1a
@@ -30,3 +30,33 @@ dispatched: 2026-08-19T04:06:37Z
 | 12 | low | src/agent-src/templates/scripts/telemetry/remote.ts:505-526 | `_read_first_line` reads a fixed 4096-byte window and, when that window contains no newline, returns the **truncated** chunk as if it were the line. `record_line_ms` then fails to parse it and `retention_due` reports "not due" on age. Bounded in practice by record size, but it turns a long or torn first line into the silent age-policy stall of finding 4 rather than into an error. | fixed | a0d06a7a0 |
 | 13 | low | src/scripts/telemetry_disclosure_hook.ts:156-160 | `slot` defaults to `'session_start'` when `event` is absent or empty, so a well-formed envelope that simply carries no `event` key is treated as a session start on whatever slot invoked it — it discloses and writes the state note. The sibling concern takes the opposite default and gates on a positively-matched `tool_name`. Fail-open on an unidentified slot is the wrong default for a once-per-install side effect. | fixed | a0d06a7a0 |
 | 14 | low | tests/scripts/telemetry_disclosure_hook.test.ts:1335-1338 | Tautological test: `expect(buildDisclosure(facts)).toBe(buildDisclosure({ ...facts }))` compares a pure, deterministic, I/O-free function to itself over a shallow copy of the same object. No implementation of `buildDisclosure` can fail it, so it asserts nothing about the "stable block" property it names — pinning the actual emitted text (or its byte length) would. | fixed | a0d06a7a0 |
+
+## What changed after the review, and why it was not re-dispatched
+
+The scope hash moved twice more after the fixes landed, and both moves are
+recorded here rather than absorbed by a silent re-bind.
+
+1. **`origin/main` was merged in** (11 commits, at the maintainer's request).
+   One conflict, in `agents/roadmaps-progress.md`, a generated file — resolved
+   by regenerating it, never by mixing hunks.
+2. **`src/scripts/hook_manifest.json` was recompiled.** main introduced a
+   precompiled manifest while this branch was adding a `session_start` concern
+   to the YAML source. The merge took main's JSON, compiled before this branch
+   existed, so `telemetry-disclosure` stood 8 times in the YAML and **zero
+   times** in the compiled table the dispatcher reads on its fast path.
+   `tests/hooks/hook_manifest_compiled.test.ts` was red on two assertions and
+   is green after the recompile.
+
+Neither adds a design the reviewer did not see: the JSON is a mechanical
+projection of the YAML that was in the reviewed diff, and the dashboard is a
+regenerated artefact. So the findings above stand unchanged and no second
+review was dispatched — but a reader comparing the reviewed head
+(`ffb9dbacc`) with the current one deserves to know what sits between them
+without having to diff for it.
+
+**Worth carrying:** neither `task sync` nor `task generate-tools` writes
+`hook_manifest.json`, so both reported no drift while the compiled table was
+stale. The runtime mtime guard would have fallen back to the YAML on this
+machine (the YAML was newer), but mtime survives neither a clone nor an
+install, so on a consumer the choice between the two tables is undefined. The
+test is the backstop, not the regen path.
