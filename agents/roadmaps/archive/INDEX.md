@@ -5,7 +5,7 @@
 > history, not in this file (a clock here would make every drift check a
 > false red).
 
-**512 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 172 · completed 249 · completed-with-deferrals 25 · not-extractable 34
+**513 archived roadmaps** · archived-with-open-steps 32 · closed-with-cancellations 173 · completed 249 · completed-with-deferrals 25 · not-extractable 34
 
 Every column is extracted deterministically from the file itself. No
 summary here is model-written: a verdict the frontmatter does not carry
@@ -279,6 +279,7 @@ distribution: [`archive-index-saving`](../../evidence/analysis/archive-index-sav
 | [`road-to-inbox-harvest-2026-08-b-authoring-contract`](road-to-inbox-harvest-2026-08-b-authoring-contract.md) | Road to an enforced authoring contract | closed-with-cancellations | 6 | 16/25 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b-council-integrity-followup`](road-to-inbox-harvest-2026-08-b-council-integrity-followup.md) | Roadmap: Follow-up to council-pass integrity | closed-with-cancellations | 1 | 6/7 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b-council-integrity`](road-to-inbox-harvest-2026-08-b-council-integrity.md) | Road to council-pass integrity | closed-with-cancellations | 3 | 8/16 | _not extractable_ |
+| [`road-to-inbox-harvest-2026-08-b-dispatch-safety`](road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | Road to inbox harvest 2026-08-b — dispatch safety | closed-with-cancellations | 4 | 15/21 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b-estate-lifecycle`](road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | Road to estate lifecycle reporting | closed-with-cancellations | 4 | 9/15 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b-install-lifecycle`](road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | Road to install lifecycle — every write recorded, org packs decided | closed-with-cancellations | 2 | 6/13 | _not extractable_ |
 | [`road-to-inbox-harvest-2026-08-b-ledger-truth`](road-to-inbox-harvest-2026-08-b-ledger-truth.md) | Road to cost-ledger truth | closed-with-cancellations | 3 | 13/19 | _not extractable_ |

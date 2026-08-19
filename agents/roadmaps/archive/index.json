@@ -1,7 +1,7 @@
 {
   "generated_by": "src/scripts/build_archive_index.ts",
   "source": "agents/roadmaps/archive",
-  "count": 512,
+  "count": 513,
   "entries": [
     {
       "slug": "00-overview-and-ordering",
@@ -3569,6 +3569,20 @@
         "done": 8,
         "deferred": 1,
         "cancelled": 7
+      },
+      "verdict": null,
+      "status": null
+    },
+    {
+      "slug": "road-to-inbox-harvest-2026-08-b-dispatch-safety",
+      "title": "Road to inbox harvest 2026-08-b — dispatch safety",
+      "disposition": "closed-with-cancellations",
+      "phases": 4,
+      "steps": {
+        "open": 0,
+        "done": 15,
+        "deferred": 0,
+        "cancelled": 6
       },
       "verdict": null,
       "status": null
