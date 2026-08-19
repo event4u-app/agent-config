@@ -7,7 +7,7 @@ inputs:
   diff_sha: 58ddc415b9d7f8e07814926fb1fce90e2a7728c5
   scope_hash: 410bb253a496788e55824b93a96fc3beeb41e337a9e263c7d55d3982ea764d65
   roadmap: agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-dispatch-safety.md
-  roadmap_hash: 01e0b86fd5583b3cedcd967777d5797a0e395d33b0e0c4d3765ac0ab1884cc65
+  roadmap_hash: 2cbf4223c5d2161b164d7462118396617d5e0978b2b5ef4cf1725bd24d69037f
   ac_hash: none
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
