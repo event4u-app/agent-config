@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Single-delivery census — the two layers, measured on a known projection shape
 
 > **Evidence artefact.** Written 2026-08-19 for `road-to-single-delivery` Phase 0.
