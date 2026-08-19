@@ -1,0 +1,1783 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index cec8c0db40bfdedd0050d460de6ba03473c98020..cb6f5dda2c7ec037f7e4931734174b900cd1e8af 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -6,7 +6,7 @@
+ 
+ ## Overall
+ 
+-**297 / 543 steps done · 55%**
++**299 / 543 steps done · 55%**
+ 
+ ```text
+ ██████████████████████░░░░░░░░░░░░░░░░░░   55%
+@@ -52,7 +52,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ | 26 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+ | 27 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 6 | 29 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ████████░░ 83% |
+ | 28 | [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md) | 6 | 18 | 6 | 11 | 1 | 0 | 0 | ██████░░░░ 65% |
+-| 29 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 8 | 0 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ░░░░░░░░░░ 0% |
++| 29 | [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md) | 5 | 9 | 6 | 2 | 1 | 0 | [1](#blockers-road-to-standing-context-40k) | ██░░░░░░░░ 25% |
+ | 30 | [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md) | 7 | 21 | 8 | 11 | 0 | 2 | [1](#blockers-road-to-subagent-lifecycle-integrity) | ██████░░░░ 58% |
+ | 31 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+ | 32 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+@@ -1027,7 +1027,7 @@ _1 blocker resolved._
+ 
+ ### [road-to-standing-context-40k.md](roadmaps/road-to-standing-context-40k.md)
+ 
+-**Road to standing context 40k — the registered destination, given a route** — 0 / 8 done (0%)
++**Road to standing context 40k — the registered destination, given a route** — 2 / 8 done (25%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+@@ -1035,7 +1035,7 @@ _1 blocker resolved._
+ | 1 | Pull the lever that already exists | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+ | 2 | Shrink the structural payload without touching reach | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+ | 3 | Give rules a runtime carrier, or retire the dead triggers | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
+-| 4 | Per-turn injection aggregate | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
++| 4 | Per-turn injection aggregate | ✅ done | 0 | 2 | 0 | 0 | 100% |
+ 
+ <a id="blockers-road-to-standing-context-40k"></a>
+ **Blockers**
+diff --git a/agents/roadmaps/road-to-standing-context-40k.md b/agents/roadmaps/road-to-standing-context-40k.md
+index 3c07decc74a25e779b0e613b3f741c0ea1437216..d225727301adbfbcc565d882d650a59b225401b6 100644
+--- a/agents/roadmaps/road-to-standing-context-40k.md
++++ b/agents/roadmaps/road-to-standing-context-40k.md
+@@ -96,6 +96,11 @@ colleague's report on its own.
+       predates the installer gate: apply the `claudeMdExcludes` suppression for the
+       unchosen layer — one settings entry, no deletion of anything.
+       `verify:` the task's own output, recorded per machine with its date.
++      **NOT executed 2026-08-19 — human action, by the step's own wording.** "On
++      the maintainer machine and on each affected colleague machine" names
++      hardware an agent cannot reach, and the remedy is a settings write per
++      machine. This is a `/roadmap:next` disqualifier (a blocker whose resolution
++      is a human ACTION), recorded here so the next screen does not re-derive it.
+ - **AC-0:** every machine in the team reports under the governed cap on that gate,
+   or carries a dated exemption note saying why it does not.
+ 
+@@ -113,6 +118,15 @@ colleague's report on its own.
+       it, and the fact that no resumption event followed. Move the file out of
+       `later/` under its own disposition rules.
+       `verify:` the file is in the active tree and the dashboard counts it.
++      **NOT executed 2026-08-19 — a scope call, not a blocker, and the cheapest
++      open item left in this file.** It is genuinely repo work and nothing gates
++      it. It is also a *disposition change to a different roadmap*: it moves a
++      file between dispositions, changes what the dashboard counts, and can
++      interact with `lint_roadmap_family_cap`. Landing that inside a PR whose
++      subject is a dispatcher mechanism mixes two reviewable concerns in one diff,
++      which `minimal-safe-diff` refuses. It wants its own small PR, together with
++      the park-note read — `agent-config gates` reports that resume condition
++      FIRED. **Next executor: start here.**
+ - [ ] **1.2** (Owned by that roadmap, tracked here for the interlock only.) The
+       machinery is built and tested; only the human gate is unpulled. Consumer
+       installs default to workspace-derived scope, `legacy-all` becomes the
+@@ -133,6 +147,14 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
+       before any prose shrinks.
+       `verify:` routing matrix green; the diff contains zero `triggers:` edits,
+       machine-checkable by byte-comparing every `triggers:` block.
++      **NOT executed 2026-08-19 — its own sequencing condition is unmet, and this
++      is a one-command check rather than a reading of intent.** The step says to
++      sequence condensation *after* the per-rule norm lint exists, so the
++      obligation sentence is pinned before any prose shrinks. That lint is
++      `road-to-cost-parity-1-rule-payload-diet` step 3.1, still `[ ]`, and no
++      `norm`-pinning script exists under `src/scripts/`. Condensing first would
++      shrink prose with nothing holding the obligation — precisely the ordering
++      this step was written to prevent.
+ 
+   > **Prioritisation input — supplied 2026-08-17 by `road-to-rule-stub-projection`
+   > Phase 0.** "Prioritised by body size" had no measurement; this is one, in
+@@ -185,6 +207,13 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
+       none is deleted, and Iron Law headings survive verbatim at their level.
+       `verify:` the condensation gate is green and each moved passage is reachable
+       from its rule by a link.
++      **NOT executed 2026-08-19 — same sequencing as 2.1, for the same reason.**
++      Moving rationale out of a rule body is a `preservation-guard` transform over
++      the same corpus 2.1 condenses, and it shares 2.1's precondition: with no
++      norm-line pinned, "which passage is the obligation" is a judgement per rule
++      rather than a checkable field, and `preservation-guard`'s every-passage-stays
++      rule cannot distinguish a legitimate move from a quiet softening. Sequence
++      it behind 2.1, not beside it.
+ - **AC-2:** the unconditional-corpus token count falls against the committed
+   census bucket; routing matrix green; zero trigger edits in the diff.
+ 
+@@ -204,6 +233,26 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
+       per-session ground-truth count — exactly the demand-signal datum the
+       retriever's own gate reads. Decide the fork *after* the observer has data.
+       `verify:` the observer records a load event with its reason on this tree.
++      **NOT executed 2026-08-19, and the reason is a refuted premise rather than
++      effort.** This step reads "the host fires that event" as given. Nothing in
++      this tree establishes it: `InstructionsLoaded` appears in no
++      `EVENT_VOCABULARY` (`dispatch_hook.ts:99-110`, ten events, not this one),
++      in no `native_event_aliases` row for any platform, and
++      `check_standing_rule_delivery.instructionsLoadedRecord`'s own docblock calls
++      it "a host feature this suite does not yet bind" while returning a path that
++      is *expected* not to exist. So "register the observer" is not a binding task
++      today — it is first a host-capability question, and binding an event whose
++      existence was never confirmed is designing against an assumption, which
++      `source-discovery-gate` forbids by name.
++      **What would close it:** one recorded observation that the installed host
++      emits the event (version-stamped, like the `subagent_start`/`subagent_stop`
++      evidence that justified those two rows), *then* the vocabulary + alias +
++      platform-row change, *then* the concern. Until the first exists the rest is
++      speculative wiring.
++      **Consequence for the blocker below:** its Recommendation says to land this
++      observer first and re-date the fork against it. That recommendation is not
++      actionable as written, so the fork stays open on a *different* ground than
++      the one recorded there — see the correction in the blocker itself.
+ - [~] **3.1** Fork, stated so it cannot be half-done. **(a)** Execute
+       `later/road-to-deferred-rule-retriever` when its `rules_efficiency` gate
+       converts, lexical-core comparison first, per its own text. **(b)** If the
+@@ -216,7 +265,7 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
+ 
+ ### Phase 4 — Per-turn injection aggregate
+ 
+-- [ ] **4.1** Add an aggregate row to `hook-token-budget.json`: the sum of all
++- [x] **4.1** Add an aggregate row to `hook-token-budget.json`: the sum of all
+       concern emissions per session-turn, capped outside `session_start`, with the
+       dispatcher enforcing by dropping lowest-severity advisories first and
+       recording each drop in dispatch issues. The cap exempts `severity: blocking`
+@@ -224,12 +273,78 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
+       safety-relevant warning.
+       `verify:` the injection bench reports the aggregate; a fixture exceeding the
+       cap drops the right advisory and records it.
+-- [ ] **4.2** Interference fixture: one routing-matrix-style corpus file asserting
++      **Landed 2026-08-19.** `per_turn_aggregate_bytes` in
++      `src/config/hook-token-budget.json`; `bench_hook_injection.perTurnAggregate`
++      derives and prints it on **every** run from the same `slotSums` the
++      per-slot rows come from, so the local reading and the CI gate run are the
++      same number. Runtime enforcement is
++      `src/scripts/hooks/injection_budget.shapeEmissions`, wired into
++      `dispatch_hook` between reduction and `emitFor`.
++      **The ceiling is DERIVED, not a new number:** 47,104 B is
++      `4096 + (2048 + 2048) × 10 + 2048`, i.e. the arithmetic consequence of the
++      per-slot rows already registered above it. A tighter per-turn ceiling would
++      contradict per-slot decisions that are already committed; a looser one would
++      let the composition exceed what every part was capped at.
++      `tests/scripts/bench_hook_injection_aggregate.test.ts` asserts that
++      derivation against the live config, so the two cannot drift.
++      **`gate_on_ceiling: false`, and the reason is a measurement, not caution.**
++      Under the committed fixtures a turn injects 1,140 B against a 47,104 B
++      ceiling — the row sits roughly forty times above the only reading that
++      exists, and arming an inequality nobody has approached would gate on
++      nothing. The flag governs **CI only**; runtime shaping is always on.
++      **Two findings this step produced and did not fix.** (a) The bench reading
++      MOVES between runs — 922 B and 1,140 B minutes apart — because the
++      stop-slot `end-review-nudge` is session-state-conditional and replay skips
++      its writes but not its reads. That is a pre-existing bench
++      non-determinism this row surfaces rather than introduces, and it is one
++      more reason the ceiling is unarmed. (b) A `nudge_rank` tie between two
++      concerns is a manifest defect that nothing detects; `lint_hook_manifest`
++      is where it belongs and the check does not exist. Both are noted at the
++      code, not silently carried.
++      `verify:` `./scripts-run src/scripts/bench_hook_injection` ·
++      `npx vitest run tests/scripts/hooks/injection_budget.test.ts tests/scripts/bench_hook_injection_aggregate.test.ts tests/hooks/injection_budget_dispatch.test.ts`
++- [x] **4.2** Interference fixture: one routing-matrix-style corpus file asserting
+       that for each prompt class at most one nudge fires. The delegation-nudge and
+       skill-route overlap is the first known pair to pin.
+       `verify:` the fixture is green and fails when a second nudge is forced.
++      **Landed 2026-08-19.** `tests/eval/nudge-interference/prompts.yaml` +
++      `tests/scripts/nudge_interference.test.ts`, same shape as
++      `tests/eval/orchestration-matrix/`: positives AND pinned near-misses,
++      executed against the real `classifyPrompt` / `routePointers` predicates
++      with the ranks read live from the manifest.
++      **The overlap was MEASURED before the policy was written, so this file
++      pins a fact rather than a hypothesis.** The prompt "Use when starting
++      parallel work in isolation from the current branch — spawn a git worktree
++      with ignore-safety checks and a clean test baseline for src/a.ts, src/b.ts,
++      src/c.ts and src/d.ts, each independently" fires **both** carriers: its
++      first clause is `using-git-worktrees`' own description (ranker top-1 58,
++      over skill-route's 31/100 floor) and its trailing clause carries four file
++      tokens (over delegation-nudge's `FILE_SIGNAL_FLOOR` of 3). Four near-miss
++      rows pin the classes that must fire exactly one carrier, or none.
++      **Each row pins TWO expectations on purpose** — the pre-policy fire set
++      *and* the post-shaping emission. A trigger change that shrinks the overlap
++      then reads as a corpus failure instead of being silently absorbed by the
++      fix that hides it.
++      **The precedence is a decision and is stated as one:** delegation-nudge
++      outranks skill-route because the delegation verdict changes the *shape* of
++      the work while a skill pointer is a hint, and the suppressed pointer has a
++      first-class recovery path the suppressed verdict would not —
++      `suggest_skill_for_task` ranks the same catalogue on demand. Losing the
++      pointer costs one tool call; losing the verdict costs the plan. It lives in
++      the manifest as `nudge_rank`, so changing it is a reviewable one-line diff
++      rather than an edit to a hardcoded pair.
++      **A test-fixture trap worth carrying:** the first version of the
++      end-to-end fixture wrote a folded multi-line `description:` into its
++      `SKILL.md`. The catalogue loader reads that as its first line only, which
++      halved the ranker's score, and the co-fire the test exists to reproduce
++      never fired — a green-looking fixture over the wrong measurement. The
++      description must be ONE physical line.
++      `verify:` `npx vitest run tests/scripts/nudge_interference.test.ts`
+ - **AC-4:** the aggregate appears in the bench output and the overlap fixture is
+-  green.
++  green. **Met 2026-08-19** — `per-turn aggregate 1140 B (ceiling 47104 B,
++  reported, not gated)` on the bench's own output line; 50 tests across four
++  files, including the end-to-end proof that the shaping is *wired* and not
++  merely defined.
+ 
+ ## Blockers
+ 
+@@ -246,6 +361,15 @@ The revert proved the nineteen must stay **unconditional**. It did not prove the
+   itself progress, per the same discipline the telemetry-count gates use. Do not
+   build a retriever before the comparison against `src/scripts/_lib/lexical_index.ts`
+   that `later/road-to-deferred-rule-retriever` pre-registered.
++- **Correction 2026-08-19:** the Recommendation below is **not actionable as
++  written**, and the reason is checkable rather than a judgement — step 3.0's
++  observer cannot be landed today because `InstructionsLoaded` is in no event
++  vocabulary and no alias table in this tree, and the one module that names it
++  documents it as unbound (evidence at step 3.0). The Recommendation is kept
++  verbatim below rather than rewritten, because *what it wanted* is still right —
++  a ground-truth count before deciding the fork — and only its stated route is
++  unavailable. The fork therefore stays open on the missing HOST CAPABILITY, not
++  on an unfilled metric window.
+ - **Recommendation:** **land step 3.0's observer first and re-date this blocker
+   against it.** The fork cannot be decided today in either direction: option (a)
+   needs a demand signal that does not exist, and option (b) would delete trigger
+diff --git a/docs/contracts/hook-architecture-v1.md b/docs/contracts/hook-architecture-v1.md
+index 4f3864bfeb72a6e523fc8ea11e6aa94dfb38755d..ba60e0c337c1f8e695bfa9cdaccd2ba479c35d8c 100644
+--- a/docs/contracts/hook-architecture-v1.md
++++ b/docs/contracts/hook-architecture-v1.md
+@@ -217,6 +217,44 @@ runs them **sequentially** in manifest order and reduces:
+ in manifest order. Concerns are never run in parallel — concurrency
+ guarantees rely on serial state writes.
+ 
++## Emission shaping — what leaves is a subset of what was produced
++
++Reduction decides the *verdict*. A second pass decides which of the collected
++messages are actually emitted, because two independently-correct advisory
++concerns can both fire on one event and nothing used to arbitrate between them.
++Both policies live in `src/scripts/hooks/injection_budget.ts` and run after
++reduction, in this order:
++
++1. **Nudge exclusivity.** A concern may declare `nudge_rank: <n>` in the
++   manifest. At most one ranked concern's message leaves per event: the lowest
++   rank wins, the rest are suppressed. A concern without the field is not
++   nudge-class and this policy never touches it.
++2. **Per-turn byte ceiling.** `src/config/hook-token-budget.json §
++   per_turn_aggregate_bytes` registers the bytes a representative turn may
++   inject. When the running total would exceed it, advisory messages are dropped
++   lowest-severity-first (`allow` before `warn`, then largest first) until it
++   fits. The events named in that row's `excluded_slots` — `session_start` above
++   all — are not shaped by volume at all.
++
++**Neither policy can drop a `severity: blocking` or `fail_closed` concern.** That
++exemption is by construction, not by configuration: a shaping layer able to
++silence a safety warning would be worse than the stacking it was added to fix.
++When the exempt set alone exceeds the ceiling, the dispatcher says so on stderr
++and drops nothing.
++
++Every suppression is recorded as one `dispatch-issues.jsonl` line, so a reader
++who expected a hook effect and did not see it can find out why. The two codes
++are `nudge_interference_drop` and `injection_budget_drop`; unlike the four
++concern-failure codes, they mean the concern ran correctly and the dispatcher
++chose not to emit it.
++
++The running total lives in `agents/runtime/state/injection-turn.json` — one
++session id and one integer, with no field capable of holding a prompt or an
++emitted line — and is reset on `user_prompt_submit`, the event that starts a
++turn. It is not written under replay, per § Replay mode. An unreadable or
++missing counter reads as zero: an accounting failure must never be the reason an
++advisory disappears.
++
+ ## Feedback channel — `agents/runtime/state/.dispatcher/<session_id>/`
+ 
+ Exit-code reduction collapses the severity ladder to a single
+diff --git a/src/config/hook-token-budget.json b/src/config/hook-token-budget.json
+index 4a9eaca8610a383d0ffbc90f651f23f9f8f32ae9..b43206e3edcdc72f9f9006aff8ee619d095a9f1b 100644
+--- a/src/config/hook-token-budget.json
++++ b/src/config/hook-token-budget.json
+@@ -42,6 +42,22 @@
+         "pre_compact": 2048,
+         "agent_error": 1024
+     },
++    "per_turn_aggregate_bytes": {
++        "_comment": "road-to-standing-context-40k Phase 4 step 4.1 — the sum the USER feels, which no row above could see. The per-slot caps bound ONE fire; a turn fires user_prompt_submit once, pre_tool_use and post_tool_use once per tool call, and stop once, so the number a turn actually injects is a multiple of them and was unregistered. This row is the injection twin of `per_turn_composite` in hook-latency-budget.json: same definition shape, same tool_calls, different unit. bench_hook_injection derives and prints it on every run; the DISPATCHER enforces `ceiling_bytes` at runtime by dropping lowest-severity advisories first (src/scripts/hooks/injection_budget.ts), exempting severity:blocking and fail_closed concerns by construction so the policy can never hide a safety-relevant warning.",
++        "owner": "maintainer",
++        "review_by": "2026-11-10",
++        "definition": "(pre_tool_use + post_tool_use) x tool_calls + user_prompt_submit + stop",
++        "tool_calls": 10,
++        "tool_calls_rationale": "Taken verbatim from hook-latency-budget.json's per_turn_composite rather than re-derived. Two definitions of 'a representative turn' in one repo is how two people compute two different composites and both call their row green.",
++        "slots_counted": ["user_prompt_submit", "pre_tool_use", "post_tool_use", "stop"],
++        "excluded_slots": ["session_start", "session_end", "pre_compact", "agent_error"],
++        "excluded_slots_rationale": "session_start is excluded BY THE STEP: it is the one-shot restore slot that legitimately carries hot-context, handoff-context and the canary contract, and capping it against a per-turn number would evict exactly the payloads it exists to deliver. The other three are not per-turn events at all.",
++        "ceiling_bytes": 47104,
++        "ceiling_derivation": "NOT a fresh number, and deliberately so: it is the arithmetic consequence of the per_slot_sum_caps_bytes rows already registered above — 4096 + (2048 + 2048) x 10 + 2048. A tighter per-turn ceiling would contradict per-slot rows that are already the committed decision, and a looser one would let the composition exceed what every part was capped at. Tightening it is a decision about those rows, taken there, in a PR.",
++        "gate_on_ceiling": false,
++        "gate_on_ceiling_rationale": "The bench REPORTS the aggregate but does not red the build on it yet — the first-reading discipline the latency twin's observe_only flag encodes. Measured 2026-08-19 under the committed fixtures: 1,140 B against a 47,104 B ceiling, i.e. the row is registered roughly forty times above the only reading that exists. That reading MOVES between runs (922-1,140 B observed minutes apart) because the stop-slot end-review-nudge is session-state-conditional and replay skips its writes but not its reads — a pre-existing bench non-determinism this row surfaces rather than introduces, and one more reason not to arm the ceiling on it. Arming a ceiling nobody has ever approached would gate on an untested inequality. Runtime enforcement is NOT gated by this flag and is always on: this flag governs CI, the ceiling governs the live session.",
++        "honest_null_consequence": "If the census shows real turns sitting near the ceiling, the per-slot rows move first and this row follows from them. If real turns never approach it, the row is a bound that costs nothing and the finding is published at review date either way."
++    },
+     "injection_load_metric": {
+         "definition": "Roadmap 3.4: total injected bytes per session and per turn, hook-carried. The census mode of bench_hook_injection (--record) appends counts-only lines to agents/runtime/state/injection-census.jsonl; the caps above are the thresholds; breach trend at review date decides tighten vs relax — by evidence, in a PR. The census is also the repeat-injection-census blocker's instrument (one instrumented week ranks the repeaters for the 3.3 idempotency gate).",
+         "privacy": "census lines carry {ts, slot, concern, bytes} — counts and ids only, never content"
+diff --git a/src/scripts/bench_hook_injection.ts b/src/scripts/bench_hook_injection.ts
+index 77aa3017f97b55a526a49f09e81e176b2cfd1577..feaf136b63770cc6b8f60782b35669f6bd8dc4fb 100644
+--- a/src/scripts/bench_hook_injection.ts
++++ b/src/scripts/bench_hook_injection.ts
+@@ -62,10 +62,60 @@ export interface Measurement {
+     breach: boolean;
+ }
+ 
++interface PerTurnAggregate {
++    tool_calls: number;
++    slots_counted: string[];
++    ceiling_bytes: number;
++    gate_on_ceiling: boolean;
++}
++
+ interface Budget {
+     default_cap_bytes: number;
+     per_concern_caps_bytes: Record<string, number | string>;
+     per_slot_sum_caps_bytes: Record<string, number | string>;
++    per_turn_aggregate_bytes?: PerTurnAggregate;
++}
++
++/** The per-turn aggregate reading, or the reason there isn't one. */
++export interface TurnAggregate {
++    /** Bytes a representative turn injects, or `null` when it is not derivable. */
++    bytes: number | null;
++    ceiling: number;
++    gated: boolean;
++    breach: boolean;
++    /** Present only when `bytes` is null — names the slot that was missing. */
++    unresolved?: string;
++}
++
++/**
++ * Derive the per-turn aggregate from the same per-slot sums the rows above
++ * report, per `per_turn_aggregate_bytes.definition`.
++ *
++ * Returns `null` bytes rather than a number when a counted slot produced no
++ * reading. This is the latency twin's rule, adopted deliberately: a composite
++ * over a subset reads LOW, and low is the direction that makes a ceiling look
++ * met. A missing slot is an unresolved measurement, never a small one.
++ */
++export function perTurnAggregate(
++    slotSums: Record<string, { bytes: number }>,
++    cfg: PerTurnAggregate | undefined,
++): TurnAggregate | null {
++    if (cfg === undefined) return null;
++    const perCallSlots = new Set(['pre_tool_use', 'post_tool_use']);
++    let bytes = 0;
++    for (const slot of cfg.slots_counted) {
++        const reading = slotSums[slot];
++        if (reading === undefined) {
++            return { bytes: null, ceiling: cfg.ceiling_bytes, gated: cfg.gate_on_ceiling, breach: false, unresolved: slot };
++        }
++        bytes += perCallSlots.has(slot) ? reading.bytes * cfg.tool_calls : reading.bytes;
++    }
++    return {
++        bytes,
++        ceiling: cfg.ceiling_bytes,
++        gated: cfg.gate_on_ceiling,
++        breach: cfg.gate_on_ceiling && bytes > cfg.ceiling_bytes,
++    };
+ }
+ 
+ function capFor(budget: Budget, concern: string): number {
+@@ -129,7 +179,7 @@ export function runConcernOnce(
+     }
+ }
+ 
+-export function bench(opts: { platform?: string; budgetPath?: string } = {}): { measurements: Measurement[]; slotSums: Record<string, { bytes: number; cap: number; breach: boolean }>; errors: string[] } {
++export function bench(opts: { platform?: string; budgetPath?: string } = {}): { measurements: Measurement[]; slotSums: Record<string, { bytes: number; cap: number; breach: boolean }>; errors: string[]; turnAggregate: TurnAggregate | null } {
+     const platform = opts.platform ?? 'claude';
+     const manifest = _load_yaml(MANIFEST);
+     const budget = JSON.parse(fs.readFileSync(opts.budgetPath ?? BUDGET, 'utf8')) as Budget;
+@@ -158,7 +208,7 @@ export function bench(opts: { platform?: string; budgetPath?: string } = {}): {
+         const slotCap = typeof slotCapRaw === 'number' ? slotCapRaw : Number.MAX_SAFE_INTEGER;
+         slotSums[event] = { bytes: sum, cap: slotCap, breach: sum > slotCap };
+     }
+-    return { measurements, slotSums, errors };
++    return { measurements, slotSums, errors, turnAggregate: perTurnAggregate(slotSums, budget.per_turn_aggregate_bytes) };
+ }
+ 
+ export function main(argv: readonly string[]): number {
+@@ -211,9 +261,20 @@ export function main(argv: readonly string[]): number {
+         for (const [slot, s] of Object.entries(result.slotSums)) {
+             if (s.bytes > 0) process.stdout.write(`  slot-sum ${slot.padEnd(20)} ${String(s.bytes).padStart(6)} B (cap ${s.cap === Number.MAX_SAFE_INTEGER ? '—' : s.cap})${s.breach ? '  ❌ BREACH' : ''}\n`);
+         }
++        const agg = result.turnAggregate;
++        if (agg !== null) {
++            const reading =
++                agg.bytes === null
++                    ? `UNRESOLVED (slot '${String(agg.unresolved)}' produced no reading)`
++                    : `${String(agg.bytes)} B`;
++            const arm = agg.gated ? 'gated' : 'reported, not gated';
++            process.stdout.write(
++                `  per-turn aggregate      ${reading} (ceiling ${String(agg.ceiling)} B, ${arm})${agg.breach ? '  ❌ BREACH' : ''}\n`,
++            );
++        }
+         for (const e of result.errors) process.stdout.write(`  warn: ${e}\n`);
+     }
+-    if (breaches.length > 0 || slotBreaches.length > 0) {
++    if (breaches.length > 0 || slotBreaches.length > 0 || result.turnAggregate?.breach === true) {
+         process.stderr.write(`bench_hook_injection: ${breaches.length} concern breach(es), ${slotBreaches.length} slot-sum breach(es) — the budget row is the decision surface (src/config/hook-token-budget.json)\n`);
+         return 1;
+     }
+diff --git a/src/scripts/hook_manifest.json b/src/scripts/hook_manifest.json
+index 2a4da375352ab5e92de02f7e2c2d7fe39154bc31..47ad05b91b3a799901048f689c86e804a75a49ae 100644
+--- a/src/scripts/hook_manifest.json
++++ b/src/scripts/hook_manifest.json
+@@ -1 +1 @@
+-{"fingerprint":"fdf0d72b:63826","manifest":{"schema_version":1,"concerns":{"chat-history":{"script":"src/scripts/chat_history.ts","args":["hook-dispatch"],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["result"]},"hot-context":{"script":"src/scripts/hot_context_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"handoff-context":{"script":"src/scripts/handoff_context_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"roadmap-progress":{"script":"src/scripts/roadmap_progress_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"onboarding-gate":{"script":"src/scripts/onboarding_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"context-hygiene":{"script":"src/scripts/context_hygiene_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"verify-before-complete":{"script":"src/scripts/before_complete_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"ship-diff-volume":{"script":"src/scripts/hooks/ship_diff_volume_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"minimal-safe-diff":{"script":"src/scripts/minimal_safe_diff_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"injection-scan":{"script":"src/scripts/injection_scan_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"block-no-verify":{"script":"src/scripts/hooks/block_no_verify.ts","args":[],"fail_closed":true,"severity":"blocking","needs_payload_bodies":["input"]},"block-kernel-rule-writes":{"script":"src/scripts/hooks/block_kernel_rule_writes.ts","args":[],"fail_closed":true,"severity":"blocking","needs_payload_bodies":["input"]},"block-config-weakening":{"script":"src/scripts/hooks/block_config_weakening.ts","args":[],"fail_closed":false,"severity":"blocking","needs_payload_bodies":["input"]},"rtk-wrap":{"script":"src/scripts/hooks/rtk_wrap_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"design-slop":{"script":"src/scripts/hooks/design_slop_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"ui-route-nudge":{"script":"src/scripts/hooks/ui_route_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"code-graph-nudge":{"script":"src/scripts/hooks/code_graph_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Grep","Glob","Read"],"needs_payload_bodies":["input"]},"memory-learn":{"script":"src/scripts/memory_learn_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"first-run-gate":{"script":"src/scripts/first_run_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"profile-staleness":{"script":"src/scripts/profile_staleness_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"wrapper-freshness":{"script":"src/scripts/wrapper_freshness_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"surface-probe":{"script":"src/scripts/surface_probe_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"team-review-gate":{"script":"src/scripts/team_review_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"pr-url-reminder":{"script":"src/scripts/pr_url_reminder_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"language-mirror":{"script":"src/scripts/language_mirror_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"git-authorization":{"script":"src/scripts/git_authorization_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"block-unauthorized-git":{"script":"src/scripts/hooks/block_unauthorized_git.ts","args":[],"fail_closed":true,"severity":"blocking","needs_payload_bodies":["input"]},"evidence-independence":{"script":"src/scripts/hooks/evidence_independence.ts","args":[],"fail_closed":false,"severity":"blocking","needs_payload_bodies":["input"]},"session-canary":{"script":"src/scripts/session_canary_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"council-availability":{"script":"src/scripts/council_availability_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"telemetry-disclosure":{"script":"src/scripts/telemetry_disclosure_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"self-repair":{"script":"src/scripts/self_repair_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"session-register":{"script":"src/scripts/session_register_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"orchestration-record":{"script":"src/scripts/hooks/orchestration_record_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Agent","Task"],"needs_payload_bodies":["input","result"]},"telemetry-usage":{"script":"src/scripts/hooks/telemetry_usage_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Skill"],"needs_payload_bodies":["input"]},"delegation-nudge":{"script":"src/scripts/hooks/delegation_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"skill-route":{"script":"src/scripts/hooks/skill_route_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"end-review-nudge":{"script":"src/scripts/hooks/end_review_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","skip_on_refusal_retry":true},"turn-end-gate":{"script":"src/scripts/hooks/turn_end_gate_hook.ts","args":[],"fail_closed":false,"severity":"blocking"},"edit-shape":{"script":"src/scripts/hooks/edit_shape_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Write"],"needs_payload_bodies":["input"]},"reread-guard":{"script":"src/scripts/hooks/reread_guard_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Read","Edit","Write"],"needs_payload_bodies":["input"]},"session-eol":{"script":"src/scripts/hooks/session_eol_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"run-continuation":{"script":"src/scripts/hooks/run_continuation_hook.ts","args":[],"fail_closed":false,"severity":"blocking"},"interruption-ledger":{"script":"src/scripts/hooks/interruption_ledger_hook.ts","args":[],"fail_closed":false,"severity":"advisory","skip_on_refusal_retry":true},"subagent-ledger":{"script":"src/scripts/hooks/subagent_ledger_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"tool-result-bytes":{"script":"src/scripts/hooks/tool_result_bytes_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"spawn-guard-shadow":{"script":"src/scripts/hooks/spawn_guard_shadow_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Agent","Task"]}},"roles":{"worker":{"drop":["delegation-nudge","skill-route","end-review-nudge","council-availability","team-review-gate","self-repair","session-eol","interruption-ledger"]}},"platforms":{"augment":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress"],"stop":["chat-history","hot-context","verify-before-complete","self-repair","session-register","roadmap-progress"],"pre_tool_use":["block-no-verify","block-unauthorized-git","evidence-independence","block-kernel-rule-writes","block-config-weakening","rtk-wrap","design-slop","ui-route-nudge","code-graph-nudge","ship-diff-volume","reread-guard"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape"]},"claude":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress"],"stop":["chat-history","hot-context","verify-before-complete","team-review-gate","end-review-nudge","turn-end-gate","self-repair","session-register","session-eol","interruption-ledger","roadmap-progress","run-continuation"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","delegation-nudge","skill-route","git-authorization","session-canary","self-repair","session-register"],"pre_tool_use":["block-no-verify","block-unauthorized-git","evidence-independence","block-kernel-rule-writes","block-config-weakening","rtk-wrap","design-slop","ui-route-nudge","code-graph-nudge","ship-diff-volume","reread-guard","spawn-guard-shadow"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","language-mirror"],"pre_compact":["language-mirror","hot-context"],"subagent_start":["subagent-ledger"],"subagent_stop":["subagent-ledger"]},"cowork":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress"],"stop":["chat-history","hot-context","verify-before-complete","self-repair","session-register","roadmap-progress"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"pre_tool_use":["block-no-verify","block-unauthorized-git","evidence-independence","block-kernel-rule-writes","block-config-weakening","rtk-wrap","design-slop","ui-route-nudge","code-graph-nudge","ship-diff-volume","reread-guard","spawn-guard-shadow"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape"],"subagent_start":["subagent-ledger"],"subagent_stop":["subagent-ledger"]},"cursor":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress"],"stop":["chat-history","hot-context","verify-before-complete","self-repair","session-register","roadmap-progress"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape"]},"cline":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress"],"stop":["chat-history","hot-context","verify-before-complete","self-repair","session-register","roadmap-progress"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape"]},"windsurf":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","profile-staleness","wrapper-freshness","surface-probe","session-register"],"stop":["chat-history","hot-context","verify-before-complete","self-repair","session-register"],"user_prompt_submit":["chat-history","verify-before-complete","language-mirror","git-authorization","session-canary","self-repair","session-register"]},"gemini":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress"],"stop":["chat-history","hot-context","verify-before-complete","self-repair","session-register","roadmap-progress"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape"]},"copilot":{"fallback_only":true}},"native_event_aliases":{"augment":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use"},"claude":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact","SubagentStart":"subagent_start","SubagentStop":"subagent_stop"},"cowork":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact","SubagentStart":"subagent_start","SubagentStop":"subagent_stop"},"cursor":{"sessionStart":"session_start","sessionEnd":"session_end","stop":"stop","beforeSubmitPrompt":"user_prompt_submit","postToolUse":"post_tool_use","preToolUse":"pre_tool_use","preCompact":"pre_compact"},"cline":{"TaskStart":"session_start","TaskResume":"session_start","TaskComplete":"session_end","TaskCancel":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact"},"windsurf":{"pre_user_prompt":"user_prompt_submit","post_cascade_response":"stop","post_setup_worktree":"session_start"},"gemini":{"SessionStart":"session_start","SessionEnd":"session_end","BeforeAgent":"user_prompt_submit","AfterAgent":"stop","BeforeTool":"pre_tool_use","AfterTool":"post_tool_use"}}}}
+\ No newline at end of file
++{"fingerprint":"4834904a:65187","manifest":{"schema_version":1,"concerns":{"chat-history":{"script":"src/scripts/chat_history.ts","args":["hook-dispatch"],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["result"]},"hot-context":{"script":"src/scripts/hot_context_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"handoff-context":{"script":"src/scripts/handoff_context_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"roadmap-progress":{"script":"src/scripts/roadmap_progress_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"onboarding-gate":{"script":"src/scripts/onboarding_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"context-hygiene":{"script":"src/scripts/context_hygiene_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"verify-before-complete":{"script":"src/scripts/before_complete_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"ship-diff-volume":{"script":"src/scripts/hooks/ship_diff_volume_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"minimal-safe-diff":{"script":"src/scripts/minimal_safe_diff_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"injection-scan":{"script":"src/scripts/injection_scan_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"block-no-verify":{"script":"src/scripts/hooks/block_no_verify.ts","args":[],"fail_closed":true,"severity":"blocking","needs_payload_bodies":["input"]},"block-kernel-rule-writes":{"script":"src/scripts/hooks/block_kernel_rule_writes.ts","args":[],"fail_closed":true,"severity":"blocking","needs_payload_bodies":["input"]},"block-config-weakening":{"script":"src/scripts/hooks/block_config_weakening.ts","args":[],"fail_closed":false,"severity":"blocking","needs_payload_bodies":["input"]},"rtk-wrap":{"script":"src/scripts/hooks/rtk_wrap_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"design-slop":{"script":"src/scripts/hooks/design_slop_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"ui-route-nudge":{"script":"src/scripts/hooks/ui_route_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"code-graph-nudge":{"script":"src/scripts/hooks/code_graph_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Grep","Glob","Read"],"needs_payload_bodies":["input"]},"memory-learn":{"script":"src/scripts/memory_learn_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"first-run-gate":{"script":"src/scripts/first_run_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"profile-staleness":{"script":"src/scripts/profile_staleness_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"wrapper-freshness":{"script":"src/scripts/wrapper_freshness_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"surface-probe":{"script":"src/scripts/surface_probe_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"team-review-gate":{"script":"src/scripts/team_review_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"pr-url-reminder":{"script":"src/scripts/pr_url_reminder_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"language-mirror":{"script":"src/scripts/language_mirror_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"git-authorization":{"script":"src/scripts/git_authorization_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"block-unauthorized-git":{"script":"src/scripts/hooks/block_unauthorized_git.ts","args":[],"fail_closed":true,"severity":"blocking","needs_payload_bodies":["input"]},"evidence-independence":{"script":"src/scripts/hooks/evidence_independence.ts","args":[],"fail_closed":false,"severity":"blocking","needs_payload_bodies":["input"]},"session-canary":{"script":"src/scripts/session_canary_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"council-availability":{"script":"src/scripts/council_availability_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"telemetry-disclosure":{"script":"src/scripts/telemetry_disclosure_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"self-repair":{"script":"src/scripts/self_repair_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"session-register":{"script":"src/scripts/session_register_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"orchestration-record":{"script":"src/scripts/hooks/orchestration_record_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Agent","Task"],"needs_payload_bodies":["input","result"]},"telemetry-usage":{"script":"src/scripts/hooks/telemetry_usage_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Skill"],"needs_payload_bodies":["input"]},"delegation-nudge":{"script":"src/scripts/hooks/delegation_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","nudge_rank":1},"skill-route":{"script":"src/scripts/hooks/skill_route_hook.ts","args":[],"fail_closed":false,"severity":"advisory","nudge_rank":2},"end-review-nudge":{"script":"src/scripts/hooks/end_review_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","skip_on_refusal_retry":true},"turn-end-gate":{"script":"src/scripts/hooks/turn_end_gate_hook.ts","args":[],"fail_closed":false,"severity":"blocking"},"edit-shape":{"script":"src/scripts/hooks/edit_shape_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Write"],"needs_payload_bodies":["input"]},"reread-guard":{"script":"src/scripts/hooks/reread_guard_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Read","Edit","Write"],"needs_payload_bodies":["input"]},"session-eol":{"script":"src/scripts/hooks/session_eol_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"run-continuation":{"script":"src/scripts/hooks/run_continuation_hook.ts","args":[],"fail_closed":false,"severity":"blocking"},"interruption-ledger":{"script":"src/scripts/hooks/interruption_ledger_hook.ts","args":[],"fail_closed":false,"severity":"advisory","skip_on_refusal_retry":true},"subagent-ledger":{"script":"src/scripts/hooks/subagent_ledger_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"tool-result-bytes":{"script":"src/scripts/hooks/tool_result_bytes_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"spawn-guard-shadow":{"script":"src/scripts/hooks/spawn_guard_shadow_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Agent","Task"]}},"roles":{"worker":{"drop":["delegation-nudge","skill-route","end-review-nudge","council-availability","team-review-gate","self-repair","session-eol","interruption-ledger"]}},"platforms":{"augment":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress"],"stop":["chat-history","hot-context","verify-before-complete","self-repair","session-register","roadmap-progress"],"pre_tool_use":["block-no-verify","block-unauthorized-git","evidence-independence","block-kernel-rule-writes","block-config-weakening","rtk-wrap","design-slop","ui-route-nudge","code-graph-nudge","ship-diff-volume","reread-guard"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape"]},"claude":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress"],"stop":["chat-history","hot-context","verify-before-complete","team-review-gate","end-review-nudge","turn-end-gate","self-repair","session-register","session-eol","interruption-ledger","roadmap-progress","run-continuation"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","delegation-nudge","skill-route","git-authorization","session-canary","self-repair","session-register"],"pre_tool_use":["block-no-verify","block-unauthorized-git","evidence-independence","block-kernel-rule-writes","block-config-weakening","rtk-wrap","design-slop","ui-route-nudge","code-graph-nudge","ship-diff-volume","reread-guard","spawn-guard-shadow"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","language-mirror"],"pre_compact":["language-mirror","hot-context"],"subagent_start":["subagent-ledger"],"subagent_stop":["subagent-ledger"]},"cowork":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress"],"stop":["chat-history","hot-context","verify-before-complete","self-repair","session-register","roadmap-progress"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"pre_tool_use":["block-no-verify","block-unauthorized-git","evidence-independence","block-kernel-rule-writes","block-config-weakening","rtk-wrap","design-slop","ui-route-nudge","code-graph-nudge","ship-diff-volume","reread-guard","spawn-guard-shadow"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape"],"subagent_start":["subagent-ledger"],"subagent_stop":["subagent-ledger"]},"cursor":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress"],"stop":["chat-history","hot-context","verify-before-complete","self-repair","session-register","roadmap-progress"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape"]},"cline":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress"],"stop":["chat-history","hot-context","verify-before-complete","self-repair","session-register","roadmap-progress"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape"]},"windsurf":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","profile-staleness","wrapper-freshness","surface-probe","session-register"],"stop":["chat-history","hot-context","verify-before-complete","self-repair","session-register"],"user_prompt_submit":["chat-history","verify-before-complete","language-mirror","git-authorization","session-canary","self-repair","session-register"]},"gemini":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress"],"stop":["chat-history","hot-context","verify-before-complete","self-repair","session-register","roadmap-progress"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape"]},"copilot":{"fallback_only":true}},"native_event_aliases":{"augment":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use"},"claude":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact","SubagentStart":"subagent_start","SubagentStop":"subagent_stop"},"cowork":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact","SubagentStart":"subagent_start","SubagentStop":"subagent_stop"},"cursor":{"sessionStart":"session_start","sessionEnd":"session_end","stop":"stop","beforeSubmitPrompt":"user_prompt_submit","postToolUse":"post_tool_use","preToolUse":"pre_tool_use","preCompact":"pre_compact"},"cline":{"TaskStart":"session_start","TaskResume":"session_start","TaskComplete":"session_end","TaskCancel":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact"},"windsurf":{"pre_user_prompt":"user_prompt_submit","post_cascade_response":"stop","post_setup_worktree":"session_start"},"gemini":{"SessionStart":"session_start","SessionEnd":"session_end","BeforeAgent":"user_prompt_submit","AfterAgent":"stop","BeforeTool":"pre_tool_use","AfterTool":"post_tool_use"}}}}
+\ No newline at end of file
+diff --git a/src/scripts/hook_manifest.yaml b/src/scripts/hook_manifest.yaml
+index 36ef04f013f886bef8b3074debd2f5b733884191..699c4cbcd627b66710d301a8ec962ba72eb54eb5 100644
+--- a/src/scripts/hook_manifest.yaml
++++ b/src/scripts/hook_manifest.yaml
+@@ -542,11 +542,32 @@ concerns:
+   # enumerated signal → no injection at all. Never blocks the turn — see the
+   # hook's file header for the `host_semantics.emitFor` proof. fail_closed:
+   # false.
++  # `nudge_rank` (road-to-standing-context-40k Phase 4 step 4.2) — nudge-class
++  # exclusivity. At most ONE ranked nudge leaves per slot; the LOWEST rank wins
++  # and the dispatcher records every suppression as a `nudge_interference_drop`
++  # dispatch issue. A concern without the field is not nudge-class and is never
++  # suppressed by this policy.
++  #
++  # Measured before the policy was written, so the overlap is a fact rather than
++  # a hypothesis: the prompt "Use when starting parallel work in isolation from
++  # the current branch — spawn a git worktree … for src/a.ts, src/b.ts, src/c.ts
++  # and src/d.ts, each independently" fires delegation-nudge AND skill-route
++  # together on `user_prompt_submit`. Pinned by tests/eval/nudge-interference/.
++  #
++  # WHY delegation-nudge OUTRANKS skill-route, stated because the order is a
++  # decision and not an accident: the delegation verdict changes the SHAPE of
++  # the work (dispatch vs in-session), while a skill pointer is a hint the model
++  # may ignore — and the suppressed half has a first-class recovery path that
++  # the suppressed delegation verdict would not, because `suggest_skill_for_task`
++  # ranks the same catalogue on demand (see the missing-skill-recovery rule).
++  # Losing the pointer costs one tool call; losing the delegation verdict costs
++  # the plan.
+   delegation-nudge:
+     script: src/scripts/hooks/delegation_nudge_hook.ts
+     args: []
+     fail_closed: false
+     severity: advisory
++    nudge_rank: 1
+   # road-to-inbox-harvest-2026-08-d-runtime-skill-routing Phase 2 — binds the
+   # deterministic task→skill ranker, which had shipped with ZERO production
+   # callers: `score_skill_relevance.rank` and its `suggest_skill_for_task`
+@@ -569,6 +590,7 @@ concerns:
+     args: []
+     fail_closed: false
+     severity: advisory
++    nudge_rank: 2
+   # road-to-orchestrator-discipline-carriers Phase 5 (F4-lite) — end-review
+   # nudge. Fires ONLY when the session mutated tracked+untracked, non-doc
+   # files beyond MUTATION_LINE_THRESHOLD (50 lines; untracked files added
+diff --git a/src/scripts/hooks/dispatch_hook.ts b/src/scripts/hooks/dispatch_hook.ts
+index 1103362da7468e3edd1e3f8f18a1df58788cbb6d..8285fbd4f9b809824db02da5fe03ac05dda1b9e1 100644
+--- a/src/scripts/hooks/dispatch_hook.ts
++++ b/src/scripts/hooks/dispatch_hook.ts
+@@ -43,6 +43,11 @@ import {
+   is_replay_mode,
+ } from "./state_io.js";
+ import { log_dispatch_issue, fix_hint } from "./dispatch_issues.js";
++import {
++  readTurnSpend,
++  recordTurnSpend,
++  shapeEmissions,
++} from "./injection_budget.js";
+ import { CONCERN_REGISTRY, type ConcernMain } from "./concern_registry.js";
+ import {
+   setHookStdinOverride,
+@@ -131,6 +136,39 @@ export function _is_advisory(concern: JsonObject): boolean {
+   return String(concern["severity"] ?? "").trim().toLowerCase() === "advisory";
+ }
+ 
++/**
++ * The per-turn injection ceiling for one event, or `null` when the budget does
++ * not apply here.
++ *
++ * `null` on three paths, and all three mean the same thing — do not shape by
++ * volume: the event is one the row excludes by name (`session_start` above all,
++ * the one-shot restore slot), the config is missing or malformed, or the row
++ * has not been added yet. A budget that cannot be read must never become a
++ * budget of zero; failing open is the only safe direction for a policy whose
++ * job is to delete output.
++ *
++ * The row lives in the PACKAGE (`REPO_ROOT`), not the consumer workspace — it
++ * is a shipped decision, not a per-project setting. The workspace root is used
++ * only for the turn counter and the drop log.
++ */
++function _per_turn_cap(_workspace_root: string, event: string): number | null {
++  try {
++    const raw = fs.readFileSync(
++      path.join(REPO_ROOT, "src", "config", "hook-token-budget.json"),
++      "utf-8",
++    );
++    const cfg = (JSON.parse(raw) as JsonObject)["per_turn_aggregate_bytes"];
++    if (cfg === undefined || cfg === null || typeof cfg !== "object") return null;
++    const row = cfg as JsonObject;
++    const excluded = row["excluded_slots"];
++    if (Array.isArray(excluded) && excluded.map(String).includes(event)) return null;
++    const ceiling = row["ceiling_bytes"];
++    return typeof ceiling === "number" && ceiling > 0 ? ceiling : null;
++  } catch {
++    return null;
++  }
++}
++
+ function _now_iso(): string {
+   // Python: datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ").
+   return new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+@@ -1269,7 +1307,18 @@ export function main(argv?: string[]): number {
+   // feedback_entries on purpose: that record is written to disk with a
+   // fixed-field schema (PII-exclusion-by-construction), and a concern's raw
+   // stderr is free-form content. This array is in-memory only.
+-  const concern_messages: Array<{ rc: number; text: string }> = [];
++  // Carries the manifest fields the emission-shaping layer needs (severity,
++  // fail_closed, nudge_rank) alongside the text, so `shapeEmissions` decides
++  // from declarations rather than re-reading the manifest. Ids and integers
++  // only — the free-form half stays `text`, and nothing here is written to disk.
++  const concern_messages: Array<{
++    rc: number;
++    text: string;
++    concern: string;
++    severity: string;
++    failClosed: boolean;
++    nudgeRank: number | null;
++  }> = [];
+   // Per-concern `tools:` filter (see _concern_matches_tool). Applied here so it
+   // is one place, after the envelope exists and before any concern is spawned.
+   const tool_name = _payload_tool_name(envelope);
+@@ -1355,7 +1404,15 @@ export function main(argv?: string[]): number {
+         : "";
+     const message = [stated, extra].filter(Boolean).join("\n\n");
+     if (message) {
+-      concern_messages.push({ rc, text: message });
++      const rawRank = concern["nudge_rank"];
++      concern_messages.push({
++        rc,
++        text: message,
++        concern: String(concern["name"]),
++        severity: String(concern["severity"] ?? ""),
++        failClosed: Boolean(concern["fail_closed"]),
++        nudgeRank: typeof rawRank === "number" ? rawRank : null,
++      });
+     }
+     if (
+       args.event === "session_start" &&
+@@ -1400,8 +1457,63 @@ export function main(argv?: string[]): number {
+   // disagree: on Claude Code exit 1 does not block and exit 2 does, which
+   // inverted every verdict (see host_semantics.ts for the documented mapping).
+   // Unverified platforms keep the legacy pass-through byte-for-byte.
++  // Emission shaping (road-to-standing-context-40k Phase 4). Two policies —
++  // at most one nudge-class advisory per slot, then the per-turn byte ceiling —
++  // decide which of the collected messages actually leave. Blocking and
++  // fail_closed concerns are exempt by construction, so this can only ever
++  // remove advisory noise. See injection_budget.ts for the ordering rationale.
++  const workspace_root_for_budget = String(
++    envelope["workspace_root"] || process.cwd(),
++  );
++  const budget_cap = _per_turn_cap(workspace_root_for_budget, args.event);
++  const spent_before =
++    budget_cap === null
++      ? 0
++      : readTurnSpend(workspace_root_for_budget, session_id);
++  const shaped = shapeEmissions(
++    concern_messages.map((m) => ({
++      concern: m.concern,
++      severity: m.severity,
++      failClosed: m.failClosed,
++      rc: m.rc,
++      bytes: Buffer.byteLength(m.text, "utf-8"),
++      nudgeRank: m.nudgeRank,
++    })),
++    { capBytes: budget_cap, spentBytes: spent_before },
++  );
++  for (const drop of shaped.dropped) {
++    log_dispatch_issue(
++      workspace_root_for_budget,
++      drop.concern,
++      drop.reason === "nudge_interference"
++        ? "nudge_interference_drop"
++        : "injection_budget_drop",
++      drop.detail,
++      "src/config/hook-token-budget.json § per_turn_aggregate_bytes",
++    );
++  }
++  if (shaped.ceilingExceeded) {
++    // Stated, never swallowed: the exempt set alone is over the ceiling, so the
++    // policy held its own contract (nothing safety-relevant dropped) and the
++    // ceiling did not hold. That is a budget finding, not a runtime failure.
++    process.stderr.write(
++      `dispatch_hook: per-turn injection ceiling exceeded by exempt concerns alone ` +
++        `(${String(spent_before + shaped.keptBytes)} B over ${String(budget_cap)} B) — ` +
++        `nothing dropped; the row is the decision surface ` +
++        `(src/config/hook-token-budget.json § per_turn_aggregate_bytes).\n`,
++    );
++  }
++  if (budget_cap !== null) {
++    recordTurnSpend(
++      workspace_root_for_budget,
++      session_id,
++      shaped.keptBytes,
++      { reset: args.event === "user_prompt_submit" },
++    );
++  }
++  const kept_concerns = new Set(shaped.kept);
+   const decidingReasons = concern_messages
+-    .filter((m) => m.rc === final_rc)
++    .filter((m) => m.rc === final_rc && kept_concerns.has(m.concern))
+     .map((m) => m.text);
+   const emission = emitFor(
+     args.platform,
+diff --git a/src/scripts/hooks/dispatch_issues.ts b/src/scripts/hooks/dispatch_issues.ts
+index 893b9571b59f3c3a29ff93acddf1cc6ed8ec2da9..db36d26bff06608b7f44d00e4d51593eea588365 100644
+--- a/src/scripts/hooks/dispatch_issues.ts
++++ b/src/scripts/hooks/dispatch_issues.ts
+@@ -42,6 +42,16 @@ export const VALID_ISSUE: ReadonlySet<string> = new Set([
+   "script_not_found",
+   "permission_denied",
+   "execution_failed",
++  // road-to-standing-context-40k Phase 4. The four codes above all mean "a
++  // concern tried to run and could not". These two mean the opposite — the
++  // concern ran, produced its line, and the DISPATCHER decided not to emit it.
++  // They share this log because it is already the place a reader looks to find
++  // out why an expected hook effect never appeared, and a suppressed advisory
++  // is exactly that question. The distinct codes keep the two classes
++  // separable: `hooks_doctor` surfaces the whole log, and a budget drop must
++  // not read as a broken hook.
++  "injection_budget_drop",
++  "nudge_interference_drop",
+ ]);
+ 
+ export interface DispatchIssueEntry {
+diff --git a/src/scripts/hooks/injection_budget.ts b/src/scripts/hooks/injection_budget.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..0255cb7d8e30c56165dbbf3a9b6b02f279910201
+--- /dev/null
++++ b/src/scripts/hooks/injection_budget.ts
+@@ -0,0 +1,303 @@
++/**
++ * Emission shaping — the dispatcher's outbound half of the injection budget.
++ *
++ * WHY THIS EXISTS (road-to-standing-context-40k, D-4 "Advisory injectors stack
++ * on the same slots", Phase 4 steps 4.1 and 4.2).
++ *
++ * `src/config/hook-token-budget.json` has registered per-concern and per-slot
++ * byte caps since road-to-token-economy-cache Phase 3, and
++ * `bench_hook_injection` reds the build on a breach. That is an AUTHORING-time
++ * control: it stops a new injector from growing the budget unnoticed. Nothing
++ * acted at RUNTIME — a live session that actually produced more bytes than the
++ * registered ceiling emitted all of them anyway, and two concerns whose triggers
++ * happen to overlap on one prompt both injected, because no layer had ever been
++ * asked which one the model should get.
++ *
++ * This module is that layer, and it is deliberately PURE: the dispatcher hands
++ * it a list of candidate emissions and gets back what to keep, what to drop, and
++ * why. Every branch is decidable from the arguments, so the paired negative
++ * fixtures can force each drop path without a hook, a host, or a session.
++ *
++ * TWO POLICIES, APPLIED IN THIS ORDER, AND THE ORDER MATTERS.
++ *
++ *   1. NUDGE EXCLUSIVITY (4.2). At most one nudge-class advisory leaves per
++ *      slot. Concerns opt in by carrying `nudge_rank: <n>` in the manifest;
++ *      the LOWEST rank wins and the rest are dropped. Measured on this tree
++ *      before the policy was written: the prompt
++ *      "Use when starting parallel work in isolation from the current branch —
++ *      spawn a git worktree … for src/a.ts, src/b.ts, src/c.ts and src/d.ts,
++ *      each independently" fires `delegation-nudge` AND `skill-route` together,
++ *      so the overlap the roadmap predicted is real rather than hypothetical.
++ *   2. BYTE BUDGET (4.1). Drop lowest-severity advisories until the per-turn
++ *      running total is under the registered ceiling.
++ *
++ * Exclusivity runs first because it is a RELEVANCE decision and the budget is a
++ * VOLUME one: dropping the redundant nudge may put the slot under the ceiling on
++ * its own, and a budget that had already evicted the more useful line by size
++ * would have made the relevance call by accident.
++ *
++ * WHAT CAN NEVER BE DROPPED, BY CONSTRUCTION. A concern is exempt when its
++ * manifest `severity` is anything other than `advisory`, or when it is
++ * `fail_closed`. Neither policy can therefore silence a safety-relevant warning
++ * — the failure that would make this module worse than the problem it solves.
++ * When the exempt set alone exceeds the ceiling, the ceiling is reported as
++ * exceeded and nothing is dropped: an honest overflow beats a quiet one.
++ *
++ * WHAT IS NOT CLAIMED. Dropping an advisory does not make the turn cheaper by
++ * the dropped byte count in any measured sense — nothing in this tree observes
++ * what the host does with an injected block. The claim is exactly the bounded
++ * one: what the dispatcher WRITES per turn now has a ceiling and a recorded
++ * reason for every line that did not survive it.
++ */
++
++import * as fs from "node:fs";
++import * as path from "node:path";
++
++/** Internal severity ladder, mirroring dispatch_hook's EXIT_* constants. */
++export const RC_ALLOW = 0;
++export const RC_BLOCK = 1;
++export const RC_WARN = 2;
++
++/** Why a candidate did not survive shaping. */
++export type DropReason = "nudge_interference" | "injection_budget";
++
++/** One concern's would-be emission, as the dispatcher already knows it. */
++export interface EmissionCandidate {
++    /** Manifest concern name — the id used in drop records. */
++    readonly concern: string;
++    /** Manifest `severity`. Anything but `advisory` is exempt. */
++    readonly severity: string;
++    /** Manifest `fail_closed`. True is exempt. */
++    readonly failClosed: boolean;
++    /** The concern's reduced exit code on the internal ladder. */
++    readonly rc: number;
++    /** Bytes this emission would contribute to the slot payload. */
++    readonly bytes: number;
++    /** Manifest `nudge_rank`; `null` when the concern is not nudge-class. */
++    readonly nudgeRank: number | null;
++}
++
++export interface EmissionDrop {
++    readonly concern: string;
++    readonly bytes: number;
++    readonly reason: DropReason;
++    /** One line, safe for a dispatch-issues `detail` field. Ids and counts only. */
++    readonly detail: string;
++}
++
++export interface ShapeResult {
++    /** Concern names that survive, in the input order. */
++    readonly kept: readonly string[];
++    readonly dropped: readonly EmissionDrop[];
++    /** Bytes the surviving set contributes. */
++    readonly keptBytes: number;
++    /**
++     * True when the ceiling is still exceeded after every droppable candidate
++     * was dropped — i.e. the exempt set alone is over. Never silent.
++     */
++    readonly ceilingExceeded: boolean;
++}
++
++export interface ShapeOptions {
++    /**
++     * Per-turn ceiling in bytes, or `null` to skip the budget policy entirely
++     * (the `session_start` case — a one-shot restore slot the roadmap excludes
++     * from the per-turn cap by name).
++     */
++    readonly capBytes: number | null;
++    /** Bytes already emitted earlier in the same turn. Defaults to 0. */
++    readonly spentBytes?: number;
++}
++
++/**
++ * Exempt from BOTH policies. Kept as its own predicate so a caller can assert
++ * the exemption directly rather than inferring it from a shaping outcome.
++ */
++export function isExempt(c: EmissionCandidate): boolean {
++    if (c.failClosed) return true;
++    return c.severity.trim().toLowerCase() !== "advisory";
++}
++
++/**
++ * Eviction order among droppable candidates, lowest-value first:
++ *
++ *   1. `rc` ascending — an advisory that returned ALLOW is a quieter signal
++ *      than one that returned WARN, so the ALLOW goes first. This is the
++ *      "lowest-severity advisories first" the step asks for, read against the
++ *      only severity axis a candidate actually varies on (manifest `severity`
++ *      is `advisory` for every droppable one by construction).
++ *   2. `bytes` DESCENDING — free the ceiling in the fewest drops. The
++ *      alternative (smallest first) keeps the biggest single line and loses
++ *      more distinct advisories; fewer-drops was chosen because each drop is a
++ *      whole advisory the model never sees, and the count is what the reader
++ *      of the dispatch-issues log has to reason about.
++ *   3. `concern` ascending — a total order, so two runs on one input never
++ *      disagree about which line survived.
++ */
++export function evictionOrder(
++    a: EmissionCandidate,
++    b: EmissionCandidate,
++): number {
++    if (a.rc !== b.rc) return a.rc - b.rc;
++    if (a.bytes !== b.bytes) return b.bytes - a.bytes;
++    return a.concern < b.concern ? -1 : a.concern > b.concern ? 1 : 0;
++}
++
++/**
++ * Nudge exclusivity: keep the lowest `nudge_rank`, drop every other nudge.
++ *
++ * Ties break on concern name so the winner is stable; a tie is a manifest
++ * defect rather than a runtime one, and `lint_hook_manifest` is where it should
++ * eventually be caught — that check does not exist yet and this comment is the
++ * honest statement of the gap, not a claim that it is covered.
++ */
++function _selectNudge(
++    candidates: readonly EmissionCandidate[],
++): { winner: string | null; losers: EmissionCandidate[] } {
++    const nudges = candidates.filter(
++        (c) => c.nudgeRank !== null && !isExempt(c),
++    );
++    if (nudges.length <= 1) return { winner: nudges[0]?.concern ?? null, losers: [] };
++    const sorted = [...nudges].sort((a, b) => {
++        const ra = a.nudgeRank as number;
++        const rb = b.nudgeRank as number;
++        if (ra !== rb) return ra - rb;
++        return a.concern < b.concern ? -1 : a.concern > b.concern ? 1 : 0;
++    });
++    const winner = sorted[0] as EmissionCandidate;
++    return { winner: winner.concern, losers: sorted.slice(1) };
++}
++
++/**
++ * Apply both policies and report what leaves.
++ *
++ * Total by construction: an empty candidate list, a `null` cap, or a cap the
++ * input is already under all resolve to "keep everything, drop nothing".
++ */
++export function shapeEmissions(
++    candidates: readonly EmissionCandidate[],
++    opts: ShapeOptions,
++): ShapeResult {
++    const dropped: EmissionDrop[] = [];
++    const droppedNames = new Set<string>();
++
++    // ── Policy 1: nudge exclusivity ──────────────────────────────────────────
++    const { winner, losers } = _selectNudge(candidates);
++    for (const l of losers) {
++        droppedNames.add(l.concern);
++        dropped.push({
++            concern: l.concern,
++            bytes: l.bytes,
++            reason: "nudge_interference",
++            detail:
++                `nudge-class advisory suppressed: '${String(winner)}' carries the lower ` +
++                `nudge_rank on this slot (${String(l.nudgeRank)} vs the winner's)`,
++        });
++    }
++
++    let survivors = candidates.filter((c) => !droppedNames.has(c.concern));
++    const total = (set: readonly EmissionCandidate[]): number =>
++        set.reduce((n, c) => n + c.bytes, 0);
++
++    // ── Policy 2: byte budget ────────────────────────────────────────────────
++    const spent = opts.spentBytes ?? 0;
++    let ceilingExceeded = false;
++    if (opts.capBytes !== null) {
++        const cap = opts.capBytes;
++        const droppable = survivors.filter((c) => !isExempt(c)).sort(evictionOrder);
++        for (const victim of droppable) {
++            if (spent + total(survivors) <= cap) break;
++            droppedNames.add(victim.concern);
++            dropped.push({
++                concern: victim.concern,
++                bytes: victim.bytes,
++                reason: "injection_budget",
++                detail:
++                    `advisory dropped to hold the per-turn injection ceiling ` +
++                    `(${String(cap)} B): ${String(spent + total(survivors))} B would have been emitted this turn`,
++            });
++            survivors = survivors.filter((c) => c.concern !== victim.concern);
++        }
++        ceilingExceeded = spent + total(survivors) > cap;
++    }
++
++    return {
++        kept: survivors.map((c) => c.concern),
++        dropped,
++        keptBytes: total(survivors),
++        ceilingExceeded,
++    };
++}
++
++// ─── Per-turn accounting ─────────────────────────────────────────────────────
++//
++// The ceiling is per TURN, and a turn spans several dispatches: one
++// `user_prompt_submit`, a `pre_tool_use`/`post_tool_use` pair per tool call,
++// and one `stop`. So the running total has to survive between processes, which
++// is what this small state file is for.
++//
++// It holds one session id and one integer. It has NO field capable of holding a
++// prompt, a file body, or an emitted line — the same PII-exclusion-by-
++// construction the telemetry and dispatch-issues surfaces use, applied here so
++// a byte counter can never quietly become a content log.
++
++/** The turn's running injection total. Counts only — never content. */
++export interface TurnSpend {
++    /** Session the count belongs to; a mismatch resets rather than accumulates. */
++    readonly session: string;
++    /** Bytes emitted so far in the current turn. */
++    readonly bytes: number;
++}
++
++export const TURN_SPEND_BASENAME = "injection-turn.json";
++
++export function turnSpendPath(workspaceRoot: string): string {
++    return path.join(workspaceRoot, "agents", "runtime", "state", TURN_SPEND_BASENAME);
++}
++
++/**
++ * Read the turn's spend so far. Returns 0 for a missing, unreadable, malformed,
++ * or foreign-session file — every failure resolves to "this turn has spent
++ * nothing", which under-counts rather than over-drops. An accounting error must
++ * never be the reason an advisory disappears.
++ */
++export function readTurnSpend(workspaceRoot: string, session: string): number {
++    try {
++        const raw = fs.readFileSync(turnSpendPath(workspaceRoot), "utf-8");
++        const parsed = JSON.parse(raw) as Partial<TurnSpend>;
++        if (parsed.session !== session) return 0;
++        return typeof parsed.bytes === "number" &&
++            Number.isFinite(parsed.bytes) &&
++            parsed.bytes >= 0
++            ? parsed.bytes
++            : 0;
++    } catch {
++        return 0;
++    }
++}
++
++/**
++ * Write the turn's spend. Best-effort and silent on failure — a counter that
++ * cannot be persisted degrades to per-dispatch enforcement, which is strictly
++ * weaker and never wrong in the dangerous direction.
++ *
++ * `reset` is passed on the slot that STARTS a turn (`user_prompt_submit`), so
++ * the count is bounded by one turn rather than growing across a session.
++ */
++export function recordTurnSpend(
++    workspaceRoot: string,
++    session: string,
++    bytes: number,
++    opts: { readonly reset?: boolean } = {},
++): void {
++    if (process.env["AGENT_CONFIG_REPLAY"] === "1") return;
++    const previous = opts.reset === true ? 0 : readTurnSpend(workspaceRoot, session);
++    const entry: TurnSpend = { session, bytes: previous + Math.max(0, bytes) };
++    try {
++        const target = turnSpendPath(workspaceRoot);
++        fs.mkdirSync(path.dirname(target), { recursive: true });
++        fs.writeFileSync(target, JSON.stringify(entry) + "\n", { encoding: "utf-8" });
++    } catch {
++        /* observability-adjacent bookkeeping never breaks the agent loop */
++    }
++}
+diff --git a/tests/eval/nudge-interference/prompts.yaml b/tests/eval/nudge-interference/prompts.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..099d3bbc82376802d150a1c2a209435aa1750ad8
+--- /dev/null
++++ b/tests/eval/nudge-interference/prompts.yaml
+@@ -0,0 +1,63 @@
++# Nudge-interference matrix (road-to-standing-context-40k Phase 4 step 4.2).
++#
++# Same discipline as tests/eval/orchestration-matrix/ and tests/eval/routing-matrix/:
++# positives AND pinned near-misses, executed against the REAL predicates —
++# `delegation_nudge_hook.classifyPrompt` and `skill_route_hook.routePointers` —
++# and then through the real `shapeEmissions` policy with the ranks read live
++# from `src/scripts/hook_manifest.yaml`.
++#
++# Each row carries TWO expectations and both matter:
++#
++#   `fires`   — which nudges WOULD fire on this prompt, before any policy. This
++#               is the measurement, and it is pinned so the corpus records the
++#               overlap rather than hiding it behind the fix. A row whose `fires`
++#               shrinks to one is a trigger change, which is a finding about the
++#               triggers and must not be absorbed silently by this file.
++#   `emitted` — which nudges leave after shaping. At most one, always. That is
++#               the assertion the step asks for.
++#
++# The `overlap: true` row is the paired negative in the sense the verify line
++# means: with the exclusivity policy removed it emits two, so it is the case that
++# forces a second nudge and fails.
++
++rows:
++  - name: overlap — worktree skill vocabulary PLUS four enumerated slices
++    # Measured 2026-08-19 before the policy existed: this exact prompt fires both.
++    # The first clause is `using-git-worktrees`' own description (ranker top-1 58,
++    # over the 31 floor); the trailing clause supplies four file tokens, over
++    # delegation-nudge's FILE_SIGNAL_FLOOR of 3.
++    prompt: >-
++      Use when starting parallel work in isolation from the current branch —
++      spawn a git worktree with ignore-safety checks and a clean test baseline
++      for src/a.ts, src/b.ts, src/c.ts and src/d.ts, each independently.
++    overlap: true
++    fires: [delegation-nudge, skill-route]
++    emitted: [delegation-nudge]
++
++  - name: near-miss — skill vocabulary alone carries no delegation signal
++    prompt: >-
++      Use when starting parallel work in isolation from the current branch —
++      spawn a git worktree with ignore-safety checks and a clean test baseline
++    overlap: false
++    fires: [skill-route]
++    emitted: [skill-route]
++
++  - name: near-miss — four slices whose vocabulary never clears the ranker floor
++    prompt: >-
++      Refactor src/a.ts, src/b.ts, src/c.ts and src/d.ts to use the new logger,
++      each file independently.
++    overlap: false
++    fires: [delegation-nudge]
++    emitted: [delegation-nudge]
++
++  - name: near-miss — a trivial prompt fires neither
++    prompt: fix typo
++    overlap: false
++    fires: []
++    emitted: []
++
++  - name: near-miss — a bounded question fires neither carrier
++    prompt: Why does the council report a quorum it never reached?
++    overlap: false
++    fires: []
++    emitted: []
+diff --git a/tests/hooks/injection_budget_dispatch.test.ts b/tests/hooks/injection_budget_dispatch.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..4e0c66c68871754f2089cf7276d45b5ed08e9bbf
+--- /dev/null
++++ b/tests/hooks/injection_budget_dispatch.test.ts
+@@ -0,0 +1,176 @@
++/**
++ * End-to-end emission shaping through the REAL dispatcher
++ * (road-to-standing-context-40k Phase 4, steps 4.1 + 4.2).
++ *
++ * `tests/scripts/hooks/injection_budget.test.ts` unit-tests the policy and
++ * `tests/scripts/nudge_interference.test.ts` pins the corpus. Neither proves the
++ * layer is WIRED — a policy defined but never reached is the "defined but not
++ * wired" failure this repo's own discipline calls not-done. So this file runs
++ * the production no-bundle path (`dispatch_entry.ts` via tsx, the same shape
++ * host_semantics_dispatch.test.ts uses) against the SHIPPED manifest, on the
++ * prompt measured to fire both nudges, and asserts:
++ *
++ *   - exactly one nudge line reaches stdout;
++ *   - it is the one the manifest ranks first;
++ *   - the suppression is RECORDED in dispatch-issues.jsonl, so a reader who
++ *     wonders where the other line went can find out.
++ *
++ * The skills catalogue is a two-entry fixture under the temp workspace rather
++ * than the real tree: the ranker's score is then a property of this file, and a
++ * future edit to a shipped SKILL.md cannot silently drop the co-fire this test
++ * exists to reproduce.
++ */
++import { spawnSync } from "node:child_process";
++import * as fs from "node:fs";
++import * as os from "node:os";
++import * as path from "node:path";
++
++import { afterEach, describe, expect, it } from "vitest";
++
++const REPO_ROOT = path.resolve(__dirname, "..", "..");
++const ENTRY = path.join(REPO_ROOT, "src", "scripts", "hooks", "dispatch_entry.ts");
++const TSX_BIN = path.join(
++    REPO_ROOT,
++    "node_modules",
++    ".bin",
++    process.platform === "win32" ? "tsx.cmd" : "tsx",
++);
++
++// The measured co-fire prompt. First clause is `using-git-worktrees`' own
++// description (clears skill-route's 31/100 floor); the trailing clause carries
++// four file tokens (clears delegation-nudge's FILE_SIGNAL_FLOOR of 3).
++const CO_FIRE_PROMPT =
++    "Use when starting parallel work in isolation from the current branch — " +
++    "spawn a git worktree with ignore-safety checks and a clean test baseline " +
++    "for src/a.ts, src/b.ts, src/c.ts and src/d.ts, each independently.";
++
++const tmpDirs: string[] = [];
++
++function workspace(): string {
++    const d = fs.mkdtempSync(path.join(os.tmpdir(), "injection-dispatch-"));
++    tmpDirs.push(d);
++    const skills = path.join(d, ".claude", "skills");
++    fs.mkdirSync(path.join(skills, "using-git-worktrees"), { recursive: true });
++    fs.writeFileSync(
++        path.join(skills, "using-git-worktrees", "SKILL.md"),
++        // ONE physical line, deliberately. A folded multi-line `description:`
++        // reads as its first line only through the catalogue loader, which
++        // silently halves the ranker's score — the first version of this fixture
++        // did exactly that and the co-fire it exists to reproduce never fired.
++        [
++            "---",
++            "name: using-git-worktrees",
++            "description: Use when starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'.",
++            "---",
++            "",
++            "# Using git worktrees",
++            "",
++        ].join("\n"),
++    );
++    // A second entry so the catalogue is a ranking rather than a single row.
++    fs.mkdirSync(path.join(skills, "docx-authoring"), { recursive: true });
++    fs.writeFileSync(
++        path.join(skills, "docx-authoring", "SKILL.md"),
++        ["---", "name: docx-authoring", "description: Author Word documents.", "---", ""].join("\n"),
++    );
++    return d;
++}
++
++function dispatchPrompt(ws: string, prompt: string): { status: number | null; stdout: string; stderr: string } {
++    const payload = JSON.stringify({
++        session_id: "injection-budget-dispatch-test",
++        cwd: ws,
++        hook_event_name: "UserPromptSubmit",
++        prompt,
++    });
++    const r = spawnSync(
++        TSX_BIN,
++        [ENTRY, "--platform", "claude", "--event", "user_prompt_submit", "--project-dir", ws],
++        {
++            encoding: "utf-8",
++            input: payload,
++            cwd: ws,
++            env: {
++                ...process.env,
++                // Real run, not replay: the drop record and the turn counter are
++                // both state writes and replay skips them by contract.
++                AGENT_CONFIG_REPLAY: "",
++                AGENT_CONFIG_SESSION_ROLE: "",
++            },
++        },
++    );
++    return { status: r.status, stdout: r.stdout ?? "", stderr: r.stderr ?? "" };
++}
++
++function dispatchIssues(ws: string): Record<string, string>[] {
++    const log = path.join(ws, "agents", "runtime", "state", "dispatch-issues.jsonl");
++    if (!fs.existsSync(log)) return [];
++    return fs
++        .readFileSync(log, "utf-8")
++        .split("\n")
++        .filter((l) => l.trim() !== "")
++        .map((l) => JSON.parse(l) as Record<string, string>);
++}
++
++afterEach(() => {
++    while (tmpDirs.length > 0) {
++        const d = tmpDirs.pop();
++        if (d) fs.rmSync(d, { recursive: true, force: true });
++    }
++});
++
++describe("emission shaping through the real dispatcher", () => {
++    it("emits the higher-ranked nudge only, and records the suppression", () => {
++        const ws = workspace();
++        const r = dispatchPrompt(ws, CO_FIRE_PROMPT);
++
++        // UserPromptSubmit is advisory here — the turn must proceed.
++        expect(r.status).toBe(0);
++
++        const out = r.stdout;
++        expect(out).toContain("<delegation-nudge>");
++        expect(out).not.toContain("<skill-route>");
++
++        const drops = dispatchIssues(ws).filter(
++            (e) => e["issue"] === "nudge_interference_drop",
++        );
++        expect(drops).toHaveLength(1);
++        expect(drops[0]?.["hook"]).toBe("skill-route");
++        expect(drops[0]?.["detail"]).toContain("delegation-nudge");
++        // The record points at the row that owns the decision, not at a fix-hint
++        // for a broken hook — this is a policy outcome, not a failure.
++        expect(drops[0]?.["resolution"]).toContain("per_turn_aggregate_bytes");
++    });
++
++    it("near-miss — a skill-only prompt keeps skill-route and records nothing", () => {
++        const ws = workspace();
++        // Same first clause, no file tokens: delegation-nudge stays silent, so
++        // skill-route is a single nudge and must survive untouched.
++        const r = dispatchPrompt(
++            ws,
++            "Use when starting parallel work in isolation from the current branch — " +
++                "spawn a git worktree with ignore-safety checks and a clean test baseline",
++        );
++        expect(r.status).toBe(0);
++        expect(r.stdout).toContain("<skill-route>");
++        expect(r.stdout).not.toContain("<delegation-nudge>");
++        expect(dispatchIssues(ws).filter((e) => e["issue"].endsWith("_drop"))).toEqual([]);
++    });
++
++    it("writes a counts-only turn counter and resets it on the turn-start slot", () => {
++        const ws = workspace();
++        dispatchPrompt(ws, CO_FIRE_PROMPT);
++        const counter = path.join(ws, "agents", "runtime", "state", "injection-turn.json");
++        expect(fs.existsSync(counter)).toBe(true);
++        const parsed = JSON.parse(fs.readFileSync(counter, "utf-8")) as Record<string, unknown>;
++        expect(Object.keys(parsed).sort()).toEqual(["bytes", "session"]);
++        expect(parsed["bytes"]).toBeTypeOf("number");
++        const first = parsed["bytes"] as number;
++        expect(first).toBeGreaterThan(0);
++
++        // user_prompt_submit STARTS a turn, so a second prompt must not accumulate.
++        dispatchPrompt(ws, CO_FIRE_PROMPT);
++        const again = JSON.parse(fs.readFileSync(counter, "utf-8")) as Record<string, unknown>;
++        expect(again["bytes"]).toBe(first);
++    });
++});
+diff --git a/tests/scripts/bench_hook_injection_aggregate.test.ts b/tests/scripts/bench_hook_injection_aggregate.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..7a8165e264b8d03573bfe370954a72466acbb285
+--- /dev/null
++++ b/tests/scripts/bench_hook_injection_aggregate.test.ts
+@@ -0,0 +1,132 @@
++// Per-turn injection aggregate (road-to-standing-context-40k Phase 4 step 4.1).
++//
++// The load-bearing case is the UNRESOLVED one: a composite derived over a subset
++// of its counted slots reads LOW, and low is the direction that makes a ceiling
++// look met. The latency twin's `perTurnComposite` returns null for exactly this
++// reason; this asserts the injection half behaves the same way.
++import * as fs from "node:fs";
++import * as path from "node:path";
++
++import { describe, expect, it } from "vitest";
++
++import { perTurnAggregate } from "../../src/scripts/bench_hook_injection.js";
++
++const CONFIG = path.resolve(
++  __dirname,
++  "..",
++  "..",
++  "src",
++  "config",
++  "hook-token-budget.json",
++);
++
++const cfg = {
++  tool_calls: 10,
++  slots_counted: ["user_prompt_submit", "pre_tool_use", "post_tool_use", "stop"],
++  ceiling_bytes: 47104,
++  gate_on_ceiling: false,
++};
++
++function sums(over: Record<string, number>): Record<string, { bytes: number }> {
++  const base: Record<string, number> = {
++    user_prompt_submit: 0,
++    pre_tool_use: 0,
++    post_tool_use: 0,
++    stop: 0,
++  };
++  const merged = { ...base, ...over };
++  return Object.fromEntries(
++    Object.entries(merged).map(([k, v]) => [k, { bytes: v }]),
++  );
++}
++
++describe("perTurnAggregate", () => {
++  it("returns null when the budget carries no row", () => {
++    expect(perTurnAggregate(sums({}), undefined)).toBeNull();
++  });
++
++  it("multiplies the per-call slots by tool_calls and adds the once-per-turn ones", () => {
++    const agg = perTurnAggregate(
++      sums({ user_prompt_submit: 900, pre_tool_use: 100, post_tool_use: 50, stop: 200 }),
++      cfg,
++    );
++    // 900 + (100 + 50) * 10 + 200
++    expect(agg?.bytes).toBe(2600);
++  });
++
++  it("does not multiply user_prompt_submit or stop", () => {
++    const agg = perTurnAggregate(sums({ user_prompt_submit: 1000, stop: 1000 }), cfg);
++    expect(agg?.bytes).toBe(2000);
++  });
++
++  it("reads UNRESOLVED, not a low number, when a counted slot produced nothing", () => {
++    const partial: Record<string, { bytes: number }> = {
++      user_prompt_submit: { bytes: 900 },
++      pre_tool_use: { bytes: 100 },
++      stop: { bytes: 200 },
++      // post_tool_use absent — the slot never ran.
++    };
++    const agg = perTurnAggregate(partial, cfg);
++    expect(agg?.bytes).toBeNull();
++    expect(agg?.unresolved).toBe("post_tool_use");
++    expect(agg?.breach).toBe(false);
++  });
++
++  it("does not breach while the row is unarmed, even over the ceiling", () => {
++    const agg = perTurnAggregate(sums({ user_prompt_submit: 999_999 }), cfg);
++    expect(agg?.bytes).toBe(999_999);
++    expect(agg?.gated).toBe(false);
++    expect(agg?.breach).toBe(false);
++  });
++
++  it("breaches once the row is armed and the reading is over", () => {
++    const armed = { ...cfg, gate_on_ceiling: true };
++    expect(perTurnAggregate(sums({ user_prompt_submit: 999_999 }), armed)?.breach).toBe(true);
++    expect(perTurnAggregate(sums({ user_prompt_submit: 100 }), armed)?.breach).toBe(false);
++  });
++});
++
++describe("the committed row", () => {
++  const row = (
++    JSON.parse(fs.readFileSync(CONFIG, "utf-8")) as {
++      per_turn_aggregate_bytes?: Record<string, unknown>;
++      per_slot_sum_caps_bytes: Record<string, number | string>;
++    }
++  );
++
++  it("exists and carries an owner and a review date", () => {
++    const r = row.per_turn_aggregate_bytes;
++    expect(r).toBeDefined();
++    expect(r?.["owner"]).toBeTypeOf("string");
++    expect(r?.["review_by"]).toBeTypeOf("string");
++  });
++
++  it("excludes session_start by name — the step's own carve-out", () => {
++    expect(row.per_turn_aggregate_bytes?.["excluded_slots"]).toContain("session_start");
++  });
++
++  it("derives its ceiling from the per-slot rows rather than inventing a number", () => {
++    const slot = (k: string): number => {
++      const v = row.per_slot_sum_caps_bytes[k];
++      return typeof v === "number" ? v : 0;
++    };
++    const r = row.per_turn_aggregate_bytes as { tool_calls: number; ceiling_bytes: number };
++    const derived =
++      slot("user_prompt_submit") +
++      (slot("pre_tool_use") + slot("post_tool_use")) * r.tool_calls +
++      slot("stop");
++    expect(r.ceiling_bytes).toBe(derived);
++  });
++
++  it("shares its tool_calls definition with the latency twin", () => {
++    const latency = JSON.parse(
++      fs.readFileSync(
++        path.resolve(__dirname, "..", "..", "src", "config", "hook-latency-budget.json"),
++        "utf-8",
++      ),
++    ) as { per_turn_composite?: { tool_calls?: number } };
++    const twin = latency.per_turn_composite?.tool_calls;
++    if (twin === undefined) return; // twin row absent — nothing to compare against
++    expect(row.per_turn_aggregate_bytes?.["tool_calls"]).toBe(twin);
++  });
++});
+diff --git a/tests/scripts/hooks/dispatch_issues.test.ts b/tests/scripts/hooks/dispatch_issues.test.ts
+index 1d7a10736551201d2afb5457c71dabf28dd9b773..f556c255e744932c53bdf3073de0c989da15027e 100644
+--- a/tests/scripts/hooks/dispatch_issues.test.ts
++++ b/tests/scripts/hooks/dispatch_issues.test.ts
+@@ -35,10 +35,16 @@ afterEach(() => {
+ const LOG_REL = path.join('agents', 'runtime', 'state', 'dispatch-issues.jsonl');
+ 
+ describe('dispatch_issues — constants', () => {
++    // The four concern-failure codes are the Council-R3 schema; the two
++    // suppression codes were added by road-to-standing-context-40k Phase 4, when
++    // the dispatcher gained a reason to record a line it decided NOT to emit.
++    // Both halves are pinned so a future addition is a deliberate edit here.
+     it('cap is 200 and VALID_ISSUE matches the schema', () => {
+         expect(LOG_CAP).toBe(200);
+         expect([...VALID_ISSUE].sort()).toEqual([
+             'execution_failed',
++            'injection_budget_drop',
++            'nudge_interference_drop',
+             'permission_denied',
+             'prerequisite_missing',
+             'script_not_found',
+diff --git a/tests/scripts/hooks/injection_budget.test.ts b/tests/scripts/hooks/injection_budget.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..585c2cf4b8be36b3e1669870856eefa7fa3772f5
+--- /dev/null
++++ b/tests/scripts/hooks/injection_budget.test.ts
+@@ -0,0 +1,276 @@
++// Emission-shaping policy tests (road-to-standing-context-40k Phase 4).
++//
++// Every case here is a PAIRED fixture: a positive that must drop and a
++// near-miss that must not. A shaping layer whose job is to delete output is
++// only trustworthy if the not-dropping half is pinned as hard as the dropping
++// half — the dangerous failure is a silenced safety warning, not a surviving
++// advisory.
++import * as fs from "node:fs";
++import * as os from "node:os";
++import * as path from "node:path";
++
++import { afterEach, beforeEach, describe, expect, it } from "vitest";
++
++import {
++  RC_ALLOW,
++  RC_WARN,
++  evictionOrder,
++  isExempt,
++  readTurnSpend,
++  recordTurnSpend,
++  shapeEmissions,
++  turnSpendPath,
++  type EmissionCandidate,
++} from "../../../src/scripts/hooks/injection_budget.js";
++
++function candidate(over: Partial<EmissionCandidate> = {}): EmissionCandidate {
++  return {
++    concern: "some-advisory",
++    severity: "advisory",
++    failClosed: false,
++    rc: RC_ALLOW,
++    bytes: 100,
++    nudgeRank: null,
++    ...over,
++  };
++}
++
++describe("isExempt", () => {
++  it("exempts a blocking concern", () => {
++    expect(isExempt(candidate({ severity: "blocking" }))).toBe(true);
++  });
++
++  it("exempts a fail_closed concern even when it declares advisory", () => {
++    expect(isExempt(candidate({ severity: "advisory", failClosed: true }))).toBe(true);
++  });
++
++  it("does not exempt a plain advisory — the near-miss", () => {
++    expect(isExempt(candidate())).toBe(false);
++  });
++
++  it("treats severity case-insensitively and ignores surrounding space", () => {
++    expect(isExempt(candidate({ severity: " BLOCKING " }))).toBe(true);
++    expect(isExempt(candidate({ severity: " advisory " }))).toBe(false);
++  });
++});
++
++describe("nudge exclusivity", () => {
++  it("keeps the lowest nudge_rank and drops the rest", () => {
++    const result = shapeEmissions(
++      [
++        candidate({ concern: "skill-route", nudgeRank: 2, bytes: 300 }),
++        candidate({ concern: "delegation-nudge", nudgeRank: 1, bytes: 400 }),
++      ],
++      { capBytes: null },
++    );
++    expect(result.kept).toEqual(["delegation-nudge"]);
++    expect(result.dropped).toHaveLength(1);
++    expect(result.dropped[0]?.concern).toBe("skill-route");
++    expect(result.dropped[0]?.reason).toBe("nudge_interference");
++  });
++
++  it("near-miss — a single nudge is never suppressed", () => {
++    const result = shapeEmissions(
++      [candidate({ concern: "skill-route", nudgeRank: 2 })],
++      { capBytes: null },
++    );
++    expect(result.kept).toEqual(["skill-route"]);
++    expect(result.dropped).toEqual([]);
++  });
++
++  it("near-miss — unranked advisories are not nudge-class and coexist freely", () => {
++    const result = shapeEmissions(
++      [
++        candidate({ concern: "language-mirror" }),
++        candidate({ concern: "session-canary" }),
++      ],
++      { capBytes: null },
++    );
++    expect(result.kept).toEqual(["language-mirror", "session-canary"]);
++    expect(result.dropped).toEqual([]);
++  });
++
++  it("never suppresses an exempt concern that happens to carry a rank", () => {
++    const result = shapeEmissions(
++      [
++        candidate({ concern: "guard", nudgeRank: 1, severity: "blocking" }),
++        candidate({ concern: "advisory-nudge", nudgeRank: 2 }),
++      ],
++      { capBytes: null },
++    );
++    // The guard is out of the policy's population entirely, so the remaining
++    // nudge is a single nudge and survives.
++    expect(result.kept).toEqual(["guard", "advisory-nudge"]);
++    expect(result.dropped).toEqual([]);
++  });
++
++  it("breaks a rank tie deterministically on concern name", () => {
++    const forward = shapeEmissions(
++      [
++        candidate({ concern: "zulu", nudgeRank: 1 }),
++        candidate({ concern: "alpha", nudgeRank: 1 }),
++      ],
++      { capBytes: null },
++    );
++    const reversed = shapeEmissions(
++      [
++        candidate({ concern: "alpha", nudgeRank: 1 }),
++        candidate({ concern: "zulu", nudgeRank: 1 }),
++      ],
++      { capBytes: null },
++    );
++    expect(forward.kept).toEqual(["alpha"]);
++    expect(reversed.kept).toEqual(["alpha"]);
++  });
++});
++
++describe("byte budget", () => {
++  it("drops nothing when the input is already under the ceiling", () => {
++    const result = shapeEmissions([candidate({ bytes: 100 })], { capBytes: 1000 });
++    expect(result.dropped).toEqual([]);
++    expect(result.keptBytes).toBe(100);
++    expect(result.ceilingExceeded).toBe(false);
++  });
++
++  it("drops the ALLOW advisory before the WARN one", () => {
++    const result = shapeEmissions(
++      [
++        candidate({ concern: "warned", rc: RC_WARN, bytes: 600 }),
++        candidate({ concern: "quiet", rc: RC_ALLOW, bytes: 600 }),
++      ],
++      { capBytes: 700 },
++    );
++    expect(result.dropped.map((d) => d.concern)).toEqual(["quiet"]);
++    expect(result.kept).toEqual(["warned"]);
++    expect(result.dropped[0]?.reason).toBe("injection_budget");
++  });
++
++  it("frees the ceiling in the fewest drops — largest first within one rc", () => {
++    const result = shapeEmissions(
++      [
++        candidate({ concern: "small", bytes: 100 }),
++        candidate({ concern: "large", bytes: 900 }),
++      ],
++      { capBytes: 500 },
++    );
++    expect(result.dropped.map((d) => d.concern)).toEqual(["large"]);
++    expect(result.kept).toEqual(["small"]);
++  });
++
++  it("counts bytes already spent earlier in the same turn", () => {
++    const under = shapeEmissions([candidate({ bytes: 400 })], { capBytes: 1000 });
++    expect(under.dropped).toEqual([]);
++    const over = shapeEmissions([candidate({ bytes: 400 })], {
++      capBytes: 1000,
++      spentBytes: 900,
++    });
++    expect(over.dropped).toHaveLength(1);
++  });
++
++  it("never drops an exempt concern, and reports the overflow instead", () => {
++    const result = shapeEmissions(
++      [
++        candidate({ concern: "guard", severity: "blocking", bytes: 5000 }),
++        candidate({ concern: "noise", bytes: 200 }),
++      ],
++      { capBytes: 1000 },
++    );
++    expect(result.kept).toContain("guard");
++    expect(result.dropped.map((d) => d.concern)).toEqual(["noise"]);
++    expect(result.ceilingExceeded).toBe(true);
++  });
++
++  it("skips the budget entirely when the cap is null (the session_start case)", () => {
++    const result = shapeEmissions(
++      [candidate({ bytes: 99999 }), candidate({ concern: "other", bytes: 99999 })],
++      { capBytes: null },
++    );
++    expect(result.dropped).toEqual([]);
++    expect(result.ceilingExceeded).toBe(false);
++  });
++
++  it("applies exclusivity before the budget, so the surviving nudge is the ranked one", () => {
++    // Without exclusivity-first, the 900-byte rank-1 nudge would be the budget's
++    // first victim and the policy would have made the relevance call by size.
++    const result = shapeEmissions(
++      [
++        candidate({ concern: "delegation-nudge", nudgeRank: 1, bytes: 900 }),
++        candidate({ concern: "skill-route", nudgeRank: 2, bytes: 100 }),
++      ],
++      { capBytes: 1000 },
++    );
++    expect(result.kept).toEqual(["delegation-nudge"]);
++    expect(result.dropped.map((d) => d.reason)).toEqual(["nudge_interference"]);
++  });
++});
++
++describe("evictionOrder", () => {
++  it("is a total order — rc, then bytes descending, then name", () => {
++    const sorted = [
++      candidate({ concern: "b", rc: RC_WARN, bytes: 100 }),
++      candidate({ concern: "a", rc: RC_ALLOW, bytes: 100 }),
++      candidate({ concern: "c", rc: RC_ALLOW, bytes: 900 }),
++    ].sort(evictionOrder);
++    expect(sorted.map((c) => c.concern)).toEqual(["c", "a", "b"]);
++  });
++});
++
++describe("turn spend accounting", () => {
++  let root: string;
++  const session = "sess-1";
++
++  beforeEach(() => {
++    root = fs.mkdtempSync(path.join(os.tmpdir(), "injection-turn-"));
++    delete process.env["AGENT_CONFIG_REPLAY"];
++  });
++  afterEach(() => {
++    fs.rmSync(root, { recursive: true, force: true });
++    delete process.env["AGENT_CONFIG_REPLAY"];
++  });
++
++  it("returns 0 for a missing file", () => {
++    expect(readTurnSpend(root, session)).toBe(0);
++  });
++
++  it("accumulates within one session and resets on request", () => {
++    recordTurnSpend(root, session, 100);
++    recordTurnSpend(root, session, 250);
++    expect(readTurnSpend(root, session)).toBe(350);
++    recordTurnSpend(root, session, 50, { reset: true });
++    expect(readTurnSpend(root, session)).toBe(50);
++  });
++
++  it("does not carry a count across sessions", () => {
++    recordTurnSpend(root, session, 400);
++    expect(readTurnSpend(root, "other-session")).toBe(0);
++  });
++
++  it("returns 0 for a malformed file rather than throwing", () => {
++    fs.mkdirSync(path.dirname(turnSpendPath(root)), { recursive: true });
++    fs.writeFileSync(turnSpendPath(root), "not json at all");
++    expect(readTurnSpend(root, session)).toBe(0);
++  });
++
++  it("returns 0 for a negative or non-numeric byte count", () => {
++    fs.mkdirSync(path.dirname(turnSpendPath(root)), { recursive: true });
++    fs.writeFileSync(turnSpendPath(root), JSON.stringify({ session, bytes: -5 }));
++    expect(readTurnSpend(root, session)).toBe(0);
++    fs.writeFileSync(turnSpendPath(root), JSON.stringify({ session, bytes: "40" }));
++    expect(readTurnSpend(root, session)).toBe(0);
++  });
++
++  it("writes nothing under replay — fixture runs never mutate state", () => {
++    process.env["AGENT_CONFIG_REPLAY"] = "1";
++    recordTurnSpend(root, session, 500);
++    expect(fs.existsSync(turnSpendPath(root))).toBe(false);
++  });
++
++  it("carries no field capable of holding content", () => {
++    recordTurnSpend(root, session, 120);
++    const parsed = JSON.parse(fs.readFileSync(turnSpendPath(root), "utf-8")) as Record<
++      string,
++      unknown
++    >;
++    expect(Object.keys(parsed).sort()).toEqual(["bytes", "session"]);
++  });
++});
+diff --git a/tests/scripts/nudge_interference.test.ts b/tests/scripts/nudge_interference.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..94e88347d28e1d15217a1d8b37ef5685a0d4a96f
+--- /dev/null
++++ b/tests/scripts/nudge_interference.test.ts
+@@ -0,0 +1,128 @@
++// Nudge-interference matrix runner (road-to-standing-context-40k Phase 4 step
++// 4.2). Executes tests/eval/nudge-interference/prompts.yaml against the REAL
++// nudge predicates and the REAL shaping policy, with the `nudge_rank` values
++// read live from the manifest so the corpus and the manifest cannot drift.
++//
++// The invariant: for every prompt class, AT MOST ONE nudge-class advisory
++// leaves. The corpus additionally pins the pre-policy fire set, so a trigger
++// change shows up as a corpus failure rather than being absorbed by the fix.
++import * as fs from "node:fs";
++import * as path from "node:path";
++
++import { afterAll, beforeAll, describe, expect, it } from "vitest";
++import { parse as parseYaml } from "yaml";
++
++import { classifyPrompt } from "../../src/scripts/hooks/delegation_nudge_hook.js";
++import {
++  RC_ALLOW,
++  shapeEmissions,
++  type EmissionCandidate,
++} from "../../src/scripts/hooks/injection_budget.js";
++import { routePointers } from "../../src/scripts/hooks/skill_route_hook.js";
++
++const REPO_ROOT = path.resolve(__dirname, "..", "..");
++const FIXTURE = path.join(REPO_ROOT, "tests", "eval", "nudge-interference", "prompts.yaml");
++const MANIFEST = path.join(REPO_ROOT, "src", "scripts", "hook_manifest.yaml");
++const SKILLS_DIR = path.join(REPO_ROOT, "src", "skills");
++
++interface Row {
++  name: string;
++  prompt: string;
++  overlap: boolean;
++  fires: string[];
++  emitted: string[];
++}
++
++/** `nudge_rank` per concern, read from the manifest — never hardcoded here. */
++function manifestRanks(): Record<string, number> {
++  const parsed = parseYaml(fs.readFileSync(MANIFEST, "utf-8"), { version: "1.1" }) as {
++    concerns?: Record<string, { nudge_rank?: unknown }>;
++  };
++  const out: Record<string, number> = {};
++  for (const [name, body] of Object.entries(parsed.concerns ?? {})) {
++    if (typeof body?.nudge_rank === "number") out[name] = body.nudge_rank;
++  }
++  return out;
++}
++
++/** Which nudges would fire on this prompt, before any policy. */
++function firingNudges(prompt: string): string[] {
++  const out: string[] = [];
++  if (classifyPrompt(prompt, REPO_ROOT, "claude") !== null) out.push("delegation-nudge");
++  if (routePointers(prompt, SKILLS_DIR).length > 0) out.push("skill-route");
++  return out;
++}
++
++function asCandidates(
++  names: readonly string[],
++  ranks: Record<string, number>,
++): EmissionCandidate[] {
++  return names.map((concern) => ({
++    concern,
++    severity: "advisory",
++    failClosed: false,
++    rc: RC_ALLOW,
++    // A representative advisory line; the policy under test here is
++    // exclusivity, and the byte cap is switched off below so size is inert.
++    bytes: 400,
++    nudgeRank: ranks[concern] ?? null,
++  }));
++}
++
++const rows = (parseYaml(fs.readFileSync(FIXTURE, "utf-8")) as { rows: Row[] }).rows;
++const ranks = manifestRanks();
++
++let savedRole: string | undefined;
++beforeAll(() => {
++  // `delegation_nudge_hook` silences itself inside a worker/reviewer session.
++  // A suite inheriting that marker would measure silence and call it a
++  // near-miss, so the variable is cleared for the duration of this file.
++  savedRole = process.env["AGENT_CONFIG_SESSION_ROLE"];
++  delete process.env["AGENT_CONFIG_SESSION_ROLE"];
++});
++afterAll(() => {
++  if (savedRole === undefined) delete process.env["AGENT_CONFIG_SESSION_ROLE"];
++  else process.env["AGENT_CONFIG_SESSION_ROLE"] = savedRole;
++});
++
++describe("nudge-interference corpus", () => {
++  it("is non-empty and carries at least one measured overlap", () => {
++    // Dead-scope guard: a corpus that asserts exclusivity over zero overlapping
++    // rows exits green over nothing at all, which is the recorded false-green
++    // class this repo gates against.
++    expect(rows.length).toBeGreaterThan(0);
++    expect(rows.some((r) => r.overlap)).toBe(true);
++  });
++
++  it("reads both nudge ranks from the manifest", () => {
++    expect(ranks["delegation-nudge"]).toBeTypeOf("number");
++    expect(ranks["skill-route"]).toBeTypeOf("number");
++  });
++
++  for (const row of rows) {
++    it(`${row.name} — fire set is as measured`, () => {
++      expect(firingNudges(row.prompt)).toEqual(row.fires);
++    });
++
++    it(`${row.name} — at most one nudge leaves`, () => {
++      const shaped = shapeEmissions(asCandidates(firingNudges(row.prompt), ranks), {
++        capBytes: null,
++      });
++      expect(shaped.kept).toEqual(row.emitted);
++      expect(shaped.kept.length).toBeLessThanOrEqual(1);
++    });
++  }
++
++  it("fails when a second nudge is forced — the policy is what makes the rest green", () => {
++    const overlapping = rows.find((r) => r.overlap) as Row;
++    const firing = firingNudges(overlapping.prompt);
++    // Without the policy this prompt emits two nudges. That is the state the
++    // corpus above would fail in, and it is asserted here rather than described.
++    expect(firing.length).toBe(2);
++    const unshaped = shapeEmissions(
++      asCandidates(firing, ranks).map((c) => ({ ...c, nudgeRank: null })),
++      { capBytes: null },
++    );
++    expect(unshaped.kept.length).toBe(2);
++  });
++});

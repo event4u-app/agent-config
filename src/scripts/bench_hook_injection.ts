@@ -62,10 +62,74 @@ export interface Measurement {
     breach: boolean;
 }
 
+interface PerTurnAggregate {
+    tool_calls: number;
+    slots_counted: string[];
+    ceiling_bytes: number;
+    gate_on_ceiling: boolean;
+}
+
 interface Budget {
     default_cap_bytes: number;
     per_concern_caps_bytes: Record<string, number | string>;
     per_slot_sum_caps_bytes: Record<string, number | string>;
+    per_turn_aggregate_bytes?: PerTurnAggregate;
+}
+
+/** The per-turn aggregate reading, or the reason there isn't one. */
+export interface TurnAggregate {
+    /** Bytes a representative turn injects, or `null` when it is not derivable. */
+    bytes: number | null;
+    ceiling: number;
+    gated: boolean;
+    breach: boolean;
+    /** Present only when `bytes` is null — names the slot that was missing. */
+    unresolved?: string;
+}
+
+/**
+ * Derive the per-turn aggregate from the same per-slot sums the rows above
+ * report, per `per_turn_aggregate_bytes.definition`.
+ *
+ * Returns `null` bytes rather than a number when a counted slot produced no
+ * reading. This is the latency twin's rule, adopted deliberately: a composite
+ * over a subset reads LOW, and low is the direction that makes a ceiling look
+ * met. A missing slot is an unresolved measurement, never a small one.
+ */
+export function perTurnAggregate(
+    slotSums: Record<string, { bytes: number; unresolved?: boolean }>,
+    cfg: PerTurnAggregate | undefined,
+): TurnAggregate | null {
+    if (cfg === undefined) return null;
+    const perCallSlots = new Set(['pre_tool_use', 'post_tool_use']);
+    let bytes = 0;
+    for (const slot of cfg.slots_counted) {
+        const reading = slotSums[slot];
+        if (reading === undefined || reading.unresolved === true) {
+            return {
+                bytes: null,
+                ceiling: cfg.ceiling_bytes,
+                gated: cfg.gate_on_ceiling,
+                // AN UNRESOLVED COMPOSITE BREACHES WHEN THE ROW IS ARMED. It used
+                // to return `false` here, which meant the protection this
+                // function's docstring calls load-bearing was a printed word and
+                // not a gate: once `gate_on_ceiling` is armed, a composite over a
+                // subset of its slots reads low, and low is the direction that
+                // makes a ceiling look met — so the run would have exited green
+                // over a measurement that does not exist. Found by the R2
+                // completion review, 2026-08-19.
+                breach: cfg.gate_on_ceiling,
+                unresolved: slot,
+            };
+        }
+        bytes += perCallSlots.has(slot) ? reading.bytes * cfg.tool_calls : reading.bytes;
+    }
+    return {
+        bytes,
+        ceiling: cfg.ceiling_bytes,
+        gated: cfg.gate_on_ceiling,
+        breach: cfg.gate_on_ceiling && bytes > cfg.ceiling_bytes,
+    };
 }
 
 function capFor(budget: Budget, concern: string): number {
@@ -129,12 +193,12 @@ export function runConcernOnce(
     }
 }
 
-export function bench(opts: { platform?: string; budgetPath?: string } = {}): { measurements: Measurement[]; slotSums: Record<string, { bytes: number; cap: number; breach: boolean }>; errors: string[] } {
+export function bench(opts: { platform?: string; budgetPath?: string } = {}): { measurements: Measurement[]; slotSums: Record<string, { bytes: number; cap: number; breach: boolean }>; errors: string[]; turnAggregate: TurnAggregate | null } {
     const platform = opts.platform ?? 'claude';
     const manifest = _load_yaml(MANIFEST);
     const budget = JSON.parse(fs.readFileSync(opts.budgetPath ?? BUDGET, 'utf8')) as Budget;
     const measurements: Measurement[] = [];
-    const slotSums: Record<string, { bytes: number; cap: number; breach: boolean }> = {};
+    const slotSums: Record<string, { bytes: number; cap: number; breach: boolean; unresolved?: boolean }> = {};
     const errors: string[] = [];
 
     for (const event of EVENT_VOCABULARY) {
@@ -143,10 +207,19 @@ export function bench(opts: { platform?: string; budgetPath?: string } = {}): { 
         const envelope = JSON.parse(fs.readFileSync(fixtureFile, 'utf8')) as JsonObject;
         const concerns = _resolve_concerns(manifest, platform, event);
         let sum = 0;
+        // A concern the registry cannot resolve contributes NOTHING to `sum`, so
+        // the slot total is short by an unknown amount. It used to be reported as
+        // a resolved low number, which is the one direction that makes a ceiling
+        // look met — `perTurnAggregate`'s own docstring refuses exactly that for a
+        // missing fixture, and a missing concern is the same defect one level
+        // down. Marked unresolved so the composite refuses to derive from it.
+        // (R2 review, 2026-08-19.)
+        let slotUnresolved = false;
         for (const concern of concerns) {
             const bytes = runConcernOnce(String(concern['script']), Array.isArray(concern['args']) ? concern['args'].map(String) : [], envelope);
             if (bytes < 0) {
                 errors.push(`${event}/${String(concern['name'])}: not in CONCERN_REGISTRY`);
+                slotUnresolved = true;
                 continue;
             }
             const cap = capFor(budget, String(concern['name']));
@@ -156,9 +229,9 @@ export function bench(opts: { platform?: string; budgetPath?: string } = {}): { 
         }
         const slotCapRaw = budget.per_slot_sum_caps_bytes[event];
         const slotCap = typeof slotCapRaw === 'number' ? slotCapRaw : Number.MAX_SAFE_INTEGER;
-        slotSums[event] = { bytes: sum, cap: slotCap, breach: sum > slotCap };
+        slotSums[event] = { bytes: sum, cap: slotCap, breach: sum > slotCap, ...(slotUnresolved ? { unresolved: true } : {}) };
     }
-    return { measurements, slotSums, errors };
+    return { measurements, slotSums, errors, turnAggregate: perTurnAggregate(slotSums, budget.per_turn_aggregate_bytes) };
 }
 
 export function main(argv: readonly string[]): number {
@@ -211,10 +284,31 @@ export function main(argv: readonly string[]): number {
         for (const [slot, s] of Object.entries(result.slotSums)) {
             if (s.bytes > 0) process.stdout.write(`  slot-sum ${slot.padEnd(20)} ${String(s.bytes).padStart(6)} B (cap ${s.cap === Number.MAX_SAFE_INTEGER ? '—' : s.cap})${s.breach ? '  ❌ BREACH' : ''}\n`);
         }
+        const agg = result.turnAggregate;
+        if (agg !== null) {
+            const reading =
+                agg.bytes === null
+                    ? `UNRESOLVED (slot '${String(agg.unresolved)}' produced no reading)`
+                    : `${String(agg.bytes)} B`;
+            const arm = agg.gated ? 'gated' : 'reported, not gated';
+            process.stdout.write(
+                `  per-turn aggregate      ${reading} (ceiling ${String(agg.ceiling)} B, ${arm})${agg.breach ? '  ❌ BREACH' : ''}\n`,
+            );
+        }
         for (const e of result.errors) process.stdout.write(`  warn: ${e}\n`);
     }
-    if (breaches.length > 0 || slotBreaches.length > 0) {
-        process.stderr.write(`bench_hook_injection: ${breaches.length} concern breach(es), ${slotBreaches.length} slot-sum breach(es) — the budget row is the decision surface (src/config/hook-token-budget.json)\n`);
+    const aggBreach = result.turnAggregate?.breach === true;
+    if (breaches.length > 0 || slotBreaches.length > 0 || aggBreach) {
+        // The aggregate is named in the failure line. It used to be absent, so an
+        // aggregate-only red read "0 concern breach(es), 0 slot-sum breach(es)"
+        // and exited 1 — a CI failure that named no cause. (R2 review, 2026-08-19.)
+        const agg = result.turnAggregate;
+        const aggPart = !aggBreach
+            ? ''
+            : agg?.bytes === null
+              ? `, per-turn aggregate UNRESOLVED (slot '${String(agg.unresolved)}' produced no reading) while the ceiling is armed`
+              : `, per-turn aggregate ${String(agg?.bytes)} B over its ${String(agg?.ceiling)} B ceiling`;
+        process.stderr.write(`bench_hook_injection: ${breaches.length} concern breach(es), ${slotBreaches.length} slot-sum breach(es)${aggPart} — the budget row is the decision surface (src/config/hook-token-budget.json)\n`);
         return 1;
     }
     return 0;

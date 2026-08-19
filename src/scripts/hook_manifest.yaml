@@ -542,11 +542,32 @@ concerns:
   # enumerated signal → no injection at all. Never blocks the turn — see the
   # hook's file header for the `host_semantics.emitFor` proof. fail_closed:
   # false.
+  # `nudge_rank` (road-to-standing-context-40k Phase 4 step 4.2) — nudge-class
+  # exclusivity. At most ONE ranked nudge leaves per slot; the LOWEST rank wins
+  # and the dispatcher records every suppression as a `nudge_interference_drop`
+  # dispatch issue. A concern without the field is not nudge-class and is never
+  # suppressed by this policy.
+  #
+  # Measured before the policy was written, so the overlap is a fact rather than
+  # a hypothesis: the prompt "Use when starting parallel work in isolation from
+  # the current branch — spawn a git worktree … for src/a.ts, src/b.ts, src/c.ts
+  # and src/d.ts, each independently" fires delegation-nudge AND skill-route
+  # together on `user_prompt_submit`. Pinned by tests/eval/nudge-interference/.
+  #
+  # WHY delegation-nudge OUTRANKS skill-route, stated because the order is a
+  # decision and not an accident: the delegation verdict changes the SHAPE of
+  # the work (dispatch vs in-session), while a skill pointer is a hint the model
+  # may ignore — and the suppressed half has a first-class recovery path that
+  # the suppressed delegation verdict would not, because `suggest_skill_for_task`
+  # ranks the same catalogue on demand (see the missing-skill-recovery rule).
+  # Losing the pointer costs one tool call; losing the delegation verdict costs
+  # the plan.
   delegation-nudge:
     script: src/scripts/hooks/delegation_nudge_hook.ts
     args: []
     fail_closed: false
     severity: advisory
+    nudge_rank: 1
   # road-to-inbox-harvest-2026-08-d-runtime-skill-routing Phase 2 — binds the
   # deterministic task→skill ranker, which had shipped with ZERO production
   # callers: `score_skill_relevance.rank` and its `suggest_skill_for_task`
@@ -569,6 +590,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    nudge_rank: 2
   # road-to-orchestrator-discipline-carriers Phase 5 (F4-lite) — end-review
   # nudge. Fires ONLY when the session mutated tracked+untracked, non-doc
   # files beyond MUTATION_LINE_THRESHOLD (50 lines; untracked files added
