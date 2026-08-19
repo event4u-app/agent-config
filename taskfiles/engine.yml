@@ -328,6 +328,21 @@ tasks:
     desc: "Per-type shadow counts from the repo-vs-operational conflict rule (weekly cron target)"
     cmd: ./scripts-run src/scripts/check_memory --shadow-report {{.CLI_ARGS}}
 
+  memory:pointers:
+    silent: true
+    desc: "Pointer integrity of curated memory — dead/moved/unparseable citations + anchor coverage (NOT staleness, see cf04)"
+    cmd: ./scripts-run src/scripts/report_memory_pointers {{.CLI_ARGS}}
+
+  memory:consolidation:
+    silent: true
+    desc: "Near-duplicate pairs in the curated memory store — reports, never merges"
+    cmd: ./scripts-run src/scripts/memory_consolidation {{.CLI_ARGS}}
+
+  memory:eviction:
+    silent: true
+    desc: "Eviction ladder plan (due → quarantine → delete). Dry-run; pass -- --apply to execute"
+    cmd: ./scripts-run src/scripts/memory_eviction {{.CLI_ARGS}}
+
   cost:
     silent: true
     desc: |

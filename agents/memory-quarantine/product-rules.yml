@@ -1,0 +1,172 @@
+# Quarantined curated-memory entries — demoted by memory_eviction.ts.
+# Kept readable on purpose: a demotion is appealable, and an entry
+# re-verified against the tree returns to the curated store.
+version: 1
+entries:
+  - id: council-ecc-parity-positioning
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: stale
+    semantic_verdict_at: 2026-08-17
+    key: council ecc parity positioning
+    body: '2026-06-25 council on AC-vs-operator-runtime-suite (ECC) comparison — gap
+      is positioning not capability; universal enforcement lever is compile-time
+      frontmatter, runtime hooks Tier-2 MCP-only; do-not-cross list. 2026-06-25
+      council (claude-sonnet-4-5 + gpt-4o, 2 rounds, $0.14) on how AC should
+      respond to an external operator-runtime reference suite ("Suite R"). Verified counts: AC 258 skills / 93 rules / 162 commands /
+      26 personas; Suite R 271 skills / 114 rules / 92 commands / 67 subagents /
+      47 hook scripts. External GPT review undersold AC (read "162" command
+      count as the '
+  - id: council-judge-harness-2026-06-26
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: stale
+    semantic_verdict_at: 2026-08-17
+    key: council judge harness 2026 06 26
+    body: "Council verdict on token-saving Phase 0 length-controlled paired judge —
+      promptfoo vs hand-roll. 2026-06-26 council (claude-sonnet-4-5 + gpt-4o, 2
+      rounds, $0.14; gemini member skipped — its client needs a `google-genai`
+      python pkg not installed here) on the token-saving Phase 0
+      **length-controlled paired judge** harness: adopt `promptfoo` (Option A)
+      or hand-roll on the existing `bench_ab_v2_stats.ts` Wilcoxon/McNemar layer
+      (Option B). **Both members landed Option A (promptfoo) — but heavily
+      CONDITIONED**, not a clean mandate: - The required bias controls
+      (randomised order, **swap-and-recheck /"
+  - id: council-memory-knowledge-validation-tests
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: stale
+    semantic_verdict_at: 2026-08-17
+    key: council memory knowledge validation tests
+    body: "2026-07-08 council on validation tests for the memory/knowledge/context
+      substrate — NO new roadmap; shared Phase 0-pre in the two owning roadmaps;
+      deterministic-only; no task test-memory. Council (claude-sonnet-4-5 +
+      gpt-4o, 2026-07-08, 2 rounds, $0.12) on \"how to validate the
+      learning/memory/context/project-knowledge substrate with tests\". GPT-4o
+      initially wanted a dedicated `road-to-memory-knowledge-validation.md`;
+      converged after rebuttal on Sonnet's position: - **NO new roadmap.**
+      Validation foundations land as a shared **Phase 0-pre** embedded in the
+      two owning roadmaps ([[council-tmp-inb"
+  - id: council-memory-tripwire-engine
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: stale
+    semantic_verdict_at: 2026-08-17
+    key: council memory tripwire engine
+    body: "2026-07-08 councils on round-2 Obsidian-review feedback — tripwire engine
+      unified on node:sqlite FTS5 (ADR-116), amendments not a new roadmap,
+      harness + next-step field rejected; don't relitigate. Two councils
+      (claude-sonnet-4-5 + gpt-4o, 2026-07-08, disposition 2 rounds $0.10 +
+      engine tie-break 2 rounds $0.04) on the round-2 external
+      Obsidian-comparison feedback: - **Three-way pre-decided-path conflict was
+      real**: verdict Q4 said \"minisearch-class BM25\", retrieval-economy Phase
+      6 said \"SQLite FTS5\", ADR-061 bans engine forks (in-house
+      `bm25_search.ts` exists). A fourth straggler sat in `road-"
+  - id: council-orchestration-flip-honest-null
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: stale
+    semantic_verdict_at: 2026-08-17
+    key: council orchestration flip honest null
+    body: "2026-06-26 auto-subagent default-flip resolved HONEST-NULL — keep
+      subagents.auto:ask; headless bench can't measure real orchestration;
+      re-gate flip on real orchestration-telemetry.
+      `road-to-auto-subagent-orchestration-followup` (flip `subagents.auto`
+      ask→on iff a bench shows net token/time win at held quality) resolved
+      **honest-null**: keep `ask`, do NOT flip. **Why (verified at HEAD +
+      AI-council 2026-06-26, claude-sonnet-4-5 + gpt-4o, 2 rounds, $0.09):** a
+      credible orchestrated-vs-single-agent benchmark is **not producible in the
+      headless `bench:ab` harness** — it re-invokes `claude --print` "
+  - id: council-subagent-auto-cost-downshift
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: stale
+    semantic_verdict_at: 2026-08-17
+    key: council subagent auto cost downshift
+    body: 2026-07-08 council on flipping subagents.auto default on a COST basis (not
+      the settled quality-null); trigger = reasoning≪execution not "small";
+      session on, template default stays ask (telemetry-gated). Council
+      2026-07-08 (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2 rounds, $0.08)
+      on whether `subagents.auto` should flip from `ask` → `on` driven by **cost
+      on expensive hosts** (Opus/Fable). This is a distinct mechanism from the
+      prior orchestration honest-null (which tested **quality-lift on strong
+      hosts** → null), so `decision-revisit-gate` mechanism-match cleared it as
+      a valid re-eval. **Con
+  - id: council-subagent-default-flip-revisit
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: stale
+    semantic_verdict_at: 2026-08-17
+    key: council subagent default flip revisit
+    body: '2026-07-08 deep council (4 rounds) re-evaluating the subagents.auto
+      ask→on flip; verdict = validate-before-flip via the NOW-runnable
+      paired-delegation probe, NOT flip-first; classifier cost-correctness
+      agreed as precondition. Deep council 2026-07-08
+      (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 4 rounds, $0.30)
+      re-evaluating whether to flip `subagents.auto` shipped default `ask → on`,
+      superseding the 2026-06-26 honest-null verdict. Re-eval justified by
+      `decision-revisit-gate`: three conditions changed — (1) new COST mechanism
+      vs the old quality-null, (2) the `bench:ab` "not producible" blocker'
+  - id: council-team-shared-memory
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-07-09
+    review_after_days: 90
+    verified_at_commit: 9beeb0662
+    semantic_verdict: stale
+    semantic_verdict_at: 2026-08-17
+    key: council team shared memory
+    body: "2026-06-14 council — team-shared committed memory idea is mostly
+      redundant with git+AGENTS.md+ADRs; gitignore intake, NO personal layer,
+      narrow types, manual size-bounding; open question = markdown vs YML layer;
+      don't relitigate the skeptical verdict. AI council (claude-sonnet-4-5 +
+      gpt-4o, 2026-06-14, debate 2 rounds) on \"team-shared project memory via
+      committed agents/memory — sensible? global/team/personal split? size
+      bounding?\". Both members converged SKEPTICAL in round 2 (gpt-4o switched
+      to Anthropic's side): **The idea is only partly right — and much of it
+      already exists.** Committed fil"
