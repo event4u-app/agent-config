@@ -23,7 +23,17 @@ const NAMED = /^ADR-(\d{3})-([a-z0-9-]+)\.md$/;
 const FM = /^---\n([\s\S]*?)\n---/;
 // ^([a-z_]+):\s*(.+?)\s*$  (MULTILINE)
 const FIELD = /^([a-z_]+):[ \t]*(.+?)[ \t]*$/gm;
-const HEAD = '| # | Title | Status | Date | Supersedes |\n|---|---|---|---|---|';
+/**
+ * The index used to render `| # | Title | Status | Date | Supersedes |`, which
+ * is forward-only: a dead ADR showed `superseded | —` and the reader learned it
+ * was dead but not by what. `superseded_by` was read nowhere despite being a
+ * documented field, and `amended_by` had no representation at all — 18 ADRs
+ * carry an amendment block and the index could not distinguish one with five
+ * amendments from one never touched.
+ */
+const HEAD =
+    '| # | Title | Status | Date | Supersedes | Superseded by | Amended by |\n' +
+    '|---|---|---|---|---|---|---|';
 
 type Meta = Record<string, string>;
 interface Row extends Meta {
@@ -182,7 +192,8 @@ export function row(r: Row): string {
     const label = 'num' in r ? `ADR-${r.num}` : (r.path as string).slice(0, -3);
     return (
         `| [${label}](${r.path}) | ${title} | ${r.status ?? '—'} ` +
-        `| ${r.date ?? '—'} | ${r.supersedes ?? '—'} |`
+        `| ${r.date ?? '—'} | ${r.supersedes ?? '—'} | ${r.superseded_by ?? '—'} ` +
+        `| ${r.amended_by ?? '—'} |`
     );
 }
 

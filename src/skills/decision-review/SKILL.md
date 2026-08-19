@@ -280,6 +280,24 @@ in the rule; the lock catalog, fire steps, and failure modes live here.
    contract — every re-evaluated lock gets a fresh, correctly-scoped
    disposition, not a re-statement of the old one.
 
+   When the lock is an **ADR**, the disposition carries the five-field reopen
+   record from [`adr-layout § Reopen record`](../../../docs/contracts/adr-layout.md):
+   the original rationale **addressed** (not cited), what changed with tree
+   evidence, dependants and external commitments touched, the rollback path,
+   and a blast radius — `narrow | wide | irreversible` — with the evidence for
+   that call. Two clauses bind the same record: **precedent creates no
+   authority** (that a similar ADR was reopened is never grounds for this one),
+   and **one seat must argue the strongest case for keeping the decision**.
+   Both answer precedent laundering through correlated self-review, which is
+   the failure two independent council seats named for this mechanism on
+   2026-08-19: the proposer frames the evidence, correlated seats ratify, and
+   the amendment becomes authoritative input for the next review.
+
+   Proportionally: a narrow, reversible, bounded transition takes the light
+   path (record + council); `wide` or `irreversible` adds owner notification.
+   Identical ceremony for a typo-level amendment would cost more than asking
+   the owner and the mechanism would die of its own weight.
+
 ### When NOT to fire
 
 - The blocked change has no real benefit — the gate is not a lever to

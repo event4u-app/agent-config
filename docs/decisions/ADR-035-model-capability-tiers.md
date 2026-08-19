@@ -5,6 +5,7 @@ date: 2026-05-30
 decision: model-capability-tiers
 supersedes: 034
 superseded_by: —
+amended_by: ADR-232
 phase: model-capability-tiers
 type: structural
 review_trigger: >-
@@ -34,12 +35,18 @@ The values are also version-brittle (model names churn) and couple the portable
 source to specific vendors' line-ups. The fix is to recommend a **capability
 band**, not a model, and let each agent resolve the band to its own best model.
 
+> **Amended by [ADR-232](ADR-232-frontier-tier-reopened.md) (2026-08-15) —
+> Decision 1's rejection of a 4th `frontier` tier was reopened on this ADR's own
+> `review_trigger` and no longer holds. Read ADR-232 before citing Decision 1 or
+> the matching Alternatives entry below.**
+
 ## Decision
 
 1. **Tiers — `lite | medium | high` (+ `inherit`).** Pure capability descriptors
    (reasoning horsepower), not use-case names. A 4th `frontier` tier is rejected
    — it would map sparsely (one vendor's outlier) and break vendor-neutrality.
-   `inherit` = "no opinion, keep the session model".
+   `inherit` = "no opinion, keep the session model". **(Reopened by ADR-232 —
+   see the banner above.)**
 
 2. **Field rename `recommended_model` → `model_tier`.** The semantics changed
    from a model identifier to an abstract band; keeping the old name "is lying in
@@ -99,7 +106,9 @@ deprecated upstream.
   drift failure; suggestion-only is simpler and self-maintaining.
 - **Context length as a tier (`high-context`).** Rejected — conflates two
   orthogonal axes; handled by the sparse `context: large` modifier instead.
-- **4th `frontier` tier.** Rejected — sparse cross-vendor mapping.
+- **4th `frontier` tier.** Rejected — sparse cross-vendor mapping. **Reopened by
+  [ADR-232](ADR-232-frontier-tier-reopened.md) (2026-08-15): the sparseness
+  premise was re-measured and no longer held.**
 
 ## References
 

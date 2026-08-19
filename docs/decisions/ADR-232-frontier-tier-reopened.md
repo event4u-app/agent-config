@@ -5,6 +5,7 @@ date: 2026-08-15
 decision: frontier-tier-reopened
 supersedes: —
 superseded_by: —
+amends: ADR-035
 phase: road-to-inbox-harvest-2026-08-d-top-band-model-economy
 type: structural
 review_trigger: >-
