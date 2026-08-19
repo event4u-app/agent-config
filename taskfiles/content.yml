@@ -46,7 +46,14 @@ tasks:
   generate-tools:
     silent: true
     desc: Generate tool-specific directories (.claude/, .cursor/, .clinerules/, .windsurfrules, GEMINI.md)
-    cmd: ./scripts-run src/scripts/condense --generate-tools
+    cmds:
+      - ./scripts-run src/scripts/condense --generate-tools
+      # Say what writing the project layer costs when a global layer holds the same
+      # names (ADR-236). A separate step rather than a call inside condense.ts:
+      # check_source_size_budget is a shrink-only ratchet and that module is already
+      # over its ceiling, so an import plus a call there is +2 the ratchet refuses.
+      # Advisory by construction — it cannot fail the build.
+      - ./scripts-run src/scripts/report_layer_overlap || true
 
   probe:skills:
     silent: true

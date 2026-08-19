@@ -345,8 +345,15 @@ same-version duplication is free.
       one layer and is silent about the other existing.
       `verify:` generating while the other layer holds an overlapping name prints
       the count and points at the check.
-      **DONE 2026-08-19** — `_warn_layer_overlap()` in `condense.ts`, after the
-      summary. Verified on a real run: `⚠️ a global layer holds the same names
+      **DONE 2026-08-19** — `src/scripts/_lib/layer_overlap_notice.ts` plus a
+      `report_layer_overlap` CLI, wired as its own step of `task generate-tools`.
+      **Not a call inside `condense.ts`, and the reason is a gate rather than taste:**
+      the first version put it there and CI refused — `check_source_size_budget` is a
+      shrink-only ratchet, `condense.ts` is already over its 1500-line ceiling, and the
+      inline function was **+60**. Extraction took it to +2 (an import and a call),
+      which the ratchet still refuses, so the notice moved out of that module entirely
+      and `condense.ts` is byte-for-line back at its trunk value. Re-pinning the
+      baseline is named a defect in the gate's own message. Verified on a real run: `⚠️ a global layer holds the same names
       (rules=110 skills=290 commands=40)`, the same figures the census and
       `check_single_delivery` report independently.
       **Advisory, never failing.** `generate-tools` is the normal build step, and
