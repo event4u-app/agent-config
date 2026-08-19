@@ -178,23 +178,19 @@ function _isExecFile(p: string): boolean {
 // Module body (workspace_hosts.py).
 // ---------------------------------------------------------------------------
 
-interface InventoryEntry {
-    tier: number;
-    cli: string | null;
-}
-
-// Mirrors docs/contracts/host-agent-protocol.md § Today's inventory. `cli` is
-// the PATH binary that proves the Tier-1 surface is reachable; Tier-3 hosts
-// have no drivable CLI (null). Insertion order matches the Python dict.
-export const HOST_INVENTORY: Record<string, InventoryEntry> = {
-    'claude-code': { tier: 1, cli: 'claude' },
-    codex: { tier: 1, cli: 'codex' },
-    gemini: { tier: 1, cli: 'gemini' },
-    augment: { tier: 3, cli: null },
-    cursor: { tier: 3, cli: null },
-    cline: { tier: 3, cli: null },
-    windsurf: { tier: 3, cli: null },
-};
+// The inventory itself lives in `src/scripts/_lib/host_launch.ts` and is
+// re-exported here, unchanged, so every existing importer and the ADR-068
+// contract test keep working.
+//
+// The move is a PACKAGING one, not a design preference: `src/cli/python/` is
+// not in the package.json `files` whitelist, while `src/scripts/` is, so a
+// shipped module importing this table from here resolves in a checkout and
+// crashes a global install with ERR_MODULE_NOT_FOUND. `prepack-check` caught
+// it. The alternative was shipping this whole 396 KB subtree — including
+// `workspace_secrets` and `workspace_crypto` — so that two constants could
+// resolve.
+export { HOST_INVENTORY, type InventoryEntry } from '../../scripts/_lib/host_launch.js';
+import { HOST_INVENTORY } from '../../scripts/_lib/host_launch.js';
 
 type WhichFn = (cmd: string) => string | null;
 

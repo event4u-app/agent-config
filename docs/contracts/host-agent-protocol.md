@@ -41,13 +41,24 @@ their semver, not derived from unstable stdout parsing.
 | Host agent | `launch` surface | `emit_trace` surface | Effective tier |
 |---|---|---|---|
 | **Claude Code (CLI)** | `claude -p "<prompt>" --output-format json` (subprocess; documented). Slash commands resolved against `.claude/commands/`. | JSON envelope on stdout per turn; session id preserved; no live append stream. | **Tier 1** — only host with both surfaces today. |
-| **OpenAI Codex CLI** | `codex exec --json` consumes stdin; documented. No slash-command surface (skills not first-class). | NDJSON event stream on stdout — `turn.completed`, `item.completed`, tool envelopes. | **Tier 1**, no skill surface — workspace must pre-render the prompt with skill context inlined. |
-| **Gemini CLI** | `gemini --output-format json` consumes stdin; documented. | JSON envelope on stdout per turn. OAuth grant required once. | **Tier 1**, no skill surface (same as Codex). |
+| **OpenAI Codex CLI** | `codex exec --json "<prompt>"` — prompt in **argv**, not stdin. No slash-command surface (skills not first-class). | NDJSON event stream on stdout — `turn.completed`, `item.completed`, tool envelopes. | **Tier 1**, no skill surface — workspace must pre-render the prompt with skill context inlined. |
+| **Gemini CLI** | `gemini -p "<prompt>" --output-format json` — prompt in **argv**, not stdin. | JSON envelope on stdout per turn. OAuth grant required once. | **Tier 1**, no skill surface (same as Codex). |
 | **Augment (IDE)** | None documented. Hook trampolines exist (`scripts/hooks/augment-dispatcher.sh`) — post-event only, cannot initiate a conversation. | None — hook payloads cover events, not model output. | **Tier 3** — observe-only. |
 | **Cursor (IDE)** | `cursor://` deep links open files / chats but cannot pre-fill a prompt with skill context from a non-Cursor process. Hooks (`.cursor/hooks.json`) are post-event. | None at the protocol layer. | **Tier 3** — observe-only. |
 | **Cline (VS Code ext)** | None. Hooks (`~/Documents/Cline/Hooks/`) are post-event. | None at the protocol layer. | **Tier 3** — observe-only. |
 | **Windsurf (Cascade)** | None. Hooks (`.windsurf/hooks.json`) are post-event. | None at the protocol layer. | **Tier 3** — observe-only. |
 
+> **The `launch` column was wrong for codex and gemini until 2026-08-19, and
+> the fix is stated rather than quietly applied.** Both rows read "consumes
+> stdin" while `HOST_CONFIGS` in `src/cli/python/workspace_drive.ts` — the only
+> code in the tree that actually drives them — passes the prompt as an argv
+> member for both, and the prose contradicted itself two paragraphs apart for
+> gemini. Found by an R2 review of a consumer that had built its own argv off
+> this table and inherited the error, which is the argument against a second
+> derivation existing at all: **the drive config is normative, this table
+> describes it.** A consumer needing the argv calls `HOST_CONFIGS[...]
+> .build_args`; it does not re-read this column.
+>
 > **Detection (ADR-068).** This table is mirrored by `HOST_INVENTORY` in
 > `src/cli/python/workspace_hosts.py`; `tests/test_workspace_hosts.py` asserts
 > the two agree, so this markdown stays the source of truth. `workspace_hosts.py

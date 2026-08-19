@@ -1,0 +1,22 @@
+# Findings: long-horizon-phase4-close
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 9e2fb9b2b13cb2b751e38fc3e2359af5867a7cb39395921d47572a23587a8d5d | diff: 4158e9e4278a987163eadb097ff626d371ad6f7c | reviewer: r2-fresh-subagent-long-horizon-phase4-close | prompt_hash: 22a3968d77f896c6276ae7617a1838558f9fc9d2e061f25adc8bc335a2013151 -->
+<!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
+
+<!-- context-manifest: v1
+inputs:
+  diff_sha: 4158e9e4278a987163eadb097ff626d371ad6f7c
+  scope_hash: 9e2fb9b2b13cb2b751e38fc3e2359af5867a7cb39395921d47572a23587a8d5d
+  roadmap: agents/roadmaps/road-to-long-horizon-execution.md
+  roadmap_hash: 63756794b8105cde6044146e56351c6ff5e1ab87722719f3947779a9cb3efeb4
+  ac_hash: 5b49f85313e27ace1904b342e01046c25c050944e168cd7068c07276f60bc133
+excluded: [session-history, agents/runtime, implementation-context]
+tools: [git-diff-branch-scoped, file-read-branch-paths]
+dispatched: 2026-08-19T09:16:59Z
+-->
+
+| # | Severity | File:Line | Finding | Status | Reason/Ref |
+|---|----------|-----------|---------|--------|------------|
+| 1 | medium | src/scripts/interruption_report.ts:514 | The new comment above `contact_axis_runs`/`wall_clock_axis_runs` states "21 runs carried contacts ... the contact axis had cleared its own floor" — but the roadmap's own contemporaneous account of this exact 2026-08-19 measurement (agents/roadmaps/road-to-long-horizon-execution.md:632-637, docs/CLAIMS.md) says the contact-axis count is **19**, not 21 (2 of the 21 total runs carry timing with no ledger entry, so they inflate the total but not the contact axis), and that the floor was explicitly **not** cleared ("It had not"). The shipped comment reproduces, as fact, the exact pre-fix misreading this feature was built to prevent, and will mislead any future reader of the source. | fixed | Confirmed and corrected: 19 of 21, NEITHER axis clearing. The misreading is left ON the record in the corrected comment rather than erased — that the number was got wrong while writing the guard against getting it wrong is the argument for reading it off the field instead of the total. |
+| 2 | low | docs/CLAIMS.md:680 | "**HONEST-NULL PATH TAKEN 2026-08-19, one day after registration.**" — but the same evidence field opens with "PRE-REGISTERED 2026-08-19", the identical calendar date. Registration and closure are both dated 2026-08-19, so "one day after" is arithmetically inconsistent (0 days elapsed, not 1). | fixed | Corrected to the same day, and the awkward fact stated rather than rounded away: a pre-registration closed on its registration date attracts suspicion, so the entry now says what changed between the two states — the spawn went from DEFERRED to REFUSED, a decision moved, no measurement did. |
+| 3 | low | agents/roadmaps/road-to-long-horizon-execution.md:407 | The `verify:` line raises the cited count for `tests/scripts/unattended_guard.test.ts` from a prior "21 green" to "31 green", but that test file is not among the files this diff touches (per prompt.md's Changed files list and diff.patch), so the new count has no supporting change in this scope and cannot be verified from it. The figure "31" also happens to exactly equal `run_supervise.test.ts`'s own (separately verifiable) pre-existing test count, raising the possibility the number was copied from the wrong file. | fixed | Right about the scope, wrong about the copy: 31 is this file's own count, re-run fresh (`31 passed`), and `run_supervise.test.ts` is at 38. The count grew to 31 in `53b4ac34f`, the round-6 fix pass of the PR that landed step 4.0, and the roadmap line kept the stale 21. Provenance written into the step rather than the figure reverted — a stale number that happens to be in-scope is still stale. |
+| 4 | low | src/scripts/interruption_report.ts:518 | `contact_axis_runs: runs.filter((r) => r.contacts !== null).length` re-walks the full `runs` array to recompute a value that is logically identical to the pre-existing `runsWithLedger` (line 497: `runs.filter((r) => ledgerRuns.has(r.run_id)).length`) — `r.contacts` is set to `null` exactly when `!ledgerRuns.has(r.run_id)`, so the two filters always agree. Reusing `runsWithLedger` avoids the duplicate pass. | fixed | `contact_axis_runs: runsWithLedger`. The saved pass is the smaller half — two equivalent predicates for one fact are two things that have to stay true, and the equivalence test written for this field is what makes the swap safe to assert. |

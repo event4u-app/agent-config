@@ -1,0 +1,1459 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index da1f9549f33a9e5d68563ed35208f720cdc480d0..ae3eead260bcaf7abaa97d5bf97de2809956e08e 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -6,10 +6,10 @@
+ 
+ ## Overall
+ 
+-**336 / 606 steps done · 55%**
++**338 / 607 steps done · 56%**
+ 
+ ```text
+-██████████████████████░░░░░░░░░░░░░░░░░░   55%
++██████████████████████░░░░░░░░░░░░░░░░░░   56%
+ ```
+ 
+ ## ⚠️ Iron Law 3 — unresolved deferred items
+@@ -20,6 +20,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ |---|---:|---:|---:|
+ | [road-to-council-api-fallback.md](roadmaps/road-to-council-api-fallback.md) | 16 | 1 | 0 |
+ | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 13 | 1 | 0 |
++| [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md) | 20 | 1 | 3 |
+ 
+ ## Open roadmaps
+ 
+@@ -44,7 +45,7 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
+ | 17 | [road-to-inbox-harvest-2026-08-d-top-band-model-economy.md](roadmaps/road-to-inbox-harvest-2026-08-d-top-band-model-economy.md) | 4 | 14 | 0 | 13 | 1 | 0 | 0 | ██████████ 100% |
+ | 18 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 2 | 2 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | █████░░░░░ 50% |
+ | 19 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 20 | [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md) | 6 | 24 | 1 | 18 | 5 | 0 | [1](#blockers-road-to-long-horizon-execution) | ██████████ 95% |
++| 20 | [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md) | 6 | 24 | 0 | 20 | 1 | 3 | [1](#blockers-road-to-long-horizon-execution) | ██████████ 100% |
+ | 21 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
+ | 22 | [road-to-mixed-trigger-activation-cost.md](roadmaps/road-to-mixed-trigger-activation-cost.md) | 4 | 10 | 2 | 6 | 2 | 0 | [1](#blockers-road-to-mixed-trigger-activation-cost) | ████████░░ 75% |
+ | 23 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+@@ -602,7 +603,7 @@ _1 blocker resolved._
+ 
+ ### [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md)
+ 
+-**Road to long-horizon execution — the agent stops when the roadmap doesn't** — 18 / 19 done (95%)
++**Road to long-horizon execution — the agent stops when the roadmap doesn't** — 20 / 20 done (100%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+@@ -610,22 +611,28 @@ _1 blocker resolved._
+ | 1 | Re-engagement concern | ✅ done | 0 | 4 | 0 | 0 | 100% |
+ | 2 | Question ladder closure | ✅ done | 0 | 4 | 0 | 0 | 100% |
+ | 3 | Session immortality | ✅ done | 0 | 3 | 0 | 0 | 100% |
+-| 4 | Unattended backlog | ✅ done | 0 | 2 | 2 | 0 | 100% |
+-| 5 | Standing measurement | 🟡 in progress | 1 | 3 | 3 | 0 | 75% |
++| 4 | Unattended backlog | ✅ done | 0 | 3 | 0 | 1 | 100% |
++| 5 | Standing measurement | ✅ done | 0 | 4 | 1 | 2 | 100% |
+ 
+ <a id="blockers-road-to-long-horizon-execution"></a>
+ **Blockers**
+ 
+-- **team-loop-benchmark-spend** (owner: user) — blocks Phase 4 step 4.3, and any multi-agent variant of 4.0
+-  - **Recommendation:** (b). D-5 names this benchmark as pending "since it was written", and a second indefinite pending reproduces the exact defect this roadmap opens with. A published null is a real answer that closes the gate; option (a) is right only if the multi-agent variant is wanted soon enough to justify the spend now.
+-  - **If you do nothing:** 4.3 stays `[~]` forever and the multi-agent variant of 4.0 stays neither built nor refused — the indefinite-pending state D-5 already describes, now carried by a second roadmap.
++- **worktree-claim-root-split** (owner: user) — blocks the `process-full` contract-run acceptance criterion, and every future observation of `run-continuation` made from a worktree. - **The defect, measured 2026-08-19.** The run contract has two halves that resolve their root differently, and in a worktree they land in different trees. `sessions_cli.cmd_claim` writes `agents/runtime/state/roadmap-claim-<session>.json` under `process.cwd()` — the worktree the operator is in. The stop-slot concern reads it under `envelope.workspace_root`, which `dispatch_hook` sets from `--project-dir`, i.e. the host's `CLAUDE_PROJECT_DIR` — the parent checkout. Neither side is wrong on its own; they simply never agreed on which tree the contract lives in. - **Why it stayed invisible.** The concern's first rung is `contract absent → no-op`, and a no-op writes no event. So the ledger built to make the mechanism auditable is empty in exactly the case where it never ran, and empty is also what a healthy idle run looks like. The dispatch integration test cannot see it either: it passes the SAME root to the writer and the reader, which is the one arrangement in which the two agree. - **Second symptom, same cause.** `session_register_hook` reads the slug through `read_claimed_slug(workspace_root, …)` on the same envelope, so the register records `roadmap_slug: null` for a session that has claimed. `run:supervise` listed this session as `roadmap=-` minutes after its claim. A watcher whose whole job is "dead session, roadmap still open" cannot see the roadmap of any worktree session.
++  - **Recommendation:** (a). It is one shared helper called by the writer and both readers, it makes the claim agree with the register that already carries it, and it fixes the watcher symptom in the same move. Not taken autonomously in this run: the claim file is a shared contract carrier read by four modules, and relocating one is a structural change `scope-control` reserves for the maintainer.
++  - **If you do nothing:** `run-continuation` remains inert for every worktree session, which in this repository means effectively always, and the acceptance criterion above cannot be observed.
+   - **What to do:**
+-    pick exactly one — (a) authorise the benchmark run with a
+-    named USD ceiling, so 4.3 executes and its verdict is published either
+-    way; or (b) close the gate as a published null on the stated ground that
+-    the benchmark will not be funded, which permanently removes the
+-    multi-agent variant of 4.0 from scope.
+-  - **Resolved when:** Phase 4 step `4.3` carries either a benchmark verdict with its run date and cost, or a published null naming option (b).
++    pick exactly one — (a) move the claim beside the
++    session register, under the git **common dir**, which every worktree of
++    a repo shares. That is the location `register_dir()` already uses and
++    for the same reason, and a roadmap claim is repo-global by intent —
++    `sessions:claim` tells the operator it "becomes visible to other
++    sessions". Back-compat: read the old per-tree path when the new one is
++    absent. Or (b) keep the claim per-tree and make the hook resolve the
++    same tree, which means the concern stops trusting `--project-dir` — a
++    larger change touching every concern, not just this one.
++  - **Resolved when:** a `process-full` run started from a worktree writes at least one `engage` event to `agents/runtime/state/run-continuation.jsonl`.
++
++_1 blocker resolved._
+ 
+ ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
+ 
+diff --git a/agents/roadmaps/road-to-long-horizon-execution.md b/agents/roadmaps/road-to-long-horizon-execution.md
+index 55c680f6599e7ad2a03087f0406e55faba097a96..66241afc1d914daf242e0ecd29793e5e5dd8581b 100644
+--- a/agents/roadmaps/road-to-long-horizon-execution.md
++++ b/agents/roadmaps/road-to-long-horizon-execution.md
+@@ -353,7 +353,7 @@ budgets for it rather than discovering it at preflight.
+ 
+ ### Phase 4 — Unattended backlog
+ 
+-- [~] **4.0** `src/scripts/_lib/unattended_guard.ts` ships the three
++- [x] **4.0** `src/scripts/_lib/unattended_guard.ts` ships the three
+       preconditions — remote safety (fails CLOSED on an unreadable git
+       config, because "I could not tell" and "no production remote" must
+       not resolve the same when being wrong means an unattended push),
+@@ -362,15 +362,56 @@ budgets for it rather than discovering it at preflight.
+       job-dedup key derived from roadmap+head so a second caller
+       recognises the first caller's job. `preflight` reports every
+       refusal in one pass.
+-      **The SPAWN is deliberately not built, and that is why this step is
+-      deferred rather than done.** Writing one means choosing an
+-      invocation shape, an auth path and a sandbox posture for a process
+-      that spends money unattended; none of those is testable without
+-      spending, and an untested one behind a flag that reads as finished
+-      is how a capability nobody validated reaches a scheduler. The guard
+-      is the half that can be verified and the half whose absence makes
+-      the other half unsafe.
+-      `verify:` `npx vitest run tests/scripts/unattended_guard.test.ts` — 21 green.
++      **The live SPAWN is now a published refusal rather than a deferral,
++      and the seam ships print-only.** The step stood `[~]` on the
++      argument that an untested money-spending spawn is worse than none —
++      which is right about the spawn and wrong about the deferral: a
++      deferral with no end condition IS D-5, the defect this roadmap
++      opens with, reproduced inside it. Resolved 2026-08-19 by AI council
++      (anthropic/claude-sonnet-4-5 + openai/codex-default, blind peer
++      review, $0.031). They SPLIT — build a dry-run seam vs cancel the
++      capability — and named the same defect from both sides:
++      `--relaunch` advertised something that did not exist. What ships is
++      the intersection, recorded in decision memo 001:
++      - `src/scripts/_lib/headless_invocation.ts` — builds the exact
++        resume command per host off the `HOST_INVENTORY` tiering and
++        `docs/contracts/host-agent-protocol.md`, refuses any host with no
++        documented headless surface, and **contains no spawn, exec or
++        fork — asserted by a source test, not promised by a comment.**
++      - `run:supervise --print-relaunch` prints that command *for a
++        human* alongside what an unattended lane would decide about the
++        same run. The two are separate fields on purpose: conflating them
++        tells an operator that a disabled budget forbids them from
++        running it by hand, which is the opposite of true.
++      - `--relaunch` now names a DECISION and its reopen condition
++        instead of "not implemented yet" — the sentence that makes an
++        operator wait for a release nobody is preparing.
++      - **Reopen condition, falsifiable and not a date:** the first time
++        `agents/runtime/state/checkpoints/` holds a checkpoint from a
++        real dying run. Measured 2026-08-19 on the main checkout, that
++        directory does not exist — the resume path has never had one
++        input. Stated the other way round so it cannot be over-read: an
++        empty directory is a CONJUNCTION of two rare conditions (recycle
++        threshold AND a roadmap claim), so it licenses "do not build the
++        spawn yet" and never "the need does not exist".
++      Two live defects found on the way and fixed here, both in
++      `run_supervise.ts`: `writeLedger` swallowed its own write failure
++      under a comment asserting "there is NO CALLER" — false in the same
++      file, since `digest` calls it fourteen lines later — so a digest
++      could print `relaunch budget reset` over a counter that still
++      stood, and a stale-high counter refuses the next relaunch the
++      digest just promised. It throws now, and the release line follows
++      the write rather than the intent.
++      `verify:` `npx vitest run tests/scripts/unattended_guard.test.ts` — 31 green.
++      (Was cited as 21 here; the file is NOT touched by this change, and the
++      count grew to 31 in `53b4ac34f`, the round-6 fix pass of the PR that
++      landed this step — the roadmap line was never updated with it. Re-run
++      fresh rather than carried over. R2 round 1, finding 3 flagged the
++      number as unverifiable from this diff's scope, which was correct about
++      the scope and is why the provenance is written down instead of the
++      figure being quietly reverted to a stale 21.)
++      `verify:` `npx vitest run tests/scripts/headless_invocation.test.ts` — 18 green.
++      `verify:` `npx vitest run tests/scripts/run_supervise.test.ts` — 38 green.
+ - [x] **4.1** `agent-config run:supervise --digest` — the morning report:
+       sessions dead vs alive, budget consumed against its ceiling,
+       decision memos written, and what needs attention. It reports state
+@@ -387,12 +428,26 @@ budgets for it rather than discovering it at preflight.
+       occurred and none can, so it cannot have been written around a
+       number already in hand.
+       `verify:` `./scripts-run src/scripts/check_claims` — green, 70 entries.
+-- [~] **4.3** Team-loop gate (H-5): run the pre-registered
++- [-] **4.3** Team-loop gate (H-5): run the pre-registered
+       build-review-fix benchmark; positive → team loop activates for
+       unattended runs, null → gate closes, published. Blocker for any
+-      multi-agent variant of 4.0. **Deferred** — see
+-      `blocker: team-loop-benchmark-spend`; the single-agent 4.0 primitive
+-      is unaffected and ships without it.
++      multi-agent variant of 4.0.
++      **CLOSED 2026-08-19 as a published WILL-NOT-FUND null.** The AI
++      council was UNANIMOUS 2/2 for option (b), matching the blocker's
++      own recommendation, and openai supplied the refinement that makes
++      the closure hold: reconsideration requires a NEW roadmap with fresh
++      pre-registration and explicit funding — never reopening this
++      blocker — because a closure that can be reopened by re-reading it
++      decays straight back into the indefinite pending D-5 names. No USD
++      ceiling is named at all: the $25 figure floated in round 1 was
++      refused as unconnected to any evidence about what a valid verdict
++      costs, and naming an unevidenced number would have been the same
++      defect in a smaller font.
++      Compounding fact, not a tiebreaker but decisive on its own: under
++      step 4.0 there is no live spawn for a team loop to drive, so
++      funding this benchmark now would measure a capability that does not
++      exist. **The multi-agent variant of 4.0 leaves scope permanently.**
++      Recorded in decision memo 002.
+ 
+ ### Phase 5 — Standing measurement
+ 
+@@ -424,7 +479,14 @@ budgets for it rather than discovering it at preflight.
+ 
+ ### blocker: team-loop-benchmark-spend
+ 
+-- **Status:** open
++- **Status:** resolved
++- **Resolution:** (b) — published WILL-NOT-FUND null, 2026-08-19. AI
++  council unanimous 2/2 (anthropic/claude-sonnet-4-5 +
++  openai/codex-default), matching the recommendation below. The
++  multi-agent variant of 4.0 leaves scope permanently; reconsideration
++  requires a NEW roadmap with fresh pre-registration and explicit
++  funding, never a reopening of this blocker. Step 4.3 carries the full
++  verdict; decision memo 002 carries the reasoning.
+ - **Owner:** user
+ - **Blocks:** Phase 4 step 4.3, and any multi-agent variant of 4.0
+ - **Question:** may the pre-registered build-review-fix benchmark be run,
+@@ -445,6 +507,56 @@ budgets for it rather than discovering it at preflight.
+ - **Resolved when:** Phase 4 step `4.3` carries either a benchmark verdict
+   with its run date and cost, or a published null naming option (b).
+ 
++### blocker: worktree-claim-root-split
++
++- **Status:** open
++- **Owner:** user
++- **Blocks:** the `process-full` contract-run acceptance criterion, and
++  every future observation of `run-continuation` made from a worktree.
++- **The defect, measured 2026-08-19.** The run contract has two halves
++  that resolve their root differently, and in a worktree they land in
++  different trees. `sessions_cli.cmd_claim` writes
++  `agents/runtime/state/roadmap-claim-<session>.json` under
++  `process.cwd()` — the worktree the operator is in. The stop-slot
++  concern reads it under `envelope.workspace_root`, which
++  `dispatch_hook` sets from `--project-dir`, i.e. the host's
++  `CLAUDE_PROJECT_DIR` — the parent checkout. Neither side is wrong on
++  its own; they simply never agreed on which tree the contract lives in.
++- **Why it stayed invisible.** The concern's first rung is
++  `contract absent → no-op`, and a no-op writes no event. So the ledger
++  built to make the mechanism auditable is empty in exactly the case
++  where it never ran, and empty is also what a healthy idle run looks
++  like. The dispatch integration test cannot see it either: it passes the
++  SAME root to the writer and the reader, which is the one arrangement
++  in which the two agree.
++- **Second symptom, same cause.** `session_register_hook` reads the slug
++  through `read_claimed_slug(workspace_root, …)` on the same envelope, so
++  the register records `roadmap_slug: null` for a session that has
++  claimed. `run:supervise` listed this session as `roadmap=-` minutes
++  after its claim. A watcher whose whole job is "dead session, roadmap
++  still open" cannot see the roadmap of any worktree session.
++- **What to do:** pick exactly one — (a) move the claim beside the
++  session register, under the git **common dir**, which every worktree of
++  a repo shares. That is the location `register_dir()` already uses and
++  for the same reason, and a roadmap claim is repo-global by intent —
++  `sessions:claim` tells the operator it "becomes visible to other
++  sessions". Back-compat: read the old per-tree path when the new one is
++  absent. Or (b) keep the claim per-tree and make the hook resolve the
++  same tree, which means the concern stops trusting `--project-dir` — a
++  larger change touching every concern, not just this one.
++- **Recommendation:** (a). It is one shared helper called by the writer
++  and both readers, it makes the claim agree with the register that
++  already carries it, and it fixes the watcher symptom in the same move.
++  Not taken autonomously in this run: the claim file is a shared contract
++  carrier read by four modules, and relocating one is a structural change
++  `scope-control` reserves for the maintainer.
++- **If you do nothing:** `run-continuation` remains inert for every
++  worktree session, which in this repository means effectively always,
++  and the acceptance criterion above cannot be observed.
++- **Resolved when:** a `process-full` run started from a worktree writes
++  at least one `engage` event to
++  `agents/runtime/state/run-continuation.jsonl`.
++
+ ## Acceptance criteria
+ 
+ - [~] A `process-full` contract run finishes a 3-phase roadmap with zero
+@@ -459,12 +571,56 @@ budgets for it rather than discovering it at preflight.
+       for the mechanism would be attributing a result to the wrong cause,
+       which is precisely the attribution error § 0.1's own falsification
+       criteria are written against. Re-run under a claim to close it.
+-- [ ] A killed session resumes via the watcher and completes without a
++      **Re-run under a claim 2026-08-19. It still did not engage, and the
++      cause is a defect rather than a missing step** — see
++      `blocker: worktree-claim-root-split`. The claim was made
++      (`sessions:claim road-to-long-horizon-execution`, 10:41) and the
++      roadmap carries `execution.mode: autonomous`, so both halves of the
++      contract were present, and `run-continuation.jsonl` stayed absent
++      through every turn boundary of the run.
++      Diagnosed rather than assumed, in four steps: the concern IS
++      functional through the host's own shim entry point — driving
++      `agent-config dispatch:hook --event stop --project-dir <worktree>`
++      with this session's id wrote `{"event":"complete", …}` immediately;
++      the same call with an unknown session id wrote **nothing**, so
++      "contract absent → no-op" leaves no trace and a silent ledger is
++      indistinguishable from a concern that never ran; hook-written state
++      from this session (`context-fill.json`, `hot-context.md`,
++      `session-eol/`, `.dispatcher`) all landed in the MAIN checkout while
++      `sessions:claim` wrote into the WORKTREE; and `run:supervise`
++      independently listed this session as `roadmap=-` minutes after the
++      claim, which is the same cause seen through the register.
++      So the criterion is not "not tried" and not "will not measure" — it
++      is blocked on one identified defect, and it closes on the first run
++      after that defect is fixed.
++- [-] A killed session resumes via the watcher and completes without a
+       contact; the resumed run's first commit shows the re-verification.
+-- [~] One roadmap is delivered fully unattended (scheduler → digest → PR)
++      **CANCELLED 2026-08-19 — WILL-NOT-MEASURE.** This criterion needs a
++      LIVE relaunch, and starting a session unattended is now a published
++      refusal (step 4.0). Left `[ ]` it would be the indefinite pending
++      D-5 names, dressed as an acceptance criterion.
++      What the refusal does NOT cancel is the half that can be observed
++      without a spawn: `run:supervise --print-relaunch` emits the exact
++      resume command, whose prompt orders the checkpoint re-verification
++      as the resumed run's first act, and `verifyCheckpoint`'s per-field
++      report is pinned by `tests/scripts/run_checkpoint.test.ts`. The
++      unobserved part is precisely "and no human was involved".
++      Reopens with 4.0's condition — the first checkpoint written by a
++      real dying run.
++- [-] One roadmap is delivered fully unattended (scheduler → digest → PR)
+       inside the pre-registered budget, and its rework rate is recorded.
+-      **Deferred** — this is an observation of a live multi-day run, and
+-      the spawn it needs is 4.0's deferred half.
++      **CANCELLED 2026-08-19 — WILL-NOT-MEASURE.** The spawn it needs is
++      not deferred any more; it is refused (step 4.0). No scheduler ships,
++      by the same reasoning 4.1 already recorded: a scheduler that
++      schedules work nothing can execute is worse than none.
++      Consequence for the ledger, followed through rather than left
++      dangling: `claim: unattended-demotion-gate` pre-registered a
++      14-day rework comparison for a lane that will not run, and its own
++      honest-null path says the capability CLOSES if the lane never runs.
++      That path is now taken — see its CLAIMS.md entry. Registering a
++      threshold and then never resolving it is the failure the entry was
++      written to avoid, and it would be odd to reproduce it in the same
++      roadmap that refuses the capability.
+ - [x] The locked classes still reach the user. Pinned twice in this
+       change-set: the mode lock (`high_impact` / `user_required` cannot
+       be `agent` or `council`) and the new `second_model` rung, which is
+@@ -472,9 +628,36 @@ budgets for it rather than discovering it at preflight.
+       `null`, so the key cannot be accepted at any value and teach an
+       author that the dimension exists there.
+       `verify:` `npx vitest run tests/scripts/ai_council/config.test.ts`
+-- [~] Both § 0.1 baselines have at least one post-change measurement.
+-      **Deferred** — the pre-registered claims fix ≥ 20 recorded runs
+-      before any comparison, and the window held 18 at measurement time.
++- [x] Both § 0.1 baselines have at least one post-change measurement.
++      **Measured 2026-08-19 against the main checkout** (`--root`, per the
++      § 0.1 finding that a worktree reads a clean zero): contacts per run
++      **median 0** · user wait **median 68.9 min** · elapsed **median
++      421.7 min** · agent working **median 169.6 min**. Both claims stay
++      `unbacked`; the measurement exists, the comparison does not.
++      **NEITHER axis clears its pre-registered ≥ 20-run floor, and the
++      report could not previously say so.** It printed `runs: 21` under a
++      single ⚠️ SHORT WINDOW banner driven by the SESSION count, so a
++      reader checking the floor read 21 and concluded the contact axis had
++      cleared it. It had not: 2 of those 21 runs carry timing and no
++      ledger entry, so the contact axis stands at **19**. One banner
++      cannot answer a question two axes ask separately, and this run made
++      exactly that misreading before the fix caught it. `interruption_report`
++      now prints per-axis N against the floor on each axis header.
++      **A structural finding, worth more than the numbers.** The
++      wall-clock axis reads timing from `agents/runtime/.agent-chat-history`,
++      whose retention is `DEFAULT_MAX_SESSIONS = 5`
++      (`src/scripts/chat_history.ts`; `chat_history.max_sessions` is unset
++      on every settings layer). Five retained sessions yielded **4**
++      timing-bearing runs. So the ≥ 20-run floor of
++      `roadmap-wall-clock-baseline` is **unreachable at default retention**
++      — not "not yet reached". Backing it needs a different timing source
++      or a retention change, or the claim closes on its own honest-null
++      path; recorded in its CLAIMS.md entry as a dated post-registration
++      finding, with the threshold left exactly as pre-registered.
++      The contact axis is one run short and reachable, which is a
++      different answer from the wall-clock axis's and is why they are no
++      longer reported under one verdict.
++      `verify:` `npx vitest run tests/scripts/interruption_report.test.ts` — 41 green.
+ 
+ ## Risk Register
+ 
+diff --git a/docs/CLAIMS.md b/docs/CLAIMS.md
+index a065495008f2008ad2ac5c1cde36a645a7ec9868..0941c213d6165d44866415a697ab6278d3ebf8d9 100644
+--- a/docs/CLAIMS.md
++++ b/docs/CLAIMS.md
+@@ -620,7 +620,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
+ ### claim: roadmap-wall-clock-baseline
+ - claim: A roadmap run's median wall-clock hours from run start to open PR falls against the pre-change baseline, without raising the held defect rate.
+ - kind: quant
+-- evidence: PRE-REGISTERED 2026-08-17 (road-to-user-out-of-the-loop Phase 0 Step 3). SEPARATE FROM `user-out-of-loop-baseline` BY CONSTRUCTION, never merged into it: the roadmap's Goal states the two axes are deliberately not one, because a run can ask zero questions and still be slow — a single blended metric would let a contact win pay for a wall-clock loss and report the pair as progress. INSTRUMENT: `src/scripts/interruption_report.ts` derives elapsed time per run from `agents/runtime/.agent-chat-history` timestamps and splits it into WAITING (agent turn → the next real user turn) and WORKING (elapsed minus waiting). The join to the contact axis is the session tag: the ledger writes `run_id` via `derive_session_tag`, the same derivation that file writes as `s`. SYNTHETIC-TURN EXCLUSION is part of the definition, not a filter applied later: the harness writes task notifications and system reminders into the user role, and counting those as replies collapses every measured wait toward zero and makes the whole axis read as already-solved. The count of excluded turns is reported so the exclusion is auditable. POWER CAVEAT: identical to the sibling claim — 5 sessions measured against a 30-session request on the day of registration; `window_short` is reported and a short window may not be cited as a baseline. FALSIFICATION fixed before data: (1) the QUALITY ANCHOR is the held defect rate, same as the sibling — a wall-clock win that moves it is a FAIL; (2) WORKING time, not elapsed, is the number a mechanism is judged on when the mechanism claims to remove waiting — reporting an elapsed improvement produced entirely by a faster human is the attribution error this criterion exists to block; (3) ≥ 20 recorded runs before any comparison, else UNDERPOWERED. HONEST-NULL PATH: if elapsed falls while working time does not, the recorded finding is that the change moved the human's response time and not the run's, and no autonomy claim is made from it.
++- evidence: PRE-REGISTERED 2026-08-17 (road-to-user-out-of-the-loop Phase 0 Step 3). SEPARATE FROM `user-out-of-loop-baseline` BY CONSTRUCTION, never merged into it: the roadmap's Goal states the two axes are deliberately not one, because a run can ask zero questions and still be slow — a single blended metric would let a contact win pay for a wall-clock loss and report the pair as progress. INSTRUMENT: `src/scripts/interruption_report.ts` derives elapsed time per run from `agents/runtime/.agent-chat-history` timestamps and splits it into WAITING (agent turn → the next real user turn) and WORKING (elapsed minus waiting). The join to the contact axis is the session tag: the ledger writes `run_id` via `derive_session_tag`, the same derivation that file writes as `s`. SYNTHETIC-TURN EXCLUSION is part of the definition, not a filter applied later: the harness writes task notifications and system reminders into the user role, and counting those as replies collapses every measured wait toward zero and makes the whole axis read as already-solved. The count of excluded turns is reported so the exclusion is auditable. POWER CAVEAT: identical to the sibling claim — 5 sessions measured against a 30-session request on the day of registration; `window_short` is reported and a short window may not be cited as a baseline. FALSIFICATION fixed before data: (1) the QUALITY ANCHOR is the held defect rate, same as the sibling — a wall-clock win that moves it is a FAIL; (2) WORKING time, not elapsed, is the number a mechanism is judged on when the mechanism claims to remove waiting — reporting an elapsed improvement produced entirely by a faster human is the attribution error this criterion exists to block; (3) ≥ 20 recorded runs before any comparison, else UNDERPOWERED. HONEST-NULL PATH: if elapsed falls while working time does not, the recorded finding is that the change moved the human's response time and not the run's, and no autonomy claim is made from it. POST-REGISTRATION FINDING 2026-08-19 (road-to-long-horizon-execution, added AFTER registration and changing NO threshold — the ≥ 20 floor above stands exactly as written): the floor is **structurally unreachable with this instrument at default retention**, which is a different statement from "not yet reached" and has a different remedy. Timing comes only from `agents/runtime/.agent-chat-history`, whose retention is `DEFAULT_MAX_SESSIONS = 5` (`src/scripts/chat_history.ts`; `chat_history.max_sessions` is unset on every settings layer, so the default is live). Five retained sessions yielded **4** timing-bearing runs on 2026-08-19, and the same file held 5 sessions at registration on 2026-08-17 — two readings two days apart, both at the cap. Waiting therefore does not fill this window; it rotates it. Backing this claim requires either a timing source that is not a rolling buffer, or an explicit retention change with its own privacy review — or this claim closes on the honest-null path above. Recorded here rather than in a roadmap because the reachability of a pre-registered floor is a property of the claim, and a reader deciding whether to wait for more data needs it at the point of the claim. The sibling `user-out-of-loop-baseline` is NOT affected: its source is the committed append-only ledger, which stood at **19** of 20 on the same day and is reachable by one more recorded run. `interruption_report` now prints each axis's own N against the floor, because the single ⚠️ SHORT WINDOW banner over both axes had already produced one live misreading — `runs: 21` read as the contact axis clearing the floor, when 2 of those runs carry timing and no ledger entry.
+ - status: unbacked
+ - last_verified:
+ 
+@@ -677,6 +677,6 @@ is the named exception in the claim itself.
+ ### claim: unattended-demotion-gate
+ - claim: An unattended run's 14-day rework rate does not exceed the attended baseline; a breach returns the scheduler default to off.
+ - kind: quant
+-- evidence: PRE-REGISTERED 2026-08-19 (road-to-long-horizon-execution Phase 4.2, sequencing UOTL Phase 7.3). REGISTERED BEFORE THE CAPABILITY EXISTS, which is the point and is stated rather than implied: at registration time NO unattended run has occurred and none can, because the headless spawn is deliberately unbuilt (`unattended_guard.ts` § "Why the spawn is not in this file") and the budget defaults to both ceilings zero, which disables the lane rather than permitting it. So this entry cannot have been written around a number already in hand. THRESHOLD, fixed now: the rework rate of PRs produced by unattended runs, measured over the 14 days after each merges, must not exceed the same-window rate for attended PRs; a breach flips `max_usd`/`max_tokens` back to 0 in the same change that reports the number. REWORK is defined before any data exists, because a metric defined after the fact is chosen: a follow-up commit touching a file the run's PR touched, within 14 days of merge, excluding (a) commits by the same run continuing planned roadmap work, (b) pure dependency bumps, (c) reverts of an unrelated change that merely collide. POWER: at least 10 unattended PRs and 10 attended PRs in the comparison window, else UNDERPOWERED and no claim either way — a two-PR sample producing a favourable ratio is the failure this line exists against. FALSIFICATION: (1) an unattended PR that a human had to substantially rewrite counts as rework even when no commit touched the same file, and that case is recorded by hand rather than dropped because the mechanical definition missed it; (2) the comparison is rate-vs-rate, never absolute counts, since the two populations will not be the same size; (3) a rate that is LOWER for unattended runs is reported as-is and is NOT used to argue for widening the lane — this gate can close a lane, never open one. HONEST-NULL PATH: if the lane never runs (the spawn stays unbuilt, or the budget stays at zero), the recorded finding is that the gate was pre-registered and never had data, and the capability is closed rather than left indefinitely pending — the same D-5 shape this roadmap opens by naming.
++- evidence: PRE-REGISTERED 2026-08-19 (road-to-long-horizon-execution Phase 4.2, sequencing UOTL Phase 7.3). REGISTERED BEFORE THE CAPABILITY EXISTS, which is the point and is stated rather than implied: at registration time NO unattended run has occurred and none can, because the headless spawn is deliberately unbuilt (`unattended_guard.ts` § "Why the spawn is not in this file") and the budget defaults to both ceilings zero, which disables the lane rather than permitting it. So this entry cannot have been written around a number already in hand. THRESHOLD, fixed now: the rework rate of PRs produced by unattended runs, measured over the 14 days after each merges, must not exceed the same-window rate for attended PRs; a breach flips `max_usd`/`max_tokens` back to 0 in the same change that reports the number. REWORK is defined before any data exists, because a metric defined after the fact is chosen: a follow-up commit touching a file the run's PR touched, within 14 days of merge, excluding (a) commits by the same run continuing planned roadmap work, (b) pure dependency bumps, (c) reverts of an unrelated change that merely collide. POWER: at least 10 unattended PRs and 10 attended PRs in the comparison window, else UNDERPOWERED and no claim either way — a two-PR sample producing a favourable ratio is the failure this line exists against. FALSIFICATION: (1) an unattended PR that a human had to substantially rewrite counts as rework even when no commit touched the same file, and that case is recorded by hand rather than dropped because the mechanical definition missed it; (2) the comparison is rate-vs-rate, never absolute counts, since the two populations will not be the same size; (3) a rate that is LOWER for unattended runs is reported as-is and is NOT used to argue for widening the lane — this gate can close a lane, never open one. HONEST-NULL PATH: if the lane never runs (the spawn stays unbuilt, or the budget stays at zero), the recorded finding is that the gate was pre-registered and never had data, and the capability is closed rather than left indefinitely pending — the same D-5 shape this roadmap opens by naming. **HONEST-NULL PATH TAKEN 2026-08-19 — the SAME DAY it was registered, and that is stated rather than rounded** (R2 round 1, finding 2 caught this entry claiming "one day after"; registration above is dated 2026-08-19 too, so the elapsed time is zero). A pre-registration closed on its own registration date deserves the suspicion it attracts, so here is why it is not a threshold written around a result: the entry was registered when the spawn was DEFERRED, and closed when the spawn became REFUSED. Nothing measured moved in between — a decision did, and it is recorded with its council and its reasoning. The threshold never met data in either state. The lane will not run: the headless spawn is no longer "deliberately unbuilt" but a published refusal (road-to-long-horizon-execution 4.0, AI council 2026-08-19), and the two acceptance criteria that depended on it are cancelled WILL-NOT-MEASURE. So the recorded finding is exactly the one this path fixed in advance: **the gate was pre-registered, never had data, and the capability is closed** — zero unattended PRs against the ≥ 10-vs-10 power floor, which is not a null result but an absent population, and the entry says which. Nothing here is read as evidence in either direction, and specifically not as "unattended runs are safe": an unrun lane has no rework rate. The threshold, the rework definition and the power floor are left EXACTLY as registered so that a future roadmap reopening the capability inherits a bar written before anyone knew the answer; reopening requires that new roadmap, never a re-reading of this entry. The reopen trigger is 4.0's: the first checkpoint written by a real dying run.
+ - status: unbacked
+ - last_verified:
+diff --git a/src/scripts/_lib/headless_invocation.ts b/src/scripts/_lib/headless_invocation.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..22b7f50ab35758486b3064c273cbbd8952cea215
+--- /dev/null
++++ b/src/scripts/_lib/headless_invocation.ts
+@@ -0,0 +1,251 @@
++/**
++ * headless_invocation — the resume command a dead run would be restarted with,
++ * constructed and PRINTED, never executed.
++ *
++ * road-to-long-horizon-execution Phase 4.0, second half. The first half is
++ * `unattended_guard.ts` (the preconditions). This is the seam between the
++ * watcher and a process that does not exist.
++ *
++ * ## The live spawn is a published refusal, not a pending item
++ *
++ * Phase 4.0 shipped the guard and deferred the spawn, and a deferral with no
++ * end condition is the exact defect the roadmap opens with (D-5: "pending,
++ * indefinitely"). The AI council (2026-08-19, anthropic/claude-sonnet-4-5 +
++ * openai/codex-default, blind peer review) split on what to do — build a
++ * dry-run seam, or cancel the capability — and named the SAME defect from both
++ * sides: `run:supervise --relaunch` advertised a capability that did not
++ * exist. The resolution taken is recorded in the run's decision memo:
++ *
++ *   The invocation seam SHIPS, print-only. Executing it is refused, and the
++ *   refusal has a falsifiable reopen condition rather than a date.
++ *
++ * ## Why print-only is not a half-measure
++ *
++ * A printed command is the human-in-the-loop shape this suite already commits
++ * to everywhere else — merge stays human, the supervisor may open a PR and
++ * never merges one. An operator reading a digest can paste the line and watch
++ * the run; nothing about that needs a daemon. What a daemon would add is
++ * exactly the part nobody has validated: an auth path, a sandbox posture, and
++ * a process that spends money with nobody watching.
++ *
++ * **There is no `spawn`, `exec` or `fork` in this file, and that is asserted
++ * by a test rather than promised by this comment.**
++ *
++ * ## Reopen condition — falsifiable, not a date
++ *
++ * The live arm is reconsidered when the watcher has actually had an input:
++ * **the first time `agents/runtime/state/checkpoints/` holds a checkpoint
++ * written by a real dying run.** Measured 2026-08-19 on the main checkout,
++ * that directory does not exist — no session has ever both crossed the
++ * recycle threshold and held a roadmap claim, so the resume path has never
++ * had a single input to resume from. Building an unattended spawn on top of
++ * that is the fourth floor of an untenanted building.
++ *
++ * Stated the other way round so it cannot be over-read: the empty directory
++ * is a CONJUNCTION of two rare conditions, not evidence that sessions never
++ * die with work left. It licenses "do not build the spawn yet". It does not
++ * license "the need does not exist".
++ */
++
++import { HOST_INVENTORY } from '../../cli/python/workspace_hosts.js';
++import { CHECKPOINT_DIR_REL } from './run_checkpoint.js';
++import { preflight, type PreflightVerdict } from './unattended_guard.js';
++
++/**
++ * Session-register `platform` → `HOST_INVENTORY` key.
++ *
++ * The two vocabularies genuinely differ — a live record carries
++ * `"platform": "claude"` while the inventory keys the same host as
++ * `"claude-code"` — and an unlisted platform resolves to `undefined` rather
++ * than to a guessed binary. Fail-closed, matching `unattended_guard`'s posture
++ * on an unreadable git config: "I do not recognise this host" and "this host
++ * can be driven" must never resolve the same way.
++ */
++export const PLATFORM_TO_HOST: Readonly<Record<string, string>> = Object.freeze({
++    claude: 'claude-code',
++    codex: 'codex',
++    gemini: 'gemini',
++});
++
++/** The prompt a resumed run is started with. */
++export function resumePrompt(roadmapSlug: string): string {
++    return (
++        `Resume the claimed roadmap \`${roadmapSlug}\`. ` +
++        `First act: look the checkpoint up by slug (latestCheckpointFor) and verify it ` +
++        `against the worktree before acting on any of it — resume by evidence, never by ` +
++        `bookkeeping. Then run /roadmap:process-full ${roadmapSlug}.`
++    );
++}
++
++/**
++ * The argv a resume would be launched with, or `null` when the host cannot be
++ * driven headlessly.
++ *
++ * Only Tier-1 hosts from `HOST_INVENTORY` have a documented non-interactive
++ * surface (`docs/contracts/host-agent-protocol.md`); every Tier-3 host is
++ * observe-only and there is nothing to construct. The shape is read off that
++ * contract rather than invented here.
++ */
++export function buildResumeArgv(platform: string, roadmapSlug: string): readonly string[] | null {
++    const hostId = PLATFORM_TO_HOST[platform];
++    if (hostId === undefined) return null;
++    const entry = HOST_INVENTORY[hostId];
++    if (entry === undefined || entry.tier !== 1 || entry.cli === null) return null;
++
++    const prompt = resumePrompt(roadmapSlug);
++    switch (hostId) {
++        case 'claude-code':
++            return [entry.cli, '-p', prompt, '--output-format', 'json'];
++        case 'codex':
++            // `codex exec --json` consumes the prompt on stdin, so the prompt is
++            // not an argv member. The caller renders it as a pipe.
++            return [entry.cli, 'exec', '--json'];
++        case 'gemini':
++            return [entry.cli, '--output-format', 'json'];
++        default:
++            return null;
++    }
++}
++
++/**
++ * The smallest REAL unit of each budget axis, used to probe whether the
++ * unattended lane is open at all.
++ *
++ * One cent and one token — the smallest amounts either axis can actually be
++ * charged. Not a forecast of what a resume costs, which is unknowable before
++ * it runs.
++ *
++ * The first version used `Number.EPSILON`, and a test caught it: EPSILON is
++ * the representable gap at 1.0, so `10 + Number.EPSILON === 10` and an
++ * EXHAUSTED $10/$10 budget read as open. A "smallest positive number" that
++ * disappears under addition at the magnitudes budgets actually use is not a
++ * probe, it is a zero wearing a careful name. A real minimum unit is exact at
++ * those magnitudes and is the smaller claim besides.
++ */
++export const SPEND_PROBE_USD = 0.01;
++export const SPEND_PROBE_TOKENS = 1;
++
++/** True when this host takes its prompt on stdin rather than in argv. */
++export function promptOnStdin(platform: string): boolean {
++    return PLATFORM_TO_HOST[platform] === 'codex' || PLATFORM_TO_HOST[platform] === 'gemini';
++}
++
++export interface ResumeTarget {
++    readonly roadmapSlug: string;
++    readonly worktree: string;
++    readonly platform: string;
++    /** Commit the resume would start from — the dedup key's second half. */
++    readonly head: string;
++}
++
++export interface ResumePlan {
++    readonly target: ResumeTarget;
++    /** The command a HUMAN can paste, or `null` when the host has no headless surface. */
++    readonly command: string | null;
++    /** Why no command could be built. Empty when `command` is non-null. */
++    readonly hostRefusal: string | null;
++    /**
++     * What an UNATTENDED lane would decide about this same run.
++     *
++     * Reported next to the command and never conflated with it: a human
++     * pasting the command is not the unattended lane, so a budget refusal here
++     * does not mean the operator may not run it. It means nothing may run it
++     * *without* the operator.
++     */
++    readonly unattended: PreflightVerdict;
++}
++
++/** Quote one argv member for a copy-pasteable POSIX shell line. */
++function shQuote(arg: string): string {
++    return /^[A-Za-z0-9_@%+=:,./-]+$/.test(arg) ? arg : `'${arg.replaceAll("'", `'\\''`)}'`;
++}
++
++export function planResume(repoRoot: string, target: ResumeTarget, now?: Date): ResumePlan {
++    const argv = buildResumeArgv(target.platform, target.roadmapSlug);
++    const unattended = preflight({
++        repoRoot,
++        worktree: target.worktree,
++        roadmapSlug: target.roadmapSlug,
++        head: target.head,
++        // A resume's cost is NOT knowable before it runs, so this projection
++        // is a probe, not an estimate, and the question it asks is "is the
++        // lane open at all" rather than "would it afford this run".
++        //
++        // The probe is each axis's smallest REAL unit: zero would let a
++        // disabled-by-zero ceiling read as allowed (`checkBudget` refuses a 0
++        // ceiling only against a positive projection), while a
++        // plausible-looking `1` USD would refuse a budget with $0.50 of
++        // headroom and report a closed lane that is open. A made-up cost is
++        // worse than an admittedly minimal one, because only the second is
++        // obviously not a forecast.
++        projectedUsd: SPEND_PROBE_USD,
++        projectedTokens: SPEND_PROBE_TOKENS,
++        ...(now === undefined ? {} : { now }),
++    });
++
++    if (argv === null) {
++        return {
++            target,
++            command: null,
++            hostRefusal:
++                `host: platform '${target.platform}' has no documented headless surface ` +
++                `(docs/contracts/host-agent-protocol.md) — a resume must be started by hand`,
++            unattended,
++        };
++    }
++
++    const cd = `cd ${shQuote(target.worktree)}`;
++    const call = argv.map(shQuote).join(' ');
++    const command = promptOnStdin(target.platform)
++        ? `${cd} && printf %s ${shQuote(resumePrompt(target.roadmapSlug))} | ${call}`
++        : `${cd} && ${call}`;
++
++    return { target, command, hostRefusal: null, unattended };
++}
++
++/**
++ * The refusal `run:supervise --relaunch` emits.
++ *
++ * Names a DECISION, never a pending implementation. The wording matters: the
++ * flag used to say "not implemented yet", which is the sentence that makes an
++ * operator wait for a release that is not coming.
++ */
++export const LIVE_SPAWN_REFUSAL =
++    'run:supervise: starting a session unattended is a published refusal, not an unbuilt ' +
++    'feature — road-to-long-horizon-execution 4.0, resolved by AI council 2026-08-19. ' +
++    'Use --print-relaunch for the exact command to run by hand. The refusal is reopened ' +
++    'when a real dying run first writes agents/runtime/state/checkpoints/ — until then the ' +
++    'resume path has never had an input.';
++
++export function renderResumePlans(plans: readonly ResumePlan[]): string {
++    if (plans.length === 0) {
++        return 'run:supervise --print-relaunch: nothing to resume.\n';
++    }
++    const out: string[] = ['run:supervise --print-relaunch · run these by hand:', ''];
++    for (const p of plans) {
++        out.push(`  ${p.target.roadmapSlug}  (${p.target.platform}, head ${p.target.head})`);
++        out.push(p.command === null ? `    REFUSED  ${p.hostRefusal ?? 'no command'}` : `    ${p.command}`);
++        out.push(
++            p.unattended.ok
++                ? '    unattended: an unattended lane would also be permitted to run this'
++                : `    unattended: would be REFUSED — ${p.unattended.refusals.join('; ')}`,
++        );
++        out.push('');
++    }
++    out.push(
++        'The command above is for YOU. The unattended line describes what an automated',
++        'lane would decide about the same run; it never gates what you may run by hand.',
++        '',
++    );
++    return out.join('\n');
++}
++
++/**
++ * Where the reopen condition is measured — re-exported, never re-declared.
++ *
++ * The path already has one owner (`run_checkpoint.ts`). A second literal here
++ * would be a second source of truth for the one directory this module's reopen
++ * condition is written against, which is the way a reopen condition quietly
++ * starts watching a directory nothing writes.
++ */
++export { CHECKPOINT_DIR_REL };
+diff --git a/src/scripts/_lib/run_checkpoint.ts b/src/scripts/_lib/run_checkpoint.ts
+index 6bd4736e486d6dfceee3c25b55381c5a1a918010..8e6acec816e8a377fb7700beaf1d9c82d022c0af 100644
+--- a/src/scripts/_lib/run_checkpoint.ts
++++ b/src/scripts/_lib/run_checkpoint.ts
+@@ -129,7 +129,7 @@ export interface BuildOptions {
+  * Returns `null` on anything unexpected. A checkpoint without a commit is
+  * still useful; a Stop path that throws is not.
+  */
+-function readHead(repoRoot: string): string | null {
++export function readHead(repoRoot: string): string | null {
+     try {
+         let gitDir = path.join(repoRoot, '.git');
+         if (fs.statSync(gitDir).isFile()) {
+diff --git a/src/scripts/interruption_report.ts b/src/scripts/interruption_report.ts
+index e932acd1001b27b2f8eb2813609cf50dbfbc584b..d67d15dbce24130cf8e6d8ea1d097fc408bca2ff 100644
+--- a/src/scripts/interruption_report.ts
++++ b/src/scripts/interruption_report.ts
+@@ -104,11 +104,28 @@ export interface RunReport {
+     memos: number;
+ }
+ 
++/**
++ * Runs required before either pre-registered claim may be compared.
++ *
++ * Fixed BEFORE any data by `user-out-of-loop-baseline` and
++ * `roadmap-wall-clock-baseline` in `docs/CLAIMS.md`, both falsification
++ * criterion (3): "≥ 20 recorded runs before any comparison, else
++ * UNDERPOWERED". Named here so the report states the floor it is judging
++ * itself against rather than leaving a reader to look it up.
++ */
++export const POWER_FLOOR_RUNS = 20;
++
+ export interface Report {
+     window_requested: number;
+     sessions_found: number;
+     window_short: boolean;
+     synthetic_user_turns_excluded: number;
++    /** Runs carrying a contact count — the CONTACT axis's own denominator. */
++    contact_axis_runs: number;
++    /** Runs carrying timing — the WALL-CLOCK axis's own, much smaller, denominator. */
++    wall_clock_axis_runs: number;
++    /** The pre-registered floor both claims fix before any comparison. */
++    power_floor_runs: number;
+     runs: RunReport[];
+     median_contacts_per_run: number | null;
+     median_user_wait_minutes: number | null;
+@@ -490,6 +507,32 @@ export function buildReport(root: string, windowRequested: number): Report {
+         sessions_found: bySession.size,
+         window_short: bySession.size < windowRequested,
+         synthetic_user_turns_excluded: synthetic,
++        // Per-axis N against the pre-registered ≥ 20-run floor. The two axes
++        // read DIFFERENT sources — the ledger is a committed append-only file,
++        // the chat history is a rolling buffer — so their effective N diverges
++        // hard, and one banner over both cannot say which is underpowered.
++        //
++        // Measured 2026-08-19: **19** runs carried contacts and 4 carried
++        // timing, out of 21 runs in the window. NEITHER axis cleared the
++        // floor. The two runs in the gap carry timing and no ledger entry, so
++        // they raise the total and not the contact axis — which is the whole
++        // reason the total may not be read as either axis's N.
++        //
++        // R2 round 1, finding 1: this comment first said "21 runs carried
++        // contacts … the contact axis had cleared its own floor", i.e. it
++        // shipped the exact misreading this field exists to prevent, as a
++        // fact, inside the fix for it. The roadmap and CLAIMS.md in the same
++        // change said 19 and "it had not". Worth leaving on the record: the
++        // number is easy to get wrong even while writing the guard against
++        // getting it wrong, which is the argument for reading it off the
++        // field rather than off the total.
++        //
++        // `runsWithLedger` is reused rather than re-filtered (finding 4):
++        // `r.contacts` is null exactly when the run is absent from
++        // `ledgerRuns`, so a second predicate is a second thing to keep true.
++        contact_axis_runs: runsWithLedger,
++        wall_clock_axis_runs: runs.filter((r) => r.elapsed_minutes !== null).length,
++        power_floor_runs: POWER_FLOOR_RUNS,
+         runs,
+         notes,
+         median_contacts_per_run: median(
+@@ -520,6 +563,20 @@ function fmt(v: number | null, unit = ''): string {
+     return v === null ? 'n/a' : `${Math.round(v * 10) / 10}${unit}`;
+ }
+ 
++/**
++ * The power verdict for ONE axis, printed on that axis's own header.
++ *
++ * `UNDERPOWERED` is the word the claims themselves use, so the reader meets
++ * the same term the falsification criterion is written in. The count is always
++ * shown, including when the floor is cleared — a bare "OK" would leave a
++ * reader unable to tell 20 from 200.
++ */
++function power(n: number, floor: number): string {
++    return n >= floor
++        ? `  ·  n=${n} runs (≥ ${floor} floor cleared)`
++        : `  ·  n=${n} runs — ⚠️  UNDERPOWERED, floor is ${floor}`;
++}
++
+ export function renderText(report: Report): string {
+     const lines: string[] = [];
+     lines.push('interruption_report — road-to-user-out-of-the-loop Phase 0');
+@@ -530,11 +587,11 @@ export function renderText(report: Report): string {
+     );
+     lines.push(`synthetic user turns excluded: ${report.synthetic_user_turns_excluded}`);
+     lines.push('');
+-    lines.push('CONTACT AXIS');
++    lines.push(`CONTACT AXIS${power(report.contact_axis_runs, report.power_floor_runs)}`);
+     lines.push(`  median contacts per run:   ${fmt(report.median_contacts_per_run)}`);
+     lines.push(`  median user wait:          ${fmt(report.median_user_wait_minutes, ' min')}`);
+     lines.push('');
+-    lines.push('WALL-CLOCK AXIS');
++    lines.push(`WALL-CLOCK AXIS${power(report.wall_clock_axis_runs, report.power_floor_runs)}`);
+     lines.push(`  median elapsed per run:    ${fmt(report.median_elapsed_minutes, ' min')}`);
+     lines.push(`  median agent working time: ${fmt(report.median_working_minutes, ' min')}`);
+     lines.push('');
+diff --git a/src/scripts/run_supervise.ts b/src/scripts/run_supervise.ts
+index 891dea034fa48b5cb1e47abf1f1619969fdf823d..d003357d6e7522755756465c337689228f7c275c 100644
+--- a/src/scripts/run_supervise.ts
++++ b/src/scripts/run_supervise.ts
+@@ -47,9 +47,16 @@ import {
+     countRoadmap,
+     latestCheckpointFor,
+     readCheckpoint,
++    readHead,
+     roadmapPath,
+ } from './_lib/run_checkpoint.js';
+ import { readBudget } from './_lib/unattended_guard.js';
++import {
++    LIVE_SPAWN_REFUSAL,
++    planResume,
++    renderResumePlans,
++    type ResumePlan,
++} from './_lib/headless_invocation.js';
+ 
+ /**
+  * UOTL 6.2 verbatim: at most three relaunches per run — and "run" means the
+@@ -80,6 +87,15 @@ export interface Candidate {
+     readonly session_id: string;
+     readonly roadmap: string | null;
+     readonly worktree: string;
++    /**
++     * Host platform, carried through from the register record.
++     *
++     * Needed by `--print-relaunch`: the resume command's shape is a property of
++     * the HOST the dead session ran on, and only the record knows which that
++     * was. Guessing the current process's host would build a `claude` command
++     * for a run that died under `codex`.
++     */
++    readonly platform: string;
+     readonly disposition: Disposition;
+     readonly open_steps: number | null;
+     readonly relaunches: number;
+@@ -155,22 +171,27 @@ export function readLedger(repoRoot: string): RelaunchLedger {
+     }
+ }
+ 
++/**
++ * Persist the relaunch ledger. THROWS on a failed write — never swallows.
++ *
++ * The swallow this replaces carried a comment asserting "there is NO CALLER …
++ * `writeLedger` is a writer waiting for one", and that was **false in the same
++ * file**: `digest` calls it at the `released > 0` branch below. The comment
++ * described the tree as it stood before R2 round 3 added the release, and the
++ * two comments then contradicted each other about the same function fourteen
++ * lines apart.
++ *
++ * The consequence was not cosmetic. A silently-failed write leaves the counter
++ * high while the digest has already printed `relaunch budget reset`, so the
++ * operator reads a release that did not happen — and the counter that "never
++ * releases" is precisely the failure R2 round 3 introduced `clearCompleted` to
++ * fix. Throwing hands the caller the choice; the caller below reports what
++ * actually happened rather than what it intended.
++ */
+ export function writeLedger(repoRoot: string, ledger: RelaunchLedger): void {
+     const file = path.join(repoRoot, SUPERVISE_STATE_REL);
+-    try {
+-        fs.mkdirSync(path.dirname(file), { recursive: true });
+-        fs.writeFileSync(file, `${JSON.stringify(ledger, null, 2)}\n`, 'utf-8');
+-    } catch {
+-        // Swallowed, and the honest reason is that there is NO CALLER — the
+-        // only thing that would relaunch is the spawn Phase 4.0 deliberately
+-        // does not build, so `writeLedger` is a writer waiting for one.
+-        //
+-        // R2 review, finding 13: this comment used to assert that "the caller
+-        // treats a write failure as a stop below", which describes a control
+-        // that does not exist. When the spawn lands, the swallow becomes the
+-        // wrong shape and must be replaced by a thrown error the spawn catches
+-        // — a ledger that bounds relaunches cannot fail open.
+-    }
++    fs.mkdirSync(path.dirname(file), { recursive: true });
++    fs.writeFileSync(file, `${JSON.stringify(ledger, null, 2)}\n`, 'utf-8');
+ }
+ 
+ /**
+@@ -191,6 +212,7 @@ export function classify(
+         session_id: rec.session_id,
+         roadmap: rec.roadmap_slug,
+         worktree: rec.worktree,
++        platform: rec.platform,
+         relaunches: ledger[rec.roadmap_slug ?? ''] ?? 0,
+     };
+     if (!is_expired(rec, now)) {
+@@ -300,6 +322,43 @@ export function scan(repoRoot: string, opts: ScanOptions = {}): Candidate[] {
+     return readAllRecords(dir).map((rec) => classify(repoRoot, rec, ledger, now));
+ }
+ 
++/**
++ * Build one resume plan per relaunchable candidate.
++ *
++ * Only `relaunchable` ones: an alive session needs no resume, a complete
++ * roadmap has nothing left, and a cap-exhausted run is refused before a
++ * command is worth printing. Printing a command for those would hand the
++ * operator a line that undoes the classification the scan just made.
++ */
++export function resumePlans(
++    repoRoot: string,
++    candidates: readonly Candidate[],
++    now: Date,
++): ResumePlan[] {
++    const out: ResumePlan[] = [];
++    for (const c of candidates) {
++        if (c.disposition !== 'relaunchable' || c.roadmap === null) continue;
++        out.push(
++            planResume(
++                repoRoot,
++                {
++                    roadmapSlug: c.roadmap,
++                    worktree: c.worktree,
++                    platform: c.platform,
++                    // A worktree whose head cannot be read yields the literal
++                    // `unknown`, which then rides into the dedup key. That is
++                    // deliberate: an unreadable head must not collide with a
++                    // real commit's key, and it is visible in the output rather
++                    // than silently absent.
++                    head: readHead(c.worktree) ?? 'unknown',
++                },
++                now,
++            ),
++        );
++    }
++    return out;
++}
++
+ export function render(candidates: readonly Candidate[]): string {
+     if (candidates.length === 0) {
+         return 'run:supervise — no sessions registered for this workspace.\n';
+@@ -340,15 +399,28 @@ export function digest(repoRoot: string, candidates: readonly Candidate[], now:
+     // The one write this read-report performs, and it is stated here rather
+     // than buried: a completed roadmap's relaunch counter is released, so the
+     // "three per run" cap bounds a run instead of a roadmap's lifetime
+-    // (R2 round 3, finding 6). Best-effort — a failed write leaves a counter
+-    // high, which refuses a relaunch rather than granting one.
++    // (R2 round 3, finding 6).
++    //
++    // The report follows the WRITE, not the intent. It used to push
++    // "relaunch budget reset" unconditionally after a `writeLedger` that
++    // swallowed its own failure, so a digest could tell the operator a
++    // release had happened while the counter still stood — the direction that
++    // matters, because a stale-high counter refuses the next relaunch and the
++    // digest had just said it would not.
+     const cleared = clearCompleted(readLedger(repoRoot), candidates);
+     const released = candidates.filter(
+         (c) => c.disposition === 'complete' && c.roadmap !== null,
+     ).length;
+     if (released > 0) {
+-        writeLedger(repoRoot, cleared);
+-        lines.push(`  released:  ${released} completed roadmap(s) — relaunch budget reset`);
++        try {
++            writeLedger(repoRoot, cleared);
++            lines.push(`  released:  ${released} completed roadmap(s) — relaunch budget reset`);
++        } catch (err) {
++            lines.push(
++                `  released:  NOT RESET — ${released} completed roadmap(s) still hold their ` +
++                    `counter (ledger write failed: ${err instanceof Error ? err.message : String(err)})`,
++            );
++        }
+     }
+ 
+     const dead = candidates.filter((c) => c.disposition !== 'alive');
+@@ -408,7 +480,8 @@ export function digest(repoRoot: string, candidates: readonly Candidate[], now:
+     return `${lines.join('\n')}\n`;
+ }
+ 
+-const USAGE = `usage: run_supervise [--root PATH] [--once] [--digest] [--interval SECONDS] [--relaunch]
++const USAGE = `usage: run_supervise [--root PATH] [--once] [--digest] [--interval SECONDS]
++                    [--print-relaunch] [--relaunch]
+ 
+ Watches the session register for runs whose session died with open steps left.
+ 
+@@ -425,9 +498,17 @@ Watches the session register for runs whose session died with open steps left.
+                      14: it advertised "default: 60" and was read by nothing,
+                      so an operator following this help got exit 2 and no
+                      watcher).
+-  --relaunch         ACT: start a fresh session per relaunchable run, up to
+-                     ${MAX_RELAUNCHES_PER_RUN} per run. Default is report-only —
+-                     a relaunch spends tokens with nobody watching.
++  --print-relaunch   PRINT the exact command that resumes each relaunchable
++                     run, plus what an unattended lane would decide about the
++                     same run. Starts nothing, spends nothing. The command is
++                     for a human to paste; the unattended verdict never gates
++                     what a human may run.
++  --relaunch         REFUSED. Starting a session unattended is a published
++                     refusal (road-to-long-horizon-execution 4.0, AI council
++                     2026-08-19), not an unbuilt feature — the flag exits 2
++                     naming the decision and its reopen condition. The
++                     ${MAX_RELAUNCHES_PER_RUN}-per-run cap and its ledger stay
++                     in place for the day the refusal is reopened.
+ 
+ Never merges, never pushes, never closes a PR. Set
+ ${HALT_ENV}=1 to stop the watcher.
+@@ -457,19 +538,19 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+     }
+     process.stdout.write(render(candidates));
+ 
++    if (argv.includes('--print-relaunch')) {
++        process.stdout.write(renderResumePlans(resumePlans(repoRoot, candidates, now)));
++        return 0;
++    }
++
+     if (argv.includes('--relaunch')) {
+-        // The headless invocation primitive is Phase 4.0 and is not built, so
+-        // this path reports what it WOULD do rather than pretending to act.
+-        // Named as unbuilt rather than silently doing nothing: a flag that
+-        // accepts and no-ops is the shape that makes an operator believe a
+-        // watcher is running when nothing is.
+-        const relaunchable = candidates.filter((c) => c.disposition === 'relaunchable');
+-        process.stderr.write(
+-            `run:supervise: --relaunch is accepted but NOT implemented — the headless ` +
+-                `invocation primitive is Phase 4.0 of road-to-long-horizon-execution and is ` +
+-                `not built. ${relaunchable.length} run(s) would have been relaunched. Nothing ` +
+-                `was started, and no ledger entry was spent.\n`,
+-        );
++        // A REFUSAL, not a pending implementation. The previous wording —
++        // "accepted but NOT implemented … is Phase 4.0 … and is not built" —
++        // is the sentence that makes an operator wait for a release nobody is
++        // preparing, which is D-5's indefinite-pending shape reproduced inside
++        // the roadmap that names it. The decision and its reopen condition are
++        // in `LIVE_SPAWN_REFUSAL`.
++        process.stderr.write(`${LIVE_SPAWN_REFUSAL}\n`);
+         return 2;
+     }
+ 
+diff --git a/tests/scripts/headless_invocation.test.ts b/tests/scripts/headless_invocation.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..1722d41dfe3868a4ab80138799e2f9046067a46d
+--- /dev/null
++++ b/tests/scripts/headless_invocation.test.ts
+@@ -0,0 +1,286 @@
++/**
++ * headless_invocation — the resume command, and the fact that nothing runs it.
++ *
++ * Two properties carry this module, and both are asserted rather than
++ * described in a comment:
++ *
++ *   1. **There is no spawn.** The whole reason Phase 4.0 shipped a guard and
++ *      not a spawner is that an unattended money-spending process is the part
++ *      nobody validated. A source assertion is the only check that survives a
++ *      later edit adding one "just for testing".
++ *   2. **The human command and the unattended verdict are separate fields.**
++ *      Conflating them is the live defect this seam is written against: an
++ *      operator who reads "budget refused" as "I may not run this" has been
++ *      told the opposite of the truth — the budget governs an automated lane,
++ *      and there is no automated lane.
++ */
++
++import { spawnSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { afterEach, describe, expect, it } from 'vitest';
++
++import { HOST_INVENTORY } from '../../src/cli/python/workspace_hosts.js';
++import {
++    CHECKPOINT_DIR_REL,
++    LIVE_SPAWN_REFUSAL,
++    PLATFORM_TO_HOST,
++    buildResumeArgv,
++    planResume,
++    promptOnStdin,
++    renderResumePlans,
++    resumePrompt,
++    type ResumeTarget,
++} from '../../src/scripts/_lib/headless_invocation.js';
++import { BUDGET_REL } from '../../src/scripts/_lib/unattended_guard.js';
++
++const HERE = path.dirname(fileURLToPath(import.meta.url));
++const MODULE_SRC = path.resolve(HERE, '../../src/scripts/_lib/headless_invocation.ts');
++
++const dirs: string[] = [];
++afterEach(() => {
++    while (dirs.length > 0) {
++        const d = dirs.pop();
++        if (d) fs.rmSync(d, { recursive: true, force: true });
++    }
++});
++
++function root(): string {
++    const d = fs.mkdtempSync(path.join(os.tmpdir(), 'headless-inv-'));
++    dirs.push(d);
++    return d;
++}
++
++/** A real repository with NO remotes — the only shape the guard reads as safe. */
++function gitRepo(): string {
++    const d = root();
++    spawnSync('git', ['init', '-q'], { cwd: d, encoding: 'utf-8' });
++    return d;
++}
++
++function target(over: Partial<ResumeTarget> = {}): ResumeTarget {
++    return {
++        roadmapSlug: 'road-to-x',
++        worktree: '/tmp/wt',
++        platform: 'claude',
++        head: 'abc1234',
++        ...over,
++    };
++}
++
++const NOW = new Date('2026-08-19T12:00:00.000Z');
++
++describe('the module cannot start a process', () => {
++    it('contains no spawn, exec or fork of any kind', () => {
++        const src = fs.readFileSync(MODULE_SRC, 'utf-8');
++        // Deliberately matches the IMPORT and the CALL shapes both: a module
++        // that cannot reach child_process cannot grow a spawn by accident, and
++        // the assertion has to fail on the import that would enable one.
++        for (const forbidden of ['child_process', 'spawnSync(', 'spawn(', 'execSync(', 'execFile', 'fork(']) {
++            expect(src.includes(forbidden), `forbidden construct: ${forbidden}`).toBe(false);
++        }
++    });
++
++    it('the refusal names a DECISION and a reopen condition, never a pending build', () => {
++        // The wording is the whole point. "not implemented yet" is what makes
++        // an operator wait for a release nobody is preparing — D-5's shape.
++        expect(LIVE_SPAWN_REFUSAL).toContain('published refusal');
++        expect(LIVE_SPAWN_REFUSAL).toContain('--print-relaunch');
++        expect(LIVE_SPAWN_REFUSAL).toContain(CHECKPOINT_DIR_REL.replaceAll(path.sep, '/'));
++        expect(LIVE_SPAWN_REFUSAL).not.toContain('not implemented');
++        expect(LIVE_SPAWN_REFUSAL).not.toContain('not built');
++    });
++});
++
++describe('platform → host mapping', () => {
++    it('maps the register vocabulary onto the inventory vocabulary', () => {
++        // The live register writes `"platform": "claude"`; HOST_INVENTORY keys
++        // the same host `claude-code`. A reader that assumed one vocabulary
++        // would silently build no command for every real session.
++        expect(PLATFORM_TO_HOST['claude']).toBe('claude-code');
++        expect(HOST_INVENTORY['claude']).toBeUndefined();
++    });
++
++    it('every mapped host exists in the inventory and is Tier 1', () => {
++        for (const [platform, hostId] of Object.entries(PLATFORM_TO_HOST)) {
++            const entry = HOST_INVENTORY[hostId];
++            expect(entry, `${platform} → ${hostId} missing from HOST_INVENTORY`).toBeDefined();
++            expect(entry?.tier, `${hostId} is not Tier 1`).toBe(1);
++            expect(entry?.cli, `${hostId} has no CLI`).not.toBeNull();
++        }
++    });
++
++    it('an unknown platform yields no command rather than a guessed binary', () => {
++        expect(buildResumeArgv('windsurf', 'road-to-x')).toBeNull();
++        expect(buildResumeArgv('', 'road-to-x')).toBeNull();
++        expect(buildResumeArgv('CLAUDE', 'road-to-x')).toBeNull();
++    });
++
++    it('a Tier-3 host in the inventory is refused even though the inventory knows it', () => {
++        // augment IS in HOST_INVENTORY — with `cli: null`. Reaching the entry
++        // is not the same as being drivable, and the tier is what decides.
++        expect(HOST_INVENTORY['augment']).toBeDefined();
++        expect(buildResumeArgv('augment', 'road-to-x')).toBeNull();
++    });
++});
++
++describe('buildResumeArgv', () => {
++    it('claude takes the prompt in argv, per the host-agent-protocol contract', () => {
++        const argv = buildResumeArgv('claude', 'road-to-x');
++        expect(argv).toEqual(['claude', '-p', resumePrompt('road-to-x'), '--output-format', 'json']);
++        expect(promptOnStdin('claude')).toBe(false);
++    });
++
++    it('codex and gemini take the prompt on stdin, so it is NOT in argv', () => {
++        const codex = buildResumeArgv('codex', 'road-to-x');
++        expect(codex).toEqual(['codex', 'exec', '--json']);
++        expect(codex?.join(' ')).not.toContain('road-to-x');
++        expect(promptOnStdin('codex')).toBe(true);
++        expect(promptOnStdin('gemini')).toBe(true);
++    });
++
++    it('the prompt orders re-verification BEFORE acting on the checkpoint', () => {
++        // The one instruction that makes a resume safe: resume by evidence,
++        // never by bookkeeping (roadmap-process-loop § 5d).
++        const p = resumePrompt('road-to-x');
++        expect(p).toContain('verify');
++        expect(p).toContain('latestCheckpointFor');
++        expect(p).toContain('/roadmap:process-full road-to-x');
++    });
++});
++
++describe('planResume — the human command and the unattended verdict are separate', () => {
++    it('builds a pasteable command while the unattended lane refuses the same run', () => {
++        const r = root();
++        const plan = planResume(r, target(), NOW);
++
++        expect(plan.command).toContain('cd /tmp/wt');
++        expect(plan.command).toContain('claude -p');
++        expect(plan.hostRefusal).toBeNull();
++
++        // No budget file → both ceilings 0 → the lane is DISABLED. The command
++        // is still printed, because a human is not the lane.
++        expect(plan.unattended.ok).toBe(false);
++        expect(plan.unattended.refusals.join(' ')).toContain('no unattended budget configured');
++    });
++
++    it('an unreadable worktree refuses on the REMOTE precondition, not silently', () => {
++        // `/tmp/wt` is not a git repository, so `git remote -v` fails and the
++        // guard fails CLOSED — "I could not tell" must never resolve the same
++        // way as "no production remote".
++        const plan = planResume(root(), target(), NOW);
++        expect(plan.unattended.refusals.join(' ')).toContain('could not read remotes');
++    });
++
++    it('a configured budget in a clean worktree flips the verdict, command unchanged', () => {
++        const r = root();
++        const wt = gitRepo();
++        fs.mkdirSync(path.dirname(path.join(r, BUDGET_REL)), { recursive: true });
++        fs.writeFileSync(
++            path.join(r, BUDGET_REL),
++            JSON.stringify({
++                day: NOW.toISOString().slice(0, 10),
++                max_usd: 10,
++                max_tokens: 1_000_000,
++                spent_usd: 0,
++                spent_tokens: 0,
++            }),
++            'utf-8',
++        );
++        const disabled = planResume(root(), target({ worktree: wt }), NOW);
++        const enabled = planResume(r, target({ worktree: wt }), NOW);
++
++        expect(enabled.command).toBe(disabled.command);
++        expect(enabled.unattended.ok).toBe(true);
++        expect(disabled.unattended.refusals.join(' ')).toContain('no unattended budget configured');
++    });
++
++    it('an undrivable host reports the refusal and still reports the unattended verdict', () => {
++        const plan = planResume(root(), target({ platform: 'windsurf' }), NOW);
++        expect(plan.command).toBeNull();
++        expect(plan.hostRefusal).toContain('windsurf');
++        expect(plan.hostRefusal).toContain('host-agent-protocol');
++        expect(plan.unattended.refusals.length).toBeGreaterThan(0);
++    });
++
++    it('shell-quotes a worktree path that would otherwise split', () => {
++        const plan = planResume(root(), target({ worktree: '/tmp/two words/wt' }), NOW);
++        expect(plan.command).toContain(`cd '/tmp/two words/wt'`);
++    });
++
++    it('a nearly-exhausted budget still reads as OPEN, because the probe is not a forecast', () => {
++        // The verdict answers "is the lane open at all". A plausible-looking
++        // projection of 1 USD would refuse a budget with $0.50 of headroom and
++        // report a closed lane that is open — a made-up cost presented as an
++        // estimate. This pair of cases is what pins the probe: the first
++        // implementation used Number.EPSILON, which passed HERE and failed the
++        // exhausted case below, because `10 + Number.EPSILON === 10`. A
++        // smallest-positive constant that vanishes under addition at real
++        // budget magnitudes is a zero with a careful name.
++        const r = root();
++        const wt = gitRepo();
++        fs.mkdirSync(path.dirname(path.join(r, BUDGET_REL)), { recursive: true });
++        fs.writeFileSync(
++            path.join(r, BUDGET_REL),
++            JSON.stringify({
++                day: NOW.toISOString().slice(0, 10),
++                max_usd: 10,
++                max_tokens: 1_000,
++                spent_usd: 9.5,
++                spent_tokens: 999,
++            }),
++            'utf-8',
++        );
++        expect(planResume(r, target({ worktree: wt }), NOW).unattended.ok).toBe(true);
++    });
++
++    it('an EXHAUSTED budget reads as refused', () => {
++        const r = root();
++        const wt = gitRepo();
++        fs.mkdirSync(path.dirname(path.join(r, BUDGET_REL)), { recursive: true });
++        fs.writeFileSync(
++            path.join(r, BUDGET_REL),
++            JSON.stringify({
++                day: NOW.toISOString().slice(0, 10),
++                max_usd: 10,
++                max_tokens: 1_000,
++                spent_usd: 10,
++                spent_tokens: 1_000,
++            }),
++            'utf-8',
++        );
++        expect(planResume(r, target({ worktree: wt }), NOW).unattended.ok).toBe(false);
++    });
++
++    it('the dedup key carries the head, so two heads are two jobs', () => {
++        const r = root();
++        const a = planResume(r, target({ head: 'aaa' }), NOW);
++        const b = planResume(r, target({ head: 'bbb' }), NOW);
++        expect(a.unattended.jobKey).not.toBe(b.unattended.jobKey);
++    });
++});
++
++describe('renderResumePlans', () => {
++    it('says so plainly when there is nothing to resume', () => {
++        expect(renderResumePlans([])).toContain('nothing to resume');
++    });
++
++    it('prints the command, the unattended verdict, and which is which', () => {
++        const out = renderResumePlans([planResume(root(), target(), NOW)]);
++        expect(out).toContain('road-to-x');
++        expect(out).toContain('claude -p');
++        expect(out).toContain('unattended: would be REFUSED');
++        // The disclaimer is not decoration: without it the refusal line reads
++        // as a prohibition on the operator.
++        expect(out).toContain('The command above is for YOU');
++    });
++
++    it('renders an undrivable host as REFUSED rather than omitting the row', () => {
++        const out = renderResumePlans([planResume(root(), target({ platform: 'cursor' }), NOW)]);
++        expect(out).toContain('REFUSED');
++        expect(out).toContain('cursor');
++    });
++});
+diff --git a/tests/scripts/interruption_report.test.ts b/tests/scripts/interruption_report.test.ts
+index 188650ecd26c0e362b4455de386523d1bc2a7cf8..74dc04c6c586e5ca3634cf2328a2f34229719e9d 100644
+--- a/tests/scripts/interruption_report.test.ts
++++ b/tests/scripts/interruption_report.test.ts
+@@ -484,3 +484,63 @@ describe('a run with no ledger entry reports NULL contacts, never zero', () => {
+         expect(typeof run?.halts).toBe('number');
+     });
+ });
++
++describe('per-axis power — the two axes do NOT share a denominator', () => {
++    // The failure this exists to stop, and it very nearly shipped: the report
++    // printed `runs: 21` with one ⚠️ SHORT WINDOW banner over both axes, so a
++    // reader checking the pre-registered "≥ 20 recorded runs" floor read 21
++    // and concluded the contact axis had cleared it. It had not — 2 of those
++    // 21 runs carried timing and no ledger entry, so the contact axis stood at
++    // 19. One banner cannot answer a question two axes ask separately.
++
++    it('counts each axis against its own source', () => {
++        // r1: both sources. r2: ledger only. r3: history only.
++        writeLedger([
++            { run_id: 'r1', turn: 1, kind: 'ask', class: 'ask', roadmap: null },
++            { run_id: 'r2', turn: 1, kind: 'ask', class: 'ask', roadmap: null },
++        ]);
++        writeHistory([
++            turn('r1', 'agent', '2026-08-19T10:00:00+00:00'),
++            turn('r1', 'user', '2026-08-19T10:30:00+00:00'),
++            turn('r3', 'agent', '2026-08-19T11:00:00+00:00'),
++            turn('r3', 'user', '2026-08-19T11:30:00+00:00'),
++        ]);
++        const r = buildReport(root, DEFAULT_WINDOW);
++        expect(r.contact_axis_runs).toBe(2);
++        expect(r.wall_clock_axis_runs).toBe(2);
++        // The total is larger than either axis — which is exactly why the
++        // total may not be read as either one's N.
++        expect(r.runs.length).toBe(3);
++    });
++
++    it('names the floor and the verdict on each axis header', () => {
++        writeLedger([
++            { run_id: derive_session_tag('r1'), turn: 1, kind: 'ask', class: 'ask', roadmap: null },
++        ]);
++        const out = renderText(buildReport(root, DEFAULT_WINDOW));
++        expect(out).toContain('CONTACT AXIS  ·  n=1 runs — ⚠️  UNDERPOWERED, floor is 20');
++        expect(out).toContain('WALL-CLOCK AXIS  ·  n=0 runs — ⚠️  UNDERPOWERED, floor is 20');
++    });
++
++    it('reports the count even when the floor IS cleared', () => {
++        // A bare "OK" would leave a reader unable to tell 20 from 200, and the
++        // claims are comparisons — the N is part of the result, not a warning
++        // that disappears once it is good enough.
++        writeLedger(
++            Array.from({ length: 21 }, (_, i) => ({
++                run_id: derive_session_tag(`r${i}`),
++                turn: 1,
++                kind: 'ask',
++                class: 'ask',
++                roadmap: null,
++            })),
++        );
++        const r = buildReport(root, DEFAULT_WINDOW);
++        expect(r.contact_axis_runs).toBe(21);
++        expect(renderText(r)).toContain('CONTACT AXIS  ·  n=21 runs (≥ 20 floor cleared)');
++    });
++
++    it('the floor constant IS the number the claims pre-registered', () => {
++        expect(buildReport(root, DEFAULT_WINDOW).power_floor_runs).toBe(20);
++    });
++});
+diff --git a/tests/scripts/run_supervise.test.ts b/tests/scripts/run_supervise.test.ts
+index b134db455816e60f87e14c80efb118ad0ead0b88..28f73d8cccb938c893e8cee82a4fa8d4c920b6ba 100644
+--- a/tests/scripts/run_supervise.test.ts
++++ b/tests/scripts/run_supervise.test.ts
+@@ -34,6 +34,7 @@ import {
+     readAllRecords,
+     readLedger,
+     render,
++    resumePlans,
+     scan,
+     writeLedger,
+     type Candidate,
+@@ -365,3 +366,100 @@ describe('clearCompleted — the cap bounds a RUN, not a roadmap lifetime', () =
+         expect(classify(r, rec(), afterCompletion, NOW).disposition).toBe('relaunchable');
+     });
+ });
++
++describe('writeLedger — a failed write is never swallowed', () => {
++    // The swallow this replaces carried a comment asserting "there is NO
++    // CALLER", which was false in the same file: `digest` calls it. The two
++    // comments contradicted each other fourteen lines apart, and the
++    // consequence was a digest reporting a release that had not happened.
++    it('throws rather than reporting success it did not achieve', () => {
++        const r = root();
++        // A FILE where the state directory must be: mkdirSync then fails.
++        fs.mkdirSync(path.join(r, 'agents', 'runtime'), { recursive: true });
++        fs.writeFileSync(path.join(r, 'agents', 'runtime', 'state'), 'not a directory', 'utf-8');
++        expect(() => writeLedger(r, { 'road-to-x': 1 })).toThrow();
++    });
++
++    it('round-trips through readLedger on a healthy tree', () => {
++        const r = root();
++        writeLedger(r, { 'road-to-x': 2 });
++        expect(readLedger(r)).toEqual({ 'road-to-x': 2 });
++        expect(fs.existsSync(path.join(r, SUPERVISE_STATE_REL))).toBe(true);
++    });
++});
++
++describe('digest — the release line follows the WRITE, not the intent', () => {
++    const done = (over: Partial<Candidate> = {}): Candidate =>
++        ({
++            session_id: 's',
++            roadmap: 'road-to-x',
++            worktree: '/tmp/wt',
++            platform: 'claude',
++            relaunches: 0,
++            disposition: 'complete',
++            open_steps: 0,
++            reason: '',
++            ...over,
++        }) as Candidate;
++
++    it('reports a reset when the ledger write succeeded', () => {
++        const r = root();
++        writeLedger(r, { 'road-to-x': 2 });
++        const out = digest(r, [done()], NOW);
++        expect(out).toContain('relaunch budget reset');
++        expect(readLedger(r)).toEqual({});
++    });
++
++    it('reports NOT RESET when the ledger write failed', () => {
++        // The direction that matters: a stale-high counter refuses the next
++        // relaunch, and the digest had just told the operator it would not.
++        const r = root();
++        fs.mkdirSync(path.join(r, 'agents', 'runtime'), { recursive: true });
++        fs.writeFileSync(path.join(r, 'agents', 'runtime', 'state'), 'not a directory', 'utf-8');
++        const out = digest(r, [done()], NOW);
++        expect(out).toContain('NOT RESET');
++        expect(out).not.toContain('relaunch budget reset');
++    });
++});
++
++describe('resumePlans — only what the scan classified as relaunchable', () => {
++    const cand = (over: Partial<Candidate>): Candidate =>
++        ({
++            session_id: 's',
++            roadmap: 'road-to-x',
++            worktree: '/tmp/wt',
++            platform: 'claude',
++            relaunches: 0,
++            disposition: 'relaunchable',
++            open_steps: 1,
++            reason: '',
++            ...over,
++        }) as Candidate;
++
++    it('skips alive, complete and budget-exhausted runs', () => {
++        // Printing a command for those would hand the operator a line that
++        // undoes the classification the scan just made.
++        const plans = resumePlans(
++            root(),
++            [
++                cand({ disposition: 'alive' }),
++                cand({ disposition: 'complete' }),
++                cand({ disposition: 'budget-exhausted' }),
++                cand({ disposition: 'relaunchable' }),
++            ],
++            NOW,
++        );
++        expect(plans).toHaveLength(1);
++        expect(plans[0]?.target.roadmapSlug).toBe('road-to-x');
++    });
++
++    it('a relaunchable candidate with no roadmap yields no plan', () => {
++        expect(resumePlans(root(), [cand({ roadmap: null })], NOW)).toHaveLength(0);
++    });
++
++    it('carries the DEAD session platform, never the current process host', () => {
++        const plans = resumePlans(root(), [cand({ platform: 'gemini' })], NOW);
++        expect(plans[0]?.command).toContain('gemini');
++        expect(plans[0]?.command).not.toContain('claude');
++    });
++});

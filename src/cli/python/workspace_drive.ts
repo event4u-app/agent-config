@@ -47,6 +47,12 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as path from 'node:path';
 
+// The launch argv is owned by the SHIPPED side and imported back here — see
+// `host_launch.ts` for why the dependency points this way. Only `build_args`
+// moved; resume argv, timeout, spawn and the envelope parsers stay with the
+// driver, because they have a runtime and this table does not.
+import { LAUNCH_ARGV } from '../../scripts/_lib/host_launch.js';
+
 export const DEFAULT_TIMEOUT = 90; // seconds (AI-council 2026-06-08)
 
 /** argparse usage exit (code 2). Caught at the CLI entry. */
@@ -255,7 +261,7 @@ export const HOST_CONFIGS: Record<string, HostConfig> = {
     // a prior session by its host session id (ADR-076); all three expose a
     // documented non-interactive resume, so `supports_resume` is true for each.
     'claude-code': {
-        build_args: (prompt) => ['claude', '-p', prompt, '--output-format', 'json'],
+        build_args: (prompt) => LAUNCH_ARGV['claude-code']!(prompt),
         build_resume_args: (sid, prompt) => [
             'claude',
             '--resume',
@@ -269,13 +275,13 @@ export const HOST_CONFIGS: Record<string, HostConfig> = {
         parse: _parse_claude,
     },
     codex: {
-        build_args: (prompt) => ['codex', 'exec', '--json', prompt],
+        build_args: (prompt) => LAUNCH_ARGV['codex']!(prompt),
         build_resume_args: (sid, prompt) => ['codex', 'exec', 'resume', sid, '--json', prompt],
         supports_resume: true,
         parse: _parse_codex,
     },
     gemini: {
-        build_args: (prompt) => ['gemini', '-p', prompt, '--output-format', 'json'],
+        build_args: (prompt) => LAUNCH_ARGV['gemini']!(prompt),
         build_resume_args: (sid, prompt) => [
             'gemini',
             '--resume',

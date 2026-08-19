@@ -484,3 +484,63 @@ describe('a run with no ledger entry reports NULL contacts, never zero', () => {
         expect(typeof run?.halts).toBe('number');
     });
 });
+
+describe('per-axis power — the two axes do NOT share a denominator', () => {
+    // The failure this exists to stop, and it very nearly shipped: the report
+    // printed `runs: 21` with one ⚠️ SHORT WINDOW banner over both axes, so a
+    // reader checking the pre-registered "≥ 20 recorded runs" floor read 21
+    // and concluded the contact axis had cleared it. It had not — 2 of those
+    // 21 runs carried timing and no ledger entry, so the contact axis stood at
+    // 19. One banner cannot answer a question two axes ask separately.
+
+    it('counts each axis against its own source', () => {
+        // r1: both sources. r2: ledger only. r3: history only.
+        writeLedger([
+            { run_id: 'r1', turn: 1, kind: 'ask', class: 'ask', roadmap: null },
+            { run_id: 'r2', turn: 1, kind: 'ask', class: 'ask', roadmap: null },
+        ]);
+        writeHistory([
+            turn('r1', 'agent', '2026-08-19T10:00:00+00:00'),
+            turn('r1', 'user', '2026-08-19T10:30:00+00:00'),
+            turn('r3', 'agent', '2026-08-19T11:00:00+00:00'),
+            turn('r3', 'user', '2026-08-19T11:30:00+00:00'),
+        ]);
+        const r = buildReport(root, DEFAULT_WINDOW);
+        expect(r.contact_axis_runs).toBe(2);
+        expect(r.wall_clock_axis_runs).toBe(2);
+        // The total is larger than either axis — which is exactly why the
+        // total may not be read as either one's N.
+        expect(r.runs.length).toBe(3);
+    });
+
+    it('names the floor and the verdict on each axis header', () => {
+        writeLedger([
+            { run_id: derive_session_tag('r1'), turn: 1, kind: 'ask', class: 'ask', roadmap: null },
+        ]);
+        const out = renderText(buildReport(root, DEFAULT_WINDOW));
+        expect(out).toContain('CONTACT AXIS  ·  n=1 runs — ⚠️  UNDERPOWERED, floor is 20');
+        expect(out).toContain('WALL-CLOCK AXIS  ·  n=0 runs — ⚠️  UNDERPOWERED, floor is 20');
+    });
+
+    it('reports the count even when the floor IS cleared', () => {
+        // A bare "OK" would leave a reader unable to tell 20 from 200, and the
+        // claims are comparisons — the N is part of the result, not a warning
+        // that disappears once it is good enough.
+        writeLedger(
+            Array.from({ length: 21 }, (_, i) => ({
+                run_id: derive_session_tag(`r${i}`),
+                turn: 1,
+                kind: 'ask',
+                class: 'ask',
+                roadmap: null,
+            })),
+        );
+        const r = buildReport(root, DEFAULT_WINDOW);
+        expect(r.contact_axis_runs).toBe(21);
+        expect(renderText(r)).toContain('CONTACT AXIS  ·  n=21 runs (≥ 20 floor cleared)');
+    });
+
+    it('the floor constant IS the number the claims pre-registered', () => {
+        expect(buildReport(root, DEFAULT_WINDOW).power_floor_runs).toBe(20);
+    });
+});

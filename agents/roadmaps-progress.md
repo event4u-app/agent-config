@@ -6,11 +6,19 @@
 
 ## Overall
 
-**295 / 542 steps done · 54%**
+**297 / 543 steps done · 55%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   54%
+██████████████████████░░░░░░░░░░░░░░░░░░   55%
 ```
+
+## ⚠️ Iron Law 3 — unresolved deferred items
+
+These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
+
+| Roadmap | Done | Deferred | Cancelled |
+|---|---:|---:|---:|
+| [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md) | 20 | 1 | 3 |
 
 ## Open roadmaps
 
@@ -32,7 +40,7 @@
 | 14 | [road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-c-evidence-lifecycle.md) | 3 | 13 | 1 | 9 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-c-evidence-lifecycle) | █████████░ 90% |
 | 15 | [road-to-inbox-harvest-residuals.md](roadmaps/road-to-inbox-harvest-residuals.md) | 1 | 4 | 2 | 2 | 0 | 0 | [2](#blockers-road-to-inbox-harvest-residuals) | █████░░░░░ 50% |
 | 16 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 17 | [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md) | 6 | 24 | 1 | 18 | 5 | 0 | [1](#blockers-road-to-long-horizon-execution) | ██████████ 95% |
+| 17 | [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md) | 6 | 24 | 0 | 20 | 1 | 3 | [1](#blockers-road-to-long-horizon-execution) | ██████████ 100% |
 | 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 11 | 4 | 7 | 0 | 0 | 0 | ██████░░░░ 64% |
 | 19 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 20 | [road-to-org-telemetry.md](roadmaps/road-to-org-telemetry.md) | 7 | 27 | 17 | 10 | 0 | 0 | [2](#blockers-road-to-org-telemetry) | ████░░░░░░ 37% |
@@ -536,7 +544,7 @@ _1 blocker resolved._
 
 ### [road-to-long-horizon-execution.md](roadmaps/road-to-long-horizon-execution.md)
 
-**Road to long-horizon execution — the agent stops when the roadmap doesn't** — 18 / 19 done (95%)
+**Road to long-horizon execution — the agent stops when the roadmap doesn't** — 20 / 20 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -544,22 +552,28 @@ _1 blocker resolved._
 | 1 | Re-engagement concern | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | Question ladder closure | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Session immortality | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | Unattended backlog | ✅ done | 0 | 2 | 2 | 0 | 100% |
-| 5 | Standing measurement | 🟡 in progress | 1 | 3 | 3 | 0 | 75% |
+| 4 | Unattended backlog | ✅ done | 0 | 3 | 0 | 1 | 100% |
+| 5 | Standing measurement | ✅ done | 0 | 4 | 1 | 2 | 100% |
 
 <a id="blockers-road-to-long-horizon-execution"></a>
 **Blockers**
 
-- **team-loop-benchmark-spend** (owner: user) — blocks Phase 4 step 4.3, and any multi-agent variant of 4.0
-  - **Recommendation:** (b). D-5 names this benchmark as pending "since it was written", and a second indefinite pending reproduces the exact defect this roadmap opens with. A published null is a real answer that closes the gate; option (a) is right only if the multi-agent variant is wanted soon enough to justify the spend now.
-  - **If you do nothing:** 4.3 stays `[~]` forever and the multi-agent variant of 4.0 stays neither built nor refused — the indefinite-pending state D-5 already describes, now carried by a second roadmap.
+- **worktree-claim-root-split** (owner: user) — blocks the `process-full` contract-run acceptance criterion, and every future observation of `run-continuation` made from a worktree. - **The defect, measured 2026-08-19.** The run contract has two halves that resolve their root differently, and in a worktree they land in different trees. `sessions_cli.cmd_claim` writes `agents/runtime/state/roadmap-claim-<session>.json` under `process.cwd()` — the worktree the operator is in. The stop-slot concern reads it under `envelope.workspace_root`, which `dispatch_hook` sets from `--project-dir`, i.e. the host's `CLAUDE_PROJECT_DIR` — the parent checkout. Neither side is wrong on its own; they simply never agreed on which tree the contract lives in. - **Why it stayed invisible.** The concern's first rung is `contract absent → no-op`, and a no-op writes no event. So the ledger built to make the mechanism auditable is empty in exactly the case where it never ran, and empty is also what a healthy idle run looks like. The dispatch integration test cannot see it either: it passes the SAME root to the writer and the reader, which is the one arrangement in which the two agree. - **Second symptom, same cause.** `session_register_hook` reads the slug through `read_claimed_slug(workspace_root, …)` on the same envelope, so the register records `roadmap_slug: null` for a session that has claimed. `run:supervise` listed this session as `roadmap=-` minutes after its claim. A watcher whose whole job is "dead session, roadmap still open" cannot see the roadmap of any worktree session.
+  - **Recommendation:** (a). It is one shared helper called by the writer and both readers, it makes the claim agree with the register that already carries it, and it fixes the watcher symptom in the same move. Not taken autonomously in this run: the claim file is a shared contract carrier read by four modules, and relocating one is a structural change `scope-control` reserves for the maintainer.
+  - **If you do nothing:** `run-continuation` remains inert for every worktree session, which in this repository means effectively always, and the acceptance criterion above cannot be observed.
   - **What to do:**
-    pick exactly one — (a) authorise the benchmark run with a
-    named USD ceiling, so 4.3 executes and its verdict is published either
-    way; or (b) close the gate as a published null on the stated ground that
-    the benchmark will not be funded, which permanently removes the
-    multi-agent variant of 4.0 from scope.
-  - **Resolved when:** Phase 4 step `4.3` carries either a benchmark verdict with its run date and cost, or a published null naming option (b).
+    pick exactly one — (a) move the claim beside the
+    session register, under the git **common dir**, which every worktree of
+    a repo shares. That is the location `register_dir()` already uses and
+    for the same reason, and a roadmap claim is repo-global by intent —
+    `sessions:claim` tells the operator it "becomes visible to other
+    sessions". Back-compat: read the old per-tree path when the new one is
+    absent. Or (b) keep the claim per-tree and make the hook resolve the
+    same tree, which means the concern stops trusting `--project-dir` — a
+    larger change touching every concern, not just this one.
+  - **Resolved when:** a `process-full` run started from a worktree writes at least one `engage` event to `agents/runtime/state/run-continuation.jsonl`.
+
+_1 blocker resolved._
 
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 

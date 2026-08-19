@@ -47,9 +47,16 @@ import {
     countRoadmap,
     latestCheckpointFor,
     readCheckpoint,
+    readHead,
     roadmapPath,
 } from './_lib/run_checkpoint.js';
 import { readBudget } from './_lib/unattended_guard.js';
+import {
+    LIVE_SPAWN_REFUSAL,
+    planResume,
+    renderResumePlans,
+    type ResumePlan,
+} from './_lib/headless_invocation.js';
 
 /**
  * UOTL 6.2 verbatim: at most three relaunches per run — and "run" means the
@@ -80,6 +87,15 @@ export interface Candidate {
     readonly session_id: string;
     readonly roadmap: string | null;
     readonly worktree: string;
+    /**
+     * Host platform, carried through from the register record.
+     *
+     * Needed by `--print-relaunch`: the resume command's shape is a property of
+     * the HOST the dead session ran on, and only the record knows which that
+     * was. Guessing the current process's host would build a `claude` command
+     * for a run that died under `codex`.
+     */
+    readonly platform: string;
     readonly disposition: Disposition;
     readonly open_steps: number | null;
     readonly relaunches: number;
@@ -155,22 +171,27 @@ export function readLedger(repoRoot: string): RelaunchLedger {
     }
 }
 
+/**
+ * Persist the relaunch ledger. THROWS on a failed write — never swallows.
+ *
+ * The swallow this replaces carried a comment asserting "there is NO CALLER …
+ * `writeLedger` is a writer waiting for one", and that was **false in the same
+ * file**: `digest` calls it at the `released > 0` branch below. The comment
+ * described the tree as it stood before R2 round 3 added the release, and the
+ * two comments then contradicted each other about the same function fourteen
+ * lines apart.
+ *
+ * The consequence was not cosmetic. A silently-failed write leaves the counter
+ * high while the digest has already printed `relaunch budget reset`, so the
+ * operator reads a release that did not happen — and the counter that "never
+ * releases" is precisely the failure R2 round 3 introduced `clearCompleted` to
+ * fix. Throwing hands the caller the choice; the caller below reports what
+ * actually happened rather than what it intended.
+ */
 export function writeLedger(repoRoot: string, ledger: RelaunchLedger): void {
     const file = path.join(repoRoot, SUPERVISE_STATE_REL);
-    try {
-        fs.mkdirSync(path.dirname(file), { recursive: true });
-        fs.writeFileSync(file, `${JSON.stringify(ledger, null, 2)}\n`, 'utf-8');
-    } catch {
-        // Swallowed, and the honest reason is that there is NO CALLER — the
-        // only thing that would relaunch is the spawn Phase 4.0 deliberately
-        // does not build, so `writeLedger` is a writer waiting for one.
-        //
-        // R2 review, finding 13: this comment used to assert that "the caller
-        // treats a write failure as a stop below", which describes a control
-        // that does not exist. When the spawn lands, the swallow becomes the
-        // wrong shape and must be replaced by a thrown error the spawn catches
-        // — a ledger that bounds relaunches cannot fail open.
-    }
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, `${JSON.stringify(ledger, null, 2)}\n`, 'utf-8');
 }
 
 /**
@@ -191,6 +212,7 @@ export function classify(
         session_id: rec.session_id,
         roadmap: rec.roadmap_slug,
         worktree: rec.worktree,
+        platform: rec.platform,
         relaunches: ledger[rec.roadmap_slug ?? ''] ?? 0,
     };
     if (!is_expired(rec, now)) {
@@ -300,6 +322,43 @@ export function scan(repoRoot: string, opts: ScanOptions = {}): Candidate[] {
     return readAllRecords(dir).map((rec) => classify(repoRoot, rec, ledger, now));
 }
 
+/**
+ * Build one resume plan per relaunchable candidate.
+ *
+ * Only `relaunchable` ones: an alive session needs no resume, a complete
+ * roadmap has nothing left, and a cap-exhausted run is refused before a
+ * command is worth printing. Printing a command for those would hand the
+ * operator a line that undoes the classification the scan just made.
+ */
+export function resumePlans(
+    repoRoot: string,
+    candidates: readonly Candidate[],
+    now: Date,
+): ResumePlan[] {
+    const out: ResumePlan[] = [];
+    for (const c of candidates) {
+        if (c.disposition !== 'relaunchable' || c.roadmap === null) continue;
+        out.push(
+            planResume(
+                repoRoot,
+                {
+                    roadmapSlug: c.roadmap,
+                    worktree: c.worktree,
+                    platform: c.platform,
+                    // A worktree whose head cannot be read yields the literal
+                    // `unknown`, which then rides into the dedup key. That is
+                    // deliberate: an unreadable head must not collide with a
+                    // real commit's key, and it is visible in the output rather
+                    // than silently absent.
+                    head: readHead(c.worktree) ?? 'unknown',
+                },
+                now,
+            ),
+        );
+    }
+    return out;
+}
+
 export function render(candidates: readonly Candidate[]): string {
     if (candidates.length === 0) {
         return 'run:supervise — no sessions registered for this workspace.\n';
@@ -340,15 +399,37 @@ export function digest(repoRoot: string, candidates: readonly Candidate[], now: 
     // The one write this read-report performs, and it is stated here rather
     // than buried: a completed roadmap's relaunch counter is released, so the
     // "three per run" cap bounds a run instead of a roadmap's lifetime
-    // (R2 round 3, finding 6). Best-effort — a failed write leaves a counter
-    // high, which refuses a relaunch rather than granting one.
-    const cleared = clearCompleted(readLedger(repoRoot), candidates);
-    const released = candidates.filter(
-        (c) => c.disposition === 'complete' && c.roadmap !== null,
-    ).length;
+    // (R2 round 3, finding 6).
+    //
+    // The report follows the WRITE and the DELTA, not the intent. It used to
+    // push "relaunch budget reset" unconditionally after a `writeLedger` that
+    // swallowed its own failure, so a digest could tell the operator a
+    // release had happened while the counter still stood — the direction that
+    // matters, because a stale-high counter refuses the next relaunch and the
+    // digest had just said it would not. Round 1 fixed the write half and
+    // left the count reading off the candidate set; both halves are needed,
+    // and a read-report that writes when nothing changed is the smaller half
+    // of the same mistake.
+    const before = readLedger(repoRoot);
+    const cleared = clearCompleted(before, candidates);
+    // The count is the LEDGER DELTA, never the candidate set.
+    //
+    // R2 round 2, finding 7, and it is the same defect one level up from the
+    // one round 1 fixed. Counting completed candidates reports a release for a
+    // roadmap that never had a counter — and with no relaunch mechanism
+    // shipping, the ledger is always empty, so EVERY such line was false. It
+    // also made a read-report write `{}` to disk on its first run.
+    const released = Object.keys(before).length - Object.keys(cleared).length;
     if (released > 0) {
-        writeLedger(repoRoot, cleared);
-        lines.push(`  released:  ${released} completed roadmap(s) — relaunch budget reset`);
+        try {
+            writeLedger(repoRoot, cleared);
+            lines.push(`  released:  ${released} completed roadmap(s) — relaunch budget reset`);
+        } catch (err) {
+            lines.push(
+                `  released:  NOT RESET — ${released} completed roadmap(s) still hold their ` +
+                    `counter (ledger write failed: ${err instanceof Error ? err.message : String(err)})`,
+            );
+        }
     }
 
     const dead = candidates.filter((c) => c.disposition !== 'alive');
@@ -408,7 +489,8 @@ export function digest(repoRoot: string, candidates: readonly Candidate[], now: 
     return `${lines.join('\n')}\n`;
 }
 
-const USAGE = `usage: run_supervise [--root PATH] [--once] [--digest] [--interval SECONDS] [--relaunch]
+const USAGE = `usage: run_supervise [--root PATH] [--once] [--digest] [--interval SECONDS]
+                    [--print-relaunch] [--relaunch]
 
 Watches the session register for runs whose session died with open steps left.
 
@@ -418,16 +500,28 @@ Watches the session register for runs whose session died with open steps left.
   --digest           the morning report instead of the per-session list:
                      dead runs, decision memos written, budget consumed.
                      Reports state; schedules nothing, starts nothing.
-  --interval SECONDS accepted and IGNORED — reserved for the loop driver that
-                     lands with the Phase 4.0 primitive. Listed rather than
-                     hidden so the flag is not silently dropped, and marked
-                     rather than documented with a default (R2 review, finding
-                     14: it advertised "default: 60" and was read by nothing,
-                     so an operator following this help got exit 2 and no
-                     watcher).
-  --relaunch         ACT: start a fresh session per relaunchable run, up to
-                     ${MAX_RELAUNCHES_PER_RUN} per run. Default is report-only —
-                     a relaunch spends tokens with nobody watching.
+  --interval SECONDS accepted and IGNORED. It used to say "reserved for the
+                     loop driver that lands with the Phase 4.0 primitive";
+                     that primitive is a published refusal now, so nothing is
+                     scheduled to land and the flag has no future caller.
+                     Listed rather than hidden so it is not silently dropped,
+                     and marked rather than documented with a default (an
+                     earlier round: it advertised "default: 60" and was read
+                     by nothing, so an operator following this help got exit 2
+                     and no watcher).
+  --print-relaunch   PRINT the exact command that resumes each relaunchable
+                     run, plus what an unattended lane would decide about the
+                     same run. Starts no SESSION and spends nothing; it does
+                     run one \`git remote -v\` per plan, which is the guard's
+                     production-remote precondition. The command is for a
+                     human to paste; the unattended verdict never gates what
+                     a human may run.
+  --relaunch         REFUSED. Starting a session unattended is a published
+                     refusal (road-to-long-horizon-execution 4.0, AI council
+                     2026-08-19), not an unbuilt feature — the flag exits 2
+                     naming the decision and its reopen condition. The
+                     ${MAX_RELAUNCHES_PER_RUN}-per-run cap and its ledger stay
+                     in place for the day the refusal is reopened.
 
 Never merges, never pushes, never closes a PR. Set
 ${HALT_ENV}=1 to stop the watcher.
@@ -448,6 +542,21 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stdout.write(`run:supervise — ${HALT_ENV} is set; watcher does not start.\n`);
         return 0;
     }
+    // Report-shape flags are mutually exclusive, and a silent precedence is
+    // the wrong way to say so (R2 round 2, finding 10): `--digest
+    // --print-relaunch` used to print the digest and drop the plans without a
+    // word, and `--print-relaunch --relaunch` returned 0 without ever emitting
+    // the refusal — success as the exit code of the one flag whose entire
+    // purpose is to refuse.
+    const shapes = ['--digest', '--print-relaunch', '--relaunch'].filter((f) => argv.includes(f));
+    if (shapes.length > 1) {
+        process.stderr.write(
+            `run:supervise: ${shapes.join(' and ')} are mutually exclusive — each is a ` +
+                `different report, and one silently winning would hide the other. Pick one.\n`,
+        );
+        return 2;
+    }
+
     const repoRoot = argValue(argv, '--root') ?? process.cwd();
     const now = new Date();
     const candidates = scan(repoRoot, { now });
@@ -457,27 +566,28 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     }
     process.stdout.write(render(candidates));
 
+    if (argv.includes('--print-relaunch')) {
+        process.stdout.write(renderResumePlans(resumePlans(repoRoot, candidates, now)));
+        return 0;
+    }
+
     if (argv.includes('--relaunch')) {
-        // The headless invocation primitive is Phase 4.0 and is not built, so
-        // this path reports what it WOULD do rather than pretending to act.
-        // Named as unbuilt rather than silently doing nothing: a flag that
-        // accepts and no-ops is the shape that makes an operator believe a
-        // watcher is running when nothing is.
-        const relaunchable = candidates.filter((c) => c.disposition === 'relaunchable');
-        process.stderr.write(
-            `run:supervise: --relaunch is accepted but NOT implemented — the headless ` +
-                `invocation primitive is Phase 4.0 of road-to-long-horizon-execution and is ` +
-                `not built. ${relaunchable.length} run(s) would have been relaunched. Nothing ` +
-                `was started, and no ledger entry was spent.\n`,
-        );
+        // A REFUSAL, not a pending implementation. The previous wording —
+        // "accepted but NOT implemented … is Phase 4.0 … and is not built" —
+        // is the sentence that makes an operator wait for a release nobody is
+        // preparing, which is D-5's indefinite-pending shape reproduced inside
+        // the roadmap that names it. The decision and its reopen condition are
+        // in `LIVE_SPAWN_REFUSAL`.
+        process.stderr.write(`${LIVE_SPAWN_REFUSAL}\n`);
         return 2;
     }
 
     if (!argv.includes('--once')) {
         process.stderr.write(
-            'run:supervise: looping is not implemented yet — use --once. The scan above is ' +
-                'the full v1 surface (Phase 3.1: a foreground loop is enough to falsify the ' +
-                'design; the loop driver lands with the Phase 4.0 primitive it would call).\n',
+            'run:supervise: looping is not implemented — use --once. The scan above is the ' +
+                'full surface (Phase 3.1: a foreground loop is enough to falsify the design). ' +
+                'The loop driver was tied to the Phase 4.0 spawn, which is a published refusal, ' +
+                'so it is not pending — there is nothing to wait for.\n',
         );
         return 2;
     }
