@@ -1,14 +1,14 @@
 # Findings: single-delivery
-<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: 3577b8ed9da3348d8772823639391762bd63af9a22cc58e6f1b98d2632a05c57 | diff: 8c7d62a6e8fbce84669917dc7733c8666c711e9c | reviewer: r2-fresh-subagent-single-delivery | prompt_hash: a319dcedcc9b467dad63b72359469b802970bdd1d02635708b3d8adaafadd8ce -->
+<!-- completion-review: v1 | reviewed: 2026-08-19 | scope: d6592b7260d3c2ea620a40d611aea027b8997ff341ab3b9de8347c4b301b0c0d | diff: f28ffebf23d70a18d91b4d949a164a90d916ccc4 | reviewer: r2-fresh-subagent-single-delivery | prompt_hash: a319dcedcc9b467dad63b72359469b802970bdd1d02635708b3d8adaafadd8ce -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-19 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 8c7d62a6e8fbce84669917dc7733c8666c711e9c
-  scope_hash: 3577b8ed9da3348d8772823639391762bd63af9a22cc58e6f1b98d2632a05c57
+  diff_sha: f28ffebf23d70a18d91b4d949a164a90d916ccc4
+  scope_hash: d6592b7260d3c2ea620a40d611aea027b8997ff341ab3b9de8347c4b301b0c0d
   roadmap: agents/roadmaps/road-to-single-delivery.md
-  roadmap_hash: 9043f19f690c3d7df718fb14e2d3a155e20974e41e451359e8b5a81047b2cf95
-  ac_hash: b4442ae5f68446eaf2ca740bc939a41be5275ae6561c6e6e9f535037260f3917
+  roadmap_hash: ba18900376c3d62d714649eb5b6379bf52d43e052c9b1f11e55db0307b1fd794
+  ac_hash: 508e3882142046224dd1cb4c555b8792f1858c690aab57cec4a19d071e68a95f
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-19T20:03:34Z
