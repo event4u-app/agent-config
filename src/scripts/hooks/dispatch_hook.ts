@@ -177,31 +177,58 @@ export function _parse_concern_stdout(stdout_text: string): JsonObject {
  * always ships the `yaml` package, so this mirrors the PyYAML-present
  * path (`yaml.safe_load(text) or {}`); version 1.1 matches PyYAML.safe_load.
  */
+/**
+ * Cheap content fingerprint of a manifest source — FNV-1a 32-bit plus the byte
+ * length, hex.
+ *
+ * Deliberately NOT a crypto hash: `require('node:crypto')` costs 8 ms of
+ * process start, which is most of what the precompiled manifest exists to
+ * save. This runs in about 0.2 ms over 61 kB and only has to detect an edited
+ * source, not resist an adversary — a wrong answer costs the slow path, never
+ * correctness.
+ */
+export function _manifest_fingerprint(text: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i += 1) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return `${h.toString(16)}:${String(text.length)}`;
+}
+
 export function _load_yaml(p: string): JsonObject {
   // Precompiled fast path. The manifest is ~61 kB of YAML and is parsed on
   // EVERY dispatch, which measured 12 ms of a ~103 ms dispatch (plus 8 ms to
   // load the `yaml` module itself). The sibling `.json` is the same data with
   // comments stripped — 14.7 kB — and JSON.parse of it is sub-millisecond.
   //
-  // Freshness is decided by mtime rather than by trust: a YAML newer than its
-  // compiled sibling means someone edited the source, so the parse path runs
-  // and the stale JSON is ignored. That keeps a hand-edited manifest correct
-  // at the cost of the slow path, which is the safe direction — a dispatcher
-  // reading a stale concern table would silently run the wrong guards.
+  // Freshness is decided by the SOURCE CONTENT, not by mtime. The first version
+  // of this compared mtimes and that was a measured defect, not a theoretical
+  // one: on a fresh `actions/checkout` both files get the checkout timestamp in
+  // whatever order git wrote them, so whether the optimisation applied at all
+  // was a coin flip. It won on the PR (p95 129 ms) and lost on the trunk
+  // (p95 186 ms) for the same commit. A fingerprint is deterministic wherever
+  // the tree came from.
+  //
+  // Reading the YAML unconditionally costs ~0 ms (it is the PARSE that is
+  // expensive), so the fast path still skips ~20 ms.
+  const text = fs.readFileSync(p, "utf-8");
   const compiled = p.replace(/\.ya?ml$/u, ".json");
   if (compiled !== p) {
     try {
-      const cs = fs.statSync(compiled);
-      if (cs.mtimeMs >= fs.statSync(p).mtimeMs) {
-        const data = JSON.parse(fs.readFileSync(compiled, "utf-8")) as JsonValue;
-        if (_isObject(data)) return data;
+      const raw = JSON.parse(fs.readFileSync(compiled, "utf-8")) as JsonValue;
+      if (
+        _isObject(raw) &&
+        raw["fingerprint"] === _manifest_fingerprint(text) &&
+        _isObject(raw["manifest"])
+      ) {
+        return raw["manifest"];
       }
     } catch {
       // Missing, unreadable or malformed → fall through to the YAML source.
       // Never fail the dispatch on the optimisation.
     }
   }
-  const text = fs.readFileSync(p, "utf-8");
   const data = parseYaml(text, { version: "1.1" }) as JsonValue;
   return _isObject(data) ? data : {};
 }
