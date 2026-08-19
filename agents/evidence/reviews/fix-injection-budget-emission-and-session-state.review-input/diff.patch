@@ -1,0 +1,504 @@
+diff --git a/src/scripts/bench_hook_injection.ts b/src/scripts/bench_hook_injection.ts
+index ba30870d55a8cd7b666b5a441c08573b95c29a74..b38502bb59d87317793bcf9092cb5e2d78074caf 100644
+--- a/src/scripts/bench_hook_injection.ts
++++ b/src/scripts/bench_hook_injection.ts
+@@ -17,10 +17,23 @@
+  *     the fix is a registered decision, not a silent default bump
+  *   - per-slot SUM over all bound concerns > the slot cap → RED
+  *
++ * NOT FULLY DETERMINISTIC — this paragraph replaces a claim that said it was.
++ * The fixture path was described as "deterministic, CI-reproducible". For most
++ * concerns it is; they read only the committed envelope. But `end-review-nudge`
++ * decides whether to fire from the LIVE working-tree diff plus a once-per-session
++ * latch, so one commit reads 1,140 B with uncommitted changes present and 922 B
++ * without them — three different values appeared in one session on one commit.
++ * Two consequences. A single run is a reading of THIS checkout right now, so its
++ * number must never be pinned as acceptance evidence (a roadmap note tried, and
++ * had to be corrected). And the BREACH verdict is unaffected regardless, because
++ * a state-dependent concern can only push the sum UP: a green run is still a
++ * green run. Documented rather than fixed, because making this hermetic means
++ * changing what the concern reads — a change to the concern, not to its bench.
++ *
+  * HONEST SCOPE, stated up front: concerns are conditional-silence by design —
+  * a generic fixture triggers few of them, so most measure 0 bytes here. The
+  * gate therefore enforces the cap on whatever DOES fire under the committed
+- * fixtures (deterministic, CI-reproducible), while the census mode
++ * fixtures, while the census mode
+  * (`--record`) measures REAL sessions: it appends counts-only lines
+  * ({ts, slot, concern, bytes}) to agents/runtime/state/injection-census.jsonl
+  * — the repeat-injection-census blocker's instrument. Claiming the fixture
+diff --git a/src/scripts/hooks/host_semantics.ts b/src/scripts/hooks/host_semantics.ts
+index 40a981ffd85bfbaa464eb3dc044683c06d641c2f..48033a6f5706e3107c24f3244be9bd6fe8277ae9 100644
+--- a/src/scripts/hooks/host_semantics.ts
++++ b/src/scripts/hooks/host_semantics.ts
+@@ -97,6 +97,26 @@ export function claudeAdditionalContext(event: string, text: string): string {
+     })}\n`;
+ }
+ 
++/**
++ * Will `emitFor` actually put the reasons on a stream?
++ *
++ * The per-turn injection ceiling (`injection_budget.ts`) may only charge bytes
++ * the host receives, and TWO branches of `emitFor` below emit nothing at all: an
++ * unverified platform (legacy pass-through) and `severity: allow`. The budget
++ * module originally covered only the first, which let an `allow` dispatch spend
++ * the turn on output nobody got — and a crashed non-`fail_closed` concern is
++ * fail-opened to exactly that verdict with its stack trace as the largest
++ * candidate.
++ *
++ * Kept beside `emitFor` deliberately rather than re-derived at the call site:
++ * the predicate is only correct while it mirrors the function below it, and a
++ * copy one module away is a copy that drifts.
++ */
++export function emissionCarriesReasons(platform: string, severity: Severity): boolean {
++    if (!VERIFIED_PLATFORMS.has(platform)) return false;
++    return severity !== "allow";
++}
++
+ /**
+  * Translate (platform, event, severity, reasons) into a native emission.
+  *
+diff --git a/src/scripts/hooks/injection_budget.ts b/src/scripts/hooks/injection_budget.ts
+index ba230d7423b503de0182ebfb7914310681a68851..8847cd8beb0b683e2ff008b59e8d148a929a0df0 100644
+--- a/src/scripts/hooks/injection_budget.ts
++++ b/src/scripts/hooks/injection_budget.ts
+@@ -67,7 +67,7 @@ import * as fs from "node:fs";
+ import * as path from "node:path";
+ 
+ import { log_dispatch_issue } from "./dispatch_issues.js";
+-import { VERIFIED_PLATFORMS } from "./host_semantics.js";
++import { VERIFIED_PLATFORMS, emissionCarriesReasons, type Severity } from "./host_semantics.js";
+ 
+ /**
+  * The event that STARTS a turn, and therefore the one that resets the per-turn
+@@ -81,6 +81,20 @@ export const RC_ALLOW = 0;
+ export const RC_BLOCK = 1;
+ export const RC_WARN = 2;
+ 
++/**
++ * The host-facing severity for a reduced exit code, mirroring
++ * `dispatch_hook._severity_for`. Local rather than imported: this module is
++ * imported BY the dispatcher, so reaching back would close an import cycle.
++ * Anything outside the ladder reads as `block`, the conservative direction —
++ * an unknown verdict must never be treated as "emits nothing" and silently
++ * skip the ceiling.
++ */
++function _severityForRc(rc: number): Severity {
++    if (rc === RC_ALLOW) return "allow";
++    if (rc === RC_WARN) return "warn";
++    return "block";
++}
++
+ /** Why a candidate did not survive shaping. */
+ export type DropReason = "nudge_interference" | "injection_budget";
+ 
+@@ -323,8 +337,81 @@ export interface TurnSpend {
+ 
+ export const TURN_SPEND_BASENAME = "injection-turn.json";
+ 
+-export function turnSpendPath(workspaceRoot: string): string {
+-    return path.join(workspaceRoot, "agents", "runtime", "state", TURN_SPEND_BASENAME);
++/** The per-session directory the counters live in. */
++export const TURN_SPEND_DIR_REL = path.join("agents", "runtime", "state", "injection-turn");
++
++/** Keep the directory bounded; oldest files are pruned past this many. */
++export const TURN_SPEND_MAX_FILES = 64;
++
++/**
++ * A session id reduced to ONE safe path segment.
++ *
++ * Two jobs, and the second is why a plain `replace` is not enough: the id is
++ * host-supplied, so it must not escape the directory (`../`), and it must not
++ * blow the filesystem's name limit. Anything outside a conservative charset is
++ * replaced, and an id that is too long — or that sanitises to something
++ * ambiguous — is suffixed with a short FNV-1a digest of the ORIGINAL so two
++ * different ids can never collide onto one counter.
++ */
++export function turnSpendKey(session: string): string {
++    const safe = session.replace(/[^A-Za-z0-9._-]/g, "_");
++    let h = 0x811c9dc5;
++    for (let i = 0; i < session.length; i += 1) {
++        h ^= session.charCodeAt(i);
++        h = Math.imul(h, 0x01000193) >>> 0;
++    }
++    const digest = h.toString(16).padStart(8, "0");
++    // The digest is unconditional rather than only-when-needed: a conditional
++    // suffix means two code paths can produce the same basename for different
++    // ids, which is the collision it exists to prevent.
++    return `${safe.slice(0, 96)}.${digest}`;
++}
++
++/**
++ * Path of ONE session's counter.
++ *
++ * Per session, not per workspace, and that was a defect rather than a
++ * refinement: with a single shared file, two concurrent sessions in one
++ * workspace read each other's record, saw a foreign id, resolved to "nothing
++ * spent", and then overwrote it — so the ceiling was effectively unenforced for
++ * both, every fire. The estate's existing pattern for per-session state is a
++ * directory (`agents/runtime/state/end-review-nudge/`); this follows it.
++ */
++export function turnSpendPath(workspaceRoot: string, session: string): string {
++    return path.join(workspaceRoot, TURN_SPEND_DIR_REL, `${turnSpendKey(session)}.json`);
++}
++
++/**
++ * Drop the oldest counters once the directory passes its cap.
++ *
++ * A per-session file trades one unbounded counter for unbounded FILES, so the
++ * cap is part of the same change rather than a follow-up. Best-effort and
++ * silent: failing to prune must never affect a dispatch.
++ */
++function _pruneTurnSpend(dir: string): void {
++    try {
++        const entries = fs
++            .readdirSync(dir)
++            .filter((n) => n.endsWith(".json"))
++            .map((n) => {
++                const p = path.join(dir, n);
++                try {
++                    return { p, mtime: fs.statSync(p).mtimeMs };
++                } catch {
++                    return { p, mtime: 0 };
++                }
++            })
++            .sort((a, b) => b.mtime - a.mtime);
++        for (const stale of entries.slice(TURN_SPEND_MAX_FILES)) {
++            try {
++                fs.unlinkSync(stale.p);
++            } catch {
++                /* a file another process already removed is the desired state */
++            }
++        }
++    } catch {
++        /* unreadable directory — nothing to prune, nothing to report */
++    }
+ }
+ 
+ /**
+@@ -335,7 +422,7 @@ export function turnSpendPath(workspaceRoot: string): string {
+  */
+ export function readTurnSpend(workspaceRoot: string, session: string): number {
+     try {
+-        const raw = fs.readFileSync(turnSpendPath(workspaceRoot), "utf-8");
++        const raw = fs.readFileSync(turnSpendPath(workspaceRoot, session), "utf-8");
+         const parsed = JSON.parse(raw) as Partial<TurnSpend>;
+         if (parsed.session !== session) return 0;
+         return typeof parsed.bytes === "number" &&
+@@ -355,6 +442,15 @@ export function readTurnSpend(workspaceRoot: string, session: string): number {
+  *
+  * `reset` is passed on the slot that STARTS a turn (`user_prompt_submit`), so
+  * the count is bounded by one turn rather than growing across a session.
++ *
++ * The write is ATOMIC — a temp file plus a rename — because the read-modify-write
++ * above is not. Two dispatches of the SAME session can interleave (parallel tool
++ * calls, a subagent fire landing between the parent's read and write), and a
++ * plain `writeFileSync` there loses an update or leaves a torn file. The sibling
++ * counter in this estate (`rule-trips.json`) already uses the same primitive for
++ * the same class of artefact in the same directory; a lost update degrades to
++ * under-counting, which is the safe direction, but it is avoidable and this makes
++ * it so.
+  */
+ export function recordTurnSpend(
+     workspaceRoot: string,
+@@ -366,9 +462,13 @@ export function recordTurnSpend(
+     const previous = opts.reset === true ? 0 : readTurnSpend(workspaceRoot, session);
+     const entry: TurnSpend = { session, bytes: previous + Math.max(0, bytes) };
+     try {
+-        const target = turnSpendPath(workspaceRoot);
+-        fs.mkdirSync(path.dirname(target), { recursive: true });
+-        fs.writeFileSync(target, JSON.stringify(entry) + "\n", { encoding: "utf-8" });
++        const target = turnSpendPath(workspaceRoot, session);
++        const dir = path.dirname(target);
++        fs.mkdirSync(dir, { recursive: true });
++        const tmp = `${target}.${String(process.pid)}.tmp`;
++        fs.writeFileSync(tmp, JSON.stringify(entry) + "\n", { encoding: "utf-8" });
++        fs.renameSync(tmp, target);
++        _pruneTurnSpend(dir);
+     } catch {
+         /* observability-adjacent bookkeeping never breaks the agent loop */
+     }
+@@ -536,12 +636,29 @@ export function shapeAndRecord(
+                 nudgeRank: typeof rank === "number" ? rank : null,
+             };
+         });
+-    // Skipped wholesale where the emission carries nothing: on an unverified
+-    // platform `emitFor` returns empty stdout AND stderr, so choosing between two
+-    // messages there would write advisory-suppression records into the consumer's
+-    // log for output that never left the process. Nothing to shape is not the
+-    // same as shaping to nothing.
+-    if (!VERIFIED_PLATFORMS.has(ctx.platform)) {
++    // Skipped wholesale where the emission carries nothing. Two such cases, and
++    // one reason for both: this is an INJECTION ceiling, so it may only charge
++    // bytes the host actually receives. Shaping output that never left would
++    // write advisory-suppression records for nothing and — worse — spend the
++    // turn's budget, so a LATER dispatch whose advisory WOULD have been delivered
++    // gets dropped instead. Nothing to shape is not the same as shaping to
++    // nothing.
++    //
++    //   1. an unverified platform — `emitFor` returns the legacy pass-through,
++    //      empty stdout AND stderr;
++    //   2. a reduced verdict of ALLOW — `emitFor` returns
++    //      `{exit: 0, stdout: "", stderr: ""}` for `severity: allow`, on every
++    //      platform including the verified one.
++    //
++    // Case 2 was missed when this module landed, and it is not theoretical. A
++    // non-`fail_closed` concern that CRASHES is fail-opened to `EXIT_ALLOW` by
++    // the dispatcher and its stderr then becomes the deciding message — usually
++    // the largest candidate in the set. Measured against this module before the
++    // fix: a 9,000-byte rc-0 message emitted 0 bytes and charged 9,000, so about
++    // five such dispatches exhausted a 47,104-byte turn ceiling on output nobody
++    // received. `emissionCarriesReasons` is the shared predicate, kept beside
++    // `emitFor` so it cannot drift from the function whose behaviour it reports.
++    if (!emissionCarriesReasons(ctx.platform, _severityForRc(finalRc))) {
+         return textOf(new Set(candidates.map((c) => c.concern)));
+     }
+     const workspaceRoot = _workspaceRoot(ctx);
+diff --git a/tests/hooks/injection_budget_dispatch.test.ts b/tests/hooks/injection_budget_dispatch.test.ts
+index 99864a758ed2215f1f26c01348ef9c6dc3826039..2a07852b9b4864d66b61fac75a45298f3f5bc3a6 100644
+--- a/tests/hooks/injection_budget_dispatch.test.ts
++++ b/tests/hooks/injection_budget_dispatch.test.ts
+@@ -27,6 +27,11 @@ import * as path from "node:path";
+ 
+ import { afterEach, describe, expect, it } from "vitest";
+ 
++import { turnSpendPath } from "../../src/scripts/hooks/injection_budget.js";
++
++/** The session id the fixture envelope below carries. */
++const SESSION = "injection-budget-dispatch-test";
++
+ const REPO_ROOT = path.resolve(__dirname, "..", "..");
+ const ENTRY = path.join(REPO_ROOT, "src", "scripts", "hooks", "dispatch_entry.ts");
+ const TSX_BIN = path.join(
+@@ -78,7 +83,7 @@ function workspace(): string {
+ 
+ function dispatchPrompt(ws: string, prompt: string): { status: number | null; stdout: string; stderr: string } {
+     const payload = JSON.stringify({
+-        session_id: "injection-budget-dispatch-test",
++        session_id: SESSION,
+         cwd: ws,
+         hook_event_name: "UserPromptSubmit",
+         prompt,
+@@ -164,12 +169,9 @@ describe("emission shaping through the real dispatcher", () => {
+         // assert the opening nudge survives anyway — on the slot that begins a
+         // turn, the carried total is zero by definition.
+         const ws = workspace();
+-        const stateDir = path.join(ws, "agents", "runtime", "state");
+-        fs.mkdirSync(stateDir, { recursive: true });
+-        fs.writeFileSync(
+-            path.join(stateDir, "injection-turn.json"),
+-            JSON.stringify({ session: "injection-budget-dispatch-test", bytes: 47_104 }),
+-        );
++        const counter = turnSpendPath(ws, SESSION);
++        fs.mkdirSync(path.dirname(counter), { recursive: true });
++        fs.writeFileSync(counter, JSON.stringify({ session: SESSION, bytes: 47_104 }));
+ 
+         const r = dispatchPrompt(ws, CO_FIRE_PROMPT);
+         expect(r.status).toBe(0);
+@@ -178,16 +180,14 @@ describe("emission shaping through the real dispatcher", () => {
+             dispatchIssues(ws).filter((e) => e["issue"] === "injection_budget_drop"),
+         ).toEqual([]);
+         // And the counter is now this turn's own spend, not the seeded total.
+-        const after = JSON.parse(
+-            fs.readFileSync(path.join(stateDir, "injection-turn.json"), "utf-8"),
+-        ) as Record<string, unknown>;
++        const after = JSON.parse(fs.readFileSync(counter, "utf-8")) as Record<string, unknown>;
+         expect(after["bytes"] as number).toBeLessThan(47_104);
+     });
+ 
+     it("writes a counts-only turn counter and resets it on the turn-start slot", () => {
+         const ws = workspace();
+         dispatchPrompt(ws, CO_FIRE_PROMPT);
+-        const counter = path.join(ws, "agents", "runtime", "state", "injection-turn.json");
++        const counter = turnSpendPath(ws, SESSION);
+         expect(fs.existsSync(counter)).toBe(true);
+         const parsed = JSON.parse(fs.readFileSync(counter, "utf-8")) as Record<string, unknown>;
+         expect(Object.keys(parsed).sort()).toEqual(["bytes", "session"]);
+diff --git a/tests/scripts/hooks/injection_budget.test.ts b/tests/scripts/hooks/injection_budget.test.ts
+index a4701ea06fb7ccb897010ac117447228d5c907bf..eaaae2d4580d8ec4b129ab8e3830dfa82a2caa75 100644
+--- a/tests/scripts/hooks/injection_budget.test.ts
++++ b/tests/scripts/hooks/injection_budget.test.ts
+@@ -19,11 +19,18 @@ import {
+   readTurnSpend,
+   recordTurnSpend,
+   resolveVolumeCap,
++  shapeAndRecord,
+   shapeEmissions,
+   turnSpendPath,
++  turnSpendKey,
++  TURN_SPEND_DIR_REL,
++  TURN_SPEND_MAX_FILES,
+   type EmissionCandidate,
+ } from "../../../src/scripts/hooks/injection_budget.js";
+ 
++/** Package root — the shipped budget row lives under it. */
++const REPO_ROOT = path.resolve(__dirname, "..", "..", "..");
++
+ function candidate(over: Partial<EmissionCandidate> = {}): EmissionCandidate {
+   return {
+     concern: "some-advisory",
+@@ -309,6 +316,77 @@ describe("resolveVolumeCap — the three preconditions", () => {
+   });
+ });
+ 
++describe("shapeAndRecord — only charges bytes the host receives", () => {
++  // The module already skipped an unverified platform, whose `emitFor` returns
++  // empty stdout AND stderr. It did NOT skip a reduced verdict of ALLOW, whose
++  // `emitFor` returns exactly the same empty emission on the verified platform
++  // too — so the turn was charged for output nobody got, and a LATER dispatch
++  // whose advisory would have been delivered got dropped for it.
++  //
++  // Measured against this module before the fix: a 9,000-byte rc-0 message
++  // emitted 0 bytes and charged 9,000 against a 47,104-byte ceiling.
++  let root: string;
++  beforeEach(() => {
++    root = fs.mkdtempSync(path.join(os.tmpdir(), "shape-and-record-"));
++    delete process.env["AGENT_CONFIG_REPLAY"];
++  });
++  afterEach(() => {
++    fs.rmSync(root, { recursive: true, force: true });
++  });
++
++  const SESSION = "shape-and-record-session";
++  function ctxAt(event: string) {
++    return {
++      packageRoot: REPO_ROOT,
++      envelope: { workspace_root: root, session_id: SESSION } as Record<string, unknown>,
++      platform: "claude",
++      event,
++    };
++  }
++  function message(bytes: number, rc: number) {
++    return { rc, text: "x".repeat(bytes), def: { name: "noisy-advisory", severity: "advisory" } };
++  }
++
++  it("charges nothing when the reduced verdict is ALLOW", () => {
++    const kept = shapeAndRecord(ctxAt("post_tool_use"), [message(9000, RC_ALLOW)], RC_ALLOW);
++    expect(kept).toHaveLength(1); // nothing shaped away
++    expect(readTurnSpend(root, SESSION)).toBe(0);
++  });
++
++  it("charges nothing for an ALLOW verdict on the turn-start slot either", () => {
++    const kept = shapeAndRecord(ctxAt("user_prompt_submit"), [message(9000, RC_ALLOW)], RC_ALLOW);
++    expect(kept).toHaveLength(1);
++    expect(readTurnSpend(root, SESSION)).toBe(0);
++  });
++
++  it("DOES charge a WARN verdict, which the host does emit", () => {
++    const kept = shapeAndRecord(ctxAt("post_tool_use"), [message(600, RC_WARN)], RC_WARN);
++    expect(kept).toHaveLength(1);
++    expect(readTurnSpend(root, SESSION)).toBe(600);
++  });
++
++  it("a crashed concern cannot eat the turn ceiling", () => {
++    // The dispatcher fail-opens a non-fail_closed crash to ALLOW and its stderr
++    // becomes the deciding message — usually the largest candidate in the set.
++    // Five of these used to exhaust the ceiling on text nobody received.
++    for (let i = 0; i < 6; i += 1) {
++      shapeAndRecord(ctxAt("post_tool_use"), [message(9000, RC_ALLOW)], RC_ALLOW);
++    }
++    expect(readTurnSpend(root, SESSION)).toBe(0);
++
++    // …and a real, deliverable advisory afterwards is still eligible in full.
++    const kept = shapeAndRecord(ctxAt("post_tool_use"), [message(600, RC_WARN)], RC_WARN);
++    expect(kept).toHaveLength(1);
++    expect(readTurnSpend(root, SESSION)).toBe(600);
++  });
++
++  it("records no drop for an emission that never left", () => {
++    shapeAndRecord(ctxAt("post_tool_use"), [message(90_000, RC_ALLOW)], RC_ALLOW);
++    const log = path.join(root, "agents", "runtime", "state", "dispatch-issues.jsonl");
++    expect(fs.existsSync(log)).toBe(false);
++  });
++});
++
+ describe("turn spend accounting", () => {
+   let root: string;
+   const session = "sess-1";
+@@ -339,29 +417,79 @@ describe("turn spend accounting", () => {
+     expect(readTurnSpend(root, "other-session")).toBe(0);
+   });
+ 
++  // Strengthened with the per-session store. The assertion above is satisfied
++  // by a SHARED file too — a foreign id reads 0 because the record was
++  // clobbered, which is exactly the defect it failed to detect. These two pin
++  // the isolation itself: both counts survive, and the paths differ.
++  it("isolates two concurrent sessions instead of letting them clobber", () => {
++    recordTurnSpend(root, session, 400);
++    recordTurnSpend(root, "other-session", 90);
++    expect(readTurnSpend(root, session)).toBe(400);
++    expect(readTurnSpend(root, "other-session")).toBe(90);
++    expect(turnSpendPath(root, session)).not.toBe(turnSpendPath(root, "other-session"));
++  });
++
++  it("keeps a hostile session id inside the counter directory", () => {
++    const nasty = "../../../etc/passwd";
++    expect(path.dirname(turnSpendPath(root, nasty))).toBe(
++      path.join(root, TURN_SPEND_DIR_REL),
++    );
++    recordTurnSpend(root, nasty, 10);
++    expect(readTurnSpend(root, nasty)).toBe(10);
++  });
++
++  it("never collides two different ids onto one counter", () => {
++    // Both sanitise to the same characters; only the digest separates them.
++    const a = "sess/one";
++    const b = "sess:one";
++    expect(turnSpendKey(a)).not.toBe(turnSpendKey(b));
++    recordTurnSpend(root, a, 30);
++    recordTurnSpend(root, b, 70);
++    expect(readTurnSpend(root, a)).toBe(30);
++    expect(readTurnSpend(root, b)).toBe(70);
++  });
++
++  it("bounds the counter directory rather than growing without limit", () => {
++    for (let i = 0; i < TURN_SPEND_MAX_FILES + 12; i += 1) {
++      recordTurnSpend(root, `session-${String(i)}`, 5);
++    }
++    const kept = fs
++      .readdirSync(path.join(root, TURN_SPEND_DIR_REL))
++      .filter((n) => n.endsWith(".json"));
++    expect(kept.length).toBeLessThanOrEqual(TURN_SPEND_MAX_FILES);
++  });
++
++  it("leaves no temp file behind after an atomic write", () => {
++    recordTurnSpend(root, session, 42);
++    const leftovers = fs
++      .readdirSync(path.join(root, TURN_SPEND_DIR_REL))
++      .filter((n) => n.endsWith(".tmp"));
++    expect(leftovers).toEqual([]);
++  });
++
+   it("returns 0 for a malformed file rather than throwing", () => {
+-    fs.mkdirSync(path.dirname(turnSpendPath(root)), { recursive: true });
+-    fs.writeFileSync(turnSpendPath(root), "not json at all");
++    fs.mkdirSync(path.dirname(turnSpendPath(root, session)), { recursive: true });
++    fs.writeFileSync(turnSpendPath(root, session), "not json at all");
+     expect(readTurnSpend(root, session)).toBe(0);
+   });
+ 
+   it("returns 0 for a negative or non-numeric byte count", () => {
+-    fs.mkdirSync(path.dirname(turnSpendPath(root)), { recursive: true });
+-    fs.writeFileSync(turnSpendPath(root), JSON.stringify({ session, bytes: -5 }));
++    fs.mkdirSync(path.dirname(turnSpendPath(root, session)), { recursive: true });
++    fs.writeFileSync(turnSpendPath(root, session), JSON.stringify({ session, bytes: -5 }));
+     expect(readTurnSpend(root, session)).toBe(0);
+-    fs.writeFileSync(turnSpendPath(root), JSON.stringify({ session, bytes: "40" }));
++    fs.writeFileSync(turnSpendPath(root, session), JSON.stringify({ session, bytes: "40" }));
+     expect(readTurnSpend(root, session)).toBe(0);
+   });
+ 
+   it("writes nothing under replay — fixture runs never mutate state", () => {
+     process.env["AGENT_CONFIG_REPLAY"] = "1";
+     recordTurnSpend(root, session, 500);
+-    expect(fs.existsSync(turnSpendPath(root))).toBe(false);
++    expect(fs.existsSync(turnSpendPath(root, session))).toBe(false);
+   });
+ 
+   it("carries no field capable of holding content", () => {
+     recordTurnSpend(root, session, 120);
+-    const parsed = JSON.parse(fs.readFileSync(turnSpendPath(root), "utf-8")) as Record<
++    const parsed = JSON.parse(fs.readFileSync(turnSpendPath(root, session), "utf-8")) as Record<
+       string,
+       unknown
+     >;
