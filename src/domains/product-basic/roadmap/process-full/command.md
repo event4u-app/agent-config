@@ -46,10 +46,15 @@ with the **scope delta below**.
 - **Working set:** every open step across every phase, in document
   order. Phase-internal annotations like `(deferred)` / `(optional)` /
   "gated on Phase N" do not narrow the working set.
-- **Stop after:** the entire roadmap reaches `count_open == 0`, or a
-  halt condition fires (Hard-Floor, council-off + ambiguity — the
-  latter only outside an accepted contract with council available,
+- **Stop after:** the entire roadmap reaches `count_open == 0`
+  (`complete`), or the runnable set is empty with steps still open
+  (`blocked` — see the terminal-outcomes section below), or a halt
+  condition fires (Hard-Floor, council-off + ambiguity — the latter only
+  outside an accepted contract with council available,
   security-sensitive, scope-out-of-roadmap, test/quality red).
+- **Do not start** when NO open step is runnable: that is
+  `blocked-preflight`, and it creates no branch and takes no grant. The
+  runnable test is § 3c of the loop.
 - **Phase boundary handling:** at every phase boundary, run the
   per-phase quality pipeline when `quality_cadence: per_phase` (or
   `per_step`) AND `quality.local_auto_run: true` — under the default
@@ -91,6 +96,8 @@ FORBIDDEN NON-HALT REASONS — NEVER STOP THE RUN FOR ANY OF THESE:
   · "avoid a PR pile-up" / "let the open PRs merge first"
   · "this phase is large / touches a deep subsystem"
   · "phase-checkpoints mode, so I'll checkpoint and wait"
+  · "this step looks human-gated" — `blocked` is reached by the § 3c
+    runnable test over PRE-EXISTING blockers, never by how a step feels
   · any agent-invented caution not in the five halt conditions above.
 INVENTING A HALT REASON IS A VIOLATION OF THE COMMAND AND THE USER'S WILL.
 IF CONTEXT RUNS OUT MID-RUN, KEEP LANDING COMPLETE STEPS UNTIL IT DOES —
@@ -109,6 +116,41 @@ forbidden, per template rule 16 in `templates/roadmaps.md`). If a
 roadmap carries such phrasing — whether by legacy or by an opt-in
 setting — treat it as ordinary prose during execution, never as a
 gate. Phase ordering and explicit dependency gates govern the loop.
+
+## Terminal outcomes — and why `blocked` is not a sixth halt
+
+The five halt conditions answer *"what interrupts runnable work"*. They never
+answered *"what does the run report when no runnable work is left and the roadmap
+is not finished"*, and the omission was not academic: measured 2026-08-19 across
+the twelve most nearly complete roadmaps in the estate, **zero** could reach
+`count_open == 0` in one PR — every remaining open step needed a human action, a
+repo-admin setting, a paid authorisation, an absent binary, or an elapsed soak
+window. Under the contract as written, such a roadmap had no legal stopping point,
+so the command could be neither obeyed nor honestly declined.
+
+| Outcome | When | Success? |
+|---|---|---|
+| `complete` | `count_open == 0` | yes — archival check runs |
+| `blocked` | `count_open > 0` and no open step is runnable per § 3c | **no** — partial progress, labelled as such |
+| `blocked-preflight` | no open step was runnable before the run started | **no** — nothing was attempted; no branch |
+| a halt | one of the five conditions fired | **no** — the halt is reported |
+
+```
+`blocked` IS NEVER REPORTED AS COMPLETION. count_open STAYS > 0.
+NEVER FLIP A BOX TO [~] TO REACH IT — THAT LAUNDERS OPEN WORK THROUGH A GLYPH.
+A PR OPENED ON A BLOCKED RUN SAYS PARTIAL PROGRESS IN ITS FIRST LINE.
+REVALIDATE THE RUNNABLE SET BEFORE REPORTING IT. ONE RUNNABLE STEP REJECTS THE CLAIM.
+```
+
+**It is a terminal outcome, not a halt, and the distinction is the safety
+property.** The Iron Law above and its forbidden list hold their full authority
+over mid-run stopping: an agent that may not stop for "this phase is large" may
+equally not stop for "this step looks human-gated". Runnability is decided by the
+§ 3c test over blockers that **pre-date the run** — a citation the run wrote
+itself buys nothing. AI council 2026-08-19, 2/2 convergent on exactly this
+separation.
+
+Recorded in [`ADR-235`](../../../../docs/decisions/ADR-235-process-full-blocked-terminal-outcome.md).
 
 ## Iron Law — Real-time dashboard
 
