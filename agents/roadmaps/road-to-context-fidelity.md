@@ -197,7 +197,7 @@ what changed is that the gate is now countable.
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-08-17 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-19 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -206,6 +206,8 @@ what changed is that the gate is now countable.
 | 3 | Host mechanics drift underneath the plan | implementation | Compaction survival rules, re-injection caps, and session-source semantics are host facts that change without notice. | Every census result is stamped with the host version; the skill-top cap is re-verified at build time rather than hardcoded from a document read once. | Phase 0, Phase 3 |
 | 4 | The baseline shows no defect to fix | product | Post-compaction compliance turns out to be high and Phase 1 was built on folklore. | The honest-null threshold is pre-registered before the census runs; at or above 90 % across all three probe classes, Phase 1 is not built and the null is published with the host version recorded. | Phase 0 |
 | 5 | A new obligation surface grows the estate | product | Fixing context loss by adding rules is self-defeating. | The plan adds one concern, one frontmatter flag, policy on existing machinery, and one lint — zero new rules is the intent, and a rule turning out to be necessary is a finding to surface rather than absorb. | Phase 1 |
+| 6 | A shipped instrument keeps a claim its measurement retired | implementation | `report_memory_pointers` was built as a staleness ranker and measured at 0.00x lift. An instrument that stays in the tree under its original framing gets cited later for the thing it cannot do — the same 0.0 %-that-means-nothing failure one layer up. | The name, the header, the help text and the report's own first line all state the null; cf04 carries the numbers and the reproduction; and the ladder reads none of its output. If the claim creeps back, it has to survive a test that pins why each narrowing exists. | Phase 2 |
+| 7 | Re-verification becomes a treadmill nobody walks | product | The 30-day window on `historical-patterns` is short, and a deadline nobody meets is a uniform 365-day window wearing a smaller number. Entries would then decay into quarantine on age rather than on a reading. | The window is derived and republishable rather than chosen, so it is falsifiable by the next census; ADR-234's review trigger names exactly this; and quarantine is reversible, so the cost of the treadmill failing is a demotion to appeal rather than a deletion to regret. | Phase 2 |
 
 ## Acceptance Criteria
 
