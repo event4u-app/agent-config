@@ -72,13 +72,27 @@ export function buildFallbackOptions(deps: FallbackWiringDeps): CliFallbackOptio
         // One line per establishing escalation, so attendance analysis can
         // tell a seat SAVED by the fallback from one that was natively api.
         on_event: (e: FallbackEvent): void => {
-            deps.emit({
-                action: 'transport_fallback',
-                provider: e.provider,
-                failure_class: e.failure,
-                outcome: e.outcome,
-                api_on_quota: e.api_on_quota,
-            });
+            // Wrapped, for the reason `appendQuorumEvent` states for the
+            // identical call: an events-log write is best-effort telemetry, and
+            // a failed one (read-only mount, full disk, a permission change on
+            // agents/runtime) must not take the council pass down with it.
+            //
+            // R2 round 2, finding 7. Unwrapped, this throws out of `on_event`,
+            // out of `establishTwin`, and out of `consult` — so a disk problem
+            // during a fallback kills the whole round, and the mechanism whose
+            // entire purpose is to SAVE a seat becomes the thing that loses
+            // every seat. Losing the log line is the strictly smaller failure.
+            try {
+                deps.emit({
+                    action: 'transport_fallback',
+                    provider: e.provider,
+                    failure_class: e.failure,
+                    outcome: e.outcome,
+                    api_on_quota: e.api_on_quota,
+                });
+            } catch {
+                /* best-effort telemetry — never fail the pass */
+            }
         },
         construct: (provider: string) => {
             if (!deps.hasApiRung(provider)) return null;

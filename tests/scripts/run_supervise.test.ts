@@ -122,18 +122,40 @@ describe('classify — order is the logic', () => {
     it('the relaunch budget caps at three per run', () => {
         const r = root();
         writeRoadmap(r, 'road-to-x', ['- [ ] a']);
-        expect(classify(r, rec(), { 'sess-1': MAX_RELAUNCHES_PER_RUN - 1 }, NOW).disposition).toBe(
-            'relaunchable',
-        );
-        const spent = classify(r, rec(), { 'sess-1': MAX_RELAUNCHES_PER_RUN }, NOW);
+        expect(
+            classify(r, rec(), { 'road-to-x': MAX_RELAUNCHES_PER_RUN - 1 }, NOW).disposition,
+        ).toBe('relaunchable');
+        const spent = classify(r, rec(), { 'road-to-x': MAX_RELAUNCHES_PER_RUN }, NOW);
         expect(spent.disposition).toBe('budget-exhausted');
         expect(spent.relaunches).toBe(MAX_RELAUNCHES_PER_RUN);
+    });
+
+    it('the cap binds ACROSS generations — a new session id does not reset it', () => {
+        // R2 round 2, finding 9, and the reason the tests above had to move to
+        // the roadmap key: relaunching produces a new session id, so a
+        // session-keyed ledger handed every generation a fresh budget of three
+        // and the "three per RUN" cap could never bind. This test is the whole
+        // point of the key change — a second-generation session, spent budget.
+        const r = root();
+        writeRoadmap(r, 'road-to-x', ['- [ ] a']);
+        const secondGeneration = rec({ session_id: 'sess-2-relaunched' });
+        const c = classify(r, secondGeneration, { 'road-to-x': MAX_RELAUNCHES_PER_RUN }, NOW);
+        expect(c.disposition).toBe('budget-exhausted');
+    });
+
+    it('a session-keyed ledger no longer grants a budget — the old shape is inert', () => {
+        // Pins the direction: the pre-fix key reads as "never relaunched".
+        const r = root();
+        writeRoadmap(r, 'road-to-x', ['- [ ] a']);
+        const c = classify(r, rec(), { 'sess-1': MAX_RELAUNCHES_PER_RUN }, NOW);
+        expect(c.disposition).toBe('relaunchable');
+        expect(c.relaunches).toBe(0);
     });
 
     it('liveness is checked BEFORE the budget — a live session is never budget-exhausted', () => {
         const r = root();
         writeRoadmap(r, 'road-to-x', ['- [ ] a']);
-        const c = classify(r, rec({ last_seen: iso_now(NOW) }), { 'sess-1': 99 }, NOW);
+        const c = classify(r, rec({ last_seen: iso_now(NOW) }), { 'road-to-x': 99 }, NOW);
         expect(c.disposition).toBe('alive');
     });
 });
@@ -169,9 +191,9 @@ describe('readAllRecords — expired records are the point', () => {
 describe('the relaunch ledger', () => {
     it('round-trips and lands under runtime state', () => {
         const r = root();
-        writeLedger(r, { 'sess-1': 2 });
+        writeLedger(r, { 'road-to-x': 2 });
         expect(fs.existsSync(path.join(r, SUPERVISE_STATE_REL))).toBe(true);
-        expect(readLedger(r)).toEqual({ 'sess-1': 2 });
+        expect(readLedger(r)).toEqual({ 'road-to-x': 2 });
     });
 
     it('a malformed or absent ledger reads as empty rather than throwing', () => {

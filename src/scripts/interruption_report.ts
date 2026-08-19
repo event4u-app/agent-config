@@ -435,7 +435,14 @@ export function buildReport(root: string, windowRequested: number): Report {
             working_minutes: working,
             reengagements: cont.engage,
             stall_halts: cont.stall,
-            relaunches: lookupByRunId(relaunches, runId) ?? 0,
+            // By ROADMAP, not by run id: the relaunch ledger is keyed on the
+            // roadmap slug so its per-run cap survives the new session id a
+            // relaunch produces (see `run_supervise.RelaunchLedger`). Joining
+            // it on the run id would read 0 for every run — the same
+            // permanent-zero shape finding 2 fixed one source over.
+            relaunches: (rows.find((r) => r.roadmap !== null)?.roadmap ?? null) === null
+                ? 0
+                : (relaunches[rows.find((r) => r.roadmap !== null)?.roadmap as string] ?? 0),
             memos: lookupByRunId(memosByRun, runId) ?? 0,
         });
     }

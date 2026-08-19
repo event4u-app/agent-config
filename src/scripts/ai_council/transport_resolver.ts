@@ -510,6 +510,26 @@ export class MidFlightFallback {
         return 'api';
     }
 
+    /**
+     * Give a provider its one fallback back, because the twin never ran.
+     *
+     * R2 round 2, finding 8. `attempt` claims the slot at DECISION time, which
+     * is correct — the claim is what stops a dead binary being retried once per
+     * round. But a claim that is never CONSUMED must not stay spent: when the
+     * projected-spend gate refuses the escalation, no api call happens, and
+     * leaving the provider marked means the seat can never re-decide. Every
+     * later round then re-spawns the dead cli binary and gets `'stop'`, which
+     * is the exact per-round-ledger behaviour the invocation-scoped ledger was
+     * chosen to avoid.
+     *
+     * Called ONLY on a path where the twin was built and then not called.
+     * A provider that actually retried keeps its claim spent — that is the cap
+     * working.
+     */
+    release(provider: string): void {
+        this.used.delete(provider);
+    }
+
     /** Providers that have already spent their one fallback. */
     spent(): readonly string[] {
         return [...this.used].sort();

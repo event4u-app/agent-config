@@ -51,7 +51,11 @@ import {
 } from './_lib/run_checkpoint.js';
 import { readBudget } from './_lib/unattended_guard.js';
 
-/** UOTL 6.2 verbatim: at most three relaunches per run. */
+/**
+ * UOTL 6.2 verbatim: at most three relaunches per run — and "run" means the
+ * roadmap across every session that worked it, not one session id. See
+ * {@link RelaunchLedger}.
+ */
 export const MAX_RELAUNCHES_PER_RUN = 3;
 
 /** The emergency stop. Same switch the orchestration layer already honours. */
@@ -84,6 +88,20 @@ export interface Candidate {
 }
 
 /** Per-run relaunch counts. A plain object so the file stays readable by eye. */
+/**
+ * Relaunch counts, keyed by ROADMAP SLUG — never by session id.
+ *
+ * R2 round 2, finding 9. The cap is documented as "at most three relaunches
+ * per RUN", and a run spans generations by definition: relaunching produces a
+ * NEW session id, so a session-keyed ledger handed every generation a fresh
+ * budget of three and the cap could never bind. The roadmap is what identifies
+ * a run across its generations — the same key `latestCheckpointFor` uses, and
+ * for the same reason.
+ *
+ * Total over the relaunchable set: a record with no roadmap slug is classified
+ * `no-roadmap` before the cap is consulted, so there is no relaunchable run
+ * this key cannot name.
+ */
 export type RelaunchLedger = Record<string, number>;
 
 export function readLedger(repoRoot: string): RelaunchLedger {
@@ -138,7 +156,7 @@ export function classify(
         session_id: rec.session_id,
         roadmap: rec.roadmap_slug,
         worktree: rec.worktree,
-        relaunches: ledger[rec.session_id] ?? 0,
+        relaunches: ledger[rec.roadmap_slug ?? ''] ?? 0,
     };
     if (!is_expired(rec, now)) {
         return { ...base, disposition: 'alive', open_steps: null, reason: 'session is still beating' };

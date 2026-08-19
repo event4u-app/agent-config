@@ -112,6 +112,54 @@ export interface BuildOptions {
 }
 
 /**
+ * The current commit, read straight off `.git` — no subprocess.
+ *
+ * R2 round 2, finding 5. `head` was populated only from `opts.head`, and the
+ * ONE production caller (`session_eol_hook`) never passed it, so the field was
+ * always `null` while the checkpoint's own docblock, the loop contract and the
+ * roadmap all describe it as carrying the commit the tree was on. Only the
+ * test injected a value, which is why nothing noticed.
+ *
+ * No `git rev-parse`: this runs on the Stop path, where a spawn is a cost paid
+ * on every reply. Two files answer it — and a WORKTREE is the case a naive
+ * reader gets wrong, because there `.git` is a FILE holding `gitdir: <path>`
+ * rather than a directory. This package is developed in worktrees, so the naive
+ * version would have returned null exactly where it was being exercised.
+ *
+ * Returns `null` on anything unexpected. A checkpoint without a commit is
+ * still useful; a Stop path that throws is not.
+ */
+function readHead(repoRoot: string): string | null {
+    try {
+        let gitDir = path.join(repoRoot, '.git');
+        if (fs.statSync(gitDir).isFile()) {
+            const m = /^gitdir:\s*(.+)$/m.exec(fs.readFileSync(gitDir, 'utf-8').trim());
+            if (m === null) return null;
+            gitDir = path.resolve(repoRoot, m[1] as string);
+        }
+        const head = fs.readFileSync(path.join(gitDir, 'HEAD'), 'utf-8').trim();
+        // A detached HEAD is the sha itself.
+        if (/^[0-9a-f]{40}$/.test(head)) return head;
+        const ref = /^ref:\s*(.+)$/.exec(head);
+        if (ref === null) return null;
+        const refName = ref[1] as string;
+        try {
+            return fs.readFileSync(path.join(gitDir, refName), 'utf-8').trim() || null;
+        } catch {
+            // Packed refs: a loose file does not exist for every branch.
+            const packed = fs.readFileSync(path.join(gitDir, 'packed-refs'), 'utf-8');
+            for (const line of packed.split('\n')) {
+                const pm = /^([0-9a-f]{40})\s+(.+)$/.exec(line.trim());
+                if (pm !== null && pm[2] === refName) return pm[1] as string;
+            }
+            return null;
+        }
+    } catch {
+        return null;
+    }
+}
+
+/**
  * Derive a checkpoint from the tree. Returns `null` when the roadmap is
  * unreadable — a checkpoint that guesses is worse than none, because the whole
  * contract of this file is that its fields were computed rather than recalled.
@@ -137,7 +185,7 @@ export function buildCheckpoint(
         done_steps: counts.done,
         parked_steps: counts.parked,
         next_step: counts.next,
-        head: opts.head ?? null,
+        head: opts.head ?? readHead(repoRoot),
         written_at: (opts.now ?? ((): Date => new Date()))().toISOString(),
     };
 }

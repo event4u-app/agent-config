@@ -329,7 +329,9 @@ describe('buildReport — the autonomy axis joins the PRODUCERS\' real keys', ()
         expect(key).not.toBe(tag);
         expect(SESSION).not.toBe(tag);
 
-        writeLedger([{ run_id: tag, turn: 1, kind: 'none', class: 'none', roadmap: null }]);
+        writeLedger([
+            { run_id: tag, turn: 1, kind: 'none', class: 'none', roadmap: 'road-to-x' },
+        ]);
         writeContinuation([
             { run_id: key, event: 'engage' },
             { run_id: key, event: 'engage' },
@@ -338,10 +340,11 @@ describe('buildReport — the autonomy axis joins the PRODUCERS\' real keys', ()
         const state = path.join(root, 'agents', 'runtime', 'state');
         fs.mkdirSync(path.join(state, 'decisions', SESSION), { recursive: true });
         fs.writeFileSync(path.join(state, 'decisions', SESSION, '001.md'), 'x', 'utf8');
-        // run_supervise keys its ledger on the RAW session id.
+        // run_supervise keys its ledger on the ROADMAP — a fourth key space,
+        // and the one that survives the new session id a relaunch produces.
         fs.writeFileSync(
             path.join(state, 'supervise-relaunches.json'),
-            JSON.stringify({ [SESSION]: 2 }),
+            JSON.stringify({ 'road-to-x': 2 }),
             'utf8',
         );
 
@@ -391,15 +394,22 @@ describe('buildReport — the autonomy axis joins the PRODUCERS\' real keys', ()
         expect(buildReport(root, DEFAULT_WINDOW).stall_halt_rate).toBe(0.5);
     });
 
-    it('relaunches and memos join on the same run id', () => {
-        writeLedger([{ run_id: 'r1', turn: 1, kind: 'none', class: 'none', roadmap: null }]);
+    it('memos join on the run id, relaunches on the ROADMAP', () => {
+        // The two sources are keyed differently on purpose. Memos are written
+        // per session, so the run id is right. The relaunch ledger is keyed by
+        // roadmap so its per-run cap survives the new session id a relaunch
+        // produces (R2 round 2, finding 9) — joining it on the run id would
+        // read 0 for every run.
+        writeLedger([
+            { run_id: 'r1', turn: 1, kind: 'none', class: 'none', roadmap: 'road-to-x' },
+        ]);
         const state = path.join(root, 'agents', 'runtime', 'state');
         fs.mkdirSync(path.join(state, 'decisions', 'r1'), { recursive: true });
         fs.writeFileSync(path.join(state, 'decisions', 'r1', '001.md'), 'x', 'utf8');
         fs.writeFileSync(path.join(state, 'decisions', 'r1', '002.md'), 'x', 'utf8');
         fs.writeFileSync(
             path.join(state, 'supervise-relaunches.json'),
-            JSON.stringify({ r1: 2 }),
+            JSON.stringify({ 'road-to-x': 2 }),
             'utf8',
         );
         const run = buildReport(root, DEFAULT_WINDOW).runs.find((x) => x.run_id === 'r1');

@@ -33,6 +33,7 @@ import {
     readPath,
     renderSparseSettings,
     replaceScalar,
+    upsertScalar,
     substituteTemplatePlaceholders,
     writePath,
 } from '../io/yamlIO.js';
@@ -921,7 +922,14 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 for (const cls of ['trivial', 'low_impact', 'medium_impact']) {
                     set(['decision_resolution', 'classes', cls, 'mode'], p.decision?.[cls]);
                 }
-                set(['fallback', 'api_on_quota'], p.fallbackApiOnQuota);
+                // UPSERT, not set. R2 round 2, finding 6: `replaceScalar`
+                // no-ops on an absent path, so on every `.ai-council.yml`
+                // written before this key existed the toggle returned 200 and
+                // wrote nothing. It is the one key here that a pre-existing
+                // file is guaranteed NOT to carry.
+                if (p.fallbackApiOnQuota !== undefined) {
+                    body = upsertScalar(body, ['fallback', 'api_on_quota'], p.fallbackApiOnQuota);
+                }
                 const target = join(opts.writeRoot, AI_COUNCIL_REL);
                 await fs.mkdir(dirname(target), { recursive: true });
                 await writeAtomic(target, body, { mode: 0o600 });

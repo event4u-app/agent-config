@@ -74,6 +74,7 @@ import { MidFlightFallback } from './transport_resolver.js';
 import {
     emitOutcome,
     escalateUnmetered,
+    refuseUnmeteredEscalation,
     establishTwin,
     isFailedCliCall,
     runGatedRetry,
@@ -84,6 +85,24 @@ import {
 } from './mid_flight_fallback.js';
 
 export type { CliFallbackOptions, EstablishedTwin } from './mid_flight_fallback.js';
+
+// The spend gate, extracted whole. Re-exported so every existing importer of
+// `CostBudget` / `OverrunEvent` from this module keeps working unchanged.
+export {
+    CostBudget,
+    OverrunEvent,
+    _breach,
+    _total_usd,
+    type BreachKind,
+    type Spent,
+} from './spend_gate.js';
+import {
+    CostBudget,
+    OverrunEvent,
+    _breach,
+    _total_usd,
+    type Spent,
+} from './spend_gate.js';
 import { callMember, renderResponseMeta } from './response_render.js';
 import {
     _excTag,
@@ -131,30 +150,6 @@ function _label(idx: number): string {
 
 // ── dataclasses ───────────────────────────────────────────────────────
 
-export class CostBudget {
-    max_input_tokens: number;
-    max_output_tokens: number;
-    max_calls: number;
-    max_total_usd: number; // 0 = USD ceiling disabled (token caps still apply)
-    daily_limit_usd: number; // 0 = rolling 24h cap disabled (D3)
-
-    constructor(
-        args: {
-            max_input_tokens?: number;
-            max_output_tokens?: number;
-            max_calls?: number;
-            max_total_usd?: number;
-            daily_limit_usd?: number;
-        } = {},
-    ) {
-        this.max_input_tokens = args.max_input_tokens ?? 50_000;
-        this.max_output_tokens = args.max_output_tokens ?? 20_000;
-        this.max_calls = args.max_calls ?? 10;
-        this.max_total_usd = args.max_total_usd ?? 0.0;
-        this.daily_limit_usd = args.daily_limit_usd ?? 0.0;
-    }
-}
-
 export class CouncilQuestion {
     mode: string; // one of: prompt, roadmap, diff, files
     user_prompt: string; // bundled artefact text
@@ -164,44 +159,6 @@ export class CouncilQuestion {
         this.mode = args.mode;
         this.user_prompt = args.user_prompt;
         this.max_tokens = args.max_tokens ?? DEFAULT_MAX_TOKENS;
-    }
-}
-
-/** Passed to `on_overrun` when projected spend exceeds the budget. */
-export class OverrunEvent {
-    member_index: number;
-    member: ExternalAIClient;
-    next_estimate: CostEstimate; // this member's projected cost
-    spent_input_tokens: number; // already-billed totals BEFORE this member
-    spent_output_tokens: number;
-    spent_usd: number;
-    projected_total_usd: number; // spent_usd + next_estimate.total_usd
-    daily_spent_usd: number; // rolling 24h spend BEFORE this member (D3)
-    daily_limit_usd: number; // the configured daily cap (0 = disabled)
-    breach_kind: string; // "session" | "daily" | "tokens"
-
-    constructor(args: {
-        member_index: number;
-        member: ExternalAIClient;
-        next_estimate: CostEstimate;
-        spent_input_tokens: number;
-        spent_output_tokens: number;
-        spent_usd: number;
-        projected_total_usd: number;
-        daily_spent_usd?: number;
-        daily_limit_usd?: number;
-        breach_kind?: string;
-    }) {
-        this.member_index = args.member_index;
-        this.member = args.member;
-        this.next_estimate = args.next_estimate;
-        this.spent_input_tokens = args.spent_input_tokens;
-        this.spent_output_tokens = args.spent_output_tokens;
-        this.spent_usd = args.spent_usd;
-        this.projected_total_usd = args.projected_total_usd;
-        this.daily_spent_usd = args.daily_spent_usd ?? 0.0;
-        this.daily_limit_usd = args.daily_limit_usd ?? 0.0;
-        this.breach_kind = args.breach_kind ?? 'session';
     }
 }
 
@@ -331,10 +288,6 @@ export function estimate_debate_cost(
     });
 }
 
-/** Mirror the Python `CostEstimate.total_usd` property. */
-function _total_usd(e: CostEstimate): number {
-    return e.input_usd + e.output_usd;
-}
 
 /**
  * Return a pre-call cost estimate per member, in input order.
@@ -582,38 +535,6 @@ export function consult(
 
 
 /** Which cap a projected call breaches, or `null` when it fits. */
-type BreachKind = 'tokens' | 'daily' | 'session' | null;
-
-/**
- * The projected-spend verdict. One implementation because the round head and
- * the fallback's metered retry must gate on the SAME rules — two copies of
- * four comparisons is how they drift.
- */
-function _breach(
-    est: CostEstimate | null,
-    spent: Spent,
-    budget: CostBudget,
-): BreachKind {
-    const usd = est ? _total_usd(est) : 0.0;
-    if (
-        spent.input + (est ? est.input_tokens : 0) > budget.max_input_tokens ||
-        spent.output + (est ? est.output_tokens : 0) > budget.max_output_tokens
-    ) {
-        return 'tokens';
-    }
-    if (budget.daily_limit_usd > 0 && _would_exceed_daily(budget.daily_limit_usd, usd)) {
-        return 'daily';
-    }
-    if (budget.max_total_usd > 0 && spent.usd + usd > budget.max_total_usd) return 'session';
-    return null;
-}
-
-interface Spent {
-    input: number;
-    output: number;
-    usd: number;
-}
-
 interface RunRoundOptions {
     table: PriceTable | null;
     on_overrun: OnOverrunCallback | null;
@@ -761,38 +682,22 @@ function _run_round(
                     : 'cost_budget_exceeded';
             // A seat that arrived here by escalating from an UNMETERED cli
             // call degrades to its own original failure — never to an abort,
-            // and never to the round-wide short-circuit below.
-            //
-            // The R2 review's finding 3. Before the escalation existed, a
-            // `billable: false` member `continue`d above and could not reach
-            // this gate at all, so a dead free CLI cost its own seat and
-            // nothing else. Falling through priced as the metered twin put it
-            // one branch away from `_aborted(left, …)` for EVERY remaining
-            // member — a missing vendor binary near a `max_total_usd` could
-            // terminate the round, which is precisely what the shipped claim
-            // `council-fallback-loses-zero-seats` says cannot happen.
-            //
-            // The shape matches `runGatedRetry`'s refusal path exactly: the
-            // original response, `fallback_skipped: cost_budget` so a reader
-            // can tell "not retried" from "retry refused", and the outcome on
-            // the event log.
+            // and never to the round-wide short-circuit below. The reasoning,
+            // and the rollback of both the twin map and the ledger claim, live
+            // in `refuseUnmeteredEscalation`.
             if (unmetered_original !== null && unmetered_twin !== null) {
-                unmetered_original.metadata = {
-                    ...(unmetered_original.metadata ?? {}),
-                    fallback_skipped: 'cost_budget',
-                };
-                const fb = opts.cli_fallback ?? null;
-                if (fb !== null) {
-                    emitOutcome(fb, declared.name, unmetered_twin, 'cost_budget');
-                }
-                _stamp_transport_metadata(unmetered_original, declared);
-                results.push(unmetered_original);
-                spent.input += unmetered_original.input_tokens;
-                spent.output += unmetered_original.output_tokens;
-                // The sticky map is rolled back: the twin was never called, so
-                // a later round must re-decide rather than inherit a
-                // substitution that never happened.
-                twins?.delete(declared.name);
+                const refused = refuseUnmeteredEscalation({
+                    original: unmetered_original,
+                    declared,
+                    twin: unmetered_twin,
+                    fallback: opts.cli_fallback ?? null,
+                    ledger: opts.fallback_ledger ?? null,
+                    twins,
+                });
+                _stamp_transport_metadata(refused, declared);
+                results.push(refused);
+                spent.input += refused.input_tokens;
+                spent.output += refused.output_tokens;
                 continue;
             }
             if (on_overrun !== null && estimates !== null) {
@@ -826,6 +731,16 @@ function _run_round(
                 }
                 return results;
             }
+        }
+
+        // An escalated unmetered seat clears the gate: NOW the escalation is
+        // real, so `retried` is emitted here rather than at establishment.
+        // `escalateUnmetered` used to emit it the moment the twin was built,
+        // which put a "seat saved" line in the log for escalations the budget
+        // then refused — R2 round 2, finding 4.
+        if (unmetered_twin !== null) {
+            const fb = opts.cli_fallback ?? null;
+            if (fb !== null) emitOutcome(fb, declared.name, unmetered_twin, 'retried');
         }
 
         // ── actual call ──────────────────────────────────────────────

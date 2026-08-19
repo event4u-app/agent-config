@@ -106,6 +106,92 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
 }
 
 /**
+ * Set the scalar at `dottedPath`, CREATING the nesting when it is absent.
+ *
+ * R2 round 2, finding 6. `replaceScalar` returns the template unchanged when
+ * the path cannot be located, and the wizard's `set` helper never appended —
+ * so on every pre-existing `.ai-council.yml` written before a key existed, the
+ * wizard's toggle for that key returned 200 and wrote nothing. The user flips
+ * a switch, the server reports success, and the file is untouched.
+ *
+ * `mergeIntoTemplate` is not the fix for a NESTED key: its fallback appends a
+ * flat `a.b: value` line, which a YAML reader sees as a top-level key literally
+ * named "a.b" — so `doc['fallback']` stays undefined and the toggle is still
+ * inert, now with a line in the file suggesting otherwise.
+ *
+ * Insertion point is the end of the deepest EXISTING ancestor block, so an
+ * existing `fallback:` section gains a key rather than a second `fallback:`
+ * being appended — a duplicate mapping key is a YAML error in strict parsers
+ * and a silent last-wins in lenient ones.
+ *
+ * Comments and unrelated keys are preserved: nothing is rewritten, only
+ * inserted.
+ */
+export function upsertScalar(template: string, dottedPath: string[], value: unknown): string {
+    if (dottedPath.length === 0) return template;
+    const replaced = replaceScalar(template, dottedPath, value);
+    if (replaced !== template) return replaced;
+
+    const sections = dottedPath.slice(0, -1);
+    const key = dottedPath[dottedPath.length - 1] as string;
+    const formatted = formatScalar(value);
+    const lines = template.split('\n');
+
+    // How deep an existing ancestor chain runs, and where its block ends.
+    let matched = 0;
+    let insertAt = lines.length;
+    for (let depth = 0; depth < sections.length; depth++) {
+        const want = sections[depth];
+        const indent = '  '.repeat(depth);
+        let found = -1;
+        // Search only inside the block established so far.
+        const from = depth === 0 ? 0 : insertAt === lines.length ? 0 : 0;
+        for (let i = from; i < lines.length; i++) {
+            const line = lines[i];
+            if (line === undefined) continue;
+            if (line.trim() === '' || line.trim().startsWith('#')) continue;
+            const indentLen = line.length - line.trimStart().length;
+            if (indentLen !== indent.length) continue;
+            const m = /^([A-Za-z_][A-Za-z0-9_]*)\s*:/.exec(line.trim());
+            if (m !== null && m[1] === want) {
+                found = i;
+                break;
+            }
+        }
+        if (found === -1) break;
+        matched = depth + 1;
+        // End of this block: the next line at or above its own indent level.
+        let end = lines.length;
+        for (let i = found + 1; i < lines.length; i++) {
+            const line = lines[i];
+            if (line === undefined) continue;
+            if (line.trim() === '' || line.trim().startsWith('#')) continue;
+            const indentLen = line.length - line.trimStart().length;
+            if (indentLen <= indent.length) {
+                end = i;
+                break;
+            }
+        }
+        insertAt = end;
+    }
+
+    const block: string[] = [];
+    for (let depth = matched; depth < sections.length; depth++) {
+        block.push(`${'  '.repeat(depth)}${sections[depth] as string}:`);
+    }
+    block.push(`${'  '.repeat(sections.length)}${key}: ${formatted}`);
+
+    if (matched === 0) {
+        // No ancestor at all — append at EOF as its own block.
+        let body = template;
+        if (!body.endsWith('\n')) body += '\n';
+        return `${body}${block.join('\n')}\n`;
+    }
+    lines.splice(insertAt, 0, ...block);
+    return lines.join('\n');
+}
+
+/**
  * Apply every leaf change from `newValues` to `templateBody`. Paths that
  * are not present in the template are appended at the end. Comments are
  * preserved for every key that already exists in the template.

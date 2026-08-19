@@ -91,8 +91,27 @@ const EXIT_ALLOW = 0;
 /** Dispatcher-internal block code; the dispatcher maps stop-slot 1 → host 2. */
 const EXIT_BLOCK = 1;
 
-/** Same cap the interruption ledger reads its tail under. */
-const TRANSCRIPT_READ_MAX_BYTES = 2 * 1024 * 1024;
+/**
+ * The gate's cap, IMPORTED rather than restated — the two must agree by
+ * construction, not by two numbers that happened to match.
+ *
+ * R2 round 2, finding 1, and it was critical. This file carried its own 2 MB
+ * ("same cap the interruption ledger reads its tail under") while
+ * `turn_end_gate_hook` uses 8 MB, and `readTranscriptTail` returns
+ * `turnOrdinal: 0` over its cap WITHOUT throwing. So on any 2-8 MB transcript
+ * the gate computed ordinal N and wrote `refused_turn: N`, this concern
+ * computed 0, `refusedThisTurn` compared `N === 0`, the defer was skipped, and
+ * the concern BLOCKED a stop the quality gate had just refused — silently, and
+ * in exactly the long-running regime this roadmap targets. That is Risk 1 of
+ * the register ("quality gates outrank continuation, always") inverted.
+ *
+ * Sharing the constant is the fix; a matching literal would re-introduce the
+ * same defect the next time one side is tuned.
+ */
+import { TRANSCRIPT_READ_MAX_BYTES } from './turn_end_gate_hook.js';
+
+/** Re-exported so a test can assert the IDENTITY, not two matching literals. */
+export { TRANSCRIPT_READ_MAX_BYTES };
 
 export const EVENTS_RELPATH = path.join(
     'agents',
@@ -213,32 +232,77 @@ export function scanOpenSteps(text: string): ScanResult {
     let open = 0;
     let blocked = 0;
     let next: NextStep | null = null;
-    // Phase spans only. A `- [ ]` under `## Done means`, `## Blockers` or
-    // `## Risk Register` is an acceptance criterion, a gate or a risk row —
-    // never an executable step, and re-engaging on one is a guaranteed stall.
-    // See `_lib/roadmap_checkboxes.ts`.
-    for (const line of phaseLines(text)) {
+    // Phase spans only. A `- [ ]` under `## Acceptance criteria`,
+    // `## Blockers` or `## Risk Register` is a criterion, a gate or a risk
+    // row — never an executable step, and re-engaging on one is a guaranteed
+    // stall. See `_lib/roadmap_checkboxes.ts`.
+    const lines = phaseLines(text);
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i] as string;
         const m = OPEN_BOX.exec(line);
         if (!m) continue;
-        const body = m[1]!;
+        // A step spans its own line plus the indented continuation lines under
+        // it, and the `verify:` command is conventionally written on one of
+        // those rather than inline. Gathered up to the next checkbox or
+        // heading, so one step never absorbs the next one's verify line.
+        const step: string[] = [line];
+        for (let j = i + 1; j < lines.length; j++) {
+            const cont = lines[j] as string;
+            if (cont.trim() === '') break;
+            if (/^[ \t]*[-*][ \t]+\[/.test(cont)) break;
+            if (/^#{1,6}[ \t]/.test(cont)) break;
+            if (!/^[ \t]/.test(cont)) break;
+            step.push(cont);
+        }
+        const full = step.join('\n');
+        const body = m[1] as string;
         if (body.includes('blocked-by:')) {
             blocked += 1;
             continue;
         }
         open += 1;
         if (next === null) {
-            const verifyMatch = body.match(/<!--\s*verify:\s*(.*?)\s*-->/);
-            const cleaned = body
-                .replace(/<!--.*?-->/g, '')
-                .replace(/\s+/g, ' ')
-                .trim();
             next = {
-                text: cleaned.length > 240 ? `${cleaned.slice(0, 237)}...` : cleaned,
-                verify: verifyMatch ? verifyMatch[1]! : null,
+                text: (() => {
+                    const cleaned = body
+                        .replace(/<!--.*?-->/g, '')
+                        .replace(/\s+/g, ' ')
+                        .trim();
+                    return cleaned.length > 240 ? `${cleaned.slice(0, 237)}...` : cleaned;
+                })(),
+                verify: extractVerify(full),
             };
         }
     }
     return { open, blocked, next };
+}
+
+/**
+ * The step's `verify:` command, in either form the tree writes.
+ *
+ * R2 round 2, finding 10. Only the HTML-comment form was matched, and only on
+ * the step's OWN line — while 18 roadmaps, including both this branch ships,
+ * write the backticked form on a continuation line:
+ *
+ *     - [ ] **1.0** do the thing
+ *           `verify:` `./scripts-run src/scripts/lint_thing`
+ *
+ * So the continuation named a next step and omitted the command that proves it
+ * — and Risk 7 of the roadmap names exactly that command as its mitigation
+ * against a re-engagement that cannot check its own work.
+ *
+ * The comment form wins when both are present: it is the machine-readable one,
+ * and a step carrying both has a human-facing line and a tooling-facing line
+ * rather than two commands.
+ */
+export function extractVerify(stepText: string): string | null {
+    const html = /<!--\s*verify:\s*(.*?)\s*-->/.exec(stepText);
+    if (html !== null) return (html[1] as string).trim() || null;
+    // `verify:` then the command, both backticked. The label's own backticks
+    // are optional because the tree carries `verify:` and `` `verify:` ``.
+    const backticked = /`?verify:`?\s*`([^`]+)`/.exec(stepText);
+    if (backticked !== null) return (backticked[1] as string).trim() || null;
+    return null;
 }
 
 /**
@@ -384,6 +448,21 @@ export function main(): number {
         (payload['transcript_path'] ?? payload['transcriptPath']) as JsonValue | undefined,
     );
     if (!transcriptPath) return EXIT_ALLOW;
+    // Over the shared cap, `readTranscriptTail` returns `turnOrdinal: 0`
+    // without throwing — indistinguishable from a genuinely fresh session. The
+    // ordinal is the ONLY key the defer-to-the-gate check has, so an untrusted
+    // one must not be used to decide a block: allow instead.
+    //
+    // This is the residual half of R2 round 2's finding 1. Sharing the cap
+    // stops the two hooks disagreeing about the SAME transcript; this stops
+    // this concern acting on an ordinal neither of them could compute. Erring
+    // toward allow is the same fail-open posture the gate takes on every
+    // unreadable-transcript case.
+    try {
+        if (fs.statSync(transcriptPath).size > TRANSCRIPT_READ_MAX_BYTES) return EXIT_ALLOW;
+    } catch {
+        return EXIT_ALLOW;
+    }
     let turnOrdinal = 0;
     try {
         turnOrdinal = readTranscriptTail(transcriptPath, {

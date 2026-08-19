@@ -338,3 +338,77 @@ describe('latestCheckpointFor — the lookup a RELAUNCHED session can perform', 
         expect(latestCheckpointFor(root(), 'road-to-thing')).toBeNull();
     });
 });
+
+describe('buildCheckpoint — head is resolved, not left null', () => {
+    // R2 round 2, finding 5. `head` came only from `opts.head` and the one
+    // production caller never passed it, so the field was always null while
+    // three surfaces described it as carrying the commit. Only the test
+    // injected a value, which is exactly why nothing noticed.
+    it('resolves HEAD from a plain .git directory', () => {
+        const repoRoot = root();
+        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
+        const git = path.join(repoRoot, '.git');
+        fs.mkdirSync(path.join(git, 'refs', 'heads'), { recursive: true });
+        fs.writeFileSync(path.join(git, 'HEAD'), 'ref: refs/heads/main\n', 'utf-8');
+        fs.writeFileSync(path.join(git, 'refs', 'heads', 'main'), `${'a'.repeat(40)}\n`, 'utf-8');
+        expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBe('a'.repeat(40));
+    });
+
+    it('resolves HEAD in a WORKTREE, where .git is a file', () => {
+        // The case a naive reader gets wrong, and the one this package is
+        // actually developed in — so the naive version would have returned
+        // null exactly where it was being exercised.
+        const repoRoot = root();
+        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
+        const realGit = path.join(repoRoot, 'elsewhere', 'worktrees', 'wt');
+        fs.mkdirSync(path.join(realGit, 'refs', 'heads'), { recursive: true });
+        fs.writeFileSync(path.join(realGit, 'HEAD'), 'ref: refs/heads/feature\n', 'utf-8');
+        fs.writeFileSync(
+            path.join(realGit, 'refs', 'heads', 'feature'),
+            `${'b'.repeat(40)}\n`,
+            'utf-8',
+        );
+        fs.writeFileSync(path.join(repoRoot, '.git'), `gitdir: ${realGit}\n`, 'utf-8');
+        expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBe('b'.repeat(40));
+    });
+
+    it('falls back to packed-refs when the loose ref file is absent', () => {
+        const repoRoot = root();
+        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
+        const git = path.join(repoRoot, '.git');
+        fs.mkdirSync(git, { recursive: true });
+        fs.writeFileSync(path.join(git, 'HEAD'), 'ref: refs/heads/packed\n', 'utf-8');
+        fs.writeFileSync(
+            path.join(git, 'packed-refs'),
+            `# pack-refs with: peeled\n${'c'.repeat(40)} refs/heads/packed\n`,
+            'utf-8',
+        );
+        expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBe('c'.repeat(40));
+    });
+
+    it('a detached HEAD is the sha itself', () => {
+        const repoRoot = root();
+        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
+        const git = path.join(repoRoot, '.git');
+        fs.mkdirSync(git, { recursive: true });
+        fs.writeFileSync(path.join(git, 'HEAD'), `${'d'.repeat(40)}\n`, 'utf-8');
+        expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBe('d'.repeat(40));
+    });
+
+    it('no git at all is null, never a throw — the Stop path must not fail', () => {
+        const repoRoot = root();
+        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
+        expect(buildCheckpoint(repoRoot, 'r1', 'road-to-thing')?.head).toBeNull();
+    });
+
+    it('an explicit opts.head still wins', () => {
+        const repoRoot = root();
+        writeRoadmap(repoRoot, 'road-to-thing', ['## Phase 1', '- [ ] a step']);
+        const git = path.join(repoRoot, '.git');
+        fs.mkdirSync(git, { recursive: true });
+        fs.writeFileSync(path.join(git, 'HEAD'), `${'e'.repeat(40)}\n`, 'utf-8');
+        expect(
+            buildCheckpoint(repoRoot, 'r1', 'road-to-thing', { head: 'injected' })?.head,
+        ).toBe('injected');
+    });
+});

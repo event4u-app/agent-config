@@ -233,9 +233,54 @@ export function escalateUnmetered(
         ledger,
     });
     if (twin === null) return null;
-    // Emitted at establishment: on this path the twin goes through the round's
-    // ORDINARY spend gate, whose refusal surfaces as `cost_budget_exceeded` on
-    // the response rather than as a fallback event.
-    emitOutcome(fallback, member.name, twin, 'retried');
+    // NOTHING is emitted here, and the previous comment justifying an emit at
+    // establishment is deleted rather than reworded because it stopped being
+    // true. It read: "on this path the twin goes through the round's ORDINARY
+    // spend gate, whose refusal surfaces as `cost_budget_exceeded` on the
+    // response rather than as a fallback event." Round 1's finding-3 fix made
+    // a refusal surface as exactly such an event, so an `retried` written here
+    // and a `cost_budget` written there put two contradictory lines in the log
+    // for one seat — and the first of them claims a seat was saved that was
+    // not. R2 round 2, finding 4.
+    //
+    // The caller emits once, on the outcome it actually observed:
+    // `refuseUnmeteredEscalation` for the refusal, `emitOutcome(…, 'retried')`
+    // immediately before the metered call for the acceptance.
     return twin;
+}
+
+/**
+ * A budget-refused escalation of an UNMETERED seat, as one call.
+ *
+ * The seat degrades to its own original cli failure — never to an abort, and
+ * never to the round-wide short-circuit. Before the escalation existed a
+ * `billable: false` member returned before the spend gate and could not reach
+ * it at all, so a dead free CLI cost its own seat and nothing else; falling
+ * through priced as the metered twin put it one branch from aborting EVERY
+ * remaining member, which the shipped claim `council-fallback-loses-zero-seats`
+ * says cannot happen. R2 round 1, finding 3.
+ *
+ * The shape matches {@link runGatedRetry}'s refusal path exactly: the original
+ * response, `fallback_skipped: cost_budget` so a reader can tell "not retried"
+ * from "retry refused", and one outcome on the event log.
+ *
+ * Rolls the sticky substitution back — the twin was never called, so a later
+ * round must re-decide rather than inherit a substitution that never happened.
+ * `ledger.release` undoes the once-per-provider claim for the same reason: a
+ * twin that never ran must not consume the provider's one escalation.
+ */
+export function refuseUnmeteredEscalation(args: {
+    readonly original: CouncilResponse;
+    readonly declared: ExternalAIClient;
+    readonly twin: EstablishedTwin;
+    readonly fallback: CliFallbackOptions | null;
+    readonly ledger: MidFlightFallback | null;
+    readonly twins: TwinMap | null;
+}): CouncilResponse {
+    const { original, declared, twin, fallback, ledger, twins } = args;
+    original.metadata = { ...(original.metadata ?? {}), fallback_skipped: 'cost_budget' };
+    if (fallback !== null) emitOutcome(fallback, declared.name, twin, 'cost_budget');
+    twins?.delete(declared.name);
+    ledger?.release(declared.name);
+    return original;
 }

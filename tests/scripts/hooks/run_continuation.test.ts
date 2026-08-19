@@ -21,8 +21,14 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    TRANSCRIPT_READ_MAX_BYTES as GATE_TRANSCRIPT_MAX_BYTES,
+    readTranscriptTail,
+} from '../../../src/scripts/hooks/turn_end_gate_hook.js';
+
+import {
     DUPLICATE_WINDOW_MS,
     HALT_ACTIONS,
+    TRANSCRIPT_READ_MAX_BYTES as CONTINUATION_TRANSCRIPT_MAX_BYTES,
     MAX_ITERATIONS,
     STALL_WINDOW,
     WALL_CLOCK_CAP_MS,
@@ -30,6 +36,7 @@ import {
     ladder,
     parseExecutionMode,
     refusedThisTurn,
+    extractVerify,
     scanOpenSteps,
     stateRelPath,
     type RunState,
@@ -309,5 +316,126 @@ describe('scanOpenSteps — phase spans only, dashboard bullets', () => {
 
     it('an unphased roadmap still yields its steps', () => {
         expect(scanOpenSteps('- [ ] **0.1** a step\n').open).toBe(1);
+    });
+});
+
+/** This worktree's root — four levels up from tests/scripts/hooks/. */
+const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
+
+const homeDirs: string[] = [];
+afterEach(() => {
+    while (homeDirs.length > 0) {
+        const d = homeDirs.pop();
+        if (d) fs.rmSync(d, { recursive: true, force: true });
+    }
+});
+
+describe('the transcript cap agrees with the quality gate', () => {
+    // R2 round 2, finding 1 — the critical one. This concern carried its own
+    // 2 MB cap while `turn_end_gate_hook` uses 8 MB, and `readTranscriptTail`
+    // returns `turnOrdinal: 0` over its cap WITHOUT throwing. On any 2-8 MB
+    // transcript the gate wrote `refused_turn: N`, this concern computed 0,
+    // the defer compared `N === 0` and was skipped — so the concern BLOCKED a
+    // stop the quality gate had just refused. Risk 1 of the register inverted,
+    // silently, in the long-run regime the roadmap targets.
+    it('reads the SAME constant the gate does, not a matching literal', () => {
+        // The identity is the assertion. Two literals that happen to agree
+        // re-introduce the defect the next time one side is tuned.
+        expect(CONTINUATION_TRANSCRIPT_MAX_BYTES).toBe(GATE_TRANSCRIPT_MAX_BYTES);
+    });
+
+    it('a transcript in the old 2-8 MB dead zone yields the gate\'s real ordinal', () => {
+        // Built just over the OLD 2 MB cap and well under the shared 8 MB one:
+        // under the old constant this read 0, under the shared one it reads the
+        // true count, which is what makes the defer comparison meaningful.
+        // Under $HOME: `isSafeTranscriptPath` refuses anything else, and a
+        // refusal also returns ordinal 0 — which would make this test pass for
+        // the wrong reason.
+        const home = fs.mkdtempSync(path.join(os.homedir(), '.agent-config-rc-test-'));
+        homeDirs.push(home);
+        const file = path.join(home, 'big.jsonl');
+        const pad = 'y'.repeat(4096);
+        const rows: string[] = [];
+        for (let i = 0; i < 3; i++) {
+            rows.push(JSON.stringify({ type: 'user', message: { role: 'user', content: 'hi' } }));
+            rows.push(
+                JSON.stringify({ type: 'assistant', message: { role: 'assistant', content: pad } }),
+            );
+        }
+        // Pad past 2 MB with assistant rows, which do not move the ordinal.
+        while (rows.join('\n').length < 2.2 * 1024 * 1024) {
+            rows.push(
+                JSON.stringify({ type: 'assistant', message: { role: 'assistant', content: pad } }),
+            );
+        }
+        fs.writeFileSync(file, `${rows.join('\n')}\n`, 'utf8');
+        expect(fs.statSync(file).size).toBeGreaterThan(2 * 1024 * 1024);
+        expect(fs.statSync(file).size).toBeLessThan(8 * 1024 * 1024);
+
+        const under2mb = readTranscriptTail(file, { maxBytes: 2 * 1024 * 1024 }).turnOrdinal;
+        const shared = readTranscriptTail(file, {
+            maxBytes: CONTINUATION_TRANSCRIPT_MAX_BYTES,
+        }).turnOrdinal;
+        expect(under2mb).toBe(0);
+        expect(shared).toBe(3);
+    });
+});
+
+describe('extractVerify — both forms the tree actually writes', () => {
+    // R2 round 2, finding 10. Only the HTML-comment form was matched, and only
+    // on the step's own line, while 18 roadmaps — including both this branch
+    // ships — write the backticked form on a CONTINUATION line. So the
+    // continuation named a next step and omitted the command that proves it,
+    // which Risk 7 names as its mitigation.
+    it('reads the backticked form from a continuation line', () => {
+        const md = [
+            '## Phase 1',
+            '',
+            '- [ ] **1.0** do the thing',
+            '      `verify:` `./scripts-run src/scripts/lint_thing`',
+        ].join('\n');
+        expect(scanOpenSteps(md).next?.verify).toBe('./scripts-run src/scripts/lint_thing');
+    });
+
+    it('still reads the HTML-comment form, and it wins when both are present', () => {
+        // A step carrying both has a human-facing line and a tooling-facing
+        // one — not two commands.
+        const md = [
+            '## Phase 1',
+            '- [ ] **1.0** do it <!-- verify: machine-readable -->',
+            '      `verify:` `human-facing`',
+        ].join('\n');
+        expect(scanOpenSteps(md).next?.verify).toBe('machine-readable');
+    });
+
+    it('does not absorb the NEXT step\'s verify line', () => {
+        const md = [
+            '## Phase 1',
+            '- [ ] **1.0** first',
+            '- [ ] **1.1** second',
+            '      `verify:` `belongs-to-1.1`',
+        ].join('\n');
+        const scan = scanOpenSteps(md);
+        expect(scan.open).toBe(2);
+        expect(scan.next?.text).toContain('first');
+        expect(scan.next?.verify).toBeNull();
+    });
+
+    it('a step with no verify line reports null, not an empty string', () => {
+        expect(scanOpenSteps('## Phase 1\n- [ ] **1.0** bare\n').next?.verify).toBeNull();
+    });
+
+    it('reads the real roadmap this branch ships', () => {
+        // The end-to-end statement: the form in the tree, not a fixture of it.
+        const md = fs.readFileSync(
+            path.join(REPO_ROOT, 'agents', 'roadmaps', 'road-to-long-horizon-execution.md'),
+            'utf8',
+        );
+        // Every open step in it is closed, so this asserts the MATCHER over the
+        // real text rather than the scan result.
+        expect(extractVerify('      `verify:` `npx vitest run tests/x.test.ts` — 21 green.')).toBe(
+            'npx vitest run tests/x.test.ts',
+        );
+        expect(md).toContain('`verify:`');
     });
 });
