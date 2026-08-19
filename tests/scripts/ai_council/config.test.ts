@@ -1115,7 +1115,7 @@ describe('config — decision_resolution second_model rung', () => {
         const tmp = make_tmp();
         expect(() =>
             cfg.load_council_config(
-                write_yaml(make_tmp(), withClass('user_required', ['      second_model: openai'])),
+                write_yaml(tmp, withClass('user_required', ['      second_model: openai'])),
             ),
         ).toThrow(/LOCKED/);
         // Even `null` is refused: the class does not HAVE this dimension, and

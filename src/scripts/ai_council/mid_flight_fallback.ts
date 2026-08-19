@@ -20,8 +20,8 @@ import type { ExternalAIClient, CouncilResponse } from './clients.js';
 import {
     classifyCliFailure,
     isFallbackEligibleUnder,
-    MidFlightFallback,
     type FallbackPolicy,
+    type MidFlightFallback,
 } from './transport_resolver.js';
 
 /** One escalation's outcome, for the event sink. */
